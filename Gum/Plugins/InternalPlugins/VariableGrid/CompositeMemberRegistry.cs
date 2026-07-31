@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using GumRuntime;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -24,8 +25,10 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
     {
         // Alpha is deliberately excluded: it stays an independent row so it can be animated separately
         // from color. Compose builds an opaque color; Decompose writes only R/G/B.
+        // Channel names are sourced from ElementSaveExtensions' composite-reference table (GumRuntime)
+        // so this UI-facing registry and apply-time reference expansion can't drift apart.
         return new CompositeMemberDescriptor(
-            ChannelRootNames: new[] { "Red", "Green", "Blue" },
+            ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("Color")!,
             CompositeNameFormat: "{prefix}Color{suffix}",
             Displayer: typeof(Gum.Controls.DataUi.ColorDisplay),
             CompositeType: typeof(Color),
@@ -58,11 +61,7 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
         // Rectangle only - no affixed variants (no StrokeCornerRadius / CornerRadius2), so the
         // composite name format has no prefix/suffix content beyond the token itself.
         return new CompositeMemberDescriptor(
-            ChannelRootNames: new[]
-            {
-                "CornerRadius", "CustomRadiusTopLeft", "CustomRadiusTopRight",
-                "CustomRadiusBottomLeft", "CustomRadiusBottomRight"
-            },
+            ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("CornerRadius")!,
             CompositeNameFormat: "{prefix}CornerRadius{suffix}",
             Displayer: typeof(Gum.Controls.DataUi.CornerRadiusDisplay),
             CompositeType: typeof(CornerRadiusComposite),

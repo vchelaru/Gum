@@ -158,6 +158,37 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
 
     #endregion
 
+    #region CompositeColorExpansion
+
+    [Fact]
+    public void ApplyVariableReferences_CollapsedColorReference_ExpandsToAllChannels()
+    {
+        // "Color = Source.Color" must expand to Red/Green/Blue at apply time even though
+        // it stays a single collapsed line in VariableReferences.
+        ColoredRectangleRuntime parent = new ColoredRectangleRuntime();
+        parent.Red = 0;
+        parent.Green = 0;
+        parent.Blue = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "Color = Source.Color",
+            null,
+            ("Red", 0, "int"),
+            ("Green", 0, "int"),
+            ("Blue", 0, "int"),
+            ("Source.Red", 10, "int"),
+            ("Source.Green", 20, "int"),
+            ("Source.Blue", 30, "int"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.Red.ShouldBe(10);
+        parent.Green.ShouldBe(20);
+        parent.Blue.ShouldBe(30);
+    }
+
+    #endregion
+
     #region SimpleAssignment
 
     [Fact]

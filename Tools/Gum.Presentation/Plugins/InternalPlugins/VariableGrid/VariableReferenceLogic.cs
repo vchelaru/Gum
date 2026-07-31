@@ -108,6 +108,25 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
+        if (TryGetCompositeExpansion(parentElement, leftSideInstance, line, out var expandedLines))
+        {
+            // Composite reference (e.g. "Color = Other.Color") - "Color" is never a real
+            // StateSave variable on either side, so validate each underlying channel line
+            // independently instead. Report a single failure against the original collapsed
+            // line (so CommentFailures can find and comment it out) if any channel is invalid.
+            foreach (string expandedLine in expandedLines)
+            {
+                var channelFailures = new List<(string, GeneralResponse)>();
+                AddFailureForLine(parentElement, leftSideInstance, channelFailures, expandedLine, liveRoot);
+                if (channelFailures.Count > 0)
+                {
+                    failures.Add((line, channelFailures[0].Item2));
+                    return;
+                }
+            }
+            return;
+        }
+
         var assignmentSyntax = GetAssignmentSyntax(line);
 
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
@@ -731,23 +750,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                     }
                 }
 
-                if (split.Length == 2)
-                {
-                    var leftSide = split[0];
-                    var rightSide = split[1];
-                    // A composite reference (e.g. "Color = X.Color", "StrokeColor = X.StrokeColor") expands into
-                    // one assignment per underlying channel. The registry knows which names are composites and
-                    // what channels they map to, so any registered composite (color today, others later) expands
-                    // with no extra control flow here. We only expand when the reference owner actually has those
-                    // channels - otherwise a non-composite name that merely contains the token (e.g. a literal
-                    // "BackgroundColor" variable) would be mangled into BackgroundRed/Green/Blue.
-                    if (rightSide.EndsWith("." + leftSide) &&
-                        TryGetCompositeChannelNames(leftSide, out var channelNames) &&
-                        OwnerHasAllChannels(channelNames, selectedInstance, ownerElement))
-                    {
-                        ExpandCompositeToChannels(newValueAsList, i, rightSide, leftSide, channelNames);
-                    }
-                }
             }
         }
 
@@ -866,19 +868,38 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         return true;
     }
 
-    private static void ExpandCompositeToChannels(List<string> asList, int i, string rightSide,
-        string compositeName, IReadOnlyList<string> channelNames)
+    /// <summary>
+    /// If <paramref name="line"/> is a composite reference directly assigning the same composite
+    /// from another object (e.g. <c>Color = Other.Color</c>), outputs the equivalent per-channel
+    /// lines (e.g. <c>Red = Other.Red</c>, <c>Green = Other.Green</c>, <c>Blue = Other.Blue</c>)
+    /// and returns true. Used by validation only - the collapsed line itself is what gets
+    /// persisted; expansion happens again at apply time in <c>GumRuntime.ElementSaveExtensions</c>.
+    /// </summary>
+    private bool TryGetCompositeExpansion(ElementSave parentElement, InstanceSave? leftSideInstance, string line,
+        out IReadOnlyList<string> expandedLines)
     {
-        // rightSide ends with "." + compositeName (e.g. "X.StrokeColor"); strip that to get the referenced
-        // object path ("X"), then re-attach each channel name on both sides.
-        var withoutVariable = rightSide.Substring(0, rightSide.Length - ("." + compositeName).Length);
+        string[] split = line
+            .Split(equalsArray, 2, StringSplitOptions.RemoveEmptyEntries)
+            .Select(item => item.Trim())
+            .ToArray();
 
-        asList.RemoveAt(i);
-
-        foreach (var channelName in channelNames)
+        if (split.Length == 2)
         {
-            asList.Add($"{channelName} = {withoutVariable}.{channelName}");
+            var leftSide = split[0];
+            var rightSide = split[1];
+
+            if (rightSide.EndsWith("." + leftSide) &&
+                TryGetCompositeChannelNames(leftSide, out var channelNames) &&
+                OwnerHasAllChannels(channelNames, leftSideInstance, parentElement))
+            {
+                var withoutVariable = rightSide.Substring(0, rightSide.Length - ("." + leftSide).Length);
+                expandedLines = channelNames.Select(channelName => $"{channelName} = {withoutVariable}.{channelName}").ToArray();
+                return true;
+            }
         }
+
+        expandedLines = Array.Empty<string>();
+        return false;
     }
 
     private static string[] AddImpliedLeftSide(List<string> asList, int i, string[] split)

@@ -178,6 +178,50 @@ public class DetectUnpropagatedReferencesTests : BaseTestClass
     }
 
     [Fact]
+    public void GetStatesWithUnpropagatedReferences_TunneledCollapsedColorReferenceWithMaterializedScalars_DoesNotReport()
+    {
+        // "Color = Source.Color" on an instance's VariableReferences row must expand to
+        // RectangleInstance.Red/Green/Blue for the materialized-scalar check - the instance's
+        // type (ColorType) is what tells the detector the composite's channels are real.
+        // Without the fix, the detector looks for a literal "RectangleInstance.Color" scalar,
+        // which never exists, and always false-positives as unpropagated.
+        ComponentSave colorType = new ComponentSave { Name = "ColorType" };
+        StateSave colorTypeDefault = new StateSave { Name = "Default", ParentContainer = colorType };
+        colorTypeDefault.Variables.Add(new VariableSave { Name = "Red", Type = "int", Value = 0, SetsValue = true });
+        colorTypeDefault.Variables.Add(new VariableSave { Name = "Green", Type = "int", Value = 0, SetsValue = true });
+        colorTypeDefault.Variables.Add(new VariableSave { Name = "Blue", Type = "int", Value = 0, SetsValue = true });
+        colorType.States.Add(colorTypeDefault);
+
+        ScreenSave screen = new ScreenSave { Name = "ScreenWithTunneledCollapsedColorGood" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        InstanceSave instance = new InstanceSave { Name = "RectangleInstance", BaseType = "ColorType", ParentContainer = screen };
+        screen.Instances.Add(instance);
+
+        state.Variables.Add(new VariableSave { Name = "RectangleInstance.Red", Type = "int", Value = 10, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "RectangleInstance.Green", Type = "int", Value = 20, SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "RectangleInstance.Blue", Type = "int", Value = 30, SetsValue = true });
+
+        VariableListSave<string> refs = new VariableListSave<string>
+        {
+            Name = "RectangleInstance.VariableReferences",
+            Type = "string"
+        };
+        refs.Value.Add("Color = Source.Color");
+        state.VariableLists.Add(refs);
+
+        GumProjectSave project = new GumProjectSave();
+        project.Screens.Add(screen);
+        project.Components.Add(colorType);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        var result = screen.GetStatesWithUnpropagatedReferences();
+
+        result.ShouldNotContain(state);
+    }
+
+    [Fact]
     public void GetStatesWithUnpropagatedReferences_StateHasReferenceAndMaterializedScalar_DoesNotReport()
     {
         // Regression guard: a properly authored state (reference row + materialized
