@@ -207,9 +207,6 @@ public partial class CustomSetPropertyOnRenderable
         {
             handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
         }
-#if !RAYLIB
-
-
 #if !FRB
         // Issue #2925 — dispatch by RUNTIME type for CircleRuntime / RectangleRuntime before
         // falling through to the renderable-type tree. Both runtimes now own two renderable
@@ -217,6 +214,13 @@ public partial class CustomSetPropertyOnRenderable
         // renderable-type-only dispatch lands legacy "Color" / "Alpha" / "Red" / etc. on the
         // wrong slot. Routing through the runtime's typed property setters keeps each variable
         // landing where its pre-two-slot equivalent did, independent of which slot is contained.
+        //
+        // Included on RAYLIB too (#4176): the v3 shape properties (IsFilled/FillRed/FillGreen/
+        // FillBlue/FillAlpha/Stroke*/CustomRadius*/Blend/Color) only exist on the runtime, not on
+        // either raylib renderable slot, so without this dispatch they silently fell through to
+        // SetPropertyThroughReflection, which reflects on the renderable and drops them — a
+        // Rectangle with a custom fill color saved in a project rendered with its default fill
+        // instead on raylib, indistinguishable from a real rendering bug.
         else if (graphicalUiElement is Gum.GueDeriving.CircleRuntime circleRuntime)
         {
             handled = TrySetPropertyOnCircleRuntime(circleRuntime, propertyName, value);
@@ -226,6 +230,7 @@ public partial class CustomSetPropertyOnRenderable
             handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, value);
         }
 #endif
+#if !RAYLIB
         else if (renderableIpso is LineCircle)
         {
             handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
@@ -3276,7 +3281,7 @@ public partial class CustomSetPropertyOnRenderable
         }
     }
 
-#if !RAYLIB && !FRB
+#if !FRB
     // Issue #2925 — legacy variable routing for the two-slot CircleRuntime. The legacy
     // properties (Color/Alpha/Red/Green/Blue) on the runtime are intentionally obsolete and
     // already route to the stroke slot internally, preserving pre-two-slot behavior. Going
@@ -3287,7 +3292,21 @@ public partial class CustomSetPropertyOnRenderable
 #pragma warning disable CS0618 // legacy obsolete properties are the public surface this dispatch was written against
         switch (propertyName)
         {
+            // #4176: CircleRuntime.Color is backend-typed (Raylib_cs.Color on raylib,
+            // Microsoft.Xna.Framework.Color elsewhere), so the conversion branches by platform.
+            // Mirrors the raylib NineSlice/Sprite/Text "Color" cases elsewhere in this file: only
+            // System.Drawing.Color arrives from a loaded project, so that's the only branch needed.
             case "Color":
+#if RAYLIB
+                if (value is System.Drawing.Color raylibDrawingColor)
+                {
+                    circleRuntime.Color = raylibDrawingColor.ToRaylib();
+                }
+                else
+                {
+                    return false;
+                }
+#else
                 if (value is System.Drawing.Color drawingColor)
                 {
                     circleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
@@ -3300,6 +3319,7 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     return false;
                 }
+#endif
                 return true;
             case "Alpha":
                 circleRuntime.Alpha = (int)value;
@@ -3365,7 +3385,21 @@ public partial class CustomSetPropertyOnRenderable
 #pragma warning disable CS0618
         switch (propertyName)
         {
+            // #4176: RectangleRuntime.Color is backend-typed (Raylib_cs.Color on raylib,
+            // Microsoft.Xna.Framework.Color elsewhere), so the conversion branches by platform.
+            // Mirrors the raylib NineSlice/Sprite/Text "Color" cases elsewhere in this file: only
+            // System.Drawing.Color arrives from a loaded project, so that's the only branch needed.
             case "Color":
+#if RAYLIB
+                if (value is System.Drawing.Color raylibDrawingColor)
+                {
+                    rectangleRuntime.Color = raylibDrawingColor.ToRaylib();
+                }
+                else
+                {
+                    return false;
+                }
+#else
                 if (value is System.Drawing.Color drawingColor)
                 {
                     rectangleRuntime.Color = new Microsoft.Xna.Framework.Color(drawingColor.R, drawingColor.G, drawingColor.B, drawingColor.A);
@@ -3378,6 +3412,7 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     return false;
                 }
+#endif
                 return true;
             case "Alpha":
                 rectangleRuntime.Alpha = (int)value;

@@ -60,6 +60,14 @@ public class RaylibScreenshotService : IScreenshotService
             int width = request.Width ?? 800;
             int height = request.Height ?? 600;
 
+            // Must be set before UpdateLayout: a parentless element's PixelsFromMiddle/Percentage
+            // positioning resolves against these, not against the render texture's actual size.
+            // MonoGameScreenshotService gets this for free because its GraphicsDeviceManager backs
+            // straight onto the real backbuffer; raylib always renders into an explicitly-sized
+            // off-screen RenderTexture2D below, so nothing else tells the layout engine that size.
+            gumService.CanvasWidth = width;
+            gumService.CanvasHeight = height;
+
             var element = elementSave.ToGraphicalUiElement(SystemManagers.Default);
             element.AddToManagers(SystemManagers.Default);
             element.UpdateLayout();
