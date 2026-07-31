@@ -373,8 +373,33 @@ namespace RenderingLibrary
 
             float worldTop = ipso.GetAbsoluteTop();
             float worldBottom = ipso.GetAbsoluteBottom();
+            ExpandWorldTopBottomForWrappedTextExcess(ipso, ref worldTop, ref worldBottom);
 
-            if (ipso is IWrappedText wrappedText)
+            return camera.GetScissorRectangleForWorldBounds(layer, ipso.GetAbsoluteLeft(), worldTop, ipso.GetAbsoluteRight(), worldBottom);
+        }
+
+        /// <summary>
+        /// Finds the <see cref="IWrappedText"/> for <paramref name="ipso"/> — either <paramref
+        /// name="ipso"/> itself, or (the common case in a real Gum tree) the inner renderable it
+        /// wraps via <see cref="IHasRenderableComponent"/>, since a layout wrapper like
+        /// <c>GraphicalUiElement</c>/<c>TextRuntime</c> does not itself implement
+        /// <see cref="IWrappedText"/> — only the renderable it contains does (#4144).
+        /// </summary>
+        private static IWrappedText? GetWrappedText(IRenderableIpso ipso) =>
+            ipso as IWrappedText ?? (ipso as IHasRenderableComponent)?.RenderableComponent as IWrappedText;
+
+        /// <summary>
+        /// If <paramref name="ipso"/> is (or wraps) an <see cref="IWrappedText"/> whose actual
+        /// rendered extent (<see cref="IText.WrappedTextHeight"/>) exceeds its declared
+        /// <see cref="IPositionedSizedObject.Height"/>, widens <paramref name="worldTop"/>/
+        /// <paramref name="worldBottom"/> by that excess on both edges. Shared by
+        /// <see cref="GetCullTestBoundsFor"/> and any backend-specific cull check that computes its
+        /// own world bounds (e.g. raylib's render-target-bake path) instead of going through it.
+        /// </summary>
+        public static void ExpandWorldTopBottomForWrappedTextExcess(IRenderableIpso ipso, ref float worldTop, ref float worldBottom)
+        {
+            IWrappedText? wrappedText = GetWrappedText(ipso);
+            if (wrappedText != null)
             {
                 float excess = wrappedText.WrappedTextHeight - ipso.Height;
                 if (excess > 0)
@@ -383,8 +408,6 @@ namespace RenderingLibrary
                     worldBottom += excess;
                 }
             }
-
-            return camera.GetScissorRectangleForWorldBounds(layer, ipso.GetAbsoluteLeft(), worldTop, ipso.GetAbsoluteRight(), worldBottom);
         }
 
         /// <summary>

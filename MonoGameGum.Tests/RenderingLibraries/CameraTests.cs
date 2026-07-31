@@ -308,6 +308,100 @@ public class CameraTests : BaseTestClass
             .ShouldBe(camera.GetScissorRectangleFor(layer: null!, text));
     }
 
+    // A bare IWrappedText renderable never actually reaches the cull check in a real Gum tree:
+    // the object walked by the orderers is the GraphicalUiElement/Runtime wrapper (e.g.
+    // TextRuntime), which does NOT itself implement IWrappedText — only the inner renderable it
+    // wraps (exposed via IHasRenderableComponent.RenderableComponent) does. GetCullTestBoundsFor
+    // must unwrap through that, or the expansion above never triggers for a real TextBox (#4144).
+    private sealed class FakeWrappedTextComponent : IWrappedText, IRenderable
+    {
+        public float WrappedTextHeight { get; set; }
+        public Gum.BlendState BlendState => Gum.BlendState.NonPremultiplied;
+        public bool Wrap => false;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public int? MaxNumberOfLines => null;
+        public float Height => 0;
+        public int LineHeightInPixels => 0;
+        public bool IsTruncatingWithEllipsisOnLastLine => false;
+        public bool IsHeightDependentOnLines { get; set; }
+        public bool IsMidWordLineBreakEnabled => false;
+        public float MeasureString(string text) => 0;
+        public void SetNeedsRefreshToTrue() { }
+        public void UpdatePreRenderDimensions() { }
+        public float DescenderHeight => 0;
+        public float FontScale => 1;
+        public float WrappedTextWidth => 0;
+        public string? RawText { get; set; }
+        public string? StoredMarkupText => null;
+        float? IText.Width { get; set; }
+        public TextOverflowVerticalMode TextOverflowVerticalMode { get; set; }
+    }
+
+    private sealed class StubWrapperRenderable : IRenderableIpso, IHasRenderableComponent
+    {
+        public StubWrapperRenderable()
+        {
+            Children = new ObservableCollection<IRenderableIpso>();
+        }
+
+        public IRenderable RenderableComponent { get; set; } = null!;
+
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public float Width { get; set; }
+        public float Height { get; set; }
+        public float Rotation { get; set; }
+        public bool FlipHorizontal { get; set; }
+        public string? Name { get; set; }
+        public object? Tag { get; set; }
+        public bool Visible { get; set; } = true;
+        public bool AbsoluteVisible => Visible;
+        public bool ClipsChildren { get; set; }
+        public bool IsRenderTarget => false;
+        public ObservableCollection<IRenderableIpso> Children { get; }
+        public IRenderableIpso? Parent { get; set; }
+        IVisible? IVisible.Parent => Parent;
+        public int Alpha => 255;
+        public ColorOperation ColorOperation => ColorOperation.Modulate;
+        public Gum.BlendState BlendState => Gum.BlendState.NonPremultiplied;
+        public bool Wrap => false;
+        public string BatchKey => "SpriteBatch";
+        public void SetParentDirect(IRenderableIpso? newParent) => Parent = newParent;
+        public void Render(ISystemManagers managers) { }
+        public void PreRender() { }
+        public void StartBatch(ISystemManagers managers) { }
+        public void EndBatch(ISystemManagers managers) { }
+    }
+
+    [Fact]
+    public void GetCullTestBoundsFor_WrappedTextReachedThroughRenderableComponent_ExpandsBounds()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 2000;
+        camera.ClientHeight = 2000;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        FakeWrappedTextComponent innerText = new FakeWrappedTextComponent
+        {
+            WrappedTextHeight = 300 // 200px taller than the wrapper's declared Height
+        };
+
+        StubWrapperRenderable wrapper = new StubWrapperRenderable();
+        wrapper.X = 10;
+        wrapper.Y = 500;
+        wrapper.Width = 150;
+        wrapper.Height = 100;
+        wrapper.RenderableComponent = innerText;
+
+        System.Drawing.Rectangle plain = camera.GetScissorRectangleFor(layer: null!, wrapper);
+        System.Drawing.Rectangle cullBounds = camera.GetCullTestBoundsFor(layer: null!, wrapper);
+
+        cullBounds.Top.ShouldBe(plain.Top - 200);
+        cullBounds.Bottom.ShouldBe(plain.Bottom + 200);
+    }
+
     [Fact]
     public void NoSetFromMatrixCall_ShouldPreserveExplicitlySetCameraValues()
     {

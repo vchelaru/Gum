@@ -81,7 +81,7 @@ public enum Dock
 /// wrap an underlying rendering object.
 /// GraphicalUiElements are also considered "Visuals" for Forms objects such as Button and TextBox.
 /// </summary>
-public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged
+public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged, IHasRenderableComponent
 {
     #region Enums/Internal Classes
 

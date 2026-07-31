@@ -252,6 +252,12 @@ public class HierarchicalOrdererTests : BaseTestClass
     // the visible box, so the Text's own declared bounds can drift entirely outside an on-screen
     // clip even though its actual wrapped content (WrappedTextHeight) still overlaps it. The
     // off-screen cull must not skip drawing it in that case.
+    //
+    // clipParent is deliberately NOT at Y=0: GetScissorRectangleFor clamps its result to the
+    // camera's overall client bounds, and a clip sitting exactly at that boundary makes an
+    // off-clip renderable's declared bounds collapse to a degenerate rect AT the same boundary —
+    // which then spuriously reads as "not fully outside" regardless of any fix. Placing the clip
+    // in the middle of the camera avoids that false negative.
     [Fact]
     public void BuildDrawList_ScrolledWrappedTextInsideOnScreenClip_IsNotCulled()
     {
@@ -262,13 +268,14 @@ public class HierarchicalOrdererTests : BaseTestClass
 
         FakeRenderable clipParent = new FakeRenderable("clipParent");
         clipParent.ClipsChildren = true;
+        clipParent.Y = 300;
         clipParent.Width = 200;
         clipParent.Height = 200;
 
         FakeRenderable scrolledText = AddChild(clipParent, "scrolledText");
         scrolledText.Width = 190;
         scrolledText.Height = 200; // fixed to the visible box, like TextInstance's RelativeToParent Height
-        scrolledText.Y = -500;     // scrolled far past many wrapped lines
+        scrolledText.Y = -400;     // scrolled past many wrapped lines (absolute Y: 300 - 400 = -100)
         scrolledText.WrappedTextHeight = 700; // actual content is far taller than Height
 
         Layer layer = BuildLayer(clipParent);
@@ -291,13 +298,14 @@ public class HierarchicalOrdererTests : BaseTestClass
 
         FakeRenderable clipParent = new FakeRenderable("clipParent");
         clipParent.ClipsChildren = true;
+        clipParent.Y = 300;
         clipParent.Width = 200;
         clipParent.Height = 200;
 
         FakeRenderable scrolledOffItem = AddChild(clipParent, "scrolledOffItem");
         scrolledOffItem.Width = 190;
         scrolledOffItem.Height = 80;
-        scrolledOffItem.Y = 500; // well past the 200px-tall clip band
+        scrolledOffItem.Y = 250; // well past the 200px-tall clip band (absolute Y: 300 + 250 = 550)
 
         Layer layer = BuildLayer(clipParent);
         List<DrawCommand> commands = new List<DrawCommand>();
