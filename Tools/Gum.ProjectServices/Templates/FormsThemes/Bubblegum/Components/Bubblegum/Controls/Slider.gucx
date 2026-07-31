@@ -122,9 +122,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Bubblegum/Styles.AccentLight.FillRed</string>
-        <string>FillGreen = Components/Bubblegum/Styles.AccentLight.FillGreen</string>
-        <string>FillBlue = Components/Bubblegum/Styles.AccentLight.FillBlue</string>
+        <string>FillColor = Components/Bubblegum/Styles.AccentLight.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -157,9 +155,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>FillColor = Components/Bubblegum/Styles.Disabled.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -184,9 +180,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>FillGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>FillBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>FillColor = Components/Bubblegum/Styles.Disabled.FillColor</string>
         </Value>
       </VariableList>
     </State>

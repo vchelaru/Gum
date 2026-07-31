@@ -302,9 +302,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Placeholder.Red</string>
-        <string>Green = Components/Hazard/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Hazard/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Hazard/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -314,9 +312,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Placeholder.Red</string>
-        <string>Green = Components/Hazard/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Hazard/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Hazard/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -326,9 +322,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Placeholder.Red</string>
-        <string>Green = Components/Hazard/Styles.Placeholder.Green</string>
-        <string>Blue = Components/Hazard/Styles.Placeholder.Blue</string>
+        <string>Color = Components/Hazard/Styles.Placeholder.Color</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

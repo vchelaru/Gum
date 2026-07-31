@@ -224,8 +224,24 @@ public class HazardTemplateTests
                         }
 
                         string left = referenceString.Substring(0, equalsIndex).Trim();
-                        string effectiveLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
-                        wired.Add(effectiveLeft);
+
+                        // A collapsed composite reference (e.g. "FillColor = Other.FillColor", #4153)
+                        // wires all 3 of its channel scalars at apply time (GumRuntime.ElementSaveExtensions),
+                        // not a literal "FillColor" scalar - so it must mark Red/Green/Blue as wired here too.
+                        if (left.EndsWith("Color", StringComparison.Ordinal))
+                        {
+                            string colorPrefix = left.Substring(0, left.Length - "Color".Length);
+                            foreach (string channelToken in new[] { "Red", "Green", "Blue" })
+                            {
+                                string channelLeft = colorPrefix + channelToken;
+                                wired.Add(string.IsNullOrEmpty(sourceObject) ? channelLeft : $"{sourceObject}.{channelLeft}");
+                            }
+                        }
+                        else
+                        {
+                            string effectiveLeft = string.IsNullOrEmpty(sourceObject) ? left : $"{sourceObject}.{left}";
+                            wired.Add(effectiveLeft);
+                        }
                     }
                 }
 

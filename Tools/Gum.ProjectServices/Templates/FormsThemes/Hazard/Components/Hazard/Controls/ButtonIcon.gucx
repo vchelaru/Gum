@@ -204,9 +204,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
         <string>DropshadowRed = Components/Hazard/Styles.Accent.FillRed</string>
         <string>DropshadowGreen = Components/Hazard/Styles.Accent.FillGreen</string>
         <string>DropshadowBlue = Components/Hazard/Styles.Accent.FillBlue</string>
@@ -260,9 +258,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -311,9 +307,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -362,9 +356,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -413,9 +405,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -464,9 +454,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.AccentHover.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -515,9 +503,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -566,9 +552,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
+          <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
