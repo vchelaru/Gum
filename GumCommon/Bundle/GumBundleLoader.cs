@@ -7,10 +7,10 @@ namespace Gum.Bundle;
 
 /// <summary>
 /// Resolves a Gum project path to either loose-file or bundle-backed loading based on the
-/// extension of <c>projectPath</c>: <c>.gumx</c> means loose, <c>.gumpkg</c> means bundle.
-/// No sibling probing happens — the caller's chosen extension is the single source of truth,
-/// which keeps behavior identical across desktop and streaming-only platforms (Blazor WASM,
-/// Android, iOS) where a probe would otherwise issue a guaranteed-404 HTTP request.
+/// extension of <c>projectPath</c>: <c>.gumx</c>/<c>.gumj</c> mean loose, <c>.gumpkg</c> means
+/// bundle. No sibling probing happens — the caller's chosen extension is the single source of
+/// truth, which keeps behavior identical across desktop and streaming-only platforms (Blazor
+/// WASM, Android, iOS) where a probe would otherwise issue a guaranteed-404 HTTP request.
 /// When bundle mode is selected, installs <see cref="FileManager.CustomGetStreamFromFile"/>
 /// to serve bundle entries (composing with any pre-existing user hook as a fallback).
 /// </summary>
@@ -18,8 +18,8 @@ public static class GumBundleLoader
 {
     /// <summary>
     /// Returns a <see cref="ProjectResolution"/> describing how to load <paramref name="projectPath"/>.
-    /// The extension picks the mode: <c>.gumx</c> = loose, <c>.gumpkg</c> = bundle. Any other
-    /// extension throws. The resolution always carries an <see cref="IGumFileProvider"/> — the
+    /// The extension picks the mode: <c>.gumx</c>/<c>.gumj</c> = loose, <c>.gumpkg</c> = bundle. Any
+    /// other extension throws. The resolution always carries an <see cref="IGumFileProvider"/> — the
     /// canonical runtime file seam — that new code (e.g. animation enumeration) should prefer over
     /// re-deriving paths and probing <see cref="FileManager"/> per element.
     /// </summary>
@@ -39,7 +39,10 @@ public static class GumBundleLoader
 
         string extension = Path.GetExtension(resolvedPath);
 
-        if (string.Equals(extension, ".gumx", StringComparison.OrdinalIgnoreCase))
+        // .gumj (JSON) is a loose-file project exactly like .gumx (XML) - GumProjectSave.Load
+        // already dispatches JSON vs XML off this same extension, so both belong in loose mode.
+        if (string.Equals(extension, ".gumx", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(extension, ".gumj", StringComparison.OrdinalIgnoreCase))
         {
             // Loose mode: hand the path straight to GumProjectSave.Load. No probing for a
             // sibling .gumpkg — if the caller wanted a bundle they would have said so. The
@@ -59,7 +62,7 @@ public static class GumBundleLoader
         if (!string.Equals(extension, ".gumpkg", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException(
-                $"Project path '{projectPath}' must end with '.gumx' (loose) or '.gumpkg' (bundle).",
+                $"Project path '{projectPath}' must end with '.gumx'/'.gumj' (loose) or '.gumpkg' (bundle).",
                 nameof(projectPath));
         }
 
@@ -224,8 +227,8 @@ public class ProjectResolution
 
     /// <summary>
     /// The path to pass to <c>GumProjectSave.Load</c>. For loose mode this is the original
-    /// `.gumx` path; for bundle mode this is the synthetic `.gumx` path inside the bundle that
-    /// the installed hook will intercept.
+    /// `.gumx`/`.gumj` path; for bundle mode this is the synthetic `.gumx` path inside the bundle
+    /// that the installed hook will intercept.
     /// </summary>
     public string ResolvedGumxPath { get; }
 

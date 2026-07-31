@@ -906,8 +906,8 @@ public partial class GumService : IGumService
 
         if (!string.IsNullOrEmpty(gumProjectFile))
         {
-            // Resolve loose-vs-bundle off the file extension: ".gumx" = loose, ".gumpkg" = bundle.
-            // In bundle mode, installs a CustomGetStreamFromFile hook so runtime asset loads
+            // Resolve loose-vs-bundle off the file extension: ".gumx"/".gumj" = loose, ".gumpkg" =
+            // bundle. In bundle mode, installs a CustomGetStreamFromFile hook so runtime asset loads
             // (textures/fonts) also resolve from the bundle.
             ProjectResolution projectResolution = GumBundleLoader.Resolve(gumProjectFile);
             CurrentProjectResolution = projectResolution;
