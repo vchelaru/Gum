@@ -896,6 +896,12 @@ public partial class InteractiveGue : GraphicalUiElement
         nextPushActionHoldingList.Add(action);
     }
 
+    public static void ClearNextPushActions()
+    {
+        nextPushActionHoldingList.Clear();
+        nextPushActions.Clear();
+    }
+
     // See DoNextClickAndPushActions for details on why this is needed
     static List<Action> nextClickActionHoldingList = new();
 

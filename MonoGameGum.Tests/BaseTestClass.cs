@@ -79,6 +79,11 @@ public class BaseTestClass : IDisposable
 
         InteractiveGue.CurrentInputReceiver = null;
         InteractiveGue.ClearNextClickActions();
+        // A Menu popup left open at the end of a test (e.g. via MenuItem.IsSelected = true) queues
+        // a pending push action (Menu.HandleNextPush) that isn't cleared by ClearNextClickActions.
+        // Left uncleared, it fires against the next test's cursor state instead, closing over a
+        // torn-down Menu whose Visual no longer resolves EffectiveManagers correctly.
+        InteractiveGue.ClearNextPushActions();
 
         GumService.Default.Root.Children!.Clear();
         GumService.Default.ModalRoot.Children!.Clear();

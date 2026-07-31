@@ -8,6 +8,10 @@ If a control is not responding to input, its events may be suppressed for a numb
 
 Rather than walking the visual tree by hand, Gum exposes a diagnostic extension method on `Cursor` called `GetEventFailureReason` that returns a human-readable string describing why events are not being raised — or `null` if events should be working.
 
+## An Empty Container Can Still "Cover" a Sibling
+
+`ContainerRuntime` defaults to `HasEvents = true`, so even one with no visible content or handlers of its own still claims the cursor over its entire bounds — including empty space — and can block a sibling behind it. If a container only groups or positions other controls, set `HasEvents = false` on it so clicks pass through to what it actually contains.
+
 ## Quick Check
 
 If a control is not responding, paste one of the following into your update loop, put a breakpoint on the line, and hover the control while the game runs. Inspect `reason`: if it is `null`, events should be working; otherwise the string tells you exactly what is blocking them.

@@ -1,4 +1,6 @@
 ﻿using Gum.Forms.Controls;
+using Gum.GueDeriving;
+using RenderingLibrary;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -10,6 +12,49 @@ using Xunit;
 namespace MonoGameGum.Tests.Forms;
 public class MenuItemTests : BaseTestClass
 {
+    [Fact]
+    public void IsSelected_SetFalse_ShouldHidePopup_WhenContainerManagersAttachedViaAttachManagersOnly()
+    {
+        // Mirrors a Menu drawn through GumBatch (immediate mode) rather than added to a managed
+        // root - AttachManagersOnly is what such callers must use to get this to work (#4096
+        // RenderTarget sample).
+        ContainerRuntime container = new();
+        container.AttachManagersOnly(SystemManagers.Default);
+
+        Menu menu = new();
+        container.Children.Add(menu.Visual);
+        MenuItem fileItem = new();
+        menu.Items!.Add(fileItem);
+        fileItem.Items!.Add("SubItem");
+
+        fileItem.IsSelected = true;
+        fileItem.IsPopupVisible.ShouldBeTrue();
+
+        fileItem.IsSelected = false;
+        fileItem.IsPopupVisible.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsSelected_SetFalse_ShouldThrow_WhenContainerHasNoManagers()
+    {
+        // Documents the constraint AttachManagersOnly exists to fix: HidePopupRecursively gates
+        // on Visual.EffectiveManagers, which is null when the Menu's tree was never added to a
+        // managed root (e.g. a container only ever drawn through GumBatch). This must throw
+        // (FULL_DIAGNOSTICS) rather than silently leave the popup open, since that failure mode
+        // produced no error signal at all when it shipped in a sample.
+        ContainerRuntime container = new();
+        Menu menu = new();
+        container.Children.Add(menu.Visual);
+        MenuItem fileItem = new();
+        menu.Items!.Add(fileItem);
+        fileItem.Items!.Add("SubItem");
+
+        fileItem.IsSelected = true;
+        fileItem.IsPopupVisible.ShouldBeTrue();
+
+        Should.Throw<InvalidOperationException>(() => fileItem.IsSelected = false);
+    }
+
     [Fact]
     public void Visual_HasEvents_ShouldBeTrue()
     {

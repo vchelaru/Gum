@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
@@ -29,6 +30,11 @@ namespace MonoGameGumImmediateMode
 
         private StackPanel _navStrip;
         private IImmediateModeScreen _currentScreen;
+
+        // Reused each frame so Root and the current screen's AdditionalUpdateRoots go through a
+        // single GumService.Default.Update call - see IImmediateModeScreen.AdditionalUpdateRoots
+        // for why calling Update more than once per frame silently breaks push/click.
+        private readonly List<GraphicalUiElement> _updateRoots = new List<GraphicalUiElement>();
 
         public Game1()
         {
@@ -102,7 +108,25 @@ namespace MonoGameGumImmediateMode
                 Exit();
             }
 
-            GumService.Default.Update(gameTime);
+            // Mirrors the Root canvas-fit that GumService.Default.Update(gameTime) would otherwise
+            // perform before delegating to the roots overload below - needed here because Root and
+            // the current screen's extra interactive roots must go through that overload together,
+            // in one call (see IImmediateModeScreen.AdditionalUpdateRoots).
+            var root = GumService.Default.Root;
+            root.X = 0;
+            root.Y = 0;
+            root.WidthUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            root.HeightUnits = Gum.DataTypes.DimensionUnitType.Absolute;
+            root.Width = GraphicalUiElement.CanvasWidth;
+            root.Height = GraphicalUiElement.CanvasHeight;
+
+            _updateRoots.Clear();
+            _updateRoots.Add(root);
+            if (_currentScreen != null)
+            {
+                _updateRoots.AddRange(_currentScreen.AdditionalUpdateRoots);
+            }
+            GumService.Default.Update(gameTime, _updateRoots);
 
             base.Update(gameTime);
         }
