@@ -33,3 +33,4 @@ re-litigating it.
 | [0010](0010-converge-skia-text-dispatch-onto-textruntime.md) | Converge Skia's Text dispatch onto TextRuntime, without merging the two dispatcher files | Accepted | 2026-07-16 |
 | [0011](0011-route-skia-sprite-nineslice-container-polygon-dispatch.md) | Route Skia's Sprite/NineSlice/Container/Polygon dispatch through their Runtimes | Accepted | 2026-07-29 |
 | [0012](0012-converge-backends-on-one-shared-render-walk.md) | Converge every backend on one shared render walk, including render-target bakes | Accepted | 2026-07-31 |
+| [0013](0013-adopt-json-project-format-for-native-aot.md) | Adopt JSON as an AOT-safe project file format, phased in alongside XML | Accepted | 2026-07-31 |
