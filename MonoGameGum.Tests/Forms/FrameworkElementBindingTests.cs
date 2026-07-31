@@ -387,6 +387,35 @@ public class FrameworkElementBindingTests : BaseTestClass
             "so setting IsFocused to false should not update the source value");
     }
 
+    /// <summary>
+    /// Issue #4139: a master-detail list rebinding its detail panel to a new item
+    /// (e.g. clicking weapon2 right after editing weapon1's damage field) never fires
+    /// the TextBox's real LostFocus event, so a LostFocus-triggered edit was silently
+    /// discarded instead of committed to the outgoing source.
+    /// </summary>
+    [Fact]
+    public void UpdateSourceTrigger_LostFocus_FlushesPendingEdit_WhenBindingContextChanges()
+    {
+        // Arrange
+        TestViewModel weapon1 = new() { Text = "Initial1" };
+        TestViewModel weapon2 = new() { Text = "Initial2" };
+
+        TextBox element = new() { BindingContext = weapon1 };
+        Binding binding = new(nameof(TestViewModel.Text))
+        {
+            UpdateSourceTrigger = UpdateSourceTrigger.LostFocus
+        };
+        element.SetBinding(nameof(TextBox.Text), binding);
+
+        // Act - edit without ever losing real focus, then swap to a different source
+        element.Text = "EditedButNotBlurred";
+        element.BindingContext = weapon2;
+
+        // Assert - the pending edit should have been committed to weapon1 before the swap
+        weapon1.Text.ShouldBe("EditedButNotBlurred");
+        element.Text.ShouldBe("Initial2");
+    }
+
     [Fact]
     public void DefaultUpdateTrigger_Registered_AppliesAsLostFocus()
     {

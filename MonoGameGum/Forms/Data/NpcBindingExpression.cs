@@ -22,6 +22,7 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private object? LastTargetValue { get; set; }
     private bool _isUpdatingTarget;
     private bool _isUpdatingSource;
+    private bool _isLostFocusTrigger;
     
     public NpcBindingExpression(
         FrameworkElement target,
@@ -83,13 +84,21 @@ internal class NpcBindingExpression : UntypedBindingExpression
                 break;
 
             case UpdateSourceTrigger.LostFocus when ShouldUpdateSource:
+                _isLostFocusTrigger = true;
                 TargetElement.LostFocus += OnLostFocus;
                 break;
         }
     }
 
-    private void OnLostFocus(object? s, EventArgs e)
+    private void OnLostFocus(object? s, EventArgs e) => FlushPendingTargetValue();
+
+    protected override void FlushPendingTargetValue()
     {
+        if (!_isLostFocusTrigger || !ShouldUpdateSource)
+        {
+            return;
+        }
+
         object? targetValue = TargetProperty.GetValue(TargetElement);
         if (targetValue != LastTargetValue)
         {
