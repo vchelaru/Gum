@@ -119,7 +119,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
         _undoManager = undoManager;
         _animationUndoProviderRegistrar = animationUndoProviderRegistrar;
 
-        _animationFilePathService = new AnimationFilePathService(_selectedState, fileCommands);
+        _animationFilePathService = new AnimationFilePathService(_selectedState, fileCommands, _projectManager);
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
         _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService);
         _settingsManager = new SettingsManager();

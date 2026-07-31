@@ -130,8 +130,7 @@ public class GumHotReloadManager : IGumHotReloadManager
             $"[HotReload] event={e.ChangeType} file={Path.GetFileName(e.FullPath)} ext={extension} " +
             $"size={size} mtime={mtime} now={DateTime.UtcNow:HH:mm:ss.fff}");
 
-        if (extension == ".gumx" || extension == ".gucx" || extension == ".gusx" || extension == ".gutx"
-            || extension == ".fnt" || extension == ".ganx")
+        if (IsWatchedExtension(extension))
         {
             if (extension == ".fnt")
             {
@@ -145,6 +144,23 @@ public class GumHotReloadManager : IGumHotReloadManager
             _lastChangeTime = DateTime.UtcNow;
         }
     }
+
+    /// <summary>
+    /// True when <paramref name="extension"/> (including the leading dot, lower-invariant) is a file
+    /// type that should trigger a hot reload - both the XML and JSON forms of the project, element,
+    /// animation, and behavior formats, plus bitmap fonts. Internal (not private) so tests can pin
+    /// the watched set directly; the actual reload dispatch (<c>GumProjectSave.Load</c>,
+    /// <c>GumService.LoadAnimationsFromProvider</c>) already handles both XML and JSON content, so
+    /// this gate is the only place that needed the JSON siblings added (issue #4182).
+    /// </summary>
+    internal static bool IsWatchedExtension(string extension) =>
+        extension is ".gumx" or ".gumj"
+            or ".gucx" or ".gucj"
+            or ".gusx" or ".gusj"
+            or ".gutx" or ".gutj"
+            or ".ganx" or ".ganj"
+            or ".behx" or ".behj"
+            or ".fnt";
 
     private void CopyAndUnloadChangedFonts()
     {

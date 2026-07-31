@@ -111,6 +111,53 @@ public class FileWatchManagerTests : IDisposable
         pluginManagerMock.Verify(p => p.ReactToFileChanged(createdFile), Times.Once);
     }
 
+    [Theory]
+    [InlineData("gusx")]
+    [InlineData("gusj")]
+    [InlineData("gucx")]
+    [InlineData("gucj")]
+    [InlineData("gutx")]
+    [InlineData("gutj")]
+    public void IsElementFileExtension_ShouldReturnTrue_ForXmlAndJsonElementExtensions(string extension)
+    {
+        // Issue #4182: a JSON-converted project's element files must be recognized the same way
+        // as their XML counterparts (used to flag missing/reappeared elements on external delete).
+        FilePath file = new FilePath($@"C:\proj\Components\MyButton.{extension}");
+
+        FileWatchManager.IsElementFileExtension(file).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsElementFileExtension_ShouldReturnFalse_ForNonElementExtension()
+    {
+        FilePath file = new FilePath(@"C:\proj\Components\MyButtonAnimations.ganx");
+
+        FileWatchManager.IsElementFileExtension(file).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void EnableWithDirectories_ThenFlush_ShouldReactToJsonComponentRenamedIntoWatchedDirectory()
+    {
+        // A rename (the atomic-save pattern many editors/tools use) into a .gucj name must be
+        // recognized the same way as a .gucx rename (issue #4182).
+        FilePath watchedDirectory = new FilePath(_tempDirectory + "/");
+        FileWatchManager sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock,
+            out _,
+            watchedDirectory);
+
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        string tempName = Path.Combine(_tempDirectory, "MyComponent.gucj.tmp");
+        File.WriteAllText(tempName, "{}");
+        FilePath renamedFile = new FilePath(Path.Combine(_tempDirectory, "MyComponent.gucj"));
+        File.Move(tempName, renamedFile.FullPath);
+
+        PollUntil(() => sut.ChangedFilesWaitingForFlush.Contains(renamedFile)).ShouldBeTrue(
+            "a rename onto a .gucj file should be treated like any other recognized Gum file change");
+    }
+
     [Fact]
     public void IgnoreNextChangeUntil_ShouldSuppressQueuedChange_ForIgnoredFile()
     {

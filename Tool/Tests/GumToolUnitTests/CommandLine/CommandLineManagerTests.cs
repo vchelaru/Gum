@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
@@ -77,5 +79,41 @@ public class CommandLineManagerTests
         await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "MyProject.gumx" });
 
         _commandLineManager.GlueProjectToLoad.ShouldBe("MyProject.gumx");
+    }
+
+    [Fact]
+    public async Task ReadCommandLine_SetsGlueProjectToLoad_WhenGumjArg()
+    {
+        // A JSON-converted project (issue #4182) must be launchable the same way as a .gumx.
+        await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "MyProject.gumj" });
+
+        _commandLineManager.GlueProjectToLoad.ShouldBe("MyProject.gumj");
+    }
+
+    [Fact]
+    public async Task ReadCommandLine_FindsSiblingGumjProject_WhenGucjElementArg()
+    {
+        // Double-clicking (or scripting a launch against) a JSON-converted element file must still
+        // resolve the containing project - here the project itself was also converted, so only the
+        // .gumj sibling exists on disk (issue #4182).
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "CommandLineManagerTests_" + Guid.NewGuid().ToString("N"));
+        string componentsDirectory = Path.Combine(tempDirectory, "Components");
+        Directory.CreateDirectory(componentsDirectory);
+        string projectPath = Path.Combine(tempDirectory, "MyProject.gumj");
+        string componentPath = Path.Combine(componentsDirectory, "Foo.gucj");
+        File.WriteAllText(projectPath, "{}");
+        File.WriteAllText(componentPath, "{}");
+
+        try
+        {
+            await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", componentPath });
+
+            _commandLineManager.ElementName.ShouldBe("Foo");
+            _commandLineManager.GlueProjectToLoad.ShouldBe(projectPath);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
     }
 }

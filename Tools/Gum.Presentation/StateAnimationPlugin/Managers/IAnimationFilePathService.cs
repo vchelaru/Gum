@@ -4,7 +4,8 @@ using ToolsUtilities;
 namespace StateAnimationPlugin.Managers;
 
 /// <summary>
-/// Resolves the absolute path of an element's animation (.ganx) file.
+/// Resolves the absolute path of an element's animation (.ganx, or .ganj for a JSON-formatted
+/// project - issue #4182) file.
 /// </summary>
 public interface IAnimationFilePathService
 {

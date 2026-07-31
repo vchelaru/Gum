@@ -21,7 +21,9 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
     private readonly IProjectState _projectState;
 
     public override string Title => "Import Component";
-    public override string BrowseFileFilter => "Gum Component (*.gucx)|*.gucx";
+    public override string BrowseFileFilter =>
+        $"Gum Component (*.{GumProjectSave.ComponentExtension};*.{GumProjectSave.ComponentJsonExtension})" +
+        $"|*.{GumProjectSave.ComponentExtension};*.{GumProjectSave.ComponentJsonExtension}";
 
     public ImportComponentDialog(
         IFileCommands fileCommands,
@@ -40,14 +42,22 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
         _projectManager = projectManager;
         _projectState = projectState;
 
+        // A JSON-converted component (issue #4182) must be offered for import the same way its
+        // XML counterpart is.
         List<FilePath> componentFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            _projectState.ComponentFilePath.FullPath, "gucx")
+                _projectState.ComponentFilePath.FullPath, GumProjectSave.ComponentExtension)
+            .Concat(FileManager.GetAllFilesInDirectory(
+                _projectState.ComponentFilePath.FullPath, GumProjectSave.ComponentJsonExtension))
             .Select(item => new FilePath(item))
             .ToList();
 
         FilePath[] componentFilesInProject = _projectState.GumProjectSave
             .Components
-            .Select(item => new FilePath(_projectState.ComponentFilePath + item.Name + ".gucx"))
+            .SelectMany(item => new[]
+            {
+                new FilePath(_projectState.ComponentFilePath + item.Name + "." + GumProjectSave.ComponentExtension),
+                new FilePath(_projectState.ComponentFilePath + item.Name + "." + GumProjectSave.ComponentJsonExtension),
+            })
             .ToArray();
 
         componentFilesNotInProject = componentFilesNotInProject

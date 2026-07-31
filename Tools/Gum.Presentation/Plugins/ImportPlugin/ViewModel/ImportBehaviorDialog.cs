@@ -21,7 +21,9 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
     private readonly IProjectManager _projectManager;
 
     public override string Title => "Import Behavior";
-    public override string BrowseFileFilter => "Behavior Files (*.behaviors)|*.behaviors";
+    public override string BrowseFileFilter =>
+        $"Behavior Files (*.{BehaviorReference.Extension};*.{BehaviorReference.JsonExtension})" +
+        $"|*.{BehaviorReference.Extension};*.{BehaviorReference.JsonExtension}";
 
     public ImportBehaviorDialog(
         IFileCommands fileCommands,
@@ -40,14 +42,22 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
         _projectState = projectState;
         _projectManager = projectManager;
 
+        // A JSON-converted behavior (issue #4182) must be offered for import the same way its
+        // XML counterpart is.
         List<FilePath> behaviorFilesNotInProject = FileManager.GetAllFilesInDirectory(
-            _projectState.BehaviorFilePath.FullPath, "behx")
+                _projectState.BehaviorFilePath.FullPath, BehaviorReference.Extension)
+            .Concat(FileManager.GetAllFilesInDirectory(
+                _projectState.BehaviorFilePath.FullPath, BehaviorReference.JsonExtension))
             .Select(item => new FilePath(item))
             .ToList();
 
         FilePath[] behaviorFilesInProject = _projectState.GumProjectSave
             .Behaviors
-            .Select(item => new FilePath(_projectState.BehaviorFilePath + item.Name + ".behx"))
+            .SelectMany(item => new[]
+            {
+                new FilePath(_projectState.BehaviorFilePath + item.Name + "." + BehaviorReference.Extension),
+                new FilePath(_projectState.BehaviorFilePath + item.Name + "." + BehaviorReference.JsonExtension),
+            })
             .ToArray();
 
         behaviorFilesNotInProject = behaviorFilesNotInProject

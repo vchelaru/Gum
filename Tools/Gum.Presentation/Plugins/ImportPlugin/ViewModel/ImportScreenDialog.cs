@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Gum.DataTypes;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -14,7 +15,9 @@ public class ImportScreenDialog : ImportBaseDialogViewModel
     private readonly IProjectState _projectState;
 
     public override string Title => "Import Screen";
-    public override string BrowseFileFilter => "Gum Screen (*.gusx)|*.gusx";
+    public override string BrowseFileFilter =>
+        $"Gum Screen (*.{GumProjectSave.ScreenExtension};*.{GumProjectSave.ScreenJsonExtension})" +
+        $"|*.{GumProjectSave.ScreenExtension};*.{GumProjectSave.ScreenJsonExtension}";
     public ImportScreenDialog(IDialogService dialogService,
         IImportLogic importLogic,
         IProjectState projectState
@@ -24,14 +27,25 @@ public class ImportScreenDialog : ImportBaseDialogViewModel
         _importLogic = importLogic;
         _projectState = projectState;
 
+        // A JSON-converted screen (issue #4182) must be offered for import the same way its XML
+        // counterpart is.
         List<FilePath> screenFilesNotInProject = FileManager.GetAllFilesInDirectory(
-                _projectState.ScreenFilePath.FullPath, "gusx")
+                _projectState.ScreenFilePath.FullPath, GumProjectSave.ScreenExtension)
+            .Concat(FileManager.GetAllFilesInDirectory(
+                _projectState.ScreenFilePath.FullPath, GumProjectSave.ScreenJsonExtension))
             .Select(item => new FilePath(item))
             .ToList();
 
+        // Boyscout (issue #4182): this previously compared against ComponentFilePath instead of
+        // ScreenFilePath, so an already-imported screen never matched here and always re-appeared
+        // in the "available to import" list.
         FilePath[] screenFilesInProject = _projectState.GumProjectSave
             .Screens
-            .Select(item => new FilePath(_projectState.ComponentFilePath + item.Name + ".gusx"))
+            .SelectMany(item => new[]
+            {
+                new FilePath(_projectState.ScreenFilePath + item.Name + "." + GumProjectSave.ScreenExtension),
+                new FilePath(_projectState.ScreenFilePath + item.Name + "." + GumProjectSave.ScreenJsonExtension),
+            })
             .ToArray();
 
         screenFilesNotInProject = screenFilesNotInProject

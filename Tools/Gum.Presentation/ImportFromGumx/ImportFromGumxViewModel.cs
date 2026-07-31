@@ -198,7 +198,7 @@ public class ImportFromGumxViewModel : DialogViewModel
         List<string>? selectedFiles = _dialogService.OpenFile(new OpenFileDialogOptions
         {
             Title = "Open Gum Project",
-            Filter = "Gum Project Files (*.gumx)|*.gumx|All Files (*.*)|*.*"
+            Filter = "Gum Project Files (*.gumx;*.gumj)|*.gumx;*.gumj|All Files (*.*)|*.*"
         });
 
         string? selectedPath = selectedFiles?.FirstOrDefault();

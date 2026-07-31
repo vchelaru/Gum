@@ -208,10 +208,12 @@ public class GumxImportService : IGumxImportService
     }
 
     /// <summary>
-    /// Copies the sibling .ganx (state animation) file for each element, if one exists in the source.
-    /// The naming convention is {elementName}Animations.ganx, located in the same subfolder
-    /// as the element file (e.g. Components/Controls/ButtonAnimations.ganx).
-    /// Silently skips elements that have no .ganx file.
+    /// Copies the sibling .ganx (or JSON .ganj - issue #4182) state-animation file for each
+    /// element, if one exists in the source. The naming convention is
+    /// {elementName}Animations.ganx/.ganj, located in the same subfolder as the element file
+    /// (e.g. Components/Controls/ButtonAnimations.ganx). Both extensions are attempted - a plain
+    /// byte copy, so there's no format-specific parsing to keep in sync. Silently skips elements
+    /// that have neither file.
     /// </summary>
     private async Task CopyGanxFilesAsync(
         IEnumerable<ElementSave> elements,
@@ -225,14 +227,17 @@ public class GumxImportService : IGumxImportService
             string sourceName = element.Name;
             string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
 
-            string relativeSourcePath = $"{elementSubfolder}/{sourceName}Animations.ganx";
-            string destPath = Path.Combine(projectDir, elementSubfolder, $"{destName}Animations.ganx");
-
-            byte[]? bytes = await _sourceService.FetchBinaryAsync(relativeSourcePath, sourceBase);
-            if (bytes != null)
+            foreach (string extension in new[] { "ganx", "ganj" })
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-                await File.WriteAllBytesAsync(destPath, bytes);
+                string relativeSourcePath = $"{elementSubfolder}/{sourceName}Animations.{extension}";
+                string destPath = Path.Combine(projectDir, elementSubfolder, $"{destName}Animations.{extension}");
+
+                byte[]? bytes = await _sourceService.FetchBinaryAsync(relativeSourcePath, sourceBase);
+                if (bytes != null)
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                    await File.WriteAllBytesAsync(destPath, bytes);
+                }
             }
         }
     }

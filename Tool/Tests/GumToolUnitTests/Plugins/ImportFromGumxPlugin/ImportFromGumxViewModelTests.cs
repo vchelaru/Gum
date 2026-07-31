@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace GumToolUnitTests.Plugins.ImportFromGumxPlugin;
@@ -43,6 +44,21 @@ public class ImportFromGumxViewModelTests
         _dialogService = new FakeDialogService();
         _sut = new ImportFromGumxViewModel(
             sourceService, resolver, importService, _projectState, _dialogService, new SynchronousDispatcher());
+    }
+
+    [Fact]
+    public async Task BrowseCommand_ShowsOpenDialogAcceptingBothXmlAndJsonSourceProjects()
+    {
+        // Local .gumj sources already import correctly (GumxSourceService.LoadProjectAsync just
+        // calls GumProjectSave.Load) - the Browse picker just needs to let the user select one
+        // (issue #4182).
+        _dialogService.OpenFileStub = _ => null;
+
+        await _sut.BrowseCommand.ExecuteAsync(null);
+
+        _dialogService.LastOpenFileOptions.ShouldNotBeNull();
+        _dialogService.LastOpenFileOptions!.Filter.ShouldContain("*.gumx");
+        _dialogService.LastOpenFileOptions!.Filter.ShouldContain("*.gumj");
     }
 
     [Fact]

@@ -64,12 +64,11 @@ namespace Gum.Managers
             {
                 ReactToFontFileChanged(file);
             }
-            else if(extension == GumProjectSave.ScreenExtension || extension == GumProjectSave.ComponentExtension || 
-                extension == GumProjectSave.StandardExtension)
+            else if(IsElementExtension(extension))
             {
                 ReactToElementSaveChanged(file);
             }
-            else if(extension == GumProjectSave.ProjectExtension)
+            else if(extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension)
             {
                 var isCurrentProject = file == _projectState.GumProjectSave.FullFileName;
                 if(isCurrentProject)
@@ -77,11 +76,11 @@ namespace Gum.Managers
                     ReactToProjectChanged(file);
                 }
             }
-            // .ganx (animation collection) reload is handled by the StateAnimationPlugin via the
+            // .ganx/.ganj (animation collection) reload is handled by the StateAnimationPlugin via the
             // _pluginManager.ReactToFileChanged call below. The animation data is a per-element
             // sidecar owned by that plugin (not part of GumProjectSave), so there is no core-side
             // reload to perform here (issue #3410).
-            else if(extension == "behx")
+            else if(extension == BehaviorReference.Extension || extension == BehaviorReference.JsonExtension)
             {
                 ReactToBehaviorChanged(file);
             }
@@ -94,21 +93,28 @@ namespace Gum.Managers
         }
 
         /// <summary>
-        /// Reacts to an element file (.gusx/.gucx/.gutx) that was deleted on disk while the tool
-        /// is running. The flush routes here (instead of the change path) only once the file is
-        /// confirmed gone, so a delete-then-recreate within the debounce window is handled as a
-        /// normal reload instead. See <see cref="ReactToElementSaveDeleted"/> for why the element
-        /// is flagged rather than reloaded.
+        /// Reacts to an element file (.gusx/.gucx/.gutx, or their JSON siblings .gusj/.gucj/.gutj)
+        /// that was deleted on disk while the tool is running. The flush routes here (instead of the
+        /// change path) only once the file is confirmed gone, so a delete-then-recreate within the
+        /// debounce window is handled as a normal reload instead. See
+        /// <see cref="ReactToElementSaveDeleted"/> for why the element is flagged rather than reloaded.
         /// </summary>
         public void ReactToFileDeleted(FilePath file)
         {
             var extension = file.Extension;
-            if (extension == GumProjectSave.ScreenExtension || extension == GumProjectSave.ComponentExtension ||
-                extension == GumProjectSave.StandardExtension)
+            if (IsElementExtension(extension))
             {
                 ReactToElementSaveDeleted(file);
             }
         }
+
+        /// <summary>
+        /// True for a Screen/Component/StandardElement file's extension, XML or JSON (issue #4182).
+        /// </summary>
+        private static bool IsElementExtension(string extension) =>
+            extension == GumProjectSave.ScreenExtension || extension == GumProjectSave.ScreenJsonExtension ||
+            extension == GumProjectSave.ComponentExtension || extension == GumProjectSave.ComponentJsonExtension ||
+            extension == GumProjectSave.StandardExtension || extension == GumProjectSave.StandardJsonExtension;
 
         private void ReactToElementSaveDeleted(FilePath file)
         {

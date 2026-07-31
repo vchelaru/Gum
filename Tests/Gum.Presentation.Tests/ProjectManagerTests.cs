@@ -303,6 +303,34 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadProject_ShowsOpenDialogAcceptingBothXmlAndJsonProjects()
+    {
+        // A converted .gumj project (issue #4182) must appear in the Open dialog's file picker.
+        _dialogService
+            .Setup(d => d.OpenFile(It.IsAny<OpenFileDialogOptions?>()))
+            .Returns((List<string>?)null);
+
+        _projectManager.LoadProject();
+
+        _dialogService.Verify(d => d.OpenFile(It.Is<OpenFileDialogOptions>(o =>
+            o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
+    }
+
+    [Fact]
+    public void AskUserForProjectNameIfNecessary_ShowsSaveDialogAcceptingBothXmlAndJsonProjects()
+    {
+        SetCurrentProject(new GumProjectSave());
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns((string?)null);
+
+        _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        _dialogService.Verify(d => d.SaveFile(It.Is<SaveFileDialogOptions>(o =>
+            o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
+    }
+
+    [Fact]
     public void RecreateMissingStandardElements_DoesNotCrash_AndInforms_ForMissingPluginStandard()
     {
         // Repro of #3373: clicking "Yes" to recreate a missing Skia standard (Arc) crashed with
