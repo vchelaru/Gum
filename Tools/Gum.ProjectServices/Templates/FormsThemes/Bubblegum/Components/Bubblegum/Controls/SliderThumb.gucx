@@ -49,8 +49,17 @@
     <Variable Type="bool" Name="Body.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">157</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">107</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
     <Variable Type="float" Name="Body.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">2</Value>
     </Variable>
     <Variable Type="float" Name="Body.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -74,51 +83,6 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="Body.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="BorderInstance.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="BorderInstance.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="BorderInstance.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="BorderInstance.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">6</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="BorderInstance.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="BorderInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
@@ -199,15 +163,6 @@
         <string>DropshadowRed = Components/Bubblegum/Styles.Accent.FillRed</string>
         <string>DropshadowGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
         <string>DropshadowBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
-      </Value>
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
-      <Name>BorderInstance.VariableReferences</Name>
-      <Category>References</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
         <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
         <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
         <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
@@ -242,13 +197,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -264,15 +219,6 @@
           <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
@@ -293,13 +239,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -315,15 +261,6 @@
           <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
@@ -344,13 +281,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">117</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">68</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">204</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -366,15 +303,6 @@
           <string>FillRed = Components/Bubblegum/Styles.AccentLight.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.AccentLight.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.AccentLight.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.AccentDark.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.AccentDark.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.AccentDark.FillBlue</string>
@@ -395,13 +323,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -417,15 +345,6 @@
           <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
@@ -446,13 +365,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">157</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">107</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -468,15 +387,6 @@
           <string>FillRed = Components/Bubblegum/Styles.Surface1.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.Surface1.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
@@ -497,13 +407,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -519,15 +429,6 @@
           <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
@@ -548,13 +449,13 @@
       <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">221</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeGreen" SetsValue="true">
         <Value xsi:type="xsd:int">174</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.StrokeRed" SetsValue="true">
         <Value xsi:type="xsd:int">205</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -570,15 +471,6 @@
           <string>FillRed = Components/Bubblegum/Styles.DisabledFill.FillRed</string>
           <string>FillGreen = Components/Bubblegum/Styles.DisabledFill.FillGreen</string>
           <string>FillBlue = Components/Bubblegum/Styles.DisabledFill.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
           <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
           <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
           <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
@@ -587,7 +479,6 @@
     </State>
   </Category>
   <Instance Name="Body" BaseType="Circle" />
-  <Instance Name="BorderInstance" BaseType="Circle" />
   <Instance Name="FocusedIndicator" BaseType="Circle" />
   <Behaviors>
     <ElementBehaviorReference>

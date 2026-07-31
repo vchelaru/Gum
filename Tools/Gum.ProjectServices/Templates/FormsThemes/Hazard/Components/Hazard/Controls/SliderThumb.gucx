@@ -4,41 +4,14 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="int" Name="Body.DropshadowAlpha" SetsValue="true">
-      <Value xsi:type="xsd:int">160</Value>
-    </Variable>
-    <Variable Type="int" Name="Body.DropshadowBlue" SetsValue="true">
+    <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">26</Value>
     </Variable>
-    <Variable Type="float" Name="Body.DropshadowBlurX" SetsValue="true">
-      <Value xsi:type="xsd:float">10</Value>
-    </Variable>
-    <Variable Type="float" Name="Body.DropshadowBlurY" SetsValue="true">
-      <Value xsi:type="xsd:float">10</Value>
-    </Variable>
-    <Variable Type="int" Name="Body.DropshadowGreen" SetsValue="true">
+    <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
       <Value xsi:type="xsd:int">200</Value>
     </Variable>
-    <Variable Type="float" Name="Body.DropshadowOffsetX" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="float" Name="Body.DropshadowOffsetY" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
-    </Variable>
-    <Variable Type="int" Name="Body.DropshadowRed" SetsValue="true">
-      <Value xsi:type="xsd:int">244</Value>
-    </Variable>
-    <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
-    </Variable>
-    <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">16</Value>
-    </Variable>
     <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">18</Value>
-    </Variable>
-    <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
+      <Value xsi:type="xsd:int">244</Value>
     </Variable>
     <Variable Type="float" Name="Body.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -74,51 +47,6 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="Body.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="BorderInstance.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">26</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">200</Value>
-    </Variable>
-    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">244</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="BorderInstance.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.X" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="HorizontalAlignment" Name="BorderInstance.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="BorderInstance.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">6</Value>
-    </Variable>
-    <Variable Type="float" Name="BorderInstance.Y" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="BorderInstance.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="BorderInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
@@ -193,24 +121,9 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
-        <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
-        <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
-        <string>DropshadowRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>DropshadowGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>DropshadowBlue = Components/Hazard/Styles.Accent.FillBlue</string>
-      </Value>
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
-      <Name>BorderInstance.VariableReferences</Name>
-      <Category>References</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+        <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+        <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -231,24 +144,12 @@
     <State>
       <Name>Enabled</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">18</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">26</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">200</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -261,46 +162,22 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Highlighted</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+        <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
+        <Value xsi:type="xsd:int">208</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">18</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">26</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">244</Value>
+        <Value xsi:type="xsd:int">245</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -312,45 +189,21 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Pushed</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">26</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">244</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">12</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">163</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">201</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -363,45 +216,21 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Selection.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Selection.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Selection.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">18</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
         <Value xsi:type="xsd:int">26</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
         <Value xsi:type="xsd:int">200</Value>
       </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
         <Value xsi:type="xsd:int">244</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
@@ -414,46 +243,22 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.Accent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.Accent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.Accent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>HighlightedFocused</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+        <Value xsi:type="xsd:int">60</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
+        <Value xsi:type="xsd:int">208</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">18</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">26</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">200</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">244</Value>
+        <Value xsi:type="xsd:int">245</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -465,46 +270,22 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.Surface1.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.Surface1.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.Surface1.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.AccentHover.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.AccentHover.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.AccentHover.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>Disabled</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">14</Value>
+        <Value xsi:type="xsd:int">57</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">36</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">42</Value>
+        <Value xsi:type="xsd:int">69</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">false</Value>
@@ -516,46 +297,22 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledAccent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledAccent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledAccent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
     <State>
       <Name>DisabledFocused</Name>
       <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">7</Value>
+        <Value xsi:type="xsd:int">26</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">14</Value>
+        <Value xsi:type="xsd:int">57</Value>
       </Variable>
       <Variable Type="int" Name="Body.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="bool" Name="Body.HasDropshadow" SetsValue="true">
-        <Value xsi:type="xsd:boolean">false</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">16</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">36</Value>
-      </Variable>
-      <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
-        <Value xsi:type="xsd:int">42</Value>
+        <Value xsi:type="xsd:int">69</Value>
       </Variable>
       <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
         <Value xsi:type="xsd:boolean">true</Value>
@@ -567,27 +324,14 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillRed = Components/Hazard/Styles.DisabledFill.FillRed</string>
-          <string>FillGreen = Components/Hazard/Styles.DisabledFill.FillGreen</string>
-          <string>FillBlue = Components/Hazard/Styles.DisabledFill.FillBlue</string>
-        </Value>
-      </VariableList>
-      <VariableList xsi:type="VariableListSaveOfString">
-        <Type>string</Type>
-        <Name>BorderInstance.VariableReferences</Name>
-        <Category>References</Category>
-        <IsFile>false</IsFile>
-        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>FillRed = Components/Hazard/Styles.DisabledAccent.FillRed</string>
+          <string>FillGreen = Components/Hazard/Styles.DisabledAccent.FillGreen</string>
+          <string>FillBlue = Components/Hazard/Styles.DisabledAccent.FillBlue</string>
         </Value>
       </VariableList>
     </State>
   </Category>
   <Instance Name="Body" BaseType="Circle" />
-  <Instance Name="BorderInstance" BaseType="Circle" />
   <Instance Name="FocusedIndicator" BaseType="Circle" />
   <Behaviors>
     <ElementBehaviorReference>
