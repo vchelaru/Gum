@@ -59,7 +59,10 @@ jobs:
       - name: Restore
         run: dotnet restore GumFull.sln -p:ExcludeIOS=true -p:ExcludeAndroid=true
 
-      # Update AssemblyInfo.cs version dynamically to current date
+      # Update AssemblyInfo.cs version dynamically to current date. The build version lives
+      # in an AssemblyMetadata("BuildVersion", ...) attribute rather than
+      # AssemblyVersion/AssemblyFileVersion - see the comment in AssemblyInfo.cs for why
+      # (a WPF/SDK wpftmp bug that made those attributes uncompilable in this project).
       - name: Update AssemblyInfo.cs version
         shell: pwsh
         run: |
@@ -69,8 +72,7 @@ jobs:
           $file = "Gum/Properties/AssemblyInfo.cs"
 
           Write-Host "Updating version in $file to $version"
-          (Get-Content $file) -replace 'AssemblyVersion\(".*"\)', "AssemblyVersion(`"$version`")" `
-                              -replace 'AssemblyFileVersion\(".*"\)', "AssemblyFileVersion(`"$version`")" `
+          (Get-Content $file) -replace 'AssemblyMetadata\("BuildVersion", ".*"\)', "AssemblyMetadata(`"BuildVersion`", `"$version`")" `
                               -replace 'AssemblyCopyright\(".*"\)', "AssemblyCopyright(`"$copyrightLine`")" |
             Set-Content $file
 
