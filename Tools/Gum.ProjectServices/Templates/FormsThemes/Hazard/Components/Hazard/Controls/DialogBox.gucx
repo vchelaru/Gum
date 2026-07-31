@@ -138,7 +138,7 @@
       <Value xsi:type="xsd:int">8</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Saira Condensed</Value>
+      <Value xsi:type="xsd:string">SairaCondensed-Regular.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">15</Value>

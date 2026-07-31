@@ -150,6 +150,30 @@ point it at the new theme and run it once via `dotnet test --filter`. When re-sa
 the attribute-based shape every theme file on disk actually uses — both round-trip through
 `ProjectLoader` fine, so passing the default silently produces a valid-but-inconsistent file.
 
+## A bundled custom font must be referenced by its .ttf filename, not its family name
+
+Setting a `Text`/`Styles` instance's `Font` value to a human-readable family name (e.g.
+`"Saira Condensed"`) makes Gum look that name up as a **Windows-installed system font** — both at
+runtime (`CustomSetPropertyOnRenderable.UpdateToFontValues` → `BmfcSave.ResolveTtfSourcePath`) and
+in the tool's headless generator. A theme's own bundled `Fonts/*.ttf` is invisible to that lookup.
+If the family isn't actually installed on the machine (a Google Font bundled as project content
+almost never is), generation fails — logged as `KernSmith error: System font '<name>' not found`
+in the tool's Output panel, easy to miss — and the text silently falls back to the embedded
+default (`Font18Arial`), which looks like a rendering/alpha bug at a glance, not a missing-font one.
+
+The fix is to set `Font` to the literal bundled filename instead (`"SairaCondensed-Regular.ttf"`,
+matching the file under the theme's `Fonts/` folder) — `IsFontFilePath`/`ResolveTtfSourcePath`
+treat any `Font` value ending in `.ttf` as a direct file reference, bypassing system-font lookup
+entirely. There's no separate "pick the bold weight" mechanism on this path — a `Strong`/bold style
+must point `Font` at the bold-weight file directly (`"SairaCondensed-SemiBold.ttf"`); `IsBold`
+alone does nothing for a `.ttf`-valued `Font`. This has no color-style parallel to check against:
+`AllColorVariables_ShouldBeStylesWired` only inspects color-channel suffixes, so a family-name
+`Font` value passes every existing automated check. After fixing `Styles.gucx`, rerun
+`ThemeRecolorHelper` (above) to cascade to every control that references `Styles.Normal.Font`/
+`Styles.Strong.Font` — then grep the whole theme for the bare family-name string, since a Screen
+(the demo screen's own `Text` instances, notably) can hardcode `Font` directly instead of routing
+through `Styles`, and `ThemeRecolorHelper` only walks `project.Components`, not `project.Screens`.
+
 ## Verifying theme content changes
 
 There's no C#-unit-test surface for a theme's XML content. Use `gumcli diff-standards` (theme's

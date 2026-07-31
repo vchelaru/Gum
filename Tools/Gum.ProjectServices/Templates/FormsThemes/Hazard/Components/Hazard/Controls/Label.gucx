@@ -8,7 +8,7 @@
       <Value xsi:type="xsd:int">40</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Saira Condensed</Value>
+      <Value xsi:type="xsd:string">SairaCondensed-SemiBold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">15</Value>
@@ -57,7 +57,7 @@
     <State>
       <Name>Normal</Name>
       <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-        <Value xsi:type="xsd:string">Saira Condensed</Value>
+        <Value xsi:type="xsd:string">SairaCondensed-Regular.ttf</Value>
       </Variable>
       <Variable Type="int" Name="FontSize" SetsValue="true">
         <Value xsi:type="xsd:int">15</Value>
@@ -85,7 +85,7 @@
     <State>
       <Name>Strong</Name>
       <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
-        <Value xsi:type="xsd:string">Saira Condensed</Value>
+        <Value xsi:type="xsd:string">SairaCondensed-SemiBold.ttf</Value>
       </Variable>
       <Variable Type="int" Name="FontSize" SetsValue="true">
         <Value xsi:type="xsd:int">15</Value>
