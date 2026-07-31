@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using Gum.DataTypes.Variables;
+using System;
 using System.Xml.Serialization;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Serialization.Json;
 
 namespace Gum.DataTypes
 {
@@ -193,7 +195,17 @@ namespace Gum.DataTypes
 
         public void Save(string fileName, bool useCompactFormat = false)
         {
-            if (useCompactFormat)
+            // No content-sniffing between XML and JSON - the target file's own extension decides
+            // the format, symmetric with ElementReference.DeserializeElement. Every JSON element
+            // extension is its XML counterpart with the trailing "x" swapped for "j"
+            // (gusx->gusj, gucx->gucj, gutx->gutj).
+            string jsonExtension = FileExtension.Substring(0, FileExtension.Length - 1) + "j";
+            bool isJsonFormat = string.Equals(FileManager.GetExtension(fileName), jsonExtension, StringComparison.OrdinalIgnoreCase);
+            if (isJsonFormat)
+            {
+                GumJsonFileSerializer.WriteToFile(fileName, GumJsonFileSerializer.SerializeElement(this));
+            }
+            else if (useCompactFormat)
             {
                 var serializer = GumFileSerializer.GetCompactSerializer(this.GetType());
                 FileManager.XmlSerialize(this, fileName, serializer);

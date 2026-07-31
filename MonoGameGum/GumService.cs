@@ -760,7 +760,8 @@ public partial class GumService : IGumService
 
     /// <summary>
     /// Loads animations for all elements in the project by enumerating the project's
-    /// <c>*Animations.ganx</c> files through the loaded project's <see cref="IGumFileProvider"/>.
+    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files through the loaded project's
+    /// <see cref="IGumFileProvider"/>.
     /// </summary>
     /// <remarks>
     /// This enumerates once instead of probing <see cref="FileManager.FileExists"/> per element.
@@ -805,7 +806,7 @@ public partial class GumService : IGumService
         if (!resolution.UsedBundle && loaded == 0)
         {
             Console.WriteLine(
-                "[Gum] No animation (*Animations.ganx) files were found for this loosely-loaded project. " +
+                "[Gum] No animation (*Animations.ganx/*Animations.ganj) files were found for this loosely-loaded project. " +
                 "Loose-mode animation loading enumerates the project directory, which is unavailable on " +
                 "browser/streaming platforms (e.g. Blazor WASM) — package the project as a .gumpkg to " +
                 "load animations on those platforms.");
@@ -813,10 +814,10 @@ public partial class GumService : IGumService
     }
 
     /// <summary>
-    /// Enumerates <c>*Animations.ganx</c> files from <paramref name="provider"/>, deserializes each,
-    /// and adds the result to <paramref name="project"/>'s <see cref="GumProjectSave.ElementAnimations"/>.
-    /// The element name is derived from the file's path, not from the (stale) value serialized inside
-    /// the file. Returns the number of animation files loaded.
+    /// Enumerates <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files from <paramref name="provider"/>,
+    /// deserializes each, and adds the result to <paramref name="project"/>'s
+    /// <see cref="GumProjectSave.ElementAnimations"/>. The element name is derived from the file's path,
+    /// not from the (stale) value serialized inside the file. Returns the number of animation files loaded.
     /// </summary>
     internal static int LoadAnimationsFromProvider(GumProjectSave project, IGumFileProvider provider)
     {
@@ -833,23 +834,39 @@ public partial class GumService : IGumService
             project.ElementAnimations.Add(animation);
             loaded++;
         }
+        foreach (string path in provider.EnumerateFiles("*Animations.ganj"))
+        {
+            using Stream stream = provider.OpenRead(path);
+            using StreamReader reader = new StreamReader(stream);
+            string json = reader.ReadToEnd();
+            ElementAnimationsSave animation = Gum.DataTypes.Serialization.Json.GumAnimationJsonFileSerializer.DeserializeElementAnimations(json);
+            animation.ElementName = ElementNameFromPath(path);
+            project.ElementAnimations.Add(animation);
+            loaded++;
+        }
         return loaded;
     }
 
     /// <summary>
     /// Maps an animation file path back to its element name — the inverse of the
-    /// <c>{categoryFolder}/{element.Name}Animations.ganx</c> convention. Strips the
-    /// <c>Animations.ganx</c> suffix and any leading category folder so a nested component path like
-    /// <c>Components/Buttons/MyButtonAnimations.ganx</c> resolves to <c>Buttons/MyButton</c>.
+    /// <c>{categoryFolder}/{element.Name}Animations.ganx</c> (or <c>.ganj</c>) convention. Strips the
+    /// <c>Animations.ganx</c>/<c>Animations.ganj</c> suffix and any leading category folder so a nested
+    /// component path like <c>Components/Buttons/MyButtonAnimations.ganx</c> resolves to
+    /// <c>Buttons/MyButton</c>.
     /// </summary>
     internal static string ElementNameFromPath(string path)
     {
-        const string suffix = "Animations.ganx";
         string normalized = path.Replace('\\', '/');
 
-        string withoutSuffix = normalized.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
-            ? normalized.Substring(0, normalized.Length - suffix.Length)
-            : normalized;
+        string withoutSuffix = normalized;
+        foreach (string suffix in AnimationFileSuffixes)
+        {
+            if (normalized.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                withoutSuffix = normalized.Substring(0, normalized.Length - suffix.Length);
+                break;
+            }
+        }
 
         foreach (string categoryFolder in AnimationCategoryFolders)
         {
@@ -861,6 +878,9 @@ public partial class GumService : IGumService
 
         return withoutSuffix;
     }
+
+    private static readonly string[] AnimationFileSuffixes =
+        { "Animations.ganx", "Animations.ganj" };
 
     private static readonly string[] AnimationCategoryFolders =
         { "Screens/", "Components/", "StandardElements/" };

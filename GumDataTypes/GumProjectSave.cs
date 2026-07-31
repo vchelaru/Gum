@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Serialization.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -134,6 +135,18 @@ public class GumProjectSave
     public const string ComponentExtension = "gucx";
     public const string StandardExtension = "gutx";
     public const string ProjectExtension = "gumx";
+
+    /// <summary>
+    /// JSON counterpart of <see cref="ScreenExtension"/>. AOT-safe alternative to the XML
+    /// <c>.gusx</c> format — see <see cref="GumJsonFileSerializer"/>.
+    /// </summary>
+    public const string ScreenJsonExtension = "gusj";
+    /// <summary>JSON counterpart of <see cref="ComponentExtension"/>. See <see cref="ScreenJsonExtension"/>.</summary>
+    public const string ComponentJsonExtension = "gucj";
+    /// <summary>JSON counterpart of <see cref="StandardExtension"/>. See <see cref="ScreenJsonExtension"/>.</summary>
+    public const string StandardJsonExtension = "gutj";
+    /// <summary>JSON counterpart of <see cref="ProjectExtension"/>. See <see cref="ScreenJsonExtension"/>.</summary>
+    public const string ProjectJsonExtension = "gumj";
 
 
     public List<CustomPropertySave> CustomProperties = new List<CustomPropertySave>();
@@ -484,6 +497,9 @@ public class GumProjectSave
             fileName = FileManager.RemoveDotDotSlash(FileManager.MakeAbsolute(fileName));
         }
 
+        // No content-sniffing between XML and JSON - the extension alone determines the format,
+        // for both this project file and every element/behavior file it references.
+        bool isJsonFormat = IsJsonFormat(fileName);
 
         GumProjectSave gps = null;
 
@@ -504,14 +520,21 @@ public class GumProjectSave
             {
                 using var reader = new StreamReader(stream);
                 string streamContent = reader.ReadToEnd();
-                bool isCompact = IsGumxCompactFormat(streamContent);
-                var deserializer = isCompact
-                    ? GumFileSerializer.GetGumProjectCompactSerializer()
-                    : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-                gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent));
-                if (!isCompact && !streamContent.Contains("<Version>"))
+                if (isJsonFormat)
                 {
-                    gps.Version = (int)GumxVersions.InitialVersion;
+                    gps = GumJsonFileSerializer.DeserializeProject(streamContent);
+                }
+                else
+                {
+                    bool isCompact = IsGumxCompactFormat(streamContent);
+                    var deserializer = isCompact
+                        ? GumFileSerializer.GetGumProjectCompactSerializer()
+                        : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent));
+                    if (!isCompact && !streamContent.Contains("<Version>"))
+                    {
+                        gps.Version = (int)GumxVersions.InitialVersion;
+                    }
                 }
             }
         }
@@ -525,14 +548,21 @@ public class GumProjectSave
             try
             {
                 string fileContent = File.ReadAllText(fileName);
-                bool isCompact = IsGumxCompactFormat(fileContent);
-                var deserializer = isCompact
-                    ? GumFileSerializer.GetGumProjectCompactSerializer()
-                    : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-                gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent));
-                if (!isCompact && !fileContent.Contains("<Version>"))
+                if (isJsonFormat)
                 {
-                    gps.Version = (int)GumxVersions.InitialVersion;
+                    gps = GumJsonFileSerializer.DeserializeProject(fileContent);
+                }
+                else
+                {
+                    bool isCompact = IsGumxCompactFormat(fileContent);
+                    var deserializer = isCompact
+                        ? GumFileSerializer.GetGumProjectCompactSerializer()
+                        : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent));
+                    if (!isCompact && !fileContent.Contains("<Version>"))
+                    {
+                        gps.Version = (int)GumxVersions.InitialVersion;
+                    }
                 }
             }
             catch (FileNotFoundException)
@@ -548,7 +578,7 @@ public class GumProjectSave
         }
         string projectRootDirectory = FileManager.GetDirectory(fileName);
 
-        gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result);
+        gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result, isJsonFormat);
         gps.FullFileName = fileName.Replace('\\', '/');
 
 
@@ -626,7 +656,7 @@ public class GumProjectSave
     {
         return StandardElements.FirstOrDefault(item => item.Name == standardElementName);
     }
-    private void PopulateElementSavesFromReferences(string projectRootDirectory, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
+    private void PopulateElementSavesFromReferences(string projectRootDirectory, LinkLoadingPreference linkLoadingPreference, GumLoadResult result, bool isJsonFormat = false)
     {
         string errors = "";
 
@@ -641,7 +671,7 @@ public class GumProjectSave
             ScreenSave? toAdd = null;
             try
             {
-                toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, ScreenExtension, result, projectVersion: this.Version);
+                toAdd = reference.ToElementSave<ScreenSave>(projectRootDirectory, isJsonFormat ? ScreenJsonExtension : ScreenExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -660,7 +690,7 @@ public class GumProjectSave
 
             try
             {
-                toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, ComponentExtension, result, projectVersion: this.Version);
+                toAdd = reference.ToElementSave<ComponentSave>(projectRootDirectory, isJsonFormat ? ComponentJsonExtension : ComponentExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -678,7 +708,7 @@ public class GumProjectSave
             StandardElementSave? toAdd = null;
             try
             {
-                toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, StandardExtension, result, projectVersion: this.Version);
+                toAdd = reference.ToElementSave<StandardElementSave>(projectRootDirectory, isJsonFormat ? StandardJsonExtension : StandardExtension, result, projectVersion: this.Version);
             }
             catch (Exception e)
             {
@@ -698,7 +728,7 @@ public class GumProjectSave
 
                 try
                 {
-                    toAdd = reference.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version);
+                    toAdd = reference.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version, isJsonFormat: isJsonFormat);
                 }
                 catch (Exception e)
                 {
@@ -718,10 +748,11 @@ public class GumProjectSave
     public void ReloadBehavior(BehaviorSave behavior)
     {
         string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
+        bool isJsonFormat = IsJsonFormat(this.FullFileName);
 
         var matchingReference = BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
 
-        var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version);
+        var newBehaviorSave = matchingReference?.ToBehaviorSave(projectRootDirectory, projectVersion: this.Version, isJsonFormat: isJsonFormat);
 
         if (newBehaviorSave != null)
         {
@@ -733,6 +764,7 @@ public class GumProjectSave
     public void ReloadElement(ElementSave element)
     {
         string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
+        bool isJsonFormat = IsJsonFormat(this.FullFileName);
 
         var gumLoadResult = new GumLoadResult();
 
@@ -741,7 +773,7 @@ public class GumProjectSave
             var matchingReference = ScreenReferences.FirstOrDefault(item => item.Name == element.Name);
 
             ScreenSave? newScreen = matchingReference?.ToElementSave<ScreenSave>(
-                projectRootDirectory, GumProjectSave.ScreenExtension, gumLoadResult, projectVersion: this.Version);
+                projectRootDirectory, isJsonFormat ? ScreenJsonExtension : GumProjectSave.ScreenExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newScreen != null)
             {
@@ -757,7 +789,7 @@ public class GumProjectSave
             var matchingReference = ComponentReferences.FirstOrDefault(item => item.Name == element.Name);
 
             ComponentSave newComonent = matchingReference?.ToElementSave<ComponentSave>(
-                projectRootDirectory, GumProjectSave.ComponentExtension, gumLoadResult, projectVersion: this.Version);
+                projectRootDirectory, isJsonFormat ? ComponentJsonExtension : GumProjectSave.ComponentExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newComonent != null)
             {
@@ -770,7 +802,7 @@ public class GumProjectSave
             var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
 
             StandardElementSave newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
-                projectRootDirectory, GumProjectSave.StandardExtension, gumLoadResult, projectVersion: this.Version);
+                projectRootDirectory, isJsonFormat ? StandardJsonExtension : GumProjectSave.StandardExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newStandardElement != null)
             {
@@ -789,35 +821,50 @@ public class GumProjectSave
         return content.Contains("Reference Name=");
     }
 
+    private static bool IsJsonFormat(string fileName) =>
+        string.Equals(FileManager.GetExtension(fileName), ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
+
     public void Save(string fileName, bool saveElements)
     {
-        var projectSerializer = Version >= (int)GumxVersions.AttributeVersion
-            ? GumFileSerializer.GetGumProjectCompactSerializer()
-            : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-        FileManager.XmlSerialize(this, fileName, projectSerializer);
+        // No content-sniffing between XML and JSON - the target file's own extension decides the
+        // format, symmetric with Load(). Nested elements below follow the same project-wide choice.
+        bool isJsonFormat = IsJsonFormat(fileName);
+        if (isJsonFormat)
+        {
+            GumJsonFileSerializer.WriteToFile(fileName, GumJsonFileSerializer.SerializeProject(this));
+        }
+        else
+        {
+            var projectSerializer = Version >= (int)GumxVersions.AttributeVersion
+                ? GumFileSerializer.GetGumProjectCompactSerializer()
+                : FileManager.GetXmlSerializer(typeof(GumProjectSave));
+            FileManager.XmlSerialize(this, fileName, projectSerializer);
+        }
 
         if (saveElements)
         {
             bool useCompact = Version >= (int)GumxVersions.AttributeVersion;
             string directory = FileManager.GetDirectory(fileName);
+            string screenExtension = isJsonFormat ? ScreenJsonExtension : ScreenExtension;
+            string componentExtension = isJsonFormat ? ComponentJsonExtension : ComponentExtension;
 
             foreach (var screenSave in Screens)
             {
                 // Don't recreate a file the user deleted and whose element is only an in-memory
                 // missing-source stub - saving would silently undo the deletion (issue #3369).
                 if (screenSave.IsSourceFileMissing) continue;
-                screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + ScreenExtension, useCompact);
+                screenSave.Save(directory + ElementReference.ScreenSubfolder + "/" + screenSave.Name + "." + screenExtension, useCompact);
             }
             foreach (var componentSave in Components)
             {
                 if (componentSave.IsSourceFileMissing) continue;
-                componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + ComponentExtension, useCompact);
+                componentSave.Save(directory + ElementReference.ComponentSubfolder + "/" + componentSave.Name + "." + componentExtension, useCompact);
             }
-            SaveStandardElements(directory, useCompact);
+            SaveStandardElements(directory, useCompact, isJsonFormat);
         }
     }
 
-    public void SaveStandardElements(string directory, bool useCompact = false)
+    public void SaveStandardElements(string directory, bool useCompact = false, bool isJsonFormat = false)
     {
         foreach (var standardElement in StandardElements)
         {
@@ -834,11 +881,12 @@ public class GumProjectSave
             bool succeeded = false;
             Exception exception = null;
 
+            string standardExtension = isJsonFormat ? StandardJsonExtension : StandardExtension;
             while (numberOfTimesTried < maxNumberOfTries)
             {
                 try
                 {
-                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + StandardExtension, useCompact);
+                    standardElement.Save(directory + ElementReference.StandardSubfolder + "/" + standardElement.Name + "." + standardExtension, useCompact);
 
                     succeeded = true;
                     break;
