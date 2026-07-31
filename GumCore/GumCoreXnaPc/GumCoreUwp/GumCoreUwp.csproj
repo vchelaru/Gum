@@ -113,6 +113,11 @@
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.12</Version>
     </PackageReference>
+    <!-- UWP has no built-in System.Text.Json; required by GumCoreShared.projitems'
+         JSON project-format source generator (GumDataTypes/Serialization/Json). -->
+    <PackageReference Include="System.Text.Json">
+      <Version>8.0.5</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
