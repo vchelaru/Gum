@@ -650,6 +650,77 @@ public class VariableReferenceLogicTests : BaseTestClass
         defaultState.GetValue("Blue").ShouldBe(30);
     }
 
+    [Fact]
+    public void DoVariableReferenceReaction_CrossNamedCompositeReference_AcceptsLineAndAppliesChannelsPositionally()
+    {
+        // "DropshadowColor = Source.FillColor" - different composite names on each side that both
+        // resolve to the same Color descriptor - channels must pair positionally
+        // (DropshadowRed = Source.FillRed, etc.) rather than requiring identical composite names.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "DropshadowColor = Source.FillColor",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowRed", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowGreen", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowBlue", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.FillRed", Value = 10, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.FillGreen", Value = 20, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.FillBlue", Value = 30, Type = "int", SetsValue = true });
+
+        project.Screens.Add(screen);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value.Count.ShouldBe(1);
+        varList.Value[0].ShouldBe("DropshadowColor = Source.FillColor");
+        defaultState.GetValue("DropshadowRed").ShouldBe(10);
+        defaultState.GetValue("DropshadowGreen").ShouldBe(20);
+        defaultState.GetValue("DropshadowBlue").ShouldBe(30);
+    }
+
+    [Fact]
+    public void DoVariableReferenceReaction_CompositeLeftSideWithNonCompositeRightSide_CommentsLine()
+    {
+        // "DropshadowColor" is a genuine composite (owner declares DropshadowRed/Green/Blue), but the
+        // right side's trailing member ("Width") isn't a Color composite at all - must not be mangled
+        // into a bogus expansion. Since "DropshadowColor" is never a real scalar, the line then fails
+        // ordinary validation and gets commented out.
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ScreenSave screen = BuildScreenWithVariableReference(
+            line: "DropshadowColor = Source.Width",
+            out StateSave defaultState,
+            out VariableListSave<string> varList);
+
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowRed", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowGreen", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "DropshadowBlue", Value = 0, Type = "int", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Source.Width", Value = 100f, Type = "float", SetsValue = true });
+
+        project.Screens.Add(screen);
+
+        _sut.DoVariableReferenceReaction(
+            parentElement: screen,
+            leftSideInstance: null,
+            unqualifiedMember: "VariableReferences",
+            stateSave: defaultState,
+            qualifiedName: "VariableReferences",
+            trySave: false);
+
+        varList.Value[0].ShouldStartWith("//");
+    }
+
     #endregion
 
     #region Helpers
