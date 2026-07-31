@@ -232,8 +232,11 @@ regardless of instance type. Getting this wrong doesn't error — if the pre-exi
 is unchanged, so the mistake is invisible until `gumcli check-references` reports "has
 VariableReferences but missing materialized scalars" (it matches by property *name*, not value).
 Run `gumcli check-references --fix` after any hand-authored reference to materialize it for real —
-this only works when the scalar is missing outright; see "Recoloring after a clone" above for the
-stale-but-present case it can't touch.
+propagation is never automatic (not on project load, not on opening a screen in the tool), so
+authoring the reference row is the whole job; don't also hand-copy the resolved value into
+instances yourself, `--fix` already writes it into every state. This only works when the scalar is
+missing outright, though; see "Recoloring after a clone" above for the stale-but-present case it
+can't touch.
 
 One more staged-output-specific gotcha, beyond the postbuild simply not rerunning (item 7 /
 "the staged build, not the source" above): `xcopy` never deletes, so a rename or removal in the
