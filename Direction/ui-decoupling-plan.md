@@ -429,6 +429,21 @@ as in-scope vs. deferred.
   plus pixel-buffer-out / input-in, and lift the cursor/keyboard off the WinForms control. The
   `3218-skiasharp-host-model` work is the prototype. *Payoff (even on WPF):* lets the
   `WindowsFormsHost` airspace/focus hacks be deleted.
+  The wireframe canvas has taken this path end to end: `WpfGraphicsDeviceControl` draws into the
+  shared device's render target, reads it back, and pushes the pixels into a `WriteableBitmap`, so
+  the editor tab is `WindowsFormsHost`-free. Points worth carrying to the next host:
+  - **A WPF host has no control handle to create the device against.** It is constructed before it
+    is attached to a window, so the device is created against the application's main window handle
+    instead, and it keeps calling the same ref-counted `GraphicsDeviceService` — giving a canvas its
+    *own* device would split `LoaderManager`'s process-wide texture cache against the other canvas.
+  - **Size the surface, the cursor, and the viewport in the same unit system.** WPF reports element
+    size and `PointFromScreen` in device-independent units, so the render target is sized in those
+    too; mixing in raw pixels puts hit-testing and the camera out of step on a scaled display.
+  - **`CompositionTarget.Rendering` is the render trigger, not a timer** (a `DispatcherTimer` caps
+    out far below the copy cost's actual limit). It fires at the compositor's cadence, so a
+    requested frame rate is honored by skipping passes rather than by setting an interval.
+  - **WPF does not carry a drag effect from `DragEnter` into `DragOver`** the way WinForms does; the
+    accept decision has to be re-applied on every move or the drop goes invalid mid-drag.
 
 **Phase 5 — The actual bet (deferred, and only now decidable).** Build *one* real Avalonia screen
 (the tree, or the canvas on the Skia host) against the now-unchanged logic. **Measure** the

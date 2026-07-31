@@ -40,7 +40,7 @@ public class CameraControllerTests
         var zoomController = new Mock<IZoomController>();
 
         var controller = new CameraController();
-        controller.Initialize(camera, zoomController.Object, defaultWidth: 800, defaultHeight: 600, hotkeyManager.Object);
+        controller.Initialize(camera, zoomController.Object, hotkeyManager.Object);
 
         return (controller, camera, hotkeyManager, zoomController);
     }

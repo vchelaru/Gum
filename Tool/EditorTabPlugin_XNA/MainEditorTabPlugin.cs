@@ -1,5 +1,4 @@
-﻿using CommonFormsAndControls;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using EditorTabPlugin_XNA.Views;
@@ -46,11 +45,10 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Forms;
-using System.Windows.Forms.Integration;
+using System.Windows.Input;
 using System.Windows.Markup;
 using ToolsUtilities;
-using DialogResult = System.Windows.Forms.DialogResult;
+using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab;
 
@@ -143,7 +141,6 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private EditorControls _editorControls;
 
-    System.Windows.Forms.Panel gumEditorPanel;
     private LayerService _layerService;
     private System.Windows.Controls.ContextMenu _wireframeContextMenu;
     private EditingManager _editingManager;
@@ -831,11 +828,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     private void HandleXnaInitialized()
     {
-        _scrollbarService.HandleWireframeInitialized(_wireframeControl, gumEditorPanel);
-
-
         _wireframeControl.Initialize(
-            gumEditorPanel,
             _hotkeyManager,
             _selectionManager,
             _dragDropManager,
@@ -871,49 +864,35 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _scrollbarService.HandleXnaInitialized();
 
 
-        this._wireframeControl.Parent.Resize += (_, _) =>
+        this._wireframeControl.SizeChanged += (_, _) =>
         {
-            UpdateWireframeControlSizes();
             _pluginManager.HandleWireframeResized();
         };
 
-        //this._wireframeControl.MouseClick += wireframeControl1_MouseClick;
         this._wireframeControl.MouseDown += wireframeControl1_MouseDown;
 
-
-        this._wireframeControl.DragDrop += OnWireframeDrop;
+        this._wireframeControl.Drop += OnWireframeDrop;
         this._wireframeControl.DragEnter += OnWireframeDragEnter;
-        this._wireframeControl.DragOver += (sender, e) =>
-        {
-            // Intentionally does NOT set e.Effect. The effect is chosen once in
-            // OnWireframeDragEnter, and WinForms carries it forward into each DragOver,
-            // so the drop stays valid for the whole drag without re-asserting it here.
-            // This is fine because the entire canvas accepts a drop the same way; if
-            // drop validity ever becomes position-dependent, set the effect per-move
-            // here the way the tree view's DragOver does.
-            //this.DoDragDrop(e.Data, DragDropEffects.Move | DragDropEffects.Copy);
-            //DragDropManager.Self.HandleDragOver(sender, e);
-
-        };
+        // Unlike WinForms, WPF does not carry the effect chosen on DragEnter forward into each
+        // DragOver, so the same decision has to be re-applied per move or the drop goes invalid.
+        this._wireframeControl.DragOver += OnWireframeDragOver;
 
         // December 29, 2024
         // AppCenter is dead - do we want to replace this?
         //_wireframeControl.ErrorOccurred += (exception) => Crashes.TrackError(exception);
 
-        this._wireframeControl.QueryContinueDrag += (sender, args) =>
-        {
-            args.Action = System.Windows.Forms.DragAction.Continue;
-        };
         _wireframeControl.CameraChanged += () =>
         {
             _pluginManager.CameraChanged();
         };
 
-        this._wireframeControl.KeyDown += (o, args) =>
+        this._wireframeControl.KeyDown += (_, args) =>
         {
-            if (args.KeyCode == Keys.Tab)
+            if (args.Key == Key.Tab)
             {
                 _guiCommands.ToggleToolVisibility();
+                // Otherwise WPF also moves focus off the canvas.
+                args.Handled = true;
             }
         };
 
@@ -921,79 +900,94 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         float frameRate = Math.Max(Math.Min(_projectManager.FrameRate, 60), 10);
         _wireframeControl.DesiredFramesPerSecond = frameRate;
 
-        UpdateWireframeControlSizes();
-
         IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
     }
 
-    internal void OnWireframeDragEnter(object? sender, System.Windows.Forms.DragEventArgs e)
+    // WPF glue only - the decision and the drop handling below are framework-neutral.
+    private void OnWireframeDragEnter(object? sender, System.Windows.DragEventArgs e)
     {
-        // WinForms glue only: inspect the drag payload, ask the neutral manager
-        // whether to accept it, then apply the decision. The accept/reject logic
-        // itself lives in DragDropManager.DecideWireframeDragEffect.
-        bool hasFileDrop = e.Data.GetDataPresent(System.Windows.Forms.DataFormats.FileDrop);
-        bool hasNodes = MultiSelectTreeView.ExtractDraggedNodes(e.Data).Length > 0;
-        bool hasStandardChip = e.Data.GetDataPresent(DragDropManager.StandardElementNameDataFormat);
+        e.Effects = DecideWireframeDropEffect(
+            WpfWireframeDropPayloadReader.Read(e.Data), reportBlockedReason: true);
+        e.Handled = true;
+    }
 
-        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(hasFileDrop, hasNodes);
+    private void OnWireframeDragOver(object? sender, System.Windows.DragEventArgs e)
+    {
+        // Same decision as DragEnter, but silent: a rejected drag would otherwise report its reason
+        // on every mouse move rather than once per drag.
+        e.Effects = DecideWireframeDropEffect(
+            WpfWireframeDropPayloadReader.Read(e.Data), reportBlockedReason: false);
+        e.Handled = true;
+    }
+
+    private void OnWireframeDrop(object? sender, System.Windows.DragEventArgs e)
+    {
+        HandleWireframeDrop(WpfWireframeDropPayloadReader.Read(e.Data));
+        e.Handled = true;
+    }
+
+    internal System.Windows.DragDropEffects DecideWireframeDropEffect(
+        WireframeDropPayload payload, bool reportBlockedReason)
+    {
+        DragAcceptDecision decision = _dragDropManager.DecideWireframeDragEffect(
+            payload.HasFileDrop, payload.HasNodes);
 
         // A Standards-palette chip is accepted like a dragged Standard node — the drop creates an
         // instance of that type on the open Screen/Component at the cursor position.
-        if (decision.Accept || hasStandardChip)
+        if (decision.Accept || payload.HasStandardChip)
         {
-            e.Effect = System.Windows.Forms.DragDropEffects.Copy;
+            return System.Windows.DragDropEffects.Copy;
         }
-        else if (decision.BlockedReason != null)
+
+        if (reportBlockedReason && decision.BlockedReason != null)
         {
             _guiCommands.PrintOutput($"File drag rejected: {decision.BlockedReason}.");
         }
+
+        return System.Windows.DragDropEffects.None;
     }
 
-    internal void OnWireframeDrop(object? sender, System.Windows.Forms.DragEventArgs e)
+    internal void HandleWireframeDrop(WireframeDropPayload payload)
     {
-        // Handle Standards-palette chip drops: create + position an instance of the chip's type,
-        // reusing the same path as a dragged Standard node.
-        if (e.Data.GetData(DragDropManager.StandardElementNameDataFormat) is string standardTypeName)
+        switch (payload.ResolveAction())
         {
-            if (ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
-            {
-                _dragDropManager.OnNodeObjectDroppedInWireframe(standardElement);
-            }
-            return;
-        }
+            case WireframeDropAction.StandardChip standardChip:
+                // Create + position an instance of the chip's type, reusing the same path as a
+                // dragged Standard node.
+                if (ObjectFinder.Self.GetStandardElement(standardChip.StandardElementTypeName) is { } standardElement)
+                {
+                    _dragDropManager.OnNodeObjectDroppedInWireframe(standardElement);
+                }
+                break;
 
-        // Handle node drops
-        TreeNode[] droppedNodes = MultiSelectTreeView.ExtractDraggedNodes(e.Data);
+            case WireframeDropAction.Nodes nodes:
+                // A search-result drag's TreeNode.Tag doesn't survive the WPF -> WinForms boundary
+                // (see SearchResultDragPayload); fall back to it when Tag comes back null.
+                foreach (object draggedObject in nodes.Tags.Select(tag => tag ?? SearchResultDragPayload.Current))
+                {
+                    _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
+                }
+                break;
 
-        if (droppedNodes.Length > 0)
-        {
-            // A search-result drag's TreeNode.Tag doesn't survive the WPF -> WinForms boundary
-            // (see SearchResultDragPayload); fall back to it when Tag comes back null.
-            foreach (var draggedObject in droppedNodes.Select(x => x.Tag ?? SearchResultDragPayload.Current))
-            {
-                _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
-            }
-
-            return;
-        }
-
-        // Handle file drops.
-        // Wrapped in try/catch because exceptions thrown inside a WinForms/OLE
-        // DragDrop handler are swallowed by the drag loop — a failed drop then
-        // looks like drag+drop silently "stopped working". Surfacing it in the
-        // output window makes the failure diagnosable (#3128).
-        try
-        {
-            HandleWireframeFileDrop(e);
-        }
-        catch (Exception ex)
-        {
-            _outputManager.AddError($"Drag+drop failed while handling the dropped file(s): {ex}");
+            case WireframeDropAction.FileDrop fileDrop:
+                // Wrapped in try/catch because exceptions thrown inside an OLE drop handler are
+                // swallowed by the drag loop — a failed drop then looks like drag+drop silently
+                // "stopped working". Surfacing it in the output window makes the failure
+                // diagnosable (#3128).
+                try
+                {
+                    HandleWireframeFileDrop(fileDrop.Files);
+                }
+                catch (Exception ex)
+                {
+                    _outputManager.AddError($"Drag+drop failed while handling the dropped file(s): {ex}");
+                }
+                break;
         }
     }
 
-    private void HandleWireframeFileDrop(System.Windows.Forms.DragEventArgs e)
+    private void HandleWireframeFileDrop(string[] files)
     {
         if (!CanDrop())
         {
@@ -1002,13 +996,6 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         float worldX, worldY;
         Renderer.Self.Camera.ScreenToWorld(InputLibrary.Cursor.Self.X, InputLibrary.Cursor.Self.Y, out worldX, out worldY);
-        string[] files = (string[])e.Data.GetData(System.Windows.Forms.DataFormats.FileDrop);
-
-        if (files == null)
-        {
-            _guiCommands.PrintOutput("File drop ignored: the drag payload contained no file data.");
-            return;
-        }
 
         var handled = false;
         bool shouldUpdate = false;
@@ -1423,13 +1410,9 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     {
         _wireframeContextMenu = new System.Windows.Controls.ContextMenu();
 
-        gumEditorPanel = new ();
-        gumEditorPanel.Dock = DockStyle.Fill;
-
-        // 2025-01-02 UI Scale update
-        // WireFrameControl needs to be added to the gumEditorPanel first
-        // Otherwise, the combobox will be drawn ontop of the top yellow ruler
         CreateWireframeControl();
+        _scrollbarService.HandleWireframeInitialized(
+            new FrameworkElementScrollSurfaceAdapter(_wireframeControl));
 
         System.Windows.Controls.Grid wpfGrid = new();
         wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
@@ -1439,18 +1422,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         wpfGrid.Children.Add(_editorControls);
         Grid.SetRow(_editorControls, 0);
 
-        WindowsFormsHost host = new WindowsFormsHost();
-        host.Child = gumEditorPanel;
-
-        // This is kind of a hack to deal with the airspace issue blocking mouse
-        // interaction with the grid splitter and window resize handle: WindowsFormsHost
-        // hosts a real HWND, which always paints on top of WPF siblings regardless of
-        // z-order, so without this margin the grid splitter can't receive mouse input
-        // right at the edge of this tab.
-        host.Margin = new Thickness(4, 0, 4, 0);
-
-        wpfGrid.Children.Add(host);
-        Grid.SetRow(host, 1);
+        wpfGrid.Children.Add(CreateCanvasGrid());
 
         _tabManager.AddControl(wpfGrid, "Editor", TabLocation.RightTop);
 
@@ -1465,30 +1437,38 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
     }
 
+    /// <summary>
+    /// Builds the canvas plus its scroll bars - vertical along the right edge, horizontal along the
+    /// bottom - and places it in the editor tab's second row.
+    /// </summary>
+    private System.Windows.Controls.Grid CreateCanvasGrid()
+    {
+        System.Windows.Controls.Grid canvasGrid = new();
+        canvasGrid.ColumnDefinitions.Add(new() { Width = new(1, GridUnitType.Star) });
+        canvasGrid.ColumnDefinitions.Add(new() { Width = GridLength.Auto });
+        canvasGrid.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
+        canvasGrid.RowDefinitions.Add(new() { Height = GridLength.Auto });
+
+        canvasGrid.Children.Add(_wireframeControl);
+
+        WpfScrollBar verticalScrollBar = _scrollbarService.VerticalScrollBar!;
+        canvasGrid.Children.Add(verticalScrollBar);
+        Grid.SetColumn(verticalScrollBar, 1);
+
+        WpfScrollBar horizontalScrollBar = _scrollbarService.HorizontalScrollBar!;
+        canvasGrid.Children.Add(horizontalScrollBar);
+        Grid.SetRow(horizontalScrollBar, 1);
+
+        Grid.SetRow(canvasGrid, 1);
+        return canvasGrid;
+    }
+
     private void CreateWireframeControl()
     {
         this._wireframeControl = new WireframeControl(_dialogService, _outputManager, _pluginManager);
         this._wireframeControl.AllowDrop = true;
-        this._wireframeControl.Dock = DockStyle.Fill;
-        this._wireframeControl.Cursor = System.Windows.Forms.Cursors.Default;
         this._wireframeControl.DesiredFramesPerSecond = 30F;
         this._wireframeControl.Name = "wireframeControl1";
-        this._wireframeControl.TabIndex = 0;
-        this._wireframeControl.Text = "wireframeControl1";
-        gumEditorPanel.Controls.Add(this._wireframeControl);
-    }
-
-    /// <summary>
-    /// Refreshes the wifreframe control size - for some reason this is necessary if windows has a non-100% scale (for higher resolution displays)
-    /// </summary>
-    private void UpdateWireframeControlSizes()
-    {
-        // I don't think we need this for docking:
-        //WireframeEditControl.Width = WireframeEditControl.Parent.Width / 2;
-
-        //_toolbarPanel.Width = _toolbarPanel.Parent.Width;
-
-        _wireframeControl.Width = _wireframeControl.Parent.Width;
     }
 
     private void HandleStateSelected(StateSave? save)
@@ -1500,9 +1480,9 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _wireframeRefreshCoordinator.OnStateRebuild(_selectedState.SelectedElement);
     }
 
-    private void wireframeControl1_MouseDown(object? sender, MouseEventArgs e)
+    private void wireframeControl1_MouseDown(object? sender, MouseButtonEventArgs e)
     {
-        if (e.Button == MouseButtons.Right)
+        if (e.ChangedButton == MouseButton.Right)
         {
             _editingManager.OnRightClick();
 
