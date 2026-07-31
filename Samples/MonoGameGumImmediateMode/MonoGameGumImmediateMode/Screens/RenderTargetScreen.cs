@@ -48,6 +48,7 @@ namespace MonoGameGumImmediateMode.Screens
         private ColoredRectangleRuntime _gameBackground;
         private ContainerRuntime _inGameContainerForRenderTarget;
         private ContainerRuntime _aboveGameUiContainer;
+        private Menu _menu;
 
         private readonly List<GraphicalUiElement> _roots = new List<GraphicalUiElement>();
 
@@ -77,6 +78,7 @@ namespace MonoGameGumImmediateMode.Screens
             _inGameContainerForRenderTarget.AddChild(gameButton);
 
             var menu = new Menu();
+            _menu = menu;
             menu.Y = 48;
             var fileMenu = new MenuItem();
             fileMenu.Header = "File";
@@ -103,6 +105,13 @@ namespace MonoGameGumImmediateMode.Screens
 
             _aboveGameUiContainer.Children.Add(menu.Visual);
             _aboveGameUiContainer.Children.Add(window.Visual);
+
+            // Neither container is ever added to a managed root (they're only drawn through
+            // GumBatch), so EffectiveManagers is null throughout their trees by default. The Menu
+            // popup's own close-on-outside-click logic (MenuItem.HidePopupRecursively) gates on
+            // EffectiveManagers being set, so without this the popup opens but never closes.
+            _inGameContainerForRenderTarget.AttachManagersOnly(RenderingLibrary.SystemManagers.Default);
+            _aboveGameUiContainer.AttachManagersOnly(RenderingLibrary.SystemManagers.Default);
 
             _roots.Add(_inGameContainerForRenderTarget);
             _roots.Add(_aboveGameUiContainer);
@@ -149,6 +158,14 @@ namespace MonoGameGumImmediateMode.Screens
 
         public void Dispose()
         {
+            // A Menu's open popup is parented into the shared, always-present PopupRoot rather than
+            // this screen's own containers - if left open here it would stay stuck in PopupRoot after
+            // navigating away, since nothing else ever removes it.
+            foreach (var menuItem in _menu.MenuItems)
+            {
+                menuItem.HidePopupRecursively();
+            }
+
             _renderTarget?.Dispose();
         }
     }

@@ -266,6 +266,10 @@ spriteBatch.Draw(MyRenderTarget, new Vector2(0, 0), Color.White);
 Content drawn to a render target this way is not interactive by default, because the cursor is measured in window pixels while the content was drawn, and then scaled or offset, into the render target. To keep it clickable, map the cursor back into render-target space with [`HitTestTransformMatrix`](../events-and-interactivity/mouse-and-touch-screen-cursor.md#several-coordinate-spaces-at-once-hittesttransformmatrix).
 {% endhint %}
 
+{% hint style="warning" %}
+A container only ever drawn through `GumBatch` (never `AddToRoot`) has no `EffectiveManagers`, which breaks Forms controls that depend on it — most notably a `Menu`/`ComboBox` popup, which opens but never closes on an outside click. Call `container.AttachManagersOnly(SystemManagers.Default)` once after creating it so this works correctly.
+{% endhint %}
+
 For a runnable example, see the `RenderTarget` screen in the Gum immediate-mode sample. It draws a scaled, offset render target alongside a full-screen UI drawn at 1:1, both interactive in the same frame:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumImmediateMode" %}

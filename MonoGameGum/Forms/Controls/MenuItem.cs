@@ -605,6 +605,15 @@ public class MenuItem : ItemsControl
                 itemsPopup = null;
 
             }
+#if FULL_DIAGNOSTICS
+            else if (itemsPopup?.IsVisible == true)
+            {
+                throw new InvalidOperationException(
+                    $"MenuItem '{Visual.Name ?? "(unnamed)"}' cannot close its popup because its Visual has no " +
+                    "EffectiveManagers. If this MenuItem's tree is not added to a managed root (e.g. it is only " +
+                    "drawn through GumBatch), call AttachManagersOnly(...) on the root container.");
+            }
+#endif
             foreach(var item in this.MenuItemsInternal)
             {
                 item.IsSelected = false;
