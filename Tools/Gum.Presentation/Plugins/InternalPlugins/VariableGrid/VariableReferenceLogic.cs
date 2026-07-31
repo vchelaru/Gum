@@ -822,24 +822,6 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     }
 
     /// <summary>
-    /// Returns the channel variable names for <paramref name="compositeName"/> if it matches any registered
-    /// composite descriptor (e.g. "StrokeColor" -&gt; StrokeRed/StrokeGreen/StrokeBlue); otherwise false.
-    /// </summary>
-    private bool TryGetCompositeChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
-    {
-        foreach (var descriptor in _compositeMemberRegistry.Descriptors)
-        {
-            if (descriptor.TryGetChannelNames(compositeName, out channelNames))
-            {
-                return true;
-            }
-        }
-
-        channelNames = Array.Empty<string>();
-        return false;
-    }
-
-    /// <summary>
     /// Returns true only if the reference owner (the selected instance's type, or the owning element for an
     /// element-level reference) declares a root variable for every channel - i.e. the composite name really is
     /// a composite on this object. Mirrors the channel-existence check <c>CompositeMemberLogic</c> uses to
@@ -869,10 +851,11 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     }
 
     /// <summary>
-    /// If <paramref name="line"/> is a composite reference directly assigning the same composite
-    /// from another object (e.g. <c>Color = Other.Color</c>), outputs the equivalent per-channel
-    /// lines (e.g. <c>Red = Other.Red</c>, <c>Green = Other.Green</c>, <c>Blue = Other.Blue</c>)
-    /// and returns true. Used by validation only - the collapsed line itself is what gets
+    /// If <paramref name="line"/> is a composite reference whose right side ends in another
+    /// composite name of the *same* underlying token - identically named (<c>Color = Other.Color</c>)
+    /// or cross-named (<c>DropshadowColor = Other.FillColor</c>) - outputs the equivalent per-channel
+    /// lines with left/right channels paired positionally (e.g. <c>DropshadowRed = Other.FillRed</c>,
+    /// ...) and returns true. Used by validation only - the collapsed line itself is what gets
     /// persisted; expansion happens again at apply time in <c>GumRuntime.ElementSaveExtensions</c>.
     /// </summary>
     private bool TryGetCompositeExpansion(ElementSave parentElement, InstanceSave? leftSideInstance, string line,
@@ -887,14 +870,25 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             var leftSide = split[0];
             var rightSide = split[1];
+            var lastDot = rightSide.LastIndexOf('.');
 
-            if (rightSide.EndsWith("." + leftSide) &&
-                TryGetCompositeChannelNames(leftSide, out var channelNames) &&
-                OwnerHasAllChannels(channelNames, leftSideInstance, parentElement))
+            if (lastDot >= 0)
             {
-                var withoutVariable = rightSide.Substring(0, rightSide.Length - ("." + leftSide).Length);
-                expandedLines = channelNames.Select(channelName => $"{channelName} = {withoutVariable}.{channelName}").ToArray();
-                return true;
+                var rightMemberName = rightSide.Substring(lastDot + 1);
+                var withoutVariable = rightSide.Substring(0, lastDot);
+
+                foreach (var descriptor in _compositeMemberRegistry.Descriptors)
+                {
+                    if (descriptor.TryGetChannelNames(leftSide, out var leftChannelNames) &&
+                        descriptor.TryGetChannelNames(rightMemberName, out var rightChannelNames) &&
+                        OwnerHasAllChannels(leftChannelNames, leftSideInstance, parentElement))
+                    {
+                        expandedLines = leftChannelNames
+                            .Select((channelName, i) => $"{channelName} = {withoutVariable}.{rightChannelNames[i]}")
+                            .ToArray();
+                        return true;
+                    }
+                }
             }
         }
 

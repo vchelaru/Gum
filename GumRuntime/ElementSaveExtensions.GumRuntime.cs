@@ -935,20 +935,6 @@ namespace GumRuntime
             return null;
         }
 
-        private static bool TryGetCompositeChannelNames(string compositeName, out IReadOnlyList<string> channelNames)
-        {
-            foreach (CompositeReferenceDescriptor descriptor in CompositeReferenceDescriptors)
-            {
-                if (descriptor.TryGetChannelNames(compositeName, out channelNames))
-                {
-                    return true;
-                }
-            }
-
-            channelNames = Array.Empty<string>();
-            return false;
-        }
-
         /// <summary>
         /// True only if <paramref name="channelOwner"/> declares a root variable for every channel -
         /// i.e. the composite name really is backed by real channels on this element, not just a
@@ -975,14 +961,18 @@ namespace GumRuntime
 
         /// <summary>
         /// Expands a single reference line into one line per channel when its left side is a
-        /// composite property directly referencing the same composite on another object (e.g.
-        /// <c>Color = Other.Color</c> -&gt; <c>Red = Other.Red</c>, <c>Green = Other.Green</c>,
-        /// <c>Blue = Other.Blue</c>). Returns the line unchanged (as a single-item sequence) when it
-        /// isn't a composite reference. This is what lets the collapsed form stay on disk while
-        /// every apply/evaluate/validate path downstream only ever sees plain single-channel lines.
-        /// Public so other GumCommon-tier consumers of raw <c>VariableReferences</c> line text
-        /// (e.g. <c>HeadlessErrorChecker</c>'s reference-conflict check) can expand consistently
-        /// with how references are actually applied, instead of duplicating the channel table.
+        /// composite property whose right side ends in another composite name of the *same*
+        /// underlying token (e.g. <c>Color = Other.Color</c>, or a cross-named
+        /// <c>DropshadowColor = Other.FillColor</c>). Left and right channel names are paired
+        /// positionally (channel order is fixed per descriptor - e.g. Red/Green/Blue), so the two
+        /// sides don't need identical composite names, only the same composite token (both
+        /// "Color", not one "Color" and one "CornerRadius"). Returns the line unchanged (as a
+        /// single-item sequence) when it isn't a composite reference. This is what lets the
+        /// collapsed form stay on disk while every apply/evaluate/validate path downstream only
+        /// ever sees plain single-channel lines. Public so other GumCommon-tier consumers of raw
+        /// <c>VariableReferences</c> line text (e.g. <c>HeadlessErrorChecker</c>'s reference-conflict
+        /// check) can expand consistently with how references are actually applied, instead of
+        /// duplicating the channel table.
         /// </summary>
         public static IEnumerable<string> ExpandCompositeReferenceLine(string referenceString, ElementSave? channelOwner)
         {
@@ -1001,17 +991,26 @@ namespace GumRuntime
             {
                 string left = split[0];
                 string right = split[1];
+                int lastDot = right.LastIndexOf('.');
 
-                if (right.EndsWith("." + left, StringComparison.Ordinal) &&
-                    TryGetCompositeChannelNames(left, out IReadOnlyList<string> channelNames) &&
-                    OwnerHasAllCompositeChannels(channelNames, channelOwner))
+                if (lastDot >= 0)
                 {
-                    string withoutVariable = right.Substring(0, right.Length - (1 + left.Length));
-                    foreach (string channelName in channelNames)
+                    string rightMemberName = right.Substring(lastDot + 1);
+                    string withoutVariable = right.Substring(0, lastDot);
+
+                    foreach (CompositeReferenceDescriptor descriptor in CompositeReferenceDescriptors)
                     {
-                        yield return $"{channelName} = {withoutVariable}.{channelName}";
+                        if (descriptor.TryGetChannelNames(left, out IReadOnlyList<string> leftChannelNames) &&
+                            descriptor.TryGetChannelNames(rightMemberName, out IReadOnlyList<string> rightChannelNames) &&
+                            OwnerHasAllCompositeChannels(leftChannelNames, channelOwner))
+                        {
+                            for (int i = 0; i < leftChannelNames.Count; i++)
+                            {
+                                yield return $"{leftChannelNames[i]} = {withoutVariable}.{rightChannelNames[i]}";
+                            }
+                            yield break;
+                        }
                     }
-                    yield break;
                 }
             }
 

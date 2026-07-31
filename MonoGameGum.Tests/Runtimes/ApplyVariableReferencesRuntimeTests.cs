@@ -6,6 +6,8 @@ using Gum.Wireframe;
 using GumRuntime;
 using Gum.GueDeriving;
 using Shouldly;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
@@ -185,6 +187,79 @@ public class ApplyVariableReferencesRuntimeTests : BaseTestClass
         parent.Red.ShouldBe(10);
         parent.Green.ShouldBe(20);
         parent.Blue.ShouldBe(30);
+    }
+
+    [Fact]
+    public void ApplyVariableReferences_CrossNamedCompositeReference_PairsChannelsPositionally()
+    {
+        // "StrokeColor = Source.FillColor" - different composite names on each side (Stroke vs Fill)
+        // that both resolve to the same Color descriptor (Red/Green/Blue order), so channels must
+        // pair positionally: StrokeRed = Source.FillRed, etc. - not require identical names.
+        RectangleRuntime parent = new RectangleRuntime();
+        parent.StrokeRed = 0;
+        parent.StrokeGreen = 0;
+        parent.StrokeBlue = 0;
+
+        StateSave state = BuildStateWithVariableReference(
+            "StrokeColor = Source.FillColor",
+            null,
+            ("StrokeRed", 0, "int"),
+            ("StrokeGreen", 0, "int"),
+            ("StrokeBlue", 0, "int"),
+            ("Source.FillRed", 10, "int"),
+            ("Source.FillGreen", 20, "int"),
+            ("Source.FillBlue", 30, "int"));
+
+        parent.ApplyVariableReferences(state);
+
+        parent.StrokeRed.ShouldBe(10);
+        parent.StrokeGreen.ShouldBe(20);
+        parent.StrokeBlue.ShouldBe(30);
+    }
+
+    #endregion
+
+    #region ExpandCompositeReferenceLine
+
+    [Fact]
+    public void ExpandCompositeReferenceLine_CrossNamedComposite_PairsChannelsPositionally()
+    {
+        ScreenSave owner = new ScreenSave { Name = "Owner" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = owner };
+        owner.States.Add(state);
+        state.Variables.Add(new VariableSave { Name = "DropshadowRed", Value = 0, Type = "int", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "DropshadowGreen", Value = 0, Type = "int", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "DropshadowBlue", Value = 0, Type = "int", SetsValue = true });
+
+        List<string> expanded = ElementSaveExtensions
+            .ExpandCompositeReferenceLine("DropshadowColor = Source.FillColor", owner)
+            .ToList();
+
+        expanded.ShouldBe(new[]
+        {
+            "DropshadowRed = Source.FillRed",
+            "DropshadowGreen = Source.FillGreen",
+            "DropshadowBlue = Source.FillBlue"
+        });
+    }
+
+    [Fact]
+    public void ExpandCompositeReferenceLine_RightSideNotSameCompositeToken_LeavesLineUnchanged()
+    {
+        // Left is a real Color composite, but the right side's trailing member ("Width") doesn't
+        // contain the "Color" token at all - not a composite reference, must not be mangled.
+        ScreenSave owner = new ScreenSave { Name = "Owner" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = owner };
+        owner.States.Add(state);
+        state.Variables.Add(new VariableSave { Name = "Red", Value = 0, Type = "int", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Green", Value = 0, Type = "int", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Blue", Value = 0, Type = "int", SetsValue = true });
+
+        List<string> expanded = ElementSaveExtensions
+            .ExpandCompositeReferenceLine("Color = Source.Width", owner)
+            .ToList();
+
+        expanded.ShouldBe(new[] { "Color = Source.Width" });
     }
 
     #endregion
