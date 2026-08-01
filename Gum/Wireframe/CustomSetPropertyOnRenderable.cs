@@ -3374,6 +3374,59 @@ public partial class CustomSetPropertyOnRenderable
             case "Blend":
                 circleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
                 return true;
+            // #4169: Dropshadow* is the same runtime-only shape as the Fill/Stroke cases above -
+            // no case at all here (not even a legacy-era one), so it fell straight through to
+            // SetPropertyThroughReflection and was silently dropped.
+            case "HasDropshadow":
+                circleRuntime.HasDropshadow = (bool)value;
+                return true;
+            // DropshadowColor is backend-typed same as "Color" above.
+            case "DropshadowColor":
+#if RAYLIB
+                if (value is System.Drawing.Color raylibDropshadowDrawingColor)
+                {
+                    circleRuntime.DropshadowColor = raylibDropshadowDrawingColor.ToRaylib();
+                }
+                else
+                {
+                    return false;
+                }
+#else
+                if (value is System.Drawing.Color dropshadowDrawingColor)
+                {
+                    circleRuntime.DropshadowColor = new Microsoft.Xna.Framework.Color(dropshadowDrawingColor.R, dropshadowDrawingColor.G, dropshadowDrawingColor.B, dropshadowDrawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaDropshadowColor)
+                {
+                    circleRuntime.DropshadowColor = xnaDropshadowColor;
+                }
+                else
+                {
+                    return false;
+                }
+#endif
+                return true;
+            case "DropshadowAlpha":
+                circleRuntime.DropshadowAlpha = (int)value;
+                return true;
+            case "DropshadowRed":
+                circleRuntime.DropshadowRed = (int)value;
+                return true;
+            case "DropshadowGreen":
+                circleRuntime.DropshadowGreen = (int)value;
+                return true;
+            case "DropshadowBlue":
+                circleRuntime.DropshadowBlue = (int)value;
+                return true;
+            case "DropshadowOffsetX":
+                circleRuntime.DropshadowOffsetX = (float)value;
+                return true;
+            case "DropshadowOffsetY":
+                circleRuntime.DropshadowOffsetY = (float)value;
+                return true;
+            case "DropshadowBlur":
+                circleRuntime.DropshadowBlur = (float)value;
+                return true;
         }
         return false;
 #pragma warning restore CS0618
@@ -3478,6 +3531,59 @@ public partial class CustomSetPropertyOnRenderable
                 return true;
             case "Blend":
                 rectangleRuntime.Blend = (Gum.RenderingLibrary.Blend)value;
+                return true;
+            // #4169: Dropshadow* is the same runtime-only shape as the Fill/Stroke cases above -
+            // no case at all here (not even a legacy-era one), so it fell straight through to
+            // SetPropertyThroughReflection and was silently dropped.
+            case "HasDropshadow":
+                rectangleRuntime.HasDropshadow = (bool)value;
+                return true;
+            // DropshadowColor is backend-typed same as "Color" above.
+            case "DropshadowColor":
+#if RAYLIB
+                if (value is System.Drawing.Color raylibDropshadowDrawingColor)
+                {
+                    rectangleRuntime.DropshadowColor = raylibDropshadowDrawingColor.ToRaylib();
+                }
+                else
+                {
+                    return false;
+                }
+#else
+                if (value is System.Drawing.Color dropshadowDrawingColor)
+                {
+                    rectangleRuntime.DropshadowColor = new Microsoft.Xna.Framework.Color(dropshadowDrawingColor.R, dropshadowDrawingColor.G, dropshadowDrawingColor.B, dropshadowDrawingColor.A);
+                }
+                else if (value is Microsoft.Xna.Framework.Color xnaDropshadowColor)
+                {
+                    rectangleRuntime.DropshadowColor = xnaDropshadowColor;
+                }
+                else
+                {
+                    return false;
+                }
+#endif
+                return true;
+            case "DropshadowAlpha":
+                rectangleRuntime.DropshadowAlpha = (int)value;
+                return true;
+            case "DropshadowRed":
+                rectangleRuntime.DropshadowRed = (int)value;
+                return true;
+            case "DropshadowGreen":
+                rectangleRuntime.DropshadowGreen = (int)value;
+                return true;
+            case "DropshadowBlue":
+                rectangleRuntime.DropshadowBlue = (int)value;
+                return true;
+            case "DropshadowOffsetX":
+                rectangleRuntime.DropshadowOffsetX = (float)value;
+                return true;
+            case "DropshadowOffsetY":
+                rectangleRuntime.DropshadowOffsetY = (float)value;
+                return true;
+            case "DropshadowBlur":
+                rectangleRuntime.DropshadowBlur = (float)value;
                 return true;
         }
         return false;
