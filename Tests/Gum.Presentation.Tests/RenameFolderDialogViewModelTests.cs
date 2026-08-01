@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Logic;
@@ -13,11 +13,8 @@ using ToolsUtilities;
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Characterization (pinning) tests for RenameFolderDialogViewModel, relocated out of Gum.csproj
-/// into the headless Gum.Presentation assembly (ADR-0005, #3754). FolderNode used to be cast to the
-/// concrete, WinForms-coupled TreeNodeWrapper to reach the underlying TreeNode.Text setter; ITreeNode
-/// gained a Text setter instead, so folder nodes are mocked directly via ITreeNode here rather than
-/// real WinForms TreeNode/TreeNodeWrapper instances.
+/// Characterization (pinning) tests for RenameFolderDialogViewModel. Folder nodes are mocked as
+/// ITreeNode, which carries the Text setter the rename needs, so these run without a real tree.
 /// </summary>
 public class RenameFolderDialogViewModelTests : BaseTestClass
 {
@@ -124,9 +121,7 @@ public class RenameFolderDialogViewModelTests : BaseTestClass
     }
 
     // Pins the FolderNode.Text update that keeps the tree label in sync immediately after rename,
-    // without going through a full RefreshElementTreeView. This used to require an "as TreeNodeWrapper"
-    // cast to reach the underlying WinForms TreeNode - now it's a plain ITreeNode.Text set, so it's
-    // mockable directly.
+    // without going through a full RefreshElementTreeView.
     [Fact]
     public void OnAffirmative_SetsFolderNodeTextToNewValue()
     {

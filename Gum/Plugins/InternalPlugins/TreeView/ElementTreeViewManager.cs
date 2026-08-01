@@ -184,8 +184,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public ITreeNodeMutable RootBehaviorsTreeNode => mBehaviorsTreeNode;
 
-    // The four root fields already implement ITreeNode directly (they are always GumTreeNode),
-    // so IElementTreeRoots is satisfied for free - no TreeNodeWrapper needed here.
+    // The four root fields are ITreeNodeMutable, which extends ITreeNode, so these satisfy
+    // IElementTreeRoots directly.
     ITreeNode? IElementTreeRoots.Screens => mScreensTreeNode;
     ITreeNode? IElementTreeRoots.Components => mComponentsTreeNode;
     ITreeNode? IElementTreeRoots.StandardElements => mStandardElementsTreeNode;
