@@ -68,6 +68,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 return mSideGrabbed;
             }
+            // setter internal for testing - lets tests simulate an in-progress drag
+            // without driving the whole Cursor/Activity input pipeline.
+            internal set
+            {
+                mSideGrabbed = value;
+            }
         }
 
         bool mVisible = true;
@@ -90,17 +96,17 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Left
         {
-            get 
-            { 
+            get
+            {
                 // We used to return the raw value, but I think we want to round it - if it's to use unit coordinates then it should probably always return them.
 
-                return RoundIfNecessary( mCoordinates.X); 
+                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
             }
-            set 
+            set
             {
                 mCoordinates.X = value;
 
-                mLineRectangle.X = RoundIfNecessary(value);
+                mLineRectangle.X = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
 
                 UpdateHandles();
             }
@@ -108,14 +114,14 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Top
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Y); 
+            get
+            {
+                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
             }
             set
             {
                 mCoordinates.Y = value;
-                mLineRectangle.Y = RoundIfNecessary( value );
+                mLineRectangle.Y = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
 
             }
@@ -180,28 +186,28 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Width
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Width); 
+            get
+            {
+                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
             }
-            set 
+            set
             {
                 mCoordinates.Width = value;
-                mLineRectangle.Width = RoundIfNecessary( value );
+                mLineRectangle.Width = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
 
         public float Height
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Height); 
+            get
+            {
+                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
             }
-            set 
+            set
             {
                 mCoordinates.Height = value;
-                mLineRectangle.Height = RoundIfNecessary( value );
+                mLineRectangle.Height = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
@@ -538,10 +544,15 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         }
 
 
-        // Grid snapping (SnappingGridSize) is only committed when an interaction (a drag) ends -
-        // see ApplyGridSnappingOnRelease - so it never affects the display of a value that was just
-        // programmatically assigned (e.g. from a previously-saved, non-grid-aligned texture region).
-        // RoundToUnitCoordinates is a separate, always-on whole-pixel constraint, unrelated to grid snapping.
+        // Grid snapping (SnappingGridSize) only applies to the display of an axis while it's actively
+        // being dragged, so it never affects the display of a value that was just programmatically
+        // assigned (e.g. from a previously-saved, non-grid-aligned texture region), and a move only
+        // snaps position while a resize only snaps size (see ApplyGridSnappingOnRelease for the
+        // equivalent split at the moment the drag ends). RoundToUnitCoordinates is a separate,
+        // always-on whole-pixel constraint, unrelated to grid snapping.
+        private bool IsPositionBeingDragged => mSideGrabbed == ResizeSide.Middle;
+        private bool IsSizeBeingDragged => mSideGrabbed != ResizeSide.None && mSideGrabbed != ResizeSide.Middle;
+
         private float RoundIfNecessary(float value)
         {
             if (RoundToUnitCoordinates)

@@ -76,7 +76,7 @@ public class RectangleSelectorGridSnappingTests
     }
 
     [Fact]
-    public void LeftTopWidthHeight_WhenSetProgrammaticallyWithGridSnappingEnabled_ShouldNotSnapForDisplay()
+    public void LeftTopWidthHeight_WhenSetProgrammaticallyWithNoSideGrabbed_ShouldNotSnapForDisplay()
     {
         var selector = CreateSelector();
 
@@ -89,5 +89,39 @@ public class RectangleSelectorGridSnappingTests
         selector.Top.ShouldBe(7f);
         selector.Width.ShouldBe(27f);
         selector.Height.ShouldBe(41f);
+    }
+
+    [Fact]
+    public void LeftTop_WhileMiddleIsGrabbed_ShouldSnapToGridForDisplayButLeaveSizeAlone()
+    {
+        var selector = CreateSelector();
+        selector.Left = 13f;
+        selector.Top = 7f;
+        selector.Width = 27f;
+        selector.Height = 41f;
+
+        selector.SideGrabbed = ResizeSide.Middle;
+
+        selector.Left.ShouldBe(16f);
+        selector.Top.ShouldBe(0f);
+        selector.Width.ShouldBe(27f);
+        selector.Height.ShouldBe(41f);
+    }
+
+    [Fact]
+    public void WidthHeight_WhileResizeSideIsGrabbed_ShouldSnapToGridForDisplayButLeavePositionAlone()
+    {
+        var selector = CreateSelector();
+        selector.Left = 13f;
+        selector.Top = 7f;
+        selector.Width = 27f;
+        selector.Height = 41f;
+
+        selector.SideGrabbed = ResizeSide.BottomRight;
+
+        selector.Left.ShouldBe(13f);
+        selector.Top.ShouldBe(7f);
+        selector.Width.ShouldBe(32f);
+        selector.Height.ShouldBe(48f);
     }
 }
