@@ -169,7 +169,7 @@ public class StandardElementsManager
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "string", Value = "Hello", Name = "Text", Category = "Text" });
 
-            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "LocalizeText", Category = "Text" });
+            stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = true, Name = "LocalizeText", Category = "Text", MinimumGumxVersion = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion });
 
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "HorizontalAlignment", Value = HorizontalAlignment.Left, Name = "HorizontalAlignment", Category = "Text" });
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "VerticalAlignment", Value = VerticalAlignment.Top, Name = "VerticalAlignment", Category = "Text" });

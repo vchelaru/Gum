@@ -1894,9 +1894,6 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""float"" Name=""LineHeightMultiplier"" Category=""Text"" SetsValue=""true"">
         <Value xsi:type=""xsd:float"">1</Value>
       </Variable>
-      <Variable Type=""bool"" Name=""LocalizeText"" Category=""Text"" SetsValue=""true"">
-        <Value xsi:type=""xsd:boolean"">true</Value>
-      </Variable>
       <Variable Type=""float?"" Name=""MaxHeight"" Category=""Dimensions"" SetsValue=""true"" />
       <Variable Type=""int?"" Name=""MaxLettersToShow"" Category=""Text"" SetsValue=""true"" />
       <Variable Type=""int?"" Name=""MaxNumberOfLines"" Category=""Text"" SetsValue=""true"" />

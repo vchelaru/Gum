@@ -23,6 +23,7 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
 {
     private const int PreV3 = (int)GumProjectSave.GumxVersions.AttributeVersion;     // 2
     private const int V3 = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;  // 3
+    private const int V4 = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion;   // 4
 
     // Variables added to the plain Circle / Rectangle in the v3 shape-variable expansion
     // (#2929/#2931/#2950). None existed on a pre-v3 shape, and none exist on the older FRB-pinned
@@ -320,6 +321,41 @@ public class StandardElementBackfillVersionGateTests : BaseTestClass
             .Variables.FirstOrDefault(v => v.Name == variableName);
         preserved.ShouldNotBeNull();
         preserved.Value.ShouldBe(value);
+    }
+
+    // LocalizeText (#4133/#4134) was added to the Text standard element's default state without a
+    // MinimumGumxVersion tag, so it back-filled into every project regardless of version — including
+    // v3 projects saved before LocalizeText existed, breaking their FRB1-generated runtime the same
+    // way the v3 shape surface did pre-v3 projects (issue #4222).
+    [Fact]
+    public void Initialize_DoesNotInjectLocalizeText_IntoPreV4TextStandard()
+    {
+        var project = MakeProjectWithBareStandard("Text", V3, "Width", "Height", "Visible", "Text");
+
+        var textDefault = DefaultStateAfterInitialize(project, "Text");
+
+        textDefault.Variables.Any(v => v.Name == "LocalizeText").ShouldBeFalse(
+            "A pre-v4 project (including one already at v3) must not have LocalizeText back-filled into its Text standard.");
+    }
+
+    [Fact]
+    public void Initialize_InjectsLocalizeText_IntoV4TextStandard()
+    {
+        var project = MakeProjectWithBareStandard("Text", V4, "Width", "Height", "Visible", "Text");
+
+        var textDefault = DefaultStateAfterInitialize(project, "Text");
+
+        textDefault.Variables.Any(v => v.Name == "LocalizeText").ShouldBeTrue(
+            "A v4 project should get LocalizeText back-filled into its Text standard.");
+    }
+
+    [Fact]
+    public void DefaultState_TagsLocalizeText_WithV4MinimumGumxVersion()
+    {
+        StateSave defaultState = StandardElementsManager.Self.DefaultStates["Text"];
+
+        VariableSave variable = defaultState.Variables.First(v => v.Name == "LocalizeText");
+        variable.MinimumGumxVersion.ShouldBe(V4);
     }
 
     [Fact]
