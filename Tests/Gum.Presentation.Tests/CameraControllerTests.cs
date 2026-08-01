@@ -113,6 +113,42 @@ public class CameraControllerTests
     }
 
     [Fact]
+    public void HandleMouseUp_ThenHandleMouseDown_ThenHandleMouseMove_PansByTheNewDragDeltaOnly()
+    {
+        var (controller, camera, _, _) = CreateSut();
+        camera.Zoom = 2f;
+        var originalX = camera.X;
+        var originalY = camera.Y;
+
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Middle });
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 130, Y = 90, Button = GumMouseButton.Middle });
+        controller.HandleMouseUp(new GumMouseEventArgs { X = 130, Y = 90, Button = GumMouseButton.Middle });
+
+        var xAfterFirstDrag = camera.X;
+        var yAfterFirstDrag = camera.Y;
+        var raised = 0;
+        controller.CameraChanged += () => raised++;
+
+        // A stray move reporting the middle button still held - e.g. a WPF-synchronized
+        // MouseMove dispatched without WireframeControl's own MouseDown having run first for
+        // this press - must not pan, since HandleMouseUp already ended the drag.
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 500, Y = 500, Button = GumMouseButton.Middle });
+
+        camera.X.ShouldBe(xAfterFirstDrag);
+        camera.Y.ShouldBe(yAfterFirstDrag);
+        raised.ShouldBe(0);
+
+        // The next real press starts a fresh drag baseline at its own position, so only the
+        // small delta from here pans the camera - not the distance traveled since the release.
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 500, Y = 500, Button = GumMouseButton.Middle });
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 510, Y = 495, Button = GumMouseButton.Middle });
+
+        camera.X.ShouldBe(xAfterFirstDrag - (510 - 500) / 2f);
+        camera.Y.ShouldBe(yAfterFirstDrag - (495 - 500) / 2f);
+        raised.ShouldBe(1);
+    }
+
+    [Fact]
     public void HandleMouseMove_WithLeftButton_DoesNotPanCameraOrRaiseCameraChanged()
     {
         var (controller, camera, _, _) = CreateSut();

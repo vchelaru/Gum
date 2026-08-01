@@ -122,6 +122,9 @@ public class WireframeControl : WpfGraphicsDeviceControl
     void HandleMouseMove(object? sender, MouseEventArgs e) =>
         _cameraController.HandleMouseMove(e.ToGumMouseEventArgs(this));
 
+    void HandleMouseUp(object? sender, MouseButtonEventArgs e) =>
+        _cameraController.HandleMouseUp(e.ToGumMouseEventArgs(this));
+
     void HandleMouseWheel(object? sender, MouseWheelEventArgs e)
     {
         GumMouseEventArgs gumMouseArgs = e.ToGumMouseEventArgs(this);
@@ -240,6 +243,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
             KeyUp += HandleKeyUp;
             MouseDown += HandleMouseDown;
             MouseMove += HandleMouseMove;
+            MouseUp += HandleMouseUp;
             MouseWheel += HandleMouseWheel;
 
             MouseEnter += (_, _) =>
