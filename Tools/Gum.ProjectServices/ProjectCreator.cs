@@ -49,9 +49,9 @@ public class ProjectCreator : IProjectCreator
         {
             FontGenerator = FontGeneratorType.KernSmith,
             FullFileName = filePath,
-            // The default standard elements seed the v3 shape variable surface, so stamp the
+            // The default standard elements seed the latest variable surface, so stamp the
             // project at the matching version rather than the GumProjectSave ctor default.
-            Version = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion
+            Version = GumProjectSave.NativeVersion
         };
 
         foreach (var name in StandardElementNames)

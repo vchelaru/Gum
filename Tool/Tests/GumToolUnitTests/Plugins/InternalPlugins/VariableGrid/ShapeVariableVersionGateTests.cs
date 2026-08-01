@@ -9,6 +9,7 @@ public class ShapeVariableVersionGateTests
 {
     private const int OlderThanV3 = (int)GumProjectSave.GumxVersions.AttributeVersion;
     private const int V3 = (int)GumProjectSave.GumxVersions.ShapeVariableExpansion;
+    private const int V4 = (int)GumProjectSave.GumxVersions.LocalizeTextExpansion;
 
     private readonly ShapeVariableVersionGate _gate = new();
 
@@ -121,5 +122,21 @@ public class ShapeVariableVersionGateTests
     public void GetIfHidden_HandlesNullRootStandardTypeName()
     {
         _gate.GetIfHiddenForProjectVersion("FillRed", null, OlderThanV3).ShouldBeFalse();
+    }
+
+    [Theory]
+    // LocalizeText (issue #4222) is gated at v4, a version past the rest of the map, so a v3
+    // project (which already clears the v3 dropshadow gate above) must still hide it.
+    [InlineData(OlderThanV3)]
+    [InlineData(V3)]
+    public void GetIfHidden_HidesLocalizeText_OnPreV4Text(int projectVersion)
+    {
+        _gate.GetIfHiddenForProjectVersion("LocalizeText", "Text", projectVersion).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetIfHidden_KeepsLocalizeText_OnV4Text()
+    {
+        _gate.GetIfHiddenForProjectVersion("LocalizeText", "Text", V4).ShouldBeFalse();
     }
 }
