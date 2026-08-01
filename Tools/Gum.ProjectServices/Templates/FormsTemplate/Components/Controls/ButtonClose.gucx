@@ -170,9 +170,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Danger.FillRed</string>
-        <string>Green = Components/Styles.Danger.FillGreen</string>
-        <string>Blue = Components/Styles.Danger.FillBlue</string>
+        <string>Color = Components/Styles.Danger.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -182,9 +180,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Warning.FillRed</string>
-        <string>Green = Components/Styles.Warning.FillGreen</string>
-        <string>Blue = Components/Styles.Warning.FillBlue</string>
+        <string>Color = Components/Styles.Warning.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -214,9 +210,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Danger.FillRed</string>
-          <string>Green = Components/Styles.Danger.FillGreen</string>
-          <string>Blue = Components/Styles.Danger.FillBlue</string>
+          <string>Color = Components/Styles.Danger.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -244,9 +238,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -274,9 +266,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Warning.FillRed</string>
-          <string>Green = Components/Styles.Warning.FillGreen</string>
-          <string>Blue = Components/Styles.Warning.FillBlue</string>
+          <string>Color = Components/Styles.Warning.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -304,9 +294,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Primary.FillRed</string>
-          <string>Green = Components/Styles.Primary.FillGreen</string>
-          <string>Blue = Components/Styles.Primary.FillBlue</string>
+          <string>Color = Components/Styles.Primary.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -334,9 +322,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Warning.FillRed</string>
-          <string>Green = Components/Styles.Warning.FillGreen</string>
-          <string>Blue = Components/Styles.Warning.FillBlue</string>
+          <string>Color = Components/Styles.Warning.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -364,9 +350,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Danger.FillRed</string>
-          <string>Green = Components/Styles.Danger.FillGreen</string>
-          <string>Blue = Components/Styles.Danger.FillBlue</string>
+          <string>Color = Components/Styles.Danger.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -394,9 +378,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
     </State>

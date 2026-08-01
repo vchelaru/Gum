@@ -172,9 +172,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -184,9 +182,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Strong.Font</string>
         <string>FontSize = Components/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Styles.Strong.IsBold</string>
