@@ -647,6 +647,32 @@ jobs:
           GALLIUM_DRIVER: llvmpipe
         run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler=true" --logger "console;verbosity=detailed"
 
+      # TEMPORARY, second diagnostic pass for #4195. The run above surfaced "DXIL container
+      # mismatch for 'PSVRuntimeInfoSize' between 'PSV0' part:('48') and DXIL module:('52')" — a
+      # classic dxcompiler.dll/dxil.dll version-skew signature. This step lists every copy of
+      # those two DLLs reachable from the test binary's directory plus common Windows-SDK
+      # locations, with file version info, to tell a shadowing bug (fixable here, like the Mesa
+      # DLL copy) apart from a packaging bug in the ShadowDusk.Compiler NuGet itself (upstream fix
+      # needed). Remove this step once the real cause is found.
+      - name: "DIAGNOSTIC: locate dxcompiler.dll / dxil.dll (#4195)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        continue-on-error: true
+        run: |
+          $testBin = "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0"
+          Write-Host "--- Files named dxcompiler.dll or dxil.dll under $testBin ---"
+          Get-ChildItem -Path $testBin -Recurse -Include "dxcompiler.dll","dxil.dll" -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host "$($_.FullName)  FileVersion=$($_.VersionInfo.FileVersion)  ProductVersion=$($_.VersionInfo.ProductVersion)  Length=$($_.Length)" }
+          Write-Host "--- Same search under the NuGet package cache ---"
+          Get-ChildItem -Path "$env:USERPROFILE\.nuget\packages" -Recurse -Include "dxcompiler.dll","dxil.dll" -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -match "win-x64" } |
+            ForEach-Object { Write-Host "$($_.FullName)  FileVersion=$($_.VersionInfo.FileVersion)  ProductVersion=$($_.VersionInfo.ProductVersion)  Length=$($_.Length)" }
+          Write-Host "--- Any system-wide dxil.dll / dxcompiler.dll on this runner image ---"
+          $roots = @("C:\Windows\System32", "C:\Program Files (x86)\Windows Kits")
+          foreach ($root in $roots) {
+            Get-ChildItem -Path $root -Recurse -Include "dxcompiler.dll","dxil.dll" -ErrorAction SilentlyContinue |
+              ForEach-Object { Write-Host "$($_.FullName)  FileVersion=$($_.VersionInfo.FileVersion)  ProductVersion=$($_.VersionInfo.ProductVersion)  Length=$($_.Length)" }
+          }
+
       # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
       # above, though verification showed every test here mocks out GraphicsDevice entirely.
