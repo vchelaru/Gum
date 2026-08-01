@@ -4,6 +4,11 @@
 
 The Button control providing an event for handling clicks.
 
+`Click`, not `Push`, is the primary event for reacting to button activation. Its timing depends on the input device:
+
+* **Mouse or touch** - `Click` fires on release, after a matching push over the same button. The cursor can leave and return before releasing; see [Click](../gum-code-reference/interactivegue/click.md) for details.
+* **Keyboard or gamepad** - `Click` fires immediately when the activation key or button is pressed, with no release-based confirmation.
+
 ## Code Example: Adding a Button
 
 The following code adds a button which increments every time it is clicked:

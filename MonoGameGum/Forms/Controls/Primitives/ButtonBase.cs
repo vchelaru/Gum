@@ -62,10 +62,12 @@ public class ButtonBase :
     #region Events
 
     /// <summary>
-    /// Event raised when the user pushes, then releases the control.
-    /// This means the cursor is over the button, the button was originally pushed,
-    /// the primary button was pressed last frame, but is no longer pressed this frame.
-    /// The "click" terminology comes from the Cursor's PrimaryClick property.
+    /// Event raised when the control is activated. Click, not Push, is the primary event
+    /// for reacting to button activation, but its timing differs by input device:
+    /// with a mouse or touch, Click fires on release, after a matching push over the same
+    /// control (the cursor may leave and return before releasing; see Push).
+    /// With keyboard or gamepad, Click fires immediately when the activation key/button is
+    /// pressed, with no release-based confirmation.
     /// </summary>
     public event EventHandler Click;
 
