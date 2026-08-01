@@ -11,11 +11,12 @@ using static Raylib_cs.Raylib;
 namespace RaylibGum.Tests.Rendering;
 
 /// <summary>
-/// Real-frame conformance suite for raylib's <c>DrawGumRecursively</c> walk (issue #4155), the
-/// off-screen-cull / clip-walk counterpart to <see cref="RenderTargetTests"/>. raylib reimplements
-/// the cull and clip walk inline instead of routing through the shared
-/// <see cref="RenderingLibrary.Graphics.HierarchicalOrderer"/> (#4154), so it can silently diverge
-/// from MonoGame's behavior even when every MonoGame-side test is green (#4144). Covers the
+/// Real-frame conformance suite for raylib's clip/cull walk (issue #4155), the off-screen-cull /
+/// clip-walk counterpart to <see cref="RenderTargetTests"/>. raylib used to reimplement the cull
+/// and clip walk inline rather than routing through the shared
+/// <see cref="RenderingLibrary.Graphics.HierarchicalOrderer"/>, which is how it silently diverged
+/// from MonoGame's behavior while every MonoGame-side test stayed green (#4144); both the main pass
+/// and the render-target bake now go through that shared builder (#4154). Covers the
 /// off-screen cull at the clip edge and cull margin, nested-clip intersection, and one pinning
 /// test per divergence found auditing against <c>HierarchicalOrderer</c>: draw order relative to
 /// an element's own clip, non-<see cref="GraphicalUiElement"/> children, and top-level visibility.
@@ -275,7 +276,7 @@ public class ClipWalkConformanceTests : BaseTestClass
     }
 
     // Coverage for existing (correct) behavior: raylib's BeginScissorMode replaces rather than
-    // intersects, which is why DrawGumRecursively maintains its own _scissorStack. A nested clip
+    // intersects, which is why the Submit phase maintains its own _scissorStack. A nested clip
     // narrower than its ancestor must still be bounded by BOTH rectangles' intersection.
     [Fact]
     public void Draw_NestedClipContainers_IntersectRatherThanReplace()
@@ -333,7 +334,7 @@ public class ClipWalkConformanceTests : BaseTestClass
     }
 
     // #4154: a container that is both IsRenderTarget and ClipsChildren -- e.g. a scrolling panel
-    // rendered to a texture for group opacity. DrawGumRecursively checks IsRenderTarget and
+    // rendered to a texture for group opacity. The walk checks IsRenderTarget and
     // composites-then-returns BEFORE ever reaching the ClipsChildren scissor push, so the node's
     // own clip has no effect and its children are never walked outside the bake. Pinned here via a
     // sibling drawn immediately afterward in the SAME bake: if that ordering regressed (the scissor
@@ -343,11 +344,11 @@ public class ClipWalkConformanceTests : BaseTestClass
     // scissoring is a fragment-level test, not something that suppresses the draw call itself --
     // so this needs pixel readback.
     //
-    // This exercises the shared DrawGumRecursively walk (used by BakeRenderTarget's child loop),
-    // not Renderer.Submit's own IsRenderTarget guard: this harness has no way to read the actual
-    // screen framebuffer Submit draws to, only RenderTexture2D content populated by a bake, and any
-    // node nested under an IsRenderTarget ancestor is (by the orderer's own recursion gate) reached
-    // via the bake's DrawGumRecursively walk, never via Submit. Submit's matching guard -- applied
+    // This exercises the bake path (BakeRenderTarget builds its subtree through the shared orderer),
+    // not the main pass's own IsRenderTarget guard: this harness has no way to read the actual
+    // screen framebuffer the main pass draws to, only RenderTexture2D content populated by a bake,
+    // and any node nested under an IsRenderTarget ancestor is (by the orderer's own recursion gate)
+    // reached via the bake, never via the main pass. Submit's matching guard -- applied
     // uniformly across BeginClip/DrawRenderable/EndClip rather than gated by command kind -- is
     // covered by Draw_TopLevelRenderTargetContainerWithClipsChildren_
     // CompositesOnceWithoutDoubleDrawingChildren below (draw-call count) and by
@@ -434,8 +435,8 @@ public class ClipWalkConformanceTests : BaseTestClass
     }
 
     // #4154: raylib's Renderer.Submit (the migrated main-pass walk) special-cases IsRenderTarget
-    // uniformly for BeginClip/DrawRenderable/EndClip -- mirroring DrawGumRecursively's composite-
-    // then-return-before-ClipsChildren ordering -- so a TOP-LEVEL container that is both
+    // uniformly for BeginClip/DrawRenderable/EndClip -- keeping the composite-before-ClipsChildren
+    // ordering -- so a TOP-LEVEL container that is both
     // IsRenderTarget and ClipsChildren composites exactly once and never draws its children a
     // second time in the main pass (only once, inside the bake). Unlike the multi-child cull case,
     // draw-call count is reliable here: the bake and the main-pass composite land in different FBO
