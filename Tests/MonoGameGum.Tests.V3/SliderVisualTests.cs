@@ -16,6 +16,24 @@ namespace MonoGameGum.Tests.V3;
 public class SliderVisualTests
 {
     [Fact]
+    public void Constructor_ShouldThrow_WhenVisualHasNoTrackInstance()
+    {
+        ContainerRuntime visual = new();
+
+        Should.Throw<InvalidOperationException>(() => new Slider(visual));
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrow_WhenTrackInstanceIsNotInteractiveGue()
+    {
+        ContainerRuntime visual = new();
+        SpriteRuntime nonInteractiveTrack = new() { Name = "TrackInstance" };
+        visual.Children.Add(nonInteractiveTrack);
+
+        Should.Throw<InvalidOperationException>(() => new Slider(visual));
+    }
+
+    [Fact]
     public void BackgroundColor_Property_ShouldNotExist()
     {
         PropertyInfo? property = typeof(SliderVisual).GetProperty("BackgroundColor");
