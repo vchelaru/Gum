@@ -32,6 +32,25 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         public string BatchKey;
     }
 
+    // Scratch state pooled on the instance (#4200) so a build does not allocate after warm-up,
+    // mirroring HierarchicalOrderer (#4190) and Renderer's own DrawCommand buffers. Safe to pool
+    // here because BuildDrawList is never re-entrant on this instance: Renderer's render-target
+    // bakes (the only other caller besides the main pass) run post-order in PreRender and fully
+    // return before the next BuildDrawList call starts (see Renderer._bakeCommands' comment) --
+    // so at most one BuildDrawList call is ever "in flight" on this instance at a time.
+
+    // Reorder-window Entry lists. A window is rented when a new window starts (top-level, a
+    // same-Y run, or a ClipsChildren subtree) and returned once FlushWindow has consumed it.
+    // Nested clip windows are used in strict LIFO order matching the recursion, so a stack works.
+    private readonly Stack<List<Entry>> _windowPool = new Stack<List<Entry>>();
+
+    // FlushWindow's precedence-graph scratch, resized to fit the largest window seen so far.
+    // FlushWindow calls never overlap (windows are flushed one at a time, depth-first), so a
+    // single reusable set of buffers serves every call.
+    private int[] _indegreeBuffer = Array.Empty<int>();
+    private List<int>[] _successorsBuffer = Array.Empty<List<int>>();
+    private readonly List<int> _availableBuffer = new List<int>();
+
     /// <inheritdoc/>
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
@@ -54,7 +73,17 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         ProcessWindow(roots, clipBounds, destination);
     }
 
-    private static void ProcessLayerTopLevel(
+    private List<Entry> RentWindow()
+    {
+        return _windowPool.Count > 0 ? _windowPool.Pop() : new List<Entry>();
+    }
+
+    private void ReturnWindow(List<Entry> window)
+    {
+        _windowPool.Push(window);
+    }
+
+    private void ProcessLayerTopLevel(
         Layer layer,
         ClipBoundsSource clipBounds,
         List<DrawCommand> destination)
@@ -81,12 +110,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     runEnd++;
                 }
 
-                List<Entry> window = new List<Entry>();
+                List<Entry> window = RentWindow();
                 for (int i = runStart; i < runEnd; i++)
                 {
                     ProcessRenderable(top[i], clipBounds, null, window, destination);
                 }
                 FlushWindow(window, destination);
+                ReturnWindow(window);
 
                 runStart = runEnd;
             }
@@ -97,7 +127,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
     }
 
-    private static void ProcessWindow(
+    private void ProcessWindow(
         IList<IRenderableIpso> renderables,
         ClipBoundsSource clipBounds,
         List<DrawCommand> destination)
@@ -108,15 +138,16 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             return;
         }
 
-        List<Entry> window = new List<Entry>();
+        List<Entry> window = RentWindow();
         for (int i = 0; i < count; i++)
         {
             ProcessRenderable(renderables[i], clipBounds, null, window, destination);
         }
         FlushWindow(window, destination);
+        ReturnWindow(window);
     }
 
-    private static void ProcessRenderable(
+    private void ProcessRenderable(
         IRenderableIpso renderable,
         ClipBoundsSource clipBounds,
         System.Drawing.Rectangle? activeClip,
@@ -129,7 +160,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
 
         // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
-        // clip. Gated on a resolvable mapping, mirroring HierarchicalOrderer — see its rationale.
+        // clip. Gated on a resolvable mapping, mirroring HierarchicalOrderer -- see its rationale.
         if (clipBounds.CanResolveCullTestBounds
             && activeClip.HasValue
             && CameraScissorExtensions.CullOffscreenWhenClipped
@@ -151,7 +182,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             FlushWindow(currentWindow, destination);
             destination.Add(new DrawCommand(DrawCommandKind.BeginClip, renderable));
 
-            List<Entry> innerWindow = new List<Entry>();
+            List<Entry> innerWindow = RentWindow();
             AddEntry(renderable, innerWindow);
 
             // Entering a clipper narrows the active clip for descendants (intersect).
@@ -176,6 +207,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
 
             FlushWindow(innerWindow, destination);
+            ReturnWindow(innerWindow);
             destination.Add(new DrawCommand(DrawCommandKind.EndClip, renderable));
         }
         else
@@ -232,7 +264,28 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         return bounds;
     }
 
-    private static void FlushWindow(List<Entry> window, List<DrawCommand> destination)
+    private void EnsureGraphCapacity(int n)
+    {
+        if (_indegreeBuffer.Length >= n)
+        {
+            return;
+        }
+
+        int newSize = System.Math.Max(n, _indegreeBuffer.Length * 2);
+        int oldSize = _successorsBuffer.Length;
+
+        _indegreeBuffer = new int[newSize];
+
+        List<int>[] newSuccessors = new List<int>[newSize];
+        Array.Copy(_successorsBuffer, newSuccessors, oldSize);
+        for (int i = oldSize; i < newSize; i++)
+        {
+            newSuccessors[i] = new List<int>();
+        }
+        _successorsBuffer = newSuccessors;
+    }
+
+    private void FlushWindow(List<Entry> window, List<DrawCommand> destination)
     {
         int n = window.Count;
         if (n == 0)
@@ -243,8 +296,15 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         // Build the precedence graph: edge i -> j when i precedes j in DFS AND their bounds
         // intersect. Same-key pairs still need edges — alpha-blending order matters even
         // within a batch, and the topological sort that follows handles them as a tie.
-        int[] indegree = new int[n];
-        List<int>?[] successors = new List<int>?[n];
+        EnsureGraphCapacity(n);
+        int[] indegree = _indegreeBuffer;
+        List<int>[] successors = _successorsBuffer;
+        Array.Clear(indegree, 0, n);
+        for (int i = 0; i < n; i++)
+        {
+            successors[i].Clear();
+        }
+
         for (int i = 0; i < n; i++)
         {
             System.Drawing.Rectangle bi = window[i].Bounds;
@@ -252,11 +312,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             {
                 if (bi.IntersectsWith(window[j].Bounds))
                 {
-                    if (successors[i] == null)
-                    {
-                        successors[i] = new List<int>();
-                    }
-                    successors[i]!.Add(j);
+                    successors[i].Add(j);
                     indegree[j]++;
                 }
             }
@@ -266,7 +322,8 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         // Among items with indegree 0, prefer one whose BatchKey matches the last emitted
         // (keeps batches contiguous); among matches, smallest DFS index for determinism.
         // No match → smallest DFS overall.
-        List<int> available = new List<int>();
+        List<int> available = _availableBuffer;
+        available.Clear();
         for (int i = 0; i < n; i++)
         {
             if (indegree[i] == 0)
@@ -306,16 +363,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             currentBucket = window[chosen].BatchKey;
             available.Remove(chosen);
 
-            List<int>? succ = successors[chosen];
-            if (succ != null)
+            List<int> succ = successors[chosen];
+            for (int k = 0; k < succ.Count; k++)
             {
-                for (int k = 0; k < succ.Count; k++)
+                int s = succ[k];
+                if (--indegree[s] == 0)
                 {
-                    int s = succ[k];
-                    if (--indegree[s] == 0)
-                    {
-                        available.Add(s);
-                    }
+                    available.Add(s);
                 }
             }
         }

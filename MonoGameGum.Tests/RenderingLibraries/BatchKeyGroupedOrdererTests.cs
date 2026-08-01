@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -116,6 +117,50 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
             "DrawRenderable:apos2",
             "DrawRenderable:apos3",
         });
+    }
+
+    // Allocation guard (#4200): unlike HierarchicalOrderer (#4190), this orderer's window Entry
+    // lists and FlushWindow's precedence-graph scratch (indegree/successors/available) were
+    // allocated fresh on every call. Exercises a top-level window, a clip subtree (a second,
+    // nested window), and same-window overlap (a real precedence-graph edge, so `successors`
+    // is actually populated) so every scratch structure the build touches is covered.
+    [Fact]
+    public void BuildDrawList_RowsWithClipSubtree_DoesNotAllocate()
+    {
+        const int RowCount = 3;
+        FakeRenderable[] rows = new FakeRenderable[RowCount * 3];
+        for (int i = 0; i < RowCount; i++)
+        {
+            FakeRenderable rect = new FakeRenderable($"rect{i}", "SpriteBatch") { X = 0, Y = i * 40, Width = 100, Height = 30 };
+            FakeRenderable text = new FakeRenderable($"text{i}", "SpriteBatch") { X = 10, Y = i * 40 + 5, Width = 80, Height = 20 };
+            FakeRenderable shape = new FakeRenderable($"shape{i}", "Apos.Shapes") { X = 200, Y = i * 40, Width = 20, Height = 20 };
+            rows[i * 3] = rect;
+            rows[i * 3 + 1] = text;
+            rows[i * 3 + 2] = shape;
+        }
+
+        FakeRenderable clipParent = new FakeRenderable("clipParent", "SpriteBatch") { X = 300, Y = 0, Width = 50, Height = 50 };
+        clipParent.ClipsChildren = true;
+        FakeRenderable childInClip = AddChild(clipParent, "childInClip", "Apos.Shapes");
+        childInClip.X = 5;
+        childInClip.Y = 5;
+        childInClip.Width = 10;
+        childInClip.Height = 10;
+
+        List<IRenderableIpso> topLevel = new List<IRenderableIpso>(rows) { clipParent };
+        Layer layer = BuildLayer(topLevel.ToArray());
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands),
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        // Liveness: a build that emitted nothing would trivially allocate nothing.
+        Describe(commands).ShouldContain("DrawRenderable:rect0");
+        Describe(commands).ShouldContain("DrawRenderable:childInClip");
+        result.BytesPerIteration.ShouldBe(0);
     }
 
     [Fact]
