@@ -29,4 +29,9 @@ public class ScreenshotRequest
     /// Height of the output image in pixels. Defaults to the project canvas height.
     /// </summary>
     public int? Height { get; init; }
+
+    /// <summary>
+    /// Background color to clear to before rendering. Defaults to fully transparent when null.
+    /// </summary>
+    public ScreenshotColor? BackgroundColor { get; init; }
 }

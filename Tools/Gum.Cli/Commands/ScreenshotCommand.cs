@@ -55,6 +55,11 @@ public static class ScreenshotCommand
             () => MonoGameBackend,
             $"Rendering backend to use: '{MonoGameBackend}' (default) or '{RaylibBackend}'.");
 
+        Option<string?> backgroundOption = new Option<string?>(
+            "--background",
+            "Background color to clear to before rendering, as 6-digit (RRGGBB) or 8-digit "
+                + "(RRGGBBAA) hex, with or without a leading '#'. Defaults to fully transparent.");
+
         Command command = new Command("screenshot", "Render a Gum Screen or Component to a PNG file.")
         {
             projectArgument,
@@ -63,6 +68,7 @@ public static class ScreenshotCommand
             widthOption,
             heightOption,
             backendOption,
+            backgroundOption,
         };
 
         command.SetHandler((InvocationContext context) =>
@@ -73,18 +79,34 @@ public static class ScreenshotCommand
             int? width = context.ParseResult.GetValueForOption(widthOption);
             int? height = context.ParseResult.GetValueForOption(heightOption);
             string backend = context.ParseResult.GetValueForOption(backendOption) ?? MonoGameBackend;
+            string? background = context.ParseResult.GetValueForOption(backgroundOption);
 
             string outputPath = output ?? $"{elementName}.png";
 
-            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height, backend);
+            context.ExitCode = Execute(projectPath, elementName, outputPath, width, height, backend, background);
         });
 
         return command;
     }
 
     private static int Execute(
-        string projectPath, string elementName, string outputPath, int? width, int? height, string backend)
+        string projectPath, string elementName, string outputPath, int? width, int? height, string backend,
+        string? background)
     {
+        ScreenshotColor? backgroundColor = null;
+        if (background != null)
+        {
+            if (!ScreenshotColor.TryParse(background, out ScreenshotColor parsedColor))
+            {
+                Console.Error.WriteLine(
+                    $"error: Invalid --background value '{background}'. Expected 6-digit (RRGGBB) or "
+                        + "8-digit (RRGGBBAA) hex, with or without a leading '#'.");
+                return 2;
+            }
+
+            backgroundColor = parsedColor;
+        }
+
         string fullProjectPath = Path.GetFullPath(projectPath);
 
         if (!File.Exists(fullProjectPath))
@@ -115,6 +137,7 @@ public static class ScreenshotCommand
             OutputPath = outputPath,
             Width = width,
             Height = height,
+            BackgroundColor = backgroundColor,
         };
 
         ScreenshotResult result = service.TakeScreenshot(request);
