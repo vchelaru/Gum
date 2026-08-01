@@ -6,8 +6,8 @@ namespace Gum.Managers;
 /// The framework-neutral contents of a drag payload dropped onto (or dragged over) the wireframe
 /// canvas. Extracted from a native drag-and-drop data object by a framework-specific reader — see
 /// <see cref="WpfWireframeDropPayloadReader"/> for the WPF side. Mirrors the three drop kinds the
-/// WinForms wireframe glue in <c>MainEditorTabPlugin</c> recognizes: a Standards-palette chip, one
-/// or more dragged tree nodes (by their <c>Tag</c>), or dropped files.
+/// wireframe glue in <c>MainEditorTabPlugin</c> recognizes: a Standards-palette chip, one or more
+/// dragged tree nodes (by their <c>Tag</c>), or dropped files.
 /// </summary>
 public sealed record WireframeDropPayload(
     string? StandardElementTypeName,
@@ -25,8 +25,8 @@ public sealed record WireframeDropPayload(
 
     /// <summary>
     /// Resolves which of the payload's drop kinds should be acted on, in the same precedence the
-    /// WinForms wireframe glue applies (<c>MainEditorTabPlugin.OnWireframeDrop</c>): a
-    /// Standards-palette chip wins, then dragged tree nodes, then a file drop.
+    /// wireframe glue applies (<c>MainEditorTabPlugin.OnWireframeDrop</c>): a Standards-palette chip
+    /// wins, then dragged tree nodes, then a file drop.
     /// </summary>
     public WireframeDropAction ResolveAction()
     {

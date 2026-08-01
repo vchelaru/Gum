@@ -3,16 +3,14 @@ using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Shouldly;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using ToolsUtilities;
 using Xunit;
 
 namespace GumToolUnitTests.Managers;
 
 // Tests for the headless ITreeNode container/folder predicates (Gum.Presentation). The fake exercises
-// the branch logic without the WinForms tree; the TreeNodeWrapper pins confirm the real live-tree
-// nodes (which are always TreeNodeWrapper) still classify identically after the WinForms-unwrap stubs
-// were replaced with true ITreeNode implementations.
+// the branch logic without a real tree; the GumTreeNode pins confirm the concrete node type the tool
+// actually builds classifies identically to the fake.
 public class TreeNodePredicateExtensionsTests
 {
     private sealed class FakeTreeNode : ITreeNode
@@ -24,7 +22,9 @@ public class TreeNodePredicateExtensionsTests
         public ITreeNode? Parent { get; set; }
         public IEnumerable<ITreeNode> Children => _children;
         public FilePath GetFullFilePath() => new FilePath(FullPath);
-        public void Expand() { }
+        public bool IsExpanded { get; private set; }
+        public void Expand() => IsExpanded = true;
+        public void Collapse() => IsExpanded = false;
 
         public FakeTreeNode AddChild(FakeTreeNode child)
         {
@@ -40,34 +40,6 @@ public class TreeNodePredicateExtensionsTests
         public ITreeNode? Components { get; set; }
         public ITreeNode? StandardElements { get; set; }
         public ITreeNode? Behaviors { get; set; }
-    }
-
-    [Fact]
-    public void Equals_DifferentUnderlyingNode_ReturnsFalse()
-    {
-        TreeNodeWrapper first = new TreeNodeWrapper(new TreeNode("A"));
-        TreeNodeWrapper second = new TreeNodeWrapper(new TreeNode("A"));
-
-        first.Equals(second).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Equals_Null_ReturnsFalse()
-    {
-        TreeNodeWrapper wrapper = new TreeNodeWrapper(new TreeNode("A"));
-
-        wrapper.Equals(null).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void Equals_SameUnderlyingNode_ReturnsTrueAndSharesHashCode()
-    {
-        TreeNode node = new TreeNode("A");
-        TreeNodeWrapper first = new TreeNodeWrapper(node);
-        TreeNodeWrapper second = new TreeNodeWrapper(node);
-
-        first.Equals(second).ShouldBeTrue();
-        first.GetHashCode().ShouldBe(second.GetHashCode());
     }
 
     [Fact]
@@ -332,11 +304,11 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
-    public void IsTopBehaviorTreeNode_TreeNodeWrapperOverBehaviorsRoot_ReturnsTrue()
+    public void IsTopBehaviorTreeNode_GumTreeNodeBehaviorsRoot_ReturnsTrue()
     {
-        ITreeNode wrapper = new TreeNodeWrapper(new TreeNode("Behaviors"));
+        ITreeNode node = new GumTreeNode("Behaviors");
 
-        wrapper.IsTopBehaviorTreeNode().ShouldBeTrue();
+        node.IsTopBehaviorTreeNode().ShouldBeTrue();
     }
 
     [Fact]
@@ -352,17 +324,17 @@ public class TreeNodePredicateExtensionsTests
     }
 
     [Fact]
-    public void IsTopStandardElementTreeNode_StandardRoot_ReturnsTrue()
+    public void IsTopStandardElementTreeNode_GumTreeNodeStandardRoot_ReturnsTrue()
     {
-        new FakeTreeNode { Text = "Standard" }.IsTopStandardElementTreeNode().ShouldBeTrue();
+        ITreeNode node = new GumTreeNode("Standard");
+
+        node.IsTopStandardElementTreeNode().ShouldBeTrue();
     }
 
     [Fact]
-    public void IsTopStandardElementTreeNode_TreeNodeWrapperOverStandardRoot_ReturnsTrue()
+    public void IsTopStandardElementTreeNode_StandardRoot_ReturnsTrue()
     {
-        ITreeNode wrapper = new TreeNodeWrapper(new TreeNode("Standard"));
-
-        wrapper.IsTopStandardElementTreeNode().ShouldBeTrue();
+        new FakeTreeNode { Text = "Standard" }.IsTopStandardElementTreeNode().ShouldBeTrue();
     }
 
     [Fact]

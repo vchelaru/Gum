@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CommonFormsAndControls;
 using Gum.ToolCommands;
 using Gum.DataTypes;
 using Gum.ToolStates;
@@ -46,17 +45,10 @@ public partial class ElementTreeViewManager
         _contextMenu.Items.Add(menuItem);
     }
 
-    private System.Windows.Controls.Image? CreateIconImageForKey(string key)
-    {
-        var source = _viewCreator.GetWpfImageSourceForKey(key);
-        if (source == null) return null;
-        return new System.Windows.Controls.Image
-        {
-            Source = source,
-            Width = 16,
-            Height = 16,
-        };
-    }
+    private const double MenuIconSize = 16;
+
+    private System.Windows.FrameworkElement? CreateIconImageForKey(string key) =>
+        Gum.Controls.TreeIconRegistry.CreateIcon(key, MenuIconSize);
 
     private void AddSeparator() => _contextMenu.Items.Add(new Separator());
 

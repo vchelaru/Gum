@@ -1,12 +1,11 @@
-using System.Windows.Forms;
+using System.Windows.Input;
 
-namespace CommonFormsAndControls;
+namespace Gum.Controls;
 
 /// <summary>
 /// Decides whether pressing a mouse button over a tree node should react (select it / raise
-/// <c>ReactToClickedNode</c>) immediately, or defer to mouse-up. Extracted from
-/// <see cref="MultiSelectTreeView"/> so the decision - independent of any live control state -
-/// can be unit-tested directly instead of only through <c>OnMouseDown</c> plumbing.
+/// <c>ReactToClickedNode</c>) immediately, or defer to mouse-up. The decision depends only on its
+/// arguments, not on any live control state, so it can be unit-tested without mouse-event plumbing.
 /// </summary>
 public class TreeNodeMouseDownSelectionLogic
 {
@@ -21,23 +20,23 @@ public class TreeNodeMouseDownSelectionLogic
     /// </summary>
     public bool ShouldReactToClick(
         bool isNodeInMultiSelection,
-        MouseButtons button,
-        Keys effectiveModifiers,
+        MouseButton button,
+        ModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior,
         bool isSelectingOnPush)
     {
-        if (isNodeInMultiSelection && button == MouseButtons.Right && effectiveModifiers != Keys.None)
+        if (isNodeInMultiSelection && button == MouseButton.Right && effectiveModifiers != ModifierKeys.None)
         {
             return false;
         }
 
-        if (effectiveModifiers == Keys.None && multiSelectBehavior != MultiSelectBehavior.RegularClick &&
+        if (effectiveModifiers == ModifierKeys.None && multiSelectBehavior != MultiSelectBehavior.RegularClick &&
             isNodeInMultiSelection)
         {
             return false;
         }
 
-        return isSelectingOnPush || effectiveModifiers == Keys.Shift || effectiveModifiers == Keys.Control ||
-               button == MouseButtons.Right;
+        return isSelectingOnPush || effectiveModifiers == ModifierKeys.Shift ||
+               effectiveModifiers == ModifierKeys.Control || button == MouseButton.Right;
     }
 }

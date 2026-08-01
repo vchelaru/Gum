@@ -1,11 +1,10 @@
-using System.Windows.Forms;
+using System.Windows.Input;
 
-namespace CommonFormsAndControls;
+namespace Gum.Controls;
 
 /// <summary>
 /// Which selection strategy a click on a tree node should use. Returned by
-/// <see cref="TreeNodeClickDispatchLogic.GetReaction"/> for <see cref="MultiSelectTreeView"/>'s
-/// caller to act on.
+/// <see cref="TreeNodeClickDispatchLogic.GetReaction"/> for <see cref="GumTreeView"/> to act on.
 /// </summary>
 public enum TreeNodeClickReaction
 {
@@ -13,7 +12,7 @@ public enum TreeNodeClickReaction
     DeselectAll,
 
     /// <summary>
-    /// The clicked node was null, but <see cref="MultiSelectTreeView.AlwaysHaveOneNodeSelected"/>
+    /// The clicked node was null, but <see cref="GumTreeView.AlwaysHaveOneNodeSelected"/>
     /// forbids an empty selection: do nothing.
     /// </summary>
     None,
@@ -29,10 +28,9 @@ public enum TreeNodeClickReaction
 }
 
 /// <summary>
-/// Decides which selection strategy applies to a clicked tree node. Extracted from
-/// <see cref="MultiSelectTreeView.ReactToClickedNode"/> so the dispatch decision - independent of
-/// any live control state - can be unit-tested directly instead of only through click plumbing.
-/// The caller still owns performing the actual selection mutation.
+/// Decides which selection strategy applies to a clicked tree node. The decision depends only on its
+/// arguments, not on any live control state, so it can be unit-tested without click plumbing. The
+/// caller still owns performing the actual selection mutation.
 /// </summary>
 public class TreeNodeClickDispatchLogic
 {
@@ -47,7 +45,7 @@ public class TreeNodeClickDispatchLogic
         bool hasClickedNode,
         bool hasExistingSelection,
         bool alwaysHaveOneNodeSelected,
-        Keys effectiveModifiers,
+        ModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior)
     {
         if (!hasClickedNode)
@@ -56,13 +54,13 @@ public class TreeNodeClickDispatchLogic
         }
 
         if (!hasExistingSelection ||
-            effectiveModifiers == Keys.Control ||
+            effectiveModifiers == ModifierKeys.Control ||
             multiSelectBehavior == MultiSelectBehavior.RegularClick)
         {
             return TreeNodeClickReaction.ToggleSelection;
         }
 
-        if (effectiveModifiers == Keys.Shift)
+        if (effectiveModifiers == ModifierKeys.Shift)
         {
             return TreeNodeClickReaction.RangeSelect;
         }

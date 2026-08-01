@@ -126,7 +126,9 @@ public class WpfPluginBaseTests
         public ITreeNode? Parent => null;
         public IEnumerable<ITreeNode> Children => Array.Empty<ITreeNode>();
         public FilePath GetFullFilePath() => new FilePath(FullPath);
+        public bool IsExpanded => false;
         public void Expand() { }
+        public void Collapse() { }
     }
 
     private sealed class FakeCursorState : IGumCursorState

@@ -1,25 +1,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using WinFormsTreeNode = System.Windows.Forms.TreeNode;
 
 namespace Gum.Managers;
 
 /// <summary>
 /// Reads a WPF drag payload (<see cref="IDataObject"/>) into a framework-neutral
-/// <see cref="WireframeDropPayload"/>. The WPF counterpart to the WinForms extraction that lives
-/// inline in <c>MainEditorTabPlugin.OnWireframeDragEnter</c>/<c>OnWireframeDrop</c> (which uses
-/// <c>CommonFormsAndControls.MultiSelectTreeView.ExtractDraggedNodes</c> for node detection, plus
-/// direct <see cref="System.Windows.Forms.DataFormats.FileDrop"/> and
-/// <see cref="DragDropManager.StandardElementNameDataFormat"/> checks).
-///
-/// Not yet wired to a live control — <c>WireframeControl</c> is still a
-/// <see cref="System.Windows.Forms.Control"/> (issue #3833). This exists so a future WPF-native
-/// <c>WireframeControl</c>, or any other WPF element that needs the same drop payloads, can wire
-/// <c>AllowDrop</c>/<c>DragEnter</c>/<c>DragOver</c>/<c>Drop</c> to it directly. Tree-node drops
-/// still carry WinForms <see cref="WinFormsTreeNode"/> objects because the element tree view itself
-/// hasn't moved to WPF yet — this reader's node extraction will need to move with it when it does.
+/// <see cref="WireframeDropPayload"/>, for the wireframe canvas and anything else that accepts the
+/// same drops.
 /// </summary>
+/// <remarks>
+/// Recognizes the three payloads the canvas acts on: a Standards-palette chip
+/// (<see cref="DragDropManager.StandardElementNameDataFormat"/>), a drag out of the element tree or
+/// the flat search results (<see cref="TreeDragPayload"/>), and dropped files.
+/// </remarks>
 public static class WpfWireframeDropPayloadReader
 {
     /// <summary>Extracts the framework-neutral drop payload from a WPF drag data object.</summary>
@@ -44,31 +38,12 @@ public static class WpfWireframeDropPayloadReader
         return new WireframeDropPayload(standardElementTypeName, nodeTags, files);
     }
 
-    // Deliberately does not use GetDataPresent(typeof(WinFormsTreeNode[]))/GetDataPresent(typeof(WinFormsTreeNode)):
-    // the drag source (MultiSelectTreeView.Theming's native reorder path, which starts the OLE drag
-    // this WPF drop target ultimately receives) wraps the payload with no explicit format, so the
-    // underlying OLE data object keys it by the payload's *runtime* type full name. A TreeNode
-    // subclass (GumTreeNode, which is what the element tree view actually constructs) is then stored
-    // under its own type name, so an exact typeof(TreeNode) lookup misses every dragged node - the
-    // same failure mode MultiSelectTreeView.ExtractDraggedNodes fixes for the tree's own internal
-    // reorder drop. Scanning the actual formats present and pattern-matching on TreeNode[]/TreeNode is
-    // robust to any subclass. Note the multi-select shape is an array (SelectedNodes.ToArray(), i.e.
-    // WinFormsTreeNode[]), not a List<WinFormsTreeNode> - matching MultiSelectTreeView.Theming's
-    // actual DoDragDrop payload, not the container type the data started in.
-    private static List<object>? ReadNodeTags(IDataObject data)
-    {
-        foreach (string format in data.GetFormats())
-        {
-            if (data.GetData(format) is WinFormsTreeNode[] nodes)
-            {
-                return nodes.Select(node => node.Tag).ToList();
-            }
-            if (data.GetData(format) is WinFormsTreeNode singleNode)
-            {
-                return new List<object> { singleNode.Tag };
-            }
-        }
-
-        return null;
-    }
+    // The data object carries only a marker format; the dragged items themselves travel alongside it
+    // in TreeDragPayload. A tag can legitimately be null - a folder row stands for nothing droppable -
+    // and is kept rather than filtered, so the drag is still recognized as a node drag and the drop
+    // simply does nothing with it.
+    private static List<object>? ReadNodeTags(IDataObject data) =>
+        data.GetDataPresent(TreeDragPayload.DataFormat) && TreeDragPayload.Tags is { } tags
+            ? tags.Select(tag => tag!).ToList()
+            : null;
 }

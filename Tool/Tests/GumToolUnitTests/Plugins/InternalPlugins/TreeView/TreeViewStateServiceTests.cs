@@ -1,12 +1,11 @@
-using CommonFormsAndControls;
-using Gum.Managers;
+﻿using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Settings;
 using Moq;
 using Shouldly;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using Xunit;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
 
@@ -15,42 +14,39 @@ public class TreeViewStateServiceTests : BaseTestClass
     private readonly Mock<IUserProjectSettingsManager> _mockSettingsManager;
     private readonly Mock<IOutputManager> _mockOutputManager;
     private readonly TreeViewStateService _service;
-    private readonly MultiSelectTreeView _treeView;
+    private readonly List<ITreeNode> _roots;
 
     public TreeViewStateServiceTests()
     {
         _mockSettingsManager = new Mock<IUserProjectSettingsManager>();
         _mockOutputManager = new Mock<IOutputManager>();
         _service = new TreeViewStateService(_mockSettingsManager.Object, _mockOutputManager.Object);
-        _treeView = new MultiSelectTreeView();
+        _roots = new List<ITreeNode>();
     }
 
-    public override void Dispose()
+    private GumTreeNode AddRoot(string text)
     {
-        base.Dispose();
-        _treeView?.Dispose();
+        GumTreeNode root = new GumTreeNode(text);
+        _roots.Add(root);
+        return root;
     }
 
-    // TreeNode.Expand()/Collapse() can force the underlying native window handle to be
-    // created, which requires an STA thread (WinForms drag/drop registration in
-    // OnHandleCreated throws otherwise); xUnit's default runner is MTA.
-
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_ShouldCaptureExpandedNodes()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var rootNodeName = "Components";
-        var childNodeName = "Button";
+        string rootNodeName = "Components";
+        string childNodeName = "Button";
 
-        var rootNode = _treeView.Nodes.Add(rootNodeName);
-        var childNode = rootNode.Nodes.Add(childNodeName);
+        GumTreeNode rootNode = AddRoot(rootNodeName);
+        rootNode.AddChild(childNodeName);
         rootNode.Expand();
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         settings.TreeViewState.ExpandedNodes.ShouldNotBeNull();
@@ -58,28 +54,28 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.ShouldContain(rootNodeName);
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_ShouldCaptureNestedExpandedNodes()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var componentsNodeName = "Components";
-        var buttonsFolderName = "Buttons";
-        var primaryButtonName = "PrimaryButton";
-        var expectedComponentsPath = componentsNodeName;
-        var expectedButtonsFolderPath = $"{componentsNodeName}/{buttonsFolderName}";
+        string componentsNodeName = "Components";
+        string buttonsFolderName = "Buttons";
+        string primaryButtonName = "PrimaryButton";
+        string expectedComponentsPath = componentsNodeName;
+        string expectedButtonsFolderPath = $"{componentsNodeName}/{buttonsFolderName}";
 
-        var componentsNode = _treeView.Nodes.Add(componentsNodeName);
-        var buttonsFolder = componentsNode.Nodes.Add(buttonsFolderName);
-        var primaryButton = buttonsFolder.Nodes.Add(primaryButtonName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
+        GumTreeNode buttonsFolder = (GumTreeNode)componentsNode.AddChild(buttonsFolderName);
+        buttonsFolder.AddChild(primaryButtonName);
 
         componentsNode.Expand();
         buttonsFolder.Expand();
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         settings.TreeViewState.ExpandedNodes.Count.ShouldBe(2);
@@ -87,43 +83,43 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.ShouldContain(expectedButtonsFolderPath);
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_ShouldCreateTreeViewState_WhenNull()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = null };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = null };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var rootNodeName = "Components";
-        var rootNode = _treeView.Nodes.Add(rootNodeName);
+        string rootNodeName = "Components";
+        GumTreeNode rootNode = AddRoot(rootNodeName);
         rootNode.Expand();
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         settings.TreeViewState.ShouldNotBeNull();
         settings.TreeViewState.ExpandedNodes.ShouldContain(rootNodeName);
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_ShouldDoNothing_WhenCurrentSettingsIsNull()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns((UserProjectSettings?)null);
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert - should not throw
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
     }
 
-    [StaFact]
-    public void CaptureAndSaveState_ShouldDoNothing_WhenTreeViewIsNull()
+    [Fact]
+    public void CaptureAndSaveState_ShouldDoNothing_WhenRootsIsNull()
     {
         // Arrange
-        var settings = new UserProjectSettings();
+        UserProjectSettings settings = new UserProjectSettings();
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
         // Act
@@ -133,61 +129,61 @@ public class TreeViewStateServiceTests : BaseTestClass
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_ShouldHandleError_Gracefully()
     {
         // Arrange
-        _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<System.Exception>();
+        _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<Exception>();
 
-        var rootNode = _treeView.Nodes.Add("Components");
+        GumTreeNode rootNode = AddRoot("Components");
         rootNode.Expand();
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         _mockOutputManager.Verify(x => x.AddError(It.Is<string>(msg => msg.Contains("Error capturing tree view state"))), Times.Once);
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_WithCollapsedTree_ShouldReturnEmptyList()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        _treeView.Nodes.Add("Components");
-        _treeView.Nodes.Add("Screens");
+        AddRoot("Components");
+        AddRoot("Screens");
         // Don't expand any nodes
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         settings.TreeViewState.ExpandedNodes.ShouldBeEmpty();
     }
 
-    [StaFact]
+    [Fact]
     public void CaptureAndSaveState_WithMultipleRootNodes_ShouldCaptureAll()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var componentsNodeName = "Components";
-        var screensNodeName = "Screens";
-        var standardsNodeName = "Standards";
+        string componentsNodeName = "Components";
+        string screensNodeName = "Screens";
+        string standardsNodeName = "Standards";
 
-        var componentsNode = _treeView.Nodes.Add(componentsNodeName);
-        var screensNode = _treeView.Nodes.Add(screensNodeName);
-        var standardsNode = _treeView.Nodes.Add(standardsNodeName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
+        GumTreeNode screensNode = AddRoot(screensNodeName);
+        AddRoot(standardsNodeName);
 
         componentsNode.Expand();
         screensNode.Expand();
         // Leave standardsNode collapsed
 
         // Act
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert
         settings.TreeViewState.ExpandedNodes.Count.ShouldBe(2);
@@ -196,25 +192,25 @@ public class TreeViewStateServiceTests : BaseTestClass
         settings.TreeViewState.ExpandedNodes.ShouldNotContain(standardsNodeName);
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldDoNothing_WhenCurrentSettingsIsNull()
     {
         // Arrange
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns((UserProjectSettings?)null);
-        _treeView.Nodes.Add("Components");
+        GumTreeNode componentsNode = AddRoot("Components");
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert - should not throw or expand nodes
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        componentsNode.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
-    public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewIsNull()
+    [Fact]
+    public void LoadAndApplyState_ShouldDoNothing_WhenRootsIsNull()
     {
         // Arrange
-        var settings = new UserProjectSettings();
+        UserProjectSettings settings = new UserProjectSettings();
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
         // Act
@@ -224,31 +220,31 @@ public class TreeViewStateServiceTests : BaseTestClass
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldDoNothing_WhenTreeViewStateIsNull()
     {
         // Arrange
-        var settings = new UserProjectSettings { TreeViewState = null };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = null };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
-        _treeView.Nodes.Add("Components");
+        GumTreeNode componentsNode = AddRoot("Components");
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        componentsNode.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldExpandCorrectNodes()
     {
         // Arrange
-        var componentsNodeName = "Components";
-        var screensNodeName = "Screens";
-        var standardsNodeName = "Standards";
-        var expandedPaths = new List<string> { componentsNodeName, screensNodeName };
+        string componentsNodeName = "Components";
+        string screensNodeName = "Screens";
+        string standardsNodeName = "Standards";
+        List<string> expandedPaths = new List<string> { componentsNodeName, screensNodeName };
 
-        var settings = new UserProjectSettings
+        UserProjectSettings settings = new UserProjectSettings
         {
             TreeViewState = new TreeViewState
             {
@@ -257,33 +253,33 @@ public class TreeViewStateServiceTests : BaseTestClass
         };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        _treeView.Nodes.Add(componentsNodeName);
-        _treeView.Nodes.Add(screensNodeName);
-        _treeView.Nodes.Add(standardsNodeName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
+        GumTreeNode screensNode = AddRoot(screensNodeName);
+        GumTreeNode standardsNode = AddRoot(standardsNodeName);
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();  // Components
-        _treeView.Nodes[1].IsExpanded.ShouldBeTrue();  // Screens
-        _treeView.Nodes[2].IsExpanded.ShouldBeFalse(); // Standards
+        componentsNode.IsExpanded.ShouldBeTrue();
+        screensNode.IsExpanded.ShouldBeTrue();
+        standardsNode.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldExpandNestedNodes()
     {
         // Arrange
-        var componentsNodeName = "Components";
-        var buttonsFolderName = "Buttons";
-        var primaryButtonName = "PrimaryButton";
-        var expandedPaths = new List<string>
+        string componentsNodeName = "Components";
+        string buttonsFolderName = "Buttons";
+        string primaryButtonName = "PrimaryButton";
+        List<string> expandedPaths = new List<string>
         {
             componentsNodeName,
             $"{componentsNodeName}/{buttonsFolderName}"
         };
 
-        var settings = new UserProjectSettings
+        UserProjectSettings settings = new UserProjectSettings
         {
             TreeViewState = new TreeViewState
             {
@@ -292,12 +288,12 @@ public class TreeViewStateServiceTests : BaseTestClass
         };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var componentsNode = _treeView.Nodes.Add(componentsNodeName);
-        var buttonsFolder = componentsNode.Nodes.Add(buttonsFolderName);
-        var primaryButton = buttonsFolder.Nodes.Add(primaryButtonName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
+        GumTreeNode buttonsFolder = (GumTreeNode)componentsNode.AddChild(buttonsFolderName);
+        GumTreeNode primaryButton = (GumTreeNode)buttonsFolder.AddChild(primaryButtonName);
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert
         componentsNode.IsExpanded.ShouldBeTrue();
@@ -305,32 +301,32 @@ public class TreeViewStateServiceTests : BaseTestClass
         primaryButton.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldHandleError_Gracefully()
     {
         // Arrange
-        _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<System.Exception>();
+        _mockSettingsManager.Setup(x => x.CurrentSettings).Throws<Exception>();
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert
         _mockOutputManager.Verify(x => x.AddError(It.Is<string>(msg => msg.Contains("Error applying tree view state"))), Times.Once);
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_ShouldIgnoreNonExistentPaths()
     {
         // Arrange
-        var componentsNodeName = "Components";
-        var expandedPaths = new List<string>
+        string componentsNodeName = "Components";
+        List<string> expandedPaths = new List<string>
         {
             componentsNodeName,
             "NonExistent/Path",
             "Components/DoesNotExist"
         };
 
-        var settings = new UserProjectSettings
+        UserProjectSettings settings = new UserProjectSettings
         {
             TreeViewState = new TreeViewState
             {
@@ -339,21 +335,21 @@ public class TreeViewStateServiceTests : BaseTestClass
         };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        _treeView.Nodes.Add(componentsNodeName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert - should not throw
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
+        componentsNode.IsExpanded.ShouldBeTrue();
         _mockOutputManager.Verify(x => x.AddError(It.IsAny<string>()), Times.Never);
     }
 
-    [StaFact]
+    [Fact]
     public void LoadAndApplyState_WithEmptyPathsList_ShouldDoNothing()
     {
         // Arrange
-        var settings = new UserProjectSettings
+        UserProjectSettings settings = new UserProjectSettings
         {
             TreeViewState = new TreeViewState
             {
@@ -362,50 +358,50 @@ public class TreeViewStateServiceTests : BaseTestClass
         };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        _treeView.Nodes.Add("Components");
+        GumTreeNode componentsNode = AddRoot("Components");
 
         // Act
-        _service.LoadAndApplyState(_treeView);
+        _service.LoadAndApplyState(_roots);
 
         // Assert
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        componentsNode.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void RoundTrip_ShouldPreserveExpandedState()
     {
         // Arrange - Create first tree with some nodes expanded
-        var settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
+        UserProjectSettings settings = new UserProjectSettings { TreeViewState = new TreeViewState() };
         _mockSettingsManager.Setup(x => x.CurrentSettings).Returns(settings);
 
-        var componentsNodeName = "Components";
-        var buttonsFolderName = "Buttons";
-        var screensNodeName = "Screens";
-        var expectedExpandedPaths = new List<string>
+        string componentsNodeName = "Components";
+        string buttonsFolderName = "Buttons";
+        string screensNodeName = "Screens";
+        List<string> expectedExpandedPaths = new List<string>
         {
             componentsNodeName,
             $"{componentsNodeName}/{buttonsFolderName}"
         };
 
-        var componentsNode = _treeView.Nodes.Add(componentsNodeName);
-        var buttonsFolder = componentsNode.Nodes.Add(buttonsFolderName);
-        var screensNode = _treeView.Nodes.Add(screensNodeName);
+        GumTreeNode componentsNode = AddRoot(componentsNodeName);
+        GumTreeNode buttonsFolder = (GumTreeNode)componentsNode.AddChild(buttonsFolderName);
+        AddRoot(screensNodeName);
 
         componentsNode.Expand();
         buttonsFolder.Expand();
-        // screensNode is intentionally left collapsed
+        // The Screens root is intentionally left collapsed
 
         // Act - Capture state from first tree
-        _service.CaptureAndSaveState(_treeView);
+        _service.CaptureAndSaveState(_roots);
 
         // Assert - Verify captured state matches expectations
         settings.TreeViewState.ExpandedNodes.ShouldBe(expectedExpandedPaths);
 
         // Create a fresh tree with the same structure (all nodes collapsed by default)
-        using var freshTreeView = new MultiSelectTreeView();
-        var freshComponentsNode = freshTreeView.Nodes.Add(componentsNodeName);
-        var freshButtonsFolder = freshComponentsNode.Nodes.Add(buttonsFolderName);
-        var freshScreensNode = freshTreeView.Nodes.Add(screensNodeName);
+        GumTreeNode freshComponentsNode = new GumTreeNode(componentsNodeName);
+        GumTreeNode freshButtonsFolder = (GumTreeNode)freshComponentsNode.AddChild(buttonsFolderName);
+        GumTreeNode freshScreensNode = new GumTreeNode(screensNodeName);
+        List<ITreeNode> freshRoots = new List<ITreeNode> { freshComponentsNode, freshScreensNode };
 
         // Verify fresh tree starts collapsed
         freshComponentsNode.IsExpanded.ShouldBeFalse();
@@ -413,7 +409,7 @@ public class TreeViewStateServiceTests : BaseTestClass
         freshScreensNode.IsExpanded.ShouldBeFalse();
 
         // Act - Restore state to fresh tree
-        _service.LoadAndApplyState(freshTreeView);
+        _service.LoadAndApplyState(freshRoots);
 
         // Assert - Previously expanded nodes are now expanded in fresh tree
         freshComponentsNode.IsExpanded.ShouldBeTrue();

@@ -1,13 +1,12 @@
 using System;
-using System.Windows.Forms;
+using Gum.Managers;
 
-namespace CommonFormsAndControls;
+namespace Gum.Controls;
 
 /// <summary>
 /// Computes which tree nodes fall in a Shift+Click selection range between an anchor node and a
-/// newly-clicked node, walking visible order the same way arrow-key navigation would. Extracted
-/// from <see cref="MultiSelectTreeView"/> so the (pure, decision-only) range logic can be
-/// unit-tested directly instead of only through mouse-event plumbing.
+/// newly-clicked node, walking visible order the same way arrow-key navigation would. The walk
+/// depends only on the nodes passed in, so it can be unit-tested without mouse-event plumbing.
 /// </summary>
 public class TreeNodeRangeSelectionLogic
 {
@@ -17,7 +16,7 @@ public class TreeNodeRangeSelectionLogic
     /// a parent are compared directly; otherwise both are walked up to their nearest common
     /// ancestor to determine direction before walking the visible chain between the original nodes.
     /// </summary>
-    public void SelectRange(TreeNode start, TreeNode end, Action<TreeNode> selectNode)
+    public void SelectRange(GumTreeNode start, GumTreeNode end, Action<GumTreeNode> selectNode)
     {
         if (start.Parent == end.Parent)
         {
@@ -25,23 +24,25 @@ public class TreeNodeRangeSelectionLogic
             return;
         }
 
-        TreeNode startAncestor = start;
-        TreeNode endAncestor = end;
+        GumTreeNode startAncestor = start;
+        GumTreeNode endAncestor = end;
         int commonDepth = Math.Min(startAncestor.Level, endAncestor.Level);
 
+        // A node deeper than commonDepth (>= 0) always has a parent, so the walks below cannot
+        // dereference null.
         while (startAncestor.Level > commonDepth)
         {
-            startAncestor = startAncestor.Parent;
+            startAncestor = startAncestor.Parent!;
         }
         while (endAncestor.Level > commonDepth)
         {
-            endAncestor = endAncestor.Parent;
+            endAncestor = endAncestor.Parent!;
         }
 
         while (startAncestor.Parent != endAncestor.Parent)
         {
-            startAncestor = startAncestor.Parent;
-            endAncestor = endAncestor.Parent;
+            startAncestor = startAncestor.Parent!;
+            endAncestor = endAncestor.Parent!;
         }
 
         bool forward = startAncestor.Index == endAncestor.Index
@@ -51,9 +52,10 @@ public class TreeNodeRangeSelectionLogic
         WalkAndSelect(start, end, selectNode, forward);
     }
 
-    private static void WalkAndSelect(TreeNode start, TreeNode end, Action<TreeNode> selectNode, bool forward)
+    private static void WalkAndSelect(
+        GumTreeNode start, GumTreeNode end, Action<GumTreeNode> selectNode, bool forward)
     {
-        TreeNode? current = start;
+        GumTreeNode? current = start;
         while (current != end)
         {
             current = forward ? current.NextVisibleNode : current.PrevVisibleNode;
