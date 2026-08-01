@@ -2090,9 +2090,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2102,9 +2100,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2114,9 +2110,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2126,9 +2120,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2138,9 +2130,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2150,9 +2140,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2162,9 +2150,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2174,9 +2160,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2186,9 +2170,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -2198,9 +2180,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Accent.FillRed</string>
-        <string>Green = Components/Styles.Accent.FillGreen</string>
-        <string>Blue = Components/Styles.Accent.FillBlue</string>
+        <string>Color = Components/Styles.Accent.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2218,9 +2198,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Black.FillRed</string>
-        <string>Green = Components/Styles.Black.FillGreen</string>
-        <string>Blue = Components/Styles.Black.FillBlue</string>
+        <string>Color = Components/Styles.Black.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2238,9 +2216,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.DarkGray.FillRed</string>
-        <string>Green = Components/Styles.DarkGray.FillGreen</string>
-        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        <string>Color = Components/Styles.DarkGray.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2258,9 +2234,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Emphasis.Font</string>
         <string>FontSize = Components/Styles.Emphasis.FontSize</string>
         <string>IsBold = Components/Styles.Emphasis.IsBold</string>
@@ -2278,9 +2252,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Gray.FillRed</string>
-        <string>Green = Components/Styles.Gray.FillGreen</string>
-        <string>Blue = Components/Styles.Gray.FillBlue</string>
+        <string>Color = Components/Styles.Gray.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2298,9 +2270,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.H1.Font</string>
         <string>FontSize = Components/Styles.H1.FontSize</string>
         <string>IsBold = Components/Styles.H1.IsBold</string>
@@ -2318,9 +2288,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.H2.Font</string>
         <string>FontSize = Components/Styles.H2.FontSize</string>
         <string>IsBold = Components/Styles.H2.IsBold</string>
@@ -2338,9 +2306,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.H3.Font</string>
         <string>FontSize = Components/Styles.H3.FontSize</string>
         <string>IsBold = Components/Styles.H3.IsBold</string>
@@ -2358,9 +2324,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.LightGray.FillRed</string>
-        <string>Green = Components/Styles.LightGray.FillGreen</string>
-        <string>Blue = Components/Styles.LightGray.FillBlue</string>
+        <string>Color = Components/Styles.LightGray.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2378,9 +2342,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2398,9 +2360,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2418,9 +2378,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.PrimaryDark.FillRed</string>
-        <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
-        <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+        <string>Color = Components/Styles.PrimaryDark.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2438,9 +2396,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.PrimaryLight.FillRed</string>
-        <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
-        <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+        <string>Color = Components/Styles.PrimaryLight.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2458,9 +2414,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Small.Font</string>
         <string>FontSize = Components/Styles.Small.FontSize</string>
         <string>IsBold = Components/Styles.Small.IsBold</string>
@@ -2478,9 +2432,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Strong.Font</string>
         <string>FontSize = Components/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Styles.Strong.IsBold</string>
@@ -2498,9 +2450,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Success.FillRed</string>
-        <string>Green = Components/Styles.Success.FillGreen</string>
-        <string>Blue = Components/Styles.Success.FillBlue</string>
+        <string>Color = Components/Styles.Success.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2518,9 +2468,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Tiny.Font</string>
         <string>FontSize = Components/Styles.Tiny.FontSize</string>
         <string>IsBold = Components/Styles.Tiny.IsBold</string>
@@ -2538,9 +2486,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>
@@ -2558,9 +2504,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Warning.FillRed</string>
-        <string>Green = Components/Styles.Warning.FillGreen</string>
-        <string>Blue = Components/Styles.Warning.FillBlue</string>
+        <string>Color = Components/Styles.Warning.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2578,9 +2522,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Danger.FillRed</string>
-        <string>Green = Components/Styles.Danger.FillGreen</string>
-        <string>Blue = Components/Styles.Danger.FillBlue</string>
+        <string>Color = Components/Styles.Danger.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -2598,9 +2540,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>

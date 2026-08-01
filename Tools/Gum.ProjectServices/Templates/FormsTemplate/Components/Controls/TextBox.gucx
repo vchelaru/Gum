@@ -447,9 +447,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.DarkGray.FillRed</string>
-        <string>Green = Components/Styles.DarkGray.FillGreen</string>
-        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        <string>Color = Components/Styles.DarkGray.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -459,9 +457,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -471,9 +467,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Warning.FillRed</string>
-        <string>Green = Components/Styles.Warning.FillGreen</string>
-        <string>Blue = Components/Styles.Warning.FillBlue</string>
+        <string>Color = Components/Styles.Warning.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -483,9 +477,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Gray.FillRed</string>
-        <string>Green = Components/Styles.Gray.FillGreen</string>
-        <string>Blue = Components/Styles.Gray.FillBlue</string>
+        <string>Color = Components/Styles.Gray.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -503,9 +495,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -515,9 +505,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.White.FillRed</string>
-        <string>Green = Components/Styles.White.FillGreen</string>
-        <string>Blue = Components/Styles.White.FillBlue</string>
+        <string>Color = Components/Styles.White.FillColor</string>
         <string>Font = Components/Styles.Normal.Font</string>
         <string>FontSize = Components/Styles.Normal.FontSize</string>
         <string>IsBold = Components/Styles.Normal.IsBold</string>
@@ -570,9 +558,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -582,9 +568,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Gray.FillRed</string>
-          <string>Green = Components/Styles.Gray.FillGreen</string>
-          <string>Blue = Components/Styles.Gray.FillBlue</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -594,9 +578,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.White.FillRed</string>
-          <string>Green = Components/Styles.White.FillGreen</string>
-          <string>Blue = Components/Styles.White.FillBlue</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -639,9 +621,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -651,9 +631,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Gray.FillRed</string>
-          <string>Green = Components/Styles.Gray.FillGreen</string>
-          <string>Blue = Components/Styles.Gray.FillBlue</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -663,9 +641,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Gray.FillRed</string>
-          <string>Green = Components/Styles.Gray.FillGreen</string>
-          <string>Blue = Components/Styles.Gray.FillBlue</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -708,9 +684,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Gray.FillRed</string>
-          <string>Green = Components/Styles.Gray.FillGreen</string>
-          <string>Blue = Components/Styles.Gray.FillBlue</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -720,9 +694,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -732,9 +704,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.White.FillRed</string>
-          <string>Green = Components/Styles.White.FillGreen</string>
-          <string>Blue = Components/Styles.White.FillBlue</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -777,9 +747,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -789,9 +757,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Gray.FillRed</string>
-          <string>Green = Components/Styles.Gray.FillGreen</string>
-          <string>Blue = Components/Styles.Gray.FillBlue</string>
+          <string>Color = Components/Styles.Gray.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -801,9 +767,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.White.FillRed</string>
-          <string>Green = Components/Styles.White.FillGreen</string>
-          <string>Blue = Components/Styles.White.FillBlue</string>
+          <string>Color = Components/Styles.White.FillColor</string>
         </Value>
       </VariableList>
     </State>

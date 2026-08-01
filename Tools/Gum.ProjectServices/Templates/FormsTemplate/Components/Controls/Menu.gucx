@@ -143,9 +143,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.DarkGray.FillRed</string>
-        <string>Green = Components/Styles.DarkGray.FillGreen</string>
-        <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+        <string>Color = Components/Styles.DarkGray.FillColor</string>
       </Value>
     </VariableList>
   </State>
