@@ -56,9 +56,10 @@ public class Renderer : IRenderer
     /// the active clip rectangle, along with its subtree — avoiding draw and render-state work for
     /// scrolled-off content in ListBoxes, ScrollViewers, etc. (#2998).
     /// <para>
-    /// Treat as experimental until validated on real projects: set to false to render all clipped
-    /// content if a renderable's visuals intentionally bleed far past its own bounds. Forwards to
-    /// the backend-agnostic <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
+    /// Set to false to render all clipped content if a renderable's visuals intentionally bleed far
+    /// past its own bounds; this is a diagnostic escape hatch, not a routine toggle, so report cases
+    /// that need it. Forwards to the backend-agnostic
+    /// <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
     /// </para>
     /// </summary>
     public static bool CullOffscreenWhenClipped

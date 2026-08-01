@@ -35,7 +35,7 @@ The cull decides what to skip from each renderable's *own* bounds. That is corre
 In those cases an item sitting just past the edge of a scrolled region could be culled even though part of it should still be visible. If you see content disappear at the edge of a clipped area that should be on screen, either set `CullOffscreenWhenClipped` to `false`, or give the overflowing content a parent that clips it so its footprint stays within its bounds.
 
 {% hint style="info" %}
-**As of May 2026:** Off-screen culling is on by default but is still considered experimental while it is validated across real projects. If it causes incorrect clipping in your project, disable it with `Renderer.CullOffscreenWhenClipped = false` and please report the case.
+Setting `CullOffscreenWhenClipped` to `false` is a diagnostic step, not a long-term fix. If disabling it changes what's visible in your project, please [report it](https://github.com/vchelaru/Gum/issues) so the underlying cull bounds can be fixed.
 {% endhint %}
 
 Use [Measuring Draw Calls](lastframedrawstates.md) to confirm the reduction in draw states with the cull on versus off.
