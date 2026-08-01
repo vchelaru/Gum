@@ -59,15 +59,8 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         // of once for the whole batch.
         _elementImportRefreshCoalescer = new RefreshCoalescer(dispatcher, () =>
         {
-            // TEMPORARY (issue #4233): measuring the coalesced refresh's real cost on the ported
-            // WPF tree. Remove once a real number is in hand.
-            var sw = System.Diagnostics.Stopwatch.StartNew();
             _elementTreeViewManager.RefreshUi();
             RefreshErrorIndicatorsForAllElements();
-            sw.Stop();
-            System.IO.File.AppendAllText(
-                @"C:\Users\vchel\AppData\Local\Temp\claude\C--Users-vchel-Documents-GitHub-Gum\65ccc03e-807a-4e22-a84d-40bf6aacdeec\scratchpad\gum-4233-refresh-timing.log",
-                $"{DateTime.Now:HH:mm:ss.fff} Coalesced tree RefreshUi + error refresh took {sw.ElapsedMilliseconds} ms{Environment.NewLine}");
         });
 
         // Register to receive ApplicationTeardownMessage
