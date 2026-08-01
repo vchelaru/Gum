@@ -67,6 +67,73 @@ keyed on `Children`. Container state (`IsExpanded`, `IsSelected`) is wired throu
   `TreeNodeKeyNavigationLogic`) — these encode real behavior with real unit tests. They are retyped
   off WinForms enums where needed, not rewritten.
 
+## The inventory that actually sizes this
+
+### Custom API the WPF tree must reproduce (not free from a WPF `TreeView`)
+
+`SelectedNodes` (get+set), `SelectedNode` (multi-select-aware), `AlwaysHaveOneNodeSelected`,
+`IsSelectingOnPush`, `MultiSelectBehavior`, `EnableNativeReorder`, `HoverBgColor`,
+`SelectedBorderColor`, `SetExternalHotNode`, `CallAfterClickSelect`, `DropKind`,
+`ValidateDropEventArgs`, `DroppingEventArgs`, and the events `AfterClickSelect`,
+`UnhandledException`, `NavigateBackRequested`, `NavigateForwardRequested`, `ValidateSortingDrop`,
+`NodeSortingDropped`. `StructureMutated`, `EnsureVisibleRequested`, `ChevronBoxSize` and
+`ElementTreeImageList` exist only to serve `ThemedScrollContainer` and the `ImageList`, both of
+which die here.
+
+### The four things that must move together
+
+The drag payload is the riskiest cross-boundary contract in the port. `GumTreeNode` instances are
+put on the OLE data object and read back **by runtime type name**, so the node type is observable
+outside the tree. Changing it breaks the wireframe drop path unless all four change at once:
+
+1. `MultiSelectTreeView.ExtractDraggedNodes` (internal reorder)
+2. `Gum/Managers/WpfWireframeDropPayloadReader.ReadNodeTags` (wireframe drop target)
+3. `FlatSearchListBox.CreateDragNode` (fabricates a node-shaped payload for search results)
+4. `Gum/Managers/SearchResultDragPayload.cs` (static side-channel that already exists because
+   `Tag` does not survive the WPF→OLE boundary for non-serializable types)
+
+Three regression test files pin this (#3965/#4123). **Design consequence:** stop putting node
+objects on the data object at all. Put a marker format on it and carry the nodes in a static
+side-channel — generalizing what `SearchResultDragPayload` already does — which removes the
+type-name-scanning hack instead of porting it.
+
+### Hidden second consumer: `ThemedScrollContainer`
+
+~270 lines of `ThemedScrollContainerExtensions` exist purely to bolt a themed scrollbar onto a
+WinForms `TreeView` by hand-measuring rows (`ItemHeight`, `Indent`, `ChevronBoxSize`,
+`StateImageList`, `ImageList`, `NodeFont`, `TextRenderer.MeasureText`) and to auto-scroll during
+drag. A WPF `TreeView` in its own `ScrollViewer` deletes essentially all of it. The tree is its only
+consumer, so the whole file goes.
+
+### Bugs this port fixes outright
+
+- `_lastMouseDownButton` in `ElementTreeViewManager` is a workaround for WPF `ContextMenu` dismissal
+  never delivering a right-button `MouseUp` to WinForms, which made later left-clicks arrive as
+  right-clicks. Gone with the interop boundary.
+- Right-clicking a second node while the context menu is open only dismisses it, because the WPF
+  popup has mouse capture. The existing code comment says fixing it "requires migrating the TreeView
+  to WPF."
+- The tree hand-wires `NavigateBackRequested`/`NavigateForwardRequested` because mouse XButton1/2
+  never reach `MainWindow.OnPreviewMouseDown` from a hosted surface.
+
+### Dead code to remove alongside
+
+- `PluginManager.StateWindowTreeNodeSelected` — no callers, and its `(ITreeNode)` cast of a WinForms
+  `TreeNode` would throw if there were.
+- `InternalsVisibleTo("EditorTabPlugin_XNA")` in `CommonFormsAndControls/Properties/AssemblyInfo.cs`
+  — its stated reason (that plugin calling `ExtractDraggedNodes`) is no longer true.
+- `TreeNodeExtensionMethods` (the WinForms-`TreeNode` predicate + `GetFullFilePath` class at the
+  bottom of `ElementTreeViewManager.cs`), plus its write-only static `ElementTreeViewManager`
+  property. Every predicate already has a headless `ITreeNode` twin in `Gum.Presentation`; only
+  `GetFullFilePath` needed porting.
+
+### Contracts that must not change
+
+- `ITreeNode.FullPath` is **backslash**-separated — `CopyPasteLogic` slices a `"Components\\"`
+  prefix off it.
+- Saved expansion state is a list of **forward-slash**-joined node-`Text` paths in user project
+  settings. Changing either format silently discards every user's saved expansion state.
+
 ## Risk register
 
 | Risk | Mitigation |
@@ -81,21 +148,30 @@ keyed on `Children`. Container state (`IsExpanded`, `IsSelected`) is wired throu
 
 - [x] Branch + worktree (`4228-treeview-wpf-decision`, off `origin/main` @ 6f25605c4)
 - [x] Read the seam (`ITreeNode`, `ITreeNodeMutable`, `GumTreeNode`), `MultiSelectTreeView`, `ElementTreeViewCreator`
-- [ ] Inventory the consumed API surface (in flight)
-- [ ] Inventory drag/drop + context menu + focus/hotkey routing (in flight)
-- [ ] Design sign-off on the node-VM shape
-- [ ] Implement `GumTreeNode` as observable VM
-- [ ] Implement `GumTreeView` (multi-select, typeahead, drag/drop)
-- [ ] XAML styles replacing the owner-draw theming
-- [ ] Icon pipeline swap
-- [ ] Wire into `ElementTreeViewCreator`; drop `WindowsFormsHost`
-- [ ] Delete `MainWindow.IsDescendantOfWindowsFormsHost` + the `WindowsFormsHost` style
-- [ ] Unit tests green; `GumFull.sln` builds
-- [ ] Manual test pass
+- [x] Inventory the consumed API surface
+- [x] Inventory drag/drop + context menu + focus/hotkey routing
+- [x] **Step 1 — headless prep.** `ITreeNode` gained `IsExpanded`/`Collapse`; the duplicated
+      expanded-path walk extracted to `TreeNodeExpansionPaths` (Gum.Presentation);
+      `ICollapseToggleService` and `ITreeViewStateService` retyped off `MultiSelectTreeView` onto
+      `IReadOnlyList<ITreeNode>`; `ElementTreeViewManager.RootTreeNodes` added as the roots accessor.
+- [ ] **Step 2 — node model.** `GumTreeNode` rewritten as an observable model with a
+      `GumTreeNodeCollection`, no WinForms base. `TreeNodeExtensionMethods` deleted, its
+      `GetFullFilePath` ported to `TreeNodeFilePathExtensions` on `ITreeNode`. *In progress.*
+- [ ] Step 3 — `GumTreeView` (multi-select, typeahead, drag/drop, drop adornments)
+- [ ] Step 4 — XAML styles replacing the owner-draw theming; icon pipeline swap
+- [ ] Step 5 — rewire `ElementTreeViewCreator` / `ElementTreeViewManager`; drop `WindowsFormsHost`
+- [ ] Step 6 — delete `MultiSelectTreeView*`, `ThemedScrollContainer`,
+      `MainWindow.IsDescendantOfWindowsFormsHost`, the `WindowsFormsHost` style, and the dead code listed above
+- [ ] Step 7 — unit tests green; `GumFull.sln` builds
+- [ ] Step 8 — manual test pass
 
 ## Restart notes
 
-If this work is picked up cold: the branch is `4228-treeview-wpf-decision` (name predates the
-decision to actually port — it is the port branch). Everything above is the design; the Progress
-list is the state. Nothing outside `Direction/` has been modified until the boxes below "Design
-sign-off" start getting checked.
+Branch `4228-treeview-wpf-decision` (the name predates the decision to actually port — it *is* the
+port branch). Everything above is the design and the inventory; the Progress list is the state.
+
+Order matters: steps 1 and 2 are what make the rest mechanical. Step 2 is the breaking change —
+once `GumTreeNode` stops deriving from `System.Windows.Forms.TreeNode`, every `(TreeNode)` cast in
+`ElementTreeViewManager` (there are ~25, each sitting under a comment explaining the
+"every node is a GumTreeNode" invariant) has to become a `GumTreeNode`/`ITreeNodeMutable` cast, and
+the four drag-payload sites listed above have to move in the same commit.
