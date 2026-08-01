@@ -44,4 +44,30 @@ public class CustomSetPropertyOnRenderableRectangleCircleColorTests : BaseTestCl
 
         circleRuntime.Color.ShouldBe(new Color(40, 50, 60, 255));
     }
+
+    // #4169: DropshadowColor is backend-typed the same as "Color" above, and had no dispatch
+    // case at all (not just a raylib gap) - see CustomSetPropertyOnRenderable.Dropshadow* cases.
+    [Fact]
+    public void SetPropertyOnRenderable_DropshadowColorOnRectangleRuntime_AppliesValue()
+    {
+        RectangleRuntime rectangleRuntime = new();
+        IRenderableIpso renderable = (IRenderableIpso)rectangleRuntime.RenderableComponent!;
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(200, 70, 80, 90);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(renderable, rectangleRuntime, "DropshadowColor", drawingColor);
+
+        rectangleRuntime.DropshadowColor.ShouldBe(new Color(70, 80, 90, 200));
+    }
+
+    [Fact]
+    public void SetPropertyOnRenderable_DropshadowColorOnCircleRuntime_AppliesValue()
+    {
+        CircleRuntime circleRuntime = new();
+        IRenderableIpso renderable = (IRenderableIpso)circleRuntime.RenderableComponent!;
+        System.Drawing.Color drawingColor = System.Drawing.Color.FromArgb(210, 15, 25, 35);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(renderable, circleRuntime, "DropshadowColor", drawingColor);
+
+        circleRuntime.DropshadowColor.ShouldBe(new Color(15, 25, 35, 210));
+    }
 }
