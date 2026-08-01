@@ -653,8 +653,8 @@ public class Renderer : IRenderer
         // Submit phase: walk that sequence, issuing the actual SpriteBatch / orchestrator
         // calls. Splitting these phases is what #2879's batch-grouped orderer needs — and
         // by itself it produces byte-identical output via HierarchicalOrderer (the default).
-        // The recursive Render/Draw helpers below remain in use for the prerender path
-        // (RenderToRenderTarget) and the GumBatch immediate-mode path (Renderer.Draw).
+        // The render-target bake shares the same build-then-submit shape via SubmitBake; the
+        // recursive Render/Draw helpers below remain only for the GumBatch immediate-mode path.
         SiblingOrdering.BuildDrawList(layer, _scratchCommands, mCamera);
         Submit(_scratchCommands, managers, layer);
 
@@ -703,7 +703,7 @@ public class Renderer : IRenderer
         // are not supported on this path.
         InvokePreRenderRecursively(renderable);
 
-        Draw(SystemManagers.Default, _layers[0], renderable, forceRenderHierarchy:false, isPreRender:false);
+        Draw(SystemManagers.Default, _layers[0], renderable);
     }
 
     private void InvokePreRenderRecursively(IRenderableIpso renderable)
@@ -927,8 +927,14 @@ public class Renderer : IRenderer
             var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
             var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
 
-            Camera.X = Math.MathFunctions.RoundToInt(Camera.X * CurrentZoom) / CurrentZoom + effectivePixelOffsetX / CurrentZoom;
-            Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
+            // CurrentZoom only becomes meaningful once a SpriteBatch has begun, but the bake runs
+            // in PreRender — before the frame's first BeginSpriteBatch. Fall back to the camera's
+            // own zoom so the snap below doesn't divide by zero and push Camera.X/Y to NaN, which
+            // then propagates into every world->screen scissor computed inside the bake.
+            var snapZoom = CurrentZoom > 0 ? CurrentZoom : Camera.Zoom;
+
+            Camera.X = Math.MathFunctions.RoundToInt(Camera.X * snapZoom) / snapZoom + effectivePixelOffsetX / snapZoom;
+            Camera.Y = Math.MathFunctions.RoundToInt(Camera.Y * snapZoom) / snapZoom + effectivePixelOffsetY / snapZoom;
 
 
             gumBatch = gumBatch ?? new GumBatch();
@@ -949,7 +955,7 @@ public class Renderer : IRenderer
             // substitute the bake-safe blend for that case instead (#1696). A child with an
             // explicitly custom BlendState is unaffected, same as the composite-back override.
             _isBakingRenderTarget = true;
-            Draw(systemManagers, _layers[0], renderable, forceRenderHierarchy:true, isPreRender:true);
+            SubmitBake(renderable, systemManagers, _layers[0]);
             _isBakingRenderTarget = false;
 
             gumBatch.End();
@@ -988,13 +994,53 @@ public class Renderer : IRenderer
 
     }
 
-    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer, bool isPreRender)
+    /// <summary>
+    /// Bake submit phase: draws a render-target container and its subtree into the offscreen target
+    /// <see cref="RenderToRenderTarget"/> has already bound. The subtree goes through
+    /// <see cref="SiblingOrdering"/>'s subtree entry point so the bake shares the main pass's
+    /// visibility, off-screen-cull, clip and traversal semantics instead of running its own
+    /// recursive walk (#4154). <see cref="RenderToRenderTarget"/> has already rebased the camera
+    /// into render-target-local space, so the scissor and cull-bounds mappings are the ordinary
+    /// camera ones.
+    /// </summary>
+    private void SubmitBake(IRenderableIpso container, SystemManagers managers, Layer layer)
+    {
+        bool clips = container.ClipsChildren;
+        if (clips)
+        {
+            BeginClipScope(layer, container, managers);
+        }
+
+        // The container's own visual bakes first: a runtime container's InvisibleRenderable draws
+        // nothing, but the editor's LineRectangle-backed container draws its outline.
+        AdjustNonClipRenderStates(mRenderStateVariables, layer, container, managers);
+        _batchOrchestrator.OnRenderable(container, managers);
+        container.Render(managers);
+
+        var children = container.Children;
+        if (children != null && children.Count > 0)
+        {
+            SiblingOrdering.BuildDrawList(
+                children,
+                _bakeCommands,
+                renderable => Camera.GetScissorRectangleFor(layer, renderable),
+                renderable => Camera.GetCullTestBoundsFor(layer, renderable));
+            Submit(_bakeCommands, managers, layer);
+        }
+
+        if (clips)
+        {
+            EndClipScope(layer, container, managers);
+        }
+    }
+
+    private void Render(IList<IRenderableIpso> whatToRender, SystemManagers managers, Layer layer)
     {
         var count = whatToRender.Count;
         for (int i = 0; i < count; i++)
         {
             var renderable = whatToRender[i];
-            Draw(managers, layer, renderable, forceRenderHierarchy:false, isPreRender:isPreRender);
+            Draw(managers, layer, renderable);
         }
     }
 
@@ -1007,20 +1053,28 @@ public class Renderer : IRenderer
     // after warm-up. The renderer owns the buffer; the orderer writes into it.
     readonly List<DrawCommand> _scratchCommands = new List<DrawCommand>();
 
+    // Separate buffer for the render-target bake so a bake can never stomp the main pass's
+    // in-flight command list. Bakes run post-order in PreRender and are never re-entrant, so a
+    // single buffer serves all of them.
+    readonly List<DrawCommand> _bakeCommands = new List<DrawCommand>();
+
     // Tracks clip state during Submit so EndClip can restore the rect that BeginClip saw.
     // Balanced by construction (the orderer always emits matched BeginClip/EndClip pairs),
     // so this is empty at the end of every Submit call.
     readonly Stack<Rectangle?> _clipScopeStack = new Stack<Rectangle?>();
 
-    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable, bool forceRenderHierarchy, bool isPreRender)
+    // Legacy recursive walk, still used by the GumBatch immediate-mode path (Renderer.Draw).
+    // The layered main pass and the render-target bake both go through the shared
+    // SiblingOrdering build phase plus Submit instead.
+    private void Draw(SystemManagers managers, Layer layer, IRenderableIpso renderable)
     {
-        if (renderable.Visible || ( renderable.IsRenderTarget && isPreRender))
+        if (renderable.Visible)
         {
             var oldClip = mRenderStateVariables.ClipRectangle;
             AdjustRenderStates(mRenderStateVariables, layer, renderable, managers);
             bool didClipChange = oldClip != mRenderStateVariables.ClipRectangle;
 
-            if (renderable.IsRenderTarget && !forceRenderHierarchy)
+            if (renderable.IsRenderTarget)
             {
                 // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
                 var renderTarget = renderTargetService.GetRenderTargetFor(
@@ -1040,7 +1094,7 @@ public class Renderer : IRenderer
 
                 if (RenderUsingHierarchy)
                 {
-                    Render(renderable.Children, managers, layer, isPreRender);
+                    Render(renderable.Children, managers, layer);
                 }
             }
 

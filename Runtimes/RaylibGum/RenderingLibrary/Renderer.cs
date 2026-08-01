@@ -47,14 +47,14 @@ public class Renderer : IRenderer
     readonly Gum.Renderables.RenderTextureService _renderTargetService = new();
 
     // True while baking a render-target container's subtree into its offscreen texture. Inside a
-    // bake, DrawGumRecursively rebases scissor rects into RT-local space (the clamped top-left is
+    // bake, GetScissorRectangleFor rebases scissor rects into RT-local space (the clamped top-left is
     // the RT origin) so a ClipsChildren descendant clips correctly within the RT (#3440).
     bool _isBakingRenderTarget;
 
-    // The active bake's clamped top-left in world coords, captured so DrawGumRecursively can convert
-    // a descendant's absolute bounds into RT-local scissor pixels. Only meaningful while
-    // _isBakingRenderTarget is true; bakes are never re-entrant (post-order means an inner RT is
-    // fully baked before its outer one begins), so single fields suffice.
+    // The active bake's clamped top-left in world coords, captured so the bake-local scissor and
+    // cull-bounds mappings can convert a descendant's absolute bounds into RT-local pixels. Only
+    // meaningful while _isBakingRenderTarget is true; bakes are never re-entrant (post-order means
+    // an inner RT is fully baked before its outer one begins), so single fields suffice.
     float _bakeLeft;
     float _bakeTop;
 
@@ -66,6 +66,11 @@ public class Renderer : IRenderer
     // warm-up, mirroring the xnalike Renderer's _scratchCommands (#4154). The renderer owns
     // the buffer; the orderer writes into it.
     readonly List<DrawCommand> _scratchCommands = new();
+
+    // Separate buffer for the render-target bake so a bake can never stomp the main pass's
+    // in-flight command list. Bakes run post-order and are never re-entrant, so one buffer
+    // serves all of them.
+    readonly List<DrawCommand> _bakeCommands = new();
 
     // Set during the PreRender walk (which already traverses the whole visible tree) when any
     // render-target container is present, so the bake pre-pass is skipped entirely for the common
@@ -368,9 +373,9 @@ public class Renderer : IRenderer
         // Build phase: flatten the (already Z-sorted) layer into a sequence of DrawCommands via
         // the shared HierarchicalOrderer -- the same builder MonoGame/KNI/FNA use for their main
         // pass (#4154). Submit phase below walks that sequence, issuing the raylib-specific
-        // scissor stack / BatchDrawCallCounter / render-target composite calls. BakeRenderTarget's
-        // own child walk stays on the recursive DrawGumRecursively -- unifying the bake path onto
-        // the orderer's subtree entry point is a separate follow-up (#4154 step 4).
+        // scissor stack / BatchDrawCallCounter / render-target composite calls. BakeRenderTarget
+        // uses the same build-then-submit shape via the orderer's subtree entry point, so raylib
+        // has a single walk implementation.
         HierarchicalOrderer.Instance.BuildDrawList(layer, _scratchCommands, _camera);
         Submit(_scratchCommands, layer);
     }
@@ -391,9 +396,8 @@ public class Renderer : IRenderer
 
             // A render-target container always renders as a single composited unit (its subtree
             // was already baked into an offscreen texture during the pre-pass) and never
-            // participates in the scissor stack, even if it also has ClipsChildren set --
-            // mirrors DrawGumRecursively, which composites and returns before ever touching the
-            // scissor stack. The orderer brackets ClipsChildren independently of IsRenderTarget
+            // participates in the scissor stack, even if it also has ClipsChildren set.
+            // The orderer brackets ClipsChildren independently of IsRenderTarget
             // (see HierarchicalOrdererTests.BuildDrawList_IsRenderTargetNodeWithClipsChildren_
             // StillBracketsButDoesNotRecurse), so this guard applies uniformly across BeginClip /
             // DrawRenderable / EndClip rather than assuming the brackets are already absent. Covered
@@ -446,93 +450,6 @@ public class Renderer : IRenderer
         else
         {
             BatchDrawCallCounter.EndScissorMode();
-        }
-    }
-
-    private void DrawGumRecursively(IRenderableIpso element, Layer layer)
-    {
-        // Mirrors HierarchicalOrderer's own top-of-node check: an invisible renderable and its whole
-        // subtree are skipped. Covers both top-level layer renderables (Render's loop above has no
-        // Visible check of its own) and children (the loop below no longer filters on Visible either,
-        // relying on this single check — #4155).
-        if (!element.Visible)
-        {
-            return;
-        }
-
-        // #2998 off-screen cull: when a clip is active (the scissor stack is non-empty), skip this
-        // element and its subtree if it falls entirely outside the active clip, expanded by a small
-        // margin. Mirrors the XNA orderer cull via the same shared predicate.
-        // GetCullTestBoundsFor (rather than the plain GetScissorRectangleFor) accounts for wrapped
-        // text whose actual rendered extent exceeds its declared bounds (#4144).
-        if (CameraScissorExtensions.CullOffscreenWhenClipped
-            && _scissorStack.Count > 0
-            && CameraScissorExtensions.IsFullyOutside(
-                GetCullTestBoundsFor(layer, element),
-                _scissorStack.Peek(),
-                CameraScissorExtensions.OffscreenCullMarginInPixels))
-        {
-            return;
-        }
-
-        // Render-target container (#3434): its subtree was already baked into an offscreen texture
-        // during the pre-pass, so composite that texture in place of walking the live children. This
-        // fires both in the main walk (composite to screen) and inside an outer container's bake
-        // (composite a nested inner RT into the outer texture), which is what makes nesting work. A
-        // render-target container ALWAYS renders as a single composited unit and never falls through
-        // to draw its children directly.
-        if (element.IsRenderTarget)
-        {
-            // Composite the baked texture if a valid one exists; otherwise (degenerate/zero clamped
-            // size, or entirely off-camera) render NOTHING and stop. We deliberately do NOT fall
-            // through to draw the children directly: doing so would draw them unclamped, so content
-            // that reaches back into the visible camera area (a negative offset, an oversized child,
-            // a dropshadow bleeding past the edge) would appear on raylib but be invisible on
-            // MonoGame for the same project. This converges raylib onto MonoGame, whose draw-list
-            // builder never recurses into render-target children (HierarchicalOrderer's
-            // !IsRenderTarget gate) and whose composite sites skip when GetRenderTargetFor is null
-            // (#3478).
-            CompositeRenderTarget(element);
-            return;
-        }
-
-        // #4155: pushed before the element's own Render() so a clipping element's own draw is bounded
-        // by its own clip, matching HierarchicalOrderer (BeginClip precedes DrawRenderable).
-        if (element.ClipsChildren)
-        {
-            System.Drawing.Rectangle rect = GetScissorRectangleFor(layer, element);
-            System.Drawing.Rectangle effective = _scissorStack.Count > 0
-                ? System.Drawing.Rectangle.Intersect(_scissorStack.Peek(), rect)
-                : rect;
-            _scissorStack.Push(effective);
-            BatchDrawCallCounter.BeginScissorMode(effective.X, effective.Y, effective.Width, effective.Height);
-        }
-
-        element.Render(null);
-
-        if (element.Children != null)
-        {
-            // #4155: recurse into every child regardless of concrete type -- matching
-            // HierarchicalOrderer, which recurses into any visible IRenderableIpso. The Visible check
-            // above (run on entry to the recursive call) is what actually gates each child.
-            foreach (IRenderableIpso child in element.Children)
-            {
-                DrawGumRecursively(child, layer);
-            }
-        }
-
-        if (element.ClipsChildren)
-        {
-            _scissorStack.Pop();
-            if (_scissorStack.Count > 0)
-            {
-                System.Drawing.Rectangle parent = _scissorStack.Peek();
-                BatchDrawCallCounter.BeginScissorMode(parent.X, parent.Y, parent.Width, parent.Height);
-            }
-            else
-            {
-                BatchDrawCallCounter.EndScissorMode();
-            }
         }
     }
 
@@ -666,7 +583,7 @@ public class Renderer : IRenderer
         };
 
         // Swap in the reusable bake scissor stack (avoids a per-bake allocation) so the main-walk
-        // scissor stack is isolated from the bake, and capture the bake origin so DrawGumRecursively
+        // scissor stack is isolated from the bake, and capture the bake origin so the scissor mapping
         // can rebase a ClipsChildren descendant's clip rect into RT-local space (#3440).
         Stack<System.Drawing.Rectangle> savedScissorStack = _scissorStack;
         _bakeScissorStack.Clear();
@@ -699,14 +616,18 @@ public class Renderer : IRenderer
         // counter re-establishes this pass on EndBlendMode so later siblings still bake premultiplied.
         counter.BeginRenderTargetBlend();
 
-        if (container.Children != null)
+        ObservableCollection<IRenderableIpso> children = container.Children;
+        if (children != null && children.Count > 0)
         {
-            // #4155: recurse into every child regardless of concrete type, mirroring the main walk's
-            // fix in DrawGumRecursively -- its own Visible check gates each child.
-            foreach (IRenderableIpso child in container.Children)
-            {
-                DrawGumRecursively(child, layer);
-            }
+            // Same shared builder the main pass uses, entered at this container's subtree instead of
+            // at a Layer (#4154). The RT-local scissor / cull-bounds mappings below are what let the
+            // bake express its own coordinate space through the shared walk.
+            HierarchicalOrderer.Instance.BuildDrawList(
+                children,
+                _bakeCommands,
+                renderable => GetScissorRectangleFor(layer, renderable),
+                renderable => GetCullTestBoundsFor(layer, renderable));
+            Submit(_bakeCommands, layer);
         }
 
         counter.EndRenderTargetBlend();
