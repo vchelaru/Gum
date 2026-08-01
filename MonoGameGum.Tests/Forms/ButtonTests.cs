@@ -3,7 +3,9 @@ using Gum.Wireframe;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
+using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
+using MonoGameGum.Tests.Input;
 using Gum.Input;
 using Moq;
 using Shouldly;
@@ -14,6 +16,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Xunit;
+using GamePad = Gum.Input.GamePad;
 
 namespace MonoGameGum.Tests.Forms;
 public class ButtonTests : BaseTestClass
@@ -146,6 +149,59 @@ public class ButtonTests : BaseTestClass
         button.OnFocusUpdate();
 
         wasClicked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void OnFocusUpdate_ShouldPushOnEnter()
+    {
+        Button button = new();
+        var wasPushed = false;
+        button.Push += (sender, args) => wasPushed = true;
+        FrameworkElement.KeyboardsForUiControl.Clear();
+
+        var mockKeyboard = new Mock<IInputReceiverKeyboardMonoGame>();
+        mockKeyboard
+            .Setup(k => k.KeyPushed(Microsoft.Xna.Framework.Input.Keys.Enter))
+            .Returns(true);
+        mockKeyboard.As<Gum.Wireframe.IInputReceiverKeyboard>()
+            .Setup(k => k.KeyPushed(Gum.Forms.Input.Keys.Enter))
+            .Returns(true);
+
+        FrameworkElement.KeyboardsForUiControl.Add(mockKeyboard.Object);
+
+        button.OnFocusUpdate();
+
+        wasPushed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void OnFocusUpdate_ShouldPushOnGamepadClickButton()
+    {
+        Button button = new();
+        button.IsFocused = true;
+        var wasPushed = false;
+        button.Push += (sender, args) => wasPushed = true;
+
+        GamePad gamepad = new();
+        gamepad.Activity(new GamePadState(), 0);
+
+        var pressedState = new GamePadState(
+            new GamePadThumbSticks(new Microsoft.Xna.Framework.Vector2(0, 0), new Microsoft.Xna.Framework.Vector2(0, 0)),
+            new GamePadTriggers(0, 0),
+            new GamePadButtons(Buttons.A),
+            new GamePadDPad(
+                ButtonState.Released,
+                ButtonState.Released,
+                ButtonState.Released,
+                ButtonState.Released));
+
+        InteractiveGue.CurrentGameTime = 1;
+        gamepad.Activity(pressedState, 1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        button.OnFocusUpdate();
+
+        wasPushed.ShouldBeTrue();
     }
 
     [Fact]
