@@ -21,6 +21,7 @@ inside an open element. A native WPF `TreeView`.
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | Builds, refreshes and selects nodes |
 | `MainTreeViewPlugin.cs` | Wires plugin events to `RefreshUi(...)` and error-indicator updates |
 | `TreeViewStateService.cs`, `CollapseToggleService.cs` | Expansion state: persisted across sessions, and the collapse-button toggle |
+| `Tools/Gum.Presentation/Services/RefreshCoalescer.cs` | Collapses N `RequestRefresh()` calls in one synchronous burst into a single `IDispatcher`-posted refresh |
 
 `ElementTreeViewManager` and its `RightClick` partial speak `ITreeNode`/`ITreeNodeMutable`, delegating
 to headless twins in `Tools/Gum.Presentation/Managers/` (`TreeNodeImageLogic`, the `TreeNode*Extensions`
@@ -54,6 +55,10 @@ headless `TreeNodeImageLogic`) to a pack URI plus a theme color key; `TreeNodeIc
 
 `Tag` distinguishes node kinds: folder/container nodes have `Tag == null`; element nodes carry an
 `ElementSave`/`BehaviorSave`; instance nodes an `InstanceSave`.
+
+`MainTreeViewPlugin.HandleElementImported` requests a refresh through a `RefreshCoalescer` rather than
+calling `RefreshUi()` directly, so importing N elements in one batch (Forms theme, `.gumx` import)
+produces one refresh instead of N.
 
 ## Gotchas
 
