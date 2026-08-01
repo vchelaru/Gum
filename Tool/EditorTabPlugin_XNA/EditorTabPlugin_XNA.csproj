@@ -48,7 +48,7 @@
 			Pulls native shader-compiler binaries transitively (e.g. win-x64 libvkd3d-shader-1.dll),
 			which the PostBuild step copies alongside the plugin so they load when invoked.
 		-->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.8.0" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.17.0" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />

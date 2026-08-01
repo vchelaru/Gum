@@ -20,15 +20,6 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 /// bound to the SpriteBatch when the container's cached texture is blitted back to the screen
 /// (issue #816). A real <see cref="BasicEffect"/> stands in for a user post-process shader so the
 /// binding can be verified without shipping a compiled .fx in the test project.
-/// <para>
-/// Tests carrying the <c>RequiresOpenGlShaderCompiler</c> trait compile the sample <c>.fx</c> with
-/// ShadowDusk for <see cref="PlatformTarget.OpenGL"/>. That target fails on GitHub's hosted Windows
-/// runner while <see cref="PlatformTarget.DirectX"/> succeeds there (see
-/// <see cref="Compile_GrayscaleShader_ForDirectXTarget_Succeeds"/>, which is deliberately untagged),
-/// so the HLSL front end loads fine and it is the GLSL back end that is unavailable. CI filters the
-/// trait out; these run in full locally. Making the OpenGL target work on a hosted runner is #4195 —
-/// do not weaken these assertions to make them pass there.
-/// </para>
 /// </summary>
 public class RenderTargetEffectTests : BaseTestClass
 {
@@ -155,7 +146,6 @@ technique SpriteDrawing
 ";
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void RenderTargetEffect_GrayscaleShader_ActuallyGraysThePixels()
     {
         using MinimalGame game = new();
@@ -214,7 +204,6 @@ technique SpriteDrawing
     }
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void RenderTargetEffect_GrayscaleShader_GraysThePixels_UnderCameraZoom()
     {
         using MinimalGame game = new();
@@ -260,7 +249,6 @@ technique SpriteDrawing
     }
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void RenderTargetEffect_GrayscaleShader_GraysThePixels_WhenDeeplyNested()
     {
         using MinimalGame game = new();
@@ -336,7 +324,6 @@ technique SpriteDrawing
     }
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void SourceShaderFile_CompilesOnce_WhenReferencedByMultipleContainers()
     {
         using MinimalGame game = new();
@@ -373,7 +360,6 @@ technique SpriteDrawing
     }
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void SourceShaderFile_GraysThePixels_WhenDeeplyNested()
     {
         using MinimalGame game = new();
@@ -430,7 +416,6 @@ technique SpriteDrawing
     }
 
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void SourceShaderFile_GraysThePixels_WhenResolverRegistered()
     {
         using MinimalGame game = new();
@@ -482,7 +467,6 @@ technique SpriteDrawing
     // IRenderTargetRenderable interface that both implement. Mirror the editor's setup here: a GUE
     // whose contained renderable is a LineRectangle, made a render target with a SourceShaderFile.
     [Fact]
-    [Trait("RequiresOpenGlShaderCompiler", "true")]
     public void SourceShaderFile_GraysThePixels_WhenContainerRenderableIsLineRectangle()
     {
         using MinimalGame game = new();

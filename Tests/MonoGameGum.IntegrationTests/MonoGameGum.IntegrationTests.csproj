@@ -20,7 +20,7 @@
 		<PackageReference Include="xunit" />
 		<PackageReference Include="xunit.runner.visualstudio" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" VersionOverride="3.8.4.1" />
-		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.16.0" />
+		<PackageReference Include="ShadowDusk.Compiler" VersionOverride="0.17.0" />
 	</ItemGroup>
 
 	<ItemGroup>
