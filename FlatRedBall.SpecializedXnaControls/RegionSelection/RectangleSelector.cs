@@ -538,16 +538,27 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         }
 
 
+        // Grid snapping (SnappingGridSize) is only committed when an interaction (a drag) ends -
+        // see ApplyGridSnappingOnRelease - so it never affects the display of a value that was just
+        // programmatically assigned (e.g. from a previously-saved, non-grid-aligned texture region).
+        // RoundToUnitCoordinates is a separate, always-on whole-pixel constraint, unrelated to grid snapping.
         private float RoundIfNecessary(float value)
         {
-            if(SnappingGridSize != null)
-            {
-                var toReturn = MathFunctions.RoundFloat(value, SnappingGridSize.Value);
-                return toReturn;
-            }
-            else if (RoundToUnitCoordinates)
+            if (RoundToUnitCoordinates)
             {
                 return MathFunctions.RoundToInt(value);
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        private float RoundToGridIfNecessary(float value)
+        {
+            if (SnappingGridSize != null)
+            {
+                return MathFunctions.RoundFloat(value, SnappingGridSize.Value);
             }
             else
             {
@@ -560,12 +571,10 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             if (cursor.PrimaryClick)
             {
+                var sideGrabbedBeforeRelease = mSideGrabbed;
                 mSideGrabbed = ResizeSide.None;
 
-                this.Left = RoundIfNecessary(this.Left);
-                this.Top = RoundIfNecessary(this.Top);
-                this.Width = RoundIfNecessary(this.Width);
-                this.Height= RoundIfNecessary(this.Height);
+                ApplyGridSnappingOnRelease(sideGrabbedBeforeRelease);
 
                 if(shouldRaiseEndRegionChanged)
                 {
@@ -574,6 +583,25 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 }
 
                 UpdateHandles();
+            }
+        }
+
+        /// <summary>
+        /// Commits grid snapping for the axis pair relevant to the interaction that just ended - only
+        /// position (Left/Top) for a move (middle grab), only size (Width/Height) for a resize (any other
+        /// handle). A release with nothing grabbed leaves both pairs untouched.
+        /// </summary>
+        internal void ApplyGridSnappingOnRelease(ResizeSide sideGrabbedBeforeRelease)
+        {
+            if (sideGrabbedBeforeRelease == ResizeSide.Middle)
+            {
+                this.Left = RoundToGridIfNecessary(this.Left);
+                this.Top = RoundToGridIfNecessary(this.Top);
+            }
+            else if (sideGrabbedBeforeRelease != ResizeSide.None)
+            {
+                this.Width = RoundToGridIfNecessary(this.Width);
+                this.Height = RoundToGridIfNecessary(this.Height);
             }
         }
 
