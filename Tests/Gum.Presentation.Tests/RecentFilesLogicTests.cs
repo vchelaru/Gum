@@ -66,6 +66,26 @@ public class RecentFilesLogicTests
     }
 
     [Fact]
+    public void GetDisplayedNameForGumxFilePath_IncludesExtension()
+    {
+        FilePath filePath = new(@"C:\NonExistentFolder12345\MyProject.gumx");
+
+        string name = RecentFilesLogic.GetDisplayedNameForGumxFilePath(filePath);
+
+        name.ShouldBe("MyProject.gumx");
+    }
+
+    [Fact]
+    public void GetDisplayedNameForGumxFilePath_Gumj_IncludesExtension()
+    {
+        FilePath filePath = new(@"C:\NonExistentFolder12345\MyProject.gumj");
+
+        string name = RecentFilesLogic.GetDisplayedNameForGumxFilePath(filePath);
+
+        name.ShouldBe("MyProject.gumj");
+    }
+
+    [Fact]
     public void LoadProject_DelegatesToFileCommands()
     {
         _logic.LoadProject(@"C:\SomeProject.gumx");
