@@ -206,7 +206,7 @@ public class ButtonBase :
                 IsEnabled)
             {
                 wasPushedOnCurrentHold = true;
-                //this.HandlePush(null);
+                this.HandlePush(this, EventArgs.Empty);
                 this.HandleClick(this, new InputEventArgs() { InputDevice = gamepad });
 
             }
@@ -252,8 +252,8 @@ public class ButtonBase :
 
             if ((gamepad as IInputDevice).DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
-                //this.HandlePush(null);
                 wasPushedOnCurrentHold = true;
+                this.HandlePush(this, EventArgs.Empty);
                 this.HandleClick(this, EventArgs.Empty);
             }
 
@@ -276,8 +276,8 @@ public class ButtonBase :
 
             if (inputDevice.DefaultConfirmInput.WasJustPressed && IsEnabled)
             {
-                //this.HandlePush(null);
                 wasPushedOnCurrentHold = true;
+                this.HandlePush(this, EventArgs.Empty);
                 this.HandleClick(this, EventArgs.Empty);
             }
         }
@@ -310,6 +310,7 @@ public class ButtonBase :
 
                 wasPushedOnCurrentHold = true;
 
+                this.HandlePush(this, EventArgs.Empty);
                 this.HandleClick(this, new InputEventArgs() { InputDevice = keyboard });
 
                 UpdateState();
