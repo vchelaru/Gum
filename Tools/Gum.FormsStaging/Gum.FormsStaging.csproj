@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!--
+			Deliberately references ONLY Gum.ProjectServices (core, no MonoGame/Raylib/SkiaGum
+			backends). GumFormsPlugin's postbuild step needs this to run stage-forms-behaviors
+			at build time, and Gum.Cli.csproj can't be used for that: it references all three
+			runtime backends (for its screenshot/svg commands), which pulls MonoGameGum.csproj's
+			net9.0-android/net9.0-ios targets into every Gum.sln/GumFull.sln build, requiring the
+			mobile workloads just to build the WPF tool. See #4236.
+		-->
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<AssemblyName>Gum.FormsStaging</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+	</ItemGroup>
+
+</Project>

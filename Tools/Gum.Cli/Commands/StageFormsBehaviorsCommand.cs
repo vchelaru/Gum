@@ -1,7 +1,5 @@
-using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
-using System.IO;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -47,26 +45,5 @@ public static class StageFormsBehaviorsCommand
     }
 
     private static int Execute(string projectPath, string destinationPath)
-    {
-        string fullProjectPath = Path.GetFullPath(projectPath);
-
-        if (!File.Exists(fullProjectPath))
-        {
-            Console.Error.WriteLine($"Project file not found: {fullProjectPath}");
-            return 2;
-        }
-
-        IFormsThemeBehaviorStagingService stagingService = new FormsThemeBehaviorStagingService();
-        try
-        {
-            int stagedCount = stagingService.Stage(fullProjectPath, Path.GetFullPath(destinationPath));
-            Console.WriteLine($"Staged {stagedCount} behavior(s) to {destinationPath}");
-            return 0;
-        }
-        catch (InvalidOperationException ex)
-        {
-            Console.Error.WriteLine(ex.Message);
-            return 2;
-        }
-    }
+        => FormsThemeBehaviorStagingRunner.Run(projectPath, destinationPath);
 }
