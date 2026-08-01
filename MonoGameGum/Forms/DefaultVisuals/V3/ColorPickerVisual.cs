@@ -2,9 +2,17 @@
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
+using RenderingLibrary.Graphics;
+
+#if XNALIKE
 using Microsoft.Xna.Framework;
 using MonoGameGum.GueDeriving;
-using RenderingLibrary.Graphics;
+#else
+using Gum.GueDeriving;
+#endif
+#if SKIA
+using Color = SkiaSharp.SKColor;
+#endif
 
 namespace Gum.Forms.DefaultVisuals.V3;
 
@@ -94,7 +102,7 @@ public class ColorPickerVisual : InteractiveGue
     {
         RectangleRuntime outline = new RectangleRuntime();
         outline.IsFilled = false;
-        outline.StrokeColor = new Color((byte)80, (byte)80, (byte)80);
+        outline.StrokeColor = new Color(80, 80, 80);
         outline.Width = 0;
         outline.WidthUnits = DimensionUnitType.RelativeToParent;
         outline.Height = 0;
@@ -133,7 +141,7 @@ public class ColorPickerVisual : InteractiveGue
     {
         RectangleRuntime outer = new RectangleRuntime();
         outer.IsFilled = false;
-        outer.StrokeColor = new Color((byte)0, (byte)0, (byte)0);
+        outer.StrokeColor = new Color(0, 0, 0);
         outer.Width = 0;
         outer.WidthUnits = DimensionUnitType.RelativeToParent;
         outer.Height = 0;
@@ -142,7 +150,7 @@ public class ColorPickerVisual : InteractiveGue
 
         RectangleRuntime inner = new RectangleRuntime();
         inner.IsFilled = false;
-        inner.StrokeColor = new Color((byte)255, (byte)255, (byte)255);
+        inner.StrokeColor = new Color(255, 255, 255);
         inner.X = 1;
         inner.Y = 1;
         inner.Width = -2;

@@ -40,7 +40,8 @@ public class AllControlsScreen : ShowcaseScreen
 
         // Row 3
         PlaceToggleButton(col: 0, row: 3);
-        PlaceSplitter(col: 1, row: 3, colSpan: 3);
+        PlaceSplitter(col: 1, row: 3, colSpan: 2);
+        PlaceColorPicker(col: 3, row: 3);
     }
 
     // ---------- cell placement helpers ----------
@@ -327,6 +328,29 @@ public class AllControlsScreen : ShowcaseScreen
         stack.AddChild(valueLabel);
         stack.AddChild(disabledSlider);
         Position(stack, col, row);
+    }
+
+    void PlaceColorPicker(int col, int row)
+    {
+        AddHeader("ColorPicker", col, row);
+
+        var stack = new StackPanel();
+        stack.Width = CellW;
+        stack.Orientation = Orientation.Horizontal;
+        stack.Spacing = 12;
+
+        var colorPicker = new ColorPicker();
+        colorPicker.SelectedColor = System.Drawing.Color.CornflowerBlue;
+
+        var hexLabel = new Label();
+        hexLabel.Text = ToHex(colorPicker.SelectedColor);
+        colorPicker.SelectedColorChanged += (_, _) => hexLabel.Text = ToHex(colorPicker.SelectedColor);
+
+        stack.AddChild(colorPicker);
+        stack.AddChild(hexLabel);
+        Position(stack, col, row);
+
+        static string ToHex(System.Drawing.Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
     }
 
     void PlaceScrollBar(int col, int row)

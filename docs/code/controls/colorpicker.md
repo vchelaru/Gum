@@ -4,9 +4,7 @@
 
 The ColorPicker control lets the user pick a color by dragging in a saturation/value square and a hue bar. The chosen color is available through `SelectedColor`, and changes raise `SelectedColorChanged`.
 
-{% hint style="info" %}
-The saturation/value square and hue bar are drawn with textures generated at runtime. This generation is currently implemented for the MonoGame family (MonoGame, KNI, and FNA). On other backends the control still works, but the two backgrounds render empty until that backend implements the texture seam.
-{% endhint %}
+The saturation/value square and hue bar are drawn with textures generated at runtime, on every backend the control ships on (the MonoGame family, raylib, and SkiaSharp).
 
 ## Code Example: Creating a ColorPicker
 

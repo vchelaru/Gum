@@ -93,6 +93,7 @@
 	<ItemGroup>
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
+		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ColorPickerVisual.cs" Link="Forms\DefaultVisuals\V3\ColorPickerVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\DialogBoxVisual.cs" Link="Forms\DefaultVisuals\V3\DialogBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
