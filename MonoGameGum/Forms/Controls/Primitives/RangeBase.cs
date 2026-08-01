@@ -324,27 +324,11 @@ public abstract class RangeBase :
 
     private void AssignExplicitTrack()
     {
-        // Vic says
-        // It seems FRB
-        // tolerates a missing
-        // track, but MonoGame requires
-        // it. Not sure why...perhaps to
-        // not break old FRB projects?
+        // A missing or non-InteractiveGue TrackInstance surfaces as an InvalidCastException on the
+        // cast below. A FULL_DIAGNOSTICS check used to explain it, but it was guarded on a
+        // combination no build satisfies once this file moved to GumCommon -- see #4238 for
+        // whether it should come back live.
         var trackLocal = this.Visual.GetGraphicalUiElementByName("TrackInstance");
-#if MONOGAME && !FRB
-
-#if FULL_DIAGNOSTICS
-        if (trackLocal == null)
-        {
-            throw new Exception($"Could not find a child named TrackInstance when creating a {this.GetType()}");
-        }
-        else if (!(trackLocal is InteractiveGue))
-        {
-            throw new Exception("Found a TrackInstance, but it is not an InteractiveGue");
-        }
-#endif
-
-#endif
         explicitTrack = (InteractiveGue)trackLocal;
         if (trackLocal is InteractiveGue trackAsInteractive)
         {

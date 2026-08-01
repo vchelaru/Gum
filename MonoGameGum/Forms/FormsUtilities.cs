@@ -30,11 +30,10 @@ using Gum.GueDeriving;
 // so this shared file compiles on backends without those types (e.g. Skia). GamePad is used only as
 // the fully-qualified platform-neutral Gum.Input.GamePad holder.
 
-#if FRB
-namespace MonoGameGum.Forms;
-#else
+// Unlike the Forms *control* files, this one is never compiled by FlatRedBall: FRB's
+// FlatRedBall.Forms.Shared.projitems does not reference it and FRB has no FormsUtilities of
+// its own. So FRB is never defined here and `#if FRB` branches are dead -- don't add any.
 namespace Gum.Forms;
-#endif
 
 /// <summary>
 /// The version to use for default visuals in a code-only project.
@@ -140,13 +139,12 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-#if XNALIKE
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#elif RAYLIB
+        // Written as an exclusion rather than an enumeration of every backend so a new runtime
+        // linking this file gets a compiling default instead of an undeclared-variable error:
+        // raylib alone returns a nullable value type here, everything else a nullable reference.
+#if RAYLIB
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
-#elif SOKOL
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#elif SKIA
+#else
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
@@ -182,13 +180,13 @@ public class FormsUtilities
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.ButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.CheckBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.ComboBoxVisual(tryCreateFormsObject: c));
-#if XNALIKE || FRB
+#if XNALIKE
                 TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.ItemsControlVisual(tryCreateFormsObject: c));
 #endif
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.LabelVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.ListBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.ListBoxItemVisual(tryCreateFormsObject: c));
-#if XNALIKE || FRB
+#if XNALIKE
                 TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.MenuVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.MenuItemVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.PasswordBoxVisual(tryCreateFormsObject: c));
@@ -198,7 +196,7 @@ public class FormsUtilities
                 TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.ScrollViewerVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.SliderVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.SplitterVisual(tryCreateFormsObject: c));
-#if XNALIKE || FRB
+#if XNALIKE
                 TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.TextBoxVisual(tryCreateFormsObject: c));
 #endif
                 TryAdd(typeof(Window), (_, c) => new DefaultVisuals.WindowVisual(tryCreateFormsObject: c));
@@ -210,9 +208,7 @@ public class FormsUtilities
             case DefaultVisualsVersion.V3:
                 TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.V3.CheckBoxVisual(tryCreateFormsObject: c));
-#if !FRB
                 TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
-#endif
                 TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.V3.ComboBoxVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
                 TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
@@ -277,11 +273,9 @@ public class FormsUtilities
         IGumService service = IGumService.Default!;
         cursor = service.CreateCursor()!;
 
-#if !FRB
         // This was added to MonoGame/raylib on 1/22/2026 to support
         // simplified behavior.
         ICursor.VisualOverBehavior = VisualOverBehavior.IfHasEventsIsTrue;
-#endif
 
         keyboard = service.CreateKeyboard()!;
 
