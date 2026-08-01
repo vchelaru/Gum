@@ -17,6 +17,7 @@ public class CameraController
 
     int _lastMouseX;
     int _lastMouseY;
+    bool _isPanning;
 
     public event Action? CameraChanged;
     IHotkeyManager _hotkeyManager;
@@ -64,14 +65,29 @@ public class CameraController
     {
         if (e.Button == GumMouseButton.Middle)
         {
+            _isPanning = true;
             _lastMouseX = e.X;
             _lastMouseY = e.Y;
         }
     }
 
-    public void HandleMouseMove(GumMouseEventArgs e)
+    public void HandleMouseUp(GumMouseEventArgs e)
     {
         if (e.Button == GumMouseButton.Middle)
+        {
+            _isPanning = false;
+        }
+    }
+
+    public void HandleMouseMove(GumMouseEventArgs e)
+    {
+        // _isPanning (set/cleared only by HandleMouseDown/HandleMouseUp) is the source of truth for
+        // whether a drag is in progress, rather than e.Button alone: a move event can report the
+        // middle button as currently held without HandleMouseDown having run first for this press
+        // (e.g. a stray/synchronized move), in which case _lastMouseX/Y would still be the position
+        // from the end of a previous, already-released drag, and the whole idle-period distance
+        // would get applied as one jump.
+        if (_isPanning && e.Button == GumMouseButton.Middle)
         {
             int xChange = e.X - _lastMouseX;
             int yChange = e.Y - _lastMouseY;
