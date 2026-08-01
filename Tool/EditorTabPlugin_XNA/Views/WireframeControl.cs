@@ -186,7 +186,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
 
             // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
             // reading GraphicsDevice/Services directly off this control, so the initialization
-            // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
+            // sequence below only depends on the render-host contract, not on a concrete control type.
             IRenderDeviceHost renderHost = RenderDeviceHost;
 
             SystemManagers.Default = new SystemManagers();

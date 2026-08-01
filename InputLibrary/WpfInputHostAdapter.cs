@@ -8,9 +8,8 @@ namespace InputLibrary
     /// <summary>
     /// Adapts a WPF <see cref="WpfFrameworkElement"/> to <see cref="IInputHostControl"/>, so
     /// <see cref="Cursor"/> and <see cref="Keyboard"/> can be initialized against a WPF-native
-    /// rendering surface (e.g. a host built on <c>XnaAndWinforms.WpfRenderSurfaceHost</c>) instead of
-    /// a WinForms <see cref="System.Windows.Forms.Control"/>. The WPF counterpart to
-    /// <see cref="ControlInputHostAdapter"/>.
+    /// rendering surface (e.g. a host built on <c>XnaAndWinforms.WpfRenderSurfaceHost</c>) without
+    /// depending on a concrete WPF element type.
     /// </summary>
     public class WpfInputHostAdapter : IInputHostControl
     {
