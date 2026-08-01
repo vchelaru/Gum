@@ -9,8 +9,7 @@ namespace XnaAndWinforms;
 /// <summary>
 /// The real implementation of <see cref="IWriteableBitmapPixelBufferWriter"/>. Locks
 /// <paramref name="bitmap"/>'s back buffer and copies/converts <c>rawImage</c> into it using the
-/// same <see cref="RawPixelBufferCopy"/> primitives <see cref="BitmapPixelBufferWriter"/> uses for
-/// GDI+ - the only difference is the destination's locking API and pixel format check.
+/// <see cref="RawPixelBufferCopy"/> primitives.
 /// </summary>
 public class WriteableBitmapPixelBufferWriter : IWriteableBitmapPixelBufferWriter
 {

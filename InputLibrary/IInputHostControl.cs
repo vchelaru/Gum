@@ -3,10 +3,11 @@ using System.Drawing;
 namespace InputLibrary
 {
     /// <summary>
-    /// The subset of <see cref="System.Windows.Forms.Control"/> that <see cref="Cursor"/> and
+    /// The subset of a rendering host's control surface that <see cref="Cursor"/> and
     /// <see cref="Keyboard"/> need in order to translate mouse/keyboard state into window-relative
-    /// coordinates and focus. Lets those classes be initialized against a host that isn't a real
-    /// WinForms control (e.g. a test double or a future non-WinForms rendering host).
+    /// coordinates and focus. Lets those classes be initialized against any host - a live WPF
+    /// element (via <see cref="WpfInputHostAdapter"/>) or a test double - rather than one concrete
+    /// UI-framework control type.
     /// </summary>
     public interface IInputHostControl
     {

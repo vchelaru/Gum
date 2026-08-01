@@ -10,8 +10,7 @@ using System.Windows.Media;
 namespace XnaAndWinforms;
 
 /// <summary>
-/// Hosts XNA/KNI rendering inside a WPF visual tree - the WPF counterpart to
-/// <see cref="GraphicsDeviceControl"/>. Draws into the <see cref="RenderTarget2D"/> of a
+/// Hosts XNA/KNI rendering inside a WPF visual tree. Draws into the <see cref="RenderTarget2D"/> of a
 /// <see cref="ISharedRenderDeviceHost"/> (so it shares the one process-wide
 /// <see cref="Microsoft.Xna.Framework.Graphics.GraphicsDevice"/> with every other client), reads it
 /// back, and pushes it into a <see cref="IWpfRenderSurfaceHost"/>'s <c>WriteableBitmap</c>.
@@ -264,7 +263,7 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
         catch
         {
             // The device can be lost mid-frame; the next BeginDraw handles the reset, so the
-            // dropped frame is swallowed here the same way GraphicsDeviceControl does.
+            // dropped frame is swallowed here.
         }
     }
 
@@ -279,9 +278,8 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
     #region Protected Virtual Methods
 
     /// <summary>
-    /// Takes keyboard focus when clicked, mirroring <see cref="GraphicsDeviceControl"/>'s WinForms
-    /// behavior. The canvas only receives keys while focused, and clicking it is how the user hands
-    /// focus over from the rest of the WPF UI.
+    /// Takes keyboard focus when clicked. The canvas only receives keys while focused, and clicking
+    /// it is how the user hands focus over from the rest of the WPF UI.
     /// </summary>
     protected override void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
     {

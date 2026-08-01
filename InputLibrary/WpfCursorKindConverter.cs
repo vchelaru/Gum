@@ -5,9 +5,9 @@ namespace InputLibrary
 {
     /// <summary>
     /// Converts between <see cref="CursorKind"/> (Gum's platform-neutral cursor-icon enum) and
-    /// <see cref="System.Windows.Input.Cursor"/>. The WPF counterpart to
-    /// <see cref="CursorKindConverter"/>; kept separate so only the WPF-backed pieces of InputLibrary
-    /// (<see cref="WpfInputHostAdapter"/>) need to know about the WPF cursor type.
+    /// <see cref="System.Windows.Input.Cursor"/>. Kept separate from <see cref="IInputHostControl"/>
+    /// so only the WPF-backed pieces of InputLibrary (<see cref="WpfInputHostAdapter"/>) need to know
+    /// about the WPF cursor type.
     /// </summary>
     internal static class WpfCursorKindConverter
     {

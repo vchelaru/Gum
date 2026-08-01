@@ -6,9 +6,9 @@ namespace XnaAndWinforms;
 
 /// <summary>
 /// The pointer/stride-level byte copy loops shared by every <see cref="PixelBufferConversionStrategy"/>
-/// consumer (currently <see cref="BitmapPixelBufferWriter"/> and <see cref="WriteableBitmapPixelBufferWriter"/>).
-/// Neither destination type matters here - callers pass a raw pointer and stride into whatever backing
-/// memory they've already locked, so this class has no dependency on GDI+ or WPF.
+/// consumer (currently <see cref="WriteableBitmapPixelBufferWriter"/>). The destination type doesn't
+/// matter here - callers pass a raw pointer and stride into whatever backing memory they've already
+/// locked, so this class has no dependency on any UI framework.
 /// </summary>
 internal static class RawPixelBufferCopy
 {
