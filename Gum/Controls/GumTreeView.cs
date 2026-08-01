@@ -258,6 +258,30 @@ public partial class GumTreeView : TreeView
         return FindAncestorItem(hit)?.DataContext as GumTreeNode;
     }
 
+    /// <summary>
+    /// Whether a click landed on a row's expand/collapse toggle rather than on the row itself.
+    /// </summary>
+    private static bool IsExpanderClick(object? originalSource)
+    {
+        if (originalSource is not DependencyObject source)
+        {
+            return false;
+        }
+
+        // Stop at the row: a ToggleButton found above it belongs to an ancestor row, not this click.
+        for (DependencyObject? current = source;
+             current is not null and not TreeViewItem;
+             current = GetVisualOrLogicalParent(current))
+        {
+            if (current is System.Windows.Controls.Primitives.ToggleButton)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static TreeViewItem? FindAncestorItem(DependencyObject start)
     {
         for (DependencyObject? current = start; current != null; current = GetVisualOrLogicalParent(current))
@@ -282,6 +306,15 @@ public partial class GumTreeView : TreeView
 
     protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
     {
+        // An expander click changes expansion only. Letting it fall through would also select the
+        // row, which makes expanding a folder disruptive - it would move the selection away from
+        // whatever the user is working on.
+        if (IsExpanderClick(e.OriginalSource))
+        {
+            base.OnPreviewMouseDown(e);
+            return;
+        }
+
         try
         {
             GumTreeNode? previousSelectedNode = _selectedNode;
@@ -328,6 +361,13 @@ public partial class GumTreeView : TreeView
 
     protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
     {
+        if (IsExpanderClick(e.OriginalSource))
+        {
+            EndPotentialDrag();
+            base.OnPreviewMouseUp(e);
+            return;
+        }
+
         try
         {
             EndPotentialDrag();
