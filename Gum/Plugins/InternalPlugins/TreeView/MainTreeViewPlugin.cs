@@ -65,7 +65,9 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
             _elementTreeViewManager.RefreshUi();
             RefreshErrorIndicatorsForAllElements();
             sw.Stop();
-            outputManager.AddOutput($"[#4233] Coalesced tree RefreshUi + error refresh took {sw.ElapsedMilliseconds} ms");
+            System.IO.File.AppendAllText(
+                @"C:\Users\vchel\AppData\Local\Temp\claude\C--Users-vchel-Documents-GitHub-Gum\65ccc03e-807a-4e22-a84d-40bf6aacdeec\scratchpad\gum-4233-refresh-timing.log",
+                $"{DateTime.Now:HH:mm:ss.fff} Coalesced tree RefreshUi + error refresh took {sw.ElapsedMilliseconds} ms{Environment.NewLine}");
         });
 
         // Register to receive ApplicationTeardownMessage
