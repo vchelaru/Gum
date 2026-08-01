@@ -423,12 +423,17 @@ this doc when scoping a new target; its own baselines and comments often already
 as in-scope vs. deferred.
 
 **Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
-- *4a — Element tree:* decouple `ElementTreeViewManager` from `TreeNode`; the already-migrated
-  state tree is the proven template.
-- *4b — Rendering host:* formalize a host contract around `SystemManagers.Initialize(GraphicsDevice)`
-  plus pixel-buffer-out / input-in, and lift the cursor/keyboard off the WinForms control. The
-  `3218-skiasharp-host-model` work is the prototype. *Payoff (even on WPF):* lets the
-  `WindowsFormsHost` airspace/focus hacks be deleted.
+- *4a — Element tree:* **Done** (#3755/#3963) — `ElementTreeViewManager`/`MultiSelectTreeView`'s
+  business logic decoupled from `TreeNode` onto `ITreeNode`/`ITreeNodeMutable`, the already-migrated
+  state tree's template. The WinForms `MultiSelectTreeView` widget itself stays, per the scope
+  boundary above.
+- *4b — Rendering host:* tracked in #3756/#3833 (reopened). Host-contract formalization
+  (`IRenderDeviceHost`/`IInputHostControl`/`IRenderTargetPixelBufferWriter`) and WPF-native additive
+  infra (`WpfRenderSurfaceHost` — CPU-readback + `WriteableBitmap`, measured 45-60fps incl. 4K via
+  `CompositionTarget.Rendering`; `WpfInputHostAdapter`; `CursorKind`; a WPF drag/drop payload reader)
+  are merged but unwired. What's left is the actual `WireframeControl`/`ImageRegionSelectionControl`
+  base-class swap off `GraphicsDeviceControl`/`WindowsFormsHost` — see #3833 for the concrete
+  remaining steps.
   The wireframe canvas has taken this path end to end: `WpfGraphicsDeviceControl` draws into the
   shared device's render target, reads it back, and pushes the pixels into a `WriteableBitmap`, so
   the editor tab is `WindowsFormsHost`-free. Points worth carrying to the next host:
