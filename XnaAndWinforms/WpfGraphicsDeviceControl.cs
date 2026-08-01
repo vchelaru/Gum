@@ -278,6 +278,17 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
 
     #region Protected Virtual Methods
 
+    /// <summary>
+    /// Takes keyboard focus when clicked, mirroring <see cref="GraphicsDeviceControl"/>'s WinForms
+    /// behavior. The canvas only receives keys while focused, and clicking it is how the user hands
+    /// focus over from the rest of the WPF UI.
+    /// </summary>
+    protected override void OnMouseDown(System.Windows.Input.MouseButtonEventArgs e)
+    {
+        Focus();
+        base.OnMouseDown(e);
+    }
+
     /// <summary>Derived classes override this to run per-frame logic before drawing.</summary>
     protected virtual void PreDrawUpdate()
     {

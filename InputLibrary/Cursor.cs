@@ -1,8 +1,6 @@
 ﻿using System;
 using Gum.Input;
 using Microsoft.Xna.Framework.Input;
-using System.Windows.Forms;
-using WinCursor = System.Windows.Forms.Cursor;
 
 namespace InputLibrary
 {
@@ -22,7 +20,7 @@ namespace InputLibrary
 
         bool mHasBeenSet = false;
 
-        WinCursor mSetCursor = Cursors.Arrow;
+        CursorKind mSetCursor = CursorKind.Arrow;
 
         #endregion
 
@@ -245,56 +243,57 @@ namespace InputLibrary
         }
 
         /// <summary>
-        /// Marks that the cursor hasn't yet been set this frame. Calling SetWinformsCursor will set the cursor and
-        /// prevents future setting of the cursor this frame until StartCursorSettingFrameStart is called again.
+        /// Marks that the cursor hasn't yet been set this frame. Calling <see cref="SetCursorKind"/>
+        /// will set the cursor and prevents future setting of the cursor this frame until
+        /// StartCursorSettingFrameStart is called again.
         /// </summary>
         public void StartCursorSettingFrameStart()
         {
             mHasBeenSet = false;
         }
 
-        public void SetWinformsCursor(WinCursor cursor)
+        /// <summary>
+        /// Requests the cursor icon for this frame. The first caller each frame wins, so the
+        /// highest-priority editor surface should ask first.
+        /// </summary>
+        public void SetCursorKind(CursorKind kind)
         {
             if (!mHasBeenSet)
             {
-                mSetCursor = cursor;
+                mSetCursor = kind;
                 mHasBeenSet = true;
             }
         }
 
         /// <summary>
-        /// <see cref="IGumCursorState.SetCursor"/> implementation. Maps the neutral
-        /// <see cref="GumCursorKind"/> to a real WinForms <see cref="WinCursor"/> and forwards to
-        /// <see cref="SetWinformsCursor"/> — the one place that mapping happens, so headless callers
-        /// (e.g. <c>SelectionManager</c>) never reference <see cref="WinCursor"/> directly.
+        /// <see cref="IGumCursorState.SetCursor"/> implementation, for headless callers (e.g.
+        /// <c>SelectionManager</c>) that speak <see cref="GumCursorKind"/> rather than this
+        /// assembly's <see cref="CursorKind"/>.
         /// </summary>
-        public void SetCursor(GumCursorKind kind) => SetWinformsCursor(ToWinFormsCursor(kind));
+        public void SetCursor(GumCursorKind kind) => SetCursorKind(ToCursorKind(kind));
 
-        private static WinCursor ToWinFormsCursor(GumCursorKind kind) => kind switch
+        private static CursorKind ToCursorKind(GumCursorKind kind) => kind switch
         {
-            GumCursorKind.Arrow => Cursors.Arrow,
-            GumCursorKind.Cross => Cursors.Cross,
-            GumCursorKind.Hand => Cursors.Hand,
-            GumCursorKind.SizeAll => Cursors.SizeAll,
-            GumCursorKind.SizeNS => Cursors.SizeNS,
-            GumCursorKind.SizeWE => Cursors.SizeWE,
-            GumCursorKind.SizeNESW => Cursors.SizeNESW,
-            GumCursorKind.SizeNWSE => Cursors.SizeNWSE,
-            _ => Cursors.Arrow
+            GumCursorKind.Cross => CursorKind.Cross,
+            GumCursorKind.Hand => CursorKind.Hand,
+            GumCursorKind.SizeAll => CursorKind.SizeAll,
+            GumCursorKind.SizeNS => CursorKind.SizeNS,
+            GumCursorKind.SizeWE => CursorKind.SizeWE,
+            GumCursorKind.SizeNESW => CursorKind.SizeNESW,
+            GumCursorKind.SizeNWSE => CursorKind.SizeNWSE,
+            _ => CursorKind.Arrow
         };
 
 
+        // Only the host control's own cursor is assigned - the editor canvases are WPF elements, so
+        // the process-wide WinForms Cursor.Current this used to also set had no effect on them.
         public void EndCursorSettingFrameStart()
         {
-            if (mHasBeenSet)
+            CursorKind kindToShow = mHasBeenSet ? mSetCursor : CursorKind.Arrow;
+
+            if (mControl.Cursor != kindToShow)
             {
-                mControl.Cursor = CursorKindConverter.ToCursorKind(mSetCursor);
-                WinCursor.Current = mSetCursor;
-            }
-            else if (mControl.Cursor != CursorKind.Arrow)
-            {
-                mControl.Cursor = CursorKind.Arrow;
-                WinCursor.Current = Cursors.Arrow;
+                mControl.Cursor = kindToShow;
             }
         }
     }

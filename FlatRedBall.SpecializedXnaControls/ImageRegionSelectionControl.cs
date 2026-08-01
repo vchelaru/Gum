@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using XnaAndWinforms;
 using Microsoft.Xna.Framework.Graphics;
@@ -10,7 +11,7 @@ using FlatRedBall.SpecializedXnaControls.Input;
 using RenderingLibrary.Content;
 using ToolsUtilities;
 using System.Reflection;
-using System.Windows.Forms;
+using System.Windows.Input;
 using RenderingLibrary.Math;
 using InputLibrary;
 using ToolsUtilitiesStandard.Helpers;
@@ -25,11 +26,18 @@ public enum ZoomDirection
     ZoomOut
 }
 
-public class ImageRegionSelectionControl : GraphicsDeviceControl
+/// <summary>
+/// The texture-coordinate editing canvas - a WPF-native XNA/KNI surface (see
+/// <see cref="WpfGraphicsDeviceControl"/>) showing a texture with draggable
+/// <see cref="RectangleSelector"/> regions over it.
+/// </summary>
+public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
 {
     #region Fields
 
     ImageData maxAlphaImageData;
+
+    IInputHostControl mInputHost;
 
     Texture2D mCurrentTexture;
     Texture2D maxAlphaTexture;
@@ -166,7 +174,8 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
                         mCurrentTextureSprite.Height = mCurrentTexture.Height;
 
                     }
-                    this.RefreshDisplay();
+                    // No explicit redraw request - the WPF host renders continuously off
+                    // CompositionTarget.Rendering, so the new texture shows on the next frame.
                 }
             }
         }
@@ -399,21 +408,24 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
     #region Events
 
     public event EventHandler? StartRegionChanged;
-    public new event EventHandler? RegionChanged;
+    public event EventHandler? RegionChanged;
     public event EventHandler? EndRegionChanged;
 
     public event EventHandler? MouseWheelZoom;
     public event Action? Panning;
+
+    /// <summary>
+    /// Raised when the canvas is double-clicked. WPF panels have no built-in double-click event,
+    /// so this stands in for the WinForms <c>Control.DoubleClick</c> the control used to expose.
+    /// </summary>
+    public event EventHandler? DoubleClick;
     #endregion
 
     #region Methods
 
-    protected override void Initialize()
+    public ImageRegionSelectionControl()
     {
         CustomInitialize();
-
-        base.Initialize();
-
     }
 
     public void DisableHotkeyPanning()
@@ -428,7 +440,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
     public void CustomInitialize()
     {
-        if (!DesignMode)
+        if (!DesignerProperties.GetIsInDesignMode(this))
         {
             mTimeManager = new TimeManager();
 
@@ -441,7 +453,9 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
             mManagers = new SystemManagers();
             mManagers.Initialize(renderHost.GraphicsDevice);
             mManagers.Name = "Image Region Selection";
-            Assembly assembly = Assembly.GetAssembly(typeof(GraphicsDeviceControl));// Assembly.GetCallingAssembly();
+            // The default font is an embedded resource of XnaAndWinforms, so resolve that assembly
+            // through one of its types.
+            Assembly assembly = Assembly.GetAssembly(typeof(WpfGraphicsDeviceControl));
 
             FilePath targetFntFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial.fnt";
             FilePath targetPngFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial_0.png";
@@ -486,23 +500,35 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
             CreateNewSelector();
 
-            var inputHostControl = new ControlInputHostAdapter(this);
+            mInputHost = new WpfInputHostAdapter(this);
 
             mCursor = new InputLibrary.Cursor();
-            mCursor.Initialize(inputHostControl);
+            mCursor.Initialize(mInputHost);
 
             mKeyboard = new InputLibrary.Keyboard();
-            mKeyboard.Initialize(inputHostControl);
+            mKeyboard.Initialize(mInputHost);
 
-            mCameraPanningLogic = new CameraPanningLogic(this, mManagers, mCursor, mKeyboard);
+            mCameraPanningLogic = new CameraPanningLogic(mManagers, mCursor, mKeyboard);
+            XnaUpdate += mCameraPanningLogic.Activity;
             var camera = mManagers.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
             mCameraPanningLogic.Panning += HandlePanning;
 
 
 
-            MouseWheel += new MouseEventHandler(HandleMouseWheel);
+            MouseWheel += HandleMouseWheel;
             ZoomNumbers = new Zooming.ZoomNumbers();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnMouseDown(MouseButtonEventArgs e)
+    {
+        base.OnMouseDown(e);
+
+        if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
+        {
+            DoubleClick?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -571,7 +597,7 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
 
         foreach (var item in mRectangleSelectors)
         {
-            item.Activity(mCursor, mKeyboard, this);
+            item.Activity(mCursor, mKeyboard, mInputHost);
         }
     }
 
@@ -589,13 +615,16 @@ public class ImageRegionSelectionControl : GraphicsDeviceControl
         }
     }
 
-    void HandleMouseWheel(object? sender, MouseEventArgs e)
+    void HandleMouseWheel(object? sender, MouseWheelEventArgs e)
     {
         if (mAvailableZoomLevels != null)
         {
             if (ZoomIndex != -1)
             {
                 float value = e.Delta;
+
+                // Stop a containing scroll viewer from also scrolling on the same wheel tick.
+                e.Handled = true;
 
 
                 ZoomDirection? zoomDirection = null;

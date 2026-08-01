@@ -78,6 +78,9 @@ public class WireframeControl : WpfGraphicsDeviceControl
         _dialogService = dialogService;
         _outputManager = outputManager;
         _pluginManager = pluginManager;
+
+        // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
+        CameraZoomScope.SetOwnsCameraZoom(this, true);
     }
 
     #region Properties
@@ -111,13 +114,9 @@ public class WireframeControl : WpfGraphicsDeviceControl
         _cameraController.HandleKeyPress(keyArgs);
     }
 
-    void HandleMouseDown(object? sender, MouseButtonEventArgs e)
-    {
-        // The canvas only receives keys while it has keyboard focus, and clicking it is how the
-        // user hands focus over from the rest of the WPF UI.
-        Focus();
+    // Focus is taken by WpfGraphicsDeviceControl.OnMouseDown, which runs before this.
+    void HandleMouseDown(object? sender, MouseButtonEventArgs e) =>
         _cameraController.HandleMouseDown(e.ToGumMouseEventArgs(this));
-    }
 
     void HandleMouseMove(object? sender, MouseEventArgs e) =>
         _cameraController.HandleMouseMove(e.ToGumMouseEventArgs(this));
