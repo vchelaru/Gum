@@ -62,7 +62,13 @@ public class DrawAllocationTests : BaseTestClass
         // FormsUtilities.UpdateGamepads — framework-internal, not removable here. This guard owns the
         // idle-Update residual (separate from the text/full-relayout ratchets); set just above the
         // residual so re-introducing a removed allocation source fails the build.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80);
+        //
+        // The measured value is also folded into the assertion message, not left solely in the
+        // _output.WriteLine above: xUnit only surfaces a test's stdout on failure, and CI loggers
+        // don't reliably capture ITestOutputHelper output either, so the Shouldly failure message is
+        // the one place a future regression's actual bytes/frame is guaranteed visible.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80,
+            $"measured {result.BytesPerIteration:N0} bytes/frame");
     }
 
     [Fact]
@@ -101,14 +107,21 @@ public class DrawAllocationTests : BaseTestClass
         // no-op would make a low/zero allocation result meaningless.
         drawStateCount.ShouldBeGreaterThan(0);
 
-        // Ratchet (#1934): the idle Update/Draw walk over an unchanging Forms scene. The Draw walk
-        // itself is zero-alloc; the residual is the per-frame input/cursor pass in GumService.Update
-        // (FormsUtilities.Update, dominated by MonoGame's GamePad.GetState), which the IdleUpdate
-        // ratchet above bounds on its own. Headroom over that residual is deliberate: it absorbs
-        // hosted-runner variance while still tripping on a real Draw-walk regression, which lands in
-        // the hundreds of bytes (#4190 reintroduced 160 B/frame and would fail here). Tighten toward
-        // the IdleUpdate bound once CI has established what this measures on a runner.
-        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(120);
+        // Ratchet (#1934, tightened in #4199): the idle Update/Draw walk over an unchanging Forms
+        // scene. The Draw walk itself is zero-alloc; the residual is the per-frame input/cursor pass
+        // in GumService.Update (FormsUtilities.Update, dominated by MonoGame's GamePad.GetState),
+        // which the IdleUpdate ratchet above bounds on its own — the CI Windows runner measures the
+        // same 64 B/f residual as a dev machine, so this bound matches IdleUpdate's. Headroom over
+        // that residual absorbs runner/JIT variance while still tripping on a real Draw-walk
+        // regression, which lands in the hundreds of bytes (#4190 reintroduced 160 B/frame and would
+        // fail here).
+        //
+        // The measured value is also folded into the assertion message, not left solely in the
+        // _output.WriteLine above: xUnit only surfaces a test's stdout on failure, and CI loggers
+        // don't reliably capture ITestOutputHelper output either, so the Shouldly failure message is
+        // the one place a future regression's actual bytes/frame is guaranteed visible.
+        result.BytesPerIteration.ShouldBeLessThanOrEqualTo(80,
+            $"measured {result.BytesPerIteration:N0} bytes/frame");
     }
 
     private static void BuildScene()
