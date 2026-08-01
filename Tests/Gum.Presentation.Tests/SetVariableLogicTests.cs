@@ -307,6 +307,43 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_ShouldPreserveSourceFile_WhenBaseTypeChangesFromNineSliceToSprite()
+    {
+        // Repro for issue #4196: a NineSlice instance has SourceFile set; changing its
+        // BaseType to Sprite should not drop the SourceFile value.
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave();
+        instance.Name = "MyInstance";
+        instance.BaseType = "NineSlice";
+
+        container.DefaultState.SetValue("MyInstance.SourceFile", "image.png");
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        instance.BaseType = "Sprite";
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "BaseType",
+            "NineSlice",
+            container,
+            instance,
+            container.DefaultState,
+            refresh: false,
+            recordUndo: false,
+            trySave: false);
+
+        VariableSave variable = container.DefaultState.GetVariableSave("MyInstance.SourceFile");
+        variable.ShouldNotBeNull();
+        (variable.Value as string).ShouldBe("image.png");
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldClearRenderTargetTextureSource_WhenNoneSelected()
     {
         // Picking "<NONE>" in the render-target dropdown must clear the variable back to default
