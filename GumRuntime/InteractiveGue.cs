@@ -1153,6 +1153,14 @@ public interface IInputReceiverKeyboard
     IEnumerable<Gum.Forms.Input.Keys> KeysTyped { get; }
 
     /// <summary>
+    /// Whether this keyboard can surface an inline soft keyboard through
+    /// <see cref="ShowKeyboard"/> / <see cref="HideKeyboard"/>. When true, text controls use
+    /// it instead of the modal <c>INativeTextInput</c> dialog, because typed characters arrive
+    /// through the normal input pipeline. Defaults to false.
+    /// </summary>
+    bool SupportsInlineKeyboard => false;
+
+    /// <summary>
     /// Default no-op. Runtimes with soft-keyboard / IME support (e.g. Android) override
     /// this to surface the native on-screen keyboard.
     /// </summary>

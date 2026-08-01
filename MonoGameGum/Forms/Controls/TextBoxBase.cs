@@ -1452,34 +1452,32 @@ public abstract class TextBoxBase :
 
     /// <summary>
     /// Brings up the platform's native text-input UI on behalf of this control, if one is
-    /// available. The Android path uses the inline soft keyboard via
-    /// <c>FrameworkElement.MainKeyboard</c>; everywhere else the call is delegated to the
+    /// available. Keyboards reporting <see cref="IInputReceiverKeyboard.SupportsInlineKeyboard"/>
+    /// (Android) show the inline soft keyboard; everywhere else the call is delegated to the
     /// <see cref="INativeTextInput"/> registered on <c>IGumService.Default.NativeTextInput</c>
     /// — runtimes without a native dialog leave that property null and the call no-ops.
     /// Internal so tests can drive the focus-show flow directly.
     /// </summary>
     internal void TryShowNativeKeyboard()
     {
-#if !FRB && !RAYLIB && !FNA && !SOKOL
+#if !FRB
         if (!ShowNativeKeyboardOnFocus)
         {
             return;
         }
 
-#if ANDROID
-        // On Android we use an inline soft keyboard (ported from FRB's Keyboard.Android.cs).
-        // Typed characters flow through the normal InputReceiver pipeline via
-        // Keyboard.GetStringTyped / KeysTyped — no modal dialog, no deferred-queue marshaling
-        // needed because all input arrives on the UI thread and is drained by
-        // ProcessAndroidKeys each frame.
-        //
-        // IsAndroidVersionAtLeast(21) is required by CA1416 — see TryHideNativeKeyboard.
-        if (OperatingSystem.IsAndroidVersionAtLeast(21))
+        // Platforms with an inline soft keyboard (Android) surface it through MainKeyboard.
+        // Typed characters then flow through the normal InputReceiver pipeline via
+        // GetStringTyped / KeysTyped — no modal dialog, and no deferred-queue marshaling
+        // because the input already arrives on the game loop thread.
+        var keyboard = global::Gum.Forms.Controls.FrameworkElement.MainKeyboard;
+        if (keyboard?.SupportsInlineKeyboard == true)
         {
-            global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.ShowKeyboard();
+            keyboard.ShowKeyboard();
+            return;
         }
-#else
-        // iOS (and any future platform without an inline implementation) falls back to the
+
+        // iOS (and any platform without an inline implementation) falls back to the
         // runtime's INativeTextInput. Runtimes that don't register one (e.g. Raylib, FNA,
         // browser) leave NativeTextInput null and we no-op here.
         var service = global::RenderingLibrary.IGumService.Default;
@@ -1513,23 +1511,18 @@ public abstract class TextBoxBase :
             });
         });
 #endif
-#endif
     }
 
-    private void TryHideNativeKeyboard()
+    /// <summary>
+    /// Dismisses the inline soft keyboard when this control loses focus, so users aren't left
+    /// staring at an IME over un-focused UI. Only keyboards that supply one do anything here —
+    /// the modal <see cref="INativeTextInput"/> dialog dismisses itself.
+    /// Internal so tests can drive the focus-loss flow directly.
+    /// </summary>
+    internal void TryHideNativeKeyboard()
     {
-#if ANDROID && !FRB && !RAYLIB
-        // Dismiss the soft keyboard when the TextBox loses focus so users aren't left
-        // staring at an IME over an un-focused UI. Only meaningful on Android — iOS's
-        // modal KeyboardInput.Show dismisses itself.
-        //
-        // The IsAndroidVersionAtLeast guard is redundant at runtime (the whole block is
-        // inside #if ANDROID) but is required by the CA1416 platform-compatibility analyzer,
-        // which does not track #if directives — only runtime OS checks.
-        if (OperatingSystem.IsAndroidVersionAtLeast(21))
-        {
-            global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.HideKeyboard();
-        }
+#if !FRB
+        global::Gum.Forms.Controls.FrameworkElement.MainKeyboard?.HideKeyboard();
 #endif
     }
 
