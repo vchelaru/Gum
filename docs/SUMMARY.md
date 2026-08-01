@@ -316,6 +316,7 @@
   * [Finding Elements](code/visual-tree/finding-elements.md)
 * [Rendering](code/rendering/README.md)
   * [GumBatch](code/rendering/gumbatch.md)
+  * [Render Targets](code/rendering/render-targets.md)
   * [Rendering Custom Graphics](code/rendering/rendering-custom-graphics.md)
   * [Texture Filtering](code/rendering/texture-filtering.md)
 * [Ordering, Layers, and Popups](code/ordering-layers-and-popups/README.md)
