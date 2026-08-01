@@ -624,7 +624,7 @@ jobs:
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler!=true" --logger "trx" --logger "console;verbosity=detailed" --results-directory "TestResults"
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler!=true" --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
