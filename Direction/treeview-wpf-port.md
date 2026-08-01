@@ -154,14 +154,21 @@ consumer, so the whole file goes.
       expanded-path walk extracted to `TreeNodeExpansionPaths` (Gum.Presentation);
       `ICollapseToggleService` and `ITreeViewStateService` retyped off `MultiSelectTreeView` onto
       `IReadOnlyList<ITreeNode>`; `ElementTreeViewManager.RootTreeNodes` added as the roots accessor.
-- [ ] **Step 2 — node model.** `GumTreeNode` rewritten as an observable model with a
+- [x] **Step 2 — node model.** `GumTreeNode` rewritten as an observable model with a
       `GumTreeNodeCollection`, no WinForms base. `TreeNodeExtensionMethods` deleted, its
-      `GetFullFilePath` ported to `TreeNodeFilePathExtensions` on `ITreeNode`. *In progress.*
-- [ ] Step 3 — `GumTreeView` (multi-select, typeahead, drag/drop, drop adornments)
-- [ ] Step 4 — XAML styles replacing the owner-draw theming; icon pipeline swap
-- [ ] Step 5 — rewire `ElementTreeViewCreator` / `ElementTreeViewManager`; drop `WindowsFormsHost`
-- [ ] Step 6 — delete `MultiSelectTreeView*`, `ThemedScrollContainer`,
-      `MainWindow.IsDescendantOfWindowsFormsHost`, the `WindowsFormsHost` style, and the dead code listed above
+      `GetFullFilePath` ported to `TreeNodeFilePathExtensions` on `ITreeNode`.
+- [x] **Step 3 — `GumTreeView`**: multi-select, keyboard navigation, drag/drop with drop adornments and
+      edge auto-scroll. The five selection/navigation decision classes moved to
+      `Gum/Controls/TreeSelection/` and retyped off WinForms enums onto `ModifierKeys`/`MouseButton`.
+- [x] **Step 4 — theming and icons.** `Frb.TreeView.xaml` replaces the owner-draw file;
+      `TreeIconRegistry`/`TreeNodeIcon` replace the `ImageList` + GDI+ `ColorMatrix` pipeline.
+- [x] **Step 5 — rewiring.** `ElementTreeViewCreator` lost its 17 delegate parameters (callers now
+      subscribe to the control directly) and the `WindowsFormsHost`. Drag payloads moved to
+      `TreeDragPayload`, removing the OLE type-name scanning from three readers.
+- [x] **Step 6 — deletions.** `MultiSelectTreeView` (+ theming, +resx), `ThemedScrollContainer`,
+      `TreeNodeWrapper`, `MainWindow.IsDescendantOfWindowsFormsHost` and its focus-repair block, the
+      `WindowsFormsHost` style, `PluginManager.StateWindowTreeNodeSelected`, the stale
+      `InternalsVisibleTo`, and `UseWindowsForms` from `CommonFormsAndControls.csproj`.
 - [ ] Step 7 — unit tests green; `GumFull.sln` builds
 - [ ] Step 8 — manual test pass
 

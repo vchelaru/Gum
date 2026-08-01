@@ -1,4 +1,5 @@
-using CommonFormsAndControls;
+using System.Collections.Generic;
+using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -8,14 +9,14 @@ namespace Gum.Plugins.InternalPlugins.TreeView;
 public interface ITreeViewStateService
 {
     /// <summary>
-    /// Load tree view state from settings and apply to tree.
+    /// Load tree view state from settings and apply to the tree rooted at <paramref name="roots"/>.
     /// Called after project load and tree population.
     /// </summary>
-    void LoadAndApplyState(MultiSelectTreeView treeView);
+    void LoadAndApplyState(IReadOnlyList<ITreeNode> roots);
 
     /// <summary>
     /// Capture current tree view state and save to settings.
     /// Called on application exit.
     /// </summary>
-    void CaptureAndSaveState(MultiSelectTreeView treeView);
+    void CaptureAndSaveState(IReadOnlyList<ITreeNode> roots);
 }

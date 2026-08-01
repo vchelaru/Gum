@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.Composition;
@@ -367,9 +367,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     public void TreeNodeSelected(object? treeNode) =>
         CallMethodOnPlugin(plugin => plugin.CallTreeNodeSelected(treeNode as ITreeNode));
-
-    internal void StateWindowTreeNodeSelected(TreeNode treeNode) =>
-        CallMethodOnPlugin(plugin => plugin.CallStateWindowTreeNodeSelected((ITreeNode)treeNode));
 
     public ITreeNode? GetTreeNodeOver()
     {

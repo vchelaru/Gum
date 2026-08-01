@@ -183,7 +183,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
         // Load user settings and apply tree view state
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
-        _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
+        _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.RootTreeNodes);
         RefreshErrorIndicatorsForAllElements();
 
         // Repopulate the Standards chip palette for the newly-loaded project's standard types.
@@ -430,7 +430,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     private void SaveTreeViewState()
     {
-        _treeViewStateService.CaptureAndSaveState(_elementTreeViewManager.ObjectTreeView);
+        _treeViewStateService.CaptureAndSaveState(_elementTreeViewManager.RootTreeNodes);
         _userProjectSettingsManager.Save();
     }
 }

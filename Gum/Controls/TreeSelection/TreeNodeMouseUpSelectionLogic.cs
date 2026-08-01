@@ -1,11 +1,11 @@
-using System.Windows.Forms;
+using System.Windows.Input;
 
-namespace CommonFormsAndControls;
+namespace Gum.Controls;
 
 /// <summary>
-/// Decides whether releasing a mouse button over a tree node should (re)select it. Extracted from
-/// <see cref="MultiSelectTreeView"/> so the decision - independent of any live control state - can
-/// be unit-tested directly instead of only through <c>OnMouseUp</c> plumbing.
+/// Decides whether releasing a mouse button over a tree node should (re)select it. The decision
+/// depends only on its arguments, not on any live control state, so it can be unit-tested without
+/// mouse-event plumbing.
 /// </summary>
 public class TreeNodeMouseUpSelectionLogic
 {
@@ -18,14 +18,14 @@ public class TreeNodeMouseUpSelectionLogic
     /// click rather than push (<paramref name="isSelectingOnPush"/> is false).
     /// </summary>
     public bool ShouldSelect(
-        Keys effectiveModifiers,
+        ModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior,
         bool isNodeInMultiSelection,
         bool isSelectingOnPush,
-        MouseButtons button)
+        MouseButton button)
     {
-        return button == MouseButtons.Left &&
-               effectiveModifiers == Keys.None &&
+        return button == MouseButton.Left &&
+               effectiveModifiers == ModifierKeys.None &&
                multiSelectBehavior != MultiSelectBehavior.RegularClick &&
                (isNodeInMultiSelection || !isSelectingOnPush);
     }

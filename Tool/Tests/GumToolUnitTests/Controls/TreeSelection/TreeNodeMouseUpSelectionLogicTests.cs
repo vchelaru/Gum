@@ -1,9 +1,9 @@
-using CommonFormsAndControls;
+using Gum.Controls;
 using Shouldly;
-using System.Windows.Forms;
+using System.Windows.Input;
 using Xunit;
 
-namespace GumToolUnitTests.CommonFormsAndControls;
+namespace GumToolUnitTests.Controls.TreeSelection;
 
 public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
 {
@@ -19,8 +19,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // Pins pre-existing behavior: right-click opens the context menu, it must not select.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
-            isSelectingOnPush: false, MouseButtons.Right);
+            ModifierKeys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
+            isSelectingOnPush: false, MouseButton.Right);
 
         shouldSelect.ShouldBeFalse();
     }
@@ -29,8 +29,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     public void ShouldSelect_XButton1_ReturnsFalse()
     {
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
-            isSelectingOnPush: false, MouseButtons.XButton1);
+            ModifierKeys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
+            isSelectingOnPush: false, MouseButton.XButton1);
 
         shouldSelect.ShouldBeFalse();
     }
@@ -40,8 +40,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // Mouse-down already handled selection under a modifier; mouse-up must not re-select.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.Control, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: true,
-            isSelectingOnPush: false, MouseButtons.Left);
+            ModifierKeys.Control, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: true,
+            isSelectingOnPush: false, MouseButton.Left);
 
         shouldSelect.ShouldBeFalse();
     }
@@ -51,8 +51,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // MultiSelectBehavior.RegularClick means mouse-down already selected; mouse-up must not.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.RegularClick, isNodeInMultiSelection: true,
-            isSelectingOnPush: false, MouseButtons.Left);
+            ModifierKeys.None, MultiSelectBehavior.RegularClick, isNodeInMultiSelection: true,
+            isSelectingOnPush: false, MouseButton.Left);
 
         shouldSelect.ShouldBeFalse();
     }
@@ -62,8 +62,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // A potential drag on an already-selected node defers the actual select to mouse-up.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: true,
-            isSelectingOnPush: true, MouseButtons.Left);
+            ModifierKeys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: true,
+            isSelectingOnPush: true, MouseButton.Left);
 
         shouldSelect.ShouldBeTrue();
     }
@@ -73,8 +73,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // Gum configures IsSelectingOnPush = false so clicks (not pushes) select.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
-            isSelectingOnPush: false, MouseButtons.Left);
+            ModifierKeys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
+            isSelectingOnPush: false, MouseButton.Left);
 
         shouldSelect.ShouldBeTrue();
     }
@@ -84,8 +84,8 @@ public class TreeNodeMouseUpSelectionLogicTests : BaseTestClass
     {
         // Selection already happened on push; mouse-up has nothing left to do.
         bool shouldSelect = _logic.ShouldSelect(
-            Keys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
-            isSelectingOnPush: true, MouseButtons.Left);
+            ModifierKeys.None, MultiSelectBehavior.CtrlDown, isNodeInMultiSelection: false,
+            isSelectingOnPush: true, MouseButton.Left);
 
         shouldSelect.ShouldBeFalse();
     }

@@ -1,11 +1,10 @@
-using System.Windows.Forms;
+using Gum.Managers;
 
-namespace CommonFormsAndControls;
+namespace Gum.Controls;
 
 /// <summary>
-/// Computes the target node for the Home/End/PageUp/PageDown keys. Extracted from
-/// <see cref="MultiSelectTreeView.OnKeyDown"/> so the (pure) tree-walk logic can be
-/// unit-tested directly instead of only through key-event plumbing. Callers are responsible
+/// Computes the target node for the Home/End/PageUp/PageDown keys. The walk depends only on the
+/// nodes passed in, so it can be unit-tested without key-event plumbing. Callers are responsible
 /// for actually applying the selection (single-select vs. range-select) to the returned node.
 /// </summary>
 public class TreeNodeKeyNavigationLogic
@@ -16,8 +15,8 @@ public class TreeNodeKeyNavigationLogic
     /// root) or to the first sibling under its parent; <paramref name="selectRange"/> is set to
     /// true in that case. Otherwise the target is simply the first root node.
     /// </summary>
-    public TreeNode? GetHomeTarget(
-        TreeNode selectedNode, TreeNodeCollection rootNodes, bool shiftDown, out bool selectRange)
+    public GumTreeNode? GetHomeTarget(
+        GumTreeNode selectedNode, GumTreeNodeCollection rootNodes, bool shiftDown, out bool selectRange)
     {
         selectRange = shiftDown;
 
@@ -37,8 +36,8 @@ public class TreeNodeKeyNavigationLogic
     /// first root through expanded last-children (without expanding any branch, in case the tree
     /// is virtual).
     /// </summary>
-    public TreeNode? GetEndTarget(
-        TreeNode selectedNode, TreeNodeCollection rootNodes, bool shiftDown, out bool selectRange)
+    public GumTreeNode? GetEndTarget(
+        GumTreeNode selectedNode, GumTreeNodeCollection rootNodes, bool shiftDown, out bool selectRange)
     {
         selectRange = shiftDown;
 
@@ -57,8 +56,10 @@ public class TreeNodeKeyNavigationLogic
             return null;
         }
 
-        TreeNode lastNode = rootNodes[0].LastNode;
-        while (lastNode.IsExpanded && lastNode.LastNode != null)
+        // The first root can legitimately be an empty folder, in which case there is no last node
+        // to walk down from.
+        GumTreeNode? lastNode = rootNodes[0].LastNode;
+        while (lastNode is { IsExpanded: true, LastNode: not null })
         {
             lastNode = lastNode.LastNode;
         }
@@ -71,9 +72,9 @@ public class TreeNodeKeyNavigationLogic
     /// <paramref name="visibleCount"/> visible nodes (stopping early if the top of the tree is
     /// reached) and returns the resulting node - the target for the PageUp key.
     /// </summary>
-    public TreeNode GetPageUpTarget(TreeNode selectedNode, int visibleCount)
+    public GumTreeNode GetPageUpTarget(GumTreeNode selectedNode, int visibleCount)
     {
-        TreeNode current = selectedNode;
+        GumTreeNode current = selectedNode;
         int remaining = visibleCount;
         while (remaining > 0 && current.PrevVisibleNode != null)
         {
@@ -89,9 +90,9 @@ public class TreeNodeKeyNavigationLogic
     /// <paramref name="visibleCount"/> visible nodes (stopping early if the bottom of the tree is
     /// reached) and returns the resulting node - the target for the PageDown key.
     /// </summary>
-    public TreeNode GetPageDownTarget(TreeNode selectedNode, int visibleCount)
+    public GumTreeNode GetPageDownTarget(GumTreeNode selectedNode, int visibleCount)
     {
-        TreeNode current = selectedNode;
+        GumTreeNode current = selectedNode;
         int remaining = visibleCount;
         while (remaining > 0 && current.NextVisibleNode != null)
         {

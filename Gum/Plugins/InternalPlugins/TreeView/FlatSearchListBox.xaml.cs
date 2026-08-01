@@ -19,7 +19,7 @@ namespace Gum.Plugins.InternalPlugins.TreeView
     public partial class FlatSearchListBox : UserControl
     {
 
-        public event Action<SearchItemViewModel> SelectSearchNode;
+        public event Action<SearchItemViewModel?>? SelectSearchNode;
 
         private Point _mouseDownPoint;
         private SearchItemViewModel? _dragCandidate;
@@ -37,7 +37,7 @@ namespace Gum.Plugins.InternalPlugins.TreeView
             var frameworkElementPushed = (objectPushed as FrameworkElement);
 
             var searchNodePushed = frameworkElementPushed?.DataContext as SearchItemViewModel;
-            SelectSearchNode(searchNodePushed);
+            SelectSearchNode?.Invoke(searchNodePushed);
             e.Handled = true;
         }
 
@@ -64,33 +64,32 @@ namespace Gum.Plugins.InternalPlugins.TreeView
             SearchItemViewModel dragged = _dragCandidate;
             _dragCandidate = null;
 
-            var data = new DataObject(CreateDragNode(dragged));
-            // TreeNode.Tag does not survive the WPF -> WinForms drag boundary when its type isn't
-            // [Serializable] (Gum's *Save types aren't) -- SearchResultDragPayload carries the real
-            // object across in-process instead; MainEditorTabPlugin.OnWireframeDrop falls back to it
-            // when Tag comes back null.
-            SearchResultDragPayload.Current = dragged.BackingObject;
             try
             {
-                DragDrop.DoDragDrop(FlatList, data, DragDropEffects.Copy);
+                DragDrop.DoDragDrop(FlatList, CreateDragData(dragged), DragDropEffects.Copy);
             }
             catch
             {
-                // Swallow, mirroring MultiSelectTreeView.Theming's own drag-start guard so a
-                // failed/canceled OLE drag never destabilizes the host app.
+                // Swallow so a failed/canceled OLE drag never destabilizes the host app.
             }
             finally
             {
-                SearchResultDragPayload.Current = null;
+                TreeDragPayload.Clear();
             }
         }
 
-        // Produces the same drag payload shape a real tree node does (a TreeNode tagged with the
-        // underlying element/instance/behavior), so the Wireframe drop side
-        // (MultiSelectTreeView.ExtractDraggedNodes, which reads TreeNode.Tag) handles a dragged
-        // search result the same way it handles a dragged tree node.
-        internal static System.Windows.Forms.TreeNode CreateDragNode(SearchItemViewModel item) =>
-            new System.Windows.Forms.TreeNode { Tag = item.BackingObject };
+        // Publishes the dragged search result the same way the element tree publishes dragged nodes:
+        // a marker format on the data object, with the item itself in TreeDragPayload. A search
+        // result stands for an element/instance/behavior that may not be realized in the tree, so it
+        // travels as a tag with no node behind it. The caller owns clearing the payload afterwards.
+        internal static DataObject CreateDragData(SearchItemViewModel item)
+        {
+            TreeDragPayload.SetTags(new[] { item.BackingObject });
+
+            DataObject data = new DataObject();
+            data.SetData(TreeDragPayload.DataFormat, true);
+            return data;
+        }
     }
 
     public class ObjectToFluentIconConverter : IValueConverter

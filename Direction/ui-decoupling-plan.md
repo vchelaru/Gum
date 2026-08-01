@@ -37,12 +37,11 @@ test, implement the gap it surfaces, evaluate again — repeated until an Avalon
 be built on the shared libraries as they exist, not until the phases run out.
 
 **Scope boundary: the test targets business logic, not a control's own interactive mechanics.**
-Multi-select tracking, drag-and-drop, and owner-draw rendering built directly against one framework's
-widget APIs — `MultiSelectTreeView`'s WinForms `TreeView` internals, `WireframeControl`'s WPF-hosted
-render-surface embedding — don't get pre-extracted or "shrunk" toward a hypothetical future framework;
-that produces an abstraction shaped by guesswork, not by the framework actually chosen. Defer this
-class of work entirely until a framework decision is real (ADR-0003's measured prototype), then design
-and build it fresh against that framework's actual paradigms.
+Multi-select tracking, drag-and-drop, and row rendering are written against whichever widget toolkit
+the tool actually runs on, and don't get pre-extracted or "shrunk" toward a *hypothetical* future one —
+that produces an abstraction shaped by guesswork rather than by a framework's real paradigms. Building
+such mechanics natively against the current framework is in scope and always has been; only speculative
+neutralization of them is deferred until a framework decision is real (ADR-0003's measured prototype).
 
 ## Where the tool actually is today (grounding)
 
@@ -422,11 +421,13 @@ successor this doc's Phase 0 section suggested in place of a permanent scanner. 
 this doc when scoping a new target; its own baselines and comments often already classify a class
 as in-scope vs. deferred.
 
-**Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap).
-- *4a — Element tree:* **Done** (#3755/#3963) — `ElementTreeViewManager`/`MultiSelectTreeView`'s
-  business logic decoupled from `TreeNode` onto `ITreeNode`/`ITreeNodeMutable`, the already-migrated
-  state tree's template. The WinForms `MultiSelectTreeView` widget itself stays, per the scope
-  boundary above.
+**Phase 4 — The two WinForms subsystems** (the real cost; multi-week each, can overlap). **Both are
+now done, and no `WindowsFormsHost` remains in the tool.**
+- *4a — Element tree:* **Done.** Business logic decoupled from `TreeNode` onto
+  `ITreeNode`/`ITreeNodeMutable` (#3755/#3963), then the widget itself replaced by a WPF-native
+  `GumTreeView` bound to an observable `GumTreeNode` model (#4228). That second step deleted the
+  owner-draw theming, the `ImageList` tinting pipeline, and `ThemedScrollContainer` outright rather
+  than porting them, and removed the tool's last `WindowsFormsHost`.
 - *4b — Rendering host:* tracked in #3756/#3833 (reopened). Host-contract formalization
   (`IRenderDeviceHost`/`IInputHostControl`/`IRenderTargetPixelBufferWriter`) and WPF-native additive
   infra (`WpfRenderSurfaceHost` — CPU-readback + `WriteableBitmap`, measured 45-60fps incl. 4K via

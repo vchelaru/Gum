@@ -1,9 +1,8 @@
-using CommonFormsAndControls;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Shouldly;
-using System.Windows.Forms;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
@@ -13,7 +12,8 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
     [Fact]
     public void ProcessDrop_NullTarget_ReturnsNull()
     {
-        var result = ElementTreeViewManager.ProcessDrop(null, MultiSelectTreeView.DropKind.Into);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(null, TreeDropKind.Into);
 
         result.ShouldBeNull();
     }
@@ -21,9 +21,10 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
     [Fact]
     public void ProcessDrop_NoneKind_ReturnsNull()
     {
-        TreeNode target = new TreeNode();
+        GumTreeNode target = new GumTreeNode();
 
-        var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.None);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.None);
 
         result.ShouldBeNull();
     }
@@ -34,18 +35,19 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         // Issue #2864: the visual adornment for IntoFirst is identical to Into
         // (both draw a rectangle around the row, not a between-rows line). The
         // user cannot distinguish the two visually, so they must behave the same.
-        // Insertion at index 0 of the element is still reachable via DropKind.Before
+        // Insertion at index 0 of the element is still reachable via TreeDropKind.Before
         // on the first child node, which shows an unambiguous line.
         ComponentSave component = new ComponentSave();
         component.Name = "TargetComponent";
         component.Instances.Add(new InstanceSave { Name = "Existing" });
 
-        TreeNode target = new TreeNode { Tag = component };
+        GumTreeNode target = new GumTreeNode { Tag = component };
 
-        var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.IntoFirst);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.IntoFirst);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.TreeTarget.ShouldBeSameAs(target);
         result.Value.Drop.ShouldNotBeNull();
         result.Value.Drop!.ParentElement.ShouldBe(component);
         result.Value.Drop!.ParentInstance.ShouldBeNull();
@@ -66,12 +68,13 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         screen.Instances.Add(new InstanceSave { Name = "Existing2" });
         screen.Instances.Add(new InstanceSave { Name = "Existing3" });
 
-        TreeNode target = new TreeNode { Tag = screen };
+        GumTreeNode target = new GumTreeNode { Tag = screen };
 
-        var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.Into);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.Into);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.TreeTarget.ShouldBeSameAs(target);
         result.Value.Drop.ShouldNotBeNull();
         result.Value.Drop!.ParentElement.ShouldBe(screen);
         result.Value.Drop!.ParentInstance.ShouldBeNull();
@@ -95,18 +98,19 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
             screen.Instances.Add(new InstanceSave { Name = $"Other{i}", ParentContainer = screen });
         }
 
-        TreeNode target = new TreeNode { Tag = leftContainer };
+        GumTreeNode target = new GumTreeNode { Tag = leftContainer };
         // Simulate that LeftContainer has 4 children visible in the tree view —
-        // this is what GetNodeCount(false) would have returned in the buggy path.
-        target.Nodes.Add("Child1");
-        target.Nodes.Add("Child2");
-        target.Nodes.Add("Child3");
-        target.Nodes.Add("Child4");
+        // this is what the child count would have returned in the buggy path.
+        target.AddChild("Child1");
+        target.AddChild("Child2");
+        target.AddChild("Child3");
+        target.AddChild("Child4");
 
-        var result = ElementTreeViewManager.ProcessDrop(target, MultiSelectTreeView.DropKind.Into);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.Into);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(target);
+        result.Value.TreeTarget.ShouldBeSameAs(target);
         result.Value.Drop.ShouldNotBeNull();
         result.Value.Drop!.ParentElement.ShouldBe(screen);
         result.Value.Drop!.ParentInstance.ShouldBe(leftContainer);
@@ -123,16 +127,17 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         screen.Instances.Add(first);
         screen.Instances.Add(second);
 
-        TreeNode parent = new TreeNode { Tag = screen };
-        TreeNode firstNode = parent.Nodes.Add("First");
-        firstNode.Tag = first;
-        TreeNode secondNode = parent.Nodes.Add("Second");
-        secondNode.Tag = second;
+        GumTreeNode parent = new GumTreeNode { Tag = screen };
+        GumTreeNode firstNode = new GumTreeNode("First") { Tag = first };
+        parent.Nodes.Add(firstNode);
+        GumTreeNode secondNode = new GumTreeNode("Second") { Tag = second };
+        parent.Nodes.Add(secondNode);
 
-        var result = ElementTreeViewManager.ProcessDrop(secondNode, MultiSelectTreeView.DropKind.Before);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(secondNode, TreeDropKind.Before);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.TreeTarget.ShouldBeSameAs(parent);
         result.Value.Drop.ShouldNotBeNull();
         result.Value.Drop!.ParentElement.ShouldBe(screen);
         result.Value.Drop!.ParentInstance.ShouldBeNull();
@@ -150,16 +155,17 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         screen.Instances.Add(first);
         screen.Instances.Add(second);
 
-        TreeNode parent = new TreeNode { Tag = screen };
-        TreeNode firstNode = parent.Nodes.Add("First");
-        firstNode.Tag = first;
-        TreeNode secondNode = parent.Nodes.Add("Second");
-        secondNode.Tag = second;
+        GumTreeNode parent = new GumTreeNode { Tag = screen };
+        GumTreeNode firstNode = new GumTreeNode("First") { Tag = first };
+        parent.Nodes.Add(firstNode);
+        GumTreeNode secondNode = new GumTreeNode("Second") { Tag = second };
+        parent.Nodes.Add(secondNode);
 
-        var result = ElementTreeViewManager.ProcessDrop(firstNode, MultiSelectTreeView.DropKind.After);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(firstNode, TreeDropKind.After);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.TreeTarget.ShouldBeSameAs(parent);
         result.Value.Drop.ShouldNotBeNull();
         result.Value.Drop!.ParentElement.ShouldBe(screen);
         result.Value.Drop!.ParentInstance.ShouldBeNull();
@@ -173,14 +179,16 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         // Reordering element nodes (or other non-InstanceSave-tagged nodes)
         // does not feed an instances list — the downstream consumer should
         // route by tree node alone.
-        TreeNode parent = new TreeNode();
-        TreeNode first = parent.Nodes.Add("First");
-        TreeNode second = parent.Nodes.Add("Second");
+        GumTreeNode parent = new GumTreeNode();
+        parent.AddChild("First");
+        GumTreeNode second = new GumTreeNode("Second");
+        parent.Nodes.Add(second);
 
-        var result = ElementTreeViewManager.ProcessDrop(second, MultiSelectTreeView.DropKind.Before);
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(second, TreeDropKind.Before);
 
         result.ShouldNotBeNull();
-        result.Value.TreeTarget.ShouldBe(parent);
+        result.Value.TreeTarget.ShouldBeSameAs(parent);
         result.Value.Drop.ShouldBeNull();
     }
 }

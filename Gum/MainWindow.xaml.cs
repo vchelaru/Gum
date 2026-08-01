@@ -1,4 +1,4 @@
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Dialogs;
@@ -60,10 +60,8 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
-        // Mouse "back"/"forward" side buttons, over any plain-WPF surface (menus, variable
-        // grid, dialogs, etc.). WinForms-hosted surfaces (tree view, wireframe canvas) never
-        // reach here - raw XButton messages go straight to whichever native window is under
-        // the cursor and don't bubble - so those wire up independently.
+        // Mouse "back"/"forward" side buttons. Every surface in the tool is WPF, so this one
+        // handler covers all of them.
         if (e.ChangedButton == MouseButton.XButton1)
         {
             _selectionHistory.NavigateBack();
@@ -74,39 +72,7 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         {
             _selectionHistory.NavigateForward();
             e.Handled = true;
-            return;
         }
-
-        // When a WinForms control (e.g. the editor) has focus, WPF reports
-        // Keyboard.FocusedElement as null. If the user clicks on a WPF element
-        // that is not inside a WindowsFormsHost, pull focus back to WPF so that
-        // app-wide hotkeys (like zoom) work again.
-        if (Keyboard.FocusedElement is not null)
-            return;
-
-        if (e.OriginalSource is not DependencyObject source || IsDescendantOfWindowsFormsHost(source))
-            return;
-
-        if (source is IInputElement { Focusable: true } inputElement)
-        {
-            Keyboard.Focus(inputElement);
-        }
-        else
-        {
-            Keyboard.Focus(this);
-        }
-    }
-
-    private static bool IsDescendantOfWindowsFormsHost(DependencyObject element)
-    {
-        var current = element;
-        while (current != null)
-        {
-            if (current is System.Windows.Forms.Integration.WindowsFormsHost)
-                return true;
-            current = VisualTreeHelper.GetParent(current);
-        }
-        return false;
     }
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message)

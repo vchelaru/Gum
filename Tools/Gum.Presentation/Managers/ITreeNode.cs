@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using ToolsUtilities;
 
 namespace Gum.Managers;
@@ -6,7 +6,11 @@ namespace Gum.Managers;
 public interface ITreeNode
 {
     object? Tag { get; }
-    FilePath GetFullFilePath();
+    /// <summary>
+    /// The file or folder this node stands for, or null when the project has no location on disk
+    /// yet so no path can be derived.
+    /// </summary>
+    FilePath? GetFullFilePath();
     ITreeNode? Parent { get; }
 
     /// <summary>
@@ -24,5 +28,14 @@ public interface ITreeNode
     /// </summary>
     IEnumerable<ITreeNode> Children { get; }
 
+    /// <summary>
+    /// Whether this node's children are currently shown. Read-only because the underlying widgets
+    /// expose expansion as a pair of commands rather than a settable flag; use
+    /// <see cref="Expand"/>/<see cref="Collapse"/> to change it.
+    /// </summary>
+    bool IsExpanded { get; }
+
     void Expand();
+
+    void Collapse();
 }

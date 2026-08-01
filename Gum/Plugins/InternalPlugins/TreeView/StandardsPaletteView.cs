@@ -1,4 +1,4 @@
-using Gum.Managers;
+﻿using Gum.Managers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +23,9 @@ internal class StandardsPaletteView : Border
     private const double LabelMinCellWidth = 66;
     private const double TwoColumnMinWidth = 160;
 
-    private readonly Func<string, ImageSource?> _iconResolver;
+    /// <summary>Edge length of a chip's type icon.</summary>
+    private const double ChipIconSize = 14;
+
     private readonly UniformGrid _chipsPanel;
     private readonly Dictionary<string, Border> _chipsByType = new();
     private readonly List<ChipVisual> _chipVisuals = new();
@@ -36,7 +38,7 @@ internal class StandardsPaletteView : Border
     {
         public Border Chip = null!;
         public StackPanel Content = null!;
-        public Image? Icon;
+        public FrameworkElement? Icon;
         public TextBlock Label = null!;
     }
 
@@ -49,11 +51,8 @@ internal class StandardsPaletteView : Border
     /// <summary>Returns the currently-open Screen/Component name, or null if none is open.</summary>
     public Func<string?>? CurrentElementNameProvider { get; set; }
 
-    /// <param name="iconResolver">Resolves a standard type name's icon key (e.g. "Text.png") to a themed image.</param>
-    public StandardsPaletteView(Func<string, ImageSource?> iconResolver)
+    public StandardsPaletteView()
     {
-        _iconResolver = iconResolver;
-
         BorderThickness = new Thickness(0, 1, 0, 0);
         SetResourceReference(Border.BorderBrushProperty, "Frb.Brushes.Border");
         Padding = new Thickness(4, 6, 4, 6);
@@ -197,18 +196,11 @@ internal class StandardsPaletteView : Border
             VerticalAlignment = VerticalAlignment.Center
         };
 
-        Image? iconImage = null;
-        ImageSource? icon = _iconResolver(typeName + ".png");
-        if (icon != null)
+        FrameworkElement? iconImage = Gum.Controls.TreeIconRegistry.CreateIcon(typeName + ".png", ChipIconSize);
+        if (iconImage != null)
         {
-            iconImage = new Image
-            {
-                Source = icon,
-                Width = 14,
-                Height = 14,
-                Margin = new Thickness(0, 0, 6, 0),
-                VerticalAlignment = VerticalAlignment.Center
-            };
+            iconImage.Margin = new Thickness(0, 0, 6, 0);
+            iconImage.VerticalAlignment = VerticalAlignment.Center;
             content.Children.Add(iconImage);
         }
 

@@ -21,6 +21,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Converters.xaml" />
         <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.Styles.Variants.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Frb.TreeView.xaml" />
     </ResourceDictionary.MergedDictionaries>
 
     <Style TargetType="{x:Type controlzex:WindowChromeWindow}">
@@ -33,23 +34,6 @@
         <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
         <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
-    </Style>
-
-    <Style TargetType="WindowsFormsHost">
-        <Setter Property="Background" Value="{DynamicResource Frb.Surface01}" />
-        <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="FontFamily" Value="Segoe UI" />
-        <Setter Property="FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
-        <Setter Property="TextElement.FontSize" Value="{Binding Body, Source={StaticResource Scale}}" />
-        <Setter Property="TextElement.FontWeight" Value="Regular" />
-        <Setter Property="TextElement.Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
-        <Setter Property="TextOptions.TextRenderingMode" Value="Auto" />
-        <Setter Property="SnapsToDevicePixels" Value="True" />
-        <Setter Property="ClipToBounds" Value="True" />
-        <Setter Property="Margin" Value="0" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="UseLayoutRounding" Value="True" />
     </Style>
 
     <Style BasedOn="{StaticResource {x:Type controlzex:WindowChromeWindow}}" TargetType="{x:Type dialogs:DialogWindow}" />
