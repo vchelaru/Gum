@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -24,31 +23,26 @@ public sealed class HierarchicalOrderer : IRenderableOrderer
     {
         destination.Clear();
 
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = camera != null
-            ? renderable => camera.GetScissorRectangleFor(layer, renderable)
-            : null;
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = camera != null
-            ? renderable => camera.GetCullTestBoundsFor(layer, renderable)
-            : null;
+        ClipBoundsSource clipBounds = camera != null
+            ? new ClipBoundsSource(camera, layer)
+            : default;
 
-        AppendRenderables(layer.Renderables, getScissorRectangle, getCullTestBounds, null, destination);
+        AppendRenderables(layer.Renderables, clipBounds, null, destination);
     }
 
     /// <inheritdoc/>
     public void BuildDrawList(
         IList<IRenderableIpso> roots,
         List<DrawCommand> destination,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = null,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = null)
+        ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
-        AppendRenderables(roots, getScissorRectangle, getCullTestBounds ?? getScissorRectangle, null, destination);
+        AppendRenderables(roots, clipBounds, null, destination);
     }
 
     private static void AppendRenderables(
         IList<IRenderableIpso> renderables,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        ClipBoundsSource clipBounds,
         System.Drawing.Rectangle? activeClip,
         List<DrawCommand> destination)
     {
@@ -62,13 +56,13 @@ public sealed class HierarchicalOrderer : IRenderableOrderer
             }
 
             // #2998 off-screen cull: when a clip is active, skip this renderable and its whole
-            // subtree if its bounds fall entirely outside the clip. Gated on a non-null mapping
+            // subtree if its bounds fall entirely outside the clip. Gated on a resolvable mapping
             // (the render path) so the mapping-less order-only unit tests are unaffected.
-            if (getCullTestBounds != null
+            if (clipBounds.CanResolveCullTestBounds
                 && activeClip.HasValue
                 && CameraScissorExtensions.CullOffscreenWhenClipped
                 && CameraScissorExtensions.IsFullyOutside(
-                    getCullTestBounds(renderable),
+                    clipBounds.GetCullTestBounds(renderable),
                     activeClip.Value,
                     CameraScissorExtensions.OffscreenCullMarginInPixels))
             {
@@ -91,14 +85,14 @@ public sealed class HierarchicalOrderer : IRenderableOrderer
                     // Entering a clipper narrows the active clip for descendants (intersect, mirroring
                     // Renderer.AdjustRenderStates). Without a mapping we can't compute it, so leave it null.
                     System.Drawing.Rectangle? childClip = activeClip;
-                    if (clips && getScissorRectangle != null)
+                    if (clips && clipBounds.CanResolveScissorRectangle)
                     {
-                        System.Drawing.Rectangle thisClip = getScissorRectangle(renderable);
+                        System.Drawing.Rectangle thisClip = clipBounds.GetScissorRectangle(renderable);
                         childClip = activeClip.HasValue
                             ? System.Drawing.Rectangle.Intersect(activeClip.Value, thisClip)
                             : thisClip;
                     }
-                    AppendRenderables(children, getScissorRectangle, getCullTestBounds, childClip, destination);
+                    AppendRenderables(children, clipBounds, childClip, destination);
                 }
             }
 
