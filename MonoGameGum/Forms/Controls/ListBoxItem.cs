@@ -75,6 +75,11 @@ public class ListBoxItem :
     #region Events
 
     public event EventHandler Selected;
+    /// <summary>
+    /// Event raised when the item is clicked by a cursor or touch (press, then release
+    /// over the item). Unlike ButtonBase.Click, this is not raised by keyboard or gamepad
+    /// activation.
+    /// </summary>
     public event EventHandler Clicked;
     public event EventHandler Pushed;
 

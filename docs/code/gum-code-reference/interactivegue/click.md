@@ -6,6 +6,10 @@ A Click event is raised when an InteractiveGue is first pressed, then released. 
 
 The Click event is used by most Gum Forms controls to raise their own Click event, and to update visual state.
 
+{% hint style="info" %}
+Forms controls that derive from `ButtonBase` (such as `Button`) also raise their own `Click` for keyboard and gamepad activation, bypassing this InteractiveGue-level, cursor-only `Click`. That means `ButtonBase.Click` fires immediately on key/button press for keyboard and gamepad, with no release-based confirmation, unlike the press-then-release timing described here. See the [Button](../../controls/button.md) page for details.
+{% endhint %}
+
 ## Click Definition
 
 A click occurs when the following happens:

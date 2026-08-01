@@ -97,10 +97,21 @@ internal static class BlendModeExtensions
             : (ToGlBlendFactor(blendState.ColorSourceBlend), ToGlBlendFactor(blendState.ColorDestinationBlend),
                 ToGlBlendEquation(blendState.ColorBlendFunction));
 
+        // Normal/Additive's straight-storage alpha factor reuses the same SrcAlpha factor as color
+        // (ToBlendState's 2-arg constructor sets AlphaSourceBlend = ColorSourceBlend), which squares
+        // the source alpha once written into premultiplied render-target storage. The other four
+        // values already use an alpha source factor of One (see BlendState.cs), so their alpha
+        // already accumulates correctly as coverage and needs no context-dependent override — only
+        // Normal/Additive need it (issue #4204).
+        int alphaSrc = isPremultiplyingContext && blend is global::Gum.RenderingLibrary.Blend.Normal
+            or global::Gum.RenderingLibrary.Blend.Additive
+            ? GlOne
+            : ToGlBlendFactor(blendState.AlphaSourceBlend);
+
         return (
             colorSrc,
             colorDst,
-            ToGlBlendFactor(blendState.AlphaSourceBlend),
+            alphaSrc,
             ToGlBlendFactor(blendState.AlphaDestinationBlend),
             colorFunc,
             ToGlBlendEquation(blendState.AlphaBlendFunction));
@@ -121,6 +132,15 @@ internal static class BlendModeExtensions
     // wrong-color leak.
     private static (int colorSrc, int colorDst, int colorFunc) ToPremultipliedConsistentColorFactors(global::Gum.RenderingLibrary.Blend blend) => blend switch
     {
+        // Standard "over" compositing, premultiplying the incoming color by its own alpha on the fly
+        // (Src*SrcAlpha) rather than leaving it raw (Src*One) — same color factors raylib's canned
+        // BlendMode.Alpha already uses; only the alpha factor (see ToGlBlendFactorsSeparate) needs to
+        // change to avoid squaring (issue #4204).
+        global::Gum.RenderingLibrary.Blend.Normal => (GlSrcAlpha, GlOneMinusSrcAlpha, GlFuncAdd),
+        // Adds the incoming color premultiplied by its own alpha without attenuating the destination
+        // — same color factors raylib's canned BlendMode.Additive already uses; only the alpha factor
+        // needs to change to avoid squaring (issue #4204).
+        global::Gum.RenderingLibrary.Blend.Additive => (GlSrcAlpha, GlOne, GlFuncAdd),
         // Fully replaces the destination, so premultiply the incoming color by its own alpha
         // (Src*SrcAlpha) rather than writing it raw (Src*One) — fully general, no destination
         // assumption needed since Replace discards the destination outright.

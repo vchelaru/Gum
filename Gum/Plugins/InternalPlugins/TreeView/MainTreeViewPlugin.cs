@@ -30,6 +30,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
     private readonly IMessenger _messenger;
     private readonly IErrorChecker _errorChecker;
     private readonly IProjectState _projectState;
+    private readonly IRefreshCoalescer _elementImportRefreshCoalescer;
 
     [ImportingConstructor]
     public MainTreeViewPlugin(
@@ -39,7 +40,8 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         IMessenger messenger,
         IOutputManager outputManager,
         IErrorChecker errorChecker,
-        IProjectState projectState)
+        IProjectState projectState,
+        IDispatcher dispatcher)
     {
         _selectedState = selectedState;
         _elementTreeViewManager = elementTreeViewManager;
@@ -51,6 +53,15 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
         _errorChecker = errorChecker;
         _projectState = projectState;
+
+        // Forms import fires ElementImported once per element (issue #4231) - without coalescing,
+        // a multi-element import triggers one full RefreshUi() + error re-check per element instead
+        // of once for the whole batch.
+        _elementImportRefreshCoalescer = new RefreshCoalescer(dispatcher, () =>
+        {
+            _elementTreeViewManager.RefreshUi();
+            RefreshErrorIndicatorsForAllElements();
+        });
 
         // Register to receive ApplicationTeardownMessage
         _messenger.RegisterAll(this);
@@ -183,7 +194,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
         // Load user settings and apply tree view state
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
-        _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.ObjectTreeView);
+        _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.RootTreeNodes);
         RefreshErrorIndicatorsForAllElements();
 
         // Repopulate the Standards chip palette for the newly-loaded project's standard types.
@@ -198,8 +209,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     private void HandleElementImported(ElementSave save)
     {
-        _elementTreeViewManager.RefreshUi();
-        RefreshErrorIndicatorsForAllElements();
+        _elementImportRefreshCoalescer.RequestRefresh();
     }
 
     private void HandleBehaviorCreated(BehaviorSave save)
@@ -430,7 +440,7 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
 
     private void SaveTreeViewState()
     {
-        _treeViewStateService.CaptureAndSaveState(_elementTreeViewManager.ObjectTreeView);
+        _treeViewStateService.CaptureAndSaveState(_elementTreeViewManager.RootTreeNodes);
         _userProjectSettingsManager.Save();
     }
 }

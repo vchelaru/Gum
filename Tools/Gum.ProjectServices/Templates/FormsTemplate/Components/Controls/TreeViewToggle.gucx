@@ -97,9 +97,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -135,9 +133,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Primary.FillRed</string>
-          <string>Green = Components/Styles.Primary.FillGreen</string>
-          <string>Blue = Components/Styles.Primary.FillBlue</string>
+          <string>Color = Components/Styles.Primary.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -171,9 +167,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.Primary.FillRed</string>
-          <string>Green = Components/Styles.Primary.FillGreen</string>
-          <string>Blue = Components/Styles.Primary.FillBlue</string>
+          <string>Color = Components/Styles.Primary.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -207,9 +201,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -243,9 +235,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.DarkGray.FillRed</string>
-          <string>Green = Components/Styles.DarkGray.FillGreen</string>
-          <string>Blue = Components/Styles.DarkGray.FillBlue</string>
+          <string>Color = Components/Styles.DarkGray.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -279,9 +269,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
-          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
-          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+          <string>Color = Components/Styles.PrimaryLight.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -315,9 +303,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.PrimaryLight.FillRed</string>
-          <string>Green = Components/Styles.PrimaryLight.FillGreen</string>
-          <string>Blue = Components/Styles.PrimaryLight.FillBlue</string>
+          <string>Color = Components/Styles.PrimaryLight.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -351,9 +337,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
-          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
-          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+          <string>Color = Components/Styles.PrimaryDark.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -387,9 +371,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Styles.PrimaryDark.FillRed</string>
-          <string>Green = Components/Styles.PrimaryDark.FillGreen</string>
-          <string>Blue = Components/Styles.PrimaryDark.FillBlue</string>
+          <string>Color = Components/Styles.PrimaryDark.FillColor</string>
         </Value>
       </VariableList>
     </State>

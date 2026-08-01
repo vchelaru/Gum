@@ -167,4 +167,20 @@ public class ScrollBarControlLogicTests
         _horizontal.Value.ShouldBe(_horizontal.Maximum);
         _vertical.Value.ShouldBe(_vertical.Minimum);
     }
+
+    [Fact]
+    public void UpdateScrollBarsToCameraPosition_PreservesTheCamerasFractionalPositionWithinRange()
+    {
+        Camera camera = new Camera { Zoom = 2, X = 100.75f, Y = 50.25f };
+        _logic.Camera = camera;
+        _logic.SetDisplayedArea(800, 600);
+
+        _logic.UpdateScrollBarsToCameraPosition();
+
+        // Setting the (int) bar value round-trips through ValueChanged back into the camera - the
+        // same feedback UpdateScrollBars() guards against by restoring X/Y afterward. This method
+        // must guard it the same way, or every mouse-pan tick truncates sub-pixel camera position.
+        camera.X.ShouldBe(100.75f);
+        camera.Y.ShouldBe(50.25f);
+    }
 }

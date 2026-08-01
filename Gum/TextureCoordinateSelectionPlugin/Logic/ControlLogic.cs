@@ -4,6 +4,7 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
+using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -24,7 +25,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows.Input;
 using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -180,30 +181,50 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         };
     }
 
-    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    internal void HandleKeyDown(object? sender, KeyEventArgs e) =>
+        HandleKeyDown(e.ToGumKeyEventArgs(), handled => e.Handled = handled);
+
+    // Split from the WPF handler above so the app-wide/camera key routing can be tested without a
+    // real WPF key event (KeyEventArgs needs a live PresentationSource to construct).
+    internal void HandleKeyDown(GumKeyEventArgs keyArgs, Action<bool> setHandled)
     {
+        // MainWindow's PreviewKeyDown tunnel already offers app-wide hotkeys (Undo/Redo/etc.) to
+        // this canvas, so this is a backstop for keys that reach it directly. Entire-app zoom stays
+        // disabled because Ctrl+=/Ctrl+- zoom this control's own camera below - CameraZoomScope is
+        // what keeps MainWindow from claiming those first.
+        if (_hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: false))
+        {
+            setHandled(keyArgs.Handled);
+            return;
+        }
+
+        if (IsCanvasNavigationKey(keyArgs))
+        {
+            setHandled(true);
+        }
+
         var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
-        if (_hotkeyManager.MoveCameraRight.IsPressed(e))
+        if (_hotkeyManager.MoveCameraRight.IsPressed(keyArgs))
         {
             camera.X += 10;
         }
-        if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
+        if (_hotkeyManager.MoveCameraLeft.IsPressed(keyArgs))
         {
             camera.X -= 10;
         }
-        if (_hotkeyManager.MoveCameraUp.IsPressed(e))
+        if (_hotkeyManager.MoveCameraUp.IsPressed(keyArgs))
         {
             camera.Y -= 10;
         }
-        if (_hotkeyManager.MoveCameraDown.IsPressed(e))
+        if (_hotkeyManager.MoveCameraDown.IsPressed(keyArgs))
         {
             camera.Y += 10;
         }
-        if (_hotkeyManager.ZoomCameraIn.IsPressed(e) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(e))
+        if (_hotkeyManager.ZoomCameraIn.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(keyArgs))
         {
             mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
         }
-        if (_hotkeyManager.ZoomCameraOut.IsPressed(e) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(e))
+        if (_hotkeyManager.ZoomCameraOut.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(keyArgs))
         {
             mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
         }
@@ -211,6 +232,14 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         UpdateScrollBarsToTexture();
 
     }
+
+    /// <summary>
+    /// Whether a key belongs to the canvas rather than to WPF's focus navigation. The arrow keys pan
+    /// the camera here and nudge the selected region (through the polled <c>InputLibrary.Keyboard</c>),
+    /// so letting WPF navigate on them would move focus off the canvas and kill both.
+    /// </summary>
+    internal static bool IsCanvasNavigationKey(GumKeyEventArgs e) =>
+        e.Key is GumKey.Left or GumKey.Right or GumKey.Up or GumKey.Down;
 
     private void UpdateScrollBarsToTexture()
     {

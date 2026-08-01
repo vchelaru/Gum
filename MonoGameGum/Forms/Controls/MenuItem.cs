@@ -156,6 +156,11 @@ public class MenuItem : ItemsControl
     #region Events
 
     public event EventHandler Selected;
+    /// <summary>
+    /// Event raised when the item is activated by a cursor or touch. With a mouse, this
+    /// fires on push, matching WPF menu behavior; with touch, it fires on release. Unlike
+    /// ButtonBase.Click, this is not raised by keyboard or gamepad activation.
+    /// </summary>
     public event EventHandler Clicked;
 
     #endregion

@@ -78,6 +78,9 @@ public class WireframeControl : WpfGraphicsDeviceControl
         _dialogService = dialogService;
         _outputManager = outputManager;
         _pluginManager = pluginManager;
+
+        // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
+        CameraZoomScope.SetOwnsCameraZoom(this, true);
     }
 
     #region Properties
@@ -111,16 +114,15 @@ public class WireframeControl : WpfGraphicsDeviceControl
         _cameraController.HandleKeyPress(keyArgs);
     }
 
-    void HandleMouseDown(object? sender, MouseButtonEventArgs e)
-    {
-        // The canvas only receives keys while it has keyboard focus, and clicking it is how the
-        // user hands focus over from the rest of the WPF UI.
-        Focus();
+    // Focus is taken by WpfGraphicsDeviceControl.OnMouseDown, which runs before this.
+    void HandleMouseDown(object? sender, MouseButtonEventArgs e) =>
         _cameraController.HandleMouseDown(e.ToGumMouseEventArgs(this));
-    }
 
     void HandleMouseMove(object? sender, MouseEventArgs e) =>
         _cameraController.HandleMouseMove(e.ToGumMouseEventArgs(this));
+
+    void HandleMouseUp(object? sender, MouseButtonEventArgs e) =>
+        _cameraController.HandleMouseUp(e.ToGumMouseEventArgs(this));
 
     void HandleMouseWheel(object? sender, MouseWheelEventArgs e)
     {
@@ -184,7 +186,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
 
             // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
             // reading GraphicsDevice/Services directly off this control, so the initialization
-            // sequence below only depends on the render-host contract, not on GraphicsDeviceControl.
+            // sequence below only depends on the render-host contract, not on a concrete control type.
             IRenderDeviceHost renderHost = RenderDeviceHost;
 
             SystemManagers.Default = new SystemManagers();
@@ -240,6 +242,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
             KeyUp += HandleKeyUp;
             MouseDown += HandleMouseDown;
             MouseMove += HandleMouseMove;
+            MouseUp += HandleMouseUp;
             MouseWheel += HandleMouseWheel;
 
             MouseEnter += (_, _) =>

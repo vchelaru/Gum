@@ -4,10 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:TextureCoordinateSelectionPlugin.Views"
+    xmlns:input="clr-namespace:Gum.Input;assembly=Gum"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:specializedxnacontrols="clr-namespace:FlatRedBall.SpecializedXnaControls;assembly=FlatRedBall.SpecializedXnaControls"
-    xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -66,9 +66,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <WindowsFormsHost KeyDown="HandleKeyDown">
-                <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" />
-            </WindowsFormsHost>
+            <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" input:CameraZoomScope.OwnsCameraZoom="True" />
             <ScrollBar x:Name="VerticalScrollBar" Grid.Column="1" />
             <ScrollBar
                 x:Name="HorizontalScrollBar"

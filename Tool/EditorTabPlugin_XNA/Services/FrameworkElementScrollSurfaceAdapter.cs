@@ -7,8 +7,7 @@ namespace Gum.Plugins.ScrollBarPlugin;
 /// <summary>
 /// Adapts a WPF <see cref="FrameworkElement"/> to <see cref="IScrollSurface"/> so
 /// <see cref="Gum.Plugins.InternalPlugins.EditorTab.Services.ScrollBarControlLogic"/> can size its
-/// bars from the wireframe canvas without referencing WPF. The WPF counterpart to
-/// <see cref="ControlScrollSurfaceAdapter"/>.
+/// bars from the wireframe canvas without referencing WPF.
 /// </summary>
 public class FrameworkElementScrollSurfaceAdapter : IScrollSurface
 {

@@ -1,108 +1,79 @@
 ---
 name: gum-tool-tree-view
-description: Gum main element tree view (Screens/Components/Standard/Behaviors panel). Triggers: tree view icons, ImageList, ElementTreeViewManager, ElementTreeViewCreator, MainTreeViewPlugin, MultiSelectTreeView, node add/refresh/theming. For '!' overlay see gum-tool-errors; for selection plumbing see gum-tool-selection.
+description: Gum's element tree (Screens/Components/Standard/Behaviors panel). Triggers: GumTreeView, GumTreeNode, ElementTreeViewManager, ElementTreeViewCreator, MainTreeViewPlugin, TreeIconRegistry, tree icons, node add/refresh/drag. For the '!' overlay see gum-tool-errors; for selection plumbing see gum-tool-selection.
 ---
 
 # Gum Tool Tree View Reference
 
-The element tree view is the left-hand panel listing Screens, Components, Standard Elements, Behaviors, and the instances inside an open element. It is a WinForms `MultiSelectTreeView` hosted inside a WPF `WindowsFormsHost`.
+The left-hand panel listing Screens, Components, Standard Elements, Behaviors, and the instances
+inside an open element. A native WPF `TreeView`.
 
-## Key types
+## File map
 
-- `MultiSelectTreeView` (`Gum/CommonFormsAndControls/MultiSelectTreeView.cs`) — derived from `System.Windows.Forms.TreeView`. Owns the underlying `ImageList` field `_elementTreeImages` (initialized empty in `InitializeComponent`). Exposed as `ElementTreeImageList`.
-- `ElementTreeViewCreator` (`Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewCreator.cs`) — builds the WPF `Grid` containing the tree view, search box, collapse buttons, and flat search list. Owns icon loading/tinting.
-- `ElementTreeViewManager` (`Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs`) — constructor-injected (not a `.Self` singleton). Builds, refreshes, and selects nodes. This is the bloated central class — most icon assignments happen here, via `TreeNodeImageIndices`/`TreeNodeImageLogic` (`Tools/Gum.Presentation/Managers/`, headless — no `System.Windows.Forms`). Its own node-construction/search/refresh/selection logic is `ITreeNode`/`ITreeNodeMutable`-typed, delegating to headless twins keyed off `IElementTreeRoots` in `Tools/Gum.Presentation/Managers/`; `ElementTreeViewManager.RightClick.cs` (its sibling partial) is fully `ITreeNode`-clean too. `MultiSelectTreeView`, `TreeNodeWrapper` (the adapter seam), and `GumTreeNode`'s `GetFullFilePath()` remain WinForms-typed — the latter still calls a WinForms-only helper in `TreeNodeExtensionMethods` at the bottom of `ElementTreeViewManager.cs`, since porting it headless would also require changing `TreeNodeWrapper`.
-- `MainTreeViewPlugin` — wires plugin events (`InstanceAdd`, `ElementSelected`, `VariableSet`, `AfterUndo`, etc.) to `ElementTreeViewManager.RefreshUi(...)` and to `UpdateErrorIndicatorsForElement(...)`.
-- `TreeViewStateService` — captures/restores expanded-node state across sessions via user project settings.
+| File | Purpose |
+|---|---|
+| `Gum/Controls/GumTreeView.cs` (+ `.DragDrop.cs`) | The control: multi-select, keyboard nav, drag/drop, drop adornment |
+| `Gum/Controls/TreeSelection/` | Framework-free click/range/key decision logic the control calls into |
+| `Gum/Plugins/InternalPlugins/TreeView/GumTreeNode.cs` (+ `GumTreeNodeCollection.cs`) | The node model the tree binds to; implements `ITreeNodeMutable` |
+| `Gum/Themes/Frb.TreeView.xaml` | Row template, expander, selection/hover triggers |
+| `Gum/Controls/TreeIconRegistry.cs`, `TreeNodeIcon.cs` | Icon index → artwork + theme tint |
+| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewCreator.cs` | Builds the panel (tree, search box, collapse buttons, chip palette) |
+| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | Builds, refreshes and selects nodes |
+| `MainTreeViewPlugin.cs` | Wires plugin events to `RefreshUi(...)` and error-indicator updates |
+| `TreeViewStateService.cs`, `CollapseToggleService.cs` | Expansion state: persisted across sessions, and the collapse-button toggle |
+| `Tools/Gum.Presentation/Services/RefreshCoalescer.cs` | Collapses N `RequestRefresh()` calls in one synchronous burst into a single `IDispatcher`-posted refresh |
 
-## Icon system
+`ElementTreeViewManager` and its `RightClick` partial speak `ITreeNode`/`ITreeNodeMutable`, delegating
+to headless twins in `Tools/Gum.Presentation/Managers/` (`TreeNodeImageLogic`, the `TreeNode*Extensions`
+families, `TreeNodeExpansionPaths`). Prefer adding logic there over growing the manager.
 
-> Tree-view icons are one of three icon pipelines in Gum (PNG `ImageList` here; `GumIcon`/`PathGeometry` for other WPF chrome; sprite sheet for Forms runtime). For the umbrella overview and routing, see [gum-icons](../gum-icons/SKILL.md).
+## Selection is on the model, not the container
 
-### How icons end up in the ImageList
+`TreeView` enforces a single selected item and clears the previous one on every change, so
+`TreeViewItem.IsSelected` is deliberately never set. `GumTreeView` tracks the selection itself and the
+row template binds its selected visual to `GumTreeNode.IsSelected`. Consequences:
 
-The `ImageList` is **not** populated at construction. The flow:
+- Keyboard navigation is handled in `GumTreeView.OnKeyDown`, not inherited.
+- `IsExpanded` is ordinary two-way bound state, so expansion survives a rebuild without being
+  captured and replayed.
 
-1. `MultiSelectTreeView..ctor` creates an empty `ImageList` (`_elementTreeImages`) with `Depth32Bit` and transparent color.
-2. `ElementTreeViewCreator.CreateObjectTreeView` assigns `ObjectTreeView.ImageList = ObjectTreeView.ElementTreeImageList`.
-3. `ApplyThemeColors()` calls `UpdateTreeviewIcons(scale)`. This is the real loader — it runs on theme apply and on font-size change. It:
-   - Calls `InjectDynamicIcons()` to load PNGs from `pack://application:,,,/Gum;component/Content/Icons/...` into `_originalImages` (`Dictionary<string, Image>`), keyed by filename. Idempotent — `TryInjectIcon` early-outs if the key exists.
-   - Calls `GetCurrentColorMap()` to read theme resources (`Frb.Colors.Icon.Manilla/Green/Blue/Red/Purple`) and map them to icon keys.
-   - Calls `BuildTintedImageList(...)` which, for each original image, **resizes and tints in one pass** via a `ColorMatrix` (white-source images are multiplied by the tint RGB), and adds to a fresh `ImageList`. The tree view's `ImageList` is **replaced wholesale** each call.
-   - Forces `ObjectTreeView.Indent = baseImageSize` because on certain .NET versions the indent does not auto-adjust on first load.
+## Icons
 
-The icons are intentionally white/grayscale source PNGs so they can be re-tinted by the theme.
+`TreeIconRegistry` maps an index (the shared `TreeNodeImageIndices` constants, produced by the
+headless `TreeNodeImageLogic`) to a pack URI plus a theme color key; `TreeNodeIcon` renders the pair.
 
-### ImageIndex constants
+- **Source PNGs must be white-on-transparent**, alpha carrying the shading. Tinting fills a shape with
+  the theme brush and uses the artwork as an `OpacityMask`, so a colored source multiplies wrong.
+- Adding an icon is a constant in `TreeNodeImageIndices` plus an entry in `TreeIconRegistry` — in any
+  position. The numbering is not tied to load order.
+- Icons re-tint on theme change via `TreeIconRegistry.NotifyThemeChanged()`; nothing is regenerated.
 
-Defined as `public const int` on `TreeNodeImageIndices` (`Tools/Gum.Presentation/Managers/TreeNodeImageIndices.cs`); `ElementTreeViewManager` consumes them via `using static`. They map to insertion order in `InjectDynamicIcons()` — **the order of the `TryInjectIcon` calls must match these indices**:
+## Refresh model
 
-| Index | Constant | File key |
-|---|---|---|
-| 0 | `TransparentImageIndex` | `transparent.png` |
-| 1 | `FolderImageIndex` | `Folder.png` |
-| 2 | `ComponentImageIndex` | `Component.png` |
-| 3 | `InstanceImageIndex` | `Instance.png` |
-| 4 | `ScreenImageIndex` | `Screen.png` |
-| 5 | `StandardElementImageIndex` | `StandardElement.png` |
-| 6 | `ExclamationIndex` | `redExclamation.png` |
-| 7 | `StateImageIndex` | `state.png` |
-| 8 | `BehaviorImageIndex` | `behavior.png` |
-| 9 | `DerivedInstanceImageIndex` | `InheritedInstance.png` |
-| 10 | `LockedInstanceImageIndex` | `instance_locked.png` |
+`RefreshUi()` is diff-based — existing nodes are reused and only differing `ImageIndex`/position/`Tag`/
+`Text` are written. Replacing nodes wholesale would drop selection and scroll position.
 
-### Authoring new icons (artist-facing)
+`Tag` distinguishes node kinds: folder/container nodes have `Tag == null`; element nodes carry an
+`ElementSave`/`BehaviorSave`; instance nodes an `InstanceSave`.
 
-- Author at **512×512 PNG**, white-on-transparent (alpha for shading; never use non-white RGB — the runtime tints by RGB multiplication).
-- Theme color (Manilla/Green/Blue/Red/Purple) is chosen on the code side, not by the artist.
-- SVG masters (if any) are *not* auto-converted to PNGs for the tree view. The `GumFigmaIconRipper` only processes `Gum/Content/Svg/*.svg` into XAML geometries for the variable-grid icons, not this pipeline. Export PNGs manually; keep SVG sources in `Gum/Content/Svg/TreeView/` if desired.
-
-### Adding a new icon
-
-1. Drop the PNG into `Gum/Content/Icons/UpdatedTreeViewIcons/`. Set the build action so it ships in the WPF resource pack.
-2. Add a `TryInjectIcon("YourKey.png", "pack://...")` call to `InjectDynamicIcons` **at the position matching the next image index**.
-3. Add a `public const int YourImageIndex = N;` to `TreeNodeImageIndices`.
-4. If the icon should be theme-colored, add an entry to `GetCurrentColorMap()` keyed by the same filename. Otherwise it falls back to `Frb.Colors.Primary`.
-5. Assign `treeNode.ImageIndex = YourImageIndex;` from wherever the node is created/refreshed.
-
-### Icon decision logic (state → ImageIndex)
-
-The same node may swap between several icons over its lifetime. Call sites are scattered across `ElementTreeViewManager`; the per-type mapping tables and decision rules they call into are centralized in `TreeNodeImageLogic` (`Tools/Gum.Presentation/Managers/TreeNodeImageLogic.cs`). Hot spots:
-
-- **Element nodes** (`UpdateErrorIndicatorsForElement`, `ElementTreeViewManager.cs` ~L447): picks `Screen / Component / StandardElement` by type, then overrides to `Exclamation` if `IsSourceFileMissing` or has errors.
-- **Instance nodes** (`AddTreeNodeForInstance` ~L1790, instance refresh ~L1720): default `Instance`; `LockedInstance` if `instance.Locked`; `Exclamation` if `BaseType` element is missing/missing source; `DerivedInstance` if `instance.DefinedByBase` (instance contributed by a base element).
-- **Folder containers** (Screens / Components / Standard / Behaviors top-level + subfolders): always `FolderImageIndex`.
-
-`MainTreeViewPlugin` wires `VariableSet` → if `variableName == nameof(instance.Locked)`, calls `RefreshUi(instance)` so the lock icon updates immediately.
-
-### Theming / DPI / font-size scaling
-
-`UpdateTreeviewIcons(scale)` is called from:
-- `ApplyThemeColors()` — runs on initial creation and theme changes.
-- `MainTreeViewPlugin.Receive(UiBaseFontSizeChangedMessage)` → `UpdateCollapseButtonSizes` (collapse buttons use Material Design `PackIcon`, separate from the tree image list).
-
-Base size is `16px * (DpiX / 96f) * scale`. Re-tinting and resizing happen together; any change to theme color or font size rebuilds the entire `ImageList`.
-
-## Tree refresh model
-
-`ElementTreeViewManager.RefreshUi()` is the workhorse — overloads accept an `IInstanceContainer`, an `InstanceSave`, or nothing (full rebuild). It performs **diff-based** updates: existing tree nodes are reused and only their `ImageIndex` / position / `Tag` / `Text` are updated when they differ. This matters because:
-
-- Replacing nodes wholesale would lose expansion state and selection.
-- `ImageIndex` is only assigned when it differs from the desired value (avoids redraw flicker).
-- Expanded-instance state is captured before edits and reapplied after (`expandedInstances` local).
-
-Plugin events that trigger refresh (`MainTreeViewPlugin.AssignEvents`):
-- Add/Delete/Duplicate/Reload of elements, instances, behaviors, categories, states.
-- `ProjectLoad` — full rebuild + `TreeViewStateService.LoadAndApplyState`.
-- `AfterUndo` — refreshes selected behavior + error indicators.
-- `VariableSet` — error indicator refresh, plus instance refresh when `Locked` changes.
-- `RefreshElementTreeView` — explicit refresh request from other plugins.
+`MainTreeViewPlugin.HandleElementImported` requests a refresh through a `RefreshCoalescer` rather than
+calling `RefreshUi()` directly, so importing N elements in one batch (Forms theme, `.gumx` import)
+produces one refresh instead of N.
 
 ## Gotchas
 
-- **Icon cache lives in `_originalImages` on `ElementTreeViewCreator`, not on `MultiSelectTreeView`.** The image list on the tree view is replaced; the cached source `Image` objects persist across rebuilds.
-- **The PNGs are tinted; original is expected to be white.** A new colored icon will be multiplied by the theme color and look wrong. Author icons as alpha-on-white.
-- **Index constants and `TryInjectIcon` call order are coupled.** Inserting a new icon in the middle of the list shifts every subsequent constant — easier to append.
-- `Tag` distinguishes node types: folder/container nodes have `Tag == null`; element nodes have an `ElementSave`/`BehaviorSave`; instance nodes have an `InstanceSave`. Used by `CollapseElementNodesRecursively` and selection logic.
-- `MainTreeViewPlugin` suppresses re-entrant selection cascades via `_elementTreeViewManager.SuppressCallAfterClickSelect`.
-- Hot-tracking + custom hover/selected colors are theme-driven via `Frb.Brushes.Primary*`. The tree view does not use the OS default selection colors.
+- **Reordering within one collection must be remove-then-insert.** `GumTreeNodeCollection` throws if a
+  node is inserted into the collection it already belongs to, because detaching first would shift the
+  index the caller computed. Reparenting *across* collections is a plain add.
+- **Drag payloads travel in `TreeDragPayload`, not on the `DataObject`.** Gum's `*Save` types aren't
+  `[Serializable]`, so anything put on the data object comes back null; the data object carries only a
+  marker format. `WpfWireframeDropPayloadReader` and `FlatSearchListBox` read the same static.
+- **`ITreeNode.FullPath` is backslash-separated.** `CopyPasteLogic` slices a `"Components\\"` prefix
+  off it.
+- **Persisted expansion state is forward-slash-joined node `Text` paths** (`TreeNodeExpansionPaths`).
+  Changing either the separator or the use of `Text` silently discards every user's saved state.
+- **Virtualization is off** (the WPF `TreeView` default). That is what makes
+  `GumTreeView.ContainerFor`/`EnsureVisible` reliable — turning it on would break container lookup for
+  off-screen nodes.
+- **`GumTreeView.EnsureVisible` defers to a `Loaded` dispatcher callback**, since a newly-expanded
+  ancestor's child has no container until layout runs.

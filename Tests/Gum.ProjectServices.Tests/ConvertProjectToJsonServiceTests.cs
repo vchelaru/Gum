@@ -1,7 +1,9 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Serialization.Json;
+using Gum.Logic.FileWatch;
 using Gum.StateAnimation.SaveClasses;
+using Moq;
 using Shouldly;
 using ToolsUtilities;
 
@@ -14,13 +16,15 @@ namespace Gum.ProjectServices.Tests;
 public class ConvertProjectToJsonServiceTests : IDisposable
 {
     private readonly string _tempDirectory;
+    private readonly Mock<IFileWatchIgnoreList> _fileWatchIgnoreList;
     private readonly IConvertProjectToJsonService _service;
 
     public ConvertProjectToJsonServiceTests()
     {
         _tempDirectory = Path.Combine(Path.GetTempPath(), "GumConvertToJsonTests_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDirectory);
-        _service = new ConvertProjectToJsonService();
+        _fileWatchIgnoreList = new Mock<IFileWatchIgnoreList>();
+        _service = new ConvertProjectToJsonService(_fileWatchIgnoreList.Object);
     }
 
     public void Dispose()
@@ -89,6 +93,48 @@ public class ConvertProjectToJsonServiceTests : IDisposable
         File.ReadAllBytes(Path.Combine(_tempDirectory, "Components", "Button.gucx")).ShouldBe(componentXmlBytesBefore);
         File.ReadAllBytes(behaviorXmlPath).ShouldBe(behaviorXmlBytesBefore);
         File.ReadAllBytes(animationXmlPath).ShouldBe(animationXmlBytesBefore);
+    }
+
+    [Fact]
+    public void ConvertToJson_FullProject_RegistersFileWatchIgnoreForEveryJsonFileBeforeWritingIt()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion, FullFileName = gumxPath.Replace('\\', '/') };
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        project.Components.Add(component);
+        project.Behaviors.Add(new BehaviorSave { Name = "ButtonBehavior", DefaultImplementation = "Controls/Button" });
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        project.Save(gumxPath, saveElements: true);
+        string behaviorXmlPath = Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorXmlPath)!);
+        project.Behaviors[0].Save(behaviorXmlPath);
+        string animationXmlPath = Path.Combine(_tempDirectory, "Components", "ButtonAnimations.ganx");
+        WriteAnimationXml(animationXmlPath, animationName: "FadeIn");
+
+        List<FilePath> ignoredBeforeGumjWritten = new List<FilePath>();
+        _fileWatchIgnoreList
+            .Setup(x => x.IgnoreNextChangeUntil(It.IsAny<FilePath>(), null))
+            .Callback<FilePath, DateTime?>((path, _) =>
+            {
+                if (!File.Exists(path.FullPath))
+                {
+                    ignoredBeforeGumjWritten.Add(path);
+                }
+            });
+
+        _service.ConvertToJson(project);
+
+        string gumjPath = Path.Combine(_tempDirectory, "Project.gumj");
+        string componentJsonPath = Path.Combine(_tempDirectory, "Components", "Button.gucj");
+        string behaviorJsonPath = Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behj");
+        string animationJsonPath = Path.Combine(_tempDirectory, "Components", "ButtonAnimations.ganj");
+
+        // Every path was ignored before its file existed on disk - i.e. before the write happened,
+        // not after (issue #4219: registering after the write is too late to mute the watcher).
+        ignoredBeforeGumjWritten.ShouldContain((FilePath)gumjPath);
+        ignoredBeforeGumjWritten.ShouldContain((FilePath)componentJsonPath);
+        ignoredBeforeGumjWritten.ShouldContain((FilePath)behaviorJsonPath);
+        ignoredBeforeGumjWritten.ShouldContain((FilePath)animationJsonPath);
     }
 
     [Fact]

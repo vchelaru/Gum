@@ -1,7 +1,7 @@
-using CommonFormsAndControls;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Shouldly;
-using System.Windows.Forms;
+using System.Collections.Generic;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
@@ -9,215 +9,200 @@ namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
 public class CollapseToggleServiceTests : BaseTestClass
 {
     private readonly CollapseToggleService _service;
-    private readonly MultiSelectTreeView _treeView;
+    private readonly List<ITreeNode> _roots;
 
     public CollapseToggleServiceTests()
     {
         _service = new CollapseToggleService();
-        _treeView = new MultiSelectTreeView();
+        _roots = new List<ITreeNode>();
     }
 
-    public override void Dispose()
+    /// <summary>
+    /// Adds a "Components" root containing "Button" (which itself contains "States") and "Label",
+    /// with Components and Button expanded. Returns the root.
+    /// </summary>
+    private GumTreeNode SetupTreeWithExpandedNodes()
     {
-        base.Dispose();
-        _treeView?.Dispose();
-    }
-
-    private void SetupTreeWithExpandedNodes()
-    {
-        var root = _treeView.Nodes.Add("Components");
-        var child1 = root.Nodes.Add("Button");
-        var child2 = root.Nodes.Add("Label");
-        child1.Nodes.Add("States");
+        GumTreeNode root = new GumTreeNode("Components");
+        GumTreeNode button = (GumTreeNode)root.AddChild("Button");
+        root.AddChild("Label");
+        button.AddChild("States");
         root.Expand();
-        child1.Expand();
+        button.Expand();
+
+        _roots.Add(root);
+        return root;
     }
 
     private void CollapseAllNodes()
     {
-        foreach (TreeNode node in _treeView.Nodes)
+        foreach (ITreeNode node in _roots)
         {
             CollapseNodeRecursive(node);
         }
     }
 
-    private void CollapseNodeRecursive(TreeNode node)
+    private static void CollapseNodeRecursive(ITreeNode node)
     {
         node.Collapse();
-        foreach (TreeNode child in node.Nodes)
+        foreach (ITreeNode child in node.Children)
         {
             CollapseNodeRecursive(child);
         }
     }
 
-    // TreeNode.Expand()/Collapse() can force the underlying native window handle to be
-    // created, which requires an STA thread (WinForms drag/drop registration in
-    // OnHandleCreated throws otherwise); xUnit's default runner is MTA.
+    /// <summary>
+    /// Stands in for the tree's "collapse to element level" action, which collapses the nodes below
+    /// each root but leaves the roots themselves expanded.
+    /// </summary>
+    private static void CollapseChildrenOf(GumTreeNode node)
+    {
+        foreach (ITreeNode child in node.Children)
+        {
+            child.Collapse();
+        }
+    }
 
-    [StaFact]
+    [Fact]
     public void Clear_ShouldDiscardSavedState()
     {
         // Arrange
         SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Act
         _service.Clear();
-        _treeView.Nodes.Clear();
+        _roots.Clear();
         // Click again - should capture and collapse, not restore
-        SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Assert - all collapsed because it re-captured, not restored
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        root.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void HandleCollapseAll_ShouldCaptureAndCollapse_OnFirstClick()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        root.IsExpanded.ShouldBeTrue();
 
         // Act
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Assert
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        root.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void HandleCollapseAll_ShouldRecapture_WhenManualChangeOccurred()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Simulate manual change
         _service.OnNodeManuallyChanged();
 
         // Expand some nodes manually to give it new state
-        _treeView.Nodes[0].Expand();
+        root.Expand();
 
         // Act - click again after manual change, should capture new state and collapse
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Assert - collapsed again (re-captured, not restored)
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        root.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
+    [Fact]
     public void HandleCollapseAll_ShouldRestore_OnSecondClickWithoutManualChange()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
-        var rootWasExpanded = _treeView.Nodes[0].IsExpanded;
-        var buttonWasExpanded = _treeView.Nodes[0].Nodes[0].IsExpanded;
-        rootWasExpanded.ShouldBeTrue();
-        buttonWasExpanded.ShouldBeTrue();
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        GumTreeNode button = root.Nodes[0];
+        root.IsExpanded.ShouldBeTrue();
+        button.IsExpanded.ShouldBeTrue();
 
         // Act - first click collapses
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
+        root.IsExpanded.ShouldBeFalse();
 
         // Act - second click restores
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Assert - restored to original state
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
+        root.IsExpanded.ShouldBeTrue();
+        button.IsExpanded.ShouldBeTrue();
     }
 
-    [StaFact]
+    [Fact]
     public void HandleCollapseToElementLevel_ShouldRestore_OnSecondClick()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        GumTreeNode button = root.Nodes[0];
+        root.IsExpanded.ShouldBeTrue();
+        button.IsExpanded.ShouldBeTrue();
 
         // Act - first click collapses element-level nodes
-        _service.HandleCollapseToElementLevel(_treeView, () =>
-        {
-            // Simulate collapsing only element-level nodes (nodes with children)
-            foreach (TreeNode child in _treeView.Nodes[0].Nodes)
-            {
-                child.Collapse();
-            }
-        });
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeFalse();
+        _service.HandleCollapseToElementLevel(_roots, () => CollapseChildrenOf(root));
+        button.IsExpanded.ShouldBeFalse();
 
         // Act - second click restores
-        _service.HandleCollapseToElementLevel(_treeView, () =>
-        {
-            foreach (TreeNode child in _treeView.Nodes[0].Nodes)
-            {
-                child.Collapse();
-            }
-        });
+        _service.HandleCollapseToElementLevel(_roots, () => CollapseChildrenOf(root));
 
         // Assert - Button node restored to expanded
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
+        button.IsExpanded.ShouldBeTrue();
     }
 
-    [StaFact]
+    [Fact]
     public void HandleDifferentButton_ShouldInvalidatePreviousSnapshot()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        GumTreeNode button = root.Nodes[0];
 
         // First click on CollapseAll
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
+        root.IsExpanded.ShouldBeFalse();
 
         // Expand nodes again to have something to snapshot
-        _treeView.Nodes[0].Expand();
-        _treeView.Nodes[0].Nodes[0].Expand();
+        root.Expand();
+        button.Expand();
 
         // Act - click the other button (CollapseToElementLevel)
         // This should discard the CollapseAll snapshot and capture a new one
-        _service.HandleCollapseToElementLevel(_treeView, () =>
-        {
-            foreach (TreeNode child in _treeView.Nodes[0].Nodes)
-            {
-                child.Collapse();
-            }
-        });
+        _service.HandleCollapseToElementLevel(_roots, () => CollapseChildrenOf(root));
 
         // Assert - collapsed element-level nodes
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeFalse();
+        button.IsExpanded.ShouldBeFalse();
 
         // Act - second click on CollapseToElementLevel should restore
-        _service.HandleCollapseToElementLevel(_treeView, () =>
-        {
-            foreach (TreeNode child in _treeView.Nodes[0].Nodes)
-            {
-                child.Collapse();
-            }
-        });
+        _service.HandleCollapseToElementLevel(_roots, () => CollapseChildrenOf(root));
 
         // Assert - restored to state before element-level collapse
-        _treeView.Nodes[0].IsExpanded.ShouldBeTrue();
-        _treeView.Nodes[0].Nodes[0].IsExpanded.ShouldBeTrue();
+        root.IsExpanded.ShouldBeTrue();
+        button.IsExpanded.ShouldBeTrue();
     }
 
-    [StaFact]
+    [Fact]
     public void OnNodeManuallyChanged_ShouldInvalidateSnapshot()
     {
         // Arrange
-        SetupTreeWithExpandedNodes();
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        GumTreeNode root = SetupTreeWithExpandedNodes();
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Act - simulate manual change
         _service.OnNodeManuallyChanged();
 
         // Re-expand for new state
-        _treeView.Nodes[0].Expand();
+        root.Expand();
 
         // Click again - should NOT restore (snapshot invalidated), should re-capture and collapse
-        _service.HandleCollapseAll(_treeView, () => CollapseAllNodes());
+        _service.HandleCollapseAll(_roots, CollapseAllNodes);
 
         // Assert - collapsed because it re-captured instead of restoring
-        _treeView.Nodes[0].IsExpanded.ShouldBeFalse();
+        root.IsExpanded.ShouldBeFalse();
     }
 }

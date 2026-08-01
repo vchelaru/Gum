@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using RenderingLibrary.Math.Geometry;
 using InputLibrary;
 using RenderingLibrary;
-using Cursors = System.Windows.Forms.Cursors;
-using WinCursor = System.Windows.Forms.Cursor;
 using RenderingLibrary.Math;
 
 namespace FlatRedBall.SpecializedXnaControls.RegionSelection
@@ -68,6 +66,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 return mSideGrabbed;
             }
+            // setter internal for testing - lets tests simulate an in-progress drag
+            // without driving the whole Cursor/Activity input pipeline.
+            internal set
+            {
+                mSideGrabbed = value;
+            }
         }
 
         bool mVisible = true;
@@ -90,17 +94,17 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Left
         {
-            get 
-            { 
+            get
+            {
                 // We used to return the raw value, but I think we want to round it - if it's to use unit coordinates then it should probably always return them.
 
-                return RoundIfNecessary( mCoordinates.X); 
+                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
             }
-            set 
+            set
             {
                 mCoordinates.X = value;
 
-                mLineRectangle.X = RoundIfNecessary(value);
+                mLineRectangle.X = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
 
                 UpdateHandles();
             }
@@ -108,14 +112,14 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Top
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Y); 
+            get
+            {
+                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
             }
             set
             {
                 mCoordinates.Y = value;
-                mLineRectangle.Y = RoundIfNecessary( value );
+                mLineRectangle.Y = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
 
             }
@@ -180,28 +184,28 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public float Width
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Width); 
+            get
+            {
+                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
             }
-            set 
+            set
             {
                 mCoordinates.Width = value;
-                mLineRectangle.Width = RoundIfNecessary( value );
+                mLineRectangle.Width = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
 
         public float Height
         {
-            get 
-            { 
-                return RoundIfNecessary( mCoordinates.Height); 
+            get
+            {
+                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
             }
-            set 
+            set
             {
                 mCoordinates.Height = value;
-                mLineRectangle.Height = RoundIfNecessary( value );
+                mLineRectangle.Height = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
@@ -415,23 +419,22 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             mHandles[7].Y = CenterY - halfDim;
         }
 
-        public void Activity(Cursor cursor, Keyboard keyboard, System.Windows.Forms.Control container)
+        public void Activity(Cursor cursor, Keyboard keyboard, IInputHostControl container)
         {
             if(AutoSetsCursor && cursor.IsInWindow)
             {
-                WinCursor cursorToSet = GetCursorToSet(cursor);
+                CursorKind? cursorToSet = GetCursorToSet(cursor);
 
-                if (WinCursor.Current != cursorToSet && cursorToSet != null)
+                if (cursorToSet != null && container.Cursor != cursorToSet.Value)
                 {
-                    WinCursor.Current = cursorToSet;
-                    container.Cursor = cursorToSet;
+                    container.Cursor = cursorToSet.Value;
                 }
             }
 
 
 
-            MouseActivity(cursor, container);
-            
+            MouseActivity(cursor);
+
             KeyboardActivity(keyboard);
 
             // Resize even if the cursor isn't in the window - because these may have been made visible by clicking on some winforms UI and we want
@@ -506,7 +509,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             OldBottom = Bottom;
         }
 
-        private void MouseActivity(Cursor cursor, System.Windows.Forms.Control container)
+        private void MouseActivity(Cursor cursor)
         {
 
             if (mVisible && cursor.IsInWindow)
@@ -538,16 +541,32 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         }
 
 
+        // Grid snapping (SnappingGridSize) only applies to the display of an axis while it's actively
+        // being dragged, so it never affects the display of a value that was just programmatically
+        // assigned (e.g. from a previously-saved, non-grid-aligned texture region), and a move only
+        // snaps position while a resize only snaps size (see ApplyGridSnappingOnRelease for the
+        // equivalent split at the moment the drag ends). RoundToUnitCoordinates is a separate,
+        // always-on whole-pixel constraint, unrelated to grid snapping.
+        private bool IsPositionBeingDragged => mSideGrabbed == ResizeSide.Middle;
+        private bool IsSizeBeingDragged => mSideGrabbed != ResizeSide.None && mSideGrabbed != ResizeSide.Middle;
+
         private float RoundIfNecessary(float value)
         {
-            if(SnappingGridSize != null)
-            {
-                var toReturn = MathFunctions.RoundFloat(value, SnappingGridSize.Value);
-                return toReturn;
-            }
-            else if (RoundToUnitCoordinates)
+            if (RoundToUnitCoordinates)
             {
                 return MathFunctions.RoundToInt(value);
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        private float RoundToGridIfNecessary(float value)
+        {
+            if (SnappingGridSize != null)
+            {
+                return MathFunctions.RoundFloat(value, SnappingGridSize.Value);
             }
             else
             {
@@ -560,12 +579,10 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             if (cursor.PrimaryClick)
             {
+                var sideGrabbedBeforeRelease = mSideGrabbed;
                 mSideGrabbed = ResizeSide.None;
 
-                this.Left = RoundIfNecessary(this.Left);
-                this.Top = RoundIfNecessary(this.Top);
-                this.Width = RoundIfNecessary(this.Width);
-                this.Height= RoundIfNecessary(this.Height);
+                ApplyGridSnappingOnRelease(sideGrabbedBeforeRelease);
 
                 if(shouldRaiseEndRegionChanged)
                 {
@@ -574,6 +591,25 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 }
 
                 UpdateHandles();
+            }
+        }
+
+        /// <summary>
+        /// Commits grid snapping for the axis pair relevant to the interaction that just ended - only
+        /// position (Left/Top) for a move (middle grab), only size (Width/Height) for a resize (any other
+        /// handle). A release with nothing grabbed leaves both pairs untouched.
+        /// </summary>
+        internal void ApplyGridSnappingOnRelease(ResizeSide sideGrabbedBeforeRelease)
+        {
+            if (sideGrabbedBeforeRelease == ResizeSide.Middle)
+            {
+                this.Left = RoundToGridIfNecessary(this.Left);
+                this.Top = RoundToGridIfNecessary(this.Top);
+            }
+            else if (sideGrabbedBeforeRelease != ResizeSide.None)
+            {
+                this.Width = RoundToGridIfNecessary(this.Width);
+                this.Height = RoundToGridIfNecessary(this.Height);
             }
         }
 
@@ -699,13 +735,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         /// of the cursor relative to parts of the relative selector, and whether the relative selector should
         /// reset the cursor to the arrow if not over.
         /// </summary>
-        /// <param name="sideGrabbed">The side that the user has grabbed for resizing.</param>
         /// <param name="cursor">The InputLibrary.Cursor.</param>
-        /// <returns>The windows Cursor to set. If null, then this does not reset the cursor.</returns>
-        public WinCursor GetCursorToSet(Cursor cursor)
+        /// <returns>The cursor to set. If null, then this does not reset the cursor.</returns>
+        public CursorKind? GetCursorToSet(Cursor cursor)
         {
 
-            System.Windows.Forms.Cursor cursorToSet = null;
+            CursorKind? cursorToSet = null;
 
             if (mVisible && cursor.IsInWindow)
             {
@@ -741,36 +776,36 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
                             if (flipCorners)
                             {
-                                cursorToSet = Cursors.SizeNESW;
+                                cursorToSet = CursorKind.SizeNESW;
                             }
                             else
                             {
-                                cursorToSet = Cursors.SizeNWSE;
+                                cursorToSet = CursorKind.SizeNWSE;
                             }
                             break;
                         case ResizeSide.TopRight:
                         case ResizeSide.BottomLeft:
                             if (flipCorners)
                             {
-                                cursorToSet = Cursors.SizeNWSE;
+                                cursorToSet = CursorKind.SizeNWSE;
                             }
                             else
                             {
-                                cursorToSet = Cursors.SizeNESW;
+                                cursorToSet = CursorKind.SizeNESW;
                             }
                             break;
                         case ResizeSide.Top:
                         case ResizeSide.Bottom:
-                            cursorToSet = Cursors.SizeNS;
+                            cursorToSet = CursorKind.SizeNS;
                             break;
                         case ResizeSide.Left:
                         case ResizeSide.Right:
-                            cursorToSet = Cursors.SizeWE;
+                            cursorToSet = CursorKind.SizeWE;
                             break;
                         case ResizeSide.Middle:
                             if (ShowMoveCursorWhenOver)
                             {
-                                cursorToSet = Cursors.SizeAll;
+                                cursorToSet = CursorKind.SizeAll;
                             }
                             break;
                         case ResizeSide.None:
@@ -784,7 +819,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
             if (ResetsCursorIfNotOver && cursorToSet == null)
             {
-                cursorToSet = Cursors.Arrow;
+                cursorToSet = CursorKind.Arrow;
             }
 
             return cursorToSet;

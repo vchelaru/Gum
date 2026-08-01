@@ -4,10 +4,10 @@ using System.Windows.Media.Imaging;
 namespace XnaAndWinforms;
 
 /// <summary>
-/// The WPF-native counterpart to <see cref="IRenderTargetPixelBufferWriter"/>: converts a raw pixel
-/// buffer read back from a GPU render target (via <c>RenderTarget2D.GetData</c>) into a
-/// <see cref="WriteableBitmap"/>'s backing memory, so a render surface can be displayed by a plain
-/// WPF <c>Image</c> element without going through <c>System.Drawing.Bitmap</c>/GDI+.
+/// Converts a raw pixel buffer read back from a GPU render target (via <c>RenderTarget2D.GetData</c>)
+/// into a <see cref="WriteableBitmap"/>'s backing memory, so a render surface can be displayed by a
+/// plain WPF <c>Image</c> element. Kept separate from the render surface that owns the bitmap so the
+/// conversion can be constructed and tested without a live GPU or window.
 /// </summary>
 public interface IWriteableBitmapPixelBufferWriter
 {

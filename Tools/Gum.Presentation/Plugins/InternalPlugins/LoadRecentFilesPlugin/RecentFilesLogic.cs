@@ -51,7 +51,7 @@ public class RecentFilesLogic
     /// </summary>
     public static string GetDisplayedNameForGumxFilePath(FilePath filePath)
     {
-        string name = filePath.RemoveExtension().FileNameNoPath;
+        string name = filePath.FileNameNoPath;
 
         // It's common to have lots of same-named projects so let's see if this is in a csproj somewhere:
         FilePath? parentDirectory = filePath.GetDirectoryContainingThis();

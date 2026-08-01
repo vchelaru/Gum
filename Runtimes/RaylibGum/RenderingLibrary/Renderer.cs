@@ -23,9 +23,9 @@ public class Renderer : IRenderer
     /// <summary>
     /// When true (the default), the render walk skips any renderable that falls entirely outside
     /// the active clip rectangle, along with its subtree — avoiding draw work for scrolled-off
-    /// content in clipping containers (#2998). Experimental until validated on real projects; set
-    /// false to render all clipped content. Forwards to the backend-agnostic
-    /// <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
+    /// content in clipping containers (#2998). Set false to render all clipped content; this is a
+    /// diagnostic escape hatch, not a routine toggle, so report cases that need it. Forwards to the
+    /// backend-agnostic <see cref="CameraScissorExtensions.CullOffscreenWhenClipped"/>.
     /// </summary>
     public static bool CullOffscreenWhenClipped
     {

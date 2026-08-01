@@ -120,27 +120,27 @@ public class ProjectCreatorTests : IDisposable
     }
 
     [Fact]
-    public void Create_ShouldDefaultVersionToShapeVariableExpansion()
+    public void Create_ShouldDefaultVersionToNativeVersion()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
 
         GumProjectSave project = _sut.Create(filePath);
 
-        // New projects seed the v3 shape variable surface (Fill/Dropshadow/Gradient) on the
-        // standard Circle/Rectangle, so they must be stamped at the matching version. Otherwise
-        // the variable-grid version gate hides those variables on a brand-new project.
-        project.Version.ShouldBe((int)GumProjectSave.GumxVersions.ShapeVariableExpansion);
+        // New projects seed the latest standard-element variable surface (Fill/Dropshadow/
+        // Gradient, LocalizeText, etc.), so they must be stamped at the matching version.
+        // Otherwise the variable-grid version gate hides those variables on a brand-new project.
+        project.Version.ShouldBe(GumProjectSave.NativeVersion);
     }
 
     [Fact]
-    public void Create_ShouldPersistShapeVariableExpansionVersionToDisk()
+    public void Create_ShouldPersistNativeVersionToDisk()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
 
         _sut.Create(filePath);
 
         string gumxContent = File.ReadAllText(filePath);
-        gumxContent.ShouldContain($"<Version>{(int)GumProjectSave.GumxVersions.ShapeVariableExpansion}</Version>");
+        gumxContent.ShouldContain($"<Version>{GumProjectSave.NativeVersion}</Version>");
     }
 
     [Fact]

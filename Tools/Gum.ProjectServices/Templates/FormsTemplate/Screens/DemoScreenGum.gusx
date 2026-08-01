@@ -1218,9 +1218,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -1230,9 +1228,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -1242,9 +1238,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -1254,9 +1248,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>
@@ -1274,9 +1266,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>
@@ -1294,9 +1284,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Styles.Primary.FillRed</string>
-        <string>Green = Components/Styles.Primary.FillGreen</string>
-        <string>Blue = Components/Styles.Primary.FillBlue</string>
+        <string>Color = Components/Styles.Primary.FillColor</string>
         <string>Font = Components/Styles.Title.Font</string>
         <string>FontSize = Components/Styles.Title.FontSize</string>
         <string>IsBold = Components/Styles.Title.IsBold</string>

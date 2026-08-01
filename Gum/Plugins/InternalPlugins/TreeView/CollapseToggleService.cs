@@ -1,7 +1,6 @@
-using CommonFormsAndControls;
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -22,14 +21,14 @@ public class CollapseToggleService : ICollapseToggleService
     private bool _isDirty;
     private bool _suppressDirtyFlag;
 
-    public void HandleCollapseAll(MultiSelectTreeView treeView, Action collapseAllAction)
+    public void HandleCollapseAll(IReadOnlyList<ITreeNode> roots, Action collapseAllAction)
     {
-        HandleCollapseToggle(treeView, collapseAllAction, CollapseActionType.CollapseAll);
+        HandleCollapseToggle(roots, collapseAllAction, CollapseActionType.CollapseAll);
     }
 
-    public void HandleCollapseToElementLevel(MultiSelectTreeView treeView, Action collapseToElementLevelAction)
+    public void HandleCollapseToElementLevel(IReadOnlyList<ITreeNode> roots, Action collapseToElementLevelAction)
     {
-        HandleCollapseToggle(treeView, collapseToElementLevelAction, CollapseActionType.CollapseToElementLevel);
+        HandleCollapseToggle(roots, collapseToElementLevelAction, CollapseActionType.CollapseToElementLevel);
     }
 
     public void OnNodeManuallyChanged()
@@ -47,13 +46,13 @@ public class CollapseToggleService : ICollapseToggleService
         _isDirty = false;
     }
 
-    public List<string> SaveExpandedPaths(MultiSelectTreeView treeView) =>
-        GetExpandedNodePaths(treeView);
+    public List<string> SaveExpandedPaths(IReadOnlyList<ITreeNode> roots) =>
+        TreeNodeExpansionPaths.Capture(roots);
 
-    public void RestoreExpandedPaths(MultiSelectTreeView treeView, List<string> paths) =>
-        ApplyExpandedNodePaths(treeView, paths);
+    public void RestoreExpandedPaths(IReadOnlyList<ITreeNode> roots, List<string> paths) =>
+        TreeNodeExpansionPaths.Apply(roots, paths);
 
-    private void HandleCollapseToggle(MultiSelectTreeView treeView, Action collapseAction, CollapseActionType actionType)
+    private void HandleCollapseToggle(IReadOnlyList<ITreeNode> roots, Action collapseAction, CollapseActionType actionType)
     {
         bool canRestore = _lastCollapseAction == actionType
             && !_isDirty
@@ -65,7 +64,7 @@ public class CollapseToggleService : ICollapseToggleService
             _suppressDirtyFlag = true;
             try
             {
-                ApplyExpandedNodePaths(treeView, _savedExpandedPaths!);
+                TreeNodeExpansionPaths.Apply(roots, _savedExpandedPaths!);
             }
             finally
             {
@@ -80,7 +79,7 @@ public class CollapseToggleService : ICollapseToggleService
         else
         {
             // Capture current state, then collapse
-            _savedExpandedPaths = GetExpandedNodePaths(treeView);
+            _savedExpandedPaths = TreeNodeExpansionPaths.Capture(roots);
             _lastCollapseAction = actionType;
             _isDirty = false;
 
@@ -95,91 +94,4 @@ public class CollapseToggleService : ICollapseToggleService
             }
         }
     }
-
-    #region Tree Path Helpers
-
-    private List<string> GetExpandedNodePaths(MultiSelectTreeView treeView)
-    {
-        var expandedPaths = new List<string>();
-        foreach (TreeNode node in treeView.Nodes)
-        {
-            CollectExpandedPaths(node, expandedPaths);
-        }
-        return expandedPaths;
-    }
-
-    private void CollectExpandedPaths(TreeNode node, List<string> expandedPaths)
-    {
-        if (node.IsExpanded)
-        {
-            string path = GetNodePath(node);
-            if (!string.IsNullOrEmpty(path))
-            {
-                expandedPaths.Add(path);
-            }
-
-            foreach (TreeNode child in node.Nodes)
-            {
-                CollectExpandedPaths(child, expandedPaths);
-            }
-        }
-    }
-
-    private string GetNodePath(TreeNode node)
-    {
-        var parts = new List<string>();
-        TreeNode? current = node;
-        while (current != null)
-        {
-            parts.Insert(0, current.Text);
-            current = current.Parent;
-        }
-        return string.Join("/", parts);
-    }
-
-    private void ApplyExpandedNodePaths(MultiSelectTreeView treeView, List<string> paths)
-    {
-        foreach (var path in paths)
-        {
-            var node = FindNodeByPath(treeView, path);
-            if (node != null)
-            {
-                node.Expand();
-            }
-        }
-    }
-
-    private TreeNode? FindNodeByPath(MultiSelectTreeView treeView, string path)
-    {
-        if (string.IsNullOrEmpty(path))
-        {
-            return null;
-        }
-
-        var parts = path.Split('/');
-        TreeNodeCollection currentNodes = treeView.Nodes;
-        TreeNode? foundNode = null;
-
-        foreach (var part in parts)
-        {
-            foundNode = null;
-            foreach (TreeNode node in currentNodes)
-            {
-                if (node.Text == part)
-                {
-                    foundNode = node;
-                    currentNodes = node.Nodes;
-                    break;
-                }
-            }
-            if (foundNode == null)
-            {
-                return null;
-            }
-        }
-
-        return foundNode;
-    }
-
-    #endregion
 }

@@ -6,7 +6,6 @@ using XnaAndWinforms;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using InputLibrary;
-using WinCursor = System.Windows.Forms.Cursor;
 using Sprite = RenderingLibrary.Graphics.Sprite;
 using Camera = RenderingLibrary.Camera;
 using RenderingLibrary.Math;
@@ -371,17 +370,7 @@ public class Ruler
 
         if (guideOver != null || mGrabbedGuide != null)
         {
-            WinCursor cursorToSet;
-            if (RulerSide == RulerSide.Left)
-            {
-                cursorToSet = System.Windows.Forms.Cursors.SizeNS;
-            }
-            else // top
-            {
-                cursorToSet = System.Windows.Forms.Cursors.SizeWE;
-            }
-
-            mCursor.SetWinformsCursor(cursorToSet);
+            mCursor.SetCursorKind(RulerSide == RulerSide.Left ? CursorKind.SizeNS : CursorKind.SizeWE);
         }
 
         // Remove the guide if it is right-clicked

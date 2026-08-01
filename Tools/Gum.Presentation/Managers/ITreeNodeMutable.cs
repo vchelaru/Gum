@@ -1,4 +1,4 @@
-namespace Gum.Managers;
+﻿namespace Gum.Managers;
 
 /// <summary>
 /// Mutation-capable extension of <see cref="ITreeNode"/>: adds an icon index plus child
@@ -8,11 +8,9 @@ namespace Gum.Managers;
 /// </summary>
 /// <remarks>
 /// Implement this directly on the concrete node type (see <c>GumTreeNode</c> in the Gum tool
-/// project) rather than via a per-call wrapper like <c>TreeNodeWrapper</c>. ElementTreeViewManager's
-/// refresh/construction paths touch every node in an element's subtree on every edit, so wrapping
-/// each node in a new heap object per access — the approach used for <see cref="ITreeNode"/>'s
-/// low-frequency, read-only callers — would regress that hot path. A node type that already
-/// implements this interface pays zero extra allocation to be used through it.
+/// project) rather than via a per-call adapter. ElementTreeViewManager's refresh and construction
+/// paths touch every node in an element's subtree on every edit, so allocating a new object per
+/// access would regress that hot path.
 /// </remarks>
 public interface ITreeNodeMutable : ITreeNode
 {

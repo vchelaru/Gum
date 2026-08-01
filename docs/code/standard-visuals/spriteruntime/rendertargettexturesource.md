@@ -72,3 +72,5 @@ Currently the ListBox is not interactive because the original ListBox is invisib
 
 This limitation applies to Gum's own `IsRenderTarget` baking. If you instead draw a subtree into a `RenderTarget2D` yourself (for example with `GumBatch`), you can keep it interactive by mapping the cursor with [`HitTestTransformMatrix`](../../events-and-interactivity/mouse-and-touch-screen-cursor.md#several-coordinate-spaces-at-once-hittesttransformmatrix).
 {% endhint %}
+
+If you are managing a render target yourself instead of using `IsRenderTarget`, see [Render Targets](../../rendering/render-targets.md) for the blend-mode setup needed to composite translucent content correctly on MonoGame and raylib.

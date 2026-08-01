@@ -96,11 +96,21 @@ public class ScrollBarControlLogic
             return;
         }
 
+        // Setting Value below round-trips synchronously through ValueChanged -> HandleVerticalScroll
+        // / HandleHorizontalScroll, which write the (int), clamped bar value back into _camera.X/Y.
+        // Restore the camera's own fractional position afterward, the same way UpdateScrollBars()
+        // does, so this doesn't truncate/clamp the camera position on every call.
+        var x = _camera.X;
+        var y = _camera.Y;
+
         _verticalScrollBar.Value =
-            Math.Min(Math.Max(_verticalScrollBar.Minimum, (int)_camera.Y), _verticalScrollBar.Maximum);
+            Math.Min(Math.Max(_verticalScrollBar.Minimum, (int)y), _verticalScrollBar.Maximum);
 
         _horizontalScrollBar.Value =
-            Math.Min(Math.Max(_horizontalScrollBar.Minimum, (int)_camera.X), _horizontalScrollBar.Maximum);
+            Math.Min(Math.Max(_horizontalScrollBar.Minimum, (int)x), _horizontalScrollBar.Maximum);
+
+        _camera.X = x;
+        _camera.Y = y;
     }
 
     /// <summary>

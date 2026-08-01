@@ -1,19 +1,20 @@
 using Gum.Managers;
 using Shouldly;
+using System;
 using System.Windows;
-using WinFormsTreeNode = System.Windows.Forms.TreeNode;
 
 namespace GumToolUnitTests.Managers;
 
-// Regression coverage for the same bug MultiSelectTreeViewExtractDraggedNodesTests pins: WinForms
-// (and the WPF DataObject that receives the same OLE payload across the WindowsFormsHost boundary)
-// keys stored data by the payload's *runtime* type full name, not its static/base type. A dragged
-// node is always a GumTreeNode (ElementTreeViewManager never constructs a plain TreeNode) and a
-// multi-select drag boxes a WinFormsTreeNode[] array (MultiSelectTreeView.Theming's
-// SelectedNodes.ToArray()), not a List<WinFormsTreeNode> - an exact-type format lookup for either
-// the wrong container type or the base TreeNode type would silently drop every dragged node.
-public class WpfWireframeDropPayloadReaderTests
+// Regression coverage for issues #3965/#4123: a drag out of the element tree (or out of the flat
+// search results) puts only a marker format on the data object and carries the dragged items
+// themselves in TreeDragPayload. If the reader stops surfacing those items' tags, dropping onto the
+// wireframe canvas silently does nothing.
+public class WpfWireframeDropPayloadReaderTests : IDisposable
 {
+    // The payload is a static slot shared by every drag, so a test that sets it must not leak into
+    // the next one.
+    public void Dispose() => TreeDragPayload.Clear();
+
     [StaFact]
     public void Read_FileDropFormatPresent_SetsFiles()
     {
@@ -25,6 +26,18 @@ public class WpfWireframeDropPayloadReaderTests
         payload.Files.ShouldBe(files);
         payload.StandardElementTypeName.ShouldBeNull();
         payload.NodeTags.ShouldBeNull();
+    }
+
+    [StaFact]
+    public void Read_MultipleDraggedNodes_ReturnsEachNodesTagInOrder()
+    {
+        GumTreeNode first = new GumTreeNode("Circle1") { Tag = "InstanceCircle1" };
+        GumTreeNode second = new GumTreeNode("Circle2") { Tag = "InstanceCircle2" };
+        TreeDragPayload.SetNodes(new[] { first, second });
+
+        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(CreateTreeDragData());
+
+        payload.NodeTags.ShouldBe(new object[] { "InstanceCircle1", "InstanceCircle2" });
     }
 
     [StaFact]
@@ -50,13 +63,12 @@ public class WpfWireframeDropPayloadReaderTests
     }
 
     [StaFact]
-    public void Read_SingleGumTreeNodeBoxedAsPlainObject_ReturnsItsTagInNodeTags()
+    public void Read_SingleDraggedNode_ReturnsItsTagInNodeTags()
     {
         GumTreeNode draggedNode = new GumTreeNode("Circle1") { Tag = "InstanceCircle1" };
-        // Mirrors MultiSelectTreeView.Theming.cs's single-node drag start: DoDragDrop((object)nodeToDrag, ...).
-        DataObject data = new DataObject((object)draggedNode);
+        TreeDragPayload.SetNodes(new[] { draggedNode });
 
-        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(data);
+        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(CreateTreeDragData());
 
         payload.NodeTags.ShouldHaveSingleItem();
         payload.NodeTags![0].ShouldBe("InstanceCircle1");
@@ -75,16 +87,26 @@ public class WpfWireframeDropPayloadReaderTests
     }
 
     [StaFact]
-    public void Read_TreeNodeArrayBoxed_ReturnsEachNodesTagInOrder()
+    public void Read_TagsWithoutNodes_ReturnsThoseTags()
     {
-        GumTreeNode first = new GumTreeNode("Circle1") { Tag = "InstanceCircle1" };
-        GumTreeNode second = new GumTreeNode("Circle2") { Tag = "InstanceCircle2" };
-        // Mirrors MultiSelectTreeView.Theming.cs's multi-select drag start: DoDragDrop(SelectedNodes.ToArray(), ...).
-        WinFormsTreeNode[] dragged = { first, second };
-        DataObject data = new DataObject((object)dragged);
+        // A search result stands in for a node that may not be realized in the tree, so it publishes
+        // tags with no nodes behind them.
+        object backingObject = new();
+        TreeDragPayload.SetTags(new object?[] { backingObject });
 
-        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(data);
+        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(CreateTreeDragData());
 
-        payload.NodeTags.ShouldBe(new object[] { "InstanceCircle1", "InstanceCircle2" });
+        payload.NodeTags.ShouldHaveSingleItem();
+        payload.NodeTags![0].ShouldBeSameAs(backingObject);
     }
+
+    [StaFact]
+    public void Read_TreeDragFormatPresentWithoutPayload_ReturnsNoNodeTags()
+    {
+        WireframeDropPayload payload = WpfWireframeDropPayloadReader.Read(CreateTreeDragData());
+
+        payload.NodeTags.ShouldBeNull();
+    }
+
+    private static DataObject CreateTreeDragData() => new DataObject(TreeDragPayload.DataFormat, true);
 }

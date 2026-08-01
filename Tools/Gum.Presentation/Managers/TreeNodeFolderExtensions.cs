@@ -1,15 +1,9 @@
-namespace Gum.Managers;
+﻿namespace Gum.Managers;
 
 /// <summary>
-/// Headless folder-classification predicates over <see cref="ITreeNode"/>, relocated from
-/// ElementTreeViewManager's WinForms-coupled <c>TreeNode</c> extension methods (ADR-0005 Phase 3)
-/// so <c>DeleteLogic</c> does not need a WinForms reference. Implemented directly against
-/// <see cref="ITreeNode.Parent"/>/<see cref="ITreeNode.Tag"/>/<see cref="ITreeNode.Text"/> rather
-/// than unwrapping to the WinForms <c>TreeNode</c> the old overloads relied on
-/// (<c>TreeNodeWrapper.Parent</c> already wraps <c>Node.Parent</c> recursively, so the results are
-/// identical for the tool's live <c>TreeNodeWrapper</c> nodes, and this now also works for any
-/// other <see cref="ITreeNode"/> implementation instead of always returning false).
-/// The <c>TreeNode</c>-typed overloads stay in ElementTreeViewManager.cs for WinForms call sites.
+/// Headless folder-classification predicates, written against
+/// <see cref="ITreeNode.Parent"/>/<see cref="ITreeNode.Tag"/>/<see cref="ITreeNode.Text"/> so they
+/// work for any <see cref="ITreeNode"/> implementation, not just the tool's concrete node type.
 /// </summary>
 public static class TreeNodeFolderExtensions
 {

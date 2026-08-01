@@ -1,6 +1,6 @@
-using CommonFormsAndControls;
 using System;
 using System.Collections.Generic;
+using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -15,13 +15,13 @@ public interface ICollapseToggleService
     /// Handle the Collapse All button click. Toggles between collapsing all nodes
     /// and restoring the previously saved expansion state.
     /// </summary>
-    void HandleCollapseAll(MultiSelectTreeView treeView, Action collapseAllAction);
+    void HandleCollapseAll(IReadOnlyList<ITreeNode> roots, Action collapseAllAction);
 
     /// <summary>
     /// Handle the Collapse to Element Level button click. Toggles between collapsing
     /// element-level nodes and restoring the previously saved expansion state.
     /// </summary>
-    void HandleCollapseToElementLevel(MultiSelectTreeView treeView, Action collapseToElementLevelAction);
+    void HandleCollapseToElementLevel(IReadOnlyList<ITreeNode> roots, Action collapseToElementLevelAction);
 
     /// <summary>
     /// Called when a node is manually expanded or collapsed by the user.
@@ -37,10 +37,10 @@ public interface ICollapseToggleService
     /// <summary>
     /// Returns the paths of all currently expanded nodes.
     /// </summary>
-    List<string> SaveExpandedPaths(MultiSelectTreeView treeView);
+    List<string> SaveExpandedPaths(IReadOnlyList<ITreeNode> roots);
 
     /// <summary>
     /// Expands nodes matching the previously saved paths.
     /// </summary>
-    void RestoreExpandedPaths(MultiSelectTreeView treeView, List<string> paths);
+    void RestoreExpandedPaths(IReadOnlyList<ITreeNode> roots, List<string> paths);
 }
