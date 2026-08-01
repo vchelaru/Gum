@@ -142,7 +142,10 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
 
-        if (blend.TryGetSimpleRaylibBlendMode(out BlendMode mode))
+        // raylib's canned Normal/Additive modes square the source alpha when written into
+        // premultiplied render-target storage (issue #4204), so skip them while a bake is active and
+        // fall through to the premultiply-consistent custom-separate factors below instead.
+        if (!_renderTargetBlendActive && blend.TryGetSimpleRaylibBlendMode(out BlendMode mode))
         {
             Raylib.BeginBlendMode(mode);
             return;

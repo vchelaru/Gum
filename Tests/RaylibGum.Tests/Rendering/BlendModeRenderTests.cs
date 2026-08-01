@@ -195,4 +195,44 @@ public class BlendModeRenderTests : BaseTestClass
         outer.R.ShouldBeInRange((byte)40, (byte)120);
         outer.B.ShouldBeGreaterThan((byte)120);
     }
+
+    [Fact]
+    public void Draw_NormalBlendSprite_ComposesAlphaAsCoverageOverOpaqueBackground()
+    {
+        // Normal is the default Blend, which took the fast path straight to raylib's canned
+        // BlendMode.Alpha regardless of _renderTargetBlendActive (issue #4204) — that canned mode's
+        // alpha factors square the source alpha (AlphaSourceBlend == ColorSourceBlend == SrcAlpha),
+        // instead of accumulating it as coverage (SrcAlpha + Dst*(1-SrcAlpha)) the way premultiplied
+        // render-target storage requires. Drawing a half-alpha masker over an already-opaque
+        // background isolates the difference: coverage keeps the result fully opaque (1.0), while
+        // the squared factor leaves it only ~0.75 opaque.
+        (Color cell, Color outer) = DrawMaskedCellOverBlueBackground(
+            32,
+            backgroundColor: new Color((byte)255, (byte)0, (byte)0, (byte)255),
+            maskerTextureColor: new Color((byte)0, (byte)255, (byte)0, (byte)128),
+            maskerBlend: Blend.Normal);
+
+        cell.A.ShouldBeGreaterThan((byte)240);
+
+        // Composited over blue: a fully opaque cell must not let any of the outer blue background
+        // bleed through (the bug's ~0.75 opacity would let roughly a quarter of it show).
+        outer.B.ShouldBeLessThan((byte)40);
+    }
+
+    [Fact]
+    public void Draw_AdditiveBlendSprite_ComposesAlphaAsCoverageNotSquared()
+    {
+        // Mirrors the Normal case above but for Additive, which shares the same squared-alpha bug
+        // (raylib's canned BlendMode.Additive also sets AlphaSourceBlend == ColorSourceBlend ==
+        // SrcAlpha). A fully transparent background isolates the masker's own alpha contribution,
+        // since additive alpha would otherwise clamp to opaque once the background reaches 1.0.
+        (Color cell, Color _) = DrawMaskedCellOverBlueBackground(
+            32,
+            backgroundColor: new Color((byte)0, (byte)0, (byte)0, (byte)0),
+            maskerTextureColor: new Color((byte)0, (byte)255, (byte)0, (byte)128),
+            maskerBlend: Blend.Additive);
+
+        // Coverage keeps the masker's own ~50% alpha (~128); the squared bug halves it again (~64).
+        cell.A.ShouldBeGreaterThan((byte)100);
+    }
 }
