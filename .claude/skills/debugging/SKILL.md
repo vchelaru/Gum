@@ -13,7 +13,7 @@ window.)
 ## Categories
 
 - **Static/automated** — unit tests, rendering-PNG tests, simplified scenarios
-- **Live observation** — run + logs, breakpoints, user visually confirms
+- **Live observation** — run + logs (see [self-serve-logging](../self-serve-logging/SKILL.md) — log to a file you read yourself, not console/output-panel text relayed by the user), breakpoints, user visually confirms
 - **Historical/comparative** — bisect PRs/functionality, `git log`/`blame`, cross-backend diff
 - **Structural isolation** — minimal repro outside the app/framework
 - **External verification** — read the actual upstream source, its issue tracker
