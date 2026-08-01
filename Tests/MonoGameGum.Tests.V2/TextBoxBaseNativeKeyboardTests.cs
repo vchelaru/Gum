@@ -4,16 +4,19 @@ using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MonoGameGum.Tests.V2;
 
 /// <summary>
-/// Behavior tests for TextBoxBase's interaction with the platform-agnostic
-/// <see cref="INativeTextInput"/> abstraction. These verify that the iOS / generic
-/// modal-keyboard path on TextBoxBase delegates to whatever
-/// <see cref="IGumService.NativeTextInput"/> is registered, rather than calling
-/// MonoGame's <c>KeyboardInput.Show</c> directly.
+/// Behavior tests for TextBoxBase's two native-keyboard paths: the inline soft keyboard
+/// surfaced through <see cref="FrameworkElement.MainKeyboard"/> (Android), and the modal
+/// <see cref="INativeTextInput"/> dialog registered on
+/// <see cref="IGumService.NativeTextInput"/> (iOS and anything else that supplies one).
+/// Which path is taken is decided at runtime by
+/// <see cref="IInputReceiverKeyboard.SupportsInlineKeyboard"/>, so both are reachable from
+/// this desktop test assembly.
 /// </summary>
 public class TextBoxBaseNativeKeyboardTests
 {
@@ -22,8 +25,11 @@ public class TextBoxBaseNativeKeyboardTests
     {
         StubNativeTextInput stubInput = new StubNativeTextInput();
         StubGumService stubService = new StubGumService { NativeTextInput = stubInput };
+        StubKeyboard stubKeyboard = new StubKeyboard { SupportsInlineKeyboard = false };
         IGumService? prior = IGumService.Default;
+        IInputReceiverKeyboard? priorKeyboard = FrameworkElement.MainKeyboard;
         IGumService.Default = stubService;
+        FrameworkElement.MainKeyboard = stubKeyboard;
         try
         {
             TextBox textBox = new TextBox();
@@ -39,10 +45,59 @@ public class TextBoxBaseNativeKeyboardTests
             stubInput.LastDescription.ShouldBe("DESC");
             stubInput.LastInitialText.ShouldBe("INIT");
             stubInput.LastIsPassword.ShouldBe(false);
+            stubKeyboard.ShowCallCount.ShouldBe(0);
         }
         finally
         {
             IGumService.Default = prior;
+            FrameworkElement.MainKeyboard = priorKeyboard;
+        }
+    }
+
+    [Fact]
+    public void TryShowNativeKeyboard_WhenMainKeyboardSupportsInline_ShowsInlineKeyboardInsteadOfDialog()
+    {
+        StubNativeTextInput stubInput = new StubNativeTextInput();
+        StubGumService stubService = new StubGumService { NativeTextInput = stubInput };
+        StubKeyboard stubKeyboard = new StubKeyboard { SupportsInlineKeyboard = true };
+        IGumService? prior = IGumService.Default;
+        IInputReceiverKeyboard? priorKeyboard = FrameworkElement.MainKeyboard;
+        IGumService.Default = stubService;
+        FrameworkElement.MainKeyboard = stubKeyboard;
+        try
+        {
+            TextBox textBox = new TextBox();
+            textBox.ShowNativeKeyboardOnFocus = true;
+
+            textBox.TryShowNativeKeyboard();
+
+            stubKeyboard.ShowCallCount.ShouldBe(1);
+            stubInput.CallCount.ShouldBe(0);
+        }
+        finally
+        {
+            IGumService.Default = prior;
+            FrameworkElement.MainKeyboard = priorKeyboard;
+        }
+    }
+
+    [Fact]
+    public void TryHideNativeKeyboard_WhenMainKeyboardSupportsInline_HidesInlineKeyboard()
+    {
+        StubKeyboard stubKeyboard = new StubKeyboard { SupportsInlineKeyboard = true };
+        IInputReceiverKeyboard? priorKeyboard = FrameworkElement.MainKeyboard;
+        FrameworkElement.MainKeyboard = stubKeyboard;
+        try
+        {
+            TextBox textBox = new TextBox();
+
+            textBox.TryHideNativeKeyboard();
+
+            stubKeyboard.HideCallCount.ShouldBe(1);
+        }
+        finally
+        {
+            FrameworkElement.MainKeyboard = priorKeyboard;
         }
     }
 
@@ -85,6 +140,28 @@ public class TextBoxBaseNativeKeyboardTests
         {
             IGumService.Default = prior;
         }
+    }
+
+    private class StubKeyboard : IInputReceiverKeyboard
+    {
+        public bool SupportsInlineKeyboard { get; set; }
+        public int ShowCallCount { get; private set; }
+        public int HideCallCount { get; private set; }
+
+        public bool IsShiftDown => false;
+        public bool IsCtrlDown => false;
+        public bool IsAltDown => false;
+        public IEnumerable<Gum.Forms.Input.Keys> KeysTyped => System.Array.Empty<Gum.Forms.Input.Keys>();
+
+        public void ShowKeyboard() => ShowCallCount++;
+        public void HideKeyboard() => HideCallCount++;
+
+        public string GetStringTyped() => string.Empty;
+        public void Activity(double gameTime) { }
+        public bool KeyDown(Gum.Forms.Input.Keys key) => false;
+        public bool KeyPushed(Gum.Forms.Input.Keys key) => false;
+        public bool KeyReleased(Gum.Forms.Input.Keys key) => false;
+        public bool KeyTyped(Gum.Forms.Input.Keys key) => false;
     }
 
     private class StubNativeTextInput : INativeTextInput

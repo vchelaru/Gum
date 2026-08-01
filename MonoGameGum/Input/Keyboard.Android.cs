@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Views;
 using Android.Views.InputMethods;
 using Microsoft.Xna.Framework.Input;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 
@@ -46,6 +47,14 @@ public partial class Keyboard
 
     readonly object _androidActionListLock = new();
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Gated on API 21 to match the <c>[SupportedOSPlatform]</c> annotations on the IME calls
+    /// below. Callers reach those through <c>IInputReceiverKeyboard</c>, where CA1416 cannot
+    /// see the attributes, so the floor is enforced here instead.
+    /// </remarks>
+    public bool SupportsInlineKeyboard => OperatingSystem.IsAndroidVersionAtLeast(21);
+
     /// <summary>
     /// Requests the Android soft keyboard to appear. Safe to call every frame — the IME
     /// subscription is established only on the first call. The game view is fetched from
@@ -60,7 +69,7 @@ public partial class Keyboard
 
         view.RequestFocus();
 
-        if (view.Context.GetSystemService(Context.InputMethodService) is InputMethodManager imm)
+        if (view.Context?.GetSystemService(Context.InputMethodService) is InputMethodManager imm)
         {
             imm.ShowSoftInput(view, ShowFlags.Forced);
             imm.ToggleSoftInput(ShowFlags.Forced, HideSoftInputFlags.ImplicitOnly);
@@ -83,7 +92,7 @@ public partial class Keyboard
         var view = _game?.Services.GetService(typeof(View)) as View;
         if (view == null) return;
 
-        if (view.Context.GetSystemService(Context.InputMethodService) is InputMethodManager imm)
+        if (view.Context?.GetSystemService(Context.InputMethodService) is InputMethodManager imm)
         {
             imm.HideSoftInputFromWindow(view.WindowToken, HideSoftInputFlags.None);
         }
