@@ -252,9 +252,7 @@
       <Value>
         <string>Font = Components/Hazard/Styles.Normal.Font</string>
         <string>FontSize = Components/Hazard/Styles.Normal.FontSize</string>
-        <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Text.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -266,9 +264,7 @@
       <Value>
         <string>Font = Components/Hazard/Styles.Normal.Font</string>
         <string>FontSize = Components/Hazard/Styles.Normal.FontSize</string>
-        <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Text.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -313,9 +309,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -325,9 +319,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -370,9 +362,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -382,9 +372,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -437,9 +425,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>Green = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -459,9 +445,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>Green = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -504,9 +488,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -516,9 +498,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -571,9 +551,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.DisabledText.FillRed</string>
-          <string>Green = Components/Hazard/Styles.DisabledText.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.DisabledText.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.DisabledText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -583,9 +561,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.DisabledText.FillRed</string>
-          <string>Green = Components/Hazard/Styles.DisabledText.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.DisabledText.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.DisabledText.FillColor</string>
         </Value>
       </VariableList>
     </State>

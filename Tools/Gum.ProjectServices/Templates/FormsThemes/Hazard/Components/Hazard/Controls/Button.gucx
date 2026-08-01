@@ -202,9 +202,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         <string>Font = Components/Hazard/Styles.Strong.Font</string>
         <string>FontSize = Components/Hazard/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Hazard/Styles.Strong.IsBold</string>
@@ -218,9 +216,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/Hazard/Styles.Accent.FillColor</string>
-        <string>DropshadowRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>DropshadowGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>DropshadowBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>DropshadowColor = Components/Hazard/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -230,9 +226,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -281,9 +275,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -330,9 +322,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -379,9 +369,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -428,9 +416,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -477,9 +463,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -526,9 +510,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -575,9 +557,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Ink.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Ink.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Ink.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Ink.FillColor</string>
         </Value>
       </VariableList>
     </State>

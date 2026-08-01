@@ -131,9 +131,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
   </State>
