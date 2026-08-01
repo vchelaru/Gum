@@ -1020,11 +1020,7 @@ public class Renderer : IRenderer
         var children = container.Children;
         if (children != null && children.Count > 0)
         {
-            SiblingOrdering.BuildDrawList(
-                children,
-                _bakeCommands,
-                renderable => Camera.GetScissorRectangleFor(layer, renderable),
-                renderable => Camera.GetCullTestBoundsFor(layer, renderable));
+            SiblingOrdering.BuildDrawList(children, _bakeCommands, new ClipBoundsSource(Camera, layer));
             Submit(_bakeCommands, managers, layer);
         }
 

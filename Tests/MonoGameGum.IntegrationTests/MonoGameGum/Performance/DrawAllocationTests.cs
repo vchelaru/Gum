@@ -78,12 +78,16 @@ public class DrawAllocationTests : BaseTestClass
         // only the Update/Draw walk itself.
         GameTime gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1.0 / 60.0));
 
-        AllocationResult result = AllocationMeasurer.Measure(
+        // MeasureMinimum, matching IdleUpdate above: this suite runs on a shared CI runner, where a
+        // single measured window can catch unrelated GC/JIT work and red the build spuriously.
+        // Taking the best of several attempts keeps the ratchet honest without making it flaky.
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
             () =>
             {
                 global::Gum.GumService.Default.Update(gameTime);
                 global::Gum.GumService.Default.Draw();
             },
+            attempts: 3,
             warmupIterations: 50,
             measuredIterations: 500);
 
@@ -99,8 +103,11 @@ public class DrawAllocationTests : BaseTestClass
 
         // Ratchet (#1934): the idle Update/Draw walk over an unchanging Forms scene. The Draw walk
         // itself is zero-alloc; the residual is the per-frame input/cursor pass in GumService.Update
-        // (FormsUtilities.Update, dominated by MonoGame's GamePad.GetState). Bound sits just above
-        // that residual with headroom for JIT/runner variance.
+        // (FormsUtilities.Update, dominated by MonoGame's GamePad.GetState), which the IdleUpdate
+        // ratchet above bounds on its own. Headroom over that residual is deliberate: it absorbs
+        // hosted-runner variance while still tripping on a real Draw-walk regression, which lands in
+        // the hundreds of bytes (#4190 reintroduced 160 B/frame and would fail here). Tighten toward
+        // the IdleUpdate bound once CI has established what this measures on a runner.
         result.BytesPerIteration.ShouldBeLessThanOrEqualTo(120);
     }
 

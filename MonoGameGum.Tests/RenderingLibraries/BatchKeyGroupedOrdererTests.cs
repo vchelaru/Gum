@@ -278,8 +278,7 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         BatchKeyGroupedOrderer.Instance.BuildDrawList(
             new List<IRenderableIpso> { clipContainer },
             commands,
-            GetScissorRectangle,
-            GetCullTestBounds);
+            new ClipBoundsSource(GetScissorRectangle, GetCullTestBounds));
 
         Describe(commands).ShouldBe(new[]
         {

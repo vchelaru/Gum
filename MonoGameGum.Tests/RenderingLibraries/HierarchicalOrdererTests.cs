@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -287,8 +288,7 @@ public class HierarchicalOrdererTests : BaseTestClass
         HierarchicalOrderer.Instance.BuildDrawList(
             new List<IRenderableIpso> { clipContainer },
             commands,
-            GetScissorRectangle,
-            GetCullTestBounds);
+            new ClipBoundsSource(GetScissorRectangle, GetCullTestBounds));
 
         Describe(commands).ShouldBe(new[]
         {
@@ -344,7 +344,7 @@ public class HierarchicalOrdererTests : BaseTestClass
         HierarchicalOrderer.Instance.BuildDrawList(
             new List<IRenderableIpso> { clipContainer },
             commands,
-            GetScissorRectangle);
+            new ClipBoundsSource(GetScissorRectangle));
 
         Describe(commands).ShouldBe(new[]
         {
@@ -420,6 +420,42 @@ public class HierarchicalOrdererTests : BaseTestClass
         HierarchicalOrderer.Instance.BuildDrawList(layer, commands, camera);
 
         Describe(commands).ShouldContain("DrawRenderable:scrolledText");
+    }
+
+    // Allocation guard (#4190): the render path rebuilds the draw list every frame, once per layer,
+    // so building it must not allocate. Synthesizing the camera/layer rectangle mappings as closures
+    // per call cost 160 B/frame (a display class plus two delegates) and went unnoticed because the
+    // only guard lived in a suite excluded from CI. This one runs headless, so CI catches it.
+    [Fact]
+    public void BuildDrawList_LayerOverloadWithCamera_DoesNotAllocate()
+    {
+        Camera camera = new Camera();
+        camera.ClientWidth = 800;
+        camera.ClientHeight = 600;
+        camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
+
+        FakeRenderable clipParent = new FakeRenderable("clipParent");
+        clipParent.ClipsChildren = true;
+        clipParent.Y = 300;
+        clipParent.Width = 200;
+        clipParent.Height = 200;
+
+        FakeRenderable child = AddChild(clipParent, "child");
+        child.Width = 190;
+        child.Height = 80;
+
+        Layer layer = BuildLayer(clipParent);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        AllocationResult result = AllocationMeasurer.MeasureMinimum(
+            () => HierarchicalOrderer.Instance.BuildDrawList(layer, commands, camera),
+            attempts: 3,
+            warmupIterations: 50,
+            measuredIterations: 500);
+
+        // Liveness: a build that emitted nothing would trivially allocate nothing.
+        Describe(commands).ShouldContain("DrawRenderable:child");
+        result.BytesPerIteration.ShouldBe(0);
     }
 
     [Fact]

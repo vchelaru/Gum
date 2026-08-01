@@ -37,31 +37,26 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     {
         destination.Clear();
 
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = camera != null
-            ? renderable => camera.GetScissorRectangleFor(layer, renderable)
-            : null;
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = camera != null
-            ? renderable => camera.GetCullTestBoundsFor(layer, renderable)
-            : null;
+        ClipBoundsSource clipBounds = camera != null
+            ? new ClipBoundsSource(camera, layer)
+            : default;
 
-        ProcessLayerTopLevel(layer, getScissorRectangle, getCullTestBounds, destination);
+        ProcessLayerTopLevel(layer, clipBounds, destination);
     }
 
     /// <inheritdoc/>
     public void BuildDrawList(
         IList<IRenderableIpso> roots,
         List<DrawCommand> destination,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle = null,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds = null)
+        ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
-        ProcessWindow(roots, getScissorRectangle, getCullTestBounds ?? getScissorRectangle, destination);
+        ProcessWindow(roots, clipBounds, destination);
     }
 
     private static void ProcessLayerTopLevel(
         Layer layer,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        ClipBoundsSource clipBounds,
         List<DrawCommand> destination)
     {
         ReadOnlyCollection<IRenderableIpso> top = layer.Renderables;
@@ -89,7 +84,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 List<Entry> window = new List<Entry>();
                 for (int i = runStart; i < runEnd; i++)
                 {
-                    ProcessRenderable(top[i], getScissorRectangle, getCullTestBounds, null, window, destination);
+                    ProcessRenderable(top[i], clipBounds, null, window, destination);
                 }
                 FlushWindow(window, destination);
 
@@ -98,14 +93,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
         else
         {
-            ProcessWindow(top, getScissorRectangle, getCullTestBounds, destination);
+            ProcessWindow(top, clipBounds, destination);
         }
     }
 
     private static void ProcessWindow(
         IList<IRenderableIpso> renderables,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        ClipBoundsSource clipBounds,
         List<DrawCommand> destination)
     {
         int count = renderables.Count;
@@ -117,15 +111,14 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         List<Entry> window = new List<Entry>();
         for (int i = 0; i < count; i++)
         {
-            ProcessRenderable(renderables[i], getScissorRectangle, getCullTestBounds, null, window, destination);
+            ProcessRenderable(renderables[i], clipBounds, null, window, destination);
         }
         FlushWindow(window, destination);
     }
 
     private static void ProcessRenderable(
         IRenderableIpso renderable,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getScissorRectangle,
-        Func<IRenderableIpso, System.Drawing.Rectangle>? getCullTestBounds,
+        ClipBoundsSource clipBounds,
         System.Drawing.Rectangle? activeClip,
         List<Entry> currentWindow,
         List<DrawCommand> destination)
@@ -136,12 +129,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
 
         // #2998 off-screen cull: skip a renderable (and its subtree) fully outside the active
-        // clip. Gated on a non-null mapping, mirroring HierarchicalOrderer — see its rationale.
-        if (getCullTestBounds != null
+        // clip. Gated on a resolvable mapping, mirroring HierarchicalOrderer — see its rationale.
+        if (clipBounds.CanResolveCullTestBounds
             && activeClip.HasValue
             && CameraScissorExtensions.CullOffscreenWhenClipped
             && CameraScissorExtensions.IsFullyOutside(
-                getCullTestBounds(renderable),
+                clipBounds.GetCullTestBounds(renderable),
                 activeClip.Value,
                 CameraScissorExtensions.OffscreenCullMarginInPixels))
         {
@@ -163,9 +156,9 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
             // Entering a clipper narrows the active clip for descendants (intersect).
             System.Drawing.Rectangle? childClip = activeClip;
-            if (getScissorRectangle != null)
+            if (clipBounds.CanResolveScissorRectangle)
             {
-                System.Drawing.Rectangle thisClip = getScissorRectangle(renderable);
+                System.Drawing.Rectangle thisClip = clipBounds.GetScissorRectangle(renderable);
                 childClip = activeClip.HasValue ? System.Drawing.Rectangle.Intersect(activeClip.Value, thisClip) : thisClip;
             }
 
@@ -177,7 +170,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], getScissorRectangle, getCullTestBounds, childClip, innerWindow, destination);
+                        ProcessRenderable(children[i], clipBounds, childClip, innerWindow, destination);
                     }
                 }
             }
@@ -197,7 +190,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     int childCount = children.Count;
                     for (int i = 0; i < childCount; i++)
                     {
-                        ProcessRenderable(children[i], getScissorRectangle, getCullTestBounds, activeClip, currentWindow, destination);
+                        ProcessRenderable(children[i], clipBounds, activeClip, currentWindow, destination);
                     }
                 }
             }

@@ -425,6 +425,11 @@ jobs:
       #                                     raylib window/OpenGL context as
       #                                     RaylibGum.Tests above, needs the same
       #                                     Mesa llvmpipe DLLs. #4174)
+      #   - MonoGameGum.IntegrationTests   (real MonoGame Game + GraphicsDevice;
+      #                                     Windows-only, on the same Mesa llvmpipe
+      #                                     software GL as RaylibGum.Tests. Promoted
+      #                                     from Bucket D in #4190 — see the note
+      #                                     under that bucket below)
       #
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
@@ -441,9 +446,26 @@ jobs:
       #
       # Bucket D — WILL NOT RUN IN CI (require a real graphics device / window;
       # do NOT add these even if they look tempting):
-      #   - MonoGameGum.IntegrationTests   (integration → real GraphicsDevice)
-      #   - MonoGameGum.Shapes.Tests       (shape rendering → GraphicsDevice)
-      #   - MonoGameFum.FromFile.Tests     (instantiates real visuals)
+      #   - MonoGameGum.Shapes.Tests       (shape rendering → GraphicsDevice.
+      #                                     Same MonoGame.Framework.DesktopGL as
+      #                                     MonoGameGum.IntegrationTests, so Mesa
+      #                                     llvmpipe likely covers it too — but it
+      #                                     renders through Apos.Shapes, which has
+      #                                     not been exercised on software GL. Needs
+      #                                     its own verification run before moving.)
+      #   - MonoGameFum.FromFile.Tests     (instantiates real visuals. References no
+      #                                     MonoGame package at all, so its exclusion
+      #                                     reason is something other than "needs a
+      #                                     GraphicsDevice" and needs its own look.)
+      #
+      # MonoGameGum.IntegrationTests graduated from Bucket D to Bucket A in #4190. Its
+      # "needs a real GraphicsDevice" exclusion predated Mesa llvmpipe (#3250) and was
+      # already contradicted by two jobs: Native-AOT-Smoke drives a real Game +
+      # GraphicsDevice + Texture2D upload on this runner, and Gum.Cli.Tests renders via
+      # MonoGame under `dotnet test` with the same Mesa DLLs. The suite uses the identical
+      # MonoGame.Framework.DesktopGL, and its MinimalGame hosts match the AOT harness's
+      # SmokeGame. The gap had a cost: a DrawAllocationTests ratchet went red for 129
+      # commits with nothing to catch it.
       # ---------------------------------------------------------------------
 
       # continue-on-error was removed from the Bucket-A suites below (#3233): a red
@@ -546,7 +568,8 @@ jobs:
           $dests = @(
             "Tests/RaylibGum.Tests/bin/Release/net8.0",
             "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
-            "Tests/Gum.Cli.Tests/bin/Release/net8.0"
+            "Tests/Gum.Cli.Tests/bin/Release/net8.0",
+            "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0"
           )
           foreach ($dest in $dests) {
             Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
@@ -584,6 +607,16 @@ jobs:
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/Gum.ProjectServices.Raylib.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # Real MonoGame Game + GraphicsDevice per test, on the same Mesa llvmpipe DLLs copied above
+      # (#4190). Windows-only for the same reason RaylibGum.Tests is: the macOS runner's window
+      # creation is main-thread-coupled via Cocoa, and Mesa is dropped in as Windows DLLs.
+      - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        timeout-minutes: 15
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')

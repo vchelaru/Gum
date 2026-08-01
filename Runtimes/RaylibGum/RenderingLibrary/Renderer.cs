@@ -72,6 +72,14 @@ public class Renderer : IRenderer
     // serves all of them.
     readonly List<DrawCommand> _bakeCommands = new();
 
+    // Cached bake rectangle mappings and the layer they read. Allocated once rather than as
+    // per-bake lambdas: a closure per BuildDrawList call is exactly the per-frame allocation the
+    // main pass was fixed for (#4190). Only read while a bake is running, which is never
+    // re-entrant, so a single layer field is enough.
+    readonly Func<IRenderableIpso, System.Drawing.Rectangle> _bakeScissorRectangleMapping;
+    readonly Func<IRenderableIpso, System.Drawing.Rectangle> _bakeCullTestBoundsMapping;
+    Layer? _bakeLayer;
+
     // Set during the PreRender walk (which already traverses the whole visible tree) when any
     // render-target container is present, so the bake pre-pass is skipped entirely for the common
     // case of screens with no render targets — no extra full traversal.
@@ -182,6 +190,8 @@ public class Renderer : IRenderer
         ColorTextureAlphaShader = new Gum.Renderables.ColorTextureAlphaShader();
         RenderStateChangeStatistics = new RenderStateChangeStatistics();
         BatchDrawCallCounter = new BatchDrawCallCounter();
+        _bakeScissorRectangleMapping = renderable => GetScissorRectangleFor(_bakeLayer, renderable);
+        _bakeCullTestBoundsMapping = renderable => GetCullTestBoundsFor(_bakeLayer, renderable);
     }
 
 
@@ -460,7 +470,7 @@ public class Renderer : IRenderer
     // BeginScissorMode takes top-left coordinates and applies its own Y flip; passing the RT-local
     // top-left rect directly clips the correct rows on both hardware GL and software GL (Mesa
     // llvmpipe) — no screen-height compensation is needed (that was the #3436 mistake, #3440).
-    private System.Drawing.Rectangle GetScissorRectangleFor(Layer layer, IRenderableIpso element)
+    private System.Drawing.Rectangle GetScissorRectangleFor(Layer? layer, IRenderableIpso element)
     {
         if (!_isBakingRenderTarget)
         {
@@ -485,7 +495,7 @@ public class Renderer : IRenderer
     // widens the world Top/Bottom before either the camera or bake-local transform below. Used only
     // for the off-screen cull decision above (#4144); GetScissorRectangleFor itself is unchanged and
     // still drives the actual scissor/clip application.
-    private System.Drawing.Rectangle GetCullTestBoundsFor(Layer layer, IRenderableIpso element)
+    private System.Drawing.Rectangle GetCullTestBoundsFor(Layer? layer, IRenderableIpso element)
     {
         if (!_isBakingRenderTarget)
         {
@@ -620,13 +630,13 @@ public class Renderer : IRenderer
         if (children != null && children.Count > 0)
         {
             // Same shared builder the main pass uses, entered at this container's subtree instead of
-            // at a Layer (#4154). The RT-local scissor / cull-bounds mappings below are what let the
-            // bake express its own coordinate space through the shared walk.
+            // at a Layer (#4154). The RT-local scissor / cull-bounds mappings are what let the bake
+            // express its own coordinate space through the shared walk.
+            _bakeLayer = layer;
             HierarchicalOrderer.Instance.BuildDrawList(
                 children,
                 _bakeCommands,
-                renderable => GetScissorRectangleFor(layer, renderable),
-                renderable => GetCullTestBoundsFor(layer, renderable));
+                new ClipBoundsSource(_bakeScissorRectangleMapping, _bakeCullTestBoundsMapping));
             Submit(_bakeCommands, layer);
         }
 
