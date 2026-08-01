@@ -83,9 +83,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.White.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.White.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.White.FillBlue</string>
+        <string>Color = Components/Bubblegum/Styles.White.FillColor</string>
       </Value>
     </VariableList>
   </State>

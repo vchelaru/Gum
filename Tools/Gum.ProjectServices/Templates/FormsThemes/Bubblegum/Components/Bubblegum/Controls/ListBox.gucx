@@ -333,9 +333,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
-        <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
-        <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+        <string>StrokeColor = Components/Bubblegum/Styles.Border.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -345,9 +343,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+        <string>StrokeColor = Components/Bubblegum/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -393,9 +389,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Border.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Border.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Border.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Border.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -439,9 +433,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -485,9 +477,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.AccentDark.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.AccentDark.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.AccentDark.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.AccentDark.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -531,9 +521,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -577,9 +565,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -623,9 +609,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Disabled.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -669,9 +653,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>StrokeRed = Components/Bubblegum/Styles.Disabled.FillRed</string>
-          <string>StrokeGreen = Components/Bubblegum/Styles.Disabled.FillGreen</string>
-          <string>StrokeBlue = Components/Bubblegum/Styles.Disabled.FillBlue</string>
+          <string>StrokeColor = Components/Bubblegum/Styles.Disabled.FillColor</string>
         </Value>
       </VariableList>
     </State>

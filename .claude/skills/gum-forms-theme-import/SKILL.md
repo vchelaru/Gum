@@ -238,12 +238,13 @@ instances yourself, `--fix` already writes it into every state. This only works 
 missing outright, though; see "Recoloring after a clone" above for the stale-but-present case it
 can't touch.
 
-**A `Red`/`Green`/`Blue` triple only collapses to `Color`/`FillColor`/`StrokeColor` when both sides
-use the identical channel name** — `VariableReferenceLogic.TryGetCompositeExpansion` requires the
-RHS to end with `.` + the LHS. A plain-color instance borrowing a Rectangle swatch's fill
-(`Red = X.FillRed`, common for `Text` instances) doesn't qualify - collapsing it would reference a
-`Color` composite the swatch doesn't have. `FormsTemplate` (Standard)'s own instances use this
-mismatched-name pattern exclusively, so none of its `VariableReferences` triples are eligible.
+**A `Red`/`Green`/`Blue` triple collapses to one `*Color` line whenever both sides decompose to the
+same composite token** — the two names need not match, so cross-named forms like
+`DropshadowColor = X.FillColor` and `Color = X.FillColor` are valid. All three lines must target
+the same object, since channels pair positionally. The hard requirement is on the left side only: the owning instance's type must
+declare every channel (`ExpandCompositeReferenceLine`/`OwnerHasAllCompositeChannels`), otherwise
+the line silently fails to expand at apply time and `gumcli check-references` reports the
+unmaterialized `*Color` scalar.
 
 One more staged-output-specific gotcha, beyond the postbuild simply not rerunning (item 7 /
 "the staged build, not the source" above): `xcopy` never deletes, so a rename or removal in the

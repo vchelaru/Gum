@@ -43,9 +43,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Bubblegum/Styles.Text.FillRed</string>
-        <string>Green = Components/Bubblegum/Styles.Text.FillGreen</string>
-        <string>Blue = Components/Bubblegum/Styles.Text.FillBlue</string>
+        <string>Color = Components/Bubblegum/Styles.Text.FillColor</string>
         <string>Font = Components/Bubblegum/Styles.Strong.Font</string>
         <string>FontSize = Components/Bubblegum/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Bubblegum/Styles.Strong.IsBold</string>

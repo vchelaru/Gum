@@ -719,9 +719,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Accent.FillColor</string>
         <string>Font = Components/Hazard/Styles.Strong.Font</string>
         <string>FontSize = Components/Hazard/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Hazard/Styles.Strong.IsBold</string>
@@ -734,9 +732,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Accent.FillColor</string>
         <string>Font = Components/Hazard/Styles.Strong.Font</string>
         <string>FontSize = Components/Hazard/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Hazard/Styles.Strong.IsBold</string>

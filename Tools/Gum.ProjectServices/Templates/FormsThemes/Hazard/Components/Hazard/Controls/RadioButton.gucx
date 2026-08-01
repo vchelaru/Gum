@@ -224,9 +224,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-        <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-        <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+        <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         <string>Font = Components/Hazard/Styles.Normal.Font</string>
         <string>FontSize = Components/Hazard/Styles.Normal.FontSize</string>
       </Value>
@@ -238,9 +236,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-        <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-        <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+        <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -261,9 +257,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-        <string>StrokeRed = Components/Hazard/Styles.Border.FillRed</string>
-        <string>StrokeGreen = Components/Hazard/Styles.Border.FillGreen</string>
-        <string>StrokeBlue = Components/Hazard/Styles.Border.FillBlue</string>
+        <string>StrokeColor = Components/Hazard/Styles.Border.FillColor</string>
       </Value>
     </VariableList>
   </State>
@@ -321,9 +315,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -333,9 +325,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -401,9 +391,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Border.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Border.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Border.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Border.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -413,9 +401,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -481,9 +467,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -493,9 +477,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Placeholder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -561,9 +543,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -573,9 +553,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Placeholder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -641,9 +619,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -653,9 +629,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -721,9 +695,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -733,9 +705,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -801,9 +771,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -813,9 +781,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -881,9 +847,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.AccentPressed.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.AccentPressed.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.AccentPressed.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.AccentPressed.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -893,9 +857,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -961,9 +923,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -973,9 +933,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1041,9 +999,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1053,9 +1009,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1121,9 +1075,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1133,9 +1085,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1201,9 +1151,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.Surface1.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.Accent.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.Accent.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.Accent.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.Accent.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1213,9 +1161,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Text.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Text.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Text.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Text.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1281,9 +1227,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1293,9 +1237,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Placeholder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1361,9 +1303,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Hazard/Styles.DisabledFill.FillColor</string>
-          <string>StrokeRed = Components/Hazard/Styles.DisabledBorder.FillRed</string>
-          <string>StrokeGreen = Components/Hazard/Styles.DisabledBorder.FillGreen</string>
-          <string>StrokeBlue = Components/Hazard/Styles.DisabledBorder.FillBlue</string>
+          <string>StrokeColor = Components/Hazard/Styles.DisabledBorder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -1373,9 +1313,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Red = Components/Hazard/Styles.Placeholder.FillRed</string>
-          <string>Green = Components/Hazard/Styles.Placeholder.FillGreen</string>
-          <string>Blue = Components/Hazard/Styles.Placeholder.FillBlue</string>
+          <string>Color = Components/Hazard/Styles.Placeholder.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
