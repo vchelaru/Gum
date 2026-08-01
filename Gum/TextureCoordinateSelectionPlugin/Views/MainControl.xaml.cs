@@ -21,8 +21,6 @@ namespace TextureCoordinateSelectionPlugin.Views
     /// </summary>
     public partial class MainControl : UserControl
     {
-        public event EventHandler<KeyEventArgs> ImageRegionKeyDown;
-
         MainControlViewModel ViewModel => DataContext as MainControlViewModel;
 
         public MainControl()
@@ -31,11 +29,6 @@ namespace TextureCoordinateSelectionPlugin.Views
 
             // we are going to do our own handling of events
             InnerControl.DisableHotkeyPanning();
-        }
-
-        private void HandleKeyDown(object? sender, KeyEventArgs e)
-        {
-            ImageRegionKeyDown?.Invoke(null, e);
         }
 
         private void HandleMinusClicked(object? sender, RoutedEventArgs e)

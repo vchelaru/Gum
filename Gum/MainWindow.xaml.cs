@@ -44,7 +44,11 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         this.PreviewKeyDown += (_, e) =>
         {
             GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
-            hotkeyManager.PreviewKeyDownAppWide(keyArgs);
+            // Tunneling reaches the window before the focused element, so a render canvas that owns
+            // Ctrl+=/Ctrl+- for its own camera has to opt out here rather than handle them itself.
+            hotkeyManager.PreviewKeyDownAppWide(
+                keyArgs,
+                CameraZoomScope.IsEntireAppZoomEnabledFor(e.OriginalSource));
             e.Handled = keyArgs.Handled;
         };
         this.PreviewMouseDown += OnPreviewMouseDown;

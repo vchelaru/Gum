@@ -5,6 +5,11 @@
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
+    <!--
+      ImageRegionSelectionControl is a WPF element (WpfGraphicsDeviceControl) as of #3833; the
+      remaining WinForms usage in this project is the legacy ScrollableImageRegionSelectionControl.
+    -->
+    <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 	  <!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 	  <NoWarn>$(NoWarn);CA1416</NoWarn>
@@ -29,9 +34,6 @@
 	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="ImageRegionSelectionControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Update="ScrollableImageRegionSelectionControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

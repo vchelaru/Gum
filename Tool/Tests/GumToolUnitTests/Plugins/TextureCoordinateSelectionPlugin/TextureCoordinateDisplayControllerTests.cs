@@ -8,7 +8,6 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Shouldly;
-using System.Windows.Forms;
 using TextureCoordinateSelectionPlugin.Logic;
 
 namespace GumToolUnitTests.Plugins.TextureCoordinateSelectionPlugin;
@@ -38,19 +37,42 @@ public class TextureCoordinateDisplayControllerTests
     [Fact]
     public void HandleKeyDown_WhenAppWideHotkeyHandlesTheKey_ReturnsWithoutTouchingCamera()
     {
-        // CreateControl() was never called, so the controller's inner WinForms/XNA control is
-        // uninitialized. If HandleKeyDown fell through to the camera-pan logic below the app-wide
-        // check, it would NullReferenceException here - reaching the assertion instead pins that
-        // an app-wide-handled key (e.g. Ctrl+Z) returns before that point.
+        // CreateControl() was never called, so the controller's inner XNA canvas is uninitialized.
+        // If HandleKeyDown fell through to the camera-pan logic below the app-wide check, it would
+        // NullReferenceException here - reaching the assertion instead pins that an
+        // app-wide-handled key (e.g. Ctrl+Z) returns before that point.
         _hotkeyManagerMock
             .Setup(m => m.PreviewKeyDownAppWide(It.IsAny<GumKeyEventArgs>(), false))
             .Callback<GumKeyEventArgs, bool>((args, _) => args.Handled = true)
             .Returns(true);
-        var e = new KeyEventArgs(Keys.Control | Keys.Z);
+        var keyArgs = new GumKeyEventArgs { Key = GumKey.Z, IsCtrlDown = true };
+        bool handled = false;
 
-        _sut.HandleKeyDown(null, e);
+        _sut.HandleKeyDown(keyArgs, value => handled = value);
 
-        e.Handled.ShouldBeTrue();
+        handled.ShouldBeTrue();
         _hotkeyManagerMock.Verify(m => m.PreviewKeyDownAppWide(It.IsAny<GumKeyEventArgs>(), false), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(GumKey.Left)]
+    [InlineData(GumKey.Right)]
+    [InlineData(GumKey.Up)]
+    [InlineData(GumKey.Down)]
+    public void IsCanvasNavigationKey_ShouldClaimArrowKeys(GumKey key)
+    {
+        // The canvas is a WPF element now, so an unhandled arrow key would move focus off it and
+        // silently break both camera panning and region nudging.
+        TextureCoordinateDisplayController
+            .IsCanvasNavigationKey(new GumKeyEventArgs { Key = key })
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsCanvasNavigationKey_ShouldNotClaimAnOrdinaryKey()
+    {
+        TextureCoordinateDisplayController
+            .IsCanvasNavigationKey(new GumKeyEventArgs { Key = GumKey.Delete })
+            .ShouldBeFalse();
     }
 }

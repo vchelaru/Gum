@@ -1,15 +1,18 @@
 ﻿using System;
-using XnaAndWinforms;
 using RenderingLibrary;
 using Cursor = InputLibrary.Cursor;
 using InputLibrary;
 
 namespace FlatRedBall.SpecializedXnaControls.Input
 {
+    /// <summary>
+    /// Pans the camera from middle-mouse dragging and Ctrl+arrow hotkeys. Framework-neutral - the
+    /// host control decides when to call <see cref="Activity"/> (typically from its per-frame update),
+    /// so this works over a WPF-native canvas as well as a WinForms one.
+    /// </summary>
     public class CameraPanningLogic
     {
         Camera mCamera;
-        GraphicsDeviceControl mControl;
 
         Cursor mCursor;
         Keyboard mKeyboard;
@@ -24,21 +27,17 @@ namespace FlatRedBall.SpecializedXnaControls.Input
             set;
         } = true;
 
-        public CameraPanningLogic(GraphicsDeviceControl graphicsControl, SystemManagers managers, Cursor cursor, Keyboard keyboard)
+        public CameraPanningLogic(SystemManagers managers, Cursor cursor, Keyboard keyboard)
         {
             mManagers = managers;
 
             mKeyboard = keyboard;
 
             mCursor = cursor;
-            mCursor.Initialize(new ControlInputHostAdapter(graphicsControl));
             mCamera = managers.Renderer.Camera;
-            mControl = graphicsControl;
-            graphicsControl.XnaUpdate += new Action(Activity);
-
         }
 
-        void Activity()
+        public void Activity()
         {
             if (mKeyboard != null && IsHotkeyPanningEnabled)
             {

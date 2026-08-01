@@ -7,10 +7,10 @@
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<UseWindowsForms>true</UseWindowsForms>
 		<!--
-			Added for WriteableBitmapPixelBufferWriter, part of the WPF-native render surface work for
-			#3833 - the WPF-facing counterpart to BitmapPixelBufferWriter's GDI+ path. This does not
-			change how WireframeControl/ImageRegionSelectionControl render today; both are still
-			WinForms controls embedded via WindowsFormsHost.
+			WpfGraphicsDeviceControl / WpfRenderSurfaceHost / WriteableBitmapPixelBufferWriter are the
+			WPF-native render surface both editor canvases (WireframeControl,
+			ImageRegionSelectionControl) draw through. GraphicsDeviceControl's WinForms/GDI+ path is
+			still here for any host that isn't WPF.
 		-->
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
