@@ -94,7 +94,3 @@ Raylib.EndTextureMode();
 {% hint style="info" %}
 `Raylib.EndBlendMode` always resets to `BlendMode.Alpha`, it does not restore whatever blend mode was active before. If you are drawing a mix of translucent objects onto the same render target and need to change blend modes mid-bake, re-select `BlendMode.CustomSeparate` with these same factors after each `EndBlendMode` rather than assuming the accumulating alpha blend is still active.
 {% endhint %}
-
-{% hint style="warning" %}
-**As of August 2026:** `RaylibGum`'s own `IsRenderTarget` container baking has a known gap where this alpha-accumulating pass does not apply to the default `Blend.Normal`/`Additive` values, only to `Replace`/`ReplaceAlpha`/`SubtractAlpha`/`MinAlpha` ([#4204](https://github.com/vchelaru/Gum/issues/4204)). Until that is fixed, translucent content baked through Gum's own `IsRenderTarget` on raylib can show the same darkening symptom described above even though you are not managing the render target yourself. Manually managed `RenderTexture2D` compositing using the pattern on this page is not affected, since it does not go through that code path.
-{% endhint %}
