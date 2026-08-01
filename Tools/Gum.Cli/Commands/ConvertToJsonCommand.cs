@@ -53,7 +53,7 @@ public static class ConvertToJsonCommand
         }
 
         GumProjectSave project = loadResult.Project!;
-        IConvertProjectToJsonService convertService = new ConvertProjectToJsonService();
+        IConvertProjectToJsonService convertService = new ConvertProjectToJsonService(new HeadlessFileWatchIgnoreList());
 
         ConvertProjectToJsonResult result;
         try

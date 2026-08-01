@@ -855,6 +855,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             batch.AddExportedValue<IProjectState>(Locator.GetRequiredService<IProjectState>());
             batch.AddExportedValue<IImportLogic>(Locator.GetRequiredService<IImportLogic>());
             batch.AddExportedValue<IFileWatchManager>(Locator.GetRequiredService<IFileWatchManager>());
+            // MainConvertToJsonPlugin (#4219): mutes the file watcher for each JSON file it writes
+            // during "Convert to JSON", the same way FileCommands/ProjectManager do for their saves.
+            batch.AddExportedValue<IFileWatchIgnoreList>(Locator.GetRequiredService<IFileWatchIgnoreList>());
 
             // MainInheritancePlugin (InheritanceLogic) and MainFavoriteComponentPlugin
             // (IFavoriteComponentManager) construction-time deps:

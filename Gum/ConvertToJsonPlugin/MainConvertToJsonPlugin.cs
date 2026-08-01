@@ -1,4 +1,5 @@
 using Gum.Commands;
+using Gum.Logic.FileWatch;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices;
@@ -29,10 +30,11 @@ internal class MainConvertToJsonPlugin : WpfPluginBase
     public MainConvertToJsonPlugin(
         IProjectState projectState,
         IFileCommands fileCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _convertToJsonLogic = new ConvertToJsonLogic(
-            projectState, new ConvertProjectToJsonService(), fileCommands, dialogService);
+            projectState, new ConvertProjectToJsonService(fileWatchIgnoreList), fileCommands, dialogService);
     }
 
     public override void StartUp()
