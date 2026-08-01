@@ -621,19 +621,18 @@ jobs:
       # (#4190). Windows-only for the same reason RaylibGum.Tests is: the macOS runner's window
       # creation is main-thread-coupled via Cocoa, and Mesa is dropped in as Windows DLLs.
       #
-      # RequiresOpenGlShaderCompiler is filtered out: those 7 RenderTargetEffectTests compile a .fx
-      # with ShadowDusk for PlatformTarget.OpenGL, which fails on the hosted runner even though the
-      # DirectX target succeeds there (Compile_GrayscaleShader_ForDirectXTarget_Succeeds is untagged
-      # and runs), so the HLSL front end loads and it is the GLSL back end that is missing. This is a
-      # toolchain gap unrelated to Mesa or the GraphicsDevice — the other 72 tests, render-target
-      # pixel readbacks included, all pass. They still run in full locally. Closing the gap (and
-      # dropping this filter) is #4195.
+      # All tests run unfiltered, including the 7 RenderTargetEffectTests that compile a .fx with
+      # ShadowDusk for PlatformTarget.OpenGL. That target used to fail here with "DXIL container
+      # mismatch for 'PSVRuntimeInfoSize'" — a stray, unpaired dxil.dll ShadowDusk's native loader
+      # wrote to the app base directory at runtime, which Windows' DLL search order picked up ahead
+      # of the correctly RID-scoped, version-paired copy under runtimes\win-x64\native. Fixed
+      # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
       - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
-        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler!=true" --logger "trx" --results-directory "TestResults"
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
