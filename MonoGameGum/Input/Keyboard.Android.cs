@@ -72,7 +72,6 @@ public partial class Keyboard
         if (view.Context?.GetSystemService(Context.InputMethodService) is InputMethodManager imm)
         {
             imm.ShowSoftInput(view, ShowFlags.Forced);
-            imm.ToggleSoftInput(ShowFlags.Forced, HideSoftInputFlags.ImplicitOnly);
         }
 
         if (!_hasAddedKeyPressEvent)
@@ -102,14 +101,6 @@ public partial class Keyboard
     void HandleAndroidKeyPress(object? sender, View.KeyEventArgs e)
     {
         if (e.Event == null) return;
-
-        if (e.Event.Action == KeyEventActions.Multiple)
-        {
-            lock (_androidActionListLock)
-            {
-                _stringToProcess += e.Event.Characters;
-            }
-        }
 
         if (e.Event.Action == KeyEventActions.Down || e.Event.Action == KeyEventActions.Up)
         {
