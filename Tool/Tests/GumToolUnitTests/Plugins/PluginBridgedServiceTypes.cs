@@ -63,6 +63,7 @@ internal static class PluginBridgedServiceTypes
         typeof(IProjectState),
         typeof(IImportLogic),
         typeof(IFileWatchManager),
+        typeof(IFileWatchIgnoreList),
 
         typeof(InheritanceLogic),
         typeof(IFavoriteComponentManager),

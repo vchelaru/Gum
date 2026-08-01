@@ -9,7 +9,10 @@ namespace Gum.Logic.FileWatch;
 /// the file watcher. Extracted from FileWatchManager so that components
 /// which only need to mute the watcher (e.g. FileCommands when saving an
 /// element) can depend on this small surface without introducing a DI
-/// cycle through FileWatchManager.
+/// cycle through FileWatchManager. Lives in Gum.ProjectServices (rather
+/// than Gum.Presentation, its original home) so lower-layer services like
+/// ConvertProjectToJsonService can also depend on it without an upward
+/// project reference.
 /// </summary>
 public interface IFileWatchIgnoreList
 {
