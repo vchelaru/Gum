@@ -111,6 +111,18 @@ public class GumProjectSave
         /// than silently dropping the new variables (or mis-showing a stale Radius) on the next save.
         /// </summary>
         ShapeVariableExpansion = 3,
+
+        /// <summary>
+        /// Reserves a version slot for the Text standard element's <c>LocalizeText</c> variable
+        /// (#4133/#4134). Files saved at this version use the same XML format as
+        /// <see cref="ShapeVariableExpansion"/>; the bump exists purely so the back-fill gate
+        /// (<see cref="Gum.DataTypes.Variables.VariableSave.MinimumGumxVersion"/>) can tell a
+        /// pre-LocalizeText v3 project apart from one saved after LocalizeText existed, and skip
+        /// injecting it into the older one. Without this, opening a pre-#4134 v3 project would
+        /// silently back-fill LocalizeText and break its FRB1-generated runtime (issue #4222,
+        /// same failure mode as FRB #1881).
+        /// </summary>
+        LocalizeTextExpansion = 4,
     }
 
     /// <summary>
@@ -121,13 +133,13 @@ public class GumProjectSave
     /// The <see cref="GumProjectSave"/> constructor still defaults to
     /// <see cref="GumxVersions.AttributeVersion"/>, NOT this value. That ctor default is the
     /// fallback for deserialized files that lack a Version element — a legacy file must read
-    /// back as the older version so the variable-grid gate keeps hiding v3-only shape variables.
-    /// Brand-new projects are a different case: they seed the v3 shape variable surface up front,
+    /// back as the older version so the variable-grid gate keeps hiding newer-only variables.
+    /// Brand-new projects are a different case: they seed the latest variable surface up front,
     /// so the new-project factories (ProjectManager.CreateNewProject and ProjectCreator.Create)
-    /// explicitly stamp this version. Marking them v3 is honest — the project genuinely uses v3
-    /// features — and lets the gate show those variables on a fresh Circle/Rectangle.
+    /// explicitly stamp this version. Marking them at the native version is honest — the project
+    /// genuinely uses those features — and lets the gate show those variables immediately.
     /// </remarks>
-    public const int NativeVersion = (int)GumxVersions.ShapeVariableExpansion;
+    public const int NativeVersion = (int)GumxVersions.LocalizeTextExpansion;
 
     #region Fields
 

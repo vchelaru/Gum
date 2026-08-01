@@ -5,11 +5,9 @@
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<UseWindowsForms>true</UseWindowsForms>
 		<!--
-			Added for WpfInputHostAdapter, the WPF-facing counterpart to ControlInputHostAdapter's
-			WinForms path (part of the WPF-native render surface work for #3833). Does not change how
-			any existing host adapter behaves.
+			WpfInputHostAdapter is the only IInputHostControl implementation, so this project needs WPF
+			but not WinForms.
 		-->
 		<UseWPF>true</UseWPF>
 		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>

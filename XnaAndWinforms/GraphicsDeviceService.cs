@@ -23,9 +23,9 @@ namespace XnaAndWinforms;
 
 /// <summary>
 /// Helper class responsible for creating and managing the GraphicsDevice.
-/// All GraphicsDeviceControl instances share the same GraphicsDeviceService,
-/// so even though there can be many controls, there will only ever be a single
-/// underlying GraphicsDevice. This implements the standard IGraphicsDeviceService
+/// All render hosts share the same GraphicsDeviceService, so even though there
+/// can be many canvases, there will only ever be a single underlying
+/// GraphicsDevice. This implements the standard IGraphicsDeviceService
 /// interface, which provides notification events for when the device is reset
 /// or disposed.
 /// </summary>
@@ -120,7 +120,7 @@ class GraphicsDeviceService : IGraphicsDeviceService
     /// <summary>
     /// Resets the graphics device to whichever is bigger out of the specified
     /// resolution or its current size. This behavior means the device will
-    /// demand-grow to the largest of all its GraphicsDeviceControl clients.
+    /// demand-grow to the largest of all its render-host clients.
     /// </summary>
     public void ResetDevice(int width, int height)
     {

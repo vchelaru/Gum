@@ -51,7 +51,7 @@ The premise "swap WPF for Avalonia" mis-locates the cost. The mapping found:
   DI Generic-Host composition root, a genuinely headless `Gum.ProjectServices` assembly (net8.0,
   cannot reference WPF), an `IDispatcher`/`IDialogService` seam, and a real unit-test suite.
 - **The real entanglement is WinForms**, concentrated in **two load-bearing subsystems**: the KNI
-  render/editor host (`GraphicsDeviceControl` + the input library) and the element tree
+  render/editor host (since migrated to WPF — see Phase 4b) and the element tree
   (`MultiSelectTreeView` + the ~3k-line `ElementTreeViewManager`). Everything else is shallow:
   one true WinForms `Form`, the `Keys` enum for hotkeys, `DataObject`/`DragDropEffects` for
   drag-drop, and vestigial glue left by the already-migrated state tree.
@@ -425,14 +425,13 @@ now done, and no `WindowsFormsHost` remains in the tool.**
   `GumTreeView` bound to an observable `GumTreeNode` model (#4228). That second step deleted the
   owner-draw theming, the `ImageList` tinting pipeline, and `ThemedScrollContainer` outright rather
   than porting them, and removed the tool's last `WindowsFormsHost`.
-- *4b — Rendering host:* tracked in #3756/#3833 (reopened). Host-contract formalization
-  (`IRenderDeviceHost`/`IInputHostControl`/`IRenderTargetPixelBufferWriter`) and WPF-native additive
-  infra (`WpfRenderSurfaceHost` — CPU-readback + `WriteableBitmap`, measured 45-60fps incl. 4K via
-  `CompositionTarget.Rendering`; `WpfInputHostAdapter`; `CursorKind`; a WPF drag/drop payload reader)
-  are merged but unwired. What's left is the actual `WireframeControl`/`ImageRegionSelectionControl`
-  base-class swap off `GraphicsDeviceControl`/`WindowsFormsHost` — see #3833 for the concrete
-  remaining steps.
-  The wireframe canvas has taken this path end to end: `WpfGraphicsDeviceControl` draws into the
+- *4b — Rendering host:* **Done** (#3756/#3833). Host-contract formalization
+  (`IRenderDeviceHost`/`IInputHostControl`/`IWriteableBitmapPixelBufferWriter`) plus WPF-native infra
+  (`WpfRenderSurfaceHost` — CPU-readback + `WriteableBitmap`, measured 45-60fps incl. 4K via
+  `CompositionTarget.Rendering`; `WpfInputHostAdapter`; `CursorKind`; a WPF drag/drop payload reader).
+  Both editor canvases (`WireframeControl` #4166, `ImageRegionSelectionControl` #4226) derive from
+  `WpfGraphicsDeviceControl`, and the WinForms render/input path was deleted in #4227.
+  The wireframe canvas took this path end to end: `WpfGraphicsDeviceControl` draws into the
   shared device's render target, reads it back, and pushes the pixels into a `WriteableBitmap`, so
   the editor tab is `WindowsFormsHost`-free. Points worth carrying to the next host:
   - **A WPF host has no control handle to create the device against.** It is constructed before it

@@ -4,10 +4,9 @@
 
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
     <!--
-      ImageRegionSelectionControl is a WPF element (WpfGraphicsDeviceControl) as of #3833; the
-      remaining WinForms usage in this project is the legacy ScrollableImageRegionSelectionControl.
+      ImageRegionSelectionControl is a WPF element (WpfGraphicsDeviceControl), so this project needs
+      WPF but not WinForms.
     -->
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -32,11 +31,6 @@
 	  <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
 	  <PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
 	  <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="ScrollableImageRegionSelectionControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GumCommon\GumCommon.csproj" />

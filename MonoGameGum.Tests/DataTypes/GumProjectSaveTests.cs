@@ -349,14 +349,14 @@ public class GumProjectSaveTests : BaseTestClass
     }
 
     [Fact]
-    public void NativeVersion_MatchesShapeVariableExpansion()
+    public void NativeVersion_MatchesLocalizeTextExpansion()
     {
-        // The v3 slot is reserved for the expanded Circle/Rectangle variable surface
-        // landing in #2925/#2927 follow-up PRs. Files saved at v3 use the same XML
-        // format as AttributeVersion; the bump only changes the rejection ceiling so
-        // tool builds without the new variable definitions refuse to silently drop them.
-        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.ShapeVariableExpansion);
-        ((int)GumProjectSave.GumxVersions.ShapeVariableExpansion).ShouldBe(3);
+        // The v4 slot is reserved for the Text standard element's LocalizeText variable
+        // (#4133/#4134). Files saved at v4 use the same XML format as ShapeVariableExpansion;
+        // the bump only changes the rejection ceiling and the back-fill gate so tool builds
+        // without the new variable definition refuse to silently drop/back-fill it.
+        GumProjectSave.NativeVersion.ShouldBe((int)GumProjectSave.GumxVersions.LocalizeTextExpansion);
+        ((int)GumProjectSave.GumxVersions.LocalizeTextExpansion).ShouldBe(4);
     }
 
     [Fact]

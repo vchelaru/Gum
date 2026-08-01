@@ -89,3 +89,19 @@ Unlike Version 2, which is a real XML-format change requiring a **File** -> **Sa
 {% hint style="info" %}
 New projects created with the 2026 May tool (or later) are stamped Version 3 automatically. Only projects created before this release need the manual bump.
 {% endhint %}
+
+## Version 4
+
+**Required Gum Tool Version**: 2026 July (or later)
+
+This version unlocks the `Localize Text` variable on the **Text** standard element, which controls whether that instance's text is translated when a localization database is loaded. The tool only shows and back-fills this variable for projects at version 4 or later, so a project still at version 3 keeps it hidden even on a tool build that supports it.
+
+✅No manual changes are needed to your project beyond changing the version number.
+
+Version 4 uses the **same XML format** as Version 3. The version bump exists only to unlock the new variable and to make older tool builds refuse the file rather than silently dropping it on the next save. There is **no format conversion or Save All step**, you only change the `<Version>` number.
+
+❗Be sure that your entire team is using the new version of Gum (2026 July or later) before making this upgrade. As with previous versions, mixing tool versions across a team can produce a "hybrid" file which can break a project.
+
+{% hint style="info" %}
+New projects created with the 2026 July tool (or later) are stamped Version 4 automatically. Only projects created before this release need the manual bump.
+{% endhint %}
