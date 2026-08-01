@@ -635,6 +635,18 @@ jobs:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler!=true" --logger "trx" --results-directory "TestResults"
 
+      # TEMPORARY diagnostic step for #4195 — runs just the 7 OpenGL-tagged tests with verbose
+      # console output so the real ShadowDusk compile failure (currently swallowed to a bare
+      # "Shader compilation failed") is visible in the Action log. continue-on-error so it never
+      # blocks the merge gate above. Remove this step once #4195 is resolved one way or the other.
+      - name: "DIAGNOSTIC: MonoGameGum.IntegrationTests OpenGL-tagged tests (#4195)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe
+        run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler=true" --logger "console;verbosity=detailed"
+
       # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
       # above, though verification showed every test here mocks out GraphicsDevice entirely.
