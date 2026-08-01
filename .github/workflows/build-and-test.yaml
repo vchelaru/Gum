@@ -430,6 +430,18 @@ jobs:
       #                                     software GL as RaylibGum.Tests. Promoted
       #                                     from Bucket D in #4190 — see the note
       #                                     under that bucket below)
+      #   - MonoGameGum.Shapes.Tests       (Apos.Shapes-backed shape runtimes;
+      #                                     Windows-only, same Mesa llvmpipe software
+      #                                     GL. Promoted from Bucket D in #4198: its
+      #                                     harness turned out to be fully headless —
+      #                                     every test explicitly avoids creating a
+      #                                     GraphicsDevice (see the "no GraphicsDevice"
+      #                                     comments in CircleRuntimeTests /
+      #                                     RectangleRuntimeTests / RenderableShapeBaseTests)
+      #                                     — so Bucket D's "requires a real graphics
+      #                                     device" premise never applied to it. Still
+      #                                     verified with a real Mesa llvmpipe run
+      #                                     before promotion per the linked issue.)
       #
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
@@ -444,19 +456,15 @@ jobs:
       # (Win32 window creation is not main-thread-coupled like Cocoa), so it now
       # runs headless and blocks. See the Install Mesa + RaylibGum.Tests steps below.
       #
-      # Bucket D — WILL NOT RUN IN CI (require a real graphics device / window;
-      # do NOT add these even if they look tempting):
-      #   - MonoGameGum.Shapes.Tests       (shape rendering → GraphicsDevice.
-      #                                     Same MonoGame.Framework.DesktopGL as
-      #                                     MonoGameGum.IntegrationTests, so Mesa
-      #                                     llvmpipe likely covers it too — but it
-      #                                     renders through Apos.Shapes, which has
-      #                                     not been exercised on software GL. Needs
-      #                                     its own verification run before moving.)
-      #   - MonoGameFum.FromFile.Tests     (instantiates real visuals. References no
-      #                                     MonoGame package at all, so its exclusion
-      #                                     reason is something other than "needs a
-      #                                     GraphicsDevice" and needs its own look.)
+      # Bucket D — (empty) both remaining entries were resolved in #4198.
+      # MonoGameGum.Shapes.Tests graduated to Bucket A above: it turned out to be
+      # fully headless (no GraphicsDevice at all), so the original "requires a real
+      # graphics device" rationale never applied to it.
+      # MonoGameFum.FromFile.Tests (a typo'd "MonoGameGum") was dead scaffolding —
+      # a csproj with zero source files and zero project references, added by
+      # accident in an unrelated PR (#2085) and never filled in. Deleted rather
+      # than promoted or documented as excluded, since there was nothing in it to
+      # run or to protect.
       #
       # MonoGameGum.IntegrationTests graduated from Bucket D to Bucket A in #4190. Its
       # "needs a real GraphicsDevice" exclusion predated Mesa llvmpipe (#3250) and was
@@ -569,7 +577,8 @@ jobs:
             "Tests/RaylibGum.Tests/bin/Release/net8.0",
             "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
             "Tests/Gum.Cli.Tests/bin/Release/net8.0",
-            "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0"
+            "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0",
+            "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0"
           )
           foreach ($dest in $dests) {
             Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
@@ -625,6 +634,16 @@ jobs:
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/MonoGameGum.IntegrationTests" --configuration Release --no-build --filter "RequiresOpenGlShaderCompiler!=true" --logger "trx" --results-directory "TestResults"
+
+      # Apos.Shapes-backed shape runtimes, on the same Mesa llvmpipe DLLs copied above (#4198,
+      # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
+      # above, though verification showed every test here mocks out GraphicsDevice entirely.
+      - name: "MonoGameGum.Shapes.Tests (Windows, #4198)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/MonoGameGum.Shapes.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
         if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
