@@ -4,6 +4,7 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
+using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -180,8 +181,19 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         };
     }
 
-    private void HandleKeyDown(object? sender, KeyEventArgs e)
+    internal void HandleKeyDown(object? sender, KeyEventArgs e)
     {
+        // This control is hosted via WindowsFormsHost, so it never sees MainWindow's WPF
+        // PreviewKeyDown tunnel - forward app-wide hotkeys (Undo/Redo/etc.) directly here, the
+        // same way WireframeControl.HandleKeyDown does for the wireframe canvas. Entire-app zoom
+        // stays disabled because Ctrl+=/Ctrl+- already zoom this control's own camera below.
+        var keyArgs = e.ToGumKeyEventArgs();
+        if (_hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: false))
+        {
+            e.Handled = keyArgs.Handled;
+            return;
+        }
+
         var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
         if (_hotkeyManager.MoveCameraRight.IsPressed(e))
         {
