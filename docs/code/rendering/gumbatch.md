@@ -274,21 +274,4 @@ For a runnable example, see the `RenderTarget` screen in the Gum immediate-mode 
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumImmediateMode" %}
 
-Note that if you are rendering multiple objects on a render target, the BlendState must be set as to add the transparency. Using the default BlendState may result in alpha being "removed" from the render target when new instances are drawn.
-
-The following shows how to create a BlendState for objects which have partial transparency and are to be drawn on RenderTargets:
-
-```csharp
-// Initialize
-var blendState = new BlendState();
-
-blendState.ColorSourceBlend = BlendState.NonPremultiplied.ColorSourceBlend;
-blendState.ColorDestinationBlend = BlendState.NonPremultiplied.ColorDestinationBlend;
-blendState.ColorBlendFunction = BlendState.NonPremultiplied.ColorBlendFunction;
-
-blendState.AlphaSourceBlend = Blend.SourceAlpha;
-blendState.AlphaDestinationBlend = Blend.DestinationAlpha;
-blendState.AlphaBlendFunction = BlendFunction.Add;
-
-halfTransparentRectangle.BlendState = blendState;
-```
+If you are rendering multiple translucent objects onto the render target, see [Render Targets](render-targets.md) for the `BlendState` needed to accumulate alpha correctly (the default `BlendState` can "remove" alpha from the render target when new instances are drawn on top of existing content). That page also covers the equivalent raylib pattern.
