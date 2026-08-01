@@ -8,6 +8,7 @@ using RenderingLibrary;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Gum.ProjectServices.MonoGame;
 
@@ -94,9 +95,13 @@ public class MonoGameScreenshotService : IScreenshotService
                 element.AddToManagers(SystemManagers.Default);
                 element.UpdateLayout();
 
+                Color clearColor = _request.BackgroundColor is { } background
+                    ? new Color(background.R, background.G, background.B, background.A)
+                    : Color.Transparent;
+
                 using var renderTarget = new RenderTarget2D(GraphicsDevice, width, height);
                 GraphicsDevice.SetRenderTarget(renderTarget);
-                GraphicsDevice.Clear(Color.Transparent);
+                GraphicsDevice.Clear(clearColor);
 
                 gumService.Draw();
 
@@ -110,7 +115,25 @@ public class MonoGameScreenshotService : IScreenshotService
                 }
 
                 using var stream = File.OpenWrite(outputPath);
-                renderTarget.SaveAsPng(stream, width, height);
+
+                if (_request.BackgroundColor.HasValue)
+                {
+                    // Translucent content blended onto the opaque clear color above does not
+                    // itself flatten the render target's own alpha channel back to 255 - force it
+                    // so the exported PNG is genuinely opaque, not just visually opaque against
+                    // the background it happened to be rendered with.
+                    Color[] pixels = new Color[width * height];
+                    renderTarget.GetData(pixels);
+                    ScreenshotAlphaFlattener.FlattenToOpaque(MemoryMarshal.AsBytes(pixels.AsSpan()));
+
+                    using var flattenedTexture = new Texture2D(GraphicsDevice, width, height);
+                    flattenedTexture.SetData(pixels);
+                    flattenedTexture.SaveAsPng(stream, width, height);
+                }
+                else
+                {
+                    renderTarget.SaveAsPng(stream, width, height);
+                }
 
                 Result = ScreenshotResult.Succeeded(outputPath);
             }

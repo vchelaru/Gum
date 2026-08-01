@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Shouldly;
+using SkiaSharp;
 
 namespace Gum.Cli.Tests;
 
@@ -53,6 +54,46 @@ public class ScreenshotCommandTests : IDisposable
 
         result.ExitCode.ShouldBe(2);
         result.StandardError.ShouldContain("Unknown backend");
+    }
+
+    // Windows-only for the same reason as Screenshot_WithRaylibBackend_WritesPngFile above:
+    // raylib's window creation hangs on macOS CI (GLFW/Cocoa main-thread requirement, #3233).
+    [Fact]
+    public void Screenshot_WithBackgroundOption_RendersOpaqueBackgroundColor()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string projectPath = CreateProjectWithScreen();
+        string outputPath = Path.Combine(_tempDirectory, "Screen.png");
+
+        CliTestHelper result = CliTestHelper.Run(
+            "screenshot", projectPath, "Screen", "--output", outputPath,
+            "--backend", "raylib", "--background", "1E2A38");
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+
+        // The Screen has no content, so every pixel is the clear color.
+        using SKBitmap bitmap = SKBitmap.Decode(outputPath);
+        SKColor pixel = bitmap.GetPixel(0, 0);
+        pixel.Red.ShouldBe((byte)0x1E);
+        pixel.Green.ShouldBe((byte)0x2A);
+        pixel.Blue.ShouldBe((byte)0x38);
+        pixel.Alpha.ShouldBe((byte)255);
+    }
+
+    [Fact]
+    public void Screenshot_WithInvalidBackgroundOption_ReturnsExitCode2()
+    {
+        string projectPath = CreateProjectWithScreen();
+
+        CliTestHelper result = CliTestHelper.Run(
+            "screenshot", projectPath, "Screen", "--background", "notacolor");
+
+        result.ExitCode.ShouldBe(2);
+        result.StandardError.ShouldContain("Invalid --background value");
     }
 
     private string CreateProjectWithScreen()

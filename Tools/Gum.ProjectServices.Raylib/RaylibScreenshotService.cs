@@ -72,11 +72,15 @@ public class RaylibScreenshotService : IScreenshotService
             element.AddToManagers(SystemManagers.Default);
             element.UpdateLayout();
 
+            Color clearColor = request.BackgroundColor is { } background
+                ? new Color(background.R, background.G, background.B, background.A)
+                : new Color((byte)0, (byte)0, (byte)0, (byte)0);
+
             RenderTexture2D renderTexture = Raylib_cs.Raylib.LoadRenderTexture(width, height);
             try
             {
                 Raylib_cs.Raylib.BeginTextureMode(renderTexture);
-                Raylib_cs.Raylib.ClearBackground(new Color((byte)0, (byte)0, (byte)0, (byte)0));
+                Raylib_cs.Raylib.ClearBackground(clearColor);
                 gumService.Draw();
                 Raylib_cs.Raylib.EndTextureMode();
 
@@ -86,6 +90,19 @@ public class RaylibScreenshotService : IScreenshotService
                     // Render textures are stored bottom-up in GL; flip so the exported PNG reads
                     // right-side-up like any other screenshot.
                     Raylib_cs.Raylib.ImageFlipVertical(ref image);
+
+                    if (request.BackgroundColor.HasValue)
+                    {
+                        // Translucent content blended onto the opaque clear color above does not
+                        // itself flatten the render target's own alpha channel back to 255 - force
+                        // it so the exported PNG is genuinely opaque, not just visually opaque
+                        // against the background it happened to be rendered with.
+                        unsafe
+                        {
+                            var pixelBytes = new Span<byte>((void*)image.Data, image.Width * image.Height * 4);
+                            ScreenshotAlphaFlattener.FlattenToOpaque(pixelBytes);
+                        }
+                    }
 
                     string outputPath = Path.GetFullPath(request.OutputPath);
                     string? outputDir = Path.GetDirectoryName(outputPath);

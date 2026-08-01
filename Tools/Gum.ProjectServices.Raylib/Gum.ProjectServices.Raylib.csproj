@@ -4,6 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>12.0</LangVersion>
+    <!-- RaylibScreenshotService flattens Image.Data's alpha channel in place when a screenshot
+         background color is requested (#4172); raylib's Image only exposes its pixel buffer as
+         an unmanaged pointer. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

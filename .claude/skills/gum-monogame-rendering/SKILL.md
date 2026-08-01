@@ -5,7 +5,7 @@ description: Gum's MonoGame rendering pipeline — Renderer/SpriteBatchStack/Gum
 
 # Gum's MonoGame Rendering Pipeline
 
-This skill covers the XNA-family backends only (MonoGame / KNI / FNA). Skia, Raylib, and Sokol have their own renderers and don't go through this code.
+This skill covers the XNA-family backends only (MonoGame / KNI / FNA). Skia, Raylib, and Sokol have their own renderers and don't go through this code — for raylib's blend-mode/render-target pipeline see [gum-raylib-rendering](../gum-raylib-rendering/SKILL.md).
 
 ## Two Entry Paths into Renderer
 
