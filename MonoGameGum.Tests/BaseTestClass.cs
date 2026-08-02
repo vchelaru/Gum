@@ -74,6 +74,12 @@ public class BaseTestClass : IDisposable
             IsTriggeredOnRepeat = true
         });
 
+        // Empty is the true default (opt-in, unlike Tab/Click above) -- just clear, don't re-seed.
+        FrameworkElement.UpKeyCombos.Clear();
+        FrameworkElement.DownKeyCombos.Clear();
+        FrameworkElement.LeftKeyCombos.Clear();
+        FrameworkElement.RightKeyCombos.Clear();
+
         // just to remove any mocks:
         FrameworkElement.MainCursor = new Cursor(null);
 
