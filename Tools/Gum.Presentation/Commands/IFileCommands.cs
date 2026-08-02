@@ -17,6 +17,11 @@ public interface IFileCommands
     void DeleteDirectory(FilePath filePath);
 
     /// <summary>
+    /// Deletes everything inside <paramref name="directory"/> but leaves the directory itself in place.
+    /// </summary>
+    void ClearDirectoryContents(FilePath directory);
+
+    /// <summary>
     /// Moves a file to the recycle bin rather than permanently deleting it.
     /// Currently uses Microsoft.VisualBasic.FileIO (Windows-only). If Gum ever
     /// moves to a cross-platform UI, update the implementation here.

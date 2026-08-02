@@ -184,7 +184,7 @@ public class ProjectPropertiesChangeLogic
                                 wasAbleToDelete = false;
 
                                 string message =
-                                    "Attempted to delete font cache folder to re-create it with the new font range values " +
+                                    "Attempted to clear the font cache to re-create it with the new font range values " +
                                     $"but was unable to do so:\n\n{exception}";
                                 _dialogService.ShowMessage(message);
                             }
@@ -242,7 +242,7 @@ public class ProjectPropertiesChangeLogic
                 catch (System.IO.IOException exception)
                 {
                     _dialogService.ShowMessage(
-                        "Attempted to delete font cache folder to re-create it with the new font generator " +
+                        "Attempted to clear the font cache to re-create it with the new font generator " +
                         $"but was unable to do so:\n\n{exception}");
                     break;
                 }

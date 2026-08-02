@@ -498,6 +498,7 @@ public class ImportFromGumxViewModelTests
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false) => false;
         public void LoadProject(string fileName) { }
         public void DeleteDirectory(FilePath filePath) { }
+        public void ClearDirectoryContents(FilePath filePath) { }
         public void MoveToRecycleBin(FilePath filePath) { }
         public string[] GetFiles(string path) => Array.Empty<string>();
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => Array.Empty<string>();

@@ -89,6 +89,13 @@ public class FileWatchManager : IFileWatchManager
             var pathToAssign = filePathAsString.Substring(0, filePathAsString.Length - 1);
             try
             {
+                // The directory may not exist yet (e.g. FontCache/ before the first font has been
+                // generated) - create it rather than letting FileSystemWatcher throw (#4259).
+                if (!Directory.Exists(pathToAssign))
+                {
+                    Directory.CreateDirectory(pathToAssign);
+                }
+
                 fileWatcher.Path = pathToAssign;
                 fileWatcher.EnableRaisingEvents = true;
                 fileSystemWatchers.Add(fileWatcher);
