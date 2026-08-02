@@ -117,30 +117,44 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private void HandleProjectLoad(GumProjectSave obj)
     {
+        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("MainPropertiesWindowPlugin.HandleProjectLoad (total)");
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
-            control.ViewModel = null;
-            control.ViewModel = viewModel;
-            RefreshFontRangeEditability();
-            
-            if(viewModel.UseFontCharacterFile)
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  SetFrom + control.ViewModel assign"))
             {
-                var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
-                _fontCharacterFileAbsolute = absolute;
+                viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
+                control.ViewModel = null;
+                control.ViewModel = viewModel;
+            }
 
-                if(System.IO.File.Exists(absolute.FullPath))
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  RefreshFontRangeEditability"))
+            {
+                RefreshFontRangeEditability();
+            }
+
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  font character file ranges"))
+            {
+                if (viewModel.UseFontCharacterFile)
                 {
-                    var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
-                    viewModel.FontRanges = ranges;
+                    var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
+                    _fontCharacterFileAbsolute = absolute;
+
+                    if (System.IO.File.Exists(absolute.FullPath))
+                    {
+                        var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
+                        viewModel.FontRanges = ranges;
+                    }
+                }
+                else
+                {
+                    _fontCharacterFileAbsolute = null;
                 }
             }
-            else
-            {
-                _fontCharacterFileAbsolute = null;
-            }
 
-            _fileWatchLogic.RefreshRootDirectory();
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  _fileWatchLogic.RefreshRootDirectory (called from MainPropertiesWindowPlugin)"))
+            {
+                _fileWatchLogic.RefreshRootDirectory();
+            }
         }
     }
 
