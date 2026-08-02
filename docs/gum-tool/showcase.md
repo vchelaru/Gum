@@ -1,39 +1,67 @@
 # Showcase
 
-<figure><img src="../.gitbook/assets/GumDeadvivors.png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
+**Deadvivors**
 
-<figure><img src="../.gitbook/assets/GumDeadvivors2 (1).png" alt=""><figcaption><p>Deadvivors</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/GumDeadvivors.png" alt="Deadvivors" data-size="original"> | <img src="../.gitbook/assets/GumDeadvivors2 (1).png" alt="Deadvivors" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/09_05 59 24.png" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
+**Cranky Chibi Cthulhu**
 
-<figure><img src="../.gitbook/assets/09_06 00 05.jpg" alt=""><figcaption><p>Cranky Chibi Cthulhu</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/09_05 59 24.png" alt="Cranky Chibi Cthulhu" data-size="original"> | <img src="../.gitbook/assets/09_06 00 05.jpg" alt="Cranky Chibi Cthulhu" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/TerraScriber3.avif" alt=""><figcaption><p>TerraScriber</p></figcaption></figure>
+**TerraScriber**
 
-<figure><img src="../.gitbook/assets/TerraScriber4.avif" alt=""><figcaption><p>TerraScriber</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/TerraScriber3.avif" alt="TerraScriber" data-size="original"> | <img src="../.gitbook/assets/TerraScriber4.avif" alt="TerraScriber" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/Legends1.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
+**Champions of Anteria**
 
-<figure><img src="../.gitbook/assets/Legends2.jpg" alt=""><figcaption><p>Champions of Anteria</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/Legends1.jpg" alt="Champions of Anteria" data-size="original"> | <img src="../.gitbook/assets/Legends2.jpg" alt="Champions of Anteria" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/Blitz1.png" alt=""><figcaption><p>Tetris Blitz</p></figcaption></figure>
+**Tetris Blitz**
 
-<figure><img src="../.gitbook/assets/Blitz2.png" alt=""><figcaption><p>Tetris Blitz</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/Blitz1.png" alt="Tetris Blitz" data-size="original"> | <img src="../.gitbook/assets/Blitz2.png" alt="Tetris Blitz" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/OldApp2.jpeg" alt=""><figcaption><p>Tula Mobile App</p></figcaption></figure>
+**Tula Mobile App**
 
-<figure><img src="../.gitbook/assets/OldApp1.jpeg" alt=""><figcaption><p>Tula Mobile App</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/OldApp2.jpeg" alt="Tula Mobile App" data-size="original"> | <img src="../.gitbook/assets/OldApp1.jpeg" alt="Tula Mobile App" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/screenshot26.png" alt=""><figcaption><p>Catnip Coast</p></figcaption></figure>
+**Catnip Coast**
 
-<figure><img src="../.gitbook/assets/WH5.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/screenshot26.png" alt="Catnip Coast" data-size="original"> |  |
 
-<figure><img src="../.gitbook/assets/WH2.png" alt=""><figcaption><p>War Haven</p></figcaption></figure>
+**War Haven**
 
-<figure><img src="../.gitbook/assets/09_05 45 50.png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/WH5.png" alt="War Haven" data-size="original"> | <img src="../.gitbook/assets/WH2.png" alt="War Haven" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/image (1) (2).png" alt=""><figcaption><p>BattleCrypt Bombers</p></figcaption></figure>
+**BattleCrypt Bombers**
 
-<figure><img src="../.gitbook/assets/09_05 48 04.png" alt=""><figcaption><p>Teotihuacan</p></figcaption></figure>
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/09_05 45 50.png" alt="BattleCrypt Bombers" data-size="original"> | <img src="../.gitbook/assets/image (1) (2).png" alt="BattleCrypt Bombers" data-size="original"> |
 
-<figure><img src="../.gitbook/assets/09_05 49 15.png" alt=""><figcaption><p>Ship Skwabble</p></figcaption></figure>
+**Teotihuacan**
+
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/09_05 48 04.png" alt="Teotihuacan" data-size="original"> |  |
+
+**Ship Skwabble**
+
+|  |  |
+| :---: | :---: |
+| <img src="../.gitbook/assets/09_05 49 15.png" alt="Ship Skwabble" data-size="original"> |  |
