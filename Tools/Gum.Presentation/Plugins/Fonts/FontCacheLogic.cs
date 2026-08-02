@@ -31,8 +31,11 @@ public class FontCacheLogic
     /// <summary>
     /// Creates any missing font files for the just-loaded project.
     /// </summary>
-    public Task CreateMissingFontFilesForLoadedProject() =>
-        _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+    public async Task CreateMissingFontFilesForLoadedProject()
+    {
+        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("FontCacheLogic.CreateMissingFontFilesForLoadedProject (total)");
+        await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+    }
 
     /// <summary>
     /// Returns the font cache folder path, creating it first if it doesn't already exist.

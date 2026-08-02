@@ -31,6 +31,8 @@ public class FileWatchLogic
 
     public void HandleProjectLoaded()
     {
+        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("FileWatchLogic.HandleProjectLoaded (total, called from MainFileWatchPlugin)");
+
         // On a project load we always clear ignored files, but if the project
         // is null then we also clear ignored files - see RefreshRootDirectory()
         _fileWatchManager.ClearIgnoredFiles();
@@ -40,11 +42,21 @@ public class FileWatchLogic
 
     public void RefreshRootDirectory()
     {
+        Gum.Diagnostics.ProjectLoadDiagnostics.Log("FileWatchLogic.RefreshRootDirectory called");
+        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("FileWatchLogic.RefreshRootDirectory (total)");
 
         if (_projectManager.GumProjectSave?.FullFileName != null)
         {
-            var directories = GetFileWatchRootDirectories();
-            _fileWatchManager.EnableWithDirectories(directories);
+            HashSet<FilePath> directories;
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  GetFileWatchRootDirectories"))
+            {
+                directories = GetFileWatchRootDirectories();
+            }
+
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  EnableWithDirectories (create FileSystemWatchers)"))
+            {
+                _fileWatchManager.EnableWithDirectories(directories);
+            }
         }
         else
         {
@@ -63,6 +75,7 @@ public class FileWatchLogic
         IEnumerable<string> filesReferenced;
         try
         {
+            using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("    ObjectFinder.GetAllFilesInProject");
             filesReferenced = ObjectFinder.Self.GetAllFilesInProject();
         }
         catch (Exception e)

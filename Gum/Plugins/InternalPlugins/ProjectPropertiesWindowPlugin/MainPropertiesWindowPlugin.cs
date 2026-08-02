@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using Gum.Commands;
-using Gum.Logic.FileWatch;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -40,7 +39,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly FileWatchLogic _fileWatchLogic;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
@@ -58,7 +56,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         IDialogService dialogService,
         IDispatcher dispatcher,
         IWireframeObjectManager wireframeObjectManager,
-        FileWatchLogic fileWatchLogic,
         IProjectState projectState,
         IPluginManager pluginManager,
         IProjectManager projectManager,
@@ -69,7 +66,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         _dialogService = dialogService;
         _dispatcher = dispatcher;
         _wireframeObjectManager = wireframeObjectManager;
-        _fileWatchLogic = fileWatchLogic;
         _projectState = projectState;
         _pluginManager = pluginManager;
         _projectManager = projectManager;
@@ -117,30 +113,39 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private void HandleProjectLoad(GumProjectSave obj)
     {
+        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("MainPropertiesWindowPlugin.HandleProjectLoad (total)");
         if (control != null && viewModel != null)
         {
-            viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
-            control.ViewModel = null;
-            control.ViewModel = viewModel;
-            RefreshFontRangeEditability();
-            
-            if(viewModel.UseFontCharacterFile)
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  SetFrom + control.ViewModel assign"))
             {
-                var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
-                _fontCharacterFileAbsolute = absolute;
+                viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
+                control.ViewModel = null;
+                control.ViewModel = viewModel;
+            }
 
-                if(System.IO.File.Exists(absolute.FullPath))
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  RefreshFontRangeEditability"))
+            {
+                RefreshFontRangeEditability();
+            }
+
+            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  font character file ranges"))
+            {
+                if (viewModel.UseFontCharacterFile)
                 {
-                    var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
-                    viewModel.FontRanges = ranges;
+                    var absolute = new FilePath(_projectState.ProjectDirectory + ".gumfcs");
+                    _fontCharacterFileAbsolute = absolute;
+
+                    if (System.IO.File.Exists(absolute.FullPath))
+                    {
+                        var ranges = BmfcSave.GenerateRangesFromFile(absolute.FullPath);
+                        viewModel.FontRanges = ranges;
+                    }
+                }
+                else
+                {
+                    _fontCharacterFileAbsolute = null;
                 }
             }
-            else
-            {
-                _fontCharacterFileAbsolute = null;
-            }
-
-            _fileWatchLogic.RefreshRootDirectory();
         }
     }
 

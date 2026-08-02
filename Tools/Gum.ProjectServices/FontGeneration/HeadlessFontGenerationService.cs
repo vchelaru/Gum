@@ -282,7 +282,14 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
         string projectDirectory, bool forceRecreate)
     {
-        Dictionary<string, BmfcSave> bitmapFonts = CollectRequiredFonts(project, elements);
+        using var totalScope = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("HeadlessFontGenerationService.GenerateMissingFontsFor (total)");
+
+        Dictionary<string, BmfcSave> bitmapFonts;
+        using (Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("  CollectRequiredFonts"))
+        {
+            bitmapFonts = CollectRequiredFonts(project, elements);
+        }
+        Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Log($"  CollectRequiredFonts found {bitmapFonts.Count} fonts");
 
         // Resolve relative FontFile paths to absolute so font generators can find them.
         // FontFile is stored relative to the project directory, but generators resolve
@@ -333,6 +340,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         try
         {
+            using var _ = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("  Task.WhenAll(per-font generation)");
             await Task.WhenAll(tasks);
         }
         finally
@@ -399,6 +407,8 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             if (!desiredFntFile.Exists() || shadowSiblingMissing || force)
             {
+                using var _ = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time($"    generate {desiredFntFile.FileNameNoPath}");
+
                 if (showSpinner)
                 {
                     spinner = _callbacks.ShowSpinner();
@@ -422,6 +432,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
                 toReturn.Succeeded = generateResponse.Succeeded;
                 toReturn.Message = generateResponse.Message;
+            }
+            else
+            {
+                Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Log($"    skip {desiredFntFile.FileNameNoPath} (already exists)");
             }
         }
         finally
