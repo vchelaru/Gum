@@ -16,15 +16,32 @@ namespace GumToolUnitTests.Commands;
 /// </summary>
 public class GuiCommandsTests
 {
-    private static GuiCommands CreateSut(ISpinnerFactory spinnerFactory)
+    private static GuiCommands CreateSut(ISpinnerFactory spinnerFactory, IDispatcher? dispatcher = null)
     {
         return new GuiCommands(
             new Lazy<ISelectedState>(() => new Mock<ISelectedState>().Object),
-            new Mock<IDispatcher>().Object,
+            dispatcher ?? new Mock<IDispatcher>().Object,
             new Mock<IOutputManager>().Object,
             new Lazy<PropertyGridManager>(() => throw new InvalidOperationException("Not needed by this test.")),
             new Mock<IPluginManager>().Object,
             spinnerFactory);
+    }
+
+    /// <summary>
+    /// Its only caller (ToolFontGenerationCallbacks.SpinnerHandle.Dispose) runs on whichever
+    /// thread a background Task continuation happens to resume on after font generation, not
+    /// necessarily the UI thread - calling Application.Current.MainWindow/Activate() inline
+    /// crashed with a Dispatcher cross-thread-access exception (#4253).
+    /// </summary>
+    [Fact]
+    public void ActivateMainWindow_PostsWorkToDispatcher_InsteadOfRunningInline()
+    {
+        Mock<IDispatcher> dispatcher = new Mock<IDispatcher>();
+        GuiCommands sut = CreateSut(new Mock<ISpinnerFactory>().Object, dispatcher.Object);
+
+        sut.ActivateMainWindow();
+
+        dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
     }
 
     [Fact]
