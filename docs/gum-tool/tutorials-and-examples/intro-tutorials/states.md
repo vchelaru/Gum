@@ -59,16 +59,16 @@ Although this might seem like a simple change, a lot has happened in response to
 
 First, by changing the `Fill Color` value on the Medium state, we have set every state to explicitly set its color. We can see this by noticing that every state now has an edited icon.
 
-<figure><img src="../../../.gitbook/assets/30_06 37 28.png" alt=""><figcaption><p>Edited Icon on State</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 41 09.png" alt=""><figcaption><p>Edited Icon on State</p></figcaption></figure>
 
 This tells us that the Fill instance is modified by every state in the `HealthCategory`. Even the High and Low states, which haven't been modified, are now explicitly setting the color to the default green.
 
 {% hint style="warning" %}
 Be careful when editing objects with multiple states. You may end up making changes without realizing that you are doing so in the wrong state.
 
-Whenever you have a non-Default state selected, Gum displays a label telling you which state you are editing.\
-\
-![](<../../../.gitbook/assets/30_06 39 15.png>)
+Whenever you have a non-Default state selected, Gum displays a label telling you which state you are editing.<br>
+
+<img src="../../../.gitbook/assets/02_10 41 46.png" alt="" data-size="original">
 
 Any unintentional change can be undone by pressing CTRL+Z
 {% endhint %}
@@ -81,13 +81,13 @@ We can modify the Low state to be a red color:
 
 Now we can select any state and see what our state looks like immediately.
 
-<figure><img src="../../../.gitbook/assets/30_06 42 09.gif" alt=""><figcaption><p>States previewed in the Gum tool</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 42 42.gif" alt=""><figcaption><p>States previewed in the Gum tool</p></figcaption></figure>
 
 ## States and Instances
 
 Now that we have added a new category to our HealthBar component, we can assign per-instance.
 
-<figure><img src="../../../.gitbook/assets/30_06 44 01.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 43 51.png" alt=""><figcaption></figcaption></figure>
 
 Notice that the `Health Category State` variable is independent of `Health Percent`. Although the two are conceptually connected, Gum considers these to be two unrelated variables which can be adjusted individually. These variables would typically be connected in code in a game.
 

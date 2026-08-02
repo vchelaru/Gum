@@ -55,13 +55,13 @@ Now we can add states to the categories. To do this:
 
 Now that we have states set up we need to add a visual element to the component so that we can see our changes.
 
-To do this, select the **Default** state and drag+drop a ColoredRectangle into your component
+To do this, select the **Default** state and drag+drop a Rectangle into your component. Check its `Is Filled` variable, and set its Stroke Width to 0.
 
-![](<../../../.gitbook/assets/15_06 38 06.png>)
+![](<../../../.gitbook/assets/02_10 49 19.png>)
 
 ## Setting Variables in States
 
-To modify a state, you can select it and edit in the Editor tab or change properties in the Variables tab to modify what the state sets. Notice that normally for a component like this the ColoredRectangleInstance would have its width and height be relative to its container, but we're not doing this for the sake of keeping the tutorial shorter.
+To modify a state, you can select it and edit in the Editor tab or change properties in the Variables tab to modify what the state sets. Notice that normally for a component like this the RectangleInstance would have its width and height be relative to its container, but we're not doing this for the sake of keeping the tutorial shorter.
 
 First we'll set the Size states. To do this:
 
@@ -75,27 +75,29 @@ First we'll set the Size states. To do this:
 Next we'll set the Color states. To do this:
 
 1. Select the **Red** state
-2. Set the `Red`, `Green`, and `Blue` values to: `255`, `0`, `0`
+2. Set `Fill Color` to a red color
 3. Select the **Blue** state
-4. Set the `Red`, `Green`, `Blue` values to: `0`, `0`, `255`
+4. Set `Fill Color` to a blue color
 
-<figure><img src="../../../.gitbook/assets/15_06 42 34.gif" alt=""><figcaption><p>Red and Blue states with the correct color values</p></figcaption></figure>
+Your states now should reflect the colors set.
+
+<figure><img src="../../../.gitbook/assets/02_10 50 04.png" alt=""><figcaption><p>Red state with the correct color values</p></figcaption></figure>
 
 ## Viewing Multiple States on an Instance
 
 Now that we have our CategoryDemo component set up with multiple categories, we can view these states on any CategoryDemo instance. To do this:
 
-1. Create a Screen called "CategoryDemoScreen"
+1. Create a Screen called **CategoryDemoScreen**
 2. Drop an instance of the **CategoryDemo** component into the **CategoryDemoScreen**
 3. Select the newly-created **CategoryDemoInstance**
 4. Scroll down in the Variables list and notice that the instance has drop-downs for each category.
 5. You can set each state independently and the states combine
 
-![Combining states on an instance](<../../../.gitbook/assets/15_06 45 10.gif>)
+![Combining states on an instance](<../../../.gitbook/assets/02_10 55 22.gif>)
 
 We can revert the states back to their unset values by right-clicking on the state variable and selecting the **Make Default** item.
 
-<figure><img src="../../../.gitbook/assets/15_06 47 19.gif" alt=""><figcaption><p>States can be made default through the right-click make Default item</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 56 07.gif" alt=""><figcaption><p>States can be made default through the right-click make Default item</p></figcaption></figure>
 
 ### Categories and Variables
 
@@ -103,7 +105,7 @@ If a variable is modified in one of the states in a category, then all of the st
 
 For example, consider a component which has:
 
-* A single ColoredRectangle
+* A single Rectangle
 * A category called RectangleSizeCategory
 * States called Big, Medium, and Small
 
@@ -113,7 +115,7 @@ Initially, all states in a category do not explicitly assign any variables. We c
 
 If a variable is changed in one of the states in the category, then that variable propagates to all other states, and the Category lists this as one of the variables that it modifies.
 
-For example, we can select the Big category and change the ColoredRectangle.Width property to 150.
+For example, we can select the Big category and change the Rectangle.Width property to 150.
 
 <figure><img src="../../../.gitbook/assets/ColoredRectangleBigStateWidth.png" alt=""><figcaption><p>Setting ColoredRectangleInstance Width to 150</p></figcaption></figure>
 
