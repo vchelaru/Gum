@@ -4,6 +4,7 @@ using Gum.Managers;
 using Gum.ProjectServices.FontGeneration;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -913,6 +914,67 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
+    // Failure cooldown cache (#4254)
+    // -------------------------------------------------------------------------
+
+    #region Failure cooldown cache
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldNotRetryGeneration_WhenPreviousAttemptFailedWithinCooldown()
+    {
+        ControllableFontFileGenerator generator = new() { ShouldFail = true };
+        HeadlessFontGenerationService service = new(generator);
+
+        BmfcSave bmfcSave = new() { FontName = "Nunito-Regular", FontSize = 14 };
+
+        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+        GeneralResponse second = service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        generator.GenerateFontCallCount.ShouldBe(1);
+        second.Succeeded.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CreateFontIfNecessary_ShouldRetryGeneration_WhenCooldownHasElapsed()
+    {
+        ControllableFontFileGenerator generator = new() { ShouldFail = true };
+        TestableHeadlessFontGenerationService service = new(generator);
+
+        BmfcSave bmfcSave = new() { FontName = "Nunito-Regular", FontSize = 14 };
+
+        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+        service.UtcNowOverride += TestableHeadlessFontGenerationService.FailureCooldownForTests + TimeSpan.FromSeconds(1);
+        service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        generator.GenerateFontCallCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldBypassCooldown_WhenForceRecreateRequested()
+    {
+        ControllableFontFileGenerator generator = new() { ShouldFail = true };
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        await service.CreateAllMissingFontFiles(Project, "/tmp/test", forceRecreate: false);
+        int callsAfterFirstPass = generator.GenerateFontCallCount;
+
+        // A second, non-forced pass would be suppressed by the cooldown for every font that
+        // just failed. forceRecreate: true must bypass that and regenerate everything again —
+        // i.e. add exactly as many calls as the first pass made, not zero.
+        await service.CreateAllMissingFontFiles(Project, "/tmp/test", forceRecreate: true);
+
+        (generator.GenerateFontCallCount - callsAfterFirstPass).ShouldBe(callsAfterFirstPass);
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
     // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
@@ -953,5 +1015,40 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
             GeneralResponse response = GeneralResponse.SuccessfulResponse;
             return Task.FromResult(response);
         }
+    }
+
+    /// <summary>
+    /// A font file generator whose success/failure and call count are controllable, for
+    /// exercising the failure-cooldown cache (#4254).
+    /// </summary>
+    private sealed class ControllableFontFileGenerator : IFontFileGenerator
+    {
+        public bool RequiresSizeEstimation { get; init; } = false;
+        public bool ShouldFail { get; init; }
+        public int GenerateFontCallCount { get; private set; }
+
+        public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+        {
+            GenerateFontCallCount++;
+            GeneralResponse response = ShouldFail
+                ? GeneralResponse.UnsuccessfulWith("Simulated failure")
+                : GeneralResponse.SuccessfulResponse;
+            return Task.FromResult(response);
+        }
+    }
+
+    /// <summary>
+    /// Exposes a settable clock so the failure cooldown can be advanced without a real wait.
+    /// </summary>
+    private sealed class TestableHeadlessFontGenerationService : HeadlessFontGenerationService
+    {
+        public static readonly TimeSpan FailureCooldownForTests = FailureCooldown;
+
+        public TimeSpan UtcNowOverride = TimeSpan.Zero;
+
+        public TestableHeadlessFontGenerationService(IFontFileGenerator fontFileGenerator)
+            : base(fontFileGenerator) { }
+
+        internal override DateTime UtcNow => base.UtcNow + UtcNowOverride;
     }
 }

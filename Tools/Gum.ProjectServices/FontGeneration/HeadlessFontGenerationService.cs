@@ -4,6 +4,7 @@ using Gum.DataTypes.Variables;
 using Gum.Managers;
 using RenderingLibrary.Graphics.Fonts;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -37,6 +38,23 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
     private readonly IFontFileGenerator _fontFileGenerator;
     private readonly IFontGenerationCallbacks _callbacks;
+
+    /// <summary>
+    /// How long a failed generation attempt is remembered before the next request for the same
+    /// font (by <see cref="BmfcSave.FontCacheFileName"/>) is allowed to retry for real. Without
+    /// this, a single bad font reference (missing file, unresolvable system font) turns into a
+    /// full generation attempt — and exception/log line — per state/instance that references it
+    /// (#4254). A cooldown rather than a session-sticky cache lets an external fix (e.g. installing
+    /// a missing font) self-heal without requiring a project reload.
+    /// </summary>
+    internal static readonly TimeSpan FailureCooldown = TimeSpan.FromSeconds(30);
+
+    private readonly ConcurrentDictionary<string, DateTime> _recentFailures = new();
+
+    /// <summary>
+    /// Test seam — overridden by a test subclass to advance the clock without a real wait.
+    /// </summary>
+    internal virtual DateTime UtcNow => DateTime.UtcNow;
 
     /// <summary>
     /// Initializes a new instance of <see cref="HeadlessFontGenerationService"/>.
@@ -359,6 +377,15 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
         bool createTask, string projectDirectory, bool iterativelyDetermineSize)
     {
+        string cacheKey = bmfcSave.FontCacheFileName;
+
+        if (!force && _recentFailures.TryGetValue(cacheKey, out DateTime failedAt)
+            && UtcNow - failedAt < FailureCooldown)
+        {
+            return GeneralResponse.UnsuccessfulWith(
+                $"Skipping retry for font {bmfcSave.FontName} size {bmfcSave.FontSize} — a previous attempt failed recently.");
+        }
+
         if ((force || GetFilePath(bmfcSave, destinationDirectory: null, projectDirectory).Exists() == false)
             && _fontFileGenerator.RequiresSizeEstimation)
         {
@@ -371,6 +398,8 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         if (response.Succeeded == false)
         {
+            _recentFailures[cacheKey] = UtcNow;
+
             string prefix = "Error creating font " + bmfcSave.FontName + " size " + bmfcSave.FontSize + ". ";
 
             if (!string.IsNullOrEmpty(response.Message))
@@ -381,6 +410,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
             {
                 _callbacks.OnOutput($"{prefix}Unknown error.");
             }
+        }
+        else
+        {
+            _recentFailures.TryRemove(cacheKey, out _);
         }
 
         return response;
