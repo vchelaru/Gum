@@ -63,4 +63,55 @@ public class ElementTreeViewManagerSelectionTests : BaseTestClass
 
         result.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void ResolveNodeToSelect_NodeAttachedToTree_ReturnsSameNode()
+    {
+        GumTreeNodeCollection rootNodes = new GumTreeNodeCollection();
+        GumTreeNode attached = new GumTreeNode { Tag = new InstanceSave() };
+        rootNodes.Add(attached);
+
+        GumTreeNode? result = ElementTreeViewManager.ResolveNodeToSelect(attached, rootNodes);
+
+        result.ShouldBeSameAs(attached);
+    }
+
+    [Fact]
+    public void ResolveNodeToSelect_NodeDetachedFromTree_ReturnsNull()
+    {
+        // Issue #4267: editing a standard's defaults (via the Standards palette) left the
+        // previously-selected instance's node highlighted in the tree. The standard element's
+        // node isn't attached to the tree (the palette is a separate control), and selection
+        // used to bail out entirely on a detached node instead of clearing the old selection.
+        GumTreeNodeCollection rootNodes = new GumTreeNodeCollection();
+        GumTreeNode detached = new GumTreeNode { Tag = new StandardElementSave() };
+
+        GumTreeNode? result = ElementTreeViewManager.ResolveNodeToSelect(detached, rootNodes);
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ResolveNodeToSelect_NodeNestedUnderAttachedRoot_ReturnsSameNode()
+    {
+        GumTreeNodeCollection rootNodes = new GumTreeNodeCollection();
+        GumTreeNode root = new GumTreeNode { Tag = new InstanceSave { Name = "Root" } };
+        rootNodes.Add(root);
+        GumTreeNode child = new GumTreeNode { Tag = new InstanceSave { Name = "Child" } };
+        root.AddChild(child);
+
+        GumTreeNode? result = ElementTreeViewManager.ResolveNodeToSelect(child, rootNodes);
+
+        result.ShouldBeSameAs(child);
+    }
+
+    [Fact]
+    public void ResolveNodeToSelect_NullNode_ReturnsNull()
+    {
+        GumTreeNodeCollection rootNodes = new GumTreeNodeCollection();
+
+        GumTreeNode? result = ElementTreeViewManager.ResolveNodeToSelect(null, rootNodes);
+
+        result.ShouldBeNull();
+    }
 }
