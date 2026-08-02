@@ -23,6 +23,29 @@ public class GumProjectDependencyWalkerTests : IDisposable
     }
 
     [Fact]
+    public void Walk_disables_ObjectFinder_cache_after_completing_so_later_additions_are_visible()
+    {
+        // Walk() enables ObjectFinder's cache internally (#4251) to avoid an O(n) linear scan per
+        // instance lookup. If it left the cache enabled afterward, a component added to the project
+        // post-Walk would be invisible to GetElementSave, since it would still be resolving against
+        // the stale pre-addition snapshot.
+        ComponentSave button = TestProjectBuilder.BuildComponent("Button");
+        GumProjectSave project = TestProjectBuilder.BuildProject(components: new[] { button });
+        string root = CreateProjectRoot(new[]
+        {
+            ("Components/Button.gucx", EmptyContent),
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core);
+
+        ComponentSave panel = TestProjectBuilder.BuildComponent("Panel");
+        project.Components.Add(panel);
+
+        ObjectFinder.Self.GetElementSave("Panel").ShouldBe(panel);
+    }
+
+    [Fact]
     public void Walk_does_not_duplicate_files_referenced_by_multiple_components()
     {
         const string sharedTexture = "Textures/shared.png";
