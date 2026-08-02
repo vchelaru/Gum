@@ -41,6 +41,19 @@ public class ProjectCreatorTests : IDisposable
     }
 
     [Fact]
+    public void Create_ShouldCreateFontCacheFolder()
+    {
+        // FontCache/ should exist as soon as the project is created, even before any font has
+        // been generated - otherwise the file watcher errors trying to watch a folder that
+        // doesn't exist yet on a freshly-created project (#4259).
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        Directory.Exists(Path.Combine(_tempDirectory, "FontCache")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void Create_ShouldProduceLoadableProject()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");

@@ -13,7 +13,10 @@ public class ProjectCreator : IProjectCreator
         "Screens",
         "Components",
         "Standards",
-        "Behaviors"
+        "Behaviors",
+        // Created up front (rather than lazily on first font generation) so the file watcher
+        // never has to watch a directory that doesn't exist yet on a freshly-created project (#4259).
+        "FontCache"
     };
 
     // ColoredRectangle is intentionally omitted: the v3 Rectangle carries the full

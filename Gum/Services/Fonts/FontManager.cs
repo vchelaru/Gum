@@ -35,11 +35,12 @@ public class FontManager : IFontManager
     }
 
     /// <summary>
-    /// Deletes the font cache folder for the current project.
+    /// Clears the font cache for the current project. The folder itself is left in place (rather
+    /// than deleted and later re-created) so it can always be watched from project load onward (#4259).
     /// </summary>
     public void DeleteFontCacheFolder()
     {
-        _fileCommands.DeleteDirectory(AbsoluteFontCacheFolder);
+        _fileCommands.ClearDirectoryContents(AbsoluteFontCacheFolder);
     }
 
     /// <summary>

@@ -99,6 +99,21 @@ public class FontManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void DeleteFontCacheFolder_ShouldClearContents_ButKeepFolderItself()
+    {
+        // The FontCache folder should always exist (#4259) so it can be watched from project load
+        // onward - clearing the cache must not delete the folder itself, only its contents.
+        string expectedFontCacheFolder = new FilePath(_fontManager.AbsoluteFontCacheFolder).FullPath;
+
+        _fontManager.DeleteFontCacheFolder();
+
+        _fileCommandsMock.Verify(f => f.ClearDirectoryContents(
+            It.Is<FilePath>(p => p.FullPath == expectedFontCacheFolder)),
+            Times.Once);
+        _fileCommandsMock.Verify(f => f.DeleteDirectory(It.IsAny<FilePath>()), Times.Never);
+    }
+
+    [Fact]
     public void GenerateMissingFontsForReferencingElements_ShouldDelegateToHeadlessService()
     {
         GumProjectSave gumProject = new GumProjectSave();

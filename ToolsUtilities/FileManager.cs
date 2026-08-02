@@ -1001,12 +1001,24 @@ namespace ToolsUtilities
 
         public static void DeleteDirectory(string dir)
         {
+            if (!System.IO.Directory.Exists(dir)) return;
+
+            ClearDirectoryContents(dir);
+
+            System.IO.Directory.Delete(dir);
+        }
+
+        /// <summary>
+        /// Deletes everything inside <paramref name="dir"/> but leaves the directory itself in place.
+        /// </summary>
+        public static void ClearDirectoryContents(string dir)
+        {
             System.IO.DirectoryInfo info = new System.IO.DirectoryInfo(dir);
             if (!info.Exists) return;
 
             // Set the folder to NORMAL so it doesn't retain READONLY or ARCHIVE attributes
             // This happens because of OneDrive
-            // Shouldn't matter if we change the attributes, we're going to delete the folder anyways
+            // Shouldn't matter if we change the attributes, we're going to delete the contents anyways
             info.Attributes = FileAttributes.Normal;
 
             string[] files = System.IO.Directory.GetFiles(dir);
@@ -1020,9 +1032,6 @@ namespace ToolsUtilities
             {
                 DeleteDirectory(dirs[i]);
             }
-
-
-            System.IO.Directory.Delete(dir);
         }
 
         private static bool DeleteTargetFileIfExists(string targetFileName)

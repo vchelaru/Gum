@@ -25,7 +25,8 @@ public interface IFontManager : IRuntimeFontService
     string AbsoluteFontCacheFolder { get; }
 
     /// <summary>
-    /// Deletes the font cache folder for the current project.
+    /// Clears the font cache for the current project. The folder itself is left in place so it
+    /// can always be watched (#4259) - only its contents are deleted.
     /// </summary>
     void DeleteFontCacheFolder();
 

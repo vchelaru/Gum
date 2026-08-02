@@ -159,6 +159,27 @@ public class FileWatchManagerTests : IDisposable
     }
 
     [Fact]
+    public void EnableWithDirectories_ShouldCreateDirectory_WhenWatchedDirectoryDoesNotExistYet()
+    {
+        // Issue #4259: watching a directory that hasn't been created yet (e.g. FontCache/ before
+        // the first font is generated) used to throw and log a spurious error. The directory
+        // should simply be created so the watch can proceed.
+        string missingDirectory = Path.Combine(_tempDirectory, "FontCache");
+        FilePath watchedDirectory = new FilePath(missingDirectory + "/");
+        FileWatchManager sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out _,
+            out _,
+            watchedDirectory);
+
+        sut.EnableWithDirectories(new HashSet<FilePath> { watchedDirectory });
+
+        Directory.Exists(missingDirectory).ShouldBeTrue();
+        sut.Enabled.ShouldBeTrue();
+        guiCommandsMock.Verify(g => g.PrintOutput(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void IgnoreNextChangeUntil_ShouldSuppressQueuedChange_ForIgnoredFile()
     {
         FilePath watchedDirectory = new FilePath(_tempDirectory + "/");

@@ -104,6 +104,40 @@ public class FileManagerTests : IDisposable
     }
 
     [Fact]
+    public void ClearDirectoryContents_ShouldDeleteFilesAndSubdirectories_ButKeepDirectoryItself()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "GumClearDirectoryContentsTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string subDirectory = Path.Combine(root, "SubDirectory");
+        Directory.CreateDirectory(subDirectory);
+        File.WriteAllText(Path.Combine(root, "file.txt"), "contents");
+        File.WriteAllText(Path.Combine(subDirectory, "nested.txt"), "contents");
+
+        try
+        {
+            FileManager.ClearDirectoryContents(root);
+
+            Directory.Exists(root).ShouldBeTrue();
+            Directory.GetFileSystemEntries(root).ShouldBeEmpty();
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Fact]
+    public void ClearDirectoryContents_ShouldNotThrow_WhenDirectoryDoesNotExist()
+    {
+        string missingDirectory = Path.Combine(Path.GetTempPath(), "GumClearDirectoryContentsTests_Missing_" + Guid.NewGuid().ToString("N"));
+
+        Should.NotThrow(() => FileManager.ClearDirectoryContents(missingDirectory));
+    }
+
+    [Fact]
     public void GetMacOSBundleResourcesPath_ShouldResolveRealFile_WhenContentShippedInResources()
     {
         // Build a real .app directory layout in a temp dir: content physically in Resources, nothing

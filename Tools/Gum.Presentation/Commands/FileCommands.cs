@@ -68,6 +68,9 @@ public class FileCommands : IFileCommands
     public void DeleteDirectory(FilePath directory) =>
         FileManager.DeleteDirectory(directory.FullPath);
 
+    public void ClearDirectoryContents(FilePath directory) =>
+        FileManager.ClearDirectoryContents(directory.FullPath);
+
     public void MoveToRecycleBin(FilePath filePath) =>
         _recycleBinService.MoveToRecycleBin(filePath);
 
