@@ -64,4 +64,24 @@ public class ObjectFinderStandardElementFallbackTests : BaseTestClass
 
         result.ShouldBeSameAs(second);
     }
+
+    [Fact]
+    public void GetElementSave_WithCacheEnabledAndRegisteredFallback_ReturnsFallback()
+    {
+        ObjectFinder.Self.GumProjectSave = null;
+        StandardElementSave fallback = new StandardElementSave { Name = "NineSlice" };
+        ObjectFinder.Self.RegisterFallbackStandardElements(new[] { fallback });
+
+        ObjectFinder.Self.EnableCache();
+        try
+        {
+            ElementSave? result = ObjectFinder.Self.GetElementSave("NineSlice");
+
+            result.ShouldBeSameAs(fallback);
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
+        }
+    }
 }
