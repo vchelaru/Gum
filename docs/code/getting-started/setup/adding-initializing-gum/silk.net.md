@@ -89,6 +89,16 @@ GumService.Default.Update(totalSeconds);
 The `IInputContext` you pass to `Initialize` must come from a window that `Silk.NET.Windowing` created and initialized itself — `Window.Create(options)` followed by `window.Initialize()`, then `window.CreateInput()`. Building an `IInputContext` by wrapping a window you created another way (for example via `SdlWindowing.CreateFrom(existingHandle)`) skips the normal event-subscription path. The resulting `IInputContext` looks valid, but it silently never receives events — no exception is thrown, and clicks, key presses, and typed text simply do nothing.
 {% endhint %}
 
+{% hint style="warning" %}
+If `window.CreateInput()` throws `NotSupportedException: Couldn't find a suitable input platform for this view`, your project is missing the `Silk.NET.Input.Sdl` package. `Silk.NET.Windowing.Sdl` only creates the window; `CreateInput()` finds its backend by scanning loaded assemblies for a matching `IInputPlatform`, and the SDL implementation lives in the separate `Silk.NET.Input.Sdl` package. Add it directly, matching your other Silk.NET package versions:
+
+```xml
+<PackageReference Include="Silk.NET.Input.Sdl" Version="2.23.0" />
+```
+
+Once the packages are right, call `CreateInput()` immediately after `window.Initialize()` as shown above. Don't defer it to the window's `Load` event, that event only fires from inside `window.Run()`'s internal loop, and Gum's setup drives its own loop manually via `window.DoEvents()` (see below) rather than calling `window.Run()`.
+{% endhint %}
+
 ## Adding Expression Support (Optional)
 
 If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
