@@ -2,7 +2,7 @@
 
 Introduction
 
-The Components tutorial shows how Text and ColoredRectangle instances can be sized and positioned according to the Button that they are a part of. Instances can use other instances as their parents. Gum does not place a limit to the depth of the parent/child hierarchy, enabling flexible and responsive layouts through.
+The Components tutorial shows how Rectangle instances can be sized and positioned according to the component that they are a part of. Instances can use other instances as their parents too. Gum does not place a limit to the depth of the parent/child hierarchy, enabling flexible and responsive layouts through.
 
 Parent/child relationships are useful for
 
@@ -22,7 +22,7 @@ For this example we'll create a Component for displaying distance. This componen
 The two Text instances will have different colors so that ValueText stands out.
 
 {% hint style="info" %}
-A single Text instance can support inline styling. We use two text instances here to show how to work with the Parent variable, but for more info see the [Text property](../../gum-elements/text/text.md#using-bbcode-for-inline-styling) page.
+Although single Text instances support inline styling, e use two text instances here to show how to work with the Parent variable. For information on inline text styling see the [Text property](../../gum-elements/text/text.md#using-bbcode-for-inline-styling) page.
 {% endhint %}
 
 To create our component:
@@ -32,19 +32,18 @@ To create our component:
 3. Name the first **ValueText**
 4. Name the second **UnitsDisplay**
 
-<figure><img src="../../../.gitbook/assets/15_05 38 09.png" alt=""><figcaption><p>MeasurementDisplay component</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 40 18.png" alt=""><figcaption><p>MeasurementDisplay component</p></figcaption></figure>
 
 ## Positioning according to a parent
 
 Next we'll make the **UnitsDisplay** use the **ValueText** as its parent:
 
-1. Select the **UnitsDisplay** Text instance
-2. Change its `Parent` to `ValueText`
-3. Change its `X Units` to `Pixels From Right`. This makes the text object positioned according to its parent's right edge
-4. Change its `X` to `10` . This means the **UnitsDisplay** text is 10 units offset from the right edge of its parent **ValueText**
-5. Verify its `Y` is `0`
+1. Drag+drop **UnitsDisplay** onto **ValueText** to create a parent/child relationship
+2. Change UnitsDisplay's `X Units` to `Pixels From Right`. This makes the text object positioned according to its parent's right edge
+3. Change its `X` to `10` . This means the **UnitsDisplay** text is 10 units offset from the right edge of its parent **ValueText**
+4. Verify its `Y` is `0`
 
-![UnitsDisplay positioned relative to the right-side of ValueText](<../../../.gitbook/assets/15_05 42 39.png>)
+![UnitsDisplay positioned relative to the right-side of ValueText](<../../../.gitbook/assets/02_09 45 05.png>)
 
 The ValueText actual width should be based on its contents, so we'll do the following:
 
@@ -54,7 +53,7 @@ The ValueText actual width should be based on its contents, so we'll do the foll
 
 By setting these values, ValueText is now sized according to its children, which in this case are its letters.
 
-![Width and Width Units set to size ValueText according to its contained Text variable](<../../../.gitbook/assets/15_05 48 40.png>)
+![](<../../../.gitbook/assets/02_09 45 49.png>)
 
 You may have noticed that UnitsDisplay is also a child of the ValueText. However, since UnitsDisplay is explicitly positioned outside of the bounds of its parent ValueText, then ValueText ignores this child when calculating its own Width. For a detailed discussion of Width Units and whether children are ignored, see the [Width Units](../../gum-elements/general-properties/width-units.md#ignored-width-values) page.
 
@@ -67,7 +66,7 @@ Now that we have adjusted the position, size, and parent values on our Text inst
 3. Change `Green` to `150`
 4. Change `Blue` to `0`
 
-<figure><img src="../../../.gitbook/assets/15_05 51 36.png" alt=""><figcaption><p>Text with changed color values</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 22 50.png" alt=""><figcaption><p>Text with changed color values</p></figcaption></figure>
 
 ## Changing ValueText
 
@@ -87,4 +86,4 @@ The `Width` variable is used in combination with its `Width Units` to calculate 
 
 **Children always depend on their parents' effective values rather than their explicitly set values**. Gum helps us visualize the effective values when we mouse over one of the _resize handles_ on the selected object. For example, the following image shows the `Width`, `Width Units`, and effective width values of our **ValueText**.
 
-<figure><img src="../../../.gitbook/assets/15_06 02 39.png" alt=""><figcaption><p><code>Width</code> is 0, <code>Width Units</code> is <code>Relative To Children</code>, effective width is 65</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_10 26 00.png" alt=""><figcaption><p><code>Width</code> is 0, <code>Width Units</code> is <code>Relative To Children</code>, effective width is 65</p></figcaption></figure>

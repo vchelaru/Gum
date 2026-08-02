@@ -35,7 +35,7 @@ Although this variable belongs to the Fill instance, it is now exposed as a vari
 
 Similarly, now each instance can be modified since each now exposes a Health Percent variable.
 
-<figure><img src="../../../.gitbook/assets/30_06 23 52.png" alt=""><figcaption><p>Health Percent adjusted per-instance</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 37 34.png" alt=""><figcaption><p>Health Percent adjusted per-instance</p></figcaption></figure>
 
 ## Conclusion
 

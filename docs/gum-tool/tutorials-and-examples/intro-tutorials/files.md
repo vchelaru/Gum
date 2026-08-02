@@ -11,22 +11,22 @@ First we'll set up a workspace:
 1. Create a Screen called SpriteScreen.
 2. Drag+drop a Sprite into the newly-created Screen
 
-<figure><img src="../../../.gitbook/assets/14_05 31 43.gif" alt=""><figcaption><p>Drag+drop a Sprite onto SpriteScreen</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 16 57.png" alt=""><figcaption><p>Drag+drop a Sprite onto SpriteScreen</p></figcaption></figure>
 
 ## Setting the Sprite Source File
 
-The `Source File` property is the image that the Sprite displays. Usually `Source Files` are of the .png file format. To set the source file:
+`Source File` is the image that the Sprite displays. Usually `Source Files` are of the .png file format. To set the source file:
 
-1. Select  SpriteInstance
+1. Select SpriteInstance
 2. Find `Source File` in the Variables tab
 3. Click the "..." button to bring up a file window
 4. Navigate to the location of the file you would like to load
 5. Click "Open" in the file window
 6. Once `Source File` is set, the Sprite displays the image in the Editor tab
 
-![SpriteInstance displaying a bear Source File](<../../../.gitbook/assets/14_05 46 12.png>)
+![SpriteInstance displaying a bear Source File](<../../../.gitbook/assets/02_09 19 49.png>)
 
-If you select a file which is not located in the same folder or a sub folder of your gum project, Gum asks if you would like to reference the file in its original location or create a copy.&#x20;
+If you select a file which is not located in the same folder or a sub folder of your gum project, Gum asks if you would like to reference the file in its original location or create a copy.
 
 <figure><img src="../../../.gitbook/assets/14_05 42 46.png" alt=""><figcaption><p>Gum asks to copy files if they are outside of the project directory</p></figcaption></figure>
 
@@ -42,7 +42,7 @@ For example, the following file contains images for an animated character, groun
 
 If we download this file and set it as our , then the sprite displays the entire file.
 
-<figure><img src="../../../.gitbook/assets/14_05 52 53 (1).png" alt=""><figcaption><p>Sprite displaying entire sprite sheet</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 21 18.png" alt=""><figcaption><p>Sprite displaying entire sprite sheet</p></figcaption></figure>
 
 We can display a portion of the Sprite rather than the entire file:
 
@@ -51,4 +51,4 @@ We can display a portion of the Sprite rather than the entire file:
 3. Double-click anywhere on the image to select a region around the cursor
 4. Move the selected region to the desired location to adjust the sprite's texture coordinate values
 
-<figure><img src="../../../.gitbook/assets/14_06 06 03.gif" alt=""><figcaption><p>Texture coordinate values can be adjusted in the Texture Coordinates tab</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 21 54.gif" alt=""><figcaption><p>Texture coordinate values can be adjusted in the Texture Coordinates tab</p></figcaption></figure>

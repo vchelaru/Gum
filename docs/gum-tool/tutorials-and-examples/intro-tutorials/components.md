@@ -26,13 +26,13 @@ Next we'll add two Rectangle instances. One will be used as the background for t
 
 If you dragged the instances on the tree view, the two Rectangle instances will overlap. We will adjust their positions later in this tutorial.
 
-![HealthBar Component with two overlapping Rectangle instances](<../../../.gitbook/assets/30_05 37 15.png>)
+![HealthBar Component with two overlapping Rectangle instances](<../../../.gitbook/assets/02_09 26 53.png>)
 
 ## Naming Instances
 
-Next we'll rename the instances so their names match their purpose. Rename the first rectangle Background and the second Fill. Notice that in Gum, the first item is the top-most, so you can think of it in the order that you would read text.
+Next we'll rename the instances so their names match their purpose. Rename the first rectangle Background and the second Fill. You can press F2 or change an instance name in its Name text box in the Variables tab.
 
-<figure><img src="../../../.gitbook/assets/30_05 40 41.png" alt=""><figcaption><p>Renamed Rectangle instances</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 28 11.png" alt=""><figcaption><p>Renamed Rectangle instances</p></figcaption></figure>
 
 In this case, since Fill comes after Background, then it will draw on top. This ordering will become important when we make changes to these two instances later in the tutorial.
 
@@ -44,7 +44,7 @@ Next we'll adjust the Background Rectangle:
 
 1. Select Background
 2. Check the `Is Filled` variable
-3. Set `Fill Color` to black - you can click on the colored box to open the color editor, or you can type the hex value `000000`&#x20;
+3. Set `Fill Color` to black - click on the colored box to open the color editor, or you can type the hex value `000000`
 4. Set `Stroke Width` to 0 - note that the stroke may not disappear since the Fill rectangle is still overlapping Background
 5. Click on the `Alignment` tab and click the Fill button in the Dock row. This causes the Background to fill the size of its parent, and to adjust its own size if the parent HealthBar size changes.
 
@@ -52,7 +52,7 @@ Now the Background should be a solid black background to the entire component
 
 <figure><img src="../../../.gitbook/assets/30_05 47 34.png" alt=""><figcaption><p>Background filling the entire component</p></figcaption></figure>
 
-Before moving on, you might want to spend some time adjusting values on your background. Although we removed the stroke and changed the background to black, you may want your HealthBar to have a different appearance. Feel free to try changing other values to get a feel for the different options provided by Rectangle.
+Before moving on, you might want to spend some time adjusting values on your background. Although we removed the stroke and changed the background to black, you may want your HealthBar to have a different appearance. Try changing other values to get a feel for the different options provided by Rectangles.
 
 Also, note that we clicked the Fill Dock button. This button is a shortcut which changes a number of variables on the component. Specifically this changed:
 
@@ -101,9 +101,9 @@ Now that we have set up both Background and Fill to be relative to their parent'
 Select the HealthBar component and set the following values:
 
 * Set Width to 200
-* Set Height ot 24
+* Set Height to 24
 
-<figure><img src="../../../.gitbook/assets/30_06 08 28.png" alt=""><figcaption><p>HealthBar with adjusted Width and Height</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 34 49.png" alt=""><figcaption><p>HealthBar with adjusted Width and Height</p></figcaption></figure>
 
 ## Creating Component Instances
 
@@ -116,7 +116,7 @@ You can move and resize the newly-created HealthBarInstance in your screen. Noti
 
 You can also create copies by pressing CTRL+C, CTRL+V. Note that newly-created instances overlap the copied instance, so you need to move pasted instances.
 
-<figure><img src="../../../.gitbook/assets/30_06 12 13.png" alt=""><figcaption><p>HealthBar instances in a screen</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_09 35 55.png" alt=""><figcaption><p>HealthBar instances in a screen</p></figcaption></figure>
 
 ## What's Next?
 

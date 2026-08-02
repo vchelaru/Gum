@@ -4,24 +4,19 @@
 
 This page walks you through the basics of using the _Gum UI tool,_ which we'll refer to simply as Gum for this and all other documentation.
 
-<figure><img src="../../../.gitbook/assets/image (10) (3).png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_08 27 06.png" alt=""><figcaption><p>Empty Gum Project</p></figcaption></figure>
 
 ## Gum Elements
 
 Gum separates its elements into three categories: Screens, Components, and Standard. Behaviors are an advanced topic that we'll skip for these tutorials.
 
-<figure><img src="../../../.gitbook/assets/image (15) (1).png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_08 27 48.png" alt=""><figcaption><p>Screens, Components, and Standard folders</p></figcaption></figure>
 
-Standard elements represent the building-blocks for screens and components, and all projects use the same set of standard elements. To see the list of elements, expand the Standard tree item. Clicking on any element displays it in the preview window.
-
-<figure><img src="../../../.gitbook/assets/image (5) (2).png" alt=""><figcaption><p>A Sprite standard element with no source file set</p></figcaption></figure>
-
-Sprite element is selected in the image above. Notice that since a **SourceFile** is not set, the Sprite renders as a red X.
+Standard elements represent the building-blocks for screens and components. Let's take a look at the different types next.
 
 ### Standard Types
 
 * ![](<../../../.gitbook/assets/image (51).png>) Circle - a circle which can be filled in, outlined, or both. Often used for visualizations or for defining collision in your Gum objects for a game.
-* ![](<../../../.gitbook/assets/image (53).png>) ColoredRectangle - a legacy filled-in rectangle. New projects use **Rectangle** instead (which can be both filled and outlined); ColoredRectangle remains available for existing projects.
 * ![](<../../../.gitbook/assets/image (54).png>) Container - invisible object used to contain other objects. These are used to provide margins, change layouts (such as vertical vs horizontal stacking), and to organize your UI.
 * ![](<../../../.gitbook/assets/image (55).png>) NineSlice - visual object which uses nine sprites to create a resizable object from a source PNG (or portion of a PNG). The corner sprites (4) are not resized. The top, bottom, left, and right sprites are stretched on one axis. The middle sprite stretches both horizontally and vertically. These are used to create resizable frames.
 * ![](<../../../.gitbook/assets/image (56).png>) Polygon - polygon outline which can have any number of points. These are usually not used for UI, but can be used if you are defining collision in your Gum objects for a game.
@@ -47,32 +42,44 @@ Components and screens are similar - both can contain instances of standard elem
 
 For example you can think of screens in a video game which might include a main menu, credits screen, options screen, and level selection screen. You can think of components as elements which are composed of multiple standard elements. Examples include a Button component which is made up of a Sprite instance and a Text instance, or a Logo component which may be made up of multiple Sprites and Text objects.
 
+## Creating a Project
+
+Before you work on your project, you must first create a new project. You can save this project anywhere on your computer, but it's best to save the project in an empty folder so that all of the project files don't get mixed in with existing files.
+
+To create a project:
+
+1. Select File->New Project
+2. Select a new location somewhere on your machine for the new project. If you are using a library like MonoGame or raylib, you may want to save the project in a folder under your game project, such as a Content or Resources folder.
+
+Once your project has been saved you should see its name in Gum's title bar.
+
+<figure><img src="../../../.gitbook/assets/02_08 37 36.png" alt=""><figcaption><p>Gum Project Title</p></figcaption></figure>
+
 ## Creating a Screen
 
 To create a screen:
 
 1.  Right-click on the Screens tree item and select **Add Screen**
 
-    <figure><img src="../../../.gitbook/assets/image (9) (2).png" alt=""><figcaption><p>Right-click, Add Screen option</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/02_08 32 48.png" alt=""><figcaption><p>Right-click, Add Screen option</p></figcaption></figure>
 2. Enter the name of the new screen - such as **MainMenu**
 3.  Click OK. The newly-created screen is created and selected
 
-    <figure><img src="../../../.gitbook/assets/image (3) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1) (1).png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/02_08 54 58.png" alt=""><figcaption><p>The MainMenu screen in Gum</p></figcaption></figure>
 
 ## Adding instances
 
 Instances of standard and component elements can be added to screens and components. To add an instance:
 
 1. Select the destination screen or component. For example, select the **MainMenu** screen
-2. Push the left mouse button (but don't release it) on the Text item. If you happen to release the mouse button, this selects the Text item, so you need to re-select the destination (MainMenu).
-3. Drag the Text item onto the Editor tab
-4.  Release the mouse button. A new text instance appears in your screen.
+2. Drag the Text item onto the Editor tab
+3.  Release the mouse button. A new text instance appears in your screen.
 
-    <figure><img src="../../../.gitbook/assets/23_04 41 54.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Editor tab</p></figcaption></figure>
+    <figure><img src="../../../.gitbook/assets/02_08 55 44.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Editor tab</p></figcaption></figure>
 
 Alternatively, you can also drag+drop a standard element into a screen in the tree view.
 
-<figure><img src="../../../.gitbook/assets/13_09 17 10.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Project tab</p></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/02_08 56 27.gif" alt=""><figcaption><p>Adding a Text instance to the MainMenu screen in the Project tab</p></figcaption></figure>
 
 {% hint style="info" %}
 If an element is dropped in the Editor window, it appears at the location where it has been dropped - setting its X and Y values. If an element is dropped in the Project tab, then it preserves its default X and Y values.
