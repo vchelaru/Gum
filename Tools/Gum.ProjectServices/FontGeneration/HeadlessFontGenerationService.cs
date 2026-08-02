@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -352,6 +353,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         }
 
         List<Task> tasks = new List<Task>();
+        ConcurrentBag<bool> didAttemptFlags = new();
 
         int completed = 0;
         _callbacks.OnFontProgress(0, bitmapFonts.Count);
@@ -361,8 +363,13 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
             System.Diagnostics.Debug.WriteLine($"Starting {item.Key}");
             Task task = TryCreateFontFor(item.Value, forceRecreate, showSpinner: false, createTask: true,
                 projectDirectory, project.AutoSizeFontOutputs)
-                .ContinueWith(_ =>
+                .ContinueWith(t =>
                 {
+                    if (t.Status == TaskStatus.RanToCompletion && t.Result is OptionallyAttemptedGeneralResponse response)
+                    {
+                        didAttemptFlags.Add(response.DidAttempt);
+                    }
+
                     int current = Interlocked.Increment(ref completed);
                     _callbacks.OnFontProgress(current, bitmapFonts.Count);
                 });
@@ -383,8 +390,30 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         TimeSpan time = end - start;
         if (bitmapFonts.Count > 0)
         {
-            _callbacks.OnOutput($"Created font files in {time.TotalSeconds:F1} seconds");
+            int attemptedCount = didAttemptFlags.Count(didAttempt => didAttempt);
+            _callbacks.OnOutput(BuildFontGenerationSummaryMessage(bitmapFonts.Count, attemptedCount, time));
         }
+    }
+
+    /// <summary>
+    /// Builds the summary message shown after a font-generation pass. <paramref name="attemptedCount"/>
+    /// is how many of the <paramref name="totalFontCount"/> fonts actually needed (re)generation — the
+    /// rest were already cached on disk. Reported separately so a cache-hit run (#4266) doesn't claim
+    /// "Created" when nothing was actually created.
+    /// </summary>
+    internal static string BuildFontGenerationSummaryMessage(int totalFontCount, int attemptedCount, TimeSpan elapsedTime)
+    {
+        if (attemptedCount == 0)
+        {
+            return $"All {totalFontCount} font files already up to date";
+        }
+
+        if (attemptedCount == totalFontCount)
+        {
+            return $"Created {totalFontCount} font files in {elapsedTime.TotalSeconds:F1} seconds";
+        }
+
+        return $"Created {attemptedCount} font files ({totalFontCount - attemptedCount} already up to date) in {elapsedTime.TotalSeconds:F1} seconds";
     }
 
     private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
@@ -395,8 +424,12 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         if (!force && _recentFailures.TryGetValue(cacheKey, out DateTime failedAt)
             && UtcNow - failedAt < FailureCooldown)
         {
-            return GeneralResponse.UnsuccessfulWith(
-                $"Skipping retry for font {bmfcSave.FontName} size {bmfcSave.FontSize} — a previous attempt failed recently.");
+            return new OptionallyAttemptedGeneralResponse
+            {
+                Succeeded = false,
+                DidAttempt = false,
+                Message = $"Skipping retry for font {bmfcSave.FontName} size {bmfcSave.FontSize} — a previous attempt failed recently."
+            };
         }
 
         if ((force || GetFilePath(bmfcSave, destinationDirectory: null, projectDirectory).Exists() == false)
@@ -476,6 +509,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
                 GeneralResponse generateResponse = await _fontFileGenerator.GenerateFont(
                     bmfcSave, desiredFntFile.FullPath, createTask);
 
+                toReturn.DidAttempt = true;
                 toReturn.Succeeded = generateResponse.Succeeded;
                 toReturn.Message = generateResponse.Message;
             }
