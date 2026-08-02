@@ -31,6 +31,6 @@ using System.Runtime.InteropServices;
 // BuildVersion is the source of truth for the tool's displayed version (see
 // MenuStripManager's About dialog). Kept as an ordinary AssemblyMetadata attribute rather
 // than AssemblyVersion/AssemblyFileVersion - see the comment above.
-[assembly: AssemblyMetadata("BuildVersion", "2026.07.22")]
+[assembly: AssemblyMetadata("BuildVersion", "2026.08.02")]
 [assembly: InternalsVisibleTo("GumToolUnitTests")]
 [assembly: InternalsVisibleTo("EditorTabPlugin_XNA")]
