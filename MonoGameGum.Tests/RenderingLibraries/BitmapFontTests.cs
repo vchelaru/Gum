@@ -161,6 +161,45 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         font.MeasureString("     ").ShouldBe(40 + 5 + 1);
     }
 
+    const string smallCharSetFontData =
+@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""Font18Arial_0.png""
+chars count=1
+char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xadvance=5     page=0  chnl=15
+";
+
+    [Fact]
+    public void GetCharacterInfo_ShouldNotThrow_WhenFontIsSmallerThanSpaceCharacterIndex()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, smallCharSetFontData);
+
+        font.SetFontPattern(256, 256);
+
+        // The font's character array only extends to index 5 (its last defined char id),
+        // short of the space character's index (32). An out-of-range lookup falls back
+        // to the space character, which used to re-index the same too-short array and throw.
+        Should.NotThrow(() => font.GetCharacterInfo('A'));
+    }
+
+    [Fact]
+    public void GetCharacterInfo_ShouldFallBackToRealSpaceGlyphMetrics_NotPlaceholderMutatedByTabOrNewline()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+
+        font.SetFontPattern(256, 256);
+
+        // Codepoint 200 is out of range (the font only defines up to id 37) and falls back to
+        // the space character. SetFontPattern initially fills every array slot with a shared
+        // placeholder object, then mutates that same object in place for the tab/newline special
+        // cases, before finally overwriting index 32 with the font's real space glyph (id 32
+        // above). The fallback must reflect that real, final glyph -- not the placeholder, which
+        // by then has its texture coordinates zeroed out by the newline special-case.
+        BitmapCharacterInfo fallback = font.GetCharacterInfo((char)200);
+
+        fallback.TULeft.ShouldBe(206f / 256f);
+    }
+
     [Fact]
     public void MeasureString_ShouldIgnoreTrailingNewlines()
     {
