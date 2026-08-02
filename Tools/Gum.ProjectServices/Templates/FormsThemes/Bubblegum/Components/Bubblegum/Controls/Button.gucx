@@ -145,7 +145,7 @@
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Nunito-Bold.ttf</Value>
+      <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">14</Value>
