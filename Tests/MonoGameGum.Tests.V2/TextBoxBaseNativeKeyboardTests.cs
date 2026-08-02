@@ -1,3 +1,4 @@
+using Gum;
 using Gum.Forms.Controls;
 using Gum.Threading;
 using Gum.Wireframe;
@@ -98,6 +99,43 @@ public class TextBoxBaseNativeKeyboardTests
         finally
         {
             FrameworkElement.MainKeyboard = priorKeyboard;
+        }
+    }
+
+    [Fact]
+    public void IsFocused_SetFalseAfterInlineKeyboardShown_HidesInlineKeyboard()
+    {
+        GumService.Default.InitializeForTesting();
+        StubKeyboard stubKeyboard = new StubKeyboard { SupportsInlineKeyboard = true };
+        IInputReceiverKeyboard? priorKeyboard = FrameworkElement.MainKeyboard;
+        FrameworkElement.MainKeyboard = stubKeyboard;
+        try
+        {
+            TextBox textBox = new TextBox();
+            textBox.ShowNativeKeyboardOnFocus = true;
+            textBox.AddToRoot();
+
+            // Mirrors how a real tap acquires focus (HandleClick/HandlePush set
+            // CurrentInputReceiver directly, which cascades into OnGainFocus -> IsFocused =
+            // true) rather than assigning IsFocused directly, which reenters through that
+            // same cascade and double-counts the show call.
+            InteractiveGue.CurrentInputReceiver = textBox;
+            stubKeyboard.ShowCallCount.ShouldBe(1);
+
+            // FrameworkElement.IsFocused's base setter clears CurrentInputReceiver back to
+            // null as soon as focus is lost, before TextBoxBase.UpdateToIsFocused runs its
+            // own "am I still the current receiver" check on the way to TryHideNativeKeyboard.
+            // Gating the hide call on that check meant it never fired. Pins the keyboard
+            // actually dismissing on focus loss.
+            textBox.IsFocused = false;
+
+            stubKeyboard.HideCallCount.ShouldBe(1);
+        }
+        finally
+        {
+            FrameworkElement.MainKeyboard = priorKeyboard;
+            InteractiveGue.CurrentInputReceiver = null;
+            GumService.Default.Root.Children.Clear();
         }
     }
 
