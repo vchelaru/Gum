@@ -1189,9 +1189,10 @@ public class FrameworkElement : INotifyPropertyChanged
 
     /// <summary>
     /// Explicit per-direction focus overrides (Unity/UWP-style escape hatch): if set, a clean
-    /// single-direction D-pad press in that direction moves focus straight to the assigned element,
-    /// skipping <see cref="Gum.Forms.SpatialNavigationService"/> scoring entirely. Not consulted for
-    /// diagonal presses or analog stick input, which have no single well-defined cardinal to key off.
+    /// single-direction D-pad press — or a left-stick push snapped to its nearest cardinal — in that
+    /// direction moves focus straight to the assigned element, skipping
+    /// <see cref="Gum.Forms.SpatialNavigationService"/> scoring entirely. Not consulted for diagonal
+    /// D-pad presses (two held), which have no single well-defined cardinal to key off.
     /// Only meaningful while resolved <see cref="GamepadNavigationMode"/> is
     /// <see cref="Controls.GamepadNavigationMode.Spatial"/>.
     /// </summary>
@@ -1683,39 +1684,66 @@ public class FrameworkElement : INotifyPropertyChanged
         return new DigitalDirectionState(right, left, down, up, shouldFire);
     }
 
-    // Only a clean single held direction has one well-defined cardinal to key an override off of —
-    // a diagonal (two held) or stick-driven request falls through to SpatialNavigationService instead.
+    // A clean single held DPad direction has one well-defined cardinal to key an override off of —
+    // a diagonal (two held) falls through to SpatialNavigationService instead. A stick push with no
+    // DPad direction held is snapped to its nearest cardinal (see GetCardinalOverride) so overrides
+    // help stick-driven navigation the same way they help the DPad.
     private FrameworkElement? TryGetExplicitDirectionOverride(IGamePad gamepad)
     {
         DigitalDirectionState state = GetDigitalDirectionState(gamepad);
-        if (!state.ShouldFire)
+        if (state.ShouldFire)
         {
+            int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
+            if (heldCount != 1)
+            {
+                return null;
+            }
+
+            if (state.Right)
+            {
+                return SpatialNavigationRight;
+            }
+            if (state.Left)
+            {
+                return SpatialNavigationLeft;
+            }
+            if (state.Down)
+            {
+                return SpatialNavigationDown;
+            }
+            if (state.Up)
+            {
+                return SpatialNavigationUp;
+            }
             return null;
         }
 
-        int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
-        if (heldCount != 1)
+        if (gamepad.LeftStick.RadialPushedRepeatRate())
         {
-            return null;
+            float stickAngle = MathF.Atan2(-gamepad.LeftStick.Y, gamepad.LeftStick.X);
+            return GetCardinalOverride(stickAngle);
         }
 
-        if (state.Right)
-        {
-            return SpatialNavigationRight;
-        }
-        if (state.Left)
-        {
-            return SpatialNavigationLeft;
-        }
-        if (state.Down)
-        {
-            return SpatialNavigationDown;
-        }
-        if (state.Up)
-        {
-            return SpatialNavigationUp;
-        }
         return null;
+    }
+
+    // Snaps a screen-space angle (0 = right, increasing clockwise) to whichever of the four
+    // SpatialNavigation overrides is nearest, so an analog stick push can honor the same explicit
+    // overrides a clean DPad press does.
+    private FrameworkElement? GetCardinalOverride(float angleRadians)
+    {
+        float twoPi = MathF.PI * 2f;
+        float normalized = ((angleRadians % twoPi) + twoPi) % twoPi;
+        int cardinal = (int)MathF.Round(normalized / (MathF.PI / 2f)) % 4;
+
+        return cardinal switch
+        {
+            0 => SpatialNavigationRight,
+            1 => SpatialNavigationDown,
+            2 => SpatialNavigationLeft,
+            3 => SpatialNavigationUp,
+            _ => null,
+        };
     }
 
     private float? TryGetRequestedDirectionAngle(IGamePad gamepad)

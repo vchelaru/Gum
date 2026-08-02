@@ -126,6 +126,27 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_ExcludesNearPerpendicularCandidate_EvenWhenMuchCloserThanAlignedCandidate()
+    {
+        // Reproduces issue #4274: a vertically-stacked button list ("Settings" focused, with
+        // "Customize ship" above and "Leaderboard" below) sitting right next to a well-aligned but
+        // farther-away button ("Click me") off to the left. A Left request must not resolve to the
+        // above/below neighbors just because they are much closer -- they contribute ~zero actual
+        // progress in the requested direction.
+        Button origin = CreatePositionedButton(0, 0);
+        Button above = CreatePositionedButton(0, -75);
+        Button below = CreatePositionedButton(0, 75);
+        Button aligned = CreatePositionedButton(-400, 0);
+
+        List<FrameworkElement> candidates = new() { above, below, aligned };
+
+        float leftDirection = MathF.PI;
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, leftDirection, candidates);
+
+        result.ShouldBe(aligned);
+    }
+
+    [Fact]
     public void FindBestCandidate_ReturnsNull_WhenNoCandidatesQualify()
     {
         Button origin = CreatePositionedButton(0, 0);
