@@ -400,6 +400,43 @@ public class BubblegumTemplateTests
         actualTextStyles.ShouldBe(expectedTextStyles.OrderBy(n => n, StringComparer.Ordinal).ToList());
     }
 
+    [Fact]
+    public void AllBundledFontVariables_ShouldIncludeFontsPathSegment()
+    {
+        // ResolveFontFilePath resolves a non-rooted .ttf Font value against the project root
+        // (the .gumx's own directory), not the Fonts/ folder specifically - a bare filename
+        // (e.g. "Nunito-Regular.ttf") looks for the ttf directly in the project root and fails
+        // to find it there, even though the file is bundled at Fonts/Nunito-Regular.ttf (#4255).
+        GumProjectSave project = LoadBubblegum();
+
+        List<string> offenders = new();
+        foreach (ElementSave element in project.AllElements)
+        {
+            foreach (StateSave state in element.AllStates)
+            {
+                foreach (VariableSave variable in state.Variables)
+                {
+                    if (variable.SetsValue != true || variable.Value is not string fontValue)
+                    {
+                        continue;
+                    }
+
+                    if (!fontValue.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (!fontValue.StartsWith("Fonts/", StringComparison.Ordinal))
+                    {
+                        offenders.Add($"{element.Name} [{state.Name}]: {variable.Name} = {fontValue}");
+                    }
+                }
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
     private static string GetLastNameSegment(string variableName)
     {
         int lastDotIndex = variableName.LastIndexOf('.');
