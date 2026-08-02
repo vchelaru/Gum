@@ -354,6 +354,10 @@ public class ObjectFinder : IObjectFinder
             {
                 return cachedDictionary[elementName];
             }
+            else if(_fallbackStandardElements != null && _fallbackStandardElements.TryGetValue(elementName, out StandardElementSave? fallback))
+            {
+                return fallback;
+            }
         }
         else
         {
