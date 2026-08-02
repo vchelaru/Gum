@@ -555,7 +555,18 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 .Select(standard => standard.Name)
                 .ToList();
 
-        _viewCreator.StandardsPalette.RefreshChips(typeNames);
+        _viewCreator.StandardsPalette.RefreshChips(SortStandardTypeNamesForPalette(typeNames));
+    }
+
+    /// <summary>
+    /// Alphabetizes standard type names for the palette, matching the ordering the classic
+    /// "Standard" tree folder applies via <c>SortByName</c> -- the palette otherwise inherits
+    /// <see cref="GumProjectSave.StandardElements"/>'s dictionary-insertion order, which has no
+    /// relation to display order.
+    /// </summary>
+    internal static List<string> SortStandardTypeNamesForPalette(IReadOnlyList<string> typeNames)
+    {
+        return typeNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     private void AddStandardInstanceToCurrentElement(string typeName)
