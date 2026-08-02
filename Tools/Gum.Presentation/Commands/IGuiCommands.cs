@@ -21,6 +21,7 @@ public interface IGuiCommands
     /// <summary>
     /// Brings the tool's main window to the foreground. Used to reclaim focus after a transient
     /// top-level window (e.g. the font-generation spinner) closes without returning it.
+    /// Safe to call from any thread.
     /// </summary>
     void ActivateMainWindow();
 }

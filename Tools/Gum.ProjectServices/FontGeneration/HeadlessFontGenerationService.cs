@@ -294,7 +294,20 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     {
         FontReferenceCollector collector = new FontReferenceCollector(
             instance => ObjectFinder.Self.GetElementSave(instance));
-        return collector.Collect(project, elements);
+
+        // The collector resolves every instance's BaseType through the injected resolver above,
+        // which falls back to an O(n) linear scan of Screens/Components/StandardElements per call
+        // without the cache. EnableCache/DisableCache is reference-counted, so this composes safely
+        // if a caller already has the cache active.
+        ObjectFinder.Self.EnableCache();
+        try
+        {
+            return collector.Collect(project, elements);
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
+        }
     }
 
     private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
