@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using Gum.Commands;
-using Gum.Logic.FileWatch;
 using ToolsUtilities;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
@@ -40,7 +39,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
     private readonly IDialogService _dialogService;
     private readonly IDispatcher _dispatcher;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly FileWatchLogic _fileWatchLogic;
     private readonly IProjectState _projectState;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
@@ -58,7 +56,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         IDialogService dialogService,
         IDispatcher dispatcher,
         IWireframeObjectManager wireframeObjectManager,
-        FileWatchLogic fileWatchLogic,
         IProjectState projectState,
         IPluginManager pluginManager,
         IProjectManager projectManager,
@@ -69,7 +66,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         _dialogService = dialogService;
         _dispatcher = dispatcher;
         _wireframeObjectManager = wireframeObjectManager;
-        _fileWatchLogic = fileWatchLogic;
         _projectState = projectState;
         _pluginManager = pluginManager;
         _projectManager = projectManager;
@@ -149,11 +145,6 @@ class MainPropertiesWindowPlugin : PriorityPlugin
                 {
                     _fontCharacterFileAbsolute = null;
                 }
-            }
-
-            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  _fileWatchLogic.RefreshRootDirectory (called from MainPropertiesWindowPlugin)"))
-            {
-                _fileWatchLogic.RefreshRootDirectory();
             }
         }
     }
