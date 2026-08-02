@@ -1183,7 +1183,8 @@ public class FrameworkElement : INotifyPropertyChanged
     /// An unset element inherits the nearest ancestor's value (an explicit
     /// <see cref="Controls.GamepadNavigationMode.TabOrder"/> on a nested element opts back out of an
     /// outer <see cref="Controls.GamepadNavigationMode.Spatial"/> zone); the root default is TabOrder.
-    /// Does not affect keyboard Tab, which is always index-based.
+    /// Also resolved for keyboard arrow-key navigation (<see cref="UpKeyCombos"/> etc.) — but never
+    /// for keyboard Tab/Shift+Tab, which is always index-based regardless of this setting.
     /// </summary>
     public GamepadNavigationMode? GamepadNavigationMode { get; set; }
 
@@ -1325,6 +1326,32 @@ public class FrameworkElement : INotifyPropertyChanged
         new KeyCombo { PushedKey = Keys.Space },
     };
 
+    /// <summary>
+    /// List of key combinations that request focus navigation toward whatever the resolved
+    /// <see cref="Controls.GamepadNavigationMode"/> considers "up" — the previous element in
+    /// <see cref="Controls.GamepadNavigationMode.TabOrder"/> mode, or the nearest candidate above
+    /// in <see cref="Controls.GamepadNavigationMode.Spatial"/> mode (see
+    /// <see cref="Gum.Forms.SpatialNavigationService"/>). Empty by default: unlike
+    /// <see cref="TabKeyCombos"/>, arrow keys are already claimed by several stock controls for
+    /// their own value/selection/caret behavior (Slider, ListBox, TextBox), so wiring them up is
+    /// opt-in per project rather than a default that could silently change existing behavior.
+    /// </summary>
+    public static List<KeyCombo> UpKeyCombos { get; set; } = new ();
+
+    /// <inheritdoc cref="UpKeyCombos"/>
+    public static List<KeyCombo> DownKeyCombos { get; set; } = new ();
+
+    /// <summary>
+    /// <inheritdoc cref="UpKeyCombos"/>
+    /// Only consulted while <see cref="IsUsingLeftAndRightGamepadDirectionsForNavigation"/> is true —
+    /// the same flag that already gates gamepad D-pad/stick Left/Right from double-firing against a
+    /// control (e.g. Slider) that uses Left/Right for its own value instead.
+    /// </summary>
+    public static List<KeyCombo> LeftKeyCombos { get; set; } = new ();
+
+    /// <inheritdoc cref="LeftKeyCombos"/>
+    public static List<KeyCombo> RightKeyCombos { get; set; } = new ();
+
     protected void HandleKeyboardFocusUpdate()
     {
         foreach (var keyboard in KeyboardsForUiControl)
@@ -1355,6 +1382,8 @@ public class FrameworkElement : INotifyPropertyChanged
                 }
             }
         }
+
+        HandleKeyboardDirectionalNavigation();
     }
 #endif
 
@@ -1684,38 +1713,48 @@ public class FrameworkElement : INotifyPropertyChanged
         return new DigitalDirectionState(right, left, down, up, shouldFire);
     }
 
-    // A clean single held DPad direction has one well-defined cardinal to key an override off of —
-    // a diagonal (two held) falls through to SpatialNavigationService instead. A stick push with no
-    // DPad direction held is snapped to its nearest cardinal (see GetCardinalOverride) so overrides
-    // help stick-driven navigation the same way they help the DPad.
+    // A clean single held direction has one well-defined cardinal to key an override off of — a
+    // diagonal (two held) falls through to SpatialNavigationService instead.
+    private FrameworkElement? GetExplicitDirectionOverride(DigitalDirectionState state)
+    {
+        if (!state.ShouldFire)
+        {
+            return null;
+        }
+
+        int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
+        if (heldCount != 1)
+        {
+            return null;
+        }
+
+        if (state.Right)
+        {
+            return SpatialNavigationRight;
+        }
+        if (state.Left)
+        {
+            return SpatialNavigationLeft;
+        }
+        if (state.Down)
+        {
+            return SpatialNavigationDown;
+        }
+        if (state.Up)
+        {
+            return SpatialNavigationUp;
+        }
+        return null;
+    }
+
+    // A stick push with no DPad direction held is snapped to its nearest cardinal (see
+    // GetCardinalOverride) so overrides help stick-driven navigation the same way they help the DPad.
     private FrameworkElement? TryGetExplicitDirectionOverride(IGamePad gamepad)
     {
         DigitalDirectionState state = GetDigitalDirectionState(gamepad);
         if (state.ShouldFire)
         {
-            int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
-            if (heldCount != 1)
-            {
-                return null;
-            }
-
-            if (state.Right)
-            {
-                return SpatialNavigationRight;
-            }
-            if (state.Left)
-            {
-                return SpatialNavigationLeft;
-            }
-            if (state.Down)
-            {
-                return SpatialNavigationDown;
-            }
-            if (state.Up)
-            {
-                return SpatialNavigationUp;
-            }
-            return null;
+            return GetExplicitDirectionOverride(state);
         }
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
@@ -1746,14 +1785,24 @@ public class FrameworkElement : INotifyPropertyChanged
         };
     }
 
+    private float? GetRequestedDirectionAngle(DigitalDirectionState state)
+    {
+        if (!state.ShouldFire)
+        {
+            return null;
+        }
+
+        float x = (state.Right ? 1f : 0f) - (state.Left ? 1f : 0f);
+        float y = (state.Down ? 1f : 0f) - (state.Up ? 1f : 0f);
+        return MathF.Atan2(y, x);
+    }
+
     private float? TryGetRequestedDirectionAngle(IGamePad gamepad)
     {
         DigitalDirectionState state = GetDigitalDirectionState(gamepad);
         if (state.ShouldFire)
         {
-            float x = (state.Right ? 1f : 0f) - (state.Left ? 1f : 0f);
-            float y = (state.Down ? 1f : 0f) - (state.Up ? 1f : 0f);
-            return MathF.Atan2(y, x);
+            return GetRequestedDirectionAngle(state);
         }
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
@@ -1763,6 +1812,107 @@ public class FrameworkElement : INotifyPropertyChanged
         }
 
         return null;
+    }
+
+    // Mirrors GetDigitalDirectionState(IGamePad) for the new keyboard arrow-key navigation path
+    // (issue #4272): "held" comes from IsComboDown (KeyDown-based, the keyboard analogue of
+    // ButtonDown) and "fired" from IsComboPushed (the same repeat-rate-aware check TabKeyCombos
+    // already uses), so a held combo only triggers on its own push/repeat pulses. Right/Left reuse
+    // IsUsingLeftAndRightGamepadDirectionsForNavigation -- the same flag a control like Slider
+    // already sets false to keep Left/Right for its own value instead of navigation.
+    private DigitalDirectionState GetDigitalDirectionStateFromKeyCombos()
+    {
+        bool right = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(RightKeyCombos);
+        bool left = IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboDown(LeftKeyCombos);
+        bool down = AnyComboDown(DownKeyCombos);
+        bool up = AnyComboDown(UpKeyCombos);
+
+        bool shouldFire =
+            (right && AnyComboPushed(RightKeyCombos)) ||
+            (left && AnyComboPushed(LeftKeyCombos)) ||
+            (down && AnyComboPushed(DownKeyCombos)) ||
+            (up && AnyComboPushed(UpKeyCombos));
+
+        return new DigitalDirectionState(right, left, down, up, shouldFire);
+    }
+
+    private static bool AnyComboDown(List<KeyCombo> combos)
+    {
+        foreach (KeyCombo combo in combos)
+        {
+            if (combo.IsComboDown())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool AnyComboPushed(List<KeyCombo> combos)
+    {
+        foreach (KeyCombo combo in combos)
+        {
+            if (combo.IsComboPushed())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Keyboard counterpart to <see cref="HandleGamepadNavigation(GamePadForNavigation)"/> (issue
+    /// #4272): resolves the same <see cref="GamepadNavigationMode"/> and dispatches to
+    /// <see cref="Gum.Forms.SpatialNavigationService"/> scoring (honoring
+    /// <see cref="SpatialNavigationUp"/>-style overrides) or index-based <see cref="HandleTab"/>,
+    /// driven by <see cref="UpKeyCombos"/>/<see cref="DownKeyCombos"/>/<see cref="LeftKeyCombos"/>/
+    /// <see cref="RightKeyCombos"/> instead of a gamepad's D-pad/stick. Called once per frame from
+    /// <see cref="HandleKeyboardFocusUpdate"/>, for whichever element currently has focus.
+    /// </summary>
+    private void HandleKeyboardDirectionalNavigation()
+    {
+        (GamepadNavigationMode mode, GraphicalUiElement? spatialRoot) = ResolveGamepadNavigationMode();
+
+        if (mode == Controls.GamepadNavigationMode.Spatial && spatialRoot != null)
+        {
+            DigitalDirectionState state = GetDigitalDirectionStateFromKeyCombos();
+
+            FrameworkElement? explicitOverride = GetExplicitDirectionOverride(state);
+            if (explicitOverride != null)
+            {
+                explicitOverride.IsFocused = true;
+                this.IsFocused = false;
+                return;
+            }
+
+            float? angle = GetRequestedDirectionAngle(state);
+            if (angle == null)
+            {
+                return;
+            }
+
+            var candidates = Gum.Forms.FrameworkElementTreeExtensions.ProjectToFrameworkElements(spatialRoot.Descendants())
+                .Where(CanElementBeFocused);
+
+            FrameworkElement? best = Gum.Forms.SpatialNavigationService.FindBestCandidate(this, angle.Value, candidates);
+            if (best != null)
+            {
+                best.IsFocused = true;
+                this.IsFocused = false;
+            }
+            return;
+        }
+
+        if (AnyComboPushed(DownKeyCombos) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboPushed(RightKeyCombos)))
+        {
+            this.HandleTab(TabDirection.Down, this, loop: true);
+        }
+        else if (AnyComboPushed(UpKeyCombos) ||
+            (IsUsingLeftAndRightGamepadDirectionsForNavigation && AnyComboPushed(LeftKeyCombos)))
+        {
+            this.HandleTab(TabDirection.Up, this, loop: true);
+        }
     }
 #endif
 
