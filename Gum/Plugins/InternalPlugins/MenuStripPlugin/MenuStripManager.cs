@@ -13,6 +13,7 @@ using Gum.Dialogs;
 using Gum.Messages;
 using Gum.Services.Dialogs;
 using CommunityToolkit.Mvvm.Messaging;
+using ToolsUtilities;
 
 namespace Gum.Managers
 {
@@ -51,6 +52,7 @@ namespace Gum.Managers
         private MenuItem _undoMenuItem;
         private MenuItem _redoMenuItem;
         private MenuItem _standardsPaletteMenuItem;
+        private MenuItem _openSettingsFolderMenuItem;
 
         #endregion
 
@@ -246,11 +248,24 @@ namespace Gum.Managers
             _viewMenuItem.Header = "View";
 
 
+            _openSettingsFolderMenuItem = new MenuItem();
+            _openSettingsFolderMenuItem.Header = "Open Settings Folder...";
+            _openSettingsFolderMenuItem.ToolTip = "Open the folder containing Gum's global settings files";
+            _openSettingsFolderMenuItem.Click += (_, _) =>
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = FileManager.UserApplicationDataForThisApplication,
+                    UseShellExecute = true
+                });
+            };
+
             _helpMenuItem = new MenuItem();
             _helpMenuItem.Header = "Help";
             _helpMenuItem.Items.Add(_aboutMenuItem);
             _helpMenuItem.Items.Add(_thirdPartyLicensesMenuItem);
             _helpMenuItem.Items.Add(_documentationMenuItem);
+            _helpMenuItem.Items.Add(_openSettingsFolderMenuItem);
 
 
             _fileMenuItem = new MenuItem();

@@ -149,6 +149,18 @@ public class MenuStripManagerTests : BaseTestClass
     }
 
     [StaFact]
+    public void PopulateMenu_ShouldAddOpenSettingsFolderItemToHelpMenu()
+    {
+        var menu = new Menu();
+
+        _menuStripManager.PopulateMenu(menu);
+
+        var helpMenu = (MenuItem)menu.Items[5];
+        helpMenu.Items.OfType<MenuItem>()
+            .ShouldContain(mi => mi.Header as string == "Open Settings Folder...");
+    }
+
+    [StaFact]
     public void GetItem_ShouldReturnNull_WhenItemDoesNotExist()
     {
         var menu = new Menu();
