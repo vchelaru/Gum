@@ -1,7 +1,6 @@
 using Gum.Renderables;
 using Gum.Wireframe;
 using RenderingLibrary.Content;
-using System.Collections.Generic;
 using static Raylib_cs.Raylib;
 
 namespace RenderingLibrary;
@@ -15,14 +14,7 @@ namespace RenderingLibrary;
 /// </summary>
 internal static class PixelDataTextureApplier
 {
-    private class PoolEntry
-    {
-        public PoolEntry(Texture2D texture) => Texture = texture;
-        public Texture2D Texture { get; }
-        public GraphicalUiElement? Owner { get; set; }
-    }
-
-    private static readonly List<PoolEntry> Pool = new List<PoolEntry>();
+    private static readonly PixelDataTexturePool<Texture2D> Pool = new PixelDataTexturePool<Texture2D>();
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
@@ -60,37 +52,10 @@ internal static class PixelDataTextureApplier
             return;
         }
 
-        PoolEntry? entry = null;
-        PoolEntry? reclaimable = null;
-        foreach (PoolEntry candidate in Pool)
-        {
-            if (candidate.Owner == owner)
-            {
-                entry = candidate;
-                break;
-            }
-            // An entry whose owner has left the visual tree (removed from root) can be reused.
-            if (reclaimable == null && (candidate.Owner == null || candidate.Owner.Parent == null))
-            {
-                reclaimable = candidate;
-            }
-        }
+        Texture2D texture = Pool.GetOrCreate(owner, () => CreateTexture(rgba, width, height));
 
-        if (entry == null)
-        {
-            entry = reclaimable ?? AddPoolEntry(rgba, width, height);
-            entry.Owner = owner;
-        }
-
-        UpdateTexture(entry.Texture, rgba);
-        sprite.Texture = entry.Texture;
-    }
-
-    private static PoolEntry AddPoolEntry(byte[] rgba, int width, int height)
-    {
-        PoolEntry entry = new PoolEntry(CreateTexture(rgba, width, height));
-        Pool.Add(entry);
-        return entry;
+        UpdateTexture(texture, rgba);
+        sprite.Texture = texture;
     }
 
     private static Texture2D CreateTexture(byte[] rgba, int width, int height)
