@@ -1373,14 +1373,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (IsInUiInitiatedSelection) return;
 
-        // When the Standards palette is on, standard elements have no visible tree node (the "Standard"
-        // folder is detached from the tree). Selecting one as data is valid — the variable grid loads
-        // its defaults via the selection cascade — but selecting a detached node in the tree would
-        // leave a selection the user cannot see. Skip the visual sync in that case.
-        if (treeNode != null && !IsInTree(treeNode))
-        {
-            return;
-        }
+        treeNode = ResolveNodeToSelect(treeNode, ObjectTreeView.Nodes);
 
         if (ObjectTreeView.SelectedNode != treeNode)
         {
@@ -1401,10 +1394,22 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Whether a node is still reachable from the tree's roots. A node detached during a rebuild -
-    /// or never attached, as standard elements are while the Standards palette is on - is not.
+    /// Resolves the node that should actually be selected. A node detached from the tree - never
+    /// attached, as standard elements are while the Standards palette is on, or detached during a
+    /// rebuild - has no visible row to select, so it resolves to null (clearing any prior selection)
+    /// rather than being selected outright.
     /// </summary>
-    private bool IsInTree(GumTreeNode node)
+    internal static GumTreeNode? ResolveNodeToSelect(GumTreeNode? treeNode, GumTreeNodeCollection rootNodes)
+    {
+        if (treeNode != null && !IsInTree(treeNode, rootNodes))
+        {
+            return null;
+        }
+
+        return treeNode;
+    }
+
+    private static bool IsInTree(GumTreeNode node, GumTreeNodeCollection rootNodes)
     {
         GumTreeNode root = node;
         while (root.Parent is { } parent)
@@ -1412,7 +1417,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             root = parent;
         }
 
-        return ObjectTreeView.Nodes.Contains(root);
+        return rootNodes.Contains(root);
     }
 
     private void Select(List<GumTreeNode> treeNodes)
