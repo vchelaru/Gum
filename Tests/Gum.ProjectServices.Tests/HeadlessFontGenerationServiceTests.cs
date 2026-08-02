@@ -711,6 +711,34 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         result.Values.ShouldContain(f => f.FontName == "Verdana" && f.FontSize == 24);
     }
 
+    [Fact]
+    public void CollectRequiredFonts_ShouldSetFontFile_WhenNestedTextInComponentUsesTtfPath()
+    {
+        // Component "MyButton" has a Text instance "Label" with Font="Fonts/Custom.ttf" - a
+        // bundled .ttf file reference, not a system font family name (#4255's Bubblegum bug is
+        // exactly this shape: a themed control's nested TextInstance.Font pointing at a bundled
+        // .ttf). Screen has an instance of MyButton, so collection goes through the nested-Text
+        // resolution path (TryGetBmfcSaveFromStack), not the direct-instance path (BuildBmfcSave).
+        // Both paths must treat a .ttf Font value as a file reference: FontFile set (so the
+        // generator loads the file instead of doing a system-font lookup) and FontName reduced to
+        // the bare name (matching BuildBmfcSave's behavior for a direct instance).
+        ComponentSave component = new ComponentSave { Name = "MyButton", BaseType = "Container" };
+        StateSave componentState = AddState(component, "Default");
+        AddTextInstance(component, "Label");
+        SetVar(componentState, "Label.Font", "Fonts/Custom.ttf");
+        SetVar(componentState, "Label.FontSize", 18);
+        Project.Components.Add(component);
+
+        ScreenSave screen = new ScreenSave { Name = "MainScreen" };
+        StateSave screenState = AddState(screen, "Default");
+        screen.Instances.Add(new InstanceSave { Name = "ButtonInstance", BaseType = "MyButton" });
+        Project.Screens.Add(screen);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { screen });
+
+        result.Values.ShouldContain(f => f.FontName == "Custom" && f.FontFile == "Fonts/Custom.ttf");
+    }
+
     #endregion
 
     // -------------------------------------------------------------------------
