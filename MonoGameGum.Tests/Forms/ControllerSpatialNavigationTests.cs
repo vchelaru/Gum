@@ -186,6 +186,34 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadSpatialNavigation_StickPushedNearLeft_HonorsSpatialNavigationLeftOverride()
+    {
+        // Issue #4274: explicit per-direction overrides only ever consulted the DPad, so a
+        // developer-set SpatialNavigationLeft was silently ignored when the player used the left
+        // stick instead -- scoring ran and could pick a different (wrong) candidate even with an
+        // override in place. A near-left stick push should snap to the Left cardinal and honor it.
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        SpatialNavHarness nearestByScore = CreateHarness(root, -90, -20);
+        SpatialNavHarness overrideTarget = CreateHarness(root, -400, 0);
+
+        origin.SpatialNavigationLeft = overrideTarget;
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        // AnalogStick.Y is +1 = up; a small upward wobble keeps this short of straight-left.
+        gamepad.SetLeftStickPosition(-0.98f, 0.05f);
+        gamepad.Activity(1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeFalse();
+        overrideTarget.IsFocused.ShouldBeTrue();
+        nearestByScore.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadSpatialNavigation_StickPushedOffAxis_MovesFocusUsingContinuousAngle()
     {
         ContainerRuntime root = new ContainerRuntime();

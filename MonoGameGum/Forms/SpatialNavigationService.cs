@@ -38,7 +38,7 @@ public static class SpatialNavigationService
         FrameworkElement origin,
         float directionAngleRadians,
         IEnumerable<FrameworkElement> candidates,
-        float maxAngleRadians = MathF.PI / 2f,
+        float maxAngleRadians = MathF.PI / 4f,
         float angleWeight = 2f)
     {
         (float originX, float originY) = GetCenter(origin);
