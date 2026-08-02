@@ -64,8 +64,13 @@ public abstract class TextBoxBase :
         get => base.IsFocused;
         set
         {
+            // Captured before base.IsFocused mutates the field: UpdateToIsFocused runs on
+            // every assignment (even a same-value no-op, e.g. the constructor's initial
+            // "IsFocused = false"), so it needs the pre-assignment value to tell a real
+            // focus-loss transition apart from a redundant false->false call.
+            bool wasFocused = isFocused;
             base.IsFocused = value;
-            UpdateToIsFocused();
+            UpdateToIsFocused(wasFocused);
         }
     }
 
@@ -609,7 +614,7 @@ public abstract class TextBoxBase :
 
     private void HandlePushOff()
     {
-        if (MainCursor.VisualOver != Visual && 
+        if (MainCursor.VisualOver != Visual &&
             timeFocused != InteractiveGue.CurrentGameTime &&
             LosesFocusWhenClickedOff)
         {
@@ -1387,7 +1392,9 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void UpdateToIsFocused()
+    private void UpdateToIsFocused() => UpdateToIsFocused(wasFocused: isFocused);
+
+    private void UpdateToIsFocused(bool wasFocused)
     {
         UpdateCaretVisibility();
 
@@ -1421,6 +1428,17 @@ public abstract class TextBoxBase :
             if (InteractiveGue.CurrentInputReceiver == this)
             {
                 InteractiveGue.CurrentInputReceiver = null;
+            }
+
+            // wasFocused (captured before base.IsFocused mutated the field) distinguishes a
+            // real focus-loss transition from a same-value "IsFocused = false" no-op — e.g.
+            // the one the constructor issues to establish the initial visual state. Without
+            // this, every new TextBox spuriously dismissed whatever keyboard some other
+            // already-focused control had open. It also sidesteps the base FrameworkElement.
+            // IsFocused setter already having cleared CurrentInputReceiver by this point, which
+            // is why this used to be (incorrectly) gated on "CurrentInputReceiver == this".
+            if (wasFocused)
+            {
                 TryHideNativeKeyboard();
 #if ANDROID && FRB
                 FlatRedBall.Input.InputManager.Keyboard.HideKeyboard();
