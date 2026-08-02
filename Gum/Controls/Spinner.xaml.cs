@@ -57,4 +57,15 @@ public partial class Spinner : Window, ISpinner
             CountLabel.Text = $"{_completed}/{_total}";
         });
     }
+
+    /// <summary>
+    /// Shadows <see cref="Window.Hide"/> so calls through <see cref="ISpinner"/> (its only
+    /// current caller runs the disposing code on whichever thread a background Task continuation
+    /// happened to resume on, not necessarily this Window's owning thread) are dispatcher-safe
+    /// like <see cref="SetTotal"/>/<see cref="IncrementProgress"/> already are.
+    /// </summary>
+    public new void Hide()
+    {
+        Dispatcher.BeginInvoke(() => base.Hide());
+    }
 }
