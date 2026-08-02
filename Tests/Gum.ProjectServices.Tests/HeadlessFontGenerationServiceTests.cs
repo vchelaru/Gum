@@ -6,6 +6,7 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ToolsUtilities;
@@ -1021,6 +1022,84 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     #endregion
 
     // -------------------------------------------------------------------------
+    // Generation summary message (#4266): "Created font files" was shown even
+    // when every font was already cached and nothing was actually generated.
+    // -------------------------------------------------------------------------
+
+    #region Generation summary message
+
+    [Fact]
+    public void BuildFontGenerationSummaryMessage_ShouldReportAllUpToDate_WhenNothingWasAttempted()
+    {
+        string message = HeadlessFontGenerationService.BuildFontGenerationSummaryMessage(
+            totalFontCount: 3, attemptedCount: 0, elapsedTime: TimeSpan.FromSeconds(0.4));
+
+        message.ShouldBe("All 3 font files already up to date");
+    }
+
+    [Fact]
+    public void BuildFontGenerationSummaryMessage_ShouldReportCreatedOnly_WhenEveryFontWasAttempted()
+    {
+        string message = HeadlessFontGenerationService.BuildFontGenerationSummaryMessage(
+            totalFontCount: 3, attemptedCount: 3, elapsedTime: TimeSpan.FromSeconds(0.4));
+
+        message.ShouldBe("Created 3 font files in 0.4 seconds");
+    }
+
+    [Fact]
+    public void BuildFontGenerationSummaryMessage_ShouldReportBothCounts_WhenOnlySomeFontsWereAttempted()
+    {
+        string message = HeadlessFontGenerationService.BuildFontGenerationSummaryMessage(
+            totalFontCount: 3, attemptedCount: 1, elapsedTime: TimeSpan.FromSeconds(0.4));
+
+        message.ShouldBe("Created 1 font files (2 already up to date) in 0.4 seconds");
+    }
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldReportAlreadyUpToDate_WhenFontFileAlreadyExistsOnDisk()
+    {
+        // Regression guard for #4266: a cache hit (font file already on disk, nothing
+        // generated) must not be reported as "Created font files".
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumFontGenTest_" + Guid.NewGuid()) + Path.DirectorySeparatorChar;
+        Directory.CreateDirectory(projectDirectory);
+        try
+        {
+            ScreenSave screen = new ScreenSave { Name = "Screen" };
+            StateSave state = AddState(screen);
+            SetVar(state, "Font", "Arial");
+            SetVar(state, "FontSize", 14);
+            Project.Screens.Add(screen);
+
+            // project.AllElements (walked internally by CreateAllMissingFontFiles) includes the
+            // Text standard element itself, whose Default state has its own Font/FontSize
+            // (Arial@18, set in this class's constructor) — so 2 fonts are required in total, not 1.
+            foreach (BmfcSave requiredFont in new[]
+                     {
+                         new BmfcSave { FontName = "Arial", FontSize = 14 },
+                         new BmfcSave { FontName = "Arial", FontSize = 18 }
+                     })
+            {
+                string cachedFntPath = Path.Combine(projectDirectory, requiredFont.FontCacheFileName);
+                Directory.CreateDirectory(Path.GetDirectoryName(cachedFntPath)!);
+                File.WriteAllText(cachedFntPath, "cached");
+            }
+
+            RecordingFontGenerationCallbacks callbacks = new();
+            HeadlessFontGenerationService service = new(new NoOpFontFileGenerator(), callbacks);
+
+            await service.CreateAllMissingFontFiles(Project, projectDirectory, forceRecreate: false);
+
+            callbacks.Messages.ShouldContain("All 2 font files already up to date");
+        }
+        finally
+        {
+            Directory.Delete(projectDirectory, recursive: true);
+        }
+    }
+
+    #endregion
+
+    // -------------------------------------------------------------------------
     // Windows gate (BmFontExeFileGenerator)
     // -------------------------------------------------------------------------
 
@@ -1081,6 +1160,16 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
                 : GeneralResponse.SuccessfulResponse;
             return Task.FromResult(response);
         }
+    }
+
+    /// <summary>
+    /// Captures <see cref="IFontGenerationCallbacks.OnOutput"/> messages for assertions.
+    /// </summary>
+    private sealed class RecordingFontGenerationCallbacks : IFontGenerationCallbacks
+    {
+        public List<string> Messages { get; } = new();
+
+        public void OnOutput(string message) => Messages.Add(message);
     }
 
     /// <summary>
