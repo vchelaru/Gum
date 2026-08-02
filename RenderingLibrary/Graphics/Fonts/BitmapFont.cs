@@ -41,6 +41,11 @@ public class BitmapFont : IDisposable
 
     BitmapCharacterInfo[] mCharacterInfo;
 
+    // The space character's info, used as the fallback for any out-of-range lookup.
+    // Cached directly instead of re-indexing mCharacterInfo[' '], since that index can
+    // itself be out of range for a font whose character table is smaller than 33 entries.
+    private BitmapCharacterInfo _defaultCharacterInfo;
+
     int mLineHeightInPixels;
 
     internal string mFontFile;
@@ -330,7 +335,7 @@ public class BitmapFont : IDisposable
         else
         {
             // Just return the coordinates for the space character
-            characterInfo = mCharacterInfo[' '];
+            characterInfo = _defaultCharacterInfo;
         }
 
         tVTop = characterInfo.TVTop;
@@ -350,7 +355,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            characterInfo = mCharacterInfo[' '];
+            characterInfo = _defaultCharacterInfo;
         }
 
         return characterInfo.DistanceFromTopOfLine;
@@ -373,7 +378,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return mCharacterInfo[' '];
+            return _defaultCharacterInfo;
         }
     }
 
@@ -392,7 +397,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return mCharacterInfo[' '].ScaleY * 2;
+            return _defaultCharacterInfo.ScaleY * 2;
         }
     }
 
@@ -404,7 +409,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return mCharacterInfo[' '].ScaleX;
+            return _defaultCharacterInfo.ScaleX;
 
         }
     }
@@ -417,7 +422,7 @@ public class BitmapFont : IDisposable
         }
         else
         {
-            return mCharacterInfo[' '].Spacing;
+            return _defaultCharacterInfo.Spacing;
         }
     }
 
@@ -445,6 +450,7 @@ public class BitmapFont : IDisposable
 
         var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
         mCharacterInfo = new BitmapCharacterInfo[charArraySize];
+        _defaultCharacterInfo = null;
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
 
@@ -472,11 +478,8 @@ public class BitmapFont : IDisposable
         // This used to cause a rendering crash. That was fixed but
         // even with it fixed we want to make sure we have a valid space
         // character since it's so common.
-        bool wasSpaceCreatedDynamically = false;
         if(spaceCharInfo == null)
         {
-            wasSpaceCreatedDynamically = true;
-
             var fontSize = 18;
 
             var absFontSize = System.Math.Abs(parsedData.Info.Size);
@@ -504,6 +507,9 @@ public class BitmapFont : IDisposable
         {
             var space = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight,
                 mLineHeightInPixels);
+            // Tentative fallback for a font too small to have an index 32 at all (see the
+            // final assignment below, which takes precedence once the array is fully populated).
+            _defaultCharacterInfo = space;
 
             for (int i = 0; i < charArraySize; i++)
             {
@@ -542,13 +548,11 @@ public class BitmapFont : IDisposable
                 textureHeight, mLineHeightInPixels);
         }
 
-        if(wasSpaceCreatedDynamically)
+        // Prefer the font's real space glyph (now in its final, non-placeholder form) if the
+        // array is large enough to hold it.
+        if (mCharacterInfo.Length > (int)' ')
         {
-            if(mCharacterInfo.Length > (int)' ')
-            {
-                mCharacterInfo[' '] = FillBitmapCharacterInfo(spaceCharInfo, textureWidth,
-                    textureHeight, mLineHeightInPixels);
-            }
+            _defaultCharacterInfo = mCharacterInfo[' '];
         }
 
         foreach (var kerning in parsedData.Kernings)
@@ -1169,16 +1173,7 @@ public class BitmapFont : IDisposable
         for (int i = 0; i < line.Length; i++)
         {
             char character = line[i];
-            BitmapCharacterInfo characterInfo = null;
-            try
-            {
-                characterInfo = GetCharacterInfo(character);
-            }
-            catch
-            {
-                // If we can't measure a character due to it missing, we shouldn't throw an exception here.
-                // By catching the exception, we allow Gum to work even if it's missing characters
-            }
+            BitmapCharacterInfo characterInfo = GetCharacterInfo(character);
 
             if (characterInfo != null)
             {
