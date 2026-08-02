@@ -79,6 +79,8 @@ namespace RenderingLibrary
                 ElementSaveExtensions.CustomCreateGraphicalComponentFunc = HandleCreateGraphicalComponent;
                 GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
                 GraphicalUiElement.UpdateFontFromProperties = UpdateFonts;
+                GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
+                GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
 
                 GraphicalUiElement.AddRenderableToManagers = AddRenderableToManagers;
                 GraphicalUiElement.RemoveRenderableFromManagers = RemoveRenderableFromManagers;

@@ -131,6 +131,8 @@ public class SystemManagers : ISystemManagers
             // teardown nulls UpdateFontFromProperties; without re-wiring here, the direct font-property
             // setters silently stop loading fonts after a teardown/reinitialize cycle.
             GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
+            GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
+            GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
 
             // raylib seems to use a resources folder, but I don't think we should make any
             // assumptions
