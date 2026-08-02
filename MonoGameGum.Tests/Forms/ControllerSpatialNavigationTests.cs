@@ -141,6 +141,56 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadSpatialNavigation_LeftRightNavigationDisabled_StickPushedRight_DoesNotMoveFocus()
+    {
+        // Reproduces issue #4273: a Slider sets IsUsingLeftAndRightGamepadDirectionsForNavigation to
+        // false so left/right stick input adjusts its own Value instead of navigating focus. Under
+        // spatial navigation, a pure left/right stick push must not steal focus to a candidate on
+        // that axis either.
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        origin.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
+        SpatialNavHarness right = CreateHarness(root, 150, 0);
+
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetLeftStickPosition(1f, 0f);
+        gamepad.Activity(1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeTrue();
+        right.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleGamepadSpatialNavigation_LeftRightNavigationDisabledWithExplicitOverride_StickPushedRight_DoesNotUseOverride()
+    {
+        // Same root cause as above, via the explicit-override branch: an override assigned to the
+        // right cardinal must not fire from a horizontal stick push when left/right navigation is
+        // disabled (e.g. a Slider, which reserves left/right stick input for adjusting its own Value).
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        origin.IsUsingLeftAndRightGamepadDirectionsForNavigation = false;
+        SpatialNavHarness overrideTarget = CreateHarness(root, 150, 0);
+        origin.SpatialNavigationRight = overrideTarget;
+
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetLeftStickPosition(1f, 0f);
+        gamepad.Activity(1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeTrue();
+        overrideTarget.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadSpatialNavigation_NoInput_DoesNotChangeFocus()
     {
         ContainerRuntime root = new ContainerRuntime();

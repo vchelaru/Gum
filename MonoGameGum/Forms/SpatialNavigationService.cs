@@ -26,11 +26,14 @@ public static class SpatialNavigationService
     /// The requested direction in screen space: 0 = right, increasing clockwise (Y grows downward).
     /// </param>
     /// <param name="candidates">
-    /// The focusable elements to consider. <paramref name="origin"/>, and any ancestor of
+    /// The focusable elements to consider. <paramref name="origin"/>, any ancestor of
     /// <paramref name="origin"/> (e.g. a large focusable container the origin sits near the edge
-    /// of), are skipped if present — an ancestor's own center can otherwise score better than a
-    /// true sibling simply by virtue of containing the origin, sending focus "backwards" into a
-    /// container the origin is already inside instead of to something actually in that direction.
+    /// of), and any descendant of <paramref name="origin"/> (e.g. a composite control's own
+    /// internal focusable part, such as a Slider's Thumb button) are skipped if present — an
+    /// ancestor's own center can otherwise score better than a true sibling simply by virtue of
+    /// containing the origin, and a descendant sitting right at the origin's edge can otherwise
+    /// outscore a true sibling simply by virtue of being nested inside it — both send focus
+    /// somewhere other than an actual neighboring control.
     /// </param>
     /// <param name="maxAngleRadians">Half-width of the direction cone; candidates outside are excluded.</param>
     /// <param name="angleWeight">How strongly angular misalignment penalizes an otherwise-close candidate.</param>
@@ -48,7 +51,9 @@ public static class SpatialNavigationService
 
         foreach (FrameworkElement candidate in candidates)
         {
-            if (candidate == origin || origin.Visual.IsInParentChain(candidate.Visual))
+            if (candidate == origin ||
+                origin.Visual.IsInParentChain(candidate.Visual) ||
+                candidate.Visual.IsInParentChain(origin.Visual))
             {
                 continue;
             }

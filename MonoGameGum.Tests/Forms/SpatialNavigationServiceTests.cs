@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Shouldly;
@@ -78,6 +79,47 @@ public class SpatialNavigationServiceTests : BaseTestClass
         List<FrameworkElement> candidates = new() { container, sibling };
 
         FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, MathF.PI / 2f, candidates);
+
+        result.ShouldBe(sibling);
+    }
+
+    [Fact]
+    public void FindBestCandidate_ExcludesDescendantsOfOrigin_EvenWhenGeometricallyBestScored()
+    {
+        // Reproduces issue #4273: a composite control (e.g. a Slider) contains its own focusable
+        // child (e.g. the Thumb button) sitting right at its own edge -- so without this exclusion,
+        // that internal child can outscore an actual sibling and steal focus onto the control's own
+        // part instead of moving to a neighboring control.
+        Panel origin = new();
+        origin.AddToRoot();
+        origin.WidthUnits = DimensionUnitType.Absolute;
+        origin.HeightUnits = DimensionUnitType.Absolute;
+        origin.X = 0;
+        origin.Y = 0;
+        origin.Width = 150;
+        origin.Height = 20;
+
+        Button internalChild = new();
+        origin.AddChild(internalChild);
+        internalChild.WidthUnits = DimensionUnitType.Absolute;
+        internalChild.HeightUnits = DimensionUnitType.Absolute;
+        internalChild.X = 140;
+        internalChild.Y = 0;
+        internalChild.Width = 10;
+        internalChild.Height = 20;
+
+        Button sibling = new();
+        sibling.AddToRoot();
+        sibling.WidthUnits = DimensionUnitType.Absolute;
+        sibling.HeightUnits = DimensionUnitType.Absolute;
+        sibling.X = 400;
+        sibling.Y = 0;
+        sibling.Width = 10;
+        sibling.Height = 10;
+
+        List<FrameworkElement> candidates = new() { internalChild, sibling };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, 0f, candidates);
 
         result.ShouldBe(sibling);
     }
