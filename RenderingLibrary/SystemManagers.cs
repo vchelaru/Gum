@@ -472,14 +472,7 @@ public partial class SystemManagers : ISystemManagers
 /// </summary>
 internal static class PixelDataTextureApplier
 {
-    private class PoolEntry
-    {
-        public PoolEntry(Texture2D texture) => Texture = texture;
-        public Texture2D Texture { get; }
-        public GraphicalUiElement? Owner { get; set; }
-    }
-
-    private static readonly List<PoolEntry> Pool = new List<PoolEntry>();
+    private static readonly PixelDataTexturePool<Texture2D> Pool = new PixelDataTexturePool<Texture2D>();
 
     public static void ApplyCached(GraphicalUiElement target, string cacheKey, byte[] rgba, int width, int height)
     {
@@ -518,37 +511,11 @@ internal static class PixelDataTextureApplier
             return;
         }
 
-        PoolEntry? entry = null;
-        PoolEntry? reclaimable = null;
-        foreach (PoolEntry candidate in Pool)
-        {
-            if (candidate.Owner == owner)
-            {
-                entry = candidate;
-                break;
-            }
-            // An entry whose owner has left the visual tree (removed from root) can be reused.
-            if (reclaimable == null && (candidate.Owner == null || candidate.Owner.Parent == null))
-            {
-                reclaimable = candidate;
-            }
-        }
+        Texture2D texture = Pool.GetOrCreate(owner,
+            () => new Texture2D(graphicsDevice, width, height, false, SurfaceFormat.Color));
 
-        if (entry == null)
-        {
-            entry = reclaimable ?? AddPoolEntry(graphicsDevice, width, height);
-            entry.Owner = owner;
-        }
-
-        entry.Texture.SetData(rgba);
-        sprite.Texture = entry.Texture;
-    }
-
-    private static PoolEntry AddPoolEntry(GraphicsDevice graphicsDevice, int width, int height)
-    {
-        PoolEntry entry = new PoolEntry(new Texture2D(graphicsDevice, width, height, false, SurfaceFormat.Color));
-        Pool.Add(entry);
-        return entry;
+        texture.SetData(rgba);
+        sprite.Texture = texture;
     }
 }
 #endif
