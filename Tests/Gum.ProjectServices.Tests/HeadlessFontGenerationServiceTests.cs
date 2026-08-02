@@ -320,6 +320,24 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void CollectRequiredFonts_ShouldDisableObjectFinderCache_SoLaterAdditionsAreVisible()
+    {
+        // CollectRequiredFonts enables ObjectFinder's cache internally (#4251) to avoid an O(n)
+        // linear scan per instance lookup. If it left the cache enabled afterward, a component
+        // added to the project post-call would be invisible to GetElementSave, since it would
+        // still be resolving against the stale pre-addition snapshot.
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        Project.Components.Add(button);
+
+        _sut.CollectRequiredFonts(Project, new ElementSave[] { button });
+
+        ComponentSave panel = new ComponentSave { Name = "Panel" };
+        Project.Components.Add(panel);
+
+        ObjectFinder.Self.GetElementSave("Panel").ShouldBe(panel);
+    }
+
+    [Fact]
     public void CollectRequiredFonts_ShouldReturn2Fonts_WhenTwoStatesHaveDifferentSizes()
     {
         ScreenSave screen = new ScreenSave { Name = "Screen" };

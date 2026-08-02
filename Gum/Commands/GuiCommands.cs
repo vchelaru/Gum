@@ -136,19 +136,25 @@ public class GuiCommands : IGuiCommands
     /// <inheritdoc/>
     public void ActivateMainWindow()
     {
-        // IsLoaded: font generation can run before the main window has completed its Show()
-        // sequence (e.g. during initial project load at startup) - Activate() throws
-        // InvalidOperationException ("Cannot call DragMove or Activate before a Window is shown")
-        // if called that early.
-        if (Application.Current?.MainWindow is not { IsLoaded: true } mainWindow)
+        // Its only caller (ToolFontGenerationCallbacks.SpinnerHandle.Dispose) runs on whichever
+        // thread a background Task continuation happens to resume on after font generation, not
+        // necessarily the UI thread (#4253) - every WPF call below needs to be dispatcher-marshaled.
+        _dispatcher.Post(() =>
         {
-            return;
-        }
+            // IsLoaded: font generation can run before the main window has completed its Show()
+            // sequence (e.g. during initial project load at startup) - Activate() throws
+            // InvalidOperationException ("Cannot call DragMove or Activate before a Window is shown")
+            // if called that early.
+            if (Application.Current?.MainWindow is not { IsLoaded: true } mainWindow)
+            {
+                return;
+            }
 
-        // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
-        IntPtr windowHandle = new WindowInteropHelper(mainWindow).EnsureHandle();
-        NativeMethods.ForceForegroundWindow(windowHandle);
-        mainWindow.Activate();
+            // EnsureHandle forces the Win32 HWND to be created if it doesn't exist yet.
+            IntPtr windowHandle = new WindowInteropHelper(mainWindow).EnsureHandle();
+            NativeMethods.ForceForegroundWindow(windowHandle);
+            mainWindow.Activate();
+        });
     }
 
     private static class NativeMethods

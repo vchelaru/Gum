@@ -20,7 +20,7 @@ public interface ISpinner
     void IncrementProgress();
 
     /// <summary>
-    /// Hides the progress indicator.
+    /// Hides the progress indicator. Safe to call from any thread.
     /// </summary>
     void Hide();
 }

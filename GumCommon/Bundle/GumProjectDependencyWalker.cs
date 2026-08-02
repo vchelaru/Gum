@@ -60,34 +60,47 @@ public class GumProjectDependencyWalker
         HashSet<string> external = new HashSet<string>(StringComparer.Ordinal);
         List<DependencyWarning> missing = new List<DependencyWarning>();
 
-        if (scopeElement == null)
+        // The walk resolves instance BaseTypes via ObjectFinder.Self.GetElementSave/GetRootVariable
+        // for every instance in the project. Without the cache those fall back to an O(n) linear
+        // scan of Screens/Components/StandardElements per call, so the walk's cost scales with
+        // project size squared. EnableCache/DisableCache is reference-counted, so this composes
+        // safely with an already-active cache from an outer caller.
+        ObjectFinder.Self.EnableCache();
+        try
         {
-            if (inclusion.HasFlag(GumBundleInclusion.Core))
+            if (scopeElement == null)
             {
-                CollectCoreFiles(project, projectRootDirectory, core, missing);
-                CollectInstanceTypeCoreFiles(project, core);
-            }
+                if (inclusion.HasFlag(GumBundleInclusion.Core))
+                {
+                    CollectCoreFiles(project, projectRootDirectory, core, missing);
+                    CollectInstanceTypeCoreFiles(project, core);
+                }
 
-            if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
-            {
-                CollectFileAndFontReferences(project, projectRootDirectory, inclusion, fontCache, external, missing);
-            }
+                if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
+                {
+                    CollectFileAndFontReferences(project, projectRootDirectory, inclusion, fontCache, external, missing);
+                }
 
-            if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+                if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+                {
+                    CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
+                        inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+                }
+            }
+            else
             {
-                CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
-                    inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+                CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing);
+
+                if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+                {
+                    CollectFontCacheReferences(project, new[] { scopeElement }, projectRootDirectory,
+                        inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+                }
             }
         }
-        else
+        finally
         {
-            CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing);
-
-            if (inclusion.HasFlag(GumBundleInclusion.FontCache))
-            {
-                CollectFontCacheReferences(project, new[] { scopeElement }, projectRootDirectory,
-                    inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
-            }
+            ObjectFinder.Self.DisableCache();
         }
 
         // Enforce precedence: Core wins over FontCache wins over External.
