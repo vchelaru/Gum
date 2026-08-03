@@ -765,17 +765,33 @@ public class ObjectFinder : IObjectFinder
 
     #region Get Files
 
+    private const Gum.Bundle.GumBundleInclusion AllInclusions =
+        Gum.Bundle.GumBundleInclusion.Core |
+        Gum.Bundle.GumBundleInclusion.FontCache |
+        Gum.Bundle.GumBundleInclusion.ExternalFiles;
+
     public IEnumerable<string> GetAllFilesInProject()
     {
-        return CollectReferencedFilesViaWalker(scopeElement: null).Distinct();
+        return GetAllFilesInProject(AllInclusions);
+    }
+
+    /// <summary>
+    /// Enumerates the project's referenced files, restricted to the given categories. Excluding
+    /// <see cref="Gum.Bundle.GumBundleInclusion.FontCache"/> is dramatically cheaper - font-cache
+    /// enumeration resolves every text instance's effective font, which dominates the walk - so
+    /// callers that don't need individual .fnt/.png paths should leave that flag off.
+    /// </summary>
+    public IEnumerable<string> GetAllFilesInProject(Gum.Bundle.GumBundleInclusion inclusion)
+    {
+        return CollectReferencedFilesViaWalker(scopeElement: null, inclusion).Distinct();
     }
 
     public List<string> GetFilesReferencedBy(ElementSave element)
     {
-        return CollectReferencedFilesViaWalker(scopeElement: element).Distinct().ToList();
+        return CollectReferencedFilesViaWalker(scopeElement: element, AllInclusions).Distinct().ToList();
     }
 
-    private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement)
+    private List<string> CollectReferencedFilesViaWalker(ElementSave? scopeElement, Gum.Bundle.GumBundleInclusion inclusion)
     {
         List<string> result = new List<string>();
         if (GumProjectSave == null)
@@ -789,7 +805,7 @@ public class ObjectFinder : IObjectFinder
         Gum.Bundle.WalkResult walkResult = walker.Walk(
             GumProjectSave,
             gumProjectDirectory,
-            Gum.Bundle.GumBundleInclusion.Core | Gum.Bundle.GumBundleInclusion.FontCache | Gum.Bundle.GumBundleInclusion.ExternalFiles,
+            inclusion,
             scopeElement);
 
         // Walker emits relative-to-project paths (forward-slashed). Existing callers expect

@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+﻿using Gum.Bundle;
+using Gum.Commands;
 using Gum.Managers;
 using Gum.ToolStates;
 using System;
@@ -72,11 +73,17 @@ public class FileWatchLogic
 
         // One walk over the entire project graph. The walker is shared with
         // bundling/codegen, so it covers every file the project references.
+        //
+        // Font-cache files are deliberately excluded: enumerating them means resolving every text
+        // instance's effective font, which dominates the walk, and it buys no coverage here. Every
+        // font-cache path is relative to the project directory, which is added unconditionally
+        // below and watched with IncludeSubdirectories - so .fnt/.png changes are still detected.
         IEnumerable<string> filesReferenced;
         try
         {
             using var _ = Gum.Diagnostics.StartupTiming.Time("    ObjectFinder.GetAllFilesInProject");
-            filesReferenced = ObjectFinder.Self.GetAllFilesInProject();
+            filesReferenced = ObjectFinder.Self.GetAllFilesInProject(
+                GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
         }
         catch (Exception e)
         {
