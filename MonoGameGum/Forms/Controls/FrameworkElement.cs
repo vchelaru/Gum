@@ -1759,11 +1759,26 @@ public class FrameworkElement : INotifyPropertyChanged
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
         {
-            float stickAngle = MathF.Atan2(-gamepad.LeftStick.Y, gamepad.LeftStick.X);
+            (float stickX, float stickY) = GetEffectiveStickPosition(gamepad);
+            if (stickX == 0f && stickY == 0f)
+            {
+                return null;
+            }
+            float stickAngle = MathF.Atan2(-stickY, stickX);
             return GetCardinalOverride(stickAngle);
         }
 
         return null;
+    }
+
+    // Zeroes the stick's horizontal axis when IsUsingLeftAndRightGamepadDirectionsForNavigation is
+    // false, mirroring the same exclusion GetDigitalDirectionState applies to DPad left/right — a
+    // control that reserves left/right for its own value (e.g. Slider) must not have a horizontal
+    // stick push navigate focus away instead.
+    private (float x, float y) GetEffectiveStickPosition(IGamePad gamepad)
+    {
+        float x = IsUsingLeftAndRightGamepadDirectionsForNavigation ? gamepad.LeftStick.X : 0f;
+        return (x, gamepad.LeftStick.Y);
     }
 
     // Snaps a screen-space angle (0 = right, increasing clockwise) to whichever of the four
@@ -1807,8 +1822,13 @@ public class FrameworkElement : INotifyPropertyChanged
 
         if (gamepad.LeftStick.RadialPushedRepeatRate())
         {
+            (float stickX, float stickY) = GetEffectiveStickPosition(gamepad);
+            if (stickX == 0f && stickY == 0f)
+            {
+                return null;
+            }
             // AnalogStick.Y is math-convention (+1 = up); screen space is Y-down, so flip the sign.
-            return MathF.Atan2(-gamepad.LeftStick.Y, gamepad.LeftStick.X);
+            return MathF.Atan2(-stickY, stickX);
         }
 
         return null;

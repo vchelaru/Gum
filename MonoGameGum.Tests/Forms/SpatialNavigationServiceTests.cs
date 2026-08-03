@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
 using Shouldly;
@@ -83,6 +84,85 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_ExcludesDescendantsOfOrigin_EvenWhenGeometricallyBestScored()
+    {
+        // Reproduces issue #4273: a composite control (e.g. a Slider) contains its own focusable
+        // child (e.g. the Thumb button) sitting right at its own edge -- so without this exclusion,
+        // that internal child can outscore an actual sibling and steal focus onto the control's own
+        // part instead of moving to a neighboring control.
+        Panel origin = new();
+        origin.AddToRoot();
+        origin.WidthUnits = DimensionUnitType.Absolute;
+        origin.HeightUnits = DimensionUnitType.Absolute;
+        origin.X = 0;
+        origin.Y = 0;
+        origin.Width = 150;
+        origin.Height = 20;
+
+        Button internalChild = new();
+        origin.AddChild(internalChild);
+        internalChild.WidthUnits = DimensionUnitType.Absolute;
+        internalChild.HeightUnits = DimensionUnitType.Absolute;
+        internalChild.X = 140;
+        internalChild.Y = 0;
+        internalChild.Width = 10;
+        internalChild.Height = 20;
+
+        Button sibling = new();
+        sibling.AddToRoot();
+        sibling.WidthUnits = DimensionUnitType.Absolute;
+        sibling.HeightUnits = DimensionUnitType.Absolute;
+        sibling.X = 400;
+        sibling.Y = 0;
+        sibling.Width = 10;
+        sibling.Height = 10;
+
+        List<FrameworkElement> candidates = new() { internalChild, sibling };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, 0f, candidates);
+
+        result.ShouldBe(sibling);
+    }
+
+    [Fact]
+    public void FindBestCandidate_ExcludesCandidateNestedUnderAnotherCandidate_EvenWhenCloser()
+    {
+        // Reproduces issue #4273's real-world manifestation: a composite control (the "outer"
+        // candidate, e.g. a Slider) and its own internal focusable part (the "inner" candidate,
+        // e.g. its Thumb button) both pass the focusable filter and both end up in the SAME
+        // candidate pool when navigating FROM an unrelated sibling -- neither is the origin here,
+        // so the origin-relative ancestor/descendant exclusions don't apply. Tab-order navigation
+        // avoids this by treating a focusable element as an opaque stop and never descending into
+        // it (see FrameworkElement.HandleTab); scoring must apply the same "outermost focusable
+        // wins" rule or the inner part can win on proximity and steal focus from the control itself.
+        Button origin = CreatePositionedButton(0, 0);
+
+        Button outer = new();
+        outer.AddToRoot();
+        outer.WidthUnits = DimensionUnitType.Absolute;
+        outer.HeightUnits = DimensionUnitType.Absolute;
+        outer.X = 200;
+        outer.Y = 0;
+        outer.Width = 100;
+        outer.Height = 20;
+
+        Button inner = new();
+        outer.AddChild(inner);
+        inner.WidthUnits = DimensionUnitType.Absolute;
+        inner.HeightUnits = DimensionUnitType.Absolute;
+        inner.X = 0;
+        inner.Y = 0;
+        inner.Width = 10;
+        inner.Height = 20;
+
+        List<FrameworkElement> candidates = new() { outer, inner };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, 0f, candidates);
+
+        result.ShouldBe(outer);
+    }
+
+    [Fact]
     public void FindBestCandidate_NeverReturnsOrigin_EvenIfPresentInCandidates()
     {
         Button origin = CreatePositionedButton(0, 0);
@@ -144,6 +224,41 @@ public class SpatialNavigationServiceTests : BaseTestClass
         FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, leftDirection, candidates);
 
         result.ShouldBe(aligned);
+    }
+
+    [Fact]
+    public void FindBestCandidate_WideCandidateDirectlyBelow_IsNotExcludedByItsOwnCenterOffset()
+    {
+        // Reproduces issue #4273's second manifestation: a wide control (e.g. a full-width Slider)
+        // positioned so its bounding rectangle spans directly below the origin, but whose raw
+        // CENTER sits far enough to the side that a pure center-to-center angle falls outside the
+        // direction cone. Scoring must measure from the closest point on each candidate's
+        // rectangle, not its raw center, or a wide sibling directly in the requested direction gets
+        // excluded entirely.
+        Button origin = new();
+        origin.AddToRoot();
+        origin.WidthUnits = DimensionUnitType.Absolute;
+        origin.HeightUnits = DimensionUnitType.Absolute;
+        origin.X = 0;
+        origin.Y = 0;
+        origin.Width = 40;
+        origin.Height = 20;
+
+        Button wideBelow = new();
+        wideBelow.AddToRoot();
+        wideBelow.WidthUnits = DimensionUnitType.Absolute;
+        wideBelow.HeightUnits = DimensionUnitType.Absolute;
+        wideBelow.X = 0;
+        wideBelow.Y = 100;
+        wideBelow.Width = 600;
+        wideBelow.Height = 20;
+
+        List<FrameworkElement> candidates = new() { wideBelow };
+
+        float straightDown = MathF.PI / 2f;
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, straightDown, candidates);
+
+        result.ShouldBe(wideBelow);
     }
 
     [Fact]
