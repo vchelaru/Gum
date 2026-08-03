@@ -5,9 +5,10 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 # which main's ruleset lists as required status checks. A path-filtered trigger
 # does not skip the check, it prevents the check from ever being reported, so
 # any PR matching the filter (a docs-only PR) is stuck at BLOCKED permanently
-# with no way to re-run it into a passing state. If the CI cost of docs-only
-# PRs needs cutting again, guard the expensive *steps* inside the job so the
-# job still runs and reports; the required contexts must always report.
+# with no way to re-run it into a passing state. Docs-only CI savings are instead
+# restored inside the Build-and-Test job itself: its "Detect docs-only PR" step
+# guards every expensive step so the job still runs and reports green, it just
+# does no work. Required contexts must always report.
 # push is safe to filter: pushes to main are not gated on required checks.
 on:
   push:
@@ -276,6 +277,24 @@ jobs:
         with:
           submodules: false
 
+      # Required contexts must always report (see the top-of-file comment), so this
+      # trigger stays unfiltered. This step instead detects a docs-only PR so every
+      # expensive step below can skip its work while the job still runs and reports
+      # green. Uses the GitHub API (no local diff/full-history checkout needed) for
+      # pull_request events; irrelevant for push/workflow_dispatch, which don't gate
+      # on this output.
+      - name: Detect docs-only PR
+        if: github.event_name == 'pull_request'
+        id: docs-only
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            non-docs:
+              - '**'
+              - '!docs/**'
+              - '!**/*.md'
+              - '!.gitbook/**'
+
       # Cache the submodule object stores (.git/modules) + working trees, keyed on
       # the pinned submodule SHAs, so a hit turns the recursive non-shallow init
       # below into a fast local verify instead of re-cloning FNA's nested native
@@ -286,6 +305,7 @@ jobs:
       # budget is dominated by the workload packs — limiting submodule caches to one
       # per OS on main avoids evicting those. (#3349 item 2)
       - name: Compute submodule cache key
+        if: github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true'
         id: submodule-key
         shell: bash
         run: echo "shas=$(git submodule status | cut -c2-41 | tr -d '\n')" >> "$GITHUB_OUTPUT"
@@ -301,7 +321,7 @@ jobs:
           key: submodules-${{ runner.os }}-${{ steps.submodule-key.outputs.shas }}
       - name: Restore cached submodules (PRs)
         id: cache-submodules-restore
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/main' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -313,9 +333,11 @@ jobs:
       # --jobs parallelizes the (still non-shallow) fetch of independent submodules
       # on a cache miss; on a hit the objects are already local so this is fast.
       - name: Init submodules (non-shallow)
+        if: github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true'
         run: git submodule update --init --recursive --jobs 4
 
       - name: Setup .NET SDKs
+        if: github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
@@ -339,7 +361,7 @@ jobs:
 
       - name: Restore cached .NET workloads (PRs)
         id: cache-workloads-restore
-        if: github.ref != 'refs/heads/main'
+        if: github.ref != 'refs/heads/main' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         uses: actions/cache/restore@v4
         with:
           path: |
@@ -352,7 +374,7 @@ jobs:
           key: workloads-${{ runner.os }}-${{ hashFiles('.github/workflows/build-and-test.yaml') }}
 
       - name: Install workloads
-        if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true'
+        if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet workload install wasm-tools-net9 ios android maui
 
       # Workload caching IS used above and saves ~2 minutes per run.
@@ -372,7 +394,7 @@ jobs:
       # (see KniGum.csproj); without this flag Android regressions would slip past CI and
       # only surface when packing the Gum.KNI nupkg.
       - name: Build AllLibraries
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: |
           dotnet restore "AllLibraries.sln" -p:IncludeAndroid=true --verbosity quiet
           dotnet build "AllLibraries.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0 -p:IncludeAndroid=true
@@ -495,35 +517,35 @@ jobs:
       # Results" step runs with always() so whatever trx were produced are still
       # reported.
       - name: MonoGameGum.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: SokolGum.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/SokolGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Bundle.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.Bundle.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.ProjectServices.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.ProjectServices.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.ImageDiff.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.ImageDiff.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Presentation.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.AssemblyNameGuard.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.Analyzers.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum.Tests renders into an in-memory CPU raster SKSurface (no GPU / window /
@@ -531,21 +553,21 @@ jobs:
       # was previously excluded by mistake — the old comment claimed it needed window
       # plumbing, which is not true of these tests. #3233
       - name: SkiaGum.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SilkNetGum.Tests is the Gum.SilkNet runtime (SkiaGum renderer + Silk.NET.Input host).
       # Like SkiaGum.Tests it renders into an in-memory CPU raster SKSurface and mocks input —
       # no GPU / window / GL — so it runs headless and blocks on failure. #3605
       - name: SilkNetGum.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/SilkNetGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # SkiaGum-backed SVG export service (gumcli svg / tool File ▸ Export). Drives
       # SkiaGumSvgExportService end-to-end via SKSvgCanvas — CPU-only, fully headless
       # like SkiaGum.Tests above, so it blocks on failure too. #3259
       - name: Gum.ProjectServices.SkiaGum.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.ProjectServices.SkiaGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # --- RaylibGum.Tests via Mesa llvmpipe software GL (Windows, #3250) ---------
@@ -565,7 +587,7 @@ jobs:
       # burning the job budget, and the trx now lands in the shared TestResults dir
       # so the "Publish Test Results" reporter gates on it like every other suite.
       - name: "Install Mesa llvmpipe (Windows, #3250)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: |
           $ErrorActionPreference = "Stop"
           $ProgressPreference = "SilentlyContinue"   # Invoke-WebRequest is far faster without progress rendering
@@ -612,14 +634,14 @@ jobs:
       # OSes (no runner.os gate) like before this move — only the raylib-touching tests self-skip on
       # non-Windows (see their own comments).
       - name: Gum.Cli.Tests
-        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         env:
           GALLIUM_DRIVER: llvmpipe   # only consulted by the raylib-touching tests, themselves
                                      # Windows-only; harmless no-op elsewhere
         run: dotnet test "Tests/Gum.Cli.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: "RaylibGum.Tests (Windows, #3250)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -628,7 +650,7 @@ jobs:
       # RaylibScreenshotService (#4174) — same real raylib window/OpenGL context as
       # RaylibGum.Tests above, via the same Mesa llvmpipe DLLs copied in the step above.
       - name: "Gum.ProjectServices.Raylib.Tests (Windows, #4174)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -645,7 +667,7 @@ jobs:
       # of the correctly RID-scoped, version-paired copy under runtimes\win-x64\native. Fixed
       # upstream in ShadowDusk.Compiler 0.17.0 (#4195).
       - name: "MonoGameGum.IntegrationTests (Windows, #4190)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         timeout-minutes: 15
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
@@ -655,14 +677,14 @@ jobs:
       # promoted from Bucket D). Windows-only for consistency with the other Mesa-dependent suites
       # above, though verification showed every test here mocks out GraphicsDevice entirely.
       - name: "MonoGameGum.Shapes.Tests (Windows, #4198)"
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows'
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         timeout-minutes: 10
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/MonoGameGum.Shapes.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Publish Test Results
-        if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: always() && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         uses: dorny/test-reporter@v2
         with:
           name: Tests ${{ matrix.os }}
@@ -677,7 +699,7 @@ jobs:
       # running it from Contents/MacOS/. The harness exits non-zero if Gum fails to resolve the content,
       # so `set -e` turns that into a failed build. This is what removes the need to test #731 by hand.
       - name: macOS .app bundle content resolution (issue #731)
-        if: runner.os == 'macOS' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true')
+        if: runner.os == 'macOS' && (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: |
           set -euo pipefail
 
