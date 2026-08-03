@@ -155,6 +155,84 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // The real bug (not the rounding-noise theory above): RelativeToChildren sizes the box to fit its
+    // OWN content, so it must never wrap, full stop -- regardless of which font is loaded or how
+    // imperfectly that font's glyph metrics scale. RegenerateOversampledFont swaps BitmapFont/FontScale
+    // directly on the renderable without calling back into GraphicalUiElement.UpdateLayout(), so a
+    // RelativeToChildren box's Width is never re-derived from the new font -- it stays frozen at the
+    // natural width measured against the OLD font. That staleness happens to cancel out mathematically
+    // when the new font scales perfectly linearly (see the Proportional test above), but any real
+    // rasterizer's hinting/rounding makes the oversampled font's glyphs not an exact multiple of the
+    // base font's, which the frozen Width has no way to absorb -- unlike a fresh RelativeToChildren
+    // measurement, which would just re-size to fit. NearlyProportionalFontCreator simulates that
+    // realistic 1px-per-glyph rounding noise at the oversampled size.
+    [Fact]
+    public void RegenerateOversampledFont_WithRelativeToChildrenWidth_ShouldNeverWrap()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: 20);
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            text.WrappedText.Count.ShouldBe(1, "because RelativeToChildren sizes the box to exactly fit this text before any oversampling");
+
+            bool result = textRuntime.RegenerateOversampledFont(2.5f);
+
+            result.ShouldBeTrue();
+            text.WrappedText.Count.ShouldBe(1,
+                "because RelativeToChildren must re-size to fit whatever font is currently loaded -- it can never " +
+                "wrap its own content, even when the oversampled font's real-world glyph metrics aren't a perfect multiple of the base font's");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Every glyph's xadvance is 1px wider than a perfect (FontSize/baseFontSize)x scale of the base font
+    // whenever the requested size isn't baseFontSize itself -- simulates the rounding/hinting noise a
+    // real TrueType rasterizer introduces between two different point sizes of the same font.
+    private sealed class NearlyProportionalFontCreator : IInMemoryFontCreator
+    {
+        private readonly int _baseFontSize;
+
+        public NearlyProportionalFontCreator(int baseFontSize)
+        {
+            _baseFontSize = baseFontSize;
+        }
+
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            int xadvance = bmfcSave.FontSize;
+            if (bmfcSave.FontSize != _baseFontSize)
+            {
+                xadvance += 1;
+            }
+
+            string fontData =
+$@"info face=""Arial"" size=-{bmfcSave.FontSize} bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={bmfcSave.FontSize} base={bmfcSave.FontSize} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=3
+char id=32 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontData);
+            font.SetFontPattern(256, 256);
+            return font;
+        }
+    }
+
     // Every glyph's xadvance equals the requested FontSize exactly, so a font generated at size N is
     // a perfect (N/baseSize)x scale of one generated at baseSize -- isolates whether Gum's own
     // wrap-width math introduces error, independent of any real rasterizer's rounding/hinting noise.

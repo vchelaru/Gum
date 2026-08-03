@@ -700,6 +700,12 @@ public class TextRuntime : InteractiveGue
         ContainedText.BitmapFont = font;
         ContainedText.FontScale = (float)FontSize / rasterFontSize;
 
+        // BitmapFont/FontScale are renderable-level properties -- assigning them directly (bypassing
+        // the normal property-setter cascade a call like FontSize= goes through) never notifies this
+        // element's own layout. Without this, a RelativeToChildren box keeps whatever Width it measured
+        // against the OLD font and wraps the NEW font's (differently-measuring) glyphs against it.
+        UpdateLayout();
+
         return true;
     }
 #endif
