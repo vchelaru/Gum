@@ -164,8 +164,8 @@ public class TextRuntime : InteractiveGue
         set { font = value; UpdateToFontValues(); }
     }
 
-    int fontSize;
-    public int FontSize
+    float fontSize;
+    public float FontSize
     {
         get => fontSize;
         set { fontSize = value; UpdateToFontValues(); }

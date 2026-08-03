@@ -565,7 +565,10 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             int spacingHorizontal = bmfcSave.SpacingHorizontal;
             int spacingVertical = bmfcSave.SpacingVertical;
-            int fontSize = bmfcSave.FontSize;
+            // This heuristic only runs for the bmfont.exe backend (RequiresSizeEstimation), which
+            // itself rounds FontSize to the nearest whole pixel size (GetGdiRoundedFontSize) before
+            // rasterizing, so estimate against that same rounded value.
+            int fontSize = BmfcSave.GetGdiRoundedFontSize(bmfcSave.FontSize);
             bool isBold = bmfcSave.IsBold;
 
             int numberWide, numberTall;

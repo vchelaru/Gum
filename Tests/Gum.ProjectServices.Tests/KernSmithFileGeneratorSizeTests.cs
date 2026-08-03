@@ -59,4 +59,22 @@ public class KernSmithFileGeneratorSizeTests
 
         result.Pages.Count.ShouldBe(1);
     }
+
+    // Issue #4304: KernSmith's own FontGeneratorOptions.Size is float and rasterizes fractional
+    // point sizes natively (unlike the legacy bmfont.exe/GDI backend), so BuildOptions must pass a
+    // fractional BmfcSave.FontSize through unrounded.
+    [Fact]
+    public void BuildOptions_ShouldPassFractionalFontSizeThroughUnrounded()
+    {
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 18.5f,
+            Ranges = "32-126",
+        };
+
+        FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
+
+        options.Size.ShouldBe(18.5f);
+    }
 }

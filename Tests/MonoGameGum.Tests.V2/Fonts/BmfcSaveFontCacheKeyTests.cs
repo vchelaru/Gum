@@ -42,4 +42,29 @@ public class BmfcSaveFontCacheKeyTests
 
         blur2.ShouldNotBe(blur5);
     }
+
+    // Issue #4304: fractional FontSize needs its own distinct cache file so the KernSmith backend
+    // (which rasterizes fractional point sizes natively) doesn't collide with either neighboring
+    // integer size.
+    [Fact]
+    public void CacheName_WithFractionalFontSize_DistinguishesFromNeighboringIntegers()
+    {
+        string eighteen = BmfcSave.GetFontCacheFileNameFor(18, "Arial", 0, true);
+        string eighteenHalf = BmfcSave.GetFontCacheFileNameFor(18.5f, "Arial", 0, true);
+        string nineteen = BmfcSave.GetFontCacheFileNameFor(19, "Arial", 0, true);
+
+        eighteenHalf.ShouldNotBe(eighteen);
+        eighteenHalf.ShouldNotBe(nineteen);
+    }
+
+    // Existing cache files on disk are named from whole-number sizes (e.g. "Font18Arial.fnt"); a
+    // whole-number float must produce the identical name so those caches keep hitting.
+    [Fact]
+    public void CacheName_WithWholeNumberFontSize_MatchesLegacyIntegerFormat()
+    {
+        string fromInt = BmfcSave.GetFontCacheFileNameFor(18, "Arial", 0, true);
+        string fromFloat = BmfcSave.GetFontCacheFileNameFor(18f, "Arial", 0, true);
+
+        fromFloat.ShouldBe(fromInt);
+    }
 }

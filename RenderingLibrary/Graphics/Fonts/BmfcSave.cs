@@ -22,9 +22,11 @@ public class BmfcSave
     public string FontName = "Arial";
 
     /// <summary>
-    /// The font size in points.
+    /// The font size in points. Fractional values are rasterized natively by KernSmith; the legacy
+    /// bmfont.exe backend rounds to the nearest whole pixel size (<see cref="GetGdiRoundedFontSize"/>)
+    /// since it writes into a Windows GDI LOGFONT, which only accepts whole pixel heights.
     /// </summary>
-    public int FontSize = 20;
+    public float FontSize = 20;
 
     /// <summary>
     /// The thickness of the font outline in pixels. Zero means no outline.
@@ -274,7 +276,7 @@ public class BmfcSave
         template = template.Replace("FontNameVariable", FontName);
 
         template = template.Replace("FontFileVariable", FontFile ?? "");
-        template = template.Replace("FontSizeVariable", FontSize.ToString());
+        template = template.Replace("FontSizeVariable", GetGdiRoundedFontSize(FontSize).ToString());
         template = template.Replace("OutlineThicknessVariable", OutlineThickness.ToString());
         template = template.Replace("{UseSmoothing}", UseSmoothing ? "1" : "0");
         template = template.Replace("{IsItalic}", IsItalic ? "1" : "0");
@@ -324,6 +326,15 @@ public class BmfcSave
         template = template.Replace("chars=32-126,160-255", charsReplacement);
 
         FileManager.SaveText(template, fileName);
+    }
+
+    /// <summary>
+    /// Rounds a fractional font size to the nearest whole pixel size for the GDI-backed bmfont.exe
+    /// backend, which cannot rasterize fractional point sizes.
+    /// </summary>
+    public static int GetGdiRoundedFontSize(float fontSize)
+    {
+        return (int)System.Math.Round(fontSize, MidpointRounding.AwayFromZero);
     }
 
     /// <summary>
@@ -645,7 +656,9 @@ public class BmfcSave
     /// The file name encodes all properties that affect rendering so that
     /// different font configurations produce different cache files.
     /// </summary>
-    /// <param name="fontSize">The font size in points.</param>
+    /// <param name="fontSize">The font size in points. A whole-number value produces the same file
+    /// name as the equivalent int did before fractional sizes were supported (#4304); a fractional
+    /// value produces a distinct name from either neighboring whole number.</param>
     /// <param name="fontName">The font family name.</param>
     /// <param name="outline">The outline thickness.</param>
     /// <param name="useFontSmoothing">Whether font smoothing is enabled.</param>
@@ -654,7 +667,7 @@ public class BmfcSave
     /// <param name="fontFilePath">Optional .ttf file path. When set, the file name (without extension) is used
     /// as the font name and a "_ttf" suffix is appended to prevent collision with same-named system fonts.</param>
     /// <returns>A relative file path under "FontCache/" suitable for caching this font.</returns>
-    public static string GetFontCacheFileNameFor(int fontSize, string fontName, int outline, bool useFontSmoothing,
+    public static string GetFontCacheFileNameFor(float fontSize, string fontName, int outline, bool useFontSmoothing,
         bool isItalic = false, bool isBold = false, string? fontFilePath = null,
         bool hasDropshadow = false, float dropshadowOffsetX = 0f, float dropshadowOffsetY = 0f,
         float dropshadowBlur = 0f, byte dropshadowRed = 0, byte dropshadowGreen = 0, byte dropshadowBlue = 0,
@@ -677,7 +690,7 @@ public class BmfcSave
         // don't allow some characters in the file name:
         effectiveFontName = effectiveFontName.Replace(' ', '_');
 
-        fileName = "Font" + fontSize + effectiveFontName;
+        fileName = "Font" + FormatCacheKeyFloat(fontSize) + effectiveFontName;
 
         if(isFromFile)
         {

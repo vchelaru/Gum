@@ -275,8 +275,8 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
     {
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
-            int advance = bmfcSave.FontSize / 2;
-            BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: bmfcSave.FontSize));
+            int advance = (int)bmfcSave.FontSize / 2;
+            BitmapFont font = new BitmapFont((Texture2D)null!, AbcFontData(advance, lineHeight: (int)bmfcSave.FontSize));
             font.SetFontPattern(256, 256);
             return font;
         }
