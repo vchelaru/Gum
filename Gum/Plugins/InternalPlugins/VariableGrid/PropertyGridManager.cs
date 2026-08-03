@@ -479,8 +479,17 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     // A previous category's InstanceMember objects capture their target instance at
                     // construction (see StateReferencingInstanceMember), so they can only be reused
                     // when the same instance is still shown - an instance identity change always
-                    // needs the fresh category even when the member names match.
-                    if (oldCategory != null && (instanceIdentityChanged || DoCategoriesDiffer(oldCategory.Members, newCategory.Members)))
+                    // needs at least a per-member retarget, even when the member names match.
+                    bool namesMatch = oldCategory != null && !DoCategoriesDiffer(oldCategory.Members, newCategory.Members);
+
+                    bool canRetargetInPlace = instanceIdentityChanged && namesMatch &&
+                        CanRetargetAllMembers(oldCategory.Members, newCategory.Members);
+
+                    if (canRetargetInPlace)
+                    {
+                        RetargetAllMembers(oldCategory.Members, newCategory.Members);
+                    }
+                    else if (oldCategory != null && (instanceIdentityChanged || !namesMatch))
                     {
                         int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
 
@@ -515,7 +524,6 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         {
             ObjectFinder.Self.DisableCache();
         }
-        
     }
 
     private void RemoveMembersNotAllowedInMultiEdit(List<MemberCategory> categories)
@@ -686,7 +694,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     {
         foreach (var item in first)
         {
-            if (!second.Any(other => other.Name == item.Name))
+            if (!second.Any(other => AreSameVariable(other, item)))
             {
                 return true;
             }
@@ -694,13 +702,72 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         foreach (var item in second)
         {
-            if (!first.Any(other => other.Name == item.Name))
+            if (!first.Any(other => AreSameVariable(other, item)))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Compares two members by their unqualified variable name rather than <see cref="InstanceMember.Name"/>,
+    /// which is instance-prefixed (see <c>ElementSaveDisplayer</c>'s <c>instance.Name + "." + variable</c>) and
+    /// so never matches across two different instances even when the underlying variable is the same.
+    /// </summary>
+    private static bool AreSameVariable(InstanceMember first, InstanceMember second)
+    {
+        if (first is StateReferencingInstanceMember firstSrim && second is StateReferencingInstanceMember secondSrim)
+        {
+            return firstSrim.RootVariableName == secondSrim.RootVariableName;
+        }
+
+        return first.Name == second.Name;
+    }
+
+    /// <summary>
+    /// Whether every member in <paramref name="oldMembers"/> can be retargeted in place onto its
+    /// matching member in <paramref name="newMembers"/> (see <see cref="StateReferencingInstanceMember.CanRetargetTo"/>)
+    /// instead of the whole category being rebuilt.
+    /// </summary>
+    private static bool CanRetargetAllMembers(IEnumerable<InstanceMember> oldMembers, IEnumerable<InstanceMember> newMembers)
+    {
+        foreach (var oldMember in oldMembers)
+        {
+            if (oldMember is not StateReferencingInstanceMember oldSrim)
+            {
+                return false;
+            }
+
+            var newSrim = newMembers
+                .OfType<StateReferencingInstanceMember>()
+                .FirstOrDefault(m => m.RootVariableName == oldSrim.RootVariableName);
+
+            if (newSrim == null || !oldSrim.CanRetargetTo(newSrim))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Retargets every member in <paramref name="oldMembers"/> onto its matching member in
+    /// <paramref name="newMembers"/>. Callers must have already verified <see cref="CanRetargetAllMembers"/>.
+    /// </summary>
+    private static void RetargetAllMembers(IEnumerable<InstanceMember> oldMembers, IEnumerable<InstanceMember> newMembers)
+    {
+        foreach (var oldMember in oldMembers)
+        {
+            var oldSrim = (StateReferencingInstanceMember)oldMember;
+            var newSrim = newMembers
+                .OfType<StateReferencingInstanceMember>()
+                .First(m => m.RootVariableName == oldSrim.RootVariableName);
+
+            oldSrim.Retarget(newSrim.Entry);
+        }
     }
 
     /// <summary>
