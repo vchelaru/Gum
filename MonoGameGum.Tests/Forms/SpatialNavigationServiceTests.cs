@@ -22,9 +22,12 @@ public class SpatialNavigationServiceTests : BaseTestClass
     [Fact]
     public void FindBestCandidate_DiagonalRequest_PicksDiagonallyPlacedCandidate()
     {
+        // Deltas are large enough that none of these default-sized (128x31) buttons' rectangles
+        // overlap each other -- distance is now measured rect-to-rect, so overlapping rectangles
+        // would otherwise flatten the angle between them to purely axis-aligned.
         Button origin = CreatePositionedButton(0, 0);
-        Button rightOnAxis = CreatePositionedButton(150, 0);
-        Button downRightDiagonal = CreatePositionedButton(100, 100);
+        Button rightOnAxis = CreatePositionedButton(400, 0);
+        Button downRightDiagonal = CreatePositionedButton(200, 200);
 
         List<FrameworkElement> candidates = new() { rightOnAxis, downRightDiagonal };
 
@@ -165,8 +168,9 @@ public class SpatialNavigationServiceTests : BaseTestClass
     [Fact]
     public void FindBestCandidate_NeverReturnsOrigin_EvenIfPresentInCandidates()
     {
+        // 200-unit delta so the default-sized (128x31) buttons' rectangles don't overlap.
         Button origin = CreatePositionedButton(0, 0);
-        Button only = CreatePositionedButton(100, 0);
+        Button only = CreatePositionedButton(200, 0);
 
         List<FrameworkElement> candidates = new() { origin, only };
 
@@ -178,9 +182,10 @@ public class SpatialNavigationServiceTests : BaseTestClass
     [Fact]
     public void FindBestCandidate_PicksNearerOnAxisCandidate_OverFartherOne()
     {
+        // Deltas keep the default-sized (128x31) buttons' rectangles from overlapping each other.
         Button origin = CreatePositionedButton(0, 0);
-        Button near = CreatePositionedButton(100, 0);
-        Button far = CreatePositionedButton(300, 0);
+        Button near = CreatePositionedButton(200, 0);
+        Button far = CreatePositionedButton(500, 0);
 
         List<FrameworkElement> candidates = new() { near, far };
 
@@ -259,6 +264,40 @@ public class SpatialNavigationServiceTests : BaseTestClass
         FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, straightDown, candidates);
 
         result.ShouldBe(wideBelow);
+    }
+
+    [Fact]
+    public void FindBestCandidate_FromWideOrigin_PicksNarrowCandidateOffsetFromOriginCenter()
+    {
+        // Reproduces issue #4287: mirror image of the "wide candidate" fix above. Here the ORIGIN is
+        // wide (e.g. a full-width Slider sitting between a top-left and bottom-left button), and the
+        // candidate is narrow. Measuring from the origin's raw center puts the reference point far
+        // to the side of the candidate, so the candidate's true closest point (directly below the
+        // origin's left edge) falls outside the direction cone and is wrongly excluded.
+        Button wideOrigin = new();
+        wideOrigin.AddToRoot();
+        wideOrigin.WidthUnits = DimensionUnitType.Absolute;
+        wideOrigin.HeightUnits = DimensionUnitType.Absolute;
+        wideOrigin.X = 0;
+        wideOrigin.Y = 275;
+        wideOrigin.Width = 800;
+        wideOrigin.Height = 50;
+
+        Button narrowBelow = new();
+        narrowBelow.AddToRoot();
+        narrowBelow.WidthUnits = DimensionUnitType.Absolute;
+        narrowBelow.HeightUnits = DimensionUnitType.Absolute;
+        narrowBelow.X = 0;
+        narrowBelow.Y = 550;
+        narrowBelow.Width = 50;
+        narrowBelow.Height = 50;
+
+        List<FrameworkElement> candidates = new() { narrowBelow };
+
+        float straightDown = MathF.PI / 2f;
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(wideOrigin, straightDown, candidates);
+
+        result.ShouldBe(narrowBelow);
     }
 
     [Fact]

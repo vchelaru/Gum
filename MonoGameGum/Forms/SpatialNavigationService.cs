@@ -16,14 +16,15 @@ public static class SpatialNavigationService
 {
     /// <summary>
     /// Returns whichever <paramref name="candidates"/> element best matches
-    /// <paramref name="directionAngleRadians"/> from <paramref name="origin"/>'s center, or null if
-    /// none qualify. Distance and angle to each candidate are measured to the closest point on that
-    /// candidate's own rectangle to <paramref name="origin"/>'s center, not the candidate's raw
-    /// center — a wide candidate (e.g. a full-width Slider) can otherwise have its center sit far
-    /// enough to the side that the angle falls outside the direction cone, even though the
-    /// candidate's rectangle spans directly across from the origin. Candidates outside the
-    /// direction cone (<paramref name="maxAngleRadians"/> either side of the requested angle) are
-    /// excluded so navigation never moves backwards; among the rest, the lowest
+    /// <paramref name="directionAngleRadians"/> from <paramref name="origin"/>, or null if none
+    /// qualify. Distance and angle are measured between the closest points of the origin's and each
+    /// candidate's rectangles (the AABB gap along each axis, zero on an axis where the two rectangles'
+    /// ranges overlap), not raw center-to-center — either rectangle can be wide (e.g. a full-width
+    /// Slider as the origin or as a candidate) and have its center sit far enough to the side that a
+    /// center-based angle falls outside the direction cone, even though the rectangles are directly
+    /// across from each other. Candidates outside the direction cone
+    /// (<paramref name="maxAngleRadians"/> either side of the requested angle) are excluded so
+    /// navigation never moves backwards; among the rest, the lowest
     /// <c>distance * (1 + angleWeight * angleDiff / maxAngleRadians)</c> score wins.
     /// </summary>
     /// <param name="origin">The currently-focused element navigation is relative to.</param>
@@ -52,8 +53,6 @@ public static class SpatialNavigationService
     {
         List<FrameworkElement> candidateList = candidates as List<FrameworkElement> ?? new List<FrameworkElement>(candidates);
 
-        (float originX, float originY) = GetCenter(origin);
-
         FrameworkElement? best = null;
         float bestScore = float.MaxValue;
 
@@ -67,9 +66,7 @@ public static class SpatialNavigationService
                 continue;
             }
 
-            (float candidateX, float candidateY) = GetClosestPoint(candidate, originX, originY);
-            float dx = candidateX - originX;
-            float dy = candidateY - originY;
+            (float dx, float dy) = GetClosestGap(origin, candidate);
             float distance = MathF.Sqrt(dx * dx + dy * dy);
 
             if (distance == 0f)
@@ -113,26 +110,52 @@ public static class SpatialNavigationService
         return false;
     }
 
-    private static (float x, float y) GetCenter(FrameworkElement element)
+    // The (dx, dy) gap from origin's rectangle to candidate's rectangle: zero on any axis where the
+    // two rectangles' ranges overlap on that axis, and the true edge-to-edge gap (signed, positive
+    // toward candidate) on any axis where they don't. This is symmetric in rectangle size -- unlike
+    // measuring from one side's raw center, a wide rectangle on EITHER side (origin or candidate)
+    // can't push the angle off-axis on an axis where the two actually line up.
+    private static (float dx, float dy) GetClosestGap(FrameworkElement origin, FrameworkElement candidate)
     {
-        float x = (element.Visual.AbsoluteLeft + element.Visual.AbsoluteRight) / 2f;
-        float y = (element.Visual.AbsoluteTop + element.Visual.AbsoluteBottom) / 2f;
-        return (x, y);
-    }
+        float originLeft = origin.Visual.AbsoluteLeft;
+        float originRight = origin.Visual.AbsoluteRight;
+        float originTop = origin.Visual.AbsoluteTop;
+        float originBottom = origin.Visual.AbsoluteBottom;
 
-    // The point on element's rectangle nearest to (fromX, fromY) -- equal to element's own center
-    // when (fromX, fromY) falls outside its bounds on both axes, but clamped onto the rectangle's
-    // edge on any axis where (fromX, fromY) already overlaps it.
-    private static (float x, float y) GetClosestPoint(FrameworkElement element, float fromX, float fromY)
-    {
-        float left = element.Visual.AbsoluteLeft;
-        float right = element.Visual.AbsoluteRight;
-        float top = element.Visual.AbsoluteTop;
-        float bottom = element.Visual.AbsoluteBottom;
+        float candidateLeft = candidate.Visual.AbsoluteLeft;
+        float candidateRight = candidate.Visual.AbsoluteRight;
+        float candidateTop = candidate.Visual.AbsoluteTop;
+        float candidateBottom = candidate.Visual.AbsoluteBottom;
 
-        float x = Math.Clamp(fromX, left, right);
-        float y = Math.Clamp(fromY, top, bottom);
-        return (x, y);
+        float dx;
+        if (candidateRight < originLeft)
+        {
+            dx = candidateRight - originLeft;
+        }
+        else if (candidateLeft > originRight)
+        {
+            dx = candidateLeft - originRight;
+        }
+        else
+        {
+            dx = 0f;
+        }
+
+        float dy;
+        if (candidateBottom < originTop)
+        {
+            dy = candidateBottom - originTop;
+        }
+        else if (candidateTop > originBottom)
+        {
+            dy = candidateTop - originBottom;
+        }
+        else
+        {
+            dy = 0f;
+        }
+
+        return (dx, dy);
     }
 
     // Wraps to (-π, π] so the angular difference between two directions is always the shorter way around.
