@@ -212,7 +212,7 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
 
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
-            int xadvance = bmfcSave.FontSize;
+            int xadvance = (int)bmfcSave.FontSize;
             if (bmfcSave.FontSize != _baseFontSize)
             {
                 xadvance += 1;
@@ -240,7 +240,7 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
     {
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
-            int xadvance = bmfcSave.FontSize;
+            int xadvance = (int)bmfcSave.FontSize;
             string fontData =
 $@"info face=""Arial"" size=-{bmfcSave.FontSize} bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
 common lineHeight={bmfcSave.FontSize} base={bmfcSave.FontSize} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
@@ -283,7 +283,7 @@ char id=32 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
             WasCalled = true;
-            CapturedFontSize = bmfcSave.FontSize;
+            CapturedFontSize = (int)bmfcSave.FontSize;
             return _fontToReturn;
         }
     }

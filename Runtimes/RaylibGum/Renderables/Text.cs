@@ -483,7 +483,7 @@ public class Text : IVisible, IRenderableIpso,
             ? global::Gum.RenderingLibrary.BlendExtensions.ToBlendState(Blend.Value)
             : global::Gum.BlendState.NonPremultiplied;
 
-    public int FontSize
+    public float FontSize
     {
         get => _fontSize;
         set
@@ -543,7 +543,7 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     int? maxNumberOfLines;
-    private int _fontSize = 12;
+    private float _fontSize = 12;
 
     /// <summary>
     /// The maximum number of lines to display. This can be used to 

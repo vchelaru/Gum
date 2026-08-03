@@ -77,6 +77,20 @@ public class TextBbCodeTests
         runs.Single(r => r.Text == "big").Style.FontSize.ShouldBe(baseFontSize * 2);
     }
 
+    // Issue #4304: FontSize is float end-to-end, and Skia draws vector text directly (no baked
+    // atlas), so a fractional [FontSize=N] run resolves to the exact requested pixel size with no
+    // rounding.
+    [Fact]
+    public void GetStyledRuns_FractionalFontSizeTag_ResolvesToExactPixelSize()
+    {
+        Text text = MakeText();
+        text.RawText = "plain [FontSize=18.5]enlarged[/FontSize] plain";
+
+        List<Text.StyledTextRun> runs = text.GetStyledRuns();
+
+        runs.Single(r => r.Text == "enlarged").Style.FontSize.ShouldBe(18.5f);
+    }
+
     [Fact]
     public void GetStyledRuns_FontTag_ChangesRunFontFamily()
     {

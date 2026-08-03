@@ -190,9 +190,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         }
     }
-    public int FontSize
+    public float FontSize
     {
-        get => _fontSize; 
+        get => _fontSize;
         set
         {
             _fontSize = value;
@@ -455,7 +455,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
             textBlock.AddText("My", GetRawMeasurementStyle());
             return textBlock.Lines.Count > 0
                 ? (int)MathF.Ceiling(textBlock.Lines[0].Height)
-                : FontSize;
+                : (int)MathF.Ceiling(FontSize);
         }
     }
 
@@ -995,7 +995,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     private bool _isTruncatingWithEllipsisOnLastLine;
     private TextOverflowVerticalMode _textOverflowVerticalMode;
     private string _fontName = "Arial";
-    private int _fontSize = 18;
+    private float _fontSize = 18;
     private SKTypeface? _typeface;
     private float _fontScale;
     private float _boldWeight = 1;
@@ -1354,7 +1354,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     {
         var color = this.Color;
         string? fontFamily = EffectiveFontFamily;
-        int fontSizePixels = FontSize;
+        float fontSizePixels = FontSize;
         float fontScale = FontScale;
         bool italic = this.IsItalic;
         int weight = (int)(400 * BoldWeight);
@@ -1388,7 +1388,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                         color = new SKColor(color.Red, color.Green, (byte)variable.Value, color.Alpha);
                         break;
                     case "FontSize":
-                        fontSizePixels = (int)variable.Value;
+                        fontSizePixels = (float)variable.Value;
                         break;
                     case "FontScale":
                         fontScale = (float)variable.Value;
@@ -1517,7 +1517,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// their character range in the stripped <see cref="_layoutText"/>. Each supported tag maps to a
     /// value the shared <see cref="StyledSubstringSplitter"/> and <see cref="BuildRunStyle"/> understand:
     /// Font -> resolved family-name string (via <see cref="Content.Fonts.GumFontMapper.ResolveFontFamily"/>),
-    /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> int, FontScale -> float,
+    /// Color -> System.Drawing.Color, Red/Green/Blue -> byte, FontSize -> float, FontScale -> float,
     /// IsBold/IsItalic -> bool, OutlineThickness -> int. Tags whose argument fails to parse are skipped
     /// (rendered with base style).
     /// </summary>
@@ -1555,9 +1555,9 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     break;
                 case "fontsize":
                     variableName = "FontSize";
-                    value = int.TryParse(argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out var size)
+                    value = float.TryParse(argument, NumberStyles.Float, CultureInfo.InvariantCulture, out var size)
                         ? size
-                        : (int?)null;
+                        : (float?)null;
                     break;
                 case "fontscale":
                     variableName = "FontScale";

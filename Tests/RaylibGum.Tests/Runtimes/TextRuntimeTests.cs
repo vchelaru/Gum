@@ -510,6 +510,18 @@ public class TextRuntimeTests : BaseTestClass
         sut.FontSize.ShouldBe(24);
     }
 
+    // Issue #4304: FontSize is float end-to-end, and must forward unrounded onto the renderable
+    // (asText.FontSize in CustomSetPropertyOnRenderable) rather than truncating to an int.
+    [Fact]
+    public void FontSize_WithFractionalValue_ForwardsUnroundedToRenderable()
+    {
+        TextRuntime sut = new();
+        sut.FontSize = 18.5f;
+
+        Gum.Renderables.Text internalText = (Gum.Renderables.Text)sut.RenderableComponent;
+        internalText.FontSize.ShouldBe(18.5f);
+    }
+
     #endregion
 
     #region GetCharacterIndexAtPosition

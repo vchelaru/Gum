@@ -243,6 +243,18 @@ public class TextRuntimeTests
         sut.FontSize.ShouldBe(24);
     }
 
+    // Issue #4304: FontSize is float end-to-end, and must forward unrounded onto the renderable
+    // (asText.FontSize in SystemManagers.UpdateFonts) rather than truncating to an int.
+    [Fact]
+    public void FontSize_WithFractionalValue_ForwardsUnroundedToRenderable()
+    {
+        TextRuntime sut = new();
+        sut.FontSize = 18.5f;
+
+        Text containedText = (Text)sut.RenderableComponent;
+        containedText.FontSize.ShouldBe(18.5f);
+    }
+
     #endregion
 
     #region FontScale

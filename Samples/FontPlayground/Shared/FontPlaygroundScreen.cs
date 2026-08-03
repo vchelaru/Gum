@@ -67,7 +67,9 @@ public class FontPlaygroundScreen
         controlsPanel.Orientation = Orientation.Vertical;
         controlsPanel.Spacing = 6;
         controlsPanel.Visual.X = 16;
-        controlsPanel.Visual.Y = 16;
+        // Y=100 (rather than a page-edge 16) leaves a reserved top band clear for the host's own
+        // page-level content (e.g. FontPlayground.MonoGame's fractional-FontSize demo text).
+        controlsPanel.Visual.Y = 100;
         root.AddChild(controlsPanel);
 
         // Font family
@@ -188,7 +190,7 @@ public class FontPlaygroundScreen
         _previewText = new TextRuntime();
         _previewText.Text = "The quick brown fox 0123";
         _previewText.X = 290;
-        _previewText.Y = 24;
+        _previewText.Y = 108;
         // White text. Red/Green/Blue/Alpha are platform-neutral int properties (unlike the
         // backend-specific Color property), so setting them here keeps this file portable.
         _previewText.Red = 255;
@@ -204,7 +206,7 @@ public class FontPlaygroundScreen
         _bbCodeDropshadowPreviewText.Text =
             "Shadow on [HasDropshadow=false]shadow off[/HasDropshadow] shadow on again";
         _bbCodeDropshadowPreviewText.X = 290;
-        _bbCodeDropshadowPreviewText.Y = 90;
+        _bbCodeDropshadowPreviewText.Y = 174;
         _bbCodeDropshadowPreviewText.Width = 500;
         _bbCodeDropshadowPreviewText.Red = 255;
         _bbCodeDropshadowPreviewText.Green = 255;

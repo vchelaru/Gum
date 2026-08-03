@@ -352,8 +352,8 @@ public class TextRuntime : InteractiveGue
         set { font = value; UpdateToFontValues(); }
     }
 
-    int fontSize;
-    public int FontSize
+    float fontSize;
+    public float FontSize
     {
         get { return fontSize; }
         set { fontSize = value; UpdateToFontValues(); }
@@ -698,7 +698,7 @@ public class TextRuntime : InteractiveGue
         }
 
         ContainedText.BitmapFont = font;
-        ContainedText.FontScale = (float)FontSize / rasterFontSize;
+        ContainedText.FontScale = FontSize / rasterFontSize;
 
         // BitmapFont/FontScale are renderable-level properties -- assigning them directly (bypassing
         // the normal property-setter cascade a call like FontSize= goes through) never notifies this

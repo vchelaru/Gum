@@ -1431,7 +1431,7 @@ public partial class CustomSetPropertyOnRenderable
     // The eight font-resolution stacks (mirroring the MonoGame path). Inline [FontSize]/[IsBold]/etc. tags
     // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
     // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
-    static Stack<int> fontSizeStack = new Stack<int>();
+    static Stack<float> fontSizeStack = new Stack<float>();
     static Stack<string> fontNameStack = new Stack<string>();
     static Stack<int> outlineThicknessStack = new Stack<int>();
     static Stack<bool> useFontSmoothingStack = new Stack<bool>();
@@ -1476,7 +1476,7 @@ public partial class CustomSetPropertyOnRenderable
     /// the caller.
     /// </summary>
     static BmfcSave BuildInlineRunBmfcSave(
-        int fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic, bool isBold,
+        float fontSize, int outlineThickness, bool useFontSmoothing, bool isItalic, bool isBold,
         string? fontFilePath, string fontName)
     {
         BmfcSave bmfcSave = new BmfcSave();
@@ -1888,7 +1888,7 @@ public partial class CustomSetPropertyOnRenderable
                     castedValue = GetAndCreateFontIfNecessary();
                     break;
                 case "FontSize":
-                    if (int.TryParse(tag.Argument, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsedSize))
+                    if (float.TryParse(tag.Argument, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsedSize))
                     {
                         fontSizeStack.Push(parsedSize);
                         castedValue = GetAndCreateFontIfNecessary();
@@ -1897,7 +1897,7 @@ public partial class CustomSetPropertyOnRenderable
                         // rasterized at the requested size, so store the raw pixel size as a float and let the
                         // renderer scale the base atlas to it (a blurry-but-correct approximation). The XNA
                         // path never needs this - it can new BitmapFont(...) at any size.
-                        castedValue ??= (float)parsedSize;
+                        castedValue ??= parsedSize;
 #endif
                     }
                     else
