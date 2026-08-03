@@ -113,22 +113,22 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     private void HandleProjectLoad(GumProjectSave obj)
     {
-        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("MainPropertiesWindowPlugin.HandleProjectLoad (total)");
+        using var _ = Gum.Diagnostics.StartupTiming.Time("MainPropertiesWindowPlugin.HandleProjectLoad (total)");
         if (control != null && viewModel != null)
         {
-            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  SetFrom + control.ViewModel assign"))
+            using (Gum.Diagnostics.StartupTiming.Time("  SetFrom + control.ViewModel assign"))
             {
                 viewModel.SetFrom(_projectManager.AutoSave, _projectState.GumProjectSave);
                 control.ViewModel = null;
                 control.ViewModel = viewModel;
             }
 
-            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  RefreshFontRangeEditability"))
+            using (Gum.Diagnostics.StartupTiming.Time("  RefreshFontRangeEditability"))
             {
                 RefreshFontRangeEditability();
             }
 
-            using (Gum.Diagnostics.ProjectLoadDiagnostics.Time("  font character file ranges"))
+            using (Gum.Diagnostics.StartupTiming.Time("  font character file ranges"))
             {
                 if (viewModel.UseFontCharacterFile)
                 {

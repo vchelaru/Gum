@@ -9,6 +9,7 @@ using System.Windows.Media;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.DataTypes;
+using Gum.Diagnostics;
 using Gum.Dialogs;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -34,6 +35,7 @@ namespace Gum
         [STAThread]
         static int Main(string[] args)
         {
+            StartupTiming.Mark("Main entry");
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
@@ -62,13 +64,16 @@ namespace Gum
         private static async Task<int> MainAsync(string[] args)
         {
             using IHost host = GumBuilder.CreateHostBuilder(args).Build();
+            StartupTiming.Mark("Host built");
             Locator.Register(host.Services);
 
             await host.StartAsync().ConfigureAwait(true);
+            StartupTiming.Mark("Host started");
             IMessenger messenger = host.Services.GetRequiredService<IMessenger>();
 
             App app = new();
             app.InitializeComponent();
+            StartupTiming.Mark("App.InitializeComponent");
 
             app.Startup += (_, _) => messenger.Send<ApplicationStartupMessage>();
             app.Exit += (_, _) =>
@@ -82,10 +87,24 @@ namespace Gum
             };
 
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
+            StartupTiming.Mark("MainWindow resolved");
+
+            if (StartupTiming.IsEnabled)
+            {
+                app.MainWindow.ContentRendered += (_, _) =>
+                {
+                    StartupTiming.MarkOnce("MainWindow first paint");
+                    StartupTiming.Log(
+                        "=== TOTAL cold start, process start -> first paint: " +
+                        $"{StartupTiming.MillisecondsSinceProcessStart:0} ms ===");
+                };
+            }
 
             app.MainWindow.Visibility = Visibility.Visible;
+            StartupTiming.Mark("MainWindow visible");
 
             await InitializeGum(host.Services).ConfigureAwait(true);
+            StartupTiming.Mark("InitializeGum complete");
 
             if (host.Services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
@@ -105,34 +124,44 @@ namespace Gum
 
             // This has to happen before plugins are loaded since they may depend on settings...
             projectManager.LoadSettings();
+            StartupTiming.Mark("ProjectManager.LoadSettings");
 
             // Migration needs the whole (WinForms-entangled) settings object, so it resolves the
             // concrete ProjectManager directly rather than going through the narrowed IProjectManager
             // (same singleton - LoadSettings() above already ran against it).
             MigrateAppSettings(services, services.GetRequiredService<ProjectManager>().GeneralSettingsFile);
+            StartupTiming.Mark("MigrateAppSettings");
             services.GetRequiredService<IThemingService>().ApplyInitialTheme();
+            StartupTiming.Mark("ApplyInitialTheme");
             services.GetRequiredService<ITypeManager>().Initialize();
+            StartupTiming.Mark("TypeManager.Initialize");
 
             services.GetRequiredService<ElementTreeViewManager>().Initialize();
+            StartupTiming.Mark("ElementTreeViewManager.Initialize");
 
             (services.GetRequiredService<IWireframeObjectManager>() as WireframeObjectManager).Initialize();
+            StartupTiming.Mark("WireframeObjectManager.Initialize");
             // This has to be initialized very early because other things depend on it.
 
             // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
             // Is htere a way to move this to a plugin?
             services.GetRequiredService<PropertyGridManager>().InitializeEarly();
+            StartupTiming.Mark("PropertyGridManager.InitializeEarly");
 
             PluginManager pluginManager = services.GetRequiredService<PluginManager>();
             pluginManager.Initialize();
+            StartupTiming.Mark("PluginManager.Initialize");
 
             StandardElementsManager.Self.Initialize();
             StandardElementsManager.Self.CustomGetDefaultState =
                 pluginManager.GetDefaultStateFor;
+            StartupTiming.Mark("StandardElementsManager.Initialize");
 
             ElementSaveExtensions.VariableChangedThroughReference +=
                 pluginManager.VariableSet;
 
             Locator.GetRequiredService<StandardElementsManagerGumTool>().Initialize();
+            StartupTiming.Mark("StandardElementsManagerGumTool.Initialize");
 
             VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
 
@@ -143,8 +172,10 @@ namespace Gum
             // are set up properly before that happens.
             // XnaInitialize is where wireframe controls are initialized.
             pluginManager.XnaInitialized();
+            StartupTiming.Mark("PluginManager.XnaInitialized");
 
             await projectManager.Initialize();
+            StartupTiming.Mark("ProjectManager.Initialize (project load)");
 
             PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
 

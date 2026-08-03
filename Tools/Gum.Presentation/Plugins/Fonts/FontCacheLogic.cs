@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
@@ -33,7 +33,7 @@ public class FontCacheLogic
     /// </summary>
     public async Task CreateMissingFontFilesForLoadedProject()
     {
-        using var _ = Gum.Diagnostics.ProjectLoadDiagnostics.Time("FontCacheLogic.CreateMissingFontFilesForLoadedProject (total)");
+        using var _ = Gum.Diagnostics.StartupTiming.Time("FontCacheLogic.CreateMissingFontFilesForLoadedProject (total)");
         await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
     }
 

@@ -24,6 +24,7 @@ using Gum.Wireframe;
 using Gum.Localization;
 using Gum.Reflection;
 using Gum.Plugins;
+using Gum.Diagnostics;
 
 namespace Gum.Managers;
 
@@ -284,6 +285,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         List<InstanceSave> newInstances, 
         BehaviorSave? behaviorSave, bool force = false)
     {
+        StartupTiming.MarkOnce("First RefreshDataGrid - start");
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -524,6 +526,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         finally
         {
             ObjectFinder.Self.DisableCache();
+            StartupTiming.MarkOnce("First RefreshDataGrid - end");
         }
     }
 

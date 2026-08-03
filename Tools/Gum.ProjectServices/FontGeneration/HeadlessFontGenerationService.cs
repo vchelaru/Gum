@@ -1,4 +1,4 @@
-using Gum.Bundle;
+﻿using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -314,14 +314,14 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
         string projectDirectory, bool forceRecreate)
     {
-        using var totalScope = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("HeadlessFontGenerationService.GenerateMissingFontsFor (total)");
+        using var totalScope = Gum.Diagnostics.StartupTiming.Time("HeadlessFontGenerationService.GenerateMissingFontsFor (total)");
 
         Dictionary<string, BmfcSave> bitmapFonts;
-        using (Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("  CollectRequiredFonts"))
+        using (Gum.Diagnostics.StartupTiming.Time("  CollectRequiredFonts"))
         {
             bitmapFonts = CollectRequiredFonts(project, elements);
         }
-        Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Log($"  CollectRequiredFonts found {bitmapFonts.Count} fonts");
+        Gum.Diagnostics.StartupTiming.Log($"  CollectRequiredFonts found {bitmapFonts.Count} fonts");
 
         // Resolve relative FontFile paths to absolute so font generators can find them.
         // FontFile is stored relative to the project directory, but generators resolve
@@ -378,7 +378,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         try
         {
-            using var _ = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time("  Task.WhenAll(per-font generation)");
+            using var _ = Gum.Diagnostics.StartupTiming.Time("  Task.WhenAll(per-font generation)");
             await Task.WhenAll(tasks);
         }
         finally
@@ -486,7 +486,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         {
             if (!desiredFntFile.Exists() || shadowSiblingMissing || force)
             {
-                using var _ = Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Time($"    generate {desiredFntFile.FileNameNoPath}");
+                using var _ = Gum.Diagnostics.StartupTiming.Time($"    generate {desiredFntFile.FileNameNoPath}");
 
                 if (showSpinner)
                 {
@@ -515,7 +515,7 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
             }
             else
             {
-                Gum.ProjectServices.Diagnostics.ProjectLoadDiagnostics.Log($"    skip {desiredFntFile.FileNameNoPath} (already exists)");
+                Gum.Diagnostics.StartupTiming.Log($"    skip {desiredFntFile.FileNameNoPath} (already exists)");
             }
         }
         finally
