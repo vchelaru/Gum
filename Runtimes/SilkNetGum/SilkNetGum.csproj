@@ -203,4 +203,17 @@
 			  Visible="false" />
 	</ItemGroup>
 
+	<!--
+		Guards against a consumer whose own AssemblyName collides with this package's assembly
+		name (SilkNetGum), which silently overwrites the runtime DLL in the shared output folder
+		(the exact failure this project's own sample worked around - see
+		Samples/SilkNetGum/SilkNetGumSample/SilkNetGumSample.csproj). NuGet auto-imports
+		buildTransitive\Gum.SilkNet.targets into every consumer; it imports the shared check
+		packed alongside it. See #4311.
+	-->
+	<ItemGroup>
+		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+		<None Include="build\Gum.SilkNet.targets" Pack="true" PackagePath="buildTransitive\Gum.SilkNet.targets" Visible="false" />
+	</ItemGroup>
+
 </Project>

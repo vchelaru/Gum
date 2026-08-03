@@ -205,4 +205,15 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
+	<!--
+		Guards against a consumer whose own AssemblyName collides with this package's assembly
+		name (SkiaGum), which silently overwrites the runtime DLL in the shared output folder.
+		NuGet auto-imports buildTransitive\Gum.SkiaSharp.targets into every consumer; it imports
+		the shared check packed alongside it. See #4311.
+	-->
+	<ItemGroup>
+		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+		<None Include="build\Gum.SkiaSharp.targets" Pack="true" PackagePath="buildTransitive\Gum.SkiaSharp.targets" Visible="false" />
+	</ItemGroup>
+
 </Project>

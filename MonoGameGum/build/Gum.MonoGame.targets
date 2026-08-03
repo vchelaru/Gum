@@ -1,0 +1,13 @@
+<Project>
+
+	<!-- NuGet auto-imports buildTransitive\<PackageId>.targets into every direct AND transitive
+	     consumer of this package. Sets this package's identity, then delegates the actual check
+	     to AssemblyNameCollisionGuard.targets, packed alongside this file. See #4311. -->
+	<PropertyGroup>
+		<GumRuntimeAssemblyName>MonoGameGum</GumRuntimeAssemblyName>
+		<GumRuntimePackageId>Gum.MonoGame</GumRuntimePackageId>
+	</PropertyGroup>
+
+	<Import Project="$(MSBuildThisFileDirectory)AssemblyNameCollisionGuard.targets" />
+
+</Project>

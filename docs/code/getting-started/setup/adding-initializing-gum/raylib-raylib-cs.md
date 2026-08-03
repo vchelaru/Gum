@@ -24,6 +24,10 @@ Or add through command line:
 dotnet add package Gum.raylib
 ```
 
+{% hint style="warning" %}
+Don't name your project `RaylibGum`, that's the assembly name inside the `Gum.raylib` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder, causing a `TypeLoadException` at runtime with no build warning. Gum's build now catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
+{% endhint %}
+
 ## Adding Source (Optional)
 
 You can directly link your project to source instead of a NuGet package for improved debuggability, access to fixes and features before NuGet packages are published, or if you are interested in contributing.
