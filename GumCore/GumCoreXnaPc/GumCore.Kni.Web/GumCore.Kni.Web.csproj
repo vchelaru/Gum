@@ -7,6 +7,16 @@
 		<DefineConstants>$(DefineConstants)TRACE;FNA;XNA4;WEB;BLAZORGL;KNI;FRB</DefineConstants>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>1591</NoWarn>
+		<!-- Published to nuget.org by FlatRedBall's Engine.yml, not by Gum's own release. The
+		     assembly is Gum source compiled with FRB's defines and referencing FRB, so the
+		     package id is FlatRedBall-scoped to say who ships it. Assembly name is unchanged. -->
+		<PackageId>FlatRedBall.GumCore.Kni.Web</PackageId>
+		<Title>GumCore for FlatRedBall (Web)</Title>
+		<Authors>FlatRedBall</Authors>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Description>Gum layout and rendering runtime, built for FlatRedBall</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.0.0</Version>
 
 	</PropertyGroup>
 

@@ -5,6 +5,16 @@
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
 		<Nullable>enable</Nullable>
+		<!-- Published to nuget.org by FlatRedBall's Engine.yml, not by Gum's own release. The
+		     assembly is Gum source compiled with FRB's defines and referencing FRB, so the
+		     package id is FlatRedBall-scoped to say who ships it. Assembly name is unchanged. -->
+		<PackageId>FlatRedBall.GumCore.DesktopGlNet6</PackageId>
+		<Title>GumCore for FlatRedBall (.NET Desktop GL)</Title>
+		<Authors>FlatRedBall</Authors>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Description>Gum layout and rendering runtime, built for FlatRedBall</Description>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.0.0</Version>
 
 	</PropertyGroup>
 
