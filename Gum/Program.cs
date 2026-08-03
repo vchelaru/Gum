@@ -34,6 +34,9 @@ namespace Gum
         [STAThread]
         static int Main(string[] args)
         {
+            // TEMPORARY instrumentation for #4283 - remove once the warm-up evaluation is done.
+            Gum.Diagnostics.StartupPerfLog.Start();
+
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
@@ -82,7 +85,10 @@ namespace Gum
             };
 
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
+            // TEMPORARY instrumentation for #4283 - remove once the warm-up evaluation is done.
+            app.MainWindow.ContentRendered += (_, _) => Gum.Diagnostics.StartupPerfLog.Log("MainWindow.ContentRendered (first paint)");
             app.MainWindow.Visibility = Visibility.Visible;
+            Gum.Diagnostics.StartupPerfLog.Log("MainWindow.Visibility = Visible");
 
             await InitializeGum(host.Services).ConfigureAwait(true);
 

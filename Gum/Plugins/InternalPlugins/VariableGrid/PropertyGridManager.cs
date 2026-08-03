@@ -277,12 +277,23 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// <param name="state">The state to display.</param>
     /// <param name="instance">The instance to display. May be null.</param>
     /// <param name="force">Whether to refresh even if the element, state, and instance have not changed.</param>
-    private void RefreshDataGrid(ElementSave? element, 
-        StateSave? state, 
-        StateSaveCategory? stateCategory, 
-        List<InstanceSave> newInstances, 
+    // TEMPORARY instrumentation for #4283 - remove once the warm-up evaluation is done.
+    private static bool _hasLoggedFirstRefreshDataGrid;
+
+    private void RefreshDataGrid(ElementSave? element,
+        StateSave? state,
+        StateSaveCategory? stateCategory,
+        List<InstanceSave> newInstances,
         BehaviorSave? behaviorSave, bool force = false)
     {
+        if (!_hasLoggedFirstRefreshDataGrid)
+        {
+            _hasLoggedFirstRefreshDataGrid = true;
+            Gum.Diagnostics.StartupPerfLog.Log(
+                $"PropertyGridManager.RefreshDataGrid first call (displayer warm-up: " +
+                $"{VariableGridDisplayerWarmup.WarmedCount}/{VariableGridDisplayerWarmup.TotalCount} types warmed)");
+        }
+
         ObjectFinder.Self.EnableCache();
         try
         {

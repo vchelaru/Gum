@@ -904,6 +904,11 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         IEffectiveThemeSettings themeSettings = _themingService.EffectiveSettings;
         ApplyThemeSettings(themeSettings);
 
+        // Queued at Background dispatcher priority, so it only runs once the main window has
+        // finished its own higher-priority paint/input work - see VariableGridDisplayerWarmup
+        // remarks. #4283.
+        VariableGridDisplayerWarmup.ScheduleWarmUp(System.Windows.Application.Current.Dispatcher);
+
         // Must be the last statement in this method - XnaUpdate (wired up in
         // HandleWireframeInitialized, which runs earlier during startup) can fire before this
         // event handler runs, since WPF's CompositionTarget.Rendering isn't gated on it. Only
