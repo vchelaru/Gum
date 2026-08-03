@@ -35,6 +35,11 @@ public class Game1 : Game
     // camera transform above). Confirms KernSmith rebakes crisply at each new fractional size as it
     // changes continuously, and the label shows the live requested FontSize (with decimals) so the
     // number is readable while zooming.
+    //
+    // This deliberately does NOT demonstrate crisp text under CAMERA zoom (that's a different feature
+    // -- automatic, FontScale-free oversampling -- tracked separately in #4317, since it needs a
+    // render-time compensation mechanism that doesn't exist yet; see that issue for why hijacking
+    // FontScale, the way RegenerateOversampledFont below does, isn't the right shape for it).
     private TextRuntime _fractionalFontSizeText = null!;
     private const float FractionalFontSizeMin = 8f;
     // Capped well below the full 8-96 slider range in FontPlaygroundScreen so this text -- reserved
