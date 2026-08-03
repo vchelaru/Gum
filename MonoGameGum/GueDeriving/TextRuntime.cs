@@ -660,6 +660,49 @@ public class TextRuntime : InteractiveGue
             dropshadowBlue,
             dropshadowAlpha);
     }
+
+#if XNALIKE
+    /// <summary>
+    /// Regenerates this text's font at <paramref name="oversampleRatio"/> times <see cref="FontSize"/>
+    /// via <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/>, then compensates with
+    /// the contained Text's FontScale so the on-screen size is unchanged --
+    /// the glyphs are just rasterized at a higher pixel density (issue #4302).
+    /// </summary>
+    /// <param name="oversampleRatio">How many times larger than <see cref="FontSize"/> to rasterize
+    /// the font, e.g. the current camera zoom. Rounded to the nearest whole pixel size.</param>
+    /// <returns>
+    /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off, no
+    /// in-memory font creator is registered, or <paramref name="oversampleRatio"/> is not positive --
+    /// oversampling only makes sense with dynamic font generation, since a disk-based font cache
+    /// holds a fixed set of pre-baked sizes.
+    /// </returns>
+    public bool RegenerateOversampledFont(float oversampleRatio)
+    {
+        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null || oversampleRatio <= 0)
+        {
+            return false;
+        }
+
+        var rasterFontSize = Math.Max(1, (int)Math.Round(FontSize * oversampleRatio));
+
+        var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+
+        var bmfcSave = new BmfcSave();
+        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
+        bmfcSave.FontSize = rasterFontSize;
+
+        var font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        if (font == null)
+        {
+            return false;
+        }
+
+        ContainedText.BitmapFont = font;
+        ContainedText.FontScale = (float)FontSize / rasterFontSize;
+
+        return true;
+    }
+#endif
 #endif
 
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
@@ -878,6 +921,18 @@ public class TextRuntime : InteractiveGue
     // todo - add more here
     public static string DefaultFont = "Arial";
     public static int DefaultFontSize = 18;
+
+    /// <summary>
+    /// Whether <see cref="RegenerateOversampledFont"/> is allowed to regenerate fonts at a higher
+    /// raster size than <see cref="FontSize"/> for crisper text under camera zoom. Off by default:
+    /// pixel-art games deliberately want blocky/nearest-neighbor text, and whether a project wants
+    /// oversampling at all is a project-wide decision, so a single global toggle (not a per-instance
+    /// one) is sufficient for now. A per-instance override (letting individual TextRuntimes opt out of
+    /// or into oversampling independently of this project-wide default) is a plausible future
+    /// extension if a real need for mixed pixel-art/crisp text within one project shows up, but is not
+    /// built here.
+    /// </summary>
+    public static bool UseFontOversampling = false;
 
     /// <summary>
     /// Indicates whether the font should be assigned during object construction.
