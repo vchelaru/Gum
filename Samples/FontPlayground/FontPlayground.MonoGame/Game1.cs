@@ -59,8 +59,8 @@ public class Game1 : Game
 
         FontPlaygroundScreen.Build(GumService.Default.Root);
 
-        BuildZoomOversamplingDemo();
         BuildFractionalFontSizeDemo();
+        BuildZoomOversamplingDemo();
 
         base.Initialize();
     }
@@ -70,7 +70,7 @@ public class Game1 : Game
         _fractionalFontSizeText = new TextRuntime();
         _fractionalFontSizeText.Font = "Arial";
         _fractionalFontSizeText.X = 16;
-        _fractionalFontSizeText.Y = 660;
+        _fractionalFontSizeText.Y = 560;
         _fractionalFontSizeText.Red = 255;
         _fractionalFontSizeText.Green = 255;
         _fractionalFontSizeText.Blue = 255;
@@ -96,7 +96,7 @@ public class Game1 : Game
         _plainZoomPreviewText.Text = "Scroll to zoom (always blurry)";
         _plainZoomPreviewText.FontSize = 24;
         _plainZoomPreviewText.X = 16;
-        _plainZoomPreviewText.Y = 560;
+        _plainZoomPreviewText.Y = 600;
         _plainZoomPreviewText.Red = 255;
         _plainZoomPreviewText.Green = 255;
         _plainZoomPreviewText.Blue = 255;
@@ -107,7 +107,7 @@ public class Game1 : Game
         _oversampledZoomPreviewText.Text = "Scroll to zoom, then press R (crisp)";
         _oversampledZoomPreviewText.FontSize = 24;
         _oversampledZoomPreviewText.X = 16;
-        _oversampledZoomPreviewText.Y = 600;
+        _oversampledZoomPreviewText.Y = 640;
         _oversampledZoomPreviewText.Red = 255;
         _oversampledZoomPreviewText.Green = 255;
         _oversampledZoomPreviewText.Blue = 255;
