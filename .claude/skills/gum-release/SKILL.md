@@ -19,7 +19,7 @@ The release process lives in **[`docs/contributing/building-and-releasing-gum.md
 1. **Read the doc** above and confirm the current step list with the user.
 2. **Track progress** — create one task per step (`TaskCreate`) so nothing is dropped across the long-running release, and mark each `completed` as the user confirms it.
 3. **Walk the steps in order**, one at a time. For each, state what the user needs to do (the doc has the detail) and wait for confirmation before advancing.
-4. **Hand off the automatable step.** When you reach release-notes generation, invoke the **`gum-monthly-release`** skill — it drafts the notes and is the only step with real automation. Everything else (NuGet workflow trigger, Build-and-Release workflow, screenshots, migration doc, announcements, FRB FTP upload) is the user's manual action; you confirm and check it off.
+4. **Hand off the automatable step.** Release-notes generation is the only step with real automation, and it lives in **`gum-monthly-release`**. That skill is `disable-model-invocation: true`, so the `Skill` tool refuses it — read `.claude/skills/gum-monthly-release/SKILL.md` and follow it yourself instead. Everything else (NuGet workflow trigger, Build-and-Release workflow, screenshots, migration doc, announcements, FRB FTP upload) is the user's manual action; you confirm and check it off.
 
 ## Gotchas
 

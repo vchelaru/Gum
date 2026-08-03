@@ -1,12 +1,20 @@
 name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 
+# Do NOT add paths-ignore to the pull_request trigger. This workflow produces
+# `Build-and-Test (macos-15)` and `Build-and-Test (windows-latest)`, both of
+# which main's ruleset lists as required status checks. A path-filtered trigger
+# does not skip the check, it prevents the check from ever being reported, so
+# any PR matching the filter (a docs-only PR) is stuck at BLOCKED permanently
+# with no way to re-run it into a passing state. If the CI cost of docs-only
+# PRs needs cutting again, guard the expensive *steps* inside the job so the
+# job still runs and reports; the required contexts must always report.
+# push is safe to filter: pushes to main are not gated on required checks.
 on:
   push:
     branches: [main]
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
     branches: [master, main]
-    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   workflow_dispatch:
 
 jobs:
