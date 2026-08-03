@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ProjectServices.FontGeneration;
@@ -462,6 +462,35 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
 
         result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldStillCollectFontOfInstanceUntouchedByACategoryState()
+    {
+        // A category state that overrides one instance says nothing about a sibling instance, so
+        // the sibling still resolves its font from the default state. Collection skips (state,
+        // instance) pairs the state sets nothing for, and must not lose the sibling's font.
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave defaultState = AddState(component, "Default");
+        StateSave largeState = AddCategoryState(component, "SizeCategory", "Large");
+        AddTextInstance(component, "Title");
+        AddTextInstance(component, "Subtitle");
+
+        SetVar(defaultState, "Title.Font", "Arial");
+        SetVar(defaultState, "Title.FontSize", 18);
+        SetVar(defaultState, "Subtitle.Font", "Arial");
+        SetVar(defaultState, "Subtitle.FontSize", 12);
+
+        // Only Title is touched by the category state.
+        SetVar(largeState, "Title.Font", "Arial");
+        SetVar(largeState, "Title.FontSize", 32);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Count.ShouldBe(3);
+        result.Values.ShouldContain(f => f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontSize == 12);
+        result.Values.ShouldContain(f => f.FontSize == 32);
     }
 
     [Fact]
@@ -1097,6 +1126,46 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldGenerateOnlyTheFontMissingFromDisk()
+    {
+        // The counterpart to the "already up to date" guard above, and the reason font collection
+        // must not drop entries: a font whose .fnt is absent has to be regenerated on load, and the
+        // one already cached must not be regenerated.
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumFontGenTest_" + Guid.NewGuid()) + Path.DirectorySeparatorChar;
+        Directory.CreateDirectory(projectDirectory);
+        try
+        {
+            ScreenSave screen = new ScreenSave { Name = "Screen" };
+            StateSave state = AddState(screen);
+            SetVar(state, "Font", "Arial");
+            SetVar(state, "FontSize", 14);
+            Project.Screens.Add(screen);
+
+            // Arial@18 comes from the Text standard element (see this class's constructor). Cache
+            // that one only, leaving Arial@14 missing.
+            BmfcSave cachedFont = new BmfcSave { FontName = "Arial", FontSize = 18 };
+            BmfcSave missingFont = new BmfcSave { FontName = "Arial", FontSize = 14 };
+
+            string cachedFntPath = Path.Combine(projectDirectory, cachedFont.FontCacheFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(cachedFntPath)!);
+            File.WriteAllText(cachedFntPath, "cached");
+
+            ControllableFontFileGenerator generator = new();
+            HeadlessFontGenerationService service = new(generator);
+
+            await service.CreateAllMissingFontFiles(Project, projectDirectory, forceRecreate: false);
+
+            generator.GenerateFontCallCount.ShouldBe(1);
+            generator.GeneratedFntPaths.ShouldHaveSingleItem()
+                .ShouldEndWith(Path.GetFileName(missingFont.FontCacheFileName));
+        }
+        finally
+        {
+            Directory.Delete(projectDirectory, recursive: true);
+        }
+    }
+
     #endregion
 
     // -------------------------------------------------------------------------
@@ -1151,10 +1220,12 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         public bool RequiresSizeEstimation { get; init; } = false;
         public bool ShouldFail { get; init; }
         public int GenerateFontCallCount { get; private set; }
+        public List<string> GeneratedFntPaths { get; } = new();
 
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
         {
             GenerateFontCallCount++;
+            GeneratedFntPaths.Add(outputFntPath);
             GeneralResponse response = ShouldFail
                 ? GeneralResponse.UnsuccessfulWith("Simulated failure")
                 : GeneralResponse.SuccessfulResponse;
