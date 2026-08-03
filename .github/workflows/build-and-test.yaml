@@ -3,8 +3,10 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 on:
   push:
     branches: [main]
+    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
     branches: [master, main]
+    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   workflow_dispatch:
 
 jobs:

@@ -6,8 +6,10 @@ name: "Build Samples"
 on:
   push:
     branches: [main]
+    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
     branches: [master, main]
+    paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   workflow_dispatch:
 
 jobs:
