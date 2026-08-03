@@ -10,7 +10,7 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 
 The easiest way to add Gum to your project is to use NuGet. Open your project in your preferred IDE, or add packages through the command line. Each Gum NuGet package works on any platform. For example, MonoGame Desktop and Android project types use the same Gum NuGet package.
 
-The block below includes the base package plus two commonly-used add-ons, each marked **recommended, optional**: shape fill/gradient/shadow support, and dynamic (KernSmith) fonts. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](#adding-gum-to-game) below.
+The block below includes the base package plus three commonly-used add-ons, each marked **recommended, optional** or **optional**: shape fill/gradient/shadow support, dynamic (KernSmith) fonts, and arithmetic expression support. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](#adding-gum-to-game) below.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -22,6 +22,7 @@ Modify csproj:
 <PackageReference Include="Gum.MonoGame" Version="*" />
 <PackageReference Include="Gum.Shapes.MonoGame" Version="*" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
 <PackageReference Include="KernSmith.MonoGameGum" Version="*" /> <!-- Recommended, optional: dynamic fonts -->
+<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
 Or add through command line:
@@ -30,6 +31,7 @@ Or add through command line:
 dotnet add package Gum.MonoGame
 dotnet add package Gum.Shapes.MonoGame     # Recommended, optional: shape fill/gradient/shadow
 dotnet add package KernSmith.MonoGameGum   # Recommended, optional: dynamic fonts
+dotnet add package Gum.Expressions         # Optional: arithmetic expressions in variable references
 ```
 {% endtab %}
 
@@ -42,6 +44,7 @@ Modify csproj:
 <PackageReference Include="Gum.KNI" Version="*" />
 <PackageReference Include="Gum.Shapes.KNI" Version="*" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
 <PackageReference Include="KernSmith.KniGum" Version="*" /> <!-- Recommended, optional: dynamic fonts -->
+<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
 Or add through command line:
@@ -50,6 +53,7 @@ Or add through command line:
 dotnet add package Gum.KNI
 dotnet add package Gum.Shapes.KNI     # Recommended, optional: shape fill/gradient/shadow
 dotnet add package KernSmith.KniGum   # Recommended, optional: dynamic fonts
+dotnet add package Gum.Expressions    # Optional: arithmetic expressions in variable references
 ```
 {% endtab %}
 
@@ -60,12 +64,14 @@ Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.FNA" Version="*" />
+<PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.FNA
+dotnet add package Gum.Expressions   # Optional: arithmetic expressions in variable references
 ```
 
 There's no shape support or KernSmith package for FNA yet — skip those lines in [Adding Gum to Game](#adding-gum-to-game) below. An outlined `Circle`/`Rectangle` still renders without the shapes package (`StrokeColor`, `StrokeWidth`, and geometry all work); fill and the richer effects are MonoGame/KNI only for now. If you need dynamic fonts on FNA, reach out on Discord.
@@ -127,7 +133,7 @@ If using Visual Studio Code, see the [Visual Studio Code and Linking Source](vis
 
 Gum can be added to a Game/Core class with a few lines of code. Projects are encouraged to create a local GumService property called GumUI for convenience.
 
-The code below also wires up shape support and dynamic fonts (KernSmith) — both marked **recommended, optional**, matching the NuGet packages above. If you skipped a package above, delete its matching line(s) here too.
+The code below also wires up shape support, dynamic fonts (KernSmith), and expression support — matching the NuGet packages above. If you skipped a package above, delete its matching line(s) here too.
 
 {% hint style="info" %}
 The code in this example assumes that you are using retained mode rendering. If you are interested in immediate mode rendering, see the [Setup for GumBatch](../../setup-for-gumbatch.md) page.
@@ -165,6 +171,7 @@ public class Game1 : Game
 </strong><strong>        ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice); // Recommended, optional: dynamic fonts
+</strong><strong>        GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 </strong>        base.Initialize();
     }
 
@@ -201,6 +208,7 @@ public class Game1 : Core
 </strong><strong>        ShapeRenderer.Self.Initialize(); // Recommended, optional: shape fill/gradient/shadow
 </strong><strong>        Gum.Wireframe.CustomSetPropertyOnRenderable.InMemoryFontCreator =
 </strong><strong>            new KernSmith.Gum.KernSmithFontCreator(Core.GraphicsDevice); // Recommended, optional: dynamic fonts
+</strong><strong>        GumExpressionService.Initialize(); // Optional: arithmetic expressions in variable references
 </strong>        
         Scene = new BasicScene();
     }
@@ -242,23 +250,9 @@ By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The 
 For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../../standard-visuals/textruntime/fonts.md) page.
 {% endhint %}
 
-## Adding Expression Support (Optional)
+### About Expression Support (Optional)
 
-If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), you can add the `Gum.Expressions` NuGet package for full expression evaluation at runtime. Without this package, simple variable references like `Width = OtherInstance.Width` still work.
-
-Add the NuGet package:
-
-```bash
-dotnet add package Gum.Expressions
-```
-
-Then call `GumExpressionService.Initialize()` after `GumUI.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
-
-```csharp
-// Initialize
-GumUI.Initialize(this, "GumProject/GumProject.gumx");
-GumExpressionService.Initialize();
-```
+If your Gum project uses arithmetic expressions in variable references (such as `Width = OtherInstance.Width + 20`), the `Gum.Expressions` package added above enables full expression evaluation at runtime. Without it, simple variable references like `Width = OtherInstance.Width` still work. It's typically used together with a Gum project that has variable references defined in the tool — see [Loading a Gum Project (.gumx)](../../loading-a-gum-project-.gumx.md).
 
 If linking to source instead of NuGet, add `<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj` to your solution.
 
