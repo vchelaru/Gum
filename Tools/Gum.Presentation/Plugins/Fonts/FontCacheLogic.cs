@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
 using Gum.ToolStates;
@@ -20,16 +21,34 @@ public class FontCacheLogic
     private readonly IFontManager _fontManager;
     private readonly IDialogService _dialogService;
     private readonly IProjectState _projectState;
+    private readonly IDispatcher _dispatcher;
 
-    public FontCacheLogic(IFontManager fontManager, IDialogService dialogService, IProjectState projectState)
+    public FontCacheLogic(IFontManager fontManager, IDialogService dialogService, IProjectState projectState,
+        IDispatcher dispatcher)
     {
         _fontManager = fontManager;
         _dialogService = dialogService;
         _projectState = projectState;
+        _dispatcher = dispatcher;
     }
 
     /// <summary>
-    /// Creates any missing font files for the just-loaded project.
+    /// Queues creation of any missing font files for the loaded project to run after the caller
+    /// returns, rather than on the project-load path. Scanning the project for required fonts costs
+    /// hundreds of milliseconds and, in the normal case, finds every font already cached - so it is
+    /// pre-generation, not a prerequisite: a font that really is missing is still created on demand
+    /// when text using it renders (see <c>CustomSetPropertyOnRenderable.UpdateToFontValues</c>).
+    /// The scan reads the current project when it runs, so a project loaded in the meantime is the
+    /// one scanned.
+    /// </summary>
+    public void ScheduleMissingFontCreationForLoadedProject()
+    {
+        _dispatcher.Post(async () => await CreateMissingFontFilesForLoadedProject());
+    }
+
+    /// <summary>
+    /// Creates any missing font files for the loaded project. Prefer
+    /// <see cref="ScheduleMissingFontCreationForLoadedProject"/> on the project-load path.
     /// </summary>
     public async Task CreateMissingFontFilesForLoadedProject()
     {
