@@ -86,17 +86,26 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
+As with the NuGet packages above, the shape support, KernSmith, and expression projects are marked **recommended, optional** or **optional** — skip a project if you don't need it, and delete its matching line from the initialization code in [Adding Gum to Game](#adding-gum-to-game).
+
 {% tabs %}
 {% tab title="MonoGame" %}
 Add the following projects to your solution:
 
 * \<Gum Root>/MonoGameGum/MonoGameGum.csproj
-* \<GumRoot>/GumCommon/GumCommon.csproj
+* \<Gum Root>/GumCommon/GumCommon.csproj
+* \<Gum Root>/Runtimes/GumShapes/MonoGameGumShapes.csproj — **Recommended, optional:** shape fill/gradient/shadow
+* \<Gum Root>/Integrations/KernSmith/KernSmith.GumCommon/KernSmith.GumCommon.csproj — **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Integrations/KernSmith/KernSmith.MonoGameGum/KernSmith.MonoGameGum.csproj — **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj — **Optional:** arithmetic expressions in variable references
 
-Next, add MonoGameGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add project references in your game project for the pieces you use directly (`GumCommon.csproj` and `KernSmith.GumCommon.csproj` are pulled in transitively and don't need a direct reference). Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\MonoGameGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShapes\MonoGameGumShapes.csproj" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" /> <!-- Recommended, optional: dynamic fonts -->
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 {% endtab %}
 
@@ -104,12 +113,19 @@ Next, add MonoGameGum as a project reference in your game project. Your project 
 Add the following projects to your solution:
 
 * \<Gum Root>/MonoGameGum/KniGum/KniGum.csproj
-* \<GumRoot>/GumCommon/GumCommon.csproj
+* \<Gum Root>/GumCommon/GumCommon.csproj
+* \<Gum Root>/Runtimes/GumShapes/KniGumShapes.csproj — **Recommended, optional:** shape fill/gradient/shadow
+* \<Gum Root>/Integrations/KernSmith/KernSmith.GumCommon/KernSmith.GumCommon.csproj — **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Integrations/KernSmith/KernSmith.KniGum/KernSmith.KniGum.csproj — **Recommended, optional:** dynamic fonts
+* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj — **Optional:** arithmetic expressions in variable references
 
-Next, add KniGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add project references in your game project for the pieces you use directly (`GumCommon.csproj` and `KernSmith.GumCommon.csproj` are pulled in transitively and don't need a direct reference). Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\KniGum\KniGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShapes\KniGumShapes.csproj" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" /> <!-- Recommended, optional: dynamic fonts -->
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 {% endtab %}
 
@@ -117,13 +133,17 @@ Next, add KniGum as a project reference in your game project. Your project might
 Add the following projects to your solution:
 
 * \<Gum Root>/MonoGameGum/FnaGum/FnaGum.csproj
-* \<GumRoot>/GumCommon/GumCommon.csproj
+* \<Gum Root>/GumCommon/GumCommon.csproj
+* \<Gum Root>/Runtimes/GumExpressions/GumExpressions.csproj — **Optional:** arithmetic expressions in variable references
 
-Next, add FnaGum as a project reference in your game project. Your project might look like this depending on the location of the Gum repository relative to your game project:
+Next, add project references in your game project for the pieces you use directly. Your project might look like this depending on the location of the Gum repository relative to your game project:
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\FnaGum\FnaGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
+
+There's no shape support or KernSmith source project wired up for FNA yet — skip those, matching the NuGet tab above.
 {% endtab %}
 {% endtabs %}
 
