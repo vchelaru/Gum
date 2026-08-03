@@ -1126,6 +1126,46 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldGenerateOnlyTheFontMissingFromDisk()
+    {
+        // The counterpart to the "already up to date" guard above, and the reason font collection
+        // must not drop entries: a font whose .fnt is absent has to be regenerated on load, and the
+        // one already cached must not be regenerated.
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumFontGenTest_" + Guid.NewGuid()) + Path.DirectorySeparatorChar;
+        Directory.CreateDirectory(projectDirectory);
+        try
+        {
+            ScreenSave screen = new ScreenSave { Name = "Screen" };
+            StateSave state = AddState(screen);
+            SetVar(state, "Font", "Arial");
+            SetVar(state, "FontSize", 14);
+            Project.Screens.Add(screen);
+
+            // Arial@18 comes from the Text standard element (see this class's constructor). Cache
+            // that one only, leaving Arial@14 missing.
+            BmfcSave cachedFont = new BmfcSave { FontName = "Arial", FontSize = 18 };
+            BmfcSave missingFont = new BmfcSave { FontName = "Arial", FontSize = 14 };
+
+            string cachedFntPath = Path.Combine(projectDirectory, cachedFont.FontCacheFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(cachedFntPath)!);
+            File.WriteAllText(cachedFntPath, "cached");
+
+            ControllableFontFileGenerator generator = new();
+            HeadlessFontGenerationService service = new(generator);
+
+            await service.CreateAllMissingFontFiles(Project, projectDirectory, forceRecreate: false);
+
+            generator.GenerateFontCallCount.ShouldBe(1);
+            generator.GeneratedFntPaths.ShouldHaveSingleItem()
+                .ShouldEndWith(Path.GetFileName(missingFont.FontCacheFileName));
+        }
+        finally
+        {
+            Directory.Delete(projectDirectory, recursive: true);
+        }
+    }
+
     #endregion
 
     // -------------------------------------------------------------------------
@@ -1180,10 +1220,12 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         public bool RequiresSizeEstimation { get; init; } = false;
         public bool ShouldFail { get; init; }
         public int GenerateFontCallCount { get; private set; }
+        public List<string> GeneratedFntPaths { get; } = new();
 
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
         {
             GenerateFontCallCount++;
+            GeneratedFntPaths.Add(outputFntPath);
             GeneralResponse response = ShouldFail
                 ? GeneralResponse.UnsuccessfulWith("Simulated failure")
                 : GeneralResponse.SuccessfulResponse;
