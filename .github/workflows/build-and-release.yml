@@ -51,13 +51,12 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # Restore NuGet packages once. ExcludeIOS / ExcludeAndroid let the tool build
-      # on CI runners that do not have the mobile workloads installed. Mobile-TFM
-      # assemblies are skipped; consumers who need them build locally with the
-      # workloads installed.
+      # Restore NuGet packages once. MonoGameGum/KniGum default to desktop-only
+      # (mobile TFMs are opt-in via IncludeIOS/IncludeAndroid), so this runner
+      # never needs the mobile workloads installed.
       # Uses GumFull.sln so the CLI is built and copied into the Gum tool output
       - name: Restore
-        run: dotnet restore GumFull.sln -p:ExcludeIOS=true -p:ExcludeAndroid=true
+        run: dotnet restore GumFull.sln
 
       # Update AssemblyInfo.cs version dynamically to current date. The build version lives
       # in an AssemblyMetadata("BuildVersion", ...) attribute rather than
@@ -81,7 +80,7 @@ jobs:
       # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output;
       # plugins use $(SolutionDir) in their post-build events so they must be built via the solution)
       - name: Build Gum Tool
-        run: dotnet build GumFull.sln -c Release --no-restore -p:ExcludeIOS=true -p:ExcludeAndroid=true
+        run: dotnet build GumFull.sln -c Release --no-restore
 
       # Publish Gum as a framework-dependent single-file bundle.
       # All managed assemblies are bundled into Gum.exe; the .NET runtime is still required.

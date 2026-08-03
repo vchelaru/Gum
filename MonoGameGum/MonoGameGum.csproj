@@ -2,22 +2,23 @@
 
 	<PropertyGroup>
 		<!--
-			Target frameworks are composed based on which mobile workloads the developer has
-			installed. ExcludeIOS=true skips the iOS target (no iOS workload needed);
-			ExcludeAndroid=true skips the Android target (no Android workload needed). CI uses
-			both escape hatches because the release runner only has the base .NET SDK installed.
+			This csproj uses opt-IN for mobile (IncludeIOS=true / IncludeAndroid=true), matching
+			KniGum.csproj's convention (see its comment). Opt-out was tried first and kept every
+			source-linker's IDE/build on the hook for the iOS/Android workloads by default, since
+			ProjectReference AdditionalProperties do not flow into a referenced project's own
+			TargetFrameworks evaluation — only real global properties do (CLI -p:, env vars, or a
+			Directory.Build.props actually in scope for this csproj). Opt-in keeps the default
+			build desktop-only for everyone; release pipelines that pack Gum.MonoGame pass
+			-p:IncludeIOS=true -p:IncludeAndroid=true so the published NuGet still ships both
+			mobile TFMs. Do not flip this back to opt-out.
 
 			The mobile targets are net9.0-* and are additionally gated on the active SDK being
-			.NET 9+. A .NET 8 SDK cannot evaluate a net9.0-* TFM at all (NETSDK1139), and that
-			evaluation happens during NuGet restore — where ProjectReference AdditionalProperties
-			like ExcludeIOS do NOT flow — so source-linkers pinned to the .NET 8 SDK would
-			otherwise break on restore before the build-time escape hatches ever apply. The
-			SDK gate keeps net8.0-SDK restores clean while net9+ SDK builds still get the mobile
-			TFMs.
+			.NET 9+, so opting in on a .NET 8 SDK doesn't hit NETSDK1139 (a .NET 8 SDK cannot
+			evaluate a net9.0-* TFM at all).
 		-->
 		<TargetFrameworks>net8.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeIOS)' != 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
-		<TargetFrameworks Condition="'$(ExcludeAndroid)' != 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeIOS)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="'$(IncludeAndroid)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
