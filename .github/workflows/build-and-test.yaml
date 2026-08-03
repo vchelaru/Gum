@@ -62,8 +62,8 @@ jobs:
   # before System32).
   #
   # Needs neither FNA/Sokol submodules nor mobile workloads - the harness only references
-  # MonoGameGum/GumCommon - so ExcludeAndroid/ExcludeIOS keep restore on just net8.0, same escape
-  # hatches Build-Generated-Code below uses for the same reason.
+  # MonoGameGum/GumCommon, and mobile TFMs are opt-in (IncludeIOS/IncludeAndroid), so restore
+  # stays on just net8.0 with no flags needed.
   Native-AOT-Smoke:
     if: github.event_name != 'push'
     runs-on: windows-latest
@@ -84,7 +84,7 @@ jobs:
         run: echo "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Publish harness as Native AOT
-        run: dotnet publish "Tests/NativeAotSmoke.Harness/NativeAotSmoke.Harness.csproj" --configuration Release -r win-x64 --self-contained -p:ExcludeAndroid=true -p:ExcludeIOS=true
+        run: dotnet publish "Tests/NativeAotSmoke.Harness/NativeAotSmoke.Harness.csproj" --configuration Release -r win-x64 --self-contained
 
       # Same download/extract as "Install Mesa llvmpipe" below, pointed at this job's own AOT
       # publish output instead of RaylibGum.Tests' bin dir.
