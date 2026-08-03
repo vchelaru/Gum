@@ -48,6 +48,17 @@ public class FontPlaygroundScreen
     private TextRuntime _bbCodeDropshadowPreviewText = null!;
 
     /// <summary>
+    /// How many rows the fractional-FontSize column (issue #4304 manual test) builds, each 0.25
+    /// larger than the last starting at <see cref="FractionalFontSizeColumnStart"/>.
+    /// </summary>
+    private const int FractionalFontSizeColumnCount = 20;
+
+    /// <summary>
+    /// The smallest FontSize in the fractional-FontSize column (issue #4304 manual test).
+    /// </summary>
+    private const float FractionalFontSizeColumnStart = 10f;
+
+    /// <summary>
     /// Builds the font-playground controls and preview text into the given root and wires up
     /// live updates. Returns the created screen so the host can keep it alive if desired; the
     /// host can also safely ignore the return value because the wired event handlers keep the
@@ -213,7 +224,38 @@ public class FontPlaygroundScreen
         _bbCodeDropshadowPreviewText.HasDropshadow = true;
         root.Children.Add(_bbCodeDropshadowPreviewText);
 
+        BuildFractionalFontSizeColumn(root);
+
         ApplyFontSettings();
+    }
+
+    /// <summary>
+    /// Issue #4304 manual test: a column of Text instances, each 0.25 larger than the one above it
+    /// starting at <see cref="FractionalFontSizeColumnStart"/>, so fractional FontSize can be
+    /// compared visually. Each label includes its own FontSize so a row is identifiable at a glance.
+    /// KernSmith rasterizes each size natively (no rounding), unlike the legacy bmfont.exe backend.
+    /// </summary>
+    private static void BuildFractionalFontSizeColumn(InteractiveGue root)
+    {
+        float y = 250;
+        for (int i = 0; i < FractionalFontSizeColumnCount; i++)
+        {
+            float fontSize = FractionalFontSizeColumnStart + i * 0.25f;
+
+            TextRuntime text = new TextRuntime();
+            text.Font = "Arial";
+            text.FontSize = fontSize;
+            text.Text = $"{fontSize:0.00} The quick brown fox";
+            text.X = 290;
+            text.Y = y;
+            text.Red = 255;
+            text.Green = 255;
+            text.Blue = 255;
+            text.Alpha = 255;
+            root.Children.Add(text);
+
+            y += fontSize + 4;
+        }
     }
 
     /// <summary>
