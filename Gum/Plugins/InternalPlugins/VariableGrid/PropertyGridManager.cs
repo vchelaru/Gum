@@ -287,31 +287,15 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         try
         {
 
-            bool hasChangedObjectShowing =
+            bool structuralChange =
                 element != mLastElement ||
                 state != mLastState ||
                 stateCategory != mLastCategory ||
                 behaviorSave != mLastBehaviorSave ||
                 force;
 
-            if (!hasChangedObjectShowing)
-            {
-                if (newInstances.Count != mLastInstanceSaves.Count)
-                {
-                    hasChangedObjectShowing = true;
-                }
-                else
-                {
-                    for (int i = 0; i < newInstances.Count; i++)
-                    {
-                        if (newInstances[i] != mLastInstanceSaves[i])
-                        {
-                            hasChangedObjectShowing = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            (bool hasChangedObjectShowing, bool instanceIdentityChanged) =
+                DetermineRefreshFlags(structuralChange, newInstances, mLastInstanceSaves);
 
             var hasCustomState = _selectedState.CustomCurrentStateSave != null;
 
@@ -492,7 +476,20 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     // let's see if any variables have changed
                     var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
 
-                    if (oldCategory != null && DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
+                    // A previous category's InstanceMember objects capture their target instance at
+                    // construction (see StateReferencingInstanceMember), so they can only be reused
+                    // when the same instance is still shown - an instance identity change always
+                    // needs at least a per-member retarget, even when the member names match.
+                    bool namesMatch = oldCategory != null && !DoCategoriesDiffer(oldCategory.Members, newCategory.Members);
+
+                    bool canRetargetInPlace = instanceIdentityChanged && namesMatch &&
+                        CanRetargetAllMembers(oldCategory.Members, newCategory.Members);
+
+                    if (canRetargetInPlace)
+                    {
+                        RetargetAllMembers(oldCategory.Members, newCategory.Members);
+                    }
+                    else if (oldCategory != null && (instanceIdentityChanged || !namesMatch))
                     {
                         int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
 
@@ -513,10 +510,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             // When a structural rebuild happened (hasChangedObjectShowing = true), each control's
             // InstanceMember setter already called Refresh(). Calling mVariablesDataGrid.Refresh()
             // here would trigger a second Refresh() on every control via SimulateValueChanged →
-            // PropertyChanged → HandlePropertyChange. Skip it in that case.
-            // When hasChangedObjectShowing = false, existing InstanceMember objects stay in place
-            // and their values may have changed (e.g. after undo), so Refresh() is still needed.
-            if (!hasChangedObjectShowing)
+            // PropertyChanged → HandlePropertyChange. Skip it in that case - and also when only the
+            // instance changed (instanceIdentityChanged), since every category was just replaced
+            // with a freshly-built one above for the same reason.
+            // Otherwise, existing InstanceMember objects stay in place and their values may have
+            // changed (e.g. after undo), so Refresh() is still needed.
+            if (!hasChangedObjectShowing && !instanceIdentityChanged)
             {
                 mVariablesDataGrid.Refresh();
             }
@@ -525,7 +524,6 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         {
             ObjectFinder.Self.DisableCache();
         }
-        
     }
 
     private void RemoveMembersNotAllowedInMultiEdit(List<MemberCategory> categories)
@@ -692,11 +690,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    public bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
+    public static bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
     {
         foreach (var item in first)
         {
-            if (!second.Any(other => other.Name == item.Name))
+            if (!second.Any(other => AreSameVariable(other, item)))
             {
                 return true;
             }
@@ -704,13 +702,100 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         foreach (var item in second)
         {
-            if (!first.Any(other => other.Name == item.Name))
+            if (!first.Any(other => AreSameVariable(other, item)))
             {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Compares two members by their unqualified variable name rather than <see cref="InstanceMember.Name"/>,
+    /// which is instance-prefixed (see <c>ElementSaveDisplayer</c>'s <c>instance.Name + "." + variable</c>) and
+    /// so never matches across two different instances even when the underlying variable is the same.
+    /// </summary>
+    private static bool AreSameVariable(InstanceMember first, InstanceMember second)
+    {
+        if (first is StateReferencingInstanceMember firstSrim && second is StateReferencingInstanceMember secondSrim)
+        {
+            return firstSrim.RootVariableName == secondSrim.RootVariableName;
+        }
+
+        return first.Name == second.Name;
+    }
+
+    /// <summary>
+    /// Whether every member in <paramref name="oldMembers"/> can be retargeted in place onto its
+    /// matching member in <paramref name="newMembers"/> (see <see cref="StateReferencingInstanceMember.CanRetargetTo"/>)
+    /// instead of the whole category being rebuilt.
+    /// </summary>
+    private static bool CanRetargetAllMembers(IEnumerable<InstanceMember> oldMembers, IEnumerable<InstanceMember> newMembers)
+    {
+        foreach (var oldMember in oldMembers)
+        {
+            if (oldMember is not StateReferencingInstanceMember oldSrim)
+            {
+                return false;
+            }
+
+            var newSrim = newMembers
+                .OfType<StateReferencingInstanceMember>()
+                .FirstOrDefault(m => m.RootVariableName == oldSrim.RootVariableName);
+
+            if (newSrim == null || !oldSrim.CanRetargetTo(newSrim))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Retargets every member in <paramref name="oldMembers"/> onto its matching member in
+    /// <paramref name="newMembers"/>. Callers must have already verified <see cref="CanRetargetAllMembers"/>.
+    /// </summary>
+    private static void RetargetAllMembers(IEnumerable<InstanceMember> oldMembers, IEnumerable<InstanceMember> newMembers)
+    {
+        foreach (var oldMember in oldMembers)
+        {
+            var oldSrim = (StateReferencingInstanceMember)oldMember;
+            var newSrim = newMembers
+                .OfType<StateReferencingInstanceMember>()
+                .First(m => m.RootVariableName == oldSrim.RootVariableName);
+
+            oldSrim.Retarget(newSrim.Entry);
+        }
+    }
+
+    /// <summary>
+    /// Decides whether <see cref="RefreshDataGrid"/> needs a full category rebuild, and whether
+    /// the shown instance changed identity even when no rebuild is needed. A single selected
+    /// instance changing identity (same element/state/category/behavior, same count) can go
+    /// through the cheaper per-category diff path instead of a full rebuild; multi-select changes
+    /// always force a full rebuild since the diff path only patches a single category list.
+    /// </summary>
+    public static (bool HasChangedObjectShowing, bool InstanceIdentityChanged) DetermineRefreshFlags(
+        bool structuralChange,
+        IReadOnlyList<InstanceSave> newInstances,
+        IReadOnlyList<InstanceSave> lastInstances)
+    {
+        if (structuralChange || newInstances.Count != lastInstances.Count)
+        {
+            return (true, false);
+        }
+
+        for (int i = 0; i < newInstances.Count; i++)
+        {
+            if (newInstances[i] != lastInstances[i])
+            {
+                return newInstances.Count == 1 ? (false, true) : (true, false);
+            }
+        }
+
+        return (false, false);
     }
 
     private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave instance)

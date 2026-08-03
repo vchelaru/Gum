@@ -34,9 +34,69 @@ public class StateReferencingInstanceMember : InstanceMember
 {
     #region Fields
 
-    private readonly VariableGridEntry _entry;
+    private VariableGridEntry _entry;
 
     #endregion
+
+    internal VariableGridEntry Entry => _entry;
+
+    /// <summary>
+    /// Whether <see cref="Retarget"/> can safely re-point this row at <paramref name="newEntry"/>
+    /// without recreating the bound WPF control. Requires the same <see cref="PreferredDisplayer"/>
+    /// type - a mismatch means the existing control can't render the new entry's data even if the
+    /// variable name is the same (e.g. differing available-states drive a ComboBox in one instance
+    /// but not another).
+    /// </summary>
+    internal bool CanRetargetTo(StateReferencingInstanceMember other) =>
+        RootVariableName == other.RootVariableName && PreferredDisplayer == other.PreferredDisplayer;
+
+    /// <summary>
+    /// Re-points this row at a freshly built entry for a different instance, in place, instead of
+    /// being replaced by a new <see cref="StateReferencingInstanceMember"/> - avoids the WPF
+    /// container recreation/layout cost of swapping the row out entirely. Callers must have already
+    /// verified <see cref="CanRetargetTo"/>.
+    /// </summary>
+    internal void Retarget(VariableGridEntry newEntry)
+    {
+        bool wasReadOnly = _entry.IsReadOnly;
+
+        _entry = newEntry;
+
+        if (wasReadOnly != _entry.IsReadOnly)
+        {
+            if (wasReadOnly)
+            {
+                this.CustomSetPropertyEvent += HandleCustomSet;
+                this.SetToDefault += HandleSetToDefault;
+            }
+            else
+            {
+                this.CustomSetPropertyEvent -= HandleCustomSet;
+                this.SetToDefault -= HandleSetToDefault;
+            }
+        }
+
+        this.Instance = _entry.Instance;
+        this.DisplayName = _entry.DisplayName;
+        this.DetailText = _entry.DetailText;
+        this.ToolTipText = _entry.ToolTipText;
+        this.SupportsMakeDefault = _entry.SupportsMakeDefault;
+
+        this.PropertiesToSetOnDisplayer.Clear();
+        foreach (var kvp in _entry.PropertiesToSetOnDisplayer)
+        {
+            this.PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+        }
+
+        ContextMenuEvents.Clear();
+        PopulateContextMenu();
+
+        SimulateValueChanged();
+        OnPropertyChanged(nameof(DisplayName));
+        OnPropertyChanged(nameof(DetailText));
+        OnPropertyChanged(nameof(ToolTipText));
+        OnPropertyChanged(nameof(IsReadOnly));
+    }
 
     #region Properties
 

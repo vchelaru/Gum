@@ -32,13 +32,14 @@ public class StateReferencingInstanceMemberTests
         Type? componentType,
         StateSave stateSave,
         string variableName,
-        IStateContainer container)
+        IStateContainer container,
+        bool isReadOnly = false)
     {
         return new StateReferencingInstanceMember(
             attributes,
             converter,
             componentType,
-            false,
+            isReadOnly,
             false,
             true,
             stateSave,
@@ -84,6 +85,78 @@ public class StateReferencingInstanceMemberTests
     }
 
     [Fact]
+    public void CanRetargetTo_ShouldReturnFalse_WhenPreferredDisplayerDiffers()
+    {
+        ComponentSave componentSave = CreateComponent("CanRetargetToDisplayerMismatchComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        stateSave.SetValue("Instance1.Foo", "A");
+        stateSave.SetValue("Instance2.Foo", "A");
+
+        StateReferencingInstanceMember comboBoxMember = CreateSut(
+            Array.Empty<Attribute>(),
+            new AvailableStatesConverter(category: "", _mocker.Get<ISelectedState>()),
+            typeof(string), stateSave, "Instance1.Foo", componentSave);
+        StateReferencingInstanceMember plainMember = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(string), stateSave, "Instance2.Foo", componentSave);
+
+        comboBoxMember.CanRetargetTo(plainMember).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void CanRetargetTo_ShouldReturnTrue_WhenRootVariableNameAndDisplayerMatch()
+    {
+        ComponentSave componentSave = CreateComponent("CanRetargetToMatchComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        stateSave.SetValue("Instance1.Foo", "A");
+        stateSave.SetValue("Instance2.Foo", "A");
+
+        StateReferencingInstanceMember first = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(string), stateSave, "Instance1.Foo", componentSave);
+        StateReferencingInstanceMember second = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(string), stateSave, "Instance2.Foo", componentSave);
+
+        first.CanRetargetTo(second).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void DoCategoriesDiffer_ShouldReturnFalse_WhenMembersOnlyDifferByInstanceQualifier()
+    {
+        ComponentSave componentSave = CreateComponent("DoCategoriesDifferSameShapeComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        stateSave.SetValue("Instance1.Visible", true);
+        stateSave.SetValue("Instance2.Visible", true);
+
+        StateReferencingInstanceMember first = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(bool), stateSave, "Instance1.Visible", componentSave);
+        StateReferencingInstanceMember second = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(bool), stateSave, "Instance2.Visible", componentSave);
+
+        bool result = PropertyGridManager.DoCategoriesDiffer(
+            new InstanceMember[] { first }, new InstanceMember[] { second });
+
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DoCategoriesDiffer_ShouldReturnTrue_WhenRootVariableNamesDiffer()
+    {
+        ComponentSave componentSave = CreateComponent("DoCategoriesDifferDifferentShapeComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        stateSave.SetValue("Instance1.Visible", true);
+        stateSave.SetValue("Instance2.Width", 10);
+
+        StateReferencingInstanceMember first = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(bool), stateSave, "Instance1.Visible", componentSave);
+        StateReferencingInstanceMember second = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(int), stateSave, "Instance2.Width", componentSave);
+
+        bool result = PropertyGridManager.DoCategoriesDiffer(
+            new InstanceMember[] { first }, new InstanceMember[] { second });
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
     public void PreferredDisplayer_ShouldMapToComboBoxDisplay_WhenConverterProvidesStandardValues()
     {
         ComponentSave componentSave = CreateComponent("PreferredDisplayerComboBoxComponent");
@@ -115,6 +188,35 @@ public class StateReferencingInstanceMemberTests
         sut.PreferredDisplayer = typeof(SliderDisplay);
 
         sut.PreferredDisplayer.ShouldBe(typeof(SliderDisplay));
+    }
+
+    [Fact]
+    public void Retarget_ShouldEnableEditing_WhenNewEntryIsNotReadOnly()
+    {
+        ComponentSave componentSave = CreateComponent("RetargetEnablesEditingComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        stateSave.SetValue("Instance1.Visible", true);
+        stateSave.SetValue("Instance2.Visible", true);
+
+        StateReferencingInstanceMember lockedMember = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(bool), stateSave, "Instance1.Visible", componentSave, isReadOnly: true);
+        StateReferencingInstanceMember unlockedMember = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(bool), stateSave, "Instance2.Visible", componentSave, isReadOnly: false);
+
+        Mock<ISetVariableLogic> setVariableLogic = _mocker.GetMock<ISetVariableLogic>();
+        setVariableLogic
+            .Setup(x => x.PropertyValueChanged(It.IsAny<string>(), It.IsAny<object?>(),
+                It.IsAny<InstanceSave>(), It.IsAny<StateSave>(), It.IsAny<bool>(), It.IsAny<bool>(),
+                It.IsAny<bool>(), It.IsAny<bool>()))
+            .Returns(GeneralResponse.SuccessfulResponse);
+
+        lockedMember.Retarget(unlockedMember.Entry);
+        lockedMember.Instance = componentSave;
+
+        lockedMember.SetValue(false, SetPropertyCommitType.Full);
+
+        setVariableLogic.Verify(x => x.PropertyValueChanged(
+            It.IsAny<string>(), It.IsAny<object?>(), null, stateSave, true, true, true, true), Times.Once);
     }
 
     [Fact]

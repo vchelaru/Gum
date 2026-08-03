@@ -435,7 +435,7 @@ public partial class GumTreeView : TreeView
                     e.Handled = true;
                     break;
                 case Key.Left when selected.Parent != null:
-                    SelectSingleNode(selected.Parent);
+                    SelectSingleNodeAndNotify(selected.Parent);
                     e.Handled = true;
                     break;
                 case Key.Right when !selected.IsExpanded:
@@ -443,13 +443,14 @@ public partial class GumTreeView : TreeView
                     e.Handled = true;
                     break;
                 case Key.Right when selected.FirstNode is { } firstChild:
-                    SelectSingleNode(firstChild);
+                    SelectSingleNodeAndNotify(firstChild);
                     e.Handled = true;
                     break;
                 case Key.Up when !altDown && !controlDown:
                     if (selected.PrevVisibleNode is { } previous)
                     {
                         ReactToClickedNode(previous);
+                        AfterClickSelect?.Invoke(previous);
                         e.Handled = true;
                     }
                     break;
@@ -457,6 +458,7 @@ public partial class GumTreeView : TreeView
                     if (selected.NextVisibleNode is { } next)
                     {
                         ReactToClickedNode(next);
+                        AfterClickSelect?.Invoke(next);
                         e.Handled = true;
                     }
                     break;
@@ -473,11 +475,11 @@ public partial class GumTreeView : TreeView
                     e.Handled = true;
                     break;
                 case Key.PageUp:
-                    SelectSingleNode(_keyNavigationLogic.GetPageUpTarget(selected, VisibleRowCount));
+                    SelectSingleNodeAndNotify(_keyNavigationLogic.GetPageUpTarget(selected, VisibleRowCount));
                     e.Handled = true;
                     break;
                 case Key.PageDown:
-                    SelectSingleNode(_keyNavigationLogic.GetPageDownTarget(selected, VisibleRowCount));
+                    SelectSingleNodeAndNotify(_keyNavigationLogic.GetPageDownTarget(selected, VisibleRowCount));
                     e.Handled = true;
                     break;
             }
@@ -505,6 +507,24 @@ public partial class GumTreeView : TreeView
         {
             SelectSingleNode(target);
         }
+
+        AfterClickSelect?.Invoke(target);
+    }
+
+    /// <summary>
+    /// Selects a single node and notifies <see cref="AfterClickSelect"/> - unlike
+    /// <see cref="SelectSingleNode"/> alone (also used by the mouse-click path, which raises
+    /// <see cref="AfterClickSelect"/> itself), keyboard navigation has no other caller to raise it.
+    /// </summary>
+    private void SelectSingleNodeAndNotify(GumTreeNode? node)
+    {
+        if (node == null)
+        {
+            return;
+        }
+
+        SelectSingleNode(node);
+        AfterClickSelect?.Invoke(node);
     }
 
     #endregion
