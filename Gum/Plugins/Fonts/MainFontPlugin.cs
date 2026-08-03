@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -6,6 +6,7 @@ using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
 using System.Diagnostics;
+using Gum.Services;
 using Gum.Services.Fonts;
 
 namespace Gum.Plugins.Fonts;
@@ -26,11 +27,12 @@ public class MainFontPlugin : PriorityPlugin
         IGuiCommands guiCommands,
         IFontManager fontManager,
         IDialogService dialogService,
-        IProjectState projectState)
+        IProjectState projectState,
+        IDispatcher dispatcher)
     {
         _fontManager = fontManager;
         _dialogService = dialogService;
-        _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState);
+        _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState, dispatcher);
     }
 
     public override void StartUp()
@@ -63,8 +65,8 @@ public class MainFontPlugin : PriorityPlugin
 
     }
 
-    private async void HandleProjectLoaded(GumProjectSave save) =>
-        await _fontCacheLogic.CreateMissingFontFilesForLoadedProject();
+    private void HandleProjectLoaded(GumProjectSave save) =>
+        _fontCacheLogic.ScheduleMissingFontCreationForLoadedProject();
 
     private void HandleClearFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
