@@ -10,7 +10,7 @@ MonoGame Gum works on a variety of platforms including DesktopGL, DirectX, and m
 
 The easiest way to add Gum to your project is to use NuGet. Open your project in your preferred IDE, or add packages through the command line. Each Gum NuGet package works on any platform. For example, MonoGame Desktop and Android project types use the same Gum NuGet package.
 
-The block below includes the base package plus three commonly-used add-ons, each marked **recommended, optional** or **optional**: shape fill/gradient/shadow support, dynamic (KernSmith) fonts, and arithmetic expression support. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](#adding-gum-to-game) below.
+The block below includes the base package plus three commonly-used add-ons, each marked **recommended, optional** or **optional**: shape fill/gradient/shadow support, dynamic (KernSmith) fonts, and arithmetic expression support. If you don't need one, skip its line here and delete the matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game) below.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -74,7 +74,7 @@ dotnet add package Gum.FNA
 dotnet add package Gum.Expressions   # Optional: arithmetic expressions in variable references
 ```
 
-There's no shape support or KernSmith package for FNA yet — skip those lines in [Adding Gum to Game](#adding-gum-to-game) below. An outlined `Circle`/`Rectangle` still renders without the shapes package (`StrokeColor`, `StrokeWidth`, and geometry all work); fill and the richer effects are MonoGame/KNI only for now. If you need dynamic fonts on FNA, reach out on Discord.
+There's no shape support or KernSmith package for FNA yet — skip those lines in [Adding Gum to Game](./#adding-gum-to-game) below. An outlined `Circle`/`Rectangle` still renders without the shapes package (`StrokeColor`, `StrokeWidth`, and geometry all work); fill and the richer effects are MonoGame/KNI only for now. If you need dynamic fonts on FNA, reach out on Discord.
 {% endtab %}
 {% endtabs %}
 
@@ -86,7 +86,7 @@ To add source, first clone the Gum repository: [https://github.com/vchelaru/Gum]
 
 If you have already added the Gum NuGet package to your project, remove it.
 
-As with the NuGet packages above, the shape support, KernSmith, and expression projects are marked **recommended, optional** or **optional** — skip a project if you don't need it, and delete its matching line from the initialization code in [Adding Gum to Game](#adding-gum-to-game).
+As with the NuGet packages above, the shape support, KernSmith, and expression projects are marked **recommended, optional** or **optional** — skip a project if you don't need it, and delete its matching line from the initialization code in [Adding Gum to Game](./#adding-gum-to-game).
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -103,9 +103,11 @@ Next, add project references in your game project for the pieces you use directl
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\MonoGameGum.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\GumShapes\MonoGameGumShapes.csproj" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
-<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" /> <!-- Recommended, optional: dynamic fonts -->
-<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
+<ProjectReference Include="..\Gum\GumCommon\GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.MonoGameGum\KernSmith.MonoGameGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 {% endtab %}
 
@@ -123,9 +125,11 @@ Next, add project references in your game project for the pieces you use directl
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\KniGum\KniGum.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\GumShapes\KniGumShapes.csproj" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
-<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" /> <!-- Recommended, optional: dynamic fonts -->
-<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
+<ProjectReference Include="..\Gum\GumCommon\GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumShapes\KniGumShapes.csproj" />
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.GumCommon\KernSmith.GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Integrations\KernSmith\KernSmith.KniGum\KernSmith.KniGum.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 {% endtab %}
 
@@ -140,7 +144,8 @@ Next, add project references in your game project for the pieces you use directl
 
 ```xml
 <ProjectReference Include="..\Gum\MonoGameGum\FnaGum\FnaGum.csproj" />
-<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" /> <!-- Optional: arithmetic expressions in variable references -->
+<ProjectReference Include="..\Gum\GumCommon\GumCommon.csproj" />
+<ProjectReference Include="..\Gum\Runtimes\GumExpressions\GumExpressions.csproj" />
 ```
 
 There's no shape support or KernSmith source project wired up for FNA yet — skip those, matching the NuGet tab above.
