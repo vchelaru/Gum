@@ -33,6 +33,13 @@
 	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<DefineConstants>TRACE;GUM</DefineConstants>
 	</PropertyGroup>
+	<!-- ReadyToRun precompiles native code ahead of time to reduce first-call JIT cost (#4282).
+	     Only meaningful for a framework-dependent, RID-specific publish, so it's gated to the
+	     win-x64 publish the CI workflow already performs (-r win-x64 -c Release); it has no effect
+	     on a plain `dotnet build`. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(RuntimeIdentifier)' == 'win-x64'">
+		<PublishReadyToRun>true</PublishReadyToRun>
+	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'UnitTest|AnyCPU'">
 		<DebugSymbols>true</DebugSymbols>
 		<DefineConstants>TRACE;DEBUG;GUM</DefineConstants>

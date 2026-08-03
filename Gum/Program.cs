@@ -82,6 +82,7 @@ namespace Gum
             };
 
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
+
             app.MainWindow.Visibility = Visibility.Visible;
 
             await InitializeGum(host.Services).ConfigureAwait(true);

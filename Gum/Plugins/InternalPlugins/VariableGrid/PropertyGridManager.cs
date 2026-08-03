@@ -52,6 +52,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IClipboardService _clipboardService;
+
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
