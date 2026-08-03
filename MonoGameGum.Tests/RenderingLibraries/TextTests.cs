@@ -144,6 +144,43 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
             "Because a content-derived Height must not be used to truncate the very lines it was derived from");
     }
 
+    // Issue #4302 follow-up: TextRuntime.RegenerateOversampledFont swaps BitmapFont to a font
+    // rasterized at oversampleRatio * FontSize, then sets FontScale = 1/oversampleRatio to compensate
+    // so the on-screen size is unchanged. Both setters call UpdateWrappedText() independently -- the
+    // BitmapFont setter fires FIRST, with the OLD (pre-swap) FontScale still in effect, so it wraps
+    // using the new (much wider) glyph metrics against a wrap width that hasn't been inflated yet.
+    // That intermediate wrap is wrong, but should be harmless IF the FontScale setter's later call
+    // fully recomputes WrappedText afterward. This test asserts the actual (post both-setters) result
+    // still matches the pre-swap wrap, exactly what a user should see (crisp text, same layout).
+    [Fact]
+    public void UpdateLines_WhenBitmapFontAndFontScaleBothChangeInOversampleOrder_ShouldWrapTheSameAsBeforeTheSwap()
+    {
+        const int baseAdvance = 10;
+        const float oversampleRatio = 2.5f;
+        const int oversampledAdvance = (int)(baseAdvance * oversampleRatio); // 25
+
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(baseAdvance, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont oversampledFont = new BitmapFont((Texture2D)null!, AbcFontData(oversampledAdvance, lineHeight: 50));
+        oversampledFont.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        text.Width = 5 * baseAdvance; // exactly fits "AB AB" (5 chars * baseAdvance)
+        text.RawText = "AB AB";
+
+        text.WrappedText.Count.ShouldBe(1, "because AB AB exactly fits the base font/width before any oversampling");
+
+        // Mirrors TextRuntime.RegenerateOversampledFont's exact call order: BitmapFont first, then FontScale.
+        text.BitmapFont = oversampledFont;
+        text.FontScale = 1f / oversampleRatio;
+
+        text.WrappedText.Count.ShouldBe(1,
+            "because the oversampled font's glyphs are exactly oversampleRatio times wider and FontScale " +
+            "compensates by the same ratio -- the on-screen size, and therefore the wrap, must not change");
+        text.WrappedText[0].ShouldBe("AB AB");
+    }
+
     // Two-char ("ab") BMFont with every glyph at a caller-chosen xadvance, so a test can build a
     // "base" font and a deliberately-wider "swapped" font and assert measurement honors each run's font.
     private static string TwoCharFontData(int xadvance, int lineHeight) =>

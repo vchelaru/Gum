@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
@@ -110,6 +111,70 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         {
             TextRuntime.UseFontOversampling = savedUseFontOversampling;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Reproduction attempt for the wrap-earlier report on #4302: goes through the real TextRuntime
+    // property cascade (not a bare Text) with a fixed Width, using a fake creator whose glyph metrics
+    // scale perfectly with the requested FontSize -- i.e. the oversampled font is an exact multiple of
+    // the base font, same as the "AB AB" bare-Text regression test in TextTests.cs. If this passes,
+    // the TextRuntime/GraphicalUiElement plumbing isn't adding its own discrepancy on top of the core
+    // BitmapFont/FontScale swap (already proven sound by that other test) -- meaning a real-world
+    // wrap shift comes from the actual rasterizer's glyph metrics not scaling perfectly linearly,
+    // not from a logic bug in Gum's wrap-width math.
+    [Fact]
+    public void RegenerateOversampledFont_WithProportionalFont_DoesNotChangeWrappedLineCount()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new ProportionalFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.Absolute;
+            textRuntime.FontSize = 20;
+            textRuntime.Width = 5 * 20; // exactly fits "AB AB" (5 chars * FontSize-as-xadvance)
+            textRuntime.Text = "AB AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            text.WrappedText.Count.ShouldBe(1, "because AB AB exactly fits the base font/width before any oversampling");
+
+            bool result = textRuntime.RegenerateOversampledFont(2.5f);
+
+            result.ShouldBeTrue();
+            text.WrappedText.Count.ShouldBe(1,
+                "because the fake creator's glyph metrics scale exactly with FontSize, so FontScale " +
+                "compensates perfectly -- the on-screen size, and therefore the wrap, must not change");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Every glyph's xadvance equals the requested FontSize exactly, so a font generated at size N is
+    // a perfect (N/baseSize)x scale of one generated at baseSize -- isolates whether Gum's own
+    // wrap-width math introduces error, independent of any real rasterizer's rounding/hinting noise.
+    private sealed class ProportionalFontCreator : IInMemoryFontCreator
+    {
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            int xadvance = bmfcSave.FontSize;
+            string fontData =
+$@"info face=""Arial"" size=-{bmfcSave.FontSize} bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={bmfcSave.FontSize} base={bmfcSave.FontSize} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=3
+char id=32 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontData);
+            font.SetFontPattern(256, 256);
+            return font;
         }
     }
 
