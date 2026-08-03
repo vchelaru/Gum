@@ -17,9 +17,14 @@ public static class SpatialNavigationService
     /// <summary>
     /// Returns whichever <paramref name="candidates"/> element best matches
     /// <paramref name="directionAngleRadians"/> from <paramref name="origin"/>'s center, or null if
-    /// none qualify. Candidates outside the direction cone (<paramref name="maxAngleRadians"/> either
-    /// side of the requested angle) are excluded so navigation never moves backwards; among the rest,
-    /// the lowest <c>distance * (1 + angleWeight * angleDiff / maxAngleRadians)</c> score wins.
+    /// none qualify. Distance and angle to each candidate are measured to the closest point on that
+    /// candidate's own rectangle to <paramref name="origin"/>'s center, not the candidate's raw
+    /// center — a wide candidate (e.g. a full-width Slider) can otherwise have its center sit far
+    /// enough to the side that the angle falls outside the direction cone, even though the
+    /// candidate's rectangle spans directly across from the origin. Candidates outside the
+    /// direction cone (<paramref name="maxAngleRadians"/> either side of the requested angle) are
+    /// excluded so navigation never moves backwards; among the rest, the lowest
+    /// <c>distance * (1 + angleWeight * angleDiff / maxAngleRadians)</c> score wins.
     /// </summary>
     /// <param name="origin">The currently-focused element navigation is relative to.</param>
     /// <param name="directionAngleRadians">
@@ -62,7 +67,7 @@ public static class SpatialNavigationService
                 continue;
             }
 
-            (float candidateX, float candidateY) = GetCenter(candidate);
+            (float candidateX, float candidateY) = GetClosestPoint(candidate, originX, originY);
             float dx = candidateX - originX;
             float dy = candidateY - originY;
             float distance = MathF.Sqrt(dx * dx + dy * dy);
@@ -112,6 +117,21 @@ public static class SpatialNavigationService
     {
         float x = (element.Visual.AbsoluteLeft + element.Visual.AbsoluteRight) / 2f;
         float y = (element.Visual.AbsoluteTop + element.Visual.AbsoluteBottom) / 2f;
+        return (x, y);
+    }
+
+    // The point on element's rectangle nearest to (fromX, fromY) -- equal to element's own center
+    // when (fromX, fromY) falls outside its bounds on both axes, but clamped onto the rectangle's
+    // edge on any axis where (fromX, fromY) already overlaps it.
+    private static (float x, float y) GetClosestPoint(FrameworkElement element, float fromX, float fromY)
+    {
+        float left = element.Visual.AbsoluteLeft;
+        float right = element.Visual.AbsoluteRight;
+        float top = element.Visual.AbsoluteTop;
+        float bottom = element.Visual.AbsoluteBottom;
+
+        float x = Math.Clamp(fromX, left, right);
+        float y = Math.Clamp(fromY, top, bottom);
         return (x, y);
     }
 

@@ -227,6 +227,41 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_WideCandidateDirectlyBelow_IsNotExcludedByItsOwnCenterOffset()
+    {
+        // Reproduces issue #4273's second manifestation: a wide control (e.g. a full-width Slider)
+        // positioned so its bounding rectangle spans directly below the origin, but whose raw
+        // CENTER sits far enough to the side that a pure center-to-center angle falls outside the
+        // direction cone. Scoring must measure from the closest point on each candidate's
+        // rectangle, not its raw center, or a wide sibling directly in the requested direction gets
+        // excluded entirely.
+        Button origin = new();
+        origin.AddToRoot();
+        origin.WidthUnits = DimensionUnitType.Absolute;
+        origin.HeightUnits = DimensionUnitType.Absolute;
+        origin.X = 0;
+        origin.Y = 0;
+        origin.Width = 40;
+        origin.Height = 20;
+
+        Button wideBelow = new();
+        wideBelow.AddToRoot();
+        wideBelow.WidthUnits = DimensionUnitType.Absolute;
+        wideBelow.HeightUnits = DimensionUnitType.Absolute;
+        wideBelow.X = 0;
+        wideBelow.Y = 100;
+        wideBelow.Width = 600;
+        wideBelow.Height = 20;
+
+        List<FrameworkElement> candidates = new() { wideBelow };
+
+        float straightDown = MathF.PI / 2f;
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, straightDown, candidates);
+
+        result.ShouldBe(wideBelow);
+    }
+
+    [Fact]
     public void FindBestCandidate_ReturnsNull_WhenNoCandidatesQualify()
     {
         Button origin = CreatePositionedButton(0, 0);

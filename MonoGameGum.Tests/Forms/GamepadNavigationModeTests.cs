@@ -131,6 +131,55 @@ public class GamepadNavigationModeTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadNavigation_DPadDownIntoWideSlider_WithSiblingsOnEitherSide_FocusesSlider()
+    {
+        // Full reproduction of issue #4273's manual-test layout: a wide, full-row Slider (X=40,
+        // Width=600) sits below a narrower button (X=40, default width), with another button off
+        // to the side and a third farther below. The Slider's raw center sits well to the right of
+        // the narrow button above it, which used to push its angle outside the direction cone
+        // (see SpatialNavigationServiceTests.FindBestCandidate_WideCandidateDirectlyBelow...);
+        // scoring off the closest point on its rectangle instead fixes this.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        Button topLeft = new Button();
+        panel.AddChild(topLeft);
+        topLeft.X = 40;
+        topLeft.Y = 120;
+
+        Button topRight = new Button();
+        panel.AddChild(topRight);
+        topRight.X = 500;
+        topRight.Y = 120;
+
+        Slider slider = new Slider();
+        panel.AddChild(slider);
+        slider.X = 40;
+        slider.Y = 220;
+        slider.Width = 600;
+        slider.Value = 0;
+
+        Button bottom = new Button();
+        panel.AddChild(bottom);
+        bottom.X = 40;
+        bottom.Y = 360;
+
+        topLeft.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        topLeft.OnFocusUpdate();
+
+        slider.IsFocused.ShouldBeTrue();
+        topLeft.IsFocused.ShouldBeFalse();
+        bottom.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadNavigation_SliderDPadRightPressed_AdjustsValueAndDoesNotNavigate()
     {
         // Slider disables Left/Right-as-navigation in its own constructor (Slider.cs:101),
