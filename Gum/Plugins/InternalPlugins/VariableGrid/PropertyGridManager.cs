@@ -287,31 +287,15 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         try
         {
 
-            bool hasChangedObjectShowing =
+            bool structuralChange =
                 element != mLastElement ||
                 state != mLastState ||
                 stateCategory != mLastCategory ||
                 behaviorSave != mLastBehaviorSave ||
                 force;
 
-            if (!hasChangedObjectShowing)
-            {
-                if (newInstances.Count != mLastInstanceSaves.Count)
-                {
-                    hasChangedObjectShowing = true;
-                }
-                else
-                {
-                    for (int i = 0; i < newInstances.Count; i++)
-                    {
-                        if (newInstances[i] != mLastInstanceSaves[i])
-                        {
-                            hasChangedObjectShowing = true;
-                            break;
-                        }
-                    }
-                }
-            }
+            (bool hasChangedObjectShowing, bool instanceIdentityChanged) =
+                DetermineRefreshFlags(structuralChange, newInstances, mLastInstanceSaves);
 
             var hasCustomState = _selectedState.CustomCurrentStateSave != null;
 
@@ -492,7 +476,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     // let's see if any variables have changed
                     var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
 
-                    if (oldCategory != null && DoCategoriesDiffer(oldCategory.Members, newCategory.Members))
+                    // A previous category's InstanceMember objects capture their target instance at
+                    // construction (see StateReferencingInstanceMember), so they can only be reused
+                    // when the same instance is still shown - an instance identity change always
+                    // needs the fresh category even when the member names match.
+                    if (oldCategory != null && (instanceIdentityChanged || DoCategoriesDiffer(oldCategory.Members, newCategory.Members)))
                     {
                         int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
 
@@ -513,10 +501,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             // When a structural rebuild happened (hasChangedObjectShowing = true), each control's
             // InstanceMember setter already called Refresh(). Calling mVariablesDataGrid.Refresh()
             // here would trigger a second Refresh() on every control via SimulateValueChanged →
-            // PropertyChanged → HandlePropertyChange. Skip it in that case.
-            // When hasChangedObjectShowing = false, existing InstanceMember objects stay in place
-            // and their values may have changed (e.g. after undo), so Refresh() is still needed.
-            if (!hasChangedObjectShowing)
+            // PropertyChanged → HandlePropertyChange. Skip it in that case - and also when only the
+            // instance changed (instanceIdentityChanged), since every category was just replaced
+            // with a freshly-built one above for the same reason.
+            // Otherwise, existing InstanceMember objects stay in place and their values may have
+            // changed (e.g. after undo), so Refresh() is still needed.
+            if (!hasChangedObjectShowing && !instanceIdentityChanged)
             {
                 mVariablesDataGrid.Refresh();
             }
@@ -692,7 +682,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    public bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
+    public static bool DoCategoriesDiffer(IEnumerable<InstanceMember> first, IEnumerable<InstanceMember> second)
     {
         foreach (var item in first)
         {
@@ -711,6 +701,34 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Decides whether <see cref="RefreshDataGrid"/> needs a full category rebuild, and whether
+    /// the shown instance changed identity even when no rebuild is needed. A single selected
+    /// instance changing identity (same element/state/category/behavior, same count) can go
+    /// through the cheaper per-category diff path instead of a full rebuild; multi-select changes
+    /// always force a full rebuild since the diff path only patches a single category list.
+    /// </summary>
+    public static (bool HasChangedObjectShowing, bool InstanceIdentityChanged) DetermineRefreshFlags(
+        bool structuralChange,
+        IReadOnlyList<InstanceSave> newInstances,
+        IReadOnlyList<InstanceSave> lastInstances)
+    {
+        if (structuralChange || newInstances.Count != lastInstances.Count)
+        {
+            return (true, false);
+        }
+
+        for (int i = 0; i < newInstances.Count; i++)
+        {
+            if (newInstances[i] != lastInstances[i])
+            {
+                return newInstances.Count == 1 ? (false, true) : (true, false);
+            }
+        }
+
+        return (false, false);
     }
 
     private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave instance)
