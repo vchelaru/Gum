@@ -88,6 +88,33 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadSpatialNavigation_DiagonalDPadHeld_SelfReferencingOverridesOnBothAxesSuppressNavigation()
+    {
+        // Reproduces a real bug report: an element suppresses Up and Right individually by pointing
+        // both overrides back at itself. Pressing Up and Right on the exact same frame must still be
+        // suppressed -- previously the two-held-directions case skipped the override check entirely
+        // and fell through to scoring, which found upRight and navigated there anyway.
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        SpatialNavHarness upRight = CreateHarness(root, 200, -200);
+
+        origin.SpatialNavigationUp = origin;
+        origin.SpatialNavigationRight = origin;
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadUp, true);
+        gamepad.SetButtonState(GamepadButton.DPadRight, true);
+        gamepad.Activity(1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeTrue();
+        upRight.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadSpatialNavigation_DiagonalDPadPressedSequentially_MovesFocusToDiagonalCandidate()
     {
         // Realistic controller use: Up is held first, then Right is pressed afterward while Up is
