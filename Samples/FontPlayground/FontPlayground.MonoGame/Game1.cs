@@ -36,14 +36,20 @@ public class Game1 : Game
     // number is readable while zooming.
     private TextRuntime _fractionalFontSizeText = null!;
     private const float FractionalFontSizeMin = 8f;
-    private const float FractionalFontSizeMax = 96f;
+    // Capped well below the full 8-96 slider range in FontPlaygroundScreen so this text -- reserved
+    // the top band of the page (see FontPlaygroundScreen.BuildInternal's controlsPanel.Visual.Y
+    // comment) -- can never grow tall/wide enough to run into the controls panel below it.
+    private const float FractionalFontSizeMax = 48f;
     private float _fractionalFontSize = 24f;
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         _graphics.PreferredBackBufferWidth = 1024;
-        _graphics.PreferredBackBufferHeight = 768;
+        // Taller than the 768 the rest of the page's content originally fit in, to give the
+        // fractional-FontSize demo's reserved top band (see FontPlaygroundScreen's controlsPanel
+        // comment) room without cramming the zoom-demo pair against the bottom edge.
+        _graphics.PreferredBackBufferHeight = 820;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
     }
@@ -70,7 +76,7 @@ public class Game1 : Game
         _fractionalFontSizeText = new TextRuntime();
         _fractionalFontSizeText.Font = "Arial";
         _fractionalFontSizeText.X = 16;
-        _fractionalFontSizeText.Y = 560;
+        _fractionalFontSizeText.Y = 4;
         _fractionalFontSizeText.Red = 255;
         _fractionalFontSizeText.Green = 255;
         _fractionalFontSizeText.Blue = 255;
@@ -96,7 +102,7 @@ public class Game1 : Game
         _plainZoomPreviewText.Text = "Scroll to zoom (always blurry)";
         _plainZoomPreviewText.FontSize = 24;
         _plainZoomPreviewText.X = 16;
-        _plainZoomPreviewText.Y = 600;
+        _plainZoomPreviewText.Y = 650;
         _plainZoomPreviewText.Red = 255;
         _plainZoomPreviewText.Green = 255;
         _plainZoomPreviewText.Blue = 255;
@@ -107,7 +113,7 @@ public class Game1 : Game
         _oversampledZoomPreviewText.Text = "Scroll to zoom, then press R (crisp)";
         _oversampledZoomPreviewText.FontSize = 24;
         _oversampledZoomPreviewText.X = 16;
-        _oversampledZoomPreviewText.Y = 640;
+        _oversampledZoomPreviewText.Y = 690;
         _oversampledZoomPreviewText.Red = 255;
         _oversampledZoomPreviewText.Green = 255;
         _oversampledZoomPreviewText.Blue = 255;
