@@ -5,6 +5,7 @@ using KernSmith.Gum;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 
 namespace FontPlayground.MonoGame;
 
@@ -83,6 +84,17 @@ public class Game1 : Game
         _fractionalFontSizeText.Alpha = 255;
         GumService.Default.Root.Children.Add(_fractionalFontSizeText);
 
+        // Everything else in this sample renders through the main camera, which the mouse wheel
+        // also zooms (see UpdateZoomOversamplingDemo) -- if this text stayed on that same layer, its
+        // own FontSize growth would compound with the camera's zoom on top of it (pixelation, drift
+        // from the zoom pivot, size growing faster than the displayed number). A screen-space layer
+        // (IsInScreenSpace) is ignored by the main camera entirely, so this text's on-screen size and
+        // position are driven ONLY by its own FontSize/X/Y -- exactly what the demo needs to show.
+        Layer screenSpaceLayer = SystemManagers.Default.Renderer.AddLayer();
+        screenSpaceLayer.Name = "Fractional FontSize (screen space)";
+        screenSpaceLayer.LayerCameraSettings = new LayerCameraSettings { IsInScreenSpace = true };
+        _fractionalFontSizeText.MoveToLayer(screenSpaceLayer);
+
         ApplyFractionalFontSize();
     }
 
@@ -147,10 +159,18 @@ public class Game1 : Game
         Camera camera = SystemManagers.Default.Renderer.Camera;
         if (scrollWheelDelta != 0)
         {
-            camera.Zoom = System.Math.Clamp(camera.Zoom * (1 + scrollWheelDelta * 0.001f), 0.25f, 8f);
+            // Multiplying by (1 + delta*k) for a scroll up and by (1 - delta*k) for the same-sized
+            // scroll down is NOT an inverse pair -- (1+k)*(1-k) = 1-k^2 < 1, so scrolling up then down
+            // the same amount nets a small loss every time. An exponential step (Pow(base, delta)) IS
+            // its own exact inverse (Pow(b,d) * Pow(b,-d) = 1 always), so equal-and-opposite scrolling
+            // returns to precisely the original value.
+            const float zoomStepBase = 1.001f;
+            float zoomMultiplier = System.MathF.Pow(zoomStepBase, scrollWheelDelta);
+
+            camera.Zoom = System.Math.Clamp(camera.Zoom * zoomMultiplier, 0.25f, 8f);
 
             _fractionalFontSize = System.Math.Clamp(
-                _fractionalFontSize * (1 + scrollWheelDelta * 0.001f), FractionalFontSizeMin, FractionalFontSizeMax);
+                _fractionalFontSize * zoomMultiplier, FractionalFontSizeMin, FractionalFontSizeMax);
             ApplyFractionalFontSize();
         }
 
