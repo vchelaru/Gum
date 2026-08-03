@@ -212,6 +212,30 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadSpatialNavigation_SelfReferencingExplicitOverride_BlocksDirectionWithoutLosingFocus()
+    {
+        // Issue #4298: assigning a control to its own SpatialNavigationRight is the documented way to
+        // block rightward navigation entirely. It must consume the press without moving focus anywhere,
+        // including off of itself.
+        ContainerRuntime root = new ContainerRuntime();
+
+        SpatialNavHarness origin = CreateHarness(root, 0, 0);
+        SpatialNavHarness nearestByScore = CreateHarness(root, 150, 0);
+        origin.SpatialNavigationRight = origin;
+
+        origin.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadRight, true);
+        gamepad.Activity(1);
+
+        origin.InvokeHandleGamepadSpatialNavigation(gamepad, root);
+
+        origin.IsFocused.ShouldBeTrue();
+        nearestByScore.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadSpatialNavigation_SkillTreeLayoutDPadDown_MovesFocusToNearestDownwardCandidate()
     {
         // Reproduces the manual-test demo's scattered 6-button layout reported in issue #4129:

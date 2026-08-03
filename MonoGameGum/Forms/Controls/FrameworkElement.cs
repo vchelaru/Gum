@@ -1193,7 +1193,9 @@ public class FrameworkElement : INotifyPropertyChanged
     /// single-direction D-pad press — or a left-stick push snapped to its nearest cardinal — in that
     /// direction moves focus straight to the assigned element, skipping
     /// <see cref="Gum.Forms.SpatialNavigationService"/> scoring entirely. Not consulted for diagonal
-    /// D-pad presses (two held), which have no single well-defined cardinal to key off.
+    /// D-pad presses (two held), which have no single well-defined cardinal to key off. Assigning a
+    /// control to itself blocks that direction entirely: the press is consumed and focus stays put,
+    /// rather than falling back to automatic scoring the way an unset (null) override does.
     /// Only meaningful while resolved <see cref="GamepadNavigationMode"/> is
     /// <see cref="Controls.GamepadNavigationMode.Spatial"/>.
     /// </summary>
@@ -1649,8 +1651,11 @@ public class FrameworkElement : INotifyPropertyChanged
         FrameworkElement? explicitOverride = TryGetExplicitDirectionOverride(gamepad);
         if (explicitOverride != null)
         {
-            explicitOverride.IsFocused = true;
-            this.IsFocused = false;
+            if (explicitOverride != this)
+            {
+                explicitOverride.IsFocused = true;
+                this.IsFocused = false;
+            }
             return;
         }
 
@@ -1900,8 +1905,11 @@ public class FrameworkElement : INotifyPropertyChanged
             FrameworkElement? explicitOverride = GetExplicitDirectionOverride(state);
             if (explicitOverride != null)
             {
-                explicitOverride.IsFocused = true;
-                this.IsFocused = false;
+                if (explicitOverride != this)
+                {
+                    explicitOverride.IsFocused = true;
+                    this.IsFocused = false;
+                }
                 return;
             }
 

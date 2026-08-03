@@ -146,6 +146,38 @@ public class KeyboardDirectionalNavigationTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleKeyboardFocusUpdate_SelfReferencingSpatialNavigationRightOverride_BlocksDirectionWithoutLosingFocus()
+    {
+        // Issue #4298: assigning a control to its own SpatialNavigationRight is the documented way to
+        // block rightward navigation entirely. It must consume the key press without moving focus
+        // anywhere, including off of itself.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        Button origin = new Button();
+        panel.AddChild(origin);
+        origin.X = 0;
+        origin.Y = 0;
+
+        Button nearestByScore = new Button();
+        panel.AddChild(nearestByScore);
+        nearestByScore.X = 150;
+        nearestByScore.Y = 0;
+
+        origin.SpatialNavigationRight = origin;
+        origin.IsFocused = true;
+
+        FrameworkElement.RightKeyCombos.Add(new KeyCombo { PushedKey = Keys.Right });
+        FrameworkElement.KeyboardsForUiControl.Add(CreateKeyboardMock(Keys.Right).Object);
+
+        origin.OnFocusUpdate();
+
+        origin.IsFocused.ShouldBeTrue();
+        nearestByScore.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleKeyboardFocusUpdate_SliderRightKeyComboConfigured_SpatialMode_AdjustsValueAndDoesNotNavigate()
     {
         // Slider disables Left/Right-as-navigation in its own constructor
