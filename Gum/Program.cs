@@ -34,9 +34,6 @@ namespace Gum
         [STAThread]
         static int Main(string[] args)
         {
-            // TEMPORARY — see Gum.Diagnostics.TempStartupTimingLog (#4282).
-            Gum.Diagnostics.TempStartupTimingLog.Log("Main entered");
-
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
@@ -85,17 +82,6 @@ namespace Gum
             };
 
             app.MainWindow = host.Services.GetRequiredService<MainWindow>();
-
-            // TEMPORARY — see Gum.Diagnostics.TempStartupTimingLog (#4282).
-            bool hasLoggedContentRendered = false;
-            app.MainWindow.ContentRendered += (_, _) =>
-            {
-                if (!hasLoggedContentRendered)
-                {
-                    hasLoggedContentRendered = true;
-                    Gum.Diagnostics.TempStartupTimingLog.Log("MainWindow ContentRendered (first paint)");
-                }
-            };
 
             app.MainWindow.Visibility = Visibility.Visible;
 
