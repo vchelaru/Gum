@@ -1189,13 +1189,14 @@ public class FrameworkElement : INotifyPropertyChanged
     public GamepadNavigationMode? GamepadNavigationMode { get; set; }
 
     /// <summary>
-    /// Explicit per-direction focus overrides (Unity/UWP-style escape hatch): if set, a clean
-    /// single-direction D-pad press — or a left-stick push snapped to its nearest cardinal — in that
-    /// direction moves focus straight to the assigned element, skipping
-    /// <see cref="Gum.Forms.SpatialNavigationService"/> scoring entirely. Not consulted for diagonal
-    /// D-pad presses (two held), which have no single well-defined cardinal to key off. Assigning a
-    /// control to itself blocks that direction entirely: the press is consumed and focus stays put,
-    /// rather than falling back to automatic scoring the way an unset (null) override does.
+    /// Explicit per-direction focus overrides (Unity/UWP-style escape hatch): if set, a D-pad press
+    /// in that direction — or a left-stick push snapped to its nearest cardinal — moves focus
+    /// straight to the assigned element, skipping <see cref="Gum.Forms.SpatialNavigationService"/>
+    /// scoring entirely. Checked independently per held direction, so a diagonal press (two held)
+    /// still honors whichever axis has an override set (priority order: Right, Left, Down, Up, if
+    /// more than one axis has one set). Assigning a control to itself blocks that direction entirely:
+    /// the press is consumed and focus stays put, rather than falling back to automatic scoring the
+    /// way an unset (null) override does.
     /// Only meaningful while resolved <see cref="GamepadNavigationMode"/> is
     /// <see cref="Controls.GamepadNavigationMode.Spatial"/>.
     /// </summary>
@@ -1632,7 +1633,8 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <paramref name="navigationRoot"/> best matches that direction by on-screen position (see
     /// <see cref="Gum.Forms.SpatialNavigationService"/>), rather than by tab order. An explicit
     /// per-direction override (<see cref="SpatialNavigationUp"/> etc.) on this element takes
-    /// precedence over scoring for a clean single-direction D-pad press.
+    /// precedence over scoring, checked independently per currently-held direction (so it still
+    /// applies on a diagonal press if either held axis has one set).
     /// </summary>
     /// <remarks>
     /// Prefer setting <see cref="GamepadNavigationMode"/> on a container instead of calling this
@@ -1651,6 +1653,9 @@ public class FrameworkElement : INotifyPropertyChanged
         FrameworkElement? explicitOverride = TryGetExplicitDirectionOverride(gamepad);
         if (explicitOverride != null)
         {
+            // A self-referencing override (e.g. SpatialNavigationUp = this) is a suppression idiom:
+            // it must leave focus untouched, not defocus and immediately refocus the same element --
+            // unconditionally setting IsFocused true then false on the same object nets to false.
             if (explicitOverride != this)
             {
                 explicitOverride.IsFocused = true;
@@ -1718,8 +1723,11 @@ public class FrameworkElement : INotifyPropertyChanged
         return new DigitalDirectionState(right, left, down, up, shouldFire);
     }
 
-    // A clean single held direction has one well-defined cardinal to key an override off of — a
-    // diagonal (two held) falls through to SpatialNavigationService instead.
+    // Each currently-held direction is checked independently, in this same Right/Left/Down/Up
+    // priority order, so a diagonal (two held) still honors an override set on either axis instead
+    // of skipping the check entirely and falling through to SpatialNavigationService scoring. This
+    // is what lets a self-referencing override (e.g. SpatialNavigationUp = this) suppress navigation
+    // even when the suppressed direction is pressed together with another one on the same frame.
     private FrameworkElement? GetExplicitDirectionOverride(DigitalDirectionState state)
     {
         if (!state.ShouldFire)
@@ -1727,25 +1735,19 @@ public class FrameworkElement : INotifyPropertyChanged
             return null;
         }
 
-        int heldCount = (state.Right ? 1 : 0) + (state.Left ? 1 : 0) + (state.Down ? 1 : 0) + (state.Up ? 1 : 0);
-        if (heldCount != 1)
-        {
-            return null;
-        }
-
-        if (state.Right)
+        if (state.Right && SpatialNavigationRight != null)
         {
             return SpatialNavigationRight;
         }
-        if (state.Left)
+        if (state.Left && SpatialNavigationLeft != null)
         {
             return SpatialNavigationLeft;
         }
-        if (state.Down)
+        if (state.Down && SpatialNavigationDown != null)
         {
             return SpatialNavigationDown;
         }
-        if (state.Up)
+        if (state.Up && SpatialNavigationUp != null)
         {
             return SpatialNavigationUp;
         }
@@ -1905,6 +1907,7 @@ public class FrameworkElement : INotifyPropertyChanged
             FrameworkElement? explicitOverride = GetExplicitDirectionOverride(state);
             if (explicitOverride != null)
             {
+                // See the matching self-reference guard in HandleGamepadSpatialNavigation.
                 if (explicitOverride != this)
                 {
                     explicitOverride.IsFocused = true;

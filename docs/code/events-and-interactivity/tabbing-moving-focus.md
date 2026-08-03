@@ -151,7 +151,7 @@ Spatial navigation scores candidates by distance and angle, which can occasional
 myButton.SpatialNavigationRight = otherButton;
 ```
 
-An explicit override only applies to a single-direction DPad press. It is not consulted for a diagonal press or for left stick input, since neither has one well-defined cardinal direction to match against.
+An explicit override is checked independently for each direction currently held, so it also applies on a diagonal DPad press (for example, an override on `SpatialNavigationRight` still applies even while Up is held at the same time). If more than one held direction has an override set, `SpatialNavigationRight` takes priority, followed by `SpatialNavigationLeft`, `SpatialNavigationDown`, then `SpatialNavigationUp`. Left stick input is snapped to its nearest cardinal direction and checks that single direction's override the same way.
 
 #### Blocking a Direction Entirely
 

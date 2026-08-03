@@ -17,7 +17,7 @@ namespace MonoGameGum.Tests.Forms;
 public class GamepadNavigationModeTests : BaseTestClass
 {
     [Fact]
-    public void HandleGamepadNavigation_DiagonalPress_IgnoresSingleDirectionOverride()
+    public void HandleGamepadNavigation_DiagonalPress_HonorsOverrideOnEitherHeldAxis()
     {
         Panel panel = new Panel();
         panel.AddToRoot();
@@ -38,8 +38,8 @@ public class GamepadNavigationModeTests : BaseTestClass
         diagonalCandidate.X = 100;
         diagonalCandidate.Y = 100;
 
-        // Set, but the press below is diagonal (Right+Down), not a clean single direction, so the
-        // override must be ignored and scoring must run instead.
+        // The press below is diagonal (Right+Down); Right has an explicit override and Down does
+        // not, so the override wins even though only one of the two held axes has one set.
         origin.SpatialNavigationRight = overrideRightTarget;
         origin.IsFocused = true;
 
@@ -51,8 +51,8 @@ public class GamepadNavigationModeTests : BaseTestClass
 
         origin.OnFocusUpdate();
 
-        diagonalCandidate.IsFocused.ShouldBeTrue();
-        overrideRightTarget.IsFocused.ShouldBeFalse();
+        overrideRightTarget.IsFocused.ShouldBeTrue();
+        diagonalCandidate.IsFocused.ShouldBeFalse();
     }
 
     [Fact]
