@@ -325,4 +325,15 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
+	<!--
+		Guards against a consumer whose own AssemblyName collides with this package's assembly
+		name (MonoGameGum), which silently overwrites the runtime DLL in the shared output folder.
+		NuGet auto-imports buildTransitive\Gum.MonoGame.targets into every consumer; it imports
+		the shared check packed alongside it. See #4311.
+	-->
+	<ItemGroup>
+		<None Include="..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+		<None Include="build\Gum.MonoGame.targets" Pack="true" PackagePath="buildTransitive\Gum.MonoGame.targets" Visible="false" />
+	</ItemGroup>
+
 </Project>

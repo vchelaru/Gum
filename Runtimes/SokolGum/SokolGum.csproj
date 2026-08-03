@@ -206,4 +206,15 @@
 		<PackageReference Include="TextCopy" Version="6.2.1" Condition="!$(TargetFramework.Contains('ios'))" />
 	</ItemGroup>
 
+	<!--
+		Guards against a consumer whose own AssemblyName collides with this package's assembly
+		name (SokolGum), which silently overwrites the runtime DLL in the shared output folder.
+		NuGet auto-imports buildTransitive\Gum.sokol.targets into every consumer; it imports the
+		shared check packed alongside it. See #4311.
+	-->
+	<ItemGroup>
+		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+		<None Include="build\Gum.sokol.targets" Pack="true" PackagePath="buildTransitive\Gum.sokol.targets" Visible="false" />
+	</ItemGroup>
+
 </Project>

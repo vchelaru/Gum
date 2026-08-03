@@ -407,6 +407,9 @@ jobs:
       #   - Gum.ProjectServices.SkiaGum.Tests (SkiaGum SVG export — renders into
       #                                     SKSvgCanvas, CPU-only like SkiaGum.Tests)
       #   - Gum.Analyzers.Tests            (Roslyn analyzers; pure compilation)
+      #   - Gum.AssemblyNameGuard.Tests    (MSBuild buildTransitive collision guard;
+      #                                     shells out to `dotnet build` against temp
+      #                                     projects, no window/GPU. #4311)
       #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
       #                                     raylib-backend screenshot test, and the
       #                                     diff-screenshots test (which renders via
@@ -514,6 +517,10 @@ jobs:
       - name: Gum.Presentation.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
         run: dotnet test "Tests/Gum.Presentation.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.AssemblyNameGuard.Tests
+        if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'
+        run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
         if: github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true'

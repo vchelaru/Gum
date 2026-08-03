@@ -1,0 +1,20 @@
+<Project>
+
+	<!--
+		Shared by every Gum runtime NuGet package's buildTransitive\<PackageId>.targets wrapper
+		(see e.g. Runtimes/SilkNetGum/build/Gum.SilkNet.targets). A consumer whose own AssemblyName
+		matches the runtime's produces a same-named output DLL that overwrites the runtime's copy
+		in the shared output folder on every build, since both land in the same bin directory with
+		no build-time signal - only a TypeLoadException the first time a Gum type is touched at
+		runtime. See #4311.
+
+		The wrapper sets GumRuntimeAssemblyName/GumRuntimePackageId before importing this file, so
+		this logic is written once and packed unchanged into every runtime package.
+	-->
+	<Target Name="GumAssemblyNameCollisionGuard" BeforeTargets="CoreCompile">
+		<Error
+			Condition="'$(AssemblyName)' == '$(GumRuntimeAssemblyName)'"
+			Text="Your project's assembly name '$(AssemblyName)' collides with the assembly shipped by $(GumRuntimePackageId). Your project's output DLL will overwrite Gum's in the output folder, causing a TypeLoadException at runtime. Set &lt;AssemblyName&gt; in your .csproj to something else." />
+	</Target>
+
+</Project>
