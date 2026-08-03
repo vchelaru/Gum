@@ -67,9 +67,11 @@ public class ControllerSpatialNavigationTests : BaseTestClass
     {
         ContainerRuntime root = new ContainerRuntime();
 
+        // Deltas keep the default-sized harness rectangles from overlapping each other; distance is
+        // measured rect-to-rect, so an overlap would flatten the angle between them to axis-aligned.
         SpatialNavHarness origin = CreateHarness(root, 0, 0);
-        SpatialNavHarness right = CreateHarness(root, 150, 0);
-        SpatialNavHarness downRight = CreateHarness(root, 100, 100);
+        SpatialNavHarness right = CreateHarness(root, 400, 0);
+        SpatialNavHarness downRight = CreateHarness(root, 200, 200);
 
         origin.IsFocused = true;
 
@@ -98,8 +100,8 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         ContainerRuntime root = new ContainerRuntime();
 
         SpatialNavHarness origin = CreateHarness(root, 0, 0);
-        SpatialNavHarness pureRight = CreateHarness(root, 150, 0);
-        SpatialNavHarness diagonal = CreateHarness(root, 100, -100);
+        SpatialNavHarness pureRight = CreateHarness(root, 400, 0);
+        SpatialNavHarness diagonal = CreateHarness(root, 200, -200);
 
         origin.IsFocused = true;
 
@@ -124,8 +126,8 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         ContainerRuntime root = new ContainerRuntime();
 
         SpatialNavHarness origin = CreateHarness(root, 0, 0);
-        SpatialNavHarness right = CreateHarness(root, 150, 0);
-        SpatialNavHarness above = CreateHarness(root, 0, -150);
+        SpatialNavHarness right = CreateHarness(root, 400, 0);
+        SpatialNavHarness above = CreateHarness(root, 0, -400);
 
         origin.IsFocused = true;
 
@@ -269,8 +271,8 @@ public class ControllerSpatialNavigationTests : BaseTestClass
         ContainerRuntime root = new ContainerRuntime();
 
         SpatialNavHarness origin = CreateHarness(root, 0, 0);
-        SpatialNavHarness downRight = CreateHarness(root, 100, 100);
-        SpatialNavHarness right = CreateHarness(root, 150, 0);
+        SpatialNavHarness downRight = CreateHarness(root, 200, 200);
+        SpatialNavHarness right = CreateHarness(root, 400, 0);
 
         origin.IsFocused = true;
 
