@@ -153,6 +153,17 @@ myButton.SpatialNavigationRight = otherButton;
 
 An explicit override only applies to a single-direction DPad press. It is not consulted for a diagonal press or for left stick input, since neither has one well-defined cardinal direction to match against.
 
+#### Blocking a Direction Entirely
+
+Assigning a control to itself blocks that direction: the press is consumed and focus stays put, instead of falling back to automatic scoring. This is useful when a neighboring control should only be reachable by an explicit action (for example, pressing a confirm button) rather than by drifting into it with spatial navigation.
+
+```csharp
+// Initialize
+myButton.SpatialNavigationRight = myButton;
+```
+
+Leaving the property unset is not the same as blocking the direction. With no override assigned, that direction still falls back to automatic distance/angle scoring and can still move focus to a nearby control.
+
 ## Modal Tab Trapping
 
 When you show an element modally by adding it to `GumService.Default.ModalRoot`, tab focus is confined to the controls inside that modal element. Tabbing forward past the last focusable control wraps back to the first, and Shift+Tabbing before the first control wraps to the last. Focus never escapes to the controls behind the modal under the regular `Root`.
