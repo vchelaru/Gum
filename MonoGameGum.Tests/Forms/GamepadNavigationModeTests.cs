@@ -92,6 +92,45 @@ public class GamepadNavigationModeTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleGamepadNavigation_DPadDownIntoSlider_FocusesSliderNotItsOwnThumb()
+    {
+        // Reproduces issue #4273 as actually seen in the running app. Unlike the
+        // already-focused-on-the-Slider case above (where the Thumb is excluded as a descendant of
+        // the origin), HERE the origin is a different control, so the Slider and its own internal
+        // Thumb button both end up as separate, sibling candidates in the pool navigation scores
+        // over. At Value = 0 the Thumb sits at the very edge of the track, right under `above` --
+        // without deduping nested focusable candidates, the Thumb can outscore the Slider itself
+        // and steal focus onto the Slider's own part instead of the Slider.
+        Panel panel = new Panel();
+        panel.AddToRoot();
+        panel.GamepadNavigationMode = GamepadNavigationMode.Spatial;
+
+        Button above = new Button();
+        panel.AddChild(above);
+        above.X = 0;
+        above.Y = 0;
+
+        Slider slider = new Slider();
+        panel.AddChild(slider);
+        slider.X = 0;
+        slider.Y = 150;
+        slider.Width = 300;
+        slider.Value = 0;
+
+        above.IsFocused = true;
+
+        GamePad gamepad = new GamePad();
+        gamepad.SetButtonState(GamepadButton.DPadDown, true);
+        gamepad.Activity(1);
+        FrameworkElement.GamePadsForUiControl.Add(gamepad);
+
+        above.OnFocusUpdate();
+
+        slider.IsFocused.ShouldBeTrue();
+        above.IsFocused.ShouldBeFalse();
+    }
+
+    [Fact]
     public void HandleGamepadNavigation_SliderDPadRightPressed_AdjustsValueAndDoesNotNavigate()
     {
         // Slider disables Left/Right-as-navigation in its own constructor (Slider.cs:101),

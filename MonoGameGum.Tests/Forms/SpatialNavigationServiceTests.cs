@@ -125,6 +125,44 @@ public class SpatialNavigationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void FindBestCandidate_ExcludesCandidateNestedUnderAnotherCandidate_EvenWhenCloser()
+    {
+        // Reproduces issue #4273's real-world manifestation: a composite control (the "outer"
+        // candidate, e.g. a Slider) and its own internal focusable part (the "inner" candidate,
+        // e.g. its Thumb button) both pass the focusable filter and both end up in the SAME
+        // candidate pool when navigating FROM an unrelated sibling -- neither is the origin here,
+        // so the origin-relative ancestor/descendant exclusions don't apply. Tab-order navigation
+        // avoids this by treating a focusable element as an opaque stop and never descending into
+        // it (see FrameworkElement.HandleTab); scoring must apply the same "outermost focusable
+        // wins" rule or the inner part can win on proximity and steal focus from the control itself.
+        Button origin = CreatePositionedButton(0, 0);
+
+        Button outer = new();
+        outer.AddToRoot();
+        outer.WidthUnits = DimensionUnitType.Absolute;
+        outer.HeightUnits = DimensionUnitType.Absolute;
+        outer.X = 200;
+        outer.Y = 0;
+        outer.Width = 100;
+        outer.Height = 20;
+
+        Button inner = new();
+        outer.AddChild(inner);
+        inner.WidthUnits = DimensionUnitType.Absolute;
+        inner.HeightUnits = DimensionUnitType.Absolute;
+        inner.X = 0;
+        inner.Y = 0;
+        inner.Width = 10;
+        inner.Height = 20;
+
+        List<FrameworkElement> candidates = new() { outer, inner };
+
+        FrameworkElement? result = SpatialNavigationService.FindBestCandidate(origin, 0f, candidates);
+
+        result.ShouldBe(outer);
+    }
+
+    [Fact]
     public void FindBestCandidate_NeverReturnsOrigin_EvenIfPresentInCandidates()
     {
         Button origin = CreatePositionedButton(0, 0);

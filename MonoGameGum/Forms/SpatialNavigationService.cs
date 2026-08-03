@@ -28,12 +28,13 @@ public static class SpatialNavigationService
     /// <param name="candidates">
     /// The focusable elements to consider. <paramref name="origin"/>, any ancestor of
     /// <paramref name="origin"/> (e.g. a large focusable container the origin sits near the edge
-    /// of), and any descendant of <paramref name="origin"/> (e.g. a composite control's own
-    /// internal focusable part, such as a Slider's Thumb button) are skipped if present — an
-    /// ancestor's own center can otherwise score better than a true sibling simply by virtue of
-    /// containing the origin, and a descendant sitting right at the origin's edge can otherwise
-    /// outscore a true sibling simply by virtue of being nested inside it — both send focus
-    /// somewhere other than an actual neighboring control.
+    /// of), and any candidate nested inside <paramref name="origin"/> or inside another candidate
+    /// (e.g. a composite control's own internal focusable part, such as a Slider's Thumb button)
+    /// are skipped if present — an ancestor's own center can otherwise score better than a true
+    /// sibling simply by virtue of containing the origin, and an internal part sitting right at its
+    /// owning control's edge can otherwise outscore that control (or an unrelated sibling) simply
+    /// by virtue of being nested inside it. This mirrors index-based <see cref="FrameworkElement.HandleTab"/>,
+    /// which treats a focusable element as an opaque stop and never descends into it.
     /// </param>
     /// <param name="maxAngleRadians">Half-width of the direction cone; candidates outside are excluded.</param>
     /// <param name="angleWeight">How strongly angular misalignment penalizes an otherwise-close candidate.</param>
@@ -44,16 +45,19 @@ public static class SpatialNavigationService
         float maxAngleRadians = MathF.PI / 4f,
         float angleWeight = 2f)
     {
+        List<FrameworkElement> candidateList = candidates as List<FrameworkElement> ?? new List<FrameworkElement>(candidates);
+
         (float originX, float originY) = GetCenter(origin);
 
         FrameworkElement? best = null;
         float bestScore = float.MaxValue;
 
-        foreach (FrameworkElement candidate in candidates)
+        foreach (FrameworkElement candidate in candidateList)
         {
             if (candidate == origin ||
                 origin.Visual.IsInParentChain(candidate.Visual) ||
-                candidate.Visual.IsInParentChain(origin.Visual))
+                candidate.Visual.IsInParentChain(origin.Visual) ||
+                IsNestedUnderAnotherCandidate(candidate, candidateList))
             {
                 continue;
             }
@@ -86,6 +90,22 @@ public static class SpatialNavigationService
         }
 
         return best;
+    }
+
+    // Two independently-focusable elements can be in an ancestor/descendant relationship (a Slider
+    // and its own Thumb button both pass the focusable filter), so excluding only origin-relative
+    // ancestors/descendants isn't enough once neither is the origin. Only the outermost focusable
+    // element in any such chain should compete for the score.
+    private static bool IsNestedUnderAnotherCandidate(FrameworkElement candidate, List<FrameworkElement> candidates)
+    {
+        foreach (FrameworkElement other in candidates)
+        {
+            if (other != candidate && candidate.Visual.IsInParentChain(other.Visual))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static (float x, float y) GetCenter(FrameworkElement element)
