@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -81,13 +81,28 @@ public class FontReferenceCollector
                 // paths the references may not have been applied yet.
                 element.ApplyVariableReferences(state);
 
-                foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
+                // A non-default state that sets nothing for a given owner resolves that owner's
+                // font properties identically to the default state, which is always collected -
+                // so it can only produce an already-deduplicated entry. Skipping those pairs is
+                // what keeps collection from costing (states x instances) recursive lookups on a
+                // project whose category states mostly touch one instance each.
+                bool isDefaultState = state == element.DefaultState;
+
+                if (isDefaultState || StateSetsAnythingFor(state, ownerName: null))
                 {
-                    bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
+                    foreach (BmfcSave bmfcSave in CollectAllBmfcSavesFor(instance: null, state, fontRanges, spacingHorizontal, spacingVertical))
+                    {
+                        bitmapFonts[bmfcSave.FontCacheFileName] = bmfcSave;
+                    }
                 }
 
                 foreach (InstanceSave instance in element.Instances)
                 {
+                    if (!isDefaultState && !StateSetsAnythingFor(state, instance.Name))
+                    {
+                        continue;
+                    }
+
                     foreach (BmfcSave bmfcSaveInner in CollectAllBmfcSavesFor(instance, state, fontRanges, spacingHorizontal, spacingVertical))
                     {
                         bitmapFonts[bmfcSaveInner.FontCacheFileName] = bmfcSaveInner;
@@ -104,6 +119,25 @@ public class FontReferenceCollector
         }
 
         return bitmapFonts;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="stateSave"/> sets any variable belonging to <paramref name="ownerName"/>
+    /// - an instance name, or null for the element itself. Deliberately checks membership rather than
+    /// font-specific names: a font property can reach an owner under an arbitrary name through an
+    /// exposed variable, so only "sets nothing at all for this owner" is safe to skip.
+    /// </summary>
+    private static bool StateSetsAnythingFor(StateSave stateSave, string? ownerName)
+    {
+        if (ownerName == null)
+        {
+            return stateSave.Variables.Any(v => !v.Name.Contains('.'))
+                || stateSave.VariableLists.Any(vl => string.IsNullOrEmpty(vl.SourceObject));
+        }
+
+        string prefix = ownerName + ".";
+        return stateSave.Variables.Any(v => v.Name.StartsWith(prefix, StringComparison.Ordinal))
+            || stateSave.VariableLists.Any(vl => vl.SourceObject == ownerName);
     }
 
     private static BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave,

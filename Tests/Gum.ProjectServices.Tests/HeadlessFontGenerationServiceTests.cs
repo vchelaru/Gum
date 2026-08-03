@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ProjectServices.FontGeneration;
@@ -462,6 +462,35 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
 
         result.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void CollectRequiredFonts_ShouldStillCollectFontOfInstanceUntouchedByACategoryState()
+    {
+        // A category state that overrides one instance says nothing about a sibling instance, so
+        // the sibling still resolves its font from the default state. Collection skips (state,
+        // instance) pairs the state sets nothing for, and must not lose the sibling's font.
+        ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+        StateSave defaultState = AddState(component, "Default");
+        StateSave largeState = AddCategoryState(component, "SizeCategory", "Large");
+        AddTextInstance(component, "Title");
+        AddTextInstance(component, "Subtitle");
+
+        SetVar(defaultState, "Title.Font", "Arial");
+        SetVar(defaultState, "Title.FontSize", 18);
+        SetVar(defaultState, "Subtitle.Font", "Arial");
+        SetVar(defaultState, "Subtitle.FontSize", 12);
+
+        // Only Title is touched by the category state.
+        SetVar(largeState, "Title.Font", "Arial");
+        SetVar(largeState, "Title.FontSize", 32);
+
+        Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+        result.Count.ShouldBe(3);
+        result.Values.ShouldContain(f => f.FontSize == 18);
+        result.Values.ShouldContain(f => f.FontSize == 12);
+        result.Values.ShouldContain(f => f.FontSize == 32);
     }
 
     [Fact]
