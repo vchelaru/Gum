@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Diagnostics;
 using Gum.Extensions;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
@@ -253,9 +254,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // made public so that File commands can access this function
     public void LoadProject(FilePath fileName)
     {
+        using IDisposable totalScope = StartupTiming.Time("LoadProject (total)");
         GumLoadResult result;
 
-        _gumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
+        using (StartupTiming.Time("  GumProjectSave.Load (xml deserialize)"))
+        {
+            _gumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
+        }
 
         if (_gumProjectSave != null && _gumProjectSave.Version > GumProjectSave.NativeVersion)
         {
@@ -300,14 +305,20 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             // freshly-loaded project, which is otherwise painful to track down.
             List<string> modifications = new List<string>();
             ObjectFinder.Self.EnableCache();
+            using (StartupTiming.Time("  load-time repair passes (total)"))
             {
 
                 // Initialize is the heaviest pass; have it report which specific elements it changed so a
                 // re-save's cause is identifiable rather than a bare "Initialize".
                 List<string> initializeModifications = new List<string>();
-                if (_gumProjectSave.Initialize(
-                    // tolerate this so we don't immediately crash the tool
-                    tolerateMissingDefaultStates: true, initializeModifications))
+                bool initializeChangedSomething;
+                using (StartupTiming.Time("    GumProjectSave.Initialize"))
+                {
+                    initializeChangedSomething = _gumProjectSave.Initialize(
+                        // tolerate this so we don't immediately crash the tool
+                        tolerateMissingDefaultStates: true, initializeModifications);
+                }
+                if (initializeChangedSomething)
                 {
                     foreach (string reason in initializeModifications)
                     {
@@ -367,7 +378,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 modifications.Add("FixRecursiveAssignments");
             }
-            _pluginManager.ProjectLoad(_gumProjectSave);
+            using (StartupTiming.Time("  PluginManager.ProjectLoad (total)"))
+            {
+                _pluginManager.ProjectLoad(_gumProjectSave);
+            }
 
             if (_gumProjectSave.Version < (int)GumProjectSave.GumxVersions.AttributeVersion)
             {

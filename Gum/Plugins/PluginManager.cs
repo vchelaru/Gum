@@ -7,6 +7,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.IO;
 using System.Windows.Forms;
+using Gum.Diagnostics;
 using Gum.Plugins.BaseClasses;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -179,6 +180,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                         var line = $"[plugin] {methodName} on {plugin.FriendlyName} took {sw.ElapsedMilliseconds} ms";
                         System.Diagnostics.Debug.WriteLine(line);
                         Console.WriteLine(line);
+                        StartupTiming.Log($"    {line}");
                     }
                 }
             }
@@ -739,8 +741,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _dialogService = Locator.GetRequiredService<IDialogService>();
 
         _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
-        _pluginEnablementStore.Load();
-        LoadPlugins(this);
+        using (StartupTiming.Time("  PluginEnablementStore.Load"))
+        {
+            _pluginEnablementStore.Load();
+        }
+        using (StartupTiming.Time("  LoadPlugins (MEF composition)"))
+        {
+            LoadPlugins(this);
+        }
         mInstances.Add(this);
         mGlobalInstance = this;
     }
@@ -822,7 +830,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         {
             AppDomain currentDomain = AppDomain.CurrentDomain;
             currentDomain.AssemblyResolve += reh;
-            AggregateCatalog catalog = instance.CreateCatalog();
+            AggregateCatalog catalog;
+            using (StartupTiming.Time("    CreateCatalog (assembly scan)"))
+            {
+                catalog = instance.CreateCatalog();
+            }
 
             var batch = new CompositionBatch();
             // PluginManager's own [ImportingConstructor] dep (#3880): MEF activates PluginManager itself
@@ -966,9 +978,15 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             var container = new CompositionContainer(catalog);
 
-            container.Compose(batch);
+            using (StartupTiming.Time("    container.Compose(batch)"))
+            {
+                container.Compose(batch);
+            }
 
-            container.ComposeParts(instance);
+            using (StartupTiming.Time("    container.ComposeParts (plugin ctors)"))
+            {
+                container.ComposeParts(instance);
+            }
         }
         catch (Exception e)
         {
@@ -1018,18 +1036,27 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // parent). Surface it rather than silently starting the plugin twice OR silently dropping
         // the dupe with no signal.
         var startedPluginTypes = new Dictionary<Type, PluginBase>();
-        foreach (PluginBase plugin in instance.Plugins)
+        using (StartupTiming.Time("    StartupPlugin on all plugins (total)"))
         {
-            Type pluginType = plugin.GetType();
-            if (startedPluginTypes.ContainsKey(pluginType))
+            foreach (PluginBase plugin in instance.Plugins)
             {
-                instance._guiCommands.PrintOutput(
-                    $"Warning: MEF composed {pluginType.FullName} more than once; only the first instance was started up.");
-                continue;
-            }
+                Type pluginType = plugin.GetType();
+                if (startedPluginTypes.ContainsKey(pluginType))
+                {
+                    instance._guiCommands.PrintOutput(
+                        $"Warning: MEF composed {pluginType.FullName} more than once; only the first instance was started up.");
+                    continue;
+                }
 
-            startedPluginTypes[pluginType] = plugin;
-            StartupPlugin(plugin, instance);
+                startedPluginTypes[pluginType] = plugin;
+                var startupStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                StartupPlugin(plugin, instance);
+                startupStopwatch.Stop();
+                if (startupStopwatch.ElapsedMilliseconds > 50)
+                {
+                    StartupTiming.Log($"      [plugin] StartUp on {pluginType.Name} took {startupStopwatch.ElapsedMilliseconds} ms");
+                }
+            }
         }
 
         #endregion
