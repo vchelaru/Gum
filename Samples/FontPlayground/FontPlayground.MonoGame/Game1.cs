@@ -28,6 +28,17 @@ public class Game1 : Game
     private int _previousScrollWheelValue;
     private bool _wasRKeyDown;
 
+    // Issue #4304 manual-test rig: a single Text whose FontSize tracks the mouse wheel directly (NOT
+    // camera.Zoom -- this text is drawn in normal, unzoomed screen space so the raster size KernSmith
+    // bakes always matches this text's own on-screen footprint 1:1, with no compounding from the
+    // camera transform above). Confirms KernSmith rebakes crisply at each new fractional size as it
+    // changes continuously, and the label shows the live requested FontSize (with decimals) so the
+    // number is readable while zooming.
+    private TextRuntime _fractionalFontSizeText = null!;
+    private const float FractionalFontSizeMin = 8f;
+    private const float FractionalFontSizeMax = 96f;
+    private float _fractionalFontSize = 24f;
+
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
@@ -49,8 +60,30 @@ public class Game1 : Game
         FontPlaygroundScreen.Build(GumService.Default.Root);
 
         BuildZoomOversamplingDemo();
+        BuildFractionalFontSizeDemo();
 
         base.Initialize();
+    }
+
+    private void BuildFractionalFontSizeDemo()
+    {
+        _fractionalFontSizeText = new TextRuntime();
+        _fractionalFontSizeText.Font = "Arial";
+        _fractionalFontSizeText.X = 16;
+        _fractionalFontSizeText.Y = 660;
+        _fractionalFontSizeText.Red = 255;
+        _fractionalFontSizeText.Green = 255;
+        _fractionalFontSizeText.Blue = 255;
+        _fractionalFontSizeText.Alpha = 255;
+        GumService.Default.Root.Children.Add(_fractionalFontSizeText);
+
+        ApplyFractionalFontSize();
+    }
+
+    private void ApplyFractionalFontSize()
+    {
+        _fractionalFontSizeText.FontSize = _fractionalFontSize;
+        _fractionalFontSizeText.Text = $"Font size: {_fractionalFontSize:0.00}";
     }
 
     private void BuildZoomOversamplingDemo()
@@ -109,6 +142,10 @@ public class Game1 : Game
         if (scrollWheelDelta != 0)
         {
             camera.Zoom = System.Math.Clamp(camera.Zoom * (1 + scrollWheelDelta * 0.001f), 0.25f, 8f);
+
+            _fractionalFontSize = System.Math.Clamp(
+                _fractionalFontSize * (1 + scrollWheelDelta * 0.001f), FractionalFontSizeMin, FractionalFontSizeMax);
+            ApplyFractionalFontSize();
         }
 
         bool isRKeyDown = Keyboard.GetState().IsKeyDown(Keys.R);
