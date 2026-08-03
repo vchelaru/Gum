@@ -52,6 +52,9 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IClipboardService _clipboardService;
+    // TEMPORARY — see Gum.Diagnostics.TempStartupTimingLog (#4282).
+    private static bool _hasLoggedFirstRefreshDataGrid;
+
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
 
@@ -283,6 +286,13 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         List<InstanceSave> newInstances, 
         BehaviorSave? behaviorSave, bool force = false)
     {
+        // TEMPORARY — see Gum.Diagnostics.TempStartupTimingLog (#4282).
+        if (!_hasLoggedFirstRefreshDataGrid)
+        {
+            _hasLoggedFirstRefreshDataGrid = true;
+            Gum.Diagnostics.TempStartupTimingLog.Log("First PropertyGridManager.RefreshDataGrid call");
+        }
+
         ObjectFinder.Self.EnableCache();
         try
         {
