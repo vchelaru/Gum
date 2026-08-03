@@ -191,28 +191,66 @@ As with the expand example, `Root.UpdateLayout()` is only needed if your game lo
 
 ### Silk.NET
 
-Silk.NET has no `Game`/`GraphicsDeviceManager` host, so there's no `Window.ClientSizeChanged` event to subscribe to. Instead, call `GumService.Default.HandleResize(width, height)` directly from your windowing library's resize callback:
+Silk.NET has no `Game`/`GraphicsDeviceManager` host, so there's no `Window.ClientSizeChanged` event to subscribe to, and unlike the other backends, your project owns the Skia render surface directly. `GumService.Default.Initialize` is handed an `SKCanvas` once at startup and never re-reads it, so a resize handler needs more than just `HandleResize`. On every resize you must:
+
+1. **Recreate the `GRBackendRenderTarget`/`SKSurface`.** Both declare a fixed logical size, separate from the GL viewport. With `GRSurfaceOrigin.BottomLeft`, Skia uses that declared height to flip rows, so once the viewport grows past a stale surface size, everything Gum draws renders shifted down by the size delta.
+2. **Reassign `GumUI.SystemManagers.Canvas`** to the new surface's `Canvas`. Without this, `GumUI.Draw()` keeps rendering into the disposed `SKCanvas` from the old surface, an `AccessViolationException`.
+3. **Update the GL viewport** to the new size.
+4. **Call `GumUI.HandleResize(width, height)`**, which updates `GraphicalUiElement.CanvasWidth`/`CanvasHeight` and calls `Root.UpdateLayout()` for you, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically.
+
+{% hint style="warning" %}
+Don't do this work synchronously inside the `window.Resize` event itself. Dragging a window border enters a nested "live resize" modal message loop, and Silk.NET's SDL backend can invoke `Resize` from inside that loop, where the GL context isn't guaranteed to be current. Recreating GPU resources there can crash with `AccessViolationException`. Instead, record the new size in the event and apply the full resize once per frame from your main loop, where the GL context state is well-defined.
+{% endhint %}
 
 ```csharp
-window.Resize += newSize =>
+// Initialize
+Vector2D<int>? pendingResize = null;
+window.Resize += newSize => pendingResize = newSize;
+
+void RecreateSurface(int width, int height)
 {
-    GumUI.HandleResize(newSize.X, newSize.Y);
-};
+    surface?.Dispose();
+    renderTarget?.Dispose();
+
+    renderTarget = new GRBackendRenderTarget(width, height, 0, 8, new GRGlFramebufferInfo(0, 0x8058)); // 0x8058 = GL_RGBA8
+    surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);
+
+    GumUI.SystemManagers.Canvas = surface.Canvas;
+}
+
+// Main loop
+while (running)
+{
+    window.DoEvents();
+
+    if (pendingResize.HasValue)
+    {
+        var newSize = pendingResize.Value;
+        pendingResize = null;
+
+        gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+        RecreateSurface(newSize.X, newSize.Y);
+        GumUI.HandleResize(newSize.X, newSize.Y);
+    }
+
+    // ...update and draw...
+}
 ```
 
-`HandleResize` updates `GraphicalUiElement.CanvasWidth`/`CanvasHeight` and calls `Root.UpdateLayout()` for you, so elements using relative units (`RelativeToParent`, `Dock(Fill)`, etc.) reposition automatically.
-
-If your app manages a screen's `Width`/`Height` in pixels rather than relative units — for example a loaded `.gumx` screen sized once at startup to match the initial canvas — those pixel values do **not** track canvas size changes on their own. Re-apply them from the same resize callback, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
+If your app manages a screen's `Width`/`Height` in pixels rather than relative units, for example a loaded `.gumx` screen sized once at startup to match the initial canvas, those pixel values do **not** track canvas size changes on their own. Re-apply them in the same block after `HandleResize`, or the screen will keep its original size while descendants anchored to its edges drift out of place as the canvas grows or shrinks:
 
 ```csharp
-window.Resize += newSize =>
-{
-    GumUI.HandleResize(newSize.X, newSize.Y);
+gl.Viewport(0, 0, (uint)newSize.X, (uint)newSize.Y);
+RecreateSurface(newSize.X, newSize.Y);
+GumUI.HandleResize(newSize.X, newSize.Y);
 
-    currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
-    currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
-};
+currentGumxScreen.Width = GraphicalUiElement.CanvasWidth;
+currentGumxScreen.Height = GraphicalUiElement.CanvasHeight;
 ```
+
+For a complete working example, see `RecreateSurface` and the `pendingResize` handling in the Gum Silk.NET sample:
+
+{% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/SilkNetGum" %}
 
 ## RenderTargets, Scaling, and Offsets
 
