@@ -86,7 +86,6 @@ public class Game1 : Game
         _fractionalFontSizeText.Green = 255;
         _fractionalFontSizeText.Blue = 255;
         _fractionalFontSizeText.Alpha = 255;
-        GumService.Default.Root.Children.Add(_fractionalFontSizeText);
 
         // Everything else in this sample renders through the main camera, which the mouse wheel
         // also zooms (see UpdateZoomOversamplingDemo) -- if this text stayed on that same layer, its
@@ -94,10 +93,20 @@ public class Game1 : Game
         // from the zoom pivot, size growing faster than the displayed number). A screen-space layer
         // (IsInScreenSpace) is ignored by the main camera entirely, so this text's on-screen size and
         // position are driven ONLY by its own FontSize/X/Y -- exactly what the demo needs to show.
+        //
+        // Registered as a TOP-LEVEL layer member via AddToManagers rather than parented under Root
+        // (Root.Children.Add) + MoveToLayer -- MoveToLayer only re-homes a TOP-LEVEL renderable's
+        // layer membership, it does not detach a nested child from its parent's own render-tree walk.
+        // Parenting under Root and then calling MoveToLayer left this text rendered TWICE: once via
+        // Root's default-layer subtree walk (still scaled by the main camera zoom) AND once via its
+        // own top-level entry on the screen-space layer -- invisible at zoom 1 (both draws coincide)
+        // but increasingly visible as two diverging, overlapping copies at any other zoom. Surfaced
+        // manually testing #4317; tracked generally (MoveToLayer silently double-rendering a parented
+        // element) in #4333.
         Layer screenSpaceLayer = SystemManagers.Default.Renderer.AddLayer();
         screenSpaceLayer.Name = "Fractional FontSize (screen space)";
         screenSpaceLayer.LayerCameraSettings = new LayerCameraSettings { IsInScreenSpace = true };
-        _fractionalFontSizeText.MoveToLayer(screenSpaceLayer);
+        _fractionalFontSizeText.AddToManagers(SystemManagers.Default, screenSpaceLayer);
 
         ApplyFractionalFontSize();
     }
