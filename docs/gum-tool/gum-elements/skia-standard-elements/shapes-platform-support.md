@@ -12,7 +12,7 @@ MonoGame and KNI projects can use the following shapes:
 * Circle
 * Rectangle
 
-The outline (stroke) of Circle and Rectangle renders out of the box. The fill and the richer effects — gradients, drop shadows, and dashed strokes — are provided by the shape support package (`Gum.Shapes.MonoGame` or `Gum.Shapes.KNI`). Without the package those properties are saved but do not draw.
+The outline (stroke) of Circle and Rectangle, and Rectangle's fill (at square corners), render out of the box. Circle's fill, Rectangle's rounded corners, and the richer effects — gradients, drop shadows, and dashed strokes — are provided by the shape support package (`Gum.Shapes.MonoGame` or `Gum.Shapes.KNI`). Without the package those properties are saved but do not draw.
 
 Other types, such as SVG or Lottie, are not currently supported.
 
@@ -24,7 +24,7 @@ The older ColoredCircle, RoundedRectangle, and SolidRectangle shapes are being p
 {% endtab %}
 
 {% tab title="FNA" %}
-FNA renders the outline (stroke) of Circle and Rectangle only. The fill and the richer effects (gradients, drop shadows, dashed strokes) are not available on FNA because there is no shape support package for it. We are looking for contributors to help expand FNA shape support.
+FNA renders the outline (stroke) of Circle and Rectangle, and Rectangle's fill (at square corners), out of the box. Circle's fill, Rectangle's rounded corners, and the richer effects (gradients, drop shadows, dashed strokes) are not available on FNA because there is no shape support package for it. We are looking for contributors to help expand FNA shape support.
 {% endtab %}
 
 {% tab title="Raylib" %}

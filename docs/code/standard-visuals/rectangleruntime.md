@@ -11,7 +11,7 @@ A freshly-constructed `RectangleRuntime` is 50 × 50 and renders as a **stroke-o
 For the full property surface — fill, outline, corner radius, gradient, drop shadow, dashed stroke, and the platform/package requirements — see the [Shapes](shapes-apos.shapes.md#circleruntime-and-rectangleruntime) page. The examples below cover the common cases.
 
 {% hint style="info" %}
-On MonoGame, KNI, and FNA the outline and geometry render out of the box, but the **fill** and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added — otherwise they are stored and round-trip but silently do not draw. See the [Shapes](shapes-apos.shapes.md) page for setup.
+On MonoGame, KNI, and FNA the outline, geometry, and a plain (square-cornered) **fill** all render out of the box, with no extra package needed. `CornerRadius` and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) only draw once the `Gum.Shapes.<platform>` package is added; otherwise they are stored and round-trip but silently do not draw. (`CircleRuntime`'s fill has the opposite requirement; see its own page.) See the [Shapes](shapes-apos.shapes.md) page for setup.
 
 Skia, .NET MAUI, raylib, and Silk.NET support the full surface natively — no additional package needed.
 {% endhint %}
@@ -31,7 +31,7 @@ container.Children.Add(rectangle);
 
 <figure><img src="../../.gitbook/assets/WideRectOverBlue.png" alt=""><figcaption><p>Pink outlined rectangle</p></figcaption></figure>
 
-To fill the rectangle and round its corners, set `IsFilled = true`, assign a `FillColor`, and set a `CornerRadius`. On MonoGame, KNI, and FNA the fill requires the shape support package (see the [Shapes](shapes-apos.shapes.md) page):
+To fill the rectangle and round its corners, set `IsFilled = true`, assign a `FillColor`, and set a `CornerRadius`. On MonoGame, KNI, and FNA the fill renders without any package, but rounding the corners requires the shape support package (see the [Shapes](shapes-apos.shapes.md) page); without it the rectangle fills but stays square-cornered:
 
 ```csharp
 // Initialize

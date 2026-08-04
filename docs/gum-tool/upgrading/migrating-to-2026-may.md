@@ -273,7 +273,7 @@ Other defaults preserved (no migration needed, listed for reference):
 - `IsFilled` still defaults to `false`, `StrokeWidth` still defaults to `1` with `StrokeWidthUnits = ScreenPixel`.
 - Dropshadow defaults (`DropshadowAlpha = 255`, `DropshadowOffsetY = 3`, `DropshadowBlur = 3`) are still seeded; inert until `HasDropshadow` is set to `true`. (Note: the plain `CircleRuntime` / `RectangleRuntime` expose a single isotropic `DropshadowBlur` — the older per-axis `DropshadowBlurX` / `DropshadowBlurY` properties only exist on the obsolete `ColoredCircleRuntime` / `RoundedRectangleRuntime` / `SkiaShapeRuntime` Skia surface.)
 
-These richer effects — gradient, drop shadow, and dashed strokes — are built in natively on Skia and raylib. On MonoGame and KNI they are provided by the shape support package (`Gum.Shapes.MonoGame` / `Gum.Shapes.KNI`); FNA renders the outline only. See the [Shapes](../../code/standard-visuals/shapes-apos.shapes.md) page for the per-platform matrix.
+These richer effects — gradient, drop shadow, and dashed strokes — are built in natively on Skia and raylib. On MonoGame and KNI they are provided by the shape support package (`Gum.Shapes.MonoGame` / `Gum.Shapes.KNI`); FNA has no shape support package, so it doesn't get them. (This doesn't affect `RectangleRuntime`'s plain fill, which renders on FNA regardless of the package.) See the [Shapes](../../code/standard-visuals/shapes-apos.shapes.md) page for the full per-platform matrix.
 
 ### Shape runtime shims obsolete: `ColoredCircleRuntime`, `ColoredRectangleRuntime`, `SolidRectangleRuntime`, `RoundedRectangleRuntime`
 

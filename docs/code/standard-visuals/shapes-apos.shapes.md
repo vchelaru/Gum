@@ -17,7 +17,7 @@ The fill + outline `CircleRuntime` / `RectangleRuntime` surface described on thi
 
 ## Adding Shape Support (Recommended)
 
-On MonoGame, KNI, and FNA, an outlined shape (`StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`) and the geometry properties (`Width`, `Height`, `Radius`, `CornerRadius`) render out of the box with no extra package. The fill and the richer effects require the shape support package for your platform (the `Gum.Shapes.*` package, which uses Apos.Shapes under the hood). We recommend installing it for most projects so that fill, gradient, drop shadow, dashed stroke, and anti-aliasing all draw. Without it, `FillColor` (and the fill channels), gradient (`UseGradient`), drop shadow (`HasDropshadow`), dashed stroke (`StrokeDashLength` / `StrokeGapLength`), anti-aliasing (`IsAntialiased`), and `Blend` are stored and round-trip but silently do not draw — nothing throws.
+On MonoGame, KNI, and FNA, an outlined shape (`StrokeColor`, `StrokeWidth`, `StrokeWidthUnits`) and the geometry properties (`Width`, `Height`, `Radius`, `CornerRadius`) render out of the box with no extra package. `RectangleRuntime`'s fill also renders out of the box, at square corners. Beyond that, `RectangleRuntime`'s rounded corners, `CircleRuntime`'s fill, and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing) all require the shape support package for your platform (the `Gum.Shapes.*` package, which uses Apos.Shapes under the hood). We recommend installing it for most projects so that fill, gradient, drop shadow, dashed stroke, and anti-aliasing all draw everywhere. Without it, `CircleRuntime.FillColor` (and its fill channels), `RectangleRuntime.CornerRadius` (rendering; the value still stores), gradient (`UseGradient`), drop shadow (`HasDropshadow`), dashed stroke (`StrokeDashLength` / `StrokeGapLength`), anti-aliasing (`IsAntialiased`), and `Blend` are stored and round-trip but silently do not draw — nothing throws.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -57,7 +57,7 @@ dotnet add package Gum.Shapes.KNI
 {% endtab %}
 
 {% tab title="FNA" %}
-There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), but fill and the richer effects are currently available on MonoGame and KNI only.
+There is no shape support NuGet package for FNA. An outlined `Circle` or `Rectangle` renders without any package (`StrokeColor`, `StrokeWidth`, and geometry all work), and `Rectangle`'s fill (at square corners) renders too. `Circle`'s fill, `Rectangle`'s rounded corners, and the richer effects (gradient, drop shadow, dashed stroke) are currently available on MonoGame and KNI only, since there is no shape support package for FNA.
 {% endtab %}
 
 {% tab title=".NET MAUI" %}
@@ -178,7 +178,7 @@ public class Game1 : Game
 A freshly-constructed shape renders as a **stroke-only outline**: `IsFilled` defaults to `false`, so the fill is gated off even though `FillColor` defaults to opaque white. `StrokeColor` defaults to white and `StrokeWidth` defaults to `1`. Set `IsFilled = true` to show the fill (assigning `FillColor` alone does not show it), or set `StrokeWidth` to `0` to hide the outline. A `CircleRuntime` is 32 × 32 by default; a `RectangleRuntime` is 50 × 50.
 
 {% hint style="info" %}
-On MonoGame, KNI, and FNA the outline and geometry render without the shapes package, but the fill and effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise the values round-trip but silently do not draw. Skia and .NET MAUI support the full surface natively; raylib supports a near-full subset (see [Shape Support Across Platforms](../../gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)).
+On MonoGame, KNI, and FNA the outline, geometry, and `RectangleRuntime`'s fill (at square corners) render without the shapes package. `CircleRuntime`'s fill, `RectangleRuntime`'s rounded corners, and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise the values round-trip but silently do not draw. Skia and .NET MAUI support the full surface natively; raylib supports a near-full subset (see [Shape Support Across Platforms](../../gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)).
 {% endhint %}
 
 The property tables in this section describe both runtimes. Properties marked **Rectangle only** do not exist on `CircleRuntime`.
