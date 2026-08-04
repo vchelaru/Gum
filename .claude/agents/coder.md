@@ -87,7 +87,7 @@ The mirror of the rule above, and the single most common way a Gum change silent
 
 So whenever you add or move a member behind **any** platform `#if` (`!FRB`, `!RAYLIB`, `XNALIKE`, etc.):
 1. `grep` for every call site of that member. If any lives in un-guarded shared source, the call site must be guarded too **or** you must provide a same-named shim for the excluded platform (an FRB-only extension method on `GraphicalUiElement` is the established pattern — see `CustomSetPropertyOnRenderable.cs`).
-2. Run the FRB canary build (`frb-build-verification` skill) from the **primary checkout** before finishing — it is the only build that exercises the `#if FRB` path, and worktrees cannot run it.
+2. Run the FRB canary build (`frb-build-verification` skill) from your worktree before finishing — it is the only build that exercises the `#if FRB` path. The worktree must be a sibling of the Gum repo, not nested under `.claude/worktrees/`, for the build's relative-path imports to resolve.
 
 # Test-Driven Development (Required)
 
