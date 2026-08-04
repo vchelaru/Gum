@@ -8,14 +8,14 @@ using Gum.Commands;
 using ToolsUtilities;
 using Gum.Messages;
 using Gum.Extensions;
-using Gum.Services.Fonts;
+using Gum.ProjectServices.FontGeneration;
 
 namespace Gum.CommandLine
 {
     /// <inheritdoc cref="ICommandLineManager"/>
     public class CommandLineManager : ICommandLineManager
     {
-        private readonly IFontManager _fontManager;
+        private readonly IHeadlessFontGenerationService _fontGenerationService;
         private readonly IGuiCommands _guiCommands;
         private readonly IFileCommands _fileCommands;
         private readonly IMessenger _messenger;
@@ -46,13 +46,13 @@ namespace Gum.CommandLine
         #endregion
 
         public CommandLineManager(
-            IFontManager fontManager,
+            IHeadlessFontGenerationService fontGenerationService,
             IGuiCommands guiCommands,
             IFileCommands fileCommands,
             IMessenger messenger,
             IProjectManager projectManager)
         {
-            _fontManager = fontManager;
+            _fontGenerationService = fontGenerationService;
             _guiCommands = guiCommands;
             _fileCommands = fileCommands;
             _messenger = messenger;
@@ -142,7 +142,10 @@ namespace Gum.CommandLine
             _fileCommands.LoadProject(gumxFile);
 
             // 3.
-            await _fontManager.CreateAllMissingFontFiles(_projectManager.GumProjectSave);
+            // Use the headless service with no callbacks - the CLI runs before app.Run(), so the
+            // WPF dispatcher never pumps and any Dispatcher.Invoke would block forever.
+            await _fontGenerationService.CreateAllMissingFontFiles(
+                _projectManager.GumProjectSave, _fileCommands.ProjectDirectory.FullPath);
 
             // 4.
             _messenger.Send<CloseMainWindowMessage>();

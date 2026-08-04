@@ -7,16 +7,17 @@ using Gum.CommandLine;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
-using Gum.Services.Fonts;
+using Gum.ProjectServices.FontGeneration;
 using Moq;
 using Shouldly;
+using ToolsUtilities;
 using Xunit;
 
 namespace GumToolUnitTests.CommandLine;
 
 public class CommandLineManagerTests
 {
-    private readonly Mock<IFontManager> _fontManager;
+    private readonly Mock<IHeadlessFontGenerationService> _fontGenerationService;
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IMessenger> _messenger;
@@ -25,14 +26,14 @@ public class CommandLineManagerTests
 
     public CommandLineManagerTests()
     {
-        _fontManager = new Mock<IFontManager>();
+        _fontGenerationService = new Mock<IHeadlessFontGenerationService>();
         _guiCommands = new Mock<IGuiCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _messenger = new Mock<IMessenger>();
         _projectManager = new Mock<IProjectManager>();
 
         _commandLineManager = new CommandLineManager(
-            _fontManager.Object,
+            _fontGenerationService.Object,
             _guiCommands.Object,
             _fileCommands.Object,
             _messenger.Object,
@@ -62,15 +63,20 @@ public class CommandLineManagerTests
     [Fact]
     public async Task ReadCommandLine_SetsExitAndRebuildsFonts_WhenRebuildFontsArg()
     {
-        _fontManager
-            .Setup(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()))
+        // The --rebuildfonts path must go through the headless font service (no UI callbacks), so
+        // it works before app.Run() without touching the WPF dispatcher.
+        _fileCommands.Setup(f => f.ProjectDirectory).Returns(new FilePath("MyProject.gumx"));
+        _fontGenerationService
+            .Setup(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(Task.CompletedTask);
 
         await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "--rebuildfonts", "MyProject.gumx" });
 
         _commandLineManager.ShouldExitImmediately.ShouldBeTrue();
         _fileCommands.Verify(f => f.LoadProject("MyProject.gumx"), Times.Once);
-        _fontManager.Verify(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Once);
+        _fontGenerationService.Verify(
+            f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<string>(), It.IsAny<bool>()),
+            Times.Once);
     }
 
     [Fact]
