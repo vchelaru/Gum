@@ -41,10 +41,12 @@ public class Game1 : Game
     // automatic-oversampling demo below (BuildZoomOversamplingDemo / issue #4317).
     private TextRuntime _fractionalFontSizeText = null!;
     private const float FractionalFontSizeMin = 8f;
-    // Capped well below the full 8-96 slider range in FontPlaygroundScreen so this text -- reserved
-    // the top band of the page (see FontPlaygroundScreen.BuildInternal's controlsPanel.Visual.Y
-    // comment) -- can never grow tall/wide enough to run into the controls panel below it.
-    private const float FractionalFontSizeMax = 48f;
+    // Matches the full 8-96 slider range in FontPlaygroundScreen. This text sits at Y=4 in the
+    // reserved top band (see FontPlaygroundScreen.BuildInternal's controlsPanel.Visual.Y=100
+    // comment), so there's ~96px of headroom before its box reaches the controls panel below --
+    // a taller font (bigger FontSize -> taller glyph box) can eat into that margin at the top of
+    // the range. If that becomes visually cramped, lower this or move controlsPanel.Visual.Y down.
+    private const float FractionalFontSizeMax = 96f;
     private float _fractionalFontSize = 24f;
 
     public Game1()
