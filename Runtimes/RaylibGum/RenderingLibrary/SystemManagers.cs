@@ -23,14 +23,8 @@ public class SystemManagers : ISystemManagers
     int mPrimaryThreadId;
 
     static bool IsMobile =>
-#if NET6_0_OR_GREATER
     System.OperatingSystem.IsAndroid() ||
         System.OperatingSystem.IsIOS();
-#elif ANDROID || IOS
-    true;
-#else
-    false;
-#endif
 
     public static SystemManagers Default
     {

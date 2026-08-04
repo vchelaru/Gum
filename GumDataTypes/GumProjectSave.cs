@@ -498,8 +498,8 @@ public class GumProjectSave
         return Load(fileName, LinkLoadingPreference.PreferLinked, out result);
     }
 
-    // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
-    // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+    // Gated because this file also compiles into GumDataTypesNet6.csproj (netstandard2.0),
+    // which has no trim attributes.
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Deserializes GumProjectSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
@@ -525,9 +525,7 @@ public class GumProjectSave
         GumProjectSave gps = null;
 
         var shouldLoadFromTitleContainer = false;
-#if ANDROID || IOS
-        shouldLoadFromTitleContainer = true;
-#elif NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
         // If not using precompiles, it may be a standard .dll which is used everywhere, so we still can check like this:
         shouldLoadFromTitleContainer = System.OperatingSystem.IsAndroid() ||
                                        System.OperatingSystem.IsBrowser() ||
@@ -619,18 +617,6 @@ public class GumProjectSave
     //    return gps;
 
     //}
-
-#if ANDROID || IOS
-    static GumProjectSave LoadFromTitleStorage(string fileName, LinkLoadingPreference linkLoadingPreference, GumLoadResult result)
-		{
-			using (System.IO.Stream stream = Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName))
-			{
-				GumProjectSave gps = FileManager.XmlDeserializeFromStream<GumProjectSave>(stream);
-
-				return gps;
-			}
-		}
-#endif
 
     /// <summary>
     ///  shortcut function to fetch a specific screen from your gum project.

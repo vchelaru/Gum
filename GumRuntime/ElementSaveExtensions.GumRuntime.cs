@@ -60,9 +60,7 @@ namespace GumRuntime
         /// </remarks>
         public static void RegisterGueInstantiationType(
             string elementName,
-#if NET5_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
             Type gueInheritingType,
             bool overwriteIfAlreadyExists = true)
         {
@@ -155,10 +153,8 @@ namespace GumRuntime
         // DynamicallyAccessedMembers annotation that RegisterGueInstantiationType declares on the way
         // in. The constructors are preserved at each registration site, so reading them back out is
         // safe even though the annotation does not survive the round trip.
-#if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2072",
             Justification = "Types reach this dictionary only via RegisterGueInstantiationType, whose parameter is annotated with PublicConstructors.")]
-#endif
         private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string genericType)
         {
             GraphicalUiElement? toReturn = null;
@@ -238,9 +234,7 @@ namespace GumRuntime
         /// reporting.
         /// </remarks>
         private static GraphicalUiElement? InstantiateRegisteredType(
-#if NET5_0_OR_GREATER
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-#endif
             Type type,
             string elementName,
             bool fullInstantiation)
@@ -272,12 +266,10 @@ namespace GumRuntime
         /// one when the instantiation is statically reachable, so this stays a documented limitation
         /// rather than something the annotation above can fix.
         /// </remarks>
-#if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2055",
             Justification = "Generic Gum components are not supported under Native AOT; the failure is reported at runtime with a targeted message.")]
         [UnconditionalSuppressMessage("AOT", "IL3050",
             Justification = "Generic Gum components are not supported under Native AOT; the failure is reported at runtime with a targeted message.")]
-#endif
         private static Type MakeGenericRuntimeType(Type openType, Type argumentType)
         {
             try

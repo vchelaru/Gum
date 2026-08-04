@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-#if NET5_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
-#endif
 using System.Xml.Serialization;
 using ToolsUtilities;
 
@@ -69,12 +67,8 @@ namespace Gum.Content.AnimationChain
 
         #endregion
 
-        // Gated because this file also compiles into GumRuntime.csproj (net472) and is shared
-        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
-#if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "Deserializes AnimationChainListSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.Content.AnimationChain.*.")]
-#endif
         public static AnimationChainListSave FromFile(string fileName)
         {
             AnimationChainListSave? toReturn = null;

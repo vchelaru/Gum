@@ -29,18 +29,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="objNetFramework\**" />
-		<EmbeddedResource Remove="objNetFramework\**" />
-		<None Remove="objNetFramework\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Remove="Properties\AssemblyInfo.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Folder Include="Extensions\" />
-		<Folder Include="Properties\" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net6.0'">

@@ -17,8 +17,8 @@ namespace ToolsUtilities
     /// </summary>
     public static partial class FileManager
     {
-        // Gated because this file also compiles into ToolsUtilities.csproj (net472) and is shared
-        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+        // Gated because this file also compiles into ToolsUtilitiesStandard.csproj (netstandard2.0),
+        // which has no trim attributes.
 #if NET5_0_OR_GREATER
         private const string XmlSerializerTrimMessage =
             "Uses System.Xml.Serialization.XmlSerializer with a type known only at runtime; members of that type may be trimmed if not referenced directly elsewhere.";
@@ -29,10 +29,8 @@ namespace ToolsUtilities
 
         static bool IsMobile =>
 #if NET6_0_OR_GREATER
-            System.OperatingSystem.IsAndroid() || 
+            System.OperatingSystem.IsAndroid() ||
                 System.OperatingSystem.IsIOS() ;
-#elif ANDROID || IOS
-        true;
 #else
         false;
 #endif
@@ -857,10 +855,6 @@ namespace ToolsUtilities
             try
             {
 
-#if ANDROID || IOS
-                fileName = TryRemoveLeadingDotSlash(fileName);
-			    return Microsoft.Xna.Framework.TitleContainer.OpenStream(fileName);
-#else
                 // Normalize to an absolute path BEFORE handing off — both for the host-installed
                 // CustomGetStreamFromFile hook and for the direct File.OpenRead fallback. FileExists
                 // already does this via Standardize(makeAbsolute: true); keeping the two APIs in
@@ -903,7 +897,6 @@ namespace ToolsUtilities
 
                     return System.IO.File.OpenRead(fileName);
                 }
-#endif
             }
             catch (Exception e)
             {

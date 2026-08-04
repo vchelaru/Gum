@@ -48,11 +48,8 @@ Projects that import `GumCoreShared.projitems` (verify by grepping if unsure):
 - `GumCore/GumCoreXnaPc/GumCore.FNA/GumCore.FNA.csproj`
 - `GumCore/GumCoreXnaPc/GumCore.Kni.DesktopGL/GumCore.Kni.DesktopGL.csproj`
 - `GumCore/GumCoreXnaPc/GumCore.Kni.Web/GumCore.Kni.Web.csproj`
-- `GumCore/GumCoreXnaPc/GumCoreAndroid/GumCoreAndroid.csproj` (and the sibling `GumCoreAndroid.csproj`)
-- `GumCore/GumCoreXnaPc/GumCoreUwp/GumCoreUwp.csproj`
-- `GumCore/GumCoreXnaPc/GumCoreiOS/GumCoreiOS.csproj` (and the sibling `GumCoreiOS.csproj`)
-- `GumCore/GumCoreXnaPc/GumCoreDesktopGL.csproj`
-- `GumCore/GumCoreXnaPc/GumCoreXnaPc.csproj`
+- `GumCore/GumCoreXnaPc/GumCoreAndroid/GumCoreAndroid.csproj`
+- `GumCore/GumCoreXnaPc/GumCoreiOS/GumCoreiOS.csproj`
 
 Pin to the same version used in `GumCommon.csproj` / `MonoGameGum.csproj` so a single bump propagates predictably. Mention the package additions explicitly in your final notes so the user can audit them.
 
@@ -75,11 +72,11 @@ Gating pattern:
 
 Don't `#if` away entire types or methods unless you've confirmed no caller references them across targets — that's a much harder refactor.
 
-## `ToolsUtilities/` also compiles into a .NET Framework 4.7.2 project
+## `ToolsUtilities/` and `GumDataTypes/` also compile into netstandard2.0 packages
 
-`ToolsUtilities.csproj` is a legacy non-SDK project targeting `v4.7.2` that compiles the same `ToolsUtilities/*.cs` files `GumCommon` does, so net8.0 is not the floor for that folder. A .NET 5+ API compiles in `GumCommon` and breaks CI's `Build-Tool` job while every runtime csproj stays green — build `GumFull.sln` to catch it.
+`ToolsUtilities/ToolsUtilitiesStandard.csproj` and `GumDataTypes/GumDataTypesNet6.csproj` multi-target `netstandard2.0` (published as `FlatRedBall.ToolsUtilities.NetStandard` / `FlatRedBall.GumDataTypes`) alongside compiling the same `ToolsUtilities/*.cs` / `GumDataTypes/*.cs` files `GumCommon` does, so net8.0 is not the floor for either folder. A .NET 5+ API compiles fine in `GumCommon` (net8.0) but breaks the `netstandard2.0` leg of these two csproj — a failure `dotnet build GumFull.sln` alone won't catch, since neither is part of that solution; build the csproj directly (`dotnet build ToolsUtilities/ToolsUtilitiesStandard.csproj` / `dotnet build GumDataTypes/GumDataTypesNet6.csproj`) to verify.
 
-Trim and AOT attributes (`RequiresUnreferencedCode`, `DynamicallyAccessedMembers`, `UnconditionalSuppressMessage`) are the common case, since none exist on .NET Framework. Gate the attribute and its `using System.Diagnostics.CodeAnalysis;` with `#if NET5_0_OR_GREATER`.
+Trim and AOT attributes (`RequiresUnreferencedCode`, `DynamicallyAccessedMembers`, `UnconditionalSuppressMessage`) are the common case, since none exist pre-.NET 5 / on netstandard2.0. Gate the attribute and its `using System.Diagnostics.CodeAnalysis;` with `#if NET5_0_OR_GREATER`.
 
 ## Guard symmetry — a member behind `#if !FRB` cannot be called from shared un-guarded code
 
