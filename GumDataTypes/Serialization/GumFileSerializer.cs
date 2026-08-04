@@ -2,6 +2,9 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO;
 using System.Text;
 using System.Xml.Serialization;
@@ -11,6 +14,14 @@ namespace Gum.DataTypes;
 
 public static class GumFileSerializer
 {
+    // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+    // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+    private const string TrimSuppressionJustification =
+        "rootType/T is always a Gum.DataTypes.* save class (ElementSave/BehaviorSave/GumProjectSave/StateSave and friends), " +
+        "which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").";
+#endif
+
     private static readonly Dictionary<Type, XmlSerializer> _compactSerializers = new();
     private static readonly Dictionary<Type, XmlSerializer> _legacyInstancesCompactSerializers = new();
     private static XmlSerializer? _gumProjectCompactSerializer;
@@ -65,6 +76,9 @@ public static class GumFileSerializer
     /// Full compact serializer: VariableSave and InstanceSave members as XML attributes.
     /// Use for v2 files where both variables and instances are in attribute format.
     /// </summary>
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+#endif
     public static XmlSerializer GetCompactSerializer(Type rootType)
     {
         lock (_compactSerializers)
@@ -92,6 +106,9 @@ public static class GumFileSerializer
     /// Mixed serializer: VariableSave members as XML attributes, InstanceSave as child elements.
     /// Use for transitional files saved before instance compaction was introduced.
     /// </summary>
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+#endif
     public static XmlSerializer GetLegacyInstancesCompactSerializer(Type rootType)
     {
         lock (_legacyInstancesCompactSerializers)
@@ -108,6 +125,9 @@ public static class GumFileSerializer
         }
     }
 
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+#endif
     public static XmlSerializer GetGumProjectCompactSerializer()
     {
         lock (_compactSerializers)
@@ -179,6 +199,9 @@ public static class GumFileSerializer
     /// Deserializes an <see cref="ElementSave"/> subtype from already-loaded XML text,
     /// selecting compact or legacy XML deserialization based on the content and project version.
     /// </summary>
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+#endif
     public static T? DeserializeElementSave<T>(string content, int projectVersion) where T : ElementSave, new()
     {
         if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
@@ -202,6 +225,9 @@ public static class GumFileSerializer
     /// Deserializes a <see cref="BehaviorSave"/> from already-loaded XML text,
     /// selecting compact or legacy XML deserialization based on the content and project version.
     /// </summary>
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026", Justification = TrimSuppressionJustification)]
+#endif
     public static BehaviorSave? DeserializeBehaviorSave(string content, int projectVersion)
     {
         if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)

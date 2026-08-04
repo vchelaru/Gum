@@ -1,4 +1,7 @@
 ﻿using System;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO;
 using Gum.DataTypes.Serialization.Json;
 using ToolsUtilities;
@@ -74,6 +77,12 @@ namespace Gum.DataTypes.Behaviors
             }
         }
 
+        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Deserializes BehaviorSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
         public static BehaviorSave DeserializeBehavior(string filePath, int projectVersion)
         {
             // No content-sniffing between XML and JSON - the file's own extension determines the format.

@@ -1,4 +1,7 @@
-﻿using System.Xml.Serialization;
+﻿#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
+using System.Xml.Serialization;
 using ToolsUtilities;
 
 namespace Gum.DataTypes
@@ -41,6 +44,12 @@ namespace Gum.DataTypes
 
         // Modify Clone if adding any XmlIgnored properties
 
+        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Clones this InstanceSave instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
         public InstanceSave Clone()
         {
             InstanceSave cloned = FileManager.CloneSaveObject(this);

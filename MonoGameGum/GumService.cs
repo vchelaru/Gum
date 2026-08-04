@@ -11,6 +11,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -819,6 +820,8 @@ public partial class GumService : IGumService
     /// <see cref="GumProjectSave.ElementAnimations"/>. The element name is derived from the file's path,
     /// not from the (stale) value serialized inside the file. Returns the number of animation files loaded.
     /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Deserializes ElementAnimationsSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.StateAnimation.SaveClasses.*.")]
     internal static int LoadAnimationsFromProvider(GumProjectSave project, IGumFileProvider provider)
     {
         // Filename-only pattern (no '/'): GlobMatcher matches it against the file name regardless of
