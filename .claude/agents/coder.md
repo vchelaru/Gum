@@ -75,6 +75,12 @@ Gating pattern:
 
 Don't `#if` away entire types or methods unless you've confirmed no caller references them across targets — that's a much harder refactor.
 
+## `ToolsUtilities/` also compiles into a .NET Framework 4.7.2 project
+
+`ToolsUtilities.csproj` is a legacy non-SDK project targeting `v4.7.2` that compiles the same `ToolsUtilities/*.cs` files `GumCommon` does, so net8.0 is not the floor for that folder. A .NET 5+ API compiles in `GumCommon` and breaks CI's `Build-Tool` job while every runtime csproj stays green — build `GumFull.sln` to catch it.
+
+Trim and AOT attributes (`RequiresUnreferencedCode`, `DynamicallyAccessedMembers`, `UnconditionalSuppressMessage`) are the common case, since none exist on .NET Framework. Gate the attribute and its `using System.Diagnostics.CodeAnalysis;` with `#if NET5_0_OR_GREATER`.
+
 ## Guard symmetry — a member behind `#if !FRB` cannot be called from shared un-guarded code
 
 The mirror of the rule above, and the single most common way a Gum change silently breaks FRB1: you add a method/property behind `#if !FRB` (e.g. on `TextRuntime`, which does not exist under FRB — FRB uses `GraphicalUiElement` directly), then call it from **shared** code that compiles under both FRB and non-FRB. The non-FRB build is green, so the break is invisible until the FRB canary runs — which is exactly what CI does not gate on. This broke FRB in #3413 (`GetFontCacheFileName`/`CopyFontGenerationFieldsTo`).
