@@ -474,32 +474,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             else
             {
                 // todo: handle multiselect
-                foreach (var newCategory in listOfCategories[0])
-                {
-                    // let's see if any variables have changed
-                    var oldCategory = mVariablesDataGrid.Categories.FirstOrDefault(item => item.Name == newCategory.Name);
-
-                    // A previous category's InstanceMember objects capture their target instance at
-                    // construction (see StateReferencingInstanceMember), so they can only be reused
-                    // when the same instance is still shown - an instance identity change always
-                    // needs at least a per-member retarget, even when the member names match.
-                    bool namesMatch = oldCategory != null && !DoCategoriesDiffer(oldCategory.Members, newCategory.Members);
-
-                    bool canRetargetInPlace = instanceIdentityChanged && namesMatch &&
-                        CanRetargetAllMembers(oldCategory.Members, newCategory.Members);
-
-                    if (canRetargetInPlace)
-                    {
-                        RetargetAllMembers(oldCategory.Members, newCategory.Members);
-                    }
-                    else if (oldCategory != null && (instanceIdentityChanged || !namesMatch))
-                    {
-                        int index = mVariablesDataGrid.Categories.IndexOf(oldCategory);
-
-                        mVariablesDataGrid.Categories.RemoveAt(index);
-                        mVariablesDataGrid.Categories.Insert(index, newCategory);
-                    }
-                }
+                ReconcileCategories(mVariablesDataGrid.Categories, listOfCategories[0], instanceIdentityChanged);
             }
 
             RefreshErrors(element);
@@ -691,6 +666,63 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
             this.VariableViewModel.ErrorInformation = message;
+        }
+    }
+
+    /// <summary>
+    /// Reconciles <paramref name="gridCategories"/> (the categories currently shown in the grid) against
+    /// <paramref name="newCategories"/> (the categories for the newly selected instance), retargeting
+    /// members in place where possible instead of rebuilding containers.
+    /// </summary>
+    public static void ReconcileCategories(
+        IList<MemberCategory> gridCategories,
+        IReadOnlyList<MemberCategory> newCategories,
+        bool instanceIdentityChanged)
+    {
+        foreach (var newCategory in newCategories)
+        {
+            // let's see if any variables have changed
+            var oldCategory = gridCategories.FirstOrDefault(item => item.Name == newCategory.Name);
+
+            // A previous category's InstanceMember objects capture their target instance at
+            // construction (see StateReferencingInstanceMember), so they can only be reused
+            // when the same instance is still shown - an instance identity change always
+            // needs at least a per-member retarget, even when the member names match.
+            bool namesMatch = oldCategory != null && !DoCategoriesDiffer(oldCategory.Members, newCategory.Members);
+
+            bool canRetargetInPlace = instanceIdentityChanged && namesMatch &&
+                CanRetargetAllMembers(oldCategory.Members, newCategory.Members);
+
+            if (canRetargetInPlace)
+            {
+                RetargetAllMembers(oldCategory.Members, newCategory.Members);
+            }
+            else if (oldCategory != null && (instanceIdentityChanged || !namesMatch))
+            {
+                int index = gridCategories.IndexOf(oldCategory);
+
+                gridCategories.RemoveAt(index);
+                gridCategories.Insert(index, newCategory);
+            }
+            else if (oldCategory == null)
+            {
+                // The new instance has a category the previously-shown instance didn't (e.g. "Text"
+                // when the previous instance had no Text category) - it has no counterpart to
+                // retarget or replace, so it must be added.
+                gridCategories.Add(newCategory);
+            }
+        }
+
+        // Categories left over from the previously-shown instance with no counterpart in
+        // newCategories (e.g. "Text" from a previously-selected Text instance, when the newly-selected
+        // instance isn't text) must be removed - otherwise they stay stuck in the grid.
+        for (int i = gridCategories.Count - 1; i >= 0; i--)
+        {
+            var existingCategory = gridCategories[i];
+            if (!newCategories.Any(newCategory => newCategory.Name == existingCategory.Name))
+            {
+                gridCategories.RemoveAt(i);
+            }
         }
     }
 
