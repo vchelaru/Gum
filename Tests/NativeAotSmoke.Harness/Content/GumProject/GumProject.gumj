@@ -24,7 +24,14 @@
   "ShowLocalizationInGum": true,
   "CurrentLanguageIndex": 0,
   "ScreenReferences": [],
-  "ComponentReferences": [],
+  "ComponentReferences": [
+    {
+      "Name": "TrimmedComponent",
+      "ElementType": 1,
+      "LinkType": 0,
+      "Link": null
+    }
+  ],
   "StandardElementReferences": [
     {
       "Name": "Circle",

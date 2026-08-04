@@ -9,6 +9,7 @@ using System.Linq;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Gum.Collections;
 
@@ -44,7 +45,26 @@ namespace GumRuntime
         /// </summary>
         public static Func<StateSave, string, string, GraphicalUiElement?, IEnumerable<object>>? CustomEvaluateExpressionAllBranches;
 
-        public static void RegisterGueInstantiationType(string elementName, Type gueInheritingType, bool overwriteIfAlreadyExists = true)
+        /// <summary>
+        /// Associates an element name with a strongly-typed <see cref="GraphicalUiElement"/> subclass
+        /// (typically a codegen'd <c>*Runtime</c> class) that Gum instantiates reflectively whenever
+        /// that element is built from its <see cref="ElementSave"/>.
+        /// </summary>
+        /// <remarks>
+        /// The <c>DynamicallyAccessedMembers</c> annotation on <paramref name="gueInheritingType"/> is
+        /// what keeps this working under <c>PublishTrimmed</c>/<c>PublishAot</c> (issue #4318).
+        /// Callers pass a literal <c>typeof(X)</c>, so the trimmer follows the annotation and preserves
+        /// X's constructors - <c>typeof(X)</c> on its own roots the type but not its members, and the
+        /// <c>(bool, bool)</c> constructor this registry needs is otherwise referenced by nothing.
+        /// Prefer <see cref="RegisterGueInstantiation{T}"/>, which needs no reflection at all.
+        /// </remarks>
+        public static void RegisterGueInstantiationType(
+            string elementName,
+#if NET5_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+#endif
+            Type gueInheritingType,
+            bool overwriteIfAlreadyExists = true)
         {
             if(overwriteIfAlreadyExists)
             {
@@ -131,6 +151,14 @@ namespace GumRuntime
             return toReturn;
         }
 
+        // mElementToGueTypes is a plain Dictionary<string, Type>, which cannot carry the
+        // DynamicallyAccessedMembers annotation that RegisterGueInstantiationType declares on the way
+        // in. The constructors are preserved at each registration site, so reading them back out is
+        // safe even though the annotation does not survive the round trip.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2072",
+            Justification = "Types reach this dictionary only via RegisterGueInstantiationType, whose parameter is annotated with PublicConstructors.")]
+#endif
         private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string genericType)
         {
             GraphicalUiElement? toReturn = null;
@@ -155,18 +183,10 @@ namespace GumRuntime
 
                 if (!string.IsNullOrEmpty(genericType))
                 {
-                    type = type.MakeGenericType(mElementToGueTypes[genericType]);
+                    type = MakeGenericRuntimeType(type, mElementToGueTypes[genericType]);
                 }
-                var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
-                if (constructorWithArgs != null)
-                {
-                    toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
-                }
-                else
-                {
-                    // For InteractiveGue in MonoGame Gum
-                    toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
-                }
+
+                toReturn = InstantiateRegisteredType(type, elementName, fullInstantiation);
             }
             else if (attemptedGenericLookup)
             {
@@ -178,16 +198,7 @@ namespace GumRuntime
                 }
                 else if (mElementToGueTypes.ContainsKey(elementName))
                 {
-                    var type = mElementToGueTypes[elementName];
-                    var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
-                    if (constructorWithArgs != null)
-                    {
-                        toReturn = constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
-                    }
-                    else
-                    {
-                        toReturn = (GraphicalUiElement)Activator.CreateInstance(type);
-                    }
+                    toReturn = InstantiateRegisteredType(mElementToGueTypes[elementName], elementName, fullInstantiation);
                 }
             }
 
@@ -211,6 +222,77 @@ namespace GumRuntime
             }
 
             return toReturn;
+        }
+
+        /// <summary>
+        /// Builds a registered runtime type, preferring the <c>(bool fullInstantiation, bool
+        /// tryCreateFormsObject)</c> constructor that codegen'd runtimes declare and falling back to a
+        /// parameterless one (InteractiveGue in MonoGame Gum).
+        /// </summary>
+        /// <remarks>
+        /// The suppressions are safe because every <paramref name="type"/> reaching this method was
+        /// registered through <see cref="RegisterGueInstantiationType"/>, whose parameter carries
+        /// <see cref="DynamicallyAccessedMemberTypes.PublicConstructors"/>; the trimmer preserves the
+        /// constructors at each registration site. Only the round-trip through an unannotated
+        /// <c>Dictionary&lt;string, Type&gt;</c> loses that annotation, which is what the analyzer is
+        /// reporting.
+        /// </remarks>
+        private static GraphicalUiElement? InstantiateRegisteredType(
+#if NET5_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+#endif
+            Type type,
+            string elementName,
+            bool fullInstantiation)
+        {
+            var constructorWithArgs = type.GetConstructor(new Type[] { typeof(bool), typeof(bool) });
+            if (constructorWithArgs != null)
+            {
+                return constructorWithArgs.Invoke(new object[] { fullInstantiation, true }) as GraphicalUiElement;
+            }
+
+            // For InteractiveGue in MonoGame Gum
+            if (type.GetConstructor(Type.EmptyTypes) != null)
+            {
+                return (GraphicalUiElement)Activator.CreateInstance(type);
+            }
+
+            throw new InvalidOperationException(
+                $"The runtime type {type.Name}, registered for the Gum element \"{elementName}\", has neither a " +
+                "(bool fullInstantiation, bool tryCreateFormsObject) constructor nor a parameterless one, so Gum " +
+                "cannot create it." + Environment.NewLine +
+                "If this is a trimmed or Native AOT build and the type does declare that constructor in source, " +
+                "the trimmer removed it because nothing else in the app calls it. Rebuild against a Gum version " +
+                "that annotates RegisterGueInstantiationType (issue #4318), or add " +
+                $"<TrimmerRootAssembly Include=\"{type.Assembly.GetName().Name}\" /> to the project as a workaround.");
+        }
+
+        /// <remarks>
+        /// Generic Gum components need a runtime-constructed closed type. Native AOT can only supply
+        /// one when the instantiation is statically reachable, so this stays a documented limitation
+        /// rather than something the annotation above can fix.
+        /// </remarks>
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2055",
+            Justification = "Generic Gum components are not supported under Native AOT; the failure is reported at runtime with a targeted message.")]
+        [UnconditionalSuppressMessage("AOT", "IL3050",
+            Justification = "Generic Gum components are not supported under Native AOT; the failure is reported at runtime with a targeted message.")]
+#endif
+        private static Type MakeGenericRuntimeType(Type openType, Type argumentType)
+        {
+            try
+            {
+                return openType.MakeGenericType(argumentType);
+            }
+            // PlatformNotSupportedException derives from NotSupportedException, so this covers both
+            // shapes ILC can throw for an instantiation it could not precompile.
+            catch (NotSupportedException exception)
+            {
+                throw new InvalidOperationException(
+                    $"Gum could not create the generic runtime type {openType.Name}<{argumentType.Name}>. Generic Gum " +
+                    "components require the closed type to be constructed at runtime, which Native AOT does not support " +
+                    "unless that exact instantiation is already reachable from code.", exception);
+            }
         }
 
         public static GraphicalUiElement ToGraphicalUiElement(this ElementSave elementSave,

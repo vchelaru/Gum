@@ -1,8 +1,13 @@
 using System;
+using System.Linq;
 using Gum;
 using Gum.DataTypes;
+using Gum.Wireframe;
+using GumRuntime;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using NativeAotSmoke.Harness;
+using RenderingLibrary;
 
 // End-to-end check for issue #4105 (RegisterRuntimeTypesThroughReflection scanned every loaded
 // assembly via unguarded reflection, crashing GumService.Initialize under Native AOT when it
@@ -33,6 +38,24 @@ try
             $"Expected 8 standard elements from the JSON project, found {loadedProject.StandardElements.Count}.");
     }
 
+    // Issue #4318: the component is only ever built through the ElementSave -> registered-type
+    // path, so this fails if the trimmer stops preserving TrimmedComponentRuntime's (bool, bool)
+    // constructor. Under the bug it threw MissingMethodException here.
+    ComponentSave? component = loadedProject.Components.FirstOrDefault(item => item.Name == "TrimmedComponent");
+    if (component == null)
+    {
+        throw new InvalidOperationException("The JSON project did not contain the TrimmedComponent component.");
+    }
+
+    GraphicalUiElement componentVisual = component.ToGraphicalUiElement(
+        SystemManagers.Default, addToManagers: false);
+    if (componentVisual is not TrimmedComponentRuntime)
+    {
+        throw new InvalidOperationException(
+            $"Expected TrimmedComponent to be built as {nameof(TrimmedComponentRuntime)}, " +
+            $"got {componentVisual.GetType().Name}.");
+    }
+
     Texture2D texture = new Texture2D(game.GraphicsDevice, 4, 4);
     Color[] data = new Color[16];
     Array.Fill(data, Color.CornflowerBlue);
@@ -40,7 +63,8 @@ try
 
     Console.WriteLine(
         "[native-aot-smoke] PASS: GumService.Initialize loaded a real .gumj project " +
-        $"({loadedProject.StandardElements.Count} standard element(s)) under Native AOT with a real GraphicsDevice.");
+        $"({loadedProject.StandardElements.Count} standard element(s), {loadedProject.Components.Count} component(s)) " +
+        "under Native AOT with a real GraphicsDevice, and built a registered runtime type reflectively.");
     return 0;
 }
 catch (Exception ex)

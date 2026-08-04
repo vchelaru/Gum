@@ -21,6 +21,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -220,6 +221,12 @@ public partial class GumService
     //      "RegisterRuntimeTypes" (plural) we can call directly to force registration before
     //      .gumx load. RegisterRuntimeTypes is idempotent (guarded), so calling it on top of an
     //      already-fired ModuleInitializer is a no-op.
+    // Best-effort by design: under trimming/Native AOT the [ModuleInitializer] hooks have already
+    // run, so a type this scan can no longer see was registered by other means. Every call is
+    // individually guarded (see InvokeRuntimeTypeHookIfPresent), so a trimmed-away hook degrades to
+    // a no-op instead of a failure.
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Scanning for optional self-registration hooks; module initializers cover the trimmed case and every call is guarded.")]
     internal void RegisterRuntimeTypesThroughReflection()
     {
         // (1) Legacy entry-assembly hook (singular method name).
@@ -280,6 +287,8 @@ public partial class GumService
     // (AmbiguousMatchException) or, under Native AOT, while walking a type's trimmed metadata
     // (TypeLoadException, issue #4105). A misbehaving or ambiguous hook shouldn't break Gum init,
     // so the whole lookup+call is guarded together rather than just the Invoke.
+    [UnconditionalSuppressMessage("Trimming", "IL2070",
+        Justification = "Looks for an optional self-registration hook; a trimmed-away hook degrades to a no-op because the lookup is guarded.")]
     private void InvokeRuntimeTypeHookIfPresent(Type type, string methodName)
     {
         try
