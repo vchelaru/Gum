@@ -108,6 +108,7 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\TextManager.cs" Link="RenderingLibrary\TextManager.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\XNAExtensions.cs" Link="Utilities\XNAExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\FloatRectangle.cs" Link="Utilities\FloatRectangle.cs" />
+		<Compile Include="..\..\RenderingLibrary\Math\Geometry\FilledStrokedRectangle.cs" Link="Renderables\FilledStrokedRectangle.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\Line.cs" Link="Renderables\Line.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineCircle.cs" Link="Renderables\LineCircle.cs" />
 		<Compile Include="..\..\RenderingLibrary\Math\Geometry\LineGrid.cs" Link="Renderables\LineGrid.cs" />
