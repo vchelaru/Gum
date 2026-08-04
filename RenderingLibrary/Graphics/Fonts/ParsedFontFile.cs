@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
+using System.Xml.Linq;
 using ToolsUtilities;
 
 namespace RenderingLibrary.Graphics;
@@ -65,38 +64,38 @@ public class ParsedFontFile
 
     private void ParseXmlText(string contents)
     {
-        XmlSerializer serializer = FileManager.GetXmlSerializer(typeof(XMLFont));
-        using var reader = new StringReader(contents);
-        var xmlFont = (XMLFont?)serializer.Deserialize(reader);
+        XElement? root = XDocument.Parse(contents).Root;
 
-        if (xmlFont == null)
+        if (root == null)
         {
-            throw new InvalidOperationException("Unable to load XML Font file, deserialization failed!");
+            throw new InvalidOperationException("Unable to load XML Font file, it has no root element!");
         }
 
-        if (xmlFont.Info != null)
+        XElement? infoElement = root.Element("info");
+        if (infoElement != null)
         {
-            Info = new FontFileInfoLine(xmlFont);
+            Info = new FontFileInfoLine(infoElement);
         }
 
-        if (xmlFont.Common != null)
+        XElement? commonElement = root.Element("common");
+        if (commonElement != null)
         {
-            Common = new FontFileCommonLine(xmlFont);
+            Common = new FontFileCommonLine(commonElement);
         }
 
-        foreach (XMLFont.XMLChar charLine in xmlFont.Chars)
+        foreach (XElement charElement in root.Elements("chars").Elements("char"))
         {
-            Chars.Add(new FontFileCharLine(charLine));
+            Chars.Add(new FontFileCharLine(charElement));
         }
 
-        foreach (XMLFont.XMLKerning kerningLine in xmlFont.Kernings)
+        foreach (XElement kerningElement in root.Elements("kernings").Elements("kerning"))
         {
-            Kernings.Add(new FontFileKerningLine(kerningLine));
+            Kernings.Add(new FontFileKerningLine(kerningElement));
         }
 
-        foreach (XMLFont.XMLPage page in xmlFont.Pages)
+        foreach (XElement pageElement in root.Elements("pages").Elements("page"))
         {
-            Pages.Add(new FontFilePage(page));
+            Pages.Add(new FontFilePage(pageElement));
         }
 
         if (Info == null || Common == null)
@@ -187,10 +186,10 @@ public class FontFilePage
         File = file;
     }
 
-    public FontFilePage(XMLFont.XMLPage page)
+    public FontFilePage(XElement pageElement)
     {
-        Id = page.Id;
-        File = page.File;
+        Id = (int?)pageElement.Attribute("id") ?? 0;
+        File = (string?)pageElement.Attribute("file") ?? "";
     }
 }
 
@@ -211,13 +210,10 @@ public class FontFileInfoLine
         }
     }
 
-    public FontFileInfoLine(XMLFont xmlFont)
+    public FontFileInfoLine(XElement infoElement)
     {
-        if (xmlFont.Info != null)
-        {
-            Outline = xmlFont.Info.Outline;
-            Size = xmlFont.Info.Size;
-        }
+        Outline = (int?)infoElement.Attribute("outline") ?? 0;
+        Size = System.Math.Abs((int?)infoElement.Attribute("size") ?? 0);
     }
 }
 
@@ -232,13 +228,10 @@ public class FontFileCommonLine
         Base = line.NumericAttributes["base"];
     }
 
-    public FontFileCommonLine(XMLFont xmlFont)
+    public FontFileCommonLine(XElement commonElement)
     {
-        if (xmlFont.Common != null)
-        {
-            LineHeight = xmlFont.Common.LineHeight;
-            Base = xmlFont.Common.Base;
-        }
+        LineHeight = (int?)commonElement.Attribute("lineHeight") ?? 0;
+        Base = (int?)commonElement.Attribute("base") ?? 0;
     }
 }
 
@@ -272,17 +265,17 @@ public class FontFileCharLine
         }
     }
 
-    public FontFileCharLine(XMLFont.XMLChar charLine)
+    public FontFileCharLine(XElement charElement)
     {
-        Id = charLine.Id;
-        X = charLine.X;
-        Y = charLine.Y;
-        Width = charLine.Width;
-        Height = charLine.Height;
-        XOffset = charLine.XOffset;
-        YOffset = charLine.YOffset;
-        XAdvance = charLine.XAdvance;
-        Page = charLine.Page;
+        Id = (int?)charElement.Attribute("id") ?? 0;
+        X = (int?)charElement.Attribute("x") ?? 0;
+        Y = (int?)charElement.Attribute("y") ?? 0;
+        Width = (int?)charElement.Attribute("width") ?? 0;
+        Height = (int?)charElement.Attribute("height") ?? 0;
+        XOffset = (int?)charElement.Attribute("xoffset") ?? 0;
+        YOffset = (int?)charElement.Attribute("yoffset") ?? 0;
+        XAdvance = (int?)charElement.Attribute("xadvance") ?? 0;
+        Page = (int?)charElement.Attribute("page") ?? 0;
     }
 
     public override string ToString()
@@ -304,101 +297,13 @@ public class FontFileKerningLine
         Amount = line.NumericAttributes["amount"];
     }
 
-    public FontFileKerningLine(XMLFont.XMLKerning kerningLine)
+    public FontFileKerningLine(XElement kerningElement)
     {
-        First = kerningLine.First;
-        Second = kerningLine.Second;
-        Amount = kerningLine.Amount;
+        First = (int?)kerningElement.Attribute("first") ?? 0;
+        Second = (int?)kerningElement.Attribute("second") ?? 0;
+        Amount = (int?)kerningElement.Attribute("amount") ?? 0;
     }
 }
-
-
-// The below classes are entirely to import the BMFont XML format
-// https://www.angelcode.com/products/bmfont/doc/file_format.html
-[XmlRoot("font")]
-public class XMLFont
-{
-    [XmlElement("info")]
-    public XMLInfo Info { get; set; }
-
-    [XmlElement("common")]
-    public XMLCommon Common { get; set; }
-
-    [XmlArray("pages")]
-    [XmlArrayItem("page")]
-    public List<XMLPage> Pages { get; set; }
-
-    [XmlArray("chars")]
-    [XmlArrayItem("char")]
-    public List<XMLChar> Chars { get; set; }
-
-    [XmlArray("kernings")]
-    [XmlArrayItem("kerning")]
-    public List<XMLKerning> Kernings { get; set; }
-
-    [XmlType("info")]
-    public class XMLInfo
-    {
-        [XmlAttribute("face")] public string Face { get; set; }
-        [XmlAttribute("size")] public int Size { get; set; }
-        [XmlAttribute("bold")] public int Bold { get; set; }
-        [XmlAttribute("italic")] public int Italic { get; set; }
-        [XmlAttribute("charset")] public string Charset { get; set; }
-        [XmlAttribute("unicode")] public int Unicode { get; set; }
-        [XmlAttribute("stretchH")] public int StretchH { get; set; }
-        [XmlAttribute("smooth")] public int Smooth { get; set; }
-        [XmlAttribute("aa")] public int Aa { get; set; }
-        [XmlAttribute("padding")] public string Padding { get; set; }
-        [XmlAttribute("spacing")] public string Spacing { get; set; }
-        [XmlAttribute("outline")] public int Outline { get; set; }
-    }
-
-    [XmlType("common")]
-    public class XMLCommon
-    {
-        [XmlAttribute("lineHeight")] public int LineHeight { get; set; }
-        [XmlAttribute("base")] public int Base { get; set; }
-        [XmlAttribute("scaleW")] public int ScaleW { get; set; }
-        [XmlAttribute("scaleH")] public int ScaleH { get; set; }
-        [XmlAttribute("pages")] public int Pages { get; set; }
-        [XmlAttribute("packed")] public int Packed { get; set; }
-        [XmlAttribute("alphaChnl")] public int AlphaChnl { get; set; }
-        [XmlAttribute("redChnl")] public int RedChnl { get; set; }
-        [XmlAttribute("greenChnl")] public int GreenChnl { get; set; }
-        [XmlAttribute("blueChnl")] public int BlueChnl { get; set; }
-    }
-
-    [XmlType("page")]
-    public class XMLPage
-    {
-        [XmlAttribute("id")] public int Id { get; set; }
-        [XmlAttribute("file")] public string File { get; set; }
-    }
-
-    [XmlType("char")]
-    public class XMLChar
-    {
-        [XmlAttribute("id")] public int Id { get; set; }
-        [XmlAttribute("x")] public int X { get; set; }
-        [XmlAttribute("y")] public int Y { get; set; }
-        [XmlAttribute("width")] public int Width { get; set; }
-        [XmlAttribute("height")] public int Height { get; set; }
-        [XmlAttribute("xoffset")] public int XOffset { get; set; }
-        [XmlAttribute("yoffset")] public int YOffset { get; set; }
-        [XmlAttribute("xadvance")] public int XAdvance { get; set; }
-        [XmlAttribute("page")] public int Page { get; set; }
-        [XmlAttribute("chnl")] public int Chnl { get; set; }
-    }
-
-    [XmlType("kerning")]
-    public class XMLKerning
-    {
-        [XmlAttribute("first")] public int First { get; set; }
-        [XmlAttribute("second")] public int Second { get; set; }
-        [XmlAttribute("amount")] public int Amount { get; set; }
-    }
-}
-
 
 public class ParsedFontLine
 {
