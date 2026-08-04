@@ -20,14 +20,15 @@ public class Game1 : Game
 {
     private readonly GraphicsDeviceManager _graphics;
 
-    // Issue #4302 manual-test rig: mouse wheel zooms the camera, blurring both preview texts below
-    // the playground the same way any zoomed Gum UI blurs today. Pressing R regenerates only
-    // _oversampledZoomPreviewText's font at the current zoom (manually-triggered, per this issue's
-    // scope), so it turns crisp again while _plainZoomPreviewText stays blurry for comparison.
+    // Issue #4317 manual-test rig: mouse wheel zooms the shared camera, magnifying both preview texts
+    // uniformly (same as any zoomed Gum UI). _oversampledZoomPreviewText re-rasterizes itself
+    // automatically at render time (TextRuntime.UpdateAutomaticFontOversampling, wired to Text.OnPreRender)
+    // and stays crisp at every zoom level with no input required, while _plainZoomPreviewText -- an
+    // ordinary Text with no oversampling -- visibly blurs/pixelates under the same zoom, for comparison.
+    // (#4302's original version of this rig required manually pressing R; that trigger no longer exists.)
     private TextRuntime _plainZoomPreviewText = null!;
     private TextRuntime _oversampledZoomPreviewText = null!;
     private int _previousScrollWheelValue;
-    private bool _wasRKeyDown;
 
     // Issue #4304 manual-test rig: a single Text whose FontSize tracks the mouse wheel directly (NOT
     // camera.Zoom -- this text is drawn in normal, unzoomed screen space so the raster size KernSmith
@@ -36,10 +37,8 @@ public class Game1 : Game
     // changes continuously, and the label shows the live requested FontSize (with decimals) so the
     // number is readable while zooming.
     //
-    // This deliberately does NOT demonstrate crisp text under CAMERA zoom (that's a different feature
-    // -- automatic, FontScale-free oversampling -- tracked separately in #4317, since it needs a
-    // render-time compensation mechanism that doesn't exist yet; see that issue for why hijacking
-    // FontScale, the way RegenerateOversampledFont below does, isn't the right shape for it).
+    // This deliberately does NOT demonstrate crisp text under CAMERA zoom -- that's the separate
+    // automatic-oversampling demo below (BuildZoomOversamplingDemo / issue #4317).
     private TextRuntime _fractionalFontSizeText = null!;
     private const float FractionalFontSizeMin = 8f;
     // Capped well below the full 8-96 slider range in FontPlaygroundScreen so this text -- reserved
@@ -127,7 +126,7 @@ public class Game1 : Game
         GumService.Default.Root.Children.Add(_plainZoomPreviewText);
 
         _oversampledZoomPreviewText = new TextRuntime();
-        _oversampledZoomPreviewText.Text = "Scroll to zoom, then press R (crisp)";
+        _oversampledZoomPreviewText.Text = "Scroll to zoom (auto-crisp)";
         _oversampledZoomPreviewText.FontSize = 24;
         _oversampledZoomPreviewText.X = 16;
         _oversampledZoomPreviewText.Y = 690;
@@ -179,12 +178,9 @@ public class Game1 : Game
             ApplyFractionalFontSize();
         }
 
-        bool isRKeyDown = Keyboard.GetState().IsKeyDown(Keys.R);
-        if (isRKeyDown && !_wasRKeyDown)
-        {
-            _oversampledZoomPreviewText.RegenerateOversampledFont(camera.Zoom);
-        }
-        _wasRKeyDown = isRKeyDown;
+        // No manual trigger needed here -- _oversampledZoomPreviewText re-rasterizes itself every
+        // frame via TextRuntime.UpdateAutomaticFontOversampling, wired to Text.OnPreRender, which
+        // reads this same camera's Zoom (issue #4317).
     }
 
     protected override void Draw(GameTime gameTime)

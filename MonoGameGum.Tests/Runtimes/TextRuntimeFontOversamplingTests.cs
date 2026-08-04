@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
@@ -10,15 +11,20 @@ using Xunit;
 namespace MonoGameGum.Tests.Runtimes;
 
 // Issue #4302: TextRuntime.RegenerateOversampledFont rasterizes a font at a multiple of FontSize (for
-// crisper text under camera zoom) and compensates with Text.FontScale so the on-screen size is
-// unchanged. Gated behind the global TextRuntime.UseFontOversampling toggle (off by default, so
-// pixel-art projects see no behavior change) and requires an IInMemoryFontCreator (KernSmith) --
-// a disk-based font cache only holds a fixed set of pre-baked sizes, so arbitrary-ratio regeneration
-// only makes sense with dynamic generation.
+// crisper text under camera zoom). Gated behind the global TextRuntime.UseFontOversampling toggle
+// (off by default, so pixel-art projects see no behavior change) and requires an IInMemoryFontCreator
+// (KernSmith) -- a disk-based font cache only holds a fixed set of pre-baked sizes, so arbitrary-ratio
+// regeneration only makes sense with dynamic generation.
+//
+// Issue #4317 follow-up: the original mechanism compensated by overwriting the public Text.FontScale,
+// which silently stomped a caller's own FontScale/[FontScale] BBCode usage. It now compensates via the
+// internal-only Text.OversampleCompensationScale, which composes multiplicatively with FontScale
+// instead -- see the "ComposesWith" tests below. This file also covers the automatic, render-time
+// trigger (UpdateAutomaticFontOversampling) that replaces the old manual "press R" call.
 public class TextRuntimeFontOversamplingTests : BaseTestClass
 {
     [Fact]
-    public void RegenerateOversampledFont_WhenEnabledWithCreator_RegeneratesAtOversampledSizeAndCompensatesFontScale()
+    public void RegenerateOversampledFont_WhenEnabledWithCreator_RegeneratesAtOversampledSizeAndLeavesFontScaleUntouched()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
         IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
@@ -37,10 +43,109 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             bool result = textRuntime.RegenerateOversampledFont(2.5f);
 
             result.ShouldBeTrue();
-            creator.CapturedFontSize.ShouldBe(50);
+            creator.CapturedFontSize.ShouldBe(50f);
             var text = (Text)textRuntime.RenderableComponent;
             text.BitmapFont.ShouldBeSameAs(stubFont);
-            text.FontScale.ShouldBe(20f / 50f);
+            text.OversampleCompensationScale.ShouldBe(20f / 50f);
+            text.FontScale.ShouldBe(1f, "because oversampling must compensate through the internal-only " +
+                "OversampleCompensationScale, not by overwriting the public FontScale (issue #4317)");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_RequestsExactFractionalRasterSize_WithoutRounding()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+
+            textRuntime.RegenerateOversampledFont(2.37f);
+
+            // 20 * 2.37 = 47.4 -- must reach the rasterizer exactly, not rounded to 47 (issue #4317
+            // asks for the exact fractional target now that #4304 made BmfcSave.FontSize a float).
+            creator.CapturedFontSize.ShouldBe(47.4f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_WhenUserFontScaleIsSet_ComposesWithCompensationInsteadOfOverwritingIt()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.FontScale = 2f; // the caller's own explicit scale -- must survive oversampling.
+
+            textRuntime.RegenerateOversampledFont(2.5f);
+
+            var text = (Text)textRuntime.RenderableComponent;
+            text.FontScale.ShouldBe(2f, "because the caller's own FontScale must not be stomped by oversampling");
+            ((IText)text).FontScale.ShouldBe(2f * (20f / 50f),
+                "because the effective on-screen scale is the caller's FontScale composed with the " +
+                "internal compensation, not just the compensation alone");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void FontSize_WhenChangedAfterOversampling_ResetsCompensationBackToNeutral()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.RegenerateOversampledFont(2.5f);
+            var text = (Text)textRuntime.RenderableComponent;
+            text.OversampleCompensationScale.ShouldBe(20f / 50f);
+
+            // A plain FontSize change (not going through RegenerateOversampledFont) re-resolves the
+            // font at its normal, un-oversampled size -- the OLD compensation ratio must not linger
+            // and shrink/grow the new font incorrectly (issue #4317).
+            textRuntime.FontSize = 30;
+
+            text.OversampleCompensationScale.ShouldBe(1f);
         }
         finally
         {
@@ -112,6 +217,177 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             TextRuntime.UseFontOversampling = savedUseFontOversampling;
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
+    }
+
+    // Issue #4317: UpdateAutomaticFontOversampling(float) is the testable decision core behind the
+    // Text.OnPreRender-wired automatic trigger -- given an effective zoom, decide whether to
+    // re-rasterize. The parameterless overload (camera/layer lookup) isn't unit-tested here since it
+    // needs a real SystemManagers/Renderer/Camera graph; that's covered by the FontPlayground manual
+    // test instead.
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenZoomedIn_RegeneratesAtEffectiveZoom()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            creator.ResetCallTracking();
+
+            bool result = textRuntime.UpdateAutomaticFontOversampling(2.5f);
+
+            result.ShouldBeTrue();
+            creator.CapturedFontSize.ShouldBe(50f);
+            var text = (Text)textRuntime.RenderableComponent;
+            text.OversampleCompensationScale.ShouldBe(20f / 50f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenZoomBelowOne_ClampsToNativeResolution_NeverUndersamples()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px, establishes a baseline to zoom back out from
+            creator.ResetCallTracking();
+
+            // Zoomed OUT (0.5x) -- oversampling only ever increases raster resolution, it must not
+            // also rasterize below native size when zoomed out.
+            bool result = textRuntime.UpdateAutomaticFontOversampling(0.5f);
+
+            result.ShouldBeTrue();
+            creator.CapturedFontSize.ShouldBe(20f, "because a zoom below 1 must clamp to native resolution (raster = FontSize), not undersample below it");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenRasterPixelDeltaBelowOne_DoesNotRegenerateAgain()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px
+            creator.ResetCallTracking();
+
+            // 20 * 2.52 = 50.4 -- less than 1px away from the 50px already rasterized.
+            bool result = textRuntime.UpdateAutomaticFontOversampling(2.52f);
+
+            result.ShouldBeFalse();
+            creator.WasCalled.ShouldBeFalse("because continuous zooming must not re-rasterize every frame for imperceptible deltas");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenRasterPixelDeltaAtLeastOne_RegeneratesAgain()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            var stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            var creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px
+            creator.ResetCallTracking();
+
+            // 20 * 3.0 = 60 -- 10px past the 50px already rasterized.
+            bool result = textRuntime.UpdateAutomaticFontOversampling(3.0f);
+
+            result.ShouldBeTrue();
+            creator.WasCalled.ShouldBeTrue();
+            creator.CapturedFontSize.ShouldBe(60f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void GetEffectiveZoom_WhenLayerIsNull_ReturnsCameraZoom()
+    {
+        var camera = new Camera { Zoom = 3f };
+
+        TextRuntime.GetEffectiveZoom(null, camera).ShouldBe(3f);
+    }
+
+    [Fact]
+    public void GetEffectiveZoom_WhenLayerHasNoZoomOverride_FallsBackToCameraZoom()
+    {
+        var camera = new Camera { Zoom = 3f };
+        var layer = new Layer { LayerCameraSettings = new LayerCameraSettings() };
+
+        TextRuntime.GetEffectiveZoom(layer, camera).ShouldBe(3f);
+    }
+
+    [Fact]
+    public void GetEffectiveZoom_WhenLayerOverridesZoom_UsesLayerZoomInsteadOfCamera()
+    {
+        var camera = new Camera { Zoom = 3f };
+        var layer = new Layer { LayerCameraSettings = new LayerCameraSettings { Zoom = 5f } };
+
+        TextRuntime.GetEffectiveZoom(layer, camera).ShouldBe(5f);
+    }
+
+    [Fact]
+    public void GetEffectiveZoom_WhenLayerIsScreenSpaceWithNoZoomOverride_IgnoresCameraAndReturnsOne()
+    {
+        var camera = new Camera { Zoom = 3f };
+        var layer = new Layer { LayerCameraSettings = new LayerCameraSettings { IsInScreenSpace = true } };
+
+        TextRuntime.GetEffectiveZoom(layer, camera).ShouldBe(1f,
+            "because a screen-space layer with no explicit Zoom override must stay 1:1 regardless of camera zoom");
     }
 
     // Reproduction attempt for the wrap-earlier report on #4302: goes through the real TextRuntime
@@ -276,14 +552,14 @@ char id=32 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=
         }
 
         public bool WasCalled { get; private set; }
-        public int CapturedFontSize { get; private set; }
+        public float CapturedFontSize { get; private set; }
 
         public void ResetCallTracking() => WasCalled = false;
 
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
             WasCalled = true;
-            CapturedFontSize = (int)bmfcSave.FontSize;
+            CapturedFontSize = bmfcSave.FontSize;
             return _fontToReturn;
         }
     }

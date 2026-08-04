@@ -53,6 +53,9 @@ public class TextRuntime : InteractiveGue
             if (_containedText == null)
             {
                 _containedText = (Text)this.RenderableComponent;
+#if XNALIKE
+                _containedText.OnPreRender = UpdateAutomaticFontOversampling;
+#endif
             }
             return _containedText;
         }
@@ -665,11 +668,15 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// Regenerates this text's font at <paramref name="oversampleRatio"/> times <see cref="FontSize"/>
     /// via <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/>, then compensates with
-    /// the contained Text's FontScale so the on-screen size is unchanged --
-    /// the glyphs are just rasterized at a higher pixel density (issue #4302).
+    /// the contained Text's internal-only <see cref="Text.OversampleCompensationScale"/> so the
+    /// on-screen size is unchanged -- the glyphs are just rasterized at a higher pixel density
+    /// (issue #4302). Unlike the compensation this replaced, it composes with the public
+    /// <see cref="FontScale"/> instead of overwriting it (issue #4317), so a caller's own FontScale
+    /// (including inline [FontScale] BBCode runs) keeps working while oversampling is active.
     /// </summary>
     /// <param name="oversampleRatio">How many times larger than <see cref="FontSize"/> to rasterize
-    /// the font, e.g. the current camera zoom. Rounded to the nearest whole pixel size.</param>
+    /// the font, e.g. the current effective camera/layer zoom. Requested as an exact fraction --
+    /// KernSmith's rasterizer has fractional precision (see issue #4304), so this is not rounded.</param>
     /// <returns>
     /// True if the font was regenerated. False if <see cref="UseFontOversampling"/> is off, no
     /// in-memory font creator is registered, or <paramref name="oversampleRatio"/> is not positive --
@@ -683,7 +690,7 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
-        var rasterFontSize = Math.Max(1, (int)Math.Round(FontSize * oversampleRatio));
+        var rasterFontSize = System.MathF.Max(1f, FontSize * oversampleRatio);
 
         var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
 
@@ -698,16 +705,96 @@ public class TextRuntime : InteractiveGue
         }
 
         ContainedText.BitmapFont = font;
-        ContainedText.FontScale = FontSize / rasterFontSize;
+        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
 
-        // BitmapFont/FontScale are renderable-level properties -- assigning them directly (bypassing
-        // the normal property-setter cascade a call like FontSize= goes through) never notifies this
-        // element's own layout. Without this, a RelativeToChildren box keeps whatever Width it measured
-        // against the OLD font and wraps the NEW font's (differently-measuring) glyphs against it.
+        // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
+        // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
+        // never notifies this element's own layout. Without this, a RelativeToChildren box keeps
+        // whatever Width it measured against the OLD font and wraps the NEW font's (differently-
+        // measuring) glyphs against it.
         UpdateLayout();
 
         return true;
     }
+
+    float _lastAutoOversampleRatio = 1f;
+
+    /// <summary>
+    /// Wired to <see cref="Text.OnPreRender"/> so it runs once per frame for every visible Text on
+    /// the layered draw path -- resolves the current effective camera/layer zoom and delegates the
+    /// actual regenerate-or-not decision to <see cref="UpdateAutomaticFontOversampling(float)"/>.
+    /// Replaces the #4302 manual "press R" trigger with the render-time mechanism issue #4317 asks for.
+    /// </summary>
+    void UpdateAutomaticFontOversampling()
+    {
+        var camera = EffectiveManagers?.Renderer?.Camera;
+        if (camera != null)
+        {
+            UpdateAutomaticFontOversampling(GetEffectiveZoom(this.Layer, camera));
+        }
+    }
+
+    /// <summary>
+    /// Given the current effective screen scale (see <see cref="GetEffectiveZoom"/>), re-rasterizes
+    /// this Text's font only when the requested raster pixel size would move by at least a full pixel
+    /// from what it was last rasterized at -- so continuously zooming doesn't regenerate every frame
+    /// for imperceptible deltas. Split out from the parameterless <see cref="UpdateAutomaticFontOversampling()"/>
+    /// so the decision logic is testable without a real Camera/Layer/SystemManagers graph.
+    /// </summary>
+    /// <returns>True if the font was regenerated.</returns>
+    internal bool UpdateAutomaticFontOversampling(float effectiveZoom)
+    {
+        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
+        {
+            return false;
+        }
+
+        // Regenerating below native resolution isn't this feature's job -- only oversample, never
+        // undersample.
+        var oversampleRatio = System.Math.Max(1f, effectiveZoom);
+
+        var rasterDelta = System.MathF.Abs(FontSize * oversampleRatio - FontSize * _lastAutoOversampleRatio);
+        if (rasterDelta >= 1f && RegenerateOversampledFont(oversampleRatio))
+        {
+            _lastAutoOversampleRatio = oversampleRatio;
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// The effective screen scale a Text on <paramref name="layer"/> renders at -- composes the main
+    /// <paramref name="camera"/>'s zoom with the layer's own <see cref="LayerCameraSettings.Zoom"/>
+    /// override. Mirrors <c>SpriteRenderer.GetZoomAndMatrix</c>'s zoom resolution; kept as a small,
+    /// independent copy here (rather than a shared call into that method) since it sits in
+    /// matrix-routing code documented as historically regression-prone -- see the
+    /// gum-monogame-rendering skill's "Matrix Routing" section.
+    /// </summary>
+    internal static float GetEffectiveZoom(Layer? layer, Camera camera)
+    {
+        var layerCameraSettings = layer?.LayerCameraSettings;
+        if (layerCameraSettings == null)
+        {
+            return camera.Zoom;
+        }
+
+        return layerCameraSettings.IsInScreenSpace
+            ? layerCameraSettings.Zoom ?? 1f
+            : layerCameraSettings.Zoom ?? camera.Zoom;
+    }
+
+    /// <summary>
+    /// Called by <see cref="CustomSetPropertyOnRenderable.UpdateToFontValues"/> (the single choke
+    /// point both the direct-property-setter and string/state-based <c>SetProperty</c> paths
+    /// converge on -- see the gum-property-assignment skill) whenever a font property (Font,
+    /// FontSize, IsBold, etc.) is re-resolved. Resets the automatic-oversampling hysteresis cache so
+    /// the next PreRender re-evaluates against the NEW FontSize instead of comparing it to a ratio
+    /// computed for the OLD one, which could otherwise read as "no change" and leave oversampling
+    /// stale (issue #4317). <see cref="Text.OversampleCompensationScale"/> itself is reset by the
+    /// caller directly, since it lives on the renderable that caller already has a reference to.
+    /// </summary>
+    internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
 #endif
 #endif
 
