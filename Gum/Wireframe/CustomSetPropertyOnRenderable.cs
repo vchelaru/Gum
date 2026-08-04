@@ -2435,11 +2435,35 @@ public partial class CustomSetPropertyOnRenderable
 #else
         var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
 
+        // A font property being re-resolved (through either this string path or the direct
+        // TextRuntime property setters, which funnel back into this same method via the
+        // UpdateFontFromProperties delegate -- see the gum-property-assignment skill) means
+        // whatever automatic font oversampling (issue #4317) was in effect is stale: it compensated
+        // for the OLD FontSize's raster, not the new font this method is about to assign. Reset here,
+        // the single point both paths converge on, so a Font/FontSize change never leaves an old
+        // compensation ratio applied to a newly-resolved font -- which would otherwise render at the
+        // wrong size until the next zoom change happened to trigger a fresh regeneration. Guarded by
+        // textRuntime != null below (a bare Text renderable with no owning TextRuntime never has
+        // oversampling applied to begin with).
 #endif
         if (text == null || textRuntime == null)
         {
             return;
         }
+
+#if XNALIKE && !FRB
+        // This file also compiles (unchanged) for SilkNetGum (SKIA) and, via a namespace swap, for
+        // RaylibGum -- neither has ResetAutomaticOversamplingState (oversampling is XNALIKE-only for
+        // now; Raylib parity is issue #4317's own follow-up), so this must stay XNALIKE-gated even
+        // though it's already inside the non-FRB branch above. FRB is excluded too: an FRB build that
+        // also defines XNALIKE would otherwise see textRuntime typed as the plain GraphicalUiElement
+        // from the #if FRB branch above (no TextRuntime type available there yet), not TextRuntime.
+        if (asText.OversampleCompensationScale != 1f)
+        {
+            asText.OversampleCompensationScale = 1f;
+        }
+        textRuntime.ResetAutomaticOversamplingState();
+#endif
 
         BitmapFont font = null;
 

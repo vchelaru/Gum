@@ -144,16 +144,17 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
             "Because a content-derived Height must not be used to truncate the very lines it was derived from");
     }
 
-    // Issue #4302 follow-up: TextRuntime.RegenerateOversampledFont swaps BitmapFont to a font
-    // rasterized at oversampleRatio * FontSize, then sets FontScale = 1/oversampleRatio to compensate
-    // so the on-screen size is unchanged. Both setters call UpdateWrappedText() independently -- the
-    // BitmapFont setter fires FIRST, with the OLD (pre-swap) FontScale still in effect, so it wraps
+    // Issue #4302/#4317: TextRuntime.RegenerateOversampledFont swaps BitmapFont to a font rasterized
+    // at oversampleRatio * FontSize, then sets the internal-only OversampleCompensationScale to
+    // 1/oversampleRatio to compensate so the on-screen size is unchanged (composing with, rather than
+    // overwriting, the public FontScale). Both setters call UpdateWrappedText() independently -- the
+    // BitmapFont setter fires FIRST, with the OLD (pre-swap) compensation still in effect, so it wraps
     // using the new (much wider) glyph metrics against a wrap width that hasn't been inflated yet.
-    // That intermediate wrap is wrong, but should be harmless IF the FontScale setter's later call
+    // That intermediate wrap is wrong, but should be harmless IF the compensation setter's later call
     // fully recomputes WrappedText afterward. This test asserts the actual (post both-setters) result
     // still matches the pre-swap wrap, exactly what a user should see (crisp text, same layout).
     [Fact]
-    public void UpdateLines_WhenBitmapFontAndFontScaleBothChangeInOversampleOrder_ShouldWrapTheSameAsBeforeTheSwap()
+    public void UpdateLines_WhenBitmapFontAndOversampleCompensationBothChangeInOversampleOrder_ShouldWrapTheSameAsBeforeTheSwap()
     {
         const int baseAdvance = 10;
         const float oversampleRatio = 2.5f;
@@ -171,14 +172,55 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
 
         text.WrappedText.Count.ShouldBe(1, "because AB AB exactly fits the base font/width before any oversampling");
 
-        // Mirrors TextRuntime.RegenerateOversampledFont's exact call order: BitmapFont first, then FontScale.
+        // Mirrors TextRuntime.RegenerateOversampledFont's exact call order: BitmapFont first, then compensation.
         text.BitmapFont = oversampledFont;
-        text.FontScale = 1f / oversampleRatio;
+        text.OversampleCompensationScale = 1f / oversampleRatio;
 
         text.WrappedText.Count.ShouldBe(1,
-            "because the oversampled font's glyphs are exactly oversampleRatio times wider and FontScale " +
-            "compensates by the same ratio -- the on-screen size, and therefore the wrap, must not change");
+            "because the oversampled font's glyphs are exactly oversampleRatio times wider and the " +
+            "compensation scale offsets by the same ratio -- the on-screen size, and therefore the wrap, must not change");
         text.WrappedText[0].ShouldBe("AB AB");
+    }
+
+    // Issue #4317: OversampleCompensationScale must compose multiplicatively with the public FontScale
+    // rather than overwrite it -- the defect the old RegenerateOversampledFont (which assigned straight
+    // into FontScale) had.
+    [Fact]
+    public void EffectiveFontScale_ComposesFontScaleWithOversampleCompensationScale()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.FontScale = 2f;
+        text.RawText = "AB";
+        float widthAtUserScaleOnly = text.WrappedTextWidth;
+
+        text.OversampleCompensationScale = 0.4f;
+
+        text.FontScale.ShouldBe(2f, "because setting OversampleCompensationScale must not touch the public FontScale");
+        text.WrappedTextWidth.ShouldBe(widthAtUserScaleOnly * 0.4f, tolerance: 0.001f,
+            customMessage: "because the effective on-screen width is FontScale composed with OversampleCompensationScale, not just one or the other");
+    }
+
+    // Issue #4317: the render-time hook TextRuntime wires automatic oversampling through.
+    [Fact]
+    public void PreRender_InvokesOnPreRenderHook()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = font;
+        text.RawText = "AB";
+
+        bool wasInvoked = false;
+        text.OnPreRender = () => wasInvoked = true;
+
+        ((IRenderable)text).PreRender();
+
+        wasInvoked.ShouldBeTrue();
     }
 
     // Two-char ("ab") BMFont with every glyph at a caller-chosen xadvance, so a test can build a

@@ -180,7 +180,42 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     float mFontScale = 1;
 
-    private float EffectiveFontScale => mFontScale * SystemManagers.GlobalFontScale;
+    float mOversampleCompensationScale = 1;
+
+    /// <summary>
+    /// Internal-only multiplicative compensation for automatic font oversampling (issue #4317).
+    /// Composes with the public <see cref="FontScale"/> instead of overwriting it -- the raster
+    /// swaps to a higher-resolution <see cref="BitmapFont"/> under zoom, and this scale shrinks it
+    /// back down to the requested on-screen size, so a caller's own FontScale (including inline
+    /// [FontScale] BBCode runs) keeps working unmodified. Defaults to 1 (no compensation).
+    /// </summary>
+    internal float OversampleCompensationScale
+    {
+        get => mOversampleCompensationScale;
+        set
+        {
+            if (value != mOversampleCompensationScale)
+            {
+                mOversampleCompensationScale = value;
+                UpdateWrappedText();
+                mNeedsBitmapFontRefresh = true;
+                UpdatePreRenderDimensions();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Runs once per frame during this Text's <see cref="IRenderable.PreRender"/>, before texture
+    /// regeneration. Used by <c>TextRuntime</c> (XNALIKE) to automatically re-rasterize at the
+    /// current camera/layer zoom (issue #4317) -- kept here rather than on the runtime because
+    /// PreRender is the render-time hook the layered draw path already calls per visible renderable.
+    /// </summary>
+    internal Action? OnPreRender;
+
+    private float ComposeFontScale(float baseFontScale) =>
+        baseFontScale * SystemManagers.GlobalFontScale * mOversampleCompensationScale;
+
+    private float EffectiveFontScale => ComposeFontScale(mFontScale);
 
     float IText.FontScale => EffectiveFontScale;
 
@@ -902,6 +937,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     void IRenderable.PreRender()
     {
+        OnPreRender?.Invoke();
         TryUpdateTextureToRender();
     }
 
@@ -1186,7 +1222,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                         }
                         else if (variable.VariableName == nameof(FontScale))
                         {
-                            fontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                            fontScale = ComposeFontScale((float)variable.Value);
                         }
                         else if (variable.VariableName == nameof(BitmapFont))
                         {
@@ -1386,7 +1422,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 var variable = substring.Variables[variableIndex];
                 if (variable.VariableName == nameof(FontScale))
                 {
-                    currentFontScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                    currentFontScale = ComposeFontScale((float)variable.Value);
                     lineHeight = System.Math.Max(lineHeight, currentFont.EffectiveLineHeight(currentFontScale, 1));
                     maxBaseline = System.Math.Max(maxBaseline, currentFontScale * currentFont.BaselineY);
                 }
@@ -1690,7 +1726,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 var variable = substring.Variables[variableIndex];
                 if (variable.VariableName == nameof(FontScale))
                 {
-                    runScale = (float)variable.Value * SystemManagers.GlobalFontScale;
+                    runScale = ComposeFontScale((float)variable.Value);
                     runHeightScale = runScale;
                 }
                 else if (variable.VariableName == nameof(BitmapFont))
