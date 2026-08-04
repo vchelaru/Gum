@@ -8,9 +8,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 
 namespace RenderingLibrary.Graphics;
 
+/// <remarks>
+/// The type annotation makes the trimmer keep the public properties of every renderable. The
+/// data-driven variable path (<c>ApplyState</c> → <c>SetProperty</c>) falls back to resolving them
+/// by name through reflection, so they would silently stop applying if they were trimmed.
+/// </remarks>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
 {
     bool IsRenderTarget { get; }

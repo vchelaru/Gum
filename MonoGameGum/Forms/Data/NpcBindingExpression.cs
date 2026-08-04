@@ -24,6 +24,9 @@ internal class NpcBindingExpression : UntypedBindingExpression
     private bool _isUpdatingSource;
     private bool _isLostFocusTrigger;
     
+    [UnconditionalSuppressMessage("Trimming", "IL2072",
+        Justification = "Only value types reach Activator.CreateInstance here, and every value type " +
+            "has a parameterless constructor that the trimmer cannot remove.")]
     public NpcBindingExpression(
         FrameworkElement target,
         string targetPropertyName,

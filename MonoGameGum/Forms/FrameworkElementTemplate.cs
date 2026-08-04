@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,12 @@ public class FrameworkElementTemplate
 {
     Func<FrameworkElement> creationFunc;
 
-    public FrameworkElementTemplate(Type type)
+    /// <summary>
+    /// Creates a template which instantiates <paramref name="type"/> through its parameterless
+    /// constructor by reflection.
+    /// </summary>
+    public FrameworkElementTemplate(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type)
     {
 #if FULL_DIAGNOSTICS
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Text;
@@ -26,7 +27,12 @@ public class VisualTemplate
 
     }
 
-    public VisualTemplate(Type type)
+    /// <summary>
+    /// Creates a template which instantiates <paramref name="type"/> by reflection, preferring its
+    /// (bool, bool) constructor and falling back to its parameterless one.
+    /// </summary>
+    public VisualTemplate(
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
     {
 #if FULL_DIAGNOSTICS
         if (typeof(GraphicalUiElement).IsAssignableFrom(type) == false)

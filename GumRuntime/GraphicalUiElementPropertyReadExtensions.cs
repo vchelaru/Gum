@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Gum.Converters;
 
@@ -248,6 +249,9 @@ public static class GraphicalUiElementPropertyReadExtensions
         return string.IsNullOrEmpty(name) ? null : name;
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2070",
+        Justification = "Best-effort read of a backend renderable's or texture's property. A trimmed " +
+            "property resolves to null, which every caller already treats as 'not available'.")]
     private static PropertyInfo? ResolveReflectedProperty(Type type, string propertyName)
     {
         try

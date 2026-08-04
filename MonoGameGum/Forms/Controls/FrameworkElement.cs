@@ -106,6 +106,12 @@ public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 
 
 
+/// <remarks>
+/// The type annotation makes the trimmer keep the public properties of every derived control.
+/// Binding, behavior-driven property application, and <see cref="RegisterRuntimeProperty(string)"/>
+/// all resolve those properties by name through reflection.
+/// </remarks>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public class FrameworkElement : INotifyPropertyChanged
 {
     #region Fields/Properties
@@ -229,6 +235,9 @@ public class FrameworkElement : INotifyPropertyChanged
             "Assigning a new BindingContext re-resolves every existing binding's VM member by name on " +
             "the new context's type. Those members may be removed under PublishTrimmed if nothing else " +
             "in the app references them.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2112",
+            Justification = "The DynamicallyAccessedMembers annotation on FrameworkElement preserves " +
+                "this setter without calling it. The trim risk is surfaced at the caller instead.")]
         set
         {
             if (Visual != null)
@@ -640,6 +649,10 @@ public class FrameworkElement : INotifyPropertyChanged
         return GetGraphicalUiElementForFrameworkElement(type);
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075",
+        Justification = "Only the obsolete DefaultFormsComponents branch reflects, and its value type " +
+            "is caller-supplied so Gum cannot preserve it. Callers should use DefaultFormsTemplates, " +
+            "which constructs content without reflection.")]
     public static InteractiveGue? GetGraphicalUiElementForFrameworkElement(Type type)
     {
         if (DefaultFormsTemplates.ContainsKey(type))
@@ -655,12 +668,6 @@ public class FrameworkElement : INotifyPropertyChanged
             // whether to create a forms object. Yes, this is less convenient for the user who is manually
             // creating runtimes, but it's worth it for the standard behavior of the user creating instances
             // of Gum objects, and to be able to create Forms objects in Gum tool
-            //
-            // Trim-unsafe (#4116 audit): gumType is an arbitrary caller-supplied type (the value side
-            // of the obsolete DefaultFormsComponents dictionary), so Gum has no way to preserve its
-            // members via its own ILLink.Descriptors.xml. Not fixed: this is the deprecated legacy
-            // path (superseded by DefaultFormsTemplates above), so the trim-safety cost of a caller
-            // still using it is accepted rather than invested in.
             var boolBoolConstructor = gumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
             if(boolBoolConstructor != null)
             {
@@ -2039,12 +2046,15 @@ public class FrameworkElement : INotifyPropertyChanged
         private readonly System.Reflection.PropertyInfo _propertyInfo;
         private object? _savedValue;
 
-        public ReflectionRegistration(object target, string propertyName)
+        public ReflectionRegistration(
+            object target,
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] Type targetType,
+            string propertyName)
         {
             _target = target;
-            _propertyInfo = target.GetType().GetProperty(propertyName)
+            _propertyInfo = targetType.GetProperty(propertyName)
                 ?? throw new ArgumentException(
-                    $"Property '{propertyName}' not found on type '{target.GetType().Name}'.");
+                    $"Property '{propertyName}' not found on type '{targetType.Name}'.");
         }
 
         public void Save() => _savedValue = _propertyInfo.GetValue(_target);
@@ -2058,10 +2068,24 @@ public class FrameworkElement : INotifyPropertyChanged
     /// across <see cref="GraphicalUiElement.RefreshStyles"/> calls. The current
     /// value is captured before state re-application and restored afterward.
     /// </summary>
+    [RequiresUnreferencedCode(
+        "The property is resolved by name on the target's own type, so it may be removed under " +
+        "PublishTrimmed if nothing else in the app references it. The GraphicalUiElement and " +
+        "getter/setter overloads do not have this limitation.")]
     public void RegisterRuntimeProperty(object target, string propertyName)
     {
         _runtimePropertyRegistrations ??= new();
-        _runtimePropertyRegistrations.Add(new ReflectionRegistration(target, propertyName));
+        _runtimePropertyRegistrations.Add(new ReflectionRegistration(target, target.GetType(), propertyName));
+    }
+
+    /// <summary>
+    /// Registers a property on the specified visual for automatic preservation
+    /// across <see cref="GraphicalUiElement.RefreshStyles"/> calls.
+    /// </summary>
+    public void RegisterRuntimeProperty(GraphicalUiElement target, string propertyName)
+    {
+        _runtimePropertyRegistrations ??= new();
+        _runtimePropertyRegistrations.Add(new ReflectionRegistration(target, target.GetType(), propertyName));
     }
 
     /// <summary>
@@ -2070,7 +2094,8 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public void RegisterRuntimeProperty(string propertyName)
     {
-        RegisterRuntimeProperty(this, propertyName);
+        _runtimePropertyRegistrations ??= new();
+        _runtimePropertyRegistrations.Add(new ReflectionRegistration(this, GetType(), propertyName));
     }
 
     /// <summary>
