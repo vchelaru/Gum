@@ -12,8 +12,6 @@ namespace RenderingLibrary
         bool EnableTouchEvents { get; set; }
         IRenderer Renderer { get; }
 
-#if NET6_0_OR_GREATER
         public static ISystemManagers Default { get; set;  }
-#endif
     }
 }

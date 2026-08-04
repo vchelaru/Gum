@@ -42,14 +42,8 @@ public partial class SystemManagers : ISystemManagers
     private double _lastActivityTime = double.NaN;
 
     static bool IsMobile =>
-#if NET6_0_OR_GREATER
         System.OperatingSystem.IsAndroid() ||
             System.OperatingSystem.IsIOS();
-#elif ANDROID || IOS
-    true;
-#else
-    false;
-#endif
 
     public static SystemManagers Default
     {
@@ -138,7 +132,6 @@ public partial class SystemManagers : ISystemManagers
     
     public void Initialize(GraphicsDevice graphicsDevice, bool fullInstantiation = false)
     {
-#if NET6_0_OR_GREATER
         // Install a default TitleContainer-based hook on platforms where files
         // ship inside the app package, but only if the caller hasn't already
         // provided their own hook (e.g. loading Gum assets from a zip). See #2522.
@@ -220,8 +213,6 @@ public partial class SystemManagers : ISystemManagers
 #endif
             };
         }
-
-#endif
 
         mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 

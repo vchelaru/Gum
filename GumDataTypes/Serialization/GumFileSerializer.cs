@@ -14,8 +14,8 @@ namespace Gum.DataTypes;
 
 public static class GumFileSerializer
 {
-    // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
-    // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+    // Gated because this file also compiles into GumDataTypesNet6.csproj (netstandard2.0),
+    // which has no trim attributes.
 #if NET5_0_OR_GREATER
     private const string TrimSuppressionJustification =
         "rootType/T is always a Gum.DataTypes.* save class (ElementSave/BehaviorSave/GumProjectSave/StateSave and friends), " +

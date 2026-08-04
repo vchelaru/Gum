@@ -109,9 +109,7 @@ namespace Gum.DataTypes
             }
 
             var usesTitleContainer = false;
-#if ANDROID || IOS
-            usesTitleContainer = true;
-#elif NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER
             usesTitleContainer = System.OperatingSystem.IsAndroid() ||
                                  System.OperatingSystem.IsIOS() ||
                                  System.OperatingSystem.IsBrowser() ||
@@ -125,18 +123,10 @@ namespace Gum.DataTypes
                 T elementSave = DeserializeElement<T>(linkedName.FullPath, projectVersion);
                 return elementSave;
             }
-#if ANDROID || IOS
-            else if (containedReferenceName != null && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
-#else
             else if (  ((usesTitleContainer && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
-#endif
             {
                 T elementSave = DeserializeElement<T>(
-#if ANDROID || IOS
-                    containedReferenceName.StandardizedCaseSensitive,
-#else
                     containedReferenceName.FullPath,
-#endif
                     projectVersion);
 
                 if (Name != elementSave.Name)
@@ -178,8 +168,8 @@ namespace Gum.DataTypes
             GumProjectSave.StandardJsonExtension
         };
 
-        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
-        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+        // Gated because this file also compiles into GumDataTypesNet6.csproj (netstandard2.0),
+        // which has no trim attributes.
 #if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "T is always an ElementSave subtype, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]

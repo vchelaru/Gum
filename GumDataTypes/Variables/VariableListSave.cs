@@ -132,8 +132,8 @@ namespace Gum.DataTypes.Variables
             set;
         } = new List<T>();
 
-        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
-        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+        // Gated because this file also compiles into GumDataTypesNet6.csproj (netstandard2.0),
+        // which has no trim attributes.
 #if NET5_0_OR_GREATER
         [UnconditionalSuppressMessage("Trimming", "IL2026",
             Justification = "Clones this VariableListSave<T> instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.DataTypes.Variables.*.")]

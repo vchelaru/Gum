@@ -8,7 +8,6 @@ CLAUDE.local.md
 *.user
 Gum/objNetFramework/
 GumCoreShared.shproj.user
-GumDataTypes/objNetFramework/
 packages/
 Samples/MonoGameGumFontLoading/MonoGameGumFontLoading/.config/*
 Samples/MonoGameGumImmediateMode/MonoGameGumImmediateMode/.config/*

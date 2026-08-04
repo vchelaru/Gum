@@ -9,8 +9,8 @@ namespace ToolsUtilities
 {
     public static class ReflectionManager
     {
-        // Gated because this file also compiles into ToolsUtilities.csproj, which targets .NET
-        // Framework 4.7.2 and has no trim attributes.
+        // Gated because this file also compiles into ToolsUtilitiesStandard.csproj (netstandard2.0),
+        // which has no trim attributes.
 #if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(
             "Enumerates every property and field on the container's own type, any of which may be " +

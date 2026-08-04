@@ -5847,7 +5847,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// <c>AddToRoot</c> extension method instead, which adds this element to the GumService root container.
     /// </summary>
 
-#if NET6_0_OR_GREATER
 #if !FRB
     [Obsolete("Use the AddToRoot extension method instead (e.g. myElement.AddToRoot()). " +
         "AddToRoot adds this element to the GumService root container, which is the recommended " +
@@ -5859,7 +5858,6 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         AddToManagers(ISystemManagers.Default, null);
 
     }
-#endif
 
     /// <summary>
     /// Adds this as a renderable to the specified <paramref name="managers"/> on the given

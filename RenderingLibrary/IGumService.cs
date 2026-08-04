@@ -152,13 +152,11 @@ namespace RenderingLibrary
         /// <param name="time">The total elapsed game time, in seconds.</param>
         void ApplyGamePadState(Gum.Input.GamePad gamepad, int index, double time) { }
 
-#if NET6_0_OR_GREATER
         /// <summary>
         /// The current default <see cref="IGumService"/>. Assigned by the
         /// concrete runtime's <c>GumService.Initialize</c> and cleared by
         /// <c>Uninitialize</c>. May be null before initialization.
         /// </summary>
         public static IGumService? Default { get; set; }
-#endif
     }
 }
