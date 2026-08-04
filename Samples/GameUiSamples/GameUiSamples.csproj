@@ -32,9 +32,9 @@
     <Folder Include="Components\HyTaleComponents\Pieces\" />
     <Folder Include="Content\GumProject\Components\FrbClickerComponents\" />
     <Folder Include="DefsData\" />
-	  <None Update=" Content\**\*.*">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+    <None Update="Content\GumProject\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
