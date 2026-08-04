@@ -110,6 +110,8 @@ annotations raise CS8632 there). Put `#nullable enable` at the top of the shared
 annotations stay valid and warning-free in every consumer regardless of their setting. (Issue
 #3218, relocating the render-only `GumService` into WPF/MAUI/Silk hosts with differing settings.)
 
+**Gotcha — never add an extension method to a shared file that a project both links and references.** `RaylibGum.csproj` `<Compile Include>`s files under `RenderingLibrary/` *and* references `GumCommon`, which compiles the same sources, so every type in them exists twice in that build. Duplicate *types* are only a warning (CS0436 — the compiler prefers the source copy); duplicate *extension methods* are a hard CS0121 ambiguity at every call site, and it surfaces in the linking project only, so a green build of the file's home project proves nothing. Use an instance member or an explicitly-qualified static call instead.
+
 ## Mechanical Steps
 
 1. Read all three per-platform source files end to end. Write down every difference.
