@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Reflection;
 
 namespace ToolsUtilities
 {
     public static class ReflectionManager
     {
+        // Gated because this file also compiles into ToolsUtilities.csproj, which targets .NET
+        // Framework 4.7.2 and has no trim attributes.
+#if NET5_0_OR_GREATER
         [RequiresUnreferencedCode(
             "Enumerates every property and field on the container's own type, any of which may be " +
             "removed under PublishTrimmed if nothing else in the app references it.")]
+#endif
         public static List<T> GetMembersOfType<T>(object container)
         {
             Type typeOfT = typeof(T);
