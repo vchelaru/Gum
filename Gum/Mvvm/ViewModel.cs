@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -20,6 +21,17 @@ namespace Gum.Mvvm
 
     }
 
+    /// <summary>
+    /// Base class for view models, providing property storage, change notification, and
+    /// <see cref="DependsOnAttribute"/> relationships.
+    /// </summary>
+    /// <remarks>
+    /// The type annotation makes the trimmer keep every derived view model's properties. The
+    /// constructor scans them for <see cref="DependsOnAttribute"/>, and Gum's string-path binding
+    /// resolves bound members by name, so both would silently stop working if they were trimmed.
+    /// </remarks>
+    [DynamicallyAccessedMembers(
+        DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]
     public class ViewModel : INotifyPropertyChanged
     {
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();

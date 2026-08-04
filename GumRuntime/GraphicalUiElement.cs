@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.ComponentModel;
 using ToolsUtilitiesStandard.Helpers;
@@ -81,6 +82,12 @@ public enum Dock
 /// wrap an underlying rendering object.
 /// GraphicalUiElements are also considered "Visuals" for Forms objects such as Button and TextBox.
 /// </summary>
+/// <remarks>
+/// The type annotation makes the trimmer keep the public properties of every derived runtime type,
+/// including the ones the Gum tool generates. Binding and state application resolve those properties
+/// by name through reflection, so they would silently stop working if they were trimmed.
+/// </remarks>
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyPropertyChanged, IHasRenderableComponent
 {
     #region Enums/Internal Classes

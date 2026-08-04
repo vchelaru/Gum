@@ -249,16 +249,20 @@ public class ListBox : ItemsControl, IInputReceiver
 
 
     [Obsolete("Use VisualTemplate")]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemGumType
     {
         get => ItemGumType;
+        [UnconditionalSuppressMessage("Trimming", "IL2114", Justification = PreservedNotCalledJustification)]
         set => ItemGumType = value;
     }
 
     [Obsolete("Use FrameworkElementTemplate")]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemFormsType
     {
         get { return ItemFormsType; }
+        [UnconditionalSuppressMessage("Trimming", "IL2114", Justification = PreservedNotCalledJustification)]
         set { ItemFormsType = value; }
     }
 
@@ -270,8 +274,11 @@ public class ListBox : ItemsControl, IInputReceiver
     // explicitly. then we'll go to the list box type. This eventually should get
     // marked as obsolete and we should instead go to a VM solution.
     protected bool isItemTypeSetExplicitly = false;
+
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     Type itemFormsType = typeof(ListBoxItem);
 
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     protected Type ItemFormsType
     {
         get => itemFormsType;
@@ -445,9 +452,12 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #endregion
 
+    /// <inheritdoc/>
     public override string DisplayMemberPath
-    { 
+    {
         get => base.DisplayMemberPath;
+        [RequiresUnreferencedCode(DisplayMemberPathTrimMessage)]
+        [UnconditionalSuppressMessage("Trimming", "IL2112", Justification = PreservedNotCalledJustification)]
         set
         {
             if(value != base.DisplayMemberPath)
@@ -624,6 +634,9 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075",
+        Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
+            "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
     private void CallUpdateToObject(object objectToUpdateTo, ListBoxItem listBoxItem)
     {
         if (!string.IsNullOrEmpty(DisplayMemberPath))

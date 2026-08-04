@@ -1,6 +1,7 @@
 ﻿using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Converters;
@@ -89,9 +90,15 @@ public class ComboBox :
     }
 
     string _displayMemberPath;
+    /// <summary>
+    /// The name of a property to read off each item for display, instead of the item's ToString.
+    /// </summary>
     public string DisplayMemberPath
     {
         get => _displayMemberPath;
+        [RequiresUnreferencedCode(ItemsControl.DisplayMemberPathTrimMessage)]
+        [UnconditionalSuppressMessage("Trimming", "IL2112",
+            Justification = ItemsControl.PreservedNotCalledJustification)]
         set
         {
             _displayMemberPath = value;
@@ -119,9 +126,12 @@ public class ComboBox :
     /// type used for each item in the drop-down list.
     /// </summary>
     [Obsolete("Use VisualTemplate")]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemGumType
     {
         get { return listBox.ListBoxItemGumType; }
+        [UnconditionalSuppressMessage("Trimming", "IL2114",
+            Justification = ItemsControl.PreservedNotCalledJustification)]
         set
         {
 #if FULL_DIAGNOSTICS
@@ -139,9 +149,12 @@ public class ComboBox :
     /// type used for each item in the drop-down list.
     /// </summary>
     [Obsolete("Use FrameworkElementTemplate")]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type ListBoxItemFormsType
     {
         get { return listBox.ListBoxItemFormsType; }
+        [UnconditionalSuppressMessage("Trimming", "IL2114",
+            Justification = ItemsControl.PreservedNotCalledJustification)]
         set
         {
 #if FULL_DIAGNOSTICS
@@ -524,6 +537,9 @@ public class ComboBox :
 
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075",
+        Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
+            "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
     public virtual void UpdateToObject(object o)
     {
         if(!string.IsNullOrEmpty(DisplayMemberPath ))

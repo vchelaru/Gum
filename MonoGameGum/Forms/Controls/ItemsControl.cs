@@ -21,15 +21,32 @@ public class ItemsControl : ScrollViewer
 {
     #region Fields/Properties
 
+    // Shared with ComboBox and ListBox, which expose the same reflective member by name.
+    internal const string DisplayMemberPathTrimMessage =
+        "DisplayMemberPath resolves the named property by reflection on each item's own type, so that " +
+        "property may be removed under PublishTrimmed if nothing else in the app references it. Assign " +
+        "a VisualTemplate whose content reads the property directly to avoid reflection entirely.";
+
+    // Preserving a member for reflection does not call it, so its own trim requirement is still
+    // enforced wherever it is actually used.
+    internal const string PreservedNotCalledJustification =
+        "The DynamicallyAccessedMembers annotation on FrameworkElement preserves this member without " +
+        "calling it. The trim requirement is still enforced at real call sites.";
+
     [Obsolete("Use VisualTemplate")]
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     protected Type? ItemGumType { get; set; }
 
+    /// <summary>
+    /// The name of a property to read off each item for display, instead of the item's ToString.
+    /// </summary>
     public virtual string DisplayMemberPath
     {
         get;
+        [RequiresUnreferencedCode(DisplayMemberPathTrimMessage)]
+        [UnconditionalSuppressMessage("Trimming", "IL2112", Justification = PreservedNotCalledJustification)]
         set;
     } = string.Empty;
-
 
     IList? items = new ObservableCollection<object>();
     /// <summary>
@@ -258,6 +275,10 @@ public class ItemsControl : ScrollViewer
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2075",
+        Justification = "Only the obsolete DefaultFormsComponents branch reflects, and its value type " +
+            "is caller-supplied so Gum cannot preserve it. Assigning VisualTemplate constructs content " +
+            "without reflection.")]
     protected virtual InteractiveGue CreateNewVisual(object vm)
     {
         if (VisualTemplate != null || DefaultFormsTemplates.ContainsKey(typeof(ListBoxItem)))

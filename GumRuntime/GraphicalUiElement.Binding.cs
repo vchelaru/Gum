@@ -181,6 +181,9 @@ public partial class GraphicalUiElement
             "Assigning a new BindingContext re-resolves every existing binding's VM member by name " +
             "on the new context's type. Those members may be removed under PublishTrimmed if nothing " +
             "else in the app references them.")]
+        [UnconditionalSuppressMessage("Trimming", "IL2112",
+            Justification = "The DynamicallyAccessedMembers annotation on GraphicalUiElement preserves " +
+                "this setter without calling it. The trim risk is surfaced at the caller instead.")]
         set
         {
             var oldEffectiveBindingContext = BindingContext;
@@ -580,6 +583,9 @@ public partial class GraphicalUiElement
         }
     }
 
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Reached only from UpdateToVmProperty, whose RequiresUnreferencedCode " +
+            "annotation already surfaces name-based VM member resolution at the caller.")]
     private void BindEvent(string vmPropertyName, object? bindingContextObjectToUse, EventInfo foundEvent)
     {
         var binding = vmPropsToUiProps[vmPropertyName];

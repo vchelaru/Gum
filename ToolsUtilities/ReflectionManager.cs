@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace ToolsUtilities
 {
     public static class ReflectionManager
     {
+        [RequiresUnreferencedCode(
+            "Enumerates every property and field on the container's own type, any of which may be " +
+            "removed under PublishTrimmed if nothing else in the app references it.")]
         public static List<T> GetMembersOfType<T>(object container)
         {
             Type typeOfT = typeof(T);
