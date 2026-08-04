@@ -177,6 +177,8 @@ public class Game1 : Game
 
 A freshly-constructed shape renders as a **stroke-only outline**: `IsFilled` defaults to `false`, so the fill is gated off even though `FillColor` defaults to opaque white. `StrokeColor` defaults to white and `StrokeWidth` defaults to `1`. Set `IsFilled = true` to show the fill (assigning `FillColor` alone does not show it), or set `StrokeWidth` to `0` to hide the outline. A `CircleRuntime` is 32 × 32 by default; a `RectangleRuntime` is 50 × 50.
 
+Fill and stroke render independently and simultaneously: `IsFilled` only gates the fill, `StrokeWidth = 0` only gates the stroke, and neither hides the other. There is no exclusive toggle between the two, so a filled shape with a visible border (the common bordered panel / button / card look) works directly, wherever fill is available (see the platform hint below for `CircleRuntime`'s fill on MonoGame/KNI/FNA).
+
 {% hint style="info" %}
 On MonoGame, KNI, and FNA the outline, geometry, and `RectangleRuntime`'s fill (at square corners) render without the shapes package. `CircleRuntime`'s fill, `RectangleRuntime`'s rounded corners, and the richer effects (gradient, drop shadow, dashed stroke, anti-aliasing, `Blend`) only draw once the `Gum.Shapes.<platform>` package is added — otherwise the values round-trip but silently do not draw. Skia and .NET MAUI support the full surface natively; raylib supports a near-full subset (see [Shape Support Across Platforms](../../gum-tool/gum-elements/skia-standard-elements/shapes-platform-support.md)).
 {% endhint %}
