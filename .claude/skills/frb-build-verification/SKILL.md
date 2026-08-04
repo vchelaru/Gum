@@ -15,9 +15,11 @@ This is only doable when a **FlatRedBall checkout exists as a sibling of the Gum
 
 Check the sibling's checked-out branch before trusting the canary — `git status`/`git branch --show-current` there. A stale or already-merged local branch doesn't error, it just silently compiles against old FRB-side source, so a clean canary result proves nothing. The sibling's default branch is `origin/NetStandard`, not `main`/`master`.
 
-## Must run from the PRIMARY checkout, never a worktree
+## Worktree must be a sibling of Gum, not nested under `.claude/worktrees/`
 
-The sibling-relative imports are computed from the csproj location, and the FlatRedBall-side csprojs pull Gum source by relative path into the **primary** Gum checkout (`…\Gum\MonoGameGum\…`). A worktree under `.claude/worktrees/<branch>/` is both nested too deep (so `..\..\..\..\FlatRedBall` resolves to nothing — `MSB4019`) and not the path FRB compiles from. To FRB-verify a branch, **check that branch out in the primary Gum checkout** and build there. Worktrees cannot FRB-verify.
+The sibling-relative imports (`..\..\..\..\FlatRedBall\…`) are computed from the csproj's location. A git worktree is a full checkout, so its internal directory structure mirrors the primary checkout at the same depth — the import resolves correctly as long as the worktree root itself sits at the same level as `Gum\` and `FlatRedBall\` (i.e. directly under the parent `GitHub\` folder). A worktree nested under `.claude/worktrees/<branch>/` is one level too deep, so the import resolves to nowhere (`MSB4019`).
+
+Create issue worktrees as a sibling of the Gum repo (e.g. `<gum-repo>/../gum-wt-<branch>/`), not under `.claude/worktrees/`.
 
 ## Canaries
 
