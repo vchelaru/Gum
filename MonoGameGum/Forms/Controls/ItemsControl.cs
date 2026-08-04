@@ -295,6 +295,17 @@ public class ItemsControl : ScrollViewer
             // vic says - this uses reflection, could be made faster, somehow...
 
             var gumConstructor = listBoxItemGumType.GetConstructor(new[] { typeof(bool), typeof(bool) });
+
+            if (gumConstructor == null)
+            {
+                throw new InvalidOperationException(
+                    $"The item type {listBoxItemGumType.Name} used by this {GetType().Name} has no " +
+                    "(bool fullInstantiation, bool tryCreateFormsObject) constructor, so Gum cannot create items " +
+                    "for it. Under a trimmed or Native AOT build that constructor may have been removed even " +
+                    "though it exists in source - assigning VisualTemplate instead of the obsolete ItemGumType " +
+                    "avoids reflection entirely.");
+            }
+
             var visual = gumConstructor.Invoke(new object[] { true, true }) as InteractiveGue;
             return visual;
         }

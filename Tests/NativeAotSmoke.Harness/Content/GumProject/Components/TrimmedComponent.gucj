@@ -1,0 +1,55 @@
+{
+  "Name": "TrimmedComponent",
+  "BaseType": "Container",
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [
+        {
+          "Name": "Height",
+          "Type": "float",
+          "StandardizedName": null,
+          "Category": "Dimensions",
+          "ExposedAsName": null,
+          "SetsValue": true,
+          "IsFile": false,
+          "IsFont": false,
+          "IsHiddenInPropertyGrid": false,
+          "IsCustomVariable": false,
+          "Description": null,
+          "ValueAsString": null,
+          "ValueAsFloat": 64,
+          "ValueAsInt": null,
+          "ValueAsLong": null,
+          "ValueAsDouble": null,
+          "ValueAsBool": null
+        },
+        {
+          "Name": "Width",
+          "Type": "float",
+          "StandardizedName": null,
+          "Category": "Dimensions",
+          "ExposedAsName": null,
+          "SetsValue": true,
+          "IsFile": false,
+          "IsFont": false,
+          "IsHiddenInPropertyGrid": false,
+          "IsCustomVariable": false,
+          "Description": null,
+          "ValueAsString": null,
+          "ValueAsFloat": 128,
+          "ValueAsInt": null,
+          "ValueAsLong": null,
+          "ValueAsDouble": null,
+          "ValueAsBool": null
+        }
+      ],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

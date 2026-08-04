@@ -2,12 +2,15 @@
 
   <!--
     End-to-end harness for issue #4105 (RegisterRuntimeTypesThroughReflection breaking under Native
-    AOT metadata trimming) and issue #4180 (proving GumProjectSave.Load's JSON path - added for
-    issue #4170/#4171 - also survives a real Native AOT publish, not just `dotnet test`'s JIT path).
+    AOT metadata trimming), issue #4180 (proving GumProjectSave.Load's JSON path - added for
+    issue #4170/#4171 - also survives a real Native AOT publish, not just `dotnet test`'s JIT path),
+    and issue #4318 (the trimmer removing a registered runtime type's (bool, bool) constructor, so
+    the reflective lookup in ElementSaveExtensions fell through and threw).
     This project is NOT part of any solution and is not a unit-test project: the "Native-AOT-Smoke"
     CI job publishes it with PublishAot=true and runs it against Mesa's llvmpipe software GL (no GPU
     on the runners) so GumService.Initialize - including loading the real .gumj project under
-    Content/GumProject/ - is proven against a real Native AOT publish with a genuine GraphicsDevice.
+    Content/GumProject/ and building TrimmedComponent through the registered-runtime-type reflection
+    path - is proven against a real Native AOT publish with a genuine GraphicsDevice.
     See the "Native-AOT-Smoke" job in .github/workflows/build-and-test.yaml.
   -->
   <PropertyGroup>
