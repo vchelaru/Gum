@@ -2,6 +2,9 @@
 using Gum.DataTypes.Serialization.Json;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -495,6 +498,12 @@ public class GumProjectSave
         return Load(fileName, LinkLoadingPreference.PreferLinked, out result);
     }
 
+    // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+    // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Deserializes GumProjectSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
     public static GumProjectSave? Load(string fileName, LinkLoadingPreference linkLoadingPreference, out GumLoadResult result)
     {
         result = new GumLoadResult();
@@ -843,6 +852,10 @@ public class GumProjectSave
     public static bool IsJsonFormat(string fileName) =>
         string.Equals(FileManager.GetExtension(fileName), ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
 
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Serializes this GumProjectSave instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
     public void Save(string fileName, bool saveElements)
     {
         // No content-sniffing between XML and JSON - the target file's own extension decides the

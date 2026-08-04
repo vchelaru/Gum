@@ -3,6 +3,9 @@ using System;
 using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Linq;
 using System.Reflection.Emit;
 using System.Security.Cryptography.X509Certificates;
@@ -962,6 +965,12 @@ public static class StateSaveExtensionMethods
 
     }
 
+    // Gated because this file also compiles into GumRuntime.csproj (net472) and is shared
+    // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "T is always StateSave (no subclasses exist), which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
     public static T Clone<T>(this StateSave whatToClone) where T : StateSave
     {
         T toReturn = FileManager.CloneSaveObjectCast<StateSave, T>(whatToClone);

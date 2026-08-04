@@ -1,5 +1,8 @@
 ﻿using Gum.DataTypes.Serialization.Json;
 using System;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.IO;
 using ToolsUtilities;
 
@@ -175,6 +178,12 @@ namespace Gum.DataTypes
             GumProjectSave.StandardJsonExtension
         };
 
+        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "T is always an ElementSave subtype, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
         public static T DeserializeElement<T>(string filePath, int projectVersion) where T : ElementSave, new()
         {
             // No content-sniffing between XML and JSON - the file's own extension determines the format.

@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Text;
 using System.Reflection;
 using System.IO;
@@ -14,6 +17,13 @@ namespace ToolsUtilities
     /// </summary>
     public static partial class FileManager
     {
+        // Gated because this file also compiles into ToolsUtilities.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        private const string XmlSerializerTrimMessage =
+            "Uses System.Xml.Serialization.XmlSerializer with a type known only at runtime; members of that type may be trimmed if not referenced directly elsewhere.";
+#endif
+
         public const char DefaultSlash = '\\';
         #region Fields
 
@@ -101,6 +111,9 @@ namespace ToolsUtilities
         }
 
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static bool AreSaveObjectsEqual<T>(T first, T second)
         {
             string firstAsString;
@@ -112,6 +125,9 @@ namespace ToolsUtilities
             return firstAsString == secondAsString;
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T CloneSaveObject<T>(T objectToClone)
         {
             string container;
@@ -123,6 +139,9 @@ namespace ToolsUtilities
             return (T)serializer.Deserialize(new StringReader(container));
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T CloneSaveObjectCast<U, T>(U objectToClone)
         {
             string container;
@@ -782,6 +801,9 @@ namespace ToolsUtilities
         }
 
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T XmlDeserialize<T>(string fileName)
         {
             T objectToReturn = default(T);
@@ -889,6 +911,9 @@ namespace ToolsUtilities
             }
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T XmlDeserializeFromStream<T>(Stream stream)
         {
             Type type = typeof(T);
@@ -902,6 +927,9 @@ namespace ToolsUtilities
 
 
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static XmlSerializer GetXmlSerializer(Type type)
         {
             lock (mXmlSerializers)
@@ -937,6 +965,9 @@ namespace ToolsUtilities
         }
 
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static void XmlSerialize<T>(T objectToSerialize, out string stringToSerializeTo)
         {
             MemoryStream memoryStream = new MemoryStream();
@@ -1434,11 +1465,17 @@ namespace ToolsUtilities
             }
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static void XmlSerialize(Type type, object objectToSerialize, string fileName)
         {
             XmlSerialize(objectToSerialize, fileName, GetXmlSerializer(type));
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static void XmlSerialize(object objectToSerialize, string fileName, XmlSerializer serializer)
         {
             // Make sure that the directory for the file exists
@@ -1470,11 +1507,17 @@ namespace ToolsUtilities
             }
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
             XmlSerialize(typeof(T), objectToSerialize, fileName);
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T XmlDeserialize<T>(string fileName, XmlSerializer serializer)
         {
             if (IsMobile)
@@ -1496,12 +1539,18 @@ namespace ToolsUtilities
             }
         }
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T XmlDeserializeFromStream<T>(Stream stream, XmlSerializer serializer)
         {
             return (T)serializer.Deserialize(stream);
         }
 
 
+#if NET5_0_OR_GREATER
+        [RequiresUnreferencedCode(XmlSerializerTrimMessage)]
+#endif
         public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
         {
             T objectToReturn = default(T);

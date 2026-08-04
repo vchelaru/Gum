@@ -2,6 +2,9 @@
 using Gum.DataTypes.Variables;
 using System;
 using System.Collections.Generic;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Linq;
 using System.Xml.Serialization;
 using ToolsUtilities;
@@ -76,6 +79,12 @@ namespace Gum.DataTypes.Behaviors
         }
 
 
+        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "this.GetType() is always BehaviorSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
+#endif
         public void Save(string fileName, bool useCompactFormat = false)
         {
             // No content-sniffing between XML and JSON - the target file's own extension decides

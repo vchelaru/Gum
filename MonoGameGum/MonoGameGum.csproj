@@ -19,6 +19,7 @@
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(IncludeIOS)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-ios</TargetFrameworks>
 		<TargetFrameworks Condition="'$(IncludeAndroid)' == 'true' AND $([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0'))">$(TargetFrameworks);net9.0-android</TargetFrameworks>
+		<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
 		<ImplicitUsings>disable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>

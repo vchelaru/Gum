@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using System.Collections;
+#if NET5_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 using ToolsUtilities;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
@@ -129,6 +132,12 @@ namespace Gum.DataTypes.Variables
             set;
         } = new List<T>();
 
+        // Gated because this file also compiles into GumDataTypes.csproj (net472) and is shared
+        // with FlatRedBall via GumCoreShared.projitems, neither of which has trim attributes.
+#if NET5_0_OR_GREATER
+        [UnconditionalSuppressMessage("Trimming", "IL2026",
+            Justification = "Clones this VariableListSave<T> instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.DataTypes.Variables.*.")]
+#endif
         public new VariableListSave<T> Clone()
         {
             return FileManager.CloneSaveObject<VariableListSave<T>>(this);

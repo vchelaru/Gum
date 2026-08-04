@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using RenderingLibrary.Graphics;
 using Gum.DataTypes;
@@ -15,6 +16,7 @@ public class TypeManager : ITypeManager
         mTypes.Add(type);
     }
 
+    [RequiresUnreferencedCode("Scans all types in the executing, RenderingLibrary, and GumCommon-linked assemblies via Assembly.GetTypes(), which can be incomplete or throw after trimming.")]
     public void Initialize()
     {
         List<Type> allTypes = new List<Type>();
@@ -29,6 +31,7 @@ public class TypeManager : ITypeManager
     }
 
 
+    [RequiresDynamicCode("Resolving a nullable-enum type name calls Type.MakeGenericType, which requires generating new code at runtime.")]
     public Type GetTypeFromString(string typeAsString)
     {
         if (mTypes == null)
