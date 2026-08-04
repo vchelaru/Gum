@@ -40,14 +40,12 @@ public class Game1 : Game
     // This deliberately does NOT demonstrate crisp text under CAMERA zoom -- that's the separate
     // automatic-oversampling demo below (BuildZoomOversamplingDemo / issue #4317).
     private TextRuntime _fractionalFontSizeText = null!;
-    private const float FractionalFontSizeMin = 8f;
-    // Matches the full 8-96 slider range in FontPlaygroundScreen. This text sits at Y=4 in the
-    // reserved top band (see FontPlaygroundScreen.BuildInternal's controlsPanel.Visual.Y=100
-    // comment), so there's ~96px of headroom before its box reaches the controls panel below --
-    // a taller font (bigger FontSize -> taller glyph box) can eat into that margin at the top of
-    // the range. If that becomes visually cramped, lower this or move controlsPanel.Visual.Y down.
-    private const float FractionalFontSizeMax = 96f;
-    private float _fractionalFontSize = 24f;
+    // The base FontSize at camera.Zoom == 1. _fractionalFontSize is derived directly from the SAME
+    // (already-clamped) camera.Zoom each scroll tick -- not tracked as its own independently-clamped
+    // running product -- so it can never drift out of sync with the camera's own 0.25-8x zoom range;
+    // it necessarily stops growing/shrinking exactly when the camera's clamp does.
+    private const float BaseFractionalFontSize = 24f;
+    private float _fractionalFontSize = BaseFractionalFontSize;
 
     public Game1()
     {
@@ -184,8 +182,7 @@ public class Game1 : Game
 
             camera.Zoom = System.Math.Clamp(camera.Zoom * zoomMultiplier, 0.25f, 8f);
 
-            _fractionalFontSize = System.Math.Clamp(
-                _fractionalFontSize * zoomMultiplier, FractionalFontSizeMin, FractionalFontSizeMax);
+            _fractionalFontSize = BaseFractionalFontSize * camera.Zoom;
             ApplyFractionalFontSize();
         }
 
