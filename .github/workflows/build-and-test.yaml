@@ -289,6 +289,11 @@ jobs:
         id: docs-only
         uses: dorny/paths-filter@v3
         with:
+          # predicate-quantifier: every is required for the '!'-prefixed excludes below to
+          # actually exclude. The default ('some'/OR) matches a file against '**' alone and
+          # short-circuits true, so every PR — docs-only or not — reported non-docs=true and
+          # this guard never actually skipped the expensive steps it gates.
+          predicate-quantifier: every
           filters: |
             non-docs:
               - '**'
