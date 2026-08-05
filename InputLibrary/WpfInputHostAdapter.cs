@@ -24,10 +24,13 @@ namespace InputLibrary
             _element = element;
         }
 
-        // Requires _element to be connected to a live PresentationSource (i.e. hosted in a shown
-        // window) to reflect real keyboard focus - not unit-testable without spinning up a real WPF
-        // window, so this is exercised by the manual/runtime check instead.
-        public bool Focused => _element.IsFocused;
+        // IsKeyboardFocused (not IsFocused) is required here: IsFocused reflects WPF's logical
+        // focus-scope state, which does not clear when the containing window loses OS activation,
+        // so clicks would keep registering while another window sits on top. IsKeyboardFocused
+        // tracks real OS keyboard focus. Requires _element to be connected to a live
+        // PresentationSource (i.e. hosted in a shown window) - not unit-testable without spinning
+        // up a real WPF window, so this is exercised by the manual/runtime check instead.
+        public bool Focused => _element.IsKeyboardFocused;
 
         public int Width => (int)_element.ActualWidth;
 
