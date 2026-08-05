@@ -2116,6 +2116,22 @@ public class GraphicalUiElementTests : BaseTestClass
         Should.Throw<InvalidOperationException>(() => leaf.MoveToLayer(null));
     }
 
+    [Fact]
+    public void MoveToLayer_ParentedElement_ShouldThrow()
+    {
+        // MoveToLayer only knows how to re-home a top-level layer member. A GUE that
+        // was instead added as a nested child (root.Children.Add(child)) is still
+        // drawn via its parent's render-tree walk, so adding it to a layer as well
+        // would double-render it. This must fail loud instead of silently doing that.
+        ContainerRuntime root = new();
+        ContainerRuntime child = new();
+        root.Children.Add(child);
+
+        Layer targetLayer = new();
+
+        Should.Throw<InvalidOperationException>(() => child.MoveToLayer(targetLayer));
+    }
+
     #endregion
 
     #region Try Get Property
