@@ -174,6 +174,34 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
     return null;
   }
 
+  function isPreformattedWhiteSpace(whiteSpace) {
+    const ws = String(whiteSpace || '').toLowerCase();
+    return ws === 'pre' || ws === 'pre-wrap' || ws === 'pre-line' || ws === 'break-spaces';
+  }
+
+  // textContent is raw source; collapse only when CSS white-space says so. Without this,
+  // <pre><code> newlines become spaces and Gum soft-wraps at the wrong places
+  // (tabsoverspaces code blocks).
+  function textForWhiteSpace(raw, whiteSpace) {
+    let t = String(raw || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const ws = String(whiteSpace || 'normal').toLowerCase();
+    if (ws === 'pre' || ws === 'pre-wrap' || ws === 'break-spaces') {
+      // Drop a single leading/trailing newline that HTML source formatting injects;
+      // keep interior newlines and runs of spaces/tabs.
+      return t.replace(/^\n/, '').replace(/\n$/, '');
+    }
+    if (ws === 'pre-line') {
+      return t
+        .replace(/[ \t\f\v]+/g, ' ')
+        .replace(/^\n+|\n+$/g, '')
+        .split('\n')
+        .map((line) => line.replace(/ +$/, ''))
+        .join('\n')
+        .trim();
+    }
+    return t.replace(/\s+/g, ' ').trim();
+  }
+
   function shouldRasterTextHeavyCell(el) {
     const tag = String(el.tagName).toUpperCase();
     const text = (el.innerText || '').replace(/\s+/g, ' ').trim();
@@ -184,6 +212,42 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       // Icon / logo cells with a short alt caption stay structured Sprites.
       if (imgs.length > 0 && text.length < 80) return false;
       return true;
+    }
+    // Multi-line preformatted blocks: extract used to collapse newlines to spaces, and
+    // Gum Text soft-wrap ≠ Chromium pre layout (tabsoverspaces <pre><code>). Bake the
+    // host so indentation and line breaks match Chromium paint.
+    // Only <pre> or leaf/phrasing-only hosts — not large layout wrappers that inherit
+    // white-space:pre (pastebin's per-line / full-paste containers).
+    {
+      const csPre = getComputedStyle(el);
+      const preWs = isPreformattedWhiteSpace(csPre.whiteSpace);
+      if (tag === 'PRE' || preWs) {
+        let leafLike = tag === 'PRE';
+        if (!leafLike && preWs) {
+          const kids = Array.from(el.children).filter(isVisible);
+          leafLike = kids.length === 0
+            || kids.every((c) => {
+              const t = String(c.tagName).toUpperCase();
+              return PHRASING.has(t) || t === 'BR' || t === 'WBR';
+            });
+        }
+        if (leafLike) {
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+          // getClientRects returns one box per inline fragment — many spans on one
+          // visual line (pastebin highlighter) must not count as multi-line.
+          const lineYs = [];
+          for (const r of rects) {
+            if (!lineYs.some((y) => Math.abs(y - r.y) < 1)) lineYs.push(r.y);
+          }
+          const nonemptyLines = String(el.innerText || '')
+            .replace(/\r/g, '')
+            .split('\n')
+            .filter((l) => l.length > 0);
+          if (lineYs.length >= 2 || nonemptyLines.length >= 2) return true;
+        }
+      }
     }
     // Custom web-font multi-line blocks (Pocket Graphik/Doyle): KernSmith metrics wrap
     // differently than Chromium, so every line is a pixel miss even when glyphs look fine.
@@ -584,7 +648,7 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
           ownText = String(el.value || '').replace(/\s+/g, ' ').trim();
         }
       } else {
-        ownText = el.textContent.replace(/\s+/g, ' ').trim();
+        ownText = textForWhiteSpace(el.textContent, cs.whiteSpace);
       }
       if (ownText) {
         ownText = normalizeForBitmapFont(applyTextTransform(ownText, cs.textTransform));

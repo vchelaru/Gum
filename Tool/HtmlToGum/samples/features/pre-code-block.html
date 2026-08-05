@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Preformatted code block</title>
+  <!--
+    Landmine: <pre><code> must keep Chromium line breaks / indentation.
+    Collapsing whitespace to spaces makes Gum soft-wrap mid-token
+    (tabsoverspaces C# samples). Multi-line pre hosts are rasterized.
+  -->
+  <style>
+    html, body { margin: 0; background: #fff; }
+    main { padding: 16px; font: 16px/1.4 Arial, sans-serif; color: #222; }
+    p { margin: 0 0 12px; }
+    code.inline {
+      font: 14px Consolas, monospace;
+      background: #efefef;
+      padding: 1px 4px;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      background: #f4f4f4;
+      overflow: auto;
+      font: 14px/1.35 Consolas, monospace;
+    }
+    pre code { background: transparent; padding: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <p>Property <code class="inline">A</code> vs <code class="inline">B</code>:</p>
+    <pre id="sample"><code>public class C
+{
+    public Foo A { get; } = new Foo();
+    public Foo B => new Foo();
+}
+</code></pre>
+  </main>
+</body>
+</html>

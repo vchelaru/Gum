@@ -40,6 +40,17 @@
       "maxPct": 5,
       "maxDeltaPct": 2,
       "landmine": "background-size:auto + position natural placement"
+    },
+    {
+      "id": "pre-code-block",
+      "html": "../samples/features/pre-code-block.html",
+      "selector": "body",
+      "width": 800,
+      "height": 280,
+      "baselinePct": 1.25,
+      "maxPct": 4,
+      "maxDeltaPct": 1.5,
+      "landmine": "multi-line pre/code must keep Chromium line breaks"
     }
   ],
   "frozen": [

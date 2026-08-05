@@ -297,3 +297,49 @@ test('extractBoxTree: transparent body inherits html canvas color, not white', a
     await browser.close();
   }
 });
+
+// Multi-line <pre><code>: whitespace collapse turned newlines into spaces and Gum soft-
+// wrapped mid-token (tabsoverspaces). Bake the pre host so Chromium line breaks stick.
+test('extractBoxTree: multi-line pre/code is rasterized whole', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <pre id="block" style="margin:0;padding:8px;background:#f4f4f4;font:14px Consolas,monospace;"><code>public class C
+{
+    public Foo A { get; } = new Foo();
+    public Foo B => new Foo();
+}
+</code></pre>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#block');
+    await page.close();
+    assert.equal(tree.tag, 'pre');
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal(tree.style?.rasterWholeSubtree, true);
+    assert.equal(tree.children?.length ?? 0, 0);
+    assert.equal(tree.text || '', '');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: preformatted leaf keeps newlines when not rasterized', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    // Single visual line — no raster — but spaces must not collapse away.
+    await page.setContent(`
+      <code id="one" style="white-space:pre;font:14px Consolas,monospace;">a  b</code>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#one');
+    await page.close();
+    assert.equal(tree.tag, 'code');
+    assert.equal(tree.style?.needsRaster, false);
+    assert.equal(tree.text, 'a  b');
+  } finally {
+    await browser.close();
+  }
+});

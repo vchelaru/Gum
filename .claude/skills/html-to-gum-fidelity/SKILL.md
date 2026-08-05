@@ -29,6 +29,8 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **Custom-font multi-line `<p>`/`<h*>`:** BitmapFont wrap ≠ Chromium for faces like Graphik/Doyle (Pocket). `shouldRasterTextHeavyCell` also bakes multi-line blocks (≥2 client rects) whose first `font-family` is not a system face, narrow (`≤280px`) wrapping `<a>`/`<li>` even in Arial (TL Community News), and centered multi-line system-font `<p>` marketing copy (Pi-hole). Wide left-aligned system-font article prose (HN / Wikipedia) stays structured Text.
 
+**Multi-line `<pre>` / `white-space:pre*`:** leaf extract used to collapse all whitespace (`/\s+/g` → space), so indented code became one soft-wrapped line and Gum broke mid-token (`new` / `Foo();` on tabsoverspaces). Prefer baking multi-line preformatted hosts (`shouldRasterTextHeavyCell` on `<pre>` or phrasing-only pre hosts, counting distinct client-rect Ys — not raw rect count, or pastebin highlighter spans false-trigger). When structured, `textForWhiteSpace` must preserve newlines/spaces for `pre` / `pre-wrap` / `break-spaces` / `pre-line`.
+
 **Font Awesome / icon-font `::before`:** glyphs use `content:"\uf0xx"` with `width/height:auto` (no border/bg box). `needsRasterPaint` must treat icon-font families and Private Use Area content as pseudo chrome — otherwise Gum draws empty bordered squares (Embrace the Red header social icons).
 
 **Empty-content pseudo backdrops:** overlays often use `::before { content:""; inset:0; background:…; opacity:… }` (Pi-hole hero tint). Do not discard the pseudo because its unquoted content is empty. Bake the host chrome (background + pseudo) while hiding descendants so nav/text remain structured; icon/glyph pseudos still bake the whole host.
