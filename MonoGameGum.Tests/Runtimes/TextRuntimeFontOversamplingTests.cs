@@ -516,6 +516,83 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4309 (discontinuity found via manual test): the jitter-elimination test above uses a fake
+    // creator whose native/hinted advance and design-metrics advance happen to agree exactly at the
+    // nominal size (both 20px) -- that coincidence hid a real bug. A real font's hinted native
+    // measurement and its unhinted design-unit measurement are NOT guaranteed to agree, so if the
+    // measurement font is only wired up once oversampling first activates, there's a visible jump/shrink
+    // at that exact moment (reported: text briefly overflows its box right as zoom starts). The fix is
+    // for the measurement font to be in effect from the very first (native, zoom==1) measurement, not
+    // just once oversampling kicks in.
+    [Fact]
+    public void FontSize_AtNativeZoom_MeasuresAgainstDesignMetricsFromTheStart_NoDiscontinuityWhenOversamplingActivates()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new HintingMismatchFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+
+            // Design metrics: 2 chars * (1000 design units * 20/1000 scale) = 40. The native BitmapFont's
+            // own hinted xadvance (24/char = 48 total) must NOT be what's measured, even though no zoom
+            // has happened yet -- that's exactly the discontinuity bug.
+            float widthAtNativeZoom = text.WrappedTextWidth;
+
+            textRuntime.RegenerateOversampledFont(2.5f);
+            float widthAfterOversamplingActivates = text.WrappedTextWidth;
+
+            widthAtNativeZoom.ShouldBe(40f, tolerance: 0.01f,
+                "because the measurement font must be in effect from the start, not just once oversampling activates");
+            widthAfterOversamplingActivates.ShouldBe(widthAtNativeZoom, tolerance: 0.01f,
+                "because there must be no discontinuity the moment oversampling first kicks in");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Native/hinted advance (24px/char) deliberately does NOT match what TryGetDesignMetrics below
+    // scales to (20px/char) -- simulates a real rasterizer's hinting producing a different result than
+    // the font's plain unhinted design-unit data would.
+    private sealed class HintingMismatchFontCreator : IInMemoryFontCreator
+    {
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            const int xadvance = 24;
+            string fontData =
+$@"info face=""Arial"" size=-{bmfcSave.FontSize} bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={bmfcSave.FontSize} base={bmfcSave.FontSize} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=2
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontData);
+            font.SetFontPattern(256, 256);
+            return font;
+        }
+
+        public FontDesignMetrics? TryGetDesignMetrics(BmfcSave bmfcSave)
+        {
+            Dictionary<int, GlyphDesignMetrics> glyphMetrics = new()
+            {
+                ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+            };
+            return new FontDesignMetrics(unitsPerEm: 1000, lineHeight: 1000, glyphMetrics: glyphMetrics);
+        }
+    }
+
     [Fact]
     public void RegenerateOversampledFont_WhenDesignMetricsUnavailable_FallsBackToMeasuringDisplayFont()
     {

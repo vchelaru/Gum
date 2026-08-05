@@ -696,10 +696,6 @@ public class TextRuntime : InteractiveGue
 
         var bmfcSave = new BmfcSave();
         CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
-        // bmfcSave.FontSize is still the nominal FontSize here (CopyFontGenerationFieldsTo's default) --
-        // design metrics are requested at the NOMINAL size, before it's overwritten below for the
-        // raster/display font.
-        FetchMeasurementFontIfNeeded(bmfcSave);
         bmfcSave.FontSize = rasterFontSize;
 
         var font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
@@ -710,7 +706,10 @@ public class TextRuntime : InteractiveGue
 
         ContainedText.BitmapFont = font;
         ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        ContainedText.MeasurementFont = _cachedMeasurementFont;
+        // Usually already populated by EnsureMeasurementFont (called from the font-property-resolution
+        // choke point, before any zoom ever happens) -- calling it again here is a cheap no-op guard for
+        // callers that invoke RegenerateOversampledFont directly, without going through that cascade.
+        EnsureMeasurementFont();
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
@@ -726,28 +725,45 @@ public class TextRuntime : InteractiveGue
     BitmapFont? _cachedMeasurementFont;
 
     /// <summary>
-    /// Fetches and builds <see cref="_cachedMeasurementFont"/> -- issue #4309's stable, never-regenerated
-    /// measurement font, built from unscaled design-unit metrics at the NOMINAL <see cref="FontSize"/> --
-    /// at most once per Font/FontSize/Bold/Italic identity. The display raster changes every zoom tick
-    /// (<see cref="RegenerateOversampledFont"/> runs continuously under camera zoom), but the measurement
-    /// font never needs to: it stays valid until <see cref="ResetAutomaticOversamplingState"/> clears the
-    /// cache in response to a font-property change. Leaves the cache at null (falls back to measuring the
-    /// live display font, i.e. today's behavior) when <see cref="IInMemoryFontCreator.TryGetDesignMetrics"/>
-    /// is unsupported or returns null -- e.g. a plain system-installed font family, a known gap (see the
+    /// Fetches, builds, and assigns <see cref="Text.MeasurementFont"/> -- issue #4309's stable,
+    /// never-regenerated measurement font, built from unscaled design-unit metrics at the NOMINAL
+    /// <see cref="FontSize"/> -- at most once per Font/FontSize/Bold/Italic identity. Called both from
+    /// the font-property-resolution choke point (<see cref="CustomSetPropertyOnRenderable.UpdateToFontValues"/>,
+    /// so the measurement font is in effect from the very first, native-zoom measurement) and from
+    /// <see cref="RegenerateOversampledFont"/> (a no-op guard there once the former has already run).
+    /// A real font's hinted native <see cref="BitmapFont"/> measurement and its unhinted design-unit
+    /// measurement are not guaranteed to agree -- wiring this up only once oversampling first activates
+    /// (rather than from the start) produced a visible jump/shrink at that exact moment.
+    /// <para>
+    /// The display raster changes every zoom tick, but the measurement font never needs to: it stays
+    /// valid until <see cref="ResetAutomaticOversamplingState"/> clears the cache in response to a
+    /// font-property change. Leaves the cache at null (falls back to measuring the live display font,
+    /// i.e. today's original behavior) when <see cref="IInMemoryFontCreator.TryGetDesignMetrics"/> is
+    /// unsupported or returns null -- e.g. a plain system-installed font family, a known gap (see the
     /// KernSmith.GumCommon.GumFontGenerator.ReadDesignMetrics doc comment).
+    /// </para>
     /// </summary>
-    void FetchMeasurementFontIfNeeded(BmfcSave nominalBmfcSave)
+    internal void EnsureMeasurementFont()
     {
-        if (_measurementFontFetchAttempted)
+        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
         {
             return;
         }
 
-        var designMetrics = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryGetDesignMetrics(nominalBmfcSave);
-        _cachedMeasurementFont = designMetrics != null
-            ? BitmapFont.CreateFromDesignMetrics(designMetrics, FontSize)
-            : null;
-        _measurementFontFetchAttempted = true;
+        if (!_measurementFontFetchAttempted)
+        {
+            var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+            var bmfcSave = new BmfcSave();
+            CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
+
+            var designMetrics = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryGetDesignMetrics(bmfcSave);
+            _cachedMeasurementFont = designMetrics != null
+                ? BitmapFont.CreateFromDesignMetrics(designMetrics, FontSize)
+                : null;
+            _measurementFontFetchAttempted = true;
+        }
+
+        ContainedText.MeasurementFont = _cachedMeasurementFont;
     }
 
     float _lastAutoOversampleRatio = 1f;
