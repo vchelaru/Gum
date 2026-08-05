@@ -704,12 +704,10 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
-        ContainedText.BitmapFont = font;
+        // Issue #4309: pins the OUTGOING (native) font as the measurement source, if nothing is pinned
+        // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
+        ContainedText.SetOversampledDisplayFont(font);
         ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
-        // Usually already populated by EnsureMeasurementFont (called from the font-property-resolution
-        // choke point, before any zoom ever happens) -- calling it again here is a cheap no-op guard for
-        // callers that invoke RegenerateOversampledFont directly, without going through that cascade.
-        EnsureMeasurementFont();
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
@@ -719,51 +717,6 @@ public class TextRuntime : InteractiveGue
         UpdateLayout();
 
         return true;
-    }
-
-    bool _measurementFontFetchAttempted;
-    BitmapFont? _cachedMeasurementFont;
-
-    /// <summary>
-    /// Fetches, builds, and assigns <see cref="Text.MeasurementFont"/> -- issue #4309's stable,
-    /// never-regenerated measurement font, built from unscaled design-unit metrics at the NOMINAL
-    /// <see cref="FontSize"/> -- at most once per Font/FontSize/Bold/Italic identity. Called both from
-    /// the font-property-resolution choke point (<see cref="CustomSetPropertyOnRenderable.UpdateToFontValues"/>,
-    /// so the measurement font is in effect from the very first, native-zoom measurement) and from
-    /// <see cref="RegenerateOversampledFont"/> (a no-op guard there once the former has already run).
-    /// A real font's hinted native <see cref="BitmapFont"/> measurement and its unhinted design-unit
-    /// measurement are not guaranteed to agree -- wiring this up only once oversampling first activates
-    /// (rather than from the start) produced a visible jump/shrink at that exact moment.
-    /// <para>
-    /// The display raster changes every zoom tick, but the measurement font never needs to: it stays
-    /// valid until <see cref="ResetAutomaticOversamplingState"/> clears the cache in response to a
-    /// font-property change. Leaves the cache at null (falls back to measuring the live display font,
-    /// i.e. today's original behavior) when <see cref="IInMemoryFontCreator.TryGetDesignMetrics"/> is
-    /// unsupported or returns null -- e.g. a plain system-installed font family, a known gap (see the
-    /// KernSmith.GumCommon.GumFontGenerator.ReadDesignMetrics doc comment).
-    /// </para>
-    /// </summary>
-    internal void EnsureMeasurementFont()
-    {
-        if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
-        {
-            return;
-        }
-
-        if (!_measurementFontFetchAttempted)
-        {
-            var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
-            var bmfcSave = new BmfcSave();
-            CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
-
-            var designMetrics = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryGetDesignMetrics(bmfcSave);
-            _cachedMeasurementFont = designMetrics != null
-                ? BitmapFont.CreateFromDesignMetrics(designMetrics, FontSize)
-                : null;
-            _measurementFontFetchAttempted = true;
-        }
-
-        ContainedText.MeasurementFont = _cachedMeasurementFont;
     }
 
     float _lastAutoOversampleRatio = 1f;
@@ -797,15 +750,6 @@ public class TextRuntime : InteractiveGue
         {
             return false;
         }
-
-        // Issue #4309: retried every frame (cheap -- a no-op once already resolved), not just once at
-        // font-property-resolution time. UseFontOversampling can be flipped on at any point in a
-        // project's lifecycle, independent of when a given Text's font was last resolved -- gating this
-        // solely on the font-property choke point left a Text permanently stuck measuring via the
-        // native BitmapFont if the flag happened to be off at that one moment. This hook already runs
-        // every frame for every visible Text, so piggybacking here makes it self-healing the same way
-        // the raster-regeneration decision below already is.
-        EnsureMeasurementFont();
 
         // Regenerating below native resolution isn't this feature's job -- only oversample, never
         // undersample.
@@ -852,15 +796,7 @@ public class TextRuntime : InteractiveGue
     /// stale (issue #4317). <see cref="Text.OversampleCompensationScale"/> itself is reset by the
     /// caller directly, since it lives on the renderable that caller already has a reference to.
     /// </summary>
-    internal void ResetAutomaticOversamplingState()
-    {
-        _lastAutoOversampleRatio = 1f;
-        // Issue #4309: the cached measurement font was built for the OLD Font/FontSize/Bold/Italic
-        // identity -- clear it so the next RegenerateOversampledFont call fetches fresh design metrics
-        // instead of measuring against stale-but-still-non-null cached data.
-        _measurementFontFetchAttempted = false;
-        _cachedMeasurementFont = null;
-    }
+    internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
 #endif
 #endif
 

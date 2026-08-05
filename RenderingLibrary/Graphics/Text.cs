@@ -617,15 +617,45 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (mBitmapFont != value)
             {
-                mBitmapFont = value;
-
-                UpdateWrappedText();
-                UpdatePreRenderDimensions();
-
-                mNeedsBitmapFontRefresh = true;
+                // Issue #4309: a plain assignment is a fresh font resolution (Font/FontSize/Bold/Italic
+                // re-resolved), establishing a new measurement baseline -- clear any prior oversample
+                // pin. An oversample-driven display swap goes through SetOversampledDisplayFont
+                // instead, which pins the outgoing value here rather than clearing it.
+                MeasurementFont = null;
+                AssignBitmapFontAndRefresh(value);
             }
             //UpdateTextureToRender();
         }
+    }
+
+    /// <summary>
+    /// Swaps in <paramref name="oversampledFont"/> as the DISPLAY font for camera-zoom oversampling
+    /// (issue #4309), pinning the outgoing (native) <see cref="BitmapFont"/> as <see cref="MeasurementFont"/>
+    /// first if nothing is pinned yet. Layout keeps measuring against whatever was actually being shown
+    /// up to this point, instead of jumping to a different raster size's own (differently-hinted)
+    /// measurement -- a rasterized font's hinted glyph metrics are not exact multiples of each other
+    /// across raster sizes, so re-measuring against each new oversampled raster in turn is what produced
+    /// the jitter this fix eliminates.
+    /// </summary>
+    internal void SetOversampledDisplayFont(BitmapFont oversampledFont)
+    {
+        if (MeasurementFont == null)
+        {
+            MeasurementFont = mBitmapFont;
+        }
+
+        if (mBitmapFont != oversampledFont)
+        {
+            AssignBitmapFontAndRefresh(oversampledFont);
+        }
+    }
+
+    private void AssignBitmapFontAndRefresh(BitmapFont value)
+    {
+        mBitmapFont = value;
+        UpdateWrappedText();
+        UpdatePreRenderDimensions();
+        mNeedsBitmapFontRefresh = true;
     }
 
     public ObservableCollection<IRenderableIpso> Children

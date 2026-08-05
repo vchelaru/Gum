@@ -2463,12 +2463,6 @@ public partial class CustomSetPropertyOnRenderable
             asText.OversampleCompensationScale = 1f;
         }
         textRuntime.ResetAutomaticOversamplingState();
-        // Issue #4309: wire up the design-metrics measurement font here, at native/nominal font
-        // resolution -- not only once oversampling first activates (RegenerateOversampledFont also
-        // calls this, as a no-op guard once this has already run). A real font's hinted native
-        // BitmapFont measurement and its unhinted design-unit measurement aren't guaranteed to agree,
-        // so deferring this until zoom changes produced a visible jump/shrink at that exact moment.
-        textRuntime.EnsureMeasurementFont();
 #endif
 
         BitmapFont font = null;
