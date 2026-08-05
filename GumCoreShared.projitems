@@ -159,6 +159,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\IPositionedSizedObject.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\ISystemManagers.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\FloatRectangle.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\FilledStrokedRectangle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\Line.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineCircle.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Math\Geometry\LineGrid.cs" />
