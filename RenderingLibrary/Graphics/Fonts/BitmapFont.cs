@@ -1,5 +1,6 @@
 ﻿using Gum.Graphics;
 using Microsoft.Xna.Framework.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using RenderingLibrary.Math;
 using RenderingLibrary.Math.Geometry;
 using System;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using ToolsUtilities;
 using BlendState = Gum.BlendState;
@@ -316,6 +318,70 @@ public class BitmapFont : IDisposable
 
         SetFontPattern();
     }
+
+    /// <summary>
+    /// Builds a measurement-only <see cref="BitmapFont"/> directly from unscaled font design-unit
+    /// metrics (issue #4309) -- no texture pages, no rasterization. Values scale from design units
+    /// to pixels by exact multiplication (<c>value * fontSizeInPixels / UnitsPerEm</c>), so unlike
+    /// a rasterized <see cref="BitmapFont"/> (whose hinted glyph metrics are independently
+    /// pixel-snapped per raster size) this measurement stays exactly proportional across any
+    /// requested pixel size. Intended as the stable "measurement font" for a <see cref="Text"/>
+    /// whose display font is being oversampled under camera zoom, so layout never depends on the
+    /// display raster's own rounding.
+    /// </summary>
+    /// <remarks>
+    /// KernSmith's design metrics do not include right-side-bearing (that needs glyf/loca bbox
+    /// parsing, which is not exposed), so each glyph's ink width is approximated as
+    /// <c>AdvanceWidth - LeftSideBearing</c> (right-side-bearing treated as 0). That makes
+    /// <see cref="HorizontalMeasurementStyle.TrimRight"/> and <see cref="HorizontalMeasurementStyle.Full"/>
+    /// measure identically for a design-metrics-built font, since XOffset + Width always lands
+    /// exactly on XAdvance.
+    /// </remarks>
+    /// <returns>Null if <paramref name="designMetrics"/> or <paramref name="fontSizeInPixels"/> is invalid.</returns>
+    internal static BitmapFont? CreateFromDesignMetrics(FontDesignMetrics designMetrics, float fontSizeInPixels)
+    {
+        if (designMetrics.UnitsPerEm <= 0 || fontSizeInPixels <= 0)
+        {
+            return null;
+        }
+
+        float scale = fontSizeInPixels / designMetrics.UnitsPerEm;
+        int lineHeightInPixels = ToDesignMetricsPixels(designMetrics.LineHeight, scale);
+
+        XElement root = new XElement("font",
+            new XElement("info", new XAttribute("size", (int)MathF.Round(fontSizeInPixels))),
+            // "base" (baseline-from-top) isn't tracked separately in FontDesignMetrics -- this font
+            // is measurement-only and never drawn with, so an approximate base is harmless.
+            new XElement("common",
+                new XAttribute("lineHeight", lineHeightInPixels),
+                new XAttribute("base", lineHeightInPixels)),
+            new XElement("pages", new XElement("page", new XAttribute("id", 0), new XAttribute("file", ""))),
+            new XElement("chars",
+                // Ascending by codepoint: SetFontPattern sizes mCharacterInfo off Chars.LastOrDefault()
+                // (the array is a lookup by codepoint, not a general list), which assumes -- true of
+                // real BMFont output, not guaranteed for a Dictionary's enumeration order -- that Chars
+                // is already sorted ascending.
+                designMetrics.GlyphMetrics.OrderBy(pair => pair.Key).Select(pair =>
+                {
+                    int advance = ToDesignMetricsPixels(pair.Value.AdvanceWidth, scale);
+                    int leftBearing = ToDesignMetricsPixels(pair.Value.LeftSideBearing, scale);
+                    int inkWidth = System.Math.Max(0, advance - leftBearing);
+                    return new XElement("char",
+                        new XAttribute("id", pair.Key),
+                        new XAttribute("x", 0),
+                        new XAttribute("y", 0),
+                        new XAttribute("width", inkWidth),
+                        new XAttribute("height", 0),
+                        new XAttribute("xoffset", leftBearing),
+                        new XAttribute("yoffset", 0),
+                        new XAttribute("xadvance", advance),
+                        new XAttribute("page", 0));
+                })));
+
+        return new BitmapFont(Array.Empty<Texture2D>(), new XDocument(root).ToString());
+    }
+
+    private static int ToDesignMetricsPixels(int designUnits, float scale) => (int)MathF.Round(designUnits * scale);
 
 
 

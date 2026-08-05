@@ -204,6 +204,34 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
+    BitmapFont? mMeasurementFont;
+
+    /// <summary>
+    /// Optional font used for layout measurement (<see cref="WrappedText"/>/<see cref="WrappedTextWidth"/>/
+    /// <see cref="WrappedTextHeight"/>/word-wrap) instead of <see cref="BitmapFont"/> (issue #4309). When
+    /// set, <see cref="BitmapFont"/> is still used to draw glyphs, but never to measure them -- so layout
+    /// stays stable even while <see cref="BitmapFont"/> is being regenerated at different raster sizes
+    /// under camera-zoom oversampling, whose hinted glyph metrics are not exact multiples of each other
+    /// across raster sizes. Null (the default) falls back to measuring <see cref="BitmapFont"/> directly,
+    /// i.e. today's unchanged behavior.
+    /// </summary>
+    internal BitmapFont? MeasurementFont
+    {
+        get => mMeasurementFont;
+        set
+        {
+            if (mMeasurementFont != value)
+            {
+                mMeasurementFont = value;
+                UpdateWrappedText();
+                mNeedsBitmapFontRefresh = true;
+                UpdatePreRenderDimensions();
+            }
+        }
+    }
+
+    BitmapFont? EffectiveMeasurementFont => mMeasurementFont ?? mBitmapFont;
+
     /// <summary>
     /// Runs once per frame during this Text's <see cref="IRenderable.PreRender"/>, before texture
     /// regeneration. Used by <c>TextRuntime</c> (XNALIKE) to automatically re-rasterize at the
@@ -216,6 +244,22 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         baseFontScale * SystemManagers.GlobalFontScale * mOversampleCompensationScale;
 
     private float EffectiveFontScale => ComposeFontScale(mFontScale);
+
+    /// <summary>
+    /// The scale to apply to a layout-facing size readback (<see cref="WrappedTextWidth"/>/
+    /// <see cref="WrappedTextHeight"/>/<see cref="EffectiveWidth"/>/<see cref="EffectiveHeight"/>),
+    /// as opposed to <see cref="EffectiveFontScale"/>'s render-facing scale (issue #4309). When
+    /// <see cref="MeasurementFont"/> is set, <c>mPreRenderWidth</c>/<c>mPreRenderHeight</c> were
+    /// already measured at the nominal pixel size against that stable font -- multiplying by the full
+    /// <see cref="EffectiveFontScale"/> (which still includes <see cref="OversampleCompensationScale"/>,
+    /// needed to shrink the physically-larger oversampled <see cref="BitmapFont"/> back down for
+    /// drawing) would double-shrink an already-correctly-sized measurement. Falls back to
+    /// <see cref="EffectiveFontScale"/> when there is no separate measurement font, i.e. today's
+    /// unchanged behavior.
+    /// </summary>
+    private float MeasurementFontScale => mMeasurementFont != null
+        ? mFontScale * SystemManagers.GlobalFontScale
+        : EffectiveFontScale;
 
     float IText.FontScale => EffectiveFontScale;
 
@@ -258,7 +302,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (mPreRenderWidth != null)
             {
-                return mPreRenderWidth.Value * EffectiveFontScale;
+                return mPreRenderWidth.Value * MeasurementFontScale;
             }
             else if (mTextureToRender?.Width > 0)
             {
@@ -277,7 +321,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             if (mPreRenderHeight != null)
             {
-                return mPreRenderHeight.Value * EffectiveFontScale;
+                return mPreRenderHeight.Value * MeasurementFontScale;
             }
             else if (mTextureToRender?.Height > 0)
             {
@@ -452,7 +496,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             // priority to the prerendered values as they may be more up-to-date.
             else if (mPreRenderWidth.HasValue)
             {
-                return mPreRenderWidth.Value * EffectiveFontScale;
+                return mPreRenderWidth.Value * MeasurementFontScale;
             }
             else if (mTextureToRender != null)
             {
@@ -487,7 +531,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             // See EffectiveWidth for an explanation of why the prerendered values need to come first
             else if (mPreRenderHeight.HasValue)
             {
-                return mPreRenderHeight.Value * EffectiveFontScale;
+                return mPreRenderHeight.Value * MeasurementFontScale;
             }
             else if (mTextureToRender != null)
             {
@@ -864,9 +908,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// <returns></returns>
     public float MeasureString(string whatToMeasure)
     {
-        if (this.BitmapFont != null)
+        if (EffectiveMeasurementFont != null)
         {
-            return BitmapFont.MeasureString(whatToMeasure);
+            return EffectiveMeasurementFont.MeasureString(whatToMeasure);
         }
         else if (DefaultBitmapFont != null)
         {
@@ -891,9 +935,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
     {
-        if (this.BitmapFont != null)
+        if (EffectiveMeasurementFont != null)
         {
-            return BitmapFont.MeasureString(whatToMeasure, style);
+            return EffectiveMeasurementFont.MeasureString(whatToMeasure, style);
         }
         else if (DefaultBitmapFont != null)
         {
@@ -918,7 +962,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public float GetCharacterAdvance(char character)
     {
-        var bitmapFontToUse = BitmapFont ?? DefaultBitmapFont;
+        var bitmapFontToUse = EffectiveMeasurementFont ?? DefaultBitmapFont;
         if (bitmapFontToUse == null)
         {
             return MeasureString(character.ToString());
@@ -1626,7 +1670,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    mBitmapFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
+                    EffectiveMeasurementFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
                 }
             }
 

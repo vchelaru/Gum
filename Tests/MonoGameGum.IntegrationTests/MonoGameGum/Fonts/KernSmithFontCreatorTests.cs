@@ -66,6 +66,63 @@ public class KernSmithFontCreatorTests : BaseTestClass
         font!.ShadowFont.ShouldBeNull();
     }
 
+    // Issue #4309: KernSmith 0.20.0 exposes per-glyph design-unit metrics (FontInfo.DesignMetrics)
+    // without rasterizing any glyphs -- the "measurement font" source of truth this creator's
+    // TryGetDesignMetrics wires up. Uses an explicit .ttf file path (BmfcSave.FontFile) rather than
+    // a system font family, since KernSmith.ReadFontInfo has no family-name-resolution overload yet
+    // (known gap -- TryGetDesignMetrics_ForSystemFontFamily_ReturnsNull below covers that fallback).
+    private static readonly string TestFontPath = System.IO.Path.GetFullPath(
+        System.IO.Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SkiaGum.Tests", "Assets", "Fonts", "TestFont.ttf"));
+
+    [Fact]
+    public void TryGetDesignMetrics_WithExplicitFontFile_ReturnsUnscaledPerGlyphMetrics()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        KernSmithFontCreator creator = new KernSmithFontCreator(game.GraphicsDevice);
+
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontFile = TestFontPath,
+            FontName = "TestFont",
+            FontSize = 32,
+            Ranges = "65-90",
+        };
+
+        FontDesignMetrics? designMetrics = creator.TryGetDesignMetrics(bmfcSave);
+
+        designMetrics.ShouldNotBeNull();
+        designMetrics!.UnitsPerEm.ShouldBeGreaterThan(0);
+        designMetrics.LineHeight.ShouldBeGreaterThan(0);
+        designMetrics.GlyphMetrics.ContainsKey((int)'A').ShouldBeTrue();
+        designMetrics.GlyphMetrics[(int)'A'].AdvanceWidth.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public void TryGetDesignMetrics_ForSystemFontFamily_ReturnsNull()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        KernSmithFontCreator creator = new KernSmithFontCreator(game.GraphicsDevice);
+
+        // No FontFile -- a plain system-installed family name, like "Arial". KernSmith's
+        // ReadFontInfo has no family-name overload (only GenerateFromSystem does), so this is
+        // expected to gracefully return null rather than throw -- callers fall back to measuring
+        // against the rasterized BitmapFont instead.
+        BmfcSave bmfcSave = new BmfcSave
+        {
+            FontName = "Arial",
+            FontSize = 32,
+            Ranges = "65",
+        };
+
+        FontDesignMetrics? designMetrics = creator.TryGetDesignMetrics(bmfcSave);
+
+        designMetrics.ShouldBeNull();
+    }
+
     /// <summary>
     /// Minimal Game host providing a live GraphicsDevice, since KernSmithFontCreator uploads
     /// generated atlas pages to real Texture2D instances.

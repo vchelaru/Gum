@@ -474,6 +474,135 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4309: the ShouldNeverWrap test above only proves the text stays on ONE line -- it doesn't
+    // prove the measured WIDTH is stable. A RelativeToChildren box has no reason to shrink while zoom
+    // moves in one direction, but that's exactly what the raster-based measurement (OversampleCompensationScale
+    // alone) can produce, since hinting isn't linear across raster sizes. This asserts the actual number
+    // stays pinned to the nominal size once TryGetDesignMetrics is wired up as the measurement source.
+    [Fact]
+    public void RegenerateOversampledFont_WithRelativeToChildrenWidth_MeasuredWidthDoesNotJitterAcrossRasterSizes()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreatorWithDesignMetrics(baseFontSize: 20);
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            float widthBeforeOversampling = text.WrappedTextWidth;
+
+            textRuntime.RegenerateOversampledFont(2.5f);
+            float widthAt2_5x = text.WrappedTextWidth;
+
+            textRuntime.RegenerateOversampledFont(3.7f);
+            float widthAt3_7x = text.WrappedTextWidth;
+
+            widthAt2_5x.ShouldBe(widthBeforeOversampling, tolerance: 0.01f,
+                "because measuring against stable design-unit metrics must not jitter even though the " +
+                "rasterized DISPLAY font's glyph advances have +1px-per-glyph noise at this raster size");
+            widthAt3_7x.ShouldBe(widthBeforeOversampling, tolerance: 0.01f,
+                "because the measured width must stay pinned to the nominal size across ANY raster size, not just one lucky match");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    [Fact]
+    public void RegenerateOversampledFont_WhenDesignMetricsUnavailable_FallsBackToMeasuringDisplayFont()
+    {
+        // The known gap (issue #4309): a plain system font family has no KernSmith design-metrics
+        // path yet, so TryGetDesignMetrics returns null (see NearlyProportionalFontCreator, which
+        // doesn't override it). Measurement must fall back to today's behavior -- the live display
+        // font -- not throw or silently stop updating.
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: 20);
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+
+            bool result = textRuntime.RegenerateOversampledFont(2.5f);
+
+            result.ShouldBeTrue();
+            // Unfixed (pre-#4309) math: 5 chars * (51px raster advance [20+1px noise, scaled by 2.5x]
+            // * 0.4 OversampleCompensationScale [20/50]) = 102 -- today's existing, jittery behavior
+            // must be unchanged when no design metrics are available to fix it with.
+            text.WrappedTextWidth.ShouldBe(102f, tolerance: 0.01f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Same rasterizer-noise simulation as NearlyProportionalFontCreator, but also implements
+    // TryGetDesignMetrics with exact, size-independent design-unit metrics (UnitsPerEm=1000,
+    // AdvanceWidth=1000 -- scales to precisely FontSize pixels at any requested size, unlike
+    // TryCreateFont's simulated rasterizer above).
+    private sealed class NearlyProportionalFontCreatorWithDesignMetrics : IInMemoryFontCreator
+    {
+        private readonly int _baseFontSize;
+
+        public NearlyProportionalFontCreatorWithDesignMetrics(int baseFontSize)
+        {
+            _baseFontSize = baseFontSize;
+        }
+
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
+        {
+            int xadvance = (int)bmfcSave.FontSize;
+            if (bmfcSave.FontSize != _baseFontSize)
+            {
+                xadvance += 1;
+            }
+
+            string fontData =
+$@"info face=""Arial"" size=-{bmfcSave.FontSize} bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight={bmfcSave.FontSize} base={bmfcSave.FontSize} scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""x.png""
+chars count=3
+char id=32 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=65 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadvance} page=0 chnl=15
+";
+            BitmapFont font = new BitmapFont((Texture2D)null!, fontData);
+            font.SetFontPattern(256, 256);
+            return font;
+        }
+
+        public FontDesignMetrics? TryGetDesignMetrics(BmfcSave bmfcSave)
+        {
+            return new FontDesignMetrics
+            {
+                UnitsPerEm = 1000,
+                LineHeight = 1000,
+                GlyphMetrics = new Dictionary<int, GlyphDesignMetrics>
+                {
+                    [' '] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                    ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                    ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                }
+            };
+        }
+    }
+
     // Every glyph's xadvance is 1px wider than a perfect (FontSize/baseFontSize)x scale of the base font
     // whenever the requested size isn't baseFontSize itself -- simulates the rounding/hinting noise a
     // real TrueType rasterizer introduces between two different point sizes of the same font.

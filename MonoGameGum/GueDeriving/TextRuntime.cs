@@ -696,6 +696,10 @@ public class TextRuntime : InteractiveGue
 
         var bmfcSave = new BmfcSave();
         CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
+        // bmfcSave.FontSize is still the nominal FontSize here (CopyFontGenerationFieldsTo's default) --
+        // design metrics are requested at the NOMINAL size, before it's overwritten below for the
+        // raster/display font.
+        FetchMeasurementFontIfNeeded(bmfcSave);
         bmfcSave.FontSize = rasterFontSize;
 
         var font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
@@ -706,6 +710,7 @@ public class TextRuntime : InteractiveGue
 
         ContainedText.BitmapFont = font;
         ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
+        ContainedText.MeasurementFont = _cachedMeasurementFont;
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
@@ -715,6 +720,34 @@ public class TextRuntime : InteractiveGue
         UpdateLayout();
 
         return true;
+    }
+
+    bool _measurementFontFetchAttempted;
+    BitmapFont? _cachedMeasurementFont;
+
+    /// <summary>
+    /// Fetches and builds <see cref="_cachedMeasurementFont"/> -- issue #4309's stable, never-regenerated
+    /// measurement font, built from unscaled design-unit metrics at the NOMINAL <see cref="FontSize"/> --
+    /// at most once per Font/FontSize/Bold/Italic identity. The display raster changes every zoom tick
+    /// (<see cref="RegenerateOversampledFont"/> runs continuously under camera zoom), but the measurement
+    /// font never needs to: it stays valid until <see cref="ResetAutomaticOversamplingState"/> clears the
+    /// cache in response to a font-property change. Leaves the cache at null (falls back to measuring the
+    /// live display font, i.e. today's behavior) when <see cref="IInMemoryFontCreator.TryGetDesignMetrics"/>
+    /// is unsupported or returns null -- e.g. a plain system-installed font family, a known gap (see the
+    /// KernSmith.GumCommon.GumFontGenerator.ReadDesignMetrics doc comment).
+    /// </summary>
+    void FetchMeasurementFontIfNeeded(BmfcSave nominalBmfcSave)
+    {
+        if (_measurementFontFetchAttempted)
+        {
+            return;
+        }
+
+        var designMetrics = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryGetDesignMetrics(nominalBmfcSave);
+        _cachedMeasurementFont = designMetrics != null
+            ? BitmapFont.CreateFromDesignMetrics(designMetrics, FontSize)
+            : null;
+        _measurementFontFetchAttempted = true;
     }
 
     float _lastAutoOversampleRatio = 1f;
@@ -794,7 +827,15 @@ public class TextRuntime : InteractiveGue
     /// stale (issue #4317). <see cref="Text.OversampleCompensationScale"/> itself is reset by the
     /// caller directly, since it lives on the renderable that caller already has a reference to.
     /// </summary>
-    internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
+    internal void ResetAutomaticOversamplingState()
+    {
+        _lastAutoOversampleRatio = 1f;
+        // Issue #4309: the cached measurement font was built for the OLD Font/FontSize/Bold/Italic
+        // identity -- clear it so the next RegenerateOversampledFont call fetches fresh design metrics
+        // instead of measuring against stale-but-still-non-null cached data.
+        _measurementFontFetchAttempted = false;
+        _cachedMeasurementFont = null;
+    }
 #endif
 #endif
 

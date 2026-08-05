@@ -33,6 +33,40 @@ public static class GumFontGenerator
     }
 
     /// <summary>
+    /// Reads this font's unscaled design-unit metrics (issue #4309) without rasterizing any
+    /// glyphs, via <see cref="BmFont.ReadFontInfo(string, int)"/>.
+    /// </summary>
+    /// <returns>
+    /// Null when <paramref name="bmfcSave"/> has no resolvable file path -- KernSmith's
+    /// <c>ReadFontInfo</c> only accepts raw bytes or a file path, unlike <see cref="Generate"/>'s
+    /// <see cref="BmFont.GenerateFromSystem"/> fallback, so a plain system-installed font family
+    /// (the common case, e.g. "Arial") is a known gap: callers must fall back to measuring against
+    /// a rasterized <see cref="RenderingLibrary.Graphics.BitmapFont"/> instead.
+    /// </returns>
+    public static FontDesignMetrics? ReadDesignMetrics(BmfcSave bmfcSave)
+    {
+        if (string.IsNullOrEmpty(bmfcSave.FontFile))
+        {
+            return null;
+        }
+
+        KernSmith.Font.Models.FontInfo fontInfo = BmFont.ReadFontInfo(bmfcSave.FontFile);
+
+        Dictionary<int, GlyphDesignMetrics> glyphMetrics = new(fontInfo.DesignMetrics.Count);
+        foreach (KeyValuePair<int, KernSmith.Font.Models.GlyphDesignMetrics> pair in fontInfo.DesignMetrics)
+        {
+            glyphMetrics[pair.Key] = new GlyphDesignMetrics(pair.Value.AdvanceWidth, pair.Value.LeftSideBearing);
+        }
+
+        return new FontDesignMetrics
+        {
+            UnitsPerEm = fontInfo.UnitsPerEm,
+            LineHeight = fontInfo.LineHeight,
+            GlyphMetrics = glyphMetrics
+        };
+    }
+
+    /// <summary>
     /// Maps a Gum <see cref="BmfcSave"/> to KernSmith <see cref="FontGeneratorOptions"/>.
     /// Exposed publicly so callers can inspect or customize options before generating.
     /// </summary>
