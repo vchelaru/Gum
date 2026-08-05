@@ -108,6 +108,49 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
         }
     }
 
+    // Reproduces the exact manual-test finding: FontScale 2, zoomed to ~2.93x. Confirms the drawn text
+    // exactly fills its own pinned box with the real KernSmith rasterizer, not just a synthetic fake.
+    [Fact]
+    public void RegenerateOversampledFont_RealFont_FontScale2AtNonRoundZoom_DrawnTextExactlyFillsPinnedBox()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);
+            TextRuntime.UseFontOversampling = true;
+
+            TextRuntime textRuntime = new();
+            textRuntime.UseCustomFont = true;
+            textRuntime.CustomFontFile = TestFontPath;
+            textRuntime.FontSize = 12;
+            textRuntime.FontScale = 2f;
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.HeightUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.Text = "Stack Ag 12pt";
+            game.GumService.Root.Children.Add(textRuntime);
+
+            Text text = (Text)textRuntime.RenderableComponent;
+            float pinnedWidth = text.WrappedTextWidth;
+
+            textRuntime.UpdateAutomaticFontOversampling(2.93f);
+
+            float drawnWidth = text.BitmapFont.MeasureString("Stack Ag 12pt") * ((IText)text).FontScale;
+
+            drawnWidth.ShouldBe(pinnedWidth, tolerance: 0.01f,
+                "because the drawn text must exactly fill its own box at this zoom level -- reproduces " +
+                "the manual-test gap found at FontScale 2, zoom~2.93 with the real KernSmith rasterizer");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     [Fact]
     public void RegenerateOversampledFont_RealFont_UseFontOversamplingEnabledAfterFontResolved_NoOrderingLandmine()
     {
