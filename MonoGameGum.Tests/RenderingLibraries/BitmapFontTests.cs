@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
+using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -216,6 +217,49 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
         var withNewline = font.MeasureString("a\n");
 
         withoutNewline.ShouldBe(withNewline, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
+    }
+
+    [Fact]
+    public void CreateFromDesignMetrics_ScalesDesignUnitsToPixelsByExactMultiplication()
+    {
+        Dictionary<int, GlyphDesignMetrics> glyphMetrics = new()
+        {
+            ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 100),
+            ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1200, LeftSideBearing: 50),
+            [' '] = new GlyphDesignMetrics(AdvanceWidth: 500, LeftSideBearing: 0),
+        };
+        FontDesignMetrics designMetrics = new(unitsPerEm: 2000, lineHeight: 2400, glyphMetrics: glyphMetrics);
+
+        BitmapFont font = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 20f)!;
+
+        // scale factor = fontSizeInPixels / UnitsPerEm = 20 / 2000 = 0.01
+        font.LineHeightInPixels.ShouldBe(24, "because 2400 design units * 0.01 = 24");
+        font.GetCharacterInfo('A').XAdvance.ShouldBe(10, "because 1000 design units * 0.01 = 10");
+        font.GetCharacterInfo('B').XAdvance.ShouldBe(12, "because 1200 design units * 0.01 = 12");
+        font.GetCharacterInfo(' ').XAdvance.ShouldBe(5, "because 500 design units * 0.01 = 5");
+    }
+
+    [Fact]
+    public void CreateFromDesignMetrics_TwoDifferentFontSizes_ProduceExactlyProportionalMeasurements()
+    {
+        // The whole point of design-unit metrics (issue #4309): unlike a rasterized BitmapFont
+        // (whose hinted, pixel-snapped advances at two different sizes are NOT exact multiples of
+        // each other), a design-metrics-built font must scale by an EXACT ratio -- measuring "AB"
+        // at size 40 must be precisely 2x measuring it at size 20, every time, with zero jitter.
+        Dictionary<int, GlyphDesignMetrics> glyphMetrics = new()
+        {
+            ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1024, LeftSideBearing: 64),
+            ['B'] = new GlyphDesignMetrics(AdvanceWidth: 896, LeftSideBearing: 32),
+        };
+        FontDesignMetrics designMetrics = new(unitsPerEm: 2048, lineHeight: 2500, glyphMetrics: glyphMetrics);
+
+        BitmapFont fontAt20 = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 20f)!;
+        BitmapFont fontAt40 = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 40f)!;
+
+        float widthAt20 = fontAt20.MeasureString("AB");
+        float widthAt40 = fontAt40.MeasureString("AB");
+
+        widthAt40.ShouldBe(widthAt20 * 2f, tolerance: 0.01f);
     }
 }
 

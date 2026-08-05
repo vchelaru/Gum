@@ -704,8 +704,30 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
-        ContainedText.BitmapFont = font;
-        ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
+        // Issue #4309: pins the OUTGOING (native) font as the measurement source, if nothing is pinned
+        // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
+        ContainedText.SetOversampledDisplayFont(font);
+
+        // Issue #4309 (render-side gap found via manual test): a naive FontSize/rasterFontSize ratio
+        // assumes the oversampled font's glyphs are an exact linear scale of the pinned/native font's --
+        // they're not, since hinting isn't linear across raster sizes. That leaves a visible gap (or
+        // overflow) between the drawn text and its own box, even though the box's SIZE is now correctly
+        // stable. Deriving the compensation from the ACTUAL measured width ratio between the two fonts,
+        // for this Text's own wrapped content, makes the drawn text fill exactly the pinned box instead
+        // of only approximately fitting it.
+        BitmapFont? pinnedFont = ContainedText.MeasurementFont;
+        if (pinnedFont != null)
+        {
+            pinnedFont.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int pinnedWidth, out _);
+            font.GetRequiredWidthAndHeight(ContainedText.WrappedText, out int oversampledWidth, out _);
+            ContainedText.OversampleCompensationScale = oversampledWidth > 0
+                ? (float)pinnedWidth / oversampledWidth
+                : FontSize / rasterFontSize;
+        }
+        else
+        {
+            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
+        }
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
