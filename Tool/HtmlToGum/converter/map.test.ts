@@ -414,6 +414,37 @@ test('mapTreeToScreen: root tiled background offsets for viewport/canvas tile or
   assert.equal(findVar(variables, 'BodyBg.TextureAddress')?.value, 2);
 });
 
+test('mapTreeToScreen: fixed/absolute descendant does not inflate a styled ancestor backdrop', () => {
+  // OWASP header (periwinkle bg, 159px) contains a position:fixed cookie banner painted at
+  // y=800. textOverflowPad must skip out-of-flow subtrees, else the header backdrop grows to
+  // ~1544px and its fill tints the whole page. In-flow text near the box bottom still pads.
+  const inFlowText = boxNode({
+    id: 'logo', tag: 'span', text: 'OWASP', lineCount: 1,
+    rect: { x: 18, y: 120, width: 120, height: 30 },
+    style: baseStyle({ fontSize: 20 }),
+  });
+  const bannerText = boxNode({
+    id: 'cookie', tag: 'p', text: 'This website uses cookies to analyze traffic.', lineCount: 3,
+    rect: { x: 16, y: 810, width: 500, height: 60 },
+    style: baseStyle({ fontSize: 16 }),
+  });
+  const fixedBanner = boxNode({
+    id: 'disclaimer-container', tag: 'div',
+    rect: { x: 0, y: 800, width: 800, height: 100 },
+    style: baseStyle({ position: 'fixed', backgroundColor: 'rgba(20, 20, 20, 0.8)' }),
+    children: [bannerText],
+  });
+  const header = boxNode({
+    id: 'header', tag: 'header',
+    rect: { x: 0, y: 0, width: 800, height: 159 },
+    style: baseStyle({ backgroundColor: 'rgb(152, 175, 199)' }),
+    children: [inFlowText, fixedBanner],
+  });
+  const { variables } = mapTreeToScreen(header, new Map());
+  const h = findVar(variables, 'Header.Height')?.value;
+  assert.ok(h < 200, `header backdrop should stay ~159px, got ${h}`);
+});
+
 test('mapTreeToScreen: repeating background-image tiles via DimensionsBased + Wrap', () => {
   // CSS default background-repeat is `repeat` (Space Jam starfield). EntireTexture would
   // stretch one tile across the box; DimensionsBased + Wrap repeats at intrinsic size.

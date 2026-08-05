@@ -787,6 +787,25 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
   const root = document.querySelector(rootSelector);
   if (!root) throw new Error('root selector not found: ' + rootSelector);
   const tree = walk(root);
+
+  // Canvas background: browsers paint the page canvas white when neither <html> nor <body>
+  // sets an opaque background (CSS "canvas" default). Gum has no such default, so a page
+  // that relies on it renders with a transparent root — the screenshot is transparent where
+  // Chromium is white, which the pixel diff scores as a full miss (OWASP: whole content band).
+  // Propagate the effective page background onto the root so BodyBg paints a backmost fill.
+  const rootTag = String(root.tagName).toUpperCase();
+  if ((rootTag === 'BODY' || rootTag === 'HTML') && tree && tree.style) {
+    const isTransp = (c) => !c || c === 'transparent'
+      || /^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)$/i.test(c);
+    const noRootBgImage = !tree.style.backgroundImage || tree.style.backgroundImage === 'none';
+    if (isTransp(tree.style.backgroundColor) && noRootBgImage) {
+      let pageBg = getComputedStyle(document.documentElement).backgroundColor;
+      if (isTransp(pageBg)) pageBg = getComputedStyle(document.body).backgroundColor;
+      if (isTransp(pageBg)) pageBg = 'rgb(255, 255, 255)';
+      tree.style.backgroundColor = pageBg;
+    }
+  }
+
   await enrichNaturalSizes(tree);
   return tree;
 }

@@ -851,7 +851,13 @@ function wantsTiledBackground(style) {
 function textOverflowPad(node) {
   const boxBottom = node.rect.y + node.rect.height;
   let pad = 0;
-  function visit(n) {
+  function visit(n, isRoot) {
+    // Out-of-flow descendants (position:fixed cookie banners, absolute popovers) paint at
+    // their own viewport coordinates and are NOT part of an ancestor's content box. A fixed
+    // banner nested in <header> would otherwise stretch the header's painted backdrop from
+    // ~159px to the banner's y-offset (OWASP #disclaimer-container → whole page tinted).
+    if (!isRoot && n.style
+      && (n.style.position === 'fixed' || n.style.position === 'absolute')) return;
     if (n.text && n.style && n.style.fontSize > 0) {
       const lines = Math.max(1, n.lineCount || 1);
       // Gum BitmapFont line boxes run taller than CSS; ~1.35× font-size per line is a
@@ -860,9 +866,9 @@ function textOverflowPad(node) {
       const spill = Math.max(0, guess - Math.round(n.rect.height));
       pad = Math.max(pad, (n.rect.y + n.rect.height + spill) - boxBottom);
     }
-    for (const c of n.children || []) visit(c);
+    for (const c of n.children || []) visit(c, false);
   }
-  visit(node);
+  visit(node, true);
   return Math.max(0, Math.ceil(pad));
 }
 

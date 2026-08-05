@@ -177,3 +177,49 @@ test('extractBoxTree: narrow wrapping Arial link needsRaster (TL Community News)
     await browser.close();
   }
 });
+
+// Browsers paint a white "canvas" when neither <html> nor <body> sets an opaque background.
+// Gum has no such default, so the root must inherit that white or the screenshot is
+// transparent where Chromium is white (OWASP: whole content band scored as a full miss).
+test('extractBoxTree: transparent body inherits white canvas background', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<body style="margin:0;"><header style="background:rgb(152,175,199);height:40px;">h</header><p>content</p></body>`);
+    const tree = await page.evaluate(extractBoxTree, 'body');
+    await page.close();
+    assert.equal(tree.tag, 'body');
+    assert.equal(tree.style?.backgroundColor, 'rgb(255, 255, 255)');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: explicit body background is not overridden with white', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<body style="margin:0;background:rgb(10,20,30);"><p>x</p></body>`);
+    const tree = await page.evaluate(extractBoxTree, 'body');
+    await page.close();
+    assert.equal(tree.style?.backgroundColor, 'rgb(10, 20, 30)');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: transparent body inherits html canvas color, not white', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<html style="background:rgb(30,30,30);"><body style="margin:0;"><p>x</p></body></html>`);
+    const tree = await page.evaluate(extractBoxTree, 'body');
+    await page.close();
+    assert.equal(tree.style?.backgroundColor, 'rgb(30, 30, 30)');
+  } finally {
+    await browser.close();
+  }
+});

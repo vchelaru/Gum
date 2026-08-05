@@ -38,6 +38,10 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 **Mac-only faces on Windows:** `Menlo` / `Monaco` / `Helvetica Neue` resolve via `FACE_ALIASES` to Consolas / Arial so gumcli can embed them.
 **Bad font downloads:** `@font-face` URLs can return HTML/empty bytes. `looksLikeFontBuffer` + multi-URL retry in `materializeWebFonts` skip non-sfnt/woff payloads and try the next candidate (KORE Proxima Nova w400).
 
+**White canvas default:** browsers paint the page canvas white when neither `<html>` nor `<body>` sets an opaque background (CSS "canvas"). Gum has no such default → the root stays transparent and the screenshot is transparent (RGB 0,0,0 under alpha 0) where Chromium is white; the diff scores every such pixel as a full miss (OWASP content band was ~40% alone). `extractBoxTree` propagates the effective page background (html → body → white) onto the root `body`/`html` node so `BodyBg` paints a backmost fill. Only fires when the root is body/html with a transparent bg and no background-image (Space Jam's opaque/starfield body is untouched).
+
+**Out-of-flow descendants inflating a backdrop:** `backdropHeight`/`textOverflowPad` walk a styled container's subtree to pad for BitmapFont spill. A `position:fixed`/`absolute` descendant (e.g. a cookie banner nested in `<header>`, painted at `y=800`) would stretch the header's painted backdrop from ~159px to ~1544px and tint the whole page with the header color (OWASP `#disclaimer-container`). `textOverflowPad` skips out-of-flow subtrees — they paint at their own coordinates and are not part of an ancestor's content box.
+
 **System font stacks:** CSS `-apple-system, BlinkMacSystemFont, "Segoe UI", …` must resolve via `resolveCssFontFamily` to `Segoe UI` (not the synthetic first token). Otherwise Gum falls back to Arial while Chromium on Windows uses Segoe.
 
 **Percent-encoded `data:image/svg+xml`:** select chevrons etc. need `parseDataImageUrl` (`decodeURIComponent`) — the old `;base64`-only regex dropped charset URLs (Pocket).
