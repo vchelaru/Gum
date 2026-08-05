@@ -12,11 +12,21 @@ namespace RenderingLibrary.Graphics.Fonts;
 public sealed class FontDesignMetrics
 {
     /// <summary>Design units per em square. Typically 1000 or 2048.</summary>
-    public required int UnitsPerEm { get; init; }
+    public int UnitsPerEm { get; }
 
     /// <summary>Total line height (ascender - descender + line gap), in font design units.</summary>
-    public required int LineHeight { get; init; }
+    public int LineHeight { get; }
 
     /// <summary>Per-codepoint horizontal metrics, in font design units.</summary>
-    public required IReadOnlyDictionary<int, GlyphDesignMetrics> GlyphMetrics { get; init; }
+    public IReadOnlyDictionary<int, GlyphDesignMetrics> GlyphMetrics { get; }
+
+    /// <summary>
+    /// Initializes a new instance of <see cref="FontDesignMetrics"/>.
+    /// </summary>
+    public FontDesignMetrics(int unitsPerEm, int lineHeight, IReadOnlyDictionary<int, GlyphDesignMetrics> glyphMetrics)
+    {
+        UnitsPerEm = unitsPerEm;
+        LineHeight = lineHeight;
+        GlyphMetrics = glyphMetrics;
+    }
 }

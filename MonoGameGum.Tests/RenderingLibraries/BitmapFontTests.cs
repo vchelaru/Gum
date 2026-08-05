@@ -228,12 +228,7 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
             ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1200, LeftSideBearing: 50),
             [' '] = new GlyphDesignMetrics(AdvanceWidth: 500, LeftSideBearing: 0),
         };
-        FontDesignMetrics designMetrics = new()
-        {
-            UnitsPerEm = 2000,
-            LineHeight = 2400,
-            GlyphMetrics = glyphMetrics
-        };
+        FontDesignMetrics designMetrics = new(unitsPerEm: 2000, lineHeight: 2400, glyphMetrics: glyphMetrics);
 
         BitmapFont font = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 20f)!;
 
@@ -256,12 +251,7 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
             ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1024, LeftSideBearing: 64),
             ['B'] = new GlyphDesignMetrics(AdvanceWidth: 896, LeftSideBearing: 32),
         };
-        FontDesignMetrics designMetrics = new()
-        {
-            UnitsPerEm = 2048,
-            LineHeight = 2500,
-            GlyphMetrics = glyphMetrics
-        };
+        FontDesignMetrics designMetrics = new(unitsPerEm: 2048, lineHeight: 2500, glyphMetrics: glyphMetrics);
 
         BitmapFont fontAt20 = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 20f)!;
         BitmapFont fontAt40 = BitmapFont.CreateFromDesignMetrics(designMetrics, fontSizeInPixels: 40f)!;

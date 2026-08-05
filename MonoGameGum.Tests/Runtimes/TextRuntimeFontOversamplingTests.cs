@@ -589,17 +589,13 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
         public FontDesignMetrics? TryGetDesignMetrics(BmfcSave bmfcSave)
         {
-            return new FontDesignMetrics
+            Dictionary<int, GlyphDesignMetrics> glyphMetrics = new()
             {
-                UnitsPerEm = 1000,
-                LineHeight = 1000,
-                GlyphMetrics = new Dictionary<int, GlyphDesignMetrics>
-                {
-                    [' '] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
-                    ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
-                    ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
-                }
+                [' '] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                ['A'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
+                ['B'] = new GlyphDesignMetrics(AdvanceWidth: 1000, LeftSideBearing: 0),
             };
+            return new FontDesignMetrics(unitsPerEm: 1000, lineHeight: 1000, glyphMetrics: glyphMetrics);
         }
     }
 

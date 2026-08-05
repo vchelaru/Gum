@@ -58,12 +58,7 @@ public static class GumFontGenerator
             glyphMetrics[pair.Key] = new GlyphDesignMetrics(pair.Value.AdvanceWidth, pair.Value.LeftSideBearing);
         }
 
-        return new FontDesignMetrics
-        {
-            UnitsPerEm = fontInfo.UnitsPerEm,
-            LineHeight = fontInfo.LineHeight,
-            GlyphMetrics = glyphMetrics
-        };
+        return new FontDesignMetrics(fontInfo.UnitsPerEm, fontInfo.LineHeight, glyphMetrics);
     }
 
     /// <summary>
