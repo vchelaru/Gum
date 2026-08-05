@@ -191,6 +191,32 @@ public class GumBundleLoaderTests : IDisposable
     }
 
     [Fact]
+    public void Resolve_with_gumpkg_extension_finds_gumj_entry_when_packed_project_was_json_format()
+    {
+        // A bundle packed from a JSON-format (.gumj) project stores its top-level project entry
+        // under its real name/extension (see GumProjectDependencyWalker.TryGetGumxRelativePath),
+        // not ".gumx". Resolve must not assume XML - see issue #4350.
+        byte[] gumjBytes = Encoding.UTF8.GetBytes("{}");
+        string gumpkgPath = Path.Combine(_tempDir, "Project.gumpkg");
+        string expectedProjectPath = Path.Combine(_tempDir, "Project.gumj");
+        WriteBundle(gumpkgPath, new (string, byte[])[]
+        {
+            ("Project.gumj", gumjBytes),
+        });
+
+        ProjectResolution resolution = GumBundleLoader.Resolve(gumpkgPath);
+
+        resolution.UsedBundle.ShouldBeTrue();
+        resolution.ResolvedGumxPath.ShouldBe(expectedProjectPath);
+        FileManager.CustomGetStreamFromFile.ShouldNotBeNull();
+
+        using Stream stream = FileManager.CustomGetStreamFromFile!(expectedProjectPath);
+        using MemoryStream copy = new MemoryStream();
+        stream.CopyTo(copy);
+        copy.ToArray().ShouldBe(gumjBytes);
+    }
+
+    [Fact]
     public void Resolve_with_gumj_extension_is_treated_as_loose_like_gumx()
     {
         // .gumj (JSON) projects are loose-file projects exactly like .gumx (issue #4180) -
