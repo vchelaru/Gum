@@ -142,6 +142,69 @@ public class GumProjectDependencyWalkerTests : IDisposable
     }
 
     [Fact]
+    public void Walk_resolves_JSON_extensions_for_JSON_format_project()
+    {
+        // Regression guard for #4345: a project loaded from a .gumj file must resolve its
+        // element/behavior core files as .gusj/.gucj/.gutj/.behj, not the XML extensions.
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        ComponentSave component = TestProjectBuilder.BuildComponent("Button");
+        StandardElementSave standard = TestProjectBuilder.BuildStandard("Sprite");
+        BehaviorSave behavior = TestProjectBuilder.BuildBehavior("Toggle");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            projectName: "JsonProject",
+            screens: new[] { screen },
+            components: new[] { component },
+            standards: new[] { standard },
+            behaviors: new[] { behavior });
+        project.FullFileName = "JsonProject." + GumProjectSave.ProjectJsonExtension;
+
+        string root = CreateProjectRoot(new[]
+        {
+            ("JsonProject.gumj", EmptyContent),
+            ("Screens/MainMenu.gusj", EmptyContent),
+            ("Components/Button.gucj", EmptyContent),
+            ("Standards/Sprite.gutj", EmptyContent),
+            ("Behaviors/Toggle.behj", EmptyContent),
+        });
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core);
+
+        result.CoreFiles.ShouldContain("Screens/MainMenu.gusj");
+        result.CoreFiles.ShouldContain("Components/Button.gucj");
+        result.CoreFiles.ShouldContain("Standards/Sprite.gutj");
+        result.CoreFiles.ShouldContain("Behaviors/Toggle.behj");
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_resolves_instance_BaseType_core_file_using_JSON_extension_for_JSON_format_project()
+    {
+        // Regression guard for #4345: CollectInstanceTypeCoreFiles adds the .gucx/.gutx file for
+        // every instance's BaseType - that lookup must also respect the project's JSON format.
+        ComponentSave button = TestProjectBuilder.BuildComponent("Button");
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        InstanceSave instance = new InstanceSave { Name = "MyButton", BaseType = "Button", ParentContainer = screen };
+        screen.Instances.Add(instance);
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            projectName: "JsonProject",
+            screens: new[] { screen },
+            components: new[] { button });
+        project.FullFileName = "JsonProject." + GumProjectSave.ProjectJsonExtension;
+
+        string root = CreateProjectRoot(new[]
+        {
+            ("JsonProject.gumj", EmptyContent),
+            ("Screens/MainMenu.gusj", EmptyContent),
+            ("Components/Button.gucj", EmptyContent),
+        });
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core);
+
+        result.CoreFiles.ShouldContain("Components/Button.gucj");
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Walk_normalizes_paths_to_forward_slashes()
     {
         ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");

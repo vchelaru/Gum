@@ -54,7 +54,7 @@ public class ProjectLoader : IProjectLoader
                 project.Initialize();
 
                 var elementLoadErrors = ParseElementLoadErrors(gumLoadResult.ErrorMessage);
-                var conflictErrors = DetectConflictMarkers(project, projectDirectory);
+                var conflictErrors = DetectConflictMarkers(project, projectDirectory, GumProjectSave.IsJsonFormat(filePath));
 
                 // A conflicted element file is invalid XML, so it ALSO failed to deserialize and
                 // produced a cryptic "Malformed XML" entry via ParseElementLoadErrors. Drop those
@@ -259,7 +259,7 @@ public class ProjectLoader : IProjectLoader
     /// into those lists. Mirrors the per-element error model used by <see cref="DetectSilentlyDroppedContent"/>.
     /// </summary>
     private static List<ErrorResult> DetectConflictMarkers(
-        GumProjectSave project, string projectDirectory)
+        GumProjectSave project, string projectDirectory, bool isJsonFormat)
     {
         var errors = new List<ErrorResult>();
 
@@ -279,19 +279,23 @@ public class ProjectLoader : IProjectLoader
 
         foreach (var reference in project.ScreenReferences)
         {
-            Check(reference.Name, ElementReference.ScreenSubfolder, GumProjectSave.ScreenExtension);
+            Check(reference.Name, ElementReference.ScreenSubfolder,
+                isJsonFormat ? GumProjectSave.ScreenJsonExtension : GumProjectSave.ScreenExtension);
         }
         foreach (var reference in project.ComponentReferences)
         {
-            Check(reference.Name, ElementReference.ComponentSubfolder, GumProjectSave.ComponentExtension);
+            Check(reference.Name, ElementReference.ComponentSubfolder,
+                isJsonFormat ? GumProjectSave.ComponentJsonExtension : GumProjectSave.ComponentExtension);
         }
         foreach (var reference in project.StandardElementReferences)
         {
-            Check(reference.Name, ElementReference.StandardSubfolder, GumProjectSave.StandardExtension);
+            Check(reference.Name, ElementReference.StandardSubfolder,
+                isJsonFormat ? GumProjectSave.StandardJsonExtension : GumProjectSave.StandardExtension);
         }
         foreach (var reference in project.BehaviorReferences)
         {
-            Check(reference.Name, BehaviorReference.Subfolder, BehaviorReference.Extension);
+            Check(reference.Name, BehaviorReference.Subfolder,
+                isJsonFormat ? BehaviorReference.JsonExtension : BehaviorReference.Extension);
         }
 
         return errors;

@@ -52,6 +52,18 @@ namespace Gum.DataTypes
             }
         }
 
+        /// <summary>
+        /// Returns <see cref="Extension"/> (XML) or its JSON counterpart, matching the project's
+        /// actual format. Every JSON element extension is its XML counterpart with the trailing
+        /// "x" swapped for "j" (gusx-&gt;gusj, gucx-&gt;gucj, gutx-&gt;gutj), the same convention
+        /// used by <see cref="ElementSave.Save"/>.
+        /// </summary>
+        public string GetExtension(bool isJsonFormat)
+        {
+            string extension = Extension;
+            return isJsonFormat ? extension.Substring(0, extension.Length - 1) + "j" : extension;
+        }
+
         public string Subfolder
         {
             get
