@@ -798,6 +798,15 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
+        // Issue #4309: retried every frame (cheap -- a no-op once already resolved), not just once at
+        // font-property-resolution time. UseFontOversampling can be flipped on at any point in a
+        // project's lifecycle, independent of when a given Text's font was last resolved -- gating this
+        // solely on the font-property choke point left a Text permanently stuck measuring via the
+        // native BitmapFont if the flag happened to be off at that one moment. This hook already runs
+        // every frame for every visible Text, so piggybacking here makes it self-healing the same way
+        // the raster-regeneration decision below already is.
+        EnsureMeasurementFont();
+
         // Regenerating below native resolution isn't this feature's job -- only oversample, never
         // undersample.
         var oversampleRatio = System.Math.Max(1f, effectiveZoom);

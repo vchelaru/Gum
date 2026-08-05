@@ -561,6 +561,51 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4309 (landmine found via manual test): EnsureMeasurementFont is only triggered by
+    // font-property changes -- a one-time event -- not re-evaluated every frame. If UseFontOversampling
+    // (a project-wide static toggle) happens to be off at the moment a Text's font is first resolved,
+    // and nothing else changes that Text's font properties afterward, it stays permanently stuck
+    // measuring via the native BitmapFont even after the flag is later turned on. A real project can
+    // easily hit this ordering (e.g. a settings toggle flipped after some UI already exists) with no
+    // error or warning. The fix: the automatic per-frame hook (already continuously re-evaluated, same
+    // as the raster-regeneration decision itself) must also retry wiring up the measurement font.
+    [Fact]
+    public void EnsureMeasurementFont_WhenOversamplingEnabledAfterFontAlreadyResolved_SelfHealsOnNextAutomaticUpdate()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = false;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new HintingMismatchFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            text.WrappedTextWidth.ShouldBe(48f, tolerance: 0.01f,
+                "because oversampling is off -- the native hinted BitmapFont is the only measurement source available yet");
+
+            TextRuntime.UseFontOversampling = true;
+
+            // effectiveZoom=1 deliberately does NOT cross the 1px raster-delta threshold that triggers
+            // an actual RegenerateOversampledFont call -- this must still wire up the measurement font.
+            textRuntime.UpdateAutomaticFontOversampling(1f);
+
+            text.WrappedTextWidth.ShouldBe(40f, tolerance: 0.01f,
+                "because the very next automatic per-frame check (issue #4317's render-time hook) must " +
+                "pick up the now-enabled flag and wire up the measurement font -- no explicit re-trigger, " +
+                "and no raster regeneration, should be required");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     // Native/hinted advance (24px/char) deliberately does NOT match what TryGetDesignMetrics below
     // scales to (20px/char) -- simulates a real rasterizer's hinting producing a different result than
     // the font's plain unhinted design-unit data would.
