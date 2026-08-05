@@ -47,11 +47,9 @@ namespace MonoGameGumInCode.Screens;
 // section goes in the SAME position for every backend, not just present), and carry NO descriptive
 // section labels — each demo's own text shows AND names what it is. Only genuinely backend-specific
 // things differ here, gated `#if RAYLIB` / `#elif SKIA` / `#else`: the namespace, the
-// Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, the [State=Name] BBCode
+// Color/Text/LetterCustomization/TextRenderingPositionMode aliases above, and the [State=Name] BBCode
 // tag (MonoGame/raylib only — SkiaGum owns a separate CustomSetPropertyOnRenderable.cs that doesn't
-// implement it yet, excluded on Skia), and AddTextureFilterSection's mechanism (a per-layer sampler
-// state on MonoGame vs a baked font-cache texture on raylib; excluded entirely on Skia, which has no
-// equivalent render-state layer switch).
+// implement it yet, excluded on Skia).
 //
 // Tick(elapsedSeconds) (#3701) drives the animated typewriter section and must be called once per
 // frame by the host while this screen is active — see Game1.Update / Program.cs's main loop
@@ -266,9 +264,6 @@ internal class TextScreen : FrameworkElement
         // Placed right after the blend block to keep section ORDER identical across all three
         // backends — the text samples must stay identical in order, not just content.
         AddOverflowSection(container);
-#if !SKIA
-        AddTextureFilterSection(container);
-#endif
 
         // --- Per-instance TextRenderingPositionMode override, at a fractional origin ---
         var snapText = new TextRuntime();
@@ -322,98 +317,14 @@ internal class TextScreen : FrameworkElement
         };
     }
 
-    // Texture filter on Text (#3496): a font baked SMALL then magnified via FontScale, so
-    // point-filtering's blocky glyph edges are visibly distinct from bilinear's smoothed ones. A
-    // large FontSize at 1x scale doesn't stress the sampler enough to show a difference - the atlas
-    // texel density roughly matches screen pixel density either way. Baking small and scaling up
-    // means each atlas texel covers several screen pixels, which is exactly when nearest-neighbor
-    // vs bilinear diverge. Renderer.TextureFilter is a single global sampler state for the whole
-    // SpriteBatch pass, so one Text can't be Point and another Linear on the same layer (see
-    // docs/code/rendering/texture-filtering.md) - each side gets its own Layer with
-    // Layer.IsLinearFilteringEnabled forcing the mode, while layout still comes from the shared
-    // filterRow container. Unlike raylib (where the filter is baked into the font-cache texture at
-    // creation time), the layer-based override here is a pure render-state switch, so both sides can
-    // share the same FontSize/FontScale. Each cell's own text ("Point" / "Linear") names its filter.
-    // No Skia equivalent -- SkiaGum's Renderer has no per-layer sampler-state switch (see the
-    // file-level comment above), so the whole method is excluded there rather than just its call site.
-#if !SKIA
-    private static void AddTextureFilterSection(ContainerRuntime container)
-    {
-        var filterRow = new ContainerRuntime();
-        filterRow.WidthUnits = DimensionUnitType.RelativeToChildren;
-        filterRow.HeightUnits = DimensionUnitType.RelativeToChildren;
-        filterRow.Width = 0;
-        filterRow.Height = 0;
-        filterRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
-        filterRow.StackSpacing = 16;
-#if RAYLIB
-        var savedFilter = RenderingLibrary.Content.ContentLoader.DefaultTextureFilter;
-
-        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Point;
-        var pointText = new TextRuntime();
-        pointText.FontSize = 12;
-        pointText.FontScale = 4;
-        pointText.Text = "Point filter (blocky)";
-        filterRow.AddChild(pointText);
-
-        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = Raylib_cs.TextureFilter.Bilinear;
-        var linearText = new TextRuntime();
-        linearText.FontSize = 13; // distinct size so this is a separate font-cache entry from "Point" above
-        linearText.FontScale = 4;
-        linearText.Text = "Linear filter (smoothed)";
-        filterRow.AddChild(linearText);
-
-        RenderingLibrary.Content.ContentLoader.DefaultTextureFilter = savedFilter;
-
-        container.Children.Add(filterRow);
-#else
-        container.Children.Add(filterRow);
-
-        var pointLayer = SystemManagers.Default.Renderer.AddLayer();
-        pointLayer.Name = "Texture Filter - Point";
-        pointLayer.IsLinearFilteringEnabled = false;
-        var pointText = new TextRuntime();
-        pointText.FontSize = 12;
-        pointText.FontScale = 4;
-        pointText.Text = "Point filter (blocky)";
-
-        var linearLayer = SystemManagers.Default.Renderer.AddLayer();
-        linearLayer.Name = "Texture Filter - Linear";
-        linearLayer.IsLinearFilteringEnabled = true;
-        var linearText = new TextRuntime();
-        linearText.FontSize = 12;
-        linearText.FontScale = 4;
-        linearText.Text = "Linear filter (smoothed)";
-
-        // pointText/linearText need filterRow's LeftToRightStack to compute their position, but
-        // must render on their own texture-filter Layer, not filterRow's. A GUE can't be both a
-        // parented render-tree child AND a top-level layer member (see #4333) -- adding both would
-        // double-render it, so instead: parent long enough for the stack layout to run, bake the
-        // resulting position into absolute X/Y, then detach and add as a top-level layer member.
-        filterRow.AddChild(pointText);
-        filterRow.AddChild(linearText);
-
-        // Read both absolute positions before mutating either -- assigning an absolute pixel value
-        // into X/Y while still parented re-triggers the stack layout, which would shift the
-        // not-yet-read sibling's position out from under it.
-        float pointLeft = pointText.AbsoluteLeft;
-        float pointTop = pointText.AbsoluteTop;
-        float linearLeft = linearText.AbsoluteLeft;
-        float linearTop = linearText.AbsoluteTop;
-
-        filterRow.Children.Remove(pointText);
-        filterRow.Children.Remove(linearText);
-
-        pointText.X = pointLeft;
-        pointText.Y = pointTop;
-        linearText.X = linearLeft;
-        linearText.Y = linearTop;
-
-        pointText.AddToManagers(SystemManagers.Default, pointLayer);
-        linearText.AddToManagers(SystemManagers.Default, linearLayer);
-#endif
-    }
-#endif
+    // Point vs linear texture filtering on Text (#3496) moved out to its own standalone sample,
+    // Samples/TextureFilterDemo -- it needs two Text objects that are each simultaneously a
+    // stack-layout child (for position) AND a top-level Layer member (Layer.IsLinearFilteringEnabled
+    // is the only per-object override MonoGame's renderer exposes), and a GUE can't be both at once
+    // (see #4333). Forcing it into that shape here kept breaking in new ways (double-render, then a
+    // corrupted position bake, then the parent's RelativeToChildren size collapsing and shifting
+    // every section below it) because every fix for one duty broke the other. Not worth carrying
+    // that fragility in the general text-features screen.
 
     // MaxLettersToShow typewriter reveal (#3678). The same wrapping paragraph is shown fully, then
     // with MaxLettersToShow set to a partial count so only the first N letters are visible while the
