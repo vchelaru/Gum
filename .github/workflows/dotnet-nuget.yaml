@@ -22,79 +22,6 @@ on:
         required: false
         default: ''
         type: string
-      # --- Package selection ---
-      pkg_GumCommon:
-        description: 'FlatRedBall.GumCommon'
-        type: boolean
-        default: true
-      pkg_GumDataTypes:
-        description: 'FlatRedBall.GumDataTypes'
-        type: boolean
-        default: true
-      pkg_ToolsUtilities:
-        description: 'FlatRedBall.ToolsUtilities.NetStandard'
-        type: boolean
-        default: true
-      pkg_MonoGame:
-        description: 'Gum.MonoGame'
-        type: boolean
-        default: true
-      pkg_KNI:
-        description: 'Gum.KNI'
-        type: boolean
-        default: true
-      pkg_FNA:
-        description: 'Gum.FNA'
-        type: boolean
-        default: true
-      pkg_SkiaSharp:
-        description: 'Gum.SkiaSharp'
-        type: boolean
-        default: true
-      pkg_SkiaSharpMaui:
-        description: 'Gum.SkiaSharp.Maui'
-        type: boolean
-        default: true
-      pkg_Raylib:
-        description: 'Gum.raylib'
-        type: boolean
-        default: true
-      pkg_ShapesMonoGame:
-        description: 'Gum.Shapes.MonoGame'
-        type: boolean
-        default: true
-      pkg_ShapesKNI:
-        description: 'Gum.Shapes.KNI'
-        type: boolean
-        default: true
-      pkg_Expressions:
-        description: 'Gum.Expressions'
-        type: boolean
-        default: true
-      pkg_Themes:
-        description: 'Gum.Themes.* (all shipped themes, MonoGame + Kni + Raylib; Template is excluded)'
-        type: boolean
-        default: true
-      pkg_Sokol:
-        description: 'Gum.sokol'
-        type: boolean
-        default: true
-      pkg_SilkNet:
-        description: 'Gum.SilkNet'
-        type: boolean
-        default: true
-      pkg_GumCli:
-        description: 'GumCli'
-        type: boolean
-        default: true
-      # KernSmith font integrations (GumCommon + MonoGameGum + KniGum). Default false:
-      # these package IDs are still owned by the KernSmith maintainer on nuget.org
-      # (ownership transfer pending), so leave unchecked until the Gum publishing
-      # account is a confirmed co-owner — otherwise the push fails with 403.
-      pkg_KernSmith:
-        description: 'KernSmith.* (GumCommon, MonoGameGum, KniGum)'
-        type: boolean
-        default: false
 
 env:
   DOTNET_VERSIONS: '6.0.x;8.0.x;9.0.x' # Multiple .NET versions
@@ -174,80 +101,22 @@ jobs:
           ./nupkgs/*.nupkg
           ./nupkgs/*.snupkg
     
-    # Publish to NuGet.org (when explicitly requested, filtered by package selection)
+    # Publish to NuGet.org (when explicitly requested).
     - name: Publish to NuGet.org
       if: github.event.inputs.publish_to_nuget == 'true'
       shell: pwsh
       run: |
-        $selected = @()
-        if ('${{ github.event.inputs.pkg_GumCommon }}' -eq 'true') { $selected += 'FlatRedBall.GumCommon' }
-        if ('${{ github.event.inputs.pkg_GumDataTypes }}' -eq 'true') { $selected += 'FlatRedBall.GumDataTypes' }
-        if ('${{ github.event.inputs.pkg_ToolsUtilities }}' -eq 'true') { $selected += 'FlatRedBall.ToolsUtilities.NetStandard' }
-        if ('${{ github.event.inputs.pkg_MonoGame }}' -eq 'true') { $selected += 'Gum.MonoGame' }
-        if ('${{ github.event.inputs.pkg_KNI }}' -eq 'true') { $selected += 'Gum.KNI' }
-        if ('${{ github.event.inputs.pkg_FNA }}' -eq 'true') { $selected += 'Gum.FNA' }
-        if ('${{ github.event.inputs.pkg_SkiaSharp }}' -eq 'true') { $selected += 'Gum.SkiaSharp' }
-        if ('${{ github.event.inputs.pkg_SkiaSharpMaui }}' -eq 'true') { $selected += 'Gum.SkiaSharp.Maui' }
-        if ('${{ github.event.inputs.pkg_Raylib }}' -eq 'true') { $selected += 'Gum.raylib' }
-        if ('${{ github.event.inputs.pkg_ShapesMonoGame }}' -eq 'true') { $selected += 'Gum.Shapes.MonoGame' }
-        if ('${{ github.event.inputs.pkg_ShapesKNI }}' -eq 'true') { $selected += 'Gum.Shapes.KNI' }
-        if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
-        if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
-        if ('${{ github.event.inputs.pkg_SilkNet }}' -eq 'true') { $selected += 'Gum.SilkNet' }
-        if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
-        if ('${{ github.event.inputs.pkg_KernSmith }}' -eq 'true') { $selected += 'KernSmith.GumCommon', 'KernSmith.MonoGameGum', 'KernSmith.KniGum', 'KernSmith.RaylibGum' }
-        $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
-
-        Write-Host "Selected packages: $($selected -join ', ')"
-        Write-Host "Publish all Gum.Themes.*: $themesSelected"
-
         Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
-          $name = $_.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
-          $isTheme = $name -like 'Gum.Themes.*'
-          $include = if ($isTheme) { $themesSelected } else { $selected -contains $name }
-          if ($include) {
-            Write-Host "Publishing $($_.Name)..."
-            dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
-          } else {
-            Write-Host "Skipping $($_.Name) (not selected)"
-          }
+          Write-Host "Publishing $($_.Name)..."
+          dotnet nuget push $_.FullName --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
         }
 
-    # Publish to GitHub Packages (when explicitly requested, filtered by package selection)
+    # Publish to GitHub Packages (when explicitly requested).
     - name: Publish to GitHub Packages
       if: github.event.inputs.publish_to_github == 'true'
       shell: pwsh
       run: |
-        $selected = @()
-        if ('${{ github.event.inputs.pkg_GumCommon }}' -eq 'true') { $selected += 'FlatRedBall.GumCommon' }
-        if ('${{ github.event.inputs.pkg_GumDataTypes }}' -eq 'true') { $selected += 'FlatRedBall.GumDataTypes' }
-        if ('${{ github.event.inputs.pkg_ToolsUtilities }}' -eq 'true') { $selected += 'FlatRedBall.ToolsUtilities.NetStandard' }
-        if ('${{ github.event.inputs.pkg_MonoGame }}' -eq 'true') { $selected += 'Gum.MonoGame' }
-        if ('${{ github.event.inputs.pkg_KNI }}' -eq 'true') { $selected += 'Gum.KNI' }
-        if ('${{ github.event.inputs.pkg_FNA }}' -eq 'true') { $selected += 'Gum.FNA' }
-        if ('${{ github.event.inputs.pkg_SkiaSharp }}' -eq 'true') { $selected += 'Gum.SkiaSharp' }
-        if ('${{ github.event.inputs.pkg_SkiaSharpMaui }}' -eq 'true') { $selected += 'Gum.SkiaSharp.Maui' }
-        if ('${{ github.event.inputs.pkg_Raylib }}' -eq 'true') { $selected += 'Gum.raylib' }
-        if ('${{ github.event.inputs.pkg_ShapesMonoGame }}' -eq 'true') { $selected += 'Gum.Shapes.MonoGame' }
-        if ('${{ github.event.inputs.pkg_ShapesKNI }}' -eq 'true') { $selected += 'Gum.Shapes.KNI' }
-        if ('${{ github.event.inputs.pkg_Expressions }}' -eq 'true') { $selected += 'Gum.Expressions' }
-        if ('${{ github.event.inputs.pkg_Sokol }}' -eq 'true') { $selected += 'Gum.sokol' }
-        if ('${{ github.event.inputs.pkg_SilkNet }}' -eq 'true') { $selected += 'Gum.SilkNet' }
-        if ('${{ github.event.inputs.pkg_GumCli }}' -eq 'true') { $selected += 'GumCli' }
-        if ('${{ github.event.inputs.pkg_KernSmith }}' -eq 'true') { $selected += 'KernSmith.GumCommon', 'KernSmith.MonoGameGum', 'KernSmith.KniGum', 'KernSmith.RaylibGum' }
-        $themesSelected = ('${{ github.event.inputs.pkg_Themes }}' -eq 'true')
-
-        Write-Host "Selected packages: $($selected -join ', ')"
-        Write-Host "Publish all Gum.Themes.*: $themesSelected"
-
         Get-ChildItem "./nupkgs/*.nupkg" | ForEach-Object {
-          $name = $_.BaseName -replace '\.\d+\.\d+\.\d+.*$', ''
-          $isTheme = $name -like 'Gum.Themes.*'
-          $include = if ($isTheme) { $themesSelected } else { $selected -contains $name }
-          if ($include) {
-            Write-Host "Publishing $($_.Name)..."
-            dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
-          } else {
-            Write-Host "Skipping $($_.Name) (not selected)"
-          }
+          Write-Host "Publishing $($_.Name)..."
+          dotnet nuget push $_.FullName --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --skip-duplicate
         }
