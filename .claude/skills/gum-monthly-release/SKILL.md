@@ -12,6 +12,8 @@ This skill is a **collaboration**. The user has explicitly said: when anything i
 
 Anything you can't resolve mid-draft, capture in the `## Open Questions` block at the bottom of the markdown file. The user will work through that block with you after the file is generated.
 
+**Not for hotfixes.** This skill's fan-out is built for monthly-scale PR volume. A hotfix (emergency single-bug release) gets a short manual note instead — see "Hotfixes" in `docs/contributing/building-and-releasing-gum.md`.
+
 ## Step 1: Front-loaded questions
 
 Before doing any work, ask the user (in a single message, as a numbered list — they can answer all at once):

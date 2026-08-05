@@ -34,3 +34,12 @@ The skill writes a draft to `temp/` and walks through any open questions with yo
 3. Add the generated notes and screenshots to the GitHub release. Fill in the **Full Changelog** compare link once the tag exists.
 4. Create or update the [migration documentation](../gum-tool/upgrading/README.md) if there are breaking changes.
 5. Announce the release across the community channels: FRB Discord, MonoGame Discord, MGE Discord, Kni Discord, Twitter, Bluesky, and the MonoGame community forum.
+
+### Hotfixes
+
+A hotfix is an emergency tool release for a bad bug, cut outside the normal release cadence. It skips anything not required to ship the fix:
+
+* Skip `/gum-monthly-release` — that skill is built for monthly-scale PR volume. Write a short, plain note describing the bug and the fix instead.
+* Skip screenshots/GIFs and skip step 5 (community announcements).
+* A hotfix should never carry a breaking change — confirm that before tagging.
+* Still run the Build and Release Gum Tool workflow (step 2) and fill in the GitHub release notes and Full Changelog link.

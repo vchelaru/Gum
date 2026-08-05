@@ -17,12 +17,14 @@ The release process lives in **[`docs/contributing/building-and-releasing-gum.md
 ## How to run
 
 1. **Read the doc** above and confirm the current step list with the user.
-2. **Track progress** — create one task per step (`TaskCreate`) so nothing is dropped across the long-running release, and mark each `completed` as the user confirms it.
-3. **Walk the steps in order**, one at a time. For each, state what the user needs to do (the doc has the detail) and wait for confirmation before advancing.
-4. **Hand off the automatable step.** Release-notes generation is the only step with real automation, and it lives in **`gum-monthly-release`**. That skill is `disable-model-invocation: true`, so the `Skill` tool refuses it — read `.claude/skills/gum-monthly-release/SKILL.md` and follow it yourself instead. Everything else (NuGet workflow trigger, Build-and-Release workflow, screenshots, migration doc, announcements, FRB FTP upload) is the user's manual action; you confirm and check it off.
+2. **Ask if this is a hotfix** — an emergency tool release for a bad bug, outside the normal cadence. If yes, follow the doc's "Hotfixes" subsection: skip `gum-monthly-release` (write a short manual note instead), skip screenshots and community announcements, and confirm with the user that the fix carries no breaking changes before tagging.
+3. **Track progress** — create one task per step (`TaskCreate`) so nothing is dropped across the long-running release, and mark each `completed` as the user confirms it. For a hotfix, only create tasks for the steps that apply.
+4. **Walk the steps in order**, one at a time. For each, state what the user needs to do (the doc has the detail) and wait for confirmation before advancing.
+5. **Hand off the automatable step (non-hotfix only).** Release-notes generation is the only step with real automation, and it lives in **`gum-monthly-release`**. That skill is `disable-model-invocation: true`, so the `Skill` tool refuses it — read `.claude/skills/gum-monthly-release/SKILL.md` and follow it yourself instead. Everything else (NuGet workflow trigger, Build-and-Release workflow, screenshots, migration doc, announcements, FRB FTP upload) is the user's manual action; you confirm and check it off.
 
 ## Gotchas
 
 - The two processes in the doc — **NuGet publishing** and **tool release** — are independent. Ask which the user is doing; don't assume both.
+- A hotfix is a mode of the tool release, not a separate process — same steps, minus notes/promotion. Don't run `gum-monthly-release` for one.
 - `gum-monthly-release` only writes the notes markdown. It does **not** bump versions, cut the tag, or trigger workflows — those are separate manual steps in the doc.
 - The **Full Changelog** compare link in the notes can only be filled after the tag exists, so it stays a placeholder until the release is cut.
