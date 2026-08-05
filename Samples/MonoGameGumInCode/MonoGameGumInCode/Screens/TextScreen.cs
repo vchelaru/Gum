@@ -392,12 +392,23 @@ internal class TextScreen : FrameworkElement
         // resulting position into absolute X/Y, then detach and add as a top-level layer member.
         filterRow.AddChild(pointText);
         filterRow.AddChild(linearText);
-        pointText.X = pointText.AbsoluteLeft;
-        pointText.Y = pointText.AbsoluteTop;
-        linearText.X = linearText.AbsoluteLeft;
-        linearText.Y = linearText.AbsoluteTop;
+
+        // Read both absolute positions before mutating either -- assigning an absolute pixel value
+        // into X/Y while still parented re-triggers the stack layout, which would shift the
+        // not-yet-read sibling's position out from under it.
+        float pointLeft = pointText.AbsoluteLeft;
+        float pointTop = pointText.AbsoluteTop;
+        float linearLeft = linearText.AbsoluteLeft;
+        float linearTop = linearText.AbsoluteTop;
+
         filterRow.Children.Remove(pointText);
         filterRow.Children.Remove(linearText);
+
+        pointText.X = pointLeft;
+        pointText.Y = pointTop;
+        linearText.X = linearLeft;
+        linearText.Y = linearTop;
+
         pointText.AddToManagers(SystemManagers.Default, pointLayer);
         linearText.AddToManagers(SystemManagers.Default, linearLayer);
 #endif
