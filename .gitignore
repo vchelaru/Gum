@@ -70,6 +70,7 @@ Tool/HtmlToGum/.out/
 Tool/HtmlToGum/.regress/
 Tool/HtmlToGum/.site-fidelity/
 Tool/HtmlToGum/.bookmark-fidelity/
+Tool/HtmlToGum/.canaries/
 Tool/HtmlToGum/*.log
 Tool/HtmlToGum/**/*.log
 Tool/HtmlToGum/HtmlToGum-SpaceJam-Demo.html

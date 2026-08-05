@@ -1,0 +1,13 @@
+{
+  "id": "mdn-background-size",
+  "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size",
+  "baseHref": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/",
+  "frozenAt": "2026-08-05T20:03:45.394Z",
+  "viewport": {
+    "width": 800,
+    "height": 900
+  },
+  "index": "index.html",
+  "chromiumReference": "chromium-reference.png",
+  "note": "HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially."
+}

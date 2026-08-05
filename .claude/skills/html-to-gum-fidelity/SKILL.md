@@ -66,6 +66,17 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **Space Jam regression:** after shared converter edits, smoke `jam.htm` (or `--max-pages=3`) before calling a fix done.
 
+**Canary suite (anti-overfit):** after shared converter edits, run the curated gate before calling a fix done:
+
+```powershell
+cd Tool/HtmlToGum/fidelity
+npm run canaries -- --tier=local    # layout zoo (~1–2 min) — run every fix
+npm run canaries -- --tier=live     # 10 CS/general sites (~5–8 min) — run before commit
+# optional: npm run canaries -- --tier=frozen   # after npm run freeze …
+```
+
+Fail if any entry exceeds `maxPct` **or** rises more than `maxDeltaPct` above its checked-in `baselinePct` (`canaries.json`). Use `--update-baselines` only after a known-good intentional improvement. Do not use personal bookmark batches as the regression net.
+
 ## Loop cap
 
 Per site: diagnose top `diff/` regions → one focused converter patch + tests → re-run fidelity. If still failing for the *same* rotating-media hypothesis after stabilize already ran, stop that hypothesis and move on.

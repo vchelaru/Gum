@@ -39,6 +39,10 @@ export const FIXTURES: Fixture[] = [
   { tag: 'tabler', html: 'third-party/tabler-card.html', sel: '.card', screen: 'TablerScreen', w: 800, h: 600, maxPct: 26 },
   { tag: 'cerberus', html: 'third-party/cerberus-fluid.html', sel: '.email-container', screen: 'CerberusScreen', w: 700, h: 1000, maxPct: 45 },
   { tag: 'imagecard', html: 'third-party/tabler-image-card.html', sel: '.row', screen: 'TablerImageScreen', w: 800, h: 400, maxPct: 58 },
+  // Layout-zoo landmines (also run via fidelity/canaries.ts --tier=local).
+  { tag: 'whitecanvas', html: 'features/white-canvas.html', sel: 'body', screen: 'WhiteCanvas', w: 800, h: 400, maxPct: 3, noResponsive: true },
+  { tag: 'fixedcookie', html: 'features/fixed-cookie-header.html', sel: 'body', screen: 'FixedCookie', w: 800, h: 600, maxPct: 4, noResponsive: true },
+  { tag: 'bgsizeauto', html: 'features/bg-size-auto-banner.html', sel: 'body', screen: 'BgSizeAuto', w: 800, h: 200, maxPct: 5, noResponsive: true },
 ];
 
 export const EXTRA_CHECKS = {

@@ -1,0 +1,13 @@
+{
+  "id": "python-docs-3",
+  "sourceUrl": "https://docs.python.org/3/",
+  "baseHref": "https://docs.python.org/3/",
+  "frozenAt": "2026-08-05T20:03:48.102Z",
+  "viewport": {
+    "width": 800,
+    "height": 900
+  },
+  "index": "index.html",
+  "chromiumReference": "chromium-reference.png",
+  "note": "HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially."
+}

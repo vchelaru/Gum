@@ -8,6 +8,8 @@
     "convert": "tsx convert.ts",
     "gumcli": "tsx gumcli.ts",
     "site-fidelity": "npm --prefix ../fidelity run site-fidelity --",
+    "canaries": "npm --prefix ../fidelity run canaries --",
+    "freeze": "npm --prefix ../fidelity run freeze --",
     "bookmark-fidelity": "npm --prefix ../fidelity run bookmark-fidelity --",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test *.test.ts",

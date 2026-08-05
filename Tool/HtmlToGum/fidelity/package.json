@@ -6,6 +6,8 @@
   "description": "Site/bookmark pixel-gate harness for HtmlToGum (not the convert pipeline)",
   "scripts": {
     "site-fidelity": "tsx site-fidelity.ts",
+    "canaries": "tsx canaries.ts",
+    "freeze": "tsx freeze-page.ts",
     "bookmark-fidelity": "python bookmark_fidelity_batch.py seeds.json",
     "test": "tsx --test *.test.ts"
   },

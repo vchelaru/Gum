@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>background-size auto banner</title>
+  <!--
+    Landmine: background-size:auto + background-position must place the image at
+    natural size, not stretch-fill (Team Liquid header banner).
+  -->
+  <style>
+    html, body { margin: 0; background: #1a1a2e; }
+    .banner {
+      width: 800px;
+      height: 120px;
+      background-color: #0f3460;
+      /* 200×60 SVG placed at natural size, centered horizontally */
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='60'%3E%3Crect width='200' height='60' fill='%23e94560'/%3E%3Ctext x='100' y='38' text-anchor='middle' fill='white' font-family='Arial' font-size='20'%3EBANNER%3C/text%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: auto;
+      background-position: 50% 0%;
+    }
+    p {
+      margin: 16px;
+      color: #eee;
+      font: 14px Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="banner" id="banner"></div>
+  <p>The red BANNER mark must be ~200×60 centered at the top — not stretched to 800×120.</p>
+</body>
+</html>
