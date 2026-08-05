@@ -376,8 +376,6 @@ internal class TextScreen : FrameworkElement
         pointText.FontSize = 12;
         pointText.FontScale = 4;
         pointText.Text = "Point filter (blocky)";
-        filterRow.AddChild(pointText);
-        pointText.MoveToLayer(pointLayer);
 
         var linearLayer = SystemManagers.Default.Renderer.AddLayer();
         linearLayer.Name = "Texture Filter - Linear";
@@ -386,8 +384,22 @@ internal class TextScreen : FrameworkElement
         linearText.FontSize = 12;
         linearText.FontScale = 4;
         linearText.Text = "Linear filter (smoothed)";
+
+        // pointText/linearText need filterRow's LeftToRightStack to compute their position, but
+        // must render on their own texture-filter Layer, not filterRow's. A GUE can't be both a
+        // parented render-tree child AND a top-level layer member (see #4333) -- adding both would
+        // double-render it, so instead: parent long enough for the stack layout to run, bake the
+        // resulting position into absolute X/Y, then detach and add as a top-level layer member.
+        filterRow.AddChild(pointText);
         filterRow.AddChild(linearText);
-        linearText.MoveToLayer(linearLayer);
+        pointText.X = pointText.AbsoluteLeft;
+        pointText.Y = pointText.AbsoluteTop;
+        linearText.X = linearText.AbsoluteLeft;
+        linearText.Y = linearText.AbsoluteTop;
+        filterRow.Children.Remove(pointText);
+        filterRow.Children.Remove(linearText);
+        pointText.AddToManagers(SystemManagers.Default, pointLayer);
+        linearText.AddToManagers(SystemManagers.Default, linearLayer);
 #endif
     }
 #endif

@@ -6195,6 +6195,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         bool hasContainedObject = mContainedObjectAsIpso != null;
         if (hasContainedObject)
         {
+            if (Parent != null)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot move {this} to a different layer because it is parented to {Parent}. " +
+                    "MoveToLayer only re-homes top-level layer members; a parented element is already " +
+                    "drawn through its parent's render tree, so also adding it to a layer would double-render it. " +
+                    "Remove it from its parent first, or use AddToManagers instead.");
+            }
             if(layerToAddTo == null)
             {
                 throw new InvalidOperationException($"Cannot move {this} to a different layer because it is not currently on a layer and no layer was provided");
