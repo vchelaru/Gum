@@ -7,4 +7,4 @@ using System.Runtime.CompilerServices;
 // decide which runtime conventions/namespaces to emit code against. Kept in lock step with the
 // other runtime assemblies (GumCommon, MonoGameGum, RaylibGum, SkiaGum, SokolGum). See:
 // https://docs.flatredball.com/gum/gum-tool/upgrading/syntax-versions
-[assembly: GumSyntaxVersion(Version = 3)]
+[assembly: GumSyntaxVersion(Version = 4)]

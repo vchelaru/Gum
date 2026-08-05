@@ -29,6 +29,11 @@ public class GumSyntaxVersionAttribute : Attribute
     /// Version 2 collapses <c>ColoredCircleRuntime</c>/<c>ColoredRectangleRuntime</c>/<c>RoundedRectangleRuntime</c>
     /// into <c>CircleRuntime</c>/<c>RectangleRuntime</c> and exposes <c>FillColor</c>,
     /// <c>StrokeColor</c>, and <c>StrokeWidth</c> on them. See PR #2769 / issue #2768.
+    /// Version 3 unifies the <c>GumService</c> namespace (<c>GumService</c>/<c>WindowZoomMode</c> move
+    /// under <c>Gum</c>, <c>AddToRoot</c> becomes an instance method). See PR #3122 / issue #3119.
+    /// Version 4 adds <c>RenderingLibrary.Math.Geometry.FilledStrokedRectangle</c>, the flat fill+stroke
+    /// renderable FlatRedBall's Glue codegen backs a v3 (gumx <c>ShapeVariableExpansion</c>) Rectangle
+    /// with. See PR #4342 / issue #4341.
     /// </summary>
     public int Version;
 }

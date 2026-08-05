@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0-android</TargetFramework>
@@ -17,6 +17,9 @@
 		<DefineConstants>$(DefineConstants);MONOGAME;FRB</DefineConstants>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Include="..\AssemblyAttributes.cs" />
+	</ItemGroup>
 	<Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
 
 	<Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -42,6 +42,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\FlatRedBall\Engines\FlatRedBallXNA\FlatRedBallDesktopGLNet6\FlatRedBallDesktopGLNet6.csproj" />
 		<ProjectReference Include="..\..\..\..\FlatRedBall\Engines\Forms\FlatRedBall.Forms\StateInterpolation\StateInterpolation.DesktopGlNet6\StateInterpolation.DesktopNet6.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Include="..\AssemblyAttributes.cs" />
 	</ItemGroup>
 	<Import Project="..\..\..\GumCoreShared.projitems" Label="Shared" />
 	<Import Project="..\..\..\..\FlatRedBall\FRBDK\Glue\GumPlugin\GumPlugin\GumCoreShared.FlatRedBall.projitems" Label="Shared" />
