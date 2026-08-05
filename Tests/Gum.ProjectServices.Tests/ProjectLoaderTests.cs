@@ -1,5 +1,8 @@
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
+using Gum.Managers;
 using Gum.ProjectServices;
+using Moq;
 using Shouldly;
 
 namespace Gum.ProjectServices.Tests;
@@ -563,6 +566,57 @@ public class ProjectLoaderTests
             result.LoadErrors.ShouldNotContain(e => e.ElementName == "GoodComponent");
 
             // The conflicted element gets a clear, dedicated conflict-marker error.
+            result.LoadErrors.ShouldContain(e =>
+                e.ElementName == "ConflictComponent" &&
+                e.Severity == ErrorSeverity.Error &&
+                e.Message.Contains("conflict marker"));
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_ShouldReportError_WhenJsonElementFileContainsGitConflictMarkers()
+    {
+        // Regression guard for #4345: conflict-marker detection must resolve against a JSON-format
+        // project's actual .gucj/.gusj/.gutj/.behj files, not just their XML counterparts.
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumLoaderTest_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Test.gumx");
+        try
+        {
+            ProjectCreator creator = new ProjectCreator();
+            creator.Create(gumxPath);
+
+            string componentDir = Path.Combine(tempDir, "Components");
+            File.WriteAllText(Path.Combine(componentDir, "ConflictComponent.gucx"), """
+                <?xml version="1.0" encoding="utf-8"?>
+                <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+                  <Name>ConflictComponent</Name>
+                  <BaseType>Container</BaseType>
+                </ComponentSave>
+                """);
+
+            string gumxContent = File.ReadAllText(gumxPath);
+            gumxContent = gumxContent.Replace("</GumProjectSave>",
+                """  <ComponentReference Name="ConflictComponent" />""" + "\n</GumProjectSave>");
+            File.WriteAllText(gumxPath, gumxContent);
+
+            StandardElementsManager.Self.Initialize();
+            GumProjectSave project = GumProjectSave.Load(gumxPath, out _)!;
+            project.Initialize();
+            IConvertProjectToJsonService jsonService = new ConvertProjectToJsonService(new Mock<IFileWatchIgnoreList>().Object);
+            ConvertProjectToJsonResult convertResult = jsonService.ConvertToJson(project);
+
+            // Corrupt the JSON sibling with unresolved git conflict markers, mirroring the XML case.
+            string componentJsonPath = Path.Combine(componentDir, "ConflictComponent.gucj");
+            string jsonContent = File.ReadAllText(componentJsonPath);
+            File.WriteAllText(componentJsonPath, "<<<<<<< HEAD\n" + jsonContent + "\n=======\n>>>>>>> other-branch\n");
+
+            ProjectLoadResult result = _sut.Load(convertResult.ProjectFilePath);
+
             result.LoadErrors.ShouldContain(e =>
                 e.ElementName == "ConflictComponent" &&
                 e.Severity == ErrorSeverity.Error &&

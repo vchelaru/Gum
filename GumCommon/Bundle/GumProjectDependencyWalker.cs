@@ -65,6 +65,11 @@ public class GumProjectDependencyWalker
         // scan of Screens/Components/StandardElements per call, so the walk's cost scales with
         // project size squared. EnableCache/DisableCache is reference-counted, so this composes
         // safely with an already-active cache from an outer caller.
+        // The single source of truth for "is this project JSON or XML formatted" (see
+        // GumProjectSave.IsJsonFormat) - element/behavior core files must resolve against the
+        // project's actual on-disk format, not always the XML extensions (#4345).
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName ?? string.Empty);
+
         ObjectFinder.Self.EnableCache();
         try
         {
@@ -72,8 +77,8 @@ public class GumProjectDependencyWalker
             {
                 if (inclusion.HasFlag(GumBundleInclusion.Core))
                 {
-                    CollectCoreFiles(project, projectRootDirectory, core, missing);
-                    CollectInstanceTypeCoreFiles(project, core);
+                    CollectCoreFiles(project, projectRootDirectory, core, missing, isJsonFormat);
+                    CollectInstanceTypeCoreFiles(project, core, isJsonFormat);
                 }
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
@@ -89,7 +94,7 @@ public class GumProjectDependencyWalker
             }
             else
             {
-                CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing);
+                CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing, isJsonFormat);
 
                 if (inclusion.HasFlag(GumBundleInclusion.FontCache))
                 {
@@ -119,7 +124,8 @@ public class GumProjectDependencyWalker
         GumProjectSave project,
         string projectRootDirectory,
         HashSet<string> core,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        bool isJsonFormat)
     {
         // .gumx itself — derive from FullFileName when present, else from any single .gumx in the root.
         string? gumxRelative = TryGetGumxRelativePath(project, projectRootDirectory);
@@ -131,21 +137,21 @@ public class GumProjectDependencyWalker
         foreach (ElementReference reference in project.ScreenReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Screen;
-            AddElementReference(reference, projectRootDirectory, core, missing);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
         }
         foreach (ElementReference reference in project.ComponentReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Component;
-            AddElementReference(reference, projectRootDirectory, core, missing);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
         }
         foreach (ElementReference reference in project.StandardElementReferences ?? new List<ElementReference>())
         {
             reference.ElementType = ElementType.Standard;
-            AddElementReference(reference, projectRootDirectory, core, missing);
+            AddElementReference(reference, projectRootDirectory, core, missing, isJsonFormat);
         }
         foreach (BehaviorReference reference in project.BehaviorReferences ?? new List<BehaviorReference>())
         {
-            string relative = NormalizeRelative(BehaviorReference.Subfolder + "/" + reference.Name + "." + BehaviorReference.Extension);
+            string relative = NormalizeRelative(reference.GetRelativeFilePath(isJsonFormat));
             core.Add(relative);
             string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(fullPath))
@@ -160,9 +166,10 @@ public class GumProjectDependencyWalker
         ElementReference reference,
         string projectRootDirectory,
         HashSet<string> core,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        bool isJsonFormat)
     {
-        string relative = NormalizeRelative(reference.Subfolder + "/" + reference.Name + "." + reference.Extension);
+        string relative = NormalizeRelative(reference.Subfolder + "/" + reference.Name + "." + reference.GetExtension(isJsonFormat));
         core.Add(relative);
         string fullPath = Path.Combine(projectRootDirectory, relative.Replace('/', Path.DirectorySeparatorChar));
         if (!File.Exists(fullPath))
@@ -232,7 +239,7 @@ public class GumProjectDependencyWalker
         }
     }
 
-    private static void CollectInstanceTypeCoreFiles(GumProjectSave project, HashSet<string> core)
+    private static void CollectInstanceTypeCoreFiles(GumProjectSave project, HashSet<string> core, bool isJsonFormat)
     {
         // Mirror the historical ObjectFinder behavior: for every instance, add the .gucx/.gutx
         // file for its BaseType. Projects loaded normally have ComponentReferences/StandardElementReferences
@@ -265,10 +272,20 @@ public class GumProjectDependencyWalker
                     : null;
                 if (subfolder != null)
                 {
-                    core.Add(NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + instanceElement.FileExtension));
+                    core.Add(NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + GetElementExtension(instanceElement, isJsonFormat)));
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Returns <see cref="ElementSave.FileExtension"/> (XML) or its JSON counterpart, matching
+    /// the project's actual format. Same "x"-&gt;"j" convention as <see cref="ElementSave.Save"/>.
+    /// </summary>
+    private static string GetElementExtension(ElementSave element, bool isJsonFormat)
+    {
+        string extension = element.FileExtension;
+        return isJsonFormat ? extension.Substring(0, extension.Length - 1) + "j" : extension;
     }
 
     private static void CollectForSingleElement(
@@ -279,7 +296,8 @@ public class GumProjectDependencyWalker
         HashSet<string> core,
         HashSet<string> fontCache,
         HashSet<string> external,
-        List<DependencyWarning> missing)
+        List<DependencyWarning> missing,
+        bool isJsonFormat)
     {
         bool includeCore = inclusion.HasFlag(GumBundleInclusion.Core);
         bool includeFontCache = inclusion.HasFlag(GumBundleInclusion.FontCache);
@@ -317,7 +335,7 @@ public class GumProjectDependencyWalker
                             : null;
                         if (subfolder != null)
                         {
-                            string relative = NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + instanceElement.FileExtension);
+                            string relative = NormalizeRelative(subfolder + "/" + instanceElement.Name + "." + GetElementExtension(instanceElement, isJsonFormat));
                             core.Add(relative);
                         }
                     }

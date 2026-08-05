@@ -451,6 +451,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     internal void CopyLinkedComponents(GumProjectSave gumProjectSave)
     {
         var gumDirectory = new FilePath(gumProjectSave.FullFileName).GetDirectoryContainingThis();
+        var isJsonFormat = GumProjectSave.IsJsonFormat(gumProjectSave.FullFileName);
 
         void CopyReference(ElementReference reference)
         {
@@ -458,7 +459,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 // copy from the original location here
                 var source = gumDirectory.Original + reference.Link;
-                var destination = gumDirectory.Original + reference.Subfolder + "/" + reference.Name + "." + reference.Extension;
+                var destination = gumDirectory.Original + reference.Subfolder + "/" + reference.Name + "." + reference.GetExtension(isJsonFormat);
 
                 try
                 {

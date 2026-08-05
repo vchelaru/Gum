@@ -243,6 +243,45 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void CopyLinkedComponents_UsesJsonExtension_WhenProjectIsJsonFormat()
+    {
+        // Regression guard for #4345: CopyLocally destinations must resolve against the project's
+        // actual format, not always the XML extension (ElementReference.Extension is XML-only).
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        Directory.CreateDirectory(Path.Combine(tempDirectory, "Components"));
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDirectory, "Source.gucj"), "json source contents");
+
+            GumProjectSave project = new GumProjectSave
+            {
+                FullFileName = Path.Combine(tempDirectory, "Project.gumj")
+            };
+            project.ComponentReferences.Add(new ElementReference
+            {
+                ElementType = ElementType.Component,
+                LinkType = LinkType.CopyLocally,
+                Name = "Copied",
+                Link = "Source.gucj"
+            });
+
+            _projectManager.CopyLinkedComponents(project);
+
+            string destination = Path.Combine(tempDirectory, "Components", "Copied.gucj");
+            File.Exists(destination).ShouldBeTrue();
+            File.ReadAllText(destination).ShouldBe("json source contents");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void CopyLinkedComponents_PrintsError_WhenSourceFileIsMissing()
     {
         string tempDirectory = Path.Combine(

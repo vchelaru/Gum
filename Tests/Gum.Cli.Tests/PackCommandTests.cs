@@ -199,6 +199,41 @@ public class PackCommandTests : IDisposable
     }
 
     [Fact]
+    public void Pack_resolves_JSON_extensions_for_JSON_format_project()
+    {
+        // Regression guard for #4345: gumcli new -> convert-to-json -> pack must not report every
+        // referenced screen/component/standard/behavior as missing because of a hardcoded XML extension.
+        // "empty" template (not the default "forms" one): forms pulls in SourcePath-linked
+        // behaviors that are only staged via `gumcli stage-forms-behaviors`, which is an
+        // unrelated, pre-existing gap - not part of this JSON-extension regression.
+        string projectDir = Path.Combine(_tempDirectory, "JsonProject");
+        string projectPath = Path.Combine(projectDir, "JsonProject.gumx");
+        CliTestHelper.Run("new", projectPath, "--template", "empty").ExitCode.ShouldBe(0);
+        CliTestHelper.Run("convert-to-json", projectPath).ExitCode.ShouldBe(0);
+        string gumjPath = Path.Combine(projectDir, "JsonProject.gumj");
+        string outputPath = Path.Combine(projectDir, "out.gumpkg");
+
+        // convert-to-json writes JSON siblings without touching the XML originals, so a converted
+        // project has both on disk. Delete the XML originals to reproduce a real JSON-only project
+        // (e.g. one where the user removed the XML after converting) - otherwise the old, broken
+        // extension resolution would silently succeed by finding the XML sibling instead.
+        string[] xmlExtensions = { "gumx", "gusx", "gucx", "gutx", "behx", "ganx" };
+        foreach (string xmlFile in Directory.EnumerateFiles(projectDir, "*.*", SearchOption.AllDirectories)
+                     .Where(f => xmlExtensions.Contains(Path.GetExtension(f).TrimStart('.'), StringComparer.OrdinalIgnoreCase)))
+        {
+            File.Delete(xmlFile);
+        }
+
+        CliTestHelper result = CliTestHelper.Run("pack", gumjPath, "-o", outputPath, "--include", "core");
+
+        result.StandardError.ShouldNotContain("missing:");
+        result.ExitCode.ShouldBe(0);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain("JsonProject.gumj");
+        entries.Keys.Any(k => k.EndsWith(".gutj")).ShouldBeTrue();
+    }
+
+    [Fact]
     public void Pack_writes_output_to_default_path_when_no_dash_o()
     {
         string projectPath = CreateCleanProject("DefaultOut");
