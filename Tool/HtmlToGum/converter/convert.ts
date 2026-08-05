@@ -45,6 +45,10 @@ import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
 import { treeHasFormControls } from './forms.js';
 import { intersectScreenshotClip } from './screenshot-clip.js';
+import {
+  isolateElementForTransparentScreenshot,
+  restoreRasterIsolation,
+} from './raster-isolation.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -314,21 +318,10 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
         const pseudoChrome = omitBg && node.tag !== 'svg';
         if (omitBg && !pseudoChrome) {
           const mark = `htg${i}`;
-          const found = await page.evaluate(({ rootSelector, path, mark }) => {
-            function isVisible(el) {
-              const cs = getComputedStyle(el);
-              return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
-            }
-            let el = document.querySelector(rootSelector);
-            if (!el) return false;
-            for (const idx of path) {
-              const kids = Array.from(el.children).filter(isVisible);
-              el = kids[idx];
-              if (!el) return false;
-            }
-            el.setAttribute('data-html-to-gum-shot', mark);
-            return true;
-          }, { rootSelector, path, mark });
+          const found = await page.evaluate(
+            isolateElementForTransparentScreenshot,
+            { rootSelector, path, mark },
+          );
           if (found) {
             try {
               await page.locator(`[data-html-to-gum-shot="${mark}"]`).screenshot({
@@ -344,10 +337,7 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
               }
               throw e;
             } finally {
-              await page.evaluate((mark) => {
-                document.querySelector(`[data-html-to-gum-shot="${mark}"]`)
-                  ?.removeAttribute('data-html-to-gum-shot');
-              }, mark);
+              await page.evaluate(restoreRasterIsolation, mark);
             }
             return;
           }

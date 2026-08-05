@@ -27,9 +27,13 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 ## Landmines
 
-**Custom-font multi-line `<p>`/`<h*>`:** BitmapFont wrap ≠ Chromium for faces like Graphik/Doyle (Pocket). `shouldRasterTextHeavyCell` also bakes multi-line blocks (≥2 client rects) whose first `font-family` is not a system face — plus narrow (`≤280px`) wrapping `<a>`/`<li>` even in Arial (TL Community News). Wide system-font article prose (HN / Wikipedia) stays structured Text.
+**Custom-font multi-line `<p>`/`<h*>`:** BitmapFont wrap ≠ Chromium for faces like Graphik/Doyle (Pocket). `shouldRasterTextHeavyCell` also bakes multi-line blocks (≥2 client rects) whose first `font-family` is not a system face, narrow (`≤280px`) wrapping `<a>`/`<li>` even in Arial (TL Community News), and centered multi-line system-font `<p>` marketing copy (Pi-hole). Wide left-aligned system-font article prose (HN / Wikipedia) stays structured Text.
 
 **Font Awesome / icon-font `::before`:** glyphs use `content:"\uf0xx"` with `width/height:auto` (no border/bg box). `needsRasterPaint` must treat icon-font families and Private Use Area content as pseudo chrome — otherwise Gum draws empty bordered squares (Embrace the Red header social icons).
+
+**Empty-content pseudo backdrops:** overlays often use `::before { content:""; inset:0; background:…; opacity:… }` (Pi-hole hero tint). Do not discard the pseudo because its unquoted content is empty. Bake the host chrome (background + pseudo) while hiding descendants so nav/text remain structured; icon/glyph pseudos still bake the whole host.
+
+**Transparent inline SVG rasterization:** Playwright `omitBackground` clears the page canvas but still captures painted DOM ancestors through transparent SVG pixels. Isolate the SVG by temporarily neutralizing ancestor chrome and hiding sibling branches (`raster-isolation.ts`), then restore exact inline styles. Otherwise a separator SVG over a photo bakes the photo and Gum paints a duplicate strip (Pi-hole hero).
 
 **Google Fonts unicode-range subsets:** each weight has many `@font-face` rules (Latin / Latin-ext / Cyrillic / …). Picking the first CSS match often bakes a Cyrillic-only TTF → empty KernSmith atlas → Arial fallback. Prefer faces whose `unicode-range` covers basic Latin (`unicodeRangeCoversBasicLatin`); reject baked TTFs that lack `A`/`a`/`M`/`m` and try the next URL.
 

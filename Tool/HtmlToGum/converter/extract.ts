@@ -205,12 +205,14 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
     range.selectNodeContents(el);
     const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
     if (rects.length < 2) return false;
-    // System faces: only bake narrow wrapping columns (sidebar news); leave wide
-    // article prose structured (HN / Wikipedia stay Text).
+    // System faces: bake narrow wrapping links (sidebar news) and centered multi-line
+    // marketing copy, whose wrap/centering amplifies small BitmapFont metric drift.
+    // Leave wide left-aligned article prose structured (HN / Wikipedia stay Text).
     if (systemFace.test(first)) {
       const box = el.getBoundingClientRect();
-      if (box.width > 280) return false;
-      if (tag !== 'A' && tag !== 'LI') return false;
+      const centeredProse = tag === 'P' && cs.textAlign === 'center';
+      if (box.width > 280 && !centeredProse) return false;
+      if (tag !== 'A' && tag !== 'LI' && !centeredProse) return false;
     }
     return true;
   }
@@ -236,6 +238,7 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
     const hasBorderImage = !!bi && bi !== 'none' && /url\(/i.test(bi);
     const isSvg = !!(el && String(el.tagName).toUpperCase() === 'SVG');
     let hasPseudoChrome = false;
+    let hasPseudoBackdrop = false;
     if (el && !isSvg) {
       for (const pseudo of ['::before', '::after']) {
         let pcs;
@@ -244,7 +247,6 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         if (!content || content === 'none' || content === 'normal') continue;
         // CSS returns quoted strings: "\"\\f003\"" / '"•"' / '""'
         const raw = String(content).replace(/^["']|["']$/g, '');
-        if (!raw) continue;
         const pw = parseFloat(pcs.width) || 0;
         const ph = parseFloat(pcs.height) || 0;
         const borders = (parseFloat(pcs.borderTopWidth) || 0)
@@ -253,26 +255,32 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
           + (parseFloat(pcs.borderLeftWidth) || 0);
         const pbg = pcs.backgroundColor || '';
         const hasBg = pbg && pbg !== 'transparent' && !/^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)$/i.test(pbg);
+        const hasBgImage = !!pcs.backgroundImage && pcs.backgroundImage !== 'none';
+        const hasShadow = !!pcs.boxShadow && pcs.boxShadow !== 'none';
         // Font Awesome / Material Icons use ::before glyphs with width/height:auto
         // (parseFloat → 0) and no box chrome — previously skipped → empty bordered hosts.
         const fam = (pcs.fontFamily || '').toLowerCase();
         const isIconFont = /font\s*awesome|fontawesome|material icons|glyphicons?|ionicons|bootstrap-icons|feather|lucide/i.test(fam);
         let isPua = false;
         try {
-          const cp = raw.codePointAt(0);
+          const cp = raw && raw.codePointAt(0);
           isPua = cp != null && cp >= 0xe000 && cp <= 0xf8ff;
         } catch { /* ignore */ }
-        if (pw > 0 || ph > 0 || borders > 0 || hasBg || isIconFont || isPua) {
+        if (pw > 0 || ph > 0 || borders > 0 || hasBg || hasBgImage || hasShadow || isIconFont || isPua) {
           hasPseudoChrome = true;
+          // Empty-content pseudos commonly paint a full-box tint/texture over a host
+          // background (Pi-hole hero color overlay). Bake host chrome only and keep
+          // structured children; icon/glyph pseudos still bake the whole host.
+          hasPseudoBackdrop = !raw && (hasBg || hasBgImage || hasShadow);
           break;
         }
       }
     }
     return {
       needsRaster: hasFilter || hasGradient || hasBorderImage || isSvg || hasPseudoChrome,
-      rasterWholeSubtree: hasFilter || isSvg || hasPseudoChrome,
+      rasterWholeSubtree: hasFilter || isSvg || (hasPseudoChrome && !hasPseudoBackdrop),
       // Transparent PNG for icons so sidebar/card chrome isn't baked into the sprite.
-      rasterOmitBackground: isSvg || hasPseudoChrome,
+      rasterOmitBackground: isSvg || (hasPseudoChrome && !hasPseudoBackdrop),
     };
   }
 

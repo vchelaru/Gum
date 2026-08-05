@@ -178,6 +178,80 @@ test('extractBoxTree: narrow wrapping Arial link needsRaster (TL Community News)
   }
 });
 
+test('extractBoxTree: centered multi-line system-font paragraph needsRaster', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <p id="copy" style="width:546px;text-align:center;font:18px/1.5 Helvetica,Arial,sans-serif;">
+        You can run Pi-hole in a container, or deploy it directly to a supported operating
+        system via our automated installer.
+      </p>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#copy');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal(tree.style?.rasterWholeSubtree, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: wide left-aligned system-font prose stays structured', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <p id="article" style="width:546px;text-align:left;font:18px/1.5 Arial,sans-serif;">
+        This wide article paragraph intentionally wraps across lines but remains structured
+        text so documentation and news pages do not become a collection of raster blocks.
+      </p>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#article');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, false);
+    assert.equal(tree.text.includes('wide article paragraph'), true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: empty ::before background rasterizes host chrome, not children', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        #hero {
+          position: relative;
+          width: 800px;
+          height: 300px;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Crect width='8' height='8' fill='red'/%3E%3C/svg%3E") center/cover;
+        }
+        #hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: rgb(15, 1, 0);
+          opacity: .61;
+        }
+      </style>
+      <div id="hero"><h1>Structured heading</h1></div>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#hero');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal(tree.style?.rasterWholeSubtree, false);
+    assert.equal(tree.style?.rasterOmitBackground, false);
+    assert.equal(tree.children.some((child) => child.tag === 'h1'), true);
+  } finally {
+    await browser.close();
+  }
+});
+
 // Browsers paint a white "canvas" when neither <html> nor <body> sets an opaque background.
 // Gum has no such default, so the root must inherit that white or the screenshot is
 // transparent where Chromium is white (OWASP: whole content band scored as a full miss).

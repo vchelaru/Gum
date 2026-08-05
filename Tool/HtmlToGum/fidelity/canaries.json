@@ -82,15 +82,15 @@
     {
       "id": "wikipedia",
       "url": "https://en.wikipedia.org/wiki/Main_Page",
-      "baselinePct": 13.8,
-      "maxPct": 20,
+      "baselinePct": 1.15,
+      "maxPct": 5,
       "maxDeltaPct": 2,
-      "landmine": "dense multi-column; gate on delta, not absolute 5%"
+      "landmine": "dense multi-column; empty-content ::before overlays"
     },
     {
       "id": "pastebin",
       "url": "https://pastebin.com/TLzWRTet",
-      "baselinePct": 0.88,
+      "baselinePct": 0.65,
       "maxPct": 5,
       "maxDeltaPct": 2,
       "landmine": "monospace / simple chrome"
