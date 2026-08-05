@@ -1,16 +1,22 @@
 using Gum.Bundle;
+using Gum.DataTypes;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.Cli.Tests;
 
 public class PackCommandTests : IDisposable
 {
     private readonly string _tempDirectory;
+    private readonly Func<string, Stream>? _previousHook;
 
     public PackCommandTests()
     {
         _tempDirectory = Path.Combine(Path.GetTempPath(), "GumCliPackTests_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDirectory);
+        // GumBundleLoader.Resolve installs FileManager.CustomGetStreamFromFile as global mutable
+        // state; stash/restore around it so this test class stays isolated from others.
+        _previousHook = FileManager.CustomGetStreamFromFile;
     }
 
     [Fact]
@@ -234,6 +240,44 @@ public class PackCommandTests : IDisposable
     }
 
     [Fact]
+    public void Pack_of_JSON_format_project_loads_back_through_GumBundleLoader_Resolve()
+    {
+        // Regression guard for #4350: gumcli pack succeeding (and gumcli check passing) is not
+        // proof the resulting .gumpkg can actually be loaded - GumBundleLoader.Resolve used to
+        // hardcode ".gumx" for the bundle's internal project entry, so a bundle packed from a
+        // JSON-format (.gumj) project failed to load with a FileNotFoundException even though
+        // packing it reported success.
+        string projectDir = Path.Combine(_tempDirectory, "JsonLoadProject");
+        string projectPath = Path.Combine(projectDir, "JsonLoadProject.gumx");
+        CliTestHelper.Run("new", projectPath, "--template", "empty").ExitCode.ShouldBe(0);
+        CliTestHelper.Run("convert-to-json", projectPath).ExitCode.ShouldBe(0);
+        string gumjPath = Path.Combine(projectDir, "JsonLoadProject.gumj");
+        // GumBundleLoader.Resolve derives the internal project entry's base name from the
+        // .gumpkg's own base name, so the two must match - use the project's name, not "out".
+        string outputPath = Path.Combine(projectDir, "JsonLoadProject.gumpkg");
+
+        string[] xmlExtensions = { "gumx", "gusx", "gucx", "gutx", "behx", "ganx" };
+        foreach (string xmlFile in Directory.EnumerateFiles(projectDir, "*.*", SearchOption.AllDirectories)
+                     .Where(f => xmlExtensions.Contains(Path.GetExtension(f).TrimStart('.'), StringComparer.OrdinalIgnoreCase)))
+        {
+            File.Delete(xmlFile);
+        }
+
+        CliTestHelper.Run("pack", gumjPath, "-o", outputPath, "--include", "core").ExitCode.ShouldBe(0);
+
+        ProjectResolution resolution = GumBundleLoader.Resolve(outputPath);
+
+        resolution.UsedBundle.ShouldBeTrue();
+        resolution.ResolvedGumxPath.ShouldBe(Path.Combine(projectDir, "JsonLoadProject.gumj"));
+
+        GumProjectSave? loaded = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult loadResult);
+
+        loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+        loadResult.MissingFiles.ShouldBeEmpty();
+        loaded.ShouldNotBeNull();
+    }
+
+    [Fact]
     public void Pack_writes_output_to_default_path_when_no_dash_o()
     {
         string projectPath = CreateCleanProject("DefaultOut");
@@ -351,6 +395,7 @@ public class PackCommandTests : IDisposable
 
     public void Dispose()
     {
+        FileManager.CustomGetStreamFromFile = _previousHook;
         if (Directory.Exists(_tempDirectory))
         {
             try

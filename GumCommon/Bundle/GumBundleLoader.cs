@@ -16,6 +16,11 @@ namespace Gum.Bundle;
 /// </summary>
 public static class GumBundleLoader
 {
+    // XML first: a project written by an older `gumcli pack` before JSON support only ever
+    // produced a ".gumx" entry, so checking it first keeps existing bundles resolving without
+    // a JSON probe.
+    private static readonly string[] GumxCandidateExtensions = { ".gumx", ".gumj" };
+
     /// <summary>
     /// Returns a <see cref="ProjectResolution"/> describing how to load <paramref name="projectPath"/>.
     /// The extension picks the mode: <c>.gumx</c>/<c>.gumj</c> = loose, <c>.gumpkg</c> = bundle. Any
@@ -70,15 +75,6 @@ public static class GumBundleLoader
         // .gumpkg loading requires System.Formats.Tar (net7+).
         throw new NotSupportedException(".gumpkg loading requires net7.0 or greater.");
 #else
-        // The bundle stores its own .gumx by name; the path we hand to GumProjectSave.Load is
-        // the sibling .gumx path, and the hook below intercepts that read so it's served from
-        // the bundle stream. Callers never need to know the .gumx name themselves.
-        string? directory = Path.GetDirectoryName(resolvedPath);
-        string nameWithoutExtension = Path.GetFileNameWithoutExtension(resolvedPath);
-        string gumxPath = string.IsNullOrEmpty(directory)
-            ? nameWithoutExtension + ".gumx"
-            : Path.Combine(directory!, nameWithoutExtension + ".gumx");
-
         // Read the bundle through the same file seam as the rest of the loader. On desktop
         // this is File.OpenRead; on TitleContainer-backed platforms (Blazor WASM / Android /
         // iOS) the host-installed CustomGetStreamFromFile hook routes the read through
@@ -96,6 +92,36 @@ public static class GumBundleLoader
         {
             bundle = GumBundleReader.Read(bundleStream);
         }
+
+        // The bundle stores its own top-level project file by name (see
+        // GumProjectDependencyWalker.TryGetGumxRelativePath, which preserves the packed
+        // project's real extension) - it may be an XML ".gumx" or a JSON ".gumj" project
+        // (issue #4350). Probe both instead of assuming XML; the path we hand to
+        // GumProjectSave.Load is the sibling path with whichever extension the bundle
+        // actually contains, and the hook below intercepts that read so it's served from
+        // the bundle stream. Callers never need to know the project entry's name themselves.
+        string? directory = Path.GetDirectoryName(resolvedPath);
+        string nameWithoutExtension = Path.GetFileNameWithoutExtension(resolvedPath);
+        string? gumxEntryName = null;
+        foreach (string candidateExtension in GumxCandidateExtensions)
+        {
+            string candidateEntry = nameWithoutExtension + candidateExtension;
+            if (bundle.Entries.ContainsKey(candidateEntry))
+            {
+                gumxEntryName = candidateEntry;
+                break;
+            }
+        }
+        if (gumxEntryName == null)
+        {
+            throw new FileNotFoundException(
+                $"The Gum bundle '{resolvedPath}' does not contain a top-level project file " +
+                $"named '{nameWithoutExtension}.gumx' or '{nameWithoutExtension}.gumj'.",
+                resolvedPath);
+        }
+        string gumxPath = string.IsNullOrEmpty(directory)
+            ? gumxEntryName
+            : Path.Combine(directory!, gumxEntryName);
 
         BundleGumFileProvider provider = new BundleGumFileProvider(bundle);
         string projectRoot = string.IsNullOrEmpty(directory) ? "." : directory!;
