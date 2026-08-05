@@ -43,6 +43,15 @@ export function firstFontFamily(fam) {
  * (already an allowlisted gumcli system font) instead of a synthetic name that falls
  * through to Arial.
  */
+/** Mac / web faces that are not gumcli system fonts on Windows — map to a close allowlisted face. */
+const FACE_ALIASES = new Map([
+  ['menlo', 'Consolas'],
+  ['monaco', 'Consolas'],
+  ['sf mono', 'Consolas'],
+  ['helvetica neue', 'Arial'],
+  ['helvetica', 'Arial'],
+]);
+
 export function resolveCssFontFamily(fam) {
   const parts = (fam || '')
     .split(',')
@@ -52,10 +61,48 @@ export function resolveCssFontFamily(fam) {
   const skipEmoji = /emoji|symbol/i;
   for (const p of parts) {
     if (skip.test(p) || skipEmoji.test(p)) continue;
+    const alias = FACE_ALIASES.get(p.toLowerCase());
+    if (alias) return alias;
     return p;
   }
   if (parts.some((p) => /apple-system|system-ui|blinkmac/i.test(p))) return 'Segoe UI';
   return parts[0] || '';
+}
+
+/**
+ * True when unicode-range is unrestricted or overlaps basic Latin letters (A–z).
+ * Google Fonts emits one @font-face per script subset; picking Cyrillic/Greek first
+ * yields a TTF with no A–Z and an empty KernSmith atlas.
+ */
+export function unicodeRangeCoversBasicLatin(range) {
+  const s = String(range || '').trim();
+  if (!s) return true;
+  for (const part of s.split(',')) {
+    const p = part.trim();
+    if (!p) continue;
+    const rangeM = p.match(/^U\+([0-9A-Fa-f]{1,6})-([0-9A-Fa-f]{1,6})$/i);
+    if (rangeM) {
+      const a = parseInt(rangeM[1], 16);
+      const b = parseInt(rangeM[2], 16);
+      if (a <= 0x7a && b >= 0x41) return true;
+      continue;
+    }
+    const wild = p.match(/^U\+([0-9A-Fa-f]*)(\?+)$/i);
+    if (wild) {
+      const prefix = wild[1];
+      const q = wild[2].length;
+      const lo = parseInt((prefix + '0'.repeat(q)) || '0', 16);
+      const hi = parseInt((prefix + 'F'.repeat(q)) || '0', 16);
+      if (lo <= 0x7a && hi >= 0x41) return true;
+      continue;
+    }
+    const single = p.match(/^U\+([0-9A-Fa-f]{1,6})$/i);
+    if (single) {
+      const cp = parseInt(single[1], 16);
+      if (cp >= 0x41 && cp <= 0x7a) return true;
+    }
+  }
+  return false;
 }
 
 /** Normalize for matching: "Inter Var" / "Inter" / '"Inter"' → "inter" */
@@ -112,6 +159,7 @@ export function parseFontFacesFromCss(cssText) {
       family,
       weight: prop('font-weight') || '400',
       style: prop('font-style') || 'normal',
+      unicodeRange: prop('unicode-range') || '',
       urls,
     });
   }
@@ -125,7 +173,7 @@ export function parseFontFacesFromCss(cssText) {
 export async function collectFontFaceRules(page) {
   const sameOrigin = await page.evaluate(() => {
     const out = [];
-    const push = (family, weight, style, src) => {
+    const push = (family, weight, style, src, unicodeRange) => {
       if (!family || !src) return;
       const urls = [];
       const re = /url\(\s*['"]?([^'")]+)['"]?\s*\)/gi;
@@ -136,6 +184,7 @@ export async function collectFontFaceRules(page) {
         family: family.replace(/["']/g, '').trim(),
         weight: weight || '400',
         style: style || 'normal',
+        unicodeRange: unicodeRange || '',
         urls,
       });
     };
@@ -150,6 +199,7 @@ export async function collectFontFaceRules(page) {
           rule.style.getPropertyValue('font-weight'),
           rule.style.getPropertyValue('font-style'),
           rule.style.getPropertyValue('src'),
+          rule.style.getPropertyValue('unicode-range'),
         );
       }
     }
@@ -292,6 +342,21 @@ function instantiateToTtf(inputPath, outputPath, weight, style) {
   }
 }
 
+/** True if the baked TTF cmap includes basic Latin letters (rejects script subsets). */
+export function ttfCoversBasicLatin(ttfPath) {
+  const r = spawnSync(
+    'python',
+    [
+      '-c',
+      'from fontTools.ttLib import TTFont; import sys; c=TTFont(sys.argv[1]).getBestCmap() or {};'
+      + 'sys.exit(0 if all(ord(ch) in c for ch in "AaMm") else 1)',
+      ttfPath,
+    ],
+    { encoding: 'utf8' },
+  );
+  return r.status === 0;
+}
+
 /**
  * @returns {Map<string, string>} fontFaceKey → relative path "Fonts/….ttf"
  */
@@ -307,8 +372,16 @@ export async function materializeWebFonts({ tree, captured, rules, fontsDir, pag
       familiesMatch(r.family, need.family)
       && weightRangeCovers(r.weight, need.weight)
       && styleMatches(r.style, need.style));
-    // Prefer exact family name length (shorter = closer), then first url that we captured.
-    candidates.sort((a, b) => normalizeFamily(a.family).length - normalizeFamily(b.family).length);
+    // Prefer Latin unicode-range subsets (Google Fonts), then shorter family names.
+    const anyLatin = candidates.some((c) => unicodeRangeCoversBasicLatin(c.unicodeRange));
+    candidates.sort((a, b) => {
+      if (anyLatin) {
+        const al = unicodeRangeCoversBasicLatin(a.unicodeRange) ? 0 : 1;
+        const bl = unicodeRangeCoversBasicLatin(b.unicodeRange) ? 0 : 1;
+        if (al !== bl) return al - bl;
+      }
+      return normalizeFamily(a.family).length - normalizeFamily(b.family).length;
+    });
 
     /** @type {{ buffer: Buffer, contentType: string, url: string }[]} */
     const tries = [];
@@ -319,6 +392,8 @@ export async function materializeWebFonts({ tree, captured, rules, fontsDir, pag
     };
 
     for (const face of candidates) {
+      // When Latin faces exist, do not fetch Cyrillic/Greek/etc. subsets first.
+      if (anyLatin && !unicodeRangeCoversBasicLatin(face.unicodeRange)) continue;
       for (const u of face.urls) {
         const abs = resolveUrl(pageUrl, u);
         let cap = pickCaptured(captured, abs);
@@ -362,7 +437,12 @@ export async function materializeWebFonts({ tree, captured, rules, fontsDir, pag
       writeFileSync(rawPath, hit.buffer);
       try {
         instantiateToTtf(rawPath, outPath, need.weight, need.style);
-        baked = true;
+        if (!ttfCoversBasicLatin(outPath)) {
+          console.warn(`  ! baked font lacks basic Latin glyphs, trying next subset: ${hit.url}`);
+          try { rmSync(outPath, { force: true }); } catch { /* ignore */ }
+        } else {
+          baked = true;
+        }
       } catch (e) {
         console.warn(`  ! ${e.message}`);
       } finally {

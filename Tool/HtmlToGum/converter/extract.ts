@@ -176,12 +176,42 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
 
   function shouldRasterTextHeavyCell(el) {
     const tag = String(el.tagName).toUpperCase();
-    if (tag !== 'TD' && tag !== 'TH') return false;
     const text = (el.innerText || '').replace(/\s+/g, ' ').trim();
-    if (text.length < 40) return false;
-    const imgs = el.querySelectorAll('img');
-    // Icon / logo cells with a short alt caption stay structured Sprites.
-    if (imgs.length > 0 && text.length < 80) return false;
+    // Space Jam sitemap: multi-line table prose with underlines BitmapFont can't match.
+    if (tag === 'TD' || tag === 'TH') {
+      if (text.length < 40) return false;
+      const imgs = el.querySelectorAll('img');
+      // Icon / logo cells with a short alt caption stay structured Sprites.
+      if (imgs.length > 0 && text.length < 80) return false;
+      return true;
+    }
+    // Custom web-font multi-line blocks (Pocket Graphik/Doyle): KernSmith metrics wrap
+    // differently than Chromium, so every line is a pixel miss even when glyphs look fine.
+    // Headings may wrap with <60 chars at large sizes — use a lower floor for H*.
+    // Narrow wrapping links (TL Community News) use Arial but still drift on wrap —
+    // include <a>/<li> when the line box is clearly multi-line.
+    if (!/^(P|H1|H2|H3|H4|H5|H6|LI|A)$/.test(tag)) return false;
+    const minChars = /^H[1-6]$/.test(tag) ? 16 : 40;
+    if (text.length < minChars) return false;
+    const cs = getComputedStyle(el);
+    const first = String(cs.fontFamily || '')
+      .split(',')[0]
+      .replace(/["']/g, '')
+      .trim()
+      .toLowerCase();
+    if (!first) return false;
+    const systemFace = /^(arial|helvetica|helvetica neue|times|times new roman|courier|courier new|verdana|georgia|tahoma|segoe ui|consolas|menlo|monaco|sans-serif|serif|monospace|system-ui)$/;
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const rects = Array.from(range.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+    if (rects.length < 2) return false;
+    // System faces: only bake narrow wrapping columns (sidebar news); leave wide
+    // article prose structured (HN / Wikipedia stay Text).
+    if (systemFace.test(first)) {
+      const box = el.getBoundingClientRect();
+      if (box.width > 280) return false;
+      if (tag !== 'A' && tag !== 'LI') return false;
+    }
     return true;
   }
 
@@ -212,6 +242,9 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
         try { pcs = getComputedStyle(el, pseudo); } catch { continue; }
         const content = pcs.content;
         if (!content || content === 'none' || content === 'normal') continue;
+        // CSS returns quoted strings: "\"\\f003\"" / '"•"' / '""'
+        const raw = String(content).replace(/^["']|["']$/g, '');
+        if (!raw) continue;
         const pw = parseFloat(pcs.width) || 0;
         const ph = parseFloat(pcs.height) || 0;
         const borders = (parseFloat(pcs.borderTopWidth) || 0)
@@ -220,7 +253,16 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
           + (parseFloat(pcs.borderLeftWidth) || 0);
         const pbg = pcs.backgroundColor || '';
         const hasBg = pbg && pbg !== 'transparent' && !/^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)$/i.test(pbg);
-        if (pw > 0 || ph > 0 || borders > 0 || hasBg) {
+        // Font Awesome / Material Icons use ::before glyphs with width/height:auto
+        // (parseFloat → 0) and no box chrome — previously skipped → empty bordered hosts.
+        const fam = (pcs.fontFamily || '').toLowerCase();
+        const isIconFont = /font\s*awesome|fontawesome|material icons|glyphicons?|ionicons|bootstrap-icons|feather|lucide/i.test(fam);
+        let isPua = false;
+        try {
+          const cp = raw.codePointAt(0);
+          isPua = cp != null && cp >= 0xe000 && cp <= 0xf8ff;
+        } catch { /* ignore */ }
+        if (pw > 0 || ph > 0 || borders > 0 || hasBg || isIconFont || isPua) {
           hasPseudoChrome = true;
           break;
         }

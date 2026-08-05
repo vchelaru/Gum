@@ -27,8 +27,15 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 ## Landmines
 
+**Custom-font multi-line `<p>`/`<h*>`:** BitmapFont wrap ≠ Chromium for faces like Graphik/Doyle (Pocket). `shouldRasterTextHeavyCell` also bakes multi-line blocks (≥2 client rects) whose first `font-family` is not a system face — plus narrow (`≤280px`) wrapping `<a>`/`<li>` even in Arial (TL Community News). Wide system-font article prose (HN / Wikipedia) stays structured Text.
+
+**Font Awesome / icon-font `::before`:** glyphs use `content:"\uf0xx"` with `width/height:auto` (no border/bg box). `needsRasterPaint` must treat icon-font families and Private Use Area content as pseudo chrome — otherwise Gum draws empty bordered squares (Embrace the Red header social icons).
+
+**Google Fonts unicode-range subsets:** each weight has many `@font-face` rules (Latin / Latin-ext / Cyrillic / …). Picking the first CSS match often bakes a Cyrillic-only TTF → empty KernSmith atlas → Arial fallback. Prefer faces whose `unicode-range` covers basic Latin (`unicodeRangeCoversBasicLatin`); reject baked TTFs that lack `A`/`a`/`M`/`m` and try the next URL.
+
 **Empty custom FontCache atlases:** some web `.ttf` bakes (e.g. Poppins Light) yield `chars count=2` (space only) → invisible text. `repairEmptyCustomFonts` in `fonts.ts` rewrites those `Font=Fonts/….ttf` refs to Arial and re-bakes. Do not chase “missing text” with layout probes until you’ve checked `FontCache/*.fnt` `chars count`.
 
+**Mac-only faces on Windows:** `Menlo` / `Monaco` / `Helvetica Neue` resolve via `FACE_ALIASES` to Consolas / Arial so gumcli can embed them.
 **Bad font downloads:** `@font-face` URLs can return HTML/empty bytes. `looksLikeFontBuffer` + multi-URL retry in `materializeWebFonts` skip non-sfnt/woff payloads and try the next candidate (KORE Proxima Nova w400).
 
 **System font stacks:** CSS `-apple-system, BlinkMacSystemFont, "Segoe UI", …` must resolve via `resolveCssFontFamily` to `Segoe UI` (not the synthetic first token). Otherwise Gum falls back to Arial while Chromium on Windows uses Segoe.
@@ -41,11 +48,13 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **Flex item `width`/`height: 100%`:** Chromium’s *used* size is flex-constrained; do not emit Gum `PercentageOfParent` for stack main-axis — use Absolute measured px (KORE login column shifted ~192px left).
 
-**`background-size: Npx` / `contain` + `no-repeat`:** must place a Sprite at the resolved size + `background-position`, not stretch-fill the box (`resolveBackgroundImageLayout`). Stretching the KORE logo (`100px`) and hero (`400px` + `50% 50%`) alone cost ~3%+ of the pixel gate.
+**`background-size: Npx` / `auto` / `contain` + `no-repeat`:** place a Sprite at the resolved size + `background-position`, not stretch-fill the box (`resolveBackgroundImageLayout`). Stretching the KORE logo (`100px`) / hero (`400px`) and TL header banner (`auto` + `50% 0%`) costs multiple % of the pixel gate.
 
 **Off-page raster clips abort convert:** `needsRaster` nodes with boxes outside `scrollWidth/Height` (transformed SVGs, sticky overflow) made Playwright throw `Clipped area is either empty or outside the resulting image`. `intersectScreenshotClip` clamps/skips those instead of failing the whole page (kali.org/tools, opencv.org).
 
 **Rotating heroes / carousels are not converter bugs.** `stabilizeDynamicMedia` runs in convert *before* extract (pins `.newsitem` / swiper / carousel slides, pauses CSS animations, clears + noops timers/rAF). If `capture-meta.json` has `suspectedRotatingMedia: true`, **do not** write probe scripts or spend iterations on timer races — fix mapping/fonts/layout or move to the next site after one re-run.
+
+**Interactive hash-routed diagrams** (e.g. ndpsoftware git-cheatsheet `#loc=index;`) can land extract vs screenshot on different modes → 90%+ diffs. Same rule: one stabilize attempt, then move on — not a layout primitive gap.
 
 **Rejected hosts:** crawl aborts on HTTP 4xx / challenge / seed nav timeout (`fidelity/rejection.ts`). Empty crawl → `status: rejected`, not a fidelity fail. Do not retry max-pages on the same wall.
 

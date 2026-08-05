@@ -713,12 +713,20 @@ test('resolveBackgroundImageLayout: contain fits inside the box', () => {
   assert.deepEqual(layout, { x: 0, y: 0, width: 20, height: 14 });
 });
 
-test('resolveBackgroundImageLayout: auto / cover stay on stretch path', () => {
-  assert.equal(resolveBackgroundImageLayout(
-    baseStyle({ backgroundSize: 'auto', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
-  ), null);
+test('resolveBackgroundImageLayout: auto + 50% 0% uses natural size (TL banner)', () => {
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'auto', backgroundPosition: '50% 0%', backgroundRepeat: 'no-repeat' }),
+    1200, 210, 800, 210,
+  );
+  assert.deepEqual(layout, { x: -200, y: 0, width: 1200, height: 210 });
+});
+
+test('resolveBackgroundImageLayout: cover stays on stretch path; % size too', () => {
   assert.equal(resolveBackgroundImageLayout(
     baseStyle({ backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
+  ), null);
+  assert.equal(resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '100%', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
   ), null);
 });
 

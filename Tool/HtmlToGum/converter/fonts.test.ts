@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { repairEmptyCustomFonts, looksLikeFontBuffer, resolveCssFontFamily } from './fonts.js';
+import { repairEmptyCustomFonts, looksLikeFontBuffer, resolveCssFontFamily, unicodeRangeCoversBasicLatin, parseFontFacesFromCss } from './fonts.js';
 
 test('looksLikeFontBuffer: accepts sfnt / woff magic, rejects HTML', () => {
   assert.equal(looksLikeFontBuffer(Buffer.from([0x00, 0x01, 0x00, 0x00, 0x00])), true);
@@ -26,6 +26,46 @@ test('resolveCssFontFamily: keeps a real custom face first', () => {
 
 test('resolveCssFontFamily: system-ui alone maps to Segoe UI', () => {
   assert.equal(resolveCssFontFamily('system-ui, sans-serif'), 'Segoe UI');
+});
+
+test('resolveCssFontFamily: Menlo maps to Consolas on Windows', () => {
+  assert.equal(resolveCssFontFamily('Menlo, Monaco, monospace'), 'Consolas');
+});
+
+test('unicodeRangeCoversBasicLatin: Google Fonts latin vs cyrillic subsets', () => {
+  assert.equal(unicodeRangeCoversBasicLatin(''), true);
+  assert.equal(
+    unicodeRangeCoversBasicLatin('U+0-FF, U+131, U+152-153, U+2BB-2BC'),
+    true,
+  );
+  assert.equal(
+    unicodeRangeCoversBasicLatin('U+460-52F, U+1C80-1C88, U+20B4, U+2DE0-2DFF'),
+    false,
+  );
+  assert.equal(unicodeRangeCoversBasicLatin('U+370-3FF'), false);
+});
+
+test('parseFontFacesFromCss: captures unicode-range', () => {
+  const faces = parseFontFacesFromCss(`
+    @font-face {
+      font-family: "Source Sans Pro";
+      font-weight: 200;
+      font-style: normal;
+      unicode-range: U+0-FF, U+131;
+      src: url(https://fonts.gstatic.com/s/latin.woff2) format("woff2");
+    }
+    @font-face {
+      font-family: "Source Sans Pro";
+      font-weight: 200;
+      unicode-range: U+460-52F;
+      src: url(https://fonts.gstatic.com/s/cyrl.woff2);
+    }
+  `);
+  assert.equal(faces.length, 2);
+  assert.equal(faces[0].unicodeRange, 'U+0-FF, U+131');
+  assert.equal(faces[1].unicodeRange, 'U+460-52F');
+  assert.equal(unicodeRangeCoversBasicLatin(faces[0].unicodeRange), true);
+  assert.equal(unicodeRangeCoversBasicLatin(faces[1].unicodeRange), false);
 });
 
 test('repairEmptyCustomFonts: rewrites Fonts/*.ttf with empty atlas to Arial', () => {

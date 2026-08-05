@@ -744,11 +744,11 @@ function wantsCoverCrop(style) {
 }
 
 /**
- * CSS `background-size: <length>` / `contain` + `no-repeat` paints the image at a
+ * CSS `background-size: <length>` / `auto` / `contain` + `no-repeat` paints the image at a
  * resolved size and `background-position`, NOT stretched to the box (KORE logo
- * `background-size: 100px`, hero `400px` + `50% 50%`). Gum's default EntireTexture +
+ * `background-size: 100px`, TL banner `auto` + `50% 0%`). Gum's default EntireTexture +
  * fillParent stretches — return Absolute place/size for the Sprite instead, or null
- * to keep stretch/cover/tile paths.
+ * to keep cover/tile/% paths.
  *
  * @returns {{ x: number, y: number, width: number, height: number } | null}
  */
@@ -775,9 +775,13 @@ export function resolveBackgroundImageLayout(style, naturalWidth, naturalHeight,
     const scale = Math.min(boxWidth / naturalWidth, boxHeight / naturalHeight);
     imgWidth = naturalWidth * scale;
     imgHeight = naturalHeight * scale;
+  } else if (size0 === 'auto' && (sizeToks.length < 2 || sizeToks[1].toLowerCase() === 'auto')) {
+    // CSS default: intrinsic size + background-position (TL header banner `auto` + `50% 0%`).
+    // Do not stretch — that was the old fallback and darkens/distorts centered banners.
+    imgWidth = naturalWidth;
+    imgHeight = naturalHeight;
   } else {
-    // Opt in only when an author set an explicit px length (KORE). Leave bare `auto`
-    // / `%` on the legacy stretch-to-fill path so tiled/full-bleed sites stay stable.
+    // Explicit px lengths (KORE logo/hero). Percentage-only sizes stay on stretch-to-fill.
     if (!sizeToks.some((t) => /px$/i.test(t))) return null;
     const wTok = resolveSize(sizeToks[0], boxWidth);
     const hTok = resolveSize(sizeToks[1], boxHeight);

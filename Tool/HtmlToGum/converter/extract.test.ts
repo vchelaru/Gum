@@ -126,3 +126,54 @@ test('extractBoxTree: password / checkbox / select form metadata', async () => {
     await browser.close();
   }
 });
+
+// Font Awesome / icon-font ::before glyphs use width/height:auto (no box chrome) — still
+// must rasterize the host or Gum emits an empty bordered square.
+test('extractBoxTree: multi-line custom-font paragraph needsRaster (Pocket Graphik)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        @font-face {
+          font-family: "Graphik Web";
+          src: local("Arial");
+        }
+        p {
+          font-family: "Graphik Web", sans-serif;
+          font-size: 16px;
+          width: 280px;
+          line-height: 1.4;
+        }
+      </style>
+      <p id="body">After careful consideration, we've made the difficult decision to phase out Pocket - our read-it-later and content discovery app across platforms.</p>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#body');
+    await page.close();
+    assert.equal(tree.tag, 'p');
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal((tree.text || ''), '');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: narrow wrapping Arial link needsRaster (TL Community News)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <a id="news" href="#" style="display:block;font:12px/1.2 Arial;width:200px;">
+        Weekly Cups (July 20-26): Early returns on 5.0.16b balance patch notes
+      </a>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#news');
+    await page.close();
+    assert.equal(tree.tag, 'a');
+    assert.equal(tree.style?.needsRaster, true);
+  } finally {
+    await browser.close();
+  }
+});
