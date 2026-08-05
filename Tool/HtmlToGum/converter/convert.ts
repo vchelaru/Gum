@@ -43,6 +43,8 @@ import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
 import { waitForDomQuiescence, stabilizeDynamicMedia } from './dom-quiescence.js';
 import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
+import { treeHasFormControls } from './forms.js';
+import { intersectScreenshotClip } from './screenshot-clip.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -52,6 +54,9 @@ function parseArgs(argv) {
   // responsive defaults ON — matches the project goal (emit layout that survives resize).
   const flags = {
     responsive: true, narrow: null, wide: null, compareNaive: false, tag: null, out: null,
+    // When true (default), HTML form controls map to Gum Forms and the project may
+    // bootstrap with --template forms. --no-forms keeps visual-only chrome (pixel gate).
+    forms: true,
   };
   for (const a of argv) {
     if (a === '--responsive') {
@@ -63,6 +68,10 @@ function parseArgs(argv) {
       flags.wide = parseInt(w, 10);
     } else if (a === '--no-responsive') {
       flags.responsive = false;
+    } else if (a === '--no-forms') {
+      flags.forms = false;
+    } else if (a === '--forms') {
+      flags.forms = true;
     } else if (a === '--compare-naive') {
       flags.compareNaive = true;
     } else if (a.startsWith('--tag=')) {
@@ -205,6 +214,21 @@ async function screenshotClip(page, path, clip, screenshotOptions = {}) {
   });
 }
 
+async function pageScrollSize(page) {
+  return page.evaluate(() => ({
+    width: Math.max(
+      document.documentElement?.scrollWidth || 0,
+      document.body?.scrollWidth || 0,
+      1,
+    ),
+    height: Math.max(
+      document.documentElement?.scrollHeight || 0,
+      document.body?.scrollHeight || 0,
+      1,
+    ),
+  }));
+}
+
 /**
  * Screenshot nodes flagged needsRaster (gradients / CSS filter / border-image) into Images/.
  * Backdrop-only parents: hide element children (and own text paint) so the sprite is
@@ -213,6 +237,8 @@ async function screenshotClip(page, path, clip, screenshotOptions = {}) {
  */
 async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
   let i = 0;
+  const pageSize = await pageScrollSize(page);
+  let skippedClips = 0;
 
   async function withChromeOnly(path, mark, fn) {
     await page.evaluate(({ rootSelector, path, mark }) => {
@@ -267,12 +293,17 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
   async function walk(node, path) {
     if (node.style?.needsRaster) {
       const r = node.rect;
-      const clip = {
-        x: Math.max(0, Math.floor(r.x)),
-        y: Math.max(0, Math.floor(r.y)),
-        width: Math.max(1, Math.ceil(r.width)),
-        height: Math.max(1, Math.ceil(r.height)),
-      };
+      const clip = intersectScreenshotClip(
+        { x: r.x, y: r.y, width: r.width, height: r.height },
+        pageSize.width,
+        pageSize.height,
+      );
+      if (!clip) {
+        // Off-page / zero-area boxes (transformed SVGs, sticky overflow) — skip rather
+        // than abort the whole convert (Playwright: "Clipped area is either empty…").
+        skippedClips++;
+        node.style.needsRaster = false;
+      } else {
       mkdirSync(imagesDir, { recursive: true });
       const filename = `raster${i++}.png`;
       const key = `raster:${path.length ? path.join('.') : 'root'}`;
@@ -304,6 +335,14 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
                 path: join(imagesDir, filename),
                 omitBackground: true,
               });
+            } catch (e) {
+              const msg = String(e?.message || e);
+              if (/Clipped area is either empty|outside the resulting image|Element is not visible/i.test(msg)) {
+                skippedClips++;
+                node.style.needsRaster = false;
+                return;
+              }
+              throw e;
             } finally {
               await page.evaluate((mark) => {
                 document.querySelector(`[data-html-to-gum-shot="${mark}"]`)
@@ -313,14 +352,28 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
             return;
           }
         }
-        await screenshotClip(page, join(imagesDir, filename), clip, { omitBackground: false });
+        try {
+          await screenshotClip(page, join(imagesDir, filename), clip, { omitBackground: false });
+        } catch (e) {
+          // Race: page size changed after measure, or clip still rejected — skip sprite.
+          const msg = String(e?.message || e);
+          if (/Clipped area is either empty|outside the resulting image/i.test(msg)) {
+            skippedClips++;
+            node.style.needsRaster = false;
+            return;
+          }
+          throw e;
+        }
       };
       const backdropOnly = !node.style.rasterWholeSubtree
         && (node.children.length > 0 || !!(node.text && String(node.text).trim()));
       if (backdropOnly) await withChromeOnly(path, key, shot);
       else await shot();
-      node.rasterSrc = key;
-      assetMap.set(key, `Images/${filename}`);
+      if (node.style.needsRaster) {
+        node.rasterSrc = key;
+        assetMap.set(key, `Images/${filename}`);
+      }
+      }
     }
     // Path indices must match el.children (element-only). Synthetic #text leaves from
     // extract's phrasing walk are skipped so withChromeOnly stays aligned.
@@ -335,19 +388,22 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
     }
   }
   await walk(tree, []);
+  if (skippedClips) {
+    console.warn(`  ! skipped ${skippedClips} off-page/empty raster clip(s)`);
+  }
 }
 
 /**
- * Bootstrap outProjectDir's .gumx + Standards/ via `gumcli new --template empty` (via
- * gumcli.ts) instead of a static scaffold snapshot, so Standards always match Gum's live
- * defaults (StandardElementsManager) — see #4003.
+ * Bootstrap outProjectDir's .gumx + Standards/ via `gumcli new`.
+ * Uses --template forms when the page has mappable form controls (so Controls/*
+ * components exist); otherwise --template empty (visual-only Standards).
  */
-function runGumcliNew(gumxPath) {
+function runGumcliNew(gumxPath, template = 'empty') {
   const wrapper = join(__dirname, 'gumcli.ts');
-  console.log(`> npx tsx gumcli.ts new ${gumxPath} --template empty`);
+  console.log(`> npx tsx gumcli.ts new ${gumxPath} --template ${template}`);
   const r = spawnSync(
     process.execPath,
-    nodeTsxArgs(wrapper, 'new', gumxPath, '--template', 'empty'),
+    nodeTsxArgs(wrapper, 'new', gumxPath, '--template', template),
     { encoding: 'utf8', shell: false },
   );
   if (r.stdout) process.stdout.write(r.stdout);
@@ -395,7 +451,13 @@ async function main() {
 
   rmSync(outProjectDir, { recursive: true, force: true });
   const gumxPath = join(outProjectDir, 'Generated.gumx');
-  runGumcliNew(gumxPath);
+  const useForms = flags.forms && treeHasFormControls(tree);
+  runGumcliNew(gumxPath, useForms ? 'forms' : 'empty');
+  if (useForms) {
+    console.log('forms: mapping HTML controls → Controls/* (pass --no-forms for visual-only)');
+  } else if (!flags.forms) {
+    console.log('forms: off (--no-forms)');
+  }
   const imagesDir = join(outProjectDir, 'Images');
   const fontsDir = join(outProjectDir, 'Fonts');
 
@@ -423,17 +485,19 @@ async function main() {
   });
   const nineSliceMap = generateNineSliceAssets(tree, imagesDir, assetMap);
 
-  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap);
+  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap, useForms);
   const screens = [{ name: screenName, mapped, gusx: toGusx(screenName, mapped) }];
 
   if (flags.responsive && flags.compareNaive) {
-    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap);
+    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap, useForms);
     const naiveName = `${screenName}Naive`;
     screens.push({ name: naiveName, mapped: naive, gusx: toGusx(naiveName, naive) });
   }
 
   const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
-  const gumx = readFileSync(gumxPath, 'utf8');
+  let gumx = readFileSync(gumxPath, 'utf8');
+  // forms template ships Demo screen refs — drop them so only our converted screen(s) remain.
+  gumx = gumx.replace(/^\s*<ScreenReference\b[^>]*\/>\s*\r?\n/gm, '');
   // gumcli new --template empty emits no <ScreenReference> (empty list serializes to nothing);
   // insert ours right before the first <StandardElementReference>, matching GumProjectSave's
   // field order (ScreenReferences before StandardElementReferences).

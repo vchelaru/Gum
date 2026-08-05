@@ -83,6 +83,97 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
   // BitmapFont metrics + missing text-decoration:underline leave multi-line table prose
   // (Space Jam sitemap) well above a 5% pixel budget even after BBCode merges. Baking the
   // cell through Chromium captures borders, underlines, and glyph raster in one sprite.
+  // Mirrors forms.ts formControlFromDom — must be inlined here because this whole
+  // function is serialized into the page via page.evaluate (no module imports).
+  function formControlFromDom(el) {
+    const tag = String(el.tagName || '').toUpperCase();
+    const TEXT_INPUT_TYPES = new Set([
+      'text', 'email', 'search', 'tel', 'url', 'number', 'date', 'datetime-local',
+      'month', 'week', 'time', '',
+    ]);
+    if (tag === 'INPUT') {
+      const inputType = String(el.type || 'text').toLowerCase();
+      const placeholder = String(el.placeholder || '');
+      const value = String(el.value || '');
+      const checked = !!el.checked;
+      const disabled = !!el.disabled;
+      if (inputType === 'hidden' || inputType === 'file' || inputType === 'image'
+        || inputType === 'range' || inputType === 'color' || inputType === 'reset') {
+        return null;
+      }
+      if (inputType === 'password') {
+        return { role: 'password', inputType, placeholder, value, checked, disabled };
+      }
+      if (inputType === 'checkbox') {
+        return { role: 'checkbox', inputType, placeholder, value, checked, disabled };
+      }
+      if (inputType === 'radio') {
+        return { role: 'radio', inputType, placeholder, value, checked, disabled };
+      }
+      if (inputType === 'submit' || inputType === 'button') {
+        return {
+          role: inputType === 'submit' ? 'submit' : 'button',
+          inputType,
+          placeholder,
+          value: value || (inputType === 'submit' ? 'Submit' : 'Button'),
+          checked,
+          disabled,
+        };
+      }
+      if (TEXT_INPUT_TYPES.has(inputType)) {
+        return {
+          role: 'textbox',
+          inputType: inputType || 'text',
+          placeholder,
+          value,
+          checked,
+          disabled,
+        };
+      }
+      return null;
+    }
+    if (tag === 'TEXTAREA') {
+      return {
+        role: 'textbox',
+        inputType: 'textarea',
+        placeholder: String(el.placeholder || ''),
+        value: String(el.value || ''),
+        checked: false,
+        disabled: !!el.disabled,
+      };
+    }
+    if (tag === 'BUTTON') {
+      const type = String(el.type || 'submit').toLowerCase();
+      const label = String(el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim()
+        || (type === 'submit' ? 'Submit' : 'Button');
+      return {
+        role: type === 'submit' ? 'submit' : 'button',
+        inputType: type,
+        placeholder: '',
+        value: label,
+        checked: false,
+        disabled: !!el.disabled,
+      };
+    }
+    if (tag === 'SELECT') {
+      const options = Array.from(el.options || []).map((o) => String(o.text || o.value || '').trim());
+      const selected = el.selectedOptions && el.selectedOptions[0];
+      const value = selected
+        ? String(selected.text || selected.value || '').trim()
+        : (options[0] || '');
+      return {
+        role: 'combobox',
+        inputType: 'select',
+        placeholder: '',
+        value,
+        checked: false,
+        disabled: !!el.disabled,
+        options,
+      };
+    }
+    return null;
+  }
+
   function shouldRasterTextHeavyCell(el) {
     const tag = String(el.tagName).toUpperCase();
     if (tag !== 'TD' && tag !== 'TH') return false;
@@ -529,6 +620,7 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       rect: box,
       text: ownText,
       lineCount,
+      form: formControlFromDom(el),
       // el.currentSrc resolves srcset/responsive-image selection; falls back to el.src
       // for a plain <img>. Both are already-resolved absolute URLs, ready to download.
       imgSrc: el.tagName.toLowerCase() === 'img' ? (el.currentSrc || el.src || null) : null,

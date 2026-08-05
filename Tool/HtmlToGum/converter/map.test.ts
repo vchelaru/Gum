@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   parseColor, parseBoxShadow, parseHardTextShadows, mapTreeToScreen,
+  resolveBackgroundImageLayout,
 } from './map.js';
 
 // ---- minimal BoxNode/BoxStyle fixtures for mapTreeToScreen ------------------
@@ -681,4 +682,70 @@ test('mapTreeToScreen: Absolute-parent right-aligned single-line text hugs + anc
   assert.equal(findVar(variables, 'Lp.WidthUnits')?.value, 4);
   assert.equal(findVar(variables, 'Lp.XOrigin')?.value, 2); // Right
   assert.equal(findVar(variables, 'Lp.X')?.value, 735); // 680+55
+});
+
+test('resolveBackgroundImageLayout: px width + auto height (KORE logo)', () => {
+  // background-size: 100px; natural 300×141 → display ~100×47 at 0% 0%
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '100px', backgroundPosition: '0% 0%', backgroundRepeat: 'no-repeat' }),
+    300, 141, 415, 50,
+  );
+  assert.deepEqual(layout, { x: 0, y: 0, width: 100, height: 47 });
+});
+
+test('resolveBackgroundImageLayout: px width + 50% 50% position (KORE hero)', () => {
+  // background-size: 400px; natural 651×509 in 404×500 box → ~400×313 centered
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '400px', backgroundPosition: '50% 50%', backgroundRepeat: 'no-repeat' }),
+    651, 509, 404, 500,
+  );
+  assert.equal(layout.width, 400);
+  assert.equal(layout.height, 313); // round(400 * 509/651)
+  assert.equal(layout.x, 2); // round((404-400)/2)
+  assert.equal(layout.y, 94); // round((500-313)/2) = 93.5 → 94
+});
+
+test('resolveBackgroundImageLayout: contain fits inside the box', () => {
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'contain', backgroundPosition: '0% 0%', backgroundRepeat: 'no-repeat' }),
+    25, 17, 20, 20,
+  );
+  assert.deepEqual(layout, { x: 0, y: 0, width: 20, height: 14 });
+});
+
+test('resolveBackgroundImageLayout: auto / cover stay on stretch path', () => {
+  assert.equal(resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'auto', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
+  ), null);
+  assert.equal(resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
+  ), null);
+});
+
+test('mapTreeToScreen: background-size px places Sprite instead of stretch-fill (KORE logo)', () => {
+  const url = 'https://example.com/kore-logo.svg';
+  const assetMap = new Map([[url, 'Images/logo.png']]);
+  const node = boxNode({
+    id: 'kc-header',
+    tag: 'div',
+    rect: { x: 466, y: 255, width: 415, height: 50 },
+    naturalWidth: 300,
+    naturalHeight: 141,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: '100px',
+      backgroundPosition: '0% 0%',
+      backgroundRepeat: 'no-repeat',
+      backgroundColor: 'rgba(0,0,0,0)',
+    }),
+    children: [],
+  });
+  const { instances, variables } = mapTreeToScreen(node, assetMap);
+  const bg = instances.find((i) => i.baseType === 'Sprite');
+  assert.ok(bg, `expected placed Sprite, got ${instances.map((i) => i.name + ':' + i.baseType)}`);
+  assert.equal(findVar(variables, `${bg.name}.Width`)?.value, 100);
+  assert.equal(findVar(variables, `${bg.name}.Height`)?.value, 47);
+  assert.equal(findVar(variables, `${bg.name}.WidthUnits`)?.value, 0); // Absolute
+  assert.equal(findVar(variables, `${bg.name}.X`)?.value, 0);
+  assert.equal(findVar(variables, `${bg.name}.SourceFile`)?.value, 'Images/logo.png');
 });

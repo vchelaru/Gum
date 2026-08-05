@@ -9,6 +9,7 @@ import type {
   BoxNode, MappedScreen, NineSliceInfo, ResponsiveMap,
 } from './types.js';
 import { resolveCssFontFamily } from './fonts.js';
+import { formsBaseType, emitFormsControlVars } from './forms.js';
 
 // ---- Gum enum values (see ai-reference/gum-xml-format.md) --------------------
 const CL = {
@@ -743,6 +744,82 @@ function wantsCoverCrop(style) {
 }
 
 /**
+ * CSS `background-size: <length>` / `contain` + `no-repeat` paints the image at a
+ * resolved size and `background-position`, NOT stretched to the box (KORE logo
+ * `background-size: 100px`, hero `400px` + `50% 50%`). Gum's default EntireTexture +
+ * fillParent stretches — return Absolute place/size for the Sprite instead, or null
+ * to keep stretch/cover/tile paths.
+ *
+ * @returns {{ x: number, y: number, width: number, height: number } | null}
+ */
+export function resolveBackgroundImageLayout(style, naturalWidth, naturalHeight, boxWidth, boxHeight) {
+  if (naturalWidth <= 0 || naturalHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) return null;
+  const repeat = String(style.backgroundRepeat || 'repeat').trim().toLowerCase();
+  if (repeat !== 'no-repeat') return null;
+
+  const sizeRaw = String(style.backgroundSize || 'auto').trim();
+  const sizeToks = sizeRaw.split(/\s+/);
+  const size0 = (sizeToks[0] || 'auto').toLowerCase();
+  if (size0 === 'cover') return null;
+
+  function resolveSize(tok, basis) {
+    if (tok == null || tok === 'auto') return null;
+    if (tok.endsWith('%')) return (parseFloat(tok) / 100) * basis;
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined;
+  }
+
+  let imgWidth;
+  let imgHeight;
+  if (size0 === 'contain') {
+    const scale = Math.min(boxWidth / naturalWidth, boxHeight / naturalHeight);
+    imgWidth = naturalWidth * scale;
+    imgHeight = naturalHeight * scale;
+  } else {
+    // Opt in only when an author set an explicit px length (KORE). Leave bare `auto`
+    // / `%` on the legacy stretch-to-fill path so tiled/full-bleed sites stay stable.
+    if (!sizeToks.some((t) => /px$/i.test(t))) return null;
+    const wTok = resolveSize(sizeToks[0], boxWidth);
+    const hTok = resolveSize(sizeToks[1], boxHeight);
+    if (wTok === undefined || hTok === undefined) return null;
+    if (wTok == null && hTok == null) return null;
+    if (hTok == null) {
+      imgWidth = wTok;
+      imgHeight = naturalHeight * (imgWidth / naturalWidth);
+    } else if (wTok == null) {
+      imgHeight = hTok;
+      imgWidth = naturalWidth * (imgHeight / naturalHeight);
+    } else {
+      imgWidth = wTok;
+      imgHeight = hTok;
+    }
+  }
+  if (!(imgWidth > 0) || !(imgHeight > 0)) return null;
+
+  function resolvePos(tok, basis, imgSize) {
+    if (tok == null) return 0;
+    if (tok.endsWith('%')) return (basis - imgSize) * (parseFloat(tok) / 100);
+    if (tok.endsWith('px')) return parseFloat(tok);
+    if (tok === 'left' || tok === 'top') return 0;
+    if (tok === 'center') return (basis - imgSize) / 2;
+    if (tok === 'right' || tok === 'bottom') return basis - imgSize;
+    return undefined;
+  }
+
+  const posToks = (style.backgroundPosition || '0% 0%').trim().split(/\s+/);
+  const posX = resolvePos(posToks[0], boxWidth, imgWidth);
+  const posY = resolvePos(posToks[1] ?? posToks[0], boxHeight, imgHeight);
+  if (posX === undefined || posY === undefined) return null;
+
+  return {
+    x: Math.round(posX),
+    y: Math.round(posY),
+    width: Math.round(imgWidth),
+    height: Math.round(imgHeight),
+  };
+}
+
+/**
  * CSS `background-repeat` (default `repeat`) → Gum Sprite Wrap + DimensionsBased.
  * Skip when the author asked for a single stretched/cropped image (`no-repeat`,
  * `background-size: cover|contain`, or percentage sizes that fill the box).
@@ -817,6 +894,7 @@ export function mapTreeToScreen(
   fontMap: Map<string, string> | null = null,
   nineSliceMap: Map<string, NineSliceInfo> | null = null,
   assetSizeMap: Map<string, { width: number, height: number }> | null = null,
+  formsEnabled = true,
 ): MappedScreen {
   const namer = makeNamer();
   const instances = [];
@@ -908,6 +986,38 @@ export function mapTreeToScreen(
       VDIM(`${name}.WidthUnits`, DIM.RelativeToParent), VF(`${name}.Width`, 0),
       VDIM(`${name}.HeightUnits`, DIM.RelativeToParent), VF(`${name}.Height`, 0),
     );
+  }
+
+  /**
+   * Size/place a background Sprite from CSS background-size + background-position when
+   * resolveBackgroundImageLayout says not to stretch; otherwise fillParent + emitSpriteSource.
+   */
+  function emitBackgroundSprite(sprName, node, { allowCanvasTileOffset = false } = {}) {
+    const layout = resolveBackgroundImageLayout(
+      node.style, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height,
+    );
+    if (layout) {
+      variables.push(
+        VF(`${sprName}.X`, layout.x),
+        VF(`${sprName}.Y`, layout.y),
+        VDIM(`${sprName}.WidthUnits`, DIM.Absolute), VF(`${sprName}.Width`, layout.width),
+        VDIM(`${sprName}.HeightUnits`, DIM.Absolute), VF(`${sprName}.Height`, layout.height),
+      );
+      const url = parseBackgroundImageUrl(node.style.backgroundImage);
+      const asset = url && assetMap.get(url);
+      if (asset) variables.push(VS(`${sprName}.SourceFile`, asset));
+      else {
+        warnings.push(`"${sprName}" (${node.tag}) background-size placement had no downloaded asset.`);
+      }
+      return;
+    }
+    if (allowCanvasTileOffset && wantsTiledBackground(node.style)) {
+      fillParentCanvasTiledBackground(sprName, node);
+    } else {
+      fillParent(sprName);
+    }
+    const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
+    emitSpriteSource(sprName, fakeNode, { asBackground: true });
   }
 
   /**
@@ -1401,12 +1511,37 @@ export function mapTreeToScreen(
   // parentAlignItems is the parent's align-items (cross-axis) for flex stacks.
   function walk(node, parentName, parentOrientation, parentRect, path = [], parentAlignItems = 'stretch', opts = {}) {
     node = mergeInlinePhrasingRun(node) || node;
+
+    // HTML form controls → Gum Forms components (Controls/TextBox, ButtonStandard, …).
+    // Absolute place+size; skip chrome/children so we don't double-emit Rectangle labels.
+    if (formsEnabled) {
+      const formsType = formsBaseType(node.form);
+      if (formsType) {
+        const name = namer.forNode(node);
+        instances.push({ name, baseType: formsType });
+        const vars = emitFormsControlVars(
+          name, node, parentName, parentRect || { x: 0, y: 0 },
+          VS, VF, VDIM, VB, DIM,
+        );
+        for (const vr of vars) variables.push(vr);
+        return name;
+      }
+    }
+
     const kind = classify(node);
     const name = namer.forNode(node);
     // Image with a solid background-color/border (Cerberus broken-image affordance,
     // styled <img>): Sprite has no fill — wrap as Container → underlay Rectangle → Sprite
     // (same backdrop pattern as styled Containers, §8.6/§8.12).
-    const underlay = kind === 'image' && imageNeedsUnderlay(node.style);
+    const underlay = kind === 'image' && (
+      imageNeedsUnderlay(node.style)
+      // background-size: Npx / contain must not stretch a leaf Sprite to the box —
+      // promote to Container + placed Sprite (KORE hero illustration).
+      || (!node.imgSrc && !node.rasterSrc && !!parseBackgroundImageUrl(node.style.backgroundImage)
+        && !!resolveBackgroundImageLayout(
+          node.style, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height,
+        ))
+    );
     // Text leaves with background/border/radius (game hotbar slots, chips, badges): Gum
     // Text has no fill — promote to Container → chrome → Text label (DESIGN §8.15).
     const textChrome = kind === 'text' && hasVisualStyling(node.style);
@@ -1603,12 +1738,16 @@ export function mapTreeToScreen(
         const sprName = namer.mint(`${name}Img`);
         instances.push({ name: sprName, baseType: 'Sprite' });
         variables.push(VS(`${sprName}.Parent`, name));
-        fillParent(sprName); // explicit RelativeToParent — Sprite's odd default
         // Leaf divs styled only via background-image classify as 'image' (Tabler cards,
-        // empty body shells) — still a CSS background, so honor background-repeat.
+        // empty body shells) — still a CSS background, so honor background-size placement.
         const asBackground = !node.imgSrc && !node.rasterSrc
           && !!parseBackgroundImageUrl(node.style.backgroundImage);
-        emitSpriteSource(sprName, node, { asBackground });
+        if (asBackground) {
+          emitBackgroundSprite(sprName, node);
+        } else {
+          fillParent(sprName); // explicit RelativeToParent — Sprite's odd default
+          emitSpriteSource(sprName, node, { asBackground: false });
+        }
         applyOpacity('image', sprName, node.style);
       } else if (node.imgSrc || parseBackgroundImageUrl(node.style.backgroundImage)) {
         warnings.push(`"${name}" (${node.tag}) image download failed — showing background-color underlay only.`);
@@ -1625,11 +1764,12 @@ export function mapTreeToScreen(
         const sprName = namer.mint(`${name}Bg`);
         instances.push({ name: sprName, baseType: 'Sprite' });
         variables.push(VS(`${sprName}.Parent`, name));
-        fillParent(sprName);
-        if (rasterAsset) variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
-        else {
+        if (rasterAsset) {
+          fillParent(sprName);
+          variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
+        } else {
           const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-          emitSpriteSource(sprName, fakeNode, { asBackground: true });
+          emitBackgroundSprite(sprName, fakeNode);
         }
       }
       // Rasterized border-image chrome already includes the frame — don't stack NineSlice.
@@ -1863,16 +2003,11 @@ export function mapTreeToScreen(
           instances.push({ name: sprName, baseType: 'Sprite' });
           variables.push(VS(`${sprName}.Parent`, name));
           // Root tiled backgrounds: canvas/viewport tile origin (see fillParentCanvasTiledBackground).
-          if (parentName === null && wantsTiledBackground(node.style)) {
-            fillParentCanvasTiledBackground(sprName, node);
-          } else {
-            fillParent(sprName);
-          }
           if (rasterAsset) {
+            fillParent(sprName);
             variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
           } else {
-            const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-            emitSpriteSource(sprName, fakeNode, { asBackground: true });
+            emitBackgroundSprite(sprName, node, { allowCanvasTileOffset: parentName === null });
           }
           paintedBackdrop = true;
         } else if (!isTransparent(bgColor) || anyBorder(node.style) || styleHasShadowOrRadius(node.style)) {

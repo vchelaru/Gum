@@ -230,6 +230,9 @@ async function main() {
       `--tag=${screen}`,
     ];
     if (flags.noResponsive) convertArgs.push('--no-responsive');
+    // Pixel gate compares against Chromium's native form chrome; default Forms visuals
+    // would inflate diffs. Keep visual-only mapping for fidelity runs.
+    convertArgs.push('--no-forms');
 
     const conv = run(process.execPath, nodeTsxArgs(...convertArgs), { cwd: converterDir });
     if (conv.status !== 0) {

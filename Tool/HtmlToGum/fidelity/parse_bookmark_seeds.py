@@ -79,7 +79,10 @@ def parse_unique_seeds(bookmarks_path: Path) -> dict:
 if __name__ == "__main__":
     import sys
 
-    path = Path(sys.argv[1] if len(sys.argv) > 1 else r"d:\Downloads\bookmarks_7_24_26.html")
+    if len(sys.argv) < 2:
+        print("Usage: python parse_bookmark_seeds.py <bookmarks.html> [seeds.json]", file=sys.stderr)
+        sys.exit(2)
+    path = Path(sys.argv[1])
     data = parse_unique_seeds(path)
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("seeds.json")
     out.write_text(json.dumps(data, indent=2), encoding="utf-8")

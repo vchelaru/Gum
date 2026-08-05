@@ -84,6 +84,17 @@ export type BoxStyle = {
   borderImageRepeat: string;
 };
 
+/** HTML form-control metadata captured in extract (INPUT/BUTTON/TEXTAREA/SELECT). */
+export type FormControlInfo = {
+  role: 'textbox' | 'password' | 'button' | 'checkbox' | 'radio' | 'combobox' | 'submit';
+  inputType: string;
+  placeholder: string;
+  value: string;
+  checked: boolean;
+  disabled: boolean;
+  options?: string[];
+};
+
 export type BoxNode = {
   id: string | null;
   tag: string;
@@ -95,6 +106,8 @@ export type BoxNode = {
   naturalHeight: number;
   /** Set by convert.ts after rasterizeEffects (key into assetMap). */
   rasterSrc: string | null;
+  /** Present when this node is a mappable HTML form control. */
+  form?: FormControlInfo | null;
   style: BoxStyle;
   children: BoxNode[];
 };

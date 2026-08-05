@@ -56,9 +56,9 @@ cd Tool/HtmlToGum/converter
 npm run convert -- ../samples/features/inventory.html #panel InventoryScreen 800 600
 ```
 
-Default output is `Tool/HtmlToGum/.out/` (gitignored). Use `--out=<dir>` to choose another folder (the plugin always passes a temp `--out=`). The output project (`.gumx` + `Standards/`) is bootstrapped via `gumcli new --template empty`, so Standards always match Gum's live defaults rather than a static snapshot.
+Default output is `Tool/HtmlToGum/.out/` (gitignored). Use `--out=<dir>` to choose another folder (the plugin always passes a temp `--out=`). The output project (`.gumx` + `Standards/`) is bootstrapped via `gumcli new` — `--template forms` when the page has mappable form controls (`input`/`button`/`textarea`/`select`), otherwise `--template empty`.
 
-Useful flags: `--no-responsive`, `--responsive=n,w`, `--tag=name`.
+Useful flags: `--no-responsive`, `--responsive=n,w`, `--tag=name`, `--no-forms` (visual-only chrome; skip Controls/* mapping — used by the pixel fidelity harness).
 
 Fonts: `npm run gumcli -- fonts <project.gumx>` (wraps in-repo `Tools/Gum.Cli`).
 

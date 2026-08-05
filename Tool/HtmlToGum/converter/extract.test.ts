@@ -66,6 +66,8 @@ test('extractBoxTree: submit/button input uses value as text', async () => {
     await page.close();
     assert.equal(tree.tag, 'input');
     assert.equal(tree.text, 'Sign In');
+    assert.equal(tree.form?.role, 'submit');
+    assert.equal(tree.form?.value, 'Sign In');
   } finally {
     await browser.close();
   }
@@ -80,6 +82,46 @@ test('extractBoxTree: text input does not treat empty value as a label', async (
     const tree = await page.evaluate(extractBoxTree, '#email');
     await page.close();
     assert.equal(tree.text || '', '');
+    assert.equal(tree.form?.role, 'textbox');
+    assert.equal(tree.form?.placeholder, 'Email');
+    assert.equal(tree.form?.inputType, 'email');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: password / checkbox / select form metadata', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <form id="f">
+        <input id="pw" type="password" placeholder="Password" value="secret" style="width:100px;height:24px;">
+        <input id="cb" type="checkbox" checked style="width:16px;height:16px;">
+        <select id="sel" style="width:100px;height:24px;">
+          <option>One</option>
+          <option selected>Two</option>
+        </select>
+      </form>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#f');
+    await page.close();
+    const byId = (id) => {
+      const stack = [tree];
+      while (stack.length) {
+        const n = stack.pop();
+        if (n.id === id) return n;
+        for (const c of n.children || []) stack.push(c);
+      }
+      return null;
+    };
+    assert.equal(byId('pw')?.form?.role, 'password');
+    assert.equal(byId('pw')?.form?.value, 'secret');
+    assert.equal(byId('cb')?.form?.role, 'checkbox');
+    assert.equal(byId('cb')?.form?.checked, true);
+    assert.equal(byId('sel')?.form?.role, 'combobox');
+    assert.equal(byId('sel')?.form?.value, 'Two');
   } finally {
     await browser.close();
   }

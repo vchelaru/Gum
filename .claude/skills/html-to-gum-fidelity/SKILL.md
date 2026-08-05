@@ -37,7 +37,13 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **`<input type="submit|button|reset">` labels:** value lives in `.value`, not `textContent`. Extract must copy `el.value` or buttons render as chrome-only (KORE “Sign In”).
 
+**HTML form controls → Gum Forms:** by default, mappable controls become `Controls/TextBox`, `PasswordBox`, `ButtonStandard`, `CheckBox`, `RadioButton`, `ComboBox` and the project bootstraps with `gumcli new --template forms`. Default Forms chrome ≠ site-styled widgets, so **site-fidelity always passes `--no-forms`** (visual Rectangle/Text path) until styled matching exists. Fixture: `samples/features/forms-controls.html`.
+
 **Flex item `width`/`height: 100%`:** Chromium’s *used* size is flex-constrained; do not emit Gum `PercentageOfParent` for stack main-axis — use Absolute measured px (KORE login column shifted ~192px left).
+
+**`background-size: Npx` / `contain` + `no-repeat`:** must place a Sprite at the resolved size + `background-position`, not stretch-fill the box (`resolveBackgroundImageLayout`). Stretching the KORE logo (`100px`) and hero (`400px` + `50% 50%`) alone cost ~3%+ of the pixel gate.
+
+**Off-page raster clips abort convert:** `needsRaster` nodes with boxes outside `scrollWidth/Height` (transformed SVGs, sticky overflow) made Playwright throw `Clipped area is either empty or outside the resulting image`. `intersectScreenshotClip` clamps/skips those instead of failing the whole page (kali.org/tools, opencv.org).
 
 **Rotating heroes / carousels are not converter bugs.** `stabilizeDynamicMedia` runs in convert *before* extract (pins `.newsitem` / swiper / carousel slides, pauses CSS animations, clears + noops timers/rAF). If `capture-meta.json` has `suspectedRotatingMedia: true`, **do not** write probe scripts or spend iterations on timer races — fix mapping/fonts/layout or move to the next site after one re-run.
 
