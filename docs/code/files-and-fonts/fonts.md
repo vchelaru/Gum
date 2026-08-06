@@ -52,6 +52,7 @@ The Gum tool generates these atlases automatically while you edit your project. 
 * [Fonts on Web](fonts-web.md) — bandwidth vs CPU tradeoffs for web targets.
 * [Font Localization](font-localization.md) — current behavior, known limitations, and the per-locale design that's coming.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system, naming convention, and when to use it.
+* [Font Oversampling](font-oversampling.md) — keeping text crisp under camera/layer zoom.
 
 ## Need Outline Color, Gradients, or Other KernSmith Extras?
 

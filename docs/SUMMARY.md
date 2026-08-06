@@ -332,6 +332,7 @@
     * [Font Localization](code/files-and-fonts/font-localization.md)
     * [Font Cache](code/files-and-fonts/font-cache.md)
     * [Advanced Font Effects](code/files-and-fonts/advanced-font-effects.md)
+    * [Font Oversampling](code/files-and-fonts/font-oversampling.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [Animation Chains](code/files-and-fonts/animation-chains.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)
