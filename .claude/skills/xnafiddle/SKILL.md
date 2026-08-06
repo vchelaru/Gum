@@ -20,4 +20,8 @@ The obvious assumption — "an online playground bakes in one engine, so you can
 
 ## Relationship to the local Gum samples
 
-`Samples/KniGum*` (and the MonoGame/FNA equivalents) already reproduce across backends and link the **Gum runtime** from source, with the engine itself via NuGet — best when the question is "does Gum consume the shipped engine correctly." Reach for XnaFiddle when you instead need a self-contained **engine-source** experiment or a public repro: it's the stronger tool for *varying the engine*, weaker for exercising Gum's own runtime (a fiddle is engine-level XNA, not Gum-aware by default).
+`Samples/KniGum*` (and the MonoGame/FNA equivalents) already reproduce across backends and link the **Gum runtime** from source, with the engine itself via NuGet — best when the question is "does Gum consume the shipped engine correctly." Reach for XnaFiddle when you instead need a self-contained **engine-source** experiment or a public repro: it's the stronger tool for *varying the engine*. For demoing a Gum-runtime feature itself, see the landmine below — it's a strong fit, not a weak one.
+
+## Landmine — it already knows about Gum and 3rd-party libraries
+
+Fiddles are Gum-aware, not engine-level-XNA-only — dozens of doc fiddles use the snippet `IsGum` flag (see `gum-docs-writing`'s `xnafiddle.md`). Referencing a 3rd-party library in a fiddle's source is enough to pull it in at export: each `ILibraryPlugin` (e.g. `KernSmithPlugin` in `XnaFiddle.Core/Plugins/`) auto-detects it via `IsUsedInSource` and adds the right NuGet packages — no manual "upgrade" needed. No plugin yet for a library? Request it rather than ruling the fiddle out.
