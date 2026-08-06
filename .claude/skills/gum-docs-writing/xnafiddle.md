@@ -2,10 +2,10 @@
 
 ## Criteria — only include a link when
 
-- The example needs **no content files** (no PNG, font, .achx, etc.)
+- The example needs **no custom content files** (no uploaded PNG, font, .achx, etc.) — XnaFiddle's **Standard Content** library (`std/DroidSans.ttf` today; see the [XnaFiddle README](https://github.com/vchelaru/XnaFiddle#standard-content)) ships fonts/assets referenceable by fixed path with no upload, and is fair game.
 - The example is **self-contained** (all code fits in one file — custom classes are fine via `#code=` format, but no external file dependencies)
 
-> **Custom files not supported:** If the example requires any custom content files (textures, fonts, animation chains, etc.), an XnaFiddle link cannot be created — skip the link entirely.
+> **Custom files not supported:** If the example needs a content file XnaFiddle doesn't ship as standard content, an XnaFiddle link cannot be created — skip the link entirely. Victor maintains XnaFiddle and can add more standard-content items on request, but only when explicitly asked; don't assume one exists without checking the README table first.
 
 ## Encoding
 
