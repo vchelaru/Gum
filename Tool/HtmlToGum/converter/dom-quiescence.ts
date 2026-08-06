@@ -166,12 +166,16 @@ export async function stabilizeDynamicMedia(page) {
     };
     try {
       for (const el of document.querySelectorAll(overlaySel)) hideFixed(el);
-      // TL.net: fixed bar with no cookie-* class, only #cookieok button + prose.
-      for (const el of document.querySelectorAll('body > *')) {
+      // Nested fixed banners (OWASP #disclaimer-container under <header>) are not
+      // body > * — walk every fixed/sticky node and match cookie-copy heuristics.
+      for (const el of document.querySelectorAll('body *')) {
         const s = getComputedStyle(el);
         if (s.position !== 'fixed' && s.position !== 'sticky') continue;
-        const t = (el.innerText || '').slice(0, 200);
-        if (/accept cookies|we use cookies|cookie consent/i.test(t)) hideFixed(el);
+        if (s.display === 'none' || s.visibility === 'hidden') continue;
+        const t = (el.innerText || '').slice(0, 280);
+        if (/(this website uses cookies|we use cookies|uses cookies to|cookie consent|accept cookies)/i.test(t)) {
+          hideFixed(el);
+        }
       }
     } catch { /* invalid selector on older engines */ }
 

@@ -48,6 +48,8 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **Out-of-flow descendants inflating a backdrop:** `backdropHeight`/`textOverflowPad` walk a styled container's subtree to pad for BitmapFont spill. A `position:fixed`/`absolute` descendant (e.g. a cookie banner nested in `<header>`, painted at `y=800`) would stretch the header's painted backdrop from ~159px to ~1544px and tint the whole page with the header color (OWASP `#disclaimer-container`). `textOverflowPad` skips out-of-flow subtrees — they paint at their own coordinates and are not part of an ancestor's content box.
 
+**Nested fixed cookie banners:** `stabilizeDynamicMedia` hides GDPR toasts so fidelity measures page chrome, not consent UI. Match by id/class *and* by cookie-copy text on **any** `position:fixed`/`sticky` node — not only `body > *`. OWASP nests `#disclaimer-container` under `<header>`; a body-direct scan never sees it (~3% of the residual gate).
+
 **System font stacks:** CSS `-apple-system, BlinkMacSystemFont, "Segoe UI", …` must resolve via `resolveCssFontFamily` to `Segoe UI` (not the synthetic first token). Otherwise Gum falls back to Arial while Chromium on Windows uses Segoe.
 
 **Percent-encoded `data:image/svg+xml`:** select chevrons etc. need `parseDataImageUrl` (`decodeURIComponent`) — the old `;base64`-only regex dropped charset URLs (Pocket).

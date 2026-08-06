@@ -143,3 +143,32 @@ test('stabilizeDynamicMedia: pins .newsitem slides and blocks new intervals', as
     await browser.close();
   }
 });
+
+// OWASP nests #disclaimer-container (fixed) under <header>, so body>* heuristics miss it.
+test('stabilizeDynamicMedia: hides nested fixed cookie disclaimer under header', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <header style="height:40px;background:#abc;">
+        <nav>Home</nav>
+        <div id="disclaimer-container" style="position:fixed;left:0;right:0;bottom:0;height:80px;background:rgba(20,20,20,0.8);color:#fff;">
+          <p>This website uses cookies to analyze our traffic and only share that information with our analytics partners.</p>
+          <a href="#">Accept</a>
+        </div>
+      </header>
+      <main><p>content</p></main>
+    `);
+    const meta = await stabilizeDynamicMedia(page);
+    assert.ok(meta.hiddenOverlays >= 1, `expected to hide nested cookie banner, got ${meta.hiddenOverlays}`);
+    const visible = await page.evaluate(() => {
+      const el = document.getElementById('disclaimer-container');
+      return el && getComputedStyle(el).display !== 'none';
+    });
+    assert.equal(visible, false, 'nested fixed cookie banner should be display:none');
+    await page.close();
+  } finally {
+    await browser.close();
+  }
+});

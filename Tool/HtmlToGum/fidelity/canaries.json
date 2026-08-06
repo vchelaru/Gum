@@ -125,10 +125,10 @@
     {
       "id": "owasp",
       "url": "https://owasp.org/www-project-top-ten/",
-      "baselinePct": 6.78,
-      "maxPct": 12,
+      "baselinePct": 4.12,
+      "maxPct": 5,
       "maxDeltaPct": 2,
-      "landmine": "white canvas + fixed cookie-in-header; near-miss, delta gate"
+      "landmine": "white canvas + nested fixed cookie under header"
     },
     {
       "id": "mdn",
