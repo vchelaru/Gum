@@ -127,9 +127,13 @@ This applies to: "as of <date>", "starting in <date>", "before <date>", "in vers
 
 ## Flag Release Status for New Features
 
-Before documenting a new feature or behavior, confirm whether it has already shipped, is out in preview, or hasn't shipped yet — ask the user if it's not clear from context. Then flag accordingly in a `{% hint style="info" %}` block (same pattern as dated content above):
+Before documenting a new feature or behavior, ask the user whether it has already shipped, is out in preview, or hasn't shipped yet — they usually know offhand, which is faster than investigating. Only investigate yourself when they don't know: walk the feature's commits with `git merge-base --is-ancestor <commit> <sha>` against the commit each candidate NuGet build was made from, then confirm against the live NuGet feed.
 
-- **Not yet shipped** — `Coming in <Month Year>` (the target release).
+**"Shipped" means published to NuGet (stable or preview), not merged to `main`.** Runtime NuGet packages publish on a separate, manually-triggered workflow (`dotnet-nuget.yaml`) from the Tool's near-daily GitHub Releases (`build-and-release.yml`) — a feature on `main`, or even bundled into a dated Tool release, can sit unpublished to NuGet for days.
+
+Then flag accordingly in a `{% hint style="info" %}` block (same pattern as dated content above):
+
+- **Not yet shipped** — `Available in <next calendar month> <year>, or now if building Gum from source.` Next month is always the target; don't ask the user which release.
 - **Shipped in preview** — note that it's a preview feature.
 - **Fully shipped** — no flag; write it as current behavior.
 
