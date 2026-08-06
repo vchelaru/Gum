@@ -62,6 +62,8 @@ Keep converter fixes in `converter/`; keep crawl/gate/diff scripts in `fidelity/
 
 **`background-size: Npx` / `auto` / `contain` + `no-repeat`:** place a Sprite at the resolved size + `background-position`, not stretch-fill the box (`resolveBackgroundImageLayout`). Stretching the KORE logo (`100px`) / hero (`400px`) and TL header banner (`auto` + `50% 0%`) costs multiple % of the pixel gate.
 
+**Large downscaled `<img>`:** Gum Sprite stretch-resample ≠ Chromium's filter even when aspect matches (Embrace hero 1792→720 ≈6% alone). `shouldRasterScaledImage` bakes Chromium paint for large on-screen figures (`area ≥ 80k` CSS px²) whose min scale is outside `0.9–1.1`; near-native and small icons stay structured Sprites. After capture, sync `node.rect` to the PNG pixel size — `intersectScreenshotClip`'s floor/ceil can be 1px taller than `Math.round(rect.height)`, and Absolute height mismatch stretches the sprite (bottom of the hero drifts).
+
 **Off-page raster clips abort convert:** `needsRaster` nodes with boxes outside `scrollWidth/Height` (transformed SVGs, sticky overflow) made Playwright throw `Clipped area is either empty or outside the resulting image`. `intersectScreenshotClip` clamps/skips those instead of failing the whole page (kali.org/tools, opencv.org).
 
 **Rotating heroes / carousels are not converter bugs.** `stabilizeDynamicMedia` runs in convert *before* extract (pins `.newsitem` / swiper / carousel slides, pauses CSS animations, clears + noops timers/rAF). If `capture-meta.json` has `suspectedRotatingMedia: true`, **do not** write probe scripts or spend iterations on timer races — fix mapping/fonts/layout or move to the next site after one re-run.

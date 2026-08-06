@@ -343,3 +343,70 @@ test('extractBoxTree: preformatted leaf keeps newlines when not rasterized', asy
     await browser.close();
   }
 });
+
+// Large downscaled <img>: Gum stretch-resample ≠ Chromium (Embrace hero). Bake paint.
+test('extractBoxTree: large downscaled img is rasterized', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<img id="hero" alt="">`);
+    await page.evaluate(() => {
+      const c = document.createElement('canvas');
+      c.width = 1600;
+      c.height = 900;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#336699';
+      ctx.fillRect(0, 0, 1600, 900);
+      ctx.fillStyle = '#ffcc00';
+      ctx.fillRect(100, 100, 400, 200);
+      const img = document.getElementById('hero');
+      img.src = c.toDataURL('image/png');
+      img.style.width = '800px';
+      img.style.height = '450px';
+    });
+    await page.waitForFunction(() => {
+      const img = document.getElementById('hero');
+      return img.complete && img.naturalWidth === 1600;
+    });
+    const tree = await page.evaluate(extractBoxTree, '#hero');
+    await page.close();
+    assert.equal(tree.tag, 'img');
+    assert.equal(tree.naturalWidth, 1600);
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal(tree.style?.rasterWholeSubtree, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: near-native img stays structured Sprite', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`<img id="pic" width="200" height="150" alt="">`);
+    await page.evaluate(() => {
+      const c = document.createElement('canvas');
+      c.width = 200;
+      c.height = 150;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#123';
+      ctx.fillRect(0, 0, 200, 150);
+      const img = document.getElementById('pic');
+      img.src = c.toDataURL('image/png');
+      img.style.width = '200px';
+      img.style.height = '150px';
+    });
+    await page.waitForFunction(() => {
+      const img = document.getElementById('pic');
+      return img.complete && img.naturalWidth === 200;
+    });
+    const tree = await page.evaluate(extractBoxTree, '#pic');
+    await page.close();
+    assert.equal(tree.tag, 'img');
+    assert.equal(tree.style?.needsRaster, false);
+  } finally {
+    await browser.close();
+  }
+});

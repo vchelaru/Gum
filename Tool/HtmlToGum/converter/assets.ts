@@ -144,7 +144,7 @@ export function attachImageCapture(page) {
  *  actual rasterized pixel size of an SVG->PNG conversion (SVG_UPSCALE / SVG_MAX_DIM in
  *  rasterizeSvg mean it's not simply the SVG's own declared intrinsic size) without
  *  duplicating that scale math here. */
-function pngDimensions(buf) {
+export function pngDimensions(buf) {
   return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
 }
 

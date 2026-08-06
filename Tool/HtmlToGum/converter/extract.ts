@@ -281,6 +281,25 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
     return true;
   }
 
+  // Large <img> drawn far from its natural size: Gum Sprite stretch-resample ≠ Chromium's
+  // filter (Embrace hero 1792→720 alone can cost ~6% of the pixel gate even when aspect
+  // matches). Bake Chromium's painted pixels for big on-screen figures; leave near-native
+  // and small icons as structured Sprites.
+  function shouldRasterScaledImage(el) {
+    if (String(el.tagName).toUpperCase() !== 'IMG') return false;
+    const nw = el.naturalWidth || 0;
+    const nh = el.naturalHeight || 0;
+    if (nw < 2 || nh < 2) return false;
+    const box = el.getBoundingClientRect();
+    if (box.width < 40 || box.height < 40) return false;
+    if (box.width * box.height < 80_000) return false; // ~283² — skip icons/thumbs
+    const sx = box.width / nw;
+    const sy = box.height / nh;
+    const scale = Math.min(sx, sy);
+    if (scale >= 0.9 && scale <= 1.1) return false;
+    return true;
+  }
+
   function bgImageUrl(str) {
     if (!str || str === 'none') return null;
     const m = str.match(/url\((['"]?)(.*?)\1\)/);
@@ -726,6 +745,13 @@ export async function extractBoxTree(rootSelector: string): Promise<BoxNode> {
       kids = [];
       ownText = '';
       lineCount = 1;
+    }
+    if (shouldRasterScaledImage(el) && !paint.needsRaster) {
+      paint.needsRaster = true;
+      paint.rasterWholeSubtree = true;
+      // Capture Chromium's already-resampled paint (omitBackground false) so the sprite
+      // matches the reference screenshot's filter, not Gum's stretch of the full PNG.
+      paint.rasterOmitBackground = false;
     }
 
     return {

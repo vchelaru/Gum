@@ -33,7 +33,7 @@ import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'no
 import { spawnSync } from 'node:child_process';
 import { extractBoxTree } from './extract.js';
 import { mapTreeToScreen, toGusx } from './map.js';
-import { downloadImages, attachImageCapture } from './assets.js';
+import { downloadImages, attachImageCapture, pngDimensions } from './assets.js';
 import { computeResponsiveMap } from './responsive.js';
 import {
   attachFontCapture, collectFontFaceRules, materializeWebFonts, runGumcliFonts, repairEmptyCustomFonts,
@@ -362,6 +362,15 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
       if (node.style.needsRaster) {
         node.rasterSrc = key;
         assetMap.set(key, `Images/${filename}`);
+        // Clip uses floor/ceil; map Absolute size uses Math.round(rect). A 411.42 box
+        // becomes a 412px PNG but Absolute height 411 → Gum stretches and the bottom
+        // of large figures drifts (Embrace hero). Size the node to the PNG we wrote.
+        try {
+          const dim = pngDimensions(readFileSync(join(imagesDir, filename)));
+          if (dim.width > 0 && dim.height > 0) {
+            node.rect = { ...node.rect, width: dim.width, height: dim.height };
+          }
+        } catch { /* keep measured rect */ }
       }
       }
     }
