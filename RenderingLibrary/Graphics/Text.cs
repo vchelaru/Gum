@@ -263,6 +263,11 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     float IText.FontScale => EffectiveFontScale;
 
+    // Issue #4370: word-wrap must convert a Width constraint using the UNcompensated scale, since
+    // wrap decisions measure words against EffectiveMeasurementFont (native units) -- see
+    // MeasurementFontScale's own doc comment and IWrappedText.WordWrapFontScale.
+    float IWrappedText.WordWrapFontScale => MeasurementFontScale;
+
     public bool mIsTextureCreationSuppressed;
 
     bool IWrappedText.IsMidWordLineBreakEnabled => IsMidWordLineBreakEnabled;
@@ -1865,7 +1870,12 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         // Opt in only when incremental measurement equals measuring the full concatenation: a BitmapFont
         // must exist (for the no-trim Full style) and no inline BBCode run may be active (those size across
         // the whole line). Otherwise -1 so UpdateLines concatenates exactly.
-        var bitmapFontToUse = BitmapFont ?? DefaultBitmapFont;
+        //
+        // Issue #4370: must measure against EffectiveMeasurementFont (the pinned, stable font), not the
+        // live display BitmapFont directly -- otherwise this fast path silently disagrees with every
+        // other measurement in the wrap loop (MeasureString above) the moment oversampling swaps in a
+        // differently-sized display font, re-wrapping text that never actually changed size on screen.
+        var bitmapFontToUse = EffectiveMeasurementFont ?? DefaultBitmapFont;
         if (bitmapFontToUse == null || InlineVariables.Count > 0)
         {
             return -1;

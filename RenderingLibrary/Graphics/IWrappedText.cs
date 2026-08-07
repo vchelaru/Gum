@@ -52,6 +52,18 @@ public interface IWrappedText : IText
     float MeasureStringFullAdvance(string text) => -1;
 
     bool IsMidWordLineBreakEnabled { get; }
+
+    /// <summary>
+    /// The scale a Width constraint is divided by to compute the word-wrap width, in the same base
+    /// units as <see cref="MeasureString(string)"/>. Distinct from <see cref="IText.FontScale"/> when a
+    /// backend composes a display-only compensation into FontScale (e.g. MonoGame's camera-zoom font
+    /// oversampling, issue #4309/#4317) -- that compensation must not affect where text wraps, since
+    /// wrap decisions measure words against a pinned, stable font in native units (issue #4370: an
+    /// Absolute-width box re-wrapped every time oversampling recomputed its compensation ratio, even at
+    /// a fixed zoom, because the wrap width was still being computed with the compensated scale).
+    /// Defaults to <see cref="IText.FontScale"/> for backends with no such compensation.
+    /// </summary>
+    float WordWrapFontScale => FontScale;
 }
 
 public static class IWrappedTextExtensions
@@ -99,9 +111,9 @@ public static class IWrappedTextExtensions
 
 
         int wrappingWidth = int.MaxValue;
-        if (textInstance.Width != null && !float.IsPositiveInfinity(textInstance.Width.Value) && textInstance.FontScale > 0)
+        if (textInstance.Width != null && !float.IsPositiveInfinity(textInstance.Width.Value) && textInstance.WordWrapFontScale > 0)
         {
-            wrappingWidth = MathFunctions.RoundToInt(System.Math.Ceiling(textInstance.Width.Value / textInstance.FontScale));
+            wrappingWidth = MathFunctions.RoundToInt(System.Math.Ceiling(textInstance.Width.Value / textInstance.WordWrapFontScale));
         }
 
         wrappingWidth = System.Math.Max(0, wrappingWidth);
