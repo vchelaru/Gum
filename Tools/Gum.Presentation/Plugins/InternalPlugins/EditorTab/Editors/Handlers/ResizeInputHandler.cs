@@ -160,6 +160,13 @@ public class ResizeInputHandler : InputHandlerBase
 
         if (hasChange)
         {
+            // Snap to grid live, as the object is dragged - not deferred to release, so the user
+            // sees exactly where it will land instead of having to guess and re-grab.
+            if (Context.SnapToGrid)
+            {
+                SnapSelectedToGrid();
+            }
+
             Context.GuiCommands.RefreshVariables();
             MarkAsChanged();
         }
@@ -169,28 +176,27 @@ public class ResizeInputHandler : InputHandlerBase
     {
         if (Context.HasChangedAnythingSinceLastPush)
         {
-            if (Context.SnapToGrid)
-            {
-                SnapSelectedToGrid();
-            }
-
             DoEndOfSettingValuesLogic();
         }
 
         _sideGrabbed = ResizeSide.None;
     }
 
+    /// <summary>
+    /// Snaps the current selection's position/size to the grid. Called live from
+    /// <see cref="OnDrag"/> on every tick that changes something - the caller refreshes the
+    /// Variables grid afterward, so this doesn't refresh itself.
+    /// </summary>
     private void SnapSelectedToGrid()
     {
         float gridSize = Context.GridSize;
-        bool wasAnythingModified = false;
         var elementStack = Context.SelectedState.GetTopLevelElementStack();
 
         if (Context.SelectionManager.HasSelection &&
             Context.SelectedState.SelectedInstances.Count() == 0)
         {
             var gue = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element) as GraphicalUiElement;
-            wasAnythingModified |= SnapInstanceToGrid(gue, instanceSave: null, gridSize);
+            SnapInstanceToGrid(gue, instanceSave: null, gridSize);
         }
 
         foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
@@ -201,23 +207,16 @@ public class ResizeInputHandler : InputHandlerBase
             }
 
             var gue = Context.WireframeObjectManager.GetRepresentation(save, elementStack) as GraphicalUiElement;
-            wasAnythingModified |= SnapInstanceToGrid(gue, save, gridSize);
-        }
-
-        if (wasAnythingModified)
-        {
-            Context.GuiCommands.RefreshVariables();
+            SnapInstanceToGrid(gue, save, gridSize);
         }
     }
 
-    private bool SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize)
+    private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize)
     {
         if (gue == null)
         {
-            return false;
+            return;
         }
-
-        bool wasModified = false;
 
         MoveInputHandler.GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
         GetDifferenceToGridForSize(gue, gridSize, out float differenceToGridWidth, out float differenceToGridHeight);
@@ -227,39 +226,33 @@ public class ResizeInputHandler : InputHandlerBase
             gue.X = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("X", differenceToGridX, instanceSave)
                 : Context.ElementCommands.ModifyVariable("X", differenceToGridX, Context.SelectedState.SelectedElement);
-            wasModified = true;
         }
         if (differenceToGridY != 0)
         {
             gue.Y = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Y", differenceToGridY, instanceSave)
                 : Context.ElementCommands.ModifyVariable("Y", differenceToGridY, Context.SelectedState.SelectedElement);
-            wasModified = true;
         }
         if (differenceToGridWidth != 0)
         {
             gue.Width = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, instanceSave)
                 : Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, Context.SelectedState.SelectedElement);
-            wasModified = true;
         }
         if (differenceToGridHeight != 0)
         {
             gue.Height = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, instanceSave)
                 : Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, Context.SelectedState.SelectedElement);
-            wasModified = true;
         }
-
-        return wasModified;
     }
 
     /// <summary>
     /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so each lands on the
-    /// nearest grid line at or below its current value. This is local (not world-space) rounding,
-    /// mirroring how the analogous unit-snap already treats Width/Height - the world-space anchor
-    /// snap lives in <see cref="MoveInputHandler.GetDifferenceToGrid"/> and is reused for X/Y.
-    /// Axes using non-pixel units are left untouched.
+    /// nearest grid line (rounded, not floored - a resize should grow/shrink to whichever grid
+    /// line is closest, not always down). This is local (not world-space) rounding; the
+    /// world-space anchor snap lives in <see cref="MoveInputHandler.GetDifferenceToGrid"/> and is
+    /// reused for X/Y. Axes using non-pixel units are left untouched.
     /// </summary>
     internal static void GetDifferenceToGridForSize(GraphicalUiElement gue, float gridSize,
         out float differenceToGridWidth, out float differenceToGridHeight)
@@ -270,14 +263,14 @@ public class ResizeInputHandler : InputHandlerBase
         if (gue.WidthUnits.GetIsPixelBased())
         {
             float width = gue.Width;
-            float snappedWidth = GridSnapper.Snap(width, gridSize);
+            float snappedWidth = GridSnapper.SnapRound(width, gridSize);
             differenceToGridWidth = snappedWidth - width;
         }
 
         if (gue.HeightUnits.GetIsPixelBased())
         {
             float height = gue.Height;
-            float snappedHeight = GridSnapper.Snap(height, gridSize);
+            float snappedHeight = GridSnapper.SnapRound(height, gridSize);
             differenceToGridHeight = snappedHeight - height;
         }
     }

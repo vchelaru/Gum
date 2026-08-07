@@ -21,4 +21,19 @@ public static class GridSnapper
 
         return (float)Math.Floor(value / gridSize) * gridSize;
     }
+
+    /// <summary>
+    /// Returns <paramref name="value"/> snapped to the nearest multiple of <paramref name="gridSize"/>,
+    /// rounding away from zero at the exact midpoint (matches <c>MathFunctions.RoundToInt</c>).
+    /// Returns <paramref name="value"/> unchanged if <paramref name="gridSize"/> is not positive.
+    /// </summary>
+    public static float SnapRound(float value, float gridSize)
+    {
+        if (gridSize <= 0)
+        {
+            return value;
+        }
+
+        return (float)Math.Round(value / gridSize, MidpointRounding.AwayFromZero) * gridSize;
+    }
 }

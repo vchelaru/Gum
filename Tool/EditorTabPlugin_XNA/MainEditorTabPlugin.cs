@@ -270,7 +270,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _pluginManager,
             _fileCommands,
             _wireframeObjectManager,
-            _gridSnapWarningService);
+            _gridSnapWarningService,
+            _projectManager);
 
         messenger.RegisterAll(this);
     }

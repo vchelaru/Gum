@@ -55,24 +55,6 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
-    public bool ShowGrid
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
-
-    public bool SnapToGrid
-    {
-        get => Get<bool>();
-        set => Set(value);
-    }
-
-    public int GridSize
-    {
-        get => Get<int>();
-        set => Set(value);
-    }
-
     public int CanvasWidth
     {
         get => Get<int>();
@@ -242,9 +224,6 @@ public class ProjectPropertiesViewModel : ViewModel
             FontGenerator = this.gumProject.FontGenerator;
 
             RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
-            ShowGrid = this.gumProject.ShowGrid;
-            SnapToGrid = this.gumProject.SnapToGrid;
-            GridSize = this.gumProject.GridSize;
             CanvasHeight = this.gumProject.DefaultCanvasHeight;
             CanvasWidth = this.gumProject.DefaultCanvasWidth;
             RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
@@ -276,9 +255,6 @@ public class ProjectPropertiesViewModel : ViewModel
 
         this.gumProject.TextureFilter = TextureFilter.ToString();
         this.gumProject.RestrictToUnitValues = RestrictToUnitValues;
-        this.gumProject.ShowGrid = ShowGrid;
-        this.gumProject.SnapToGrid = SnapToGrid;
-        this.gumProject.GridSize = GridSize;
         this.gumProject.DefaultCanvasHeight = CanvasHeight;
         this.gumProject.DefaultCanvasWidth = CanvasWidth;
         this.gumProject.RestrictFileNamesForAndroid = RestrictFileNamesForAndroid;

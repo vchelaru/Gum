@@ -87,12 +87,6 @@ public class MoveInputHandler : InputHandlerBase
                 SnapSelectedToUnitValues();
             }
 
-            // Snap to grid if enabled
-            if (Context.SnapToGrid)
-            {
-                SnapSelectedToGrid();
-            }
-
             Context.DoEndOfSettingValuesLogic();
         }
 
@@ -163,6 +157,14 @@ public class MoveInputHandler : InputHandlerBase
         if (didMove)
         {
             ApplyAxisLockIfNeeded();
+
+            // Snap to grid live, as the object is dragged - not deferred to release, so the user
+            // sees exactly where it will land instead of having to guess and re-grab.
+            if (Context.SnapToGrid)
+            {
+                SnapSelectedToGrid();
+            }
+
             MarkAsChanged();
         }
     }
@@ -391,7 +393,9 @@ public class MoveInputHandler : InputHandlerBase
 
         if (wasAnythingModified)
         {
-            Context.GuiCommands.RefreshVariables(true);
+            // Not forced (true) - this runs on every drag tick, not just once at release, so a
+            // full grid rebuild here would be needlessly expensive.
+            Context.GuiCommands.RefreshVariables();
         }
     }
 

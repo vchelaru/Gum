@@ -56,4 +56,44 @@ public class GridSnapperTests
 
         result.ShouldBe(23);
     }
+
+    [Fact]
+    public void SnapRound_ShouldRoundDown_WhenValueIsBelowTheMidpoint()
+    {
+        float result = GridSnapper.SnapRound(value: 20, gridSize: 16);
+
+        result.ShouldBe(16);
+    }
+
+    [Fact]
+    public void SnapRound_ShouldRoundUp_WhenValueIsAboveTheMidpoint()
+    {
+        float result = GridSnapper.SnapRound(value: 26, gridSize: 16);
+
+        result.ShouldBe(32);
+    }
+
+    [Fact]
+    public void SnapRound_ShouldRoundAwayFromZero_AtExactMidpoint()
+    {
+        float result = GridSnapper.SnapRound(value: 24, gridSize: 16);
+
+        result.ShouldBe(32);
+    }
+
+    [Fact]
+    public void SnapRound_ShouldRoundTowardNegativeInfinity_WhenValueIsNegativeAndPastMidpoint()
+    {
+        float result = GridSnapper.SnapRound(value: -26, gridSize: 16);
+
+        result.ShouldBe(-32);
+    }
+
+    [Fact]
+    public void SnapRound_ShouldReturnOriginalValue_WhenGridSizeIsZeroOrNegative()
+    {
+        float result = GridSnapper.SnapRound(value: 23, gridSize: 0);
+
+        result.ShouldBe(23);
+    }
 }

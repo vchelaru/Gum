@@ -15,7 +15,7 @@ namespace Gum.Presentation.Tests;
 public class ResizeInputHandlerGridSnapTests
 {
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldReturnOffsetToLowerGridLine_WhenPixelBasedAndOffGrid()
+    public void GetDifferenceToGridForSize_ShouldRoundToNearestGridLine_WhenPixelBasedAndOffGrid()
     {
         GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
         {
@@ -28,8 +28,8 @@ public class ResizeInputHandlerGridSnapTests
         ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
             out float differenceToGridWidth, out float differenceToGridHeight);
 
-        differenceToGridWidth.ShouldBe(-14); // 30 -> 16
-        differenceToGridHeight.ShouldBe(-2); // 50 -> 48
+        differenceToGridWidth.ShouldBe(2); // 30 -> 32 (nearest), not 16 (floor)
+        differenceToGridHeight.ShouldBe(-2); // 50 -> 48 (nearest)
     }
 
     [Fact]

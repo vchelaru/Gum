@@ -29,6 +29,7 @@ public partial class EditorViewModel : ViewModel, IZoomController
     private readonly IFileCommands _fileCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IGridSnapWarningService _gridSnapWarningService;
+    private readonly IProjectManager _projectManager;
 
     public bool HasGridSnapWarning
     {
@@ -51,6 +52,55 @@ public partial class EditorViewModel : ViewModel, IZoomController
         var info = _gridSnapWarningService.GetInfo();
         HasGridSnapWarning = info.HasWarning;
         GridSnapWarningText = info.WarningText;
+    }
+
+    public bool ShowGrid
+    {
+        get => Get<bool>();
+        set
+        {
+            if (Set(value))
+            {
+                ApplyGridSettingToProject(nameof(GumProjectSave.ShowGrid), gumProject => gumProject.ShowGrid = value);
+            }
+        }
+    }
+
+    public bool SnapToGrid
+    {
+        get => Get<bool>();
+        set
+        {
+            if (Set(value))
+            {
+                ApplyGridSettingToProject(nameof(GumProjectSave.SnapToGrid), gumProject => gumProject.SnapToGrid = value);
+            }
+        }
+    }
+
+    public int GridSize
+    {
+        get => Get<int>();
+        set
+        {
+            if (Set(value))
+            {
+                ApplyGridSettingToProject(nameof(GumProjectSave.GridSize), gumProject => gumProject.GridSize = value);
+            }
+        }
+    }
+
+    private void ApplyGridSettingToProject(string propertyName, Action<GumProjectSave> applyToProject)
+    {
+        var project = _projectManager.GumProjectSave;
+        if (project == null)
+        {
+            return;
+        }
+
+        applyToProject(project);
+        _pluginManager.ProjectPropertySet(propertyName);
+        _fileCommands.TryAutoSaveProject();
     }
 
     SystemManagers? SystemManagers
@@ -250,12 +300,14 @@ public partial class EditorViewModel : ViewModel, IZoomController
     public EditorViewModel(IPluginManager pluginManager,
         IFileCommands fileCommands,
         IWireframeObjectManager wireframeObjectManager,
-        IGridSnapWarningService gridSnapWarningService)
+        IGridSnapWarningService gridSnapWarningService,
+        IProjectManager projectManager)
     {
         _pluginManager = pluginManager;
         _fileCommands = fileCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _gridSnapWarningService = gridSnapWarningService;
+        _projectManager = projectManager;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
         CustomCanvasSizes = DefaultCanvasSizes;
@@ -330,6 +382,10 @@ public partial class EditorViewModel : ViewModel, IZoomController
         this.CustomCanvasSizes = save.CustomCanvasSizes.ToArray();
 
         this.SelectedCustomCanvasSize = this.CustomCanvasSizes[0];
+
+        SetWithoutNotifying(save.ShowGrid, nameof(ShowGrid));
+        SetWithoutNotifying(save.SnapToGrid, nameof(SnapToGrid));
+        SetWithoutNotifying(save.GridSize, nameof(GridSize));
     }
 }
 
