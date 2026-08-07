@@ -8,12 +8,24 @@ namespace Gum.Settings;
 /// <see cref="LegacyMainWindowState"/>).
 /// </summary>
 public record WindowSettings(
-    double Width = 1280,
-    double Height = 720,
+    double Width = WindowSettings.DefaultWidth,
+    double Height = WindowSettings.DefaultHeight,
     double? Top = null,
     double? Left = null,
     bool IsMaximized = false
-);
+)
+{
+    public const double DefaultWidth = 1280;
+    public const double DefaultHeight = 720;
+
+    /// <summary>
+    /// Smallest size the main window may be sized to. Enforced by MainWindow's MinWidth/MinHeight,
+    /// and treated as the floor for persisted geometry so a window shrunk to the OS minimum track
+    /// size (title bar only) can't be saved and restored forever - see #4361.
+    /// </summary>
+    public const double MinimumWidth = 640;
+    public const double MinimumHeight = 480;
+}
 
 public record MainTabDimensions(
     double LeftColumnWidth = 250,

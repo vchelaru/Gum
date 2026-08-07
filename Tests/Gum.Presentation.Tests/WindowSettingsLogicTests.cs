@@ -49,4 +49,39 @@ public class WindowSettingsLogicTests
 
         result.ShouldBeTrue();
     }
+
+    [Fact]
+    public void IsFirstLaunch_ShouldReturnTrue_WhenSizeIsTooSmallToBeUsable()
+    {
+        // The OS minimum track size, as reported in #4361 - a title-bar-only window.
+        WindowSettings settings = new(Width: 159.2, Height: 27.2, Top: 0, Left: 0);
+
+        bool result = WindowSettingsLogic.IsFirstLaunch(settings);
+
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WithUsableSize_ShouldPreserveSize_WhenSizeIsUsable()
+    {
+        WindowSettings settings = new(Width: 1000, Height: 800, Top: 10, Left: 20, IsMaximized: true);
+
+        WindowSettings result = WindowSettingsLogic.WithUsableSize(settings);
+
+        result.ShouldBe(settings);
+    }
+
+    [Fact]
+    public void WithUsableSize_ShouldReplaceSizeWithDefault_WhenSizeIsTooSmallToBeUsable()
+    {
+        WindowSettings settings = new(Width: 159.2, Height: 27.2, Top: 10, Left: 20, IsMaximized: true);
+
+        WindowSettings result = WindowSettingsLogic.WithUsableSize(settings);
+
+        result.Width.ShouldBe(1280);
+        result.Height.ShouldBe(720);
+        result.Top.ShouldBe(10);
+        result.Left.ShouldBe(20);
+        result.IsMaximized.ShouldBeTrue();
+    }
 }
