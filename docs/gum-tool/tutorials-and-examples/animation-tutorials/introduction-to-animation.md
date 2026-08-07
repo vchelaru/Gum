@@ -19,10 +19,10 @@ Gum's animation system is very powerful and can be used in a variety of situatio
 
 ## Storage of animations
 
-Animations are stored separate from the screen or component on the file system. If a screen or component contains at least one animation then Gum will save a Gum Animation XML file (.ganx extension) with the word "Animations" appended on the screen or component's name. In other words GameScreen would have a file called GameScreenAnimations.ganx in the same folder containing information about its animations.
+Animations are stored separate from the screen or component on the file system. If a screen or component contains at least one animation then Gum will save a Gum Animation file (.ganj or .ganx extension) with the word "Animations" appended on the screen or component's name. In other words GameScreen would have a file called GameScreenAnimations.ganj/ganx in the same folder containing information about its animations.
 
 ## Playing animations
 
 Once an animation has been made it can be played back in editor. The following shows how an animation is played back, both in real time and also by dragging the slider.
 
-<figure><img src="../../../.gitbook/assets/06_11 16 56.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/07_06 21 17.gif" alt=""><figcaption></figcaption></figure>

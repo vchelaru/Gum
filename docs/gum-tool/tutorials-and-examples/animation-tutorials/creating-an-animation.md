@@ -14,7 +14,7 @@ First we'll create a component which will be animated. To do this:
 4. Drag+drop the **Text** Standard into the **TextComponent** to create a Text instance
 5. Select the **Alignment** tab and click the middle button to have the TextInstance fill the TextComponent
 
-<figure><img src="../../../.gitbook/assets/06_11 33 32.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/07_08 01 52.gif" alt=""><figcaption></figcaption></figure>
 
 ## Creating the States
 
@@ -30,7 +30,7 @@ Now that we have a component we'll add the states needed for animation. We'll ad
 8. Select **Add State**
 9. Select **Shown**
 
-<figure><img src="../../../.gitbook/assets/06_11 36 47.gif" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../../.gitbook/assets/07_08 04 36.png" alt=""><figcaption></figcaption></figure>
 
 ## Setting values in the states
 
