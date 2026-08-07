@@ -181,6 +181,17 @@ public class Renderer : IRenderer
     public Layer MainLayer => _layers[0];
     public ReadOnlyCollection<Layer> Layers => _layersReadOnly;
 
+    public Layer AddLayer()
+    {
+        Layer layer = new Layer();
+        _layers.Add(layer);
+        return layer;
+    }
+
+    public void AddLayer(Layer layer) => _layers.Add(layer);
+
+    public void RemoveLayer(Layer layer) => _layers.Remove(layer);
+
     public Renderer()
     {
         _layers = new List<Layer>();
@@ -240,16 +251,6 @@ public class Renderer : IRenderer
         _camera.ClientWidth = Raylib.GetRenderWidth();
         _camera.ClientHeight = Raylib.GetRenderHeight();
 
-        var camera2D = new Camera2D
-        {
-            Zoom = _camera.Zoom,
-            Target = new System.Numerics.Vector2(_camera.X, _camera.Y),
-            Offset = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
-                ? new System.Numerics.Vector2(_camera.ClientWidth / 2f, _camera.ClientHeight / 2f)
-                : System.Numerics.Vector2.Zero,
-            Rotation = 0,
-        };
-
         // Substitute our owned RenderBatch for raylib's default so its draw counter can be read,
         // then route the mode/scissor state changes below through the counter so each batch flush
         // is banked into RenderStateChangeStatistics.DrawCallCount.
@@ -282,11 +283,6 @@ public class Renderer : IRenderer
             }
         }
 
-        // Record the outer camera so a mid-walk offscreen consumer can re-establish it after its
-        // own EndTextureMode resets the modelview (issue #3460).
-        ActiveCamera2D = camera2D;
-        BatchDrawCallCounter.BeginMode2D(camera2D);
-
         for (int i = 0; i < layers.Count; i++)
         {
             Layer layer = layers[i];
@@ -298,12 +294,43 @@ public class Renderer : IRenderer
             {
                 //mRenderStateVariables.Filtering = TextureFilter == TextureFilter.Linear;
             }
+
+            // Each layer gets its own Camera2D built from its LayerCameraSettings (position/zoom/
+            // IsInScreenSpace) falling back to the main camera when unset, so a screen-space HUD
+            // layer actually renders fixed on screen instead of panning/zooming with everything
+            // else (#4367). Record the active one so a mid-walk offscreen consumer can re-establish
+            // it after its own EndTextureMode resets the modelview (issue #3460).
+            Camera2D layerCamera2D = GetCamera2DForLayer(layer);
+            ActiveCamera2D = layerCamera2D;
+            BatchDrawCallCounter.BeginMode2D(layerCamera2D);
+
             RenderLayer(managers, layer, prerender: false);
+
+            BatchDrawCallCounter.EndMode2D();
         }
 
-        BatchDrawCallCounter.EndMode2D();
         BatchDrawCallCounter.EndPass();
     }
+
+    // Builds the Camera2D used to draw a single layer, factoring in LayerCameraSettings on top of
+    // the main camera (#4367). The Offset (where the target maps to on screen) always follows the
+    // main camera's CameraCenterOnScreen -- LayerCameraSettings has no center-mode override of its
+    // own -- matching Layer.GetEffectiveCamera's ground truth already used for hit-testing/scissor.
+    private Camera2D GetCamera2DForLayer(Layer layer)
+    {
+        layer.GetEffectiveCamera(_camera, out float effectiveX, out float effectiveY, out float effectiveZoom);
+
+        return new Camera2D
+        {
+            Zoom = effectiveZoom,
+            Target = new System.Numerics.Vector2(effectiveX, effectiveY),
+            Offset = _camera.CameraCenterOnScreen == CameraCenterOnScreen.Center
+                ? new System.Numerics.Vector2(_camera.ClientWidth / 2f, _camera.ClientHeight / 2f)
+                : System.Numerics.Vector2.Zero,
+            Rotation = 0,
+        };
+    }
+
     public void RenderLayer(ISystemManagers managers, Layer layer, bool prerender = true)
     {
 
