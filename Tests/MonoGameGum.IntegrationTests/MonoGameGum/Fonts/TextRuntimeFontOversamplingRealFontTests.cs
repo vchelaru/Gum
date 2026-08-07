@@ -110,6 +110,64 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
 
     // Reproduces the exact manual-test finding: FontScale 2, zoomed to ~2.93x. Confirms the drawn text
     // exactly fills its own pinned box with the real KernSmith rasterizer, not just a synthetic fake.
+    // Issue #4349: same continuous-zoom sweep as above, but against a plain system-installed font
+    // family (no BmfcSave.FontFile) rather than an explicit .ttf -- the common case for a game that
+    // just sets Font = "Arial".
+    [Fact]
+    public void RegenerateOversampledFont_SystemFontFamily_ContinuousZoomSequence_MeasuredSizeNeverDriftsFromNative()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);
+            TextRuntime.UseFontOversampling = true;
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 12;
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.HeightUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.Text = "Stack Ag 12pt";
+            game.GumService.Root.Children.Add(textRuntime);
+
+            Text text = (Text)textRuntime.RenderableComponent;
+            float nativeWidth = text.WrappedTextWidth;
+            float nativeHeight = text.WrappedTextHeight;
+            BitmapFont nativeFont = text.BitmapFont;
+
+            // Guards a false pass: if KernSmith couldn't resolve "Arial" the display font would never
+            // be swapped, and measurement would trivially never drift.
+            textRuntime.RegenerateOversampledFont(4f).ShouldBeTrue();
+            text.BitmapFont.ShouldNotBeSameAs(nativeFont);
+
+            List<string> failures = new();
+
+            foreach (float zoom in BuildContinuousZoomSequence())
+            {
+                textRuntime.UpdateAutomaticFontOversampling(zoom);
+
+                if (System.MathF.Abs(text.WrappedTextWidth - nativeWidth) > 0.01f ||
+                    System.MathF.Abs(text.WrappedTextHeight - nativeHeight) > 0.01f)
+                {
+                    failures.Add($"zoom={zoom:0.000}: W={text.WrappedTextWidth} (expected {nativeWidth}), " +
+                        $"H={text.WrappedTextHeight} (expected {nativeHeight})");
+                }
+            }
+
+            failures.ShouldBeEmpty($"measured size drifted from the native {nativeWidth}x{nativeHeight}:\n" +
+                string.Join("\n", failures));
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     [Fact]
     public void RegenerateOversampledFont_RealFont_FontScale2AtNonRoundZoom_DrawnTextExactlyFillsPinnedBox()
     {

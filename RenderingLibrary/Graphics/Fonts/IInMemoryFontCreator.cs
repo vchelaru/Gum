@@ -12,11 +12,4 @@ public interface IInMemoryFontCreator
     /// Returns <c>null</c> if creation fails or is not supported for the given parameters.
     /// </summary>
     BitmapFont? TryCreateFont(BmfcSave bmfcSave);
-
-    /// <summary>
-    /// Attempts to read this font's unscaled design-unit metrics without rasterizing any glyphs
-    /// (issue #4309). Returns <c>null</c> if unsupported for the given parameters -- callers must
-    /// fall back to measuring against a rasterized <see cref="BitmapFont"/> instead.
-    /// </summary>
-    FontDesignMetrics? TryGetDesignMetrics(BmfcSave bmfcSave) => null;
 }
