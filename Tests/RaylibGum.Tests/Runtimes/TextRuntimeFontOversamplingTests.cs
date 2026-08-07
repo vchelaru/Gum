@@ -332,6 +332,89 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4365: ResolveRunFont (Runtimes/RaylibGum/Renderables/Text.cs) resolves an inline BBCode
+    // run's draw size from the LIVE Font.BaseSize, which IS the oversampled raster once
+    // RegenerateOversampledFont has swapped it in -- so a run with no [FontScale]/[FontSize] tag (any
+    // OTHER tag, e.g. [Color], still routes through ResolveRunFont's default branch) must compose
+    // OversampleCompensationScale the same way EffectiveFontScale/DrawPlainLine already do for plain
+    // text, or its reported/drawn size balloons with the oversample raster ratio instead of staying
+    // pinned to the native size.
+    [Fact]
+    public void RegenerateOversampledFont_BBCodeColorOnlyRun_WidthDoesNotDriftFromNative()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.HeightUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 12;
+            textRuntime.Text = "[Color=Red]Stack[/Color] Ag 12pt";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            float nativeWidth = text.WrappedTextWidth;
+            nativeWidth.ShouldBeGreaterThan(0);
+
+            textRuntime.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+
+            text.WrappedTextWidth.ShouldBe(nativeWidth, 0.5f,
+                "because a Color-only inline run has no explicit scale and must report the same width " +
+                "regardless of the raster the live Font happens to be oversampled to");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Companion to the Color-only case above: an explicit [FontScale=2] tag is an ABSOLUTE per-run
+    // scale (ResolveRunFont's "case nameof(FontScale)" branch), not a Text-level FontScale, so it must
+    // independently compose OversampleCompensationScale too.
+    [Fact]
+    public void RegenerateOversampledFont_BBCodeFontScaleTagRun_WidthDoesNotDriftFromNative()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.HeightUnits = DimensionUnitType.RelativeToChildren;
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 12;
+            textRuntime.Text = "small [FontScale=2]BIG[/FontScale]";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            float nativeWidth = text.WrappedTextWidth;
+            nativeWidth.ShouldBeGreaterThan(0);
+
+            textRuntime.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+
+            // Tolerance wider than the Color-only case: OversampleCompensationScale is derived from the
+            // BASE (unscaled) text's measured width ratio (TextRuntime.RegenerateOversampledFont), which
+            // is only an approximation of the [FontScale=2] run's own -- differently, non-linearly
+            // hinted -- raster at 2x the base size (the same "not exact multiples" gap the
+            // Text.MeasurementFont doc comment calls out for the plain-text path).
+            text.WrappedTextWidth.ShouldBe(nativeWidth, 3f,
+                "because an inline [FontScale=2] run's size is relative to the native FontSize and must " +
+                "not also balloon with the oversample raster ratio");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     private static IEnumerable<float> BuildContinuousZoomSequence()
     {
         List<float> zooms = new();
