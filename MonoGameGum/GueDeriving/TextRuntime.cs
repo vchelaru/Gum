@@ -796,6 +796,18 @@ public class TextRuntime : InteractiveGue
     {
         if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
         {
+            // Issue #4330 (manual-test finding): oversampling is meant to be a live toggle, not a
+            // one-way ratchet -- if this Text was already oversampled, re-resolve the font through the
+            // normal (non-oversampled) property cascade so it actually reverts to native, instead of
+            // silently leaving the last-oversampled raster/compensation in place forever just because
+            // no further regeneration is happening. UpdateToFontValues also resets
+            // OversampleCompensationScale and the hysteresis state (_lastAutoOversampleRatio) via
+            // CustomSetPropertyOnRenderable.UpdateToFontValues, so this only fires once per
+            // enabled-to-disabled transition, not every frame.
+            if (_lastAutoOversampleRatio != 1f)
+            {
+                UpdateToFontValues();
+            }
             return false;
         }
 

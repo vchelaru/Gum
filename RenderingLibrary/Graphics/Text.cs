@@ -1526,6 +1526,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             objectCausingRendering: this);
     }
 
+    /// <summary>
+    /// Test-only access to <see cref="UpdateIpsoForRendering"/>'s resulting temp renderable, so unit
+    /// tests can assert on the alignment offset it computes without a real SpriteRenderer/draw pass.
+    /// </summary>
+    internal IRenderableIpso UpdateIpsoForRenderingForTests()
+    {
+        UpdateIpsoForRendering();
+        return mTempForRendering;
+    }
+
     private void UpdateIpsoForRendering()
     {
         if (mTempForRendering == null)
@@ -1539,16 +1549,20 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         mTempForRendering.X = this.X;
         mTempForRendering.Y = this.Y;
 
-        if (mPreRenderWidth.HasValue)
-        {
-            mTempForRendering.Width = this.mPreRenderWidth.Value * EffectiveFontScale;
-            mTempForRendering.Height = this.mPreRenderHeight.Value * EffectiveFontScale;
-        }
-        else
-        {
-            mTempForRendering.Width = this.mTextureToRender.Width * EffectiveFontScale;
-            mTempForRendering.Height = this.mTextureToRender.Height * EffectiveFontScale;
-        }
+        // Issue #4330 (manual-test finding): a centered Button/RadioButton label visibly shifted
+        // down-and-right once oversampling was actually engaged. Root cause -- this used to recompute
+        // Width/Height inline as mPreRenderWidth/Height * EffectiveFontScale (which INCLUDES
+        // OversampleCompensationScale), while EffectiveWidth/EffectiveHeight below (what this box's
+        // size is compared against to compute the alignment offset) use MeasurementFontScale (which
+        // does NOT include compensation once a MeasurementFont is pinned -- see that property's own
+        // doc comment). mPreRenderWidth/Height are themselves already measured against the STABLE
+        // measurement font (via MeasureString -> EffectiveMeasurementFont), so re-scaling them by
+        // EffectiveFontScale double-applied the compensation, producing a temp box whose size didn't
+        // match EffectiveWidth/EffectiveHeight's own idea of this Text's size -- exactly the same
+        // quantity WrappedTextWidth/WrappedTextHeight already compute correctly, so reuse those
+        // instead of re-deriving it here with the wrong scale.
+        mTempForRendering.Width = WrappedTextWidth;
+        mTempForRendering.Height = WrappedTextHeight;
         //mTempForRendering.Parent = this.Parent;
 
         float widthDifference = this.EffectiveWidth - mTempForRendering.Width;

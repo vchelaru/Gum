@@ -149,6 +149,42 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4330 (manual-test finding): UpdateAutomaticFontOversampling early-returned when
+    // UseFontOversampling was false, but never undid an ALREADY-oversampled font -- the checkbox on
+    // the Zoom demo screen appeared to do nothing when unchecked. The flag is meant to be a live
+    // on/off toggle, not a one-way ratchet.
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenDisabledAfterOversamplingWasActive_RevertsToNativeFont()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px
+            var text = (Text)textRuntime.RenderableComponent;
+            text.Font.BaseSize.ShouldBe(50);
+
+            // Flag turned off, but the effective zoom (from the still-zoomed camera) is unchanged --
+            // exactly what happens in a real game the frame after unchecking the box.
+            TextRuntime.UseFontOversampling = false;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f);
+
+            text.Font.BaseSize.ShouldBe(20,
+                "because disabling oversampling must revert to the native font, not leave the last-oversampled raster stuck in place");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     [Fact]
     public void UpdateAutomaticFontOversampling_WhenRasterPixelDeltaBelowOne_DoesNotRegenerateAgain()
     {
