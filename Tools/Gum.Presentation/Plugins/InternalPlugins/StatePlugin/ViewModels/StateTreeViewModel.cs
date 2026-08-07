@@ -1,7 +1,10 @@
-﻿using Gum.DataTypes;
+﻿using CommunityToolkit.Mvvm.Input;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Mvvm;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -18,12 +21,15 @@ public class StateTreeViewModel : ViewModel
     #region Fields/Properties
 
     private readonly ISelectedState _selectedState;
-    
+    private readonly IDialogService _dialogService;
+
     [DependsOn(nameof(Categories))]
     [DependsOn(nameof(States))]
     public IEnumerable<StateTreeViewItem> Items => Categories.Concat<StateTreeViewItem>(States);
 
     private readonly IStateTreeViewRightClickService _stateTreeViewRightClickService;
+
+    public RelayCommand AddCategoryCommand { get; }
 
     public ObservableCollection<CategoryViewModel> Categories
     {
@@ -43,12 +49,16 @@ public class StateTreeViewModel : ViewModel
 
     public StateTreeViewModel(
         IStateTreeViewRightClickService stateTreeViewRightClickService,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        IDialogService dialogService)
     {
         _selectedState = selectedState;
         _stateTreeViewRightClickService = stateTreeViewRightClickService;
+        _dialogService = dialogService;
         Categories = new ObservableCollection<CategoryViewModel>();
         States = new ObservableCollection<StateViewModel>();
+
+        AddCategoryCommand = new RelayCommand(() => _dialogService.Show<AddCategoryDialogViewModel>());
 
         PropertyChanged += HandlePropertyChanged;
     }
@@ -88,6 +98,20 @@ public class StateTreeViewModel : ViewModel
             }
         }
         
+    }
+
+    /// <summary>
+    /// A category's "+" button was clicked. Selects the category first, since
+    /// <see cref="AddStateDialogViewModel"/> reads <see cref="ISelectedState.SelectedStateCategorySave"/>
+    /// in both its validation and its OnAffirmative handler.
+    /// </summary>
+    private void HandleCategoryAddStateRequested(object? sender, EventArgs e)
+    {
+        if (sender is CategoryViewModel categoryVm)
+        {
+            _selectedState.SelectedStateCategorySave = categoryVm.Data;
+            _dialogService.Show<AddStateDialogViewModel>();
+        }
     }
 
     #region Refresh
@@ -143,6 +167,7 @@ public class StateTreeViewModel : ViewModel
                 var categoryVm = Categories[i];
                         // Remove this so they don't push any changes to Gum
                 categoryVm.PropertyChanged -= HandleItemVmPropertyChanged;
+                categoryVm.AddStateRequested -= HandleCategoryAddStateRequested;
                 Categories.RemoveAt(i);
                 i--;
             }
@@ -183,6 +208,7 @@ public class StateTreeViewModel : ViewModel
             {
                 var categoryVm = new CategoryViewModel() { Data = category };
                 categoryVm.PropertyChanged += HandleItemVmPropertyChanged;
+                categoryVm.AddStateRequested += HandleCategoryAddStateRequested;
 
                 categoryVm.IsSelected = selectedState.SelectedStateSave == null && selectedState.SelectedStateCategorySave == category;
 
