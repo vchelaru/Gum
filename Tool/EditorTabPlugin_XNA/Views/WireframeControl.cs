@@ -245,7 +245,6 @@ public class WireframeControl : WpfGraphicsDeviceControl
             }
             _cameraController.Initialize(Camera, editorViewModel, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
-            _cameraController.CameraChanged += () => _gridOverlayManager.Refresh(Camera);
 
             InputLibrary.Cursor.Self.Initialize(new InputLibrary.WpfInputHostAdapter(this));
 
@@ -389,6 +388,14 @@ public class WireframeControl : WpfGraphicsDeviceControl
             {
                 InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
                 TimeManager.Self.Activity();
+
+                // Camera.ClientWidth/Height come from the GraphicsDevice viewport, which isn't
+                // valid yet the first time a project loads (before the first XNA frame has run) -
+                // a one-shot Refresh() at load time can compute against a 0x0 viewport and leave
+                // the grid invisible even though IsGridOverlayVisible is true. Refreshing here
+                // every frame keeps it in sync once the viewport (and therefore the camera) is
+                // actually valid, with no extra event wiring needed.
+                _gridOverlayManager.Refresh(Camera);
 
                 SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);
 
