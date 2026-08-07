@@ -1320,16 +1320,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 }
             }
 
-            List<GumTreeNode> treeNodeList = new List<GumTreeNode>();
-
-            foreach (var item in list)
-            {
-                if(parentContainer != null)
-                {
-                    GumTreeNode itemTreeNode = GetTreeNodeFor(item, parentContainer);
-                    treeNodeList.Add(itemTreeNode);
-                }
-            }
+            List<GumTreeNode> treeNodeList = parentContainer != null
+                ? GetReselectableNodes(list.ToList(), item => GetTreeNodeFor(item, parentContainer))
+                    .Cast<GumTreeNode>()
+                    .ToList()
+                : new List<GumTreeNode>();
 
             Select(treeNodeList);
         }
