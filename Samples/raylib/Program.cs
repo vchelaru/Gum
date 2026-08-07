@@ -162,6 +162,7 @@ public class BasicShapes
         AddNavButton("Text", () => new TextScreen());
         AddNavButton("Render Target", () => new RenderTargetScreen());
         AddNavButton("RT Shader", () => new RenderTargetShaderScreen());
+        AddNavButton("Zoom", () => new ZoomScreen());
 
         AddFitModeRadio("Zoom", isChecked: true, () =>
         {
@@ -238,6 +239,10 @@ public class BasicShapes
         {
             activeScreen.RemoveFromRoot();
         }
+
+        // ZoomScreen drives the shared main Camera.Zoom directly (issue #4330) -- reset it here so
+        // leaving that screen zoomed in never leaks a non-1 zoom into whichever screen is shown next.
+        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
 
         activeScreen = factory();
         // Offset the screen so it doesn't sit underneath the nav strip — same trick as

@@ -85,6 +85,7 @@ unsafe class Program
         () => new SilkNetGum.Screens.RenderTargetScreen(),
         () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
         () => new GumSamples.Screens.FormsScreen(),
+        () => new SilkNetGum.Screens.ZoomScreen(),
     };
 
     // Parallel to codeScreenFactories, used as nav-strip button labels.
@@ -100,6 +101,7 @@ unsafe class Program
         "Render Target",
         "RT Shader",
         "Forms",
+        "Zoom",
     };
 
     private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
@@ -220,6 +222,10 @@ unsafe class Program
         currentGumxScreen = null;
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
+
+        // ZoomScreen drives the shared main Camera.Zoom directly (issue #4330) -- reset it here so
+        // leaving that screen zoomed in never leaks a non-1 zoom into whichever screen is shown next.
+        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
 
         if (currentScreenIndex < gumxScreens.Count)
         {

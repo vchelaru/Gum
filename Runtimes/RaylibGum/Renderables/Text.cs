@@ -323,28 +323,168 @@ public class Text : IVisible, IRenderableIpso,
         }
     }
 
+    float _oversampleCompensationScale = 1;
+
+    /// <summary>
+    /// Internal-only multiplicative compensation for automatic font oversampling (issue #4330, Raylib
+    /// parity for #4317). Composes with the public <see cref="FontScale"/> instead of overwriting it --
+    /// the raster swaps to a higher-resolution <see cref="Font"/> under zoom, and this scale shrinks it
+    /// back down to the requested on-screen size. Only affects PLAIN text draw size
+    /// (<see cref="DrawPlainLine"/>) and the pinned layout size -- an inline [FontScale]/[FontSize]
+    /// BBCode run keeps drawing at its own resolved size, unaffected by oversampling (a documented
+    /// limitation, not an oversight: composing compensation into per-run resolution risks destabilizing
+    /// the line-height/baseline math those runs already depend on). Defaults to 1 (no compensation).
+    /// </summary>
+    internal float OversampleCompensationScale
+    {
+        get => _oversampleCompensationScale;
+        set
+        {
+            if (value != _oversampleCompensationScale)
+            {
+                _oversampleCompensationScale = value;
+                UpdateWrappedText();
+                UpdatePreRenderDimensions();
+            }
+        }
+    }
+
+    Font? _measurementFont;
+
+    /// <summary>
+    /// Optional font used for layout measurement (<see cref="WrappedTextWidth"/>/<see cref="WrappedTextHeight"/>/
+    /// word-wrap) instead of the live <see cref="Font"/> (issue #4330, mirroring #4309 on the MonoGame side).
+    /// When set, <see cref="Font"/> is still used to draw glyphs, but never to measure them -- so layout
+    /// stays stable even while <see cref="Font"/> is being regenerated at different raster sizes under
+    /// camera-zoom oversampling, whose rasterized glyph metrics are not exact multiples of each other
+    /// across raster sizes. Null (the default) falls back to measuring the live <see cref="Font"/> directly,
+    /// i.e. today's unchanged behavior.
+    /// </summary>
+    internal Font? MeasurementFont
+    {
+        get => _measurementFont;
+        set
+        {
+            _measurementFont = value;
+            UpdateWrappedText();
+            UpdatePreRenderDimensions();
+        }
+    }
+
+    Font EffectiveMeasurementFont => _measurementFont ?? Font;
+
+    /// <summary>
+    /// Runs once per frame during this Text's <see cref="PreRender"/>. Used by <c>TextRuntime</c> to
+    /// automatically re-rasterize at the current camera/layer zoom (issue #4330, Raylib parity for
+    /// #4317) -- kept here rather than on the runtime because PreRender is the render-time hook the
+    /// layered draw path already calls per visible renderable.
+    /// </summary>
+    internal Action? OnPreRender;
+
+    /// <summary>
+    /// The scale applied when drawing plain (non-BBCode) text: composes the public <see cref="FontScale"/>
+    /// with <see cref="OversampleCompensationScale"/>.
+    /// </summary>
+    private float EffectiveFontScale => FontScale * _oversampleCompensationScale;
+
+    /// <summary>
+    /// The scale applied to pre-rendered layout sizes (box width/height, vertical origin offsets). When a
+    /// <see cref="MeasurementFont"/> is pinned, pre-rendered sizes were already measured against that
+    /// STABLE font in base units, so only the base <see cref="FontScale"/> applies -- the compensation
+    /// exists solely to shrink the oversampled <see cref="Font"/>'s larger raster back down for DRAWING,
+    /// not for a size that's already correctly baselined. Falls back to <see cref="EffectiveFontScale"/>
+    /// when unset (matches today's unchanged behavior, since compensation defaults to 1 with no active
+    /// oversampling).
+    /// </summary>
+    private float MeasurementFontScale => _measurementFont != null ? FontScale : EffectiveFontScale;
+
+    /// <summary>
+    /// Swaps in <paramref name="oversampledFont"/> as the DISPLAY font for camera-zoom oversampling
+    /// (issue #4330, mirroring #4309), pinning the outgoing (native) <see cref="Font"/> as
+    /// <see cref="MeasurementFont"/> first if nothing is pinned yet. Layout keeps measuring against
+    /// whatever was actually being shown up to this point, instead of jumping to a different raster
+    /// size's own (differently-rasterized) measurement.
+    /// </summary>
+    internal void SetOversampledDisplayFont(Font oversampledFont)
+    {
+        if (MeasurementFont == null)
+        {
+            MeasurementFont = Font;
+        }
+
+        if (_font.Texture.Id != oversampledFont.Texture.Id || _font.BaseSize != oversampledFont.BaseSize)
+        {
+            Font = oversampledFont;
+            UpdateWrappedText();
+            UpdatePreRenderDimensions();
+        }
+    }
+
+    /// <summary>
+    /// Sums the pixel width of the widest of <paramref name="lines"/> when measured with
+    /// <paramref name="font"/> at its own <see cref="Font.BaseSize"/> -- used to derive the ACTUAL
+    /// measured-width oversample compensation ratio (issue #4330, mirroring #4309's
+    /// <c>BitmapFont.GetRequiredWidthAndHeight</c> use) rather than a naive FontSize/rasterFontSize ratio.
+    /// </summary>
+    internal static float MeasureLinesWidth(Font font, IEnumerable<string> lines)
+    {
+        float maxWidth = 0;
+        foreach (string line in lines)
+        {
+            maxWidth = System.Math.Max(maxWidth, MeasureTextEx(font, line, font.BaseSize, 0).X);
+        }
+        return maxWidth;
+    }
+
     private void UpdateLineHeightInPixels()
+    {
+        GetLineHeightAndDescender(_font, out _lineHeightInPixels, out _descenderHeight);
+    }
+
+    /// <summary>
+    /// A Gum bitmap font records its .fnt lineHeight/base when loaded (keyed by atlas texture id),
+    /// because raylib's Font struct can't hold them. Use those so line height includes the
+    /// descender region exactly as the MonoGame BitmapFont does — otherwise a Text (and any
+    /// container sized RelativeToChildren around it, e.g. a ListBoxItem) is short by that region.
+    /// Fonts without recorded metrics (raylib's built-in default, TTF via LoadFontEx) fall back to
+    /// native measurement, which returns ~BaseSize. Extracted from <see cref="UpdateLineHeightInPixels"/>
+    /// (which caches this for the LIVE <see cref="Font"/>) so <see cref="MeasurementLineHeightInPixels"/>
+    /// can compute the same metrics for <see cref="EffectiveMeasurementFont"/> instead (issue #4330):
+    /// height/word-wrap must stay pinned to the measurement font exactly like width already does, or a
+    /// RelativeToChildren box's HEIGHT keeps growing with the live oversampled raster even though its
+    /// WIDTH is correctly held stable.
+    /// </summary>
+    private static void GetLineHeightAndDescender(Font font, out int lineHeightInPixels, out int descenderHeight)
     {
         if (IsWindowReady() == false)
         {
             throw new InvalidOperationException("Cannot measure text because IsWindowReady() is false - did you remember to call InitWindow first?");
         }
 
-        // A Gum bitmap font records its .fnt lineHeight/base when loaded (keyed by atlas texture id),
-        // because raylib's Font struct can't hold them. Use those so line height includes the
-        // descender region exactly as the MonoGame BitmapFont does — otherwise a Text (and any
-        // container sized RelativeToChildren around it, e.g. a ListBoxItem) is short by that region.
-        // Fonts without recorded metrics (raylib's built-in default, TTF via LoadFontEx) fall back to
-        // native measurement, which returns ~BaseSize.
-        if (RaylibFontMetricsRegistry.TryGet(_font.Texture.Id, out var metrics))
+        if (RaylibFontMetricsRegistry.TryGet(font.Texture.Id, out var metrics))
         {
-            _lineHeightInPixels = metrics.LineHeight;
-            _descenderHeight = metrics.LineHeight - metrics.BaselineY;
+            lineHeightInPixels = metrics.LineHeight;
+            descenderHeight = metrics.LineHeight - metrics.BaselineY;
         }
         else
         {
-            _lineHeightInPixels = (int)(MeasureTextEx(_font, "M", _font.BaseSize, 0).Y + .5);
-            _descenderHeight = 2;
+            lineHeightInPixels = (int)(MeasureTextEx(font, "M", font.BaseSize, 0).Y + .5);
+            descenderHeight = 2;
+        }
+    }
+
+    /// <summary>
+    /// The line height (in pixels) of <see cref="EffectiveMeasurementFont"/> -- used for layout/word-wrap
+    /// height instead of the live <see cref="LineHeightInPixels"/> so a pinned box's height stays stable
+    /// across oversample raster changes, mirroring how <see cref="MeasurementFontScale"/> already keeps
+    /// width stable (issue #4330).
+    /// </summary>
+    private int MeasurementLineHeightInPixels
+    {
+        get
+        {
+            GetLineHeightAndDescender(EffectiveMeasurementFont, out int lineHeightInPixels, out _);
+            return lineHeightInPixels;
         }
     }
 
@@ -498,7 +638,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             if (mPreRenderWidth != null)
             {
-                return mPreRenderWidth.Value * FontScale;
+                return mPreRenderWidth.Value * MeasurementFontScale;
             }
             //else if (mTextureToRender?.Width > 0)
             //{
@@ -517,7 +657,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             if (mPreRenderHeight != null)
             {
-                return mPreRenderHeight.Value * FontScale;
+                return mPreRenderHeight.Value * MeasurementFontScale;
             }
             //else if (mTextureToRender?.Height > 0)
             //{
@@ -659,7 +799,7 @@ public class Text : IVisible, IRenderableIpso,
             // priority to the prerendered values as they may be more up-to-date.
             else if (mPreRenderWidth.HasValue)
             {
-                return mPreRenderWidth.Value * FontScale;
+                return mPreRenderWidth.Value * MeasurementFontScale;
             }
             //else if (mTextureToRender != null)
             //{
@@ -694,7 +834,7 @@ public class Text : IVisible, IRenderableIpso,
             // See EffectiveWidth for an explanation of why the prerendered values need to come first
             else if (mPreRenderHeight.HasValue)
             {
-                return mPreRenderHeight.Value * FontScale;
+                return mPreRenderHeight.Value * MeasurementFontScale;
             }
             //else if (mTextureToRender != null)
             //{
@@ -800,7 +940,8 @@ public class Text : IVisible, IRenderableIpso,
     /// <returns></returns>
     public float MeasureString(string whatToMeasure)
     {
-        return MeasureTextEx(Font, whatToMeasure, _font.BaseSize, 0).X;
+        var measurementFont = EffectiveMeasurementFont;
+        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
     /// <summary>
@@ -812,10 +953,14 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     public float MeasureString(string whatToMeasure, HorizontalMeasurementStyle style)
     {
-        return MeasureTextEx(Font, whatToMeasure, _font.BaseSize, 0).X;
+        var measurementFont = EffectiveMeasurementFont;
+        return MeasureTextEx(measurementFont, whatToMeasure, measurementFont.BaseSize, 0).X;
     }
 
-    public virtual void PreRender() { }
+    public virtual void PreRender()
+    {
+        OnPreRender?.Invoke();
+    }
 
     /// <summary>
     /// Splits a single wrapped line into styled runs according to which <see cref="InlineVariables"/>
@@ -866,12 +1011,12 @@ public class Text : IVisible, IRenderableIpso,
         if (VerticalAlignment == VerticalAlignment.Center)
         {
             position.Y += this.Height / 2;
-            origin.Y = FontScale * mPreRenderHeight / 2 ?? 0;
+            origin.Y = MeasurementFontScale * mPreRenderHeight / 2 ?? 0;
         }
         if (VerticalAlignment == VerticalAlignment.Bottom)
         {
             position.Y += this.Height;
-            origin.Y = FontScale * mPreRenderHeight ?? 0;
+            origin.Y = MeasurementFontScale * mPreRenderHeight ?? 0;
         }
 
         int lettersShown = 0;
@@ -1004,12 +1149,12 @@ public class Text : IVisible, IRenderableIpso,
         if (HorizontalAlignment == HorizontalAlignment.Center)
         {
             linePosition.X += (this.Width ?? 32) / 2;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X / 2;
+            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X / 2;
         }
         else if (HorizontalAlignment == HorizontalAlignment.Right)
         {
             linePosition.X += this.Width ?? 32;
-            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * FontScale, 0).X;
+            origin.X = MeasureTextEx(fontValue, line, fontValue.BaseSize * EffectiveFontScale, 0).X;
         }
 
         linePosition = SnapToPixelIfNeeded(linePosition);
@@ -1018,14 +1163,14 @@ public class Text : IVisible, IRenderableIpso,
         if (HasDropshadow && RaylibFontShadowRegistry.TryGet(fontValue.Texture.Id, out Font shadowFont))
         {
             var shadowPosition = SnapToPixelIfNeeded(
-                linePosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * FontScale);
-            DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * FontScale, 0, DropshadowColor);
+                linePosition + new Vector2(DropshadowOffsetX, DropshadowOffsetY) * EffectiveFontScale);
+            DrawTextPro(shadowFont, line, shadowPosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, DropshadowColor);
         }
 
         // Texture filtering is applied once when the font's atlas texture is loaded/built (see
         // ContentLoader.DefaultTextureFilter, #3496), not per-draw — a per-line GPU state reset here
         // was both redundant and ignored the project's texture filter setting.
-        DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * FontScale, 0, Color);
+        DrawTextPro(fontValue, line, linePosition, origin, 0, fontValue.BaseSize * EffectiveFontScale, 0, Color);
     }
 
     /// <summary>
@@ -1442,7 +1587,7 @@ public class Text : IVisible, IRenderableIpso,
 
         foreach (string line in lines)
         {
-            maxHeight += LineHeightInPixels;
+            maxHeight += MeasurementLineHeightInPixels;
             float lineWidth = 0;
 
             lineWidth = (int)Math.Ceiling(this.MeasureString(line));

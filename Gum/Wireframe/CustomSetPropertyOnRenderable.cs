@@ -2452,12 +2452,13 @@ public partial class CustomSetPropertyOnRenderable
         }
 
 #if XNALIKE && !FRB
-        // This file also compiles (unchanged) for SilkNetGum (SKIA) and, via a namespace swap, for
-        // RaylibGum -- neither has ResetAutomaticOversamplingState (oversampling is XNALIKE-only for
-        // now; Raylib parity is issue #4317's own follow-up), so this must stay XNALIKE-gated even
-        // though it's already inside the non-FRB branch above. FRB is excluded too: an FRB build that
-        // also defines XNALIKE would otherwise see textRuntime typed as the plain GraphicalUiElement
-        // from the #if FRB branch above (no TextRuntime type available there yet), not TextRuntime.
+        // This file also compiles (unchanged) for SilkNetGum (SKIA), which has no oversampling
+        // machinery at all -- so this must stay XNALIKE-gated even though it's already inside the
+        // non-FRB branch above. RaylibGum (via the namespace-swapped #else branch below) has its own
+        // equivalent reset (issue #4330, Raylib parity for #4317). FRB is excluded too: an FRB build
+        // that also defines XNALIKE would otherwise see textRuntime typed as the plain
+        // GraphicalUiElement from the #if FRB branch above (no TextRuntime type available there yet),
+        // not TextRuntime.
         if (asText.OversampleCompensationScale != 1f)
         {
             asText.OversampleCompensationScale = 1f;
@@ -2568,6 +2569,18 @@ public partial class CustomSetPropertyOnRenderable
 
         if(textRuntime != null)
         {
+            // A font property being re-resolved means whatever automatic font oversampling (issue
+            // #4330, Raylib parity for #4317) was in effect is stale: it compensated for the OLD
+            // FontSize's raster, not the new font this method is about to assign. Reset here, the
+            // single point both the direct-property-setter and string/state paths converge on, so a
+            // Font/FontSize change never leaves a stale compensation ratio applied to a newly-resolved
+            // font. Mirrors the XNALIKE branch above.
+            if (asText.OversampleCompensationScale != 1f)
+            {
+                asText.OversampleCompensationScale = 1f;
+            }
+            textRuntime.ResetAutomaticOversamplingState();
+
             // The font family and size are authoritative on the TextRuntime — both the direct
             // property setters and the string/state path write them there. Sync them onto the
             // renderable so its font-based fallbacks (and rendering) stay correct. This subsumes
