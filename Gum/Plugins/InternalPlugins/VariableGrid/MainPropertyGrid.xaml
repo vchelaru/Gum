@@ -6,6 +6,7 @@
   xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
   xmlns:controls="clr-namespace:WpfDataUi.Controls;assembly=WpfDataUi"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:gumControls="clr-namespace:Gum.Controls"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
   xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
@@ -26,11 +27,7 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
 
-    <Label
-      Background="{Binding StateBackground, Converter={StaticResource ColorToBrushConverter}}"
-      Content="{Binding StateInformation}"
-      Foreground="{DynamicResource Frb.Brushes.OnLightBanner}"
-      Visibility="{Binding HasStateInformation, Converter={StaticResource BoolToVisibilityConverter}}" />
+    <gumControls:StateEditingIndicatorBar />
     <Label
       Grid.Row="1"
       Content="{Binding ErrorInformation}"

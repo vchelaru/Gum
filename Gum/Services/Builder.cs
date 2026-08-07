@@ -201,6 +201,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IEditVariableService>(provider => provider.GetRequiredService<EditVariableService>());
         services.AddSingleton<IDeleteVariableService, DeleteVariableService>();
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
+        services.AddSingleton<IStateEditingIndicatorService, StateEditingIndicatorService>();
         services.AddSingleton<IDragDropManager, DragDropManager>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<ImportLogic>();

@@ -12,6 +12,7 @@ namespace Gum.Plugins.AlignmentButtons
         private readonly ISelectedState _selectedState;
 
         private AlignmentTabVisibilityCoordinator _coordinator;
+        private AlignmentPluginControl _control;
 
         [ImportingConstructor]
         public AlignmentMainPlugin(ISelectedState selectedState)
@@ -22,9 +23,10 @@ namespace Gum.Plugins.AlignmentButtons
         public override void StartUp()
         {
             AssignEvents();
-            var tab = _tabManager.AddControl(new Gum.Plugins.AlignmentButtons.AlignmentPluginControl(), "Alignment");
+            _control = new Gum.Plugins.AlignmentButtons.AlignmentPluginControl();
+            var tab = _tabManager.AddControl(_control, "Alignment");
             _coordinator = new AlignmentTabVisibilityCoordinator(_selectedState, tab);
-            _coordinator.Refresh();
+            Refresh();
         }
 
         private void AssignEvents()
@@ -34,21 +36,27 @@ namespace Gum.Plugins.AlignmentButtons
             this.InstanceSelected += HandleInstanceSelected;
         }
 
-        private void HandleStateWindowTreeNodeSelected(ITreeNode obj)
+        private void Refresh()
         {
             _coordinator.Refresh();
+            _control.ViewModel.RefreshStateLabel();
+        }
+
+        private void HandleStateWindowTreeNodeSelected(ITreeNode obj)
+        {
+            Refresh();
         }
 
         private void HandleTreeNodeSelected(ITreeNode? treeNode)
         {
-            _coordinator.Refresh();
+            Refresh();
         }
 
         private void HandleInstanceSelected(ElementSave elementSave, InstanceSave instance)
         {
             // Auto-selecting a new instance (e.g. right-click Add Object on an already-selected
             // Screen) only raises InstanceSelected, not TreeNodeSelected - see issue #4067.
-            _coordinator.Refresh();
+            Refresh();
         }
     }
 }

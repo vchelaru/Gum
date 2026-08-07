@@ -2,8 +2,10 @@
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins.AlignmentButtons;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
+using System.Drawing;
 using System.Globalization;
 
 namespace Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
@@ -13,6 +15,25 @@ public class AlignmentViewModel : ViewModel
     private readonly CommonControlLogic _commonControlLogic;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
+    private readonly IStateEditingIndicatorService _stateEditingIndicatorService;
+
+    public bool HasStateInformation
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
+    public string? StateInformation
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    public Color StateBackground
+    {
+        get => Get<Color>();
+        set => Set(value);
+    }
 
     public float DockMargin
     {
@@ -41,12 +62,21 @@ public class AlignmentViewModel : ViewModel
     public bool IsMarginTextVisible => DockMargin != 0;
 
     public AlignmentViewModel(CommonControlLogic commonControlLogic, ISelectedState selectedState,
-        IUndoManager undoManager)
+        IUndoManager undoManager, IStateEditingIndicatorService stateEditingIndicatorService)
     {
         _commonControlLogic = commonControlLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
+        _stateEditingIndicatorService = stateEditingIndicatorService;
         DockMarginText = "0";
+    }
+
+    public void RefreshStateLabel()
+    {
+        var info = _stateEditingIndicatorService.GetInfo();
+        HasStateInformation = info.HasStateInformation;
+        StateInformation = info.StateInformation;
+        StateBackground = info.StateBackground;
     }
 
     // When DockMargin is 0, the expression `NormalizeNegativeZero(-DockMargin * 2)` evaluates to IEEE 754
