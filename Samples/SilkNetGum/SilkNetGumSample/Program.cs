@@ -85,6 +85,7 @@ unsafe class Program
         () => new SilkNetGum.Screens.RenderTargetScreen(),
         () => new SilkNetGum.Screens.RenderTargetShaderScreen(),
         () => new GumSamples.Screens.FormsScreen(),
+        () => new SilkNetGum.Screens.ZoomScreen(),
     };
 
     // Parallel to codeScreenFactories, used as nav-strip button labels.
@@ -100,6 +101,7 @@ unsafe class Program
         "Render Target",
         "RT Shader",
         "Forms",
+        "Zoom",
     };
 
     private static void InitializeGum(SKCanvas canvas, IInputContext inputContext)
@@ -220,6 +222,10 @@ unsafe class Program
         currentGumxScreen = null;
         currentCodeScreen?.RemoveFromRoot();
         currentCodeScreen = null;
+
+        // ZoomScreen drives the shared main Camera.Zoom directly (issue #4330) -- reset it here so
+        // leaving that screen zoomed in never leaks a non-1 zoom into whichever screen is shown next.
+        SystemManagers.Default.Renderer.Camera.Zoom = 1f;
 
         if (currentScreenIndex < gumxScreens.Count)
         {
@@ -509,8 +515,18 @@ unsafe class Program
             // Per-frame delta for TextScreen's Tick (#3701) -- FrameworkElement.Activity() is FRB-only
             // and unavailable here, and GumUI.Update below only wants the running total, not a delta.
             double previousTotalSeconds = 0;
+            // options.VSync = false (above) leaves this loop otherwise uncapped, which let a feedback
+            // bug in an earlier cut of the Zoom sample screen (issue #4330) compound far faster here
+            // than on MonoGame's fixed ~60fps timestep or the raylib sample's Thread.Sleep(12) throttle
+            // -- confirmed via a side-by-side frame-rate comparison, even though the actual Slider/
+            // Cursor input code is byte-identical (file-linked) across all three backends. Capping to a
+            // fixed 60fps here, the same way the raylib sample already throttles, keeps per-frame-scaled
+            // logic (like that feedback bug, now separately fixed) behaving comparably across samples.
+            const double targetFrameSeconds = 1.0 / 60.0;
+            Stopwatch frameTimer = new Stopwatch();
             while (running && !window.IsClosing)
             {
+                frameTimer.Restart();
 
                 if (sw.ElapsedMilliseconds > 1000)
                 {
@@ -563,6 +579,12 @@ unsafe class Program
 
                 // Swap buffers
                 window.GLContext!.SwapBuffers();
+
+                double remainingSeconds = targetFrameSeconds - frameTimer.Elapsed.TotalSeconds;
+                if (remainingSeconds > 0)
+                {
+                    System.Threading.Thread.Sleep((int)(remainingSeconds * 1000));
+                }
 
                 totalFramesRendered++;
                 if (screenshotPath != null && totalFramesRendered >= 5)

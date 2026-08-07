@@ -23,6 +23,28 @@ namespace MonoGameGum.Tests.Runtimes;
 // trigger (UpdateAutomaticFontOversampling) that replaces the old manual "press R" call.
 public class TextRuntimeFontOversamplingTests : BaseTestClass
 {
+    // Issue #4330 (manual-test finding): the automatic per-frame trigger never actually engaged in a
+    // real running game -- checking UseFontOversampling and zooming did nothing, on MonoGame or
+    // Raylib. Root cause: TextRuntime's constructor assigns the backing field directly
+    // (_containedText = textRenderable) instead of going through the ContainedText PROPERTY, whose
+    // lazy-init getter is the only place OnPreRender ever got wired ("if (_containedText == null)").
+    // Since the field is already non-null by the time any property setter (Font, Red, etc.) later
+    // reads ContainedText, that branch never ran for a normally-constructed TextRuntime -- only for
+    // one that never wired up the auto-trigger. Every existing test called RegenerateOversampledFont/
+    // UpdateAutomaticFontOversampling directly, never exercising the real OnPreRender path, which is
+    // how this survived unnoticed.
+    [Fact]
+    public void Constructor_WiresOnPreRenderForAutomaticOversampling_WithoutAnyExplicitOversamplingCall()
+    {
+        TextRuntime textRuntime = new();
+
+        var text = (Text)textRuntime.RenderableComponent;
+
+        text.OnPreRender.ShouldNotBeNull(
+            "because the automatic per-frame oversampling trigger must be wired by construction, " +
+            "not only as a side effect of manually calling RegenerateOversampledFont/UpdateAutomaticFontOversampling");
+    }
+
     [Fact]
     public void RegenerateOversampledFont_WhenEnabledWithCreator_RegeneratesAtOversampledSizeAndLeavesFontScaleUntouched()
     {
@@ -154,6 +176,42 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
             textRuntime.FontSize = 30;
 
             text.OversampleCompensationScale.ShouldBe(1f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Issue #4330 (manual-test finding): UpdateAutomaticFontOversampling early-returned when
+    // UseFontOversampling was false, but never undid an ALREADY-oversampled font -- so toggling the
+    // flag off mid-session (the checkbox on the Zoom demo screen) had no visible effect; the text
+    // stayed at whatever raster size it was last regenerated to, forever. The flag is meant to be a
+    // live on/off toggle, not a one-way ratchet.
+    [Fact]
+    public void UpdateAutomaticFontOversampling_WhenDisabledAfterOversamplingWasActive_RevertsToNativeFont()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new ProportionalFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px
+            var text = (Text)textRuntime.RenderableComponent;
+            text.OversampleCompensationScale.ShouldNotBe(1f);
+
+            // Flag turned off, but the effective zoom (from the still-zoomed camera) is unchanged --
+            // this is exactly what happens in a real game the frame after unchecking the box.
+            TextRuntime.UseFontOversampling = false;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f);
+
+            text.OversampleCompensationScale.ShouldBe(1f,
+                "because disabling oversampling must revert to the native font, not leave the last-oversampled raster stuck in place");
         }
         finally
         {

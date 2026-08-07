@@ -9,7 +9,7 @@ Available in September 2026, or now if building Gum from source.
 {% endhint %}
 
 {% hint style="info" %}
-Available on MonoGame, KNI, and FNA. Not yet available on Raylib, SkiaGum, or Silk.NET.
+Available on MonoGame, KNI, FNA, and Raylib. Not needed on SkiaGum or Silk.NET, since SkiaSharp rasterizes text natively at whatever size it's drawn -- it's crisp under zoom without any oversampling step.
 {% endhint %}
 
 ## Enabling Oversampling
@@ -17,7 +17,7 @@ Available on MonoGame, KNI, and FNA. Not yet available on Raylib, SkiaGum, or Si
 Two things are required:
 
 1. Set the global flag: `TextRuntime.UseFontOversampling = true`. This is a project-wide `static` switch, not a per-instance property — pixel-art games that want blocky text at any zoom level should leave it off.
-2. Register an `IInMemoryFontCreator` (KernSmith, for the runtimes that support it — see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation)). Oversampling only makes sense with dynamic font generation; a disk-based `FontCache` holds a fixed set of pre-baked sizes and can't rasterize a new one on demand.
+2. Register an in-memory font creator (`IInMemoryFontCreator` on MonoGame/KNI/FNA, `IRaylibFontCreator` on Raylib -- KernSmith ships both, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation)). Oversampling only makes sense with dynamic font generation; a disk-based `FontCache` holds a fixed set of pre-baked sizes and can't rasterize a new one on demand.
 
 ```csharp
 // Initialize
@@ -37,6 +37,10 @@ That per-`Layer` scoping matters: a layer with `LayerCameraSettings.IsInScreenSp
 ## Limitation: System Fonts vs. Registered `.ttf`
 
 Measurement-stable oversampling — where the box a `TextRuntime` measures against doesn't shift as the font is regenerated at different raster sizes — requires `Font` (or `CustomFontFile`) to resolve to an explicit `.ttf` file, not a bare system font family name. Oversampling still runs with a system font name like `"Arial"`, but width/wrap measurement isn't guaranteed stable across regenerations. See [Font Strategies — System Fonts vs Registered Fonts](font-strategies.md#system-fonts-vs-registered-fonts) for how to register a `.ttf`.
+
+## Limitation: BBCode Inline Runs on Raylib
+
+On Raylib, oversampling only re-rasterizes a `TextRuntime`'s base font. An inline BBCode run (`[FontScale=...]`, `[FontSize=...]`, etc.) inside the text keeps drawing at its own independently-resolved size, unaffected by oversampling. This means a Text that mixes plain and BBCode-styled runs can end up with plain runs crisp and styled runs at their normal (unoversampled) size while zoomed in. MonoGame/KNI/FNA don't have this limitation -- oversampling compensation composes correctly with inline runs there.
 
 ## Try It
 

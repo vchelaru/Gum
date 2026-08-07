@@ -53,7 +53,7 @@ public class TextRuntime : InteractiveGue
             if (_containedText == null)
             {
                 _containedText = (Text)this.RenderableComponent;
-#if XNALIKE
+#if XNALIKE || RAYLIB
                 _containedText.OnPreRender = UpdateAutomaticFontOversampling;
 #endif
             }
@@ -664,7 +664,7 @@ public class TextRuntime : InteractiveGue
             dropshadowAlpha);
     }
 
-#if XNALIKE
+#if XNALIKE || RAYLIB
     /// <summary>
     /// Regenerates this text's font at <paramref name="oversampleRatio"/> times <see cref="FontSize"/>
     /// via <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/>, then compensates with
@@ -672,7 +672,8 @@ public class TextRuntime : InteractiveGue
     /// on-screen size is unchanged -- the glyphs are just rasterized at a higher pixel density
     /// (issue #4302). Unlike the compensation this replaced, it composes with the public
     /// <see cref="FontScale"/> instead of overwriting it (issue #4317), so a caller's own FontScale
-    /// (including inline [FontScale] BBCode runs) keeps working while oversampling is active.
+    /// (including inline [FontScale] BBCode runs, XNALIKE only -- see the Raylib-side gap noted on
+    /// <see cref="Text.OversampleCompensationScale"/>) keeps working while oversampling is active.
     /// </summary>
     /// <param name="oversampleRatio">How many times larger than <see cref="FontSize"/> to rasterize
     /// the font, e.g. the current effective camera/layer zoom. Requested as an exact fraction --
@@ -698,6 +699,7 @@ public class TextRuntime : InteractiveGue
         CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
         bmfcSave.FontSize = rasterFontSize;
 
+#if XNALIKE
         var font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
         if (font == null)
         {
@@ -728,6 +730,32 @@ public class TextRuntime : InteractiveGue
         {
             ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
         }
+#else
+        // Raylib parity for #4317 (issue #4330): same shape as the XNALIKE branch above, but against
+        // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
+        // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
+        Raylib_cs.Font? font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        if (font == null || font.Value.BaseSize == 0)
+        {
+            return false;
+        }
+
+        ContainedText.SetOversampledDisplayFont(font.Value);
+
+        Raylib_cs.Font? pinnedFont = ContainedText.MeasurementFont;
+        if (pinnedFont != null)
+        {
+            var pinnedWidth = Gum.Renderables.Text.MeasureLinesWidth(pinnedFont.Value, ContainedText.WrappedText);
+            var oversampledWidth = Gum.Renderables.Text.MeasureLinesWidth(font.Value, ContainedText.WrappedText);
+            ContainedText.OversampleCompensationScale = oversampledWidth > 0
+                ? pinnedWidth / oversampledWidth
+                : FontSize / rasterFontSize;
+        }
+        else
+        {
+            ContainedText.OversampleCompensationScale = FontSize / rasterFontSize;
+        }
+#endif
 
         // BitmapFont/OversampleCompensationScale are renderable-level properties -- assigning them
         // directly (bypassing the normal property-setter cascade a call like FontSize= goes through)
@@ -768,6 +796,18 @@ public class TextRuntime : InteractiveGue
     {
         if (!UseFontOversampling || CustomSetPropertyOnRenderableType.InMemoryFontCreator == null)
         {
+            // Issue #4330 (manual-test finding): oversampling is meant to be a live toggle, not a
+            // one-way ratchet -- if this Text was already oversampled, re-resolve the font through the
+            // normal (non-oversampled) property cascade so it actually reverts to native, instead of
+            // silently leaving the last-oversampled raster/compensation in place forever just because
+            // no further regeneration is happening. UpdateToFontValues also resets
+            // OversampleCompensationScale and the hysteresis state (_lastAutoOversampleRatio) via
+            // CustomSetPropertyOnRenderable.UpdateToFontValues, so this only fires once per
+            // enabled-to-disabled transition, not every frame.
+            if (_lastAutoOversampleRatio != 1f)
+            {
+                UpdateToFontValues();
+            }
             return false;
         }
 
@@ -1100,6 +1140,14 @@ public class TextRuntime : InteractiveGue
             var textRenderable = new Text(systemManagers ?? SystemManagers.Default);
 #if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
+#endif
+#if XNALIKE || RAYLIB
+            // Issue #4330 (manual-test finding): this must be wired here, not left to ContainedText's
+            // lazy-init getter -- the field is assigned directly on the next line (not through that
+            // property), so the getter's "if (_containedText == null)" branch never runs again once a
+            // TextRuntime is constructed, and the automatic per-frame oversampling trigger (#4317)
+            // silently never engages for any normally-constructed instance.
+            textRenderable.OnPreRender = UpdateAutomaticFontOversampling;
 #endif
             _containedText = textRenderable;
 

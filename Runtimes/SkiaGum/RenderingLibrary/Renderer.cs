@@ -166,6 +166,16 @@ namespace RenderingLibrary.Graphics
                     BakeRenderTargetsInSubtree(whatToRender, managers);
                 }
 
+                // Issue #4330 (manual-test finding): SKCanvas is a persistent, mutate-in-place matrix
+                // stack -- unlike a fresh matrix passed per frame (XNALIKE's SpriteBatch.Begin) or an
+                // explicit begin/end pair (raylib's BeginMode2D/EndMode2D), Scale/Translate calls here
+                // accumulate onto whatever the PREVIOUS top-level Draw call (previous frame, or a
+                // previous layer within the same frame) already applied unless undone. Without this
+                // Save (and the matching Restore at the end of this method), a non-1 Camera.Zoom
+                // compounded every single frame with no further input -- confirmed to grow unboundedly
+                // ("everything off screen") within a couple of seconds.
+                managers.Canvas.Save();
+
                 if (Camera.Zoom != 1)
                 {
                     managers.Canvas.Scale(Camera.Zoom);
@@ -249,6 +259,14 @@ namespace RenderingLibrary.Graphics
                         }
                     }
                 }
+            }
+
+            if (isTopLevelDraw)
+            {
+                // Matches the canvas.Save() at the top of this method's isTopLevelDraw block --
+                // undoes this frame's camera Scale/Translate so the next top-level Draw call (next
+                // frame, or the next layer this same frame) starts from a clean matrix (#4330).
+                managers.Canvas.Restore();
             }
         }
 

@@ -204,6 +204,49 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
             customMessage: "because the effective on-screen width is FontScale composed with OversampleCompensationScale, not just one or the other");
     }
 
+    // Issue #4330 (manual-test finding): a centered Button/RadioButton label visibly shifted
+    // down-and-right once oversampling actually engaged. UpdateIpsoForRendering used to recompute its
+    // alignment-box size inline as mPreRenderWidth/Height * EffectiveFontScale (which INCLUDES
+    // OversampleCompensationScale) -- but mPreRenderWidth/Height are already measured against the
+    // STABLE pinned MeasurementFont (see WrappedTextWidth/Height, which correctly use
+    // MeasurementFontScale instead), so re-scaling them by EffectiveFontScale double-applied the
+    // compensation. The alignment box ended up a different size than EffectiveWidth/EffectiveHeight
+    // (what it's centered against), producing a wrong (non-zero when it should be zero, or wrongly
+    // sized) alignment offset. Goes through SetOversampledDisplayFont (not a raw BitmapFont
+    // assignment) specifically because that's the only path that pins MeasurementFont -- the bug only
+    // manifests once a MeasurementFont is actually pinned.
+    [Fact]
+    public void UpdateIpsoForRendering_WhenOversamplingActive_TempSizeMatchesWrappedTextSize()
+    {
+        const int baseAdvance = 10;
+        const float oversampleRatio = 2.5f;
+        const int oversampledAdvance = (int)(baseAdvance * oversampleRatio); // 25
+
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, AbcFontData(baseAdvance, lineHeight: 20));
+        baseFont.SetFontPattern(256, 256);
+        BitmapFont oversampledFont = new BitmapFont((Texture2D)null!, AbcFontData(oversampledAdvance, lineHeight: 50));
+        oversampledFont.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        text.Width = 200;
+        text.Height = 100;
+        text.HorizontalAlignment = HorizontalAlignment.Center;
+        text.VerticalAlignment = VerticalAlignment.Center;
+        text.RawText = "AB";
+
+        // Mirrors TextRuntime.RegenerateOversampledFont: pins baseFont as MeasurementFont, then swaps
+        // in the oversampled display font and its compensation.
+        text.SetOversampledDisplayFont(oversampledFont);
+        text.OversampleCompensationScale = 1f / oversampleRatio;
+
+        var tempForRendering = text.UpdateIpsoForRenderingForTests();
+
+        tempForRendering.Width.ShouldBe(text.WrappedTextWidth, tolerance: 0.001f,
+            "because the alignment box used to center the drawn text must match this Text's own reported wrapped size, not double-apply the oversample compensation");
+        tempForRendering.Height.ShouldBe(text.WrappedTextHeight, tolerance: 0.001f);
+    }
+
     // Issue #4317: the render-time hook TextRuntime wires automatic oversampling through.
     [Fact]
     public void PreRender_InvokesOnPreRenderHook()

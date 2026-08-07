@@ -105,6 +105,7 @@ namespace MonoGameGumInCode
             AddNavButton("Clip", () => ShowScreen<ClippingScreen>());
             AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
             AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
+            AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
             AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
@@ -134,6 +135,10 @@ namespace MonoGameGumInCode
             {
                 _currentScreen.RemoveFromRoot();
             }
+
+            // ZoomScreen drives the shared main Camera.Zoom directly (issue #4330) -- reset it here so
+            // leaving that screen zoomed in never leaks a non-1 zoom into whichever screen is shown next.
+            SystemManagers.Default.Renderer.Camera.Zoom = 1f;
 
             _currentScreen = new T();
             // Offset the screen so it doesn't sit underneath the nav strip. The screen's
