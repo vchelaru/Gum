@@ -123,7 +123,4 @@ public class KernSmithFontCreator : IInMemoryFontCreator
 
         return bitmapFont;
     }
-
-    /// <inheritdoc/>
-    public FontDesignMetrics? TryGetDesignMetrics(BmfcSave bmfcSave) => GumFontGenerator.ReadDesignMetrics(bmfcSave);
 }
