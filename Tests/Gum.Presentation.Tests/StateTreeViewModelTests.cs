@@ -1,6 +1,10 @@
+using System.Linq;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Dialogs;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 
@@ -21,7 +25,8 @@ public class StateTreeViewModelTests
     {
         Mock<IStateTreeViewRightClickService> rightClickService = new();
         Mock<ISelectedState> selectedState = new();
-        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object);
+        Mock<IDialogService> dialogService = new();
+        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object, dialogService.Object);
         StateSaveCategory category = new() { Name = "Category" };
         StateSave state = new() { Name = "State" };
         category.States.Add(state);
@@ -39,12 +44,48 @@ public class StateTreeViewModelTests
     {
         Mock<IStateTreeViewRightClickService> rightClickService = new();
         Mock<ISelectedState> selectedState = new();
-        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object);
+        Mock<IDialogService> dialogService = new();
+        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object, dialogService.Object);
         StateSaveCategory category = new() { Name = "Category" };
         viewModel.Categories.Add(new CategoryViewModel { Data = category });
 
         viewModel.HandleRename(category);
 
         rightClickService.Verify(x => x.PopulateContextMenu(), Times.Once);
+    }
+
+    [Fact]
+    public void AddCategoryCommand_Execute_ShowsAddCategoryDialog()
+    {
+        Mock<IStateTreeViewRightClickService> rightClickService = new();
+        Mock<ISelectedState> selectedState = new();
+        Mock<IDialogService> dialogService = new();
+        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object, dialogService.Object);
+
+        viewModel.AddCategoryCommand.Execute(null);
+
+        dialogService.Verify(
+            x => x.Show<AddCategoryDialogViewModel>(null, out It.Ref<AddCategoryDialogViewModel>.IsAny),
+            Times.Once);
+    }
+
+    [Fact]
+    public void CategoryAddStateRequested_SetsSelectedCategoryThenShowsAddStateDialog()
+    {
+        Mock<IStateTreeViewRightClickService> rightClickService = new();
+        Mock<ISelectedState> selectedState = new();
+        Mock<IDialogService> dialogService = new();
+        StateTreeViewModel viewModel = new(rightClickService.Object, selectedState.Object, dialogService.Object);
+        StateSaveCategory category = new() { Name = "Category" };
+        ComponentSave stateContainer = new();
+        stateContainer.Categories.Add(category);
+
+        viewModel.AddMissingItems(stateContainer, selectedState.Object);
+        viewModel.Categories.Single().AddStateCommand.Execute(null);
+
+        selectedState.VerifySet(s => s.SelectedStateCategorySave = category, Times.Once);
+        dialogService.Verify(
+            x => x.Show<AddStateDialogViewModel>(null, out It.Ref<AddStateDialogViewModel>.IsAny),
+            Times.Once);
     }
 }

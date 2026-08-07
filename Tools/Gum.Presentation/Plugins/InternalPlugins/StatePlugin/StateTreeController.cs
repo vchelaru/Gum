@@ -4,6 +4,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 using Gum.PropertyGridHelpers;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 
 namespace Gum.Managers;
@@ -47,14 +48,15 @@ public class StateTreeController
         IStateTreeViewRightClickService rightClickService,
         ISelectedState selectedState,
         ObjectFinder objectFinder,
-        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic)
+        IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
+        IDialogService dialogService)
     {
         _rightClickService = rightClickService;
         _selectedState = selectedState;
         _objectFinder = objectFinder;
         _variableInCategoryPropagationLogic = variableInCategoryPropagationLogic;
 
-        ViewModel = new StateTreeViewModel(rightClickService, selectedState);
+        ViewModel = new StateTreeViewModel(rightClickService, selectedState, dialogService);
     }
 
     public void HandleElementDeleted(ElementSave save) => RefreshUI(_selectedState.SelectedStateContainer);

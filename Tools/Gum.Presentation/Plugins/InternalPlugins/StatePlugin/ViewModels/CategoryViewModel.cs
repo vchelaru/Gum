@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using CommunityToolkit.Mvvm.Input;
+using Gum.DataTypes.Variables;
 using Gum.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -45,4 +46,18 @@ public class CategoryViewModel : StateTreeViewItem
     public ObservableCollection<StateViewModel> States { get; set; } = new ObservableCollection<StateViewModel>();
 
     public override string Title => Data?.Name;
+
+    /// <summary>
+    /// Raised when the user clicks this category's "+" button. The owning <see cref="StateTreeViewModel"/>
+    /// subscribes to this to select the category and show the Add State dialog, since this view model
+    /// has no dependencies of its own to do that directly.
+    /// </summary>
+    public event EventHandler? AddStateRequested;
+
+    public RelayCommand AddStateCommand { get; }
+
+    public CategoryViewModel()
+    {
+        AddStateCommand = new RelayCommand(() => AddStateRequested?.Invoke(this, EventArgs.Empty));
+    }
 }

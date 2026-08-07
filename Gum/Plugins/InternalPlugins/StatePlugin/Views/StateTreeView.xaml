@@ -14,10 +14,63 @@
   <UserControl.Resources>
     <converters:BackgroundConverter x:Key="BackgroundConverter" />
 
+    <Style x:Key="RowAddButtonStyle" TargetType="Button">
+      <Setter Property="Width" Value="17" />
+      <Setter Property="Height" Value="17" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="4,0,0,0" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="border" Background="Transparent" CornerRadius="3">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="border" Property="Background" Value="{DynamicResource Frb.Brushes.Surface.Fill}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
+    <Style x:Key="AddCategoryGhostRowStyle" TargetType="Button">
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Padding" Value="6,4" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="border" Background="Transparent">
+              <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="border" Property="Background" Value="{DynamicResource Frb.Brushes.Surface.Fill}" />
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
   </UserControl.Resources>
   <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
     <TreeView
       x:Name="TreeViewInstance"
+      Grid.Row="0"
       HorizontalContentAlignment="Stretch"
       Grid.IsSharedSizeScope="True"
       ItemsSource="{Binding Items}"
@@ -55,12 +108,22 @@
                 Icon="PuzzlePiece"
                 Style="{StaticResource BiggerIcon}"
                 Visibility="{Binding IsRequiredBySelectedBehavior, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
+              <Button
+                x:Name="AddStateButton"
+                Grid.Column="3"
+                Command="{Binding AddStateCommand}"
+                Content="+"
+                Style="{StaticResource RowAddButtonStyle}"
+                ToolTip="{Binding Title, StringFormat='Add state to {0}'}" />
             </Grid>
           </Border>
           <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding IsRequiredBySelectedBehavior}" Value="True">
               <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
             </DataTrigger>
+            <Trigger SourceName="bd" Property="IsMouseOver" Value="True">
+              <Setter TargetName="AddStateButton" Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+            </Trigger>
           </DataTemplate.Triggers>
         </HierarchicalDataTemplate>
 
@@ -115,5 +178,10 @@
         </Style>
       </TreeView.ItemContainerStyle>
     </TreeView>
+    <Button
+      Grid.Row="1"
+      Command="{Binding AddCategoryCommand}"
+      Content="+ New category"
+      Style="{StaticResource AddCategoryGhostRowStyle}" />
   </Grid>
 </UserControl>

@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.PropertyGridHelpers;
+using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
@@ -25,12 +26,14 @@ public class StateTreeControllerTests
         var rightClickService = new Mock<IStateTreeViewRightClickService>();
         var selectedState = new Mock<ISelectedState>();
         var propagationLogic = new Mock<IVariableInCategoryPropagationLogic>();
+        var dialogService = new Mock<IDialogService>();
 
         var controller = new StateTreeController(
             rightClickService.Object,
             selectedState.Object,
             ObjectFinder.Self,
-            propagationLogic.Object);
+            propagationLogic.Object,
+            dialogService.Object);
 
         return (controller, rightClickService, selectedState, propagationLogic);
     }

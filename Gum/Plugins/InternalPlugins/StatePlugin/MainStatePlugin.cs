@@ -58,7 +58,8 @@ public class MainStatePlugin : PriorityPlugin
             _stateTreeViewRightClickService,
             _selectedState,
             ObjectFinder.Self,
-            variableInCategoryPropagationLogic);
+            variableInCategoryPropagationLogic,
+            dialogService);
     }
 
     public override void StartUp()
