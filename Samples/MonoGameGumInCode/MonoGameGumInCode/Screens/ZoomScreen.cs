@@ -17,9 +17,31 @@ namespace MonoGameGumInCode.Screens;
 // Shared by all three the same way TextScreen.cs is (namespace switch above + <Compile Include Link>
 // in the raylib/SilkNetGum csprojs) rather than three drifting copies.
 //
-// Drives the SHARED main Camera.Zoom directly (not a per-layer override) -- simplest option, and
-// safe because Game1/Program's ShowScreen resets Camera.Zoom back to 1 on every navigation, so
-// leaving this screen zoomed in never leaks into any other screen.
+// Drives the SHARED main Camera.Zoom directly (not a per-layer override -- raylib's and SkiaGum's
+// Renderer both build ONE camera matrix for the whole frame and apply it to every layer, ignoring
+// LayerCameraSettings.IsInScreenSpace entirely for actual drawing; only the XNALIKE renderer
+// respects it. A dedicated screen-space layer therefore can't isolate this screen's own controls
+// from the zoom it's driving on 2 of 3 backends, so this screen doesn't attempt that). Game1/
+// Program's ShowScreen/LoadScreen resets Camera.Zoom back to 1 on every navigation, so leaving this
+// screen zoomed in never leaks into any other screen.
+//
+// The zoom slider commits to Camera.Zoom only on ValueChangeCompleted (mouse release), not on every
+// intermediate ValueChanged during the drag. This screen's own Slider is rendered through the same
+// camera it controls, and Slider's drag math (UpdateThumbPositionToCursorDrag) converts the cursor's
+// screen position back to canvas space via ICursor.XRespectingGumZoomAndBounds(), which divides by
+// the CURRENT Camera.Zoom. Writing a new Camera.Zoom on every intermediate ValueChanged feeds that
+// new zoom back into the very next frame's cursor conversion -- a real, not merely cosmetic, circular
+// dependency: a perfectly static mouse position converts to a DIFFERENT canvas-space ratio once the
+// zoom it's divided by has changed, which computes yet another new zoom, compounding every frame the
+// drag continues. Confirmed to spiral into unbounded zoom on Silk.NET (continuing even after
+// releasing the mouse -- the runaway state corrupts the thumb's own push/release hit-testing) and to
+// jitter without ever settling far from 1x on MonoGame/raylib (which is also why oversampling never
+// visibly appeared to work there -- the achieved zoom rarely moved far enough from 1x to cross
+// UpdateAutomaticFontOversampling's 1px raster-delta threshold). Committing only once per completed
+// gesture makes Camera.Zoom -- and therefore the cursor conversion depending on it -- constant for
+// the ENTIRE drag, which cannot loop. The label still updates live from the slider's own Value on
+// every ValueChanged for immediate numeric feedback; only the actual camera zoom (and the UI's own
+// on-screen scale, since there's no way to isolate it -- see above) waits for release.
 //
 // TextRuntime.UseFontOversampling is a single project-wide static flag (see its own doc comment --
 // deliberately not a per-instance override), so this screen can only demonstrate ALL text going
@@ -53,17 +75,17 @@ internal class ZoomScreen : FrameworkElement
         zoomSlider.Value = 1;
         controlsPanel.AddChild(zoomSlider);
 
-        void UpdateZoomLabel()
+        void UpdateZoomLabel(double value)
         {
-            zoomLabel.Text = $"Camera Zoom: {SystemManagers.Default.Renderer.Camera.Zoom:0.00}x";
+            zoomLabel.Text = $"Camera Zoom: {value:0.00}x";
         }
 
-        zoomSlider.ValueChanged += (_, _) =>
+        zoomSlider.ValueChanged += (_, _) => UpdateZoomLabel(zoomSlider.Value);
+        zoomSlider.ValueChangeCompleted += (_, _) =>
         {
             SystemManagers.Default.Renderer.Camera.Zoom = (float)zoomSlider.Value;
-            UpdateZoomLabel();
         };
-        UpdateZoomLabel();
+        UpdateZoomLabel(zoomSlider.Value);
 
 #if !SKIA
         var oversamplingCheckBox = new CheckBox();
@@ -83,7 +105,7 @@ internal class ZoomScreen : FrameworkElement
         var previewText = new TextRuntime();
         previewText.Font = "Arial";
         previewText.FontSize = 24;
-        previewText.Text = "Zoom in on this text -- crisp with oversampling on, blurry with it off (MonoGame/raylib).";
+        previewText.Text = "Drag the slider and release -- crisp with oversampling on, blurry with it off (MonoGame/raylib).";
         previewText.WidthUnits = DimensionUnitType.Absolute;
         previewText.Width = 260;
         previewText.Red = 255;
