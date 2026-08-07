@@ -34,19 +34,6 @@ public class WpfPluginBaseTests
     }
 
     [Fact]
-    public void CallStateWindowTreeNodeSelected_InvokesEventWithSameTreeNodeInstance()
-    {
-        TestWpfPlugin plugin = new TestWpfPlugin();
-        ITreeNode? received = null;
-        plugin.StateWindowTreeNodeSelected += node => received = node;
-        FakeTreeNode treeNode = new FakeTreeNode();
-
-        plugin.CallStateWindowTreeNodeSelected(treeNode);
-
-        received.ShouldBeSameAs(treeNode);
-    }
-
-    [Fact]
     public void CallGetWorldCursorPosition_InvokesEventWithSameCursorAndReturnsResult()
     {
         TestWpfPlugin plugin = new TestWpfPlugin();

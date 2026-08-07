@@ -178,7 +178,7 @@ public class MainCodeOutputPlugin : PluginBase
 
         this.AfterUndo += () => HandleRefreshAndExport();
 
-        this.StateWindowTreeNodeSelected += HandleStateSelected;
+        this.ReactToStateSaveSelected += HandleStateSelected;
         this.StateRename += HandleStateRename;
         this.StateAdd += HandleStateAdd;
         this.StateDelete += HandleStateDelete;
@@ -234,7 +234,7 @@ public class MainCodeOutputPlugin : PluginBase
         HandleElementSelected(null);
     }
 
-    private void HandleStateSelected(ITreeNode obj)
+    private void HandleStateSelected(StateSave? state)
     {
         if (control != null && _selectedState.SelectedElement != null)
         {

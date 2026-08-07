@@ -63,20 +63,12 @@ public class MainBehaviorsPlugin : PriorityPlugin
         this.ElementSelected += behaviorsLogic.HandleElementSelected;
         this.InstanceSelected += behaviorsLogic.HandleInstanceSelected;
         this.BehaviorSelected += HandleBehaviorSelected;
-        this.StateWindowTreeNodeSelected += HandleStateSelected;
         this.BehaviorReferencesChanged += behaviorsLogic.HandleBehaviorReferencesChanged;
 
         this.RefreshBehaviorView += behaviorsLogic.HandleRefreshBehaviorView;
 
         this.StateAdd += behaviorsLogic.HandleStateAdd;
         this.StateMovedToCategory += behaviorsLogic.HandleStateMovedToCategory;
-    }
-
-    // A no-op today regardless of type - StateWindowTreeNodeSelected has no live invoker
-    // (PluginManager.StateWindowTreeNodeSelected is never called), so this handler never fires.
-    private void HandleStateSelected(ITreeNode obj)
-    {
-
     }
 
     private void HandleBehaviorSelected(BehaviorSave obj)
