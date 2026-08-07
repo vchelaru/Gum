@@ -31,6 +31,9 @@ internal sealed class GumProjectSaveJson
     public string TextureFilter { get; set; } = "";
     public bool ConvertVariablesOnUnitTypeChange { get; set; }
     public bool RestrictToUnitValues { get; set; }
+    public bool ShowGrid { get; set; }
+    public bool SnapToGrid { get; set; }
+    public int GridSize { get; set; }
     public bool RestrictFileNamesForAndroid { get; set; }
     public List<GuideRectangle> Guides { get; set; } = new List<GuideRectangle>();
     public List<string> FavoriteComponents { get; set; } = new List<string>();
@@ -73,6 +76,9 @@ internal static class GumProjectSaveJsonMapper
             TextureFilter = source.TextureFilter,
             ConvertVariablesOnUnitTypeChange = source.ConvertVariablesOnUnitTypeChange,
             RestrictToUnitValues = source.RestrictToUnitValues,
+            ShowGrid = source.ShowGrid,
+            SnapToGrid = source.SnapToGrid,
+            GridSize = source.GridSize,
             RestrictFileNamesForAndroid = source.RestrictFileNamesForAndroid,
             Guides = new List<GuideRectangle>(source.Guides),
             FavoriteComponents = new List<string>(source.FavoriteComponents),
@@ -114,6 +120,9 @@ internal static class GumProjectSaveJsonMapper
             TextureFilter = dto.TextureFilter,
             ConvertVariablesOnUnitTypeChange = dto.ConvertVariablesOnUnitTypeChange,
             RestrictToUnitValues = dto.RestrictToUnitValues,
+            ShowGrid = dto.ShowGrid,
+            SnapToGrid = dto.SnapToGrid,
+            GridSize = dto.GridSize,
             RestrictFileNamesForAndroid = dto.RestrictFileNamesForAndroid,
             Guides = new List<GuideRectangle>(dto.Guides),
             FavoriteComponents = new List<string>(dto.FavoriteComponents),

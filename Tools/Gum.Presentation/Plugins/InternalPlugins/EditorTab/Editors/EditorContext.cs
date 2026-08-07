@@ -82,6 +82,16 @@ public class EditorContext
     public bool IsRotationEnabled { get; set; } = true;
     public bool RestrictToUnitValues { get; set; }
 
+    /// <summary>
+    /// Whether move/resize dragging snaps pixel-unit objects to the grid.
+    /// </summary>
+    public bool SnapToGrid { get; set; }
+
+    /// <summary>
+    /// The size, in pixels, of each grid cell used by <see cref="SnapToGrid"/>.
+    /// </summary>
+    public int GridSize { get; set; } = 16;
+
     #endregion
 
     #region Editing State

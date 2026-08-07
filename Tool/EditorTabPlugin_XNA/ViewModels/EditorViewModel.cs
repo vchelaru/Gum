@@ -6,6 +6,7 @@ using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
+using Gum.Services;
 using Gum.Wireframe;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -27,6 +28,30 @@ public partial class EditorViewModel : ViewModel, IZoomController
     private readonly IPluginManager _pluginManager;
     private readonly IFileCommands _fileCommands;
     private readonly IWireframeObjectManager _wireframeObjectManager;
+    private readonly IGridSnapWarningService _gridSnapWarningService;
+
+    public bool HasGridSnapWarning
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
+    public string? GridSnapWarningText
+    {
+        get => Get<string?>();
+        set => Set(value);
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="HasGridSnapWarning"/>/<see cref="GridSnapWarningText"/>. Call after
+    /// selection changes, a variable is set, or Snap to Grid is toggled.
+    /// </summary>
+    public void RefreshGridSnapWarning()
+    {
+        var info = _gridSnapWarningService.GetInfo();
+        HasGridSnapWarning = info.HasWarning;
+        GridSnapWarningText = info.WarningText;
+    }
 
     SystemManagers? SystemManagers
     {
@@ -224,11 +249,13 @@ public partial class EditorViewModel : ViewModel, IZoomController
 
     public EditorViewModel(IPluginManager pluginManager,
         IFileCommands fileCommands,
-        IWireframeObjectManager wireframeObjectManager)
+        IWireframeObjectManager wireframeObjectManager,
+        IGridSnapWarningService gridSnapWarningService)
     {
         _pluginManager = pluginManager;
         _fileCommands = fileCommands;
         _wireframeObjectManager = wireframeObjectManager;
+        _gridSnapWarningService = gridSnapWarningService;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
         CustomCanvasSizes = DefaultCanvasSizes;

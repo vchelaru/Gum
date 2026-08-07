@@ -64,6 +64,9 @@ public partial class ProjectPropertiesControl : UserControl
         DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides");
         DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCheckerBackground), "Guides");
 
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowGrid), "Grid");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.SnapToGrid), "Grid");
+        DataGrid.MoveMemberToCategory(nameof(ViewModel.GridSize), "Grid");
 
         DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
         DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");

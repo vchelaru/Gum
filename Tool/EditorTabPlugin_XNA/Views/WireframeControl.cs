@@ -40,6 +40,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
     private IToolFontService _toolFontService;
     private IToolLayerService _toolLayerService;
     LineRectangle mCanvasBounds;
+    GridOverlayManager _gridOverlayManager;
 
     public Color ScreenBoundsColor = Color.LightBlue;
 
@@ -66,6 +67,26 @@ public class WireframeControl : WpfGraphicsDeviceControl
         {
             LeftRuler.Visible = value;
             TopRuler.Visible = value;
+        }
+    }
+
+    public bool IsGridOverlayVisible
+    {
+        get => _gridOverlayManager.IsVisible;
+        set
+        {
+            _gridOverlayManager.IsVisible = value;
+            _gridOverlayManager.Refresh(Camera);
+        }
+    }
+
+    public int GridSize
+    {
+        get => _gridOverlayManager.GridSize;
+        set
+        {
+            _gridOverlayManager.GridSize = value;
+            _gridOverlayManager.Refresh(Camera);
         }
     }
 
@@ -224,6 +245,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
             }
             _cameraController.Initialize(Camera, editorViewModel, hotkeyManager);
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
+            _cameraController.CameraChanged += () => _gridOverlayManager.Refresh(Camera);
 
             InputLibrary.Cursor.Self.Initialize(new InputLibrary.WpfInputHostAdapter(this));
 
@@ -233,6 +255,8 @@ public class WireframeControl : WpfGraphicsDeviceControl
             mCanvasBounds.Width = 800;
             mCanvasBounds.Height = 600;
             mCanvasBounds.Color = ScreenBoundsColor;
+
+            _gridOverlayManager = new GridOverlayManager(SystemManagers.Default);
 
 
             var camera = SystemManagers.Default.Renderer.Camera;
@@ -329,6 +353,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
     {
 
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
+        _gridOverlayManager.AddToLayer(layerService.OverlayLayer);
 
 
         TopRuler = new Ruler(

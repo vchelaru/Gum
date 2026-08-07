@@ -87,6 +87,12 @@ public class MoveInputHandler : InputHandlerBase
                 SnapSelectedToUnitValues();
             }
 
+            // Snap to grid if enabled
+            if (Context.SnapToGrid)
+            {
+                SnapSelectedToGrid();
+            }
+
             Context.DoEndOfSettingValuesLogic();
         }
 
@@ -332,6 +338,88 @@ public class MoveInputHandler : InputHandlerBase
         if (wasAnythingModified)
         {
             Context.GuiCommands.RefreshVariables(true);
+        }
+    }
+
+    private void SnapSelectedToGrid()
+    {
+        bool wasAnythingModified = false;
+        float gridSize = Context.GridSize;
+
+        if (Context.SelectedState.SelectedInstances.Count() == 0 &&
+            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null))
+        {
+            GraphicalUiElement gue = Context.SelectionManager.SelectedGue;
+
+            GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
+
+            if (differenceToGridX != 0)
+            {
+                gue.X = Context.ElementCommands.ModifyVariable("X", differenceToGridX, Context.SelectedState.SelectedElement);
+                wasAnythingModified = true;
+            }
+            if (differenceToGridY != 0)
+            {
+                gue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToGridY, Context.SelectedState.SelectedElement);
+                wasAnythingModified = true;
+            }
+        }
+        else if (Context.SelectedState.SelectedInstances.Count() != 0)
+        {
+            var gues = Context.SelectionManager.SelectedGues.ToArray();
+            foreach (var gue in gues)
+            {
+                var instanceSave = gue.Tag as InstanceSave;
+
+                if (instanceSave != null && !instanceSave.Locked && !Context.ElementCommands.ShouldSkipDraggingMovementOn(instanceSave))
+                {
+                    GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
+
+                    if (differenceToGridX != 0)
+                    {
+                        gue.X = Context.ElementCommands.ModifyVariable("X", differenceToGridX, instanceSave);
+                        wasAnythingModified = true;
+                    }
+                    if (differenceToGridY != 0)
+                    {
+                        gue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToGridY, instanceSave);
+                        wasAnythingModified = true;
+                    }
+                }
+            }
+        }
+
+        if (wasAnythingModified)
+        {
+            Context.GuiCommands.RefreshVariables(true);
+        }
+    }
+
+    /// <summary>
+    /// Computes the delta to apply to <paramref name="gue"/>'s local X/Y so its world-space anchor
+    /// (<see cref="GraphicalUiElement.AbsoluteX"/>/<see cref="GraphicalUiElement.AbsoluteY"/>, which
+    /// already accounts for XOrigin/YOrigin and rotation) lands on the nearest grid line at or below
+    /// its current position. Axes using non-pixel units are left untouched (0 difference) - grid
+    /// snap only applies to pixel-based positioning.
+    /// </summary>
+    internal static void GetDifferenceToGrid(GraphicalUiElement gue, float gridSize,
+        out float differenceToGridX, out float differenceToGridY)
+    {
+        differenceToGridX = 0;
+        differenceToGridY = 0;
+
+        if (gue.XUnits.GetIsPixelBased())
+        {
+            float absoluteX = gue.AbsoluteX;
+            float snappedAbsoluteX = GridSnapper.Snap(absoluteX, gridSize);
+            differenceToGridX = snappedAbsoluteX - absoluteX;
+        }
+
+        if (gue.YUnits.GetIsPixelBased())
+        {
+            float absoluteY = gue.AbsoluteY;
+            float snappedAbsoluteY = GridSnapper.Snap(absoluteY, gridSize);
+            differenceToGridY = snappedAbsoluteY - absoluteY;
         }
     }
 

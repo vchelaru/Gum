@@ -63,4 +63,26 @@ public class WireframeCommands : IWireframeCommands
             _pluginManager.WireframePropertyChanged(nameof(AreHighlightsVisible));
         }
     }
+
+    bool isGridOverlayVisible;
+    public bool IsGridOverlayVisible
+    {
+        get => isGridOverlayVisible;
+        set
+        {
+            isGridOverlayVisible = value;
+            _pluginManager.WireframePropertyChanged(nameof(IsGridOverlayVisible));
+        }
+    }
+
+    int gridSize = 16;
+    public int GridSize
+    {
+        get => gridSize;
+        set
+        {
+            gridSize = value;
+            _pluginManager.WireframePropertyChanged(nameof(GridSize));
+        }
+    }
 }

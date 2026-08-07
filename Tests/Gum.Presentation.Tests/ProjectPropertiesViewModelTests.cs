@@ -53,4 +53,40 @@ public class ProjectPropertiesViewModelTests
 
         viewModel.AutoSave.ShouldBeTrue();
     }
+
+    [Fact]
+    public void SetFrom_ReadsGridSettingsFromGumProjectSave()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        GumProjectSave gumProject = new()
+        {
+            ShowGrid = true,
+            SnapToGrid = true,
+            GridSize = 32
+        };
+
+        viewModel.SetFrom(autoSave: false, gumProject);
+
+        viewModel.ShowGrid.ShouldBeTrue();
+        viewModel.SnapToGrid.ShouldBeTrue();
+        viewModel.GridSize.ShouldBe(32);
+    }
+
+    [Fact]
+    public void ApplyToModelObjects_WritesGridSettingsBackToGumProjectSave()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        GumProjectSave gumProject = new();
+        viewModel.SetFrom(autoSave: false, gumProject);
+
+        viewModel.ShowGrid = true;
+        viewModel.SnapToGrid = true;
+        viewModel.GridSize = 32;
+
+        viewModel.ApplyToModelObjects();
+
+        gumProject.ShowGrid.ShouldBeTrue();
+        gumProject.SnapToGrid.ShouldBeTrue();
+        gumProject.GridSize.ShouldBe(32);
+    }
 }

@@ -142,11 +142,12 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     {
         get
         {
-            return 0;
+            return mLinePrimitive.Position.X;
         }
 
         set
         {
+            mLinePrimitive.Position = new System.Numerics.Vector2(value, mLinePrimitive.Position.Y);
         }
     }
 
@@ -154,11 +155,12 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     {
         get
         {
-            return 0;
+            return mLinePrimitive.Position.Y;
         }
 
         set
         {
+            mLinePrimitive.Position = new System.Numerics.Vector2(mLinePrimitive.Position.X, value);
         }
     }
 
@@ -248,11 +250,11 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
         Visible = true;
         if (managers != null)
         {
-            mLinePrimitive = new LinePrimitive(managers.Renderer.SinglePixelTexture);
+            mLinePrimitive = new LinePrimitive(managers.Renderer.TryGetSinglePixelTexture());
         }
         else
         {
-            mLinePrimitive = new LinePrimitive(Renderer.Self.SinglePixelTexture);
+            mLinePrimitive = new LinePrimitive(Renderer.Self.TryGetSinglePixelTexture());
         }
 
         mLinePrimitive.BreakIntoSegments = true;
