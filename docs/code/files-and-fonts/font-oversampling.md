@@ -38,9 +38,9 @@ That per-`Layer` scoping matters: a layer with `LayerCameraSettings.IsInScreenSp
 
 Measurement-stable oversampling — where the box a `TextRuntime` measures against doesn't shift as the font is regenerated at different raster sizes — requires `Font` (or `CustomFontFile`) to resolve to an explicit `.ttf` file, not a bare system font family name. Oversampling still runs with a system font name like `"Arial"`, but width/wrap measurement isn't guaranteed stable across regenerations. See [Font Strategies — System Fonts vs Registered Fonts](font-strategies.md#system-fonts-vs-registered-fonts) for how to register a `.ttf`.
 
-## Limitation: BBCode Inline Runs on Raylib
+## Limitation: `[FontSize]`/`[IsBold]`/`[IsItalic]`/`[OutlineThickness]` BBCode Runs on Raylib
 
-On Raylib, oversampling only re-rasterizes a `TextRuntime`'s base font. An inline BBCode run (`[FontScale=...]`, `[FontSize=...]`, etc.) inside the text keeps drawing at its own independently-resolved size, unaffected by oversampling. This means a Text that mixes plain and BBCode-styled runs can end up with plain runs crisp and styled runs at their normal (unoversampled) size while zoomed in. MonoGame/KNI/FNA don't have this limitation -- oversampling compensation composes correctly with inline runs there.
+On Raylib, oversampling re-rasterizes a `TextRuntime`'s base font, and inline runs whose size comes from a plain scale (no tag, or an explicit `[FontScale=...]` tag) compose that oversample compensation correctly, same as MonoGame/KNI/FNA. Runs that swap in a differently-resolved font -- `[FontSize=...]`, `[IsBold=...]`, `[IsItalic=...]`, `[OutlineThickness=...]` -- still keep drawing at their own independently-resolved size, unaffected by oversampling, since composing compensation there risks destabilizing the line-height/baseline math those runs already depend on. MonoGame/KNI/FNA don't have this narrower limitation either -- oversampling compensation composes correctly with every inline run family there.
 
 ## Try It
 
