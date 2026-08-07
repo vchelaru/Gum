@@ -55,6 +55,17 @@ public class BitmapFont : IDisposable
     int mOutlineThickness;
 
     private ParsedFontFile _ParsedFontFile;
+
+    // True only for fonts built directly from pre-generated textures (e.g. an IInMemoryFontCreator like
+    // KernSmith) -- those textures are exclusive to this BitmapFont, unlike the string-path constructors,
+    // which resolve textures through LoaderManager's shared cache and must not have them disposed here.
+    private readonly bool _ownsTextures;
+
+    /// <summary>
+    /// True once <see cref="Dispose"/> has run. A disposed font's owned textures (if any) have been
+    /// released and it must not be used again.
+    /// </summary>
+    public bool IsDisposed { get; private set; }
     #endregion
 
     #region Properties
@@ -316,6 +327,8 @@ public class BitmapFont : IDisposable
         _ParsedFontFile = new ParsedFontFile(fntContent);
 
         SetFontPattern();
+
+        _ownsTextures = true;
     }
 
     /// <summary>
@@ -1292,7 +1305,23 @@ public class BitmapFont : IDisposable
 
     public void Dispose()
     {
-        // Do nothing, the loader will handle disposing the texture.
+        if (IsDisposed)
+        {
+            return;
+        }
+        IsDisposed = true;
+
+        if (_ownsTextures)
+        {
+            // Issue #4364: only a font built directly from pre-generated textures (see _ownsTextures)
+            // owns them exclusively -- string-path fonts share theirs through LoaderManager's cache,
+            // which still handles disposing those.
+            foreach (Texture2D texture in mTextures)
+            {
+                texture?.Dispose();
+            }
+            ShadowFont?.Dispose();
+        }
     }
 
     public override string ToString()

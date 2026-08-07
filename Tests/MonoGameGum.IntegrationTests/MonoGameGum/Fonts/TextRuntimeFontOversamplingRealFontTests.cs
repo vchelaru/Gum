@@ -3,6 +3,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using KernSmith.Gum;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -243,6 +244,50 @@ public class TextRuntimeFontOversamplingRealFontTests : BaseTestClass
             result.ShouldBeTrue();
             text.WrappedTextWidth.ShouldBe(nativeWidth, tolerance: 0.01f);
             text.WrappedTextHeight.ShouldBe(nativeHeight, tolerance: 0.01f);
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // Issue #4364: RegenerateOversampledFont never disposed the font it was replacing on every
+    // re-rasterize during a continuous zoom gesture. BitmapFont is IDisposable and wraps a real,
+    // GPU-backed Texture2D -- nothing else disposes the KernSmith-generated font once it's superseded.
+    // Uses the real GraphicsDevice/Texture2D (not the RenderingLibrary-level fake) so a pass here is
+    // strong evidence the real leak is fixed, not just the disposal-flag plumbing.
+    [Fact]
+    public void RegenerateOversampledFont_WhenReplacingAPreviouslyOversampledFont_DisposesTheSupersededFontsTexture()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(game.GraphicsDevice);
+            TextRuntime.UseFontOversampling = true;
+
+            TextRuntime textRuntime = new();
+            textRuntime.UseCustomFont = true;
+            textRuntime.CustomFontFile = TestFontPath;
+            textRuntime.FontSize = 12;
+            textRuntime.Text = "Stack Ag 12pt";
+            game.GumService.Root.Children.Add(textRuntime);
+
+            textRuntime.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+            Text text = (Text)textRuntime.RenderableComponent;
+            Texture2D firstOversampledTexture = text.BitmapFont.Texture!;
+            firstOversampledTexture.IsDisposed.ShouldBeFalse();
+
+            // Mirrors a continuous zoom gesture re-rasterizing again at a different size.
+            textRuntime.RegenerateOversampledFont(3.5f).ShouldBeTrue();
+
+            firstOversampledTexture.IsDisposed.ShouldBeTrue(
+                "because the superseded oversampled font isn't shared or cached anywhere else, so its " +
+                "real GPU texture must be disposed when replaced or it leaks (issue #4364)");
         }
         finally
         {

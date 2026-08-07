@@ -538,6 +538,49 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // Issue #4364: RegenerateOversampledFont never disposed the font it was replacing on every
+    // re-rasterize during a continuous zoom gesture. Raylib_cs.Font wraps a live GPU-resident atlas
+    // texture (see IRaylibFontCreator/KernSmithRaylibFontCreator), and this path bypasses the shared
+    // FontCache-keyed cache entirely -- generating a brand new one directly via TryCreateFont -- so
+    // nothing else ever unloaded the superseded font.
+    [Fact]
+    public void RegenerateOversampledFont_WhenReplacingAPreviouslyOversampledFont_UnloadsTheSupersededFont()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 20;
+            textRuntime.Text = "AB";
+
+            textRuntime.RegenerateOversampledFont(2.5f).ShouldBeTrue();
+            var text = (Text)textRuntime.RenderableComponent;
+            uint firstOversampledTextureId = text.Font.Texture.Id;
+            // Every KernSmith-generated font is registered in RaylibFontMetricsRegistry (ContentLoader.
+            // BuildFontFromFntText) and removed only when its owning ManagedFont is disposed -- the same
+            // signal ContentLoaderTests uses to prove a font was actually unloaded.
+            RaylibFontMetricsRegistry.TryGet(firstOversampledTextureId, out _).ShouldBeTrue(
+                "sanity check that the first oversampled font was actually created and registered");
+
+            // Mirrors a continuous zoom gesture re-rasterizing again at a different size.
+            textRuntime.RegenerateOversampledFont(3.0f).ShouldBeTrue();
+
+            RaylibFontMetricsRegistry.TryGet(firstOversampledTextureId, out _).ShouldBeFalse(
+                "because the superseded oversampled font isn't cached or referenced anywhere else, so it " +
+                "must be unloaded (via ManagedFont) when replaced or its GPU atlas texture leaks (issue #4364)");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     private static IEnumerable<float> BuildContinuousZoomSequence()
     {
         List<float> zooms = new();

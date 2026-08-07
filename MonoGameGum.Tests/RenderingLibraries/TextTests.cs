@@ -247,6 +247,38 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
         tempForRendering.Height.ShouldBe(text.WrappedTextHeight, tolerance: 0.001f);
     }
 
+    // Issue #4364: SetOversampledDisplayFont pins the outgoing NATIVE font as MeasurementFont on the
+    // FIRST swap, but a continuous zoom gesture calls it again on every hysteresis-gated frame after
+    // that -- and every one of those later swaps used to drop the PREVIOUSLY oversampled font with no
+    // disposal. That font isn't shared/cached anywhere (KernSmithFontCreator builds it fresh via
+    // `new BitmapFont(textures, ...)`), so its GPU textures leaked on every re-rasterize past the first.
+    [Fact]
+    public void SetOversampledDisplayFont_WhenReplacingAPreviouslyOversampledFont_DisposesTheSupersededFont()
+    {
+        BitmapFont baseFont = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        baseFont.SetFontPattern(256, 256);
+
+        BitmapFont firstOversampledFont = new BitmapFont(new Texture2D[] { null! }, basicBMFontFileData);
+        firstOversampledFont.SetFontPattern(256, 256);
+
+        BitmapFont secondOversampledFont = new BitmapFont(new Texture2D[] { null! }, basicBMFontFileData);
+        secondOversampledFont.SetFontPattern(256, 256);
+
+        Text text = new Text();
+        text.BitmapFont = baseFont;
+        text.RawText = "AB";
+
+        // Mirrors two hysteresis-gated re-rasterizes during one continuous zoom gesture.
+        text.SetOversampledDisplayFont(firstOversampledFont);
+        text.SetOversampledDisplayFont(secondOversampledFont);
+
+        firstOversampledFont.IsDisposed.ShouldBeTrue(
+            "because the superseded oversampled font isn't shared or cached anywhere else, so it must " +
+            "be disposed when replaced or its GPU textures leak (issue #4364)");
+        baseFont.IsDisposed.ShouldBeFalse(
+            "because the pinned MeasurementFont is still actively used for layout measurement and must never be disposed while active");
+    }
+
     // Issue #4317: the render-time hook TextRuntime wires automatic oversampling through.
     [Fact]
     public void PreRender_InvokesOnPreRenderHook()
