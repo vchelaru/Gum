@@ -1786,7 +1786,11 @@ public class CircleRuntime : GraphicalUiElement
             IsFilled = false;
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
-            StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+            // Issue #4367 follow-up: Absolute (the implicit default MonoGame/raylib's
+            // CircleRuntime already use, since they never set this explicitly) so the stroke
+            // visually thickens as the camera zooms, matching the rest of the shape and the other
+            // two backends. Mirrors the RectangleRuntime fix.
+            StrokeWidthUnits = DimensionUnitType.Absolute;
 
             // Dropshadow is off by default; pre-seed alpha + offset/blur so toggling
             // HasDropshadow = true at runtime produces a visible shadow without further setup.

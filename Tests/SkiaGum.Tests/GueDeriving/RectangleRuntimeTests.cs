@@ -661,6 +661,19 @@ public class RectangleRuntimeTests
         sut.StrokeWidth.ShouldBe(1);
     }
 
+    // Issue #4367 follow-up: a ScreenPixel default made the stroke NOT visually thicken as the
+    // camera zooms in (ScreenPixel divides by Camera.Zoom to hold a constant on-screen pixel size
+    // -- see DimensionUnitType.ScreenPixel's doc comment), while MonoGame/raylib's RectangleRuntime
+    // has no explicit default and so uses Absolute (which DOES scale with zoom, same as the rest of
+    // the shape). Confirmed via manual cross-backend comparison: MonoGame/raylib outlines visibly
+    // thicken when zoomed; Skia's did not until this default was aligned.
+    [Fact]
+    public void StrokeWidthUnits_ShouldBeAbsolute_ByDefault()
+    {
+        RectangleRuntime sut = new();
+        sut.StrokeWidthUnits.ShouldBe(DimensionUnitType.Absolute);
+    }
+
     // Issue #4029 — corrected contract: gradient follows the ACTIVE body. When both a fill and a
     // stroke are active, the gradient applies to the fill ONLY; the stroke keeps rendering as a
     // plain solid outline on top of it, exactly like it would on top of a solid fill. Previously
