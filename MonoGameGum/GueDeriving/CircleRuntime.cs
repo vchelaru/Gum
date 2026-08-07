@@ -1666,6 +1666,11 @@ public class CircleRuntime : GraphicalUiElement
         // RenderableComponent on next access. The fill slot's Color/Radius/etc. were copied
         // by Circle.Clone (ICloneable, MemberwiseClone) so the clone's fill matches source.
         toReturn.containedLineCircle = null!;
+        // The fill's MemberwiseClone shallow-copies OnPreRender too, so it still points at the
+        // SOURCE runtime's RefreshShapeState. Rebind to the clone's own instance method or the
+        // clone's stroke never gets its Width/Height mirror when added top-level to a Layer
+        // (issue #4367 follow-up).
+        toReturn.ContainedRenderable.OnPreRender = toReturn.RefreshShapeState;
         // Issue #2790: drop the inherited reference to the source's stroke slot and rebuild a
         // fresh one parented to the clone's fill so the clone is fully independent.
         toReturn.ClearStrokeRenderable();
@@ -1761,6 +1766,15 @@ public class CircleRuntime : GraphicalUiElement
             // single-slot legacy model (last-non-null-setter-wins).
             SetStrokeRenderable(new ContainedCircleType());
 
+            // SetContainedObject above (shared with raylib/Sokol) doesn't wire the
+            // OnPreRender hook SetContainedShape would -- wire it explicitly here so the
+            // two-slot stroke Width/Height mirror in SkiaShapeRuntime.RefreshShapeState still
+            // runs when this runtime is a TOP-LEVEL Layer member added via AddToManagers, not
+            // just when nested under a parent (issue #4367 follow-up; see RectangleRuntime's
+            // SKIA branch, which uses SetContainedShape directly since its branch isn't shared
+            // with raylib).
+            circle.OnPreRender = RefreshShapeState;
+
             // Defaults: white fill gated off (IsFilled = false) + white stroke, so a freshly-
             // constructed runtime renders as a stroke-only outline. Because FillColor defaults
             // to opaque white, flipping IsFilled = true paints a white fill without assigning a
@@ -1772,7 +1786,11 @@ public class CircleRuntime : GraphicalUiElement
             IsFilled = false;
             StrokeColor = SKColors.White;
             StrokeWidth = 1;
-            StrokeWidthUnits = DimensionUnitType.ScreenPixel;
+            // Issue #4367 follow-up: Absolute (the implicit default MonoGame/raylib's
+            // CircleRuntime already use, since they never set this explicitly) so the stroke
+            // visually thickens as the camera zooms, matching the rest of the shape and the other
+            // two backends. Mirrors the RectangleRuntime fix.
+            StrokeWidthUnits = DimensionUnitType.Absolute;
 
             // Dropshadow is off by default; pre-seed alpha + offset/blur so toggling
             // HasDropshadow = true at runtime produces a visible shadow without further setup.

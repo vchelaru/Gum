@@ -244,6 +244,17 @@ public class CircleRuntimeTests
         sut.StrokeWidth.ShouldBe(1);
     }
 
+    // Issue #4367 follow-up: a ScreenPixel default made the stroke NOT visually thicken as the
+    // camera zooms in (ScreenPixel divides by Camera.Zoom to hold a constant on-screen pixel size),
+    // while MonoGame/raylib's CircleRuntime has no explicit default and so uses Absolute (which
+    // DOES scale with zoom, same as the rest of the shape). Mirrors the RectangleRuntime fix.
+    [Fact]
+    public void StrokeWidthUnits_ShouldBeAbsolute_ByDefault()
+    {
+        CircleRuntime sut = new();
+        sut.StrokeWidthUnits.ShouldBe(Gum.DataTypes.DimensionUnitType.Absolute);
+    }
+
     [Fact]
     public void Width_ShouldBe32_ByDefault()
     {

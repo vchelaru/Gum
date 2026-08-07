@@ -106,6 +106,7 @@ namespace MonoGameGumInCode
             AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
             AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
             AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
+            AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
             AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
@@ -136,9 +137,12 @@ namespace MonoGameGumInCode
                 _currentScreen.RemoveFromRoot();
             }
 
-            // ZoomScreen drives the shared main Camera.Zoom directly (issue #4330) -- reset it here so
-            // leaving that screen zoomed in never leaks a non-1 zoom into whichever screen is shown next.
+            // ZoomScreen and LayerCameraSettingsScreen both drive the shared main Camera directly
+            // (issues #4330, #4367) -- reset it here so leaving either screen zoomed/panned never
+            // leaks into whichever screen is shown next.
             SystemManagers.Default.Renderer.Camera.Zoom = 1f;
+            SystemManagers.Default.Renderer.Camera.X = 0f;
+            SystemManagers.Default.Renderer.Camera.Y = 0f;
 
             _currentScreen = new T();
             // Offset the screen so it doesn't sit underneath the nav strip. The screen's

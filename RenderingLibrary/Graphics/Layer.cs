@@ -203,15 +203,16 @@ namespace RenderingLibrary.Graphics
         }
 
         /// <summary>
-        /// Builds the world-to-screen matrix for this layer, factoring in LayerCameraSettings
-        /// (position, zoom, IsInScreenSpace) on top of the main camera. Both ScreenToWorld and
-        /// WorldToScreen route through this so their behavior cannot drift apart.
+        /// Resolves the effective camera position and zoom for this layer, factoring in
+        /// LayerCameraSettings (position, zoom, IsInScreenSpace) on top of the main camera.
+        /// This is the single source of truth for that resolution — ScreenToWorld/WorldToScreen
+        /// (hit-testing) and every backend's per-layer draw-time camera transform (rendering)
+        /// all route through this so they cannot drift apart (issue #4367).
         /// </summary>
-        private Matrix GetEffectiveTransformationMatrix(Camera camera, out float effectiveZoom)
+        public void GetEffectiveCamera(Camera camera, out float effectiveCameraX, out float effectiveCameraY, out float effectiveZoom)
         {
             // When IsInScreenSpace is true the main camera is ignored entirely, including its
-            // zoom — a screen-space HUD should not scale when the world camera zooms. This must
-            // match SpriteRenderer.GetZoomAndMatrix so rendering and hit-testing agree.
+            // zoom — a screen-space HUD should not scale when the world camera zooms.
             if (LayerCameraSettings?.IsInScreenSpace == true)
             {
                 effectiveZoom = LayerCameraSettings.Zoom ?? 1;
@@ -221,8 +222,8 @@ namespace RenderingLibrary.Graphics
                 effectiveZoom = LayerCameraSettings?.Zoom ?? camera.Zoom;
             }
 
-            float effectiveCameraX = camera.X;
-            float effectiveCameraY = camera.Y;
+            effectiveCameraX = camera.X;
+            effectiveCameraY = camera.Y;
 
             if (LayerCameraSettings?.IsInScreenSpace == true)
             {
@@ -235,6 +236,16 @@ namespace RenderingLibrary.Graphics
                 effectiveCameraX += layerPosition.X;
                 effectiveCameraY += layerPosition.Y;
             }
+        }
+
+        /// <summary>
+        /// Builds the world-to-screen matrix for this layer, factoring in LayerCameraSettings
+        /// (position, zoom, IsInScreenSpace) on top of the main camera. Both ScreenToWorld and
+        /// WorldToScreen route through this so their behavior cannot drift apart.
+        /// </summary>
+        private Matrix GetEffectiveTransformationMatrix(Camera camera, out float effectiveZoom)
+        {
+            GetEffectiveCamera(camera, out float effectiveCameraX, out float effectiveCameraY, out effectiveZoom);
 
             if (camera.CameraCenterOnScreen == RenderingLibrary.CameraCenterOnScreen.Center)
             {

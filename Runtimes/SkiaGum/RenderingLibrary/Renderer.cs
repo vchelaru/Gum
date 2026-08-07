@@ -24,9 +24,20 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public Layer MainLayer => 
+        public Layer MainLayer =>
             // Not sure if we have any layers in skia so do a FirstOrDefault
             _layers.FirstOrDefault();
+
+        public Layer AddLayer()
+        {
+            Layer layer = new Layer();
+            _layers.Add(layer);
+            return layer;
+        }
+
+        public void AddLayer(Layer layer) => _layers.Add(layer);
+
+        public void RemoveLayer(Layer layer) => _layers.Remove(layer);
 
         /// <summary>
         /// Whether renderable objects should call Render
@@ -117,7 +128,7 @@ namespace RenderingLibrary.Graphics
         {
             foreach(var layer in layers)
             {
-                Draw(layer.Renderables, managers, isTopLevelDraw: true);
+                Draw(layer.Renderables, managers, isTopLevelDraw: true, layer: layer);
             }
         }
 
@@ -138,7 +149,7 @@ namespace RenderingLibrary.Graphics
             Draw(whatToRender, managers, true);
         }
 
-        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false)
+        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false, Layer layer = null)
         {
             if (isTopLevelDraw)
             {
@@ -176,13 +187,27 @@ namespace RenderingLibrary.Graphics
                 // ("everything off screen") within a couple of seconds.
                 managers.Canvas.Save();
 
-                if (Camera.Zoom != 1)
+                // Each layer gets its own effective camera position/zoom from LayerCameraSettings
+                // (falling back to the main camera when the layer has none set), so a screen-space
+                // HUD layer actually renders fixed on screen instead of panning/zooming with
+                // everything else (#4367). A null layer (the public Draw(IList<...>)/Draw
+                // (ObservableCollection<...>) overloads, which have no Layer to consult) keeps the
+                // prior main-camera-only behavior.
+                float effectiveZoom = Camera.Zoom;
+                float effectiveCameraX = Camera.X;
+                float effectiveCameraY = Camera.Y;
+                if (layer != null)
                 {
-                    managers.Canvas.Scale(Camera.Zoom);
+                    layer.GetEffectiveCamera(Camera, out effectiveCameraX, out effectiveCameraY, out effectiveZoom);
                 }
 
-                var translateX = -Camera.X;
-                var translateY = -Camera.Y;
+                if (effectiveZoom != 1)
+                {
+                    managers.Canvas.Scale(effectiveZoom);
+                }
+
+                var translateX = -effectiveCameraX;
+                var translateY = -effectiveCameraY;
 
                 if(Camera.CameraCenterOnScreen == CameraCenterOnScreen.Center)
                 {

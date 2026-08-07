@@ -62,6 +62,8 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
 	  <!-- Camera-zoom font crispness demo shared from MonoGameGumInCode, gated #elif SKIA (#4330). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
+	  <!-- LayerCameraSettings screen-space-vs-world demo shared from MonoGameGumInCode, gated #elif SKIA (#4367). -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

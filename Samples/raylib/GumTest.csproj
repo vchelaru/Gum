@@ -18,10 +18,10 @@
     <ProjectReference Include="..\..\Integrations\KernSmith\KernSmith.RaylibGum\KernSmith.RaylibGum.csproj" />
   </ItemGroup>
 
-  <!-- #3640/#3988/#3998/#4024/#4029/#4330: TextScreen.cs, RenderTargetScreen.cs,
-       RenderTargetShaderScreen.cs, CirclesScreen.cs, RectanglesScreen.cs, and ZoomScreen.cs are
-       shared with Samples/MonoGameGumInCode (the canonical copies), gated #if RAYLIB, to stop the
-       mirrors drifting when only one got updated. -->
+  <!-- #3640/#3988/#3998/#4024/#4029/#4330/#4367: TextScreen.cs, RenderTargetScreen.cs,
+       RenderTargetShaderScreen.cs, CirclesScreen.cs, RectanglesScreen.cs, ZoomScreen.cs, and
+       LayerCameraSettingsScreen.cs are shared with Samples/MonoGameGumInCode (the canonical
+       copies), gated #if RAYLIB, to stop the mirrors drifting when only one got updated. -->
   <ItemGroup>
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\TextScreen.cs" Link="Screens\TextScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\RenderTargetScreen.cs" Link="Screens\RenderTargetScreen.cs" />
@@ -29,6 +29,7 @@
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\CirclesScreen.cs" Link="Screens\CirclesScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\RectanglesScreen.cs" Link="Screens\RectanglesScreen.cs" />
     <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
+    <Compile Include="..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -665,7 +665,22 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     public bool IsRenderTarget => false;
 
-    public void PreRender() {}
+    /// <summary>
+    /// Optional callback invoked at the end of <see cref="PreRender"/>, wired by the owning
+    /// GraphicalUiElement runtime (see <c>SkiaShapeRuntime.SetContainedShape</c>) so per-frame,
+    /// GUE-level PreRender logic (e.g. the two-slot stroke Width/Height mirror, or
+    /// <c>StrokeWidthUnits.ScreenPixel</c> resolution) still runs even when this renderable is a
+    /// TOP-LEVEL <see cref="RenderingLibrary.Graphics.Layer"/> member added via
+    /// <c>GraphicalUiElement.AddToManagers</c>. In that case only this raw renderable (the fill
+    /// slot, <c>mContainedObjectAsIpso</c>) is registered on the Layer -- the GUE wrapper's own
+    /// <c>PreRender()</c> override is otherwise unreachable, since the render walk only calls
+    /// <c>.PreRender()</c> on whatever object is actually a Layer/Children member (issue #4367
+    /// follow-up). Mirrors the XNALIKE <c>RenderableShapeBase</c> / <c>AposShapeRuntime</c>
+    /// <c>OnPreRender</c> hook (see the gum-monogame-rendering skill).
+    /// </summary>
+    public Action? OnPreRender { get; set; }
+
+    public void PreRender() => OnPreRender?.Invoke();
 
     public void Render(ISystemManagers managers)
     {
