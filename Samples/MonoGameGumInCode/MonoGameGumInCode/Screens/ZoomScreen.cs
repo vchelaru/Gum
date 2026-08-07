@@ -113,5 +113,23 @@ internal class ZoomScreen : FrameworkElement
         previewText.Blue = 255;
         previewText.Alpha = 255;
         controlsPanel.AddChild(previewText);
+
+        // Issue #4365: an inline BBCode run must stay the SAME on-screen size as its plain-text
+        // neighbor at every zoom level -- both lines here are FontSize 24, so "Color run" and "2x run"
+        // should always look the same height as "Plain run" (just crisper once oversampling regenerates
+        // the base font). Before the fix, these two BBCode lines visibly ballooned in size as the slider
+        // moved, independent of whatever the "Use Font Oversampling" checkbox above was set to (raylib only --
+        // MonoGame/KNI/FNA already composed this correctly).
+        var bbcodePreviewText = new TextRuntime();
+        bbcodePreviewText.Font = "Arial";
+        bbcodePreviewText.FontSize = 24;
+        bbcodePreviewText.Text = "Plain run / [Color=Yellow]Color run[/Color] / [FontScale=2]2x run[/FontScale]";
+        bbcodePreviewText.WidthUnits = DimensionUnitType.Absolute;
+        bbcodePreviewText.Width = 260;
+        bbcodePreviewText.Red = 255;
+        bbcodePreviewText.Green = 255;
+        bbcodePreviewText.Blue = 255;
+        bbcodePreviewText.Alpha = 255;
+        controlsPanel.AddChild(bbcodePreviewText);
     }
 }

@@ -909,6 +909,19 @@ public class Text : IVisible, IRenderableIpso,
     // not sure if basesize is correct here...
     public int LineHeightInPixels => _lineHeightInPixels;
 
+    /// <summary>
+    /// <see cref="LineHeightInPixels"/> compensated for automatic font oversampling (issue #4365,
+    /// manual-test finding). LineHeightInPixels is baked from the LIVE <see cref="Font"/>'s raw metrics
+    /// -- which balloon right along with the raster once <c>RegenerateOversampledFont</c> swaps in the
+    /// oversampled Font, even though the glyph DRAW size is shrunk back down via
+    /// <see cref="EffectiveFontScale"/>. Used wherever a per-line vertical ADVANCE (not a run-relative
+    /// ratio) is computed directly from LineHeightInPixels, so line spacing doesn't visibly grow with
+    /// the oversample ratio while glyph size stays put. Not used by <see cref="DrawStyledLine"/>'s
+    /// baseline math -- there, <c>maxScale</c> (built from <see cref="ResolveRunFont"/>'s LayoutScale)
+    /// already carries this same compensation, so applying it again here would double-compensate.
+    /// </summary>
+    private float EffectiveLineHeightInPixels => LineHeightInPixels * _oversampleCompensationScale;
+
     bool IRenderable.Wrap => false;
 
 
@@ -1067,7 +1080,7 @@ public class Text : IVisible, IRenderableIpso,
             var linePosition = position;
             linePosition.Y += lineTopOffsets != null
                 ? lineTopOffsets[i]
-                : i * LineHeightInPixels * LineHeightMultiplier;
+                : i * EffectiveLineHeightInPixels * LineHeightMultiplier;
 
             var substrings = InlineVariables.Count > 0
                 ? GetStyledSubstrings(startOfLineIndex, line)
@@ -1115,7 +1128,11 @@ public class Text : IVisible, IRenderableIpso,
             // every run's height factor away from its intended (ratio-to-base) value.
             float effectiveFontScale = EffectiveFontScale;
             float lineHeightFactor = effectiveFontScale > 0 ? lineScale / effectiveFontScale : 1;
-            runningY += LineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
+            // Issue #4365 (manual-test finding): lineHeightFactor above is a pure ratio (1 for a plain
+            // line, 2 for a [FontScale=2] line, etc.) normalized against EffectiveFontScale, so it no
+            // longer carries any oversample-ratio cancellation -- EffectiveLineHeightInPixels supplies
+            // that separately, or line spacing balloons with the oversample ratio (see its doc comment).
+            runningY += EffectiveLineHeightInPixels * lineHeightFactor * LineHeightMultiplier;
             startOfLineIndex += line.Length;
         }
         return offsets;
@@ -1138,7 +1155,7 @@ public class Text : IVisible, IRenderableIpso,
         float maxScale = EffectiveFontScale;
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
-            maxScale = System.Math.Max(maxScale, ResolveRunFont(substrings[substringIndex].Variables).LayoutScale);
+            maxScale = System.Math.Max(maxScale, ResolveRunFont(substrings[substringIndex].Variables, _font, _oversampleCompensationScale).LayoutScale);
         }
         return maxScale;
     }
@@ -1208,27 +1225,31 @@ public class Text : IVisible, IRenderableIpso,
     }
 
     /// <summary>
-    /// Resolves the font/size a styled run draws and is measured with. No tag, or a [FontScale=v] run,
-    /// keeps the base font at v (or the Text's own <see cref="FontScale"/>) times the base size,
-    /// composed with <see cref="OversampleCompensationScale"/> (issue #4365) so the run's draw size
-    /// tracks the current oversample ratio the same way plain text does. A [FontSize=N] run either
-    /// swaps in a font re-rasterized at N (crisp; its inline value is a <see cref="Font"/>) drawn at its
-    /// native size, or - when no font creator was wired so no swap font could be built - falls back to
-    /// scaling the base atlas to N px (its inline value is a float); neither composes oversample
-    /// compensation (see <see cref="OversampleCompensationScale"/>'s doc comment). Shared by
-    /// <see cref="DrawStyledLine"/> (draw) and <see cref="GetInlineVariableAwareWidthAndHeight"/>
-    /// (measure) so the drawn and measured size of a run cannot diverge - that drift is what reproduced
-    /// the RelativeToChildren spill (#3524).
+    /// Resolves the font/size a styled run draws and is measured with, against <paramref name="baseFont"/>
+    /// composed with <paramref name="oversampleCompensationScale"/>. No tag, or a [FontScale=v] run,
+    /// keeps <paramref name="baseFont"/> at v (or the Text's own <see cref="FontScale"/>) times its base
+    /// size. Callers pick which font/compensation pair to resolve against depending on intent (issue
+    /// #4365): draw call sites (<see cref="DrawStyledLine"/>, <see cref="GetLineLayoutScale"/>) pass the
+    /// LIVE <see cref="Font"/> and the current <see cref="OversampleCompensationScale"/>, so the run's
+    /// DRAWN size tracks the oversample ratio the same way plain text does; the measurement call site
+    /// (<see cref="MeasureStyledLineInBaseUnits"/>, used for both wrap and pre-render size) passes
+    /// <see cref="EffectiveMeasurementFont"/> with no compensation, so a run measures against the SAME
+    /// stable font regardless of what the live Font is currently oversampled to -- otherwise a word
+    /// straddling a wrap boundary could land on a different line depending on oversampling (manual-test
+    /// finding), the same class of instability <see cref="MeasurementFont"/> already prevents for plain
+    /// text. A [FontSize=N] run either swaps in a font re-rasterized at N (crisp; its inline value is a
+    /// <see cref="Font"/>) drawn at its native size, or - when no font creator was wired so no swap font
+    /// could be built - falls back to scaling the base atlas to N px (its inline value is a float);
+    /// neither depends on <paramref name="baseFont"/>/<paramref name="oversampleCompensationScale"/> (see
+    /// <see cref="OversampleCompensationScale"/>'s doc comment). Shared by <see cref="DrawStyledLine"/>
+    /// (draw) and <see cref="GetInlineVariableAwareWidthAndHeight"/> (measure) so the drawn and measured
+    /// size of a run cannot diverge - that drift is what reproduced the RelativeToChildren spill (#3524).
     /// </summary>
-    private ResolvedRunFont ResolveRunFont(List<InlineVariable> variables)
+    private ResolvedRunFont ResolveRunFont(List<InlineVariable> variables, Font baseFont, float oversampleCompensationScale)
     {
-        Font drawFont = _font;
+        Font drawFont = baseFont;
         bool hasSwapFont = false;
-        // Issue #4365: compose OversampleCompensationScale here too, mirroring EffectiveFontScale/
-        // DrawPlainLine -- otherwise a run with no [FontScale]/[FontSize] tag draws/measures against
-        // _font.BaseSize, which IS the oversampled raster once RegenerateOversampledFont swaps it in,
-        // and its size balloons with the oversample ratio instead of staying pinned to native size.
-        float scale = EffectiveFontScale;
+        float scale = FontScale * oversampleCompensationScale;
         float? absolutePixelSize = null;
 
         foreach (var variable in variables)
@@ -1238,7 +1259,7 @@ public class Text : IVisible, IRenderableIpso,
                 case nameof(FontScale):
                     // An inline [FontScale=v] tag is an ABSOLUTE per-run scale (not relative to the
                     // Text-level FontScale), so it must independently compose the same compensation.
-                    scale = (float)variable.Value * _oversampleCompensationScale;
+                    scale = (float)variable.Value * oversampleCompensationScale;
                     break;
                 // "BitmapFont" is the shared historical marker name the font-resolution stack model emits for
                 // every font-family tag (Font / FontSize / IsBold / IsItalic / OutlineThickness). On Raylib
@@ -1258,7 +1279,7 @@ public class Text : IVisible, IRenderableIpso,
             }
         }
 
-        float baseSize = _font.BaseSize;
+        float baseSize = baseFont.BaseSize;
         float drawSize;
         if (hasSwapFont)
         {
@@ -1314,7 +1335,7 @@ public class Text : IVisible, IRenderableIpso,
         {
             var run = substrings[s];
             var runColor = Color;
-            var resolvedFont = ResolveRunFont(run.Variables);
+            var resolvedFont = ResolveRunFont(run.Variables, _font, _oversampleCompensationScale);
             var runText = run.Substring;
             float xOffset = 0;
             float yOffset = 0;
@@ -1571,10 +1592,13 @@ public class Text : IVisible, IRenderableIpso,
         for (int substringIndex = 0; substringIndex < substrings.Count; substringIndex++)
         {
             var substring = substrings[substringIndex];
-            // Same resolver the draw loop uses, measured with the same per-run font at the same
-            // size, so a run is measured at exactly the size it is drawn - draw/measure drift is
-            // what reproduced the RelativeToChildren spill (#3524).
-            var resolvedFont = ResolveRunFont(substring.Variables);
+            // Same resolver the draw loop uses, but against EffectiveMeasurementFont with no
+            // compensation (issue #4365) -- measuring against the LIVE oversampled Font here would
+            // measure a DIFFERENT, non-linearly hinted raster than pre-oversampling, drifting a wrap
+            // decision or pre-render size by a few pixels depending on live zoom state. Draw/measure
+            // still can't drift on SIZE (#3524): compensation composes DrawSize back down to the exact
+            // same on-screen size EffectiveMeasurementFont already represents in native units.
+            var resolvedFont = ResolveRunFont(substring.Variables, EffectiveMeasurementFont, oversampleCompensationScale: 1f);
             lineWidthAtScale += MeasureTextEx(resolvedFont.Font, substring.Substring, resolvedFont.DrawSize, 0).X;
             maxRunScale = System.Math.Max(maxRunScale, resolvedFont.LayoutScale);
         }
