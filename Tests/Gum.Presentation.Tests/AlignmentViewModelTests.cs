@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.Plugins.AlignmentButtons;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
@@ -11,7 +12,7 @@ namespace Gum.Presentation.Tests;
 
 public class AlignmentViewModelTests
 {
-    private static AlignmentViewModel CreateViewModel()
+    private static AlignmentViewModel CreateViewModel(IStateEditingIndicatorService? stateEditingIndicatorService = null)
     {
         CommonControlLogic commonControlLogic = new(
             Mock.Of<ISelectedState>(),
@@ -20,7 +21,8 @@ public class AlignmentViewModelTests
             Mock.Of<IFileCommands>(),
             Mock.Of<ISetVariableLogic>());
 
-        return new AlignmentViewModel(commonControlLogic, Mock.Of<ISelectedState>(), Mock.Of<IUndoManager>());
+        return new AlignmentViewModel(commonControlLogic, Mock.Of<ISelectedState>(), Mock.Of<IUndoManager>(),
+            stateEditingIndicatorService ?? Mock.Of<IStateEditingIndicatorService>());
     }
 
     [Fact]
@@ -80,5 +82,21 @@ public class AlignmentViewModelTests
         AlignmentViewModel.NormalizeNegativeZero(-5f).ShouldBe(-5f);
         AlignmentViewModel.NormalizeNegativeZero(5f).ShouldBe(5f);
         AlignmentViewModel.NormalizeNegativeZero(-0.001f).ShouldBe(-0.001f);
+    }
+
+    [Fact]
+    public void RefreshStateLabel_CopiesInfoFromStateEditingIndicatorService()
+    {
+        var stateEditingIndicatorService = new Mock<IStateEditingIndicatorService>();
+        stateEditingIndicatorService
+            .Setup(s => s.GetInfo())
+            .Returns(new StateEditingIndicatorInfo(true, "Editing state MyState", System.Drawing.Color.Yellow));
+        AlignmentViewModel viewModel = CreateViewModel(stateEditingIndicatorService.Object);
+
+        viewModel.RefreshStateLabel();
+
+        viewModel.HasStateInformation.ShouldBeTrue();
+        viewModel.StateInformation.ShouldBe("Editing state MyState");
+        viewModel.StateBackground.ShouldBe(System.Drawing.Color.Yellow);
     }
 }

@@ -118,8 +118,6 @@ consumer, so the whole file goes.
 
 ### Dead code to remove alongside
 
-- `PluginManager.StateWindowTreeNodeSelected` — no callers, and its `(ITreeNode)` cast of a WinForms
-  `TreeNode` would throw if there were.
 - `InternalsVisibleTo("EditorTabPlugin_XNA")` in `CommonFormsAndControls/Properties/AssemblyInfo.cs`
   — its stated reason (that plugin calling `ExtractDraggedNodes`) is no longer true.
 - `TreeNodeExtensionMethods` (the WinForms-`TreeNode` predicate + `GetFullFilePath` class at the

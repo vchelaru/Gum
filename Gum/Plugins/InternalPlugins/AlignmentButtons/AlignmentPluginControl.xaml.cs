@@ -9,11 +9,14 @@ namespace Gum.Plugins.AlignmentButtons
     /// </summary>
     public partial class AlignmentPluginControl : UserControl
     {
+        public AlignmentViewModel ViewModel { get; }
+
         public AlignmentPluginControl()
         {
             InitializeComponent();
 
-            this.DataContext = Locator.GetRequiredService<AlignmentViewModel>();
+            ViewModel = Locator.GetRequiredService<AlignmentViewModel>();
+            this.DataContext = ViewModel;
         }
     }
 }

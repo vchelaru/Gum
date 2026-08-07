@@ -53,6 +53,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IHotkeyManager _hotkeyManager;
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IClipboardService _clipboardService;
+    private readonly IStateEditingIndicatorService _stateEditingIndicatorService;
 
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
@@ -126,7 +127,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IEditVariableService editVariableService,
         IHotkeyManager hotkeyManager,
         IVariableSaveLogic variableSaveLogic,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService,
+        IStateEditingIndicatorService stateEditingIndicatorService)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -149,6 +151,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _hotkeyManager = hotkeyManager;
         _variableSaveLogic = variableSaveLogic;
         _clipboardService = clipboardService;
+        _stateEditingIndicatorService = stateEditingIndicatorService;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
     }
@@ -479,7 +482,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
             RefreshErrors(element);
 
-            RefreshStateLabel(element, stateCategory, state);
+            RefreshStateLabel();
 
             RefreshCategoryNotification(stateCategory, state);
 
@@ -513,33 +516,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    private void RefreshStateLabel(ElementSave element, StateSaveCategory category, StateSave state)
+    private void RefreshStateLabel()
     {
-        if(element == null)
-        {
-            VariableViewModel.HasStateInformation = false;
-        }
-        else if(state == null || state == element.DefaultState)
-        {
-            VariableViewModel.HasStateInformation = false;
-        }
-        else if(_selectedState.CustomCurrentStateSave != null)
-        {
-            VariableViewModel.HasStateInformation = true;
-            VariableViewModel.StateInformation = $"Displaying custom (animated) state";
-            VariableViewModel.StateBackground = Color.Pink;
-        }
-        else
-        {
-            VariableViewModel.StateBackground = Color.Yellow;
-            VariableViewModel.HasStateInformation = true;
-            string stateName = state.Name;
-            if(category != null)
-            {
-                stateName = category.Name + "/" + stateName;
-            }
-            VariableViewModel.StateInformation = $"Editing state {stateName}";
-        }
+        var info = _stateEditingIndicatorService.GetInfo();
+        VariableViewModel.HasStateInformation = info.HasStateInformation;
+        VariableViewModel.StateInformation = info.StateInformation;
+        VariableViewModel.StateBackground = info.StateBackground;
     }
 
     private void RefreshCategoryNotification(StateSaveCategory? stateCategory, StateSave? state)
