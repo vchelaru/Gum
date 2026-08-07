@@ -23,6 +23,28 @@ namespace MonoGameGum.Tests.Runtimes;
 // trigger (UpdateAutomaticFontOversampling) that replaces the old manual "press R" call.
 public class TextRuntimeFontOversamplingTests : BaseTestClass
 {
+    // Issue #4330 (manual-test finding): the automatic per-frame trigger never actually engaged in a
+    // real running game -- checking UseFontOversampling and zooming did nothing, on MonoGame or
+    // Raylib. Root cause: TextRuntime's constructor assigns the backing field directly
+    // (_containedText = textRenderable) instead of going through the ContainedText PROPERTY, whose
+    // lazy-init getter is the only place OnPreRender ever got wired ("if (_containedText == null)").
+    // Since the field is already non-null by the time any property setter (Font, Red, etc.) later
+    // reads ContainedText, that branch never ran for a normally-constructed TextRuntime -- only for
+    // one that never wired up the auto-trigger. Every existing test called RegenerateOversampledFont/
+    // UpdateAutomaticFontOversampling directly, never exercising the real OnPreRender path, which is
+    // how this survived unnoticed.
+    [Fact]
+    public void Constructor_WiresOnPreRenderForAutomaticOversampling_WithoutAnyExplicitOversamplingCall()
+    {
+        TextRuntime textRuntime = new();
+
+        var text = (Text)textRuntime.RenderableComponent;
+
+        text.OnPreRender.ShouldNotBeNull(
+            "because the automatic per-frame oversampling trigger must be wired by construction, " +
+            "not only as a side effect of manually calling RegenerateOversampledFont/UpdateAutomaticFontOversampling");
+    }
+
     [Fact]
     public void RegenerateOversampledFont_WhenEnabledWithCreator_RegeneratesAtOversampledSizeAndLeavesFontScaleUntouched()
     {

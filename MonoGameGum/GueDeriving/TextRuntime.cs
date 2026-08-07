@@ -1129,6 +1129,14 @@ public class TextRuntime : InteractiveGue
 #if !RAYLIB && !SKIA
             textRenderable.RenderBoundary = false;
 #endif
+#if XNALIKE || RAYLIB
+            // Issue #4330 (manual-test finding): this must be wired here, not left to ContainedText's
+            // lazy-init getter -- the field is assigned directly on the next line (not through that
+            // property), so the getter's "if (_containedText == null)" branch never runs again once a
+            // TextRuntime is constructed, and the automatic per-frame oversampling trigger (#4317)
+            // silently never engages for any normally-constructed instance.
+            textRenderable.OnPreRender = UpdateAutomaticFontOversampling;
+#endif
             _containedText = textRenderable;
 
             SetContainedObject(textRenderable);

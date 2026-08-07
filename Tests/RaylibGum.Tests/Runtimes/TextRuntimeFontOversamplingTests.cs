@@ -18,6 +18,25 @@ namespace RaylibGum.Tests.Runtimes;
 // hand-crafting a fake Raylib_cs.Font (native Recs/Glyphs pointer arrays) is impractical from managed test code.
 public class TextRuntimeFontOversamplingTests : BaseTestClass
 {
+    // Issue #4330 (manual-test finding, MonoGame side -- same bug mirrored here since Raylib's
+    // TextRuntime constructor follows the identical pattern): the automatic per-frame trigger never
+    // engaged in a real running game. Root cause: the constructor assigns the backing field directly
+    // (_containedText = textRenderable) instead of going through the ContainedText PROPERTY, whose
+    // lazy-init getter was the only place OnPreRender ever got wired. Every existing test called
+    // RegenerateOversampledFont/UpdateAutomaticFontOversampling directly, never exercising the real
+    // OnPreRender path, which is how this survived unnoticed on both platforms.
+    [Fact]
+    public void Constructor_WiresOnPreRenderForAutomaticOversampling_WithoutAnyExplicitOversamplingCall()
+    {
+        TextRuntime textRuntime = new();
+
+        var text = (Text)textRuntime.RenderableComponent;
+
+        text.OnPreRender.ShouldNotBeNull(
+            "because the automatic per-frame oversampling trigger must be wired by construction, " +
+            "not only as a side effect of manually calling RegenerateOversampledFont/UpdateAutomaticFontOversampling");
+    }
+
     [Fact]
     public void RegenerateOversampledFont_WhenEnabledWithCreator_RegeneratesAtOversampledSizeAndLeavesFontScaleUntouched()
     {
