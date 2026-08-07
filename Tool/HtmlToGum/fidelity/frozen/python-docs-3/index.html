@@ -1,0 +1,408 @@
+<!DOCTYPE html><html lang="en" data-content_root="./"><head><base href="https://docs.python.org/3/">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>3.14.7 Documentation</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3">
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=234b1a7c">
+    <link rel="stylesheet" type="text/css" href="_static/pydoctheme.css?v=4365c8fe">
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="_static/pygments_dark.css?v=5349f25f">
+    
+    <script src="_static/documentation_options.js?v=2f7d2144"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <script src="_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml" title="Search within Python 3.14.7 documentation" href="_static/opensearch.xml">
+    <link rel="author" title="About these documents" href="about.html">
+    <link rel="index" title="Index" href="genindex.html">
+    <link rel="search" title="Search" href="search.html">
+    <link rel="copyright" title="Copyright" href="copyright.html">
+    
+      
+      <script defer="" file-types="bz2,epub,zip" data-domain="docs.python.org" src="https://analytics.python.org/js/script.file-downloads.outbound-links.js"></script>
+      
+      <link rel="canonical" href="https://docs.python.org/3/index.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="_static/py.svg">
+            <script type="text/javascript" src="_static/copybutton.js"></script>
+            <script type="text/javascript" src="_static/menu.js"></script>
+            <script type="text/javascript" src="_static/search-focus.js"></script>
+            <script type="text/javascript" src="_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+    <meta property="og:title" content="Python 3.14 documentation">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://docs.python.org/3/">
+    <meta property="og:site_name" content="Python documentation">
+    <meta property="og:description" content="The official Python documentation.">
+    <meta property="og:image" content="https://docs.python.org/3/_static/og-image.png">
+    <meta name="description" content="The official Python documentation.">
+    <meta property="og:image:width" content="200">
+    <meta property="og:image:height" content="200">
+    <meta name="theme-color" content="#3776ab">
+    <style>
+      .contentstable {
+        display: grid;
+        gap: 0 2em;
+        grid-template-columns: 1fr 1fr;
+        margin: 0 auto;
+        max-width: 90%;
+      }
+      .contentstable ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .contentstable a {
+        text-decoration: none;
+      }
+      .contentstable a:hover {
+        text-decoration: underline;
+      }
+      .contentstable li.biglink {
+        line-height: 150%;
+        margin-bottom: 1em;
+      }
+      @media (max-width: 600px) {
+        .contentstable {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation" aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"><select class="version-select" aria-label="Python version"><option value="3.16">dev (3.16)</option><option value="3.15">pre (3.15)</option><option value="3.14">3.14.7</option><option value="3.13">3.13</option><option value="3.12">3.12</option><option value="3.11">3.11</option><option value="3.10">3.10</option><option value="3.9">3.9</option><option value="3.8">3.8</option><option value="3.7">3.7</option><option value="3.6">3.6</option><option value="3.5">3.5</option><option value="3.4">3.4</option><option value="3.3">3.3</option><option value="3.2">3.2</option><option value="3.1">3.1</option><option value="3.0">3.0</option><option value="2.7">2.7</option><option value="2.6">2.6</option></select></span>
+            <form role="search" class="search" action="search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="Quick search" aria-label="Quick search" type="search" name="q">
+                <input type="submit" value="Go">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation" tabindex="-1">
+            <div class="language_switcher_placeholder"><select class="language-select" aria-label="Language"><option value="el">Greek | Ελληνικά</option><option value="en">English</option><option value="es">Spanish | español</option><option value="fr">French | français</option><option value="it">Italian | italiano</option><option value="ja">Japanese | 日本語</option><option value="ko">Korean | 한국어</option><option value="pl">Polish | polski</option><option value="pt-br">Brazilian Portuguese | Português brasileiro</option><option value="ro">Romanian | Românește</option><option value="tr">Turkish | Türkçe</option><option value="zh-cn">Simplified Chinese | 简体中文</option><option value="zh-tw">Traditional Chinese | 繁體中文</option></select></div>
+            
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected="">Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label><h3>Download</h3>
+<p><a href="download.html">Download these documents</a></p>
+<h3>Docs by version</h3>
+<ul>
+  
+  <li><a href="https://docs.python.org/3.16/">Python 3.16 (in development)</a></li>
+<li><a href="https://docs.python.org/3.15/">Python 3.15 (pre-release)</a></li>
+<li><a href="https://docs.python.org/3.14/">Python 3.14 (stable)</a></li>
+<li><a href="https://docs.python.org/3.13/">Python 3.13 (stable)</a></li>
+<li><a href="https://docs.python.org/3.12/">Python 3.12 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.11/">Python 3.11 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.10/">Python 3.10 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.9/">Python 3.9 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.8/">Python 3.8 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.7/">Python 3.7 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.6/">Python 3.6 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.5/">Python 3.5 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.4/">Python 3.4 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.3/">Python 3.3 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.2/">Python 3.2 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.1/">Python 3.1 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.0/">Python 3.0 (EOL)</a></li>
+<li><a href="https://docs.python.org/2.7/">Python 2.7 (EOL)</a></li>
+<li><a href="https://docs.python.org/2.6/">Python 2.6 (EOL)</a></li>
+  <li><a href="https://www.python.org/doc/versions/">All versions</a></li>
+</ul>
+<h3>Other resources</h3>
+<ul>
+  
+  <li><a href="https://peps.python.org/">PEP Index</a></li>
+  <li><a href="https://wiki.python.org/moin/BeginnersGuide">Beginner's Guide</a></li>
+  <li><a href="https://wiki.python.org/moin/PythonBooks">Book List</a></li>
+  <li><a href="https://www.python.org/doc/av/">Audio/Visual Talks</a></li>
+  <li><a href="https://devguide.python.org/">Python Developer’s Guide</a></li>
+</ul>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index" accesskey="I">index</a></li>
+        <li class="right">
+          <a href="py-modindex.html" title="Python Module Index">modules</a> |</li>
+
+          <li><img src="_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> »</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"><select class="language-select" aria-label="Language"><option value="el">Greek | Ελληνικά</option><option value="en">English</option><option value="es">Spanish | español</option><option value="fr">French | français</option><option value="it">Italian | italiano</option><option value="ja">Japanese | 日本語</option><option value="ko">Korean | 한국어</option><option value="pl">Polish | polski</option><option value="pt-br">Brazilian Portuguese | Português brasileiro</option><option value="ro">Romanian | Românește</option><option value="tr">Turkish | Türkçe</option><option value="zh-cn">Simplified Chinese | 简体中文</option><option value="zh-tw">Traditional Chinese | 繁體中文</option></select></div>
+            <div class="version_switcher_placeholder"><select class="version-select" aria-label="Python version"><option value="3.16">dev (3.16)</option><option value="3.15">pre (3.15)</option><option value="3.14">3.14.7</option><option value="3.13">3.13</option><option value="3.12">3.12</option><option value="3.11">3.11</option><option value="3.10">3.10</option><option value="3.9">3.9</option><option value="3.8">3.8</option><option value="3.7">3.7</option><option value="3.6">3.6</option><option value="3.5">3.5</option><option value="3.4">3.4</option><option value="3.3">3.3</option><option value="3.2">3.2</option><option value="3.1">3.1</option><option value="3.0">3.0</option><option value="2.7">2.7</option><option value="2.6">2.6</option></select></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="#">3.14.7 Documentation</a> »
+    </li>
+
+        <li class="nav-item nav-item-this"><a href=""></a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="search.html" method="get">
+          <input placeholder="Quick search" aria-label="Quick search" type="search" name="q" id="search-box">
+          <input type="submit" value="Go">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected="">Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Python 3.14.7 documentation</h1>
+  <p>
+  Welcome! This is the official documentation for Python 3.14.7.
+  </p>
+  <p><strong>Documentation sections:</strong></p>
+  <div class="contentstable">
+    <ul>
+      <li class="biglink"><a class="biglink" href="whatsnew/3.14.html">What's new in Python 3.14?</a><br>
+         <span class="linkdescr"> Or <a href="whatsnew/index.html">all "What's new" documents since Python 2.0</a></span></li>
+      <li class="biglink"><a class="biglink" href="tutorial/index.html">Tutorial</a><br>
+         <span class="linkdescr">Start here: a tour of Python's syntax and features</span></li>
+      <li class="biglink"><a class="biglink" href="library/index.html">Library reference</a><br>
+         <span class="linkdescr">Standard library and builtins</span></li>
+      <li class="biglink"><a class="biglink" href="reference/index.html">Language reference</a><br>
+         <span class="linkdescr">Syntax and language elements</span></li>
+      <li class="biglink"><a class="biglink" href="using/index.html">Python setup and usage</a><br>
+         <span class="linkdescr">How to install, configure, and use Python</span></li>
+      <li class="biglink"><a class="biglink" href="howto/index.html">Python HOWTOs</a><br>
+         <span class="linkdescr">In-depth topic manuals</span></li>
+    </ul>
+    <ul>
+      <li class="biglink"><a class="biglink" href="installing/index.html">Installing Python modules</a><br>
+         <span class="linkdescr">Third-party modules and PyPI.org</span></li>
+      <li class="biglink"><a class="biglink" href="extending/index.html">Extending and embedding</a><br>
+         <span class="linkdescr">For C/C++ programmers</span></li>
+      <li class="biglink"><a class="biglink" href="c-api/index.html">Python's C API</a><br>
+         <span class="linkdescr">C API reference</span></li>
+      <li class="biglink"><a class="biglink" href="faq/index.html">FAQs</a><br>
+         <span class="linkdescr">Frequently asked questions (with answers!)</span></li>
+      <li class="biglink"><a class="biglink" href="deprecations/index.html">Deprecations</a><br>
+         <span class="linkdescr">Deprecated functionality</span></li>
+    </ul>
+  </div>
+
+  <p><strong>Other resources:</strong></p>
+  <div class="contentstable">
+    <ul>
+      <li class="biglink"><a class="biglink" href="https://packaging.python.org">Python Packaging User Guide</a><br>
+         <span class="linkdescr">Resources relating to Python packaging</span></li>
+    </ul>
+    <ul>
+      <li class="biglink"><a class="biglink" href="https://typing.python.org">Static Typing with Python</a><br>
+         <span class="linkdescr">Information and guides about Python type safety</span></li>
+    </ul>
+  </div>
+
+  <p><strong>Indices, glossary, and search:</strong></p>
+  <div class="contentstable">
+    <ul>
+      <li class="biglink"><a class="biglink" href="py-modindex.html">Global module index</a><br>
+         <span class="linkdescr">All modules and libraries</span></li>
+      <li class="biglink"><a class="biglink" href="genindex.html">General index</a><br>
+         <span class="linkdescr">All functions, classes, and terms</span></li>
+      <li class="biglink"><a class="biglink" href="glossary.html">Glossary</a><br>
+         <span class="linkdescr">Terms explained</span></li>
+    </ul>
+    <ul>
+      <li class="biglink"><a class="biglink" href="search.html">Search page</a><br>
+         <span class="linkdescr">Search this documentation</span></li>
+      <li class="biglink"><a class="biglink" href="contents.html">Complete table of contents</a><br>
+         <span class="linkdescr">All sections and subsections</span></li>
+    </ul>
+  </div>
+
+  <p><strong>Project information:</strong></p>
+  <div class="contentstable">
+    <ul>
+      <li class="biglink"><a class="biglink" href="bugs.html">Reporting issues</a></li>
+      <li class="biglink"><a class="biglink" href="https://devguide.python.org/documentation/help-documenting/">Contributing to docs</a></li>
+      <li class="biglink"><a class="biglink" href="download.html">Download the documentation</a></li>
+    </ul>
+    <ul>
+      <li class="biglink"><a class="biglink" href="license.html">History and license of Python</a></li>
+      <li class="biglink"><a class="biglink" href="copyright.html">Copyright</a></li>
+      <li class="biglink"><a class="biglink" href="about.html">About the documentation</a></li>
+    </ul>
+  </div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper"><h3>Download</h3>
+<p><a href="download.html">Download these documents</a></p>
+<h3>Docs by version</h3>
+<ul>
+  
+  <li><a href="https://docs.python.org/3.16/">Python 3.16 (in development)</a></li>
+<li><a href="https://docs.python.org/3.15/">Python 3.15 (pre-release)</a></li>
+<li><a href="https://docs.python.org/3.14/">Python 3.14 (stable)</a></li>
+<li><a href="https://docs.python.org/3.13/">Python 3.13 (stable)</a></li>
+<li><a href="https://docs.python.org/3.12/">Python 3.12 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.11/">Python 3.11 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.10/">Python 3.10 (security-fixes)</a></li>
+<li><a href="https://docs.python.org/3.9/">Python 3.9 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.8/">Python 3.8 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.7/">Python 3.7 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.6/">Python 3.6 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.5/">Python 3.5 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.4/">Python 3.4 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.3/">Python 3.3 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.2/">Python 3.2 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.1/">Python 3.1 (EOL)</a></li>
+<li><a href="https://docs.python.org/3.0/">Python 3.0 (EOL)</a></li>
+<li><a href="https://docs.python.org/2.7/">Python 2.7 (EOL)</a></li>
+<li><a href="https://docs.python.org/2.6/">Python 2.6 (EOL)</a></li>
+  <li><a href="https://www.python.org/doc/versions/">All versions</a></li>
+</ul>
+<h3>Other resources</h3>
+<ul>
+  
+  <li><a href="https://peps.python.org/">PEP Index</a></li>
+  <li><a href="https://wiki.python.org/moin/BeginnersGuide">Beginner's Guide</a></li>
+  <li><a href="https://wiki.python.org/moin/PythonBooks">Book List</a></li>
+  <li><a href="https://www.python.org/doc/av/">Audio/Visual Talks</a></li>
+  <li><a href="https://devguide.python.org/">Python Developer’s Guide</a></li>
+</ul>
+        </div>
+<div id="sidebarbutton" title="Collapse sidebar">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index">index</a></li>
+        <li class="right">
+          <a href="py-modindex.html" title="Python Module Index">modules</a> |</li>
+
+          <li><img src="_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> »</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"><select class="language-select" aria-label="Language"><option value="el">Greek | Ελληνικά</option><option value="en">English</option><option value="es">Spanish | español</option><option value="fr">French | français</option><option value="it">Italian | italiano</option><option value="ja">Japanese | 日本語</option><option value="ko">Korean | 한국어</option><option value="pl">Polish | polski</option><option value="pt-br">Brazilian Portuguese | Português brasileiro</option><option value="ro">Romanian | Românește</option><option value="tr">Turkish | Türkçe</option><option value="zh-cn">Simplified Chinese | 简体中文</option><option value="zh-tw">Traditional Chinese | 繁體中文</option></select></div>
+            <div class="version_switcher_placeholder"><select class="version-select" aria-label="Python version"><option value="3.16">dev (3.16)</option><option value="3.15">pre (3.15)</option><option value="3.14">3.14.7</option><option value="3.13">3.13</option><option value="3.12">3.12</option><option value="3.11">3.11</option><option value="3.10">3.10</option><option value="3.9">3.9</option><option value="3.8">3.8</option><option value="3.7">3.7</option><option value="3.6">3.6</option><option value="3.5">3.5</option><option value="3.4">3.4</option><option value="3.3">3.3</option><option value="3.2">3.2</option><option value="3.1">3.1</option><option value="3.0">3.0</option><option value="2.7">2.7</option><option value="2.6">2.6</option></select></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="#">3.14.7 Documentation</a> »
+    </li>
+
+        <li class="nav-item nav-item-this"><a href=""></a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="search.html" method="get">
+          <input placeholder="Quick search" aria-label="Quick search" type="search" name="q" id="search-box">
+          <input type="submit" value="Go">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected="">Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    © <a href="copyright.html">Copyright</a> 2001 Python Software Foundation.
+    <br>
+    This page is licensed under the Python Software Foundation License Version 2.
+    <br>
+    Examples, recipes, and other code in the documentation are additionally licensed under the Zero Clause BSD License.
+    <br>
+    
+      See <a href="/license.html">History and License</a> for more information.<br>
+    
+    
+    <br>
+
+    The Python Software Foundation is a non-profit corporation.
+<a href="https://www.python.org/psf/donations/">Please donate.</a>
+<br>
+    <br>
+      Last updated on Aug 05, 2026 (15:22 UTC).
+    
+      <a href="/bugs.html">Found a bug</a>?
+    
+    <br>
+
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    </div>
+
+    <script type="text/javascript" src="_static/switchers.js"></script>
+  
+</body></html>

@@ -1,0 +1,158 @@
+{
+  "viewport": {
+    "width": 800,
+    "height": 900
+  },
+  "defaults": {
+    "maxPct": 5,
+    "maxDeltaPct": 2
+  },
+  "local": [
+    {
+      "id": "white-canvas",
+      "html": "../samples/features/white-canvas.html",
+      "selector": "body",
+      "width": 800,
+      "height": 400,
+      "baselinePct": 0,
+      "maxPct": 3,
+      "maxDeltaPct": 1.5,
+      "landmine": "transparent html/body must paint white canvas"
+    },
+    {
+      "id": "fixed-cookie-header",
+      "html": "../samples/features/fixed-cookie-header.html",
+      "selector": "body",
+      "width": 800,
+      "height": 600,
+      "baselinePct": 0,
+      "maxPct": 4,
+      "maxDeltaPct": 1.5,
+      "landmine": "position:fixed nested in painted header must not inflate backdrop"
+    },
+    {
+      "id": "bg-size-auto-banner",
+      "html": "../samples/features/bg-size-auto-banner.html",
+      "selector": "body",
+      "width": 800,
+      "height": 200,
+      "baselinePct": 3.34,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "background-size:auto + position natural placement"
+    },
+    {
+      "id": "pre-code-block",
+      "html": "../samples/features/pre-code-block.html",
+      "selector": "body",
+      "width": 800,
+      "height": 280,
+      "baselinePct": 1.25,
+      "maxPct": 4,
+      "maxDeltaPct": 1.5,
+      "landmine": "multi-line pre/code must keep Chromium line breaks"
+    }
+  ],
+  "frozen": [
+    {
+      "id": "mdn-background-size",
+      "html": "./frozen/mdn-background-size/index.html",
+      "selector": "body",
+      "baselinePct": 12.49,
+      "maxPct": 15,
+      "maxDeltaPct": 2,
+      "landmine": "MDN CSS docs layout (frozen); delta gate — fonts incomplete offline"
+    },
+    {
+      "id": "python-docs-3",
+      "html": "./frozen/python-docs-3/index.html",
+      "selector": "body",
+      "baselinePct": 5.18,
+      "maxPct": 8,
+      "maxDeltaPct": 2,
+      "landmine": "Python docs home (frozen)"
+    }
+  ],
+  "live": [
+    {
+      "id": "spacejam",
+      "url": "https://www.spacejam.com/1996/jam.htm",
+      "baselinePct": 1.16,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "tiled bg, table bevel, BitmapFont spill"
+    },
+    {
+      "id": "hn",
+      "url": "https://news.ycombinator.com/",
+      "baselinePct": 0.1,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "wide system-font prose must stay structured Text"
+    },
+    {
+      "id": "wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Main_Page",
+      "baselinePct": 1.15,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "dense multi-column; empty-content ::before overlays"
+    },
+    {
+      "id": "pastebin",
+      "url": "https://pastebin.com/TLzWRTet",
+      "baselinePct": 0.65,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "monospace / simple chrome"
+    },
+    {
+      "id": "teamliquid",
+      "url": "https://www.teamliquid.net/",
+      "baselinePct": 3.71,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "background-size:auto banner, narrow wrap links, carousel stabilize"
+    },
+    {
+      "id": "pocket",
+      "url": "https://getpocket.com/a/queue/list/",
+      "baselinePct": 3.83,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "custom web-font multi-line raster"
+    },
+    {
+      "id": "owasp",
+      "url": "https://owasp.org/www-project-top-ten/",
+      "baselinePct": 4.12,
+      "maxPct": 5,
+      "maxDeltaPct": 2,
+      "landmine": "white canvas + nested fixed cookie under header"
+    },
+    {
+      "id": "mdn",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/background-size",
+      "baselinePct": 17.61,
+      "maxPct": 22,
+      "maxDeltaPct": 2,
+      "landmine": "MDN CSS reference (KORE replacement — docs chrome); delta gate"
+    },
+    {
+      "id": "python-docs",
+      "url": "https://docs.python.org/3/",
+      "baselinePct": 5.18,
+      "maxPct": 15,
+      "maxDeltaPct": 2,
+      "landmine": "Sphinx docs layout"
+    },
+    {
+      "id": "go-dev",
+      "url": "https://go.dev/",
+      "baselinePct": 7.55,
+      "maxPct": 15,
+      "maxDeltaPct": 2,
+      "landmine": "modern marketing/docs hybrid"
+    }
+  ]
+}

@@ -8,6 +8,8 @@
 import type {
   BoxNode, MappedScreen, NineSliceInfo, ResponsiveMap,
 } from './types.js';
+import { resolveCssFontFamily } from './fonts.js';
+import { formsBaseType, emitFormsControlVars } from './forms.js';
 
 // ---- Gum enum values (see ai-reference/gum-xml-format.md) --------------------
 const CL = {
@@ -88,7 +90,7 @@ export function parseColor(str) {
 const isTransparent = (c) => !c || c.a === 0;
 const isBold = (w) => w === 'bold' || w === 'bolder' || parseInt(w, 10) >= 600;
 const isItalic = (s) => s === 'italic' || s === 'oblique';
-const firstFont = (fam) => (fam || '').split(',')[0].replace(/["']/g, '').trim();
+const firstFont = (fam) => resolveCssFontFamily(fam);
 
 // Tags whose only visual effect (once background/border/shadow/padding is ruled out) is a
 // font weight/style/color change — safe to fold into one Text via BBCode markup instead of
@@ -289,13 +291,6 @@ function specifiedPercent(style, axisName) {
   const raw = axisName === 'Width' ? style.widthSpecified : style.heightSpecified;
   const m = String(raw || '').trim().match(/^([\d.]+)\s*%$/);
   return m ? parseFloat(m[1]) : null;
-}
-
-/** Paint order: ascending z-index, stable by DOM index. Path keys still use DOM index. */
-function childrenInPaintOrder(node) {
-  return node.children
-    .map((c, domIndex) => ({ c, domIndex, z: c.style.zIndex || 0 }))
-    .sort((a, b) => (a.z - b.z) || (a.domIndex - b.domIndex));
 }
 
 // Computed box-shadow: "<color> <offsetX>px <offsetY>px <blur>px <spread>px[, ...]"
@@ -742,6 +737,140 @@ function wantsCoverCrop(style) {
 }
 
 /**
+ * CSS `background-size: <length>` / `auto` / `contain` + `no-repeat` paints the image at a
+ * resolved size and `background-position`, NOT stretched to the box (KORE logo
+ * `background-size: 100px`, TL banner `auto` + `50% 0%`). Gum's default EntireTexture +
+ * fillParent stretches — return Absolute place/size for the Sprite instead, or null
+ * to keep cover/tile/% paths.
+ *
+ * @returns {{ x: number, y: number, width: number, height: number } | null}
+ */
+export function resolveBackgroundImageLayout(style, naturalWidth, naturalHeight, boxWidth, boxHeight) {
+  if (naturalWidth <= 0 || naturalHeight <= 0 || boxWidth <= 0 || boxHeight <= 0) return null;
+  const repeat = String(style.backgroundRepeat || 'repeat').trim().toLowerCase();
+  if (repeat !== 'no-repeat') return null;
+
+  const sizeRaw = String(style.backgroundSize || 'auto').trim();
+  const sizeToks = sizeRaw.split(/\s+/);
+  const size0 = (sizeToks[0] || 'auto').toLowerCase();
+  if (size0 === 'cover') return null;
+
+  function resolveSize(tok, basis) {
+    if (tok == null || tok === 'auto') return null;
+    if (tok.endsWith('%')) return (parseFloat(tok) / 100) * basis;
+    if (tok.endsWith('px')) return parseFloat(tok);
+    return undefined;
+  }
+
+  let imgWidth;
+  let imgHeight;
+  if (size0 === 'contain') {
+    const scale = Math.min(boxWidth / naturalWidth, boxHeight / naturalHeight);
+    imgWidth = naturalWidth * scale;
+    imgHeight = naturalHeight * scale;
+  } else if (size0 === 'auto' && (sizeToks.length < 2 || sizeToks[1].toLowerCase() === 'auto')) {
+    // CSS default: intrinsic size + background-position (TL header banner `auto` + `50% 0%`).
+    // Do not stretch — that was the old fallback and darkens/distorts centered banners.
+    imgWidth = naturalWidth;
+    imgHeight = naturalHeight;
+  } else {
+    // Explicit px lengths (KORE logo/hero). Percentage-only sizes stay on stretch-to-fill.
+    if (!sizeToks.some((t) => /px$/i.test(t))) return null;
+    const wTok = resolveSize(sizeToks[0], boxWidth);
+    const hTok = resolveSize(sizeToks[1], boxHeight);
+    if (wTok === undefined || hTok === undefined) return null;
+    if (wTok == null && hTok == null) return null;
+    if (hTok == null) {
+      imgWidth = wTok;
+      imgHeight = naturalHeight * (imgWidth / naturalWidth);
+    } else if (wTok == null) {
+      imgHeight = hTok;
+      imgWidth = naturalWidth * (imgHeight / naturalHeight);
+    } else {
+      imgWidth = wTok;
+      imgHeight = hTok;
+    }
+  }
+  if (!(imgWidth > 0) || !(imgHeight > 0)) return null;
+
+  function resolvePos(tok, basis, imgSize) {
+    if (tok == null) return 0;
+    if (tok.endsWith('%')) return (basis - imgSize) * (parseFloat(tok) / 100);
+    if (tok.endsWith('px')) return parseFloat(tok);
+    if (tok === 'left' || tok === 'top') return 0;
+    if (tok === 'center') return (basis - imgSize) / 2;
+    if (tok === 'right' || tok === 'bottom') return basis - imgSize;
+    return undefined;
+  }
+
+  const posToks = (style.backgroundPosition || '0% 0%').trim().split(/\s+/);
+  const posX = resolvePos(posToks[0], boxWidth, imgWidth);
+  const posY = resolvePos(posToks[1] ?? posToks[0], boxHeight, imgHeight);
+  if (posX === undefined || posY === undefined) return null;
+
+  return {
+    x: Math.round(posX),
+    y: Math.round(posY),
+    width: Math.round(imgWidth),
+    height: Math.round(imgHeight),
+  };
+}
+
+/**
+ * CSS `background-repeat` (default `repeat`) → Gum Sprite Wrap + DimensionsBased.
+ * Skip when the author asked for a single stretched/cropped image (`no-repeat`,
+ * `background-size: cover|contain`, or percentage sizes that fill the box).
+ */
+function wantsTiledBackground(style) {
+  if (!style) return false;
+  const repeat = String(style.backgroundRepeat || 'repeat').trim().toLowerCase();
+  if (!repeat || repeat === 'no-repeat') return false;
+  const sizeToks = String(style.backgroundSize || 'auto').trim().toLowerCase().split(/\s+/);
+  const size0 = sizeToks[0] || 'auto';
+  if (size0 === 'cover' || size0 === 'contain') return false;
+  // `100%` / `100% 100%` stretch-to-fill — not a repeating tile.
+  if (sizeToks.length >= 1 && sizeToks.every((t) => t.endsWith('%') && parseFloat(t) >= 100)) {
+    return false;
+  }
+  return /^(repeat|repeat-x|repeat-y|space|round)(\s|$)/.test(repeat)
+    || repeat.split(/\s+/).some((t) => t === 'repeat' || t === 'repeat-x' || t === 'repeat-y'
+      || t === 'space' || t === 'round');
+}
+
+/**
+ * Extra px to grow a painted backdrop so BitmapFont glyphs that spill past Chromium's
+ * tighter line-box still sit on the background (Space Jam copyright under body stars).
+ */
+function textOverflowPad(node) {
+  const boxBottom = node.rect.y + node.rect.height;
+  let pad = 0;
+  function visit(n, isRoot) {
+    // Out-of-flow descendants (position:fixed cookie banners, absolute popovers) paint at
+    // their own viewport coordinates and are NOT part of an ancestor's content box. A fixed
+    // banner nested in <header> would otherwise stretch the header's painted backdrop from
+    // ~159px to the banner's y-offset (OWASP #disclaimer-container → whole page tinted).
+    if (!isRoot && n.style
+      && (n.style.position === 'fixed' || n.style.position === 'absolute')) return;
+    if (n.text && n.style && n.style.fontSize > 0) {
+      const lines = Math.max(1, n.lineCount || 1);
+      // Gum BitmapFont line boxes run taller than CSS; ~1.35× font-size per line is a
+      // conservative lower bound seen across Arial/Times imports.
+      const guess = Math.round(n.style.fontSize * 1.35 * lines);
+      const spill = Math.max(0, guess - Math.round(n.rect.height));
+      pad = Math.max(pad, (n.rect.y + n.rect.height + spill) - boxBottom);
+    }
+    for (const c of n.children || []) visit(c, false);
+  }
+  visit(node, true);
+  return Math.max(0, Math.ceil(pad));
+}
+
+function backdropHeight(node) {
+  const base = Math.round(node.rect.height);
+  return hasVisualStyling(node.style) ? base + textOverflowPad(node) : base;
+}
+
+/**
  * Build the instance list + variable list for a box tree.
  * @param {Map<string,string>} assetMap Downloaded-image URL -> relative SourceFile path
  *   (see convert.mjs's downloadImages). Nodes whose image URL isn't in the map (download
@@ -768,6 +897,7 @@ export function mapTreeToScreen(
   fontMap: Map<string, string> | null = null,
   nineSliceMap: Map<string, NineSliceInfo> | null = null,
   assetSizeMap: Map<string, { width: number, height: number }> | null = null,
+  formsEnabled = true,
 ): MappedScreen {
   const namer = makeNamer();
   const instances = [];
@@ -858,6 +988,58 @@ export function mapTreeToScreen(
     variables.push(
       VDIM(`${name}.WidthUnits`, DIM.RelativeToParent), VF(`${name}.Width`, 0),
       VDIM(`${name}.HeightUnits`, DIM.RelativeToParent), VF(`${name}.Height`, 0),
+    );
+  }
+
+  /**
+   * Size/place a background Sprite from CSS background-size + background-position when
+   * resolveBackgroundImageLayout says not to stretch; otherwise fillParent + emitSpriteSource.
+   */
+  function emitBackgroundSprite(sprName, node, { allowCanvasTileOffset = false } = {}) {
+    const layout = resolveBackgroundImageLayout(
+      node.style, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height,
+    );
+    if (layout) {
+      variables.push(
+        VF(`${sprName}.X`, layout.x),
+        VF(`${sprName}.Y`, layout.y),
+        VDIM(`${sprName}.WidthUnits`, DIM.Absolute), VF(`${sprName}.Width`, layout.width),
+        VDIM(`${sprName}.HeightUnits`, DIM.Absolute), VF(`${sprName}.Height`, layout.height),
+      );
+      const url = parseBackgroundImageUrl(node.style.backgroundImage);
+      const asset = url && assetMap.get(url);
+      if (asset) variables.push(VS(`${sprName}.SourceFile`, asset));
+      else {
+        warnings.push(`"${sprName}" (${node.tag}) background-size placement had no downloaded asset.`);
+      }
+      return;
+    }
+    if (allowCanvasTileOffset && wantsTiledBackground(node.style)) {
+      fillParentCanvasTiledBackground(sprName, node);
+    } else {
+      fillParent(sprName);
+    }
+    const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
+    emitSpriteSource(sprName, fakeNode, { asBackground: true });
+  }
+
+  /**
+   * Root/body CSS backgrounds paint on the canvas and tile from the viewport origin,
+   * not the margin-box top-left. Body's default 8px margin (Space Jam) otherwise shifts
+   * Wrap tiles by that amount vs Chromium. Offset + grow the sprite so tile phase matches.
+   */
+  function fillParentCanvasTiledBackground(name, node) {
+    const ox = Math.round(node.rect.x) || 0;
+    const oy = Math.round(node.rect.y) || 0;
+    if (ox === 0 && oy === 0) {
+      fillParent(name);
+      return;
+    }
+    variables.push(
+      VF(`${name}.X`, -ox),
+      VF(`${name}.Y`, -oy),
+      VDIM(`${name}.WidthUnits`, DIM.RelativeToParent), VF(`${name}.Width`, ox),
+      VDIM(`${name}.HeightUnits`, DIM.RelativeToParent), VF(`${name}.Height`, oy),
     );
   }
 
@@ -998,7 +1180,7 @@ export function mapTreeToScreen(
     if (vert != null) variables.push(v('VerticalAlignment', `${name}.VerticalAlignment`, 'xsd:int', vert));
   }
 
-  function emitSpriteSource(name, node) {
+  function emitSpriteSource(name, node, { asBackground = false } = {}) {
     const s = node.style;
     const url = node.rasterSrc || node.imgSrc || parseBackgroundImageUrl(s.backgroundImage);
     const asset = url && assetMap.get(url);
@@ -1016,6 +1198,13 @@ export function mapTreeToScreen(
           v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 1), // Custom
           VI(`${name}.TextureLeft`, scaled.left), VI(`${name}.TextureTop`, scaled.top),
           VI(`${name}.TextureWidth`, scaled.width), VI(`${name}.TextureHeight`, scaled.height),
+        );
+      } else if (asBackground && wantsTiledBackground(s)) {
+        // CSS background-repeat (default `repeat`) — DimensionsBased + Wrap tiles at
+        // intrinsic size instead of stretching one copy across the box (Space Jam stars).
+        variables.push(
+          v('TextureAddress', `${name}.TextureAddress`, 'xsd:int', 2), // DimensionsBased
+          VB(`${name}.Wrap`, true),
         );
       }
       return true;
@@ -1108,7 +1297,7 @@ export function mapTreeToScreen(
     return JSON.stringify(baseColor) === JSON.stringify(childColor);
   }
 
-  // Folds a block-level text container's same-line inline runs (plain #text plus
+  // Folds a block-level text container's inline runs (plain #text plus
   // <strong>/<b>/<em>/<i>/<a> weight-or-style-only children — e.g. iana.org's "...provided
   // by <a>Public Technical Identifiers</a>, an affiliate of <a>ICANN</a>.") into ONE Text
   // leaf using BBCode markup, instead of one sibling Text per run.
@@ -1121,33 +1310,109 @@ export function mapTreeToScreen(
   // line itself, the same run-by-run measurement it already does for inline BBCode styling
   // (#3520) — self-consistent regardless of how its bitmap font compares to Chromium's.
   //
-  // Only applies when every run sits on the same rendered line (paragraphs that wrap are
-  // left alone — round 1 already handles per-line splitting for a single wrapping #text
-  // node; mixing that with cross-run BBCode wrapping is a separate, untested feature).
+  // Multi-line: cluster runs by Chromium Y and join with `\n` so wrap points stay Chromium's
+  // (Space Jam sitemap table cells: bold "Space Jam" mid-paragraph). Re-wrapping with
+  // BitmapFont metrics would still drift; hardcoded newlines do not.
+  function formatInlineBbCode(c, base, baseStyle) {
+    let piece = c.text;
+    const cf = resolveFontFile(c.style);
+    if (cf.filePath && cf.filePath !== base.filePath) {
+      piece = `[Font=${cf.filePath}]${piece}[/Font]`;
+    } else if (!cf.filePath) {
+      if (isBold(c.style.fontWeight) !== isBold(baseStyle.fontWeight)) {
+        piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
+      }
+      if (isItalic(c.style.fontStyle) !== isItalic(baseStyle.fontStyle)) {
+        piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
+      }
+    }
+    return piece;
+  }
+
   function mergeInlinePhrasingRun(node) {
     if (!node.children || node.children.length < 2) return null;
-    if (!node.children.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
-    const y0 = node.children[0].rect.y;
-    if (!node.children.every((c) => Math.abs(c.rect.y - y0) < 1.5)) return null;
+    // <br> only separates lines — ignore for the "all phrasing" check.
+    const kids = node.children.filter((c) => c.tag !== 'br' && c.tag !== 'wbr');
+    if (kids.length < 2) return null;
+    if (!kids.every((c) => isSimpleInlineStyleChild(c, node.style))) return null;
+
+    const sorted = kids
+      .map((c, i) => ({ c, i }))
+      .sort((a, b) => (a.c.rect.y - b.c.rect.y) || (a.c.rect.x - b.c.rect.x) || (a.i - b.i));
+
+    const lines = [];
+    for (const { c } of sorted) {
+      const last = lines[lines.length - 1];
+      if (last && Math.abs(c.rect.y - last.y) < 1.5) last.runs.push(c);
+      else lines.push({ y: c.rect.y, runs: [c] });
+    }
 
     const base = resolveFontFile(node.style);
-    let text = '';
-    for (const c of node.children) {
-      let piece = c.text;
-      const cf = resolveFontFile(c.style);
-      if (cf.filePath && cf.filePath !== base.filePath) {
-        piece = `[Font=${cf.filePath}]${piece}[/Font]`;
-      } else if (!cf.filePath) {
-        if (isBold(c.style.fontWeight) !== isBold(node.style.fontWeight)) {
-          piece = `[IsBold=${isBold(c.style.fontWeight)}]${piece}[/IsBold]`;
-        }
-        if (isItalic(c.style.fontStyle) !== isItalic(node.style.fontStyle)) {
-          piece = `[IsItalic=${isItalic(c.style.fontStyle)}]${piece}[/IsItalic]`;
-        }
-      }
-      text += piece;
+    const text = lines
+      .map((line) => line.runs.map((c) => formatInlineBbCode(c, base, node.style)).join(''))
+      .join('\n');
+
+    // Union of Chromium glyph boxes — preserves valign=middle offsets inside table cells.
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const c of kids) {
+      minX = Math.min(minX, c.rect.x);
+      minY = Math.min(minY, c.rect.y);
+      maxX = Math.max(maxX, c.rect.x + c.rect.width);
+      maxY = Math.max(maxY, c.rect.y + c.rect.height);
     }
-    return { ...node, text, children: [], lineCount: 1 };
+    const textRect = {
+      x: minX,
+      y: minY,
+      width: Math.max(0, maxX - minX),
+      height: Math.max(0, maxY - minY),
+    };
+
+    // Hosts with their own chrome/padding (td borders, padded labels) must stay Containers
+    // so Absolute children keep Chromium positions. Flattening into the host would put the
+    // Text at the padding-box origin and drop valign=middle (Space Jam sitemap).
+    const hostHasChrome = hasVisualStyling(node.style) || hasPadding(paddingOf(node.style));
+    if (hostHasChrome) {
+      const leafStyle = {
+        ...node.style,
+        borderTopWidth: 0,
+        borderRightWidth: 0,
+        borderBottomWidth: 0,
+        borderLeftWidth: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0)',
+        backgroundImage: 'none',
+        boxShadow: 'none',
+        borderTopLeftRadius: 0,
+        needsRaster: false,
+        rasterWholeSubtree: false,
+      };
+      return {
+        ...node,
+        text: '',
+        lineCount: 0,
+        children: [{
+          id: null,
+          tag: '#text',
+          rect: textRect,
+          text,
+          lineCount: lines.length,
+          imgSrc: null,
+          naturalWidth: 0,
+          naturalHeight: 0,
+          rasterSrc: null,
+          style: leafStyle,
+          children: [],
+        }],
+      };
+    }
+
+    return { ...node, text, children: [], lineCount: lines.length };
   }
 
   /** CSS hard text-shadow → black (or tinted) Text stamps behind the face label. */
@@ -1249,12 +1514,37 @@ export function mapTreeToScreen(
   // parentAlignItems is the parent's align-items (cross-axis) for flex stacks.
   function walk(node, parentName, parentOrientation, parentRect, path = [], parentAlignItems = 'stretch', opts = {}) {
     node = mergeInlinePhrasingRun(node) || node;
+
+    // HTML form controls → Gum Forms components (Controls/TextBox, ButtonStandard, …).
+    // Absolute place+size; skip chrome/children so we don't double-emit Rectangle labels.
+    if (formsEnabled) {
+      const formsType = formsBaseType(node.form);
+      if (formsType) {
+        const name = namer.forNode(node);
+        instances.push({ name, baseType: formsType });
+        const vars = emitFormsControlVars(
+          name, node, parentName, parentRect || { x: 0, y: 0 },
+          VS, VF, VDIM, VB, DIM,
+        );
+        for (const vr of vars) variables.push(vr);
+        return name;
+      }
+    }
+
     const kind = classify(node);
     const name = namer.forNode(node);
     // Image with a solid background-color/border (Cerberus broken-image affordance,
     // styled <img>): Sprite has no fill — wrap as Container → underlay Rectangle → Sprite
     // (same backdrop pattern as styled Containers, §8.6/§8.12).
-    const underlay = kind === 'image' && imageNeedsUnderlay(node.style);
+    const underlay = kind === 'image' && (
+      imageNeedsUnderlay(node.style)
+      // background-size: Npx / contain must not stretch a leaf Sprite to the box —
+      // promote to Container + placed Sprite (KORE hero illustration).
+      || (!node.imgSrc && !node.rasterSrc && !!parseBackgroundImageUrl(node.style.backgroundImage)
+        && !!resolveBackgroundImageLayout(
+          node.style, node.naturalWidth, node.naturalHeight, node.rect.width, node.rect.height,
+        ))
+    );
     // Text leaves with background/border/radius (game hotbar slots, chips, badges): Gum
     // Text has no fill — promote to Container → chrome → Text label (DESIGN §8.15).
     const textChrome = kind === 'text' && hasVisualStyling(node.style);
@@ -1289,7 +1579,7 @@ export function mapTreeToScreen(
       // practice the root has no parent to be percentage-relative to and stays Absolute.
       variables.push(VF(`${name}.X`, Math.round(node.rect.x)), VF(`${name}.Y`, Math.round(node.rect.y)));
       emitSizeAxis(sizeKind, name, path, 'Width', node.rect.width, node.style);
-      emitSizeAxis(sizeKind, name, path, 'Height', node.rect.height, node.style);
+      emitSizeAxis(sizeKind, name, path, 'Height', backdropHeight(node), node.style);
     } else {
       variables.push(VS(`${name}.Parent`, parentName));
       if (kind === 'text' && !textWrap) {
@@ -1327,18 +1617,37 @@ export function mapTreeToScreen(
           );
           const hAlign = textAlignHorizontal(node.style);
           const centerOrRight = hAlign === 1 || hAlign === 2;
-          if (node.lineCount > 1 || centerOrRight) {
+          if (node.lineCount > 1) {
             variables.push(
               VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
             );
+          } else if (centerOrRight) {
+            // Single-line center/right: hug width; anchor to Chromium box edge/center.
+            variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
+            if (hAlign === 2) {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x + node.rect.width)),
+                VOH(`${name}.XOrigin`, ORIGIN_H.Right),
+              );
+            } else {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x + node.rect.width / 2)),
+                VOH(`${name}.XOrigin`, ORIGIN_H.Center),
+              );
+            }
           } else {
             variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
           }
           if (!isManagedLayout(parentOrientation)) {
-            variables.push(
-              VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
-              VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
-            );
+            if (centerOrRight && (node.lineCount || 1) <= 1) {
+              // X / XOrigin already set for hug+align above; only pin Y.
+              variables.push(VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)));
+            } else {
+              variables.push(
+                VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
+                VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
+              );
+            }
           }
         }
       } else if (isStackLayout(parentOrientation)) {
@@ -1351,11 +1660,24 @@ export function mapTreeToScreen(
         if (parentOrientation === 'column') {
           emitStackCrossAxis(name, parentOrientation, parentAlignItems, node.rect.width, node.style);
           if (grow > 0) variables.push(VDIM(`${name}.HeightUnits`, DIM.Ratio), VF(`${name}.Height`, Math.round(node.rect.height)));
-          else emitSizeAxis(sizeKind, name, path, 'Height', node.rect.height, node.style);
+          else {
+            // Flex item height:100% resolves against the flex container, but the *used*
+            // size is flex-constrained. Gum PercentageOfParent would take the full parent
+            // (same Absolute-fallback rule as grid items above).
+            variables.push(
+              VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, Math.round(node.rect.height)),
+            );
+          }
         } else {
           emitStackCrossAxis(name, parentOrientation, parentAlignItems, node.rect.height, node.style);
           if (grow > 0) variables.push(VDIM(`${name}.WidthUnits`, DIM.Ratio), VF(`${name}.Width`, Math.round(node.rect.width)));
-          else emitSizeAxis(sizeKind, name, path, 'Width', node.rect.width, node.style);
+          else {
+            // KORE login column: CSS width:100% → Chromium used 384px in a 768px row;
+            // PercentageOfParent 100 made the form column full-width and shifted left.
+            variables.push(
+              VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
+            );
+          }
         }
       } else if (isGridLayout(parentOrientation)) {
         // AutoGrid: each child's "parent" for RelativeToParent is its cell. CSS grid
@@ -1369,14 +1691,38 @@ export function mapTreeToScreen(
         // Always use Chromium's measured px — authored width/height % on grid items is
         // relative to the grid *area* (cell), not the grid container. PercentageOfParent
         // against this parent would stretch items to the full garden (Garden L10 bug).
-        // Keep Chromium Absolute size for the chrome plate; single-line badge labels use
-        // hugWidth (RelativeToChildren) so BitmapFont won't wrap in a tight text box.
+        const hAlign = textAlignHorizontal(node.style);
+        const hugSingleLine = kind === 'text' && !textWrap && (node.lineCount || 1) <= 1;
+        let x = Math.round(node.rect.x - parentRect.x);
+        const y = Math.round(node.rect.y - parentRect.y);
+        if (hugSingleLine && hAlign === 2) {
+          // Right-aligned: hug BitmapFont width but keep Chromium's right edge (TL header
+          // "Liquipedia" is text-align:right in a tight Absolute box).
+          x = Math.round(node.rect.x - parentRect.x + node.rect.width);
+          variables.push(
+            VF(`${name}.X`, x), VF(`${name}.Y`, y),
+            VOH(`${name}.XOrigin`, ORIGIN_H.Right),
+          );
+        } else if (hugSingleLine && hAlign === 1) {
+          x = Math.round(node.rect.x - parentRect.x + node.rect.width / 2);
+          variables.push(
+            VF(`${name}.X`, x), VF(`${name}.Y`, y),
+            VPOS(`${name}.XUnits`, POS.PixelsFromLeft),
+            VOH(`${name}.XOrigin`, ORIGIN_H.Center),
+          );
+        } else {
+          variables.push(VF(`${name}.X`, x), VF(`${name}.Y`, y));
+        }
         variables.push(
-          VF(`${name}.X`, Math.round(node.rect.x - parentRect.x)),
-          VF(`${name}.Y`, Math.round(node.rect.y - parentRect.y)),
-          VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
-          VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, Math.round(node.rect.height)),
+          VDIM(`${name}.HeightUnits`, DIM.Absolute), VF(`${name}.Height`, backdropHeight(node)),
         );
+        if (hugSingleLine) {
+          variables.push(VDIM(`${name}.WidthUnits`, DIM.RelativeToChildren));
+        } else {
+          variables.push(
+            VDIM(`${name}.WidthUnits`, DIM.Absolute), VF(`${name}.Width`, Math.round(node.rect.width)),
+          );
+        }
       }
     }
 
@@ -1395,8 +1741,16 @@ export function mapTreeToScreen(
         const sprName = namer.mint(`${name}Img`);
         instances.push({ name: sprName, baseType: 'Sprite' });
         variables.push(VS(`${sprName}.Parent`, name));
-        fillParent(sprName); // explicit RelativeToParent — Sprite's odd default
-        emitSpriteSource(sprName, node);
+        // Leaf divs styled only via background-image classify as 'image' (Tabler cards,
+        // empty body shells) — still a CSS background, so honor background-size placement.
+        const asBackground = !node.imgSrc && !node.rasterSrc
+          && !!parseBackgroundImageUrl(node.style.backgroundImage);
+        if (asBackground) {
+          emitBackgroundSprite(sprName, node);
+        } else {
+          fillParent(sprName); // explicit RelativeToParent — Sprite's odd default
+          emitSpriteSource(sprName, node, { asBackground: false });
+        }
         applyOpacity('image', sprName, node.style);
       } else if (node.imgSrc || parseBackgroundImageUrl(node.style.backgroundImage)) {
         warnings.push(`"${name}" (${node.tag}) image download failed — showing background-color underlay only.`);
@@ -1413,11 +1767,12 @@ export function mapTreeToScreen(
         const sprName = namer.mint(`${name}Bg`);
         instances.push({ name: sprName, baseType: 'Sprite' });
         variables.push(VS(`${sprName}.Parent`, name));
-        fillParent(sprName);
-        if (rasterAsset) variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
-        else {
+        if (rasterAsset) {
+          fillParent(sprName);
+          variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
+        } else {
           const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-          emitSpriteSource(sprName, fakeNode);
+          emitBackgroundSprite(sprName, fakeNode);
         }
       }
       // Rasterized border-image chrome already includes the frame — don't stack NineSlice.
@@ -1454,7 +1809,11 @@ export function mapTreeToScreen(
         preferCenterVertical: node.lineCount <= 1,
         preferCenterHorizontal: false,
       };
-      emitTextWithHardShadows(name, `${name}Label`, node, hardShadows, textInset, alignOpts);
+      // Same hugWidth as chrome badges — padded nav links (TL Calendar/Streams) must not
+      // wrap BitmapFont inside Chromium's padding-box width.
+      emitTextWithHardShadows(name, `${name}Label`, node, hardShadows, textInset, alignOpts, {
+        hugWidth: (node.lineCount || 1) <= 1,
+      });
       applyOpacity('container', name, node.style);
     } else if (kind === 'rect' && nsSelf) {
       variables.push(VS(`${name}.SourceFile`, nsSelf.sourceFile));
@@ -1524,27 +1883,55 @@ export function mapTreeToScreen(
         }
       }
 
-      function walkKids(parentForKids) {
-        const usePaintOrder = childLayout === 'block';
-        let list = usePaintOrder
-          ? childrenInPaintOrder(node)
-          : node.children.map((c, domIndex) => ({ c, domIndex }));
+      // CSS: z-index < 0 abs paint before in-flow; z-index >= 0 abs after. Gum paints
+      // siblings in instance order, so negative-z abs must be emitted BEFORE *Content
+      // (catfishing watermark z-index:-10 was covering the nav).
+      function partitionManagedChildren() {
+        const absBehind = [];
+        const absFront = [];
+        const flow = [];
+        node.children.forEach((c, domIndex) => {
+          const pos = (c.style.position || 'static').toLowerCase();
+          if (pos === 'absolute' && isManagedLayout(childLayout)) {
+            const z = c.style.zIndex || 0;
+            (z < 0 ? absBehind : absFront).push({ c, domIndex, z });
+            return;
+          }
+          flow.push({ c, domIndex });
+        });
+        const byZ = (a, b) => (a.z - b.z) || (a.domIndex - b.domIndex);
+        absBehind.sort(byZ);
+        absFront.sort(byZ);
+        return { absBehind, absFront, flow };
+      }
 
+      function emitAbsoluteChild({ c, domIndex }) {
+        const pos = (c.style.position || 'static').toLowerCase();
+        if (pos === 'absolute' && isManagedLayout(childLayout)) {
+          warnings.push(
+            `position:absolute under "${name}" → Absolute on outer box, removed from ${childLayout} flow.`,
+          );
+          walk(c, name, 'block', node.rect, [...path, domIndex], 'stretch', opts);
+        }
+      }
+
+      function walkFlowKids(parentForKids, flowList) {
+        let list = flowList.slice();
         if (isStackLayout(childLayout)) {
-          // CSS order (then DOM index). Reverse after sort for *-reverse directions.
           list = list.slice().sort((a, b) => {
             const oa = a.c.style.order || 0;
             const ob = b.c.style.order || 0;
             return (oa - ob) || (a.domIndex - b.domIndex);
           });
           if (reversed) list.reverse();
+        } else if (childLayout === 'block') {
+          list = list
+            .map((item) => ({ ...item, z: item.c.style.zIndex || 0 }))
+            .sort((a, b) => (a.z - b.z) || (a.domIndex - b.domIndex));
         }
 
         const walkOne = ({ c, domIndex }) => {
           const pos = (c.style.position || 'static').toLowerCase();
-          // Out-of-flow: CSS fixed/absolute leave the flex/grid formatting context.
-          // Fixed → screen-top-level (no Parent), viewport Absolute coords (like root).
-          // Absolute → Absolute under the nearest in-tree parent box, out of stack/grid.
           if (pos === 'fixed') {
             warnings.push(
               `position:fixed under "${name}" → emitted as screen-level Absolute (viewport coords), out of flex/grid flow.`,
@@ -1556,17 +1943,6 @@ export function mapTreeToScreen(
             warnings.push(
               `position:sticky under "${name}" — treated as in-flow snapshot (no sticky scrolling).`,
             );
-          }
-          if (pos === 'absolute' && isManagedLayout(childLayout)) {
-            warnings.push(
-              `position:absolute under "${name}" → Absolute on outer box, removed from ${childLayout} flow.`,
-            );
-            // Parent to the OUTER instance (`name`), which uses Regular layout (Bg +
-            // Content). Parenting into *Content would put the node back in the stack/grid.
-            // Position relative to the border box — matches CSS absolute when the
-            // container is the containing block (position:relative/absolute/fixed).
-            walk(c, name, 'block', node.rect, [...path, domIndex], 'stretch', opts);
-            return;
           }
           if (spacerMode && (c.style.flexGrow || 0) > 0) {
             warnings.push(`"${name}" child has flex-grow with justify-content:${justify} — using measured Absolute size; grow+justify together is not fully mapped.`);
@@ -1590,7 +1966,6 @@ export function mapTreeToScreen(
               walkOne(item);
             });
           } else if (spacerMode === 'around') {
-            // End gutters half of between: Ratio 1 — item — 2 — item — 2 — item — 1
             emitRatioSpacer(parentForKids, 'Lead', 1);
             list.forEach((item, i) => {
               if (i > 0) emitRatioSpacer(parentForKids, `Gap${i}`, 2);
@@ -1608,6 +1983,14 @@ export function mapTreeToScreen(
         } else {
           list.forEach(walkOne);
         }
+      }
+
+      /** Emit kids with CSS stacking: z<0 abs → in-flow → z>=0 abs (no Content wrapper). */
+      function walkKidsWithStacking(parentForKids) {
+        const { absBehind, absFront, flow } = partitionManagedChildren();
+        absBehind.forEach(emitAbsoluteChild);
+        walkFlowKids(parentForKids, flow);
+        absFront.forEach(emitAbsoluteChild);
       }
 
       if (hasVisualStyling(node.style)) {
@@ -1646,12 +2029,12 @@ export function mapTreeToScreen(
           const sprName = namer.mint(`${name}Bg`);
           instances.push({ name: sprName, baseType: 'Sprite' });
           variables.push(VS(`${sprName}.Parent`, name));
-          fillParent(sprName);
+          // Root tiled backgrounds: canvas/viewport tile origin (see fillParentCanvasTiledBackground).
           if (rasterAsset) {
+            fillParent(sprName);
             variables.push(VS(`${sprName}.SourceFile`, rasterAsset));
           } else {
-            const fakeNode = { ...node, imgSrc: null, rasterSrc: null };
-            emitSpriteSource(sprName, fakeNode);
+            emitBackgroundSprite(sprName, node, { allowCanvasTileOffset: parentName === null });
           }
           paintedBackdrop = true;
         } else if (!isTransparent(bgColor) || anyBorder(node.style) || styleHasShadowOrRadius(node.style)) {
@@ -1696,6 +2079,11 @@ export function mapTreeToScreen(
           warnings.push(`"${name}" has a background-image that failed to download (${bgImageUrl}) — fell back to its solid-color / NineSlice styling only.`);
         }
 
+        // Negative z-index abs under this flex/grid host must be Gum siblings *before*
+        // Content, or they paint over in-flow chrome (catfishing watermark z-index:-10).
+        const stacked = partitionManagedChildren();
+        stacked.absBehind.forEach(emitAbsoluteChild);
+
         const contentName = namer.mint(`${name}Content`);
         instances.push({ name: contentName, baseType: 'Container' });
         variables.push(VS(`${contentName}.Parent`, name));
@@ -1703,21 +2091,26 @@ export function mapTreeToScreen(
         applyLayoutOrWarn(contentName, node, orientation, childLayout, name);
         // overflow:hidden clips at the border box (outer), not the padding box.
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(contentName);
+        walkFlowKids(contentName, stacked.flow);
+        stacked.absFront.forEach(emitAbsoluteChild);
       } else if (hasPadding(inset) && (isManagedLayout(orientation) || node.children.length > 0)) {
         // Padding/border inset without a painted backdrop: still need an inset content
         // wrapper so flex/grid children don't start at the border-box origin.
+        const stacked = partitionManagedChildren();
+        stacked.absBehind.forEach(emitAbsoluteChild);
+
         const contentName = namer.mint(`${name}Content`);
         instances.push({ name: contentName, baseType: 'Container' });
         variables.push(VS(`${contentName}.Parent`, name));
         fillOrInset(contentName, inset);
         applyLayoutOrWarn(contentName, node, orientation, childLayout, name);
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(contentName);
+        walkFlowKids(contentName, stacked.flow);
+        stacked.absFront.forEach(emitAbsoluteChild);
       } else {
         applyLayoutOrWarn(name, node, orientation, childLayout, name);
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(name);
+        walkKidsWithStacking(name);
       }
     }
 

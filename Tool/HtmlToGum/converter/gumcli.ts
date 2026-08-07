@@ -21,8 +21,8 @@ if (!existsSync(gumCliCsproj)) {
 }
 
 const [cmd, ...rest] = process.argv.slice(2);
-if (!cmd || !['fonts', 'check', 'new'].includes(cmd)) {
-  console.error('Usage: gumcli.ts <fonts|check|new> <project.gumx> [extra args…]');
+if (!cmd || !['fonts', 'check', 'new', 'screenshot'].includes(cmd)) {
+  console.error('Usage: gumcli.ts <fonts|check|new|screenshot> <project.gumx> [extra args…]');
   process.exit(1);
 }
 

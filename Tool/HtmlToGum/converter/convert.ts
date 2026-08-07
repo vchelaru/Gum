@@ -33,16 +33,22 @@ import { mkdirSync, readFileSync, writeFileSync, rmSync, copyFileSync } from 'no
 import { spawnSync } from 'node:child_process';
 import { extractBoxTree } from './extract.js';
 import { mapTreeToScreen, toGusx } from './map.js';
-import { downloadImages } from './assets.js';
+import { downloadImages, attachImageCapture, pngDimensions } from './assets.js';
 import { computeResponsiveMap } from './responsive.js';
 import {
-  attachFontCapture, collectFontFaceRules, materializeWebFonts, runGumcliFonts,
+  attachFontCapture, collectFontFaceRules, materializeWebFonts, runGumcliFonts, repairEmptyCustomFonts,
 } from './fonts.js';
 import { generateNineSliceAssets } from './nineslice.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
-import { waitForDomQuiescence } from './dom-quiescence.js';
+import { waitForDomQuiescence, stabilizeDynamicMedia } from './dom-quiescence.js';
 import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
+import { treeHasFormControls } from './forms.js';
+import { intersectScreenshotClip } from './screenshot-clip.js';
+import {
+  isolateElementForTransparentScreenshot,
+  restoreRasterIsolation,
+} from './raster-isolation.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
@@ -52,6 +58,9 @@ function parseArgs(argv) {
   // responsive defaults ON — matches the project goal (emit layout that survives resize).
   const flags = {
     responsive: true, narrow: null, wide: null, compareNaive: false, tag: null, out: null,
+    // When true (default), HTML form controls map to Gum Forms and the project may
+    // bootstrap with --template forms. --no-forms keeps visual-only chrome (pixel gate).
+    forms: true,
   };
   for (const a of argv) {
     if (a === '--responsive') {
@@ -63,6 +72,10 @@ function parseArgs(argv) {
       flags.wide = parseInt(w, 10);
     } else if (a === '--no-responsive') {
       flags.responsive = false;
+    } else if (a === '--no-forms') {
+      flags.forms = false;
+    } else if (a === '--forms') {
+      flags.forms = true;
     } else if (a === '--compare-naive') {
       flags.compareNaive = true;
     } else if (a.startsWith('--tag=')) {
@@ -141,8 +154,16 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   await installTsxEvaluateShim(page);
   const capturedFonts = captureFonts ? attachFontCapture(page) : null;
+  // Always attach — cheap (a Map + response listener) and downloadImages() only reads
+  // from it for URLs collected off the primary tree, so narrow/wide responsive passes'
+  // captures are harmless to build but simply unused.
+  const capturedImages = attachImageCapture(page);
   const url = /^https?:\/\//i.test(htmlFile) ? htmlFile : pathToFileURL(htmlFile).href;
-  await page.goto(url, { waitUntil: 'networkidle' });
+  const gotoTimeoutMs = Number(process.env.HTMLTOGUM_GOTO_TIMEOUT_MS || 0);
+  await page.goto(url, {
+    waitUntil: 'networkidle',
+    ...(gotoTimeoutMs > 0 ? { timeout: gotoTimeoutMs } : {}),
+  });
   await installTsxEvaluateShim(page); // re-apply after navigation clears some contexts
   await page.evaluate(() => document.fonts.ready);
   // SPA / framework roots (e.g. Gameface Solid #root) need a beat after networkidle.
@@ -161,33 +182,55 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   // Content exists now, but a framework-driven page may still be actively re-rendering it
   // (hydration, lazy-loaded sections) — wait for it to settle before reading the DOM.
   await waitForDomQuiescence(page);
+  // Pin carousels / kill timers BEFORE extract so the box tree and the later chromium.png
+  // reference show the same slide (Team Liquid hero, etc.). Do not debug this race in
+  // site-fidelity agents — stabilizeDynamicMedia is the fix.
+  const captureMeta = await stabilizeDynamicMedia(page);
+  if (captureMeta.suspectedRotatingMedia) {
+    console.log(
+      `stabilizeDynamicMedia: pinned ${captureMeta.pinnedSlideGroups} slide group(s), `
+      + `paused ${captureMeta.pausedAnimations} animation(s)`,
+    );
+  }
   const fontFaceRules = captureFonts ? await collectFontFaceRules(page) : [];
   const tree = await page.evaluate(extractBoxTree, rootSelector);
-  return { page, tree, width, height, capturedFonts, fontFaceRules, pageUrl: url };
+  return {
+    page, tree, width, height, capturedFonts, capturedImages, fontFaceRules, pageUrl: url,
+    captureMeta,
+  };
 }
 
 /**
- * page.screenshot({ clip }) without fullPage only crops the currently visible viewport —
- * it does not scroll to reach content below the fold, and clip regions entirely outside
- * the viewport throw "Clipped area is either empty or outside the resulting image" (seen
- * on tall pages like a full-page `body` root, where most raster nodes sit well past the
- * requested viewport height). Scroll the clip's top-left into view, capture with clip
- * coordinates adjusted for the resulting scroll offset, then restore scroll position so
- * later page-relative captures (subsequent raster shots, the final reference screenshot)
- * keep seeing document coordinates from a scroll-0 origin.
+ * page.screenshot({ clip }) without fullPage crops the currently visible viewport — clip
+ * regions below the fold, or taller/wider than the viewport itself, get silently clamped
+ * to whatever's on-screen (a below-the-viewport-height raster node, e.g. HN's itemlist
+ * cell, came back short and was then stretched to the node's full box height by the Sprite
+ * mapper, producing a growing vertical drift down the page). fullPage renders the whole
+ * scrollable document first, so clip coordinates stay page-absolute and no manual scroll
+ * bookkeeping is needed.
  */
 async function screenshotClip(page, path, clip, screenshotOptions = {}) {
-  await page.evaluate(({ x, y }) => window.scrollTo(x, y), { x: clip.x, y: clip.y });
-  const scroll = await page.evaluate(() => ({ x: window.scrollX, y: window.scrollY }));
-  try {
-    await page.screenshot({
-      path,
-      ...screenshotOptions,
-      clip: { ...clip, x: clip.x - scroll.x, y: clip.y - scroll.y },
-    });
-  } finally {
-    await page.evaluate(() => window.scrollTo(0, 0));
-  }
+  await page.screenshot({
+    path,
+    fullPage: true,
+    ...screenshotOptions,
+    clip,
+  });
+}
+
+async function pageScrollSize(page) {
+  return page.evaluate(() => ({
+    width: Math.max(
+      document.documentElement?.scrollWidth || 0,
+      document.body?.scrollWidth || 0,
+      1,
+    ),
+    height: Math.max(
+      document.documentElement?.scrollHeight || 0,
+      document.body?.scrollHeight || 0,
+      1,
+    ),
+  }));
 }
 
 /**
@@ -198,12 +241,25 @@ async function screenshotClip(page, path, clip, screenshotOptions = {}) {
  */
 async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
   let i = 0;
+  const pageSize = await pageScrollSize(page);
+  let skippedClips = 0;
 
   async function withChromeOnly(path, mark, fn) {
     await page.evaluate(({ rootSelector, path, mark }) => {
+      // Must match extractBoxTree / raster-isolation path indexing (skip NOSCRIPT etc.).
+      const SKIP_TAGS = new Set([
+        'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'META', 'LINK', 'TITLE',
+      ]);
       function isVisible(el) {
+        if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+        if (SKIP_TAGS.has(String(el.tagName).toUpperCase())) return false;
         const cs = getComputedStyle(el);
-        return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
+        if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') return false;
+        if (String(el.tagName).toUpperCase() === 'IFRAME') {
+          const r = el.getBoundingClientRect();
+          if (r.width < 1 && r.height < 1) return false;
+        }
+        return true;
       }
       let el = document.querySelector(rootSelector);
       if (!el) return;
@@ -252,12 +308,17 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
   async function walk(node, path) {
     if (node.style?.needsRaster) {
       const r = node.rect;
-      const clip = {
-        x: Math.max(0, Math.floor(r.x)),
-        y: Math.max(0, Math.floor(r.y)),
-        width: Math.max(1, Math.ceil(r.width)),
-        height: Math.max(1, Math.ceil(r.height)),
-      };
+      const clip = intersectScreenshotClip(
+        { x: r.x, y: r.y, width: r.width, height: r.height },
+        pageSize.width,
+        pageSize.height,
+      );
+      if (!clip) {
+        // Off-page / zero-area boxes (transformed SVGs, sticky overflow) — skip rather
+        // than abort the whole convert (Playwright: "Clipped area is either empty…").
+        skippedClips++;
+        node.style.needsRaster = false;
+      } else {
       mkdirSync(imagesDir, { recursive: true });
       const filename = `raster${i++}.png`;
       const key = `raster:${path.length ? path.join('.') : 'root'}`;
@@ -268,44 +329,63 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
         const pseudoChrome = omitBg && node.tag !== 'svg';
         if (omitBg && !pseudoChrome) {
           const mark = `htg${i}`;
-          const found = await page.evaluate(({ rootSelector, path, mark }) => {
-            function isVisible(el) {
-              const cs = getComputedStyle(el);
-              return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
-            }
-            let el = document.querySelector(rootSelector);
-            if (!el) return false;
-            for (const idx of path) {
-              const kids = Array.from(el.children).filter(isVisible);
-              el = kids[idx];
-              if (!el) return false;
-            }
-            el.setAttribute('data-html-to-gum-shot', mark);
-            return true;
-          }, { rootSelector, path, mark });
+          const found = await page.evaluate(
+            isolateElementForTransparentScreenshot,
+            { rootSelector, path, mark, clearInheritedColor: true },
+          );
           if (found) {
             try {
               await page.locator(`[data-html-to-gum-shot="${mark}"]`).screenshot({
                 path: join(imagesDir, filename),
                 omitBackground: true,
               });
+            } catch (e) {
+              const msg = String(e?.message || e);
+              if (/Clipped area is either empty|outside the resulting image|Element is not visible/i.test(msg)) {
+                skippedClips++;
+                node.style.needsRaster = false;
+                return;
+              }
+              throw e;
             } finally {
-              await page.evaluate((mark) => {
-                document.querySelector(`[data-html-to-gum-shot="${mark}"]`)
-                  ?.removeAttribute('data-html-to-gum-shot');
-              }, mark);
+              await page.evaluate(restoreRasterIsolation, mark);
             }
             return;
           }
         }
-        await screenshotClip(page, join(imagesDir, filename), clip, { omitBackground: false });
+        try {
+          await screenshotClip(page, join(imagesDir, filename), clip, {
+            omitBackground: omitBg && !pseudoChrome,
+          });
+        } catch (e) {
+          // Race: page size changed after measure, or clip still rejected — skip sprite.
+          const msg = String(e?.message || e);
+          if (/Clipped area is either empty|outside the resulting image/i.test(msg)) {
+            skippedClips++;
+            node.style.needsRaster = false;
+            return;
+          }
+          throw e;
+        }
       };
       const backdropOnly = !node.style.rasterWholeSubtree
         && (node.children.length > 0 || !!(node.text && String(node.text).trim()));
       if (backdropOnly) await withChromeOnly(path, key, shot);
       else await shot();
-      node.rasterSrc = key;
-      assetMap.set(key, `Images/${filename}`);
+      if (node.style.needsRaster) {
+        node.rasterSrc = key;
+        assetMap.set(key, `Images/${filename}`);
+        // Clip uses floor/ceil; map Absolute size uses Math.round(rect). A 411.42 box
+        // becomes a 412px PNG but Absolute height 411 → Gum stretches and the bottom
+        // of large figures drifts (Embrace hero). Size the node to the PNG we wrote.
+        try {
+          const dim = pngDimensions(readFileSync(join(imagesDir, filename)));
+          if (dim.width > 0 && dim.height > 0) {
+            node.rect = { ...node.rect, width: dim.width, height: dim.height };
+          }
+        } catch { /* keep measured rect */ }
+      }
+      }
     }
     // Path indices must match el.children (element-only). Synthetic #text leaves from
     // extract's phrasing walk are skipped so withChromeOnly stays aligned.
@@ -320,19 +400,22 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
     }
   }
   await walk(tree, []);
+  if (skippedClips) {
+    console.warn(`  ! skipped ${skippedClips} off-page/empty raster clip(s)`);
+  }
 }
 
 /**
- * Bootstrap outProjectDir's .gumx + Standards/ via `gumcli new --template empty` (via
- * gumcli.ts) instead of a static scaffold snapshot, so Standards always match Gum's live
- * defaults (StandardElementsManager) — see #4003.
+ * Bootstrap outProjectDir's .gumx + Standards/ via `gumcli new`.
+ * Uses --template forms when the page has mappable form controls (so Controls/*
+ * components exist); otherwise --template empty (visual-only Standards).
  */
-function runGumcliNew(gumxPath) {
+function runGumcliNew(gumxPath, template = 'empty') {
   const wrapper = join(__dirname, 'gumcli.ts');
-  console.log(`> npx tsx gumcli.ts new ${gumxPath} --template empty`);
+  console.log(`> npx tsx gumcli.ts new ${gumxPath} --template ${template}`);
   const r = spawnSync(
     process.execPath,
-    nodeTsxArgs(wrapper, 'new', gumxPath, '--template', 'empty'),
+    nodeTsxArgs(wrapper, 'new', gumxPath, '--template', template),
     { encoding: 'utf8', shell: false },
   );
   if (r.stdout) process.stdout.write(r.stdout);
@@ -354,6 +437,7 @@ async function main() {
   tree = primary.tree;
   shotPage = primary.page;
   const capturedFonts = primary.capturedFonts || new Map();
+  const capturedImages = primary.capturedImages || new Map();
   const fontFaceRules = primary.fontFaceRules || [];
   const pageUrl = primary.pageUrl;
 
@@ -379,26 +463,41 @@ async function main() {
 
   rmSync(outProjectDir, { recursive: true, force: true });
   const gumxPath = join(outProjectDir, 'Generated.gumx');
-  runGumcliNew(gumxPath);
+  const useForms = flags.forms && treeHasFormControls(tree);
+  runGumcliNew(gumxPath, useForms ? 'forms' : 'empty');
+  if (useForms) {
+    console.log('forms: mapping HTML controls → Controls/* (pass --no-forms for visual-only)');
+  } else if (!flags.forms) {
+    console.log('forms: off (--no-forms)');
+  }
   const imagesDir = join(outProjectDir, 'Images');
   const fontsDir = join(outProjectDir, 'Fonts');
 
   const assetMap = new Map();
   await rasterizeEffects(shotPage, tree, imagesDir, assetMap, rootSelector);
 
-  const clip = {
-    x: Math.max(0, Math.floor(tree.rect.x)),
-    y: Math.max(0, Math.floor(tree.rect.y)),
-    width: Math.min(VIEWPORT.width - Math.floor(tree.rect.x), Math.ceil(tree.rect.width)),
-    height: Math.min(VIEWPORT.height - Math.floor(tree.rect.y), Math.ceil(tree.rect.height)),
-  };
+  // Intersect root box with the viewport. Clamping only the origin (max(0,y)) while
+  // keeping the full measured height overshoots when y is negative (mdbook body at
+  // y=-50 from sticky chrome) — Chromium then captures white canvas below where Gum's
+  // BodyBg ends → ~7% false miss on the Rust book.
+  const clip = intersectScreenshotClip(
+    {
+      x: tree.rect.x,
+      y: tree.rect.y,
+      width: tree.rect.width,
+      height: tree.rect.height,
+    },
+    VIEWPORT.width,
+    VIEWPORT.height,
+  );
+  if (!clip) throw new Error('root screenshot clip is empty / outside the viewport');
   await shotPage.screenshot({ path: chromiumPng, clip });
   copyFileSync(chromiumPng, chromiumTagged);
   await shotPage.close();
 
   // Reuse the still-open browser for SVG rasterization inside downloadImages() instead
   // of paying a second Chromium launch — close only after it's done with it.
-  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser);
+  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser, capturedImages);
   for (const [k, v] of downloaded) assetMap.set(k, v);
   await browser.close();
 
@@ -407,17 +506,19 @@ async function main() {
   });
   const nineSliceMap = generateNineSliceAssets(tree, imagesDir, assetMap);
 
-  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap);
+  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap, useForms);
   const screens = [{ name: screenName, mapped, gusx: toGusx(screenName, mapped) }];
 
   if (flags.responsive && flags.compareNaive) {
-    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap);
+    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap, useForms);
     const naiveName = `${screenName}Naive`;
     screens.push({ name: naiveName, mapped: naive, gusx: toGusx(naiveName, naive) });
   }
 
   const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
-  const gumx = readFileSync(gumxPath, 'utf8');
+  let gumx = readFileSync(gumxPath, 'utf8');
+  // forms template ships Demo screen refs — drop them so only our converted screen(s) remain.
+  gumx = gumx.replace(/^\s*<ScreenReference\b[^>]*\/>\s*\r?\n/gm, '');
   // gumcli new --template empty emits no <ScreenReference> (empty list serializes to nothing);
   // insert ours right before the first <StandardElementReference>, matching GumProjectSave's
   // field order (ScreenReferences before StandardElementReferences).
@@ -428,10 +529,28 @@ async function main() {
   writeFileSync(gumxPath, gumx.slice(0, anchor) + screenRefs + '\n' + gumx.slice(anchor));
   for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
   writeFileSync(join(outProjectDir, 'boxtree.json'), JSON.stringify(tree, null, 2));
+  writeFileSync(
+    join(outProjectDir, 'capture-meta.json'),
+    JSON.stringify({
+      ...primary.captureMeta,
+      note: primary.captureMeta?.suspectedRotatingMedia
+        ? 'Rotating media was stabilized before extract. Do not probe timer races in fidelity agents.'
+        : undefined,
+    }, null, 2),
+  );
 
   // B-first: bake FontCache from Font/FontSize (+ .ttf paths) before the MonoGame host loads.
   try {
     runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+    const { repaired } = repairEmptyCustomFonts(outProjectDir);
+    if (repaired.length) {
+      console.warn(
+        `  ! empty FontCache atlas for ${repaired.length} custom font(s) `
+        + `(${repaired.slice(0, 3).join(', ')}${repaired.length > 3 ? '…' : ''}) `
+        + `— falling back to Arial and re-baking`,
+      );
+      runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+    }
   } catch (e) {
     console.warn(`  ! gumcli fonts failed: ${e.message}`);
   }

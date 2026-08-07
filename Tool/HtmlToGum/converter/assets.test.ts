@@ -2,8 +2,28 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
-import { svgIntrinsicSize, rasterizeSvg } from './assets.js';
+import {
+  svgIntrinsicSize, rasterizeSvg, parseDataImageUrl, rasterizeRasterViaChromium,
+} from './assets.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
+
+test('parseDataImageUrl: percent-encoded SVG with charset (Pocket select chevron)', () => {
+  const url = 'data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2210%22%20height%3D%2210%22%3E%3C%2Fsvg%3E';
+  const parsed = parseDataImageUrl(url);
+  assert.ok(parsed);
+  assert.equal(parsed.contentType, 'image/svg+xml');
+  assert.match(parsed.buffer.toString('utf8'), /<svg xmlns=/);
+});
+
+test('parseDataImageUrl: base64 PNG header', () => {
+  // 1x1 transparent PNG
+  const b64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const parsed = parseDataImageUrl(`data:image/png;base64,${b64}`);
+  assert.ok(parsed);
+  assert.equal(parsed.contentType, 'image/png');
+  assert.equal(parsed.buffer[0], 0x89);
+  assert.equal(parsed.buffer[1], 0x50); // P
+});
 
 test('svgIntrinsicSize: width/height attrs', () => {
   assert.deepEqual(svgIntrinsicSize('<svg width="24" height="32"></svg>'), { width: 24, height: 32 });
@@ -61,6 +81,25 @@ test('rasterizeSvg: fills the full canvas for an SVG without a viewBox', async (
     assert.deepEqual(pixels.corner, [255, 0, 0, 255]);
     assert.deepEqual(pixels.center, [255, 0, 0, 255]);
     assert.deepEqual(pixels.farCorner, [255, 0, 0, 255]);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('rasterizeRasterViaChromium: paints AVIF to PNG (crates.io cargo logo path)', async () => {
+  const browser = await chromium.launch();
+  try {
+    // 1×1 red PNG re-labeled as the chromium paint path; AVIF bytes need Chromium decode
+    // the same way. Use a real tiny WebP so we exercise non-PNG mime without Pillow.
+    const webpB64 = 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA='; // 1×1
+    const png = await rasterizeRasterViaChromium(
+      browser,
+      Buffer.from(webpB64, 'base64'),
+      'image/webp',
+    );
+    assert.ok(png.length > 50);
+    assert.equal(png[0], 0x89);
+    assert.equal(png[1], 0x50);
   } finally {
     await browser.close();
   }

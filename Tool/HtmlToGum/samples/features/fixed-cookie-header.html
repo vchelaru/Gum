@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Fixed cookie nested in header</title>
+  <!--
+    Landmine: position:fixed descendants nested under a painted <header> must not
+    inflate the header backdrop via textOverflowPad (OWASP #disclaimer-container).
+  -->
+  <style>
+    html, body { margin: 0; background: #fff; }
+    header {
+      background: rgb(152, 175, 199);
+      height: 159px;
+      box-sizing: border-box;
+    }
+    #disclaimer-container {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100px;
+      background: rgba(20, 20, 20, 0.85);
+      z-index: 10;
+    }
+    #disclaimer-container .accept {
+      position: absolute;
+      right: 24px;
+      top: 32px;
+      width: 88px;
+      height: 36px;
+      background: #ffeb3b;
+      border: 0;
+      border-radius: 4px;
+    }
+    #probe {
+      margin: 24px 16px;
+      width: 240px;
+      height: 120px;
+      background: #222;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="disclaimer-container">
+      <button class="accept" type="button"></button>
+    </div>
+  </header>
+  <div id="probe"></div>
+</body>
+</html>

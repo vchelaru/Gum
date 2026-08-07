@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>White canvas default</title>
+  <!--
+    Landmine: browsers paint the CSS "canvas" white when html/body backgrounds are
+    transparent. Gum must inherit that onto the root or the screenshot is transparent
+    where Chromium is white (OWASP content band).
+  -->
+  <style>
+    html, body { margin: 0; background: transparent; }
+    header {
+      height: 48px;
+      background: rgb(152, 175, 199);
+    }
+    /* Solid content band — avoid long BitmapFont runs so the gate measures fill, not AA. */
+    #probe {
+      margin: 24px 16px;
+      width: 200px;
+      height: 80px;
+      background: #111;
+    }
+  </style>
+</head>
+<body>
+  <header></header>
+  <div id="probe"></div>
+</body>
+</html>

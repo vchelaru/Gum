@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   parseColor, parseBoxShadow, parseHardTextShadows, mapTreeToScreen,
+  resolveBackgroundImageLayout,
 } from './map.js';
 
 // ---- minimal BoxNode/BoxStyle fixtures for mapTreeToScreen ------------------
@@ -12,6 +13,7 @@ function baseStyle(overrides = {}) {
     backgroundImage: 'none',
     backgroundSize: 'auto',
     backgroundPosition: '0% 0%',
+    backgroundRepeat: 'repeat',
     objectFit: 'fill',
     objectPosition: '50% 50%',
     listStyleType: 'none',
@@ -178,6 +180,32 @@ test('mapTreeToScreen: flex row child margin-top offsets stretch cross-axis (IAN
   assert.equal(findVar(variables, 'Main.Y')?.value, 25);
   assert.equal(findVar(variables, 'Main.HeightUnits')?.value, 2); // RelativeToParent
   assert.equal(findVar(variables, 'Main.Height')?.value, -25);
+});
+
+test('mapTreeToScreen: flex row child with width:100% uses Absolute measured width (KORE login column)', () => {
+  // CSS width:100% on a flex item resolves against the flex container, but Chromium's
+  // *used* width is flex-constrained (e.g. 384 in a 768 row). Emitting PercentageOfParent
+  // 100 made the column full-width and shifted the login form left.
+  const illus = boxNode({
+    id: 'illus',
+    rect: { x: 0, y: 0, width: 404, height: 500 },
+    style: baseStyle({ widthSpecified: '500px' }),
+  });
+  const formCol = boxNode({
+    id: 'formCol',
+    rect: { x: 404, y: 0, width: 384, height: 430 },
+    style: baseStyle({ widthSpecified: '100%' }),
+  });
+  const root = boxNode({
+    id: 'row',
+    rect: { x: 0, y: 0, width: 768, height: 500 },
+    style: baseStyle({ display: 'flex', flexDirection: 'row', justifyContent: 'center' }),
+    children: [illus, formCol],
+  });
+
+  const { variables } = mapTreeToScreen(root);
+  assert.equal(findVar(variables, 'FormCol.WidthUnits')?.value, 0); // Absolute
+  assert.equal(findVar(variables, 'FormCol.Width')?.value, 384);
 });
 
 // ---- inline-styled run merging (IANA "Public Technical Identifiers" bold spans) ------
@@ -359,10 +387,114 @@ test('mapTreeToScreen: a sprite tile at the sheet\'s default (0,0) offset still 
   assert.equal(findVar(variables, 'Facebook.TextureHeight')?.value, 38);
 });
 
-test('mapTreeToScreen: plain background-image at default position gets no sprite crop', () => {
-  // background-position:0% 0% (the default — no authored offset) is a plain full-image
-  // background, not a sprite selection. Must keep stretch-to-fill (no TextureAddress
-  // override) rather than emit a crop derived from a coincidental size mismatch.
+test('mapTreeToScreen: root tiled background offsets for viewport/canvas tile origin', () => {
+  // Body margin → rect (8,8); CSS paints background from the canvas origin, so Wrap
+  // tiles must start at local (-8,-8) with size parent+(8,8).
+  const url = 'https://example.com/stars.gif';
+  const assetMap = new Map([[url, 'Images/stars.gif']]);
+  const child = boxNode({ id: 'main', rect: { x: 8, y: 8, width: 400, height: 300 } });
+  const node = boxNode({
+    id: 'body',
+    tag: 'body',
+    rect: { x: 8, y: 8, width: 400, height: 300 },
+    naturalWidth: 111,
+    naturalHeight: 111,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundRepeat: 'repeat',
+      backgroundColor: 'rgb(0, 0, 0)',
+    }),
+    children: [child],
+  });
+  const { variables } = mapTreeToScreen(node, assetMap);
+  assert.equal(findVar(variables, 'BodyBg.X')?.value, -8);
+  assert.equal(findVar(variables, 'BodyBg.Y')?.value, -8);
+  assert.equal(findVar(variables, 'BodyBg.Width')?.value, 8);
+  assert.equal(findVar(variables, 'BodyBg.Height')?.value, 8);
+  assert.equal(findVar(variables, 'BodyBg.TextureAddress')?.value, 2);
+});
+
+test('mapTreeToScreen: fixed/absolute descendant does not inflate a styled ancestor backdrop', () => {
+  // OWASP header (periwinkle bg, 159px) contains a position:fixed cookie banner painted at
+  // y=800. textOverflowPad must skip out-of-flow subtrees, else the header backdrop grows to
+  // ~1544px and its fill tints the whole page. In-flow text near the box bottom still pads.
+  const inFlowText = boxNode({
+    id: 'logo', tag: 'span', text: 'OWASP', lineCount: 1,
+    rect: { x: 18, y: 120, width: 120, height: 30 },
+    style: baseStyle({ fontSize: 20 }),
+  });
+  const bannerText = boxNode({
+    id: 'cookie', tag: 'p', text: 'This website uses cookies to analyze traffic.', lineCount: 3,
+    rect: { x: 16, y: 810, width: 500, height: 60 },
+    style: baseStyle({ fontSize: 16 }),
+  });
+  const fixedBanner = boxNode({
+    id: 'disclaimer-container', tag: 'div',
+    rect: { x: 0, y: 800, width: 800, height: 100 },
+    style: baseStyle({ position: 'fixed', backgroundColor: 'rgba(20, 20, 20, 0.8)' }),
+    children: [bannerText],
+  });
+  const header = boxNode({
+    id: 'header', tag: 'header',
+    rect: { x: 0, y: 0, width: 800, height: 159 },
+    style: baseStyle({ backgroundColor: 'rgb(152, 175, 199)' }),
+    children: [inFlowText, fixedBanner],
+  });
+  const { variables } = mapTreeToScreen(header, new Map());
+  const h = findVar(variables, 'Header.Height')?.value;
+  assert.ok(h < 200, `header backdrop should stay ~159px, got ${h}`);
+});
+
+test('mapTreeToScreen: repeating background-image tiles via DimensionsBased + Wrap', () => {
+  // CSS default background-repeat is `repeat` (Space Jam starfield). EntireTexture would
+  // stretch one tile across the box; DimensionsBased + Wrap repeats at intrinsic size.
+  const url = 'https://example.com/stars.gif';
+  const assetMap = new Map([[url, 'Images/stars.gif']]);
+  const child = boxNode({
+    id: 'main',
+    rect: { x: 0, y: 0, width: 400, height: 300 },
+  });
+  const node = boxNode({
+    id: 'body',
+    tag: 'body',
+    rect: { x: 0, y: 0, width: 400, height: 300 },
+    naturalWidth: 111,
+    naturalHeight: 111,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: 'auto',
+      backgroundRepeat: 'repeat',
+      backgroundColor: 'rgb(0, 0, 0)',
+    }),
+    children: [child],
+  });
+
+  const { variables } = mapTreeToScreen(node, assetMap);
+  assert.equal(findVar(variables, 'BodyBg.TextureAddress')?.value, 2); // DimensionsBased
+  assert.equal(findVar(variables, 'BodyBg.Wrap')?.value, 'true');
+});
+
+test('mapTreeToScreen: empty leaf with repeating background-image also tiles', () => {
+  // classify() promotes background-image-only leaves to 'image' (Tabler card-img-top).
+  const url = 'https://example.com/stars.gif';
+  const assetMap = new Map([[url, 'Images/stars.gif']]);
+  const node = boxNode({
+    id: 'panel',
+    rect: { x: 0, y: 0, width: 400, height: 300 },
+    naturalWidth: 111,
+    naturalHeight: 111,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundRepeat: 'repeat',
+      backgroundColor: 'rgb(0, 0, 0)',
+    }),
+  });
+  const { variables } = mapTreeToScreen(node, assetMap);
+  assert.equal(findVar(variables, 'PanelImg.TextureAddress')?.value, 2);
+  assert.equal(findVar(variables, 'PanelImg.Wrap')?.value, 'true');
+});
+
+test('mapTreeToScreen: no-repeat background-image does not enable Wrap tiling', () => {
   const url = 'https://example.com/hero.png';
   const assetMap = new Map([[url, 'Images/hero.png']]);
   const node = boxNode({
@@ -370,11 +502,339 @@ test('mapTreeToScreen: plain background-image at default position gets no sprite
     rect: { x: 0, y: 0, width: 200, height: 100 },
     naturalWidth: 400,
     naturalHeight: 200,
-    style: baseStyle({ backgroundImage: `url("${url}")`, backgroundSize: 'auto' }),
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: 'auto',
+      backgroundRepeat: 'no-repeat',
+    }),
   });
   const root = boxNode({ id: 'root', rect: { x: 0, y: 0, width: 200, height: 100 }, children: [node] });
 
   const { variables } = mapTreeToScreen(root, assetMap);
 
-  assert.equal(findVar(variables, 'Hero.TextureAddress'), undefined);
+  assert.equal(findVar(variables, 'HeroBg.TextureAddress'), undefined);
+  assert.equal(findVar(variables, 'HeroBg.Wrap'), undefined);
+});
+
+test('mapTreeToScreen: plain background-image at default position gets no sprite crop', () => {
+  // background-position:0% 0% (the default — no authored offset) is a plain full-image
+  // background, not a sprite selection. With background-repeat:no-repeat it keeps
+  // stretch-to-fill (no TextureAddress override) rather than a crop from size mismatch.
+  const url = 'https://example.com/hero.png';
+  const assetMap = new Map([[url, 'Images/hero.png']]);
+  const node = boxNode({
+    id: 'hero',
+    rect: { x: 0, y: 0, width: 200, height: 100 },
+    naturalWidth: 400,
+    naturalHeight: 200,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: 'auto',
+      backgroundRepeat: 'no-repeat',
+    }),
+  });
+  const root = boxNode({ id: 'root', rect: { x: 0, y: 0, width: 200, height: 100 }, children: [node] });
+
+  const { variables } = mapTreeToScreen(root, assetMap);
+
+  assert.equal(findVar(variables, 'HeroBg.TextureAddress'), undefined);
+});
+
+test('mapTreeToScreen: body backdrop height grows for BitmapFont text spill past Chromium box', () => {
+  const url = 'https://example.com/stars.gif';
+  const assetMap = new Map([[url, 'Images/stars.gif']]);
+  const text = boxNode({
+    id: 'copy',
+    tag: 'font',
+    text: 'SPACE JAM copyright line one\nline two',
+    lineCount: 2,
+    rect: { x: 100, y: 270, width: 200, height: 24 },
+    style: baseStyle({ fontSize: 14, color: 'rgb(255, 0, 0)' }),
+  });
+  const body = boxNode({
+    id: 'body',
+    tag: 'body',
+    rect: { x: 0, y: 0, width: 400, height: 300 },
+    naturalWidth: 111,
+    naturalHeight: 111,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundRepeat: 'repeat',
+      backgroundColor: 'rgb(0, 0, 0)',
+    }),
+    children: [text],
+  });
+
+  const { variables } = mapTreeToScreen(body, assetMap);
+  // guess = round(14 * 1.35 * 2) = 38; spill = 38-24 = 14; bottom spill past body = (270+24+14)-300 = 8
+  assert.equal(findVar(variables, 'Body.Height')?.value, 308);
+});
+
+test('mapTreeToScreen: merges multi-line inline runs with Chromium newlines + BBCode bold', () => {
+  // Space Jam sitemap: TD prose split into per-line #text + <b> Absolute leaves.
+  const td = boxNode({
+    id: 'cell',
+    tag: 'td',
+    rect: { x: 10, y: 10, width: 200, height: 60 },
+    style: baseStyle({
+      fontSize: 13,
+      color: 'rgb(254, 255, 137)',
+      fontFamily: 'Times New Roman',
+      borderTopWidth: 1,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderLeftWidth: 1,
+      borderTopColor: 'rgb(154, 154, 154)',
+      borderLeftColor: 'rgb(154, 154, 154)',
+      borderBottomColor: 'rgb(238, 238, 238)',
+      borderRightColor: 'rgb(238, 238, 238)',
+      paddingTop: 10,
+      paddingLeft: 10,
+      paddingRight: 10,
+      paddingBottom: 10,
+    }),
+    children: [
+      boxNode({
+        tag: '#text',
+        text: 'Go behind the scenes of ',
+        lineCount: 1,
+        rect: { x: 21, y: 21, width: 140, height: 17 },
+        style: baseStyle({ fontSize: 13, color: 'rgb(254, 255, 137)', fontFamily: 'Times New Roman' }),
+      }),
+      boxNode({
+        tag: 'b',
+        text: 'Space Jam',
+        lineCount: 1,
+        rect: { x: 161, y: 21, width: 60, height: 17 },
+        style: baseStyle({
+          fontSize: 13, fontWeight: '700', color: 'rgb(254, 255, 137)', fontFamily: 'Times New Roman',
+        }),
+      }),
+      boxNode({
+        tag: '#text',
+        text: 'See how the new characters were developed.',
+        lineCount: 1,
+        rect: { x: 21, y: 39, width: 180, height: 17 },
+        style: baseStyle({ fontSize: 13, color: 'rgb(254, 255, 137)', fontFamily: 'Times New Roman' }),
+      }),
+    ],
+  });
+  const { instances, variables } = mapTreeToScreen(td, new Map());
+  const texts = instances.filter((i) => i.baseType === 'Text');
+  assert.equal(texts.length, 1);
+  const textVar = findVar(variables, `${texts[0].name}.Text`);
+  assert.ok(textVar?.value.includes('[IsBold=true]Space Jam[/IsBold]')
+    || textVar?.value.includes('[IsBold=True]Space Jam[/IsBold]'));
+  assert.ok(textVar?.value.includes('\n'));
+  assert.equal(textVar.value.split('\n').length, 2);
+  // Host keeps chrome; label is Absolute inside the padding box at Chromium's glyph union.
+  assert.ok(instances.some((i) => i.baseType === 'Container'));
+  const label = texts[0];
+  // content origin = host(10) + border(1) + pad(10) = 21; glyph y=21 → Y=0
+  assert.equal(findVar(variables, `${label.name}.Y`)?.value, 0);
+});
+
+test('mapTreeToScreen: HTML table grey bevel uses per-side edge colors (not yellow stroke)', () => {
+  // extract.ts rewrites presentational table borders to Chromium's painted greys;
+  // asymmetric colors must become four edge Rectangles, not a uniform yellow Stroke.
+  const cell = boxNode({
+    id: 'cell',
+    tag: 'td',
+    rect: { x: 10, y: 10, width: 100, height: 40 },
+    text: 'Jam Central',
+    lineCount: 1,
+    style: baseStyle({
+      borderTopWidth: 1,
+      borderRightWidth: 1,
+      borderBottomWidth: 1,
+      borderLeftWidth: 1,
+      borderTopColor: 'rgb(154, 154, 154)',
+      borderLeftColor: 'rgb(154, 154, 154)',
+      borderBottomColor: 'rgb(238, 238, 238)',
+      borderRightColor: 'rgb(238, 238, 238)',
+      paddingTop: 10,
+      paddingLeft: 10,
+      paddingRight: 10,
+      paddingBottom: 10,
+      color: 'rgb(254, 255, 137)',
+      fontSize: 13,
+    }),
+  });
+  const { instances, variables } = mapTreeToScreen(cell, new Map());
+  const borderEdges = instances.filter((i) => /Border(Top|Left|Bottom|Right)$/.test(i.name));
+  assert.equal(borderEdges.length, 4);
+  // Top/left dark grey, bottom/right light grey — not the yellow text color.
+  assert.equal(findVar(variables, `${borderEdges.find((i) => i.name.endsWith('BorderTop')).name}.FillRed`)?.value, 154);
+  assert.equal(findVar(variables, `${borderEdges.find((i) => i.name.endsWith('BorderBottom')).name}.FillRed`)?.value, 238);
+  assert.ok(!variables.some((v) => v.name.endsWith('.StrokeRed') && v.value === 254));
+});
+
+test('mapTreeToScreen: padded single-line text label hugs width (no BitmapFont wrap)', () => {
+  // TL nav links: padding → Container + Label; Label must RelativeToChildren or
+  // "Calendar"/"Streams" wrap inside Chromium's padding-box width.
+  const link = boxNode({
+    id: 'nav',
+    tag: 'a',
+    text: 'Calendar',
+    lineCount: 1,
+    rect: { x: 100, y: 140, width: 66, height: 30 },
+    style: baseStyle({
+      fontSize: 11,
+      color: 'rgb(255, 255, 255)',
+      paddingTop: 9,
+      paddingBottom: 9,
+      paddingLeft: 10,
+      paddingRight: 10,
+      textAlign: 'left',
+    }),
+  });
+  const { variables } = mapTreeToScreen(link, new Map());
+  assert.equal(findVar(variables, 'NavLabel.WidthUnits')?.value, 4); // RelativeToChildren
+  assert.equal(findVar(variables, 'NavLabel.Width'), undefined);
+});
+
+test('mapTreeToScreen: Absolute-parent right-aligned single-line text hugs + anchors right', () => {
+  const label = boxNode({
+    id: 'lp',
+    tag: 'a',
+    text: 'Liquipedia',
+    lineCount: 1,
+    rect: { x: 680, y: 4, width: 55, height: 12 },
+    style: baseStyle({ fontSize: 11, color: 'rgb(255,255,255)', textAlign: 'right' }),
+  });
+  const root = boxNode({
+    id: 'hdr',
+    tag: 'div',
+    rect: { x: 0, y: 0, width: 800, height: 40 },
+    style: baseStyle({ position: 'relative' }),
+    children: [label],
+  });
+  const { variables } = mapTreeToScreen(root, new Map());
+  assert.equal(findVar(variables, 'Lp.WidthUnits')?.value, 4);
+  assert.equal(findVar(variables, 'Lp.XOrigin')?.value, 2); // Right
+  assert.equal(findVar(variables, 'Lp.X')?.value, 735); // 680+55
+});
+
+test('resolveBackgroundImageLayout: px width + auto height (KORE logo)', () => {
+  // background-size: 100px; natural 300×141 → display ~100×47 at 0% 0%
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '100px', backgroundPosition: '0% 0%', backgroundRepeat: 'no-repeat' }),
+    300, 141, 415, 50,
+  );
+  assert.deepEqual(layout, { x: 0, y: 0, width: 100, height: 47 });
+});
+
+test('resolveBackgroundImageLayout: px width + 50% 50% position (KORE hero)', () => {
+  // background-size: 400px; natural 651×509 in 404×500 box → ~400×313 centered
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '400px', backgroundPosition: '50% 50%', backgroundRepeat: 'no-repeat' }),
+    651, 509, 404, 500,
+  );
+  assert.equal(layout.width, 400);
+  assert.equal(layout.height, 313); // round(400 * 509/651)
+  assert.equal(layout.x, 2); // round((404-400)/2)
+  assert.equal(layout.y, 94); // round((500-313)/2) = 93.5 → 94
+});
+
+test('resolveBackgroundImageLayout: contain fits inside the box', () => {
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'contain', backgroundPosition: '0% 0%', backgroundRepeat: 'no-repeat' }),
+    25, 17, 20, 20,
+  );
+  assert.deepEqual(layout, { x: 0, y: 0, width: 20, height: 14 });
+});
+
+test('resolveBackgroundImageLayout: auto + 50% 0% uses natural size (TL banner)', () => {
+  const layout = resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'auto', backgroundPosition: '50% 0%', backgroundRepeat: 'no-repeat' }),
+    1200, 210, 800, 210,
+  );
+  assert.deepEqual(layout, { x: -200, y: 0, width: 1200, height: 210 });
+});
+
+test('resolveBackgroundImageLayout: cover stays on stretch path; % size too', () => {
+  assert.equal(resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
+  ), null);
+  assert.equal(resolveBackgroundImageLayout(
+    baseStyle({ backgroundSize: '100%', backgroundRepeat: 'no-repeat' }), 100, 50, 200, 100,
+  ), null);
+});
+
+test('mapTreeToScreen: background-size px places Sprite instead of stretch-fill (KORE logo)', () => {
+  const url = 'https://example.com/kore-logo.svg';
+  const assetMap = new Map([[url, 'Images/logo.png']]);
+  const node = boxNode({
+    id: 'kc-header',
+    tag: 'div',
+    rect: { x: 466, y: 255, width: 415, height: 50 },
+    naturalWidth: 300,
+    naturalHeight: 141,
+    style: baseStyle({
+      backgroundImage: `url("${url}")`,
+      backgroundSize: '100px',
+      backgroundPosition: '0% 0%',
+      backgroundRepeat: 'no-repeat',
+      backgroundColor: 'rgba(0,0,0,0)',
+    }),
+    children: [],
+  });
+  const { instances, variables } = mapTreeToScreen(node, assetMap);
+  const bg = instances.find((i) => i.baseType === 'Sprite');
+  assert.ok(bg, `expected placed Sprite, got ${instances.map((i) => i.name + ':' + i.baseType)}`);
+  assert.equal(findVar(variables, `${bg.name}.Width`)?.value, 100);
+  assert.equal(findVar(variables, `${bg.name}.Height`)?.value, 47);
+  assert.equal(findVar(variables, `${bg.name}.WidthUnits`)?.value, 0); // Absolute
+  assert.equal(findVar(variables, `${bg.name}.X`)?.value, 0);
+  assert.equal(findVar(variables, `${bg.name}.SourceFile`)?.value, 'Images/logo.png');
+});
+
+test('mapTreeToScreen: negative z-index abs under flex paints before Content (catfishing watermark)', () => {
+  const url = 'https://example.com/watermark.png';
+  const assetMap = new Map([[url, 'Images/wm.png']]);
+  const watermark = boxNode({
+    id: 'wm',
+    tag: 'div',
+    rect: { x: 0, y: 0, width: 800, height: 260 },
+    naturalWidth: 800,
+    naturalHeight: 260,
+    style: baseStyle({
+      position: 'absolute',
+      zIndex: -10,
+      backgroundImage: `url("${url}")`,
+      backgroundSize: 'cover',
+      backgroundRepeat: 'no-repeat',
+    }),
+  });
+  const nav = boxNode({
+    id: 'nav',
+    tag: 'menu',
+    rect: { x: 200, y: 0, width: 400, height: 64 },
+    text: 'Archive',
+    lineCount: 1,
+    style: baseStyle({ display: 'block', color: 'rgb(167,243,208)', fontSize: 16 }),
+  });
+  const header = boxNode({
+    id: 'header',
+    tag: 'header',
+    rect: { x: 0, y: 0, width: 800, height: 64 },
+    style: baseStyle({
+      display: 'flex',
+      flexDirection: 'row',
+      position: 'relative',
+      backgroundColor: 'rgb(10,58,42)',
+    }),
+    children: [watermark, nav],
+  });
+  const { instances, variables } = mapTreeToScreen(header, assetMap);
+  const headerName = instances[0]?.name;
+  assert.ok(headerName);
+  // Sibling order under Header: watermark (z<0) before HeaderContent (in-flow nav).
+  const underHeader = instances.filter((i) => findVar(variables, `${i.name}.Parent`)?.value === headerName);
+  const names = underHeader.map((i) => i.name);
+  const wmIdx = names.findIndex((n) => n === 'Wm' || n.startsWith('Wm'));
+  const contentIdx = names.findIndex((n) => /Content$/.test(n));
+  assert.ok(wmIdx >= 0, `expected watermark under header, got ${names.join(',')}`);
+  assert.ok(contentIdx >= 0, `expected Content under header, got ${names.join(',')}`);
+  assert.ok(wmIdx < contentIdx, `watermark (${wmIdx}) must precede Content (${contentIdx}): ${names.join(',')}`);
 });

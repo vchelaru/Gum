@@ -22,6 +22,7 @@ export const FIXTURES: Fixture[] = [
   { tag: 'padding', html: 'features/padding-flex.html', sel: '#panel', screen: 'PaddingScreen', w: 800, h: 600, maxPct: 1.5 },
   { tag: 'align', html: 'features/align-items-center.html', sel: '#bar', screen: 'AlignScreen', w: 800, h: 600, maxPct: 1.5 },
   { tag: 'zindex', html: 'features/z-index-order.html', sel: '#stage', screen: 'ZIndexScreen', w: 800, h: 600, maxPct: 1.5 },
+  { tag: 'zbehind', html: 'features/z-index-behind-flex.html', sel: '#header', screen: 'ZBehindScreen', w: 800, h: 200, maxPct: 1.5 },
   { tag: 'justify', html: 'features/justify-between.html', sel: '#bar', screen: 'JustifyScreen', w: 800, h: 600, maxPct: 1.5 },
   { tag: 'nineslice', html: 'features/nineslice-panel.html', sel: '#panel', screen: 'NineSliceScreen', w: 800, h: 600, maxPct: 5 },
   { tag: 'cssom', html: 'features/cssom-percent.html', sel: 'body', screen: 'CssomScreen', w: 800, h: 600, maxPct: 1.5 },
@@ -39,6 +40,11 @@ export const FIXTURES: Fixture[] = [
   { tag: 'tabler', html: 'third-party/tabler-card.html', sel: '.card', screen: 'TablerScreen', w: 800, h: 600, maxPct: 26 },
   { tag: 'cerberus', html: 'third-party/cerberus-fluid.html', sel: '.email-container', screen: 'CerberusScreen', w: 700, h: 1000, maxPct: 45 },
   { tag: 'imagecard', html: 'third-party/tabler-image-card.html', sel: '.row', screen: 'TablerImageScreen', w: 800, h: 400, maxPct: 58 },
+  // Layout-zoo landmines (also run via fidelity/canaries.ts --tier=local).
+  { tag: 'whitecanvas', html: 'features/white-canvas.html', sel: 'body', screen: 'WhiteCanvas', w: 800, h: 400, maxPct: 3, noResponsive: true },
+  { tag: 'fixedcookie', html: 'features/fixed-cookie-header.html', sel: 'body', screen: 'FixedCookie', w: 800, h: 600, maxPct: 4, noResponsive: true },
+  { tag: 'bgsizeauto', html: 'features/bg-size-auto-banner.html', sel: 'body', screen: 'BgSizeAuto', w: 800, h: 200, maxPct: 5, noResponsive: true },
+  { tag: 'precodeblock', html: 'features/pre-code-block.html', sel: 'body', screen: 'PreCodeBlock', w: 800, h: 280, maxPct: 4, noResponsive: true },
 ];
 
 export const EXTRA_CHECKS = {
