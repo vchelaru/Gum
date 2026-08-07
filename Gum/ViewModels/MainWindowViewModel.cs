@@ -107,14 +107,14 @@ public class MainWindowViewModel : ViewModel, IRecipient<ThemeChangedMessage>, I
     {
         _layoutSettings.Update(l =>
         {
-            l.MainWindow = new WindowSettings()
+            l.MainWindow = WindowSettingsLogic.WithUsableSize(new WindowSettings()
             {
                 Left = this.Left,
                 Top = this.Top,
                 Width = this.Width ?? 0,
                 Height = this.Height ?? 0,
                 IsMaximized = this.WindowState == GumWindowState.Maximized
-            };
+            });
         });
     }
 
