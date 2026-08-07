@@ -22,8 +22,7 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="Button">
@@ -32,7 +31,7 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="border" Property="Background" Value="#3D3D44" />
+                <Setter TargetName="border" Property="Background" Value="{DynamicResource Frb.Brushes.Surface.Fill}" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -46,13 +45,22 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="Cursor" Value="Hand" />
-      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
-      <Setter Property="Opacity" Value="0.55" />
-      <Style.Triggers>
-        <Trigger Property="IsMouseOver" Value="True">
-          <Setter Property="Opacity" Value="1" />
-        </Trigger>
-      </Style.Triggers>
+      <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground.Subtle}" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="border" Background="Transparent">
+              <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="border" Property="Background" Value="{DynamicResource Frb.Brushes.Surface.Fill}" />
+                <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
     </Style>
   </UserControl.Resources>
   <Grid>
@@ -114,7 +122,7 @@
               <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
             </DataTrigger>
             <Trigger SourceName="bd" Property="IsMouseOver" Value="True">
-              <Setter TargetName="AddStateButton" Property="Opacity" Value="1" />
+              <Setter TargetName="AddStateButton" Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
             </Trigger>
           </DataTemplate.Triggers>
         </HierarchicalDataTemplate>
