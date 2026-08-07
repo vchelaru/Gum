@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 800px; height: 200px; background: #102018; }
+  #header {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    width: 800px;
+    height: 64px;
+    padding: 0 16px;
+    background: #0a3a2a;
+  }
+  /* Decorative abs behind in-flow nav (catfishing watermark pattern). */
+  #watermark {
+    position: absolute;
+    left: 200px;
+    top: 0;
+    width: 400px;
+    height: 64px;
+    background: #80c070;
+    z-index: -10;
+    opacity: 0.85;
+  }
+  .nav {
+    display: flex;
+    gap: 24px;
+    color: #a7f3d0;
+    font: 16px Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+  <header id="header">
+    <div id="watermark"></div>
+    <nav class="nav">
+      <span>Archive</span>
+      <span>Stats</span>
+      <span>Support</span>
+      <span>Settings</span>
+    </nav>
+  </header>
+</body>
+</html>

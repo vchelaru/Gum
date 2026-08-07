@@ -110,26 +110,32 @@ function pixelDiff(refPng, candPng, outDir) {
 }
 
 /**
- * convert.ts's chromium.png is clipped to the root box (boxtree.json rect).
- * gumcli screenshot is the full viewport — crop gum to that rect so we don't
- * score Body's (x,y) margin as a total failure (Space Jam body at 8,8 → ~39%).
+ * convert.ts's chromium.png is clipped to the root box ∩ viewport (boxtree.json rect).
+ * gumcli screenshot is the full viewport — crop gum to that same intersection so we don't
+ * score Body's (x,y) margin as a total failure (Space Jam body at 8,8 → ~39%), and so a
+ * negative root y (mdbook sticky) doesn't keep full height past where BodyBg paints.
  */
 function alignGumToChromiumClip(pageDir, gumPng, alignedOut) {
   const boxPath = join(pageDir, 'boxtree.json');
   if (!existsSync(boxPath) || !existsSync(gumPng)) return gumPng;
   const tree = JSON.parse(readFileSync(boxPath, 'utf8'));
-  const x = Math.max(0, Math.floor(tree.rect?.x ?? 0));
-  const y = Math.max(0, Math.floor(tree.rect?.y ?? 0));
-  const w = Math.max(1, Math.ceil(tree.rect?.width ?? 0));
-  const h = Math.max(1, Math.ceil(tree.rect?.height ?? 0));
+  const rx = Number(tree.rect?.x) || 0;
+  const ry = Number(tree.rect?.y) || 0;
+  const rw = Number(tree.rect?.width) || 0;
+  const rh = Number(tree.rect?.height) || 0;
   const script = `
 from PIL import Image
+import math
 im = Image.open(r'''${gumPng.replace(/\\/g, '/')}''').convert('RGB')
-x, y, w, h = ${x}, ${y}, ${w}, ${h}
-x2 = min(im.width, x + w)
-y2 = min(im.height, y + h)
-im.crop((x, y, x2, y2)).save(r'''${alignedOut.replace(/\\/g, '/')}''')
-print(f'aligned gum crop ({x},{y})-({x2},{y2}) from {im.size}')
+rx, ry, rw, rh = ${rx}, ${ry}, ${rw}, ${rh}
+x0 = max(0, math.floor(rx))
+y0 = max(0, math.floor(ry))
+x1 = min(im.width, math.ceil(rx + rw))
+y1 = min(im.height, math.ceil(ry + rh))
+if x1 <= x0 or y1 <= y0:
+    raise SystemExit('empty align clip')
+im.crop((x0, y0, x1, y1)).save(r'''${alignedOut.replace(/\\/g, '/')}''')
+print(f'aligned gum crop ({x0},{y0})-({x1},{y1}) from {im.size}')
 `;
   const r = spawnSync('python', ['-c', script], { encoding: 'utf8' });
   if (r.stdout) process.stdout.write(r.stdout);

@@ -315,8 +315,18 @@ export async function downloadImages(
           outExt = 'png';
           console.log(`  image: converted ${ext} → png`);
         } catch (e) {
-          console.warn(`  ! ${e.message} — skipped ${url}`);
-          continue;
+          // Stock Pillow often lacks AVIF (no libavif) and some WebP builds — Chromium
+          // decodes both. Fall back so crates.io cargo.avif (and similar) aren't skipped.
+          try {
+            const mime = ext === 'avif' ? 'image/avif' : 'image/webp';
+            outBuf = await rasterizeRasterViaChromium(browser, buf, mime);
+            outExt = 'png';
+            assetSizeMap.set(url, pngDimensions(outBuf));
+            console.log(`  image: chromium-painted ${ext} → png (pillow unavailable)`);
+          } catch (e2) {
+            console.warn(`  ! ${e.message} — skipped ${url}`);
+            continue;
+          }
         }
       }
 

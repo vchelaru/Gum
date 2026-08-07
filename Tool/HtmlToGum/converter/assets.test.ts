@@ -2,7 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright-core';
-import { svgIntrinsicSize, rasterizeSvg, parseDataImageUrl } from './assets.js';
+import {
+  svgIntrinsicSize, rasterizeSvg, parseDataImageUrl, rasterizeRasterViaChromium,
+} from './assets.js';
 import { installTsxEvaluateShim } from './tsx-evaluate-shim.js';
 
 test('parseDataImageUrl: percent-encoded SVG with charset (Pocket select chevron)', () => {
@@ -79,6 +81,25 @@ test('rasterizeSvg: fills the full canvas for an SVG without a viewBox', async (
     assert.deepEqual(pixels.corner, [255, 0, 0, 255]);
     assert.deepEqual(pixels.center, [255, 0, 0, 255]);
     assert.deepEqual(pixels.farCorner, [255, 0, 0, 255]);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('rasterizeRasterViaChromium: paints AVIF to PNG (crates.io cargo logo path)', async () => {
+  const browser = await chromium.launch();
+  try {
+    // 1×1 red PNG re-labeled as the chromium paint path; AVIF bytes need Chromium decode
+    // the same way. Use a real tiny WebP so we exercise non-PNG mime without Pillow.
+    const webpB64 = 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoBAAEAAwA0JaQAA3AA/vuUAAA='; // 1×1
+    const png = await rasterizeRasterViaChromium(
+      browser,
+      Buffer.from(webpB64, 'base64'),
+      'image/webp',
+    );
+    assert.ok(png.length > 50);
+    assert.equal(png[0], 0x89);
+    assert.equal(png[1], 0x50);
   } finally {
     await browser.close();
   }

@@ -788,3 +788,53 @@ test('mapTreeToScreen: background-size px places Sprite instead of stretch-fill 
   assert.equal(findVar(variables, `${bg.name}.X`)?.value, 0);
   assert.equal(findVar(variables, `${bg.name}.SourceFile`)?.value, 'Images/logo.png');
 });
+
+test('mapTreeToScreen: negative z-index abs under flex paints before Content (catfishing watermark)', () => {
+  const url = 'https://example.com/watermark.png';
+  const assetMap = new Map([[url, 'Images/wm.png']]);
+  const watermark = boxNode({
+    id: 'wm',
+    tag: 'div',
+    rect: { x: 0, y: 0, width: 800, height: 260 },
+    naturalWidth: 800,
+    naturalHeight: 260,
+    style: baseStyle({
+      position: 'absolute',
+      zIndex: -10,
+      backgroundImage: `url("${url}")`,
+      backgroundSize: 'cover',
+      backgroundRepeat: 'no-repeat',
+    }),
+  });
+  const nav = boxNode({
+    id: 'nav',
+    tag: 'menu',
+    rect: { x: 200, y: 0, width: 400, height: 64 },
+    text: 'Archive',
+    lineCount: 1,
+    style: baseStyle({ display: 'block', color: 'rgb(167,243,208)', fontSize: 16 }),
+  });
+  const header = boxNode({
+    id: 'header',
+    tag: 'header',
+    rect: { x: 0, y: 0, width: 800, height: 64 },
+    style: baseStyle({
+      display: 'flex',
+      flexDirection: 'row',
+      position: 'relative',
+      backgroundColor: 'rgb(10,58,42)',
+    }),
+    children: [watermark, nav],
+  });
+  const { instances, variables } = mapTreeToScreen(header, assetMap);
+  const headerName = instances[0]?.name;
+  assert.ok(headerName);
+  // Sibling order under Header: watermark (z<0) before HeaderContent (in-flow nav).
+  const underHeader = instances.filter((i) => findVar(variables, `${i.name}.Parent`)?.value === headerName);
+  const names = underHeader.map((i) => i.name);
+  const wmIdx = names.findIndex((n) => n === 'Wm' || n.startsWith('Wm'));
+  const contentIdx = names.findIndex((n) => /Content$/.test(n));
+  assert.ok(wmIdx >= 0, `expected watermark under header, got ${names.join(',')}`);
+  assert.ok(contentIdx >= 0, `expected Content under header, got ${names.join(',')}`);
+  assert.ok(wmIdx < contentIdx, `watermark (${wmIdx}) must precede Content (${contentIdx}): ${names.join(',')}`);
+});

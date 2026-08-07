@@ -24,6 +24,14 @@ test('intersectScreenshotClip: negative origin clamps to 0', () => {
   );
 });
 
+test('intersectScreenshotClip: negative y keeps bottom at y+h (mdbook body)', () => {
+  // Bug: clamp y to 0 but keep full height → 742px clip past BodyBg (ends ~691).
+  assert.deepEqual(
+    intersectScreenshotClip({ x: 0, y: -50, width: 800, height: 741.3125 }, 800, 900),
+    { x: 0, y: 0, width: 800, height: 692 },
+  );
+});
+
 test('intersectScreenshotClip: fully off-page returns null', () => {
   assert.equal(intersectScreenshotClip({ x: 900, y: 0, width: 50, height: 50 }, 800, 900), null);
   assert.equal(intersectScreenshotClip({ x: -100, y: 0, width: 50, height: 50 }, 800, 900), null);

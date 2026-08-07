@@ -293,13 +293,6 @@ function specifiedPercent(style, axisName) {
   return m ? parseFloat(m[1]) : null;
 }
 
-/** Paint order: ascending z-index, stable by DOM index. Path keys still use DOM index. */
-function childrenInPaintOrder(node) {
-  return node.children
-    .map((c, domIndex) => ({ c, domIndex, z: c.style.zIndex || 0 }))
-    .sort((a, b) => (a.z - b.z) || (a.domIndex - b.domIndex));
-}
-
 // Computed box-shadow: "<color> <offsetX>px <offsetY>px <blur>px <spread>px[, ...]"
 // (Chromium always serializes color first, confirmed against Tabler's card:
 // "rgba(31, 41, 55, 0.04) 0px 0px 4px 0px"). Gum's Rectangle has native HasDropshadow/
@@ -1890,27 +1883,55 @@ export function mapTreeToScreen(
         }
       }
 
-      function walkKids(parentForKids) {
-        const usePaintOrder = childLayout === 'block';
-        let list = usePaintOrder
-          ? childrenInPaintOrder(node)
-          : node.children.map((c, domIndex) => ({ c, domIndex }));
+      // CSS: z-index < 0 abs paint before in-flow; z-index >= 0 abs after. Gum paints
+      // siblings in instance order, so negative-z abs must be emitted BEFORE *Content
+      // (catfishing watermark z-index:-10 was covering the nav).
+      function partitionManagedChildren() {
+        const absBehind = [];
+        const absFront = [];
+        const flow = [];
+        node.children.forEach((c, domIndex) => {
+          const pos = (c.style.position || 'static').toLowerCase();
+          if (pos === 'absolute' && isManagedLayout(childLayout)) {
+            const z = c.style.zIndex || 0;
+            (z < 0 ? absBehind : absFront).push({ c, domIndex, z });
+            return;
+          }
+          flow.push({ c, domIndex });
+        });
+        const byZ = (a, b) => (a.z - b.z) || (a.domIndex - b.domIndex);
+        absBehind.sort(byZ);
+        absFront.sort(byZ);
+        return { absBehind, absFront, flow };
+      }
 
+      function emitAbsoluteChild({ c, domIndex }) {
+        const pos = (c.style.position || 'static').toLowerCase();
+        if (pos === 'absolute' && isManagedLayout(childLayout)) {
+          warnings.push(
+            `position:absolute under "${name}" → Absolute on outer box, removed from ${childLayout} flow.`,
+          );
+          walk(c, name, 'block', node.rect, [...path, domIndex], 'stretch', opts);
+        }
+      }
+
+      function walkFlowKids(parentForKids, flowList) {
+        let list = flowList.slice();
         if (isStackLayout(childLayout)) {
-          // CSS order (then DOM index). Reverse after sort for *-reverse directions.
           list = list.slice().sort((a, b) => {
             const oa = a.c.style.order || 0;
             const ob = b.c.style.order || 0;
             return (oa - ob) || (a.domIndex - b.domIndex);
           });
           if (reversed) list.reverse();
+        } else if (childLayout === 'block') {
+          list = list
+            .map((item) => ({ ...item, z: item.c.style.zIndex || 0 }))
+            .sort((a, b) => (a.z - b.z) || (a.domIndex - b.domIndex));
         }
 
         const walkOne = ({ c, domIndex }) => {
           const pos = (c.style.position || 'static').toLowerCase();
-          // Out-of-flow: CSS fixed/absolute leave the flex/grid formatting context.
-          // Fixed → screen-top-level (no Parent), viewport Absolute coords (like root).
-          // Absolute → Absolute under the nearest in-tree parent box, out of stack/grid.
           if (pos === 'fixed') {
             warnings.push(
               `position:fixed under "${name}" → emitted as screen-level Absolute (viewport coords), out of flex/grid flow.`,
@@ -1922,17 +1943,6 @@ export function mapTreeToScreen(
             warnings.push(
               `position:sticky under "${name}" — treated as in-flow snapshot (no sticky scrolling).`,
             );
-          }
-          if (pos === 'absolute' && isManagedLayout(childLayout)) {
-            warnings.push(
-              `position:absolute under "${name}" → Absolute on outer box, removed from ${childLayout} flow.`,
-            );
-            // Parent to the OUTER instance (`name`), which uses Regular layout (Bg +
-            // Content). Parenting into *Content would put the node back in the stack/grid.
-            // Position relative to the border box — matches CSS absolute when the
-            // container is the containing block (position:relative/absolute/fixed).
-            walk(c, name, 'block', node.rect, [...path, domIndex], 'stretch', opts);
-            return;
           }
           if (spacerMode && (c.style.flexGrow || 0) > 0) {
             warnings.push(`"${name}" child has flex-grow with justify-content:${justify} — using measured Absolute size; grow+justify together is not fully mapped.`);
@@ -1956,7 +1966,6 @@ export function mapTreeToScreen(
               walkOne(item);
             });
           } else if (spacerMode === 'around') {
-            // End gutters half of between: Ratio 1 — item — 2 — item — 2 — item — 1
             emitRatioSpacer(parentForKids, 'Lead', 1);
             list.forEach((item, i) => {
               if (i > 0) emitRatioSpacer(parentForKids, `Gap${i}`, 2);
@@ -1974,6 +1983,14 @@ export function mapTreeToScreen(
         } else {
           list.forEach(walkOne);
         }
+      }
+
+      /** Emit kids with CSS stacking: z<0 abs → in-flow → z>=0 abs (no Content wrapper). */
+      function walkKidsWithStacking(parentForKids) {
+        const { absBehind, absFront, flow } = partitionManagedChildren();
+        absBehind.forEach(emitAbsoluteChild);
+        walkFlowKids(parentForKids, flow);
+        absFront.forEach(emitAbsoluteChild);
       }
 
       if (hasVisualStyling(node.style)) {
@@ -2062,6 +2079,11 @@ export function mapTreeToScreen(
           warnings.push(`"${name}" has a background-image that failed to download (${bgImageUrl}) — fell back to its solid-color / NineSlice styling only.`);
         }
 
+        // Negative z-index abs under this flex/grid host must be Gum siblings *before*
+        // Content, or they paint over in-flow chrome (catfishing watermark z-index:-10).
+        const stacked = partitionManagedChildren();
+        stacked.absBehind.forEach(emitAbsoluteChild);
+
         const contentName = namer.mint(`${name}Content`);
         instances.push({ name: contentName, baseType: 'Container' });
         variables.push(VS(`${contentName}.Parent`, name));
@@ -2069,21 +2091,26 @@ export function mapTreeToScreen(
         applyLayoutOrWarn(contentName, node, orientation, childLayout, name);
         // overflow:hidden clips at the border box (outer), not the padding box.
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(contentName);
+        walkFlowKids(contentName, stacked.flow);
+        stacked.absFront.forEach(emitAbsoluteChild);
       } else if (hasPadding(inset) && (isManagedLayout(orientation) || node.children.length > 0)) {
         // Padding/border inset without a painted backdrop: still need an inset content
         // wrapper so flex/grid children don't start at the border-box origin.
+        const stacked = partitionManagedChildren();
+        stacked.absBehind.forEach(emitAbsoluteChild);
+
         const contentName = namer.mint(`${name}Content`);
         instances.push({ name: contentName, baseType: 'Container' });
         variables.push(VS(`${contentName}.Parent`, name));
         fillOrInset(contentName, inset);
         applyLayoutOrWarn(contentName, node, orientation, childLayout, name);
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(contentName);
+        walkFlowKids(contentName, stacked.flow);
+        stacked.absFront.forEach(emitAbsoluteChild);
       } else {
         applyLayoutOrWarn(name, node, orientation, childLayout, name);
         if (node.style.overflow !== 'visible') variables.push(VB(`${name}.ClipsChildren`, true));
-        walkKids(name);
+        walkKidsWithStacking(name);
       }
     }
 

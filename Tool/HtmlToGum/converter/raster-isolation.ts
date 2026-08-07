@@ -11,11 +11,33 @@
  *
  * Neutralize ancestor chrome and hide sibling branches while preserving the target branch.
  * Every touched element's exact inline style is restored by restoreRasterIsolation.
+ *
+ * Path indices must match extractBoxTree: skip SCRIPT/STYLE/NOSCRIPT/… — Chromium can
+ * report NOSCRIPT as display≠none, so a body child index of 0 would hit NOSCRIPT while
+ * extract's path[0] is the first real DIV (catfishing.net nav SVG rasters fell back to
+ * opaque page clips and stamped green squares over the labels).
+ *
+ * @param clearInheritedColor when true (SVG default), pin target color then force
+ *   ancestors transparent so currentColor fills survive without ancestor glyphs showing
+ *   through. When false (text-heavy cells), only clear backgrounds — pinning
+ *   -webkit-text-fill / ancestor color:transparent flattens descendant span colors.
  */
-export function isolateElementForTransparentScreenshot({ rootSelector, path, mark }) {
+export function isolateElementForTransparentScreenshot({
+  rootSelector, path, mark, clearInheritedColor = true,
+}) {
+  const SKIP_TAGS = new Set([
+    'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'META', 'LINK', 'TITLE',
+  ]);
   function isVisible(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    if (SKIP_TAGS.has(String(el.tagName).toUpperCase())) return false;
     const cs = getComputedStyle(el);
-    return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
+    if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') return false;
+    if (String(el.tagName).toUpperCase() === 'IFRAME') {
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 && r.height < 1) return false;
+    }
+    return true;
   }
   function remember(el, role) {
     el.setAttribute('data-html-to-gum-isolation', `${mark}:${role}`);
@@ -33,6 +55,14 @@ export function isolateElementForTransparentScreenshot({ rootSelector, path, mar
     if (!el) return false;
   }
   el.setAttribute('data-html-to-gum-shot', mark);
+
+  if (clearInheritedColor) {
+    // Pin inherited color on the target before ancestors go transparent — currentColor SVG
+    // fills would otherwise disappear with the parent. Only `color` (not webkitTextFillColor).
+    const cs = getComputedStyle(el);
+    remember(el, 'target');
+    el.style.setProperty('color', cs.color, 'important');
+  }
 
   let branch = el;
   let ancestor = el.parentElement;
@@ -52,8 +82,10 @@ export function isolateElementForTransparentScreenshot({ rootSelector, path, mar
     ancestor.style.setProperty('border-color', 'transparent', 'important');
     ancestor.style.setProperty('box-shadow', 'none', 'important');
     ancestor.style.setProperty('text-shadow', 'none', 'important');
-    ancestor.style.setProperty('color', 'transparent', 'important');
-    ancestor.style.setProperty('-webkit-text-fill-color', 'transparent', 'important');
+    if (clearInheritedColor) {
+      ancestor.style.setProperty('color', 'transparent', 'important');
+      ancestor.style.setProperty('-webkit-text-fill-color', 'transparent', 'important');
+    }
 
     branch = ancestor;
     ancestor = ancestor.parentElement;

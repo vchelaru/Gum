@@ -246,9 +246,20 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
 
   async function withChromeOnly(path, mark, fn) {
     await page.evaluate(({ rootSelector, path, mark }) => {
+      // Must match extractBoxTree / raster-isolation path indexing (skip NOSCRIPT etc.).
+      const SKIP_TAGS = new Set([
+        'SCRIPT', 'STYLE', 'NOSCRIPT', 'TEMPLATE', 'HEAD', 'META', 'LINK', 'TITLE',
+      ]);
       function isVisible(el) {
+        if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+        if (SKIP_TAGS.has(String(el.tagName).toUpperCase())) return false;
         const cs = getComputedStyle(el);
-        return cs.opacity !== '0' && cs.display !== 'none' && cs.visibility !== 'hidden';
+        if (cs.opacity === '0' || cs.display === 'none' || cs.visibility === 'hidden') return false;
+        if (String(el.tagName).toUpperCase() === 'IFRAME') {
+          const r = el.getBoundingClientRect();
+          if (r.width < 1 && r.height < 1) return false;
+        }
+        return true;
       }
       let el = document.querySelector(rootSelector);
       if (!el) return;
@@ -320,7 +331,7 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
           const mark = `htg${i}`;
           const found = await page.evaluate(
             isolateElementForTransparentScreenshot,
-            { rootSelector, path, mark },
+            { rootSelector, path, mark, clearInheritedColor: true },
           );
           if (found) {
             try {
@@ -343,7 +354,9 @@ async function rasterizeEffects(page, tree, imagesDir, assetMap, rootSelector) {
           }
         }
         try {
-          await screenshotClip(page, join(imagesDir, filename), clip, { omitBackground: false });
+          await screenshotClip(page, join(imagesDir, filename), clip, {
+            omitBackground: omitBg && !pseudoChrome,
+          });
         } catch (e) {
           // Race: page size changed after measure, or clip still rejected — skip sprite.
           const msg = String(e?.message || e);
@@ -463,12 +476,21 @@ async function main() {
   const assetMap = new Map();
   await rasterizeEffects(shotPage, tree, imagesDir, assetMap, rootSelector);
 
-  const clip = {
-    x: Math.max(0, Math.floor(tree.rect.x)),
-    y: Math.max(0, Math.floor(tree.rect.y)),
-    width: Math.min(VIEWPORT.width - Math.floor(tree.rect.x), Math.ceil(tree.rect.width)),
-    height: Math.min(VIEWPORT.height - Math.floor(tree.rect.y), Math.ceil(tree.rect.height)),
-  };
+  // Intersect root box with the viewport. Clamping only the origin (max(0,y)) while
+  // keeping the full measured height overshoots when y is negative (mdbook body at
+  // y=-50 from sticky chrome) — Chromium then captures white canvas below where Gum's
+  // BodyBg ends → ~7% false miss on the Rust book.
+  const clip = intersectScreenshotClip(
+    {
+      x: tree.rect.x,
+      y: tree.rect.y,
+      width: tree.rect.width,
+      height: tree.rect.height,
+    },
+    VIEWPORT.width,
+    VIEWPORT.height,
+  );
+  if (!clip) throw new Error('root screenshot clip is empty / outside the viewport');
   await shotPage.screenshot({ path: chromiumPng, clip });
   copyFileSync(chromiumPng, chromiumTagged);
   await shotPage.close();

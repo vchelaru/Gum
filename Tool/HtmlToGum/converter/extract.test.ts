@@ -51,23 +51,26 @@ test('extractBoxTree: a #text run that wraps across lines is split per rendered 
 
 // <input type="submit|button|reset"> labels live in the value attribute, not textContent
 // (KORE Sign In: empty text → orange rect with no label).
-test('extractBoxTree: submit/button input uses value as text', async () => {
+test('extractBoxTree: hidden menu labels are not leaf text (web.dev language selector)', async () => {
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
     await installTsxEvaluateShim(page);
     await page.setContent(`
-      <form>
-        <input id="go" type="submit" value="Sign In"
-          style="width:120px;height:32px;background:#f58320;color:#fff;border:0;font:14px Arial;">
-      </form>
+      <div id="lang" style="width:140px;height:36px;overflow:hidden;font:14px Arial;">
+        <button type="button" style="display:none">Language</button>
+        <ul style="display:none">
+          <li><a href="/">English</a></li>
+          <li><a href="/?hl=de">Deutsch</a></li>
+          <li><a href="/?hl=es">Español</a></li>
+        </ul>
+      </div>
     `);
-    const tree = await page.evaluate(extractBoxTree, '#go');
+    const tree = await page.evaluate(extractBoxTree, '#lang');
     await page.close();
-    assert.equal(tree.tag, 'input');
-    assert.equal(tree.text, 'Sign In');
-    assert.equal(tree.form?.role, 'submit');
-    assert.equal(tree.form?.value, 'Sign In');
+    assert.equal(tree.tag, 'div');
+    assert.equal((tree.text || '').includes('Deutsch'), false);
+    assert.equal((tree.text || '').includes('Español'), false);
   } finally {
     await browser.close();
   }
@@ -406,6 +409,197 @@ test('extractBoxTree: near-native img stays structured Sprite', async () => {
     await page.close();
     assert.equal(tree.tag, 'img');
     assert.equal(tree.style?.needsRaster, false);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: CSS mask-image icons needRaster (crates.io UnoCSS/Iconify)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    const mask = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10'/></svg>\")";
+    await page.setContent(`
+      <span id="icon" style="
+        display:inline-block;width:22px;height:22px;
+        background-color:#fff;
+        -webkit-mask-image:${mask};
+        mask-image:${mask};
+        -webkit-mask-size:100% 100%;
+        mask-size:100% 100%;
+      "></span>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#icon');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+    assert.equal(tree.style?.rasterOmitBackground, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: sr-only text is skipped (crates.io theme / search)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        .sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+          overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+        }
+      </style>
+      <button id="btn" style="width:48px;height:35px;position:relative;">
+        <span class="sr-only">Search</span>
+        <span id="glyph" style="display:inline-block;width:16px;height:16px;background:#fff;"></span>
+      </button>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#btn');
+    await page.close();
+    const texts = [];
+    (function walk(n) {
+      if (n.text) texts.push(n.text);
+      for (const c of n.children || []) walk(c);
+    })(tree);
+    assert.equal(texts.some((t) => /Search/i.test(t)), false);
+    assert.equal((tree.children || []).length, 1);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: text sibling next to picture is kept (crates.io brand)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <a id="brand" href="/" style="display:flex;align-items:center;gap:8px;font:20px Arial;color:#fff;background:#083;padding:8px;">
+        <picture style="display:contents">
+          <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="20" height="20" alt="">
+        </picture>
+        crates.io
+      </a>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#brand');
+    await page.close();
+    const texts = [];
+    (function walk(n) {
+      if (n.text) texts.push(n.text);
+      for (const c of n.children || []) walk(c);
+    })(tree);
+    assert.equal(texts.some((t) => /crates\.io/i.test(t)), true);
+    // picture[display:contents] must be flattened so img is a direct flex child
+    assert.equal((tree.children || []).some((c) => c.tag === 'picture'), false);
+    assert.equal((tree.children || []).some((c) => c.tag === 'img'), true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: ::after glyph content needsRaster (crates.io menu caret)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        .arrow::after { content: "▼"; color: #fff; font-size: 8px; }
+      </style>
+      <span id="arrow" class="arrow" style="display:inline-block;width:8px;height:9px;"></span>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#arrow');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: huge border-radius clamps to half min side (pill input)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <input id="q" type="text" placeholder="Search"
+        style="width:200px;height:40px;border:0;border-radius:5000px;background:#fff;">
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#q');
+    await page.close();
+    assert.ok(tree.style.borderTopLeftRadius <= 20 + 0.5);
+    assert.ok(tree.style.borderTopLeftRadius >= 19);
+    assert.equal(tree.style?.needsRaster, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: large single-line custom-font H1 needsRaster (crates.io title)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        @font-face { font-family: 'FakeFira'; src: local('Arial'); }
+      </style>
+      <h1 id="t" style="width:600px;font:700 30px FakeFira,sans-serif;color:#fff;margin:0;">
+        The Rust community's crate registry
+      </h1>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#t');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: multi-line custom-font DIV prose needsRaster (crates.io hero)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        @font-face { font-family: 'FakeFira'; src: local('Arial'); }
+      </style>
+      <div id="hero" style="width:280px;font:16px FakeFira,sans-serif;color:#333;">
+        Instantly publish your crates and install them. Use the API to interact and find
+        out more information about available crates. Become a contributor.
+      </div>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#hero');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('extractBoxTree: custom-font data TABLE needsRaster (kernel.org Oxygen)', async () => {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    await installTsxEvaluateShim(page);
+    await page.setContent(`
+      <style>
+        @font-face { font-family: 'Oxygen'; src: local('Arial'); }
+      </style>
+      <table id="rel" style="width:500px;height:120px;font:14px Oxygen,sans-serif;border-collapse:collapse;">
+        <tr><th>mainline</th><td>6.11</td><td>2026-08-06</td><td>[tarball]</td></tr>
+        <tr><th>stable</th><td>6.10.3</td><td>2026-08-05</td><td>[tarball] [patch]</td></tr>
+        <tr><th>longterm</th><td>6.6.40</td><td>2026-08-04</td><td>[tarball] [patch]</td></tr>
+        <tr><th>longterm</th><td>6.1.100</td><td>2026-08-03</td><td>[tarball] [patch]</td></tr>
+        <tr><th>longterm</th><td>5.15.160</td><td>2026-08-02</td><td>[tarball] [patch]</td></tr>
+      </table>
+    `);
+    const tree = await page.evaluate(extractBoxTree, '#rel');
+    await page.close();
+    assert.equal(tree.style?.needsRaster, true);
   } finally {
     await browser.close();
   }

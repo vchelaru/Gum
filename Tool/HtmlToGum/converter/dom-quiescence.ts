@@ -179,14 +179,52 @@ export async function stabilizeDynamicMedia(page) {
       }
     } catch { /* invalid selector on older engines */ }
 
+    // Open nav / language flyouts (web.dev mega-menu + language list) paint over the
+    // header and shift every re-run. Collapse expanded widgets and Escape-dismissible
+    // popovers so fidelity measures the resting chrome.
+    let collapsedMenus = 0;
+    try {
+      for (const d of document.querySelectorAll('details[open]')) {
+        d.removeAttribute('open');
+        collapsedMenus++;
+      }
+      for (const el of document.querySelectorAll('[aria-expanded="true"]')) {
+        el.setAttribute('aria-expanded', 'false');
+        const controls = el.getAttribute('aria-controls');
+        if (controls) {
+          const panel = document.getElementById(controls);
+          if (panel) {
+            panel.style.setProperty('display', 'none', 'important');
+            panel.setAttribute('aria-hidden', 'true');
+          }
+        }
+        collapsedMenus++;
+      }
+      for (const el of document.querySelectorAll('[role="listbox"], [role="menu"]')) {
+        const s = getComputedStyle(el);
+        if (s.position !== 'absolute' && s.position !== 'fixed') continue;
+        if (s.display === 'none' || s.visibility === 'hidden') continue;
+        el.style.setProperty('display', 'none', 'important');
+        el.setAttribute('aria-hidden', 'true');
+        collapsedMenus++;
+      }
+    } catch { /* ignore */ }
+
     return {
       slideGroupSizes,
       pinnedSlideGroups,
       pausedAnimations,
       hiddenOverlays,
+      collapsedMenus,
       hasIntervalHint: slideGroupSizes.length > 0,
     };
   });
+
+  // After DOM collapse, Escape clears focus-trap popovers that ignore aria attributes.
+  try {
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+  } catch { /* headless without keyboard */ }
 
   await freezeTimers(page);
 
@@ -200,5 +238,6 @@ export async function stabilizeDynamicMedia(page) {
     pinnedSlideGroups: meta.pinnedSlideGroups,
     pausedAnimations: meta.pausedAnimations,
     hiddenOverlays: meta.hiddenOverlays || 0,
+    collapsedMenus: meta.collapsedMenus || 0,
   };
 }
