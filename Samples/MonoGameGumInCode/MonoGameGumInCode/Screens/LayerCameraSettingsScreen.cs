@@ -155,5 +155,20 @@ internal class LayerCameraSettingsScreen : FrameworkElement
         hudLabel.Blue = 255;
         hudLabel.Alpha = 255;
         hudLabel.AddToManagers(SystemManagers.Default, _hudLayer);
+
+        // Clean up when this screen is navigated AWAY from. RemoveFromRoot (called by every sample's
+        // screen-switch code) sets this.Visual.Parent = null, which detaches the screen's own child
+        // tree -- but hudBackground/hudLabel above are NOT children of this screen (they're top-level
+        // members of _hudLayer via AddToManagers), so that detach never reaches them. Without this,
+        // the HUD layer + its two renderables keep rendering on top of every screen shown afterward,
+        // forever, until the user happens to revisit this screen (confirmed by manual test).
+        this.Visual.ParentChanged += (_, _) =>
+        {
+            if (this.Visual.Parent == null && _hudLayer != null)
+            {
+                SystemManagers.Default.Renderer.RemoveLayer(_hudLayer);
+                _hudLayer = null;
+            }
+        };
     }
 }
