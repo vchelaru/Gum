@@ -398,6 +398,13 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     private float MeasurementFontScale => _measurementFont != null ? FontScale : EffectiveFontScale;
 
+    // Issue #4370 (MonoGame parity): word-wrap must convert a Width constraint using the UNcompensated
+    // scale, since wrap decisions measure words against EffectiveMeasurementFont (native units). Already
+    // a no-op today (this class's own public FontScale never bakes in compensation, unlike MonoGame's
+    // Text.cs), but wiring it explicitly -- rather than relying on the interface default falling back to
+    // FontScale -- keeps this correct by construction if that ever changes.
+    float IWrappedText.WordWrapFontScale => MeasurementFontScale;
+
     /// <summary>
     /// Swaps in <paramref name="oversampledFont"/> as the DISPLAY font for camera-zoom oversampling
     /// (issue #4330, mirroring #4309), pinning the outgoing (native) <see cref="Font"/> as

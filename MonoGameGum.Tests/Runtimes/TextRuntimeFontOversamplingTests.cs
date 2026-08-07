@@ -790,6 +790,54 @@ char id=66 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
         }
     }
 
+    // Issue #4370: the RelativeToChildren tests above prove the pinned MEASUREMENT is stable, but an
+    // Absolute-width box never re-measures its own content -- it converts the fixed Width constraint
+    // into wrap-measurement units by dividing by FontScale (IWrappedTextExtensions.UpdateLines). That
+    // division used the render-facing IText.FontScale, which composes in OversampleCompensationScale
+    // (the pinned-vs-oversampled measured-width ratio, recomputed fresh every RegenerateOversampledFont
+    // call). So the wrap width itself shifted by 1/compensation every time oversampling turned on,
+    // even though the pinned MeasurementFont (and therefore the correct wrap width) never changed --
+    // reproducing the Zoom demo's "checkbox toggle re-wraps text at a fixed zoom" report. Text.cs
+    // already has a MeasurementFontScale (uncompensated) for exactly this purpose (issue #4309); this
+    // is the one remaining consumer that still reads the compensated scale instead.
+    [Fact]
+    public void RegenerateOversampledFont_WithAbsoluteWidth_DoesNotChangeWrappedLineCount()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new NearlyProportionalFontCreator(baseFontSize: 20);
+
+            TextRuntime textRuntime = new();
+            textRuntime.WidthUnits = DimensionUnitType.Absolute;
+            textRuntime.FontSize = 20;
+            // 8 glyphs (A,B,space,A,B,space,A,B) * 20px native xadvance = 160px -- exactly 2 lines at
+            // Width=100 ("AB AB " then "AB", assuming a trailing space stays with the first line).
+            textRuntime.Width = 100;
+            textRuntime.Text = "AB AB AB";
+
+            var text = (Text)textRuntime.RenderableComponent;
+            int lineCountBeforeOversampling = text.WrappedText.Count;
+            lineCountBeforeOversampling.ShouldBeGreaterThan(1,
+                "because the test must start from text that already wraps, or a wrap-width regression has nothing to widen");
+
+            bool result = textRuntime.RegenerateOversampledFont(2.5f);
+
+            result.ShouldBeTrue();
+            text.WrappedText.Count.ShouldBe(lineCountBeforeOversampling,
+                "because the Absolute Width constraint must always convert to wrap-measurement units via " +
+                "the uncompensated measurement scale -- oversampling's display-only compensation must not " +
+                "change how many lines a fixed-width box wraps to");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     private const string StubFontData =
 @"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
 common lineHeight=18 base=18 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
