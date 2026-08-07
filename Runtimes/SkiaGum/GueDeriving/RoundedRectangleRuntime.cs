@@ -215,6 +215,11 @@ public class RoundedRectangleRuntime
         toReturn._containedRoundedRectangle = null;
 
 #if SKIA
+        // The fill's MemberwiseClone shallow-copies OnPreRender too, so it still points at the
+        // SOURCE runtime's RefreshShapeState. Rebind to the clone's own instance method or the
+        // clone's PreRender-driven state (stroke Width/Height mirror, ScreenPixel corner radii)
+        // never runs when the clone is added top-level to a Layer (issue #4367 follow-up).
+        toReturn.ContainedRenderable.OnPreRender = toReturn.RefreshShapeState;
         // Issue #2814 recipe (mirror of CircleRuntime.Clone): drop the inherited reference to
         // the source stroke slot and rebuild a fresh one parented to the clone fill so the
         // clone is fully independent.

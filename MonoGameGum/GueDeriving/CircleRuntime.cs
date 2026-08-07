@@ -1666,6 +1666,11 @@ public class CircleRuntime : GraphicalUiElement
         // RenderableComponent on next access. The fill slot's Color/Radius/etc. were copied
         // by Circle.Clone (ICloneable, MemberwiseClone) so the clone's fill matches source.
         toReturn.containedLineCircle = null!;
+        // The fill's MemberwiseClone shallow-copies OnPreRender too, so it still points at the
+        // SOURCE runtime's RefreshShapeState. Rebind to the clone's own instance method or the
+        // clone's stroke never gets its Width/Height mirror when added top-level to a Layer
+        // (issue #4367 follow-up).
+        toReturn.ContainedRenderable.OnPreRender = toReturn.RefreshShapeState;
         // Issue #2790: drop the inherited reference to the source's stroke slot and rebuild a
         // fresh one parented to the clone's fill so the clone is fully independent.
         toReturn.ClearStrokeRenderable();
@@ -1760,6 +1765,15 @@ public class CircleRuntime : GraphicalUiElement
             // each route to their own renderable. Without this call the runtime stays on the
             // single-slot legacy model (last-non-null-setter-wins).
             SetStrokeRenderable(new ContainedCircleType());
+
+            // SetContainedObject above (shared with raylib/Sokol) doesn't wire the
+            // OnPreRender hook SetContainedShape would -- wire it explicitly here so the
+            // two-slot stroke Width/Height mirror in SkiaShapeRuntime.RefreshShapeState still
+            // runs when this runtime is a TOP-LEVEL Layer member added via AddToManagers, not
+            // just when nested under a parent (issue #4367 follow-up; see RectangleRuntime's
+            // SKIA branch, which uses SetContainedShape directly since its branch isn't shared
+            // with raylib).
+            circle.OnPreRender = RefreshShapeState;
 
             // Defaults: white fill gated off (IsFilled = false) + white stroke, so a freshly-
             // constructed runtime renders as a stroke-only outline. Because FillColor defaults
