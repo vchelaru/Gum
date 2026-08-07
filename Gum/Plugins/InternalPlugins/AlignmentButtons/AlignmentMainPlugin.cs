@@ -1,4 +1,5 @@
 ﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -32,7 +33,8 @@ namespace Gum.Plugins.AlignmentButtons
         private void AssignEvents()
         {
             this.TreeNodeSelected += HandleTreeNodeSelected;
-            this.StateWindowTreeNodeSelected += HandleStateWindowTreeNodeSelected;
+            this.ReactToStateSaveSelected += HandleStateSaveSelected;
+            this.ReactToStateSaveCategorySelected += HandleStateSaveCategorySelected;
             this.InstanceSelected += HandleInstanceSelected;
         }
 
@@ -42,7 +44,12 @@ namespace Gum.Plugins.AlignmentButtons
             _control.ViewModel.RefreshStateLabel();
         }
 
-        private void HandleStateWindowTreeNodeSelected(ITreeNode obj)
+        private void HandleStateSaveSelected(StateSave? state)
+        {
+            Refresh();
+        }
+
+        private void HandleStateSaveCategorySelected(StateSaveCategory? category)
         {
             Refresh();
         }
