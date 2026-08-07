@@ -23,8 +23,8 @@ public record WindowSettings(
     /// and treated as the floor for persisted geometry so a window shrunk to the OS minimum track
     /// size (title bar only) can't be saved and restored forever - see #4361.
     /// </summary>
-    public const double MinimumWidth = 640;
-    public const double MinimumHeight = 480;
+    public const double MinimumWidth = 480;
+    public const double MinimumHeight = 320;
 }
 
 public record MainTabDimensions(
