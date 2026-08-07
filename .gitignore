@@ -77,6 +77,9 @@ Tool/HtmlToGum/HtmlToGum-SpaceJam-Demo.html
 # One-off fidelity debug probes (not harness API)
 Tool/HtmlToGum/fidelity/_probe*
 Tool/HtmlToGum/fidelity/_tl_*
+Tool/HtmlToGum/converter/_probe*
+# Freeze still writes these locally; canaries re-screenshot chromium.png on each run
+Tool/HtmlToGum/fidelity/frozen/**/chromium-reference.png
 # Local bookmark seed list (may contain personal URLs)
 Tool/HtmlToGum/fidelity/seeds.json
 

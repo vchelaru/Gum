@@ -8,6 +8,5 @@
     "height": 900
   },
   "index": "index.html",
-  "chromiumReference": "chromium-reference.png",
-  "note": "HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially."
+  "note": "HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially. Optional local chromium-reference.png is gitignored."
 }

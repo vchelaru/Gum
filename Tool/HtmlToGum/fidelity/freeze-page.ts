@@ -91,13 +91,12 @@ async function main() {
       frozenAt: new Date().toISOString(),
       viewport: { width, height },
       index: 'index.html',
-      chromiumReference: 'chromium-reference.png',
-      note: 'HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially.',
+      note: 'HTML snapshot with <base href> to origin. Re-freeze when the live page layout changes materially. Optional local chromium-reference.png is gitignored (canaries re-screenshot).',
     };
     writeFileSync(join(dir, 'meta.json'), JSON.stringify(meta, null, 2));
 
     console.log(`wrote ${indexPath}`);
-    console.log(`wrote ${shotPath}`);
+    console.log(`wrote ${shotPath} (gitignored — local reference only)`);
     console.log(`meta: ${join(dir, 'meta.json')}`);
   } finally {
     await browser.close();
