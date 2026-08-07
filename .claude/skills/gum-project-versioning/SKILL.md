@@ -23,6 +23,10 @@ On every load, `GumProjectSaveExtensionMethods.Initialize` back-fills each stand
 
 Skip the tag (leave it 0 = always back-fill) only for variables every supported runtime already has. Forgetting the tag is exactly how FRB #1881 happened: opening a pre-v3 project injected the v3 shape surface into its `.gutx`, and FRB1 (which generates its own runtime classes from the standard elements) then emitted code referencing properties its pinned older runtime lacked — a wall of CS0246. This back-fill gate is **separate from** the variable-grid display gate (`ShapeVariableVersionGate`) and the runtime `GumSyntaxVersion` codegen gate; the three don't share a list, so a new variable may need entries in more than one.
 
+### Deprecated standard types are a separate mechanism from version gating
+
+A standard element can be excluded from new/back-filled projects without any `GumxVersions` bump: `StandardElementsManager._deprecatedStandardTypeNames` (e.g. `ColoredRectangle`, superseded by the v3 `Rectangle`) stays in `mDefaults` for legacy-load correctness but is filtered out of `SeedableStandardTypes`, which both new-project creation and the load-time back-fill read from. Seeing a deprecated standard in an old project doesn't mean its version requires it — check `SeedableStandardTypes` before assuming a standard is version-gated rather than deprecated.
+
 ## The three load-time behaviors
 
 `ProjectManager.LoadProject` (~line 201 and ~288 per recent research) compares the file's `Version` against `NativeVersion`:
