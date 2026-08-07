@@ -648,6 +648,14 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             MeasurementFont = mBitmapFont;
         }
+        else if (mBitmapFont != null && mBitmapFont != MeasurementFont && mBitmapFont != oversampledFont)
+        {
+            // Issue #4364: MeasurementFont is already pinned, so mBitmapFont here is a previously
+            // generated oversampled font being superseded by another re-rasterize (e.g. mid continuous
+            // zoom gesture) -- it isn't shared/cached anywhere else, so it must be disposed here or its
+            // GPU textures leak on every swap.
+            mBitmapFont.Dispose();
+        }
 
         if (mBitmapFont != oversampledFont)
         {

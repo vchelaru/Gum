@@ -420,6 +420,18 @@ public class Text : IVisible, IRenderableIpso,
         {
             MeasurementFont = Font;
         }
+        else if (_font.BaseSize != 0
+            && _font.Texture.Id != MeasurementFont.Value.Texture.Id
+            && _font.Texture.Id != oversampledFont.Texture.Id)
+        {
+            // Issue #4364: MeasurementFont is already pinned, so _font here is a previously generated
+            // oversampled font being superseded by another re-rasterize (e.g. mid continuous zoom
+            // gesture) -- it isn't cached or referenced anywhere else, so its GPU atlas must be unloaded
+            // here or it leaks VRAM on every swap. ManagedFont also unloads its drop-shadow companion
+            // (if any) and clears its line-metrics registry entry, mirroring the cleanup a cached font
+            // gets elsewhere (see RaylibFontShadowRegistry/RaylibFontMetricsRegistry).
+            new ManagedFont(_font).Dispose();
+        }
 
         if (_font.Texture.Id != oversampledFont.Texture.Id || _font.BaseSize != oversampledFont.BaseSize)
         {
