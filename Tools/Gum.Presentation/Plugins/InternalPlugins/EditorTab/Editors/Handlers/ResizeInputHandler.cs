@@ -336,24 +336,87 @@ public class ResizeInputHandler : InputHandlerBase
         // position/size) cancel out exactly, regardless of how they drifted.
         float parentOffset = liveAbsoluteMin - (livePositionAxis - originRatio * liveSizeAxis);
 
-        float grabStartMinLocal = grabStartPositionAxis - originRatio * grabStartSizeAxis;
-        float grabStartMaxLocal = grabStartMinLocal + grabStartSizeAxis;
-        float trueSize = grabStartSizeAxis + trueSizeOffsetSinceGrabAxis;
-
-        bool draggedIsMin = sizeMultiplier < 0;
-        float anchorLocal = draggedIsMin ? grabStartMaxLocal : grabStartMinLocal;
-        float trueDraggedLocal = draggedIsMin ? anchorLocal - trueSize : anchorLocal + trueSize;
+        GetAnchorAndDraggedLocal(grabStartPositionAxis, grabStartSizeAxis, trueSizeOffsetSinceGrabAxis,
+            sizeMultiplier, originRatio, out float anchorLocal, out float trueDraggedLocal);
 
         float snappedDraggedWorld = GridSnapper.SnapRound(parentOffset + trueDraggedLocal, gridSize);
         float snappedDraggedLocal = snappedDraggedWorld - parentOffset;
 
-        float newMinLocal = draggedIsMin ? snappedDraggedLocal : anchorLocal;
-        float newMaxLocal = draggedIsMin ? anchorLocal : snappedDraggedLocal;
-        float newSize = newMaxLocal - newMinLocal;
-        float newPositionLocal = newMinLocal + originRatio * newSize;
+        ResolveEdgesToPositionAndSize(anchorLocal, snappedDraggedLocal, originRatio,
+            out float newPositionLocal, out float newSize);
 
         differenceToGridPosition = newPositionLocal - livePositionAxis;
         differenceToGridSize = newSize - liveSizeAxis;
+    }
+
+    /// <summary>
+    /// Resolves the raw (non-grid-snapped) per-axis position/size delta for a resize drag,
+    /// allowing the dragged edge to cross the anchor edge instead of clamping Width/Height at 0.
+    /// See <see cref="GetAnchorAndDraggedLocal"/> and <see cref="ResolveEdgesToPositionAndSize"/> -
+    /// this is the same anchor/dragged-edge resolution <see cref="GetDifferenceToGridForResizeAxis"/>
+    /// uses, minus the grid-snap rounding step, so both paths flip identically (#4385).
+    /// </summary>
+    internal static void ResolveResizeAxis(
+        float grabStartPositionAxis, float grabStartSizeAxis, float trueSizeOffsetSinceGrabAxis,
+        float sizeMultiplier, float originRatio,
+        float livePositionAxis, float liveSizeAxis,
+        out float positionDelta, out float sizeDelta)
+    {
+        positionDelta = 0;
+        sizeDelta = 0;
+
+        if (sizeMultiplier == 0)
+        {
+            return;
+        }
+
+        GetAnchorAndDraggedLocal(grabStartPositionAxis, grabStartSizeAxis, trueSizeOffsetSinceGrabAxis,
+            sizeMultiplier, originRatio, out float anchorLocal, out float draggedLocal);
+
+        ResolveEdgesToPositionAndSize(anchorLocal, draggedLocal, originRatio,
+            out float newPositionLocal, out float newSize);
+
+        positionDelta = newPositionLocal - livePositionAxis;
+        sizeDelta = newSize - liveSizeAxis;
+    }
+
+    /// <summary>
+    /// Computes the grab-time ANCHOR edge (the edge opposite the one being dragged - invariant for
+    /// the whole gesture) and the DRAGGED edge's raw, never-clamped local position (anchor plus or
+    /// minus the true, unclamped size accumulated since grab). The dragged edge is free to cross
+    /// past the anchor; see <see cref="ResolveEdgesToPositionAndSize"/> for how that's turned into
+    /// a flip instead of a negative size.
+    /// </summary>
+    private static void GetAnchorAndDraggedLocal(
+        float grabStartPositionAxis, float grabStartSizeAxis, float trueSizeOffsetSinceGrabAxis,
+        float sizeMultiplier, float originRatio,
+        out float anchorLocal, out float draggedLocal)
+    {
+        float grabStartMinLocal = grabStartPositionAxis - originRatio * grabStartSizeAxis;
+        float grabStartMaxLocal = grabStartMinLocal + grabStartSizeAxis;
+
+        bool draggedIsMin = sizeMultiplier < 0;
+        anchorLocal = draggedIsMin ? grabStartMaxLocal : grabStartMinLocal;
+
+        float trueSize = grabStartSizeAxis + trueSizeOffsetSinceGrabAxis;
+        draggedLocal = draggedIsMin ? anchorLocal - trueSize : anchorLocal + trueSize;
+    }
+
+    /// <summary>
+    /// Resolves the final local position/size from an anchor edge and a dragged edge. Taking
+    /// Math.Min/Max of the two (rather than assuming the dragged edge is always the min or always
+    /// the max) is what makes crossing the anchor "just work" as a flip: once the dragged edge
+    /// passes the anchor, it naturally becomes the new min (or max) and the anchor becomes the
+    /// other - Width/Height (their difference) can never go negative.
+    /// </summary>
+    private static void ResolveEdgesToPositionAndSize(
+        float anchorLocal, float draggedLocal, float originRatio,
+        out float newPositionLocal, out float newSizeLocal)
+    {
+        float newMinLocal = Math.Min(anchorLocal, draggedLocal);
+        float newMaxLocal = Math.Max(anchorLocal, draggedLocal);
+        newSizeLocal = newMaxLocal - newMinLocal;
+        newPositionLocal = newMinLocal + originRatio * newSizeLocal;
     }
 
     public override void OnSelectionChanged()
@@ -418,13 +481,6 @@ public class ResizeInputHandler : InputHandlerBase
 
         bool hasChange = false;
 
-        // Apply position changes
-        Vector2 reposition = new Vector2(
-            cursorXChange * changeXMultiplier,
-            cursorYChange * changeYMultiplier);
-        // invert Y so up is positive
-        reposition.Y *= -1;
-
         GraphicalUiElement? representation = null;
 
         if (instanceSave != null)
@@ -436,7 +492,82 @@ public class ResizeInputHandler : InputHandlerBase
             representation = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element);
         }
 
-        float rotation = MathHelper.ToRadians(representation?.GetAbsoluteRotation() ?? 0);
+        if (representation == null)
+        {
+            return false;
+        }
+
+        // Track the raw, never-clamped size change since grab - unconditionally (not just for
+        // Snap To Grid, and toggled unconditionally so no discontinuity appears if the user toggles
+        // Snap To Grid mid-drag) - so a resize that overflows past zero can reflect the dragged edge
+        // to the opposite side (see ResolveResizeAxis) instead of getting stuck at Width/Height == 0.
+        Context.GrabbedState.AccumulateTrueSizeOffset(instanceSave,
+            cursorXChange * widthMultiplier, cursorYChange * heightMultiplier);
+
+        bool isResizeFromCenter = Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.ResizeFromCenter);
+
+        float xOriginRatio = GetRatioXOverInSelection(representation, GetCurrentXOrigin(instanceSave));
+        float yOriginRatio = GetRatioYDownInSelection(representation, GetCurrentYOrigin(instanceSave));
+
+        Vector2 grabStartPosition = instanceSave == null
+            ? Context.GrabbedState.ComponentPosition
+            : Context.GrabbedState.InstancePositions.TryGetValue(instanceSave, out var grabbedPosition)
+                ? new Vector2(grabbedPosition.AbsoluteX, grabbedPosition.AbsoluteY)
+                : new Vector2(representation.X, representation.Y);
+        Vector2 grabStartSize = instanceSave == null
+            ? Context.GrabbedState.ComponentSize
+            : Context.GrabbedState.InstanceSizes.TryGetValue(instanceSave, out var grabbedSize)
+                ? grabbedSize
+                : new Vector2(representation.Width, representation.Height);
+
+        float positionDeltaX, sizeDeltaX;
+        if (isResizeFromCenter && widthMultiplier != 0)
+        {
+            // Resize-from-center grows/shrinks symmetrically around a fixed CENTER point rather
+            // than a fixed edge, so the anchor-edge/dragged-edge flip above doesn't apply here.
+            // This combination doesn't yet support flip-at-zero (#4386 follow-up) - fall back to a
+            // simple floor clamp so Width can never go negative.
+            positionDeltaX = cursorXChange * changeXMultiplier;
+            sizeDeltaX = cursorXChange * widthMultiplier;
+            if (representation.Width + sizeDeltaX < 0)
+            {
+                sizeDeltaX = -representation.Width;
+            }
+        }
+        else
+        {
+            ResolveResizeAxis(
+                grabStartPosition.X, grabStartSize.X, Context.GrabbedState.GetTrueSizeOffset(instanceSave).X,
+                widthMultiplier, xOriginRatio,
+                representation.X, representation.Width,
+                out positionDeltaX, out sizeDeltaX);
+        }
+
+        float positionDeltaY, sizeDeltaY;
+        if (isResizeFromCenter && heightMultiplier != 0)
+        {
+            positionDeltaY = cursorYChange * changeYMultiplier;
+            sizeDeltaY = cursorYChange * heightMultiplier;
+            if (representation.Height + sizeDeltaY < 0)
+            {
+                sizeDeltaY = -representation.Height;
+            }
+        }
+        else
+        {
+            ResolveResizeAxis(
+                grabStartPosition.Y, grabStartSize.Y, Context.GrabbedState.GetTrueSizeOffset(instanceSave).Y,
+                heightMultiplier, yOriginRatio,
+                representation.Y, representation.Height,
+                out positionDeltaY, out sizeDeltaY);
+        }
+
+        // Apply position changes
+        Vector2 reposition = new Vector2(positionDeltaX, positionDeltaY);
+        // invert Y so up is positive
+        reposition.Y *= -1;
+
+        float rotation = MathHelper.ToRadians(representation.GetAbsoluteRotation());
         MathFunctions.RotateVector(ref reposition, rotation);
         // flip Y back
         reposition.Y *= -1;
@@ -467,36 +598,34 @@ public class ResizeInputHandler : InputHandlerBase
         }
 
         // Apply size changes
-        if (heightMultiplier != 0 && cursorYChange != 0)
+        if (heightMultiplier != 0 && sizeDeltaY != 0)
         {
             hasChange = true;
             if (instanceSave != null)
             {
-                Context.ElementCommands.ModifyVariable("Height", cursorYChange * heightMultiplier, instanceSave);
+                Context.ElementCommands.ModifyVariable("Height", sizeDeltaY, instanceSave);
             }
             else
             {
-                Context.ElementCommands.ModifyVariable("Height", cursorYChange * heightMultiplier, elementStack.Last().Element);
+                Context.ElementCommands.ModifyVariable("Height", sizeDeltaY, elementStack.Last().Element);
             }
         }
-        if (widthMultiplier != 0 && cursorXChange != 0)
+        if (widthMultiplier != 0 && sizeDeltaX != 0)
         {
             hasChange = true;
             if (instanceSave != null)
             {
-                Context.ElementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, instanceSave);
+                Context.ElementCommands.ModifyVariable("Width", sizeDeltaX, instanceSave);
             }
             else
             {
-                Context.ElementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
+                Context.ElementCommands.ModifyVariable("Width", sizeDeltaX, elementStack.Last().Element);
             }
         }
 
         if (Context.SnapToGrid)
         {
             Context.GrabbedState.AccumulateTruePositionOffset(instanceSave, reposition.X, reposition.Y);
-            Context.GrabbedState.AccumulateTrueSizeOffset(instanceSave,
-                cursorXChange * widthMultiplier, cursorYChange * heightMultiplier);
         }
 
         return hasChange;
