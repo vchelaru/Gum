@@ -160,3 +160,117 @@ public class ResizeInputHandlerFlipTests
         sizeDelta.ShouldBe(0);
     }
 }
+
+/// <summary>
+/// Pins ResizeInputHandler.ResolveResizeAxisFromCenter - the Resize From Center counterpart to
+/// <see cref="ResizeInputHandlerFlipTests"/> (#4390). Resize From Center grows/shrinks
+/// symmetrically around a fixed CENTER point rather than a fixed edge, so there is no "other" edge
+/// to flip against the way the plain edge-anchored resize does. Instead: Width/Height is always the
+/// absolute value of the true (signed, never-clamped) size accumulated since grab, and position is
+/// re-derived each tick from the grab-time center - which itself never moves - and the new size.
+/// </summary>
+public class ResizeInputHandlerFlipFromCenterTests
+{
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldGrowSymmetrically_WhenNotCrossingZero()
+    {
+        // Left-origin box (originRatio 0): Left(X)=10, Width=20 -> Center=20. A single tick that
+        // grows the true size offset by 10 (Width: 20 -> 30) should keep Center fixed at 20, moving
+        // Left from 10 to 5 (half the growth on each side).
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: 10,
+            originRatio: 0,
+            out float positionDelta, out float sizeDelta);
+
+        positionDelta.ShouldBe(-5); // X: 10 -> 5
+        sizeDelta.ShouldBe(10); // Width: 20 -> 30
+    }
+
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldAllowExactlyZeroSize_WithoutFlipping()
+    {
+        // Shrinking exactly down to the center (Width -> 0) is a legitimate stopping point, not a
+        // flip trigger.
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: -20,
+            originRatio: 0,
+            out float positionDelta, out float sizeDelta);
+
+        positionDelta.ShouldBe(10); // X: 10 -> 20 (Center stays at 20, Width is 0)
+        sizeDelta.ShouldBe(-20); // Width: 20 -> 0
+    }
+
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldFlip_WhenShrinkingPastZero()
+    {
+        // Left-origin box: Left(X)=10, Width=20 -> Center=20. Shrinking the true size offset past
+        // -20 (the point Width hits 0) continues symmetric growth in the "flipped" sense - Width is
+        // the magnitude of the true (signed) size - while Center stays fixed at 20.
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: -60,
+            originRatio: 0,
+            out float positionDelta, out float sizeDelta);
+
+        positionDelta.ShouldBe(-10); // X: 10 -> 0 (Left=0, Right=40, Center=20)
+        sizeDelta.ShouldBe(20); // Width: 20 -> 40
+    }
+
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldKeepCenterFixed_ForCenterOrigin()
+    {
+        // Center-origin box (originRatio .5): X already tracks the center directly, so it must
+        // never move regardless of how far the size offset crosses zero.
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 20, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: -60,
+            originRatio: 0.5f,
+            out float positionDelta, out float sizeDelta);
+
+        positionDelta.ShouldBe(0); // Center-origin X is already the center - stays at 20
+        sizeDelta.ShouldBe(20); // Width: 20 -> 40
+    }
+
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldSumToSameResult_WhenSplitAcrossConsecutiveTicks()
+    {
+        // Same per-tick-from-grab-state invariant as ResolveResizeAxis: two ticks that together
+        // cross zero (0 -> -30, then -30 -> -60) must sum to the same delta as one tick covering the
+        // same total range (0 -> -60).
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: -30,
+            originRatio: 0,
+            out float positionDelta1, out float sizeDelta1);
+
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: -30, trueSizeOffsetAfterAxis: -60,
+            originRatio: 0,
+            out float positionDelta2, out float sizeDelta2);
+
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: 0, trueSizeOffsetAfterAxis: -60,
+            originRatio: 0,
+            out float positionDeltaOneTick, out float sizeDeltaOneTick);
+
+        (positionDelta1 + positionDelta2).ShouldBe(positionDeltaOneTick);
+        (sizeDelta1 + sizeDelta2).ShouldBe(sizeDeltaOneTick);
+    }
+
+    [Fact]
+    public void ResolveResizeAxisFromCenter_ShouldReturnZeroDeltas_WhenOffsetUnchangedSinceLastTick()
+    {
+        ResolveResizeAxisFromCenter(
+            grabStartPositionAxis: 10, grabStartSizeAxis: 20,
+            trueSizeOffsetBeforeAxis: -60, trueSizeOffsetAfterAxis: -60,
+            originRatio: 0,
+            out float positionDelta, out float sizeDelta);
+
+        positionDelta.ShouldBe(0);
+        sizeDelta.ShouldBe(0);
+    }
+}
