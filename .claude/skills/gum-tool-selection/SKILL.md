@@ -9,18 +9,20 @@ description: Gum editor selection — click/drag, marquee, input handlers (move/
 
 Selection in the wireframe (XNA) editor is coordinated by `SelectionManager`. It delegates specific interactions to a set of **input handlers**, each responsible for one type of gesture (move, resize, rotate, polygon point editing). A separate **rectangle selector** handles marquee/rubber-band multi-selection. Locking (`InstanceSave.Locked`) cuts across all of these.
 
+This migrated in two parts: `MoveInputHandler`/`ResizeInputHandler`/`RotationInputHandler`/`InputHandlerBase`, `EditorContext`, `SelectionManager`, and `RectangleSelector` now live under the headless `Tools/Gum.Presentation/...`; `PolygonPointInputHandler` and `LockedSelectionVisual` are still under `Tool/EditorTabPlugin_XNA/Editors/...`.
+
 ## Input Handlers
 
-**Base class:** `Tool/EditorTabPlugin_XNA/Editors/Handlers/InputHandlerBase.cs`
+**Base class:** `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/InputHandlerBase.cs`
 
 Each handler represents one interaction mode. Concrete handlers:
 
 | Handler | File | Responsibility |
 |---------|------|----------------|
-| `MoveInputHandler` | `Handlers/MoveInputHandler.cs` | Drag-to-move selected instance(s) |
-| `ResizeInputHandler` | `Handlers/ResizeInputHandler.cs` | Resize handle dragging |
-| `RotationInputHandler` | `Handlers/RotationInputHandler.cs` | Rotation handle dragging |
-| `PolygonPointInputHandler` | `Handlers/PolygonPointInputHandler.cs` | Polygon vertex select/move/add/delete |
+| `MoveInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/MoveInputHandler.cs` | Drag-to-move selected instance(s) |
+| `ResizeInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/ResizeInputHandler.cs` | Resize handle dragging |
+| `RotationInputHandler` | `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/RotationInputHandler.cs` | Rotation handle dragging |
+| `PolygonPointInputHandler` | `Tool/EditorTabPlugin_XNA/Editors/Handlers/PolygonPointInputHandler.cs` | Polygon vertex select/move/add/delete |
 
 ### Handler Lifecycle
 
@@ -40,7 +42,7 @@ The base class `HandlePush` automatically checks `Context.IsSelectionLocked()` a
 
 ## Rectangle Selector (Marquee Selection)
 
-**File:** `Tool/EditorTabPlugin_XNA/RectangleSelector.cs`
+**File:** `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/RectangleSelector.cs`
 
 The rectangle selector activates on drag when no handler is active and the cursor is not over the element body (or Shift is held for additive selection), after a minimum drag distance is exceeded. `SelectionManager` passes `isHandlerActive` based on whether any handler's `IsActive` is `true`.
 
@@ -48,7 +50,7 @@ The rectangle selector activates on drag when no handler is active and the curso
 
 ## Locking (`InstanceSave.Locked`)
 
-`InstanceSave.Locked` is defined in `GumDataTypes/InstanceSave.cs`. The helper `EditorContext.IsSelectionLocked()` (in `Tool/EditorTabPlugin_XNA/Editors/EditorContext.cs`) returns `true` when the selected instance is locked.
+`InstanceSave.Locked` is defined in `GumDataTypes/InstanceSave.cs`. The helper `EditorContext.IsSelectionLocked()` (in `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/EditorContext.cs`) returns `true` when the selected instance is locked.
 
 ### Where Locking Is Enforced
 
@@ -117,14 +119,14 @@ User selects instance
 
 | File | Purpose |
 |------|---------|
-| `Tool/EditorTabPlugin_XNA/SelectionManager.cs` | Main coordinator; manages `IsOverBody`, routes events to handlers, passes `isHandlerActive` to rectangle selector |
-| `Tool/EditorTabPlugin_XNA/RectangleSelector.cs` | Marquee selection; activation gated on `isHandlerActive` and `IsOverBody` |
-| `Tool/EditorTabPlugin_XNA/Editors/Handlers/InputHandlerBase.cs` | Base class; provides default `HandlePush` with lock check |
-| `Tool/EditorTabPlugin_XNA/Editors/Handlers/MoveInputHandler.cs` | Move gesture; also handles axis lock and snap-to-unit for multi-selection |
-| `Tool/EditorTabPlugin_XNA/Editors/Handlers/ResizeInputHandler.cs` | Resize handle gestures |
+| `Tools/Gum.Presentation/Wireframe/SelectionManager.cs` | Main coordinator; manages `IsOverBody`, routes events to handlers, passes `isHandlerActive` to rectangle selector |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/RectangleSelector.cs` | Marquee selection; activation gated on `isHandlerActive` and `IsOverBody` |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/InputHandlerBase.cs` | Base class; provides default `HandlePush` with lock check |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/MoveInputHandler.cs` | Move gesture; also handles axis lock and snap-to-unit for multi-selection |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/Handlers/ResizeInputHandler.cs` | Resize handle gestures |
 | `Tool/EditorTabPlugin_XNA/Editors/Handlers/PolygonPointInputHandler.cs` | Polygon vertex editing; overrides `HandlePush` (must manage lock manually) |
-| `Tool/EditorTabPlugin_XNA/Editors/EditorContext.cs` | Provides `IsSelectionLocked()` helper used throughout handlers |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/EditorTab/Editors/EditorContext.cs` | Provides `IsSelectionLocked()` helper used throughout handlers |
 | `Tool/EditorTabPlugin_XNA/Editors/Visuals/LockedSelectionVisual.cs` | Dashed bounding outline for locked selected instances; display-only, no interaction |
 | `GumDataTypes/InstanceSave.cs` | `Locked` property definition |
-| `Gum/ToolCommands/ElementCommands.cs` | `MoveSelectedObjectsBy()`; skips locked instances in multi-move |
+| `Tools/Gum.Presentation/ToolCommands/ElementCommands.cs` | `MoveSelectedObjectsBy()`; skips locked instances in multi-move |
 | `WpfDataUi/Controls/ListBoxDisplay.xaml.cs` | Variable grid list control; respects `IsReadOnly` (driven by `Locked`) |

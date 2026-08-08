@@ -29,12 +29,13 @@ internal static class EditorContextTestHelper
         IWireframeObjectManager? wireframeObjectManager = null,
         IHotkeyManager? hotkeyManager = null,
         IGumCursorState? cursor = null,
-        Camera? camera = null)
+        Camera? camera = null,
+        IElementCommands? elementCommands = null)
     {
         return new EditorContext(
             selectedState ?? Mock.Of<ISelectedState>(),
             selectionManager ?? Mock.Of<ISelectionManager>(),
-            Mock.Of<IElementCommands>(),
+            elementCommands ?? Mock.Of<IElementCommands>(),
             Mock.Of<IGuiCommands>(),
             Mock.Of<IFileCommands>(),
             Mock.Of<ISetVariableLogic>(),

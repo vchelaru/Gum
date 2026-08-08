@@ -171,4 +171,23 @@ public class ResizeInputHandlerGridSnapTests
 
         diffPosition2.ShouldBe(0); // Still never moves
     }
+
+    [Fact]
+    public void GetDifferenceToGridForResizeAxis_ShouldFlipAnchor_WhenDraggedPastAnchor()
+    {
+        // Left-origin box, Left=5, Width=20 (Right=25). Right handle dragged left by a total of
+        // 30 - the dragged (Right) edge's raw target is 25-30=-5, past the Left anchor (5).
+        // Un-snapped this flips to Left=-5, Right=5, Width=10 (see the equivalent unsnapped case in
+        // ResizeInputHandlerFlipTests); snapping the dragged edge (-5) to the 16px grid rounds it to
+        // 0, giving Left=0, Right=5 (anchor), Width=5.
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 5, grabStartSizeAxis: 20, trueSizeOffsetSinceGrabAxis: -30,
+            sizeMultiplier: 1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: 5, livePositionAxis: 5, liveSizeAxis: 20,
+            out float differenceToGridPosition, out float differenceToGridSize);
+
+        differenceToGridPosition.ShouldBe(-5); // X: 5 -> 0
+        differenceToGridSize.ShouldBe(-15); // Width: 20 -> 5
+    }
 }
