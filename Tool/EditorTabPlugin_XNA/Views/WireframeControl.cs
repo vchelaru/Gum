@@ -301,11 +301,13 @@ public class WireframeControl : WpfGraphicsDeviceControl
     // internal (not private) and static so GumToolUnitTests can verify every standard type the
     // tool needs to render is registered here - this list drifting out of sync with the runtime's
     // own registration (RenderingLibrary.SystemManagers.RegisterComponentRuntimeInstantiations) is
-    // exactly how NineSlice/Container ended up missing: an instance whose type has no registration
+    // exactly how NineSlice ended up missing: an instance whose type has no registration
     // here falls back to a plain GraphicalUiElement wrapping a raw renderable, which most
     // CustomSetPropertyOnRenderable dispatch branches don't handle (they cast to the typed Runtime
     // and silently no-op if that fails) - producing a correctly-valued but unrendered property
     // (e.g. a NineSlice's Red/Green/Blue staying at the renderable's default white).
+    //
+    // Container is the one type that must stay unregistered - see the comment at its spot below.
     internal static void InitializeDefaultTypeInstantiation()
     {
         ElementSaveExtensions.RegisterGueInstantiation(
@@ -316,9 +318,14 @@ public class WireframeControl : WpfGraphicsDeviceControl
             "ColoredRectangle",
             () => new ColoredRectangleRuntime());
 
-        ElementSaveExtensions.RegisterGueInstantiation(
-            "Container",
-            () => new ContainerRuntime());
+        // Container is deliberately absent (issue #4386). Every registered runtime installs its own
+        // renderable in its constructor, so SetGraphicalUiElement sees a non-null RenderableComponent
+        // and skips CreateGraphicalComponent - the only path that consults
+        // GraphicalUiElement.ShowLineRectangles and returns FallbackRenderableFactory's dotted
+        // LineRectangle, which is how the editor draws a Container with Show Outlines checked (the
+        // runtime has no such concept, which is why it does register ContainerRuntime). Registering
+        // ContainerRuntime here replaced that outline with an InvisibleRenderable, making every
+        // Container instance invisible in the editor.
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "NineSlice",

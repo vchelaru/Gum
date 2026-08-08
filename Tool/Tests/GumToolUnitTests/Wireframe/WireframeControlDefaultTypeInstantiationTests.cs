@@ -28,9 +28,8 @@ public class WireframeControlDefaultTypeInstantiationTests
     // Circle/Polygon are deliberately excluded - their constructors reach RenderingLibrary.Graphics.Renderer.Self,
     // which needs a real graphics context (SystemManagers.Default initialized), unavailable in this
     // headless test process. They were already correctly registered before this fix; this test's
-    // purpose is pinning the two that weren't (Container, NineSlice), not full coverage.
+    // purpose is pinning the one that wasn't (NineSlice), not full coverage.
     [InlineData("ColoredRectangle", typeof(ColoredRectangleRuntime))]
-    [InlineData("Container", typeof(ContainerRuntime))]
     [InlineData("NineSlice", typeof(NineSliceRuntime))]
     [InlineData("Sprite", typeof(SpriteRuntime))]
     public void InitializeDefaultTypeInstantiation_ShouldRegisterEveryStandardType_SoInstancesConstructAsTheTypedRuntime(
@@ -42,5 +41,24 @@ public class WireframeControlDefaultTypeInstantiationTests
         var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
 
         gue.ShouldBeOfType(expectedRuntimeType);
+    }
+
+    /// <summary>
+    /// Container is the one standard type the tool must NOT register (issue #4386). Every registered
+    /// runtime installs its own renderable in its constructor, which makes SetGraphicalUiElement skip
+    /// CreateGraphicalComponent - and CreateGraphicalComponent is the only path that consults
+    /// GraphicalUiElement.ShowLineRectangles and hands back the dotted LineRectangle the editor draws
+    /// for a Container when Show Outlines is checked. Registering ContainerRuntime silently swapped
+    /// that outline for an InvisibleRenderable, making containers invisible in the editor.
+    /// </summary>
+    [Fact]
+    public void InitializeDefaultTypeInstantiation_ShouldLeaveContainerUnregistered_SoShowOutlinesCanBackItWithADottedLineRectangle()
+    {
+        WireframeControl.InitializeDefaultTypeInstantiation();
+
+        StandardElementSave containerElement = new() { Name = "Container" };
+        var gue = ElementSaveExtensions.CreateGueForElement(containerElement);
+
+        gue.RenderableComponent.ShouldBeNull();
     }
 }
