@@ -193,4 +193,72 @@ public class ResizeInputHandlerGridSnapTests
 
         differenceToGridHeight.ShouldBe(2); // 25 -> 27, so AbsoluteBottom lands at 5+27=32
     }
+
+    [Fact]
+    public void GetDifferenceToGridForPosition_ShouldSkipAxis_WhenChangeMultiplierIsZero()
+    {
+        // Dragging the Right handle on a Left-origin box only changes Width - changeXMultiplier is
+        // 0, so X never moves during this gesture. Snapping X anyway (the pre-existing bug: X/Y
+        // were always snapped regardless of which axes the resize actually touches) drags an
+        // off-grid anchor position onto the grid on every resize, even one that never moves that
+        // axis - reported as "resized and the position snapped to the grid (bad)".
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            X = 5,
+            Y = 5,
+            XUnits = GeneralUnitType.PixelsFromSmall,
+            YUnits = GeneralUnitType.PixelsFromSmall
+        };
+
+        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
+            grabStartLocal: new Vector2(5, 5), trueOffsetSinceGrab: Vector2.Zero,
+            changeXMultiplier: 0, changeYMultiplier: 0,
+            out float differenceToGridX, out float differenceToGridY);
+
+        differenceToGridX.ShouldBe(0);
+        differenceToGridY.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetDifferenceToGridForPosition_ShouldSnapAxis_WhenChangeMultiplierIsNonZero()
+    {
+        // e.g. dragging a corner handle on a Right/Bottom-origin box, where changeXMultiplier and
+        // changeYMultiplier are non-zero because the resize does move the position - this should
+        // behave exactly like MoveInputHandler.GetDifferenceToGrid.
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            X = 20,
+            Y = 5,
+            XUnits = GeneralUnitType.PixelsFromSmall,
+            YUnits = GeneralUnitType.PixelsFromSmall
+        };
+
+        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
+            grabStartLocal: new Vector2(20, 5), trueOffsetSinceGrab: Vector2.Zero,
+            changeXMultiplier: 1, changeYMultiplier: 1,
+            out float differenceToGridX, out float differenceToGridY);
+
+        differenceToGridX.ShouldBe(-4); // 20 -> 16
+        differenceToGridY.ShouldBe(-5); // 5 -> 0
+    }
+
+    [Fact]
+    public void GetDifferenceToGridForPosition_ShouldGateAxesIndependently()
+    {
+        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
+        {
+            X = 20,
+            Y = 5,
+            XUnits = GeneralUnitType.PixelsFromSmall,
+            YUnits = GeneralUnitType.PixelsFromSmall
+        };
+
+        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
+            grabStartLocal: new Vector2(20, 5), trueOffsetSinceGrab: Vector2.Zero,
+            changeXMultiplier: 1, changeYMultiplier: 0,
+            out float differenceToGridX, out float differenceToGridY);
+
+        differenceToGridX.ShouldBe(-4); // X snaps, since changeXMultiplier != 0
+        differenceToGridY.ShouldBe(0); // Y untouched, since changeYMultiplier == 0
+    }
 }

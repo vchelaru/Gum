@@ -238,11 +238,12 @@ public class ResizeInputHandler : InputHandlerBase
             return;
         }
 
-        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartPosition, truePositionOffset,
-            out float differenceToGridX, out float differenceToGridY);
-
         CalculateMultipliers(_sideGrabbed, instanceSave, elementStack,
-            out _, out _, out float widthMultiplier, out float heightMultiplier);
+            out float changeXMultiplier, out float changeYMultiplier, out float widthMultiplier, out float heightMultiplier);
+
+        GetDifferenceToGridForPosition(gue, gridSize, grabStartPosition, truePositionOffset,
+            changeXMultiplier, changeYMultiplier,
+            out float differenceToGridX, out float differenceToGridY);
 
         GetDifferenceToGridForSize(gue, gridSize, grabStartSize, trueSizeOffset,
             widthMultiplier, heightMultiplier,
@@ -271,6 +272,34 @@ public class ResizeInputHandler : InputHandlerBase
             gue.Height = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, instanceSave)
                 : Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, Context.SelectedState.SelectedElement);
+        }
+    }
+
+    /// <summary>
+    /// Computes the delta to apply to <paramref name="gue"/>'s X/Y for resize grid-snap, gated per
+    /// axis by <paramref name="changeXMultiplier"/>/<paramref name="changeYMultiplier"/> (from
+    /// CalculateMultipliers) - an axis whose multiplier is 0 isn't moved by this resize gesture at all (e.g. dragging the
+    /// Right handle on a Left-origin box never touches X), so it must be left alone even if it's
+    /// currently off-grid. Snapping it anyway would drag an off-grid anchor position onto the grid
+    /// on every resize tick, silently moving the object when the user only intended to resize it.
+    /// When an axis IS moved this gesture, delegates to <see cref="MoveInputHandler.GetDifferenceToGrid"/>
+    /// for the actual world-space snap.
+    /// </summary>
+    internal static void GetDifferenceToGridForPosition(GraphicalUiElement gue, float gridSize,
+        Vector2 grabStartLocal, Vector2 trueOffsetSinceGrab,
+        float changeXMultiplier, float changeYMultiplier,
+        out float differenceToGridX, out float differenceToGridY)
+    {
+        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartLocal, trueOffsetSinceGrab,
+            out differenceToGridX, out differenceToGridY);
+
+        if (changeXMultiplier == 0)
+        {
+            differenceToGridX = 0;
+        }
+        if (changeYMultiplier == 0)
+        {
+            differenceToGridY = 0;
         }
     }
 
