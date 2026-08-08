@@ -196,7 +196,9 @@ public class ResizeInputHandler : InputHandlerBase
             Context.SelectedState.SelectedInstances.Count() == 0)
         {
             var gue = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element) as GraphicalUiElement;
-            SnapInstanceToGrid(gue, instanceSave: null, gridSize);
+            SnapInstanceToGrid(gue, instanceSave: null, gridSize,
+                Context.GrabbedState.ComponentPosition, Context.GrabbedState.ComponentSize,
+                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset);
         }
 
         foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
@@ -207,19 +209,36 @@ public class ResizeInputHandler : InputHandlerBase
             }
 
             var gue = Context.WireframeObjectManager.GetRepresentation(save, elementStack) as GraphicalUiElement;
-            SnapInstanceToGrid(gue, save, gridSize);
+            if (gue == null)
+            {
+                continue;
+            }
+
+            Vector2 grabStartPosition = Context.GrabbedState.InstancePositions.TryGetValue(save, out var grabbedPosition)
+                ? new Vector2(grabbedPosition.AbsoluteX, grabbedPosition.AbsoluteY) // despite the field name, these are local X/Y at grab
+                : new Vector2(gue.X, gue.Y);
+            Vector2 grabStartSize = Context.GrabbedState.InstanceSizes.TryGetValue(save, out var grabbedSize)
+                ? grabbedSize
+                : new Vector2(gue.Width, gue.Height);
+
+            SnapInstanceToGrid(gue, save, gridSize,
+                grabStartPosition, grabStartSize,
+                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save));
         }
     }
 
-    private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize)
+    private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize,
+        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset)
     {
         if (gue == null)
         {
             return;
         }
 
-        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
-        GetDifferenceToGridForSize(gue, gridSize, out float differenceToGridWidth, out float differenceToGridHeight);
+        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartPosition, truePositionOffset,
+            out float differenceToGridX, out float differenceToGridY);
+        GetDifferenceToGridForSize(gue, gridSize, grabStartSize, trueSizeOffset,
+            out float differenceToGridWidth, out float differenceToGridHeight);
 
         if (differenceToGridX != 0)
         {
@@ -250,11 +269,14 @@ public class ResizeInputHandler : InputHandlerBase
     /// <summary>
     /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so each lands on the
     /// nearest grid line (rounded, not floored - a resize should grow/shrink to whichever grid
-    /// line is closest, not always down). This is local (not world-space) rounding; the
-    /// world-space anchor snap lives in <see cref="MoveInputHandler.GetDifferenceToGrid"/> and is
-    /// reused for X/Y. Axes using non-pixel units are left untouched.
+    /// line is closest, not always down), based on where the size would be with NO snapping ever
+    /// applied this drag (<paramref name="grabStartSize"/> + <paramref name="trueSizeOffsetSinceGrab"/>)
+    /// rather than the live <c>gue.Width</c>/<c>gue.Height</c> - see the "movement fights you"
+    /// explanation on <see cref="MoveInputHandler.GetDifferenceToGrid"/>, which is reused for X/Y.
+    /// This is local (not world-space) rounding. Axes using non-pixel units are left untouched.
     /// </summary>
     internal static void GetDifferenceToGridForSize(GraphicalUiElement gue, float gridSize,
+        Vector2 grabStartSize, Vector2 trueSizeOffsetSinceGrab,
         out float differenceToGridWidth, out float differenceToGridHeight)
     {
         differenceToGridWidth = 0;
@@ -262,16 +284,16 @@ public class ResizeInputHandler : InputHandlerBase
 
         if (gue.WidthUnits.GetIsPixelBased())
         {
-            float width = gue.Width;
-            float snappedWidth = GridSnapper.SnapRound(width, gridSize);
-            differenceToGridWidth = snappedWidth - width;
+            float trueWidth = grabStartSize.X + trueSizeOffsetSinceGrab.X;
+            float snappedWidth = GridSnapper.SnapRound(trueWidth, gridSize);
+            differenceToGridWidth = snappedWidth - gue.Width;
         }
 
         if (gue.HeightUnits.GetIsPixelBased())
         {
-            float height = gue.Height;
-            float snappedHeight = GridSnapper.SnapRound(height, gridSize);
-            differenceToGridHeight = snappedHeight - height;
+            float trueHeight = grabStartSize.Y + trueSizeOffsetSinceGrab.Y;
+            float snappedHeight = GridSnapper.SnapRound(trueHeight, gridSize);
+            differenceToGridHeight = snappedHeight - gue.Height;
         }
     }
 
@@ -409,6 +431,13 @@ public class ResizeInputHandler : InputHandlerBase
             {
                 Context.ElementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
             }
+        }
+
+        if (Context.SnapToGrid)
+        {
+            Context.GrabbedState.AccumulateTruePositionOffset(instanceSave, reposition.X, reposition.Y);
+            Context.GrabbedState.AccumulateTrueSizeOffset(instanceSave,
+                cursorXChange * widthMultiplier, cursorYChange * heightMultiplier);
         }
 
         return hasChange;

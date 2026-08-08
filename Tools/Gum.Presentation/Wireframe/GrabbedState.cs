@@ -91,6 +91,67 @@ public class GrabbedState
     } = new Dictionary<InstanceSave, Vector2>();
 
     /// <summary>
+    /// Grid-snap needs to know where an object would be with NO snapping applied, tracked
+    /// continuously across the whole drag - reading the live (already-snapped) X/Y/Width/Height
+    /// every frame causes each small move to be immediately reverted back to the same grid line
+    /// it was already snapped to, so the object only visibly moves once a single frame's raw
+    /// delta is big enough to land in a different grid cell. These accumulate the raw, unsnapped
+    /// per-frame deltas since grab (added to <see cref="ComponentPosition"/>/<see cref="ComponentSize"/>
+    /// or the per-instance grab position/size to get the "true" value) and are never touched by
+    /// the snap correction itself.
+    /// </summary>
+    public Vector2 TrueComponentPositionOffset { get; set; }
+    public Vector2 TrueComponentSizeOffset { get; set; }
+    public Dictionary<InstanceSave, Vector2> TrueInstancePositionOffsets { get; } = new Dictionary<InstanceSave, Vector2>();
+    public Dictionary<InstanceSave, Vector2> TrueInstanceSizeOffsets { get; } = new Dictionary<InstanceSave, Vector2>();
+
+    public void AccumulateTruePositionOffset(InstanceSave? instance, float deltaX, float deltaY)
+    {
+        if (instance == null)
+        {
+            TrueComponentPositionOffset += new Vector2(deltaX, deltaY);
+        }
+        else
+        {
+            TrueInstancePositionOffsets.TryGetValue(instance, out Vector2 current);
+            TrueInstancePositionOffsets[instance] = current + new Vector2(deltaX, deltaY);
+        }
+    }
+
+    public void AccumulateTrueSizeOffset(InstanceSave? instance, float deltaWidth, float deltaHeight)
+    {
+        if (instance == null)
+        {
+            TrueComponentSizeOffset += new Vector2(deltaWidth, deltaHeight);
+        }
+        else
+        {
+            TrueInstanceSizeOffsets.TryGetValue(instance, out Vector2 current);
+            TrueInstanceSizeOffsets[instance] = current + new Vector2(deltaWidth, deltaHeight);
+        }
+    }
+
+    public Vector2 GetTruePositionOffset(InstanceSave? instance)
+    {
+        if (instance == null)
+        {
+            return TrueComponentPositionOffset;
+        }
+        TrueInstancePositionOffsets.TryGetValue(instance, out Vector2 current);
+        return current;
+    }
+
+    public Vector2 GetTrueSizeOffset(InstanceSave? instance)
+    {
+        if (instance == null)
+        {
+            return TrueComponentSizeOffset;
+        }
+        TrueInstanceSizeOffsets.TryGetValue(instance, out Vector2 current);
+        return current;
+    }
+
+    /// <summary>
     /// Returns whether the cursor has moved enough from the initial grab point to start applying movement/sizing.
     /// This is initially false to prevent accidental movement when clicking on an object.
     /// </summary>
@@ -134,6 +195,11 @@ public class GrabbedState
 
         AccumulatedXOffset = 0;
         AccumulatedYOffset = 0;
+
+        TrueComponentPositionOffset = Vector2.Zero;
+        TrueComponentSizeOffset = Vector2.Zero;
+        TrueInstancePositionOffsets.Clear();
+        TrueInstanceSizeOffsets.Clear();
 
         if(_selectedState.SelectedStateSave != null)
         {

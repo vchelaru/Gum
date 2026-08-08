@@ -122,6 +122,11 @@ public class MoveInputHandler : InputHandlerBase
         Context.GrabbedState.AccumulatedXOffset += xToMoveBy;
         Context.GrabbedState.AccumulatedYOffset += yToMoveBy;
 
+        if (Context.SnapToGrid)
+        {
+            AccumulateTrueOffsetForGridSnap(xToMoveBy, yToMoveBy);
+        }
+
         var shouldSnapX = Context.SelectionManager.SelectedGues.Any(
             item => item.XUnits.GetIsPixelBased());
         var shouldSnapY = Context.SelectionManager.SelectedGues.Any(
@@ -166,6 +171,22 @@ public class MoveInputHandler : InputHandlerBase
             }
 
             MarkAsChanged();
+        }
+    }
+
+    private void AccumulateTrueOffsetForGridSnap(float deltaX, float deltaY)
+    {
+        if (Context.SelectedState.SelectedInstances.Count() == 0 &&
+            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null))
+        {
+            Context.GrabbedState.AccumulateTruePositionOffset(instance: null, deltaX, deltaY);
+        }
+        else
+        {
+            foreach (var instance in Context.SelectedState.SelectedInstances)
+            {
+                Context.GrabbedState.AccumulateTruePositionOffset(instance, deltaX, deltaY);
+            }
         }
     }
 
@@ -353,7 +374,9 @@ public class MoveInputHandler : InputHandlerBase
         {
             GraphicalUiElement gue = Context.SelectionManager.SelectedGue;
 
-            GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
+            GetDifferenceToGrid(gue, gridSize,
+                Context.GrabbedState.ComponentPosition, Context.GrabbedState.TrueComponentPositionOffset,
+                out float differenceToGridX, out float differenceToGridY);
 
             if (differenceToGridX != 0)
             {
@@ -375,7 +398,13 @@ public class MoveInputHandler : InputHandlerBase
 
                 if (instanceSave != null && !instanceSave.Locked && !Context.ElementCommands.ShouldSkipDraggingMovementOn(instanceSave))
                 {
-                    GetDifferenceToGrid(gue, gridSize, out float differenceToGridX, out float differenceToGridY);
+                    Vector2 grabStartLocal = Context.GrabbedState.InstancePositions.TryGetValue(instanceSave, out var grabbedPosition)
+                        ? new Vector2(grabbedPosition.AbsoluteX, grabbedPosition.AbsoluteY) // despite the field name, these are local X/Y at grab
+                        : new Vector2(gue.X, gue.Y);
+                    Vector2 trueOffset = Context.GrabbedState.GetTruePositionOffset(instanceSave);
+
+                    GetDifferenceToGrid(gue, gridSize, grabStartLocal, trueOffset,
+                        out float differenceToGridX, out float differenceToGridY);
 
                     if (differenceToGridX != 0)
                     {
@@ -401,29 +430,41 @@ public class MoveInputHandler : InputHandlerBase
 
     /// <summary>
     /// Computes the delta to apply to <paramref name="gue"/>'s local X/Y so its world-space anchor
-    /// (<see cref="GraphicalUiElement.AbsoluteX"/>/<see cref="GraphicalUiElement.AbsoluteY"/>, which
-    /// already accounts for XOrigin/YOrigin and rotation) lands on the nearest grid line at or below
-    /// its current position. Axes using non-pixel units are left untouched (0 difference) - grid
-    /// snap only applies to pixel-based positioning.
+    /// lands on the nearest grid line at or below where it would be with NO snapping ever applied
+    /// this drag (<paramref name="grabStartLocal"/> + <paramref name="trueOffsetSinceGrab"/>).
+    /// Snapping from the live <c>gue.X</c>/<c>gue.Y</c> instead would read back whatever the
+    /// previous frame's snap already wrote, silently reverting every small drag back to the same
+    /// grid line instead of letting the true position accumulate - the object would only move once
+    /// a single frame's raw delta was big enough to cross into the next grid cell (issue #4137
+    /// review: "movement fights you"). The live value is still what the returned delta is relative
+    /// to, since that's what the caller applies via <c>ModifyVariable</c>. Axes using non-pixel
+    /// units are left untouched (0 difference) - grid snap only applies to pixel-based positioning.
     /// </summary>
     internal static void GetDifferenceToGrid(GraphicalUiElement gue, float gridSize,
+        Vector2 grabStartLocal, Vector2 trueOffsetSinceGrab,
         out float differenceToGridX, out float differenceToGridY)
     {
         differenceToGridX = 0;
         differenceToGridY = 0;
 
+        // The parent's own absolute offset doesn't change during this drag (only this object
+        // moves), so live AbsoluteX/Y minus live X/Y always yields the current parent offset -
+        // valid at any point in the drag, not just at grab time.
+        float parentOffsetX = gue.AbsoluteX - gue.X;
+        float parentOffsetY = gue.AbsoluteY - gue.Y;
+
         if (gue.XUnits.GetIsPixelBased())
         {
-            float absoluteX = gue.AbsoluteX;
-            float snappedAbsoluteX = GridSnapper.Snap(absoluteX, gridSize);
-            differenceToGridX = snappedAbsoluteX - absoluteX;
+            float trueWorldX = grabStartLocal.X + trueOffsetSinceGrab.X + parentOffsetX;
+            float snappedWorldX = GridSnapper.Snap(trueWorldX, gridSize);
+            differenceToGridX = snappedWorldX - gue.AbsoluteX;
         }
 
         if (gue.YUnits.GetIsPixelBased())
         {
-            float absoluteY = gue.AbsoluteY;
-            float snappedAbsoluteY = GridSnapper.Snap(absoluteY, gridSize);
-            differenceToGridY = snappedAbsoluteY - absoluteY;
+            float trueWorldY = grabStartLocal.Y + trueOffsetSinceGrab.Y + parentOffsetY;
+            float snappedWorldY = GridSnapper.Snap(trueWorldY, gridSize);
+            differenceToGridY = snappedWorldY - gue.AbsoluteY;
         }
     }
 
