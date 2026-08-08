@@ -97,7 +97,8 @@ public class StateTreeRightClickViewModelTests
 
         List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
 
-        result.Any(item => item.Text == "Add Category").ShouldBeTrue();
+        ContextMenuItemViewModel addCategory = result.First(item => item.Text == "Add Category");
+        addCategory.IconKey.ShouldBe(ContextMenuIconKeys.Category);
     }
 
     [Fact]
@@ -110,7 +111,8 @@ public class StateTreeRightClickViewModelTests
 
         List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
 
-        result.Any(item => item.Text == "Add State").ShouldBeTrue();
+        ContextMenuItemViewModel addState = result.First(item => item.Text == "Add State");
+        addState.IconKey.ShouldBe(ContextMenuIconKeys.State);
     }
 
     [Fact]

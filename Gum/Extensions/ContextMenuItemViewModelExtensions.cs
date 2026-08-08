@@ -1,3 +1,4 @@
+using FluentIcons.Wpf;
 using Gum.ViewModels;
 using System.Windows.Controls;
 
@@ -11,6 +12,8 @@ namespace Gum.Extensions;
 /// </summary>
 public static class ContextMenuItemViewModelExtensions
 {
+    private const double MenuIconSize = 14;
+
     public static Control ToMenuItem(this ContextMenuItemViewModel item)
     {
         if (item.IsSeparator)
@@ -25,6 +28,11 @@ public static class ContextMenuItemViewModelExtensions
             menuItem.InputGestureText = item.Shortcut;
         }
 
+        if (item.IconKey != null)
+        {
+            menuItem.Icon = CreateIcon(item.IconKey);
+        }
+
         if (item.Action != null)
         {
             menuItem.Click += (_, _) => item.Action();
@@ -37,4 +45,16 @@ public static class ContextMenuItemViewModelExtensions
 
         return menuItem;
     }
+
+    /// <summary>
+    /// Matches the icons the States tree itself uses for category/state rows
+    /// (<c>StateTreeView.xaml</c>'s "DatabaseMultiple"/"Database" FluentIcons), so an "Add
+    /// State"/"Add Category" menu item reads as the same concept as the row it will create.
+    /// </summary>
+    private static FluentIcon? CreateIcon(string iconKey) => iconKey switch
+    {
+        ContextMenuIconKeys.Category => new FluentIcon { Icon = FluentIcons.Common.Icon.DatabaseMultiple, FontSize = MenuIconSize },
+        ContextMenuIconKeys.State => new FluentIcon { Icon = FluentIcons.Common.Icon.Database, FontSize = MenuIconSize },
+        _ => null
+    };
 }

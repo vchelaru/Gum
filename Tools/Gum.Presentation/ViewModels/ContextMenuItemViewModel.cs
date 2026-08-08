@@ -11,4 +11,11 @@ public class ContextMenuItemViewModel
     public bool IsSeparator { get; set; }
     public bool IsEnabled { get; set; } = true;
     public string? Shortcut { get; set; }
+
+    /// <summary>
+    /// Framework-neutral key identifying which icon this item should show, or null for none.
+    /// <see cref="Gum.Extensions.ContextMenuItemViewModelExtensions"/> maps known keys to the actual
+    /// WPF icon element - this assembly must not reference WPF (ADR-0005).
+    /// </summary>
+    public string? IconKey { get; set; }
 }
