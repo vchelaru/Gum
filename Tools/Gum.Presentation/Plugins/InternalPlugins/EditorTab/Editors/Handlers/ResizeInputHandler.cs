@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
@@ -198,7 +199,8 @@ public class ResizeInputHandler : InputHandlerBase
             var gue = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element) as GraphicalUiElement;
             SnapInstanceToGrid(gue, instanceSave: null, gridSize,
                 Context.GrabbedState.ComponentPosition, Context.GrabbedState.ComponentSize,
-                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset);
+                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset,
+                elementStack);
         }
 
         foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
@@ -223,22 +225,37 @@ public class ResizeInputHandler : InputHandlerBase
 
             SnapInstanceToGrid(gue, save, gridSize,
                 grabStartPosition, grabStartSize,
-                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save));
+                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save),
+                elementStack);
         }
     }
 
     private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize,
-        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset)
+        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset,
+        List<ElementWithState> elementStack)
     {
         if (gue == null)
         {
             return;
         }
 
-        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartPosition, truePositionOffset,
-            out float differenceToGridX, out float differenceToGridY);
-        GetDifferenceToGridForSize(gue, gridSize, grabStartSize, trueSizeOffset,
-            out float differenceToGridWidth, out float differenceToGridHeight);
+        CalculateMultipliers(_sideGrabbed, instanceSave, elementStack,
+            out _, out _, out float widthMultiplier, out float heightMultiplier);
+
+        float xOriginRatio = GetRatioXOverInSelection(gue, GetCurrentXOrigin(instanceSave));
+        float yOriginRatio = GetRatioYDownInSelection(gue, GetCurrentYOrigin(instanceSave));
+
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPosition.X, grabStartSize.X, trueSizeOffset.X, widthMultiplier, xOriginRatio,
+            gue.XUnits.GetIsPixelBased(), gue.WidthUnits.GetIsPixelBased(),
+            gue.AbsoluteLeft, gue.X, gue.Width,
+            out float differenceToGridX, out float differenceToGridWidth);
+
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPosition.Y, grabStartSize.Y, trueSizeOffset.Y, heightMultiplier, yOriginRatio,
+            gue.YUnits.GetIsPixelBased(), gue.HeightUnits.GetIsPixelBased(),
+            gue.AbsoluteTop, gue.Y, gue.Height,
+            out float differenceToGridY, out float differenceToGridHeight);
 
         if (differenceToGridX != 0)
         {
@@ -266,35 +283,77 @@ public class ResizeInputHandler : InputHandlerBase
         }
     }
 
-    /// <summary>
-    /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so each lands on the
-    /// nearest grid line (rounded, not floored - a resize should grow/shrink to whichever grid
-    /// line is closest, not always down), based on where the size would be with NO snapping ever
-    /// applied this drag (<paramref name="grabStartSize"/> + <paramref name="trueSizeOffsetSinceGrab"/>)
-    /// rather than the live <c>gue.Width</c>/<c>gue.Height</c> - see the "movement fights you"
-    /// explanation on <see cref="MoveInputHandler.GetDifferenceToGrid"/>, which is reused for X/Y.
-    /// This is local (not world-space) rounding. Axes using non-pixel units are left untouched.
-    /// </summary>
-    internal static void GetDifferenceToGridForSize(GraphicalUiElement gue, float gridSize,
-        Vector2 grabStartSize, Vector2 trueSizeOffsetSinceGrab,
-        out float differenceToGridWidth, out float differenceToGridHeight)
+    private HorizontalAlignment GetCurrentXOrigin(InstanceSave? instanceSave)
     {
-        differenceToGridWidth = 0;
-        differenceToGridHeight = 0;
+        object? xOriginAsObject = Context.ElementCommands.GetCurrentValueForVariable("XOrigin", instanceSave);
+        return xOriginAsObject != null ? (HorizontalAlignment)xOriginAsObject : HorizontalAlignment.Left;
+    }
 
-        if (gue.WidthUnits.GetIsPixelBased())
+    private VerticalAlignment GetCurrentYOrigin(InstanceSave? instanceSave)
+    {
+        object? yOriginAsObject = Context.ElementCommands.GetCurrentValueForVariable("YOrigin", instanceSave);
+        return yOriginAsObject != null ? (VerticalAlignment)yOriginAsObject : VerticalAlignment.Top;
+    }
+
+    /// <summary>
+    /// Computes the delta to apply to one axis's position and size for resize grid-snap. Unlike
+    /// rounding Width/Height in isolation (which only lands the dragged edge on-grid when the
+    /// opposite/anchor edge already happens to be grid-aligned) or independently grid-snapping X/Y
+    /// (which fights with the size snap for the shared edge and drifts frame to frame - reported as
+    /// "grab the top handle... the bottom doesn't stay fixed, it snaps around"), this resolves both
+    /// edges together from a single source of truth: the anchor edge's position AT GRAB TIME
+    /// (<paramref name="grabStartPositionAxis"/>/<paramref name="grabStartSizeAxis"/> combined via
+    /// <paramref name="originRatio"/>), which is frame-invariant by construction - re-deriving it
+    /// from "live" state each tick is exactly what let it drift. Only the dragged edge (identified by
+    /// <paramref name="sizeMultiplier"/>'s sign - negative means Left/Top, positive means Right/
+    /// Bottom, zero means this axis isn't resized this gesture) is snapped, from its true (never-
+    /// snapped) position - anchor +/- the true, unsnapped size (<paramref name="grabStartSizeAxis"/> +
+    /// <paramref name="trueSizeOffsetSinceGrabAxis"/>; see the "movement fights you" explanation on
+    /// <see cref="MoveInputHandler.GetDifferenceToGrid"/>). Position and size are then both derived
+    /// from the same resolved pair of edges via <paramref name="originRatio"/> (0 = Left/Top origin,
+    /// .5 = Center, 1 = Right/Bottom), so a Center-origin object's X/Y (which tracks neither edge
+    /// alone) comes out correct too. Axes where either the position or size units aren't pixel-based
+    /// are left untouched.
+    /// </summary>
+    internal static void GetDifferenceToGridForResizeAxis(float gridSize,
+        float grabStartPositionAxis, float grabStartSizeAxis, float trueSizeOffsetSinceGrabAxis,
+        float sizeMultiplier, float originRatio,
+        bool positionIsPixelBased, bool sizeIsPixelBased,
+        float liveAbsoluteMin, float livePositionAxis, float liveSizeAxis,
+        out float differenceToGridPosition, out float differenceToGridSize)
+    {
+        differenceToGridPosition = 0;
+        differenceToGridSize = 0;
+
+        if (sizeMultiplier == 0 || !positionIsPixelBased || !sizeIsPixelBased)
         {
-            float trueWidth = grabStartSize.X + trueSizeOffsetSinceGrab.X;
-            float snappedWidth = GridSnapper.SnapRound(trueWidth, gridSize);
-            differenceToGridWidth = snappedWidth - gue.Width;
+            return;
         }
 
-        if (gue.HeightUnits.GetIsPixelBased())
-        {
-            float trueHeight = grabStartSize.Y + trueSizeOffsetSinceGrab.Y;
-            float snappedHeight = GridSnapper.SnapRound(trueHeight, gridSize);
-            differenceToGridHeight = snappedHeight - gue.Height;
-        }
+        // Always exact: AbsoluteMin (AbsoluteLeft/Top) is, by definition, the parent offset plus
+        // the local min edge (position minus the origin's share of the size) - solving for the
+        // parent offset here means the drag's own past snap corrections (baked into the live
+        // position/size) cancel out exactly, regardless of how they drifted.
+        float parentOffset = liveAbsoluteMin - (livePositionAxis - originRatio * liveSizeAxis);
+
+        float grabStartMinLocal = grabStartPositionAxis - originRatio * grabStartSizeAxis;
+        float grabStartMaxLocal = grabStartMinLocal + grabStartSizeAxis;
+        float trueSize = grabStartSizeAxis + trueSizeOffsetSinceGrabAxis;
+
+        bool draggedIsMin = sizeMultiplier < 0;
+        float anchorLocal = draggedIsMin ? grabStartMaxLocal : grabStartMinLocal;
+        float trueDraggedLocal = draggedIsMin ? anchorLocal - trueSize : anchorLocal + trueSize;
+
+        float snappedDraggedWorld = GridSnapper.SnapRound(parentOffset + trueDraggedLocal, gridSize);
+        float snappedDraggedLocal = snappedDraggedWorld - parentOffset;
+
+        float newMinLocal = draggedIsMin ? snappedDraggedLocal : anchorLocal;
+        float newMaxLocal = draggedIsMin ? anchorLocal : snappedDraggedLocal;
+        float newSize = newMaxLocal - newMinLocal;
+        float newPositionLocal = newMinLocal + originRatio * newSize;
+
+        differenceToGridPosition = newPositionLocal - livePositionAxis;
+        differenceToGridSize = newSize - liveSizeAxis;
     }
 
     public override void OnSelectionChanged()
