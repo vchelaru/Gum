@@ -398,6 +398,33 @@ public class ResizeInputHandler : InputHandlerBase
     }
 
     /// <summary>
+    /// Center-anchored counterpart to <see cref="ResolveResizeAxis"/> (#4390). Resize From Center
+    /// grows/shrinks symmetrically around a fixed CENTER point rather than a fixed edge, so the
+    /// anchor-edge/dragged-edge Math.Min/Max approach doesn't apply - there is no "other" edge to
+    /// flip against. Flip here is simpler: Width/Height is the absolute value of the true (signed,
+    /// never-clamped) size accumulated since grab, and position is re-derived each tick from the
+    /// grab-time CENTER (itself invariant - it never moves) and the new size, so the center never
+    /// drifts even as the size crosses zero and grows again in the "flipped" direction.
+    /// </summary>
+    internal static void ResolveResizeAxisFromCenter(
+        float grabStartPositionAxis, float grabStartSizeAxis,
+        float trueSizeOffsetBeforeAxis, float trueSizeOffsetAfterAxis,
+        float originRatio,
+        out float positionDelta, out float sizeDelta)
+    {
+        float oldSizeLocal = Math.Abs(grabStartSizeAxis + trueSizeOffsetBeforeAxis);
+        float newSizeLocal = Math.Abs(grabStartSizeAxis + trueSizeOffsetAfterAxis);
+
+        float centerAxis = grabStartPositionAxis + (0.5f - originRatio) * grabStartSizeAxis;
+
+        float oldPositionLocal = centerAxis - (0.5f - originRatio) * oldSizeLocal;
+        float newPositionLocal = centerAxis - (0.5f - originRatio) * newSizeLocal;
+
+        positionDelta = newPositionLocal - oldPositionLocal;
+        sizeDelta = newSizeLocal - oldSizeLocal;
+    }
+
+    /// <summary>
     /// Computes the grab-time ANCHOR edge (the edge opposite the one being dragged - invariant for
     /// the whole gesture) and the DRAGGED edge's raw, never-clamped local position (anchor plus or
     /// minus the true, unclamped size accumulated since grab). The dragged edge is free to cross
@@ -545,16 +572,11 @@ public class ResizeInputHandler : InputHandlerBase
         float positionDeltaX, sizeDeltaX;
         if (isResizeFromCenter && widthMultiplier != 0)
         {
-            // Resize-from-center grows/shrinks symmetrically around a fixed CENTER point rather
-            // than a fixed edge, so the anchor-edge/dragged-edge flip above doesn't apply here.
-            // This combination doesn't yet support flip-at-zero (#4390 follow-up) - fall back to a
-            // simple floor clamp so Width can never go negative.
-            positionDeltaX = cursorXChange * changeXMultiplier;
-            sizeDeltaX = cursorXChange * widthMultiplier;
-            if (representation.Width + sizeDeltaX < 0)
-            {
-                sizeDeltaX = -representation.Width;
-            }
+            ResolveResizeAxisFromCenter(
+                grabStartPosition.X, grabStartSize.X,
+                trueSizeOffsetBefore.X, trueSizeOffsetAfter.X,
+                xOriginRatio,
+                out positionDeltaX, out sizeDeltaX);
         }
         else
         {
@@ -568,12 +590,11 @@ public class ResizeInputHandler : InputHandlerBase
         float positionDeltaY, sizeDeltaY;
         if (isResizeFromCenter && heightMultiplier != 0)
         {
-            positionDeltaY = cursorYChange * changeYMultiplier;
-            sizeDeltaY = cursorYChange * heightMultiplier;
-            if (representation.Height + sizeDeltaY < 0)
-            {
-                sizeDeltaY = -representation.Height;
-            }
+            ResolveResizeAxisFromCenter(
+                grabStartPosition.Y, grabStartSize.Y,
+                trueSizeOffsetBefore.Y, trueSizeOffsetAfter.Y,
+                yOriginRatio,
+                out positionDeltaY, out sizeDeltaY);
         }
         else
         {
