@@ -1,264 +1,174 @@
-using System.Numerics;
-using Gum.Converters;
-using Gum.DataTypes;
-using Gum.Wireframe;
-using Gum.Wireframe.Editors.Handlers;
-using RenderingLibrary.Graphics;
 using Shouldly;
+using static Gum.Wireframe.Editors.Handlers.ResizeInputHandler;
 
 namespace Gum.Presentation.Tests;
 
 /// <summary>
-/// Pins ResizeInputHandler.GetDifferenceToGridForSize, the Width/Height half of resize grid-snap
-/// (issue #4137, refined by #4380) — the X/Y half reuses MoveInputHandler.GetDifferenceToGrid,
-/// already pinned by MoveInputHandlerGridSnapTests. Snap targets the dragged edge's absolute
-/// (world-space) position directly - AbsoluteLeft/Right for width, AbsoluteTop/Bottom for height -
-/// deriving the Width/Height delta from that, rather than rounding Width/Height in isolation.
-/// Rounding Width/Height alone only lands on-grid when the opposite (anchor) edge already happens
-/// to be grid-aligned; when it isn't (e.g. the object's position is off-grid), the dragged edge can
-/// land off-grid even though the size itself is a multiple of the grid. Which edge is "dragged" vs
-/// "anchor" is given by the sign of widthMultiplier/heightMultiplier from CalculateMultipliers
-/// (negative = Left/Top dragged, positive = Right/Bottom dragged, zero = axis not resized this
-/// gesture) - this is independent of XOrigin/YOrigin, since the multiplier system already keeps the
-/// opposite edge fixed regardless of origin.
+/// Pins ResizeInputHandler.GetDifferenceToGridForResizeAxis, the per-axis math behind resize
+/// grid-snap (issue #4137, refined by #4380). It resolves position (X/Y) and size (Width/Height)
+/// together from one pair of edges instead of two independent computations: the anchor edge (the
+/// one NOT being dragged) is pinned to its position AT GRAB TIME - frame-invariant by construction
+/// - and only the dragged edge (identified by sizeMultiplier's sign) is snapped to the nearest
+/// world-space grid line. Position is then re-derived from the resolved edges via originRatio,
+/// rather than snapped independently.
+///
+/// An earlier version snapped X/Y and Width/Height independently, each re-deriving the anchor from
+/// "live" (already-partially-snapped) state every tick. That let the two computations disagree and
+/// drift: dragging the Top handle, the Bottom edge (meant to stay fixed) would visibly "snap around"
+/// frame to frame instead of staying put - see the two-frame stability tests below.
 /// </summary>
 public class ResizeInputHandlerGridSnapTests
 {
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldRoundToNearestGridLine_WhenPixelBasedAndOffGrid()
+    public void GetDifferenceToGridForResizeAxis_ShouldSkipAxis_WhenSizeMultiplierIsZero()
     {
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Width = 30,
-            Height = 50,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.Absolute
-        };
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 5, grabStartSizeAxis: 25, trueSizeOffsetSinceGrabAxis: 0,
+            sizeMultiplier: 0, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: 5, livePositionAxis: 5, liveSizeAxis: 25,
+            out float differenceToGridPosition, out float differenceToGridSize);
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(30, 50), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 1, heightMultiplier: 1,
-            out float differenceToGridWidth, out float differenceToGridHeight);
+        differenceToGridPosition.ShouldBe(0);
+        differenceToGridSize.ShouldBe(0);
+    }
 
-        differenceToGridWidth.ShouldBe(2); // anchor (left) at 0, right 30 -> 32 (nearest), not 16 (floor)
-        differenceToGridHeight.ShouldBe(-2); // anchor (top) at 0, bottom 50 -> 48 (nearest)
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void GetDifferenceToGridForResizeAxis_ShouldSkipAxis_WhenEitherUnitIsNotPixelBased(
+        bool positionIsPixelBased, bool sizeIsPixelBased)
+    {
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 5, grabStartSizeAxis: 25, trueSizeOffsetSinceGrabAxis: 0,
+            sizeMultiplier: 1, originRatio: 0,
+            positionIsPixelBased: positionIsPixelBased, sizeIsPixelBased: sizeIsPixelBased,
+            liveAbsoluteMin: 5, livePositionAxis: 5, liveSizeAxis: 25,
+            out float differenceToGridPosition, out float differenceToGridSize);
+
+        differenceToGridPosition.ShouldBe(0);
+        differenceToGridSize.ShouldBe(0);
     }
 
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldReturnZero_WhenAlreadyOnGrid()
+    public void GetDifferenceToGridForResizeAxis_ShouldSnapDraggedMaxEdge_WhenAnchorMinIsOffGrid()
     {
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Width = 32,
-            Height = 64,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.Absolute
-        };
+        // Left-origin box (originRatio 0), Right handle dragged (sizeMultiplier > 0). Anchor (Left)
+        // sits at 5, off the 16px grid. True width (no snap ever applied) is 25, so the true
+        // (unsnapped) Right edge is 5+25=30 -> nearest grid line 32, giving a width of 27.
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 5, grabStartSizeAxis: 25, trueSizeOffsetSinceGrabAxis: 0,
+            sizeMultiplier: 1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: 5, livePositionAxis: 5, liveSizeAxis: 25,
+            out float differenceToGridPosition, out float differenceToGridSize);
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(32, 64), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 1, heightMultiplier: 1,
-            out float differenceToGridWidth, out float differenceToGridHeight);
-
-        differenceToGridWidth.ShouldBe(0);
-        differenceToGridHeight.ShouldBe(0);
+        differenceToGridPosition.ShouldBe(0); // Left (anchor) never moves
+        differenceToGridSize.ShouldBe(2); // 25 -> 27, so Right lands at 5+27=32
     }
 
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldSkipAxis_WhenUnitsAreNotPixelBased()
+    public void GetDifferenceToGridForResizeAxis_ShouldSnapDraggedMinEdge_WhenAnchorMaxIsOffGrid()
     {
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Width = 30,
-            Height = 50,
-            WidthUnits = DimensionUnitType.PercentageOfParent,
-            HeightUnits = DimensionUnitType.PercentageOfParent
-        };
+        // Left-origin box (originRatio 0), Left handle dragged (sizeMultiplier < 0). Anchor (Right)
+        // sits at 15+25=40, off the 16px grid. True (unsnapped) Left edge is 40-25=15 -> nearest
+        // grid line 16, giving a width of 24 and moving Left/X from 15 to 16.
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 15, grabStartSizeAxis: 25, trueSizeOffsetSinceGrabAxis: 0,
+            sizeMultiplier: -1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: 15, livePositionAxis: 15, liveSizeAxis: 25,
+            out float differenceToGridPosition, out float differenceToGridSize);
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(30, 50), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 1, heightMultiplier: 1,
-            out float differenceToGridWidth, out float differenceToGridHeight);
-
-        differenceToGridWidth.ShouldBe(0);
-        differenceToGridHeight.ShouldBe(0);
+        differenceToGridPosition.ShouldBe(1); // X: 15 -> 16
+        differenceToGridSize.ShouldBe(-1); // Width: 25 -> 24, so Right (anchor) stays at 40
     }
 
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldSkipAxis_WhenMultiplierIsZero()
+    public void GetDifferenceToGridForResizeAxis_ShouldResolveBothEdges_ForCenterOrigin()
     {
-        // Dragging a handle that doesn't affect this axis (e.g. Top/Bottom only) must leave
-        // Width untouched, even when the live/true size is off-grid - only the axis actually
-        // being dragged this gesture should move.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Width = 30,
-            Height = 50,
-            WidthUnits = DimensionUnitType.Absolute,
-            HeightUnits = DimensionUnitType.Absolute
-        };
+        // Center-origin box (originRatio .5): X tracks the center, not either edge. Grabbed at
+        // Center=15, Width=20 -> Left=5, Right=25. Left handle dragged (sizeMultiplier < 0); Right
+        // (anchor) stays fixed at 25. True Left is unchanged (5) -> nearest grid line (16) is 0,
+        // giving a new Width of 25, and a new Center of 0 + 25/2 = 12.5.
+        GetDifferenceToGridForResizeAxis(gridSize: 16,
+            grabStartPositionAxis: 15, grabStartSizeAxis: 20, trueSizeOffsetSinceGrabAxis: 0,
+            sizeMultiplier: -1, originRatio: 0.5f,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: 5, livePositionAxis: 15, liveSizeAxis: 20,
+            out float differenceToGridPosition, out float differenceToGridSize);
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(30, 50), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 0, heightMultiplier: 0,
-            out float differenceToGridWidth, out float differenceToGridHeight);
-
-        differenceToGridWidth.ShouldBe(0);
-        differenceToGridHeight.ShouldBe(0);
+        differenceToGridPosition.ShouldBe(-2.5f); // Center: 15 -> 12.5
+        differenceToGridSize.ShouldBe(5); // Width: 20 -> 25, so Right (anchor) stays at 25
     }
 
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldSnapFromTrueOffset_NotFromLiveValueAlreadySnappedThisDrag()
+    public void GetDifferenceToGridForResizeAxis_ShouldKeepMaxAnchorStable_AcrossConsecutiveDragTicks()
     {
-        // Live Width (16) was already snapped earlier this drag, but the true (unsnapped) size has
-        // since grown further via trueSizeOffsetSinceGrab, crossing into the next grid cell.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Width = 16,
-            WidthUnits = DimensionUnitType.Absolute
-        };
+        // Regression for "grab the handle at the top and move it around - the bottom doesn't stay
+        // fixed, it snaps around". Top-origin box (originRatio 0) grabbed at Y=5, Height=20 (so
+        // Bottom=25). Dragging the Top handle (sizeMultiplier < 0) across two ticks must keep the
+        // Bottom anchor at exactly 25 both times, and once frame 1's result is stable, frame 2 (fed
+        // frame 1's applied Y/Height as its "live" values) must compute a zero further delta -
+        // proving the two ticks don't fight each other.
+        const float gridSize = 16;
+        const float grabStartY = 5;
+        const float grabStartHeight = 20;
 
-        // Grabbed at Width=20; true growth since grab totals +18 -> true width is 38.
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(20, 0), trueSizeOffsetSinceGrab: new Vector2(18, 0),
-            widthMultiplier: 1, heightMultiplier: 0,
-            out float differenceToGridWidth, out float _);
+        // Frame 1: true (unsnapped) height has shrunk from 20 to 17 (Top dragged down by 3).
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPositionAxis: grabStartY, grabStartSizeAxis: grabStartHeight, trueSizeOffsetSinceGrabAxis: -3,
+            sizeMultiplier: -1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: grabStartY, livePositionAxis: grabStartY, liveSizeAxis: grabStartHeight,
+            out float diffPosition1, out float diffSize1);
 
-        // Anchor (left) is at X=0; true right = 0 + 38 = 38 -> nearest grid line is 32.
-        // Delta is relative to the LIVE Width (16).
-        differenceToGridWidth.ShouldBe(16);
+        float liveY2 = grabStartY + diffPosition1;
+        float liveHeight2 = grabStartHeight + diffSize1;
+
+        (liveY2 + liveHeight2).ShouldBe(25); // Bottom after frame 1
+
+        // Frame 2: true height shrinks further to 15, but the snapped target doesn't change.
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPositionAxis: grabStartY, grabStartSizeAxis: grabStartHeight, trueSizeOffsetSinceGrabAxis: -5,
+            sizeMultiplier: -1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: liveY2, livePositionAxis: liveY2, liveSizeAxis: liveHeight2,
+            out float diffPosition2, out float diffSize2);
+
+        diffPosition2.ShouldBe(0); // Already stable - no further jitter
+        diffSize2.ShouldBe(0);
+        (liveY2 + diffPosition2 + liveHeight2 + diffSize2).ShouldBe(25); // Bottom still exactly 25
     }
 
     [Fact]
-    public void GetDifferenceToGridForSize_ShouldSnapDraggedRightEdgeInWorldSpace_WhenAnchorLeftIsOffGrid()
+    public void GetDifferenceToGridForResizeAxis_ShouldKeepMinAnchorStable_AcrossConsecutiveDragTicks()
     {
-        // Left edge (anchor, fixed by a Right-side drag) sits at X=5, off the 16px grid. Rounding
-        // Width alone (the old behavior) would snap the raw width (25 -> nearest multiple 32),
-        // landing the dragged right edge at 5+32=37 - off grid. Snapping the right edge itself
-        // (5+25=30 -> nearest grid line 32) instead derives a width of 27, landing the right edge
-        // exactly on grid at 5+27=32.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            X = 5,
-            Width = 25,
-            WidthUnits = DimensionUnitType.Absolute
-        };
+        // Mirrors the Top/Bottom regression on the X axis: dragging the Right handle must keep the
+        // Left anchor fixed across ticks (the user's "probably same with left vs right").
+        const float gridSize = 16;
+        const float grabStartX = 5;
+        const float grabStartWidth = 20;
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(25, 0), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 1, heightMultiplier: 0,
-            out float differenceToGridWidth, out float _);
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPositionAxis: grabStartX, grabStartSizeAxis: grabStartWidth, trueSizeOffsetSinceGrabAxis: 3,
+            sizeMultiplier: 1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: grabStartX, livePositionAxis: grabStartX, liveSizeAxis: grabStartWidth,
+            out float diffPosition1, out float diffSize1);
 
-        differenceToGridWidth.ShouldBe(2); // 25 -> 27, so AbsoluteRight lands at 5+27=32
-    }
+        diffPosition1.ShouldBe(0); // Left (anchor) never moves
 
-    [Fact]
-    public void GetDifferenceToGridForSize_ShouldSnapDraggedLeftEdgeInWorldSpace_WhenAnchorRightIsOffGrid()
-    {
-        // Right edge (anchor, fixed by a Left-side drag) sits at X+Width=15+25=40, off the 16px
-        // grid. Rounding Width alone (25 -> nearest multiple 32) would land the dragged left edge
-        // at 40-32=8 - off grid. Snapping the left edge itself (40-25=15 -> nearest grid line 16)
-        // instead derives a width of 24, landing the left edge exactly on grid at 40-24=16.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            X = 15,
-            Width = 25,
-            WidthUnits = DimensionUnitType.Absolute
-        };
+        float liveX2 = grabStartX + diffPosition1;
+        float liveWidth2 = grabStartWidth + diffSize1;
 
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(25, 0), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: -1, heightMultiplier: 0,
-            out float differenceToGridWidth, out float _);
+        GetDifferenceToGridForResizeAxis(gridSize,
+            grabStartPositionAxis: grabStartX, grabStartSizeAxis: grabStartWidth, trueSizeOffsetSinceGrabAxis: 5,
+            sizeMultiplier: 1, originRatio: 0,
+            positionIsPixelBased: true, sizeIsPixelBased: true,
+            liveAbsoluteMin: liveX2, livePositionAxis: liveX2, liveSizeAxis: liveWidth2,
+            out float diffPosition2, out float diffSize2);
 
-        differenceToGridWidth.ShouldBe(-1); // 25 -> 24, so AbsoluteLeft lands at 40-24=16
-    }
-
-    [Fact]
-    public void GetDifferenceToGridForSize_ShouldSnapDraggedBottomEdgeInWorldSpace_WhenAnchorTopIsOffGrid()
-    {
-        // Mirrors the Right-edge width case, on the Y axis: Top edge (anchor) sits at Y=5, off
-        // grid. Snapping the dragged bottom edge (5+25=30 -> 32) derives a height of 27.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            Y = 5,
-            Height = 25,
-            HeightUnits = DimensionUnitType.Absolute
-        };
-
-        ResizeInputHandler.GetDifferenceToGridForSize(gue, gridSize: 16,
-            grabStartSize: new Vector2(0, 25), trueSizeOffsetSinceGrab: Vector2.Zero,
-            widthMultiplier: 0, heightMultiplier: 1,
-            out float _, out float differenceToGridHeight);
-
-        differenceToGridHeight.ShouldBe(2); // 25 -> 27, so AbsoluteBottom lands at 5+27=32
-    }
-
-    [Fact]
-    public void GetDifferenceToGridForPosition_ShouldSkipAxis_WhenChangeMultiplierIsZero()
-    {
-        // Dragging the Right handle on a Left-origin box only changes Width - changeXMultiplier is
-        // 0, so X never moves during this gesture. Snapping X anyway (the pre-existing bug: X/Y
-        // were always snapped regardless of which axes the resize actually touches) drags an
-        // off-grid anchor position onto the grid on every resize, even one that never moves that
-        // axis - reported as "resized and the position snapped to the grid (bad)".
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            X = 5,
-            Y = 5,
-            XUnits = GeneralUnitType.PixelsFromSmall,
-            YUnits = GeneralUnitType.PixelsFromSmall
-        };
-
-        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
-            grabStartLocal: new Vector2(5, 5), trueOffsetSinceGrab: Vector2.Zero,
-            changeXMultiplier: 0, changeYMultiplier: 0,
-            out float differenceToGridX, out float differenceToGridY);
-
-        differenceToGridX.ShouldBe(0);
-        differenceToGridY.ShouldBe(0);
-    }
-
-    [Fact]
-    public void GetDifferenceToGridForPosition_ShouldSnapAxis_WhenChangeMultiplierIsNonZero()
-    {
-        // e.g. dragging a corner handle on a Right/Bottom-origin box, where changeXMultiplier and
-        // changeYMultiplier are non-zero because the resize does move the position - this should
-        // behave exactly like MoveInputHandler.GetDifferenceToGrid.
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            X = 20,
-            Y = 5,
-            XUnits = GeneralUnitType.PixelsFromSmall,
-            YUnits = GeneralUnitType.PixelsFromSmall
-        };
-
-        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
-            grabStartLocal: new Vector2(20, 5), trueOffsetSinceGrab: Vector2.Zero,
-            changeXMultiplier: 1, changeYMultiplier: 1,
-            out float differenceToGridX, out float differenceToGridY);
-
-        differenceToGridX.ShouldBe(-4); // 20 -> 16
-        differenceToGridY.ShouldBe(-5); // 5 -> 0
-    }
-
-    [Fact]
-    public void GetDifferenceToGridForPosition_ShouldGateAxesIndependently()
-    {
-        GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
-        {
-            X = 20,
-            Y = 5,
-            XUnits = GeneralUnitType.PixelsFromSmall,
-            YUnits = GeneralUnitType.PixelsFromSmall
-        };
-
-        ResizeInputHandler.GetDifferenceToGridForPosition(gue, gridSize: 16,
-            grabStartLocal: new Vector2(20, 5), trueOffsetSinceGrab: Vector2.Zero,
-            changeXMultiplier: 1, changeYMultiplier: 0,
-            out float differenceToGridX, out float differenceToGridY);
-
-        differenceToGridX.ShouldBe(-4); // X snaps, since changeXMultiplier != 0
-        differenceToGridY.ShouldBe(0); // Y untouched, since changeYMultiplier == 0
+        diffPosition2.ShouldBe(0); // Still never moves
     }
 }
