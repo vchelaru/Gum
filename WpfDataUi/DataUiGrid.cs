@@ -506,6 +506,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             // This assumes reflection, which is bad...
             //args.NewValue = LateBinder.GetValueStatic(this.Instance, ((InstanceMember)sender).Name);
 
+            args.OldValue = senderInstanceMember.OldValue;
             args.NewValue = senderInstanceMember.Value;
             args.PropertyName = senderInstanceMember.Name;
 
