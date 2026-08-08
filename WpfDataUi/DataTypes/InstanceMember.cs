@@ -112,6 +112,13 @@ namespace WpfDataUi.DataTypes
             set;
         }
 
+        /// <summary>
+        /// The value Value held immediately before the most recent UI-driven assignment
+        /// (see IDataUiExtensionMethods.TrySetValueOnInstance and MenuItemExposedClick.MakeDefault).
+        /// Used to populate PropertyChangedArgs.OldValue when DataUiGrid.PropertyChange fires.
+        /// </summary>
+        public object OldValue { get; set; }
+
         public object Value
         {
             get

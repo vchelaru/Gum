@@ -23,6 +23,7 @@ public class MenuItemExposedClick : MenuItem
 
     private void MakeDefault(object? sender, RoutedEventArgs e)
     {
+        Owner.InstanceMember.OldValue = Owner.InstanceMember.Value;
         Owner.InstanceMember.IsDefault = true;
         Owner.Refresh();
 
@@ -93,6 +94,7 @@ public static class IDataUiExtensionMethods
                 // Why not protect against spammed same-value assignments?
                 if(dataUi.InstanceMember.Value != valueOnUi)
                 {
+                    dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
                     //dataUi.InstanceMember.Value = valueOnUi;
                     result = dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
                     if(result == ApplyValueResult.Success)
@@ -120,6 +122,7 @@ public static class IDataUiExtensionMethods
         {
             if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
             {
+                dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
                 //dataUi.InstanceMember.Value = valueToSet;
                 result = dataUi.InstanceMember.SetValue(valueToSet, commitType);
                 dataUi.InstanceMember.CallAfterSetByUi();
