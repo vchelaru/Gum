@@ -19,5 +19,6 @@ public class ContextMenuItemViewModelTests
         viewModel.Action.ShouldBeNull();
         viewModel.IsSeparator.ShouldBeFalse();
         viewModel.Children.ShouldBeEmpty();
+        viewModel.IconKey.ShouldBeNull();
     }
 }

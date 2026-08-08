@@ -74,6 +74,7 @@ public class StateTreeRightClickViewModel
             items.Add(new ContextMenuItemViewModel
             {
                 Text = "Add State",
+                IconKey = ContextMenuIconKeys.State,
                 Action = () => _dialogService.Show<AddStateDialogViewModel>()
             });
         }
@@ -81,6 +82,7 @@ public class StateTreeRightClickViewModel
         items.Add(new ContextMenuItemViewModel
         {
             Text = "Add Category",
+            IconKey = ContextMenuIconKeys.Category,
             Action = () => _dialogService.Show<AddCategoryDialogViewModel>()
         });
 
