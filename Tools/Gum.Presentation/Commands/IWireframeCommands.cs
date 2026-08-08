@@ -7,4 +7,15 @@ public interface IWireframeCommands
     bool AreCanvasBoundsVisible { get; set; }
     bool IsBackgroundGridVisible { get; set; }
     bool AreHighlightsVisible { get; set; }
+
+    /// <summary>
+    /// Whether the grid line overlay is drawn on the canvas. Distinct from <see cref="IsBackgroundGridVisible"/>,
+    /// which controls the transparency checkerboard.
+    /// </summary>
+    bool IsGridOverlayVisible { get; set; }
+
+    /// <summary>
+    /// The size, in pixels, of each grid cell drawn by the grid overlay.
+    /// </summary>
+    int GridSize { get; set; }
 }

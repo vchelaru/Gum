@@ -229,6 +229,19 @@ public class GumProjectSave
         set;
     }
 
+    /// <summary>
+    /// Whether dragging (move/resize) snaps pixel-unit objects to the grid. The grid overlay is
+    /// drawn on the canvas whenever this is on - there's no separate visibility toggle, since the
+    /// checkerboard background already conveys canvas structure and a second grid toggle was just
+    /// UI noise on top of it.
+    /// </summary>
+    public bool SnapToGrid { get; set; }
+
+    /// <summary>
+    /// The size, in pixels, of each grid cell used by <see cref="SnapToGrid"/>.
+    /// </summary>
+    public int GridSize { get; set; }
+
     public bool RestrictFileNamesForAndroid { get; set; } = false;
 
     public List<GuideRectangle> Guides
@@ -435,6 +448,8 @@ public class GumProjectSave
 
         // I think people want this on by default:
         RestrictToUnitValues = true;
+
+        GridSize = 16;
 
         Guides = new List<GuideRectangle>();
         FavoriteComponents = new List<string>();

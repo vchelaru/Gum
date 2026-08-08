@@ -40,6 +40,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
     private IToolFontService _toolFontService;
     private IToolLayerService _toolLayerService;
     LineRectangle mCanvasBounds;
+    GridOverlayManager _gridOverlayManager;
 
     public Color ScreenBoundsColor = Color.LightBlue;
 
@@ -66,6 +67,26 @@ public class WireframeControl : WpfGraphicsDeviceControl
         {
             LeftRuler.Visible = value;
             TopRuler.Visible = value;
+        }
+    }
+
+    public bool IsGridOverlayVisible
+    {
+        get => _gridOverlayManager.IsVisible;
+        set
+        {
+            _gridOverlayManager.IsVisible = value;
+            _gridOverlayManager.Refresh(Camera);
+        }
+    }
+
+    public int GridSize
+    {
+        get => _gridOverlayManager.GridSize;
+        set
+        {
+            _gridOverlayManager.GridSize = value;
+            _gridOverlayManager.Refresh(Camera);
         }
     }
 
@@ -234,6 +255,8 @@ public class WireframeControl : WpfGraphicsDeviceControl
             mCanvasBounds.Height = 600;
             mCanvasBounds.Color = ScreenBoundsColor;
 
+            _gridOverlayManager = new GridOverlayManager(SystemManagers.Default);
+
 
             var camera = SystemManagers.Default.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
@@ -329,6 +352,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
     {
 
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
+        _gridOverlayManager.AddToLayer(layerService.OverlayLayer);
 
 
         TopRuler = new Ruler(
@@ -364,6 +388,14 @@ public class WireframeControl : WpfGraphicsDeviceControl
             {
                 InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
                 TimeManager.Self.Activity();
+
+                // Camera.ClientWidth/Height come from the GraphicsDevice viewport, which isn't
+                // valid yet the first time a project loads (before the first XNA frame has run) -
+                // a one-shot Refresh() at load time can compute against a 0x0 viewport and leave
+                // the grid invisible even though IsGridOverlayVisible is true. Refreshing here
+                // every frame keeps it in sync once the viewport (and therefore the camera) is
+                // actually valid, with no extra event wiring needed.
+                _gridOverlayManager.Refresh(Camera);
 
                 SpriteManager.Self.Activity(TimeManager.Self.CurrentTime);
 

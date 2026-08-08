@@ -135,6 +135,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private readonly IUiSettingsService _uiSettingsService;
     private readonly IProjectManager _projectManager;
     private EditorViewModel _editorViewModel;
+    private IGridSnapWarningService _gridSnapWarningService;
     private readonly FileLocations _fileLocations;
     private readonly IThemingService _themingService;
     private IDragDropManager _dragDropManager;
@@ -263,11 +264,14 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands);
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
+        _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
         _editorViewModel = new EditorViewModel(
             _pluginManager,
             _fileCommands,
-            _wireframeObjectManager);
+            _wireframeObjectManager,
+            _gridSnapWarningService,
+            _projectManager);
 
         messenger.RegisterAll(this);
     }
@@ -494,6 +498,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
     private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4)
     {
         _selectionManager.Refresh();
+        _editorViewModel.RefreshGridSnapWarning();
 
     }
 
@@ -547,6 +552,16 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _wireframeControl.CanvasBoundsVisible =
                 _wireframeCommands.AreCanvasBoundsVisible;
         }
+        else if (name == nameof(WireframeCommands.IsGridOverlayVisible))
+        {
+            _wireframeControl.IsGridOverlayVisible =
+                _wireframeCommands.IsGridOverlayVisible;
+        }
+        else if (name == nameof(WireframeCommands.GridSize))
+        {
+            _wireframeControl.GridSize =
+                _wireframeCommands.GridSize;
+        }
     }
 
     private void HandleProjectLoad(GumProjectSave save)
@@ -560,6 +575,13 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _wireframeCommands.IsBackgroundGridVisible =
             save.ShowCheckerBackground;
+
+        _selectionManager.SnapToGrid = save.SnapToGrid;
+        _selectionManager.GridSize = save.GridSize;
+        // No separate "show grid" setting - the overlay is only visible while snap is on.
+        _wireframeCommands.IsGridOverlayVisible = save.SnapToGrid;
+        _wireframeCommands.GridSize = save.GridSize;
+        _editorViewModel.RefreshGridSnapWarning();
 
         _wireframeObjectManager.RefreshAll(true);
 
@@ -581,6 +603,22 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         {
             _wireframeCommands.IsBackgroundGridVisible =
                 _projectManager.GumProjectSave.ShowCheckerBackground;
+        }
+        else if (propertyName == nameof(GumProjectSave.SnapToGrid))
+        {
+            // No separate "show grid" setting - the overlay is only visible while snap is on.
+            _selectionManager.SnapToGrid =
+                _projectManager.GumProjectSave.SnapToGrid;
+            _wireframeCommands.IsGridOverlayVisible =
+                _projectManager.GumProjectSave.SnapToGrid;
+            _editorViewModel.RefreshGridSnapWarning();
+        }
+        else if (propertyName == nameof(GumProjectSave.GridSize))
+        {
+            _selectionManager.GridSize =
+                _projectManager.GumProjectSave.GridSize;
+            _wireframeCommands.GridSize =
+                _projectManager.GumProjectSave.GridSize;
         }
         else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
@@ -825,6 +863,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         _editingManager.RefreshContextMenu();
         _selectionManager.WireframeEditor?.UpdateAspectRatioForGrabbedIpso();
         _selectionManager.Refresh();
+        _editorViewModel.RefreshGridSnapWarning();
     }
 
     private void HandleXnaInitialized()
@@ -1422,11 +1461,16 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         System.Windows.Controls.Grid wpfGrid = new();
         wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
+        wpfGrid.RowDefinitions.Add(new () { Height = GridLength.Auto});
         wpfGrid.RowDefinitions.Add(new () { Height = new (1, GridUnitType.Star) });
 
         _editorControls = new EditorControls();
         wpfGrid.Children.Add(_editorControls);
         Grid.SetRow(_editorControls, 0);
+
+        Gum.Controls.GridSnapWarningBar gridSnapWarningBar = new();
+        wpfGrid.Children.Add(gridSnapWarningBar);
+        Grid.SetRow(gridSnapWarningBar, 1);
 
         wpfGrid.Children.Add(CreateCanvasGrid());
 
@@ -1473,7 +1517,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
         canvasGrid.Children.Add(horizontalScrollBar);
         Grid.SetRow(horizontalScrollBar, 1);
 
-        Grid.SetRow(canvasGrid, 1);
+        Grid.SetRow(canvasGrid, 2);
         return canvasGrid;
     }
 

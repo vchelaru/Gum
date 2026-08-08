@@ -29,6 +29,11 @@ public interface ISelectionManager
     /// </summary>
     List<GraphicalUiElement> SelectedGues { get; }
 
+    /// <summary>
+    /// Whether move/resize dragging snaps pixel-unit objects to the grid.
+    /// </summary>
+    bool SnapToGrid { get; }
+
     void DeselectAll();
     void ToggleSelection(GraphicalUiElement element);
     void Select(IEnumerable<GraphicalUiElement> elements);

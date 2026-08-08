@@ -164,6 +164,34 @@ public class SelectionManager : ISelectionManager
         }
     }
 
+    bool snapToGrid;
+    public bool SnapToGrid
+    {
+        get { return snapToGrid; }
+        set
+        {
+            snapToGrid = value;
+            if (WireframeEditor != null)
+            {
+                WireframeEditor.SnapToGrid = value;
+            }
+        }
+    }
+
+    int gridSize = 16;
+    public int GridSize
+    {
+        get { return gridSize; }
+        set
+        {
+            gridSize = value;
+            if (WireframeEditor != null)
+            {
+                WireframeEditor.GridSize = value;
+            }
+        }
+    }
+
     public bool AreHighlightsVisible
     {
         get => highlightManager.AreHighlightsVisible;
@@ -759,6 +787,8 @@ public class SelectionManager : ISelectionManager
                 WireframeEditor.UpdateToSelection(mSelectedIpsos);
             }
             WireframeEditor.RestrictToUnitValues = RestrictToUnitValues;
+            WireframeEditor.SnapToGrid = SnapToGrid;
+            WireframeEditor.GridSize = GridSize;
         }
     }
 

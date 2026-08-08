@@ -52,7 +52,7 @@ public class ProjectPropertiesViewModel : ViewModel
     public bool RestrictToUnitValues
     {
         get => Get<bool>();
-        set => Set(value); 
+        set => Set(value);
     }
 
     public int CanvasWidth

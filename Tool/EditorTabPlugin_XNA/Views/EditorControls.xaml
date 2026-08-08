@@ -65,5 +65,19 @@
             Content="+"
             Style="{StaticResource MaterialDesignToolForegroundButton}" />
 
+        <CheckBox
+            Margin="20,0,0,0"
+            VerticalAlignment="Center"
+            Content="Snap to Grid"
+            IsChecked="{Binding SnapToGrid}" />
+        <TextBlock
+            Margin="10,0,4,0"
+            VerticalAlignment="Center"
+            Text="Grid Size:" />
+        <TextBox
+            Width="40"
+            VerticalAlignment="Center"
+            Text="{Binding GridSize}" />
+
     </StackPanel>
 </UserControl>

@@ -160,6 +160,13 @@ public class ResizeInputHandler : InputHandlerBase
 
         if (hasChange)
         {
+            // Snap to grid live, as the object is dragged - not deferred to release, so the user
+            // sees exactly where it will land instead of having to guess and re-grab.
+            if (Context.SnapToGrid)
+            {
+                SnapSelectedToGrid();
+            }
+
             Context.GuiCommands.RefreshVariables();
             MarkAsChanged();
         }
@@ -173,6 +180,121 @@ public class ResizeInputHandler : InputHandlerBase
         }
 
         _sideGrabbed = ResizeSide.None;
+    }
+
+    /// <summary>
+    /// Snaps the current selection's position/size to the grid. Called live from
+    /// <see cref="OnDrag"/> on every tick that changes something - the caller refreshes the
+    /// Variables grid afterward, so this doesn't refresh itself.
+    /// </summary>
+    private void SnapSelectedToGrid()
+    {
+        float gridSize = Context.GridSize;
+        var elementStack = Context.SelectedState.GetTopLevelElementStack();
+
+        if (Context.SelectionManager.HasSelection &&
+            Context.SelectedState.SelectedInstances.Count() == 0)
+        {
+            var gue = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element) as GraphicalUiElement;
+            SnapInstanceToGrid(gue, instanceSave: null, gridSize,
+                Context.GrabbedState.ComponentPosition, Context.GrabbedState.ComponentSize,
+                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset);
+        }
+
+        foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
+        {
+            if (save.Locked)
+            {
+                continue;
+            }
+
+            var gue = Context.WireframeObjectManager.GetRepresentation(save, elementStack) as GraphicalUiElement;
+            if (gue == null)
+            {
+                continue;
+            }
+
+            Vector2 grabStartPosition = Context.GrabbedState.InstancePositions.TryGetValue(save, out var grabbedPosition)
+                ? new Vector2(grabbedPosition.AbsoluteX, grabbedPosition.AbsoluteY) // despite the field name, these are local X/Y at grab
+                : new Vector2(gue.X, gue.Y);
+            Vector2 grabStartSize = Context.GrabbedState.InstanceSizes.TryGetValue(save, out var grabbedSize)
+                ? grabbedSize
+                : new Vector2(gue.Width, gue.Height);
+
+            SnapInstanceToGrid(gue, save, gridSize,
+                grabStartPosition, grabStartSize,
+                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save));
+        }
+    }
+
+    private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize,
+        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset)
+    {
+        if (gue == null)
+        {
+            return;
+        }
+
+        MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartPosition, truePositionOffset,
+            out float differenceToGridX, out float differenceToGridY);
+        GetDifferenceToGridForSize(gue, gridSize, grabStartSize, trueSizeOffset,
+            out float differenceToGridWidth, out float differenceToGridHeight);
+
+        if (differenceToGridX != 0)
+        {
+            gue.X = instanceSave != null
+                ? Context.ElementCommands.ModifyVariable("X", differenceToGridX, instanceSave)
+                : Context.ElementCommands.ModifyVariable("X", differenceToGridX, Context.SelectedState.SelectedElement);
+        }
+        if (differenceToGridY != 0)
+        {
+            gue.Y = instanceSave != null
+                ? Context.ElementCommands.ModifyVariable("Y", differenceToGridY, instanceSave)
+                : Context.ElementCommands.ModifyVariable("Y", differenceToGridY, Context.SelectedState.SelectedElement);
+        }
+        if (differenceToGridWidth != 0)
+        {
+            gue.Width = instanceSave != null
+                ? Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, instanceSave)
+                : Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, Context.SelectedState.SelectedElement);
+        }
+        if (differenceToGridHeight != 0)
+        {
+            gue.Height = instanceSave != null
+                ? Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, instanceSave)
+                : Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, Context.SelectedState.SelectedElement);
+        }
+    }
+
+    /// <summary>
+    /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so each lands on the
+    /// nearest grid line (rounded, not floored - a resize should grow/shrink to whichever grid
+    /// line is closest, not always down), based on where the size would be with NO snapping ever
+    /// applied this drag (<paramref name="grabStartSize"/> + <paramref name="trueSizeOffsetSinceGrab"/>)
+    /// rather than the live <c>gue.Width</c>/<c>gue.Height</c> - see the "movement fights you"
+    /// explanation on <see cref="MoveInputHandler.GetDifferenceToGrid"/>, which is reused for X/Y.
+    /// This is local (not world-space) rounding. Axes using non-pixel units are left untouched.
+    /// </summary>
+    internal static void GetDifferenceToGridForSize(GraphicalUiElement gue, float gridSize,
+        Vector2 grabStartSize, Vector2 trueSizeOffsetSinceGrab,
+        out float differenceToGridWidth, out float differenceToGridHeight)
+    {
+        differenceToGridWidth = 0;
+        differenceToGridHeight = 0;
+
+        if (gue.WidthUnits.GetIsPixelBased())
+        {
+            float trueWidth = grabStartSize.X + trueSizeOffsetSinceGrab.X;
+            float snappedWidth = GridSnapper.SnapRound(trueWidth, gridSize);
+            differenceToGridWidth = snappedWidth - gue.Width;
+        }
+
+        if (gue.HeightUnits.GetIsPixelBased())
+        {
+            float trueHeight = grabStartSize.Y + trueSizeOffsetSinceGrab.Y;
+            float snappedHeight = GridSnapper.SnapRound(trueHeight, gridSize);
+            differenceToGridHeight = snappedHeight - gue.Height;
+        }
     }
 
     public override void OnSelectionChanged()
@@ -309,6 +431,13 @@ public class ResizeInputHandler : InputHandlerBase
             {
                 Context.ElementCommands.ModifyVariable("Width", cursorXChange * widthMultiplier, elementStack.Last().Element);
             }
+        }
+
+        if (Context.SnapToGrid)
+        {
+            Context.GrabbedState.AccumulateTruePositionOffset(instanceSave, reposition.X, reposition.Y);
+            Context.GrabbedState.AccumulateTrueSizeOffset(instanceSave,
+                cursorXChange * widthMultiplier, cursorYChange * heightMultiplier);
         }
 
         return hasChange;

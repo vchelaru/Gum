@@ -36,6 +36,18 @@ public abstract class WireframeEditor
         set => _context.RestrictToUnitValues = value;
     }
 
+    public bool SnapToGrid
+    {
+        get => _context.SnapToGrid;
+        set => _context.SnapToGrid = value;
+    }
+
+    public int GridSize
+    {
+        get => _context.GridSize;
+        set => _context.GridSize = value;
+    }
+
     #endregion
 
     public WireframeEditor(
