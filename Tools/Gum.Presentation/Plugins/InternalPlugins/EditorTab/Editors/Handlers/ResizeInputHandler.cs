@@ -198,7 +198,8 @@ public class ResizeInputHandler : InputHandlerBase
             var gue = Context.WireframeObjectManager.GetRepresentation(elementStack.Last().Element) as GraphicalUiElement;
             SnapInstanceToGrid(gue, instanceSave: null, gridSize,
                 Context.GrabbedState.ComponentPosition, Context.GrabbedState.ComponentSize,
-                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset);
+                Context.GrabbedState.TrueComponentPositionOffset, Context.GrabbedState.TrueComponentSizeOffset,
+                elementStack);
         }
 
         foreach (InstanceSave save in Context.SelectedState.SelectedInstances)
@@ -223,12 +224,14 @@ public class ResizeInputHandler : InputHandlerBase
 
             SnapInstanceToGrid(gue, save, gridSize,
                 grabStartPosition, grabStartSize,
-                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save));
+                Context.GrabbedState.GetTruePositionOffset(save), Context.GrabbedState.GetTrueSizeOffset(save),
+                elementStack);
         }
     }
 
     private void SnapInstanceToGrid(GraphicalUiElement? gue, InstanceSave? instanceSave, float gridSize,
-        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset)
+        Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset,
+        List<ElementWithState> elementStack)
     {
         if (gue == null)
         {
@@ -237,7 +240,12 @@ public class ResizeInputHandler : InputHandlerBase
 
         MoveInputHandler.GetDifferenceToGrid(gue, gridSize, grabStartPosition, truePositionOffset,
             out float differenceToGridX, out float differenceToGridY);
+
+        CalculateMultipliers(_sideGrabbed, instanceSave, elementStack,
+            out _, out _, out float widthMultiplier, out float heightMultiplier);
+
         GetDifferenceToGridForSize(gue, gridSize, grabStartSize, trueSizeOffset,
+            widthMultiplier, heightMultiplier,
             out float differenceToGridWidth, out float differenceToGridHeight);
 
         if (differenceToGridX != 0)
@@ -267,32 +275,67 @@ public class ResizeInputHandler : InputHandlerBase
     }
 
     /// <summary>
-    /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so each lands on the
-    /// nearest grid line (rounded, not floored - a resize should grow/shrink to whichever grid
-    /// line is closest, not always down), based on where the size would be with NO snapping ever
-    /// applied this drag (<paramref name="grabStartSize"/> + <paramref name="trueSizeOffsetSinceGrab"/>)
-    /// rather than the live <c>gue.Width</c>/<c>gue.Height</c> - see the "movement fights you"
-    /// explanation on <see cref="MoveInputHandler.GetDifferenceToGrid"/>, which is reused for X/Y.
-    /// This is local (not world-space) rounding. Axes using non-pixel units are left untouched.
+    /// Computes the delta to apply to <paramref name="gue"/>'s Width/Height so the edge actually
+    /// being dragged this resize (per <paramref name="widthMultiplier"/>/<paramref name="heightMultiplier"/>'s
+    /// sign - negative means Left/Top, positive means Right/Bottom, zero means that axis isn't
+    /// resized this gesture) lands on the nearest world-space grid line. The opposite (anchor) edge
+    /// is read live from <paramref name="gue"/> - under a normal (non-center) resize it doesn't move
+    /// - and the dragged edge's true (never-snapped) position is anchor +/- the true, unsnapped size
+    /// (<paramref name="grabStartSize"/> + <paramref name="trueSizeOffsetSinceGrab"/>; see the
+    /// "movement fights you" explanation on <see cref="MoveInputHandler.GetDifferenceToGrid"/>,
+    /// reused here and for X/Y). Rounding Width/Height alone (the old approach) only lands the
+    /// dragged edge on-grid when the anchor edge already happens to be grid-aligned; when it isn't
+    /// (e.g. off-grid position, or a rotated object where the anchor itself drifts during the drag),
+    /// a grid-multiple size can still leave the dragged edge off-grid. Axes using non-pixel units
+    /// are left untouched.
     /// </summary>
     internal static void GetDifferenceToGridForSize(GraphicalUiElement gue, float gridSize,
         Vector2 grabStartSize, Vector2 trueSizeOffsetSinceGrab,
+        float widthMultiplier, float heightMultiplier,
         out float differenceToGridWidth, out float differenceToGridHeight)
     {
         differenceToGridWidth = 0;
         differenceToGridHeight = 0;
 
-        if (gue.WidthUnits.GetIsPixelBased())
+        if (gue.WidthUnits.GetIsPixelBased() && widthMultiplier != 0)
         {
             float trueWidth = grabStartSize.X + trueSizeOffsetSinceGrab.X;
-            float snappedWidth = GridSnapper.SnapRound(trueWidth, gridSize);
+            float snappedWidth;
+            if (widthMultiplier < 0)
+            {
+                // Left edge dragged; right edge is the anchor.
+                float anchorRight = gue.AbsoluteRight;
+                float snappedLeft = GridSnapper.SnapRound(anchorRight - trueWidth, gridSize);
+                snappedWidth = anchorRight - snappedLeft;
+            }
+            else
+            {
+                // Right edge dragged; left edge is the anchor.
+                float anchorLeft = gue.AbsoluteLeft;
+                float snappedRight = GridSnapper.SnapRound(anchorLeft + trueWidth, gridSize);
+                snappedWidth = snappedRight - anchorLeft;
+            }
             differenceToGridWidth = snappedWidth - gue.Width;
         }
 
-        if (gue.HeightUnits.GetIsPixelBased())
+        if (gue.HeightUnits.GetIsPixelBased() && heightMultiplier != 0)
         {
             float trueHeight = grabStartSize.Y + trueSizeOffsetSinceGrab.Y;
-            float snappedHeight = GridSnapper.SnapRound(trueHeight, gridSize);
+            float snappedHeight;
+            if (heightMultiplier < 0)
+            {
+                // Top edge dragged; bottom edge is the anchor.
+                float anchorBottom = gue.AbsoluteBottom;
+                float snappedTop = GridSnapper.SnapRound(anchorBottom - trueHeight, gridSize);
+                snappedHeight = anchorBottom - snappedTop;
+            }
+            else
+            {
+                // Bottom edge dragged; top edge is the anchor.
+                float anchorTop = gue.AbsoluteTop;
+                float snappedBottom = GridSnapper.SnapRound(anchorTop + trueHeight, gridSize);
+                snappedHeight = snappedBottom - anchorTop;
+            }
             differenceToGridHeight = snappedHeight - gue.Height;
         }
     }
