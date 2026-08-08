@@ -68,11 +68,6 @@
         <CheckBox
             Margin="20,0,0,0"
             VerticalAlignment="Center"
-            Content="Show Grid"
-            IsChecked="{Binding ShowGrid}" />
-        <CheckBox
-            Margin="10,0,0,0"
-            VerticalAlignment="Center"
             Content="Snap to Grid"
             IsChecked="{Binding SnapToGrid}" />
         <TextBlock

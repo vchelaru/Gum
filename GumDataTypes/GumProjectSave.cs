@@ -230,17 +230,15 @@ public class GumProjectSave
     }
 
     /// <summary>
-    /// Whether the grid overlay is drawn on the main editor canvas.
-    /// </summary>
-    public bool ShowGrid { get; set; }
-
-    /// <summary>
-    /// Whether dragging (move/resize) snaps pixel-unit objects to the grid.
+    /// Whether dragging (move/resize) snaps pixel-unit objects to the grid. The grid overlay is
+    /// drawn on the canvas whenever this is on - there's no separate visibility toggle, since the
+    /// checkerboard background already conveys canvas structure and a second grid toggle was just
+    /// UI noise on top of it.
     /// </summary>
     public bool SnapToGrid { get; set; }
 
     /// <summary>
-    /// The size, in pixels, of each grid cell used by <see cref="ShowGrid"/> and <see cref="SnapToGrid"/>.
+    /// The size, in pixels, of each grid cell used by <see cref="SnapToGrid"/>.
     /// </summary>
     public int GridSize { get; set; }
 

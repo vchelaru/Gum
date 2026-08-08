@@ -22,7 +22,7 @@ public class GridOverlayManager
         _lineGrid = new LineGrid(systemManagers);
         _lineGrid.Z = 1;
 
-        var alpha = (int)(.2f * 0xFF);
+        var alpha = (int)(.1f * 0xFF);
         // premultiplied
         _lineGrid.Color = Color.FromArgb(alpha, alpha, alpha, alpha);
     }

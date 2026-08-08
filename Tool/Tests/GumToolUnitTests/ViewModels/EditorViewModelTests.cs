@@ -41,16 +41,6 @@ public class EditorViewModelTests
     }
 
     [Fact]
-    public void ShowGrid_WritesToGumProjectSave_AndNotifiesAndAutosaves()
-    {
-        _sut.ShowGrid = true;
-
-        _gumProject.ShowGrid.ShouldBeTrue();
-        _pluginManager.Verify(p => p.ProjectPropertySet(nameof(GumProjectSave.ShowGrid)), Times.Once);
-        _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
-    }
-
-    [Fact]
     public void SnapToGrid_WritesToGumProjectSave_AndNotifiesAndAutosaves()
     {
         _sut.SnapToGrid = true;
@@ -71,9 +61,9 @@ public class EditorViewModelTests
     }
 
     [Fact]
-    public void ShowGrid_DoesNothing_WhenValueIsUnchanged()
+    public void SnapToGrid_DoesNothing_WhenValueIsUnchanged()
     {
-        _sut.ShowGrid = false;
+        _sut.SnapToGrid = false;
 
         _pluginManager.Verify(p => p.ProjectPropertySet(It.IsAny<string>()), Times.Never);
         _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
@@ -84,7 +74,6 @@ public class EditorViewModelTests
     {
         GumProjectSave loadedProject = new()
         {
-            ShowGrid = true,
             SnapToGrid = true,
             GridSize = 24,
             CustomCanvasSizes = new List<CustomCanvasSize>
@@ -95,7 +84,6 @@ public class EditorViewModelTests
 
         _sut.HandleProjectLoad(loadedProject);
 
-        _sut.ShowGrid.ShouldBeTrue();
         _sut.SnapToGrid.ShouldBeTrue();
         _sut.GridSize.ShouldBe(24);
         _pluginManager.Verify(p => p.ProjectPropertySet(It.IsAny<string>()), Times.Never);

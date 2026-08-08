@@ -54,18 +54,6 @@ public partial class EditorViewModel : ViewModel, IZoomController
         GridSnapWarningText = info.WarningText;
     }
 
-    public bool ShowGrid
-    {
-        get => Get<bool>();
-        set
-        {
-            if (Set(value))
-            {
-                ApplyGridSettingToProject(nameof(GumProjectSave.ShowGrid), gumProject => gumProject.ShowGrid = value);
-            }
-        }
-    }
-
     public bool SnapToGrid
     {
         get => Get<bool>();
@@ -383,7 +371,6 @@ public partial class EditorViewModel : ViewModel, IZoomController
 
         this.SelectedCustomCanvasSize = this.CustomCanvasSizes[0];
 
-        SetWithoutNotifying(save.ShowGrid, nameof(ShowGrid));
         SetWithoutNotifying(save.SnapToGrid, nameof(SnapToGrid));
         SetWithoutNotifying(save.GridSize, nameof(GridSize));
     }

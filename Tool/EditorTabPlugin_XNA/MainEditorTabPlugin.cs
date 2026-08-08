@@ -578,7 +578,8 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         _selectionManager.SnapToGrid = save.SnapToGrid;
         _selectionManager.GridSize = save.GridSize;
-        _wireframeCommands.IsGridOverlayVisible = save.ShowGrid;
+        // No separate "show grid" setting - the overlay is only visible while snap is on.
+        _wireframeCommands.IsGridOverlayVisible = save.SnapToGrid;
         _wireframeCommands.GridSize = save.GridSize;
         _editorViewModel.RefreshGridSnapWarning();
 
@@ -603,14 +604,12 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             _wireframeCommands.IsBackgroundGridVisible =
                 _projectManager.GumProjectSave.ShowCheckerBackground;
         }
-        else if (propertyName == nameof(GumProjectSave.ShowGrid))
-        {
-            _wireframeCommands.IsGridOverlayVisible =
-                _projectManager.GumProjectSave.ShowGrid;
-        }
         else if (propertyName == nameof(GumProjectSave.SnapToGrid))
         {
+            // No separate "show grid" setting - the overlay is only visible while snap is on.
             _selectionManager.SnapToGrid =
+                _projectManager.GumProjectSave.SnapToGrid;
+            _wireframeCommands.IsGridOverlayVisible =
                 _projectManager.GumProjectSave.SnapToGrid;
             _editorViewModel.RefreshGridSnapWarning();
         }
