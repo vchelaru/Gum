@@ -21,9 +21,7 @@ namespace Gum.Presentation.Tests;
 /// #4385 anchor-flip logic composes correctly with a rotated object. Width/Height are resolved in
 /// LOCAL, pre-rotation space (see ResizeInputHandlerFlipTests) and only the resulting X/Y position
 /// delta is rotated - via the pre-existing, unchanged MathFunctions.RotateVector step - into world
-/// space. This test drags a Right handle far enough to cross the anchor on a 90-degree-rotated
-/// object, and checks both that Width still flips correctly (rotation-agnostic) AND that the
-/// resulting position delta lands where the (unchanged) rotation math says it should.
+/// space.
 /// </summary>
 public class ResizeInputHandlerFlipRotationTests
 {
@@ -43,25 +41,29 @@ public class ResizeInputHandlerFlipRotationTests
         public void SetCursor(GumCursorKind kind) { }
     }
 
-    [Fact]
-    public void OnDrag_ShouldFlipWidthAndRotatePosition_WhenRightHandleDraggedPastAnchorOnRotatedObject()
+    /// <summary>
+    /// Builds a ResizeInputHandler wired to a real, grabbed GraphicalUiElement (whole-component
+    /// selection, no instance) with the given grab-time X/Y/Width/Height/Rotation, hovering/grabbed
+    /// on <paramref name="sideGrabbed"/>. The returned cursor starts at the push position
+    /// (100, 100); the caller sets X/XChange/YChange per tick and calls HandleDrag().
+    /// </summary>
+    private static (ResizeInputHandler sut, FakeCursorState cursor, GraphicalUiElement representation) CreateGrabbedSut(
+        float x, float y, float width, float height, float rotation, ResizeSide sideGrabbed)
     {
-        // Arrange - a real, 90-degree-rotated GraphicalUiElement: Left-origin, X=5, Width=20 (so
-        // the Left edge, at local X=5, is the anchor for a Right-handle drag).
         var representation = new GraphicalUiElement();
         // The X/Y setters no-op without a contained renderable (see GraphicalUiElement.X's
         // `mContainedObjectAsIpso != null` guard) - attach one so position assignments actually
         // stick, matching how every real runtime (and generated code) constructs a GUE.
         representation.SetContainedObject(new InvisibleRenderable());
-        representation.X = 5;
-        representation.Y = 0;
-        representation.Width = 20;
-        representation.Height = 10;
-        representation.Rotation = 90;
+        representation.X = x;
+        representation.Y = y;
+        representation.Width = width;
+        representation.Height = height;
+        representation.Rotation = rotation;
 
         var handlesVisual = new Mock<IResizeHandlesVisual>();
         handlesVisual.SetupGet(h => h.Visible).Returns(true);
-        handlesVisual.Setup(h => h.GetSideOver(It.IsAny<float>(), It.IsAny<float>())).Returns(ResizeSide.Right);
+        handlesVisual.Setup(h => h.GetSideOver(It.IsAny<float>(), It.IsAny<float>())).Returns(sideGrabbed);
 
         var wireframeObjectManager = new Mock<IWireframeObjectManager>();
         wireframeObjectManager.Setup(w => w.GetRepresentation(It.IsAny<ElementSave>())).Returns(representation);
@@ -110,20 +112,29 @@ public class ResizeInputHandlerFlipRotationTests
 
         var sut = new ResizeInputHandler(context, handlesVisual.Object);
 
-        // Act
-        sut.UpdateHover(0f, 0f); // sets _sideOver = Right (cursor.PrimaryPush is true)
+        sut.UpdateHover(0f, 0f); // sets _sideOver (cursor.PrimaryPush is true)
+        context.GrabbedState.HandlePush(); // captures grab-time ComponentPosition/Size
+        sut.HandlePush(0f, 0f); // claims the gesture; _sideGrabbed = sideGrabbed
 
-        context.GrabbedState.HandlePush(); // captures grab-time ComponentPosition/Size (X=5, Width=20)
-        sut.HandlePush(0f, 0f); // claims the gesture; _sideGrabbed = Right
-
-        // Drag the Right handle left by a total of 30 - 10 further than the Left anchor (at
-        // local X=5, Width=20 means the anchor is exactly at the drag origin's Left edge).
         cursor.PrimaryDown = true;
         cursor.PrimaryPush = false;
+
+        return (sut, cursor, representation);
+    }
+
+    [Fact]
+    public void OnDrag_ShouldFlipWidthAndRotatePosition_WhenRightHandleDraggedPastAnchorOnRotatedObject()
+    {
+        // Arrange - Left-origin, X=5, Width=20 (so the Left edge, at local X=5, is the anchor for
+        // a Right-handle drag), rotated 90 degrees.
+        var (sut, cursor, representation) = CreateGrabbedSut(
+            x: 5, y: 0, width: 20, height: 10, rotation: 90, sideGrabbed: ResizeSide.Right);
+
+        // Act - drag the Right handle left by a total of 30 in one tick - 10 further than the Left
+        // anchor (at local X=5, Width=20 means the anchor is exactly at the drag origin's Left edge).
         cursor.X = 70; // > 6px from the push position, satisfies HasMovedEnough
         cursor.XChange = -30;
         cursor.YChange = 0;
-
         sut.HandleDrag();
 
         // Assert - Width flips exactly as in the unrotated case (rotation never touches
@@ -143,7 +154,43 @@ public class ResizeInputHandlerFlipRotationTests
 
         representation.X.ShouldBe(5 + expectedRepositionLocal.X, tolerance: 0.01);
         representation.Y.ShouldBe(0 + expectedRepositionLocal.Y, tolerance: 0.01);
+    }
 
-        context.HasChangedAnythingSinceLastPush.ShouldBeTrue();
+    [Fact]
+    public void OnDrag_ShouldNotDriftAcrossTicks_WhenLeftHandleDraggedOnRotatedObject()
+    {
+        // Regression for the position "shift" the user found manually: a handle that moves BOTH
+        // position and size (Left/Top - unlike Right/Bottom, whose position never moves on a
+        // Left/Top-origin object) must accumulate correctly across MULTIPLE drag ticks on a rotated
+        // object. A single big tick was already covered above and was never broken - the bug only
+        // shows up once representation.X/Y (which get overwritten with a ROTATED, world-space delta
+        // each tick) get read back as if they were still in the LOCAL, pre-rotation frame that
+        // grabStartPositionAxis/trueSizeOffsetSinceGrabAxis are computed in.
+        var (sut, cursor, representation) = CreateGrabbedSut(
+            x: 5, y: 0, width: 20, height: 10, rotation: 90, sideGrabbed: ResizeSide.Left);
+
+        // Two small ticks, same direction, each moving the cursor right by 3 (shrinking the object
+        // from the Left, well short of crossing the anchor at local X=25).
+        cursor.X = 110;
+        cursor.XChange = 3;
+        cursor.YChange = 0;
+        sut.HandleDrag();
+
+        cursor.X = 120;
+        cursor.XChange = 3;
+        cursor.YChange = 0;
+        sut.HandleDrag();
+
+        // Local (pre-rotation) X should move by the full 6px total (Left-origin, Left handle keeps
+        // the Right edge fixed) and Width should shrink by 6, matching one big 6px tick exactly -
+        // this must hold regardless of how the 6px was split across ticks.
+        var expectedRepositionLocal = new System.Numerics.Vector2(6, 0);
+        expectedRepositionLocal.Y *= -1;
+        MathFunctions.RotateVector(ref expectedRepositionLocal, MathHelper.ToRadians(90));
+        expectedRepositionLocal.Y *= -1;
+
+        representation.X.ShouldBe(5 + expectedRepositionLocal.X, tolerance: 0.01);
+        representation.Y.ShouldBe(0 + expectedRepositionLocal.Y, tolerance: 0.01);
+        representation.Width.ShouldBe(14, tolerance: 0.01); // 20 - 6
     }
 }

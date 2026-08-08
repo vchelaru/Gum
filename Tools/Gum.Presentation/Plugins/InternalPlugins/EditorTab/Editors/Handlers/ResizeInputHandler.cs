@@ -350,16 +350,29 @@ public class ResizeInputHandler : InputHandlerBase
     }
 
     /// <summary>
-    /// Resolves the raw (non-grid-snapped) per-axis position/size delta for a resize drag,
-    /// allowing the dragged edge to cross the anchor edge instead of clamping Width/Height at 0.
-    /// See <see cref="GetAnchorAndDraggedLocal"/> and <see cref="ResolveEdgesToPositionAndSize"/> -
+    /// Resolves the raw (non-grid-snapped) per-axis position/size delta for THIS tick of a resize
+    /// drag, allowing the dragged edge to cross the anchor edge instead of clamping Width/Height at
+    /// 0. See <see cref="GetAnchorAndDraggedLocal"/> and <see cref="ResolveEdgesToPositionAndSize"/> -
     /// this is the same anchor/dragged-edge resolution <see cref="GetDifferenceToGridForResizeAxis"/>
     /// uses, minus the grid-snap rounding step, so both paths flip identically (#4385).
+    ///
+    /// The delta is computed ENTIRELY from grab-time state (<paramref name="trueSizeOffsetBeforeAxis"/>
+    /// and <paramref name="trueSizeOffsetAfterAxis"/> - the accumulated true size offset immediately
+    /// before and after this tick) rather than by diffing against the live representation's current
+    /// X/Y. The live X/Y can't be used as the "before" reference for a rotated object: on a rotated
+    /// object the position delta this method returns gets rotated before being applied (see
+    /// ApplySizeChangeForInstance), so the STORED X/Y no longer represents the same local,
+    /// pre-rotation frame that grabStartPositionAxis (and this method's own math) is expressed in
+    /// once even one prior tick has written a rotated delta into it. Resolving "before" and "after"
+    /// from the same grab-time-relative accumulator and diffing those keeps every tick in the local
+    /// frame, so per-tick deltas sum to the same result as one big tick regardless of rotation
+    /// (confirmed by ResizeInputHandlerFlipRotationTests's multi-tick case, which drifted under the
+    /// live-X/Y-diffing approach this replaced).
     /// </summary>
     internal static void ResolveResizeAxis(
-        float grabStartPositionAxis, float grabStartSizeAxis, float trueSizeOffsetSinceGrabAxis,
+        float grabStartPositionAxis, float grabStartSizeAxis,
+        float trueSizeOffsetBeforeAxis, float trueSizeOffsetAfterAxis,
         float sizeMultiplier, float originRatio,
-        float livePositionAxis, float liveSizeAxis,
         out float positionDelta, out float sizeDelta)
     {
         positionDelta = 0;
@@ -370,14 +383,18 @@ public class ResizeInputHandler : InputHandlerBase
             return;
         }
 
-        GetAnchorAndDraggedLocal(grabStartPositionAxis, grabStartSizeAxis, trueSizeOffsetSinceGrabAxis,
-            sizeMultiplier, originRatio, out float anchorLocal, out float draggedLocal);
+        GetAnchorAndDraggedLocal(grabStartPositionAxis, grabStartSizeAxis, trueSizeOffsetBeforeAxis,
+            sizeMultiplier, originRatio, out float anchorLocal, out float oldDraggedLocal);
+        ResolveEdgesToPositionAndSize(anchorLocal, oldDraggedLocal, originRatio,
+            out float oldPositionLocal, out float oldSizeLocal);
 
-        ResolveEdgesToPositionAndSize(anchorLocal, draggedLocal, originRatio,
-            out float newPositionLocal, out float newSize);
+        GetAnchorAndDraggedLocal(grabStartPositionAxis, grabStartSizeAxis, trueSizeOffsetAfterAxis,
+            sizeMultiplier, originRatio, out anchorLocal, out float newDraggedLocal);
+        ResolveEdgesToPositionAndSize(anchorLocal, newDraggedLocal, originRatio,
+            out float newPositionLocal, out float newSizeLocal);
 
-        positionDelta = newPositionLocal - livePositionAxis;
-        sizeDelta = newSize - liveSizeAxis;
+        positionDelta = newPositionLocal - oldPositionLocal;
+        sizeDelta = newSizeLocal - oldSizeLocal;
     }
 
     /// <summary>
@@ -501,8 +518,13 @@ public class ResizeInputHandler : InputHandlerBase
         // Snap To Grid, and toggled unconditionally so no discontinuity appears if the user toggles
         // Snap To Grid mid-drag) - so a resize that overflows past zero can reflect the dragged edge
         // to the opposite side (see ResolveResizeAxis) instead of getting stuck at Width/Height == 0.
+        // Captured before AND after this tick's accumulation - ResolveResizeAxis diffs those two
+        // grab-time-relative snapshots rather than the live representation, since the live X/Y gets
+        // overwritten with a ROTATED delta each tick (see ResolveResizeAxis's own doc comment).
+        Vector2 trueSizeOffsetBefore = Context.GrabbedState.GetTrueSizeOffset(instanceSave);
         Context.GrabbedState.AccumulateTrueSizeOffset(instanceSave,
             cursorXChange * widthMultiplier, cursorYChange * heightMultiplier);
+        Vector2 trueSizeOffsetAfter = Context.GrabbedState.GetTrueSizeOffset(instanceSave);
 
         bool isResizeFromCenter = Context.HotkeyManager.IsPressedInControl(Context.HotkeyManager.ResizeFromCenter);
 
@@ -525,7 +547,7 @@ public class ResizeInputHandler : InputHandlerBase
         {
             // Resize-from-center grows/shrinks symmetrically around a fixed CENTER point rather
             // than a fixed edge, so the anchor-edge/dragged-edge flip above doesn't apply here.
-            // This combination doesn't yet support flip-at-zero (#4386 follow-up) - fall back to a
+            // This combination doesn't yet support flip-at-zero (#4390 follow-up) - fall back to a
             // simple floor clamp so Width can never go negative.
             positionDeltaX = cursorXChange * changeXMultiplier;
             sizeDeltaX = cursorXChange * widthMultiplier;
@@ -537,9 +559,9 @@ public class ResizeInputHandler : InputHandlerBase
         else
         {
             ResolveResizeAxis(
-                grabStartPosition.X, grabStartSize.X, Context.GrabbedState.GetTrueSizeOffset(instanceSave).X,
+                grabStartPosition.X, grabStartSize.X,
+                trueSizeOffsetBefore.X, trueSizeOffsetAfter.X,
                 widthMultiplier, xOriginRatio,
-                representation.X, representation.Width,
                 out positionDeltaX, out sizeDeltaX);
         }
 
@@ -556,9 +578,9 @@ public class ResizeInputHandler : InputHandlerBase
         else
         {
             ResolveResizeAxis(
-                grabStartPosition.Y, grabStartSize.Y, Context.GrabbedState.GetTrueSizeOffset(instanceSave).Y,
+                grabStartPosition.Y, grabStartSize.Y,
+                trueSizeOffsetBefore.Y, trueSizeOffsetAfter.Y,
                 heightMultiplier, yOriginRatio,
-                representation.Y, representation.Height,
                 out positionDeltaY, out sizeDeltaY);
         }
 
