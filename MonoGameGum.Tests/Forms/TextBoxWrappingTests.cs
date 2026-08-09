@@ -348,6 +348,38 @@ public class TextBoxWrappingTests : BaseTestClass
     }
 
     [Fact]
+    public void Wrap_ShouldPlaceCaretAtStartOfNextLine_WhenTrailingSpaceReachesPastTheWrapPoint()
+    {
+        // Issue #4399: a wrapped line only exists once there is text on it, so after typing the
+        // space that ends a line the caret has nowhere to go and stays at the end of that line,
+        // past the right edge. It belongs where the next character will appear instead.
+        const string upToTheWrap = "This little ";
+
+        TextBox textBox = CreateWrappingTextBox();
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        foreach (char character in upToTheWrap)
+        {
+            textBox.HandleCharEntered(character);
+        }
+
+        GetCoreText(textBox).WrappedText.Count.ShouldBe(1,
+            "sanity: the trailing space alone doesn't create a wrapped line");
+        float caretLeftBeforeTheLineExists = visual.CaretInstance.AbsoluteLeft;
+        float caretTopBeforeTheLineExists = visual.CaretInstance.AbsoluteTop;
+
+        // Typing the next character creates the line the caret was anticipating. The caret at
+        // that same index must land where it already was, or it visibly jumps as you type.
+        textBox.HandleCharEntered('a');
+        textBox.CaretIndex = upToTheWrap.Length;
+
+        GetCoreText(textBox).WrappedText.Count.ShouldBe(2,
+            "sanity: the next character does wrap onto a second line");
+        visual.CaretInstance.AbsoluteLeft.ShouldBe(caretLeftBeforeTheLineExists);
+        visual.CaretInstance.AbsoluteTop.ShouldBe(caretTopBeforeTheLineExists);
+    }
+
+    [Fact]
     public void Wrap_ShouldNotShiftTextX_WhenCaretMovedIntoWrappedLine()
     {
         // The reported repro: with the caret placed partway into a wrapped line, the text jumped

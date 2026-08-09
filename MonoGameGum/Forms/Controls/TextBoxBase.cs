@@ -1378,6 +1378,11 @@ public abstract class TextBoxBase :
             {
                 SetXCaretPositionForLine(string.Empty, 0);
             }
+            else if (IsCaretPastWrapPointOnLastLine(lineNumber, relativeIndexOnLine))
+            {
+                SetXCaretPositionForLine(string.Empty, 0);
+                lineNumber++;
+            }
             else
             {
                 SetXCaretPositionForLine(coreTextObject.WrappedText[lineNumber], relativeIndexOnLine);
@@ -1390,6 +1395,35 @@ public abstract class TextBoxBase :
 
             caretComponent.Y = ResolveLineYForComponent(caretY, caretComponent);
         }
+    }
+
+    /// <summary>
+    /// True when the caret sits after a trailing space that reaches past the wrap point of the
+    /// last line. Wrapping measures a line without its trailing space while the caret is
+    /// measured with it, so such a caret would render outside the text area. The next typed
+    /// character starts a new line, so the caret belongs at the start of that line — Gum just
+    /// hasn't produced it yet, since a wrapped line only appears once there is text on it.
+    /// </summary>
+    private bool IsCaretPastWrapPointOnLastLine(int lineNumber, int relativeIndexOnLine)
+    {
+        if (!DoesTextComponentWrap || lineNumber != coreTextObject.WrappedText.Count - 1)
+        {
+            return false;
+        }
+
+        var line = coreTextObject.WrappedText[lineNumber];
+
+        if (relativeIndexOnLine != line.Length ||
+            line.Length == 0 ||
+            !char.IsWhiteSpace(line[line.Length - 1]))
+        {
+            return false;
+        }
+
+        float caretRight = GetXCaretPositionForLineRelativeToTextParent(line, relativeIndexOnLine)
+            + caretComponent.AbsoluteWidth;
+
+        return caretRight > this.textComponent.X + this.textComponent.AbsoluteWidth;
     }
 
     private void UpdateToIsFocused() => UpdateToIsFocused(wasFocused: isFocused);
@@ -1984,19 +2018,6 @@ public abstract class TextBoxBase :
     private void SetXCaretPositionForLine(string stringToMeasure, int indexIntoLine)
     {
         var newPosition = GetXCaretPositionForLineRelativeToTextParent(stringToMeasure, indexIntoLine);
-
-        if (DoesTextComponentWrap)
-        {
-            // Wrapping fits every line to the text component, so a caret past its right edge
-            // can only come from a trailing space: wrapping measures without one, but the caret
-            // is measured with it. There is no wrapped line for the caret to move onto until
-            // the next character is typed, so hold it at the wrap point rather than letting it
-            // render outside the clipped region (issue #4399).
-            float maximumPosition = this.textComponent.X
-                + this.textComponent.AbsoluteWidth
-                - this.caretComponent.AbsoluteWidth;
-            newPosition = System.Math.Min(newPosition, maximumPosition);
-        }
 
         // assumes caret and text have the same parent
         this.caretComponent.X = newPosition;
