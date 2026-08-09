@@ -1,0 +1,150 @@
+using System;
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.Dialogs;
+using Gum.Logic;
+using Gum.Managers;
+using Gum.Services.Dialogs;
+using Gum.ToolCommands;
+using Gum.ToolStates;
+using GumFormsPlugin.Services;
+using Moq;
+using Shouldly;
+
+namespace Gum.Presentation.Tests;
+
+/// <summary>
+/// New projects used to be created empty, leaving a first-time user with no screen and no Forms
+/// controls. These pin the starter content and the opt-outs at each step.
+/// </summary>
+public class NewProjectLogicTests
+{
+    private readonly Mock<IProjectManager> _projectManager = new();
+    private readonly Mock<IDialogService> _dialogService = new();
+    private readonly Mock<IFileCommands> _fileCommands = new();
+    private readonly Mock<IFormsFileService> _formsFileService = new();
+    private readonly Mock<IFormsThemeImporter> _themeImporter = new();
+    private readonly Mock<ICopyPasteProjectCommands> _projectCommands = new();
+    private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly NewProjectLogic _logic;
+
+    public NewProjectLogicTests()
+    {
+        _formsFileService.Setup(x => x.DefaultThemeName).Returns("Standard");
+        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+        _logic = new NewProjectLogic(
+            _projectManager.Object,
+            _dialogService.Object,
+            _fileCommands.Object,
+            _formsFileService.Object,
+            _themeImporter.Object,
+            _projectCommands.Object,
+            _selectedState.Object);
+    }
+
+    /// <summary>
+    /// Sets up the options dialog to return <paramref name="accepted"/>, with Forms inclusion set
+    /// to <paramref name="isIncludeFormsControls"/>.
+    /// </summary>
+    private void SetUpDialog(bool accepted, bool isIncludeFormsControls = true)
+    {
+        NewProjectDialogViewModel viewModel = new() { IsIncludeFormsControls = isIncludeFormsControls };
+        _dialogService
+            .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
+            .Returns(accepted);
+    }
+
+    private void SetUpSaveLocationPrompt(bool accepted)
+    {
+        bool isProjectNew = true;
+        _projectManager.Setup(x => x.AskUserForProjectNameIfNecessary(out isProjectNew)).Returns(accepted);
+    }
+
+    [Fact]
+    public void CreateNewProject_AlwaysCreatesTheProject_EvenWhenTheOptionsDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        _logic.CreateNewProject();
+
+        // The tool assumes a non-null GumProjectSave, so backing out must still leave one behind.
+        _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsNothing_WhenTheOptionsDialogIsCancelled()
+    {
+        SetUpDialog(accepted: false);
+
+        _logic.CreateNewProject();
+
+        _projectManager.Verify(x => x.AskUserForProjectNameIfNecessary(out It.Ref<bool>.IsAny), Times.Never);
+        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: false);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsTheDefaultThemeAndAddsAStartingScreen()
+    {
+        SetUpDialog(accepted: true, isIncludeFormsControls: true);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme("Standard", false), Times.Once);
+        _projectCommands.Verify(
+            x => x.AddScreen(It.Is<ScreenSave>(s => s.Name == NewProjectLogic.StartingScreenName)),
+            Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_StillAddsAStartingScreen_WhenFormsAreDeclined()
+    {
+        SetUpDialog(accepted: true, isIncludeFormsControls: false);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_SelectsTheStartingScreen()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _selectedState.VerifySet(
+            x => x.SelectedScreen = It.Is<ScreenSave>(s => s.Name == NewProjectLogic.StartingScreenName),
+            Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsNothing_WhenTheInitialSaveFails()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: true);
+        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+}

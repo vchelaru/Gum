@@ -1,16 +1,10 @@
 using System.Collections.Generic;
-using Gum.Commands;
 using Gum.DataTypes;
-using Gum.Logic;
-using Gum.Logic.FileWatch;
-using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using GumFormsPlugin.ViewModels;
 using Moq;
 using Shouldly;
-using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -23,22 +17,14 @@ namespace Gum.Presentation.Tests;
 public class AddFormsViewModelTests
 {
     private readonly Mock<IFormsFileService> _formsFileService;
-    private readonly Mock<IDialogService> _dialogService;
-    private readonly Mock<IFileCommands> _fileCommands;
-    private readonly Mock<IImportLogic> _importLogic;
+    private readonly Mock<IFormsThemeImporter> _themeImporter;
     private readonly Mock<IProjectState> _projectState;
-    private readonly Mock<IFileWatchManager> _fileWatchManager;
-    private readonly Mock<ISkiaShapeStandardsLogic> _skiaShapeStandards;
 
     public AddFormsViewModelTests()
     {
         _formsFileService = new Mock<IFormsFileService>();
-        _dialogService = new Mock<IDialogService>();
-        _fileCommands = new Mock<IFileCommands>();
-        _importLogic = new Mock<IImportLogic>();
+        _themeImporter = new Mock<IFormsThemeImporter>();
         _projectState = new Mock<IProjectState>();
-        _fileWatchManager = new Mock<IFileWatchManager>();
-        _skiaShapeStandards = new Mock<ISkiaShapeStandardsLogic>();
 
         _formsFileService.Setup(x => x.DefaultThemeName).Returns("Standard");
         _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
@@ -47,12 +33,8 @@ public class AddFormsViewModelTests
 
     private AddFormsViewModel CreateSut() => new(
         _formsFileService.Object,
-        _dialogService.Object,
-        _fileCommands.Object,
-        _importLogic.Object,
-        _projectState.Object,
-        _fileWatchManager.Object,
-        _skiaShapeStandards.Object);
+        _themeImporter.Object,
+        _projectState.Object);
 
     [Fact]
     public void Constructor_SelectsDefaultTheme_WhenPresentAmongAvailableThemes()
@@ -77,25 +59,33 @@ public class AddFormsViewModelTests
     }
 
     [Fact]
-    public void OnAffirmative_SavesProjectAndReloadsIt_WhenNothingBlocksCopying()
+    public void OnAffirmative_ImportsTheSelectedTheme()
     {
         _formsFileService.Setup(x => x.GetAvailableThemes())
-            .Returns(new List<string> { "Standard" });
-        _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns(new Dictionary<string, FilePath>());
-        _projectState.Setup(x => x.GumProjectSave)
-            .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumx" });
-        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+            .Returns(new List<string> { "Standard", "Bubblegum" });
 
         AddFormsViewModel sut = CreateSut();
+        sut.SelectedTheme = "Bubblegum";
+        sut.IsIncludeDemoScreenGum = true;
+
         bool? affirmativeResult = null;
         sut.RequestClose += (_, e) => affirmativeResult = e;
 
         sut.OnAffirmative();
 
-        _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
-        _fileCommands.Verify(x => x.LoadProject("C:/project/Test.gumx"), Times.Once);
-        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportTheme("Bubblegum", true), Times.Once);
         affirmativeResult.ShouldBe(true);
+    }
+
+    [Fact]
+    public void OnAffirmative_FallsBackToDefaultTheme_WhenNoThemeIsSelected()
+    {
+        _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string>());
+
+        AddFormsViewModel sut = CreateSut();
+
+        sut.OnAffirmative();
+
+        _themeImporter.Verify(x => x.ImportTheme("Standard", false), Times.Once);
     }
 }

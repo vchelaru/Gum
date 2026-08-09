@@ -1,9 +1,4 @@
-using Gum.Commands;
 using Gum.DataTypes;
-using Gum.Logic;
-using Gum.Logic.FileWatch;
-using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using GumFormsPlugin.ViewModels;
@@ -20,29 +15,17 @@ namespace GumFormsPlugin;
 public class GumFormsLogic
 {
     private readonly IFormsFileService _formsFileService;
+    private readonly IFormsThemeImporter _themeImporter;
     private readonly IProjectState _projectState;
-    private readonly IImportLogic _importLogic;
-    private readonly IFileCommands _fileCommands;
-    private readonly IFileWatchManager _fileWatchManager;
-    private readonly IDialogService _dialogService;
-    private readonly ISkiaShapeStandardsLogic _skiaShapeStandardsLogic;
 
     public GumFormsLogic(
         IFormsFileService formsFileService,
-        IProjectState projectState,
-        IImportLogic importLogic,
-        IFileCommands fileCommands,
-        IFileWatchManager fileWatchManager,
-        IDialogService dialogService,
-        ISkiaShapeStandardsLogic skiaShapeStandardsLogic)
+        IFormsThemeImporter themeImporter,
+        IProjectState projectState)
     {
         _formsFileService = formsFileService;
+        _themeImporter = themeImporter;
         _projectState = projectState;
-        _importLogic = importLogic;
-        _fileCommands = fileCommands;
-        _fileWatchManager = fileWatchManager;
-        _dialogService = dialogService;
-        _skiaShapeStandardsLogic = skiaShapeStandardsLogic;
     }
 
     /// <summary>
@@ -90,14 +73,7 @@ public class GumFormsLogic
             return false;
         }
 
-        viewModel = new AddFormsViewModel(
-            _formsFileService,
-            _dialogService,
-            _fileCommands,
-            _importLogic,
-            _projectState,
-            _fileWatchManager,
-            _skiaShapeStandardsLogic);
+        viewModel = new AddFormsViewModel(_formsFileService, _themeImporter, _projectState);
         blockedMessage = null;
         return true;
     }

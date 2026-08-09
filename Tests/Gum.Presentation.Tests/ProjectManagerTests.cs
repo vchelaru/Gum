@@ -39,6 +39,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IHotkeyManager> _hotkeyManager;
     private readonly Mock<IGumProjectRepairLogic> _gumProjectRepairLogic;
     private readonly Mock<IFilePickingFolderProvider> _filePickingFolderProvider;
+    private readonly Mock<INewProjectLogic> _newProjectLogic;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -57,6 +58,7 @@ public class ProjectManagerTests : BaseTestClass
         _hotkeyManager = new Mock<IHotkeyManager>();
         _gumProjectRepairLogic = new Mock<IGumProjectRepairLogic>();
         _filePickingFolderProvider = new Mock<IFilePickingFolderProvider>();
+        _newProjectLogic = new Mock<INewProjectLogic>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -72,7 +74,8 @@ public class ProjectManagerTests : BaseTestClass
             _pluginManager.Object,
             new Lazy<IHotkeyManager>(() => _hotkeyManager.Object),
             _gumProjectRepairLogic.Object,
-            _filePickingFolderProvider.Object);
+            _filePickingFolderProvider.Object,
+            new Lazy<INewProjectLogic>(() => _newProjectLogic.Object));
     }
 
     [Fact]
@@ -92,7 +95,7 @@ public class ProjectManagerTests : BaseTestClass
         await _projectManager.Initialize();
 
         _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
-        _pluginManager.Verify(p => p.ProjectLoad(It.IsAny<GumProjectSave>()), Times.Once);
+        _newProjectLogic.Verify(n => n.CreateNewProject(), Times.Once);
     }
 
     [Fact]
@@ -109,7 +112,7 @@ public class ProjectManagerTests : BaseTestClass
         await _projectManager.Initialize();
 
         _fileCommands.Verify(f => f.LoadProject(glueProject), Times.Once);
-        _pluginManager.Verify(p => p.ProjectLoad(It.IsAny<GumProjectSave>()), Times.Never);
+        _newProjectLogic.Verify(n => n.CreateNewProject(), Times.Never);
     }
 
     [Fact]

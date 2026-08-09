@@ -54,6 +54,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly Lazy<IHotkeyManager> _hotkeyManager;
     private readonly IGumProjectRepairLogic _gumProjectRepairLogic;
     private readonly IFilePickingFolderProvider _filePickingFolderProvider;
+    // Lazy: NewProjectLogic calls back into this manager, so a direct reference would be a
+    // construction cycle.
+    private readonly Lazy<INewProjectLogic> _newProjectLogic;
 
     #endregion
 
@@ -131,8 +134,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IPluginManager pluginManager,
         Lazy<IHotkeyManager> hotkeyManager,
         IGumProjectRepairLogic gumProjectRepairLogic,
-        IFilePickingFolderProvider filePickingFolderProvider)
+        IFilePickingFolderProvider filePickingFolderProvider,
+        Lazy<INewProjectLogic> newProjectLogic)
     {
+        _newProjectLogic = newProjectLogic;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _dialogService = dialogService;
@@ -193,7 +198,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
             else
             {
-                CreateNewProject();
+                // Startup with nothing to reopen goes through the same populate-a-starter-project
+                // flow as File > New Project, so a first-time user isn't dropped into a blank tool.
+                _newProjectLogic.Value.CreateNewProject();
             }
         }
         else
