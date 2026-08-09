@@ -1374,6 +1374,13 @@ public abstract class TextBoxBase :
         {
             GetLineNumber(caretIndex, out int lineNumber, out int _, out int relativeIndexOnLine);
 
+            // A wrapped line exists only once there is text on it, so in the moment after
+            // typing the space that ends a line there is no next line for the caret to move
+            // to: it stays at the end of the current one, which puts it just outside the
+            // clipped text area until the next character arrives. Considered and left as-is
+            // -- no user has reported it, and it isn't settled that moving the caret down
+            // early is what a text box should do. Revisit if it ever comes up (issue #4399).
+
             if (lineNumber == -1)
             {
                 SetXCaretPositionForLine(string.Empty, 0);
