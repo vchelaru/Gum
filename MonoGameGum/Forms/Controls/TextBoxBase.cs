@@ -705,7 +705,7 @@ public abstract class TextBoxBase :
 
         int index = 0;
 
-        if (IsSingleLineMode)
+        if (IsRenderedAsSingleLine)
         {
             var textToUse = DisplayedText;
             index = GetIndex(cursorOffset, textToUse);
@@ -1363,7 +1363,7 @@ public abstract class TextBoxBase :
 
     protected void UpdateCaretPositionFromCaretIndex()
     {
-        if (IsSingleLineMode)
+        if (IsRenderedAsSingleLine)
         {
             // make sure we measure a valid string
             var stringToMeasure = DisplayedText ?? "";
@@ -1615,6 +1615,30 @@ public abstract class TextBoxBase :
         TextWrapping == TextWrapping.NoWrap && !AcceptsReturn;
 
     /// <summary>
+    /// True when the displayed text actually occupies one visual line, so caret, selection and
+    /// hit-test positions can be measured against the whole string instead of per wrapped line.
+    /// <para>
+    /// Unlike <see cref="IsSingleLineMode"/> this reflects layout rather than configuration. A
+    /// single-line-configured box still renders multiple lines when the assigned text contains
+    /// <c>'\n'</c>, or when the visual's text instance is sized relative to its parent and wraps.
+    /// Measuring those as one line puts the caret hundreds of pixels right of the glyph it
+    /// belongs to, and the horizontal scroll then drags the text left to chase it (issue #4393).
+    /// </para>
+    /// </summary>
+    private bool IsRenderedAsSingleLine =>
+        IsSingleLineMode && (coreTextObject?.WrappedText?.Count ?? 1) <= 1;
+
+    /// <summary>
+    /// True when the text component is sized against its parent, which makes it wrap. Every
+    /// visual line then fits the container by construction, so horizontal scrolling would only
+    /// push characters out of the clipped region — most visibly on the keystroke that wraps a
+    /// line, where the caret sits past the right edge by the width of the trailing space.
+    /// </summary>
+    private bool DoesTextComponentWrap =>
+        textComponent?.WidthUnits == global::Gum.DataTypes.DimensionUnitType.RelativeToParent ||
+        textComponent?.WidthUnits == global::Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+
+    /// <summary>
     /// Applies the appropriate <c>LineModeCategory</c> state on the Visual based on the
     /// current <see cref="TextWrapping"/> and <see cref="AcceptsReturn"/> values:
     /// <list type="bullet">
@@ -1703,7 +1727,7 @@ public abstract class TextBoxBase :
         selectionStartEnds.Clear();
         var substring = DisplayedText.Substring(0, selectionStart);
 
-        if (!IsSingleLineMode)
+        if (!IsRenderedAsSingleLine)
         {
             GetLineNumber(selectionStart, out int startLineNumber, out int absoluteStartOfFirstLine, out int startRelativeIndexInLine);
 
@@ -1783,8 +1807,11 @@ public abstract class TextBoxBase :
     {
         // Horizontal scrolling fires whenever wrapping is off — that covers both
         // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
-        // since in both cases each visual line can extend past the right edge.
-        if (this.TextWrapping == TextWrapping.NoWrap)
+        // since in both cases each visual line can extend past the right edge. It must also
+        // check the layout, not just the property: a visual whose LineModeCategory has no
+        // "MultiNoWrap" state falls back to "Multi", which sizes the text relative to its
+        // parent and therefore wraps even though TextWrapping says otherwise.
+        if (this.TextWrapping == TextWrapping.NoWrap && !DoesTextComponentWrap)
         {
             KeepCaretEdgeInsideParent(LayoutAxis.Horizontal);
         }
