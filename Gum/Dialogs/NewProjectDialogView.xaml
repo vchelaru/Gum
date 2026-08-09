@@ -11,7 +11,7 @@
         <CheckBox IsChecked="{Binding IsIncludeFormsControls}">Include Forms controls</CheckBox>
         <TextBlock
             Margin="0,4,0,0"
-            Foreground="{DynamicResource Frb.Brushes.Foreground.Muted}"
+            Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
             Text="Adds buttons, text boxes, list boxes and other standard controls to the project."
             TextWrapping="Wrap" />
     </StackPanel>
