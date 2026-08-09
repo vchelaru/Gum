@@ -4,16 +4,16 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">14</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">242</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">231</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -27,8 +27,17 @@
     <Variable Type="string" Name="Background.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
     </Variable>
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -55,7 +64,7 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="Background1.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">14</Value>
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="int" Name="Background1.DropshadowAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">100</Value>
@@ -82,16 +91,16 @@
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="int" Name="Background1.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">242</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background1.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">231</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background1.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="bool" Name="Background1.HasDropshadow" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -105,8 +114,17 @@
     <Variable Type="string" Name="Background1.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">DemoDialog</Value>
     </Variable>
+    <Variable Type="int" Name="Background1.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background1.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Background1.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background1.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -627,7 +645,7 @@
       <Value xsi:type="xsd:float">7</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TitleText.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
@@ -636,7 +654,7 @@
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="bool" Name="TitleText.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -645,7 +663,7 @@
       <Value xsi:type="xsd:string">MenuTitle</Value>
     </Variable>
     <Variable Type="int" Name="TitleText.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
@@ -654,7 +672,7 @@
       <Value xsi:type="xsd:float">172</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TitleText1.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
@@ -663,7 +681,7 @@
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="bool" Name="TitleText1.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
@@ -672,7 +690,7 @@
       <Value xsi:type="xsd:string">MenuTitle1</Value>
     </Variable>
     <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
@@ -694,12 +712,34 @@
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Text.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Text.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
       <Name>TitleText.VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Retro95/Styles.Accent.FillColor</string>
+        <string>Color = Components/Retro95/Styles.Selection.FillColor</string>
         <string>Font = Components/Retro95/Styles.Strong.Font</string>
         <string>FontSize = Components/Retro95/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Retro95/Styles.Strong.IsBold</string>
@@ -712,7 +752,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>Color = Components/Retro95/Styles.Accent.FillColor</string>
+        <string>Color = Components/Retro95/Styles.Selection.FillColor</string>
         <string>Font = Components/Retro95/Styles.Strong.Font</string>
         <string>FontSize = Components/Retro95/Styles.Strong.FontSize</string>
         <string>IsBold = Components/Retro95/Styles.Strong.IsBold</string>

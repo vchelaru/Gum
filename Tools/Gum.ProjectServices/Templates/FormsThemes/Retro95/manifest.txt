@@ -47,8 +47,8 @@ Components/Retro95/Controls/TextBox.gucx
 Components/Retro95/Controls/Toast.gucx
 Components/Retro95/Controls/UserControl.gucx
 Components/Retro95/Controls/Window.gucx
-Components/Retro95/Elements/Divider.gucx
-Components/Retro95/Elements/Icon.gucx
+Components/Retro95/Elements/Bevel.gucx
+Components/Retro95/Elements/FocusRect.gucx
 Components/Retro95/Styles.gucx
 EventExport/.gitignore
 Fonts/Nunito-Bold.ttf
