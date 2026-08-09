@@ -108,6 +108,29 @@ public class TextBoxWrappingTests : BaseTestClass
     }
 
     [Fact]
+    public void Paste_ShouldNotScrollHorizontally_WhenVisualWrapsAutomatically()
+    {
+        Gum.Clipboard.ClipboardImplementation.PushStringToClipboard(WrappingText);
+
+        TextBox textBox = new();
+        textBox.Height = 200;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        visual.TextInstance.Width = -8f;
+        visual.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+
+        float restingTextX = visual.TextInstance.X;
+
+        textBox.HandleKeyDown(global::Gum.Forms.Input.Keys.V, false, false, isCtrlDown: true);
+
+        GetCoreText(textBox).WrappedText.Count.ShouldBeGreaterThan(1,
+            "sanity: the pasted text should have wrapped");
+        visual.TextInstance.X.ShouldBe(restingTextX,
+            "because pasted text that wraps stays inside the container horizontally");
+    }
+
+    [Fact]
     public void MultiLineTextInSingleLineMode_ShouldMapClickOnSecondLineToThatLine()
     {
         // Hit-testing has to use the same model of the text as caret placement, or clicking where
