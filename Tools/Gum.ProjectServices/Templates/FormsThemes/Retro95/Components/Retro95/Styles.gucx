@@ -160,6 +160,9 @@
     <Variable Type="bool" Name="Normal.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="bool" Name="Normal.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
     <Variable Type="string" Name="Normal.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
     </Variable>
@@ -175,6 +178,9 @@
     </Variable>
     <Variable Type="bool" Name="Strong.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="bool" Name="Strong.IsItalic" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="string" Name="Strong.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TextStyles</Value>
