@@ -397,6 +397,11 @@ namespace Gum.Converters
                     return GeneralUnitType.PercentageOfOtherDimension;
                 case DimensionUnitType.MaintainFileAspectRatio:
                     return GeneralUnitType.MaintainFileAspectRatio;
+                case DimensionUnitType.Ratio:
+                case DimensionUnitType.ScreenPixel:
+                    return GeneralUnitType.PixelsFromSmall;
+                case DimensionUnitType.RelativeToMaxParentOrChildren:
+                    return GeneralUnitType.PixelsFromLarge;
                 default:
                     throw new NotImplementedException();
             }
