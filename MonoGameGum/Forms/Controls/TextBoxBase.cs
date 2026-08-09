@@ -1318,7 +1318,7 @@ public abstract class TextBoxBase :
                 var shouldShowFirstOfNextLine =
                     // If we're at the very end of the line,
                     relativeIndexOnLine == lineLength &&
-                    // the line has content,
+                    // the last character is whitespace,
                     currentLine.Length > 0 &&
                     // we have another line
                     lineNumber < coreTextObject.WrappedText.Count - 1 &&
@@ -1374,14 +1374,16 @@ public abstract class TextBoxBase :
         {
             GetLineNumber(caretIndex, out int lineNumber, out int _, out int relativeIndexOnLine);
 
+            // A wrapped line exists only once there is text on it, so in the moment after
+            // typing the space that ends a line there is no next line for the caret to move
+            // to: it stays at the end of the current one, which puts it just outside the
+            // clipped text area until the next character arrives. Considered and left as-is
+            // -- no user has reported it, and it isn't settled that moving the caret down
+            // early is what a text box should do. Revisit if it ever comes up (issue #4399).
+
             if (lineNumber == -1)
             {
                 SetXCaretPositionForLine(string.Empty, 0);
-            }
-            else if (IsCaretPastWrapPointOnLastLine(lineNumber, relativeIndexOnLine))
-            {
-                SetXCaretPositionForLine(string.Empty, 0);
-                lineNumber++;
             }
             else
             {
@@ -1395,35 +1397,6 @@ public abstract class TextBoxBase :
 
             caretComponent.Y = ResolveLineYForComponent(caretY, caretComponent);
         }
-    }
-
-    /// <summary>
-    /// True when the caret sits after a trailing space that reaches past the wrap point of the
-    /// last line. Wrapping measures a line without its trailing space while the caret is
-    /// measured with it, so such a caret would render outside the text area. The next typed
-    /// character starts a new line, so the caret belongs at the start of that line — Gum just
-    /// hasn't produced it yet, since a wrapped line only appears once there is text on it.
-    /// </summary>
-    private bool IsCaretPastWrapPointOnLastLine(int lineNumber, int relativeIndexOnLine)
-    {
-        if (!DoesTextComponentWrap || lineNumber != coreTextObject.WrappedText.Count - 1)
-        {
-            return false;
-        }
-
-        var line = coreTextObject.WrappedText[lineNumber];
-
-        if (relativeIndexOnLine != line.Length ||
-            line.Length == 0 ||
-            !char.IsWhiteSpace(line[line.Length - 1]))
-        {
-            return false;
-        }
-
-        float caretRight = GetXCaretPositionForLineRelativeToTextParent(line, relativeIndexOnLine)
-            + caretComponent.AbsoluteWidth;
-
-        return caretRight > this.textComponent.X + this.textComponent.AbsoluteWidth;
     }
 
     private void UpdateToIsFocused() => UpdateToIsFocused(wasFocused: isFocused);
