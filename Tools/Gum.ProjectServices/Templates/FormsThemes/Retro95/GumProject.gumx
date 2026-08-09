@@ -79,6 +79,8 @@
   <ComponentReference Name="Retro95/Controls/Toast" />
   <ComponentReference Name="Retro95/Controls/UserControl" />
   <ComponentReference Name="Retro95/Controls/Window" />
+  <ComponentReference Name="Retro95/Elements/Bevel" />
+  <ComponentReference Name="Retro95/Elements/FocusRect" />
   <ComponentReference Name="Retro95/Elements/Icon" />
   <ComponentReference Name="Retro95/Styles" />
   <StandardElementReference Name="Circle" />
