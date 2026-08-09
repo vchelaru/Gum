@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Converters;
+using Gum.DataTypes;
 using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
@@ -263,17 +264,15 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         {
             if (resizeBehavior == Controls.ResizeBehavior.Rows)
             {
-                var firstHeightInPixels = firstVisual.AbsoluteHeight;
-
-                var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
+                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                    firstVisual.Height, firstVisual.AbsoluteHeight, changeInPixels);
                 firstVisual.Height += ratioToAdd;
                 secondVisual.Height -= ratioToAdd;
             }
             else
             {
-                var firstWidthInPixels = firstVisual.AbsoluteWidth;
-
-                var ratioToAdd = (changeInPixels / firstWidthInPixels) * firstVisual.Width;
+                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                    firstVisual.Width, firstVisual.AbsoluteWidth, changeInPixels);
                 firstVisual.Width += ratioToAdd;
                 secondVisual.Width -= ratioToAdd;
             }
@@ -315,9 +314,8 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(firstUnits == DimensionUnitType.Ratio)
             {
-                var firstHeightInPixels = firstVisual.AbsoluteHeight;
-
-                var ratioToAdd = (changeInPixels / firstHeightInPixels) * firstVisual.Height;
+                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                    firstVisual.Height, firstVisual.AbsoluteHeight, changeInPixels);
                 firstVisual.Height += ratioToAdd;
             }
 
@@ -354,9 +352,8 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(secondUnits == DimensionUnitType.Ratio)
             {
-                var secondHeightInPixels = secondVisual.AbsoluteHeight;
-
-                var ratioToAdd = (changeInPixels / secondHeightInPixels) * secondVisual.Height;
+                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                    secondVisual.Height, secondVisual.AbsoluteHeight, changeInPixels);
                 secondVisual.Height -= ratioToAdd;
             }
         }

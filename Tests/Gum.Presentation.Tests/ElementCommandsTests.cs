@@ -14,6 +14,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 
@@ -311,6 +312,108 @@ public class ElementCommandsTests : BaseTestClass
             // Release must never revert the drag's resolved value.
             defaultState.GetValue("RectangleInstance1.X").ShouldBe(649f, $"after release commit of {possiblyChangedVariable.Name}");
         }
+    }
+
+    [Fact]
+    public void ModifyVariable_WidthUnitsRatio_ShouldRedistributeComplementaryChangeToRatioSibling()
+    {
+        // #4395 follow-up: dragging a Ratio-typed Width/Height handle used to apply the raw pixel
+        // delta 1:1 to the Ratio number, which (since a Ratio value's rendered pixel size depends on
+        // every Ratio sibling's value, not just its own) made the drag snap to extreme sizes instead
+        // of tracking the cursor. 100px-wide container, two Ratio=1 children (50px each) - shrinking
+        // FirstItem by 1px should grow SecondItem by 1px in response.
+        ScreenSave screen = new ScreenSave { Name = "RatioScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+
+        InstanceSave firstInstance = new InstanceSave { Name = "FirstItem", BaseType = "Container", ParentContainer = screen };
+        InstanceSave secondInstance = new InstanceSave { Name = "SecondItem", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(firstInstance);
+        screen.Instances.Add(secondInstance);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Screens.Add(screen);
+        ObjectFinder.GumProjectSave = project;
+
+        defaultState.Variables.Add(new VariableSave { Name = "FirstItem.Width", Value = 1f, Type = "float", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "FirstItem.WidthUnits", Value = DimensionUnitType.Ratio, Type = "DimensionUnitType", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "SecondItem.Width", Value = 1f, Type = "float", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "SecondItem.WidthUnits", Value = DimensionUnitType.Ratio, Type = "DimensionUnitType", SetsValue = true });
+
+        GraphicalUiElement rootGue = new GraphicalUiElement(new InvisibleRenderable());
+        GraphicalUiElement firstGue = new GraphicalUiElement(new InvisibleRenderable())
+            { Name = "FirstItem", Width = 1f, WidthUnits = DimensionUnitType.Ratio, Tag = firstInstance };
+        GraphicalUiElement secondGue = new GraphicalUiElement(new InvisibleRenderable())
+            { Name = "SecondItem", Width = 1f, WidthUnits = DimensionUnitType.Ratio, Tag = secondInstance };
+        firstGue.Parent = rootGue;
+        secondGue.Parent = rootGue;
+        // Sets the rendered pixel size directly, bypassing the real Ratio layout pass (which would
+        // need a full parent-driven children-layout run) - both start at 50px in a 100px container.
+        ((IPositionedSizedObject)firstGue).Width = 50f;
+        ((IPositionedSizedObject)secondGue).Width = 50f;
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(screen);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(defaultState);
+        _selectedState.SetupGet(x => x.CustomCurrentStateSave).Returns((StateSave)null);
+
+        _wireframeObjectManager.Setup(x => x.GetRepresentation(firstInstance, null)).Returns(firstGue);
+        _wireframeObjectManager.SetupGet(x => x.RootGue).Returns(rootGue);
+
+        float result = _sut.ModifyVariable("Width", -1f, firstInstance);
+
+        result.ShouldBe(0.98f, tolerance: 0.0001f);
+        ((float)defaultState.GetValue("FirstItem.Width")).ShouldBe(0.98f, tolerance: 0.0001f);
+        ((float)defaultState.GetValue("SecondItem.Width")).ShouldBe(1.02f, tolerance: 0.0001f);
+        firstGue.Width.ShouldBe(0.98f, tolerance: 0.0001f);
+        secondGue.Width.ShouldBe(1.02f, tolerance: 0.0001f);
+    }
+
+    [Fact]
+    public void ModifyVariable_WidthUnitsRatio_WithNoRatioSiblings_ShouldLeaveRatioValueUnchanged()
+    {
+        // A sole Ratio-typed child always fills all available space regardless of its Ratio value,
+        // so there's nothing to redistribute to - the drag can't produce a visible size change, and
+        // the stored Ratio value is left as-is rather than growing unboundedly with every drag tick.
+        ScreenSave screen = new ScreenSave { Name = "RatioScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+
+        InstanceSave firstInstance = new InstanceSave { Name = "FirstItem", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(firstInstance);
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Screens.Add(screen);
+        ObjectFinder.GumProjectSave = project;
+
+        defaultState.Variables.Add(new VariableSave { Name = "FirstItem.Width", Value = 1f, Type = "float", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "FirstItem.WidthUnits", Value = DimensionUnitType.Ratio, Type = "DimensionUnitType", SetsValue = true });
+
+        GraphicalUiElement rootGue = new GraphicalUiElement(new InvisibleRenderable());
+        GraphicalUiElement firstGue = new GraphicalUiElement(new InvisibleRenderable())
+            { Name = "FirstItem", Width = 1f, WidthUnits = DimensionUnitType.Ratio, Tag = firstInstance };
+        firstGue.Parent = rootGue;
+        ((IPositionedSizedObject)firstGue).Width = 100f;
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(screen);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(defaultState);
+        _selectedState.SetupGet(x => x.CustomCurrentStateSave).Returns((StateSave)null);
+
+        _wireframeObjectManager.Setup(x => x.GetRepresentation(firstInstance, null)).Returns(firstGue);
+        _wireframeObjectManager.SetupGet(x => x.RootGue).Returns(rootGue);
+
+        float result = _sut.ModifyVariable("Width", -1f, firstInstance);
+
+        result.ShouldBe(1f);
+        ((float)defaultState.GetValue("FirstItem.Width")).ShouldBe(1f);
+        firstGue.Width.ShouldBe(1f);
     }
 
     #endregion

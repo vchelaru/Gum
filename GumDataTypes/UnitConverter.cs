@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Gum.DataTypes;
 using Gum.Managers;
 
@@ -258,8 +259,17 @@ namespace Gum.Converters
             }
             else if(generalX == GeneralUnitType.MaintainFileAspectRatio)
             {
-                // This requires possibly doing Y beforeX, so we'll just keep it for now:
-                relativeX = pixelXToConvert;
+                // pixelWidth = ownerHeightInPixels * (fileWidth/fileHeight) * (mWidth/100), so a raw
+                // 1:1 pixel delta is wrong - mWidth is a percentage of the aspect-ratio-correct size,
+                // not a pixel value (see GraphicalUiElement.UpdateDimensions's MaintainFileAspectRatio case).
+                if (fileWidth == 0 || fileHeight == 0 || ownerHeightInPixels == 0)
+                {
+                    relativeX = pixelXToConvert;
+                }
+                else
+                {
+                    relativeX = pixelXToConvert * 100f * fileHeight / (ownerHeightInPixels * fileWidth);
+                }
             }
             else if(generalX == GeneralUnitType.PercentageOfOtherDimension)
             {
@@ -292,8 +302,16 @@ namespace Gum.Converters
             }
             else if(generalY == GeneralUnitType.MaintainFileAspectRatio)
             {
-                // This won't convert properly - maybe eventually?
-                relativeY = pixelYToConvert;
+                // pixelHeight = ownerWidthInPixels * (fileHeight/fileWidth) * (mHeight/100) - see the
+                // generalX branch above for why a raw 1:1 pixel delta is wrong here too.
+                if (fileWidth == 0 || fileHeight == 0 || ownerWidthInPixels == 0)
+                {
+                    relativeY = pixelYToConvert;
+                }
+                else
+                {
+                    relativeY = pixelYToConvert * 100f * fileWidth / (ownerWidthInPixels * fileHeight);
+                }
             }
             else if (generalY == GeneralUnitType.PercentageOfFile)
             {
@@ -435,6 +453,75 @@ namespace Gum.Converters
                 case GeneralUnitType.PixelsFromSmall:
                 default:
                     return isXAxis ? PositionUnitType.PixelsFromLeft : PositionUnitType.PixelsFromTop;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Math for resizing a <see cref="DimensionUnitType.Ratio"/>-typed Width/Height by a pixel-space
+    /// amount. A Ratio value's rendered pixel size is <c>availableSpace * ratioValue / sumOfRatioSiblings</c>
+    /// (siblings meaning other same-axis, same-parent instances also using Ratio), so a raw 1:1
+    /// pixel-to-ratio-number change (as used for pixel-based unit types) is wrong: it doesn't account
+    /// for the siblings sharing that same pool of space.
+    /// </summary>
+    public static class RatioResizeCalculator
+    {
+        /// <summary>
+        /// The change to a Ratio value that reproduces <paramref name="pixelDelta"/> of rendered pixel
+        /// change, assuming the sum of all Ratio siblings' values (including this one) stays constant.
+        /// Rendered pixel size is linear in the ratio value under that assumption, so scaling the ratio
+        /// value by the same fraction as the desired pixel change reproduces that pixel change exactly.
+        /// </summary>
+        public static float GetRatioDeltaForPixelDelta(float currentRatioValue, float currentPixelSize, float pixelDelta)
+        {
+            if (currentPixelSize == 0)
+            {
+                return 0;
+            }
+
+            return pixelDelta / currentPixelSize * currentRatioValue;
+        }
+
+        /// <summary>
+        /// Computes new Ratio values for a dragged Ratio-typed instance and its Ratio-typed siblings
+        /// (same parent, same axis) after a pixel-space resize of the dragged instance. The dragged
+        /// instance's ratio changes by <see cref="GetRatioDeltaForPixelDelta"/>; the complementary
+        /// change is taken from the siblings in proportion to their current ratio values, which keeps
+        /// the sum of all ratio values constant (so the total pixel space they occupy together doesn't
+        /// change) and preserves the siblings' proportions relative to each other. With no siblings to
+        /// redistribute to, the dragged ratio is left unchanged - changing it wouldn't produce a visible
+        /// size change anyway, since a sole Ratio-typed child always fills all available space.
+        /// </summary>
+        public static void ApplyResize(
+            float draggedCurrentRatio, float draggedCurrentPixelSize, float pixelDelta,
+            IReadOnlyList<float> siblingRatios,
+            out float draggedNewRatio, out float[] siblingNewRatios)
+        {
+            siblingNewRatios = new float[siblingRatios.Count];
+
+            float siblingRatioSum = 0f;
+            for (int i = 0; i < siblingRatios.Count; i++)
+            {
+                siblingRatioSum += siblingRatios[i];
+            }
+
+            if (siblingRatioSum == 0)
+            {
+                draggedNewRatio = draggedCurrentRatio;
+                for (int i = 0; i < siblingRatios.Count; i++)
+                {
+                    siblingNewRatios[i] = siblingRatios[i];
+                }
+                return;
+            }
+
+            float ratioDelta = GetRatioDeltaForPixelDelta(draggedCurrentRatio, draggedCurrentPixelSize, pixelDelta);
+            draggedNewRatio = draggedCurrentRatio + ratioDelta;
+
+            for (int i = 0; i < siblingRatios.Count; i++)
+            {
+                float share = siblingRatios[i] / siblingRatioSum;
+                siblingNewRatios[i] = siblingRatios[i] - ratioDelta * share;
             }
         }
     }
