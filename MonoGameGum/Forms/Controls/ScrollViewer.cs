@@ -511,7 +511,12 @@ public class ScrollViewer :
 
     private void HandleRollOver(object sender, RoutedEventArgs args)
     {
-        if (MainCursor.PrimaryDown && MainCursor.LastInputDevice == InputDevice.TouchScreen)
+        // On the frame a touch first makes contact, XChange/YChange reflect the jump from
+        // wherever the cursor last was (a prior tap, or 0,0) to the new touch position, not
+        // real finger movement. Applying that as a scroll delta causes a random-looking jump
+        // on every tap and can shift content out from under the finger, eating the tap (#4394).
+        if (MainCursor.PrimaryDown && MainCursor.LastInputDevice == InputDevice.TouchScreen &&
+            !MainCursor.PrimaryPush)
         {
             verticalScrollBar.Value -= MainCursor.YChange /
                 global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
