@@ -8,13 +8,13 @@
       <Value xsi:type="xsd:float">5</Value>
     </Variable>
     <Variable Type="int" Name="LineInstance.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="LineInstance.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="LineInstance.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="float" Name="LineInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
@@ -77,7 +77,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Border.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
       </Value>
     </VariableList>
   </State>
