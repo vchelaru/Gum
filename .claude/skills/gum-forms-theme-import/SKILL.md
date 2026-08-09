@@ -9,8 +9,8 @@ Distinct from code-only themes (`gum-theming` skill — C# `*Visual` subclasses,
 packages). This is the **tool-content** side: a theme is a self-contained Gum project under
 `Tools/Gum.ProjectServices/Templates/FormsThemes/<Name>/` (its own `GumProject.gumx`,
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
-project. `Bubblegum` and `Hazard` have parity today (#3527 tracks porting the rest: Editor,
-DarkPro, ForestGlade, Neon, Retro95, Meadow).
+project. `Bubblegum`, `Hazard`, and `DarkPro` have parity today (#3527 tracks porting the rest:
+Editor, ForestGlade, Neon, Retro95, Meadow).
 
 ## Porting a new theme (#3527): do the landmines up front, not reactively
 
@@ -26,9 +26,9 @@ testing after the fact. Sequence a new theme port like this:
 3. Recolor per "Recoloring after a clone" below instead of hand-placing literals control-by-control.
 4. Grep the code-only theme's `*Visual.cs` files for `CornerRadius` and `HasDropshadow`/
    `Dropshadow*` constants — a separate axis from color, untouched by any Styles-swatch rename. A
-   uniformly square-cornered or shadow-free theme needs a project-wide mechanical fix (zero every
-   `CornerRadius`, flip every `HasDropshadow` to `false`) that nothing catches automatically. Do
-   this sweep across **`Screens/` too, not just `Components/`** — a demo screen's own instances
+   theme whose corner radius or shadow use differs uniformly from the clone's needs a project-wide
+   mechanical fix (rewrite every `CornerRadius`, flip every `HasDropshadow`) that nothing catches
+   automatically. Do this sweep across **`Screens/` too, not just `Components/`** — a demo screen's own instances
    (e.g. a panel background) are just as likely to still carry the cloned theme's raw values, and
    nothing propagates a Components-only fix to them.
 5. Run `AllColorVariables_ShouldBeStylesWired` from the start, not as a final audit — see "Wire
@@ -141,9 +141,16 @@ the code-only theme's state-wiring method directly.
 
 ## Recoloring after a clone
 
-A cloned theme's controls already reference the old theme's swatch names throughout. Where a
-swatch's *concept* carries over unchanged (e.g. `Border`, `Text`), the reference string needs no
-edit — only the value differs, and that's handled below. Rename only the reference strings whose
+A cloned theme's controls already reference the old theme's swatch names throughout.
+
+**A swatch name surviving into the new palette does not mean the reference is still correct.** Two
+themes can share a whole vocabulary and still assign it differently per control and per state — one
+fills a resting Button with `Accent`, another with `Surface1` and reserves `Accent` for the focus
+stroke. Derive the mapping from the code-only theme's `*Visual.cs` `States.<X>.Apply` bodies as a
+function of (instance, property, state name); a global old-name → new-name rename yields a
+theme that passes every automated check and looks nothing like its counterpart. Where a swatch's
+*concept* really does carry over, the reference string needs no edit — only the value differs, and
+that's handled below. Rename only the reference strings whose
 target swatch name no longer exists under the new palette (e.g. old `White` → new `Ink`); grep
 each renamed swatch's actual usage sites first; a single old swatch can legitimately split across
 several new ones by *role*, and the local left-hand property prefix on each `VariableReferences`
@@ -203,7 +210,7 @@ suite all validate *shape* — types match, references resolve to *some* materia
 Standards match canonical defaults. None of them generate a font, render a color, or read the
 built tool's output. A theme can pass every one of these while still being visibly broken — a
 family-name `Font` value, a missing `Fonts/` path segment, and an un-recolored screen all do.
-Treat a clean run of these as "no *regression*," never as "the theme works." Two checks actually
+Treat a clean run of these as "no *regression*," never as "the theme works." Three checks actually
 exercise real behavior and catch what structural checks can't:
 
 - **Font generation, for real.** `GumProjectFontGenerator` (`GumProjectFontGenerator/Program.cs`)
@@ -212,6 +219,12 @@ exercise real behavior and catch what structural checks can't:
   `dotnet GumProjectFontGenerator.dll <path>\GumProject.gumx` — a real `.fnt`/`.png` pair appearing
   in `FontCache/` for every custom font is the only proof font resolution actually succeeds; a clean
   `gumcli check` proves nothing about it.
+- **Render it.** `gumcli screenshot <theme>/GumProject.gumx <element> --background <hex>` (see
+  `gum-cli`) renders the theme's own demo screen or any single control to a PNG you can look at —
+  the cheapest way to catch a color that's right in the data and wrong on screen (a panel that
+  ended up the same value as the app background). It reads `FontCache/`, so generate fonts into a
+  scratch copy first: without the atlas the text silently falls back to `Font18Arial`, the same
+  signature as a broken `Font` value.
 - **The staged build, not the source.** Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
   not from `Templates/FormsThemes/<Theme>/` — and per the postbuild-can-no-op landmine above, those
   two can silently diverge even after a correct, committed fix. Diff a file straight from the staged

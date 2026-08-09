@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>DarkPro/Controls/ScrollBarThumb</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="Body.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">60</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Body.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="Body.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Body.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="Body.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Body.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Body.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="Body.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="Body.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">32</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Body.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/DarkPro/Styles.Border.FillColor</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Category>
+    <Name>ButtonCategory</Name>
+    <State>
+      <Name>Enabled</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Highlighted</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.BorderHover.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Pushed</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">136</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">136</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">136</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Muted.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Focused</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">60</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.Border.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>HighlightedFocused</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">90</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.BorderHover.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Disabled</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.DisabledBorder.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>DisabledFocused</Name>
+      <Variable Type="int" Name="Body.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="Body.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Body.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/DarkPro/Styles.DisabledBorder.FillColor</string>
+        </Value>
+      </VariableList>
+    </State>
+  </Category>
+  <Instance Name="Body" BaseType="Rectangle" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ButtonBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ButtonCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>
