@@ -32,16 +32,25 @@
       <Value xsi:type="xsd:int">180</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -54,7 +63,7 @@
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -353,13 +362,13 @@
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarFill.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarFill.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarFill.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarFill.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -428,13 +437,13 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarSeparator.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
+      <Value xsi:type="xsd:int">64</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarSeparator.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
+      <Value xsi:type="xsd:int">64</Value>
     </Variable>
     <Variable Type="int" Name="TitleBarSeparator.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+      <Value xsi:type="xsd:int">64</Value>
     </Variable>
     <Variable Type="float" Name="TitleBarSeparator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -485,7 +494,8 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Surface1.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Text.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -495,7 +505,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Accent.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -505,7 +515,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Border.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.ShadowOuter.FillColor</string>
       </Value>
     </VariableList>
   </State>
