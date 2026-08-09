@@ -4,9 +4,6 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">8</Value>
-    </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -15,6 +12,15 @@
     </Variable>
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -26,7 +32,7 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -160,9 +166,6 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
-    <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">8</Value>
-    </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -174,16 +177,16 @@
     </Variable>
     <Variable Type="string" Name="FocusedIndicator.Parent" SetsValue="true" />
     <Variable Type="int" Name="FocusedIndicator.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="int" Name="FocusedIndicator.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="bool" Name="FocusedIndicator.Visible" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
@@ -281,7 +284,8 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Surface1.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Text.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -291,7 +295,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>StrokeColor = Components/Retro95/Styles.Accent.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Selection.FillColor</string>
       </Value>
     </VariableList>
   </State>
