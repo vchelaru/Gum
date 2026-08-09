@@ -280,7 +280,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         _endCap2.RelativePoint = rotatedRightDirection * endCapLength;
     }
 
-    private string GetDimensionSuffix(DimensionUnitType unitType, bool isWidth)
+    internal static string GetDimensionSuffix(DimensionUnitType unitType, bool isWidth)
     {
         return unitType switch
         {
@@ -291,6 +291,8 @@ public class DimensionDisplayVisual : EditorVisualBase
             DimensionUnitType.Ratio => " Ratio of Parent",
             DimensionUnitType.RelativeToChildren => " Relative to Children",
             DimensionUnitType.RelativeToParent => " Relative to Parent",
+            DimensionUnitType.AbsoluteMultipliedByFontScale => " x Font Scale",
+            DimensionUnitType.RelativeToMaxParentOrChildren => " Relative to Max of Parent or Children",
             _ => null
         };
     }

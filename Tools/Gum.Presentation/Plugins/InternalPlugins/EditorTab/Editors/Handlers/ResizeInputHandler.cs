@@ -221,7 +221,7 @@ public class ResizeInputHandler : InputHandlerBase
                 : new Vector2(gue.X, gue.Y);
             Vector2 grabStartSize = Context.GrabbedState.InstanceSizes.TryGetValue(save, out var grabbedSize)
                 ? grabbedSize
-                : new Vector2(gue.Width, gue.Height);
+                : new Vector2(gue.AbsoluteWidth, gue.AbsoluteHeight);
 
             SnapInstanceToGrid(gue, save, gridSize,
                 grabStartPosition, grabStartSize,
@@ -567,7 +567,7 @@ public class ResizeInputHandler : InputHandlerBase
             ? Context.GrabbedState.ComponentSize
             : Context.GrabbedState.InstanceSizes.TryGetValue(instanceSave, out var grabbedSize)
                 ? grabbedSize
-                : new Vector2(representation.Width, representation.Height);
+                : new Vector2(representation.AbsoluteWidth, representation.AbsoluteHeight);
 
         float positionDeltaX, sizeDeltaX;
         if (isResizeFromCenter && widthMultiplier != 0)

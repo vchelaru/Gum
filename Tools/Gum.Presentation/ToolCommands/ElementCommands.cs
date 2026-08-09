@@ -382,6 +382,14 @@ public class ElementCommands : IElementCommands
                 throw new InvalidOperationException("Cannot be infinite");
             }
 
+            if ((baseVariableName == "Width" || baseVariableName == "Height") &&
+                unitsVariableAsObject is DimensionUnitType.Ratio &&
+                graphicalUiElement != null)
+            {
+                return ModifyRatioVariable(baseVariableName, modificationAmount, instanceSave,
+                    graphicalUiElement, currentValue, nameWithInstance);
+            }
+
             modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
             if (float.IsPositiveInfinity(modificationAmount))
@@ -418,6 +426,59 @@ public class ElementCommands : IElementCommands
         {
             return 0;
         }
+    }
+
+    /// <summary>
+    /// Handles <see cref="ModifyVariable(string, float, InstanceSave)"/> for a Width/Height whose
+    /// units is <see cref="DimensionUnitType.Ratio"/>. A Ratio value's rendered pixel size depends on
+    /// every Ratio-typed sibling's value (see <see cref="RatioResizeCalculator"/>), so the dragged
+    /// instance's Ratio siblings - other instances sharing its layout parent, with the same axis also
+    /// set to Ratio - are adjusted alongside it to keep the drag tracking the cursor.
+    /// </summary>
+    private float ModifyRatioVariable(string baseVariableName, float modificationAmount, InstanceSave instanceSave,
+        GraphicalUiElement graphicalUiElement, float currentValue, string nameWithInstance)
+    {
+        var ratioSiblings = (graphicalUiElement.Parent?.Children ?? Enumerable.Empty<GraphicalUiElement>())
+            .Where(child => child != graphicalUiElement && child.Tag is InstanceSave)
+            .Where(child => (baseVariableName == "Width" ? child.WidthUnits : child.HeightUnits) == DimensionUnitType.Ratio)
+            .ToList();
+
+        float currentPixelSize = baseVariableName == "Width" ? graphicalUiElement.AbsoluteWidth : graphicalUiElement.AbsoluteHeight;
+        List<float> siblingCurrentRatios = ratioSiblings
+            .Select(sibling => baseVariableName == "Width" ? sibling.Width : sibling.Height)
+            .ToList();
+
+        RatioResizeCalculator.ApplyResize(currentValue, currentPixelSize, modificationAmount, siblingCurrentRatios,
+            out float newValue, out float[] siblingNewRatios);
+
+        _selectedState.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+        graphicalUiElement.SetProperty(baseVariableName, newValue);
+
+        for (int i = 0; i < ratioSiblings.Count; i++)
+        {
+            InstanceSave siblingInstance = (InstanceSave)ratioSiblings[i].Tag!;
+            string siblingNameWithInstance = siblingInstance.Name + "." + baseVariableName;
+
+            _selectedState.SelectedStateSave.SetValue(siblingNameWithInstance, siblingNewRatios[i], siblingInstance, "float");
+            ratioSiblings[i].SetProperty(baseVariableName, siblingNewRatios[i]);
+        }
+
+        var rootGue = _wireframeObjectManager.RootGue;
+        ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave, rootGue);
+
+        rootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
+
+        _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
+            _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+
+        for (int i = 0; i < ratioSiblings.Count; i++)
+        {
+            InstanceSave siblingInstance = (InstanceSave)ratioSiblings[i].Tag!;
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(siblingInstance.Name + "." + baseVariableName,
+                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+        }
+
+        return newValue;
     }
 
     public float ModifyVariable(string baseVariableName, float modificationAmount, ElementSave elementSave)
@@ -489,6 +550,14 @@ public class ElementCommands : IElementCommands
 
     private float ConvertAmountToPixelAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
     {
+        if (unitsVariableAsObject is DimensionUnitType.AbsoluteMultipliedByFontScale)
+        {
+            // Rendered pixel size = raw Width/Height * GlobalFontScale (see
+            // GraphicalUiElement.UpdateDimensions's AbsoluteMultipliedByFontScale case), so a raw 1:1
+            // pixel-to-value mapping (correct for plain Absolute) over-scales the drag by GlobalFontScale.
+            return GraphicalUiElement.GlobalFontScale == 0 ? 0 : amount / GraphicalUiElement.GlobalFontScale;
+        }
+
         GeneralUnitType generalUnitType = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
         float xAmount;

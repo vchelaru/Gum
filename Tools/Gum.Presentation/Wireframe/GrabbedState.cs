@@ -219,7 +219,13 @@ public class GrabbedState
             var graphicalUiElement = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
 
             ComponentPosition = new Vector2(graphicalUiElement.X, graphicalUiElement.Y);
-            ComponentSize = new Vector2(graphicalUiElement.Width, graphicalUiElement.Height);
+            // AbsoluteWidth/Height (not Width/Height) - the resize math below mixes this against
+            // cursor pixel deltas, so it must be in the same (pixel) space. Width/Height is the raw
+            // unit-specific stored value (e.g. a Ratio weight like 1, or a percentage), which is not
+            // pixels for most unit types - using it made the resize "flip" (see ResolveResizeAxis)
+            // trigger as soon as that small raw number was exceeded by real cursor pixel movement,
+            // long before the object's actual rendered size reached zero (#4395 follow-up).
+            ComponentSize = new Vector2(graphicalUiElement.AbsoluteWidth, graphicalUiElement.AbsoluteHeight);
         }
         else if(_selectedState.SelectedInstances.Count() != 0)
         {
@@ -241,8 +247,9 @@ public class GrabbedState
                         StateY = instanceStateY
                     };
                     InstancePositions.Add(instance, stateAndAbsolutePositions);
+                    // AbsoluteWidth/Height, not Width/Height - see the ComponentSize comment above.
                     InstanceSizes.Add(instance,
-                        new Vector2(instanceGue.Width, instanceGue.Height));
+                        new Vector2(instanceGue.AbsoluteWidth, instanceGue.AbsoluteHeight));
                 }
 
             }
