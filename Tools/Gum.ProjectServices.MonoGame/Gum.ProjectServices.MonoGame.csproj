@@ -13,6 +13,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 	</ItemGroup>
 
 </Project>
