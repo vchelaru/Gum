@@ -550,6 +550,14 @@ public class ElementCommands : IElementCommands
 
     private float ConvertAmountToPixelAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
     {
+        if (unitsVariableAsObject is DimensionUnitType.AbsoluteMultipliedByFontScale)
+        {
+            // Rendered pixel size = raw Width/Height * GlobalFontScale (see
+            // GraphicalUiElement.UpdateDimensions's AbsoluteMultipliedByFontScale case), so a raw 1:1
+            // pixel-to-value mapping (correct for plain Absolute) over-scales the drag by GlobalFontScale.
+            return GraphicalUiElement.GlobalFontScale == 0 ? 0 : amount / GraphicalUiElement.GlobalFontScale;
+        }
+
         GeneralUnitType generalUnitType = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
 
         float xAmount;

@@ -205,6 +205,59 @@ public class ElementCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void ModifyVariable_WidthUnitsAbsoluteMultipliedByFontScale_ShouldDividePixelDeltaByGlobalFontScale()
+    {
+        // Rendered pixel width = raw Width * GlobalFontScale (GraphicalUiElement.UpdateDimensions's
+        // AbsoluteMultipliedByFontScale case), so a raw 1:1 pixel-delta-to-Width mapping (correct for
+        // plain Absolute) over-scales the drag by GlobalFontScale - reported as resize "multiplying
+        // the cursor movement" when Font Scale != 1.
+        float originalFontScale = GraphicalUiElement.GlobalFontScale;
+        try
+        {
+            GraphicalUiElement.GlobalFontScale = 4f;
+
+            ScreenSave screen = new ScreenSave { Name = "FontScaleScreen" };
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+            screen.States.Add(defaultState);
+
+            InstanceSave instance = new InstanceSave { Name = "RectangleInstance", BaseType = "Container", ParentContainer = screen };
+            screen.Instances.Add(instance);
+
+            StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+            containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+            GumProjectSave project = new GumProjectSave();
+            project.StandardElements.Add(containerStandard);
+            project.Screens.Add(screen);
+            ObjectFinder.GumProjectSave = project;
+
+            defaultState.Variables.Add(new VariableSave { Name = "RectangleInstance.Width", Value = 50f, Type = "float", SetsValue = true });
+            defaultState.Variables.Add(new VariableSave { Name = "RectangleInstance.WidthUnits", Value = DimensionUnitType.AbsoluteMultipliedByFontScale, Type = "DimensionUnitType", SetsValue = true });
+
+            GraphicalUiElement rootGue = new GraphicalUiElement(new InvisibleRenderable());
+            GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
+                { Name = "RectangleInstance", Width = 50f, WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale, Tag = instance };
+            gue.Parent = rootGue;
+
+            _selectedState.SetupGet(x => x.SelectedElement).Returns(screen);
+            _selectedState.SetupGet(x => x.SelectedStateSave).Returns(defaultState);
+            _selectedState.SetupGet(x => x.CustomCurrentStateSave).Returns((StateSave)null);
+
+            _wireframeObjectManager.Setup(x => x.GetRepresentation(instance, null)).Returns(gue);
+            _wireframeObjectManager.SetupGet(x => x.RootGue).Returns(rootGue);
+
+            // Dragging by 20 real pixels should change the raw stored Width by 20/4=5 (not 20).
+            float result = _sut.ModifyVariable("Width", 20f, instance);
+
+            result.ShouldBe(55f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            GraphicalUiElement.GlobalFontScale = originalFontScale;
+        }
+    }
+
+    [Fact]
     public void ModifyVariable_DragThenReleaseOnRectScreenScenario_TracksCorrectlyThroughoutWithNoReversion()
     {
         // Reproduces the real RectScreen.gusx repro reported by the user: RectangleInstance1 has
