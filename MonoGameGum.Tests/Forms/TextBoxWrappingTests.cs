@@ -268,14 +268,19 @@ public class TextBoxWrappingTests : BaseTestClass
 
         float restingTextX = visual.TextInstance.X;
 
-        textBox.Text = WrappingText;
-        textBox.CaretIndex = WrappingText.Length;
+        // Type it out rather than assigning it: the defect surfaces on the keystroke that wraps a
+        // line, where the caret sits at the end of the line *including* the trailing space that
+        // pushed the wrap. Assigning the whole string skips straight past that state.
+        foreach (char character in WrappingText)
+        {
+            textBox.HandleCharEntered(character);
+
+            visual.TextInstance.X.ShouldBe(restingTextX,
+                $"because the text wraps, so no keystroke should scroll it horizontally (broke after typing up to \"{WrappingText.Substring(0, WrappingText.IndexOf(character) + 1)}\")");
+        }
 
         GetCoreText(textBox).WrappedText.Count.ShouldBeGreaterThan(1,
             "sanity: without a MultiNoWrap state the visual falls back to Multi, which wraps");
-
-        visual.TextInstance.X.ShouldBe(restingTextX,
-            "because the text is wrapping, so every line already fits and shifting it left only clips characters out of view");
     }
 
     [Fact]

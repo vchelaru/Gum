@@ -1629,6 +1629,16 @@ public abstract class TextBoxBase :
         IsSingleLineMode && (coreTextObject?.WrappedText?.Count ?? 1) <= 1;
 
     /// <summary>
+    /// True when the text component is sized against its parent, which makes it wrap. Every
+    /// visual line then fits the container by construction, so horizontal scrolling would only
+    /// push characters out of the clipped region — most visibly on the keystroke that wraps a
+    /// line, where the caret sits past the right edge by the width of the trailing space.
+    /// </summary>
+    private bool DoesTextComponentWrap =>
+        textComponent?.WidthUnits == global::Gum.DataTypes.DimensionUnitType.RelativeToParent ||
+        textComponent?.WidthUnits == global::Gum.DataTypes.DimensionUnitType.PercentageOfParent;
+
+    /// <summary>
     /// Applies the appropriate <c>LineModeCategory</c> state on the Visual based on the
     /// current <see cref="TextWrapping"/> and <see cref="AcceptsReturn"/> values:
     /// <list type="bullet">
@@ -1797,8 +1807,11 @@ public abstract class TextBoxBase :
     {
         // Horizontal scrolling fires whenever wrapping is off — that covers both
         // single-line (NoWrap + !AcceptsReturn) and "MultiNoWrap" (NoWrap + AcceptsReturn),
-        // since in both cases each visual line can extend past the right edge.
-        if (this.TextWrapping == TextWrapping.NoWrap)
+        // since in both cases each visual line can extend past the right edge. It must also
+        // check the layout, not just the property: a visual whose LineModeCategory has no
+        // "MultiNoWrap" state falls back to "Multi", which sizes the text relative to its
+        // parent and therefore wraps even though TextWrapping says otherwise.
+        if (this.TextWrapping == TextWrapping.NoWrap && !DoesTextComponentWrap)
         {
             KeepCaretEdgeInsideParent(LayoutAxis.Horizontal);
         }
