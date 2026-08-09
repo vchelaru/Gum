@@ -3,6 +3,7 @@ using Gum.ProjectServices.Screenshot;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameAndGum.Renderables;
 using MonoGameGum;
 using RenderingLibrary;
 using System;
@@ -76,6 +77,14 @@ public class MonoGameScreenshotService : IScreenshotService
                 {
                     Result = ScreenshotResult.Failed($"Failed to load project: {_request.ProjectPath}");
                     return;
+                }
+
+                // Circle/rounded-rectangle rendering is Apos.Shapes-backed. Without this, those
+                // shapes silently fall back to the renderable's construction defaults (transparent
+                // fill, 1px white stroke) instead of the element's actual state - see #4403.
+                if (!ShapeRenderer.Self.IsInitialized)
+                {
+                    ShapeRenderer.Self.Initialize();
                 }
 
                 gumService.CanvasWidth = width;

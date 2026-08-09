@@ -466,6 +466,10 @@ jobs:
       #                                     raylib window/OpenGL context as
       #                                     RaylibGum.Tests above, needs the same
       #                                     Mesa llvmpipe DLLs. #4174)
+      #   - Gum.ProjectServices.MonoGame.Tests (MonoGameScreenshotService — real
+      #                                     MonoGame Game + GraphicsDevice like
+      #                                     MonoGameGum.IntegrationTests below,
+      #                                     same Mesa llvmpipe DLLs. #4403)
       #   - MonoGameGum.IntegrationTests   (real MonoGame Game + GraphicsDevice;
       #                                     Windows-only, on the same Mesa llvmpipe
       #                                     software GL as RaylibGum.Tests. Promoted
@@ -623,7 +627,8 @@ jobs:
             "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
             "Tests/Gum.Cli.Tests/bin/Release/net8.0",
             "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0",
-            "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0"
+            "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0",
+            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net8.0"
           )
           foreach ($dest in $dests) {
             Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
@@ -661,6 +666,17 @@ jobs:
         env:
           GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
         run: dotnet test "Tests/Gum.ProjectServices.Raylib.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      # MonoGameScreenshotService (#4403) — real MonoGame Game + GraphicsDevice, same Mesa
+      # llvmpipe DLLs copied above. Pins the fix for Circle/rounded-rectangle instances
+      # (Apos.Shapes-backed) rendering with renderable construction defaults instead of the
+      # element's actual state because ShapeRenderer.Self was never initialized.
+      - name: "Gum.ProjectServices.MonoGame.Tests (Windows, #4403)"
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        timeout-minutes: 10
+        env:
+          GALLIUM_DRIVER: llvmpipe   # force Mesa's software rasterizer (no GPU on the runners)
+        run: dotnet test "Tests/Gum.ProjectServices.MonoGame.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # Real MonoGame Game + GraphicsDevice per test, on the same Mesa llvmpipe DLLs copied above
       # (#4190). Windows-only for the same reason RaylibGum.Tests is: the macOS runner's window
