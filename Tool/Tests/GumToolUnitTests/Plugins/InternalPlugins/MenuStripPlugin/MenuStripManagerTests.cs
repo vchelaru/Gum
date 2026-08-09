@@ -8,6 +8,8 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Moq;
 using Shouldly;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace GumToolUnitTests.Plugins.InternalPlugins.MenuStripPlugin;
@@ -89,6 +91,25 @@ public class MenuStripManagerTests : BaseTestClass
 
         stateItem.Header.ShouldBe("<no state selected>");
         stateItem.IsEnabled.ShouldBeFalse();
+    }
+
+    [StaFact]
+    public void NewProjectClicked_DelegatesSavingToNewProject_WithoutForcingASave()
+    {
+        // NewProject owns the save-location prompt so it can honour a cancelled dialog. Forcing a
+        // save here as well re-prompts even when the user backed out.
+        Menu menu = new();
+        _menuStripManager.PopulateMenu(menu);
+
+        MenuItem fileMenu = (MenuItem)menu.Items[0];
+        MenuItem newProjectItem = fileMenu.Items
+            .OfType<MenuItem>()
+            .First(mi => mi.Header as string == "New Project");
+
+        newProjectItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+
+        _fileCommands.Verify(f => f.NewProject(), Times.Once);
+        _fileCommands.Verify(f => f.ForceSaveProject(It.IsAny<bool>()), Times.Never);
     }
 
     [StaFact]
