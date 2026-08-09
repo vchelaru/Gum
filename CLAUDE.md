@@ -38,6 +38,8 @@ Select the agent that best matches the task at hand. For tasks that span multipl
 
 When a task surfaces an improvement to a checked-in guidance file — a skill (`.claude/skills/`), an agent (`.claude/agents/`), `CLAUDE.md`, or `code-style.md` — include that change in the **same PR** as the work that motivated it. Do not ask whether it is okay, and do not split it into a separate PR. These files are shared repo artifacts, and bundling keeps the improvement next to the change that prompted it (and its rationale). The most common case: you hit a confusing pattern or recurring mistake, fix it, and add a rule to the relevant skill so it does not recur — both belong in one PR.
 
+Edit these files **in the worktree**, never the primary checkout — an edit in the primary checkout never reaches the branch, and the PR ships without it.
+
 ## Building and Testing
 
 Pick the right build target based on what you're working on:
