@@ -1318,7 +1318,7 @@ public abstract class TextBoxBase :
                 var shouldShowFirstOfNextLine =
                     // If we're at the very end of the line,
                     relativeIndexOnLine == lineLength &&
-                    // the last character is whitespace,
+                    // the line has content,
                     currentLine.Length > 0 &&
                     // we have another line
                     lineNumber < coreTextObject.WrappedText.Count - 1 &&
@@ -1984,6 +1984,19 @@ public abstract class TextBoxBase :
     private void SetXCaretPositionForLine(string stringToMeasure, int indexIntoLine)
     {
         var newPosition = GetXCaretPositionForLineRelativeToTextParent(stringToMeasure, indexIntoLine);
+
+        if (DoesTextComponentWrap)
+        {
+            // Wrapping fits every line to the text component, so a caret past its right edge
+            // can only come from a trailing space: wrapping measures without one, but the caret
+            // is measured with it. There is no wrapped line for the caret to move onto until
+            // the next character is typed, so hold it at the wrap point rather than letting it
+            // render outside the clipped region (issue #4399).
+            float maximumPosition = this.textComponent.X
+                + this.textComponent.AbsoluteWidth
+                - this.caretComponent.AbsoluteWidth;
+            newPosition = System.Math.Min(newPosition, maximumPosition);
+        }
 
         // assumes caret and text have the same parent
         this.caretComponent.X = newPosition;

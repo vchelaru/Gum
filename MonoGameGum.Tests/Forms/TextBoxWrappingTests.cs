@@ -328,6 +328,26 @@ public class TextBoxWrappingTests : BaseTestClass
     }
 
     [Fact]
+    public void Wrap_ShouldKeepCaretInsideHorizontalBounds_WhileTyping()
+    {
+        // Issue #4399: wrapping measures a line without its trailing space but the caret is
+        // measured with it, so typing the space that ends a line put the caret past the right
+        // edge of the text area, where it renders clipped.
+        TextBox textBox = CreateWrappingTextBox();
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+
+        foreach (char character in WrappingText)
+        {
+            textBox.HandleCharEntered(character);
+
+            float caretRight = visual.CaretInstance.AbsoluteLeft + visual.CaretInstance.AbsoluteWidth;
+            caretRight.ShouldBeLessThanOrEqualTo(visual.AbsoluteLeft + visual.AbsoluteWidth,
+                $"because the caret must stay inside the text area after typing \"{textBox.Text}\"");
+        }
+    }
+
+    [Fact]
     public void Wrap_ShouldNotShiftTextX_WhenCaretMovedIntoWrappedLine()
     {
         // The reported repro: with the caret placed partway into a wrapped line, the text jumped
