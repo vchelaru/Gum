@@ -18,6 +18,8 @@ using System.Linq;
 using System.Reflection;
 using CommunityToolkit.Mvvm.Messaging;
 using System.Linq.Expressions;
+using GumFormsPlugin;
+using GumFormsPlugin.Services;
 using System.Windows;
 using System.Windows.Threading;
 using Gum.Dialogs;
@@ -161,6 +163,12 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<IGumProjectRepairLogic, GumProjectRepairLogic>();
         services.AddSingleton<ISkiaShapeStandardsLogic, SkiaShapeStandardsLogic>();
+        // Forms theme import is app-wide rather than GumFormsPlugin-owned: new-project creation
+        // imports the default theme without going through the plugin's Add Forms dialog.
+        services.AddSingleton<IFormsFileService, FormsFileService>();
+        services.AddSingleton<IFormsThemeImporter, FormsThemeImporter>();
+        services.AddSingleton<GumFormsLogic>();
+        services.AddSingleton<INewProjectLogic, NewProjectLogic>();
         services.AddSingleton<FileLocations>();
         // IFileLocations: narrow headless port (ADR-0005 Phase 3) so dialog VMs that only need
         // folder paths can move into Gum.Presentation. Resolves to the same FileLocations singleton.

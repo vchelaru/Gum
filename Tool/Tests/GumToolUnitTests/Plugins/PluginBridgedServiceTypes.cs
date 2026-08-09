@@ -25,6 +25,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
 using Gum.ViewModels;
 using Gum.Plugins;
+using GumFormsPlugin;
 
 namespace GumToolUnitTests.Plugins;
 
@@ -118,6 +119,10 @@ internal static class PluginBridgedServiceTypes
 
         // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
         typeof(MainWindowViewModel),
+
+        // MainGumFormsPlugin ctor drain (#4404): GumFormsLogic is DI-built now that new-project
+        // creation imports the default theme through the same services, outside the plugin.
+        typeof(GumFormsLogic),
 
         // PluginManager self-injection drain (#3753): re-investigated the "cycle smell" assumption and
         // found no real construction cycle (see LoadPlugins for the reasoning). IPluginManager feeds

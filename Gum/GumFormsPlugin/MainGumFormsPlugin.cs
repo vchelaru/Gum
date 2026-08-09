@@ -1,16 +1,8 @@
-using Gum;
-using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.ImportPlugin.Manager;
-using Gum.Services.Dialogs;
-using Gum.ToolStates;
-using GumFormsPlugin.Services;
+using GumFormsPlugin.ViewModels;
 using System.ComponentModel.Composition;
-using Gum.Services;
-using Gum.Logic;
-using Gum.Logic.FileWatch;
 
 namespace GumFormsPlugin;
 
@@ -25,31 +17,16 @@ internal class MainGumFormsPlugin : WpfPluginBase
     public override string FriendlyName => "Gum Forms Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
-    System.Windows.Controls.MenuItem _addFormsMenuItem;
+    // Assigned in StartUp, which the plugin host calls before any of the handlers below run.
+    private System.Windows.Controls.MenuItem _addFormsMenuItem = null!;
     private readonly GumFormsLogic _gumFormsLogic;
 
     #endregion
 
     [ImportingConstructor]
-    public MainGumFormsPlugin(
-        IImportLogic importLogic,
-        IFileWatchManager fileWatchManager,
-        IProjectState projectState,
-        IFileCommands fileCommands,
-        IDialogService dialogService)
+    public MainGumFormsPlugin(GumFormsLogic gumFormsLogic)
     {
-        // Note: PluginBase's own _fileCommands/_dialogService [Import] properties aren't set until
-        // after construction, so these must be taken as explicit ctor params here (both are already
-        // bridged into the plugin container for other plugins).
-        IFormsFileService formsFileService = new FormsFileService(projectState);
-        _gumFormsLogic = new GumFormsLogic(
-            formsFileService,
-            projectState,
-            importLogic,
-            fileCommands,
-            fileWatchManager,
-            dialogService,
-            Locator.GetRequiredService<ISkiaShapeStandardsLogic>());
+        _gumFormsLogic = gumFormsLogic;
     }
 
     public override void StartUp()
@@ -95,13 +72,13 @@ internal class MainGumFormsPlugin : WpfPluginBase
 
     private void HandleAddFormsComponents(object? sender, System.Windows.RoutedEventArgs e)
     {
-        if (!_gumFormsLogic.TryCreateAddFormsViewModel(out var viewModel, out var blockedMessage))
+        if (!_gumFormsLogic.TryCreateAddFormsViewModel(out AddFormsViewModel? viewModel, out string? blockedMessage))
         {
-            _dialogService.ShowMessage(blockedMessage);
+            _dialogService.ShowMessage(blockedMessage!);
             return;
         }
 
-        _dialogService.Show(viewModel);
+        _dialogService.Show(viewModel!);
     }
 
 }

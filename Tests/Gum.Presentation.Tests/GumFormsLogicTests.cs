@@ -23,12 +23,8 @@ namespace Gum.Presentation.Tests;
 public class GumFormsLogicTests
 {
     private readonly Mock<IFormsFileService> _formsFileService = new();
+    private readonly Mock<IFormsThemeImporter> _themeImporter = new();
     private readonly Mock<IProjectState> _projectState = new();
-    private readonly Mock<IImportLogic> _importLogic = new();
-    private readonly Mock<IFileCommands> _fileCommands = new();
-    private readonly Mock<IFileWatchManager> _fileWatchManager = new();
-    private readonly Mock<IDialogService> _dialogService = new();
-    private readonly Mock<ISkiaShapeStandardsLogic> _skiaShapeStandardsLogic = new();
     private readonly GumFormsLogic _logic;
 
     public GumFormsLogicTests()
@@ -38,12 +34,8 @@ public class GumFormsLogicTests
 
         _logic = new GumFormsLogic(
             _formsFileService.Object,
-            _projectState.Object,
-            _importLogic.Object,
-            _fileCommands.Object,
-            _fileWatchManager.Object,
-            _dialogService.Object,
-            _skiaShapeStandardsLogic.Object);
+            _themeImporter.Object,
+            _projectState.Object);
     }
 
     [Fact]

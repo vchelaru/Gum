@@ -154,11 +154,9 @@ namespace Gum.Managers
 
 
             _newProjectMenuItem.Header = "New Project";
-            _newProjectMenuItem.Click += (_, _) =>
-            {
-                _fileCommands.NewProject();
-                _fileCommands.ForceSaveProject();
-            };
+            // NewProject prompts for a save location itself so it can honour a cancelled dialog.
+            // Forcing a save here too re-prompts even when the user backed out.
+            _newProjectMenuItem.Click += (_, _) => _fileCommands.NewProject();
 
             _pluginsMenuItem.Header = "Plugins";
             _pluginsMenuItem.Items.Add(_managePluginsMenuItem);

@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Localization;
+using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
@@ -30,6 +31,11 @@ public class FileCommands : IFileCommands
     private readonly IPluginManager _pluginManager;
     private readonly IRecycleBinService _recycleBinService;
     private readonly ICsvLocalizationLoader _csvLocalizationLoader;
+    // Lazy: NewProjectLogic saves through IFileCommands, so a direct reference would be a
+    // construction cycle.
+    private readonly Lazy<INewProjectLogic> _newProjectLogicLazy;
+
+    private INewProjectLogic _newProjectLogic => _newProjectLogicLazy.Value;
 
     public FileCommands(ISelectedState selectedState,
         Lazy<IUndoManager> undoManager,
@@ -42,8 +48,10 @@ public class FileCommands : IFileCommands
         IProjectState projectState,
         IPluginManager pluginManager,
         IRecycleBinService recycleBinService,
-        ICsvLocalizationLoader csvLocalizationLoader)
+        ICsvLocalizationLoader csvLocalizationLoader,
+        Lazy<INewProjectLogic> newProjectLogic)
     {
+        _newProjectLogicLazy = newProjectLogic;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _dialogService = dialogService;
@@ -180,7 +188,7 @@ public class FileCommands : IFileCommands
         _selectedState.SelectedStateCategorySave = null;
         _selectedState.SelectedStateSave = null;
 
-        _projectManager.CreateNewProject();
+        _newProjectLogic.CreateNewProject();
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();

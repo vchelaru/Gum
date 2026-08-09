@@ -1,0 +1,18 @@
+﻿<UserControl
+    x:Class="Gum.Dialogs.NewProjectDialogView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    dialogs:Dialog.DialogTitle="New Project"
+    mc:Ignorable="d">
+    <StackPanel MaxWidth="420" Orientation="Vertical">
+        <CheckBox IsChecked="{Binding IsIncludeFormsControls}">Include Forms controls</CheckBox>
+        <TextBlock
+            Margin="0,4,0,0"
+            Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+            Text="Adds buttons, text boxes, list boxes and other standard controls to the project."
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

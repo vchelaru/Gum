@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.ComponentModel.Composition;
@@ -28,6 +28,7 @@ using RenderingLibrary;
 using System.Numerics;
 using Gum.Commands;
 using CommunityToolkit.Mvvm.Messaging;
+using GumFormsPlugin;
 using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Gum.SelectionHistory;
@@ -961,6 +962,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
             batch.AddExportedValue<MainWindowViewModel>(Locator.GetRequiredService<MainWindowViewModel>());
+
+            // MainGumFormsPlugin ctor drain (#4404): the plugin used to assemble GumFormsLogic itself from
+            // five bridged services plus a Locator call. The logic is DI-built now because new-project
+            // creation imports the default theme through the same services, outside the plugin.
+            batch.AddExportedValue<GumFormsLogic>(Locator.GetRequiredService<GumFormsLogic>());
 
             // PluginManager self-injection (#3753): re-investigated the long-standing "host-into-its-own-
             // plugin cycle smell" assumption and found no real construction cycle. PluginManager is
