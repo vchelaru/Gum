@@ -55,6 +55,8 @@ public class MonoGameScreenshotService : IScreenshotService
             {
                 PreferredBackBufferWidth = 1,
                 PreferredBackBufferHeight = 1,
+                // Apos.Shapes uses an SM4 effect that the default Reach profile can't load - #4403.
+                GraphicsProfile = GraphicsProfile.HiDef,
             };
         }
 
