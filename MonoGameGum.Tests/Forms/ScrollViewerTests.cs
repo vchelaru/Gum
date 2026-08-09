@@ -200,6 +200,75 @@ public class ScrollViewerTests : BaseTestClass
         scrollViewer.Visual.Children.ShouldNotContain(button1.Visual);
     }
 
+    #region Touch Scrolling
+
+    [Fact]
+    public void HandleRollOver_ShouldIgnoreCursorDelta_OnTouchPushFrame()
+    {
+        ScrollViewer scrollViewer = BuildTallScrollViewerForTouch();
+
+        Mock<ICursor> cursor = BuildTouchCursorMock(isPush: true, yChange: -500);
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(scrollViewer.Visual, cursor.Object, keyboard.Object, 0);
+
+        scrollViewer.VerticalScrollBarValue.ShouldBe(0);
+    }
+
+    [Fact]
+    public void HandleRollOver_ShouldApplyCursorDelta_OnSubsequentTouchFrame()
+    {
+        ScrollViewer scrollViewer = BuildTallScrollViewerForTouch();
+
+        Mock<ICursor> cursor = BuildTouchCursorMock(isPush: false, yChange: -500);
+
+        Mock<IInputReceiverKeyboardMonoGame> keyboard = new();
+        GueInteractiveExtensionMethods.DoUiActivityRecursively(scrollViewer.Visual, cursor.Object, keyboard.Object, 0);
+
+        scrollViewer.VerticalScrollBarValue.ShouldBe(500, tolerance: 0.01);
+    }
+
+    private static ScrollViewer BuildTallScrollViewerForTouch()
+    {
+        ScrollViewer scrollViewer = new();
+        scrollViewer.Visual.Width = 200;
+        scrollViewer.Visual.Height = 200;
+        GumService.Default.Root.Children.Add(scrollViewer.Visual);
+
+        ContainerRuntime tallContent = new();
+        tallContent.Width = 0;
+        tallContent.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
+        tallContent.Height = 1000;
+        tallContent.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
+        scrollViewer.AddChild(tallContent);
+
+        GumService.Default.Root.UpdateLayout();
+
+        return scrollViewer;
+    }
+
+    private static Mock<ICursor> BuildTouchCursorMock(bool isPush, int yChange)
+    {
+        Mock<ICursor> cursor = new();
+        cursor.SetupProperty(x => x.VisualOver);
+        cursor.SetupProperty(x => x.WindowPushed);
+        cursor.Setup(x => x.LastInputDevice).Returns(InputDevice.TouchScreen);
+        cursor.Setup(x => x.PrimaryDown).Returns(true);
+        cursor.Setup(x => x.PrimaryPush).Returns(isPush);
+        cursor.Setup(x => x.X).Returns(100);
+        cursor.Setup(x => x.Y).Returns(100);
+        cursor.Setup(x => x.XChange).Returns(0);
+        cursor.Setup(x => x.YChange).Returns(yChange);
+
+        // ScrollViewer.HandleRollOver reads the static FrameworkElement.MainCursor, not the
+        // cursor instance passed to DoUiActivityRecursively -- both must point at the same mock.
+        FrameworkElement.MainCursor = cursor.Object;
+
+        return cursor;
+    }
+
+    #endregion
+
     [Fact]
     public void OnFocusUpdate_ShouldScrollByRightStickDeflection_WhenTopLevelFocused()
     {
