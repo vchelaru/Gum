@@ -6,7 +6,12 @@ description: Add Forms dialog's tool-content theme system (Templates/FormsThemes
 # Add Forms Theme Import
 
 Distinct from code-only themes (`gum-theming` skill — C# `*Visual` subclasses, NuGet
-packages). This is the **tool-content** side: a theme is a self-contained Gum project under
+packages). The two are **alternative delivery paths, not layers**: a theme imported here renders
+from the user's own `.gumx`, so a `Gum.Themes.*` package is never needed for the styled look.
+KernSmith and the runtime's shapes package are still recommended (fonts, shape-backed visuals) but
+bypassable — the tool never edits the user's game project.
+
+This is the **tool-content** side: a theme is a self-contained Gum project under
 `Tools/Gum.ProjectServices/Templates/FormsThemes/<Name>/` (its own `GumProject.gumx`,
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
 project. `Bubblegum`, `Hazard`, and `DarkPro` have parity today (#3527 tracks porting the rest:

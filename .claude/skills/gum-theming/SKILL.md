@@ -5,7 +5,7 @@ description: Building or modifying a Gum theme package (Themes/Gum.Themes.*) —
 
 # Gum Theming
 
-A theme restyles Forms controls by subclassing each V3 default visual, swapping the children that define the look, and re-wiring the state callbacks. See `Themes/Gum.Themes.Editor.MonoGame/` (NineSlice-only) and `Themes/Gum.Themes.DarkPro.MonoGame/` (NineSlice + Apos.Shapes) for two working examples on opposite ends of the visual-primitive spectrum.
+A theme restyles Forms controls by subclassing each V3 default visual, swapping the children that define the look, and re-wiring the state callbacks. **This packaged-C# path serves games with no Gum project** — a project that imports the same theme's tool content via Add Forms (`gum-forms-theme-import`) gets the styled look from its own `.gumx` and needs no `Gum.Themes.*` package at all. See `Themes/Gum.Themes.Editor.MonoGame/` (NineSlice-only) and `Themes/Gum.Themes.DarkPro.MonoGame/` (NineSlice + Apos.Shapes) for two working examples on opposite ends of the visual-primitive spectrum.
 
 This skill is about *authoring* a theme. For how a theme is *consumed* — installing the NuGet package, calling `Apply`, and the catalog of shipped themes — see the user guide: https://docs.flatredball.com/gum/code/styling/themes.
 
