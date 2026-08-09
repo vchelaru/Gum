@@ -13,6 +13,11 @@ Check the skills list for one matching the feature area and load it **before** g
 ## Don't file
 Sokol is not held to per-backend feature parity — a feature that ships on the MonoGame family, raylib, and Skia but not SokolGum is not a tracked gap.
 
+## Issues you file yourself
+A value you printed while diagnosing something else is an observation, not a report — name what a user would see, or don't file. Say in the body that it came from instrumentation.
+
+**Suggested improvement** must not assert an unverified convention ("editors conventionally do X"). Verify it or write it as an open question: asserted, it becomes the issue's premise, and whoever picks the issue up implements against it without rechecking.
+
 ## Labels
 - **Bug reports get `--label bug`** (label exists, color `#fc2929`). Apply it at creation time.
 - The `bug` label is real and applies silently — don't second-guess it or omit it on later issues.
