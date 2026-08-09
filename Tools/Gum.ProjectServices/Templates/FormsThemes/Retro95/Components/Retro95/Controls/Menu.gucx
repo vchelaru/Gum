@@ -5,13 +5,13 @@
   <State>
     <Name>Default</Name>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">192</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -50,13 +50,13 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="int" Name="BottomSeparator.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">204</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="int" Name="BottomSeparator.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">170</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="int" Name="BottomSeparator.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">240</Value>
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
     <Variable Type="float" Name="BottomSeparator.Height" SetsValue="true">
       <Value xsi:type="xsd:float">2</Value>
@@ -176,7 +176,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Surface1.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -186,7 +186,7 @@
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Border.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.HairlineDivider.FillColor</string>
       </Value>
     </VariableList>
   </State>

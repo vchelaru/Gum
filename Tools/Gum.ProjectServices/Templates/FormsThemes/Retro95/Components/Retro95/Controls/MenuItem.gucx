@@ -106,7 +106,7 @@
       <Value xsi:type="xsd:int">5</Value>
     </Variable>
     <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">85</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="SubmenuIndicatorInstance.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
@@ -115,7 +115,7 @@
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">17</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="SubmenuIndicatorInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -130,7 +130,7 @@
       <Value xsi:type="xsd:string">ContainerInstance</Value>
     </Variable>
     <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">61</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="SubmenuIndicatorInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">&gt;</Value>
@@ -163,7 +163,7 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">85</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
@@ -172,7 +172,7 @@
       <Value xsi:type="xsd:int">14</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">17</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -187,7 +187,7 @@
       <Value xsi:type="xsd:string">ContainerInstance</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">61</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Header" SetsValue="true">
       <Value xsi:type="xsd:string">Menu Item</Value>
@@ -285,22 +285,22 @@
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -329,31 +329,31 @@
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">246</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">240</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -362,7 +362,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -372,7 +372,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -382,7 +382,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Retro95/Styles.HoverOption.FillColor</string>
+          <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -392,31 +392,31 @@
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">237</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">222</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">117</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">68</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">204</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -425,7 +425,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.AccentDark.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -435,7 +435,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Retro95/Styles.AccentLight.FillColor</string>
+          <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -445,7 +445,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.AccentDark.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -455,31 +455,31 @@
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-        <Value xsi:type="xsd:int">246</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-        <Value xsi:type="xsd:int">240</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">85</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">17</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">61</Value>
+        <Value xsi:type="xsd:int">255</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -488,7 +488,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -498,7 +498,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -508,7 +508,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>FillColor = Components/Retro95/Styles.HoverOption.FillColor</string>
+          <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
         </Value>
       </VariableList>
     </State>
@@ -527,22 +527,22 @@
         <Value xsi:type="xsd:int">0</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="SubmenuIndicatorInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-        <Value xsi:type="xsd:int">221</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-        <Value xsi:type="xsd:int">174</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-        <Value xsi:type="xsd:int">205</Value>
+        <Value xsi:type="xsd:int">128</Value>
       </Variable>
       <VariableList xsi:type="VariableListSaveOfString">
         <Type>string</Type>
@@ -551,7 +551,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Disabled.FillColor</string>
+          <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -561,7 +561,7 @@
         <IsFile>false</IsFile>
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
-          <string>Color = Components/Retro95/Styles.Disabled.FillColor</string>
+          <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
         </Value>
       </VariableList>
     </State>
