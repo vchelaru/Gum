@@ -70,6 +70,7 @@
   <ComponentReference Name="DarkPro/Controls/PasswordBox" />
   <ComponentReference Name="DarkPro/Controls/RadioButton" />
   <ComponentReference Name="DarkPro/Controls/ScrollBar" />
+  <ComponentReference Name="DarkPro/Controls/ScrollBarThumb" />
   <ComponentReference Name="DarkPro/Controls/ScrollViewer" />
   <ComponentReference Name="DarkPro/Controls/Slider" />
   <ComponentReference Name="DarkPro/Controls/SliderThumb" />

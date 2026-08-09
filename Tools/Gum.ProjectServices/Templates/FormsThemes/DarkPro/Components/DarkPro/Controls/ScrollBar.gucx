@@ -16,9 +16,6 @@
     <Variable Type="string" Name="ThumbInstance.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">TrackInstance</Value>
     </Variable>
-    <Variable Type="string" Name="ThumbInstance.Text" SetsValue="true">
-      <Value xsi:type="xsd:string"></Value>
-    </Variable>
     <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -150,7 +147,7 @@
     </State>
   </Category>
   <Instance Name="TrackInstance" BaseType="Container" />
-  <Instance Name="ThumbInstance" BaseType="DarkPro/Controls/Button" />
+  <Instance Name="ThumbInstance" BaseType="DarkPro/Controls/ScrollBarThumb" />
   <Behaviors>
     <ElementBehaviorReference>
       <BehaviorName>ScrollBarBehavior</BehaviorName>

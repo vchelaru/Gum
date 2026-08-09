@@ -38,6 +38,7 @@ Components/DarkPro/Controls/Panel.gucx
 Components/DarkPro/Controls/PasswordBox.gucx
 Components/DarkPro/Controls/RadioButton.gucx
 Components/DarkPro/Controls/ScrollBar.gucx
+Components/DarkPro/Controls/ScrollBarThumb.gucx
 Components/DarkPro/Controls/ScrollViewer.gucx
 Components/DarkPro/Controls/Slider.gucx
 Components/DarkPro/Controls/SliderThumb.gucx

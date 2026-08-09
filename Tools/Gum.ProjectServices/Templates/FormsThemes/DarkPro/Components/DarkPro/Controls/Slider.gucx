@@ -38,7 +38,7 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="TrackBackground.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">3</Value>
     </Variable>
     <Variable Type="int" Name="TrackBackground.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">48</Value>
