@@ -4,44 +4,8 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">28</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
-      <Value xsi:type="xsd:int">120</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">120</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowBlurX" SetsValue="true">
-      <Value xsi:type="xsd:float">20</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowBlurY" SetsValue="true">
-      <Value xsi:type="xsd:float">20</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">80</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowOffsetX" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.DropshadowOffsetY" SetsValue="true">
-      <Value xsi:type="xsd:float">6</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
-      <Value xsi:type="xsd:int">180</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">157</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">107</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
-    </Variable>
-    <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-      <Value xsi:type="xsd:boolean">true</Value>
+    <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -52,17 +16,8 @@
     <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="string" Name="Background.Parent" SetsValue="true">
-      <Value xsi:type="xsd:string"></Value>
-    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -82,21 +37,46 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">57</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
-      <Value xsi:type="xsd:int">14</Value>
+      <Value xsi:type="xsd:int">13</Value>
     </Variable>
     <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-16</Value>
@@ -110,9 +90,8 @@
     <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
-      <Value xsi:type="xsd:int">255</Value>
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="string" Name="TextInstance.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Toast Text!!!!</Value>
@@ -167,25 +146,26 @@
     </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
-      <Name>TextInstance.VariableReferences</Name>
-      <Category>References</Category>
-      <IsFile>false</IsFile>
-      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <string>Color = Components/Retro95/Styles.White.FillColor</string>
-        <string>Font = Components/Retro95/Styles.Strong.Font</string>
-        <string>FontSize = Components/Retro95/Styles.Strong.FontSize</string>
-        <string>IsBold = Components/Retro95/Styles.Strong.IsBold</string>
-      </Value>
-    </VariableList>
-    <VariableList xsi:type="VariableListSaveOfString">
-      <Type>string</Type>
       <Name>Background.VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
-        <string>FillColor = Components/Retro95/Styles.Accent.FillColor</string>
+        <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        <string>StrokeColor = Components/Retro95/Styles.Text.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        <string>Font = Components/Retro95/Styles.Strong.Font</string>
+        <string>FontSize = Components/Retro95/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Retro95/Styles.Strong.IsBold</string>
       </Value>
     </VariableList>
   </State>
