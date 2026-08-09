@@ -12,9 +12,15 @@ Touch support varies by runtime. Where a runtime has no real touch API, touch is
 |---|---|---|
 | raylib | Partial | Single tap may not register as a click; a longer tap or a second tap works. Selection-style interactions (e.g. list items) work fine. |
 | Silk.NET | Full | ✅ |
-| MonoGame (DesktopGL) | Full | ✅ |
+| MonoGame / KNI (DesktopGL) | Mouse-emulated | No real touch API on Windows; see note below. |
 
 raylib's default desktop backend (GLFW) has no real touch input. See raylib's own [source comment acknowledging this](https://github.com/raysan5/raylib/blob/4640c849208079d758d8f0dbb4b5b7816db5ed0c/src/platforms/rcore_desktop_glfw.c#L1305-L1310). raylib's SDL backend does support real touch, but isn't what Gum's raylib runtime currently uses.
+
+{% hint style="warning" %}
+**A Windows touchscreen cannot be used to test `InputDevice.TouchScreen`-specific behavior on MonoGame or KNI's DesktopGL backend.** Tapping the screen still moves the cursor and registers clicks and drags, because Windows silently promotes untranslated touch input into synthetic mouse messages for apps that haven't opted into raw touch handling; DesktopGL's underlying SDL2 layer never wires up real touch events at all. That promoted input arrives as ordinary mouse input, so `Cursor.LastInputDevice` reports `InputDevice.Mouse`, never `InputDevice.TouchScreen`. MonoGame's WindowsDX backend does populate `TouchPanel`, but from a single mouse-derived point, not independent hardware touch tracking, so it has the same limitation.
+
+Code that only reacts when `LastInputDevice == InputDevice.TouchScreen` will look correct in a Windows test (since the mouse-emulated input still drives clicks and drags) while remaining untested for real touch. Verifying that code path requires a platform whose windowing layer genuinely captures touch, such as Android or iOS.
+{% endhint %}
 
 ## Code Example: Accessing the Cursor
 
