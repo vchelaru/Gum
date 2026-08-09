@@ -33,6 +33,50 @@ public class TextBoxWrappingTests : BaseTestClass
         (RenderingLibrary.Graphics.Text)((DefaultTextBoxBaseRuntime)textBox.Visual)
             .TextInstance.RenderableComponent;
 
+    // The full TextWrapping x AcceptsReturn matrix documented on TextBoxBase.TextWrapping.
+    // Wrapping and horizontal scrolling are two sides of one decision: text that wraps has
+    // nothing off-screen to scroll to, and text that doesn't wrap needs scrolling to stay
+    // reachable. Asserting both axes per cell keeps a change to one from silently altering the
+    // other. Uses the default visual, which defines all three LineModeCategory states and can
+    // therefore represent every cell.
+    [Theory]
+    [InlineData(global::Gum.Forms.TextWrapping.NoWrap, false, false, true)]
+    [InlineData(global::Gum.Forms.TextWrapping.NoWrap, true, false, true)]
+    [InlineData(global::Gum.Forms.TextWrapping.Wrap, false, true, false)]
+    [InlineData(global::Gum.Forms.TextWrapping.Wrap, true, true, false)]
+    public void LineModeMatrix_ShouldWrapAndScrollPerConfiguration(
+        global::Gum.Forms.TextWrapping textWrapping,
+        bool acceptsReturn,
+        bool shouldWrap,
+        bool shouldScrollHorizontally)
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = textWrapping;
+        textBox.AcceptsReturn = acceptsReturn;
+        textBox.Height = 200;
+        textBox.IsFocused = true;
+
+        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        float restingTextX = visual.TextInstance.X;
+
+        foreach (char character in WrappingText)
+        {
+            textBox.HandleCharEntered(character);
+        }
+
+        bool didWrap = GetCoreText(textBox).WrappedText.Count > 1;
+        bool didScrollHorizontally = visual.TextInstance.X < restingTextX;
+
+        didWrap.ShouldBe(shouldWrap,
+            $"because TextWrapping={textWrapping} with AcceptsReturn={acceptsReturn} should " +
+            (shouldWrap ? "break long text onto more lines" : "keep long text on one visual line"));
+        didScrollHorizontally.ShouldBe(shouldScrollHorizontally,
+            $"because TextWrapping={textWrapping} with AcceptsReturn={acceptsReturn} should " +
+            (shouldScrollHorizontally
+                ? "scroll to keep the caret reachable past the right edge"
+                : "have every line already inside the container, leaving nothing to scroll to"));
+    }
+
     [Fact]
     public void CaretAtEndOfWrappedLine_ShouldStayWithinHorizontalBounds()
     {
