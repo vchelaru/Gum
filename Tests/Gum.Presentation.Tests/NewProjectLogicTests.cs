@@ -97,6 +97,21 @@ public class NewProjectLogicTests
     }
 
     [Fact]
+    public void CreateNewProject_ForcesContainedElementsOnTheFirstSave()
+    {
+        // AskUserForProjectNameIfNecessary, called just above this save, already set FullFileName --
+        // so SaveProject's own internal isProjectNew detection would report false on this call even
+        // though it is genuinely the project's first save, silently skipping every Standard's .gutx
+        // file. forceSaveContainedElements: true bypasses that and must not regress to the default.
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _fileCommands.Verify(x => x.TryAutoSaveProject(true), Times.Once);
+    }
+
+    [Fact]
     public void CreateNewProject_ImportsTheDefaultThemeAndAddsAStartingScreen()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true);

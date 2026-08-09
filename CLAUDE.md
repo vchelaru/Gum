@@ -21,6 +21,8 @@ Also load any skill whose trigger matches the area you're working in — before 
 
 **This check re-runs per new file path, not once per task.** Matching skills against the files identified at task start (e.g. the source file a bug lives in) does not cover a different file touched later in the same task — a sample or test project pulled in only for manual verification, a config file edited in passing, a doc updated alongside. Each new file gets its own trigger-match against the skill list before it's edited, even when the task's "main" skill is already loaded.
 
+**It also re-runs on a task-type shift, not just a new file path.** Moving from implementing/verifying into diagnosing an unexpected result is its own trigger — re-scan the skill list before investigating.
+
 Available agents:
 - **coder** — Writing or modifying code and unit tests for new features or bugs
 - **refactoring-specialist** — Refactoring and improving code structure

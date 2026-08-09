@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Messaging;
@@ -402,6 +403,58 @@ public class ProjectManagerTests : BaseTestClass
             Times.Once);
         // The element is left in place (still flagged missing) rather than removed.
         project.StandardElements.ShouldContain(e => e.Name == "Arc");
+    }
+
+    [Fact]
+    public void SaveProject_TheFirstTimeAfterCreateNewProject_WritesAGutxFileForEverySeededStandard()
+    {
+        // AskUserForProjectNameIfNecessary only reports isProjectNew: true the first time it is
+        // called with an empty FullFileName -- a second call after FullFileName is already set (as
+        // SaveProject makes internally to compute saveContainedElements) reports isProjectNew: false,
+        // even on what is still, from the user's perspective, the project's first-ever save.
+        // NewProjectLogic.CreateNewProject calls AskUserForProjectNameIfNecessary once itself (which
+        // sets FullFileName) before saving, so it can no longer rely on SaveProject's own isProjectNew
+        // detection and instead passes forceSaveContainedElements: true explicitly -- mirrored here.
+        StandardElementsManager.Self.Initialize();
+        StandardElementsManager.Self.RegisterExtendedDefaultStates();
+
+        _projectManager.CreateNewProject();
+
+        string tempDir = Path.Combine(Path.GetTempPath(), "GumNewProjectSaveTest_" + Guid.NewGuid());
+        Directory.CreateDirectory(tempDir);
+        string gumxPath = Path.Combine(tempDir, "Project.gumx");
+
+        try
+        {
+            _dialogService.Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions>())).Returns(gumxPath);
+            _retryService
+                .Setup(r => r.TryMultipleTimes(It.IsAny<Action>(), It.IsAny<int>()))
+                .Callback<Action, int>((action, _) => action());
+
+            // Mirrors NewProjectLogic.CreateNewProject's first call...
+            bool firstCallShouldSave = _projectManager.AskUserForProjectNameIfNecessary(out bool isNewProject);
+            firstCallShouldSave.ShouldBeTrue();
+            isNewProject.ShouldBeTrue();
+
+            List<string> expectedNames = _projectManager.GumProjectSave!.StandardElements
+                .Select(s => s.Name).ToList();
+            expectedNames.ShouldNotBeEmpty();
+
+            // ...then the save, matching NewProjectLogic's TryAutoSaveProject(forceSaveContainedElements: true) -> SaveProject.
+            bool succeeded = _projectManager.SaveProject(forceSaveContainedElements: true);
+            succeeded.ShouldBeTrue();
+
+            List<string> missing = expectedNames
+                .Where(name => !File.Exists(Path.Combine(tempDir, "Standards", name + ".gutx")))
+                .ToList();
+
+            missing.ShouldBeEmpty(
+                $"Standards missing a .gutx file after the project's first save: {string.Join(", ", missing)}");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
     }
 
     [Fact]
