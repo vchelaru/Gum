@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Retro95/Controls/Button</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="Width" SetsValue="true"><Value xsi:type="xsd:float">96</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+    <Variable Type="float" Name="Height" SetsValue="true"><Value xsi:type="xsd:float">24</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+    <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+
+    <!-- BevelInstance: fills the button -->
+    <Variable Type="float" Name="BevelInstance.X" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="BevelInstance.XUnits" SetsValue="true"><Value xsi:type="xsd:int">6</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="BevelInstance.XOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="BevelInstance.Y" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="BevelInstance.YUnits" SetsValue="true"><Value xsi:type="xsd:int">7</Value></Variable>
+    <Variable Type="VerticalAlignment" Name="BevelInstance.YOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="BevelInstance.Width" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="BevelInstance.WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="float" Name="BevelInstance.Height" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="BevelInstance.HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+    <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+    <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+    </VariableList>
+
+    <!-- FocusRectInstance: inset 4px (FocusIndicatorInset), hidden by default -->
+    <Variable Type="float" Name="FocusRectInstance.X" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="FocusRectInstance.XUnits" SetsValue="true"><Value xsi:type="xsd:int">6</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="FocusRectInstance.XOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="FocusRectInstance.Y" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="FocusRectInstance.YUnits" SetsValue="true"><Value xsi:type="xsd:int">7</Value></Variable>
+    <Variable Type="VerticalAlignment" Name="FocusRectInstance.YOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="FocusRectInstance.Width" SetsValue="true"><Value xsi:type="xsd:float">-8</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="FocusRectInstance.WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="float" Name="FocusRectInstance.Height" SetsValue="true"><Value xsi:type="xsd:float">-8</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="FocusRectInstance.HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+
+    <!-- TextInstance -->
+    <Variable Type="float" Name="TextInstance.X" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.XUnits" SetsValue="true"><Value xsi:type="xsd:int">6</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="TextInstance.Y" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true"><Value xsi:type="xsd:int">7</Value></Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.YOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true"><Value xsi:type="xsd:float">-8</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="float" Name="TextInstance.Height" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
+    <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true"><Value xsi:type="xsd:string">Click Me</Value></Variable>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true"><Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value></Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true"><Value xsi:type="xsd:int">13</Value></Variable>
+    <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        <string>Font = Components/Retro95/Styles.Normal.Font</string>
+        <string>FontSize = Components/Retro95/Styles.Normal.FontSize</string>
+        <string>IsBold = Components/Retro95/Styles.Normal.IsBold</string>
+      </Value>
+    </VariableList>
+  </State>
+
+  <Category>
+    <Name>ButtonCategory</Name>
+
+    <State>
+      <Name>Enabled</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+    </State>
+
+    <State>
+      <Name>Highlighted</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.SurfaceHover.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+    </State>
+
+    <State>
+      <Name>Focused</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+    </State>
+
+    <State>
+      <Name>HighlightedFocused</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.SurfaceHover.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+    </State>
+
+    <State>
+      <Name>Pushed</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Sunken</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+    </State>
+
+    <State>
+      <Name>Disabled</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.DisabledText.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+    </State>
+
+    <State>
+      <Name>DisabledFocused</Name>
+      <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Raised</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
+      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value><string>Color = Components/Retro95/Styles.DisabledText.FillColor</string></Value>
+      </VariableList>
+      <Variable Type="bool" Name="FocusRectInstance.Visible" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+    </State>
+  </Category>
+
+  <Instance Name="BevelInstance" BaseType="Retro95/Elements/Bevel" />
+  <Instance Name="FocusRectInstance" BaseType="Retro95/Elements/FocusRect" />
+  <Instance Name="TextInstance" BaseType="Text" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ButtonBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ButtonCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

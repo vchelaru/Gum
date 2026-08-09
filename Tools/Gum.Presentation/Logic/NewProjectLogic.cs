@@ -64,7 +64,11 @@ public class NewProjectLogic : INewProjectLogic
             return;
         }
 
-        if (!_fileCommands.TryAutoSaveProject())
+        // AskUserForProjectNameIfNecessary just set FullFileName above, so SaveProject's own
+        // internal call to it (to compute saveContainedElements) would see a non-empty name and
+        // report isProjectNew: false -- even though this is genuinely the project's first save.
+        // Force it, since this method already knows unambiguously that it is.
+        if (!_fileCommands.TryAutoSaveProject(forceSaveContainedElements: true))
         {
             return;
         }
