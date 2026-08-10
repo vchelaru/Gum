@@ -56,7 +56,7 @@ Each internal plugin lives in `Gum/Plugins/InternalPlugins/[FeatureName]/` with 
 
 ## Common Events
 
-All events are defined on `PluginBase` — subscribe in `StartUp()`. The full list is in `PluginBase.cs`. Most-used categories:
+Most events are defined on `PluginBase` — subscribe in `StartUp()`. The full list is in `PluginBase.cs`; WPF-shell events such as the `DeleteOptionsWindow` pair live on `WpfPluginBase` instead. Most-used categories:
 
 - **Selection**: `ElementSelected`, `InstanceSelected`, `ReactToStateSaveSelected`, `BehaviorSelected`, `TreeNodeSelected`
 - **Variable changes**: `VariableSet`, `VariableSetLate`
@@ -82,6 +82,8 @@ Visualization/rendering is handled by **external** plugin projects, not by Gum.c
 **Event ordering**: `PluginManager` sorts with `OrderBy(!(item is PriorityPlugin))`, so priority plugins always handle events before non-priority ones. Note: "priority" is about dispatch order, not where the plugin's code lives — an external DLL can still be a `PriorityPlugin`.
 
 **VariableSet vs. VariableSetLate**: Two events for the same change. Use `VariableSet` to respond to a change; use `VariableSetLate` for cleanup/refresh that should run after all other plugins have responded.
+
+**Don't re-declare an injected helper**: a plugin taking `IDialogService` in its `[ImportingConstructor]` must not store it in a field named `_dialogService` — `PluginBase` already declares that one and the shadow is a CS0108 build break. Same for the other pre-injected helpers listed under Class Hierarchy.
 
 **Finding which plugin owns a feature**: Search `StartUp()` methods for the event subscription. E.g., to find what handles `VariableSet`, grep for `VariableSet +=` in `InternalPlugins/`. The subscribing plugin is the owner.
 

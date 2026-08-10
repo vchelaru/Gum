@@ -26,6 +26,8 @@ Tool UI (Gum.csproj)                 Headless (Gum.Presentation / Gum.ProjectSer
 
 `CodeGenerationService` (tool-side) orchestrates generation by calling into `CodeGenerator` (shared engine). The same `CodeGenerator` is used by the CLI via `HeadlessCodeGenerationService` -- see the gum-cli skill for that path.
 
+Both files live on disk outside the `.gumx`, so a change to an element's identity has to reconcile them: `RenameService` covers rename, folder move and BaseType change, `CodeFileDeleteService` owns the delete decision, and `OrphanCodeFileScanService` is the catch-all for files that orphaned without passing through either. One invariant governs all three: `.Generated.cs` is derived data and can be removed freely, while the custom `.cs` is user-authored, unrecoverable through undo, and never goes without consent or outside the recycle bin.
+
 ## Configuration (.codsj files)
 
 **Project-level:** `ProjectCodeSettings.codsj` alongside the `.gumx`. Managed by `CodeOutputProjectSettingsManager`. Key settings: `OutputLibrary`, `CodeProjectRoot`, `RootNamespace`, `ObjectInstantiationType`, `InheritanceLocation`, `AppendFolderToNamespace`.
