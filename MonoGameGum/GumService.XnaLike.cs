@@ -242,6 +242,25 @@ public partial class GumService
 
         // (2) Extension-package hook (plural method name) across all loaded assemblies. This is
         // what unblocks Apos shapes on Blazor/WASM.
+        InvokeHookOnAllLoadedAssemblies("RegisterRuntimeTypes");
+    }
+
+    // Mirror of the "RegisterRuntimeTypes" scan above (issue #4416), but for teardown: an optional
+    // package that GumService cannot reference directly — e.g. Gum.Shapes.MonoGame/KNI, which
+    // reference MonoGameGum rather than the other way around — exposes a public static parameterless
+    // "UninitializeRuntimeTypes" method to reset its own static state when Uninitialize runs. A
+    // package with no such hook is simply skipped (see InvokeRuntimeTypeHookIfPresent's guard).
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Scanning for optional self-uninitialize hooks; every call is guarded so a trimmed-away hook degrades to a no-op.")]
+    internal void UninitializeRuntimeTypesThroughReflection()
+    {
+        InvokeHookOnAllLoadedAssemblies("UninitializeRuntimeTypes");
+    }
+
+    [UnconditionalSuppressMessage("Trimming", "IL2026",
+        Justification = "Scanning for optional self-registration/uninitialize hooks; every call is guarded so a trimmed-away hook degrades to a no-op.")]
+    private void InvokeHookOnAllLoadedAssemblies(string methodName)
+    {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
             if (assembly.IsDynamic || IsFrameworkAssembly(assembly.GetName()))
@@ -260,7 +279,7 @@ public partial class GumService
                 {
                     continue;
                 }
-                InvokeRuntimeTypeHookIfPresent(type, "RegisterRuntimeTypes");
+                InvokeRuntimeTypeHookIfPresent(type, methodName);
             }
         }
     }
@@ -384,6 +403,11 @@ public partial class GumService
         // back. Packages that register only via [ModuleInitializer] won't, by
         // design — that's a known load-order contract gap tracked in issue #2761.
         RenderableRegistry.Reset();
+
+        // Issue #4416 — reset optional packages' own static state (e.g. ShapeRenderer.Self for
+        // Gum.Shapes.MonoGame/KNI) via the same reflection hook RegisterRuntimeTypesThroughReflection
+        // uses in the opposite direction.
+        UninitializeRuntimeTypesThroughReflection();
 
         Text.Customizations.Clear();
         Text.ContextCustomizations.Clear();

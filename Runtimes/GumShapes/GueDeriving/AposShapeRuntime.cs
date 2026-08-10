@@ -135,6 +135,20 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     }
 
     /// <summary>
+    /// Mirror of <see cref="RegisterRuntimeTypes"/> for teardown (issue #4416). GumService lives in
+    /// MonoGameGum, which this assembly references — not the other way around — so GumService.
+    /// Uninitialize() cannot call <see cref="ShapeRenderer.Uninitialize"/> directly. Instead it
+    /// locates this method by name via reflection (GumService.XnaLike.cs's
+    /// UninitializeRuntimeTypesThroughReflection, the teardown mirror of the RegisterRuntimeTypes
+    /// scan documented above) and invokes it during Uninitialize, resetting ShapeRenderer's Apos.
+    /// Shapes GPU state so Initialize can run again.
+    /// </summary>
+    public static void UninitializeRuntimeTypes()
+    {
+        ShapeRenderer.Self.Uninitialize();
+    }
+
+    /// <summary>
     /// Wires the factory-built Apos shape's <c>OnPreRender</c> hook back at the calling
     /// runtime's <c>PreRender</c>. Each runtime type the shape can back gets its own arm —
     /// the call has to land on the GUE that actually owns the shape so ScreenPixel scaling
