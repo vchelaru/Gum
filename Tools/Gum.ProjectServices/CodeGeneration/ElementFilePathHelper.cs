@@ -10,15 +10,20 @@ namespace Gum.ProjectServices.CodeGeneration;
 public static class ElementFilePathHelper
 {
     /// <summary>
-    /// Gets the full path to an element's XML file given the project directory.
+    /// Gets the full path to an element's XML file given the project directory. Pass
+    /// <paramref name="forcedElementName"/> to resolve the path the element had under a different
+    /// name, which rename uses to locate files still sitting at the old name.
     /// </summary>
-    public static FilePath? GetFullPathXmlFile(ElementSave? element, string? projectDirectory)
+    public static FilePath? GetFullPathXmlFile(ElementSave? element, string? projectDirectory,
+        string? forcedElementName = null)
     {
         if (element == null || string.IsNullOrEmpty(projectDirectory))
         {
             return null;
         }
 
-        return projectDirectory + element.Subfolder + "\\" + element.Name + "." + element.FileExtension;
+        string elementName = string.IsNullOrEmpty(forcedElementName) ? element.Name : forcedElementName!;
+
+        return projectDirectory + element.Subfolder + "\\" + elementName + "." + element.FileExtension;
     }
 }

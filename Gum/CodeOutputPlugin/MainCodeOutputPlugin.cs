@@ -118,7 +118,8 @@ public class MainCodeOutputPlugin : PluginBase
             customCodeGenerator,
             _codeGenerationNameVerifier,
             dialogService,
-            _projectDirectoryProvider);
+            _projectDirectoryProvider,
+            fileCommands);
 
         _messenger = messenger;
         _fileCommands = fileCommands;
