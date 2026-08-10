@@ -84,7 +84,15 @@ public class RenameService
 
             if (shouldMove)
             {
-                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName!.FullPath);
+                // Moving into a folder for the first time means the destination directory may not
+                // exist yet - without this the move throws and the custom file orphans at its old path.
+                var newDirectory = newCustomFileName!.GetDirectoryContainingThis();
+                if (newDirectory != null && !System.IO.Directory.Exists(newDirectory.FullPath))
+                {
+                    System.IO.Directory.CreateDirectory(newDirectory.FullPath);
+                }
+
+                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName.FullPath);
             }
         }
 
@@ -242,7 +250,13 @@ public class RenameService
 
         contents = contents.Remove(startOfLine, endOfLine - startOfLine);
 
-        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings) + suffix;
+        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings);
+        // When InheritanceLocation is InCustomCode the generated header already carries the base list,
+        // so re-appending the old one would emit "X : New : Old".
+        if (!newHeader.Contains(":"))
+        {
+            newHeader += suffix;
+        }
         contents = contents.Insert(startOfLine, newHeader);
     }
 }
