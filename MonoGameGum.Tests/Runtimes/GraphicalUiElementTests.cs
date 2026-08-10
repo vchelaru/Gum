@@ -2132,6 +2132,34 @@ public class GraphicalUiElementTests : BaseTestClass
         Should.Throw<InvalidOperationException>(() => child.MoveToLayer(targetLayer));
     }
 
+    [Fact]
+    public void MoveToLayer_ParentedElement_UnnamedParent_ShouldMentionUnnamedInMessage()
+    {
+        ContainerRuntime root = new();
+        ContainerRuntime child = new();
+        root.Children.Add(child);
+
+        Layer targetLayer = new();
+
+        var exception = Should.Throw<InvalidOperationException>(() => child.MoveToLayer(targetLayer));
+
+        exception.Message.ShouldContain("unnamed");
+    }
+
+    [Fact]
+    public void MoveToLayer_ParentedElement_NamedParent_ShouldIncludeParentNameInMessage()
+    {
+        ContainerRuntime root = new() { Name = "RootContainer" };
+        ContainerRuntime child = new();
+        root.Children.Add(child);
+
+        Layer targetLayer = new();
+
+        var exception = Should.Throw<InvalidOperationException>(() => child.MoveToLayer(targetLayer));
+
+        exception.Message.ShouldContain("RootContainer");
+    }
+
     #endregion
 
     #region Try Get Property
