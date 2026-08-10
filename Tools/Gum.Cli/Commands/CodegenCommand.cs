@@ -32,23 +32,30 @@ public static class CodegenCommand
             AllowMultipleArgumentsPerToken = true
         };
 
+        var pruneOption = new Option<bool>(
+            "--prune",
+            "Delete generated (.Generated.cs) files that no element in the project accounts for. " +
+            "Orphaned custom code and per-element .codsj settings files are reported but never deleted.");
+
         var command = new Command("codegen", "Generate C# code for a Gum project.")
         {
             projectArgument,
-            elementOption
+            elementOption,
+            pruneOption
         };
 
         command.SetHandler((InvocationContext context) =>
         {
             string projectPath = context.ParseResult.GetValueForArgument(projectArgument);
             string[]? elements = context.ParseResult.GetValueForOption(elementOption);
-            context.ExitCode = Execute(projectPath, elements);
+            bool prune = context.ParseResult.GetValueForOption(pruneOption);
+            context.ExitCode = Execute(projectPath, elements, prune);
         });
 
         return command;
     }
 
-    private static int Execute(string projectPath, string[]? elementNames)
+    private static int Execute(string projectPath, string[]? elementNames, bool prune)
     {
         var fullPath = Path.GetFullPath(projectPath);
 
@@ -203,6 +210,14 @@ public static class CodegenCommand
 
         Console.WriteLine($"Generated code for {generatedCount} element(s).");
 
+        if (prune)
+        {
+            // Scan after generating so files written by this run are never mistaken for orphans.
+            var scanService = new OrphanCodeFileScanService(
+                codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
+            Prune(scanService.Scan(project, projectSettings));
+        }
+
         if (blockedCount > 0)
         {
             Console.Error.WriteLine($"{blockedCount} element(s) skipped due to errors.");
@@ -210,6 +225,45 @@ public static class CodegenCommand
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// Deletes orphaned generated files — derived data, so removing them is lossless — and reports
+    /// everything else the scan found without touching it. Custom code is user-authored and
+    /// unrecoverable through Gum, and a .codsj carries hand-set per-element settings, so both are
+    /// left for the user to remove deliberately.
+    /// </summary>
+    private static void Prune(IReadOnlyList<OrphanCodeFile> orphans)
+    {
+        int prunedCount = 0;
+
+        foreach (OrphanCodeFile orphan in orphans.Where(item => item.Kind == OrphanCodeFileKind.Generated))
+        {
+            try
+            {
+                File.Delete(orphan.FilePath.FullPath);
+                Console.WriteLine($"Pruned {orphan.FilePath.FullPath}");
+                prunedCount++;
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"error: could not prune {orphan.FilePath.FullPath}: {e.Message}");
+            }
+        }
+
+        Console.WriteLine($"Pruned {prunedCount} orphaned generated file(s).");
+
+        List<OrphanCodeFile> reportOnly = orphans
+            .Where(item => item.Kind != OrphanCodeFileKind.Generated)
+            .ToList();
+
+        foreach (OrphanCodeFile orphan in reportOnly)
+        {
+            string description = orphan.Kind == OrphanCodeFileKind.CustomCode
+                ? "custom code file"
+                : "element code settings file";
+            Console.WriteLine($"Orphaned {description} (not removed): {orphan.FilePath.FullPath}");
+        }
     }
 
     private static List<ElementSave> ResolveElements(GumProjectSave project, string[]? elementNames)

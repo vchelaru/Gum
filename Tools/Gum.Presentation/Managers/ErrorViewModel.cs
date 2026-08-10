@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Gum.Mvvm;
 
 namespace Gum.Managers;
@@ -45,4 +46,21 @@ public class ErrorViewModel : ViewModel
     /// so the code should render as plain text rather than a hyperlink.
     /// </summary>
     public bool HasCodeWithoutHelpUrl => HasCode && !HasHelpUrl;
+
+    /// <summary>
+    /// Label for a per-error action button (e.g. "Delete File"). Null when the error has no action.
+    /// </summary>
+    public string? ActionName { get; set; }
+
+    /// <summary>
+    /// Command the per-error action button runs. Errors that can only be fixed by editing the
+    /// project leave this null; errors with a single obvious resolution (removing an orphaned file,
+    /// for instance) set it so the Errors tab can offer a one-click fix.
+    /// </summary>
+    public IRelayCommand? ActionCommand { get; set; }
+
+    /// <summary>
+    /// Visibility helper for UI binding — true when <see cref="ActionCommand"/> is set.
+    /// </summary>
+    public bool HasAction => ActionCommand != null;
 }

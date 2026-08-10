@@ -1,7 +1,7 @@
 # codegen
 
 ```
-gumcli codegen <project.gumx> [--element <name>...]
+gumcli codegen <project.gumx> [--element <name>...] [--prune]
 ```
 
 Generates C# code for elements in a Gum project. Runs error checks before generating each element — elements with errors are skipped; elements with only warnings are still generated.
@@ -10,6 +10,7 @@ Generates C# code for elements in a Gum project. Runs error checks before genera
 
 - `<project.gumx>` — Path to the `.gumx` project file
 - `--element <name>` — Generate code only for the named element. Can be specified multiple times. Supports folder-qualified names.
+- `--prune` — After generating, delete `.Generated.cs` files under `CodeProjectRoot` that no element in the project accounts for.
 
 ## Examples
 
@@ -41,6 +42,25 @@ Generated code for 11 element(s).
 - Elements marked `NeverGenerate` in their per-element settings are silently skipped.
 - When `--element` is specified, `codegen` also auto-generates code for any referenced elements whose code files do not yet exist.
 - Errors go to stderr; the summary line goes to stdout.
+
+## Pruning Orphaned Files
+
+`--prune` runs after generation and removes generated code files that no longer have a matching element, so a deleted or renamed element does not leave a stale `.cs` file compiling into the game forever.
+
+```
+gumcli codegen MyProject/MyProject.gumx --prune
+```
+
+```
+Generated code for 12 element(s).
+Pruned C:\MyGame\Screens\DeletedScreen.Generated.cs
+Pruned 1 orphaned generated file(s).
+Orphaned custom code file (not removed): C:\MyGame\Screens\DeletedScreen.cs
+```
+
+A `.Generated.cs` file is a pure function of its element, so deleting one is lossless. Custom `.cs` files and per-element `.codsj` settings files are yours, so `--prune` lists them and leaves them in place.
+
+Detection is conservative and never touches a file Gum did not write. It only recognizes a `.Generated.cs` file carrying the header Gum's code generation writes, and it only considers a custom `.cs` file whose `.Generated.cs` sibling is itself orphaned. Extra hand-written partials such as `MyScreen.Input.cs`, and files belonging to elements set to `NeverGenerate`, are never reported. See [Orphaned Code Files](../gum-tool/code-tab/orphaned-code-files.md) for the tool-side equivalent.
 
 ## Exit Codes
 
