@@ -6195,14 +6195,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         bool hasContainedObject = mContainedObjectAsIpso != null;
         if (hasContainedObject)
         {
+#if !FRB
+            // FRB1's PositionedObjectGueWrapper (GumCoreShared\FlatRedBall\Embedded\PositionedObjectGueWrapper.cs)
+            // deliberately parents every FRB-attached Gum object to a synthetic, never-added-to-managers
+            // GraphicalUiElement whose sole job is translating FRB world position into Gum coordinates. That
+            // proxy is never itself drawn, so there is no double-render risk - this guard only makes sense
+            // for standalone Gum, where a real structural parent is the thing walking Children during Draw.
             if (Parent != null)
             {
+                var parentDescription = string.IsNullOrEmpty(Parent.Name)
+                    ? $"an unnamed {Parent.GetType().Name}"
+                    : Parent.Name;
                 throw new InvalidOperationException(
-                    $"Cannot move {this} to a different layer because it is parented to {Parent}. " +
+                    $"Cannot move {this} to a different layer because it is parented to {parentDescription}. " +
                     "MoveToLayer only re-homes top-level layer members; a parented element is already " +
                     "drawn through its parent's render tree, so also adding it to a layer would double-render it. " +
                     "Remove it from its parent first, or use AddToManagers instead.");
             }
+#endif
             if(layerToAddTo == null)
             {
                 throw new InvalidOperationException($"Cannot move {this} to a different layer because it is not currently on a layer and no layer was provided");
