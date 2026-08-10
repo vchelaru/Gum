@@ -31,13 +31,16 @@ public class CodeOutputElementSettingsManager
     }
 
     /// <summary>
-    /// Gets the path of the element's .codsj settings file (alongside its XML), or null when the
-    /// element has no resolvable XML path. Public so delete/rename reconciliation outside this
-    /// assembly can move or remove the file along with the element.
+    /// Gets the path to the element's .codsj settings file, which sits alongside the element's XML,
+    /// or null when the element has no resolvable XML path. Public so delete/rename reconciliation
+    /// outside this assembly can move or remove the file along with the element.
+    /// Pass <paramref name="forcedElementName"/> to resolve the path the file had under a different
+    /// element name, which rename uses to find the file still sitting at the old name.
     /// </summary>
-    public FilePath? GetCodeSettingsFilePath(ElementSave element)
+    public FilePath? GetCodeSettingsFilePath(ElementSave element, string? forcedElementName = null)
     {
-        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element, _projectDirectoryProvider.ProjectDirectory);
+        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element,
+            _projectDirectoryProvider.ProjectDirectory, forcedElementName);
         if (fileName == null)
         {
             return null;

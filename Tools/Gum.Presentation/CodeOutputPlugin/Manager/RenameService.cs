@@ -1,4 +1,5 @@
 using Gum.ProjectServices.CodeGeneration;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using System;
@@ -17,13 +18,15 @@ public class RenameService
     private readonly CustomCodeGenerator _customCodeGenerator;
     private readonly CodeOutputElementSettingsManager _elementSettingsManager;
     private readonly IDialogService _dialogService;
+    private readonly IFileCommands _fileCommands;
 
     public RenameService(CodeGenerationService codeGenerationService,
         CodeGenerator codeGenerator,
         CustomCodeGenerator customCodeGenerator,
         CodeGenerationNameVerifier nameVerifier,
         IDialogService dialogService,
-        IProjectDirectoryProvider projectDirectoryProvider)
+        IProjectDirectoryProvider projectDirectoryProvider,
+        IFileCommands fileCommands)
     {
         _codeGenerationFileLocationsService = new CodeGenerationFileLocationsService(codeGenerator, nameVerifier, projectDirectoryProvider);
         _elementSettingsManager = new CodeOutputElementSettingsManager(projectDirectoryProvider);
@@ -31,16 +34,22 @@ public class RenameService
         _codeGenerator = codeGenerator;
         _customCodeGenerator = customCodeGenerator;
         _dialogService = dialogService;
+        _fileCommands = fileCommands;
     }
 
     public void HandleRename(ElementSave element, string oldName, CodeOutputProjectSettings codeOutputProjectSettings, VisualApi visualApi)
     {
-        if (codeOutputProjectSettings.CodeProjectRoot == string.Empty)
-        {
-            return;
-        }
         try
         {
+            // The .codsj sits next to the element's XML rather than in the code project, so it
+            // follows the element even when no code output folder is configured.
+            MoveElementSettingsFile(element, oldName);
+
+            if (codeOutputProjectSettings.CodeProjectRoot == string.Empty)
+            {
+                return;
+            }
+
             var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
 
             var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
@@ -48,10 +57,42 @@ public class RenameService
             var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
             RegenerateAndMoveCode(element, elementSettings, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
         }
+        catch (FileOperationException e)
+        {
+            _dialogService.ShowMessage(e.Message, $"Error moving code for {element}");
+        }
         catch (Exception e)
         {
             _dialogService.ShowMessage(e.ToString(), $"Error moving code for {element}");
         }
+    }
+
+    /// <summary>
+    /// Moves the element's .codsj settings file from its old name/folder to the current one. Without
+    /// this a renamed or relocated element silently reverts to default per-element code settings.
+    /// </summary>
+    private void MoveElementSettingsFile(ElementSave element, string oldName)
+    {
+        FilePath? oldSettingsFile = _elementSettingsManager.GetCodeSettingsFilePath(element, oldName);
+        FilePath? newSettingsFile = _elementSettingsManager.GetCodeSettingsFilePath(element);
+
+        ////////////////Early Out/////////////////
+        if (oldSettingsFile == null || newSettingsFile == null ||
+            oldSettingsFile.FullPath == newSettingsFile.FullPath ||
+            !oldSettingsFile.Exists())
+        {
+            return;
+        }
+
+        // A file already at the destination belongs to some other element, so leave both alone
+        // rather than overwriting settings that cannot be recovered.
+        if (newSettingsFile.Exists() && !IsSameFileWithDifferentCase(oldSettingsFile, newSettingsFile))
+        {
+            return;
+        }
+        //////////////End Early Out///////////////
+
+        MoveFile(oldSettingsFile, newSettingsFile);
     }
 
     private void RegenerateAndMoveCode(ElementSave element,
@@ -59,40 +100,52 @@ public class RenameService
         CodeOutputProjectSettings codeOutputProjectSettings, FilePath? oldGeneratedFileName,
         FilePath? oldCustomFileName, FilePath? newCustomFileName)
     {
-        // 1. Delete the old generated file
+        // 1. Delete the old generated file. Generated code is derived data - step 5 recreates it
+        // byte-identical at the new name - so deleting it outright is lossless.
         if (oldGeneratedFileName?.Exists() == true)
         {
-            System.IO.File.Delete(oldGeneratedFileName.FullPath);
+            try
+            {
+                System.IO.File.Delete(oldGeneratedFileName.FullPath);
+            }
+            catch (Exception e) when (FileOperationFailure.IsAccessFailure(e))
+            {
+                throw new FileOperationException(
+                    FileOperationFailure.BuildMessage(
+                        $"Could not delete this generated code file:\n{oldGeneratedFileName.FullPath}", e),
+                    e);
+            }
         }
 
         // 2. Rename the existing custom code file
-        if (oldCustomFileName?.Exists() == true)
+        if (oldCustomFileName?.Exists() == true && newCustomFileName != null)
         {
             bool shouldMove = true;
-            if (newCustomFileName?.Exists() == true)
+
+            // A rename that only changes casing points both names at the same physical file on a
+            // case-insensitive filesystem, so there is nothing to overwrite - MoveFile corrects the
+            // casing instead.
+            bool isOverwritingAnotherFile = newCustomFileName.Exists() &&
+                !IsSameFileWithDifferentCase(oldCustomFileName, newCustomFileName);
+
+            if (isOverwritingAnotherFile)
             {
                 var message = $"Would you like to rename the custom code file to:\n" +
                     $"{newCustomFileName.FullPath}\n" +
-                    $"This would delete the existing file that is already there";
+                    $"The file already there will be moved to the recycle bin.";
                 shouldMove = _dialogService.ShowYesNoMessage(message, "Overwrite?");
 
                 if (shouldMove)
                 {
-                    System.IO.File.Delete(newCustomFileName.FullPath);
+                    // Custom code is user-authored and unrecoverable through Gum's undo, so it goes
+                    // to the recycle bin rather than being deleted outright.
+                    RecycleFile(newCustomFileName);
                 }
             }
 
             if (shouldMove)
             {
-                // Moving into a folder for the first time means the destination directory may not
-                // exist yet - without this the move throws and the custom file orphans at its old path.
-                var newDirectory = newCustomFileName!.GetDirectoryContainingThis();
-                if (newDirectory != null && !System.IO.Directory.Exists(newDirectory.FullPath))
-                {
-                    System.IO.Directory.CreateDirectory(newDirectory.FullPath);
-                }
-
-                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName.FullPath);
+                MoveFile(oldCustomFileName, newCustomFileName);
             }
         }
 
@@ -119,6 +172,74 @@ public class RenameService
 
         // 5. Regenerate this
         _codeGenerationService.GenerateCodeForElement(element, thisElementOutputSettings, codeOutputProjectSettings, showPopups: false);
+    }
+
+    /// <summary>
+    /// True when the two paths differ only by casing, which means they are the same physical file on
+    /// a case-insensitive filesystem (Windows, macOS).
+    /// </summary>
+    private static bool IsSameFileWithDifferentCase(FilePath first, FilePath second) =>
+        first.FullPath != second.FullPath &&
+        string.Equals(first.FullPath, second.FullPath, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Moves a file, creating the destination directory if needed and translating file-access
+    /// failures into a message the user can act on.
+    /// </summary>
+    private static void MoveFile(FilePath source, FilePath destination)
+    {
+        try
+        {
+            // Moving into a folder for the first time means the destination directory may not exist
+            // yet - without this the move throws and the file orphans at its old path.
+            var destinationDirectory = destination.GetDirectoryContainingThis();
+            if (destinationDirectory != null && !System.IO.Directory.Exists(destinationDirectory.FullPath))
+            {
+                System.IO.Directory.CreateDirectory(destinationDirectory.FullPath);
+            }
+
+            if (IsSameFileWithDifferentCase(source, destination))
+            {
+                // Source and destination are the same physical file, so move through a temporary
+                // name. Windows corrects the casing with a direct move, but File.Move pre-checks the
+                // destination on Unix and throws "already exists" on a case-insensitive macOS
+                // volume. The casing on disk does have to change: git is case-sensitive even where
+                // the filesystem is not.
+                var temporaryPath = destination.FullPath + ".gumrename";
+                System.IO.File.Move(source.FullPath, temporaryPath);
+                System.IO.File.Move(temporaryPath, destination.FullPath);
+            }
+            else
+            {
+                System.IO.File.Move(source.FullPath, destination.FullPath);
+            }
+        }
+        catch (Exception e) when (FileOperationFailure.IsAccessFailure(e))
+        {
+            throw new FileOperationException(
+                FileOperationFailure.BuildMessage(
+                    $"Could not move this file:\n{source.FullPath}\nto:\n{destination.FullPath}", e),
+                e);
+        }
+    }
+
+    /// <summary>
+    /// Sends a file to the recycle bin, translating file-access failures into a message the user
+    /// can act on.
+    /// </summary>
+    private void RecycleFile(FilePath filePath)
+    {
+        try
+        {
+            _fileCommands.MoveToRecycleBin(filePath);
+        }
+        catch (Exception e) when (FileOperationFailure.IsAccessFailure(e))
+        {
+            throw new FileOperationException(
+                FileOperationFailure.BuildMessage(
+                    $"Could not move this file to the recycle bin:\n{filePath.FullPath}", e),
+                e);
+        }
     }
 
     public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
@@ -165,17 +286,24 @@ public class RenameService
 
         if (newCustomFileName != null)
         {
-            if (newCustomFileName != oldCustomFileName)
+            try
             {
-                RegenerateAndMoveCode(element, elementSettings, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
+                if (newCustomFileName != oldCustomFileName)
+                {
+                    RegenerateAndMoveCode(element, elementSettings, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
+                }
+                else
+                {
+                    string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
+
+                    fileContents = UpdateHeadersInCustomCode(fileContents, element, elementSettings, codeOutputProjectSettings);
+
+                    FileManager.SaveText(fileContents, newCustomFileName.FullPath);
+                }
             }
-            else
+            catch (FileOperationException e)
             {
-                string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
-
-                fileContents = UpdateHeadersInCustomCode(fileContents, element, elementSettings, codeOutputProjectSettings);
-
-                FileManager.SaveText(fileContents, newCustomFileName.FullPath);
+                _dialogService.ShowMessage(e.Message, $"Error moving code for {element}");
             }
         }
     }

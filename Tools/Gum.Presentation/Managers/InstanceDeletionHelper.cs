@@ -222,6 +222,35 @@ public class InstanceDeletionHelper
     }
 
     /// <summary>
+    /// Sends the XML file backing the given deleted object to the recycle bin, or does nothing when
+    /// the object has no file (an <see cref="InstanceSave"/>) or the file is already gone. The file
+    /// is user data that Gum's undo cannot restore, so it is never permanently deleted here.
+    /// </summary>
+    /// <returns>
+    /// An unsuccessful response carrying a user-facing message when the file could not be removed.
+    /// </returns>
+    public GeneralResponse TryRecycleXmlFileForObject(object deletedObject)
+    {
+        FilePath? fileName = GetFileNameForObject(deletedObject);
+
+        if (fileName?.Exists() != true)
+        {
+            return GeneralResponse.SuccessfulResponse;
+        }
+
+        try
+        {
+            _fileCommands.MoveToRecycleBin(fileName);
+            return GeneralResponse.SuccessfulResponse;
+        }
+        catch (Exception e)
+        {
+            return GeneralResponse.UnsuccessfulWith(FileOperationFailure.BuildMessage(
+                $"Could not move this file to the recycle bin:\n{fileName.FullPath}", e));
+        }
+    }
+
+    /// <summary>
     /// Decides whether the "Delete XML file?" option should be offered for the given object being
     /// deleted. Instances have no XML file of their own. An element only offers this option when
     /// its name is not shared by another element in the project (e.g. duplicates added directly to
