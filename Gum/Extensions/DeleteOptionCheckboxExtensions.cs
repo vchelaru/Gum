@@ -1,4 +1,5 @@
 using Gum.Services.Dialogs;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace Gum.Extensions;
@@ -14,9 +15,14 @@ public static class DeleteOptionCheckboxExtensions
     {
         return new CheckBox
         {
-            Content = viewModel.Label,
-            IsChecked = viewModel.IsChecked,
-            Width = 220
+            // A TextBlock rather than the raw string, and no fixed Width: a label long enough to
+            // exceed the dialog wraps instead of being silently clipped mid-word.
+            Content = new TextBlock
+            {
+                Text = viewModel.Label,
+                TextWrapping = TextWrapping.Wrap
+            },
+            IsChecked = viewModel.IsChecked
         };
     }
 }
