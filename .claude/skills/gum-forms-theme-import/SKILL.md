@@ -44,7 +44,9 @@ testing after the fact. Sequence a new theme port like this:
    error(s) found" even when every listed line is `warning:` severity, so a pre-existing warning
    inherited from the clone (e.g. a `Category` state illegally selecting its own category) is easy
    to mistake for a pass — read the lines, not just the count.
-7. **The rebuild in step 6 can silently no-op.** `GumFormsPlugin`'s postbuild `xcopy` only runs
+7. **A swatch-name recolor pass never touches geometry, and geometry is where the worst-looking bugs hide.** Ring/indicator `X`/`Y`/`Width`/`Height`/`CornerRadius` literals are carried over from the clone verbatim by every rename/recolor script — nothing about "fix the colors" touches them. Diff each focus-ring/indicator explicitly against the code-only theme's actual constants: a ring built `RelativeToParent` + Center-anchored (`X=Y=0`) can only be wrong in *size* (its Width/Height delta must equal the code's `FocusRingInset*2`, its CornerRadius must equal body-radius+inset — not whatever the clone had); one built `Absolute` + edge-anchored (a Left/Bottom-anchored circle or box — CheckBox/RadioButton's pattern) can *also* be positionally asymmetric, since the clone's edge offset doesn't automatically rescale to a different inset — diff its X/Y against `-Inset` and its Width/Height against `bodySize + 2*Inset` by hand.
+8. **Don't cut a visual feature (a glow, a border, a state-specific effect) as a silent scope-reduction call.** If the code-only theme's `*Visual.cs` sets it (`HasDropshadow`, a stroke, anything state-conditional), port it or flag the omission explicitly to the user — folding "skipped for time" into a summary aside is not the same as getting a decision. Missing a whole control this way (not just a wrong value) is the most visually obvious kind of incomplete port.
+9. **The rebuild in step 6 can silently no-op.** `GumFormsPlugin`'s postbuild `xcopy` only runs
    when MSBuild actually re-executes that project's build — and theme `.gucx`/`.gusx` content
    isn't a tracked input of `GumFormsPlugin.csproj` (it lives in a different project entirely), so
    an IDE-driven incremental "Build" can decide the project is up to date and skip the postbuild
@@ -224,12 +226,16 @@ exercise real behavior and catch what structural checks can't:
   `dotnet GumProjectFontGenerator.dll <path>\GumProject.gumx` — a real `.fnt`/`.png` pair appearing
   in `FontCache/` for every custom font is the only proof font resolution actually succeeds; a clean
   `gumcli check` proves nothing about it.
-- **Render it.** `gumcli screenshot <theme>/GumProject.gumx <element> --background <hex>` (see
-  `gum-cli`) renders the theme's own demo screen or any single control to a PNG you can look at —
-  the cheapest way to catch a color that's right in the data and wrong on screen (a panel that
-  ended up the same value as the app background). It reads `FontCache/`, so generate fonts into a
-  scratch copy first: without the atlas the text silently falls back to `Font18Arial`, the same
-  signature as a broken `Font` value.
+- **Render it — and every state that changes appearance, not just the one you get for free.**
+  `gumcli screenshot <theme>/GumProject.gumx <element> --background <hex>` (see `gum-cli`) renders
+  the theme's own demo screen or any single control to a PNG, but only ever the **first category
+  state in the `.gucx`** — almost always the unfocused/unchecked/resting look. A focus ring, a
+  selected-row tint, a checked-state fill can be badly broken (wrong size, wrong position, missing
+  entirely) and invisible in every render you take by default; the resting-state screenshot proves
+  nothing about them. To actually see a specific state, temporarily flip its own `Visible`/color
+  `<Variable>` values in place (the state that's actually rendered, not `Default` — category-state
+  values override `Default` at render/instantiation time), screenshot, then revert before moving on
+  — do this per control for every state whose geometry or color meaningfully diverges from resting.
 - **The staged build, not the source.** Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
   not from `Templates/FormsThemes/<Theme>/` — and per the postbuild-can-no-op landmine above, those
   two can silently diverge even after a correct, committed fix. Diff a file straight from the staged
@@ -264,7 +270,9 @@ declare every channel (`ExpandCompositeReferenceLine`/`OwnerHasAllCompositeChann
 the line silently fails to expand at apply time and `gumcli check-references` reports the
 unmaterialized `*Color` scalar.
 
-One more staged-output-specific gotcha, beyond the postbuild simply not rerunning (item 7 /
+**A composite `Color` reference only expands to the RGB triple — alpha is a separate channel it never touches** (`ExpandCompositeReferenceLine` pairs R/G/B only). Any translucent swatch (`FillAlpha < 255` in `Styles.gucx`) referenced via `FillColor = Source.FillColor` or `DropshadowColor = Source.FillColor` renders **fully opaque** until you add a parallel plain reference — `FillAlpha = Source.FillAlpha` / `DropshadowAlpha = Source.FillAlpha` — next to the composite line. This has no color-style parallel to check against: it's silent in every automated check, and a screenshot of an *opaque* wrong render can still look plausible at a glance (a solid-color panel instead of a translucent tint doesn't scream "bug" the way a missing color does) — compare the rendered alpha against the swatch's intended value deliberately. Same "stale but present" trap as recoloring applies here too: a clone that already carried a hardcoded opaque literal on that property keeps it until `ThemeRecolorHelper` reapplies and resaves — `check-references --fix` only fills a scalar that's entirely missing.
+
+One more staged-output-specific gotcha, beyond the postbuild simply not rerunning (item 9 /
 "the staged build, not the source" above): `xcopy` never deletes, so a rename or removal in the
 template leaves the stale old file sitting in an already-built output even when the postbuild
 *does* rerun, and importing the theme pulls in both the old and new copy. The postbuild step
