@@ -1,10 +1,12 @@
 using CodeOutputPlugin.Manager;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
 using Gum.Services.Dialogs;
 using Moq;
+using Shouldly;
 
 namespace Gum.Presentation.Tests;
 
@@ -42,7 +44,7 @@ public class RenameServiceTests : BaseTestClass
 
         CustomCodeGenerator customCodeGenerator = new(codeGenerator, codeGenNameVerifier);
 
-        // codeGenerationService is unused by the early-out this test exercises, so null! is safe here
+        // codeGenerationService is unreached by the paths these tests exercise, so null! is safe here
         // (mirrors ParentSetLogicTests's same null!-for-unreached-dependency pattern).
         _renameService = new RenameService(
             codeGenerationService: null!,
@@ -56,7 +58,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleRename_WithEmptyCodeProjectRoot_DoesNothing()
     {
-        var element = new ComponentSave { Name = "MyComponent" };
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
 
         _renameService.HandleRename(
             element,
@@ -65,5 +67,80 @@ public class RenameServiceTests : BaseTestClass
             visualApi: VisualApi.Gum);
 
         _dialogService.VerifyNoOtherCalls();
+    }
+
+    private static ComponentSave CreateComponent(string name)
+    {
+        ComponentSave component = new ComponentSave { Name = name };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        return component;
+    }
+
+    [Fact]
+    public void UpdateHeadersInCustomCode_WhenElementMovedToNewFolder_UpdatesNamespaceAndKeepsClassName()
+    {
+        ComponentSave element = CreateComponent("NewFolder/MyComponent");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            RootNamespace = "MyGame",
+            AppendFolderToNamespace = true
+        };
+        string contents =
+            "namespace MyGame.Components.OldFolder\n" +
+            "{\n" +
+            "    partial class MyComponent\n" +
+            "    {\n" +
+            "        partial void CustomInitialize()\n" +
+            "        {\n" +
+            "        }\n" +
+            "    }\n" +
+            "}\n";
+
+        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+
+        updated.ShouldContain("namespace MyGame.Components.NewFolder");
+        updated.ShouldNotContain("OldFolder");
+        updated.ShouldContain("partial class MyComponent");
+    }
+
+    [Fact]
+    public void UpdateHeadersInCustomCode_WithFileScopedNamespace_UpdatesNamespaceAndKeepsSemicolon()
+    {
+        ComponentSave element = CreateComponent("NewFolder/MyComponent");
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings
+        {
+            RootNamespace = "MyGame",
+            AppendFolderToNamespace = true
+        };
+        string contents =
+            "namespace MyGame.Components.OldFolder;\n" +
+            "\n" +
+            "partial class MyComponent\n" +
+            "{\n" +
+            "}\n";
+
+        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+
+        updated.ShouldContain("namespace MyGame.Components.NewFolder;");
+    }
+
+    [Fact]
+    public void UpdateHeadersInCustomCode_WithNoRootNamespace_LeavesExistingNamespaceAlone()
+    {
+        ComponentSave element = CreateComponent("NewFolder/MyComponent");
+        // RootNamespace is empty, so codegen would emit no namespace at all. Rewriting to an empty
+        // namespace would produce invalid code, so the existing (hand-written) namespace must survive.
+        CodeOutputProjectSettings projectSettings = new CodeOutputProjectSettings { AppendFolderToNamespace = true };
+        string contents =
+            "namespace MyHandWrittenNamespace\n" +
+            "{\n" +
+            "    partial class MyComponent\n" +
+            "    {\n" +
+            "    }\n" +
+            "}\n";
+
+        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+
+        updated.ShouldContain("namespace MyHandWrittenNamespace");
     }
 }
