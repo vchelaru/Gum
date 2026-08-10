@@ -132,4 +132,29 @@ public class ShapeRenderer
         // covers the path that bypasses GumService. Idempotent via the guard inside.
         Gum.GueDeriving.AposShapeRuntime.RegisterRuntimeTypes();
     }
+
+    /// <summary>
+    /// Releases the ShapeBatch's GPU resources and resets <see cref="IsInitialized"/> so
+    /// <see cref="Initialize(GraphicsDevice, ContentManager)"/> can be called again. Safe to call
+    /// when never initialized (e.g. invoked from GumService.Uninitialize for an app that never set
+    /// up shapes) — a no-op in that case, since this is called via GumService's reflection-based
+    /// UninitializeRuntimeTypes hook (see AposShapeRuntime.UninitializeRuntimeTypes) regardless of
+    /// whether this app actually uses shapes.
+    /// </summary>
+    public void Uninitialize()
+    {
+        if (!IsInitialized)
+        {
+            return;
+        }
+
+        _sb?.Dispose();
+        _sb = default!;
+
+        IsInitialized = false;
+        _isBatchBegun = false;
+        _currentView = null;
+        _currentRasterizerState = null;
+        _statistics = null;
+    }
 }

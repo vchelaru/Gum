@@ -3,6 +3,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameAndGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
@@ -146,6 +147,24 @@ public class UninitializeTests : BaseTestClass
     }
 
     // -------------------------------------------------------------------------
+    // ShapeRenderer (Apos.Shapes) — issue #4416
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void Uninitialize_AllowsShapeRendererReinitialize()
+    {
+        // Repro from #4416: a host (e.g. FlatRedBall2) that calls ShapeRenderer.Self.Initialize
+        // during its own startup, then GumService.Uninitialize(), then re-initializes both. Before
+        // the fix, ShapeRenderer.Self.IsInitialized stayed true across Uninitialize, so the second
+        // ShapeRenderer.Self.Initialize() threw "ShapeRenderer is already initialized".
+        using var reinitGame = new GameForShapeRendererReinitializeTest();
+
+        Should.NotThrow(() => reinitGame.RunOneFrame());
+
+        ShapeRenderer.Self.IsInitialized.ShouldBeTrue();
+    }
+
+    // -------------------------------------------------------------------------
     // Nested Game classes
     // -------------------------------------------------------------------------
 
@@ -210,6 +229,54 @@ public class UninitializeTests : BaseTestClass
 
         protected override void Dispose(bool disposing)
         {
+            LoaderManager.Self?.DisposeAndClear();
+            base.Dispose(disposing);
+        }
+    }
+
+    /// <summary>
+    /// Calls ShapeRenderer.Self.Initialize alongside GumService, then Uninitialize, then
+    /// re-initializes both — used to verify that GumService.Uninitialize() resets ShapeRenderer.Self
+    /// so a host-driven second Initialize (#4416) does not throw.
+    /// </summary>
+    private class GameForShapeRendererReinitializeTest : Game
+    {
+        private readonly GraphicsDeviceManager _graphics;
+        public GumService GumService { get; }
+
+        public GameForShapeRendererReinitializeTest()
+        {
+            LoaderManager.Self?.DisposeAndClear();
+            _graphics = new GraphicsDeviceManager(this)
+            {
+                // Apos.Shapes uses an SM4 effect that the default Reach profile can't load - #4403.
+                GraphicsProfile = GraphicsProfile.HiDef,
+            };
+            GumService = new GumService();
+        }
+
+        protected override void Initialize()
+        {
+            base.Initialize();
+            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+
+            GumService.Uninitialize();
+
+            // Second initialization on a fresh instance.
+            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
+        }
+
+        protected override void Draw(GameTime gameTime) =>
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+        protected override void Dispose(bool disposing)
+        {
+            if (GumService.IsInitialized)
+            {
+                GumService.Uninitialize();
+            }
             LoaderManager.Self?.DisposeAndClear();
             base.Dispose(disposing);
         }
