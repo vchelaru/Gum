@@ -111,9 +111,15 @@ public class RenameServiceTests : BaseTestClass
         };
     }
 
+    /// <summary>
+    /// Writes a file under the temp code project root. The relative path is given with forward
+    /// slashes and split here - a backslash is a legal file name character on macOS and Linux, so a
+    /// "Components\MyComponent.cs" literal would create one oddly named file in the root rather than
+    /// the nested file the test means.
+    /// </summary>
     private void GivenCustomCodeFile(string relativePath, string contents)
     {
-        string fullPath = Path.Combine(_codeProjectRoot, relativePath);
+        string fullPath = Path.Combine(_codeProjectRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         File.WriteAllText(fullPath, contents);
     }
@@ -135,7 +141,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleRename_WhenElementMovedToFolder_MovesCustomFileAndUpdatesNamespaceToMatchGeneratedFile()
     {
-        GivenCustomCodeFile("Components\\MyComponent.cs",
+        GivenCustomCodeFile("Components/MyComponent.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
@@ -146,7 +152,7 @@ public class RenameServiceTests : BaseTestClass
             "        }\r\n" +
             "    }\r\n" +
             "}\r\n");
-        GivenCustomCodeFile("Components\\MyComponent.Generated.cs", "//stale generated file");
+        GivenCustomCodeFile("Components/MyComponent.Generated.cs", "//stale generated file");
 
         // The tool renames the element (folder moves arrive as a rename to "Folder/Name") before
         // notifying the rename service, so the element already carries its new identity here.
@@ -175,7 +181,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleRename_WhenElementRenamedInPlace_RenamesClassAndKeepsNamespace()
     {
-        GivenCustomCodeFile("Components\\OldName.cs",
+        GivenCustomCodeFile("Components/OldName.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class OldName\r\n" +
@@ -204,7 +210,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleRename_WhenElementMovedOutOfFolderToRoot_UpdatesNamespace()
     {
-        GivenCustomCodeFile("Components\\Widgets\\MyComponent.cs",
+        GivenCustomCodeFile("Components/Widgets/MyComponent.cs",
             "namespace MyGame.Components.Widgets\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
@@ -227,7 +233,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleRename_WithAppendFolderToNamespaceOff_LeavesNamespaceUnchangedAcrossFolderMove()
     {
-        GivenCustomCodeFile("Components\\MyComponent.cs",
+        GivenCustomCodeFile("Components/MyComponent.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
@@ -364,7 +370,7 @@ public class RenameServiceTests : BaseTestClass
     [Fact]
     public void HandleVariableSet_WhenBaseTypeChangedWithInheritanceInCustomCode_RewritesTheBaseType()
     {
-        GivenCustomCodeFile("Components\\MyComponent.cs",
+        GivenCustomCodeFile("Components/MyComponent.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent : Container\r\n" +
