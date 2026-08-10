@@ -121,7 +121,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 
         _animationFilePathService = new AnimationFilePathService(_selectedState, fileCommands, _projectManager);
         _duplicateService = new DuplicateService(_dialogService, _projectManager);
-        _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService);
+        _elementDeleteService = new ElementDeleteService(_animationFilePathService, _dialogService, fileCommands);
         _settingsManager = new SettingsManager();
 
         // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
@@ -267,6 +267,10 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
     /// </summary>
     private void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
     {
+        // A cancelled delete never fires DeleteConfirmed, so clear the previous dialog's checkbox
+        // here - otherwise a later delete that adds no checkbox would read the stale checked state.
+        _deleteAnimationFileCheckBox = null;
+
         var checkboxViewModel = _elementDeleteService.HandleDeleteOptionsWindowShow(objectsToDelete);
 
         if (checkboxViewModel != null)

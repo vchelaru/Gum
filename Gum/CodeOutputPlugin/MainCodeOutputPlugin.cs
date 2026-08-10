@@ -24,11 +24,14 @@ using ToolsUtilities;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Messages;
 using Gum.Localization;
+using Gum.Extensions;
+using Gum.Gui.Windows;
+using System.Windows.Controls;
 
 namespace CodeOutputPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainCodeOutputPlugin : PluginBase
+public class MainCodeOutputPlugin : WpfPluginBase
 {
     #region Fields/Properties
 
@@ -52,6 +55,12 @@ public class MainCodeOutputPlugin : PluginBase
     private readonly ParentSetLogic _parentSetLogic;
     private readonly IFileCommands _fileCommands;
     private CodeOutputProjectSettingsManager _codeOutputProjectSettingsManager;
+    private readonly CodeFileDeleteService _codeFileDeleteService;
+
+    // Lives only between DeleteOptionsWindowShow and DeleteConfirmed; null when the deleted
+    // elements had no user-authored custom code, in which case nothing was asked.
+    private CheckBox? _deleteCustomCodeCheckBox;
+
     private readonly IProjectState _projectState;
     private readonly IProjectDirectoryProvider _projectDirectoryProvider;
     private readonly CodeGenerationNameVerifier _codeGenerationNameVerifier;
@@ -129,6 +138,14 @@ public class MainCodeOutputPlugin : PluginBase
 
         _parentSetLogic = new ParentSetLogic(_codeGenerator, _selectedState, dialogService, _fileCommands);
 
+        _codeFileDeleteService = new CodeFileDeleteService(
+            _codeGenerationFileLocationsService,
+            _elementSettingsManager,
+            _codeGenerator,
+            new CustomCodeStubDetector(),
+            _fileCommands,
+            dialogService);
+
         _messenger.Register<RequestCodeGenerationMessage>(
             this,
             (_, message) => HandleRequestCodeGeneration(message));
@@ -168,6 +185,8 @@ public class MainCodeOutputPlugin : PluginBase
         this.ElementRename += (element, oldName) => _renameService.HandleRename(element, oldName, codeOutputProjectSettings, _codeGenerator.GetVisualApiForElement(element));
         this.ElementAdd += HandleElementAdd;
         this.ElementDelete += HandleElementDeleted;
+        this.DeleteOptionsWindowShow += HandleDeleteOptionsWindowShow;
+        this.DeleteConfirmed += HandleDeleteConfirmed;
         this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
 
         this.VariableAdd += HandleVariableAdd;
@@ -194,32 +213,50 @@ public class MainCodeOutputPlugin : PluginBase
 
     #endregion
 
-    private void HandleElementDeleted(ElementSave element)
+    /// <summary>
+    /// Removes the deleted element's derived files (.Generated.cs and .codsj) with no prompt. The
+    /// user-authored custom .cs is handled per-batch by the DeleteOptionsWindow checkbox below.
+    /// </summary>
+    private void HandleElementDeleted(ElementSave element) =>
+        _codeFileDeleteService.ReconcileFilesForDeletedElement(element, codeOutputProjectSettings);
+
+    /// <summary>
+    /// Materializes the code-file option into a real WPF checkbox on the delete dialog. One
+    /// checkbox covers the whole batch, so deleting a folder's worth of elements asks once.
+    /// </summary>
+    private void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
     {
-        var elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
+        // A cancelled delete never fires DeleteConfirmed, so clear the previous dialog's checkbox
+        // here - otherwise a later delete that adds no checkbox would read the stale checked state.
+        _deleteCustomCodeCheckBox = null;
 
-        var visualApi = _codeGenerator.GetVisualApiForElement(element);
+        var checkboxViewModel = _codeFileDeleteService.HandleDeleteOptionsWindowShow(
+            objectsToDelete, codeOutputProjectSettings);
 
-        // If it's deleted, ask the user if they also want to delete generated code files
-        var generatedFile = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
-        var customCodeFile = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi: visualApi);
-
-        if(generatedFile?.Exists() == true || customCodeFile?.Exists() == true)
+        if (checkboxViewModel != null)
         {
-            var message = $"Would you like to delete the generated and custom code files for {element}?";
+            _deleteCustomCodeCheckBox = checkboxViewModel.ToCheckBox();
+            deleteWindow.MainStackPanel.Children.Add(_deleteCustomCodeCheckBox);
+        }
+    }
 
-            if(_dialogService.ShowYesNoMessage(message, "Delete Code?"))
+    /// <summary>
+    /// Reads back the checkbox added by <see cref="HandleDeleteOptionsWindowShow"/> (if any) and
+    /// removes it from the window afterward, mirroring the other DeleteOptionsWindow contributors.
+    /// </summary>
+    private void HandleDeleteConfirmed(DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
+    {
+        bool isChecked = _deleteCustomCodeCheckBox?.IsChecked == true;
+
+        _codeFileDeleteService.HandleConfirmDelete(deletedObjects, isChecked, codeOutputProjectSettings);
+
+        if (_deleteCustomCodeCheckBox != null)
+        {
+            if (deleteOptionsWindow.MainStackPanel.Children.Contains(_deleteCustomCodeCheckBox))
             {
-                if(generatedFile?.Exists() == true)
-                {
-                    _fileCommands.MoveToRecycleBin(generatedFile);
-                }
-
-                if(customCodeFile?.Exists() == true)
-                {
-                    _fileCommands.MoveToRecycleBin(customCodeFile);
-                }
+                deleteOptionsWindow.MainStackPanel.Children.Remove(_deleteCustomCodeCheckBox);
             }
+            _deleteCustomCodeCheckBox = null;
         }
     }
 

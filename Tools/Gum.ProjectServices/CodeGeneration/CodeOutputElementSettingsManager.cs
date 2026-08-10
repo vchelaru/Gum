@@ -30,7 +30,12 @@ public class CodeOutputElementSettingsManager
         System.IO.File.WriteAllText(fileName.FullPath, serialized);
     }
 
-    internal FilePath? GetCodeSettingsFilePath(ElementSave element)
+    /// <summary>
+    /// Gets the path of the element's .codsj settings file (alongside its XML), or null when the
+    /// element has no resolvable XML path. Public so delete/rename reconciliation outside this
+    /// assembly can move or remove the file along with the element.
+    /// </summary>
+    public FilePath? GetCodeSettingsFilePath(ElementSave element)
     {
         FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element, _projectDirectoryProvider.ProjectDirectory);
         if (fileName == null)

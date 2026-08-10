@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using System;
@@ -16,11 +17,16 @@ public class ElementDeleteService
 {
     private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IDialogService _dialogService;
+    private readonly IFileCommands _fileCommands;
 
-    public ElementDeleteService(IAnimationFilePathService animationFilePathService, IDialogService dialogService)
+    public ElementDeleteService(
+        IAnimationFilePathService animationFilePathService,
+        IDialogService dialogService,
+        IFileCommands fileCommands)
     {
         _animationFilePathService = animationFilePathService;
         _dialogService = dialogService;
+        _fileCommands = fileCommands;
     }
 
     /// <summary>
@@ -47,8 +53,11 @@ public class ElementDeleteService
     }
 
     /// <summary>
-    /// Deletes the animation (.ganx) file for each deleted element when <paramref name="isChecked"/>
-    /// is true (the checkbox added by <see cref="HandleDeleteOptionsWindowShow"/> was left checked).
+    /// Moves the animation (.ganx) file for each deleted element to the recycle bin when
+    /// <paramref name="isChecked"/> is true (the checkbox added by
+    /// <see cref="HandleDeleteOptionsWindowShow"/> was left checked). A .ganx holds user-authored
+    /// animation data and Gum's undo covers project state rather than files on disk, so this is
+    /// never a hard delete (issue #4422).
     /// </summary>
     public void HandleConfirmDelete(Array deletedObjects, bool isChecked)
     {
@@ -67,7 +76,7 @@ public class ElementDeleteService
                 {
                     try
                     {
-                        System.IO.File.Delete(fileName.FullPath);
+                        _fileCommands.MoveToRecycleBin(fileName);
                     }
                     catch
                     {
