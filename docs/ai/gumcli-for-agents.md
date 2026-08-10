@@ -27,7 +27,7 @@ A typical agent workflow for building or modifying a Gum UI follows three stages
 If the project uses code generation, initialize the settings once, then generate strongly-typed C# for the project's screens and components. This eliminates magic strings and lets the agent reference UI elements by name.
 
 * [`codegen-init`](../cli/codegen-init.md) — write the code-generation settings into the project.
-* [`codegen`](../cli/codegen.md) — generate C# for the project's elements.
+* [`codegen`](../cli/codegen.md) — generate C# for the project's elements. Pass `--prune` to also delete generated files left behind by elements that were deleted or renamed.
 
 ### 2. Validate
 

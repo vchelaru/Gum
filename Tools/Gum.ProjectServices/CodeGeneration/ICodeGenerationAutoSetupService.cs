@@ -2,7 +2,7 @@ namespace Gum.ProjectServices.CodeGeneration;
 
 /// <summary>
 /// Inspects the file system to automatically produce a <see cref="CodeOutputProjectSettings"/>
-/// for a Gum project. Call <see cref="Run"/> with the path to the .gumx file.
+/// for a Gum project. Call <see cref="Run(string)"/> with the path to the .gumx file.
 /// </summary>
 public interface ICodeGenerationAutoSetupService
 {

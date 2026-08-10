@@ -81,7 +81,7 @@ gumcli codegen-init path/to/MyProject.gumx --force
 - If `ProjectCodeSettings.codsj` already exists, prints a warning and exits without overwriting — pass `--force` to overwrite
 - Exit code `0` = success, `2` = `.csproj` not found, settings file already exists, or other error
 
-### `gumcli codegen <project.gumx> [--element <name>...]`
+### `gumcli codegen <project.gumx> [--element <name>...] [--prune]`
 
 Generates C# code for elements in a Gum project.
 
@@ -89,6 +89,7 @@ Generates C# code for elements in a Gum project.
 gumcli codegen MyProject.gumx
 gumcli codegen MyProject.gumx --element Button
 gumcli codegen MyProject.gumx --element Button --element Slider
+gumcli codegen MyProject.gumx --prune
 ```
 
 - Requires `ProjectCodeSettings.codsj` with `CodeProjectRoot` configured
@@ -96,6 +97,7 @@ gumcli codegen MyProject.gumx --element Button --element Slider
 - `--element` filters to specific elements (case-insensitive, supports folder-qualified names like `Controls/Button`)
 - Runs error checks before generating each element; errors block generation for that element
 - Warnings are printed to stderr but do not block generation
+- `--prune` deletes `.Generated.cs` files under `CodeProjectRoot` that no element accounts for. Orphaned custom `.cs` files and per-element `.codsj` settings files are listed but never deleted
 - Exit code `0` = success, `1` = elements blocked by errors, `2` = load failure or missing configuration
 
 ### `gumcli screenshot <project.gumx> <element> [--output <path>] [--width <px>] [--height <px>] [--backend <name>]`

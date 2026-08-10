@@ -15,6 +15,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <TextBlock
             Grid.Column="0"
@@ -39,5 +40,13 @@
             VerticalAlignment="Center"
             Text="{Binding Message}"
             TextWrapping="Wrap" />
+        <Button
+            Grid.Column="2"
+            Margin="4,0,4,0"
+            Padding="6,1,6,1"
+            VerticalAlignment="Center"
+            Command="{Binding ActionCommand}"
+            Content="{Binding ActionName}"
+            Visibility="{Binding HasAction, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 </UserControl>

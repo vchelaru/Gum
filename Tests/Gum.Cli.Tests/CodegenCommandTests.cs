@@ -289,6 +289,86 @@ public class CodegenCommandTests : IDisposable
         result.StandardError.ShouldContain("FindByName");
     }
 
+    [Fact]
+    public void Codegen_WithoutPrune_LeavesOrphanedGeneratedFileAlone()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+        string orphanPath = WriteGeneratedFile("DeletedScreen");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(orphanPath).ShouldBeTrue(
+            customMessage: "codegen must not remove anything unless --prune is passed");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_DeletesOrphanedGeneratedFile()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+        string orphanPath = WriteGeneratedFile("DeletedScreen");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(orphanPath).ShouldBeFalse(
+            customMessage: "a .Generated.cs file with no matching element is derived data and should be pruned");
+        result.StandardOutput.ShouldContain("Pruned 1");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_ReportsButDoesNotDeleteOrphanedCustomCodeFile()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+        WriteGeneratedFile("DeletedScreen");
+        string customCodePath = Path.Combine(_tempDirectory, "Screens", "DeletedScreen.cs");
+        File.WriteAllText(customCodePath, "partial class DeletedScreen { }");
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        File.Exists(customCodePath).ShouldBeTrue(
+            customMessage: "custom code is user-authored and unrecoverable, so --prune must never delete it");
+        result.StandardOutput.ShouldContain("DeletedScreen.cs");
+    }
+
+    [Fact]
+    public void Codegen_WithPrune_WhenNothingOrphaned_ReportsNothingPruned()
+    {
+        string gumxPath = CreateProjectWithCodeSettings();
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath, "--prune");
+
+        result.ExitCode.ShouldBe(0, customMessage: result.StandardError);
+        result.StandardOutput.ShouldContain("Pruned 0");
+    }
+
+    private string CreateProjectWithCodeSettings()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "./",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+        return gumxPath;
+    }
+
+    private string WriteGeneratedFile(string elementName)
+    {
+        string screensDirectory = Path.Combine(_tempDirectory, "Screens");
+        Directory.CreateDirectory(screensDirectory);
+        string path = Path.Combine(screensDirectory, elementName + ".Generated.cs");
+        File.WriteAllText(path, $"//Code for {elementName}\r\npublic partial class {elementName} {{ }}");
+        return path;
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

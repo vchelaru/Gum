@@ -132,6 +132,7 @@
   * [Generation Scope](gum-tool/code-tab/generation-scope.md)
   * [Inheritance Location](gum-tool/code-tab/inheritance-location.md)
   * [Is CodeGen Plugin Enabled](gum-tool/code-tab/is-codegen-plugin-enabled.md)
+  * [Orphaned Code Files](gum-tool/code-tab/orphaned-code-files.md)
   * [Show CodeGen Preview](gum-tool/code-tab/show-codegen-preview.md)
 * [Localization](gum-tool/localization.md)
 * [Importing Elements](gum-tool/importing-elements.md)
