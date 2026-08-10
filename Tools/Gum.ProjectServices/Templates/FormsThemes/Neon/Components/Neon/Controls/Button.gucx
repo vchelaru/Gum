@@ -72,10 +72,10 @@
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">5</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -102,7 +102,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -225,6 +225,9 @@
     <Name>ButtonCategory</Name>
     <State>
       <Name>Enabled</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">160</Value>
+      </Variable>
       <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -280,6 +283,7 @@
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
           <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
           <string>DropshadowColor = Components/Neon/Styles.GlowMedium.FillColor</string>
+          <string>DropshadowAlpha = Components/Neon/Styles.GlowMedium.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -352,6 +356,9 @@
     </State>
     <State>
       <Name>Highlighted</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -407,6 +414,7 @@
           <string>FillColor = Components/Neon/Styles.ButtonHoverFill.FillColor</string>
           <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
           <string>DropshadowColor = Components/Neon/Styles.GlowStrong.FillColor</string>
+          <string>DropshadowAlpha = Components/Neon/Styles.GlowStrong.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -422,6 +430,9 @@
     </State>
     <State>
       <Name>Pushed</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -477,6 +488,7 @@
           <string>FillColor = Components/Neon/Styles.ButtonPushedFill.FillColor</string>
           <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
           <string>DropshadowColor = Components/Neon/Styles.GlowStrong.FillColor</string>
+          <string>DropshadowAlpha = Components/Neon/Styles.GlowStrong.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -492,6 +504,9 @@
     </State>
     <State>
       <Name>HighlightedFocused</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -547,6 +562,7 @@
           <string>FillColor = Components/Neon/Styles.ButtonHoverFill.FillColor</string>
           <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
           <string>DropshadowColor = Components/Neon/Styles.GlowStrong.FillColor</string>
+          <string>DropshadowAlpha = Components/Neon/Styles.GlowStrong.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -562,6 +578,9 @@
     </State>
     <State>
       <Name>Focused</Name>
+      <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">200</Value>
+      </Variable>
       <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
       </Variable>
@@ -617,6 +636,7 @@
           <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
           <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
           <string>DropshadowColor = Components/Neon/Styles.GlowStrong.FillColor</string>
+          <string>DropshadowAlpha = Components/Neon/Styles.GlowStrong.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">

@@ -4,6 +4,9 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
+    <Variable Type="int" Name="Body.DropshadowAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">180</Value>
+    </Variable>
     <Variable Type="int" Name="Body.DropshadowBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -81,7 +84,7 @@
     </Variable>
     <Variable Type="ButtonCategory" Name="ButtonCategoryState" SetsValue="false" />
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -108,7 +111,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
+      <Value xsi:type="xsd:float">8</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
@@ -154,6 +157,7 @@
         <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
         <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
         <string>DropshadowColor = Components/Neon/Styles.SliderThumbShadow.FillColor</string>
+        <string>DropshadowAlpha = Components/Neon/Styles.SliderThumbShadow.FillAlpha</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">

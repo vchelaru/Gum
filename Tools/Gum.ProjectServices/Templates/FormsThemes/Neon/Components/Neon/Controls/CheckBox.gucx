@@ -151,10 +151,10 @@
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">2</Value>
+      <Value xsi:type="xsd:float">5</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">22</Value>
+      <Value xsi:type="xsd:float">28</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.HeightUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
@@ -182,13 +182,13 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">22</Value>
+      <Value xsi:type="xsd:float">28</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="FocusedIndicator.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
     <Variable Type="float" Name="FocusedIndicator.X" SetsValue="true">
-      <Value xsi:type="xsd:float">-2</Value>
+      <Value xsi:type="xsd:float">-4</Value>
     </Variable>
     <Variable Type="HorizontalAlignment" Name="FocusedIndicator.XOrigin" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>

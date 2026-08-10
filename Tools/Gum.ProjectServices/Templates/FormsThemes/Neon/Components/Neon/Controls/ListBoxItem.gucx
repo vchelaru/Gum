@@ -216,7 +216,7 @@
     <State>
       <Name>Selected</Name>
       <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">31</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -244,6 +244,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.AccentDim.FillColor</string>
+          <string>FillAlpha = Components/Neon/Styles.AccentDim.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">
@@ -260,7 +261,7 @@
     <State>
       <Name>Focused</Name>
       <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
-        <Value xsi:type="xsd:int">255</Value>
+        <Value xsi:type="xsd:int">31</Value>
       </Variable>
       <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
         <Value xsi:type="xsd:int">255</Value>
@@ -288,6 +289,7 @@
         <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
         <Value>
           <string>FillColor = Components/Neon/Styles.AccentDim.FillColor</string>
+          <string>FillAlpha = Components/Neon/Styles.AccentDim.FillAlpha</string>
         </Value>
       </VariableList>
       <VariableList xsi:type="VariableListSaveOfString">

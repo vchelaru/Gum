@@ -7,6 +7,27 @@
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
     </Variable>
+    <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">130</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowBlur" SetsValue="true">
+      <Value xsi:type="xsd:float">56</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">229</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowOffsetX" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.DropshadowOffsetY" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.DropshadowRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">34</Value>
     </Variable>
@@ -17,7 +38,7 @@
       <Value xsi:type="xsd:int">13</Value>
     </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
-      <Value xsi:type="xsd:boolean">false</Value>
+      <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -29,8 +50,17 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">229</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">1</Value>
     </Variable>
     <Variable Type="float" Name="Background.Width" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -328,6 +358,9 @@
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
       <Value xsi:type="xsd:string">Default</Value>
     </Variable>
+    <Variable Type="int" Name="TitleBarFill.FillAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">31</Value>
+    </Variable>
     <Variable Type="int" Name="TitleBarFill.FillBlue" SetsValue="true">
       <Value xsi:type="xsd:int">255</Value>
     </Variable>
@@ -462,6 +495,9 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/Neon/Styles.Surface1.FillColor</string>
+        <string>StrokeColor = Components/Neon/Styles.Accent.FillColor</string>
+        <string>DropshadowColor = Components/Neon/Styles.WindowShadow.FillColor</string>
+        <string>DropshadowAlpha = Components/Neon/Styles.WindowShadow.FillAlpha</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
@@ -472,6 +508,7 @@
       <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
       <Value>
         <string>FillColor = Components/Neon/Styles.AccentDim.FillColor</string>
+        <string>FillAlpha = Components/Neon/Styles.AccentDim.FillAlpha</string>
       </Value>
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
