@@ -1,0 +1,13 @@
+# Prerequisites for the Neon Forms theme.
+# Read by GumFormsPlugin.Services.ThemeRequirements at import time.
+# This file describes project-level edits only — runtime concerns
+# (NuGet packages on the user's game project) are not the tool's job.
+# Unknown keys are ignored (forward-compatible).
+
+# Neon sizes fonts dynamically at runtime; BMFont can't produce
+# equivalent output. Switching re-rasterizes every font in the project.
+FontGenerator: KernSmith
+
+# Neon's chrome is built entirely from the v3 Rectangle / Circle
+# standards (fill, stroke, corner radius, native drop shadow), so it
+# needs no Skia shape bundle. RequiresSkiaShapes is intentionally omitted.
