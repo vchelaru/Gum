@@ -5,7 +5,7 @@
   <State>
     <Name>Default</Name>
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+      <Value xsi:type="xsd:float">14</Value>
     </Variable>
     <Variable Type="int" Name="Background.DropshadowAlpha" SetsValue="true">
       <Value xsi:type="xsd:int">80</Value>
@@ -78,6 +78,54 @@
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">14</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BorderInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="bool" Name="BorderInstance.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">204</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">170</Value>
+    </Variable>
+    <Variable Type="int" Name="BorderInstance.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BorderInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BorderInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BorderInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="BorderInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BorderInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BorderInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
     <Variable Type="float" Name="BorderBottomInstance.Height" SetsValue="true">
@@ -490,6 +538,16 @@
     </VariableList>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
+      <Name>BorderInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeColor = Components/Bubblegum/Styles.Border.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
       <Name>TitleBarFill.VariableReferences</Name>
       <Category>References</Category>
       <IsFile>false</IsFile>
@@ -510,6 +568,7 @@
     </VariableList>
   </State>
   <Instance Name="Background" BaseType="Rectangle" />
+  <Instance Name="BorderInstance" BaseType="Rectangle" />
   <Instance Name="InnerPanelInstance" BaseType="Bubblegum/Controls/Panel" />
   <Instance Name="TitleBarInstance" BaseType="Bubblegum/Controls/Panel" />
   <Instance Name="TitleBarFill" BaseType="Rectangle" />
