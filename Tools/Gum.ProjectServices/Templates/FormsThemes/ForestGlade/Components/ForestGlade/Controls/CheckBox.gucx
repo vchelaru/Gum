@@ -1,0 +1,1421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>ForestGlade/Controls/CheckBox</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="BoxBorder.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.CustomRadiusBottomLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.CustomRadiusBottomRight" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.CustomRadiusTopLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.CustomRadiusTopRight" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxBorder.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="BoxBorder.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="string" Name="BoxBorder.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">BoxContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">76</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">117</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">1.5</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxBorder.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BoxBorder.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxBorder.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxBorder.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BoxBorder.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxBorder.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="bool" Name="BoxContainer.HasEvents" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BoxContainer.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxContainer.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxContainer.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BoxContainer.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxContainer.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.CustomRadiusBottomLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.CustomRadiusBottomRight" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.CustomRadiusTopLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.CustomRadiusTopRight" SetsValue="true">
+      <Value xsi:type="xsd:float">8</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">32</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">28</Value>
+    </Variable>
+    <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">3</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxFill.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="BoxFill.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="BoxFill.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">BoxContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BoxFill.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BoxFill.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxFill.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="BoxFill.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BoxFill.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BoxFill.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="CheckBoxCategory" Name="CheckBoxCategoryState" SetsValue="false" />
+    <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">31</Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="CheckGlyph.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/DejaVuSansMono.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckGlyph.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">16</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">63</Value>
+    </Variable>
+    <Variable Type="float" Name="CheckGlyph.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">22</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="CheckGlyph.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="CheckGlyph.HorizontalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="string" Name="CheckGlyph.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">BoxContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">5</Value>
+    </Variable>
+    <Variable Type="string" Name="CheckGlyph.Text" SetsValue="true">
+      <Value xsi:type="xsd:string">✓</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="CheckGlyph.VerticalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="CheckGlyph.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">22</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="CheckGlyph.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="CheckGlyph.X" SetsValue="true">
+      <Value xsi:type="xsd:float">-2</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="CheckGlyph.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="CheckGlyph.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="CheckGlyph.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="CheckGlyph.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="CheckGlyph.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="int" Name="DashIndicator.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">117</Value>
+    </Variable>
+    <Variable Type="int" Name="DashIndicator.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="DashIndicator.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">232</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DashIndicator.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="DashIndicator.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="DashIndicator.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">BoxContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">9</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="DashIndicator.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.X" SetsValue="true">
+      <Value xsi:type="xsd:float">9</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="DashIndicator.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DashIndicator.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="DashIndicator.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="DashIndicator.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="DashIndicator.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.CornerRadius" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.CustomRadiusBottomLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">11</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.CustomRadiusBottomRight" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.CustomRadiusTopLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.CustomRadiusTopRight" SetsValue="true">
+      <Value xsi:type="xsd:float">11</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FocusRing.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="FocusRing.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="string" Name="FocusRing.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">BoxContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusRing.StrokeAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">76</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusRing.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">65</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusRing.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">246</Value>
+    </Variable>
+    <Variable Type="int" Name="FocusRing.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">71</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">3</Value>
+    </Variable>
+    <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="FocusRing.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.X" SetsValue="true">
+      <Value xsi:type="xsd:float">-3</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="FocusRing.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="FocusRing.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="FocusRing.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="FocusRing.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="FocusRing.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">18</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="IsChecked" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">240</Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="TextInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">14</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.HorizontalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+      <Value xsi:type="xsd:int">241</Value>
+    </Variable>
+    <Variable Type="string" Name="TextInstance.Text" ExposedAsName="Text" SetsValue="true">
+      <Value xsi:type="xsd:string">Label</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.VerticalAlignment" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-26</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TextInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">26</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TextInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="TextInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TextInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>FocusRing.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>StrokeColor = Components/ForestGlade/Styles.AccentHalo.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>DashIndicator.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TextInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/ForestGlade/Styles.Text.FillColor</string>
+        <string>Font = Components/ForestGlade/Styles.Normal.Font</string>
+        <string>FontSize = Components/ForestGlade/Styles.Normal.FontSize</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Category>
+    <Name>CheckBoxCategory</Name>
+    <State>
+      <Name>EnabledOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">76</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">140</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FocusedOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocusedOff</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>EnabledOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FocusedOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocusedOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">65</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">246</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">71</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">31</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">63</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">5</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">41</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">126</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">176</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">245</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">214</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocusedOn</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="CheckGlyph.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>EnabledIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>FocusedIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>HighlightedFocusedIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>PushedIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">32</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">28</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">3</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">240</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">241</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+    <State>
+      <Name>DisabledFocusedIndeterminate</Name>
+      <Variable Type="int" Name="BoxBorder.StrokeAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">26</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">117</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxBorder.StrokeRed" SetsValue="true">
+        <Value xsi:type="xsd:int">232</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">18</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">16</Value>
+      </Variable>
+      <Variable Type="int" Name="BoxFill.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">8</Value>
+      </Variable>
+      <Variable Type="bool" Name="CheckGlyph.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="DashIndicator.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="FocusRing.Visible" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">88</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">106</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">74</Value>
+      </Variable>
+    </State>
+  </Category>
+  <Instance Name="BoxContainer" BaseType="Container" />
+  <Instance Name="FocusRing" BaseType="Rectangle" />
+  <Instance Name="BoxFill" BaseType="Rectangle" />
+  <Instance Name="BoxBorder" BaseType="Rectangle" />
+  <Instance Name="CheckGlyph" BaseType="Text" />
+  <Instance Name="DashIndicator" BaseType="Rectangle" />
+  <Instance Name="TextInstance" BaseType="Text" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>CheckBoxBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>CheckBoxCategoryState</string>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>
