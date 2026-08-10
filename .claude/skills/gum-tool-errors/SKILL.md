@@ -41,6 +41,8 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 
 **Plugin check** (feature-specific, tool-side only): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each. Plugin checks only show in the tool — the CLI doesn't load plugins. If the check should fire in CI / pre-commit, use the headless path above instead.
 
+**Fixable errors**: set `ActionName` and `ActionCommand` on the `ErrorViewModel` to render a button beside the row that resolves the error in place (`HasAction` drives its visibility). An action that destroys anything unrecoverable still owes the user a confirmation before it runs.
+
 **Triggering refresh**: Send `RequestErrorRefreshMessage` via messenger to refresh the Errors tab list. Tree icon refresh is driven by existing plugin event subscriptions in `MainTreeViewPlugin`.
 
 ## Current Core Checks (ErrorChecker)
