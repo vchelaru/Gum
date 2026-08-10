@@ -9,6 +9,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
+using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
 
@@ -21,6 +22,7 @@ namespace Gum.Presentation.Tests;
 public class RenameServiceTests : BaseTestClass
 {
     private readonly Mock<IDialogService> _dialogService = new();
+    private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();
     private readonly RenameService _renameService;
     private readonly string _codeProjectRoot;
@@ -29,6 +31,12 @@ public class RenameServiceTests : BaseTestClass
     {
         _codeProjectRoot = Path.Combine(Path.GetTempPath(), "GumRenameServiceTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_codeProjectRoot);
+
+        // The real recycle bin removes the file, so the fake does too - otherwise a move onto the
+        // recycled path would fail with "file already exists".
+        _fileCommands
+            .Setup(x => x.MoveToRecycleBin(It.IsAny<FilePath>()))
+            .Callback<FilePath>(filePath => File.Delete(filePath.FullPath));
 
         Mock<INameVerifier> nameVerifier = new();
         string whyNotValid;
@@ -43,7 +51,9 @@ public class RenameServiceTests : BaseTestClass
             .Callback<Action, int>((action, _) => action());
 
         CodeGenerationNameVerifier codeGenNameVerifier = new(nameVerifier.Object);
-        FixedProjectDirectoryProvider directoryProvider = new(_codeProjectRoot);
+        // Production's project directory always carries a trailing separator (it comes from
+        // FileManager.GetDirectory), and element XML paths are built by string concatenation.
+        FixedProjectDirectoryProvider directoryProvider = new(_codeProjectRoot + Path.DirectorySeparatorChar);
         CodeOutputElementSettingsManager elementSettingsManager = new(directoryProvider);
         LocalizationService localizationService = new();
 
@@ -70,7 +80,8 @@ public class RenameServiceTests : BaseTestClass
             customCodeGenerator,
             codeGenNameVerifier,
             _dialogService.Object,
-            directoryProvider);
+            directoryProvider,
+            _fileCommands.Object);
     }
 
     public override void Dispose()
@@ -117,7 +128,7 @@ public class RenameServiceTests : BaseTestClass
     /// "Components\MyComponent.cs" literal would create one oddly named file in the root rather than
     /// the nested file the test means.
     /// </summary>
-    private void GivenCustomCodeFile(string relativePath, string contents)
+    private void GivenFile(string relativePath, string contents)
     {
         string fullPath = Path.Combine(_codeProjectRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
@@ -125,23 +136,67 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleRename_WithEmptyCodeProjectRoot_DoesNothing()
+    public void HandleRename_WhenCollidingFileCannotBeRecycled_ShowsAnExplanatoryMessage()
     {
+        GivenFile("Components/OldName.cs", "partial class OldName\r\n{\r\n}\r\n");
+        GivenFile("Components/NewName.cs", "//already at the rename target, and locked");
+
+        ComponentSave element = GivenComponentInProject("NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+
+        string? errorMessage = null;
+        _dialogService
+            .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()))
+            .Callback<string, string, MessageDialogStyle?>((message, _, style) =>
+            {
+                // A null style is the plain error popup; the overwrite prompt uses YesNo.
+                if (style == null)
+                {
+                    errorMessage = message;
+                }
+            })
+            .Returns(MessageDialogResult.Affirmative);
+
+        _fileCommands
+            .Setup(x => x.MoveToRecycleBin(It.IsAny<FilePath>()))
+            .Throws(new UnauthorizedAccessException("Access to the path is denied."));
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        errorMessage.ShouldNotBeNull();
+        errorMessage.ShouldContain("NewName.cs");
+        errorMessage.ShouldContain("read-only");
+        // A raw exception dump names the exception type and its stack; the user gets a sentence.
+        errorMessage.ShouldNotContain(nameof(UnauthorizedAccessException));
+    }
+
+    [Fact]
+    public void HandleRename_WhenElementMovedOutOfFolderToRoot_UpdatesNamespace()
+    {
+        GivenFile("Components/Widgets/MyComponent.cs",
+            "namespace MyGame.Components.Widgets\r\n" +
+            "{\r\n" +
+            "    partial class MyComponent\r\n" +
+            "    {\r\n" +
+            "    }\r\n" +
+            "}\r\n");
+
         ComponentSave element = GivenComponentInProject("MyComponent");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
 
-        _renameService.HandleRename(
-            element,
-            oldName: "OldName",
-            codeOutputProjectSettings: new CodeOutputProjectSettings(), // CodeProjectRoot defaults to empty
-            visualApi: VisualApi.Gum);
+        _renameService.HandleRename(element, oldName: "Widgets/MyComponent", projectSettings, VisualApi.Gum);
 
-        _dialogService.VerifyNoOtherCalls();
+        File.Exists(Path.Combine(_codeProjectRoot, "Components", "Widgets", "MyComponent.cs")).ShouldBeFalse();
+
+        string movedCustomCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "MyComponent.cs"));
+        movedCustomCode.ShouldContain("namespace MyGame.Components\r");
+        movedCustomCode.ShouldNotContain("Widgets");
     }
 
     [Fact]
     public void HandleRename_WhenElementMovedToFolder_MovesCustomFileAndUpdatesNamespaceToMatchGeneratedFile()
     {
-        GivenCustomCodeFile("Components/MyComponent.cs",
+        GivenFile("Components/MyComponent.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
@@ -152,7 +207,7 @@ public class RenameServiceTests : BaseTestClass
             "        }\r\n" +
             "    }\r\n" +
             "}\r\n");
-        GivenCustomCodeFile("Components/MyComponent.Generated.cs", "//stale generated file");
+        GivenFile("Components/MyComponent.Generated.cs", "//stale generated file");
 
         // The tool renames the element (folder moves arrive as a rename to "Folder/Name") before
         // notifying the rename service, so the element already carries its new identity here.
@@ -179,9 +234,41 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRename_WhenElementMovedToFolder_MovesElementSettingsFile()
+    {
+        // The .codsj holding per-element code settings sits next to the element XML, so it has to
+        // follow the element into its new folder or the settings silently revert to defaults.
+        GivenFile("Components/MyComponent.codsj", "{\"UsingStatements\":\"using MovedSettingsMarker;\"}");
+
+        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+
+        _renameService.HandleRename(element, oldName: "MyComponent", projectSettings, VisualApi.Gum);
+
+        File.Exists(Path.Combine(_codeProjectRoot, "Components", "MyComponent.codsj")).ShouldBeFalse();
+        File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "Widgets", "MyComponent.codsj"))
+            .ShouldContain("MovedSettingsMarker");
+    }
+
+    [Fact]
+    public void HandleRename_WhenElementRenamedInPlace_MovesElementSettingsFile()
+    {
+        GivenFile("Components/OldName.codsj", "{\"UsingStatements\":\"using RenamedSettingsMarker;\"}");
+
+        ComponentSave element = GivenComponentInProject("NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        File.Exists(Path.Combine(_codeProjectRoot, "Components", "OldName.codsj")).ShouldBeFalse();
+        File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "NewName.codsj"))
+            .ShouldContain("RenamedSettingsMarker");
+    }
+
+    [Fact]
     public void HandleRename_WhenElementRenamedInPlace_RenamesClassAndKeepsNamespace()
     {
-        GivenCustomCodeFile("Components/OldName.cs",
+        GivenFile("Components/OldName.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class OldName\r\n" +
@@ -208,32 +295,74 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleRename_WhenElementMovedOutOfFolderToRoot_UpdatesNamespace()
+    public void HandleRename_WhenOnlyCasingChanges_KeepsCustomCodeAndCorrectsFileNameCasing()
     {
-        GivenCustomCodeFile("Components/Widgets/MyComponent.cs",
-            "namespace MyGame.Components.Widgets\r\n" +
+        GivenFile("Components/MyComponent.cs",
+            "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
             "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
             "    }\r\n" +
             "}\r\n");
 
-        ComponentSave element = GivenComponentInProject("MyComponent");
+        ComponentSave element = GivenComponentInProject("mycomponent");
         CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
 
-        _renameService.HandleRename(element, oldName: "Widgets/MyComponent", projectSettings, VisualApi.Gum);
+        _renameService.HandleRename(element, oldName: "MyComponent", projectSettings, VisualApi.Gum);
 
-        File.Exists(Path.Combine(_codeProjectRoot, "Components", "Widgets", "MyComponent.cs")).ShouldBeFalse();
+        // Old and new point at the same physical file on a case-insensitive filesystem, so there is
+        // nothing to overwrite - no prompt, and above all no delete of the user's code.
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
 
-        string movedCustomCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "MyComponent.cs"));
-        movedCustomCode.ShouldContain("namespace MyGame.Components\r");
-        movedCustomCode.ShouldNotContain("Widgets");
+        string customCodeDirectory = Path.Combine(_codeProjectRoot, "Components");
+        File.ReadAllText(Path.Combine(customCodeDirectory, "mycomponent.cs")).ShouldContain("HandWrittenMarker();");
+        Directory.GetFiles(customCodeDirectory, "*.cs").Select(Path.GetFileName).ShouldContain("mycomponent.cs");
+    }
+
+    [Fact]
+    public void HandleRename_WhenTargetCustomFileExists_MovesItToTheRecycleBinRatherThanDeletingIt()
+    {
+        GivenFile("Components/OldName.cs",
+            "namespace MyGame.Components\r\n" +
+            "{\r\n" +
+            "    partial class OldName\r\n" +
+            "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
+            "    }\r\n" +
+            "}\r\n");
+        GivenFile("Components/NewName.cs", "//already at the rename target");
+
+        ComponentSave element = GivenComponentInProject("NewName");
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+
+        // MessageDialogStyle.YesNo hands back a new instance per call, so it cannot be matched by
+        // value - match the overwrite prompt on its title instead.
+        _dialogService
+            .Setup(x => x.ShowMessage(It.IsAny<string>(), "Overwrite?", It.IsAny<MessageDialogStyle?>()))
+            .Returns(MessageDialogResult.Affirmative);
+
+        _renameService.HandleRename(element, oldName: "OldName", projectSettings, VisualApi.Gum);
+
+        // Custom code is user-authored and Gum's undo does not restore files, so the overwritten
+        // file has to be recoverable from the recycle bin.
+        FilePath overwrittenFile = new FilePath(Path.Combine(_codeProjectRoot, "Components", "NewName.cs"));
+        _fileCommands.Verify(x => x.MoveToRecycleBin(overwrittenFile), Times.Once);
+
+        File.Exists(Path.Combine(_codeProjectRoot, "Components", "OldName.cs")).ShouldBeFalse();
+        File.ReadAllText(overwrittenFile.FullPath).ShouldContain("HandWrittenMarker();");
     }
 
     [Fact]
     public void HandleRename_WithAppendFolderToNamespaceOff_LeavesNamespaceUnchangedAcrossFolderMove()
     {
-        GivenCustomCodeFile("Components/MyComponent.cs",
+        GivenFile("Components/MyComponent.cs",
             "namespace MyGame.Components\r\n" +
             "{\r\n" +
             "    partial class MyComponent\r\n" +
@@ -252,40 +381,44 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void UpdateHeadersInCustomCode_WithFileScopedNamespace_UpdatesNamespaceAndKeepsSemicolon()
+    public void HandleRename_WithEmptyCodeProjectRoot_DoesNothing()
     {
-        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
-        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
-        string contents =
-            "namespace MyGame.Components;\r\n" +
-            "\r\n" +
-            "partial class MyComponent\r\n" +
-            "{\r\n" +
-            "}\r\n";
+        ComponentSave element = GivenComponentInProject("MyComponent");
 
-        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+        _renameService.HandleRename(
+            element,
+            oldName: "OldName",
+            codeOutputProjectSettings: new CodeOutputProjectSettings(), // CodeProjectRoot defaults to empty
+            visualApi: VisualApi.Gum);
 
-        updated.ShouldContain("namespace MyGame.Components.Widgets;");
+        _dialogService.VerifyNoOtherCalls();
     }
 
     [Fact]
-    public void UpdateHeadersInCustomCode_WithNoRootNamespace_LeavesExistingNamespaceAlone()
+    public void HandleVariableSet_WhenBaseTypeChangedWithInheritanceInCustomCode_RewritesTheBaseType()
     {
-        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
-        // Without a RootNamespace codegen emits no namespace at all, so there is nothing to rename the
-        // user's hand-written namespace to. Blanking it would produce uncompilable code.
-        CodeOutputProjectSettings projectSettings = GivenProjectSettings(rootNamespace: string.Empty, appendFolderToNamespace: true);
-        string contents =
-            "namespace MyHandWrittenNamespace\r\n" +
+        GivenFile("Components/MyComponent.cs",
+            "namespace MyGame.Components\r\n" +
             "{\r\n" +
-            "    partial class MyComponent\r\n" +
+            "    partial class MyComponent : Container\r\n" +
             "    {\r\n" +
+            "        partial void CustomInitialize()\r\n" +
+            "        {\r\n" +
+            "            HandWrittenMarker();\r\n" +
+            "        }\r\n" +
             "    }\r\n" +
-            "}\r\n";
+            "}\r\n");
 
-        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+        ComponentSave element = GivenComponentInProject("MyComponent");
+        element.BaseType = "Rectangle";
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        projectSettings.InheritanceLocation = InheritanceLocation.InCustomCode;
 
-        updated.ShouldContain("namespace MyHandWrittenNamespace");
+        _renameService.HandleVariableSet(element, instance: null, "BaseType", oldValue: "Container", projectSettings);
+
+        string customCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "MyComponent.cs"));
+        customCode.ShouldContain("HandWrittenMarker();");
+        customCode.ShouldNotContain(": Container");
     }
 
     [Fact]
@@ -308,23 +441,20 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void UpdateHeadersInCustomCode_WithInheritanceInGeneratedCode_KeepsUserAddedBaseType()
+    public void UpdateHeadersInCustomCode_WithFileScopedNamespace_UpdatesNamespaceAndKeepsSemicolon()
     {
         ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
-        // InheritanceLocation defaults to InGeneratedCode, so the generated partial owns the base list
-        // and anything the user added to the custom partial (an interface, say) has to survive.
         CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
         string contents =
-            "namespace MyGame.Components\r\n" +
+            "namespace MyGame.Components;\r\n" +
+            "\r\n" +
+            "partial class MyComponent\r\n" +
             "{\r\n" +
-            "    partial class MyComponent : IDisposable\r\n" +
-            "    {\r\n" +
-            "    }\r\n" +
             "}\r\n";
 
         string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
 
-        updated.ShouldContain("partial class MyComponent : IDisposable");
+        updated.ShouldContain("namespace MyGame.Components.Widgets;");
     }
 
     [Fact]
@@ -350,6 +480,46 @@ public class RenameServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateHeadersInCustomCode_WithInheritanceInGeneratedCode_KeepsUserAddedBaseType()
+    {
+        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
+        // InheritanceLocation defaults to InGeneratedCode, so the generated partial owns the base list
+        // and anything the user added to the custom partial (an interface, say) has to survive.
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
+        string contents =
+            "namespace MyGame.Components\r\n" +
+            "{\r\n" +
+            "    partial class MyComponent : IDisposable\r\n" +
+            "    {\r\n" +
+            "    }\r\n" +
+            "}\r\n";
+
+        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+
+        updated.ShouldContain("partial class MyComponent : IDisposable");
+    }
+
+    [Fact]
+    public void UpdateHeadersInCustomCode_WithNoRootNamespace_LeavesExistingNamespaceAlone()
+    {
+        ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
+        // Without a RootNamespace codegen emits no namespace at all, so there is nothing to rename the
+        // user's hand-written namespace to. Blanking it would produce uncompilable code.
+        CodeOutputProjectSettings projectSettings = GivenProjectSettings(rootNamespace: string.Empty, appendFolderToNamespace: true);
+        string contents =
+            "namespace MyHandWrittenNamespace\r\n" +
+            "{\r\n" +
+            "    partial class MyComponent\r\n" +
+            "    {\r\n" +
+            "    }\r\n" +
+            "}\r\n";
+
+        string updated = _renameService.UpdateHeadersInCustomCode(contents, element, elementSettings: null, projectSettings);
+
+        updated.ShouldContain("namespace MyHandWrittenNamespace");
+    }
+
+    [Fact]
     public void UpdateHeadersInCustomCode_WithWindowsLineEndings_DoesNotStripTheCarriageReturn()
     {
         ComponentSave element = GivenComponentInProject("Widgets/MyComponent");
@@ -367,30 +537,4 @@ public class RenameServiceTests : BaseTestClass
         updated.ShouldContain("partial class MyComponent\r\n");
     }
 
-    [Fact]
-    public void HandleVariableSet_WhenBaseTypeChangedWithInheritanceInCustomCode_RewritesTheBaseType()
-    {
-        GivenCustomCodeFile("Components/MyComponent.cs",
-            "namespace MyGame.Components\r\n" +
-            "{\r\n" +
-            "    partial class MyComponent : Container\r\n" +
-            "    {\r\n" +
-            "        partial void CustomInitialize()\r\n" +
-            "        {\r\n" +
-            "            HandWrittenMarker();\r\n" +
-            "        }\r\n" +
-            "    }\r\n" +
-            "}\r\n");
-
-        ComponentSave element = GivenComponentInProject("MyComponent");
-        element.BaseType = "Rectangle";
-        CodeOutputProjectSettings projectSettings = GivenProjectSettings("MyGame", appendFolderToNamespace: true);
-        projectSettings.InheritanceLocation = InheritanceLocation.InCustomCode;
-
-        _renameService.HandleVariableSet(element, instance: null, "BaseType", oldValue: "Container", projectSettings);
-
-        string customCode = File.ReadAllText(Path.Combine(_codeProjectRoot, "Components", "MyComponent.cs"));
-        customCode.ShouldContain("HandWrittenMarker();");
-        customCode.ShouldNotContain(": Container");
-    }
 }

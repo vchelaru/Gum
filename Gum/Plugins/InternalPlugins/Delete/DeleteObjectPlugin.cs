@@ -78,18 +78,13 @@ public class DeleteObjectPlugin : PriorityPlugin
 
             if (deleteXmlCheckBox.IsChecked == true)
             {
-                var fileName = _instanceDeletionHelper.GetFileNameForObject(deletedObject);
+                // The element XML is user data and Gum's undo restores project state, not files on
+                // disk, so it goes to the recycle bin rather than being deleted outright.
+                var response = _instanceDeletionHelper.TryRecycleXmlFileForObject(deletedObject);
 
-                if (fileName?.Exists() == true)
+                if (!response.Succeeded)
                 {
-                    try
-                    {
-                        System.IO.File.Delete(fileName.FullPath);
-                    }
-                    catch
-                    {
-                        _dialogService.ShowMessage("Could not delete the file\n" + fileName);
-                    }
+                    _dialogService.ShowMessage(response.Message);
                 }
             }
         }

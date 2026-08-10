@@ -30,9 +30,15 @@ public class CodeOutputElementSettingsManager
         System.IO.File.WriteAllText(fileName.FullPath, serialized);
     }
 
-    internal FilePath? GetCodeSettingsFilePath(ElementSave element)
+    /// <summary>
+    /// Gets the path to the element's .codsj settings file, which sits alongside the element's XML.
+    /// Pass <paramref name="forcedElementName"/> to resolve the path the file had under a different
+    /// element name, which rename uses to find the file still sitting at the old name.
+    /// </summary>
+    public FilePath? GetCodeSettingsFilePath(ElementSave element, string? forcedElementName = null)
     {
-        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element, _projectDirectoryProvider.ProjectDirectory);
+        FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element,
+            _projectDirectoryProvider.ProjectDirectory, forcedElementName);
         if (fileName == null)
         {
             return null;
