@@ -977,36 +977,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Update the nodes
 
-        // February 2, 2025
-        // Not sure why exactly
-        // but if we foreach here,
-        // it can result in the enumerator
-        // returning a null instance. This is
-        // fixed by moving to a for-loop.
-        // ChildCount is read fresh every iteration rather than cached, because RefreshUi can add or
-        // remove children as it goes.
-        for (int i = 0; i < mScreensTreeNode.ChildCount; i++)
-        {
-            var treeNode = (GumTreeNode)mScreensTreeNode.GetChildAt(i);
-            RefreshUi(treeNode);
-        }
+        RefreshChildNodes(mScreensTreeNode, RefreshUi);
 
-        // see above on why we use a for instead foreach
-        for (int i = 0; i < mComponentsTreeNode.ChildCount; i++)
-        {
-            var treeNode = (GumTreeNode)mComponentsTreeNode.GetChildAt(i);
-            RefreshUi(treeNode);
-        }
+        RefreshChildNodes(mComponentsTreeNode, RefreshUi);
 
-        for (int i = 0; i < mStandardElementsTreeNode.ChildCount; i++)
-        {
-            RefreshUi((GumTreeNode)mStandardElementsTreeNode.GetChildAt(i));
-        }
+        RefreshChildNodes(mStandardElementsTreeNode, RefreshUi);
 
-        for (int i = 0; i < mBehaviorsTreeNode.ChildCount; i++)
-        {
-            RefreshUi((GumTreeNode)mBehaviorsTreeNode.GetChildAt(i));
-        }
+        RefreshChildNodes(mBehaviorsTreeNode, RefreshUi);
 
         #endregion
 
@@ -1551,13 +1528,28 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             RefreshBehaviorTreeNode(node, behavior);
         }
 
-        foreach (GumTreeNode treeNode in node.Nodes)
-        {
-            if(treeNode != null)
-            {
-                RefreshUi(treeNode);
-            }
+        RefreshChildNodes(node, RefreshUi);
+    }
 
+    /// <summary>
+    /// Refreshes every child of <paramref name="node"/>, against a snapshot of the child list taken
+    /// up front. Refreshing a child can reparent it - an element whose folder changed moves under the
+    /// folder node that now owns it - which mutates the collection being walked.
+    /// </summary>
+    internal static void RefreshChildNodes(ITreeNodeMutable node, Action<GumTreeNode> refreshChild)
+    {
+        List<GumTreeNode> children = new List<GumTreeNode>(node.ChildCount);
+        for (int i = 0; i < node.ChildCount; i++)
+        {
+            if (node.GetChildAt(i) is GumTreeNode child)
+            {
+                children.Add(child);
+            }
+        }
+
+        foreach (GumTreeNode child in children)
+        {
+            refreshChild(child);
         }
     }
 

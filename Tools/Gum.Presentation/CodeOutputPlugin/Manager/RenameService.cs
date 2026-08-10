@@ -2,6 +2,7 @@ using Gum.ProjectServices.CodeGeneration;
 using Gum.DataTypes;
 using Gum.Managers;
 using System;
+using System.Text.RegularExpressions;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
 using Gum.ToolStates;
@@ -45,7 +46,7 @@ public class RenameService
             var oldGeneratedFileName = _codeGenerationFileLocationsService.GetGeneratedFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
             var oldCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi, oldName);
             var newCustomFileName = _codeGenerationFileLocationsService.GetCustomCodeFileName(element, elementSettings, codeOutputProjectSettings, visualApi);
-            RegenerateAndMoveCode(element, oldName, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
+            RegenerateAndMoveCode(element, elementSettings, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
         }
         catch (Exception e)
         {
@@ -53,10 +54,10 @@ public class RenameService
         }
     }
 
-    private void RegenerateAndMoveCode(ElementSave element, string oldName,
+    private void RegenerateAndMoveCode(ElementSave element,
+        CodeOutputElementSettings? elementSettings,
         CodeOutputProjectSettings codeOutputProjectSettings, FilePath? oldGeneratedFileName,
-        FilePath? oldCustomFileName, FilePath? newCustomFileName,
-        VisualApi? oldVisualApi = null)
+        FilePath? oldCustomFileName, FilePath? newCustomFileName)
     {
         // 1. Delete the old generated file
         if (oldGeneratedFileName?.Exists() == true)
@@ -83,16 +84,24 @@ public class RenameService
 
             if (shouldMove)
             {
-                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName!.FullPath);
+                // Moving into a folder for the first time means the destination directory may not
+                // exist yet - without this the move throws and the custom file orphans at its old path.
+                var newDirectory = newCustomFileName!.GetDirectoryContainingThis();
+                if (newDirectory != null && !System.IO.Directory.Exists(newDirectory.FullPath))
+                {
+                    System.IO.Directory.CreateDirectory(newDirectory.FullPath);
+                }
+
+                System.IO.File.Move(oldCustomFileName.FullPath, newCustomFileName.FullPath);
             }
         }
 
-        // 3. Rename the class inside the custom code file
+        // 3. Update the namespace and class name inside the custom code file
         if (newCustomFileName?.Exists() == true)
         {
             string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
 
-            RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
+            fileContents = UpdateHeadersInCustomCode(fileContents, element, elementSettings, codeOutputProjectSettings);
 
             FileManager.SaveText(fileContents, newCustomFileName.FullPath);
         }
@@ -158,17 +167,60 @@ public class RenameService
         {
             if (newCustomFileName != oldCustomFileName)
             {
-                RegenerateAndMoveCode(element, element.Name, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName, oldVisualApi);
+                RegenerateAndMoveCode(element, elementSettings, codeOutputProjectSettings, oldGeneratedFileName, oldCustomFileName, newCustomFileName);
             }
             else
             {
                 string fileContents = FileManager.FromFileText(newCustomFileName.FullPath);
 
-                RenameClassInCode(element, codeOutputProjectSettings, ref fileContents);
+                fileContents = UpdateHeadersInCustomCode(fileContents, element, elementSettings, codeOutputProjectSettings);
 
                 FileManager.SaveText(fileContents, newCustomFileName.FullPath);
             }
         }
+    }
+
+    /// <summary>
+    /// Rewrites the namespace and partial class declarations in an element's custom code file so they
+    /// match the element's current identity (name, containing folder, and base type). Called by the
+    /// tool whenever an element is renamed, moved to another folder, or has its BaseType changed.
+    /// </summary>
+    /// <returns>The updated file contents.</returns>
+    public string UpdateHeadersInCustomCode(string contents, ElementSave element,
+        CodeOutputElementSettings? elementSettings, CodeOutputProjectSettings codeOutputProjectSettings)
+    {
+        RenameNamespaceInCode(element, elementSettings, codeOutputProjectSettings, ref contents);
+        RenameClassInCode(element, codeOutputProjectSettings, ref contents);
+        return contents;
+    }
+
+    private void RenameNamespaceInCode(ElementSave element, CodeOutputElementSettings? elementSettings,
+        CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
+    {
+        var newNamespace = _codeGenerator.GetElementNamespace(element, elementSettings, codeOutputProjectSettings);
+
+        ////////////////Early Out/////////////////
+        // Generation would emit no namespace at all, so there is nothing to rename the existing
+        // (presumably hand-written) namespace to.
+        if (string.IsNullOrEmpty(newNamespace))
+        {
+            return;
+        }
+
+        // Matches both block-scoped ("namespace Foo") and file-scoped ("namespace Foo;") declarations.
+        var match = Regex.Match(contents,
+            @"^[ \t]*namespace[ \t]+(?<name>[^\s;{]+)",
+            RegexOptions.Multiline);
+
+        if (!match.Success)
+        {
+            return;
+        }
+        //////////////End Early Out///////////////
+
+        var nameGroup = match.Groups["name"];
+        contents = contents.Remove(nameGroup.Index, nameGroup.Length);
+        contents = contents.Insert(nameGroup.Index, newNamespace);
     }
 
     private void RenameClassInCode(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings, ref string contents)
@@ -182,6 +234,10 @@ public class RenameService
         //////////////End Early Out///////////////
 
         var endOfLine = contents.IndexOf("\n", startOfLine + 1);
+        if (endOfLine > startOfLine && contents[endOfLine - 1] == '\r')
+        {
+            endOfLine--;
+        }
 
         var oldClassHeader = contents.Substring(startOfLine, endOfLine - startOfLine);
         string suffix = string.Empty;
@@ -194,7 +250,13 @@ public class RenameService
 
         contents = contents.Remove(startOfLine, endOfLine - startOfLine);
 
-        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings) + suffix;
+        var newHeader = _customCodeGenerator.GetClassHeader(element, codeOutputProjectSettings);
+        // When InheritanceLocation is InCustomCode the generated header already carries the base list,
+        // so re-appending the old one would emit "X : New : Old".
+        if (!newHeader.Contains(":"))
+        {
+            newHeader += suffix;
+        }
         contents = contents.Insert(startOfLine, newHeader);
     }
 }
