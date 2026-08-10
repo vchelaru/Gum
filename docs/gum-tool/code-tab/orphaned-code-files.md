@@ -22,6 +22,7 @@ Detection is deliberately conservative, so it never flags a file Gum did not wri
 * **Files with a Generation Behavior of `NeverGenerate`.** Those elements are hand-managed, so Gum leaves their files alone.
 * **Elements whose source file is missing.** The element is still part of the project, so its code files are not orphans. That situation is reported separately as [GUM0004](../project-files/README.md).
 * **Generated files written by other tools.** Gum only recognizes a `.Generated.cs` file that carries the header its own code generation writes.
+* **Custom code you chose to keep.** Deleting an element removes its generated file, and leaves the custom `.cs` file whenever you leave **Delete custom code file (contains your code)** unchecked. Gum finds an orphaned custom file through its generated file, so once that generated file is gone the custom one is no longer reported. Delete it yourself if you later change your mind.
 
 ## Cleaning Up From the Command Line
 
