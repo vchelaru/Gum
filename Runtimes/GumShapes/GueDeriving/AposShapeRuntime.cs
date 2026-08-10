@@ -142,9 +142,16 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     /// UninitializeRuntimeTypesThroughReflection, the teardown mirror of the RegisterRuntimeTypes
     /// scan documented above) and invokes it during Uninitialize, resetting ShapeRenderer's Apos.
     /// Shapes GPU state so Initialize can run again.
+    ///
+    /// Also resets <see cref="_registered"/> (issue #4417) — GumService.Uninitialize() clears
+    /// ElementSaveExtensions' registrations via ClearRegistrations(), but without this reset
+    /// RegisterRuntimeTypes' _registered guard would skip re-applying its RegisterGueInstantiation
+    /// calls on the next Initialize, permanently losing the Arc/ColoredCircle/Line/RoundedRectangle
+    /// registrations after a single Uninitialize -> Initialize cycle.
     /// </summary>
     public static void UninitializeRuntimeTypes()
     {
+        _registered = false;
         ShapeRenderer.Self.Uninitialize();
     }
 
