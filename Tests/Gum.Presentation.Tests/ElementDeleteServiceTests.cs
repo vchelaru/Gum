@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using Moq;
@@ -18,6 +19,7 @@ public class ElementDeleteServiceTests : IDisposable
     private readonly string _tempDirectory;
     private readonly Mock<IAnimationFilePathService> _animationFilePathService;
     private readonly Mock<IDialogService> _dialogService;
+    private readonly Mock<IFileCommands> _fileCommands;
     private readonly ElementDeleteService _service;
 
     public ElementDeleteServiceTests()
@@ -28,7 +30,9 @@ public class ElementDeleteServiceTests : IDisposable
 
         _animationFilePathService = new Mock<IAnimationFilePathService>();
         _dialogService = new Mock<IDialogService>();
-        _service = new ElementDeleteService(_animationFilePathService.Object, _dialogService.Object);
+        _fileCommands = new Mock<IFileCommands>();
+        _service = new ElementDeleteService(
+            _animationFilePathService.Object, _dialogService.Object, _fileCommands.Object);
     }
 
     public void Dispose()
@@ -40,19 +44,7 @@ public class ElementDeleteServiceTests : IDisposable
     }
 
     [Fact]
-    public void HandleConfirmDelete_DeletesAnimationFile_WhenIsCheckedTrue()
-    {
-        ComponentSave component = new ComponentSave { Name = "Foo" };
-        FilePath ganxPath = CreateAnimationFile("Foo");
-        _animationFilePathService.Setup(x => x.GetAbsoluteAnimationFileNameFor(component)).Returns(ganxPath);
-
-        _service.HandleConfirmDelete(new object[] { component }, isChecked: true);
-
-        File.Exists(ganxPath.FullPath).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void HandleConfirmDelete_DoesNotDeleteAnimationFile_WhenIsCheckedFalse()
+    public void HandleConfirmDelete_DoesNotRecycleAnimationFile_WhenIsCheckedFalse()
     {
         ComponentSave component = new ComponentSave { Name = "Foo" };
         FilePath ganxPath = CreateAnimationFile("Foo");
@@ -60,7 +52,21 @@ public class ElementDeleteServiceTests : IDisposable
 
         _service.HandleConfirmDelete(new object[] { component }, isChecked: false);
 
-        File.Exists(ganxPath.FullPath).ShouldBeTrue();
+        _fileCommands.Verify(x => x.MoveToRecycleBin(ganxPath), Times.Never);
+    }
+
+    [Fact]
+    public void HandleConfirmDelete_RecyclesAnimationFile_WhenIsCheckedTrue()
+    {
+        // Recycle bin rather than File.Delete: a .ganx holds user-authored animation data, and
+        // Gum's undo covers project state, not files on disk (issue #4422).
+        ComponentSave component = new ComponentSave { Name = "Foo" };
+        FilePath ganxPath = CreateAnimationFile("Foo");
+        _animationFilePathService.Setup(x => x.GetAbsoluteAnimationFileNameFor(component)).Returns(ganxPath);
+
+        _service.HandleConfirmDelete(new object[] { component }, isChecked: true);
+
+        _fileCommands.Verify(x => x.MoveToRecycleBin(ganxPath), Times.Once);
     }
 
     [Fact]
