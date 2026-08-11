@@ -51,15 +51,15 @@ public class DeleteOptionCheckboxExtensionsTests
     }
 
     /// <summary>
-    /// The themed CheckBox template measures its content in an Auto column, so TextWrapping alone
-    /// never engages - an explicit constraint on the TextBlock is what makes the label wrap.
+    /// The themed CheckBox template's content column now stretches to the available width, so the
+    /// TextBlock itself no longer needs its own width constraint for wrapping to engage.
     /// </summary>
     [StaFact]
-    public void ToCheckBox_ShouldConstrainLabelWidth_SoWrappingActuallyEngages()
+    public void ToCheckBox_ShouldNotConstrainLabelWidth_TemplateColumnHandlesWrapping()
     {
         CheckBox checkBox = new DeleteOptionCheckboxViewModel { Label = "Anything" }.ToCheckBox();
 
         TextBlock content = checkBox.Content.ShouldBeOfType<TextBlock>();
-        double.IsPositiveInfinity(content.MaxWidth).ShouldBeFalse();
+        double.IsPositiveInfinity(content.MaxWidth).ShouldBeTrue();
     }
 }

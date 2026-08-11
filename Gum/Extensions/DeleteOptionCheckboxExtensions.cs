@@ -16,15 +16,12 @@ public static class DeleteOptionCheckboxExtensions
         return new CheckBox
         {
             // A TextBlock rather than the raw string so a long label wraps instead of being clipped
-            // mid-word. MaxWidth is what makes the wrap engage: the themed CheckBox template lays
-            // the content out in an Auto column, which measures at the label's desired width and so
-            // never supplies a constraint of its own. Sized to the delete dialog's fixed width less
-            // its padding and the check box glyph.
+            // mid-word; the themed CheckBox template's content column now stretches to the dialog's
+            // width, giving the wrap something to wrap against.
             Content = new TextBlock
             {
                 Text = viewModel.Label,
-                TextWrapping = TextWrapping.Wrap,
-                MaxWidth = 290
+                TextWrapping = TextWrapping.Wrap
             },
             HorizontalAlignment = HorizontalAlignment.Left,
             IsChecked = viewModel.IsChecked
