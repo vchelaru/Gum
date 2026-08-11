@@ -53,7 +53,7 @@ https://docs.flatredball.com/gum/
 
 ### Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=vchelaru/gum&type=Date)](https://www.star-history.com/#vchelaru/gum&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=vchelaru/gum&type=Date)](https://star-history.dera.page/#vchelaru/gum&Date)
 
 ### Contributors
 
