@@ -1,6 +1,6 @@
 ---
-name: gum-user-question-triage
-description: Answering Discord/GitHub user questions — search skills→docs→code, cite the docs URL, suggest doc/API fixes with confidence, or file an issue. Triggers: pasted user question, "how do I", GitHub issue triage, "answer this person".
+name: user-asks
+description: Answering Discord/GitHub user questions — search skills→docs→code, cite the docs URL, suggest doc/API fixes with confidence, or file an issue. Triggers: pasted user question, "how do I", GitHub issue triage, "answer this person", "user asks".
 ---
 
 # Answering User Questions
