@@ -5,6 +5,8 @@ description: Gum tool C# code generation. Triggers: CodeGenerator, CodeOutputPlu
 
 # Gum Tool Code Generation System
 
+Full walkthrough in [codegen-deep-dive.md](codegen-deep-dive.md): placement and namespace derivation, `FullyInCode` vs `FindByName` in detail, the custom-file contract, and the rename/delete/orphan reconciliation rules. Self-contained, so it also works handed to an agent on its own.
+
 ## What It Is
 
 The code generation system produces C# partial classes from Gum Screens and Components. Two files per element: `.Generated.cs` (auto-regenerated, never hand-edit) and `.cs` (user-editable stub with `partial void CustomInitialize()` hook). StandardElements are never generated.
