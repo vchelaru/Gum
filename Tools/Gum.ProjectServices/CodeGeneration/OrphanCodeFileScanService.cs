@@ -110,8 +110,7 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             expectedGenerated.Add(Normalize(fallbackFileName));
         }
 
-        foreach (string file in Directory.EnumerateFiles(codeRootPath.FullPath, "*" + GeneratedFileSuffix,
-            SearchOption.AllDirectories))
+        foreach (string file in EnumerateGeneratedFilesPruningBuildOutput(codeRootPath.FullPath))
         {
             FilePath generatedPath = Normalize(file);
             if (expectedGenerated.Contains(generatedPath) || IsInBuildOutputFolder(generatedPath))
@@ -200,8 +199,41 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         project.Screens.Cast<ElementSave>().Concat(project.Components);
 
     /// <summary>
+    /// Walks <paramref name="root"/> for <c>*.Generated.cs</c> files, skipping <c>bin</c>/<c>obj</c>
+    /// subtrees during traversal rather than enumerating into them and filtering afterward - build
+    /// output can hold thousands of directory entries that are never going to match.
+    /// </summary>
+    private static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(string root)
+    {
+        Queue<string> directories = new Queue<string>();
+        directories.Enqueue(root);
+
+        while (directories.Count > 0)
+        {
+            string directory = directories.Dequeue();
+
+            foreach (string file in Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix))
+            {
+                yield return file;
+            }
+
+            foreach (string subdirectory in Directory.EnumerateDirectories(directory))
+            {
+                string name = Path.GetFileName(subdirectory);
+                if (!string.Equals(name, "bin", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(name, "obj", StringComparison.OrdinalIgnoreCase))
+                {
+                    directories.Enqueue(subdirectory);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Whether a file sits under a <c>bin</c> or <c>obj</c> folder. Build output is a copy of, not
-    /// the source of, whatever it contains, so it is skipped rather than reported.
+    /// the source of, whatever it contains, so it is skipped rather than reported. Traversal already
+    /// prunes these subtrees; this is a cheap backstop for the case where <c>CodeProjectRoot</c>
+    /// itself is named <c>bin</c>/<c>obj</c>, which pruning subdirectories alone would not catch.
     /// </summary>
     private static bool IsInBuildOutputFolder(FilePath filePath)
     {
