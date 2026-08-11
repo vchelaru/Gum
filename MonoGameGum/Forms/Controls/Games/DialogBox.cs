@@ -677,9 +677,12 @@ public class DialogBox : FrameworkElement, IInputReceiver
         LastTimeDismissed = global::RenderingLibrary.IGumService.Default?.GameTime ?? 0;
 #endif
         PageAdvanced?.Invoke(this, null);
-        FinishedShowing?.Invoke(this, null);
+        // Finish cleanup BEFORE raising FinishedShowing so a handler that re-shows the
+        // dialog (e.g. a chained sequence of dialogs) is not undone by the state reset
+        // below. Matches the async path, which fires the event only after the show loop ends.
         this.Pages.Clear();
         IsFocused = false;
+        FinishedShowing?.Invoke(this, null);
     }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)
