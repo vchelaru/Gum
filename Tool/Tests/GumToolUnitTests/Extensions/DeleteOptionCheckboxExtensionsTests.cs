@@ -30,6 +30,14 @@ public class DeleteOptionCheckboxExtensionsTests
     }
 
     [StaFact]
+    public void ToCheckBox_ShouldLeftAlign_SoTheLabelDoesNotFloatFromTheEdge()
+    {
+        CheckBox checkBox = new DeleteOptionCheckboxViewModel { Label = "Anything" }.ToCheckBox();
+
+        checkBox.HorizontalAlignment.ShouldBe(HorizontalAlignment.Left);
+    }
+
+    [StaFact]
     public void ToCheckBox_ShouldWrapLabel()
     {
         CheckBox checkBox = new DeleteOptionCheckboxViewModel
@@ -40,5 +48,18 @@ public class DeleteOptionCheckboxExtensionsTests
         TextBlock content = checkBox.Content.ShouldBeOfType<TextBlock>();
         content.Text.ShouldBe("Delete custom code file (contains your code)");
         content.TextWrapping.ShouldBe(TextWrapping.Wrap);
+    }
+
+    /// <summary>
+    /// The themed CheckBox template measures its content in an Auto column, so TextWrapping alone
+    /// never engages - an explicit constraint on the TextBlock is what makes the label wrap.
+    /// </summary>
+    [StaFact]
+    public void ToCheckBox_ShouldConstrainLabelWidth_SoWrappingActuallyEngages()
+    {
+        CheckBox checkBox = new DeleteOptionCheckboxViewModel { Label = "Anything" }.ToCheckBox();
+
+        TextBlock content = checkBox.Content.ShouldBeOfType<TextBlock>();
+        double.IsPositiveInfinity(content.MaxWidth).ShouldBeFalse();
     }
 }
