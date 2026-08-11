@@ -7,8 +7,8 @@
     <Variable Type="int" Name="ContinueIndicatorInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">204</Value>
     </Variable>
-    <Variable Type="string" Name="ContinueIndicatorInstance.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">DejaVu Sans</Value>
+    <Variable IsFont="true" Type="string" Name="ContinueIndicatorInstance.Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/DejaVuSansMono.ttf</Value>
     </Variable>
     <Variable Type="int" Name="ContinueIndicatorInstance.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">20</Value>
