@@ -31,6 +31,10 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 
 **Why it exists separately**: The delete dialog needs runtime UI composition — plugins inject checkboxes and options into a `StackPanel` (e.g., "Delete associated files?", "Remove child instances?"). This cannot be done through the MVVM template system.
 
+**Never give an injected control an explicit `Width`.** WPF centers an element that has a fixed size inside space it would otherwise stretch into, so a fixed-width checkbox renders indented relative to its neighbours, and a label longer than that width is clipped rather than wrapped. Being standalone, this window gets none of `Dialog.OnContentChanged`'s fixed-size clearing described above. Set `HorizontalAlignment.Left` instead.
+
+**A checkbox label only wraps with an explicit `MaxWidth` on its own `TextBlock`.** The themed `CheckBox` template (`Themes/Frb.Styles.Defaults.xaml`) measures its `ContentPresenter` in an `Auto` column, which supplies no width to wrap against, so `TextWrapping` alone is a no-op that widens the window instead. This applies to every checkbox in the tool, not just this dialog.
+
 **Flow**: `DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) calls the WPF-shell `IDeleteDialogService`, whose implementation `DeleteDialogService` creates the `DeleteOptionsWindow`, sets `Message`/`Title`, calls the concrete `PluginManager.ShowDeleteDialog()` (which lets plugins add controls to `MainStackPanel`), then calls `ShowDialog()`. `DeleteDialogService` depends on the concrete `PluginManager`, not `IPluginManager` — that interface dropped `ShowDeleteDialog`/`DeleteConfirmed` entirely when it moved into headless `Gum.Presentation` (#3754); those two WPF-typed calls live only on the concrete class now.
 
 **Not managed by DialogService** — no view model, no template selection, no attached property binding. Changes to `DialogWindow.xaml` or `Dialog.cs` have **zero effect** on this window.

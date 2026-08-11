@@ -4,6 +4,7 @@ using System.Linq;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 using Gum.DataTypes;
+using System.Windows;
 using System.Windows.Controls;
 using Gum.Commands;
 using Gum.Managers;
@@ -147,8 +148,6 @@ public class DeleteObjectPlugin : PriorityPlugin
             if (shouldAddDeleteXml)
             {
                 deleteWindow.MainStackPanel.Children.Add(deleteXmlCheckBox);
-                deleteXmlCheckBox.Content = "Delete XML file";
-                deleteXmlCheckBox.Width = 220;
                 deleteXmlCheckBox.IsChecked = true;
                 alreadyAddedDeleteXmlCheckBox = true;
             }
@@ -163,9 +162,11 @@ public class DeleteObjectPlugin : PriorityPlugin
     private void CreateDeleteXmlFileComboBox()
     {
         deleteXmlCheckBox = new CheckBox();
+        deleteXmlCheckBox.Content = "Delete XML file";
         deleteXmlCheckBox.IsChecked = true;
-
-
+        // No explicit Width: an explicit width combined with the default Stretch alignment centers
+        // the checkbox in the dialog, leaving it indented relative to the other options.
+        deleteXmlCheckBox.HorizontalAlignment = HorizontalAlignment.Left;
     }
 
 }

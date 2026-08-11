@@ -21,6 +21,11 @@ public interface ICustomCodeStubDetector
 /// <see cref="CustomCodeGenerator"/>'s current output, which changes across Gum versions and would
 /// misjudge files written by an older one. Anything it can't account for reads as "not a stub", so
 /// the failure direction is an unnecessary prompt rather than recycling user code.
+///
+/// Whitespace and comments are deliberately not user code: reformatting, blank lines and a stray
+/// note all still read as an untouched stub. Only a declaration or statement makes a file count as
+/// touched. The stub the generator emits carries a whitespace-only line inside
+/// <c>CustomInitialize</c>, so treating whitespace as an edit would flag every pristine file.
 /// </summary>
 public class CustomCodeStubDetector : ICustomCodeStubDetector
 {
