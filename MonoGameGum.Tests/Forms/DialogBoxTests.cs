@@ -259,4 +259,51 @@ public class DialogBoxTests : BaseTestClass
         // Three short entries -> three pages, first popped -> two remaining.
         dialogBox.PagesRemaining.ShouldBe(2);
     }
+
+    [Fact]
+    public void Dismiss_ShouldClearPagesAndDropFocus_BeforeFinishedShowingFires()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+        dialogBox.IsFocused = true;
+
+        dialogBox.Show(new[] { "one", "two", "three" });
+        dialogBox.PagesRemaining.ShouldBeGreaterThan(0); // sanity: pages queued
+
+        bool sawFinishedShowing = false;
+        dialogBox.FinishedShowing += (_, _) =>
+        {
+            sawFinishedShowing = true;
+            dialogBox.PagesRemaining.ShouldBe(0,
+                "Dismiss must clear pages before raising FinishedShowing");
+            dialogBox.IsFocused.ShouldBeFalse(
+                "Dismiss must drop focus before raising FinishedShowing");
+        };
+
+        dialogBox.Dismiss();
+
+        sawFinishedShowing.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void FinishedShowingHandler_ReShow_ShouldSurviveDismissCleanup()
+    {
+        var (dialogBox, visual) = CreateDialogBox();
+        dialogBox.LettersPerSecond = 0;
+
+        dialogBox.Show("first");
+        dialogBox.FinishedShowing += (_, _) =>
+        {
+            // Typical chained-dialog usage: show the next dialog from the handler.
+            dialogBox.IsFocused = true;
+            dialogBox.Show(new[] { "second A", "second B" });
+        };
+
+        dialogBox.Dismiss();
+
+        // The re-shown dialog must not be wiped by Dismiss()'s post-event cleanup.
+        dialogBox.IsVisible.ShouldBeTrue();
+        dialogBox.IsFocused.ShouldBeTrue();
+        dialogBox.PagesRemaining.ShouldBe(1); // two pages, first popped, rest must survive
+    }
 }
