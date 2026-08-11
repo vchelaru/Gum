@@ -215,7 +215,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="InnerCheck.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">DejaVu Sans</Value>
+      <Value xsi:type="xsd:string">Fonts/DejaVuSansMono.ttf</Value>
     </Variable>
     <Variable Type="int" Name="InnerCheck.FontSize" SetsValue="true">
       <Value xsi:type="xsd:int">18</Value>
