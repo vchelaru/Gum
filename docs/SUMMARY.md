@@ -198,6 +198,7 @@
       * [Pygame](code/getting-started/setup/adding-initializing-gum/pygame.md)
       * [raylib (raylib-cs)](code/getting-started/setup/adding-initializing-gum/raylib-raylib-cs.md)
       * [Silk.NET](code/getting-started/setup/adding-initializing-gum/silk.net.md)
+      * [SkiaSharp (General Canvas)](code/getting-started/setup/adding-initializing-gum/skiasharp-general-canvas.md)
       * [WPF](code/getting-started/setup/adding-initializing-gum/wpf.md)
     * [Loading a Gum Project (.gumx)](code/getting-started/setup/loading-a-gum-project-.gumx.md)
     * [Setup for GumBatch (Optional)](code/getting-started/setup/setup-for-gumbatch.md)
