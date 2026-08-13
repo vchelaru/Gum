@@ -1,9 +1,7 @@
 using Gum;
-using Gum.Forms;
 using Gum.Forms.Controls;
 using Gum.GueDeriving;
 using Gum.Wireframe;
-using RenderingLibrary;
 using Shouldly;
 using SkiaGum.Renderables;
 using SkiaSharp;
@@ -15,9 +13,6 @@ namespace SkiaGum.Tests.Forms;
 /// per-pixel saturation/value and hue textures the control generates actually reach the display
 /// sprites through Skia's <c>PixelDataTextureApplier</c>. Mirrors
 /// <see cref="RaylibGum.Tests.Forms.ColorPickerTests"/>. Issue #4241.
-///
-/// Calls <see cref="FormsUtilities.InitializeDefaults"/> explicitly rather than relying on
-/// <c>GumService.Initialize</c> -- the render-only SkiaGum.Standalone GumService never calls it.
 /// </summary>
 public class ColorPickerTests
 {
@@ -25,7 +20,6 @@ public class ColorPickerTests
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
         GumService.Default.Initialize(surface.Canvas, 200, 100);
-        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
     }
 
     [Fact]

@@ -6,11 +6,12 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-Three changes need your attention:
+Four changes need your attention:
 
 * `GraphicalUiElement`'s `GetAbsoluteWidth()` and `GetAbsoluteHeight()` methods are renamed to the `AbsoluteWidth` and `AbsoluteHeight` properties, matching the existing `AbsoluteLeft`/`AbsoluteTop`/`AbsoluteRight`/`AbsoluteBottom` properties. This is a **soft break**: the old methods still compile and work, but now emit a `CS0618` obsolete warning.
 * `MonoGameGum.csproj`'s iOS and Android target frameworks changed from opt-out to opt-in. This affects you only if you reference the MonoGameGum **source project** directly. If you use the `Gum.MonoGame` NuGet package, nothing changes.
 * The V1 and V2 default Forms visuals are removed. This is a **hard break**: `DefaultVisualsVersion.V1`/`.V2` and their backing classes no longer exist. This only affects you if you explicitly requested V1 or V2; everyone else was already on V3.
+* `Gum.SkiaSharp` now compiles `GumService` (and its new `GumServiceSkiaBase`) directly instead of requiring host projects to file-link `GumService.cs`. This affects you only if you previously file-linked `Runtimes/SkiaGum.Standalone/GumService.cs` into your own project.
 
 ## Upgrading the Gum Tool
 
@@ -119,3 +120,28 @@ If you subclassed a V1/V2 visual (e.g. `internal class MyButton : DefaultButtonR
 {% hint style="info" %}
 `FormsUtilities.InitializeDefaults`'s XNA-only `Game` overload also dropped its unused `game` parameter as part of this change. This only affects direct callers of `FormsUtilities.InitializeDefaults` that passed `game`; `GumService.Initialize` callers are unaffected.
 {% endhint %}
+
+### `GumService` Is Now Compiled Directly Into `Gum.SkiaSharp`
+
+The render-only `Gum.GumService` used by WPF, MAUI, and any bring-your-own-`SKCanvas` project (Silk.NET has its own, separate `GumService` and is unaffected) used to live as shared **source** (`Runtimes/SkiaGum.Standalone/GumService.cs`), file-linked into each host project. It is now a real, compiled member of the `Gum.SkiaSharp` package (`SkiaGum.csproj`), reached through the `ProjectReference`/NuGet reference every host already has. The public API is unchanged: `GumService.Default.Initialize(canvas, ...)`, `.Update(...)`, `.Draw()`, and `.HandleResize(...)` all work exactly as before.
+
+If you never file-linked `GumService.cs` yourself, this affects you only through a real behavior fix: `GumService.Initialize` now calls `FormsUtilities.InitializeDefaults()` unconditionally, matching every other backend. Previously, a code-only Forms control (`Button`, etc.) got no default `Visual` on this render-only path unless a `.gumx` project happened to be loaded; now it does.
+
+If you did file-link `Runtimes/SkiaGum.Standalone/GumService.cs` into your own project (for example, following an older version of the [SkiaSharp (General Canvas)](../../code/getting-started/setup/adding-initializing-gum/skiasharp-general-canvas.md) setup, or mirroring how `SkiaGum.Wpf`/`SkiaGum.Maui` used to do it), you'll get a duplicate-type build error once you upgrade to a `Gum.SkiaSharp` version that includes the type natively:
+
+```
+error CS0433: The type 'GumService' exists in both 'YourProject' and 'Gum.SkiaSharp'
+```
+
+To fix it, delete the file-link from your `.csproj`:
+
+❌ Old:
+```xml
+<ItemGroup>
+  <Compile Include="..\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
+</ItemGroup>
+```
+
+✅ New: delete the `ItemGroup` above entirely. `GumService` now comes from your existing `Gum.SkiaSharp` reference.
+
+`Runtimes/SkiaGum.Standalone/` itself is removed from the Gum repository; there is no longer a file to link.

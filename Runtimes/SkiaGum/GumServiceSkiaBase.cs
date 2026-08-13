@@ -1,8 +1,3 @@
-// This is shared source file-linked into host projects with differing <Nullable>
-// settings (e.g. SkiaGum.Wpf does not enable it), so declare the nullable context
-// here to keep the file's annotations valid and warning-free everywhere.
-#nullable enable
-
 using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
@@ -15,34 +10,22 @@ using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToolsUtilities;
 
-// Render-only GumService for SkiaSharp host environments (WPF, MAUI, Silk.NET,
-// standalone bring-your-own-canvas). namespace Gum / type GumService mirrors the
-// game-host GumService (MonoGameGum/GumService.cs) so user code is portable across
-// hosts. This file is shared source: it is NOT compiled into Gum.SkiaSharp (which is
-// rendering-only) but file-linked into each host lib/sample/tool that needs it.
-// See .claude/designs/runtime-unification/GumServiceHostModel.md (issues #3218, #2738).
+// The shared, render-only base for every Skia-family GumService (WPF, MAUI, bring-your-own-canvas,
+// and -- pending #4452 phase 2 -- Silk.NET). Built only against SKCanvas and the IGumService
+// capability-interface pattern (CreateCursor/CreateKeyboard default to null per ADR
+// 0006-runtimes-declare-capabilities-through-igumservice.md), so any Skia host gets identical
+// instantiation syntax, rendering, .gumx project loading, and non-interactive Forms controls for
+// free; a host that wants real mouse/touch/keyboard input derives and overrides the two Create*
+// hooks. Named GumServiceSkiaBase, not GumServiceBase -- that name stays free for a possible future
+// cross-engine base spanning MonoGame/raylib/Skia/Sokol (#4451). Compiled directly into
+// Gum.SkiaSharp (issue #4452 phase 1); WPF/MAUI/standalone consumers get it through the
+// SkiaGum.csproj ProjectReference they already have instead of file-linking shared source.
 namespace Gum;
-public class GumService : IGumService
-{
-    static GumService? _default;
-    public static GumService Default
-    {
-        get
-        {
-            if (_default == null)
-            {
-                _default = new GumService();
-            }
-            return _default;
-        }
-    }
 
+public abstract class GumServiceSkiaBase : IGumService
+{
     /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
@@ -72,10 +55,10 @@ public class GumService : IGumService
 
     IRenderer IGumService.Renderer => SystemManagers.Default.Renderer;
 
-    // Skia is a rendering technology, not a windowing/input system, so there is no built-in
-    // cursor and the Forms input pump (FormsUtilities) is not wired on Skia. Returning null
-    // is intentional; nothing on the Skia path consumes this today (Forms controls render via
-    // their contained visual, which needs no cursor).
+    // Skia is a rendering technology, not a windowing/input system, so the render-only base has no
+    // built-in cursor. A host that overrides CreateCursor (e.g. a future Silk.NET-on-Skia consumer)
+    // gets real input; nothing on the render-only path consumes this today (Forms controls render
+    // via their contained visual, which needs no cursor).
     ICursor IGumService.Cursor => null!;
 
     float IGumService.CanvasWidth
@@ -137,26 +120,9 @@ public class GumService : IGumService
         SystemManagers.Default.Initialize();
         SystemManagers.Default.Renderer.ClearsCanvas = false;
 
-        GumProjectSave? gumProject = null;
-
-        if (!string.IsNullOrEmpty(gumProjectFile))
-        {
-
-            gumProject = GumProjectSave.Load(gumProjectFile);
-            ObjectFinder.Self.GumProjectSave = gumProject;
-            gumProject.Initialize();
-            FormsUtilities.RegisterFromFileFormRuntimeDefaults();
-
-            var absolutePath = FileManager.IsRelative(gumProjectFile)
-                ? FileManager.MakeAbsolute(gumProjectFile)
-                : gumProjectFile;
-            var gumDirectory = FileManager.GetDirectory(absolutePath);
-
-            FileManager.RelativeDirectory = gumDirectory;
-        }
-
-        // Size the canvas coordinate space before configuring Root, so the
-        // RelativeToParent root has something to resolve against.
+        // Size the canvas coordinate space before Root and the InitializeDefaults-created
+        // PopupRoot/ModalRoot are created, so their RelativeToParent/fullscreen layout has
+        // something to resolve against.
         GraphicalUiElement.CanvasWidth = width;
         GraphicalUiElement.CanvasHeight = height;
 
@@ -170,17 +136,40 @@ public class GumService : IGumService
             HasEvents = false,
         };
 
-        Root.AddToManagers(SystemManagers.Default);
-        Root.UpdateLayout();
-
         DeferredQueue = new DeferredActionQueue();
 
         // Wire this service as the runtime-agnostic default so GumCommon code resolves the
         // Skia runtime the same way it does MonoGame/raylib — most importantly so that
         // FrameworkElement.AddToRoot (which adds element.Visual to IGumService.Default.Root)
-        // works on Skia. Forms controls render via their contained visual, so this needs no
-        // input/cursor plumbing.
+        // works on Skia. Must happen before InitializeDefaults, which calls back into
+        // CreateCursor/CreateKeyboard through IGumService.Default.
         IGumService.Default = this;
+
+        // Registers the code-only V3 default visuals (Button, Label, ...) and creates
+        // PopupRoot/ModalRoot, same as every other backend's Initialize. Without this, a
+        // code-only Forms control got no Visual unless a .gumx project happened to define one
+        // for it (issue #4452).
+        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
+
+        Root.AddToManagers(SystemManagers.Default);
+        Root.UpdateLayout();
+
+        if (!string.IsNullOrEmpty(gumProjectFile))
+        {
+            var gumProject = GumProjectSave.Load(gumProjectFile);
+            ObjectFinder.Self.GumProjectSave = gumProject;
+            gumProject.Initialize();
+            // Overrides the code-only defaults registered above with the project's own
+            // Forms-behavior visuals, where the project defines one.
+            FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+            var absolutePath = FileManager.IsRelative(gumProjectFile)
+                ? FileManager.MakeAbsolute(gumProjectFile)
+                : gumProjectFile;
+            var gumDirectory = FileManager.GetDirectory(absolutePath);
+
+            FileManager.RelativeDirectory = gumDirectory;
+        }
 
         IsInitialized = true;
     }

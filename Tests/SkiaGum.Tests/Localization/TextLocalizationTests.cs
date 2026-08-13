@@ -11,7 +11,7 @@ namespace SkiaGum.Tests.Localization;
 /// <summary>
 /// Regression coverage for #3621: SkiaGum's CustomSetPropertyOnRenderable copy never ran the
 /// localization path, so text assigned through the localized "Text" property was passed through
-/// untranslated in SkiaGum-rendered hosts (SkiaGum.Standalone / WPF / MAUI, Gum.SilkNet).
+/// untranslated in SkiaGum-rendered hosts (SkiaGum / WPF / MAUI, Gum.SilkNet).
 /// </summary>
 public class TextLocalizationTests : IDisposable
 {
