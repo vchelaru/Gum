@@ -12,7 +12,7 @@ namespace Gum.ProjectServices.Tests;
 /// Tests covering the state-reset behavior of subsystems touched by
 /// <c>GumService.Uninitialize()</c> that do not require MonoGame/GPU.
 /// GPU-dependent subsystems (Renderer, FormsUtilities, GumService itself)
-/// are tested in MonoGameGum.Tests.V2.
+/// are tested in MonoGameGum.Tests.V3.
 /// </summary>
 public class UninitializeTests : IDisposable
 {

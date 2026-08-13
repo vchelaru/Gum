@@ -310,7 +310,7 @@ public class RenderTargetTextureSourceSpriteTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+            GumService.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
         }
 
         protected override void Update(GameTime gameTime) { }

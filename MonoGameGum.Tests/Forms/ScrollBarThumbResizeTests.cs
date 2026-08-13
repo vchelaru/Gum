@@ -1,7 +1,7 @@
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Shouldly;
 using Xunit;
 
@@ -32,7 +32,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         // Track-position math (MaxThumbPosition = trackSize - thumbSize) reads Track size every
         // call. If only UpdateThumbSize re-runs on Track resize but UpdateThumbPositionAccordingToValue
         // does not, Value=50 still maps to the OLD track range and the thumb sits in the wrong place.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 24;
         visual.Height = 128;
         ScrollBar scrollBar = visual.FormsControl;
@@ -66,7 +66,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         // would compute below the floor and must be clamped (-> 16px). A stale (un-recomputed)
         // thumb would still read 40px and fail this assertion — making this a genuine regression
         // check for the Track.SizeChanged subscription, not just a positive sanity assertion.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 24;
         visual.Height = 128;
         ScrollBar scrollBar = visual.FormsControl;
@@ -94,7 +94,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         // Visual-level resize path, horizontal orientation. Track is RelativeToParent so resizing
         // Visual propagates into Track and Track.SizeChanged fires. Guards against the fix
         // accidentally regressing the path that the previous Visual.SizeChanged hook covered.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 128;
         visual.Height = 24;
         ScrollBar scrollBar = visual.FormsControl;
@@ -123,7 +123,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
     public void ThumbSize_ShouldUpdate_WhenScrollBarVisualResizes_Vertical()
     {
         // Visual-level resize path, vertical orientation. See horizontal sibling for rationale.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 24;
         visual.Height = 128;
         ScrollBar scrollBar = visual.FormsControl;
@@ -152,7 +152,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
     public void ThumbSize_ShouldUpdate_WhenTrackResizesDirectly_Horizontal()
     {
         // Canonical bug, horizontal. Same shape as vertical sibling.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 128;
         visual.Height = 24;
         ScrollBar scrollBar = visual.FormsControl;
@@ -184,7 +184,7 @@ public class ScrollBarThumbResizeTests : BaseTestClass
         // Resizes Track without touching Visual. The pre-fix Visual.SizeChanged hook does not
         // fire here, so nothing re-runs UpdateThumbSize and the thumb keeps its old absolute
         // height. Post-fix this is covered by the Track.SizeChanged subscription.
-        DefaultScrollBarRuntime visual = new DefaultScrollBarRuntime();
+        ScrollBarVisual visual = new ScrollBarVisual();
         visual.Width = 24;
         visual.Height = 128;
         ScrollBar scrollBar = visual.FormsControl;

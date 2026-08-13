@@ -17,7 +17,6 @@ using System.Linq;
 #if XNALIKE
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 #elif SKIA
 using Gum.GueDeriving;
@@ -40,18 +39,6 @@ namespace Gum.Forms;
 /// </summary>
 public enum DefaultVisualsVersion
 {
-    /// <summary>
-    /// The first version introduced with the first version of Gum Forms.
-    /// Most controls use solid colors and ColoredRectangles for their backgrounds.
-    /// </summary>
-    [Obsolete("V1 default visuals are legacy. Use DefaultVisualsVersion.V3 (or .Newest). Slated for removal in a future release.")]
-    V1,
-    /// <summary>
-    /// The second version introduced mid 2025. This version uses NineSlices for backgrounds,
-    /// and respects a centralized styling.
-    /// </summary>
-    [Obsolete("V2 default visuals are legacy. Use DefaultVisualsVersion.V3 (or .Newest). Slated for removal in a future release.")]
-    V2,
     /// <summary>
     /// The third version introduced end of 2025. This version makes styling with colors easier.
     /// </summary>
@@ -89,47 +76,16 @@ public class FormsUtilities
     public static Gum.Input.GamePad[] Gamepads { get; private set; } = new Gum.Input.GamePad[4];
 
 
-    // The V1/V2 default-visual classes and the DefaultVisualsVersion.V1/V2 enum members are now
-    // [Obsolete]. InitializeDefaults still supports registering them as legacy defaults, so the
-    // default parameter values and the V1/V2 switch cases below intentionally reference the
-    // obsolete members. Suppress CS0618 for that legacy-support region.
-#pragma warning disable CS0618
-#if XNALIKE
     /// <summary>
     /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
     /// </summary>
     /// <remarks>
     /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
     /// </remarks>
-    /// <param name="game">The Game instance, used for creating and updating input such as the Keyboard and Mouse</param>
     /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
     /// do not need to provide one.</param>
     /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
-    public static void InitializeDefaults(Game? game = null, SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V1)
-#elif SKIA
-    /// <summary>
-    /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
-    /// </summary>
-    /// <remarks>
-    /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
-    /// </remarks>
-    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
-    /// do not need to provide one.</param>
-    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.
-    /// Defaults to V3 on Skia -- the legacy V1/V2 default visuals were never ported to this backend (issue #3561).</param>
     public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V3)
-#else
-    /// <summary>
-    /// Initializes defaults to enable FlatRedBall Forms. This method should be called before using Forms.
-    /// </summary>
-    /// <remarks>
-    /// Projects can make further customization to Forms such as by modifying the FrameworkElement.Root or the DefaultFormsComponents.
-    /// </remarks>
-    /// <param name="systemManagers">The optional system managers. If not specified, the default system managers are used. Games with a single SystemsManager
-    /// do not need to provide one.</param>
-    /// <param name="defaultVisualsVersion">The version of visuals. Changing between visuals can change the apperance, as well as the structure of the Visual objects.</param>
-    public static void InitializeDefaults(SystemManagers? systemManagers = null, DefaultVisualsVersion defaultVisualsVersion = DefaultVisualsVersion.V2)
-#endif
     {
         systemManagers = systemManagers ?? SystemManagers.Default;
 
@@ -148,98 +104,34 @@ public class FormsUtilities
         Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
 #endif
 
-        switch (defaultVisualsVersion)
-        {
-#if XNALIKE
-            case DefaultVisualsVersion.V1:
-                TryAdd(typeof(Button), (_, c) => new DefaultButtonRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(CheckBox), (_, c) => new DefaultCheckboxRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(ComboBox), (_, c) => new DefaultComboBoxRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(Label), (_, c) => new DefaultLabelRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBox), (_, c) => new DefaultListBoxRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultListBoxItemRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(Menu), (_, c) => new DefaultMenuRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(MenuItem), (_, c) => new DefaultMenuItemRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(PasswordBox), (_, c) => new DefaultPasswordBoxRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(RadioButton), (_, c) => new DefaultRadioButtonRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollBar), (_, c) => new DefaultScrollBarRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultScrollViewerRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(TextBox), (_, c) => new DefaultTextBoxRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(Slider), (_, c) => new DefaultSliderRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(Splitter), (_, c) => new DefaultSplitterRuntime(tryCreateFormsObject: c));
-                TryAdd(typeof(Window), (_, c) => new DefaultWindowRuntime(tryCreateFormsObject: c));
-                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
-                break;
-#endif
-            // V2 default visuals ([Obsolete]) were never ported to Skia -- this is a new
-            // backend with no back-compat need, so only V3/Newest is supported. The V2 case
-            // below references Gum.Forms.DefaultVisuals.*Visual types, which are not linked
-            // into SkiaGum.csproj (mirrors how V1 is XNALIKE-only above). See #3561.
-#if !SKIA
-            case DefaultVisualsVersion.V2:
-                TryAdd(typeof(Button), (_, c) => new DefaultVisuals.ButtonVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.CheckBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.ComboBoxVisual(tryCreateFormsObject: c));
-#if XNALIKE
-                TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.ItemsControlVisual(tryCreateFormsObject: c));
-#endif
-                TryAdd(typeof(Label), (_, c) => new DefaultVisuals.LabelVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.ListBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.ListBoxItemVisual(tryCreateFormsObject: c));
-#if XNALIKE
-                TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.MenuVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.MenuItemVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.PasswordBoxVisual(tryCreateFormsObject: c));
-#endif
-                TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.RadioButtonVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.ScrollBarVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.ScrollViewerVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.SliderVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.SplitterVisual(tryCreateFormsObject: c));
-#if XNALIKE
-                TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.TextBoxVisual(tryCreateFormsObject: c));
-#endif
-                TryAdd(typeof(Window), (_, c) => new DefaultVisuals.WindowVisual(tryCreateFormsObject: c));
-                Gum.Forms.DefaultVisuals.Styling.ActiveStyle = new(uiSpriteSheet);
-
-                break;
-#endif
-
-            case DefaultVisualsVersion.V3:
-                TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.V3.CheckBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.V3.ComboBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
+        // DefaultVisualsVersion has only one member (V3, aliased as Newest), so no switch is needed
+        // here -- this used to also register V1/V2 legacy default visuals, removed in #4447.
+        TryAdd(typeof(Button), (_, c) => new DefaultVisuals.V3.ButtonVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(CheckBox), (_, c) => new DefaultVisuals.V3.CheckBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Gum.Forms.Controls.Games.DialogBox), (_, c) => new DefaultVisuals.V3.DialogBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ComboBox), (_, c) => new DefaultVisuals.V3.ComboBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ItemsControl), (_, c) => new DefaultVisuals.V3.ItemsControlVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Label), (_, c) => new DefaultVisuals.V3.LabelVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ListBox), (_, c) => new DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ListBoxItem), (_, c) => new DefaultVisuals.V3.ListBoxItemVisual(tryCreateFormsObject: c));
 #if !SOKOL
-                TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Menu), (_, c) => new DefaultVisuals.V3.MenuVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(MenuItem), (_, c) => new DefaultVisuals.V3.MenuItemVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(PasswordBox), (_, c) => new DefaultVisuals.V3.PasswordBoxVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.V3.ScrollBarVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.V3.TextBoxVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.V3.SliderVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(RadioButton), (_, c) => new DefaultVisuals.V3.RadioButtonVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ScrollBar), (_, c) => new DefaultVisuals.V3.ScrollBarVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ScrollViewer), (_, c) => new DefaultVisuals.V3.ScrollViewerVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(TextBox), (_, c) => new DefaultVisuals.V3.TextBoxVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Slider), (_, c) => new DefaultVisuals.V3.SliderVisual(tryCreateFormsObject: c));
 #if !SOKOL
-                TryAdd(typeof(ColorPicker), (_, c) => new DefaultVisuals.V3.ColorPickerVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ColorPicker), (_, c) => new DefaultVisuals.V3.ColorPickerVisual(tryCreateFormsObject: c));
 #endif
-                TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
-                TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
-                Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
+        TryAdd(typeof(Splitter), (_, c) => new DefaultVisuals.V3.SplitterVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(ToggleButton), (_, c) => new DefaultVisuals.V3.ToggleButtonVisual(tryCreateFormsObject: c));
+        TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(defaultVisualsVersion), defaultVisualsVersion, null);
-        }
-#pragma warning restore CS0618
-
-        // Tooltip is registered across all default visuals versions — it's a passive overlay with
-        // no V1/V2 equivalent, so the V3 visual is used regardless.
         TryAdd(typeof(Tooltip), (_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
 
         void TryAdd(Type formsType, Func<object, bool, GraphicalUiElement> factory)
@@ -248,18 +140,6 @@ public class FormsUtilities
             {
                 FrameworkElement.DefaultFormsTemplates[formsType] = new VisualTemplate(factory);
             }
-#if XNALIKE
-            // This is needed until MonoGameGum.Forms goes away completely. It's now marked as obsolete with error as of November 2025
-            if (formsType.FullName.StartsWith("MonoGameGum.Forms."))
-            {
-                var baseType = formsType.BaseType;
-
-                if (baseType?.FullName.StartsWith("Gum.Forms.") == true && !FrameworkElement.DefaultFormsTemplates.ContainsKey(baseType))
-                {
-                    FrameworkElement.DefaultFormsTemplates[baseType] = new VisualTemplate(factory);
-                }
-            }
-#endif
         }
 
         // Input creation is delegated to the active runtime's IGumService so this shared file no

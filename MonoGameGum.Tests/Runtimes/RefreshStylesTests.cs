@@ -1,7 +1,7 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Gum.GueDeriving;
@@ -151,32 +151,21 @@ public class RefreshStylesTests : BaseTestClass
     [Fact]
     public void RefreshStyles_ShouldReapplyFormsControlCategoricalState()
     {
-        // Arrange
+        // Arrange — V3 default visuals drive categorical state through a StateSave.Apply
+        // lambda (not a declarative Variables list like V1/V2), so "changing what the
+        // Enabled state applies" means reassigning that lambda. See gum-forms-default-visuals.
         Button button = new();
-        InteractiveGue visual = button.Visual;
+        ButtonVisual visual = (ButtonVisual)button.Visual;
 
-        // The button is in "Enabled" state by default
-        // Find the Enabled state's background color variable
-        StateSaveCategory buttonCategory = visual.Categories["ButtonCategory"];
-        StateSave enabledState = buttonCategory.States
-            .First(s => s.Name == FrameworkElement.EnabledStateName);
-
-        // Get the current background color variable
-        VariableSave backgroundColorVar = enabledState.Variables
-            .First(v => v.Name == "ButtonBackground.Color");
-
-        // Record the original color applied to the background child
-        ColoredRectangleRuntime background = (ColoredRectangleRuntime)visual.GetGraphicalUiElementByName("ButtonBackground")!;
-
-        // Change the variable to a new color
+        // The button is in "Enabled" state by default.
         Color newColor = Color.Red;
-        backgroundColorVar.Value = newColor;
+        visual.States.Enabled.Apply = () => visual.Background.Color = newColor;
 
         // Act
         visual.RefreshStyles();
 
         // Assert — the background should now show the new color
-        background.Color.ShouldBe(newColor);
+        visual.Background.Color.ShouldBe(newColor);
     }
 
     [Fact]
@@ -195,24 +184,17 @@ public class RefreshStylesTests : BaseTestClass
         Button button = new();
         button.Visual.Parent = parent;
 
-        InteractiveGue visual = button.Visual;
-        StateSaveCategory buttonCategory = visual.Categories["ButtonCategory"];
-        StateSave enabledState = buttonCategory.States
-            .First(s => s.Name == FrameworkElement.EnabledStateName);
-
-        VariableSave backgroundColorVar = enabledState.Variables
-            .First(v => v.Name == "ButtonBackground.Color");
-
-        ColoredRectangleRuntime background = (ColoredRectangleRuntime)visual.GetGraphicalUiElementByName("ButtonBackground")!;
-
+        // V3 default visuals drive categorical state through a StateSave.Apply lambda (not a
+        // declarative Variables list like V1/V2) — see gum-forms-default-visuals.
+        ButtonVisual visual = (ButtonVisual)button.Visual;
         Color newColor = Color.Green;
-        backgroundColorVar.Value = newColor;
+        visual.States.Enabled.Apply = () => visual.Background.Color = newColor;
 
         // Act — refresh from the parent, not the button directly
         parent.RefreshStyles();
 
         // Assert — the button's background should have the new color
-        background.Color.ShouldBe(newColor);
+        visual.Background.Color.ShouldBe(newColor);
     }
 
     [Fact]
@@ -533,7 +515,7 @@ public class RefreshStylesTests : BaseTestClass
         RadioButton radio2 = new();
         radio2.AddToRoot();
 
-        // The code-only DefaultRadioButtonRuntime uses "InnerCheck" for the
+        // The code-only V3 RadioButtonVisual uses "InnerCheck" for the
         // check indicator. Verify it's visible when checked.
         radio2.IsChecked = true;
 

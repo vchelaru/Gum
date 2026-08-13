@@ -193,7 +193,7 @@ public class RenderTargetBakeClipWalkTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+            Gum.GumService.Default.Initialize(this, Gum.Forms.DefaultVisualsVersion.V3);
         }
 
         protected override void Update(GameTime gameTime) { }

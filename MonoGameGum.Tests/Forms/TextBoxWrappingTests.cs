@@ -1,5 +1,5 @@
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Wireframe;
 using Shouldly;
 using System.Linq;
@@ -30,7 +30,7 @@ public class TextBoxWrappingTests : BaseTestClass
     }
 
     static RenderingLibrary.Graphics.Text GetCoreText(TextBox textBox) =>
-        (RenderingLibrary.Graphics.Text)((DefaultTextBoxBaseRuntime)textBox.Visual)
+        (RenderingLibrary.Graphics.Text)((TextBoxBaseVisual)textBox.Visual)
             .TextInstance.RenderableComponent;
 
     // The full TextWrapping x AcceptsReturn matrix documented on TextBoxBase.TextWrapping.
@@ -56,7 +56,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         foreach (char character in WrappingText)
@@ -83,7 +83,7 @@ public class TextBoxWrappingTests : BaseTestClass
         TextBox textBox = CreateWrappingTextBox();
         textBox.Text = WrappingText;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         var wrappedText = GetCoreText(textBox).WrappedText;
         wrappedText.Count.ShouldBeGreaterThan(1, "sanity: the text should wrap at this width");
 
@@ -105,7 +105,7 @@ public class TextBoxWrappingTests : BaseTestClass
         TextBox textBox = CreateWrappingTextBox();
         textBox.Text = WrappingText;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         var wrappedText = GetCoreText(textBox).WrappedText;
         wrappedText.Count.ShouldBeGreaterThan(1, "sanity: the text should wrap at this width");
 
@@ -132,7 +132,7 @@ public class TextBoxWrappingTests : BaseTestClass
         TextBox textBox = CreateWrappingTextBox();
         textBox.Text = WrappingText;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         var wrappedText = GetCoreText(textBox).WrappedText;
         wrappedText.Count.ShouldBeGreaterThan(1, "sanity: the text should wrap at this width");
 
@@ -160,7 +160,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         visual.TextInstance.Width = -8f;
         visual.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
@@ -183,7 +183,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         textBox.Text = "First line here\nSecond line here";
 
         int firstLineLength = GetCoreText(textBox).WrappedText[0].Length;
@@ -209,7 +209,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.SelectionStart = 0;
         textBox.SelectionLength = textBox.Text.Length;
 
-        int visibleSelectionCount = textBox.Visual.Children
+        int visibleSelectionCount = textBox.Visual.Descendants()
             .OfType<GraphicalUiElement>()
             .Count(item => item.Name == "SelectionInstance" && item.Visible);
 
@@ -228,7 +228,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         visual.TextInstance.Width = -8f;
         visual.TextInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
@@ -275,7 +275,7 @@ public class TextBoxWrappingTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         textBox.Text = "This little shack is where the Smith stays.\nI shouldn't go in if I'm not invited";
@@ -300,7 +300,7 @@ public class TextBoxWrappingTests : BaseTestClass
         // are visibly wrapping. Older Gum-tool components (authored before MultiNoWrap existed)
         // hit exactly this path.
         TextBox textBox = new();
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
 
         textBox.Visual.Categories["LineModeCategory"].States
             .RemoveAll(item => item.Name == "MultiNoWrap");
@@ -334,7 +334,7 @@ public class TextBoxWrappingTests : BaseTestClass
         // left as though it were a single-line box.
         TextBox textBox = CreateWrappingTextBox();
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         textBox.Text = WrappingText;
@@ -355,7 +355,7 @@ public class TextBoxWrappingTests : BaseTestClass
         // NoWrap case *does* scroll. Nothing previously asserted that Wrap does not.
         TextBox textBox = CreateWrappingTextBox();
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         foreach (char character in WrappingText)

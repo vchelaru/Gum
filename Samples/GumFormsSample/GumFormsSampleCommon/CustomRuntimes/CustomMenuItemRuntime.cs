@@ -1,4 +1,4 @@
-﻿using Gum.Forms.DefaultVisuals;
+﻿using Gum.Forms.DefaultVisuals.V3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace GumFormsSample.CustomRuntimes;
-internal class CustomMenuItemRuntime : DefaultMenuItemRuntime
+internal class CustomMenuItemRuntime : MenuItemVisual
 {
     public CustomMenuItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(fullInstantiation, tryCreateFormsObject)
     {

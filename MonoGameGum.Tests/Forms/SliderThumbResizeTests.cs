@@ -1,7 +1,7 @@
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Shouldly;
 using Xunit;
 
@@ -32,7 +32,7 @@ public class SliderThumbResizeTests : BaseTestClass
     public void ThumbCenter_ShouldFollow_WhenSliderVisualResizes()
     {
         // At Value=midpoint the thumb center should equal the Track center regardless of width.
-        DefaultSliderRuntime visual = new DefaultSliderRuntime();
+        SliderVisual visual = new SliderVisual();
         visual.Width = 128;
         visual.Height = 24;
         Slider slider = visual.FormsControl;
@@ -56,7 +56,7 @@ public class SliderThumbResizeTests : BaseTestClass
     {
         // Direct Track resize — the case ScrollBar misses pre-fix. Slider uses Percentage X for
         // the thumb so this works without any explicit Track.SizeChanged subscription.
-        DefaultSliderRuntime visual = new DefaultSliderRuntime();
+        SliderVisual visual = new SliderVisual();
         visual.Width = 128;
         visual.Height = 24;
         Slider slider = visual.FormsControl;
