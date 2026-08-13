@@ -202,7 +202,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     // Reads an element's values against an explicitly chosen standard type's catalog. CreateStateForNode
     // uses the element's own resolved type; the component root is read against the component base type
     // (Container) so a control root that does not itself resolve to a standard (e.g. an InteractiveGue
-    // subclass like DefaultButtonRuntime) still contributes its geometry/visibility.
+    // subclass like the default ButtonVisual) still contributes its geometry/visibility.
     private StateSave CreateStateForType(GraphicalUiElement element, string stateName, bool shake, string? typeName)
     {
         StateSave state = new StateSave { Name = stateName };
@@ -535,7 +535,7 @@ public class RuntimeSnapshotSerializer : IRuntimeSnapshotSerializer
     private ComponentEntry BuildComponentEntry(Type controlType, GraphicalUiElement pristine, bool shake)
     {
         // The component derives from the baseline root's own standard type when it resolves -- e.g. a Label
-        // whose visual root is a Text (DefaultLabelRuntime : TextRuntime) becomes a Text-based component so
+        // whose visual root is a Text (the default LabelVisual : TextRuntime) becomes a Text-based component so
         // its text/font/color are captured. InteractiveGue-rooted controls (Button, Panel, ScrollViewer)
         // resolve to null and fall back to Container.
         string componentBaseType = GetStandardTypeName(pristine) ?? ComponentBaseType;

@@ -46,7 +46,7 @@ public class GumServiceInitializeTests
 
         try
         {
-            GumService.Default.Initialize(DefaultVisualsVersion.V2);
+            GumService.Default.Initialize(DefaultVisualsVersion.V3);
 
             var renderables = SystemManagers.Default.Renderer.MainLayer.Renderables;
 

@@ -6,10 +6,11 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-Two changes need your attention:
+Three changes need your attention:
 
 * `GraphicalUiElement`'s `GetAbsoluteWidth()` and `GetAbsoluteHeight()` methods are renamed to the `AbsoluteWidth` and `AbsoluteHeight` properties, matching the existing `AbsoluteLeft`/`AbsoluteTop`/`AbsoluteRight`/`AbsoluteBottom` properties. This is a **soft break**: the old methods still compile and work, but now emit a `CS0618` obsolete warning.
 * `MonoGameGum.csproj`'s iOS and Android target frameworks changed from opt-out to opt-in. This affects you only if you reference the MonoGameGum **source project** directly. If you use the `Gum.MonoGame` NuGet package, nothing changes.
+* The V1 and V2 default Forms visuals are removed. This is a **hard break**: `DefaultVisualsVersion.V1`/`.V2` and their backing classes no longer exist. This only affects you if you explicitly requested V1 or V2; everyone else was already on V3.
 
 ## Upgrading the Gum Tool
 
@@ -88,3 +89,33 @@ dotnet build MonoGameGum/MonoGameGum.csproj -p:IncludeIOS=true -p:IncludeAndroid
 ```
 
 Setting them inside your own `.csproj` does not work. Only real global properties propagate through a `ProjectReference`.
+
+### V1 and V2 Default Forms Visuals Are Removed
+
+The 2026 July release (see [Migrating to 2026 July](migrating-to-2026-july.md)) marked the V1 (`Default*Runtime`) and V2 (non-V3 `*Visual`) Forms default visuals `[Obsolete]`. This release removes them outright: `DefaultVisualsVersion.V1`/`.V2` and their backing classes no longer exist. Passing either value, or referencing a V1/V2 class directly, is now a compile error rather than a `CS0618` warning.
+
+This only affects you if you explicitly passed `DefaultVisualsVersion.V1` or `.V2` to `GumService.Initialize` / `FormsUtilities.InitializeDefaults`, or referenced a V1/V2 visual class (e.g. `DefaultButtonRuntime`, the non-V3 `ButtonVisual`) directly, for example to build a custom visual around one. Every backend already defaulted to V3 in practice, so most projects need no changes.
+
+To migrate, pass `DefaultVisualsVersion.V3` (or `.Newest`):
+
+❌ Old:
+```csharp
+// Initialize
+GumService.Default.Initialize(
+    this,
+    defaultVisualsVersion: DefaultVisualsVersion.V2);
+```
+
+✅ New:
+```csharp
+// Initialize
+GumService.Default.Initialize(
+    this,
+    defaultVisualsVersion: DefaultVisualsVersion.V3);
+```
+
+If you subclassed a V1/V2 visual (e.g. `internal class MyButton : DefaultButtonRuntime`), switch to its V3 equivalent under `Gum.Forms.DefaultVisuals.V3` (e.g. `Gum.Forms.DefaultVisuals.V3.ButtonVisual`). V3's visual tree and state system are not identical to V1/V2's: V3 drives per-state appearance through a `StateSave.Apply` lambda rather than a `Variables` list, so a subclass that customized state behavior against V1/V2 internals needs more than a type swap.
+
+{% hint style="info" %}
+`FormsUtilities.InitializeDefaults`'s XNA-only `Game` overload also dropped its unused `game` parameter as part of this change. This only affects direct callers of `FormsUtilities.InitializeDefaults` that passed `game`; `GumService.Initialize` callers are unaffected.
+{% endhint %}

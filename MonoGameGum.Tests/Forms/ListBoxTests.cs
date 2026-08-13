@@ -405,7 +405,7 @@ public class ListBoxTests : BaseTestClass
     [Fact]
     public void Items_Clear_ShouldWorkWhenAddingButtonVisual()
     {
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         button.Parent.ShouldBeNull();
@@ -422,7 +422,7 @@ public class ListBoxTests : BaseTestClass
         // InnerPanel slot but NOT a ListBoxItemsInternal slot. Adding a real item after it
         // used to call ListBoxItemsInternal.Insert at the InnerPanel index (2) on a
         // 1-element list, throwing ArgumentOutOfRangeException during the add.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add("A");
@@ -443,7 +443,7 @@ public class ListBoxTests : BaseTestClass
         // ListBoxItemsInternal and Items (Items[ListBoxItemsInternal.IndexOf(item)]). With a
         // non-ListBoxItem (Button) between two real items, selecting the second real row
         // resolved to the Button instead of "B". Selection must resolve by reference.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add("A");
@@ -461,7 +461,7 @@ public class ListBoxTests : BaseTestClass
         // Issue #556 (negative path): removing a real item that sits after a non-ListBoxItem used to
         // remove the WRONG ListBoxItem — the #1380 bounds-check band-aid removed at the InnerPanel
         // index, which is offset by the non-ListBoxItem. Removal is now by reference.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add("A");
@@ -482,7 +482,7 @@ public class ListBoxTests : BaseTestClass
         // Issue #556 (negative path): removing the non-ListBoxItem itself must not drop a real row.
         // The old index-based removal would RemoveAt the non-ListBoxItem's InnerPanel index and take
         // a real ListBoxItem with it.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add("A");
@@ -502,7 +502,7 @@ public class ListBoxTests : BaseTestClass
     {
         // Issue #556 (the original worry): a non-ListBoxItem mixed into Items must be inert —
         // clicking it must not deselect the current item or raise SelectionChanged.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.AddToRoot();
@@ -1738,7 +1738,7 @@ public class ListBoxTests : BaseTestClass
         // Issue #556: the DisplayMemberPath setter walked Items[i]/ListBoxItems[i] in parallel,
         // which misaligns (and goes out of range) when a non-ListBoxItem is in Items. It must
         // resolve each row's data object by reference.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add(new DisplayItem { Name = "Alpha" });
@@ -1758,7 +1758,7 @@ public class ListBoxTests : BaseTestClass
         // Issue #556: SelectedIndex is an Items-space index; with a non-ListBoxItem (Button) in
         // Items it can exceed ListBoxItemsInternal.Count. DoListItemsHaveFocus indexed
         // ListBoxItemsInternal by SelectedIndex and threw. It must resolve the row by reference.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.Items!.Add("A");
@@ -1778,7 +1778,7 @@ public class ListBoxTests : BaseTestClass
         // Issue #556: arrow navigation moved SelectedIndex in Items space and then indexed
         // ListBoxItemsInternal with it, so a non-ListBoxItem (Button) in Items made the selection
         // land on the unselectable Button instead of the next real row.
-        Gum.Forms.DefaultVisuals.ButtonVisual button = new();
+        Gum.Forms.DefaultVisuals.V3.ButtonVisual button = new();
 
         ListBox listBox = new();
         listBox.AddToRoot();

@@ -4,7 +4,7 @@ using Xunit;
 
 namespace RaylibGum.Tests.Runtimes;
 
-// #4057 (Raylib): mirrors MonoGameGum.Tests.V2.GueDeriving.TextRuntimeDropshadowPlumbingTests'
+// #4057 (Raylib): mirrors MonoGameGum.Tests.V3.GueDeriving.TextRuntimeDropshadowPlumbingTests'
 // renderable-forwarding cases. ApplyDropshadowToRenderable was XNALIKE-only until this issue;
 // pins that it now also forwards onto the Raylib Text renderable.
 public class TextRuntimeDropshadowPlumbingTests : BaseTestClass

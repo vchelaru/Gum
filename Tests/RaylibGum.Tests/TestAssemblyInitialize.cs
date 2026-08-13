@@ -72,9 +72,9 @@ public class TestAssemblyInitialize : XunitTestFramework
         // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free.
         IGumService.Default = Gum.GumService.Default;
 
-        // Registers V2 DefaultFormsTemplates (Button, ListBox, Slider, ComboBox, ...) so
+        // Registers V3 DefaultFormsTemplates (Button, ListBox, Slider, ComboBox, ...) so
         // parameterless Forms constructors produce a control with Visual != null on Raylib.
-        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V2);
+        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
 
         // Wire GumService.Default.Root into the SystemManagers so Forms controls added to
         // the root participate in layout.

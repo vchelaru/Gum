@@ -197,7 +197,7 @@ public partial class GumService
             ContentLoader.XnaContentManager = game.Content;
         }
 
-        FormsUtilities.InitializeDefaults(game: game, systemManagers: this.SystemManagers,
+        FormsUtilities.InitializeDefaults(systemManagers: this.SystemManagers,
             defaultVisualsVersion: defaultVisualsVersion);
 
         return FinishInitialize(gumProjectFile);
@@ -425,7 +425,6 @@ public partial class GumService
             _systemManagers.Renderer.Uninitialize();
         }
 
-        Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).

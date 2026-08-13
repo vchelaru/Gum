@@ -71,7 +71,7 @@ The constructor is public (`new GumService()`), but two instances don't give two
 | `MonoGameGum/Forms/FormsUtilities.cs` | Input/cursor/gamepad setup; `Uninitialize()` lives here |
 | `GumRuntime/ElementSaveExtensions.GumRuntime.cs` | `ClearRegistrations()` called during Uninitialize |
 | `RenderingLibrary/Content/LoaderManager.cs` | `DisposeAndClear()` called during Uninitialize |
-| `Tests/MonoGameGum.Tests.V2/GumServiceUninitializeTests.cs` | Tests for GPU-accessible Uninitialize behavior |
+| `Tests/MonoGameGum.Tests.V3/GumServiceUninitializeTests.cs` | Tests for GPU-accessible Uninitialize behavior |
 | `Tests/Gum.ProjectServices.Tests/UninitializeTests.cs` | Tests for non-GPU Uninitialize behavior |
 
 ## Testing Split
@@ -79,7 +79,7 @@ The constructor is public (`new GumService()`), but two instances don't give two
 Uninitialize tests are split across two projects because `FormsUtilities`, `LoaderManager`, and `ElementSaveExtensions` don't all require a GPU:
 
 - `Gum.ProjectServices.Tests` — `LoaderManager`, `ElementSaveExtensions`, `ObjectFinder` (no GPU needed)
-- `MonoGameGum.Tests.V2` — `FormsUtilities`, root containers, `FrameworkElement` statics (require test setup with a mock `SystemManagers`)
+- `MonoGameGum.Tests.V3` — `FormsUtilities`, root containers, `FrameworkElement` statics (require test setup with a mock `SystemManagers`)
 
 ## Hot Reload
 

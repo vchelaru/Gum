@@ -3,7 +3,7 @@ using Gum.Forms.Data;
 using Gum.Localization;
 using Gum.Mvvm;
 using Gum.Wireframe;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using Moq;
 using Shouldly;
@@ -54,7 +54,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Height = 60;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
 
         for (int i = 0; i < 10; i++)
         {
@@ -80,7 +80,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Height = 60;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
 
         for (int i = 0; i < 10; i++)
         {
@@ -105,7 +105,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Height = 60;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float originalTextY = visual.TextInstance.Y;
 
         for (int i = 0; i < 10; i++)
@@ -199,7 +199,7 @@ public class TextBoxTests : BaseTestClass
         textBox.Height = 200;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float originalTextY = visual.TextInstance.Y;
 
         textBox.HandleCharEntered('a');
@@ -228,7 +228,7 @@ public class TextBoxTests : BaseTestClass
             tb.Height = 400;
             tb.IsFocused = true;
 
-            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            TextBoxBaseVisual visual = (TextBoxBaseVisual)tb.Visual;
             visual.TextInstance.LineHeightMultiplier = multiplier;
 
             tb.HandleCharEntered('\n');
@@ -271,7 +271,7 @@ public class TextBoxTests : BaseTestClass
             tb.Height = 400;
             tb.IsFocused = true;
 
-            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            TextBoxBaseVisual visual = (TextBoxBaseVisual)tb.Visual;
             visual.TextInstance.LineHeightMultiplier = multiplier;
 
             tb.HandleCharEntered('a');
@@ -307,7 +307,7 @@ public class TextBoxTests : BaseTestClass
             TextBox tb = new();
             tb.IsFocused = true;
 
-            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            TextBoxBaseVisual visual = (TextBoxBaseVisual)tb.Visual;
             visual.TextInstance.FontScale = fontScale;
 
             tb.HandleCharEntered('a');
@@ -351,7 +351,7 @@ public class TextBoxTests : BaseTestClass
             TextBox tb = new();
             tb.IsFocused = true;
 
-            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            TextBoxBaseVisual visual = (TextBoxBaseVisual)tb.Visual;
             visual.TextInstance.FontScale = fontScale;
 
             float start = visual.CaretInstance.AbsoluteLeft;
@@ -390,7 +390,7 @@ public class TextBoxTests : BaseTestClass
             tb.Height = 400;
             tb.IsFocused = true;
 
-            DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)tb.Visual;
+            TextBoxBaseVisual visual = (TextBoxBaseVisual)tb.Visual;
             visual.TextInstance.FontScale = fontScale;
 
             tb.HandleCharEntered('\n');
@@ -422,7 +422,7 @@ public class TextBoxTests : BaseTestClass
         // of the (then-tiny) parent, and never snapped back once the parent's
         // width became reasonable, leaving a permanent ~5px gap on the left.
         TextBox textBox = new();
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         textBox.Visual.Width = -346;
@@ -449,8 +449,8 @@ public class TextBoxTests : BaseTestClass
         second.Visual.Width = -346;
         second.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
 
-        DefaultTextBoxBaseRuntime firstVisual = (DefaultTextBoxBaseRuntime)first.Visual;
-        DefaultTextBoxBaseRuntime secondVisual = (DefaultTextBoxBaseRuntime)second.Visual;
+        TextBoxBaseVisual firstVisual = (TextBoxBaseVisual)first.Visual;
+        TextBoxBaseVisual secondVisual = (TextBoxBaseVisual)second.Visual;
 
         secondVisual.TextInstance.X.ShouldBe(firstVisual.TextInstance.X,
             "because identically-configured TextBoxes must not drift apart in their text X — that's the visible symptom reported in #2680");
@@ -471,7 +471,7 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextX = visual.TextInstance.X;
 
         // Type enough characters to overflow the default width and force a scroll.
@@ -503,7 +503,7 @@ public class TextBoxTests : BaseTestClass
         textBox.AcceptsReturn = true;
         textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float restingTextY = visual.TextInstance.Y;
 
         textBox.Visual.Height = -200;
@@ -731,7 +731,7 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
         float originalTextY = visual.TextInstance.Y;
         float originalCaretY = visual.CaretInstance.Y;
 
@@ -752,7 +752,7 @@ public class TextBoxTests : BaseTestClass
         TextBox textBox = new();
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual = (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
 
         // Force the text instance well outside the visible vertical range so the
         // caret would be visually clipped. Single-line mode must NOT react to this
@@ -777,7 +777,7 @@ public class TextBoxTests : BaseTestClass
     public void TextBox_ShouldHaveSelectionInstance()
     {
         var textBox = new TextBox();
-        var selection = textBox.Visual.Find<ColoredRectangleRuntime>("SelectionInstance")!;
+        var selection = textBox.Visual.Find<NineSliceRuntime>("SelectionInstance")!;
 
         selection.Color = Microsoft.Xna.Framework.Color.Blue;
 
@@ -998,8 +998,8 @@ public class TextBoxTests : BaseTestClass
         textBox.AcceptsReturn = true;
         textBox.IsFocused = true;
 
-        DefaultTextBoxBaseRuntime visual =
-            (DefaultTextBoxBaseRuntime)textBox.Visual;
+        TextBoxBaseVisual visual =
+            (TextBoxBaseVisual)textBox.Visual;
 
         float originalCaretX = visual.CaretInstance.X;
         float originalCaretY = visual.CaretInstance.Y;

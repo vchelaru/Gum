@@ -22,7 +22,7 @@ public class GumServiceWindowFitTests
         GumService.Default.Uninitialize();
         try
         {
-            GumService.Default.Initialize(DefaultVisualsVersion.V2);
+            GumService.Default.Initialize(DefaultVisualsVersion.V3);
 
             GumService.Default.EnableExpandToWindow(defaultZoom: 2f);
 
@@ -46,7 +46,7 @@ public class GumServiceWindowFitTests
         GumService.Default.Uninitialize();
         try
         {
-            GumService.Default.Initialize(DefaultVisualsVersion.V2);
+            GumService.Default.Initialize(DefaultVisualsVersion.V3);
 
             GumService.Default.EnableZoomToWindow(WindowZoomMode.HeightDominant, defaultZoom: 1f);
 

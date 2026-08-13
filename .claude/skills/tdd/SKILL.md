@@ -10,7 +10,7 @@ Behavior changes in Gum's source projects require a failing unit test in the mat
 Test projects to look in (pick the one that compiles the source you're editing):
 
 - `Tests/Gum.ProjectServices.Tests/` — for `Tools/Gum.ProjectServices/`
-- `MonoGameGum.Tests/`, `Tests/MonoGameGum.Tests.V2/`, `Tests/MonoGameGum.Tests.V3/` — for `MonoGameGum/`, `GumCommon/`, `RenderingLibrary/`
+- `MonoGameGum.Tests/`, `Tests/MonoGameGum.Tests.V3/` — for `MonoGameGum/`, `GumCommon/`, `RenderingLibrary/`
 - `Tests/SkiaGum.Tests/` — for `SkiaGum/`
 - `Tool/Tests/GumToolUnitTests/` — for `Gum/` tool-side code
 - `Tests/Gum.Cli.Tests/` — for `Gum.Cli/`

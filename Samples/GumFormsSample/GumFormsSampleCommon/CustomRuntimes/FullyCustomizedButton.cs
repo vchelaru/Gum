@@ -35,7 +35,7 @@ namespace GumFormsSample
                 background.SourceFileName = "../button_square_gradient.png";
                 this.Children.Add(background);
 
-                // TextInstance is copied as-is from DefaultButtonRuntime.cs
+                // TextInstance is copied as-is from V3's ButtonVisual.cs
                 TextInstance = new TextRuntime();
                 TextInstance.X = 0;
                 TextInstance.Y = 0;

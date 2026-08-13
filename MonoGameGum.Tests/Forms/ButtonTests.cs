@@ -1,7 +1,6 @@
 ﻿using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework.Input;
 using MonoGameGum.Input;
@@ -28,7 +27,7 @@ public class ButtonTests : BaseTestClass
 
         button.Visual.ShouldNotBeNull();
 
-        button.Visual.ShouldBeOfType<Gum.Forms.DefaultVisuals.DefaultButtonRuntime>();
+        button.Visual.ShouldBeOfType<Gum.Forms.DefaultVisuals.V3.ButtonVisual>();
     }
 
     [Fact]
@@ -36,27 +35,6 @@ public class ButtonTests : BaseTestClass
     {
         Button sut = new();
         sut.Visual.HasEvents.ShouldBeTrue();
-    }
-
-    [Fact]
-    public void DefaultButtonRuntimeConstructor_ShouldNotThrow_WhenActiveStyleNeverInitialized()
-    {
-        // Constructing a legacy default-visual class directly ("create a button through its
-        // visual type", a documented pattern - see GumFormsSample's FrameworkElementExampleScreen)
-        // used to NRE in Styling.ActiveStyle.Colors.Primary whenever the app only ever called
-        // InitializeDefaults with V3 (or never called the V1/V2 overload) - nothing else sets the
-        // V1/V2-shared Styling.ActiveStyle, so it stayed null.
-        var previousActiveStyle = Gum.Forms.DefaultVisuals.Styling.ActiveStyle;
-        try
-        {
-            Gum.Forms.DefaultVisuals.Styling.ActiveStyle = null;
-
-            Should.NotThrow(() => new DefaultButtonRuntime());
-        }
-        finally
-        {
-            Gum.Forms.DefaultVisuals.Styling.ActiveStyle = previousActiveStyle;
-        }
     }
 
     [Fact]

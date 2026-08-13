@@ -183,7 +183,7 @@ public class UninitializeTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            GumService.Initialize(this, DefaultVisualsVersion.V3);
         }
 
         protected override void Draw(GameTime gameTime) =>
@@ -217,11 +217,11 @@ public class UninitializeTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            GumService.Initialize(this, DefaultVisualsVersion.V3);
             GumService.Uninitialize();
 
             // Second initialization on a fresh instance.
-            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            GumService.Initialize(this, DefaultVisualsVersion.V3);
         }
 
         protected override void Draw(GameTime gameTime) =>
@@ -258,13 +258,13 @@ public class UninitializeTests : BaseTestClass
         protected override void Initialize()
         {
             base.Initialize();
-            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            GumService.Initialize(this, DefaultVisualsVersion.V3);
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
 
             GumService.Uninitialize();
 
             // Second initialization on a fresh instance.
-            GumService.Initialize(this, DefaultVisualsVersion.V2);
+            GumService.Initialize(this, DefaultVisualsVersion.V3);
             ShapeRenderer.Self.Initialize(GraphicsDevice, Content);
         }
 

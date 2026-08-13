@@ -1,7 +1,7 @@
 ﻿using Gum.Converters;
 using Gum.DataTypes.Variables;
 using Gum.Forms.Controls;
-using Gum.Forms.DefaultVisuals;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
@@ -135,7 +135,7 @@ public  class ComboBoxTests : BaseTestClass
 
     public class CGComboBox : InteractiveGue
     {
-        public Gum.Forms.DefaultVisuals.DefaultListBoxRuntime? ListBoxInstance;
+        public Gum.Forms.DefaultVisuals.V3.ListBoxVisual? ListBoxInstance;
         public RectangleRuntime? FocusedIndicator { get; private set; }
 
         public CGComboBox(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(new InvisibleRenderable())
@@ -148,7 +148,7 @@ public  class ComboBoxTests : BaseTestClass
                 var TextInstance = new TextRuntime();
                 TextInstance.Name = "TextInstance";
 
-                ListBoxInstance = new Gum.Forms.DefaultVisuals.DefaultListBoxRuntime(tryCreateFormsObject: false);
+                ListBoxInstance = new Gum.Forms.DefaultVisuals.V3.ListBoxVisual(tryCreateFormsObject: false);
                 ListBoxInstance.Name = "ListBoxInstance";
 
 

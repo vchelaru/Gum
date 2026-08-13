@@ -11,19 +11,13 @@ Default visuals are `InteractiveGue` subclasses that procedurally build a comple
 
 **These are *one* implementation, not *the* structure.** A control can be backed by any visual — a tool-authored component or a custom `InteractiveGue` subclass with a completely different tree — so structural features (a Window's Fill `InnerPanelInstance`, or sizing it to children via `WindowVisual.MakeSizedToChildren()`) live in the visual, never in the control. See the Visual/FrameworkElement split in **gum-forms-controls**.
 
-## Two Generations
+## Generation
 
-**V1 (legacy `Default*Runtime`)** — Solid-colored rectangles (`ColoredRectangleRuntime`, `RectangleRuntime`). No textures, no centralized styling. The `Default*Runtime` classes and `DefaultVisualsVersion.V1` are `[Obsolete]` (CS0618 warning) and slated for removal.
-
-**V2 (top-level `*Visual`)** — Nine-slice textured backgrounds via `Styling.ActiveStyle`; shared sprite sheet for backgrounds, icons, and focus indicators. The top-level `*Visual` classes and `DefaultVisualsVersion.V2` are also `[Obsolete]` (CS0618 warning) and slated for removal.
-
-**V3 (`DefaultVisuals/V3/*Visual`)** — Current generation; `DefaultVisualsVersion.V3`/`.Newest`. Not obsolete.
+All default visuals live under `DefaultVisuals/V3/*Visual` and use `DefaultVisualsVersion.V3`/`.Newest` — the only generation; the enum has a single member.
 
 > The Forms sprite-sheet icons are one of three icon pipelines in Gum (this one for the runtime; `GumIcon`/`PathGeometry` for tool WPF chrome; PNG `ImageList` for the tool tree view). For the umbrella overview and routing, see [gum-icons](../gum-icons/SKILL.md).
 
-Both generations follow the same wiring pattern; they differ only in visual fidelity.
-
-## Construction Pattern (V2+)
+## Construction Pattern
 
 Every `*Visual` constructor does four things in order:
 
@@ -34,17 +28,17 @@ Every `*Visual` constructor does four things in order:
 
 ## Initialization — Two Paths
 
-`GumService.Initialize()` always calls `FormsUtilities.InitializeDefaults()` first, which populates `FrameworkElement.DefaultFormsTemplates` with code-only default visuals. The `DefaultVisualsVersion` parameter controls which generation (V1/V2/V3/Newest).
+`GumService.Initialize()` always calls `FormsUtilities.InitializeDefaults()` first, which populates `FrameworkElement.DefaultFormsTemplates` with code-only default visuals.
 
 If a `.gumx` project file is also passed to `Initialize()`, it then calls `FormsUtilities.RegisterFromFileFormRuntimeDefaults()`, which overrides the code-only defaults with project-defined Forms visuals (components with Forms behaviors). This is the path used when the Gum tool has authored the UI.
 
-**Code-only projects** — call `Initialize(DefaultVisualsVersion)` with no project file. Controls get their visuals from the `*Visual` / `Default*Runtime` classes.
+**Code-only projects** — call `Initialize(DefaultVisualsVersion)` with no project file. Controls get their visuals from the `*Visual` classes.
 
 **Project-based** — call `Initialize(gumProjectFile)`. The code-only defaults are registered first, then project components replace them via `RegisterFromFileFormRuntimeDefaults()`.
 
 ## Styling.cs
 
-Centralized style constants consumed by V2+ visuals:
+Centralized style constants consumed by default visuals:
 
 - `Colors` — Primary, Danger, Warning, Success palettes
 - `NineSlice` — Texture coordinate presets (Solid, Bordered, Outlined, etc.)
@@ -54,7 +48,7 @@ Centralized style constants consumed by V2+ visuals:
 
 `Styling.ActiveStyle` is read at **construction time only** — set it before creating controls; existing controls don't retroactively restyle.
 
-Every V3 `*Visual` seeds `BackgroundColor`/`ForegroundColor` from `Styling.ActiveStyle.Colors.*`, but those setters don't paint — they call `FormsControl?.UpdateState()`, which re-runs the active state's `StateSave.Apply` lambda, which derives the real color via `ColorExtensions.Adjust`/`.ToGrayscale()` off the two base colors. **Never set `visual.Background.Color` directly** — the next state transition overwrites it. To override one state's look, clear and reassign its `Apply` lambda, then call `UpdateState()`.
+Every `*Visual` seeds `BackgroundColor`/`ForegroundColor` from `Styling.ActiveStyle.Colors.*`, but those setters don't paint — they call `FormsControl?.UpdateState()`, which re-runs the active state's `StateSave.Apply` lambda, which derives the real color via `ColorExtensions.Adjust`/`.ToGrayscale()` off the two base colors. **Never set `visual.Background.Color` directly** — the next state transition overwrites it. To override one state's look, clear and reassign its `Apply` lambda, then call `UpdateState()`.
 
 ## Named Children Convention
 
@@ -64,13 +58,12 @@ Forms controls locate children by name (e.g., `"TextInstance"`, `"FocusIndicator
 
 | Path | Purpose |
 |------|---------|
-| `MonoGameGum/Forms/DefaultVisuals/*Visual.cs` | V2+ visual classes |
-| `MonoGameGum/Forms/DefaultVisuals/Default*Runtime.cs` | V1 legacy visual classes |
-| `MonoGameGum/Forms/DefaultVisuals/Styling.cs` | Centralized colors, textures, fonts |
+| `MonoGameGum/Forms/DefaultVisuals/V3/*Visual.cs` | Default visual classes |
+| `MonoGameGum/Forms/DefaultVisuals/V3/Styling.cs` | Centralized colors, textures, fonts |
 | `MonoGameGum/Forms/FormsUtilities.cs` | `InitializeDefaults()` — registers visuals in `DefaultFormsTemplates` |
 | `MonoGameGum/Forms/Controls/FrameworkElement.cs` | `DefaultFormsTemplates` dictionary and Forms-first construction |
 
 ## Cross-references
 
 - Restyling these visuals as a distributable, palette-driven package: [gum-theming](../gum-theming/SKILL.md).
-- `ColorExtensions.Adjust`/`.ToGrayscale()` live alongside `Styling` in `MonoGameGum/Forms/DefaultVisuals/V3/Styling.cs`.
+- `ColorExtensions.Adjust`/`.ToGrayscale()` live alongside `Styling` in the same file.

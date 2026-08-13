@@ -1,4 +1,4 @@
-﻿using Gum.Forms.DefaultVisuals;
+﻿using Gum.Forms.DefaultVisuals.V3;
 using Gum.GueDeriving;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace GumFormsSample.CustomRuntimes;
 
-internal class SimpleListBoxItemRuntime : DefaultListBoxItemRuntime
+internal class SimpleListBoxItemRuntime : ListBoxItemVisual
 {
     public SimpleListBoxItemRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true) : base(
         fullInstantiation, tryCreateFormsObject)

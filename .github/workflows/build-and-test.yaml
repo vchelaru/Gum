@@ -491,9 +491,8 @@ jobs:
       # Bucket B — DEFERRED, NEEDS INVESTIGATION (likely safe in part, but may
       # mix headless and graphics-using tests in the same project; would need
       # xUnit traits or filter-by-class to split):
-      #   - MonoGameGum.Tests.V2           (V1 is headless; V2 likely is too —
+      #   - MonoGameGum.Tests.V3           (V1 is headless; V3 likely is too —
       #                                     verify before enabling)
-      #   - MonoGameGum.Tests.V3           (same — verify before enabling)
       #
       # Bucket C — (empty) RaylibGum.Tests used to live here as "cannot run in CI
       # yet". It graduated to Bucket A in #3250: the macOS probe hung at GLFW/Cocoa

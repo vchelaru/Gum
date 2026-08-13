@@ -103,18 +103,6 @@
 			below to avoid double-compilation.
 		-->
 		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ButtonVisual.cs" Link="Forms\DefaultVisuals\ButtonVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\CheckBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\ComboBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\LabelVisual.cs" Link="Forms\DefaultVisuals\LabelVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\ListBoxItemVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ListBoxVisual.cs" Link="Forms\DefaultVisuals\ListBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\RadioButtonVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\ScrollBarVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\ScrollViewerVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SliderVisual.cs" Link="Forms\DefaultVisuals\SliderVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\SplitterVisual.cs" Link="Forms\DefaultVisuals\SplitterVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\Styling.cs" Link="Forms\DefaultVisuals\Styling.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
@@ -135,7 +123,6 @@
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\WindowVisual.cs" Link="Forms\DefaultVisuals\WindowVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
