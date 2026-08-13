@@ -52,11 +52,11 @@ Before writing anything, identify where the ground truth already lives:
 
 ## Skill File Rules
 
-- **Length**: aim under 100 lines. Hard ceiling 500. Bloat costs agent context on every load.
+- **Length**: not a target — a byproduct. The damped-response process above is what keeps a skill short: most edits are ~20% pulls (a signpost, not a walkthrough), so length only grows where demand genuinely, repeatedly pulls. Don't pad toward a line count, and don't treat headroom under a number as license to add more than the current pull warrants. Hard ceiling 500 lines as a bloat backstop, not a goal.
 - **Naming**: kebab-case noun phrases (e.g., `gum-tool-undo`).
 - **Frontmatter**: `name` and `description`. **The description is loaded into every session's skill listing** — it pays for itself in context tokens forever. Keep it brutally short. See "Writing the description" below.
 - **Structure**: `##` sections. Tables for file maps. Prose for relationships and gotchas.
-- **Progressive disclosure**: keep SKILL.md to high-level architecture; spill advanced content into sibling files (e.g., `[xnafiddle.md](xnafiddle.md)`) only when it's bulky enough to justify a second file.
+- **Progressive disclosure**: keep SKILL.md to high-level architecture; spill advanced content into sibling files (e.g., `detail.md`) only when it's bulky enough to justify a second file.
 
 ## Writing the description
 
