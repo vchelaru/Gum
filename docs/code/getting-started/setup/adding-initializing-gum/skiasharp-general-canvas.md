@@ -9,7 +9,11 @@ If your project is .NET MAUI, WPF, or Silk.NET, use that page instead: [.NET MAU
 {% endhint %}
 
 {% hint style="warning" %}
-A raw `SKCanvas` has no built-in input system. Unlike Silk.NET, MAUI, or WPF, nothing here reads your mouse, keyboard, or touch input for you, wiring that up is your project's responsibility. See [Handling Input](#handling-input-your-responsibility) below.
+This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the Silk.NET, MAUI, or WPF setup instead, each of which has a real input story.
+{% endhint %}
+
+{% hint style="info" %}
+A fuller, Forms-integrated Skia standalone setup is planned. This page will be updated once that lands; until then it stays intentionally minimal, with no dependency on Gum's Forms code.
 {% endhint %}
 
 ## Adding Gum NuGet package
@@ -54,70 +58,92 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 <ProjectReference Include="..\Gum\Runtimes\SkiaGum\SkiaGum.csproj" />
 ```
 
-## Adding the GumService
-
-`Gum.SkiaSharp` is a rendering and layout library only, it does not include a `GumService`. Every other backend's package (MonoGame, raylib, Silk.NET) bundles its own `GumService`; on Skia that type instead lives as a single shared **source file**, `GumService.cs`, meant to be compiled directly into whichever host needs it (this is also how MAUI and WPF get theirs). There is no separate NuGet package for it yet.
-
-Bring `GumService.cs` into your project one of two ways:
-
-* **Building from source:** file-link it, the same way MAUI and WPF do:
-
-  ```xml
-  <Compile Include="..\Gum\Runtimes\SkiaGum.Standalone\GumService.cs" Link="GumService.cs" />
-  ```
-* **Using the NuGet package only:** copy the file directly into your project instead, since it isn't packaged. You can find it here: [Runtimes/SkiaGum.Standalone/GumService.cs](https://github.com/vchelaru/Gum/blob/main/Runtimes/SkiaGum.Standalone/GumService.cs)
-
-Either way you end up with a `Gum.GumService` type that mirrors the game-host `GumService` used by MonoGame and raylib, so Gum code you write is portable across hosts.
-
 ## Initializing Gum
 
-Once you have an `SKCanvas`, initialize Gum with it. `GumService.Default.Initialize` reads the canvas size from `SKCanvas.DeviceClipBounds` by default; pass an explicit width/height instead if that doesn't match what you expect (for example, if the canvas's clip isn't configured yet at the point you call this).
+`Gum.SkiaSharp` is a rendering and layout library only, it does not include a `GumService`, and this page doesn't point at one either. Write a small initialization function directly in your own project instead, no Gum-owned file to copy or keep in sync:
+
+```csharp
+// Class scope
+InteractiveGue root = null!;
+double previousTotalSeconds;
+```
+
+```csharp
+void InitializeGum(SKCanvas canvas, int width, int height, string? gumProjectFile = null)
+{
+    SystemManagers.Default = new SystemManagers();
+    SystemManagers.Default.Canvas = canvas;
+    SystemManagers.Default.Initialize();
+    SystemManagers.Default.Renderer.ClearsCanvas = false;
+
+    if (!string.IsNullOrEmpty(gumProjectFile))
+    {
+        var gumProject = GumProjectSave.Load(gumProjectFile);
+        ObjectFinder.Self.GumProjectSave = gumProject;
+        gumProject.Initialize();
+
+        var absolutePath = FileManager.IsRelative(gumProjectFile)
+            ? FileManager.MakeAbsolute(gumProjectFile)
+            : gumProjectFile;
+        FileManager.RelativeDirectory = FileManager.GetDirectory(absolutePath);
+    }
+
+    GraphicalUiElement.CanvasWidth = width;
+    GraphicalUiElement.CanvasHeight = height;
+
+    root = new ContainerRuntime();
+    root.AddToManagers(SystemManagers.Default);
+}
+```
+
+Call it once you have an `SKCanvas`, passing a `.gumx` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
-using Gum;
+using Gum.DataTypes;
+using Gum.GueDeriving;
+using Gum.Managers;
+using Gum.Wireframe;
+using RenderingLibrary;
 using SkiaSharp;
+using ToolsUtilities;
 
-GumService.Default.Initialize(canvas, "Content/GumProject/GumProject.gumx");
+var bounds = canvas.DeviceClipBounds;
+InitializeGum(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumx");
 ```
 
-Each frame, update and then draw:
+Each frame, animate and then draw:
 
 ```csharp
 // Update
-GumService.Default.Update(totalSecondsSinceStart);
+double delta = totalSecondsSinceStart - previousTotalSeconds;
+previousTotalSeconds = totalSecondsSinceStart;
+root.AnimateSelf(delta);
 ```
 
 ```csharp
 // Draw
-GumService.Default.Draw();
+SystemManagers.Default.Draw();
 ```
 
 Whenever your canvas is resized, tell Gum so layout re-runs against the new size:
 
 ```csharp
-GumService.Default.HandleResize(newWidth, newHeight);
+void HandleResize(int newWidth, int newHeight)
+{
+    GraphicalUiElement.CanvasWidth = newWidth;
+    GraphicalUiElement.CanvasHeight = newHeight;
+    root.UpdateLayout();
+}
 ```
 
 {% hint style="info" %}
-Gum does not clear the canvas for you (`Renderer.ClearsCanvas` is `false` on this path), so your own draw code is expected to clear or paint the background before calling `Draw()`.
+Gum does not clear the canvas for you (`SystemManagers.Default.Renderer.ClearsCanvas` is set to `false` above), so your own draw code is expected to clear or paint the background before calling `SystemManagers.Default.Draw()`.
 {% endhint %}
 
-## Handling Input (Your Responsibility)
-
-Skia is a rendering technology, not a windowing or input system, so the Skia `GumService` shown above is render-only: it never reads a mouse, keyboard, or touch device, and it never pumps Forms input (hover, push, click, focus) on its own. This means a `Button` or other Forms control will render, but it will not react to anything until you wire input up yourself.
-
-To make the cursor (mouse or touch) interactive:
-
-1. Implement `Gum.Wireframe.ICursor`, translating your platform's pointer events into Gum's coordinate space. The [Mouse and Touch Screen (Cursor)](../../../events-and-interactivity/mouse-and-touch-screen-cursor.md) page's `DisabledCursor` example shows the full shape of the interface to implement.
-2. Register it with `Gum.Forms.FormsUtilities.SetCursor(myCursor)`.
-3. Each frame, call `Gum.Forms.FormsUtilities.Update(totalSecondsSinceStart, GumService.Default.Root)` yourself, this is the call that actually pumps hover/push/click for Forms controls; `GumService.Default.Update` above does not do it on this host.
-
-{% hint style="warning" %}
-There is currently no equivalent public entry point for keyboard input on this host, so keyboard-driven focus and typing (tabbing between controls, typing into a `TextBox`) are not available without modifying Gum source. Mouse/touch interaction via a custom `ICursor` works today; keyboard does not.
+{% hint style="info" %}
+There's no `AddToRoot()` extension method available here, that method resolves the active root through `IGumService.Default`, which this minimal setup doesn't implement. Add top-level elements with `root.Children.Add(...)` instead, as shown below.
 {% endhint %}
-
-If you only need to place and animate visuals without reacting to clicks, you can skip this section entirely, layout, rendering, and animation all work with no input wired up at all.
 
 ## Adding Expression Support (Optional)
 
@@ -129,11 +155,11 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `GumExpressionService.Initialize()` after `InitializeGum`. Expression support is typically used with a Gum project that has variable references defined in the tool:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas, "Content/GumProject/GumProject.gumx");
+InitializeGum(canvas, width, height, "Content/GumProject/GumProject.gumx");
 GumExpressionService.Initialize();
 ```
 
@@ -147,18 +173,18 @@ Gum can be tested by adding a couple of renderables after Gum is initialized:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(canvas);
+InitializeGum(canvas, width, height);
 
 var circle = new ColoredCircleRuntime();
 circle.Color = SKColors.Red;
 circle.Width = 200;
 circle.Height = 200;
-circle.AddToRoot();
+root.Children.Add(circle);
 
 var text = new TextRuntime();
 text.Text = "SkiaGum on a general canvas!";
 text.Dock(Gum.Wireframe.Dock.Top);
-text.AddToRoot();
+root.Children.Add(text);
 ```
 
 After adding these, trigger a redraw through whatever mechanism your host uses to repaint the canvas. You should see a red circle with text docked above it.
