@@ -11,26 +11,23 @@ A skill is **a map and a list of landmines**, not an encyclopedia. It points an 
 
 A good skill answers three things and stops: **where** the relevant code/docs live, **what gotchas** aren't obvious from reading them, and **what patterns** recur. Default to prose-free pointers and tables; include code only when the snippet is a pattern that can't be conveyed by pointing at a file. Every line is re-read into context on every load, so a skill that says *less* but points *accurately* beats a thorough one.
 
+## Where Skills Live
+
+All skills for this repo live under `.claude/skills/<skill-name>/SKILL.md`. Never write skill files outside this repo — not into `~/.claude/skills/`, not into a sibling repo, not into the plugin marketplace. The folder name must match the `name` in frontmatter.
+
 ## Growing a Skill — Damped Response
 
-A skill is rarely written whole; it grows as questions pull on it. Two **independent axes** govern what a pull adds — conflating them is the most common way this section gets misapplied.
+A skill is rarely written whole; it grows as **pulls** act on it — and a pull is *any* change: a question to answer, a request to create the skill from scratch, or an edit to extend it. **Don't satisfy a pull 100% inside the skill** — this holds for a brand-new skill as much as for an edit. A new skill's first draft is its signpost-sized core, not a full treatise. Treat demand as an elastic pull and the skill as an object resting in sand: a pull moves toward a fuller answer, the skill responds **damped** (moves part-way, not all the way), and **retains** its new position — the sand means it doesn't snap back.
 
-**Axis 1 — coverage: how much of the answer's territory you write down.** This is what "damped" governs. Picture the skill as an object resting in sand: a question pulls it toward a fuller answer, it moves **damped** (covers part of the conceptual ground, not all) and **retains** that position — the sand doesn't snap back. Repeated pulls settle the skill at the *average* of real demand instead of overfitting to one question. **Default: a 100% pull moves ~20%** — add only the one signpost that would have shortest-circuited the problem (the file/class/relationship to check first, plus a one-sentence shape of the answer), not the walkthrough or the second-order cases. A genuinely recurring question reaches full coverage over a few pulls; a one-off never bloats the skill past its signpost.
+**Default: a 100% pull moves ~20% — including the pull that creates the skill.** When a pull *could* be answered in full inside the skill, add only its broad orienting fifth — a concrete signpost plus a one-sentence shape of the answer — not the whole walkthrough. The first draft of a brand-new skill is subject to this too: start at the signpost, not the encyclopedia. A genuinely recurring topic reaches full coverage in a few pulls; a one-off never bloats the skill past its signpost.
 
-Why damped: chasing every specific detail into the skill bloats it, scatters its focus, and front-loads context future agents won't need — most questions are one-offs.
+**Cut test — run before every write.** Draft freely, then delete down to a signpost: a pointer (file/symbol) plus one sentence of shape. If the addition still runs past ~2–3 sentences, or repeats anything the pointer already reveals, it has failed the 20% rule — cut and re-check.
 
-**Axis 2 — prose density: always terse, at every coverage level.** Independent of axis 1; never relaxes, not even for a full-coverage landmine. State each fact once — no restating the same point from a second angle. Skip examples unless the pattern truly can't be conveyed by naming the file/symbol. Omit narrated history (see "War stories" under Exclude) and anything a reader can derive from the code you're pointing at. A landmine written at full axis-1 coverage should still read as tight rule-plus-consequence, not a paragraph.
+**Three exceptions — place these by hand, at full strength, not through the elastic:**
 
-**Example — same gotcha, axis 1 held constant, axis 2 fixed:**
-
-Bad (states the same thing twice): *"A screen's file doesn't have to live under the backend's own folder — some are linked from another project's directory. Grepping a backend's folder for a screen name can therefore give a false 'doesn't exist,' since the file lives elsewhere and is only referenced via a link."*
-
-Good (one pass, no restatement): *"A backend can share a screen via a project-file link instead of a physical copy — check for that before concluding a screen is missing."*
-
-**Two exceptions to axis 1's damping — place these by hand, at full coverage, not through the elastic:**
-
-1. **Landmines.** A non-obvious, expensive-to-rediscover gotcha that *isn't* evident from the source you point at is a sharp fact, not a sample to be averaged. Write the whole gotcha: what triggers it, what breaks, what to check. (This is the "list of landmines" half of the mental model above.)
-2. **Bimodal pull.** When a skill is dragged toward a low-density middle between two genuinely distinct sub-topics, don't settle in the valley — it serves neither. Split into two skills, each with its own focus. A pull toward the empty middle *is* the signal to fission.
+1. **Landmines.** A non-obvious, expensive-to-rediscover gotcha that *isn't* evident from the source you point at is a sharp fact, not a sample to be averaged. State it unhedged and complete — but "full strength" means *firm, not long*: a landmine is still one or two sharp sentences, and the exemption does **not** license restating context already in the skill (the "link, don't restate" rule still applies).
+2. **Bimodal pull.** When a skill is dragged toward a low-density middle between two genuinely distinct sub-topics, don't settle in the valley — split into two skills, each with its own focus.
+3. **Converging pull.** Before drafting a new skill for a fresh gotcha, check whether it's actually one instance of a *general* principle another skill already documents. If so, generalize that skill's existing section and add this case as a second example — don't spin up a new skill scoped to the narrow case.
 
 **Signpost quality bar.** A nudge must name *where to look* — a file, class, or relationship — not merely assert that something exists. "Animation events interact with children" raises a question without reducing search cost; "see event dispatch in `X.cs` — children suppress Y because Z" reduces it. A vague signpost is worse than none: it costs context and resolves nothing.
 
@@ -39,47 +36,74 @@ Good (one pass, no restatement): *"A backend can share a screen via a project-fi
 Before writing anything, identify where the ground truth already lives:
 
 - **Source code** — class outlines, property lists, method signatures, call sites.
-- **`docs/` GitBook tree** — user-facing behavior, layout rules, control APIs, tutorials (imperative to link rather than restate is under Exclude).
+- **`docs/` GitBook tree** — user-facing behavior, layout rules, control APIs, tutorials.
 - **Other skills** — cross-reference instead of copying. (`gum-layout` and `gum-layout-engine`, for example, deliberately split shallow vs. deep.)
 
 ## Process
 
 1. Read the relevant source files.
-2. Check `docs/SUMMARY.md` for existing user-facing pages on the topic.
+2. Check `docs/SUMMARY.md` for existing user-facing pages on the topic — including whether the finding is a specific instance of a general principle another skill already documents (see "Converging pull" above).
 3. Skim a few existing skills in `.claude/skills/` to match style and depth.
-4. Write only the non-obvious distillation.
-5. Before saving, re-read every sentence you just added — against each other **and** against existing sections you didn't touch: does it restate a nearby sentence from a different angle, include an example that a file/symbol pointer would replace, or narrate history instead of stating a timeless rule? Cut what fails.
+4. Draft only the non-obvious distillation.
+5. **Show the draft to the user and wait for approval** before writing anything (see below).
 
-## Skill File Rules
+## Approval Before Edits
 
-- **Length**: not a target — a byproduct. The damped-response process above is what keeps a skill short: most edits are ~20% pulls (a signpost, not a walkthrough), so length only grows where demand genuinely, repeatedly pulls. Don't pad toward a line count, and don't treat headroom under a number as license to add more than the current pull warrants. Hard ceiling 500 lines as a bloat backstop, not a goal.
-- **Naming**: kebab-case noun phrases (e.g., `gum-tool-undo`).
-- **Frontmatter**: `name` and `description`. **The description is loaded into every session's skill listing** — it pays for itself in context tokens forever. Keep it brutally short. See "Writing the description" below.
-- **Structure**: `##` sections. Tables for file maps. Prose for relationships and gotchas.
-- **Progressive disclosure**: keep SKILL.md to high-level architecture; spill advanced content into sibling files (e.g., `detail.md`) only when it's bulky enough to justify a second file.
+**Do not create, modify, or delete skill files until the user approves the proposed change.**
 
-## Writing the description
+This applies to everything under `.claude/skills/` — new `SKILL.md` files, edits to existing skills, bundled sibling files, and removals (deleted sections, trimmed content, retired skills).
 
-The description's **only job** is to tell future-Claude *when this skill is relevant*. It is a trigger, not a summary.
+Before touching disk:
+
+1. State which skill(s) would change and why.
+2. Show the **full proposed text** for a new skill, or a clear **before/after** (or add/remove list) for updates — including anything you intend to delete.
+3. Stop and wait for explicit approval.
+
+Only write after the user confirms (e.g. "looks good", "apply it", "go ahead"). If they revise the draft, show the updated proposal again before writing.
+
+**Exception:** the user explicitly asked you to apply a specific skill change in the same message — treat that as pre-approved only for what they described. Still show anything beyond that scope before writing.
+
+## File Structure
+
+Minimum skill is a single `SKILL.md` with YAML frontmatter:
+
+```markdown
+---
+name: my-skill
+description: <Topic> — <one-line hook>. Triggers: <distinctive identifiers, file paths, or scenarios>.
+---
+
+# My Skill
+
+Body.
+```
+
+- Folder name must match `name` (kebab-case noun phrases, e.g. `gum-tool-undo`).
+- Bundled detail files sit next to `SKILL.md`; link one level deep from `SKILL.md`.
+- **Structure:** `##` sections. Tables for file maps. Prose for relationships and gotchas. Length is whatever the topic warrants — ten lines of accurate signposts is a complete skill.
+
+## Writing the Description
+
+The description is loaded into every session's skill listing — it pays for itself in context tokens forever. Its **only job** is to tell future-Claude *when this skill is relevant*.
 
 **Hard rules:**
-- **One sentence. Under ~250 chars.** Ideally under 200. The skill body covers the rest.
-- **Drop boilerplate.** No "Reference guide for…", no "Load this when working on…", no "Covers Gum's…". The fact that this is a skill is implicit — these phrases are dead weight on every entry.
-- **Lead with the topic, then trigger identifiers.** Format: `<Topic> — <one-line hook>. Triggers: <distinctive identifiers, file paths, or scenarios>.`
-- **Pick the 3–8 most distinctive triggers, not all of them.** Generic words ("file", "system", "behavior") don't help; specific class names, file paths, and method names do. The rest belong inside the file.
-- **No multi-line YAML (`description: >`).** Keep it on one line. It folds anyway, and one line is easier to scan when auditing.
 
-**Example.** Same triggers, ~40% fewer tokens:
+- **One sentence.** Under ~250 chars when possible; tighten new ones rather than padding.
+- **Drop boilerplate.** No "Reference guide for…", no "Load this when working on…", no "Covers Gum's…". The fact that this is a skill is implicit.
+- **Lead with the topic, then triggers.** Format: `<Topic> — <hook>. Triggers: <3–8 distinctive identifiers, file paths, or scenarios>.`
+- **Pick distinctive triggers.** Class names, file paths, method names — not generic words ("system", "behavior").
+- **No multi-line YAML (`description: >`).** Keep it on one line.
 
-Good:
-```
-description: Gum's undo/redo. Triggers: History tab, UndoManager, UndoPlugin, UndoSnapshot, stale references after undo.
-```
+❌ "Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo."
 
-Bad (boilerplate, padded):
-```
-description: Reference guide for Gum's undo/redo system. Load this when working on undo/redo behavior, the History tab, UndoManager, UndoPlugin, UndoSnapshot, or stale reference issues after undo.
-```
+✅ "Gum's undo/redo. Triggers: History tab, UndoManager, UndoPlugin, UndoSnapshot, stale references after undo."
+
+## Body Guidance
+
+- Open with one paragraph framing the skill and where it sits in the codebase.
+- Cross-link sibling skills by name in the first paragraph.
+- Use real file paths and symbols from this repo. Skills age badly when they describe imaginary code.
+- Include a gotchas / landmines section — the most valuable content is what you only learn by getting it wrong once.
 
 ## Include
 
@@ -89,15 +113,18 @@ description: Reference guide for Gum's undo/redo system. Load this when working 
 - Pointers: links to relevant `docs/` pages, key source files, and related skills.
 - Specific identifiers only when the name itself is misleading or the behavior is surprising.
 
-## Exclude
+## Exclude / When *Not* to Write a Skill
 
-- Anything already in `docs/` — link instead of restating.
-- Full class outlines or property lists — read source directly.
+- Already in `docs/` — link instead of restating.
+- Anything already in source — link instead of restating full class outlines.
 - Code examples unless the snippet captures an irreplaceable pattern.
-- **In-flight migration / refactor STATE** — what's done *now*, what currently blocks what, what's left, "X is already headless," "Y can't move until Z." This **inverts to false the moment the work lands**, turning the skill into an active liar that every future agent re-reads as fact. Skills hold *timeless* structure only. Transient progress belongs in the ephemeral working ledger; durable design *direction* belongs in the relevant ADR (`Direction/decisions/`), not the skill. (Subsumes the old "migration notes" rule, plus versions and dates — any time-sensitive fact.)
-- **War stories — "Issue #N: X happened" / "PR #N caught this" framing, even for a landmine that never expires.** State the rule and the gotcha in pure present-tense, timeless form: what to check, what breaks if you don't, why. Never narrate it as an event that occurred on a numbered issue/PR — that framing is what keeps getting written despite this rule, because a durable fact wrapped in "Issue #N: ..." *reads* like it satisfies "state landmines fully," so the incident-number wrapper slips through. The test: could this sentence be true independent of which issue surfaced it? If removing "Issue #N:" and rephrasing as a bare rule loses no information, the issue number was never required — cut it. If you need a concrete illustration, name the *pattern* (a type, a method, a symbol) instead of the ticket.
-- Anything Claude already knows from general C# or .NET knowledge.
+- **In-flight migration / refactor state** — what's done *now*, what blocks what, what's left, "X is already headless," "Y can't move until Z." This inverts to false the moment the work lands. Skills hold *timeless* structure only; transient progress belongs in the ephemeral working ledger, and durable design *direction* belongs in the relevant ADR (`Direction/decisions/`), not the skill.
+- **War stories — "Issue #N: X happened" framing, even for a landmine that never expires.** State the rule in pure present-tense, timeless form. The test: could this sentence be true independent of which issue surfaced it? If so, cut the issue reference.
+- Anything derivable from a quick grep or general C# / .NET knowledge.
+- Stale every commit (TODOs, in-flight migrations).
+
+Push back and suggest `CLAUDE.md` or a code comment if the request fails this test.
 
 ## Output
 
-Write to `.claude/skills/<skill-name>/SKILL.md`. Create the directory if needed. Add sibling detail files only when content is too large for the main file.
+After approval, write to `.claude/skills/<skill-name>/SKILL.md`. Create the directory if needed. Add sibling detail files only when a second file genuinely helps navigation — not to hit or avoid an arbitrary length.
