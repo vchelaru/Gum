@@ -555,13 +555,18 @@ public class FormsUtilities
 
         ToolTipService.Update(cursor, gameTimeSeconds);
 
-        var didChangeFrameworkElement = frameworkElementOver != frameworkElementOverBefore;
+        // Only reset to Arrow when leaving an element whose CustomCursor Gum itself was applying --
+        // not on every FrameworkElement change. Otherwise hovering onto/off of any plain element
+        // (which has no CustomCursor of its own) stomps a cursor a game set directly (e.g. via
+        // Mouse.SetCursor or ICursor.CustomCursor), independent of FrameworkElement.CustomCursor
+        // (issue #4442).
+        var wasApplyingCustomCursor = frameworkElementOverBefore?.IsEnabled == true && frameworkElementOverBefore.CustomCursor != null;
 
         if (frameworkElementOver?.IsEnabled == true && frameworkElementOver.CustomCursor != null)
         {
             cursor.CustomCursor = frameworkElementOver?.CustomCursor;
         }
-        else if (didChangeFrameworkElement)
+        else if (wasApplyingCustomCursor)
         {
             cursor.CustomCursor = Cursors.Arrow;
         }
