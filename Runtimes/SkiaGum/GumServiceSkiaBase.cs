@@ -5,23 +5,27 @@ using Gum.Managers;
 using Gum.Threading;
 using Gum.Wireframe;
 using RenderingLibrary;
+using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Gum.GueDeriving;
 using SkiaGum.Renderables;
 using SkiaSharp;
 using System;
+using System.Collections.Generic;
 using ToolsUtilities;
 
-// The shared, render-only base for every Skia-family GumService (WPF, MAUI, bring-your-own-canvas,
-// and -- pending #4452 phase 2 -- Silk.NET). Built only against SKCanvas and the IGumService
-// capability-interface pattern (CreateCursor/CreateKeyboard default to null per ADR
+// The shared base for every Skia-family GumService (WPF, MAUI, bring-your-own-canvas, and
+// Silk.NET). Built only against SKCanvas and the IGumService capability-interface pattern
+// (CreateCursor/CreateKeyboard default to null per ADR
 // 0006-runtimes-declare-capabilities-through-igumservice.md), so any Skia host gets identical
-// instantiation syntax, rendering, .gumx project loading, and non-interactive Forms controls for
-// free; a host that wants real mouse/touch/keyboard input derives and overrides the two Create*
-// hooks. Named GumServiceSkiaBase, not GumServiceBase -- that name stays free for a possible future
-// cross-engine base spanning MonoGame/raylib/Skia/Sokol (#4451). Compiled directly into
-// Gum.SkiaSharp (issue #4452 phase 1); WPF/MAUI/standalone consumers get it through the
-// SkiaGum.csproj ProjectReference they already have instead of file-linking shared source.
+// instantiation syntax, rendering, .gumx project loading, non-interactive Forms controls, window-fit,
+// hot reload, and the sync context for free; a host that wants real mouse/touch/keyboard input
+// derives and overrides the two Create* hooks (see Runtimes/SilkNetGum/GumService.Silk.cs for a
+// worked example). Named GumServiceSkiaBase, not GumServiceBase -- that name stays free for a
+// possible future cross-engine base spanning MonoGame/raylib/Skia/Sokol (#4451). Compiled directly
+// into Gum.SkiaSharp (issue #4452); the concrete default Gum.GumService for hosts that don't need
+// custom input lives in the separate SkiaGum.Standalone.csproj (referenced by WPF/MAUI/standalone),
+// keeping this base free of a competing concrete type for Silk.NET's own GumService to collide with.
 namespace Gum;
 
 public abstract class GumServiceSkiaBase : IGumService
@@ -39,6 +43,18 @@ public abstract class GumServiceSkiaBase : IGumService
     /// become children of this container. Null until <c>Initialize</c> is called.
     /// </summary>
     public InteractiveGue Root { get; private set; } = null!;
+
+    /// <summary>
+    /// Overlaid above <see cref="Root"/>; for non-modal popups. Created by
+    /// <see cref="FormsUtilities.InitializeDefaults"/> during <c>Initialize</c>.
+    /// </summary>
+    public InteractiveGue PopupRoot => FrameworkElement.PopupRoot;
+
+    /// <summary>
+    /// Topmost layer; blocks input to everything below. Created by
+    /// <see cref="FormsUtilities.InitializeDefaults"/> during <c>Initialize</c>.
+    /// </summary>
+    public InteractiveGue ModalRoot => FrameworkElement.ModalRoot;
 
     #region IGumService implementation
 
@@ -81,11 +97,146 @@ public abstract class GumServiceSkiaBase : IGumService
 
     float? IGumService.GameTime => _hasReceivedUpdate ? (float?)_previousTotalSeconds : null;
 
-    // Skia has no native on-screen keyboard or OS clipboard implementation.
-    INativeTextInput? IGumService.NativeTextInput => null;
-    IGumClipboard? IGumService.Clipboard => null;
+    /// <inheritdoc/>
+    // Skia has no native on-screen keyboard implementation. Settable (not just IGumService's DIM
+    // default) so a subclass with a real one to offer (e.g. Silk's IKeyboard-backed clipboard) can
+    // assign it during its own Initialize; implicitly satisfies IGumService.NativeTextInput too.
+    public INativeTextInput? NativeTextInput { get; protected set; }
+
+    /// <inheritdoc/>
+    public IGumClipboard? Clipboard { get; protected set; }
+
+    /// <summary>
+    /// The <see cref="global::RenderingLibrary.SystemManagers"/> this service initialized.
+    /// Convenience accessor for <see cref="global::RenderingLibrary.SystemManagers.Default"/>,
+    /// valid after <c>Initialize</c>.
+    /// </summary>
+    public SystemManagers SystemManagers => SystemManagers.Default;
+
+    /// <summary>
+    /// The collection of connected gamepads available to the application.
+    /// </summary>
+    public Gum.Input.GamePad[] Gamepads => FormsUtilities.Gamepads;
+
+    /// <summary>
+    /// Registers this service's keyboard (created via <see cref="IGumService.CreateKeyboard"/> during
+    /// <c>Initialize</c>) as one of <see cref="FrameworkElement.KeyboardsForUiControl"/>, so Forms
+    /// controls respond to it by default without the host having to wire that up manually.
+    /// </summary>
+    public void UseKeyboardDefaults() =>
+        FrameworkElement.KeyboardsForUiControl.Add(FormsUtilities.Keyboard);
+
+    /// <summary>
+    /// Registers this service's <see cref="Gamepads"/> as <see cref="FrameworkElement.GamePadsForUiControl"/>,
+    /// so Forms controls respond to gamepad input by default without the host having to wire that up manually.
+    /// </summary>
+    public void UseGamepadDefaults() =>
+        FrameworkElement.GamePadsForUiControl.AddRange(Gamepads);
 
     IRenderable IGumService.CreateSpriteRenderable() => new Sprite();
+
+    #endregion
+
+    #region Window fit
+
+    // Composed rather than owned inline so this shares WindowFitController/WindowFitMath with
+    // GumService (the MonoGame/Raylib/Silk-partial family) instead of a second copy (issue #4452).
+    private WindowFitController? _windowFit;
+    private WindowFitController WindowFit => _windowFit ??= new WindowFitController(
+        GetWindowSize,
+        (zoom, canvasWidth, canvasHeight) =>
+        {
+            SystemManagers.Renderer.Camera.Zoom = zoom;
+            GraphicalUiElement.CanvasWidth = canvasWidth;
+            GraphicalUiElement.CanvasHeight = canvasHeight;
+            Root.UpdateLayout();
+        });
+
+    /// <summary>
+    /// Returns the current window size used as the fit-policy reference. This render-only base has
+    /// no OS window of its own — the caller owns it and reports resizes via <see cref="HandleResize"/>
+    /// — so the default reports the current canvas size, making <see cref="EnableZoomToWindow"/> and
+    /// <see cref="EnableExpandToWindow"/> degenerate (canvas and "window" are the same value) unless a
+    /// subclass that does own a real window overrides this.
+    /// </summary>
+    protected virtual (int width, int height) GetWindowSize() =>
+        ((int)GraphicalUiElement.CanvasWidth, (int)GraphicalUiElement.CanvasHeight);
+
+    /// <inheritdoc cref="WindowFitController.EnableZoomToWindow"/>
+    public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f) =>
+        WindowFit.EnableZoomToWindow(mode, defaultZoom);
+
+    /// <inheritdoc cref="WindowFitController.EnableExpandToWindow"/>
+    public void EnableExpandToWindow(float defaultZoom = 1f) =>
+        WindowFit.EnableExpandToWindow(defaultZoom);
+
+    #endregion
+
+    #region Hot reload
+
+    private IGumHotReloadManager? _hotReloadManager;
+    private readonly List<GraphicalUiElement> _hotReloadRoots = new();
+
+    /// <summary>
+    /// Starts watching the Gum project source files at the given path.
+    /// When any .gumx, .gucx, .gusx, or .gutx file changes, the project
+    /// is reloaded and active elements in Root have their state reapplied.
+    /// </summary>
+    /// <param name="absoluteGumxSourcePath">
+    /// Absolute path to the source .gumx file (not the bin/Content copy).
+    /// </param>
+    /// <remarks>
+    /// Reloads the element tree and re-applies the project's texture filter, matching the render-only
+    /// base's own capabilities. Skia has no global texture-filter setting to re-apply (elided, same as
+    /// the prior Silk.NET implementation), and *Animations.ganx/.ganj reload during hot reload is not
+    /// yet ported to this base (tracked as a follow-up alongside <c>ExportSnapshot</c>/<c>LoadAnimations</c>).
+    /// </remarks>
+    public void EnableHotReload(string absoluteGumxSourcePath)
+    {
+        _hotReloadManager = new GumHotReloadManager(
+            applyProjectTextureFilter: _ => { },
+            loadAnimationsFromProvider: (_, _) => 0,
+            disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
+        _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
+        _hotReloadManager.Start(absoluteGumxSourcePath);
+    }
+
+    /// <summary>
+    /// Raised after a hot-reload pass completes (Root.Children rebuilt from updated
+    /// ElementSaves). Subscribe to react to project changes — e.g. rebuild
+    /// entity-attached Gum visuals that aren't part of Root.Children and therefore weren't
+    /// touched by the in-place patch.
+    /// </summary>
+    public event Action? HotReloadCompleted;
+
+    #endregion
+
+    #region Sync context
+
+    private Gum.Async.SingleThreadSynchronizationContext? _syncContext;
+
+    /// <summary>
+    /// The active single-threaded synchronization context, or <c>null</c> if
+    /// <see cref="UseSingleThreadedAsync"/> has not been called.
+    /// </summary>
+    public Gum.Async.SingleThreadSynchronizationContext? SynchronizationContext => _syncContext;
+
+    /// <summary>
+    /// Installs a <see cref="Gum.Async.SingleThreadSynchronizationContext"/> on the calling
+    /// thread so that <c>await</c> continuations (including
+    /// <c>await dialogBox.ShowAsync(...)</c>) resume on the host's primary thread. Call once,
+    /// after <c>Initialize</c>. Subsequent calls are no-ops.
+    /// </summary>
+    /// <remarks>
+    /// Off by default. Skip this call if you've already installed your own
+    /// <see cref="System.Threading.SynchronizationContext"/> — installing two would
+    /// route continuations through the wrong queue.
+    /// </remarks>
+    public void UseSingleThreadedAsync()
+    {
+        if (_syncContext != null) return;
+        _syncContext = new Gum.Async.SingleThreadSynchronizationContext();
+    }
 
     #endregion
 
@@ -205,9 +356,18 @@ public abstract class GumServiceSkiaBase : IGumService
     /// become children of <see cref="Root"/>.
     /// </summary>
     /// <param name="totalSeconds">Total elapsed time in seconds since startup.</param>
-    public void Update(double totalSeconds)
+    public virtual void Update(double totalSeconds)
     {
+        _windowFit?.PollAndApplyFit();
+
+        _syncContext?.Update();
         DeferredQueue?.ProcessPending();
+        if (_hotReloadManager != null)
+        {
+            _hotReloadRoots.Clear();
+            _hotReloadRoots.Add(Root);
+            _hotReloadManager.Update(_hotReloadRoots);
+        }
 
         double delta = _hasReceivedUpdate ? totalSeconds - _previousTotalSeconds : 0;
         _previousTotalSeconds = totalSeconds;

@@ -110,24 +110,6 @@ public partial class GumService : IGumService
     private IGumHotReloadManager? _hotReloadManager;
 #endif
 
-    private int? _zoomReferenceWidth;
-    private int? _zoomReferenceHeight;
-
-    private enum FitPolicy
-    {
-        None,
-        Zoom,
-        Expand,
-    }
-
-    private FitPolicy _fitPolicy;
-    private WindowZoomMode _fitZoomMode;
-    private float _fitDefaultZoom;
-    // Update() polls these against the current window size each frame so resize
-    // detection is platform-agnostic — no resize-event subscription on either backend.
-    private int _lastSeenWindowWidth;
-    private int _lastSeenWindowHeight;
-
     /// <summary>
     /// Gets or sets the width of the canvas, which acts as the root-most coordiante space. This value
     /// represents the "internal coordinates" which can be adjusted by Camera zoom.
@@ -147,6 +129,19 @@ public partial class GumService : IGumService
         get => GraphicalUiElement.CanvasHeight;
         set => GraphicalUiElement.CanvasHeight = value;
     }
+
+    // Composed rather than owned inline so GumServiceSkiaBase (issue #4452) shares the same policy
+    // state/math instead of a second copy. GetWindowSize is the platform partial's own method group.
+    private WindowFitController? _windowFit;
+    private WindowFitController WindowFit => _windowFit ??= new WindowFitController(
+        GetWindowSize,
+        (zoom, canvasWidth, canvasHeight) =>
+        {
+            SystemManagers.Renderer.Camera.Zoom = zoom;
+            CanvasWidth = canvasWidth;
+            CanvasHeight = canvasHeight;
+            Root.UpdateLayout();
+        });
 
     /// <summary>
     /// Enables a zoom-based fit policy: the camera scales so the Gum canvas tracks the
@@ -171,13 +166,8 @@ public partial class GumService : IGumService
     /// the first call to <c>EnableZoomToWindow</c> and persists for the lifetime of this
     /// instance.
     /// </remarks>
-    public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f)
-    {
-        _fitPolicy = FitPolicy.Zoom;
-        _fitZoomMode = mode;
-        _fitDefaultZoom = defaultZoom;
-        ApplyCurrentFit();
-    }
+    public void EnableZoomToWindow(WindowZoomMode mode = WindowZoomMode.HeightDominant, float defaultZoom = 1f) =>
+        WindowFit.EnableZoomToWindow(mode, defaultZoom);
 
     /// <summary>
     /// Enables an expand-based fit policy: the Gum canvas is resized to match the current
@@ -196,70 +186,13 @@ public partial class GumService : IGumService
     /// Calling this replaces any previously enabled fit policy (including one set by
     /// <see cref="EnableZoomToWindow(WindowZoomMode, float)"/>).
     /// </remarks>
-    public void EnableExpandToWindow(float defaultZoom = 1f)
-    {
-        _fitPolicy = FitPolicy.Expand;
-        _fitDefaultZoom = defaultZoom;
-        ApplyCurrentFit();
-    }
+    public void EnableExpandToWindow(float defaultZoom = 1f) =>
+        WindowFit.EnableExpandToWindow(defaultZoom);
 
-    private void ApplyCurrentFit()
-    {
-        if (_fitPolicy == FitPolicy.None)
-        {
-            return;
-        }
+    private void PollWindowSizeAndApplyFit() => WindowFit.PollAndApplyFit();
 
-        var (windowWidth, windowHeight) = GetWindowSize();
-        _lastSeenWindowWidth = windowWidth;
-        _lastSeenWindowHeight = windowHeight;
-        ApplyFitForSize(windowWidth, windowHeight);
-    }
-
-    private void PollWindowSizeAndApplyFit()
-    {
-        if (_fitPolicy == FitPolicy.None)
-        {
-            return;
-        }
-
-        var (windowWidth, windowHeight) = GetWindowSize();
-        if (windowWidth == _lastSeenWindowWidth && windowHeight == _lastSeenWindowHeight)
-        {
-            return;
-        }
-
-        _lastSeenWindowWidth = windowWidth;
-        _lastSeenWindowHeight = windowHeight;
-        ApplyFitForSize(windowWidth, windowHeight);
-    }
-
-    internal void ApplyFitForSize(int windowWidth, int windowHeight)
-    {
-        switch (_fitPolicy)
-        {
-            case FitPolicy.Zoom:
-                _zoomReferenceWidth ??= windowWidth;
-                _zoomReferenceHeight ??= windowHeight;
-                var (zoom, zoomCanvasW, zoomCanvasH) = WindowFitMath.ComputeZoom(
-                    windowWidth, windowHeight,
-                    _zoomReferenceWidth.Value, _zoomReferenceHeight.Value,
-                    _fitZoomMode, _fitDefaultZoom);
-                SystemManagers.Renderer.Camera.Zoom = zoom;
-                CanvasWidth = zoomCanvasW;
-                CanvasHeight = zoomCanvasH;
-                Root.UpdateLayout();
-                break;
-            case FitPolicy.Expand:
-                var (expandZoom, expandCanvasW, expandCanvasH) = WindowFitMath.ComputeExpand(
-                    windowWidth, windowHeight, _fitDefaultZoom);
-                SystemManagers.Renderer.Camera.Zoom = expandZoom;
-                CanvasWidth = expandCanvasW;
-                CanvasHeight = expandCanvasH;
-                Root.UpdateLayout();
-                break;
-        }
-    }
+    internal void ApplyFitForSize(int windowWidth, int windowHeight) =>
+        WindowFit.ApplyFitForSize(windowWidth, windowHeight);
 
     // GetWindowSize() is platform-specific (XNA back-buffer vs raylib render size) and lives in the
     // per-platform partials (issue #3608).
@@ -601,7 +534,8 @@ public partial class GumService : IGumService
     /// </param>
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
-        _hotReloadManager = new GumHotReloadManager();
+        _hotReloadManager = new GumHotReloadManager(
+            ApplyProjectTextureFilter, LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path));
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
@@ -1156,11 +1090,7 @@ public partial class GumService : IGumService
         GraphicalUiElement.CanvasWidth = 0;
         GraphicalUiElement.CanvasHeight = 0;
 
-        _zoomReferenceWidth = null;
-        _zoomReferenceHeight = null;
-        _fitPolicy = FitPolicy.None;
-        _lastSeenWindowWidth = 0;
-        _lastSeenWindowHeight = 0;
+        _windowFit?.Reset();
 
         SystemManagers.Default = null;
         ISystemManagers.Default = null;

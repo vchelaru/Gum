@@ -1,10 +1,8 @@
-// Companion enum to Gum.GumService (issue #3119) — lives in the same namespace so
-// EnableZoomToWindow callers need only `using Gum;`.
 namespace Gum;
 
 /// <summary>
 /// Controls which window axis drives the zoom factor in
-/// <see cref="GumService.ZoomToWindow(WindowZoomMode, float)"/>.
+/// <see cref="WindowFitController.EnableZoomToWindow(WindowZoomMode, float)"/>.
 /// </summary>
 public enum WindowZoomMode
 {

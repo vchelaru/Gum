@@ -136,10 +136,9 @@
 		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
 		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
 		<Compile Include="..\..\MonoGameGum\GumServiceCompat.cs" Link="GumServiceCompat.cs" />
-		<Compile Include="..\..\MonoGameGum\WindowFitMath.cs" Link="WindowFitMath.cs" />
-		<Compile Include="..\..\MonoGameGum\WindowZoomMode.cs" Link="WindowZoomMode.cs" />
-		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
-		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
+		<!-- WindowFitMath/WindowZoomMode/SingleThreadSynchronizationContext/GumHotReloadManager moved
+		     to GumCommon (issue #4452), arriving via the GumCommon ProjectReference below instead of
+		     a file-link. -->
 		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
 		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
 		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />

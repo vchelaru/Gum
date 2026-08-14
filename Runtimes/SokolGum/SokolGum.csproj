@@ -102,7 +102,8 @@
 			arrive through the Forms\Controls\**\*.cs glob above and are explicitly removed
 			below to avoid double-compilation.
 		-->
-		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
+		<!-- SingleThreadSynchronizationContext moved to GumCommon (issue #4452), arriving via the
+		     GumCommon ProjectReference below instead of a file-link. -->
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
 		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />

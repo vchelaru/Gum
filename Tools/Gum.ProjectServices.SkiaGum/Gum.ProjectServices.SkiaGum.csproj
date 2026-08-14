@@ -8,7 +8,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
-		<ProjectReference Include="..\..\Runtimes\SkiaGum\SkiaGum.csproj" />
+		<!-- Was SkiaGum.csproj directly; the concrete GumService moved to SkiaGum.Standalone.csproj
+		     (issue #4452 phase 2), which still brings SkiaGum.csproj transitively. -->
+		<ProjectReference Include="..\..\Runtimes\SkiaGum.Standalone\SkiaGum.Standalone.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -49,100 +49,19 @@
 		<DefineConstants>TRACE;SKIA;SILK</DefineConstants>
 	</PropertyGroup>
 
-	<!-- ===== SkiaGum's local render source (globbed by directory; AssemblyAttributes.cs at the
-	     SkiaGum root is intentionally NOT globbed — this project ships its own). ===== -->
-	<ItemGroup>
-		<Compile Include="..\SkiaGum\Renderables\**\*.cs" Link="Renderables\%(RecursiveDir)%(Filename)%(Extension)" />
-		<Compile Include="..\SkiaGum\GueDeriving\**\*.cs" Link="GueDeriving\%(RecursiveDir)%(Filename)%(Extension)" />
-		<Compile Include="..\SkiaGum\Helpers\**\*.cs" Link="Helpers\%(RecursiveDir)%(Filename)%(Extension)" />
-		<Compile Include="..\SkiaGum\Content\**\*.cs" Link="Content\%(RecursiveDir)%(Filename)%(Extension)" />
-		<Compile Include="..\SkiaGum\RenderingLibrary\**\*.cs" Link="RenderingLibrary\%(RecursiveDir)%(Filename)%(Extension)" />
-		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
-	</ItemGroup>
-
-	<!-- ===== Shared render source (mirrors SkiaGum.csproj's file-link list) ===== -->
-	<ItemGroup>
-		<Compile Include="..\..\Gum\RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" Link="RenderingLibrary\IPositionedSizedObjectExtensionMethods.cs" />
-		<Compile Include="..\..\Gum\SvgPlugin\Managers\DefaultStateManager.cs" Link="DefaultStateManager.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChain.cs" Link="Animation\AnimationChain.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainList.cs" Link="Animation\AnimationChainList.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationFrame.cs" Link="Animation\AnimationFrame.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\AnimationChainLogic.cs" Link="Animation\AnimationChainLogic.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Animation\SpriteAnimationLogic.cs" Link="Animation\SpriteAnimationLogic.cs" />
-		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
-		     so Skia's Text can render BBCode inline styling (#3679); mirrors SkiaGum.csproj's link. -->
-		<Compile Include="..\..\RenderingLibrary\Graphics\StyledSubstringSplitter.cs" Link="RenderingLibrary\StyledSubstringSplitter.cs" />
-		<!-- Render-target cache base subclassed by SkiaRenderTargetService (#3988); mirrors SkiaGum.csproj's link. -->
-		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
-		<!-- ContainerRuntime.Blend/BlendState (unblocked for Skia in #3989); mirrors SkiaGum.csproj's link. -->
-		<Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
-		<!-- IAnimatable intentionally NOT linked (arrives via GumCommon); a local copy would create
-		     two distinct same-FQN types and silently break AnimateSelf — see SkiaGum.csproj. -->
-		<Compile Include="..\..\MonoGameGum\GueDeriving\CircleRuntime.cs" Link="GueDeriving\CircleRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\ColoredRectangleRuntime.cs" Link="GueDeriving\ColoredRectangleRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\ContainerRuntime.cs" Link="GueDeriving\ContainerRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\NineSliceRuntime.cs" Link="GueDeriving\NineSliceRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\PolygonRuntime.cs" Link="GueDeriving\PolygonRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\RectangleRuntime.cs" Link="GueDeriving\RectangleRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\TextRuntime.cs" Link="GueDeriving\TextRuntime.cs" />
-		<Compile Include="..\..\MonoGameGum\GueDeriving\SpriteRuntime.cs" Link="GueDeriving\SpriteRuntime.cs" />
-	</ItemGroup>
+	<!-- ===== SkiaGum's render/GueDeriving/Forms source (issue #4452 phase 2): the V3 default
+	     visuals, DefaultFromFileVisuals, and FormsUtilities.cs are no longer file-linked here —
+	     they arrive via the SkiaGum ProjectReference below, which also
+	     supplies GumServiceSkiaBase. FormsUtilities in particular MUST come from that single
+	     compiled copy, not a second local one: Silk's CursorExtensions (kept below) reaches
+	     FormsUtilities.LastEventRoots (internal — see the InternalsVisibleTo in SkiaGum.csproj),
+	     and GumServiceSkiaBase.Initialize calls FormsUtilities.InitializeDefaults on ITS copy;
+	     two separately-compiled FormsUtilities types with the same FQN would silently split state
+	     between them (the IAnimatable trap SkiaGum.csproj already documents). ===== -->
 
 	<ItemGroup>
 		<!-- ScreenBase stays per-backend (news up ContainerRuntime); Window.cs arrives via GumCommon. -->
 		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
-	</ItemGroup>
-
-	<!-- Forms code-only V3 default visuals (the only generation ported to Skia). -->
-	<ItemGroup>
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ButtonVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\CheckBoxVisual.cs" Link="Forms\DefaultVisuals\V3\CheckBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ColorPickerVisual.cs" Link="Forms\DefaultVisuals\V3\ColorPickerVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ComboBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ComboBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\DialogBoxVisual.cs" Link="Forms\DefaultVisuals\V3\DialogBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ItemsControlVisual.cs" Link="Forms\DefaultVisuals\V3\ItemsControlVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\LabelVisual.cs" Link="Forms\DefaultVisuals\V3\LabelVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxItemVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ListBoxVisual.cs" Link="Forms\DefaultVisuals\V3\ListBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuItemVisual.cs" Link="Forms\DefaultVisuals\V3\MenuItemVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\MenuVisual.cs" Link="Forms\DefaultVisuals\V3\MenuVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" Link="Forms\DefaultVisuals\V3\PasswordBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\RadioButtonVisual.cs" Link="Forms\DefaultVisuals\V3\RadioButtonVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollBarVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollBarVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" Link="Forms\DefaultVisuals\V3\ScrollViewerVisualSizedToChildren.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SliderVisual.cs" Link="Forms\DefaultVisuals\V3\SliderVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\SplitterVisual.cs" Link="Forms\DefaultVisuals\V3\SplitterVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\Styling.cs" Link="Forms\DefaultVisuals\V3\Styling.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" Link="Forms\DefaultVisuals\V3\ToggleButtonVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxBaseVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TextBoxVisual.cs" Link="Forms\DefaultVisuals\V3\TextBoxVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\TooltipVisual.cs" Link="Forms\DefaultVisuals\V3\TooltipVisual.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultVisuals\V3\WindowVisual.cs" Link="Forms\DefaultVisuals\V3\WindowVisual.cs" />
-	</ItemGroup>
-
-	<!-- Forms from-file default visuals + behavior->Forms property bridge (mirrors SkiaGum.csproj). -->
-	<ItemGroup>
-		<Compile Include="..\..\MonoGameGum\Forms\BehaviorFormsPropertyApplier.cs" Link="Forms\BehaviorFormsPropertyApplier.cs" />
-		<Compile Include="..\..\MonoGameGum\Forms\DefaultFromFileVisuals\*.cs"
-				 Link="Forms\DefaultFromFileVisuals\%(Filename)%(Extension)" />
-	</ItemGroup>
-
-	<!-- FormsUtilities: registers V3 defaults and pumps input each frame. -->
-	<ItemGroup>
-		<Compile Include="..\..\MonoGameGum\Forms\FormsUtilities.cs" Link="Forms\FormsUtilities.cs" />
-	</ItemGroup>
-
-	<!-- ===== Shared game-host GumService: the partial base + its companions. The SILK-divergent
-	     GumService.Silk.cs and the SilkNet-local CustomSetPropertyOnRenderable.Localization.cs are
-	     auto-globbed from this project dir (no explicit include needed). GumServiceCompat.cs is
-	     intentionally NOT linked — SilkNet has no [Obsolete] back-compat subclass. Issue #3608. ===== -->
-	<ItemGroup>
-		<Compile Include="..\..\MonoGameGum\GumService.cs" Link="GumService.cs" />
-		<Compile Include="..\..\MonoGameGum\WindowFitMath.cs" Link="WindowFitMath.cs" />
-		<Compile Include="..\..\MonoGameGum\WindowZoomMode.cs" Link="WindowZoomMode.cs" />
-		<Compile Include="..\..\MonoGameGum\GumHotReloadManager.cs" Link="GumHotReloadManager.cs" />
-		<Compile Include="..\..\MonoGameGum\Async\SingleThreadSynchronizationContext.cs" Link="Async\SingleThreadSynchronizationContext.cs" />
 	</ItemGroup>
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
@@ -188,6 +107,11 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<!-- Supplies GumServiceSkiaBase + the render/Forms source this project used to file-link
+		     directly (issue #4452, see the comment above). SkiaGum.csproj carries no concrete
+		     GumService of its own (that lives in SkiaGum.Standalone.csproj), so this is a normal
+		     reference — no Gum.GumService naming collision with this project's own GumService. -->
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
 	<!--

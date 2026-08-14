@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		The concrete default Gum.GumService for Skia hosts that don't need custom input (WPF, MAUI,
+		true bring-your-own-canvas). Split out of SkiaGum.csproj (issue #4452 phase 2)
+		so that project can ship JUST GumServiceSkiaBase plus shared render source. A host that needs
+		real input (e.g. Silk.NET) references SkiaGum.csproj directly and defines its own concrete
+		GumService, without colliding with this one (see Runtimes/SilkNetGum/GumService.Silk.cs).
+	-->
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageId>Gum.SkiaSharp.Standalone</PackageId>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>2026.4.5.1</Version>
+
+		<NoWarn>1591</NoWarn>
+
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+		<DefineConstants>TRACE;SKIA</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+</Project>
