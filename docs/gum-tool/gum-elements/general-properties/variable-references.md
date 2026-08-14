@@ -119,6 +119,14 @@ Instances can reference their own variables, but these must be qualified. For ex
 Width = ColoredRectangleInstance.Height
 ```
 
+<a id="unqualified-instance-warning"></a>
+
+{% hint style="warning" %}
+Skipping the qualification isn't an error, it's a different reference. `X = Height` on an instance resolves `Height` against the **containing component**, not the instance. To reference the instance's own `Height`, qualify it: `X = ColoredRectangleInstance.Height`.
+
+The Variable References grid protects you from this by auto-qualifying bare names to the selected instance when you tab out, so this mix-up mostly only happens in hand-edited or generated project XML.
+{% endhint %}
+
 Variables can be assigned to constant values, essentially locking the value:
 
 ```csharp
@@ -300,7 +308,7 @@ Y = Components/SameComponent.InstanceInComponent.Y
 Y = InstanceInComponent.Y
 ```
 
-Instances must qualify their own variables as shown in the following code:
+Instances must qualify their own variables. See [the warning above](#unqualified-instance-warning) for what an unqualified name means instead:
 
 ```csharp
 X = SameInstance.Y
