@@ -107,6 +107,22 @@ Landmine: `CompositeInstanceMember.HandleCustomSet` writes **every** channel on 
 
 ---
 
+## Category Copy/Paste (whole-group values)
+
+Right-clicking a category header offers Copy Values / Paste Values (#4455). The gather/apply logic is headless: `VariableCategoryCopyPasteService` in `Tools/Gum.Presentation/.../VariableGrid/`, fed by `IVariableCategoryRow` rows that `VariableCategoryRowAdapter` (in `Gum/.../VariableGrid/`) wraps around the live WPF `InstanceMember`s. Paste only applies to the category the values were copied from, records as one undo (single `RequestLock` across all writes), and skips rather than fails: absent variables, read-only/reference-assigned rows, type mismatches (numeric mismatches convert), and state names the target doesn't declare.
+
+Category-header menus are `MemberCategory.ContextMenuItems` (`MemberCategoryContextMenuItem` is its own `ICommand`), rendered by the header template in `Frb.Styles.Defaults.xaml`. Landmines:
+
+- **`DataUiGrid.SetMultipleCategoryLists` copies only `Name` and `HeaderColor`** onto the fresh `MemberCategory` objects it creates for multi-select — any other category-level state (`ContextMenuItems`, `HideHeader`, `Width`) is silently dropped. `PropertyGridManager.RefreshCategoryContextMenus` re-populates after every refresh (guarded to only fill empty categories) for exactly this reason.
+- **A `ContextMenu` on a shared template reaches every grid.** The header template serves all `DataUiGrid`s (Code tab, project properties, behaviors), and even a visually-collapsed empty menu still opens and takes mouse capture, eating the next click. Suppress with `ContextMenuService.IsEnabled=False` (via DataTrigger on item count), not `Visibility`.
+- **`Type.IsInstanceOfType` is always false against `Nullable<T>`** for a boxed value — variables declared `int?`/`float?` (`MaxLettersToShow`, `MinWidth`, ...) need `Nullable.GetUnderlyingType` before any reflection type gate.
+- **A state name is just a string** — any automated write to a state row (`State`, `<Category>State`) must validate against the row's `CustomOptions`/available states or it saves a dangling state name that renders as a blank combo.
+- **Write units before values.** Setting `XUnits`/`WidthUnits`/... can convert the target's current `X`/`Width` ("convert variables on unit type change"), so a value written before its unit gets converted away.
+- **`MultiSelectInstanceMember.Value` returns null when the wrapped instances disagree** (indeterminate) — indistinguishable from "unset" by value alone; check `IsIndeterminate` before treating null as absent.
+- Right-clicking inside a value text field pops an empty white box (#4457, cause undetermined — candidates: a displayer's declared-but-never-populated `<ContextMenu />`, or the native text-editing menu unthemed). Pre-existing on main; don't chase it as a regression of grid work.
+
+---
+
 ## Refresh Trigger Flow
 
 ```
