@@ -81,6 +81,18 @@
         <Setter Property="FontSize" Value="{Binding Source={StaticResource Scale}, Path=IconButton}" />
     </Style>
 
+    <!--
+        WPF auto-generates the default Cut/Copy/Paste editing menu for a TextBox whose
+        ContextMenu is unset, outside the scope where the app's implicit ContextMenu/MenuItem
+        styles (below) are registered - assigning this explicit menu is what actually themes it
+        (see #4457).
+    -->
+    <ContextMenu x:Key="Frb.ContextMenu.TextEditing" x:Shared="False">
+        <MenuItem Command="{x:Static ApplicationCommands.Cut}" CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" />
+        <MenuItem Command="{x:Static ApplicationCommands.Copy}" CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" />
+        <MenuItem Command="{x:Static ApplicationCommands.Paste}" CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}" />
+    </ContextMenu>
+
     <Style x:Key="SimpleTextBox" TargetType="{x:Type TextBox}">
         <Setter Property="Foreground" Value="{DynamicResource Frb.Brushes.Foreground}" />
         <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Field.Background}" />
@@ -88,6 +100,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource Frb.Brushes.Border.Secondary}" />
         <Setter Property="CaretBrush" Value="{DynamicResource Frb.Brushes.ThemeContrast}" />
+        <Setter Property="ContextMenu" Value="{StaticResource Frb.ContextMenu.TextEditing}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -139,6 +152,7 @@
         <Setter Property="md:TextFieldAssist.TextFieldCornerRadius" Value="2" />
         <Setter Property="CaretBrush" Value="{DynamicResource Frb.Brushes.ThemeContrast}" />
         <Setter Property="md:TextFieldAssist.DecorationVisibility" Value="Collapsed" />
+        <Setter Property="ContextMenu" Value="{StaticResource Frb.ContextMenu.TextEditing}" />
         <Style.Triggers>
             <Trigger Property="IsKeyboardFocused" Value="True">
                 <Setter Property="Background" Value="{DynamicResource Frb.Brushes.Background}" />
