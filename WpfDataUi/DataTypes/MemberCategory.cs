@@ -63,6 +63,16 @@ public class MemberCategory : INotifyPropertyChanged
         private set;
     }
 
+    /// <summary>
+    /// Right-click menu entries for the category header. Empty by default; a consumer adds items to
+    /// offer category-wide actions such as copying every value in the category.
+    /// </summary>
+    public ObservableCollection<MemberCategoryContextMenuItem> ContextMenuItems
+    {
+        get;
+        private set;
+    }
+
     double? width;
     public double? Width
     {
@@ -99,50 +109,46 @@ public class MemberCategory : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public event Action<InstanceMember> MemberValueChangedByUi;
+    public event Action<InstanceMember>? MemberValueChangedByUi;
 
     #endregion
 
     #region Methods
 
-    public MemberCategory() 
+    public MemberCategory()
     {
-        InstantiateAll();
-    }
+        Name = "";
 
-    public MemberCategory(string name) 
-    {
-        InstantiateAll();
-        Name = name; 
-    }
-
-    void InstantiateAll()
-    {
         HideHeader = false;
 
         Members = new ObservableCollection<InstanceMember>();
 
+        ContextMenuItems = new ObservableCollection<MemberCategoryContextMenuItem>();
+
         Members.CollectionChanged += HandleMembersChanged;
+    }
+
+    public MemberCategory(string name) : this()
+    {
+        Name = name;
     }
 
     void HandleMembersChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         NotifyPropertyChanged("Visibility");
 
-        switch(e.Action)
+        bool isAddOrReplace =
+            e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add ||
+            e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Replace;
+
+        if (!isAddOrReplace || e.NewItems == null)
         {
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                foreach(InstanceMember newItem in e.NewItems)
-                {
-                    newItem.Category = this;
-                }
-                break;
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                foreach(InstanceMember newItem in e.NewItems)
-                {
-                    newItem.Category = this;
-                }
-                break;
+            return;
+        }
+
+        foreach (InstanceMember newItem in e.NewItems)
+        {
+            newItem.Category = this;
         }
     }
 

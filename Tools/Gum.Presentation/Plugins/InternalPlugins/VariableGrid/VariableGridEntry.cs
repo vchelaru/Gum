@@ -105,6 +105,9 @@ public class VariableGridEntry
     /// <summary>Whether the row's context menu should offer "Make Default" (false for the Name variable and reference-assigned rows).</summary>
     public bool SupportsMakeDefault { get; }
 
+    /// <summary>Whether this row's value comes from a <c>VariableReferences</c> assignment rather than being authored directly.</summary>
+    public bool IsAssignedByReference { get; }
+
     // Prior to April 10 2023 this was always true. Now that we have multi-select, we don't want to
     // call it here if editing multiple objects. Instead, we want to have the multi-select call it and
     // pass the list of variables so that a single undo can be performed.
@@ -321,7 +324,9 @@ public class VariableGridEntry
 
         Instance = instanceSave != null ? instanceSave : stateListCategoryContainer;
 
-        SupportsMakeDefault = variableName != "Name" && !isAssignedByReference;
+        IsAssignedByReference = isAssignedByReference;
+
+        SupportsMakeDefault = variableName != "Name" && !IsAssignedByReference;
 
         var alreadyHasSpaces = RootVariableName.Contains(' ');
         DisplayName = alreadyHasSpaces

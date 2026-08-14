@@ -87,6 +87,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private CompositeMemberLogic _compositeMemberLogic;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
     private BehaviorShowingLogic _behaviorShowingLogic;
+    private IVariableCategoryCopyPasteService _variableCategoryCopyPasteService;
 
     #endregion
 
@@ -187,6 +188,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _wireframeObjectManager,
             _clipboardService,
             _projectState);
+
+        _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
 
         mainControl = new Gum.MainPropertyGrid();
 
@@ -480,6 +483,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 ReconcileCategories(mVariablesDataGrid.Categories, listOfCategories[0], instanceIdentityChanged);
             }
 
+            RefreshCategoryContextMenus();
+
             RefreshErrors(element);
 
             RefreshStateLabel();
@@ -515,6 +520,61 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             category.Members.RemoveAll(item => item.DisplayName == "Name" );
         }
     }
+
+    #region Category Copy/Paste
+
+    /// <summary>
+    /// Rebuilds the copy/paste entries on every category header. This runs after each grid refresh rather
+    /// than when the categories are built, because the multi-select path
+    /// (<c>DataUiGrid.SetMultipleCategoryLists</c>) creates its own <see cref="MemberCategory"/> objects
+    /// and copies only their name and header color.
+    /// </summary>
+    private void RefreshCategoryContextMenus()
+    {
+        foreach (MemberCategory category in mVariablesDataGrid.Categories)
+        {
+            MemberCategory categoryForMenu = category;
+
+            category.ContextMenuItems.Clear();
+
+            category.ContextMenuItems.Add(new MemberCategoryContextMenuItem(
+                "Copy Values",
+                () => CopyCategoryValues(categoryForMenu)));
+
+            category.ContextMenuItems.Add(new MemberCategoryContextMenuItem(
+                "Paste Values",
+                () => PasteCategoryValues(categoryForMenu),
+                () => _variableCategoryCopyPasteService.CopiedCategory != null));
+        }
+    }
+
+    private void CopyCategoryValues(MemberCategory category)
+    {
+        _variableCategoryCopyPasteService.Copy(category.Name, VariableCategoryRowAdapter.CreateRows(category.Members));
+
+        int copiedCount = _variableCategoryCopyPasteService.CopiedCategory?.Values.Count ?? 0;
+        _guiCommands.PrintOutput($"Copied {copiedCount} value(s) from {category.Name}");
+    }
+
+    private void PasteCategoryValues(MemberCategory category)
+    {
+        VariableCategoryPasteResult result =
+            _variableCategoryCopyPasteService.Paste(VariableCategoryRowAdapter.CreateRows(category.Members));
+
+        string message = $"Pasted {result.AppliedVariableNames.Count} value(s) into {category.Name}";
+        if (result.SkippedVariableNames.Count > 0)
+        {
+            message += $". Skipped {string.Join(", ", result.SkippedVariableNames)}";
+        }
+        _guiCommands.PrintOutput(message);
+
+        if (result.AppliedVariableNames.Count > 0)
+        {
+            RefreshEntireGrid(force: true);
+        }
+    }
+
+    #endregion
 
     private void RefreshStateLabel()
     {
