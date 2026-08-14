@@ -119,7 +119,7 @@ Category-header menus are `MemberCategory.ContextMenuItems` (`MemberCategoryCont
 - **A state name is just a string** — any automated write to a state row (`State`, `<Category>State`) must validate against the row's `CustomOptions`/available states or it saves a dangling state name that renders as a blank combo.
 - **Write units before values.** Setting `XUnits`/`WidthUnits`/... can convert the target's current `X`/`Width` ("convert variables on unit type change"), so a value written before its unit gets converted away.
 - **`MultiSelectInstanceMember.Value` returns null when the wrapped instances disagree** (indeterminate) — indistinguishable from "unset" by value alone; check `IsIndeterminate` before treating null as absent.
-- Right-clicking inside a value text field pops an empty white box (#4457, cause undetermined — candidates: a displayer's declared-but-never-populated `<ContextMenu />`, or the native text-editing menu unthemed). Pre-existing on main; don't chase it as a regression of grid work.
+- Right-clicking inside a value text field can pop an empty-looking white box (#4457): the native text-editing menu, unthemed — disabled Cut/Copy/Paste entries render invisibly faint, so with no selection and an empty clipboard the menu looks blank. Pre-existing on main; don't chase it as a regression of grid work.
 
 ---
 
