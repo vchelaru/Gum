@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.PropertyGridHelpers;
@@ -13,27 +14,18 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public static class VariableCategoryRowAdapter
 {
     /// <summary>
-    /// Wraps each member of a category, expanding composite rows (such as the single color row backed by
-    /// Red/Green/Blue) into their underlying channels so copy/paste operates on real variables.
+    /// Wraps each member of a category as a copy/paste row.
     /// </summary>
-    public static List<IVariableCategoryRow> CreateRows(IEnumerable<InstanceMember> members)
-    {
-        List<IVariableCategoryRow> rows = new List<IVariableCategoryRow>();
-
-        foreach (InstanceMember member in members)
-        {
-            if (member is CompositeInstanceMember composite)
-            {
-                rows.AddRange(CreateRows(composite.ChannelMembers));
-            }
-            else
-            {
-                rows.Add(new InstanceMemberRow(member));
-            }
-        }
-
-        return rows;
-    }
+    /// <remarks>
+    /// Rows are taken exactly as the grid presents them, including composite rows (the color swatch backed
+    /// by Red/Green/Blue) and multi-select wrappers. Expanding a composite into its channels here would
+    /// name it differently depending on whether one or several objects are selected - the multi-select
+    /// wrapper sits above the composite, not below it - so a copy in one mode would not match a paste in
+    /// the other. Writing through the row as-is also keeps each wrapper's own behavior: the composite skips
+    /// unchanged channels, and the multi-select wrapper fans the value out and refreshes afterwards.
+    /// </remarks>
+    public static List<IVariableCategoryRow> CreateRows(IEnumerable<InstanceMember> members) =>
+        members.Select(member => (IVariableCategoryRow)new InstanceMemberRow(member)).ToList();
 
     private class InstanceMemberRow : IVariableCategoryRow
     {
@@ -52,7 +44,21 @@ public static class VariableCategoryRowAdapter
 
         public object? Value => _member.Value;
 
-        public bool TrySetValue(object? value)
+        public Type? ValueType
+        {
+            get
+            {
+                // PropertyType throws when the member has neither an instance to reflect over nor a custom
+                // type event. IsDefined is true only when one of those two is available.
+                if (!_member.IsDefined)
+                {
+                    return null;
+                }
+                return _member.PropertyType;
+            }
+        }
+
+        public bool TrySetValue(object value)
         {
             ApplyValueResult result = _member.SetValue(value, SetPropertyCommitType.Full);
 
@@ -66,8 +72,8 @@ public static class VariableCategoryRowAdapter
         }
 
         /// <summary>
-        /// The unqualified variable name. A multi-select row is a wrapper with no variable of its own, so
-        /// it reports the name of the rows it fans out to (they all share one).
+        /// The name a copied value is matched by. A multi-select row is a wrapper with no variable of its
+        /// own, so it reports the name of the rows it fans out to (they all share one).
         /// </summary>
         private static string GetRootVariableName(InstanceMember member)
         {
@@ -81,6 +87,8 @@ public static class VariableCategoryRowAdapter
                 return GetRootVariableName(multiSelectMember.InstanceMembers[0]);
             }
 
+            // Composite rows fall through to here. Their name is the composite's own (for example "Color"),
+            // which is stable across single- and multi-select because both build it the same way.
             return member.Name;
         }
 
@@ -94,6 +102,11 @@ public static class VariableCategoryRowAdapter
             if (member is MultiSelectInstanceMember multiSelectMember)
             {
                 return multiSelectMember.InstanceMembers.Any(GetIsAssignedByReference);
+            }
+
+            if (member is CompositeInstanceMember compositeMember)
+            {
+                return compositeMember.ChannelMembers.Any(GetIsAssignedByReference);
             }
 
             return false;

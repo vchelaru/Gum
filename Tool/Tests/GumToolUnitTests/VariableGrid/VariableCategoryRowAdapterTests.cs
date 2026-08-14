@@ -23,24 +23,56 @@ public class VariableCategoryRowAdapterTests : BaseTestClass
         return member;
     }
 
-    [Fact]
-    public void CreateRows_ShouldExpandACompositeRowIntoItsChannels()
+    private static CompositeInstanceMember CreateColorComposite(int initialValue)
     {
-        InstanceMember red = CreateMember("Red", 10);
-        InstanceMember green = CreateMember("Green", 20);
-        CompositeInstanceMember composite = new CompositeInstanceMember(
+        InstanceMember red = CreateMember("Red", initialValue);
+        InstanceMember green = CreateMember("Green", initialValue);
+        return new CompositeInstanceMember(
             "Color",
             new List<InstanceMember> { red, green },
             typeof(int),
             channelValues => (int)channelValues[0]!,
             compositeValue => new object?[] { compositeValue, compositeValue });
-        InstanceMember fontSize = CreateMember("FontSize", 36);
+    }
+
+    /// <summary>
+    /// A composite must be matched by the same name whether one object or several are selected. The
+    /// multi-select wrapper sits above the composite, so expanding composites into their channels would
+    /// name them Red/Green with one object selected but Color with two, and a copy made in one mode would
+    /// silently not apply in the other.
+    /// </summary>
+    [Fact]
+    public void CreateRows_ShouldNameACompositeRowTheSameInSingleAndMultiSelect()
+    {
+        CompositeInstanceMember singleSelectComposite = CreateColorComposite(10);
+        MultiSelectInstanceMember multiSelectComposite = new MultiSelectInstanceMember
+        {
+            Name = "Color",
+            InstanceMembers = new List<InstanceMember> { CreateColorComposite(10), CreateColorComposite(20) }
+        };
+
+        List<IVariableCategoryRow> singleSelectRows =
+            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { singleSelectComposite });
+        List<IVariableCategoryRow> multiSelectRows =
+            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { multiSelectComposite });
+
+        singleSelectRows.Single().RootVariableName.ShouldBe("Color");
+        multiSelectRows.Single().RootVariableName.ShouldBe("Color");
+    }
+
+    [Fact]
+    public void TrySetValue_ShouldWriteThroughACompositeRowToEveryChannel()
+    {
+        CompositeInstanceMember composite = CreateColorComposite(10);
 
         List<IVariableCategoryRow> rows =
-            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { composite, fontSize });
+            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { composite });
 
-        rows.Select(row => row.RootVariableName).ShouldBe(new[] { "Red", "Green", "FontSize" });
-        rows[0].Value.ShouldBe(10);
+        rows.Single().Value.ShouldBe(10);
+        rows.Single().TrySetValue(30).ShouldBeTrue();
+
+        composite.ChannelMembers[0].Value.ShouldBe(30);
+        composite.ChannelMembers[1].Value.ShouldBe(30);
     }
 
     [Fact]

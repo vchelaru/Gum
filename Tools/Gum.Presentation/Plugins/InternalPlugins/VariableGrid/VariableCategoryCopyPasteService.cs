@@ -17,6 +17,7 @@ public class VariableCategoryCopyPasteService : IVariableCategoryCopyPasteServic
         "Name",
         "BaseType",
         "Locked",
+        "Parent",
         "VariableReferences"
     };
 
@@ -43,6 +44,13 @@ public class VariableCategoryCopyPasteService : IVariableCategoryCopyPasteServic
             // A null row has no value to stamp onto the target. Writing null would author an explicit
             // null rather than restoring inheritance (which is what "Make Default" does), so skip it.
             if (row.Value == null)
+            {
+                continue;
+            }
+
+            // Copying holds the value by reference, so handing a list to a second element would leave both
+            // sharing one instance and editing one would silently change the other.
+            if (row.Value is System.Collections.IList)
             {
                 continue;
             }
@@ -106,26 +114,33 @@ public class VariableCategoryCopyPasteService : IVariableCategoryCopyPasteServic
             return false;
         }
 
-        if (!IsTypeCompatible(copiedValue.Value, row.Value))
+        if (!IsTypeCompatible(copiedValue.Value, row.ValueType))
         {
             return false;
+        }
+
+        // The target already shows this value. Writing it anyway would author an inherited value explicitly
+        // onto the target for no gain, so leave it alone and report it as matched.
+        if (Equals(row.Value, copiedValue.Value))
+        {
+            return true;
         }
 
         return row.TrySetValue(copiedValue.Value);
     }
 
     /// <summary>
-    /// Whether a copied value can stand in for the target row's current value. Same-named variables can
-    /// still differ in type between elements (for example a Font that is a system font name on one object
-    /// and a file on another), and there is nothing to compare against when the target has no value yet.
+    /// Whether a copied value can stand in for the target row. Same-named variables can still differ in
+    /// type between elements (for example a Font that is a system font name on one object and a file on
+    /// another). A row that cannot report its type is allowed through and left to reject the value itself.
     /// </summary>
-    private static bool IsTypeCompatible(object copiedValue, object? currentTargetValue)
+    private static bool IsTypeCompatible(object copiedValue, Type? targetValueType)
     {
-        if (currentTargetValue == null)
+        if (targetValueType == null)
         {
             return true;
         }
 
-        return currentTargetValue.GetType() == copiedValue.GetType();
+        return targetValueType.IsInstanceOfType(copiedValue);
     }
 }

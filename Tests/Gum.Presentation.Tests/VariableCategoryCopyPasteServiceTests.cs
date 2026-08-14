@@ -15,7 +15,12 @@ public class VariableCategoryCopyPasteServiceTests
         public object? Value { get; set; }
         public int SetCount { get; private set; }
 
-        public bool TrySetValue(object? value)
+        /// <summary>Defaults to the declared type of whatever the row currently holds, as a real row would.</summary>
+        public Type? DeclaredType { get; set; }
+
+        public Type? ValueType => DeclaredType ?? Value?.GetType();
+
+        public bool TrySetValue(object value)
         {
             Value = value;
             SetCount++;
@@ -62,31 +67,52 @@ public class VariableCategoryCopyPasteServiceTests
     }
 
     [Fact]
-    public void Paste_ShouldSkipValuesWhoseTypeDoesNotMatchTheTargetsCurrentValue()
+    public void Paste_ShouldSkipValuesWhoseTypeTheTargetRowDoesNotAccept()
     {
         FakeRow sourceFont = new FakeRow { RootVariableName = "Font", Value = "Luckiest Guy" };
-        FakeRow targetFont = new FakeRow { RootVariableName = "Font", Value = 3 };
+        // The target holds no value yet, so only its declared type can reject the paste.
+        FakeRow targetFont = new FakeRow { RootVariableName = "Font", Value = null, DeclaredType = typeof(int) };
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFont });
         VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFont });
 
-        targetFont.Value.ShouldBe(3);
+        targetFont.SetCount.ShouldBe(0);
         result.SkippedVariableNames.ShouldBe(new[] { "Font" });
     }
 
     [Fact]
-    public void Copy_ShouldExcludeIdentityVariablesAndNullValues()
+    public void Paste_ShouldNotRewriteAValueTheTargetAlreadyShows()
+    {
+        FakeRow sourceFontSize = new FakeRow { RootVariableName = "FontSize", Value = 36 };
+        // Matches already, but only by inheriting it - rewriting would author it explicitly for no gain.
+        FakeRow targetFontSize = new FakeRow { RootVariableName = "FontSize", Value = 36 };
+
+        VariableCategoryCopyPasteService service = CreateService();
+        service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize });
+        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFontSize });
+
+        targetFontSize.SetCount.ShouldBe(0);
+        result.AppliedVariableNames.ShouldBe(new[] { "FontSize" });
+    }
+
+    [Fact]
+    public void Copy_ShouldExcludeIdentityVariablesNullValuesAndLists()
     {
         FakeRow name = new FakeRow { RootVariableName = "Name", Value = "TitleText" };
         FakeRow baseType = new FakeRow { RootVariableName = "BaseType", Value = "Text" };
         FakeRow locked = new FakeRow { RootVariableName = "Locked", Value = true };
+        FakeRow parent = new FakeRow { RootVariableName = "Parent", Value = "SomeContainer" };
         FakeRow references = new FakeRow { RootVariableName = "VariableReferences", Value = new List<string>() };
+        FakeRow someList = new FakeRow { RootVariableName = "SomeListVariable", Value = new List<string> { "a" } };
         FakeRow unset = new FakeRow { RootVariableName = "MaxLettersToShow", Value = null };
         FakeRow fontSize = new FakeRow { RootVariableName = "FontSize", Value = 36 };
 
         VariableCategoryCopyPasteService service = CreateService();
-        service.Copy("General", new IVariableCategoryRow[] { name, baseType, locked, references, unset, fontSize });
+        service.Copy("General", new IVariableCategoryRow[]
+        {
+            name, baseType, locked, parent, references, someList, unset, fontSize
+        });
 
         service.CopiedCategory.ShouldNotBeNull();
         service.CopiedCategory!.CategoryName.ShouldBe("General");

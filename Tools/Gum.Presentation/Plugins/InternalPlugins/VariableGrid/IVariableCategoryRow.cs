@@ -1,3 +1,5 @@
+using System;
+
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
 /// <summary>
@@ -19,6 +21,17 @@ public interface IVariableCategoryRow
     /// <summary>The row's effective value, whether authored on the selected state or inherited.</summary>
     object? Value { get; }
 
-    /// <summary>Writes a value to the row, returning whether the assignment was accepted.</summary>
-    bool TrySetValue(object? value);
+    /// <summary>
+    /// The type the row accepts, or null when it cannot be determined. Used to reject a paste between
+    /// same-named variables of different types; the current <see cref="Value"/> is not a reliable stand-in
+    /// for this, since a row showing no value at all is exactly where a mistyped paste would land.
+    /// </summary>
+    Type? ValueType { get; }
+
+    /// <summary>
+    /// Writes a value to the row, returning whether the assignment was accepted. Never null: a copy skips
+    /// rows that have no value, since writing null would author an explicit null rather than restore
+    /// inheritance.
+    /// </summary>
+    bool TrySetValue(object value);
 }
