@@ -1,3 +1,4 @@
+using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.Forms;
 using Gum.Forms.Controls;
@@ -186,16 +187,15 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Absolute path to the source .gumx file (not the bin/Content copy).
     /// </param>
     /// <remarks>
-    /// Reloads the element tree and re-applies the project's texture filter, matching the render-only
-    /// base's own capabilities. Skia has no global texture-filter setting to re-apply (elided, same as
-    /// the prior Silk.NET implementation), and *Animations.ganx/.ganj reload during hot reload is not
-    /// yet ported to this base (tracked as a follow-up alongside <c>ExportSnapshot</c>/<c>LoadAnimations</c>).
+    /// Reloads the element tree, re-applies *Animations.ganx/.ganj files, and re-applies the project's
+    /// texture filter, matching the render-only base's own capabilities. Skia has no global
+    /// texture-filter setting to re-apply (elided, same as the prior Silk.NET implementation).
     /// </remarks>
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
         _hotReloadManager = new GumHotReloadManager(
             applyProjectTextureFilter: _ => { },
-            loadAnimationsFromProvider: (_, _) => 0,
+            loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
             disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.Start(absoluteGumxSourcePath);
@@ -208,6 +208,51 @@ public abstract class GumServiceSkiaBase : IGumService
     /// touched by the in-place patch.
     /// </summary>
     public event Action? HotReloadCompleted;
+
+    #endregion
+
+    #region Snapshot export and animation loading
+
+    // No engine-level texture-save capability is wired up on this render-only base (a Skia consumer
+    // could save an SKBitmap to PNG, but that's not implemented here) -- embedded/generated textures
+    // stay unresolved in an exported snapshot, same as Raylib's GumService (issue #4460).
+    private GumSnapshotExporter? _snapshotExporter;
+    private GumSnapshotExporter SnapshotExporter => _snapshotExporter ??= new GumSnapshotExporter();
+
+    /// <summary>
+    /// Exports the live UI tree under <see cref="Root"/> to a Gum project at <paramref name="filePath"/>,
+    /// so it can be opened and inspected in the Gum tool. This is the headline path for code-only games,
+    /// which have no design-time .gumx to open. Each runtime element is written as a standard-element
+    /// instance and the screen is named after the file.
+    /// </summary>
+    /// <param name="filePath">
+    /// Destination project (.gumx) path. Its directory receives the Screens/ and Standards/ subfolders.
+    /// </param>
+    /// <param name="shake">
+    /// When true (default), values equal to the standard-element default are pruned so the artifact is
+    /// light and reads as "unedited" in the tool. When false, every value is written — heavier, but the
+    /// always-correct baseline-free form.
+    /// </param>
+    public void ExportSnapshot(string filePath, bool shake = true) =>
+        SnapshotExporter.ExportSnapshot(Root, filePath, shake);
+
+    // Set by Initialize when a project is loaded from a loose .gumx/.gumj file, so LoadAnimations can
+    // enumerate *Animations.ganx/.ganj files from the project's own directory. This base has no
+    // .gumpkg (bundle) support, so it's always a loose-file provider. Not used by EnableHotReload's
+    // reload path -- GumHotReloadManager builds its own provider from the watched source path.
+    private IGumFileProvider? _projectFileProvider;
+
+    /// <summary>
+    /// Loads animations for all elements in the project by enumerating the project's
+    /// <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files from the directory the project was
+    /// loaded from.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown if a Gum project hasn't been loaded first (via the <c>gumProjectFile</c> overload of
+    /// <see cref="Initialize(SKCanvas, int, int, string)"/>).
+    /// </exception>
+    [Obsolete("Experimental - this API may change in future versions")]
+    public void LoadAnimations() => GumAnimationLoader.LoadAnimations(_projectFileProvider);
 
     #endregion
 
@@ -320,6 +365,7 @@ public abstract class GumServiceSkiaBase : IGumService
             var gumDirectory = FileManager.GetDirectory(absolutePath);
 
             FileManager.RelativeDirectory = gumDirectory;
+            _projectFileProvider = new LooseFileGumFileProvider(gumDirectory);
         }
 
         IsInitialized = true;

@@ -257,212 +257,21 @@ public partial class GumService : IGumService
     /// light and reads as "unedited" in the tool. When false, every value is written — heavier, but the
     /// always-correct baseline-free form.
     /// </param>
-    public void ExportSnapshot(string filePath, bool shake = true)
-    {
-        // Resolve to an absolute path up front. A bare/relative file name (e.g. "MyTestSnapshot.gumx", as
-        // the samples pass) would otherwise make Path.GetDirectoryName below return "", skipping the whole
-        // directory block that extracts embedded textures and copies referenced files -- leaving those
-        // textures unresolved (blank in the tool). project.Save resolves relative paths against the current
-        // directory anyway, so this changes only the directory computation, not where the project is written.
-        filePath = Path.GetFullPath(filePath);
+    public void ExportSnapshot(string filePath, bool shake = true) =>
+        SnapshotExporter.ExportSnapshot(Root, filePath, shake);
 
-        // A code-only game may never have triggered standards population; ensure the catalog exists
-        // before reading it (as the serializer's baseline) and writing it (as the project's standards).
-        if (StandardElementsManager.Self.DefaultStates == null)
-        {
-            StandardElementsManager.Self.Initialize();
-        }
-
-        string screenName = Path.GetFileNameWithoutExtension(filePath);
-
-        // Non-null here: the guard above initializes the catalog when it was missing. The baseline provider
-        // lets the serializer collapse Forms-control subtrees (Button, CheckBox, ...) into synthesized
-        // components by diffing each against the control type's pristine default-template visual.
-        RuntimeSnapshotSerializer serializer = new(StandardElementsManager.Self.DefaultStates!,
-            type => FrameworkElement.GetGraphicalUiElementForFrameworkElement(type));
-        ScreenSave screen = serializer.CreateScreenSave(Root, screenName, shake);
-
-        GumProjectSave project = new();
-        // A snapshot seeds the full default standards (the current native variable surface), so it
-        // genuinely uses native-version features. Stamp NativeVersion explicitly -- the ctor default is
-        // the older fallback for legacy files lacking a <Version>, which would make the tool's
-        // variable-grid version gate hide the newer-only (v3 shape) variables. Matches the new-project
-        // factories (ProjectManager.CreateNewProject, ProjectCreator.Create).
-        project.Version = GumProjectSave.NativeVersion;
-        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(project);
-
-        // Match the project's canvas resolution to the live canvas (the game's resolution) so the
-        // snapshot lays out in the tool exactly as it did at runtime, rather than the 800x600 default.
-        if (GraphicalUiElement.CanvasWidth > 0)
-        {
-            project.DefaultCanvasWidth = (int)GraphicalUiElement.CanvasWidth;
-        }
-        if (GraphicalUiElement.CanvasHeight > 0)
-        {
-            project.DefaultCanvasHeight = (int)GraphicalUiElement.CanvasHeight;
-        }
-
-        project.Screens.Add(screen);
-        project.ScreenReferences.Add(new ElementReference { Name = screenName, ElementType = ElementType.Screen });
-
-        // Forms-control subtrees collapse into reusable components (one per control type) plus thin instances.
-        foreach (ComponentSave component in serializer.SynthesizedComponents)
-        {
-            project.Components.Add(component);
-            project.ComponentReferences.Add(
-                new ElementReference { Name = component.Name, ElementType = ElementType.Component });
-        }
-
-        EnsureReferencedStandardsExist(project, screen, serializer.SynthesizedComponents);
-
-        string? directory = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(Path.Combine(directory, ElementReference.ScreenSubfolder));
-            Directory.CreateDirectory(Path.Combine(directory, ElementReference.StandardSubfolder));
-            if (serializer.SynthesizedComponents.Count > 0)
-            {
-                Directory.CreateDirectory(Path.Combine(directory, ElementReference.ComponentSubfolder));
-            }
-
-            // Save embedded/generated textures (e.g. the Forms default visuals' shared sheet) to files and
-            // fill their SourceFile paths BEFORE Save, so the written XML carries the resolved paths.
-            ExtractUnresolvedTextures(serializer, directory);
-        }
-
-        project.Save(filePath, saveElements: true);
-
-        if (!string.IsNullOrEmpty(directory))
-        {
-            CopyReferencedFiles(serializer, screen, directory);
-        }
-    }
-
-    // Instances may reference standard types the default seed omits -- notably deprecated ones like
-    // ColoredRectangle, which new (v3) projects no longer include but an old/live tree may still contain.
-    // Add any such referenced standard so the snapshot's instances don't dangle on a missing base type.
-    // Synthesized components carry instances too, so their base types are checked alongside the screen's.
-    private static void EnsureReferencedStandardsExist(GumProjectSave project, ScreenSave screen,
-        IReadOnlyList<ComponentSave> components)
-    {
-        HashSet<string> existing = new(project.StandardElements.Select(standard => standard.Name));
-
-        EnsureStandardsForInstances(project, screen.Instances, existing);
-        foreach (ComponentSave component in components)
-        {
-            EnsureStandardsForInstances(project, component.Instances, existing);
-        }
-    }
-
-    private static void EnsureStandardsForInstances(GumProjectSave project, IEnumerable<InstanceSave> instances,
-        HashSet<string> existing)
-    {
-        foreach (InstanceSave instance in instances)
-        {
-            string baseType = instance.BaseType;
-            if (string.IsNullOrEmpty(baseType) || existing.Contains(baseType))
-            {
-                continue;
-            }
-
-            if (StandardElementsManager.Self.IsDefaultType(baseType))
-            {
-                StandardElementsManager.Self.AddStandardElementSaveInstance(project, baseType);
-                existing.Add(baseType);
-            }
-        }
-    }
-
-    // Bundles the files referenced by the snapshot (Sprite/NineSlice textures, ...) next to the project
-    // so it opens self-contained in the tool. Relative references are copied preserving their relative
-    // path; absolute references already resolve on their own, and missing files are skipped (logged).
-    private static void CopyReferencedFiles(IRuntimeSnapshotSerializer serializer, ScreenSave screen, string snapshotDirectory)
-    {
-        // Textures extracted from embedded/generated sources are already written next to the project by
-        // ExtractUnresolvedTextures, yet their now-filled SourceFile paths also surface in GetReferencedFiles.
-        // Skip them here: they don't exist under the content directory (so the copy would just log a miss),
-        // and a coincidentally same-named content file must not clobber the extracted PNG.
-        HashSet<string> extractedPaths = new();
-        foreach (UnresolvedTextureReference reference in serializer.UnresolvedTextureReferences)
-        {
-            if (reference.SourceFileVariable.Value is string extractedPath && !string.IsNullOrEmpty(extractedPath))
-            {
-                extractedPaths.Add(extractedPath);
-            }
-        }
-
-        foreach (string referencedPath in serializer.GetReferencedFiles(screen))
-        {
-            if (extractedPaths.Contains(referencedPath))
-            {
-                continue;
-            }
-
-            if (!FileManager.IsRelative(referencedPath))
-            {
-                continue;
-            }
-
-            string absoluteSource;
-            try
-            {
-                absoluteSource = FileManager.MakeAbsolute(referencedPath);
-            }
-            catch (ArgumentException)
-            {
-                continue;
-            }
-
-            if (!File.Exists(absoluteSource))
-            {
-                System.Diagnostics.Debug.WriteLine($"Snapshot: referenced file not found, skipping: {referencedPath}");
-                continue;
-            }
-
-            string destination = Path.Combine(snapshotDirectory,
-                referencedPath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar));
-            string? destinationDirectory = Path.GetDirectoryName(destination);
-            if (!string.IsNullOrEmpty(destinationDirectory))
-            {
-                Directory.CreateDirectory(destinationDirectory);
-            }
-            File.Copy(absoluteSource, destination, overwrite: true);
-        }
-    }
-
-    // Extracts embedded/generated textures the serializer could not resolve to a file path, saving
-    // each next to the project so the tool can slice it. XNALIKE-only (needs Texture2D.SaveAsPng);
-    // the seam is elided on other backends -- they were blank before this existed. Implemented in
-    // GumService.XnaLike.cs (issue #3608).
-    static partial void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory);
-
-    // Pure orchestration over the serializer's unresolved textures: dedupe by texture instance, give each a
-    // relative file name, persist it via the supplied saver, and write the resulting path into the placeholder
-    // SourceFile variable. The saver seam keeps the GPU-bound Texture2D.SaveAsPng out of this method so the
-    // dedup/path-fill logic is testable headlessly. A texture the saver declines (returns false) is left
-    // unresolved -- its placeholder keeps its null value, rendering blank rather than dangling on a bad path.
-    internal static void FillUnresolvedTextureSourceFiles(
-        IReadOnlyList<UnresolvedTextureReference> references, Func<object, string, bool> trySaveTexture)
-    {
-        // Dedupe by texture instance (not value): the one shared sheet -> one file, many filled placeholders.
-        Dictionary<object, string> savedRelativePaths = new(ReferenceEqualityComparer.Instance);
-        int index = 0;
-        foreach (UnresolvedTextureReference reference in references)
-        {
-            if (!savedRelativePaths.TryGetValue(reference.Texture, out string? relativePath))
-            {
-                string candidate = $"EmbeddedTexture{index}.png";
-                if (!trySaveTexture(reference.Texture, candidate))
-                {
-                    continue;
-                }
-                relativePath = candidate;
-                index++;
-                savedRelativePaths[reference.Texture] = relativePath;
-            }
-            reference.SourceFileVariable.Value = relativePath;
-        }
-    }
+    // Composed rather than owned inline so this shares the export logic with GumServiceSkiaBase
+    // instead of a second copy (issue #4460). ExtractUnresolvedTextures needs Texture2D.SaveAsPng,
+    // which only exists on XNALIKE; the seam is elided (passed null) elsewhere -- same as before
+    // this existed.
+    private GumSnapshotExporter? _snapshotExporter;
+    private GumSnapshotExporter SnapshotExporter => _snapshotExporter ??= new GumSnapshotExporter(
+#if XNALIKE
+        ExtractUnresolvedTextures
+#else
+        null
+#endif
+        );
 
     /// <summary>
     /// Re-applies all styles on Root, PopupRoot, and ModalRoot. Call after
@@ -535,7 +344,7 @@ public partial class GumService : IGumService
     public void EnableHotReload(string absoluteGumxSourcePath)
     {
         _hotReloadManager = new GumHotReloadManager(
-            ApplyProjectTextureFilter, LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path));
+            ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider, path => LoaderManager.Self.Dispose(path));
         _hotReloadManager.ReloadCompleted += () => HotReloadCompleted?.Invoke();
         _hotReloadManager.Start(absoluteGumxSourcePath);
     }
@@ -712,115 +521,8 @@ public partial class GumService : IGumService
     /// (e.g. the project was injected directly rather than loaded via <c>Initialize(...gumProjectFile...)</c>).
     /// </exception>
     [Obsolete("Experimental - this API may change in future versions")]
-    public void LoadAnimations()
-    {
-        var project = ObjectFinder.Self.GumProjectSave;
-
-        if(project == null)
-        {
-            throw new InvalidOperationException(
-                "You must first load a project before attempting to load its animations. " +
-                "Did you call GumUI.Initialize with a valid .gumx first?");
-        }
-
-        ProjectResolution? resolution = CurrentProjectResolution;
-        if (resolution == null)
-        {
-            throw new InvalidOperationException(
-                "No project file provider is available. LoadAnimations enumerates animation files " +
-                "through the provider produced when the project is loaded — load the project via " +
-                "Initialize(...gumProjectFile...) before calling LoadAnimations.");
-        }
-
-        int loaded = LoadAnimationsFromProvider(project, resolution.FileProvider);
-
-        // Loose mode relies on directory enumeration, which streaming platforms (Blazor WASM)
-        // can't do over HTTP — there the enumeration silently returns nothing. Surface that once
-        // so a developer who expected animations isn't left guessing. Bundle mode never has this
-        // problem (the in-memory entry list is the manifest), so it stays quiet.
-        if (!resolution.UsedBundle && loaded == 0)
-        {
-            Console.WriteLine(
-                "[Gum] No animation (*Animations.ganx/*Animations.ganj) files were found for this loosely-loaded project. " +
-                "Loose-mode animation loading enumerates the project directory, which is unavailable on " +
-                "browser/streaming platforms (e.g. Blazor WASM) — package the project as a .gumpkg to " +
-                "load animations on those platforms.");
-        }
-    }
-
-    /// <summary>
-    /// Enumerates <c>*Animations.ganx</c> and <c>*Animations.ganj</c> files from <paramref name="provider"/>,
-    /// deserializes each, and adds the result to <paramref name="project"/>'s
-    /// <see cref="GumProjectSave.ElementAnimations"/>. The element name is derived from the file's path,
-    /// not from the (stale) value serialized inside the file. Returns the number of animation files loaded.
-    /// </summary>
-    [UnconditionalSuppressMessage("Trimming", "IL2026",
-        Justification = "Deserializes ElementAnimationsSave, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\") under Gum.StateAnimation.SaveClasses.*.")]
-    internal static int LoadAnimationsFromProvider(GumProjectSave project, IGumFileProvider provider)
-    {
-        // Filename-only pattern (no '/'): GlobMatcher matches it against the file name regardless of
-        // directory depth, so nested component folders (Components/Buttons/MyButtonAnimations.ganx)
-        // are found. A "**/*Animations.ganx" pattern would NOT work — GlobMatcher has no recursive
-        // '**' support and would only match files exactly one folder deep.
-        int loaded = 0;
-        foreach (string path in provider.EnumerateFiles("*Animations.ganx"))
-        {
-            using Stream stream = provider.OpenRead(path);
-            ElementAnimationsSave animation = FileManager.XmlDeserializeFromStream<ElementAnimationsSave>(stream);
-            animation.ElementName = ElementNameFromPath(path);
-            project.ElementAnimations.Add(animation);
-            loaded++;
-        }
-        foreach (string path in provider.EnumerateFiles("*Animations.ganj"))
-        {
-            using Stream stream = provider.OpenRead(path);
-            using StreamReader reader = new StreamReader(stream);
-            string json = reader.ReadToEnd();
-            ElementAnimationsSave animation = Gum.DataTypes.Serialization.Json.GumAnimationJsonFileSerializer.DeserializeElementAnimations(json);
-            animation.ElementName = ElementNameFromPath(path);
-            project.ElementAnimations.Add(animation);
-            loaded++;
-        }
-        return loaded;
-    }
-
-    /// <summary>
-    /// Maps an animation file path back to its element name — the inverse of the
-    /// <c>{categoryFolder}/{element.Name}Animations.ganx</c> (or <c>.ganj</c>) convention. Strips the
-    /// <c>Animations.ganx</c>/<c>Animations.ganj</c> suffix and any leading category folder so a nested
-    /// component path like <c>Components/Buttons/MyButtonAnimations.ganx</c> resolves to
-    /// <c>Buttons/MyButton</c>.
-    /// </summary>
-    internal static string ElementNameFromPath(string path)
-    {
-        string normalized = path.Replace('\\', '/');
-
-        string withoutSuffix = normalized;
-        foreach (string suffix in AnimationFileSuffixes)
-        {
-            if (normalized.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            {
-                withoutSuffix = normalized.Substring(0, normalized.Length - suffix.Length);
-                break;
-            }
-        }
-
-        foreach (string categoryFolder in AnimationCategoryFolders)
-        {
-            if (withoutSuffix.StartsWith(categoryFolder, StringComparison.OrdinalIgnoreCase))
-            {
-                return withoutSuffix.Substring(categoryFolder.Length);
-            }
-        }
-
-        return withoutSuffix;
-    }
-
-    private static readonly string[] AnimationFileSuffixes =
-        { "Animations.ganx", "Animations.ganj" };
-
-    private static readonly string[] AnimationCategoryFolders =
-        { "Screens/", "Components/", "StandardElements/" };
+    public void LoadAnimations() =>
+        GumAnimationLoader.LoadAnimations(CurrentProjectResolution?.FileProvider, CurrentProjectResolution?.UsedBundle ?? false);
 
     // Shared tail of every platform's InitializeInternal: adds Root to managers, reinserts it at the
     // bottom of the main layer, and (when a project path is given) loads the project, its
