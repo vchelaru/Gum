@@ -92,13 +92,13 @@ public class VariableCategoryCopyPasteService : IVariableCategoryCopyPasteServic
     }
 
     /// <inheritdoc/>
-    public VariableCategoryPasteResult Paste(IEnumerable<IVariableCategoryRow> targetRows)
+    public VariableCategoryPasteResult Paste(string targetCategoryName, IEnumerable<IVariableCategoryRow> targetRows)
     {
         List<string> applied = new List<string>();
         List<string> alreadyMatched = new List<string>();
         List<string> skipped = new List<string>();
 
-        if (CopiedCategory == null)
+        if (CopiedCategory == null || CopiedCategory.CategoryName != targetCategoryName)
         {
             return new VariableCategoryPasteResult(applied, alreadyMatched, skipped);
         }

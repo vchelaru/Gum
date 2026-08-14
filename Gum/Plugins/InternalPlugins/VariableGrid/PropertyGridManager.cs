@@ -544,10 +544,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 "Copy Values",
                 () => CopyCategoryValues(category)));
 
+            // Enabled only on the category the values came from - Font values only paste onto Font, even
+            // where variable names happen to overlap with another category.
             category.ContextMenuItems.Add(new MemberCategoryContextMenuItem(
                 "Paste Values",
                 () => PasteCategoryValues(category),
-                () => _variableCategoryCopyPasteService.CopiedCategory != null));
+                () => _variableCategoryCopyPasteService.CopiedCategory?.CategoryName == category.Name));
         }
     }
 
@@ -583,7 +585,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _objectFinder.EnableCache();
         try
         {
-            result = _variableCategoryCopyPasteService.Paste(_variableCategoryRowAdapter.CreateRows(category.Members));
+            result = _variableCategoryCopyPasteService.Paste(
+                category.Name, _variableCategoryRowAdapter.CreateRows(category.Members));
         }
         finally
         {

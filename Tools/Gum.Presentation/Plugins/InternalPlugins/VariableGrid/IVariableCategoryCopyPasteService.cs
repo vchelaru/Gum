@@ -19,7 +19,9 @@ public interface IVariableCategoryCopyPasteService
 
     /// <summary>
     /// Writes the copied values onto the supplied rows, matching by variable name and recording the whole
-    /// group as a single undo. Returns an empty result if nothing has been copied.
+    /// group as a single undo. Returns an empty result if nothing has been copied, or if
+    /// <paramref name="targetCategoryName"/> is not the category the values were copied from - Font values
+    /// only paste onto Font, even where variable names happen to overlap.
     /// </summary>
-    VariableCategoryPasteResult Paste(IEnumerable<IVariableCategoryRow> targetRows);
+    VariableCategoryPasteResult Paste(string targetCategoryName, IEnumerable<IVariableCategoryRow> targetRows);
 }

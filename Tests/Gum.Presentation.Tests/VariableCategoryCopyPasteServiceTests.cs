@@ -87,7 +87,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize, sourceIsBold });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFontSize });
+        VariableCategoryPasteResult result = service.Paste("Font", new IVariableCategoryRow[] { targetFontSize });
 
         targetFontSize.Value.ShouldBe(36);
         result.AppliedVariableNames.ShouldBe(new[] { "FontSize" });
@@ -106,7 +106,7 @@ public class VariableCategoryCopyPasteServiceTests
         VariableCategoryCopyPasteService service = CreateService();
         // Category order is X then XUnits; writing X first would let the unit change convert it away.
         service.Copy("Position", new IVariableCategoryRow[] { sourceX, sourceXUnits });
-        service.Paste(new IVariableCategoryRow[] { targetX, targetXUnits });
+        service.Paste("Position", new IVariableCategoryRow[] { targetX, targetXUnits });
 
         writeLog.ShouldBe(new[] { "XUnits", "X" });
     }
@@ -119,10 +119,29 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFontSize });
+        VariableCategoryPasteResult result = service.Paste("Font", new IVariableCategoryRow[] { targetFontSize });
 
         targetFontSize.Value.ShouldBe(36f);
         result.AppliedVariableNames.ShouldBe(new[] { "FontSize" });
+    }
+
+    /// <summary>
+    /// Values only paste onto the category they were copied from - Font values must not land on
+    /// Rendering, even where variable names happen to overlap.
+    /// </summary>
+    [Fact]
+    public void Paste_ShouldNotApplyToADifferentCategoryThanTheValuesWereCopiedFrom()
+    {
+        FakeRow sourceAlpha = new FakeRow { RootVariableName = "Alpha", Value = 255 };
+        FakeRow targetAlpha = new FakeRow { RootVariableName = "Alpha", Value = 128 };
+
+        VariableCategoryCopyPasteService service = CreateService();
+        service.Copy("Text", new IVariableCategoryRow[] { sourceAlpha });
+        VariableCategoryPasteResult result = service.Paste("Rendering", new IVariableCategoryRow[] { targetAlpha });
+
+        targetAlpha.SetCount.ShouldBe(0);
+        result.AppliedVariableNames.ShouldBeEmpty();
+        result.SkippedVariableNames.ShouldBeEmpty();
     }
 
     /// <summary>
@@ -137,7 +156,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Text", new IVariableCategoryRow[] { sourceMaxLetters });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetMaxLetters });
+        VariableCategoryPasteResult result = service.Paste("Text", new IVariableCategoryRow[] { targetMaxLetters });
 
         targetMaxLetters.Value.ShouldBe(20);
         result.AppliedVariableNames.ShouldBe(new[] { "MaxLettersToShow" });
@@ -152,7 +171,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFontSize });
+        VariableCategoryPasteResult result = service.Paste("Font", new IVariableCategoryRow[] { targetFontSize });
 
         targetFontSize.SetCount.ShouldBe(0);
         result.AppliedVariableNames.ShouldBeEmpty();
@@ -169,7 +188,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize, sourceFont });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { lockedFontSize, referencedFont });
+        VariableCategoryPasteResult result = service.Paste("Font", new IVariableCategoryRow[] { lockedFontSize, referencedFont });
 
         lockedFontSize.SetCount.ShouldBe(0);
         referencedFont.SetCount.ShouldBe(0);
@@ -186,7 +205,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFont });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { targetFont });
+        VariableCategoryPasteResult result = service.Paste("Font", new IVariableCategoryRow[] { targetFont });
 
         targetFont.SetCount.ShouldBe(0);
         result.SkippedVariableNames.ShouldBe(new[] { "Font" });
@@ -208,7 +227,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("Font", new IVariableCategoryRow[] { sourceFontSize, sourceIsBold });
-        service.Paste(new IVariableCategoryRow[] { targetFontSize, targetIsBold });
+        service.Paste("Font", new IVariableCategoryRow[] { targetFontSize, targetIsBold });
 
         _undoManager.Verify(item => item.RequestLock(), Times.Once);
         writesWhenLockReleased.ShouldBe(2, "the lock must still be held while every value is written");
@@ -229,7 +248,7 @@ public class VariableCategoryCopyPasteServiceTests
 
         VariableCategoryCopyPasteService service = CreateService();
         service.Copy("States and Visibility", new IVariableCategoryRow[] { sourceVisible });
-        VariableCategoryPasteResult result = service.Paste(new IVariableCategoryRow[] { indeterminateVisible });
+        VariableCategoryPasteResult result = service.Paste("States and Visibility", new IVariableCategoryRow[] { indeterminateVisible });
 
         indeterminateVisible.SetCount.ShouldBe(1);
         indeterminateVisible.Value.ShouldBe(true);

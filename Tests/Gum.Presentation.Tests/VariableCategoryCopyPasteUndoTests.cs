@@ -107,7 +107,7 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
             new StateBackedRow(sourceState, "IsBold"),
             new StateBackedRow(sourceState, "OutlineThickness")
         });
-        service.Paste(new IVariableCategoryRow[]
+        service.Paste("Font", new IVariableCategoryRow[]
         {
             new StateBackedRow(_component.DefaultState, "FontSize"),
             new StateBackedRow(_component.DefaultState, "IsBold"),
