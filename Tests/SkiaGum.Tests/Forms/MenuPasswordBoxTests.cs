@@ -1,7 +1,5 @@
 using Gum;
-using Gum.Forms;
 using Gum.Forms.Controls;
-using RenderingLibrary;
 using Shouldly;
 using SkiaSharp;
 
@@ -15,16 +13,12 @@ namespace SkiaGum.Tests.Forms;
 /// produced a null Visual on Skia. Mirrors
 /// <see cref="RaylibGum.Tests.Forms.MenuPasswordBoxAndImageTests"/>. Issue #3649.
 ///
-/// Calls <see cref="FormsUtilities.InitializeDefaults"/> explicitly rather than relying on
-/// <c>GumService.Initialize</c> -- the render-only SkiaGum.Standalone GumService (used here) never
-/// calls it, unlike the game-loop Gum.GumService used by SilkNetGum.
-///
 /// Menu/MenuItem construct their Visual and are asserted end-to-end. PasswordBox is asserted via
-/// the DefaultFormsTemplates registration only, not by constructing it here -- this render-only
-/// SkiaGum.Standalone GumService never assigns FrameworkElement.MainCursor, which
-/// TextBoxBase.UpdateState (invoked during construction) dereferences unconditionally,
-/// independent of the IFormsText cast this class's remarks used to describe. The IFormsText cast
-/// itself no longer throws (#3653) -- see
+/// the DefaultFormsTemplates registration only, not by constructing it here -- the render-only
+/// Skia GumService never assigns FrameworkElement.MainCursor (its CreateCursor hook returns null,
+/// per the render-only base -- see GumServiceSkiaBase), which TextBoxBase.UpdateState (invoked
+/// during construction) dereferences unconditionally, independent of the IFormsText cast this
+/// class's remarks used to describe. The IFormsText cast itself no longer throws (#3653) -- see
 /// <see cref="SilkNetGum.Tests.Forms.TextBoxPasswordBoxTests"/> for the full end-to-end
 /// construction regression test, since SilkNetGum's bootstrap does provide a MainCursor.
 /// </summary>
@@ -34,7 +28,6 @@ public class MenuPasswordBoxTests
     {
         using SKSurface surface = SKSurface.Create(new SKImageInfo(200, 100));
         GumService.Default.Initialize(surface.Canvas, 200, 100);
-        FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
     }
 
     [Fact]

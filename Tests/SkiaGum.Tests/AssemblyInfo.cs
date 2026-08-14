@@ -1,7 +1,7 @@
 using Xunit;
 
 // SkiaGum tests share global mutable state (GumService.Default, SystemManagers.Default,
-// FrameworkElement.DefaultFormsTemplates) via the SkiaGum.Standalone GumService and other
+// FrameworkElement.DefaultFormsTemplates) via the shared Gum.GumService and other
 // process-wide statics -- the same pattern every other Gum test project already serializes
 // against (see MonoGameGum.Tests, RaylibGum.Tests, SilkNetGum.Tests, etc.). Without this,
 // xunit's default parallel test-class execution intermittently corrupts another class's

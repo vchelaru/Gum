@@ -12,10 +12,6 @@ If your project is .NET MAUI, WPF, or Silk.NET, use that page instead: [.NET MAU
 This setup is rendering and layout only. There is no supported way to wire mouse, keyboard, or Forms control interactivity (hover, click, focus) here, not even as DIY glue code. If you need interactive Forms controls on SkiaSharp, use the Silk.NET, MAUI, or WPF setup instead, each of which has a real input story.
 {% endhint %}
 
-{% hint style="info" %}
-A fuller, Forms-integrated Skia standalone setup is planned. This page will be updated once that lands; until then it stays intentionally minimal, with no dependency on Gum's Forms code.
-{% endhint %}
-
 ## Adding Gum NuGet package
 
 The easiest way to add Gum to your project is to use the NuGet package. Open your project in your preferred IDE, or add Gum through the command line.
@@ -60,89 +56,41 @@ Next, add SkiaGum as a project reference in your game project. Your project migh
 
 ## Initializing Gum
 
-`Gum.SkiaSharp` is a rendering and layout library only, it does not include a `GumService`, and this page doesn't point at one either. Write a small initialization function directly in your own project instead, no Gum-owned file to copy or keep in sync:
+{% hint style="info" %}
+`GumService` for this page's setup is available in `Gum.SkiaSharp` starting September 2026, or now if building Gum from source. Before that, WPF and MAUI hosts still get their own copy of the same type through their dedicated packages (see [WPF](wpf.md) / [.NET MAUI](.net-maui.md)); this page's setup did not have one until now.
+{% endhint %}
 
-```csharp
-// Class scope
-InteractiveGue root = null!;
-double previousTotalSeconds;
-```
-
-```csharp
-void InitializeGum(SKCanvas canvas, int width, int height, string? gumProjectFile = null)
-{
-    SystemManagers.Default = new SystemManagers();
-    SystemManagers.Default.Canvas = canvas;
-    SystemManagers.Default.Initialize();
-    SystemManagers.Default.Renderer.ClearsCanvas = false;
-
-    if (!string.IsNullOrEmpty(gumProjectFile))
-    {
-        var gumProject = GumProjectSave.Load(gumProjectFile);
-        ObjectFinder.Self.GumProjectSave = gumProject;
-        gumProject.Initialize();
-
-        var absolutePath = FileManager.IsRelative(gumProjectFile)
-            ? FileManager.MakeAbsolute(gumProjectFile)
-            : gumProjectFile;
-        FileManager.RelativeDirectory = FileManager.GetDirectory(absolutePath);
-    }
-
-    GraphicalUiElement.CanvasWidth = width;
-    GraphicalUiElement.CanvasHeight = height;
-
-    root = new ContainerRuntime();
-    root.AddToManagers(SystemManagers.Default);
-}
-```
-
-Call it once you have an `SKCanvas`, passing a `.gumx` project path only if you're loading one (omit it for a code-only setup):
+`Gum.SkiaSharp` includes a render-only `GumService`, the same `Initialize`/`Update`/`Draw`/`HandleResize` API shape used by the dedicated Silk.NET host (see [Silk.NET](silk.net.md)), just without input. Call `GumService.Default.Initialize` once you have an `SKCanvas`, passing a `.gumx` project path only if you're loading one (omit it for a code-only setup):
 
 ```csharp
 // Initialize
-using Gum.DataTypes;
-using Gum.GueDeriving;
-using Gum.Managers;
-using Gum.Wireframe;
-using RenderingLibrary;
+using Gum;
 using SkiaSharp;
-using ToolsUtilities;
 
 var bounds = canvas.DeviceClipBounds;
-InitializeGum(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, bounds.Width, bounds.Height, "Content/GumProject/GumProject.gumx");
 ```
 
-Each frame, animate and then draw:
+Each frame, update and then draw:
 
 ```csharp
 // Update
-double delta = totalSecondsSinceStart - previousTotalSeconds;
-previousTotalSeconds = totalSecondsSinceStart;
-root.AnimateSelf(delta);
+GumService.Default.Update(totalSecondsSinceStart);
 ```
 
 ```csharp
 // Draw
-SystemManagers.Default.Draw();
+GumService.Default.Draw();
 ```
 
 Whenever your canvas is resized, tell Gum so layout re-runs against the new size:
 
 ```csharp
-void HandleResize(int newWidth, int newHeight)
-{
-    GraphicalUiElement.CanvasWidth = newWidth;
-    GraphicalUiElement.CanvasHeight = newHeight;
-    root.UpdateLayout();
-}
+GumService.Default.HandleResize(newWidth, newHeight);
 ```
 
 {% hint style="info" %}
-Gum does not clear the canvas for you (`SystemManagers.Default.Renderer.ClearsCanvas` is set to `false` above), so your own draw code is expected to clear or paint the background before calling `SystemManagers.Default.Draw()`.
-{% endhint %}
-
-{% hint style="info" %}
-There's no `AddToRoot()` extension method available here, that method resolves the active root through `IGumService.Default`, which this minimal setup doesn't implement. Add top-level elements with `root.Children.Add(...)` instead, as shown below.
+Gum does not clear the canvas for you, so your own draw code is expected to clear or paint the background before calling `GumService.Default.Draw()`.
 {% endhint %}
 
 ## Adding Expression Support (Optional)
@@ -155,11 +103,11 @@ Add the NuGet package:
 dotnet add package Gum.Expressions
 ```
 
-Then call `GumExpressionService.Initialize()` after `InitializeGum`. Expression support is typically used with a Gum project that has variable references defined in the tool:
+Then call `GumExpressionService.Initialize()` after `GumService.Default.Initialize`. Expression support is typically used with a Gum project that has variable references defined in the tool:
 
 ```csharp
 // Initialize
-InitializeGum(canvas, width, height, "Content/GumProject/GumProject.gumx");
+GumService.Default.Initialize(canvas, width, height, "Content/GumProject/GumProject.gumx");
 GumExpressionService.Initialize();
 ```
 
@@ -173,18 +121,18 @@ Gum can be tested by adding a couple of renderables after Gum is initialized:
 
 ```csharp
 // Initialize
-InitializeGum(canvas, width, height);
+GumService.Default.Initialize(canvas, width, height);
 
 var circle = new ColoredCircleRuntime();
 circle.Color = SKColors.Red;
 circle.Width = 200;
 circle.Height = 200;
-root.Children.Add(circle);
+circle.AddToRoot();
 
 var text = new TextRuntime();
 text.Text = "SkiaGum on a general canvas!";
 text.Dock(Gum.Wireframe.Dock.Top);
-root.Children.Add(text);
+text.AddToRoot();
 ```
 
 After adding these, trigger a redraw through whatever mechanism your host uses to repaint the canvas. You should see a red circle with text docked above it.

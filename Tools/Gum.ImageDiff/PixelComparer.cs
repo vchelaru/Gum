@@ -12,9 +12,8 @@ namespace Gum.ImageDiff;
 /// Shared by <c>SkiaGum.Tests</c>' golden-image regression tests and
 /// <c>gumcli diff-screenshots</c> (#4174), which decodes each backend's rendered PNG through
 /// SkiaSharp purely for pixel comparison — no SkiaGum rendering happens in that path. Lives in its
-/// own dependency-free project (only SkiaSharp) rather than Gum.ProjectServices.SkiaGum so it can be
-/// referenced from projects that already file-link SkiaGum.Standalone's GumService.cs (e.g.
-/// SkiaGum.Tests) without a duplicate-type conflict on that shared source.
+/// own dependency-free project (only SkiaSharp) rather than Gum.ProjectServices.SkiaGum so callers
+/// that only need pixel comparison don't pull in the rest of that project.
 /// </remarks>
 public static class PixelComparer
 {

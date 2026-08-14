@@ -33,14 +33,14 @@ namespace MonoGameGumShapes;
 
 // partial so the Gum.SilkNet host can supply the localization holder its shared GumService needs
 // (Runtimes/SilkNetGum/CustomSetPropertyOnRenderable.Localization.cs) without that state landing in
-// the render-only SkiaGum / SkiaGum.Wpf / SkiaGum.Maui / SkiaGum.Standalone consumers (issue #3608).
+// the render-only SkiaGum / SkiaGum.Wpf / SkiaGum.Maui consumers (issue #3608).
 public partial class CustomSetPropertyOnRenderable
 {
     #region Localization
 
     // Localization holder mirroring the MonoGame/Raylib copies (Gum/Wireframe/CustomSetPropertyOnRenderable.cs
     // and Runtimes/RaylibGum/Renderables/CustomSetPropertyOnRenderable.cs). SkiaGum's copy never grew these,
-    // so runtime localization was a no-op in SkiaGum-rendered hosts (SkiaGum.Standalone / WPF / MAUI,
+    // so runtime localization was a no-op in SkiaGum-rendered hosts (SkiaGum / WPF / MAUI,
     // Gum.SilkNet) until #3621. Supersedes the inert SilkNet-local holder that #3619 added to satisfy the
     // shared GumService's compile. Nullable-oblivious to match those siblings' un-annotated static fields and
     // to stay valid in consumers with no <Nullable> setting (SkiaGum.Wpf); the shared GumService consumes

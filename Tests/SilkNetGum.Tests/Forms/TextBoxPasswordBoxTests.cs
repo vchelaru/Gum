@@ -10,8 +10,8 @@ namespace SilkNetGum.Tests.Forms;
 /// MonoGameGum's, which TextBoxBase's shared source compiles through) if that cast fails. Before
 /// SkiaGum's Text implemented <see cref="RenderingLibrary.Graphics.IFormsText"/>, constructing any
 /// text-input control crashed here. Uses the real Silk-backed cursor from the assembly bootstrap
-/// (unlike <c>SkiaGum.Tests.Forms.MenuPasswordBoxTests</c>, which uses the render-only
-/// SkiaGum.Standalone GumService with no MainCursor, so it cannot construct these end-to-end).
+/// (unlike <c>SkiaGum.Tests.Forms.MenuPasswordBoxTests</c>, which uses the render-only Skia
+/// GumService with no MainCursor, so it cannot construct these end-to-end).
 /// </summary>
 public class TextBoxPasswordBoxTests : BaseTestClass
 {
