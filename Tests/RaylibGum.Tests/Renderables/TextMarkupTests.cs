@@ -192,6 +192,49 @@ public class TextMarkupTests : BaseTestClass
         }
     }
 
+    // The bug this pins: a wired creator that throws for the inline run specifically (base font at 21
+    // still succeeds) was previously swallowed by a bare catch, silently falling back to the raw-size
+    // float behavior with no way for the game/developer to find out. Resetting capturedMessage after
+    // the base-font assignment isolates the inline run's own failure from the base font's.
+    [Fact]
+    public void Text_WithFontSizeMarkup_WhenFontCreatorThrows_FallsBackAndInvokesPropertyAssignmentError()
+    {
+        IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        string? capturedMessage = null;
+        void Handler(string message) => capturedMessage = message;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new ThrowsAboveSizeFontCreator(throwAboveSize: 21);
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 21;
+
+            capturedMessage = null;
+            textRuntime.Text = "Big [FontSize=40]text[/FontSize]";
+
+            Text internalText = (Text)textRuntime.RenderableComponent;
+
+            // The swap-in run (size 40) throws and falls back to the raw-size float behavior; the
+            // pop-back-to-base run (size 21, at the throw threshold) still succeeds and resolves to a
+            // crisp font -- same two-run shape as the fully-successful case, just with the first run
+            // degraded instead of crisp.
+            internalText.InlineVariables.Count.ShouldBe(2);
+            internalText.InlineVariables[0].VariableName.ShouldBe("BitmapFont");
+            internalText.InlineVariables[0].Value.ShouldBe(40f);
+            internalText.InlineVariables[1].VariableName.ShouldBe("BitmapFont");
+            Raylib_cs.Font popBackFont = internalText.InlineVariables[1].Value.ShouldBeOfType<Raylib_cs.Font>();
+            popBackFont.BaseSize.ShouldBe(21);
+            capturedMessage.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
     // #3624 (no-creator characterization): [IsBold], [IsItalic], [OutlineThickness], and [Font=Name] are
     // recognized tags, so their markup IS stripped from the visible RawText, but applying them requires a
     // rasterized atlas that only a wired font creator can produce - so with no creator they remain unapplied
@@ -798,6 +841,29 @@ public class TextMarkupTests : BaseTestClass
         public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
         {
             Requests.Add(bmfcSave);
+            return _inner.TryCreateFont(bmfcSave);
+        }
+    }
+
+    // Wraps the real KernSmithRaylibFontCreator so requests at or below _throwAboveSize still produce a
+    // genuinely usable font (the base font resolves normally), while a request above that size throws -
+    // isolating a failure to one specific inline run.
+    private sealed class ThrowsAboveSizeFontCreator : IRaylibFontCreator
+    {
+        private readonly KernSmithRaylibFontCreator _inner = new();
+        private readonly int _throwAboveSize;
+
+        public ThrowsAboveSizeFontCreator(int throwAboveSize)
+        {
+            _throwAboveSize = throwAboveSize;
+        }
+
+        public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
+        {
+            if (bmfcSave.FontSize > _throwAboveSize)
+            {
+                throw new InvalidOperationException("Simulated font rasterization failure.");
+            }
             return _inner.TryCreateFont(bmfcSave);
         }
     }

@@ -2170,9 +2170,12 @@ public partial class CustomSetPropertyOnRenderable
                     return createdFont.Value;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall through to null - the caller uses the base font / base-atlas scale fallback.
+                // Fall through to null - the caller uses the base font / base-atlas scale fallback -
+                // but surface the failure instead of leaving it completely silent.
+                PropertyAssignmentError?.Invoke(
+                    $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
 
             return null;
@@ -2667,9 +2670,13 @@ public partial class CustomSetPropertyOnRenderable
                                 return;
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // Fall through to the disk / system-font path.
+                            // Fall through to the disk / system-font path, but surface the failure -
+                            // previously silent, leaving Raylib's default font on screen with no
+                            // indication the in-memory creator failed.
+                            PropertyAssignmentError?.Invoke(
+                                $"Error creating in-memory font '{textRuntime.Font}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
                         }
                     }
 
@@ -2677,6 +2684,16 @@ public partial class CustomSetPropertyOnRenderable
                     if (fontFromGum.BaseSize == 0)
                     {
                         fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                    }
+                    // A wired InMemoryFontCreator declining (returning null) is a documented, normal
+                    // signal -- IRaylibFontCreator.TryCreateFont falls through to disk/system-font on
+                    // purpose, and that fallback succeeding here is not a failure worth reporting. Only
+                    // surface it once NOTHING resolved a usable font, so this can't fire for a creator
+                    // that's working exactly as designed.
+                    if (InMemoryFontCreator != null && fontFromGum.BaseSize == 0)
+                    {
+                        PropertyAssignmentError?.Invoke(
+                            $"No usable font could be resolved for '{textRuntime.Font}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
                     }
                     AssignFontIfChanged(asText, fontFromGum);
                 }

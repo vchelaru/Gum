@@ -138,6 +138,84 @@ public class TextRuntimeFontCachingRegressionTests : BaseTestClass
         }
     }
 
+    // Always declines (returns null) -- IRaylibFontCreator.TryCreateFont's own documented contract
+    // for "I can't produce this, fall through," not a failure. Used to prove PropertyAssignmentError
+    // distinguishes that normal decline (silent, when a later fallback tier still resolves a font)
+    // from a genuine total failure (nothing left to fall back to).
+    private sealed class DecliningFontCreator : IRaylibFontCreator
+    {
+        public int CallCount { get; private set; }
+
+        public Raylib_cs.Font? TryCreateFont(BmfcSave bmfcSave)
+        {
+            CallCount++;
+            return null;
+        }
+    }
+
+    // The gap this pins: a wired creator returning null (not throwing) was never routed through the
+    // exception-catch diagnostic, so when nothing else could resolve a font either, the text still
+    // silently ended up on raylib's default font with zero indication anything went wrong.
+    [Fact]
+    public void UpdateToFontValues_WhenCreatorDeclinesAndNoFallbackResolves_ShouldInvokePropertyAssignmentError()
+    {
+        WithCachingOnAndNoFontFiles(() =>
+        {
+            DecliningFontCreator creator = new();
+            IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+            string? capturedMessage = null;
+            void Handler(string message) => capturedMessage = message;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+            try
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+                TextRuntime textRuntime = new();
+                textRuntime.SetProperty("Font", "GumNoFallbackFontTest_" + Guid.NewGuid().ToString("N"));
+                textRuntime.SetProperty("FontSize", 18);
+
+                creator.CallCount.ShouldBeGreaterThan(0);
+                capturedMessage.ShouldNotBeNull();
+            }
+            finally
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+                CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+            }
+        });
+    }
+
+    // The guard the fix above must not break: a creator declining is normal when a later fallback
+    // tier (here, the disk FontCache) still resolves a usable font -- that must stay completely
+    // silent, or every project using a partial-coverage-by-design creator would get spurious errors.
+    [Fact]
+    public void UpdateToFontValues_WhenCreatorDeclinesButDiskFallbackResolves_ShouldNotInvokePropertyAssignmentError()
+    {
+        WithFont18ArialCached(() =>
+        {
+            DecliningFontCreator creator = new();
+            IRaylibFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+            string? capturedMessage = null;
+            void Handler(string message) => capturedMessage = message;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+            try
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+                TextRuntime textRuntime = NewArial18Text("Declined but disk-cached");
+
+                creator.CallCount.ShouldBeGreaterThan(0);
+                textRuntime.AbsoluteHeight.ShouldBeGreaterThan(0);
+                capturedMessage.ShouldBeNull();
+            }
+            finally
+            {
+                CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+                CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+            }
+        });
+    }
+
     // Positive guard for the user-visible symptom: with valid fonts, a vertical stack must reflow to the
     // summed line heights (2 x 21) and the second item must sit below the first.
     [Fact]
