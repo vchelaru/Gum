@@ -140,7 +140,7 @@ jobs:
   #
   # None of the CodeGen_* projects reference FnaGum/SokolGum, so this job skips
   # submodule init entirely. Of the workloads Build-and-Test installs for
-  # AllLibraries.sln (wasm-tools-net9/ios/android/maui), only CodeGen_Maui_FullCodegen
+  # AllLibraries.sln (wasm-tools/ios/android/maui), only CodeGen_Maui_FullCodegen
   # needs one — maui — so this job installs just that, with its own cache key,
   # rather than duplicating the full set.
   Build-Generated-Code:
@@ -381,7 +381,7 @@ jobs:
 
       - name: Install workloads
         if: steps.cache-workloads.outputs.cache-hit != 'true' && steps.cache-workloads-restore.outputs.cache-hit != 'true' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
-        run: dotnet workload install wasm-tools-net9 ios android maui
+        run: dotnet workload install wasm-tools ios android maui
 
       # Workload caching IS used above and saves ~2 minutes per run.
       # I tried caching both NuGet packages and also cache on the actions/setup-dotnet@v4
