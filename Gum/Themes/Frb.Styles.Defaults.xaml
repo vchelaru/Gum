@@ -1663,12 +1663,38 @@
     </DataTemplate>
 
     <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
-        <TextBlock
-            Margin="0,4,0,4"
-            VerticalAlignment="Center"
-            FontWeight="Medium"
-            Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
-            Text="{Binding Name}" />
+        <!--  Transparent border so the header area, not just the text glyphs, is a right-click target.  -->
+        <Border HorizontalAlignment="Stretch" Background="Transparent">
+            <Border.Style>
+                <!--  Categories with no items (grids other than the Variables tab) must not open the menu at
+                      all: a collapsed-but-open popup would still take mouse capture and swallow the next
+                      click, where before this template the header had no menu and right-click was a no-op.  -->
+                <Style TargetType="{x:Type Border}">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ContextMenuItems.Count}" Value="0">
+                            <Setter Property="ContextMenuService.IsEnabled" Value="False" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <Border.ContextMenu>
+                <ContextMenu ItemsSource="{Binding ContextMenuItems}">
+                    <ContextMenu.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
+                            <Setter Property="Header" Value="{Binding Header}" />
+                            <!--  MemberCategoryContextMenuItem is its own ICommand.  -->
+                            <Setter Property="Command" Value="{Binding}" />
+                        </Style>
+                    </ContextMenu.ItemContainerStyle>
+                </ContextMenu>
+            </Border.ContextMenu>
+            <TextBlock
+                Margin="0,4,0,4"
+                VerticalAlignment="Center"
+                FontWeight="Medium"
+                Foreground="{DynamicResource Frb.Brushes.ThemeContrast}"
+                Text="{Binding Name}" />
+        </Border>
     </DataTemplate>
 
     <Style BasedOn="{StaticResource {x:Type wpfdataui:DataUiGrid}}" TargetType="{x:Type wpfdataui:DataUiGrid}">

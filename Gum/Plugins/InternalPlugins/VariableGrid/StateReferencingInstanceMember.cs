@@ -128,6 +128,12 @@ public class StateReferencingInstanceMember : InstanceMember
 
     public string RootVariableName => _entry.RootVariableName;
 
+    /// <inheritdoc cref="VariableGridEntry.IsAssignedByReference"/>
+    public bool IsAssignedByReference => _entry.IsAssignedByReference;
+
+    /// <inheritdoc cref="VariableGridEntry.IsStateSelection"/>
+    public bool IsStateSelection => _entry.IsStateSelection;
+
     public int SortValue
     {
         get => _entry.SortValue;

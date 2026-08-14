@@ -87,6 +87,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private CompositeMemberLogic _compositeMemberLogic;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
     private BehaviorShowingLogic _behaviorShowingLogic;
+    private readonly IVariableCategoryCopyPasteService _variableCategoryCopyPasteService;
+    private readonly IVariableCategoryRowAdapter _variableCategoryRowAdapter;
 
     #endregion
 
@@ -154,6 +156,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _stateEditingIndicatorService = stateEditingIndicatorService;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
+        _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
+        _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -480,6 +484,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 ReconcileCategories(mVariablesDataGrid.Categories, listOfCategories[0], instanceIdentityChanged);
             }
 
+            RefreshCategoryContextMenus();
+
             RefreshErrors(element);
 
             RefreshStateLabel();
@@ -515,6 +521,97 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             category.Members.RemoveAll(item => item.DisplayName == "Name" );
         }
     }
+
+    #region Category Copy/Paste
+
+    /// <summary>
+    /// Adds the copy/paste entries to any category header that does not have them yet. This runs after
+    /// each grid refresh rather than when the categories are built, because the multi-select path
+    /// (<c>DataUiGrid.SetMultipleCategoryLists</c>) creates its own <see cref="MemberCategory"/> objects
+    /// and copies only their name and header color. Categories the refresh reused keep their existing
+    /// items, so a value-only refresh churns nothing.
+    /// </summary>
+    private void RefreshCategoryContextMenus()
+    {
+        foreach (MemberCategory category in mVariablesDataGrid.Categories)
+        {
+            if (category.ContextMenuItems.Count > 0)
+            {
+                continue;
+            }
+
+            category.ContextMenuItems.Add(new MemberCategoryContextMenuItem(
+                "Copy Values",
+                () => CopyCategoryValues(category)));
+
+            // Enabled only on the category the values came from - Font values only paste onto Font, even
+            // where variable names happen to overlap with another category.
+            category.ContextMenuItems.Add(new MemberCategoryContextMenuItem(
+                "Paste Values",
+                () => PasteCategoryValues(category),
+                () => _variableCategoryCopyPasteService.CopiedCategory?.CategoryName == category.Name));
+        }
+    }
+
+    private void CopyCategoryValues(MemberCategory category)
+    {
+        CopiedVariableCategory copied;
+
+        // The rows' effective-value reads walk the inheritance chain per variable; cache element lookups
+        // for the duration, mirroring RefreshDataGrid.
+        _objectFinder.EnableCache();
+        try
+        {
+            copied = _variableCategoryCopyPasteService.Copy(
+                category.Name, _variableCategoryRowAdapter.CreateRows(category.Members));
+        }
+        finally
+        {
+            _objectFinder.DisableCache();
+        }
+
+        string message = $"Copied {copied.Values.Count} value(s) from {copied.CategoryName}";
+        if (copied.IndeterminateVariableNames.Count > 0)
+        {
+            message += $". Not copied (differs across selection): {string.Join(", ", copied.IndeterminateVariableNames)}";
+        }
+        _guiCommands.PrintOutput(message);
+    }
+
+    private void PasteCategoryValues(MemberCategory category)
+    {
+        VariableCategoryPasteResult result;
+
+        _objectFinder.EnableCache();
+        try
+        {
+            result = _variableCategoryCopyPasteService.Paste(
+                category.Name, _variableCategoryRowAdapter.CreateRows(category.Members));
+        }
+        finally
+        {
+            _objectFinder.DisableCache();
+        }
+
+        string sourceName = _variableCategoryCopyPasteService.CopiedCategory?.CategoryName ?? "?";
+        string message = $"Pasted {result.AppliedVariableNames.Count} {sourceName} value(s) into {category.Name}";
+        if (result.AlreadyMatchedVariableNames.Count > 0)
+        {
+            message += $", {result.AlreadyMatchedVariableNames.Count} already matched";
+        }
+        if (result.SkippedVariableNames.Count > 0)
+        {
+            message += $". Skipped {string.Join(", ", result.SkippedVariableNames)}";
+        }
+        _guiCommands.PrintOutput(message);
+
+        if (result.AppliedVariableNames.Count > 0)
+        {
+            RefreshEntireGrid(force: true);
+        }
+    }
+
+    #endregion
 
     private void RefreshStateLabel()
     {
