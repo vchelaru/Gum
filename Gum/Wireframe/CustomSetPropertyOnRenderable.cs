@@ -2030,9 +2030,12 @@ public partial class CustomSetPropertyOnRenderable
                                 global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Fall through to disk-based path
+                        // Fall through to disk-based path, but surface the failure instead of leaving it
+                        // completely silent (previously: catch { } with zero diagnostics anywhere - #4464).
+                        PropertyAssignmentError?.Invoke(
+                            $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
                     }
                 }
 
@@ -2304,9 +2307,12 @@ public partial class CustomSetPropertyOnRenderable
                     loaderManager.AddDisposable(fullFileName, font);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall through to disk-based path
+                // Fall through to disk-based path, but surface the failure instead of leaving it
+                // completely silent (previously: catch { } with zero diagnostics anywhere - #4464).
+                PropertyAssignmentError?.Invoke(
+                    $"Error creating in-memory font '{fontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
         }
 
@@ -2376,6 +2382,18 @@ public partial class CustomSetPropertyOnRenderable
             throw new InvalidOperationException("The returned font has a disposed texture");
         }
 #endif
+
+        // A wired InMemoryFontCreator declining (returning null, not throwing) is IInMemoryFontCreator's
+        // documented "creation fails or is not supported" signal, so it never hits the exception-catch
+        // diagnostic above. Only surface it once NOTHING resolved a usable font (embedded resource,
+        // in-memory creator, disk FontService generation, and a pre-existing disk file all failed), so a
+        // creator that intentionally declines some fonts by design -- and is then satisfied by a later
+        // fallback tier -- never gets a spurious error.
+        if (font == null && InMemoryFontCreator != null)
+        {
+            PropertyAssignmentError?.Invoke(
+                $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and font service all failed) - falling back to the default font.");
+        }
 
         return font;
     }
