@@ -69,6 +69,15 @@ public class TextRuntime : InteractiveGue
         NotifyPropertyChanged(nameof(Text));
     }
 
+    /// <summary>
+    /// Raises the <see cref="Text"/> PropertyChanged notification without touching the underlying
+    /// renderable. Used by <see cref="SokolGum.CustomSetPropertyOnRenderable"/>'s "Text"/"TextNoTranslate"
+    /// dispatch, which sets <c>ContainedText.RawText</c> directly rather than going through
+    /// <see cref="Text"/>/<see cref="SetTextNoTranslate"/> (those route back through SetProperty and
+    /// would recurse into the dispatcher that's calling this).
+    /// </summary>
+    internal void NotifyTextChanged() => NotifyPropertyChanged(nameof(Text));
+
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
     {
         get => ContainedText.TextOverflowHorizontalMode;

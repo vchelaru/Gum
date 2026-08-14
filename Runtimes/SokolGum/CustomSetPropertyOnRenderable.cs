@@ -105,6 +105,14 @@ public static class CustomSetPropertyOnRenderable
                 {
                     var s = value as string ?? string.Empty;
                     text.RawText = LocalizationTranslate is { } tr ? tr(s) : s;
+                    // The MonoGame/Raylib dispatcher delegates "Text"/"TextNoTranslate" to
+                    // TextRuntime.Text/SetTextNoTranslate, which each explicitly notify. This
+                    // method sets RawText directly instead (delegating would call back into
+                    // SetProperty here and recurse), so it must notify itself — otherwise
+                    // TextBoxBase.OnTextChanged (and the placeholder-visibility/TextChangedByUi
+                    // behavior it drives) never runs when a Sokol host's Text changes via
+                    // SetProperty, e.g. every character a TextBox user types.
+                    textRuntime?.NotifyTextChanged();
                     // If the text's size is driven by its children (glyphs), layout
                     // must re-run so the parent's measured size picks up the new text.
                     RequestLayoutIfSizedToChildren(element);
@@ -112,6 +120,7 @@ public static class CustomSetPropertyOnRenderable
                 }
             case "TextNoTranslate":
                 text.RawText = value as string ?? string.Empty;
+                textRuntime?.NotifyTextChanged();
                 RequestLayoutIfSizedToChildren(element);
                 return true;
 

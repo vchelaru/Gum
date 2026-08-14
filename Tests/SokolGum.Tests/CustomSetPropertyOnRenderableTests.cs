@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Gum.GueDeriving;
 using Gum.Renderables;
 using RenderingLibrary.Graphics;
@@ -108,5 +109,37 @@ public class CustomSetPropertyOnRenderableTests : BaseTestClass
         CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
             renderable, text, "OutlineThickness", 3);
         renderable.OutlineThickness.ShouldBe(3);
+    }
+
+    [Fact]
+    public void SetProperty_Text_ShouldRaisePropertyChanged()
+    {
+        // TrySetPropertyOnText sets Text.RawText directly rather than delegating
+        // to TextRuntime.Text (which would recurse back into SetPropertyOnRenderable),
+        // so it must explicitly notify. Without this, TextBoxBase.OnTextChanged (and
+        // the placeholder-visibility it drives) never runs when a Sokol TextBox user types.
+        var text = new TextRuntime();
+        var renderable = (Text)text.RenderableComponent;
+        var raisedPropertyNames = new List<string?>();
+        text.PropertyChanged += (_, args) => raisedPropertyNames.Add(args.PropertyName);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, text, "Text", "hello world");
+
+        raisedPropertyNames.ShouldContain(nameof(TextRuntime.Text));
+    }
+
+    [Fact]
+    public void SetProperty_TextNoTranslate_ShouldRaisePropertyChanged()
+    {
+        var text = new TextRuntime();
+        var renderable = (Text)text.RenderableComponent;
+        var raisedPropertyNames = new List<string?>();
+        text.PropertyChanged += (_, args) => raisedPropertyNames.Add(args.PropertyName);
+
+        CustomSetPropertyOnRenderable.SetPropertyOnRenderable(
+            renderable, text, "TextNoTranslate", "hello world");
+
+        raisedPropertyNames.ShouldContain(nameof(TextRuntime.Text));
     }
 }
