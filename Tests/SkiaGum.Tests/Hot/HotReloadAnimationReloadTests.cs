@@ -1,39 +1,36 @@
-using Gum;
 using System;
 using System.IO;
 using System.Xml.Serialization;
+using Gum;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.StateAnimation.SaveClasses;
 using Gum.Wireframe;
+using RenderingLibrary.Content;
 using Shouldly;
 using ToolsUtilities;
 using Xunit;
 
-namespace MonoGameGum.Tests.Hot;
+namespace SkiaGum.Tests.Hot;
 
 /// <summary>
 /// Drives the animation side of hot reload through <see cref="GumHotReloadManager.PerformReload"/>
-/// directly (bypassing the FileSystemWatcher + debounce). Reload reads animations from the live
-/// <em>source</em> directory by enumerating its <c>*Animations.ganx</c> files through a
-/// <see cref="Gum.Bundle.LooseFileGumFileProvider"/> — this replaced the old per-element
-/// <c>FileManager.FileExists</c> probe + <c>RelativeDirectory</c> swap. Empty roots keep the
-/// structural <see cref="GumHotReloadManager.ApplyDiff"/> a no-op so the test isolates the
-/// animation-loading path.
+/// directly (bypassing the FileSystemWatcher + debounce), the same way the MonoGame/Raylib
+/// equivalents do. Pins that <see cref="GumServiceSkiaBase.EnableHotReload"/> wires the real
+/// <see cref="GumAnimationLoader.LoadAnimationsFromProvider"/> rather than the pre-#4460 no-op
+/// (issue #4460).
 /// </summary>
-public class HotReloadAnimationReloadTests : BaseTestClass
+public class HotReloadAnimationReloadTests
 {
     [Fact]
     public void PerformReload_loads_animations_from_the_source_directory()
     {
         string sourceDirectory = Path.Combine(
-            Path.GetTempPath(), "HotReloadAnimationReloadTests_" + Path.GetRandomFileName());
+            Path.GetTempPath(), "SkiaHotReloadAnimationReloadTests_" + Path.GetRandomFileName());
         Directory.CreateDirectory(sourceDirectory);
 
         try
         {
-            // A minimal real project on disk is enough — the reloaded project only needs to load;
-            // the animation comes from the sibling .ganx the Gum tool would have just saved.
             string gumxPath = Path.Combine(sourceDirectory, "Proj.gumx");
             new GumProjectSave().Save(gumxPath, saveElements: false);
 
@@ -42,8 +39,9 @@ public class HotReloadAnimationReloadTests : BaseTestClass
             File.WriteAllBytes(Path.Combine(screensDirectory, "MainScreenAnimations.ganx"), Ganx());
 
             GumHotReloadManager manager = new GumHotReloadManager(
-                GumService.ApplyProjectTextureFilter, GumAnimationLoader.LoadAnimationsFromProvider,
-                path => RenderingLibrary.Content.LoaderManager.Self.Dispose(path));
+                applyProjectTextureFilter: _ => { },
+                loadAnimationsFromProvider: GumAnimationLoader.LoadAnimationsFromProvider,
+                disposeCachedAsset: path => LoaderManager.Self.Dispose(path));
             manager.Start(gumxPath);
             // Release the OS watcher immediately; Start has already recorded the source path.
             manager.Stop();
@@ -57,6 +55,11 @@ public class HotReloadAnimationReloadTests : BaseTestClass
         }
         finally
         {
+            // ObjectFinder.Self.GumProjectSave is process-wide static state (no BaseTestClass/Dispose
+            // hook in this test project to reset it) — leaving it set here would fail an unrelated
+            // "no project loaded" test in another class, since SkiaGum.Tests disables parallelization
+            // but doesn't isolate static state between test classes.
+            ObjectFinder.Self.GumProjectSave = null;
             try { Directory.Delete(sourceDirectory, recursive: true); } catch { /* best-effort */ }
         }
     }

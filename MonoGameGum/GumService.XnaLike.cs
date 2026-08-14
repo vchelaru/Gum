@@ -360,9 +360,10 @@ public partial class GumService
     // runtime-generated Texture2Ds (notably the Forms default visuals' shared UISpriteSheet) whose Name is
     // unset, so the snapshot has valid texture coordinates but no file to slice. Saves each unique texture
     // to a PNG next to the project and writes the relative path into its placeholder SourceFile variable so
-    // the slices render in the tool. The actual Texture2D.SaveAsPng is XNALIKE-only; on other backends the
-    // textures stay unresolved (the seam is elided -- they were blank before this existed).
-    static partial void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory)
+    // the slices render in the tool. The actual Texture2D.SaveAsPng is XNALIKE-only; other backends pass
+    // GumSnapshotExporter a null seam instead of this method, leaving those textures unresolved (the same
+    // as before this existed).
+    private static void ExtractUnresolvedTextures(IRuntimeSnapshotSerializer serializer, string snapshotDirectory)
     {
         if (serializer.UnresolvedTextureReferences.Count == 0)
         {
@@ -371,7 +372,7 @@ public partial class GumService
 
         Directory.CreateDirectory(snapshotDirectory);
 
-        FillUnresolvedTextureSourceFiles(serializer.UnresolvedTextureReferences, (texture, relativePath) =>
+        GumSnapshotExporter.FillUnresolvedTextureSourceFiles(serializer.UnresolvedTextureReferences, (texture, relativePath) =>
         {
             if (texture is not Texture2D texture2D)
             {

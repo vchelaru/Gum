@@ -6,7 +6,7 @@ namespace MonoGameGum.Tests.Hot;
 
 /// <summary>
 /// Pins the set of file extensions <see cref="GumHotReloadManager"/> reacts to (issue #4182).
-/// The runtime reload pipeline (<c>GumProjectSave.Load</c>, <c>GumService.LoadAnimationsFromProvider</c>)
+/// The runtime reload pipeline (<c>GumProjectSave.Load</c>, <c>GumAnimationLoader.LoadAnimationsFromProvider</c>)
 /// already handles both XML and JSON project formats - only the watch-extension gate itself needed
 /// the JSON siblings added.
 /// </summary>

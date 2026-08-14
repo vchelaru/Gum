@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using Gum;
 using Gum.Bundle;
 using Gum.DataTypes;
 using Gum.StateAnimation.SaveClasses;
@@ -10,16 +11,16 @@ using Shouldly;
 using ToolsUtilities;
 using Xunit;
 
-namespace MonoGameGum.Tests.DataTypes;
+namespace MonoGameGum.Tests.HostServices;
 
 /// <summary>
-/// Tests for <see cref="GumService.LoadAnimationsFromProvider"/>: the enumeration-based animation
+/// Tests for <see cref="GumAnimationLoader.LoadAnimationsFromProvider"/>: the enumeration-based animation
 /// loader that replaced the per-element <c>FileManager.FileExists</c> probing. Driving it through an
 /// in-memory <see cref="BundleGumFileProvider"/> proves it does zero per-element I/O and derives the
 /// element name from the bundle path — including nested component folders, which the old
 /// "**/*Animations.ganx" glob (no recursive <c>**</c> support in GlobMatcher) would have missed.
 /// </summary>
-public class LoadAnimationsFromProviderTests
+public class GumAnimationLoaderTests
 {
     [Fact]
     public void LoadAnimationsFromProvider_loads_one_animation_file_per_ganx_and_derives_element_name_from_path()
@@ -30,7 +31,7 @@ public class LoadAnimationsFromProviderTests
 
         GumProjectSave project = new GumProjectSave();
 
-        int loaded = GumService.LoadAnimationsFromProvider(project, provider);
+        int loaded = GumAnimationLoader.LoadAnimationsFromProvider(project, provider);
 
         loaded.ShouldBe(2);
         project.ElementAnimations
@@ -47,7 +48,7 @@ public class LoadAnimationsFromProviderTests
 
         GumProjectSave project = new GumProjectSave();
 
-        int loaded = GumService.LoadAnimationsFromProvider(project, provider);
+        int loaded = GumAnimationLoader.LoadAnimationsFromProvider(project, provider);
 
         loaded.ShouldBe(1);
         project.ElementAnimations.Single().ElementName.ShouldBe("MainScreen");
@@ -61,7 +62,7 @@ public class LoadAnimationsFromProviderTests
 
         GumProjectSave project = new GumProjectSave();
 
-        int loaded = GumService.LoadAnimationsFromProvider(project, provider);
+        int loaded = GumAnimationLoader.LoadAnimationsFromProvider(project, provider);
 
         loaded.ShouldBe(0);
         project.ElementAnimations.ShouldBeEmpty();
