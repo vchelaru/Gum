@@ -1577,6 +1577,13 @@ public partial class CustomSetPropertyOnRenderable
             {
                 gue.UpdateLayout();
             }
+            // The MonoGame/Raylib dispatcher delegates "Text"/"TextNoTranslate" to
+            // TextRuntime.Text/SetTextNoTranslate, which each explicitly notify. This method sets
+            // RawText directly instead (can't delegate there without re-entering SetProperty and
+            // recursing), so it must notify itself -- otherwise TextBoxBase.OnTextChanged (and the
+            // placeholder-visibility/TextChangedByUi behavior it drives) never runs when a Skia-family
+            // host's Text changes via SetProperty, e.g. every character a TextBox user types.
+            gueAsTextRuntime?.NotifyTextChanged();
             handled = true;
         }
         else if (propertyName == "LocalizeText")

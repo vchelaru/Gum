@@ -1009,6 +1009,17 @@ public class TextRuntime : InteractiveGue
 #endif
     }
 
+    /// <summary>
+    /// Raises the <see cref="Text"/> PropertyChanged notification without touching the underlying
+    /// renderable. Used by Skia's property dispatcher (<c>Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs</c>),
+    /// which sets <c>Text</c>/<c>RawText</c> directly instead of delegating back into <see cref="Text"/>
+    /// or <see cref="SetTextNoTranslate"/> (doing so would re-enter <c>SetProperty</c> and recurse) —
+    /// so it has no other way to notify subscribers like <c>TextBoxBase.OnTextChanged</c>, which
+    /// TextBox's placeholder visibility and <c>TextChangedByUi</c> depend on. Internal: this is an
+    /// implementation seam for same-assembly property dispatchers, not public API.
+    /// </summary>
+    internal void NotifyTextChanged() => NotifyPropertyChanged(nameof(Text));
+
     bool _localizeText = true;
 
     /// <summary>
