@@ -1,6 +1,20 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Gum.Commands;
+using Gum.DataTypes;
+using Gum.DataTypes.Variables;
+using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.PropertyGridHelpers;
+using Gum.PropertyGridHelpers.Converters;
+using Gum.Reflection;
+using Gum.Services;
+using Gum.ToolStates;
+using Gum.Undo;
+using Gum.Wireframe;
+using Moq.AutoMock;
 using Shouldly;
 using WpfDataUi.DataTypes;
 using Xunit;
@@ -9,6 +23,9 @@ namespace GumToolUnitTests.VariableGrid;
 
 public class VariableCategoryRowAdapterTests : BaseTestClass
 {
+    private readonly VariableCategoryRowAdapter _adapter = new();
+    private readonly AutoMocker _mocker = new();
+
     /// <summary>
     /// Builds a grid row backed by a local value rather than by reflection over an instance, so a test can
     /// read and write it without standing up a real <c>StateReferencingInstanceMember</c>.
@@ -35,6 +52,41 @@ public class VariableCategoryRowAdapterTests : BaseTestClass
             compositeValue => new object?[] { compositeValue, compositeValue });
     }
 
+    private StateReferencingInstanceMember CreateStateSelectionRow(string variableName)
+    {
+        ComponentSave component = new ComponentSave { Name = "AdapterTestComponent" };
+        component.States.Add(new StateSave());
+        component.DefaultState.ParentContainer = component;
+        ObjectFinder.Self.GumProjectSave ??= new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave.Components.Add(component);
+
+        return new StateReferencingInstanceMember(
+            Array.Empty<Attribute>(),
+            new AvailableStatesConverter(category: "", _mocker.Get<ISelectedState>()),
+            typeof(string),
+            false,
+            false,
+            true,
+            component.DefaultState,
+            null,
+            variableName,
+            null,
+            component,
+            _mocker.Get<ISelectedState>(),
+            _mocker.Get<IUndoManager>(),
+            _mocker.Get<IGuiCommands>(),
+            _mocker.Get<IFileCommands>(),
+            _mocker.Get<ISetVariableLogic>(),
+            _mocker.Get<IWireframeObjectManager>(),
+            _mocker.Get<IPluginManager>(),
+            _mocker.Get<IHotkeyManager>(),
+            _mocker.Get<IDeleteVariableService>(),
+            _mocker.Get<IExposeVariableService>(),
+            _mocker.Get<IEditVariableService>(),
+            _mocker.Get<ITypeManager>(),
+            _mocker.Get<IClipboardService>());
+    }
+
     /// <summary>
     /// A composite must be matched by the same name whether one object or several are selected. The
     /// multi-select wrapper sits above the composite, so expanding composites into their channels would
@@ -52,12 +104,26 @@ public class VariableCategoryRowAdapterTests : BaseTestClass
         };
 
         List<IVariableCategoryRow> singleSelectRows =
-            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { singleSelectComposite });
+            _adapter.CreateRows(new List<InstanceMember> { singleSelectComposite });
         List<IVariableCategoryRow> multiSelectRows =
-            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { multiSelectComposite });
+            _adapter.CreateRows(new List<InstanceMember> { multiSelectComposite });
 
         singleSelectRows.Single().RootVariableName.ShouldBe("Color");
         multiSelectRows.Single().RootVariableName.ShouldBe("Color");
+    }
+
+    /// <summary>
+    /// State names are only meaningful on the element that declares them. A pasted state name the target
+    /// does not offer must be rejected, or a dangling state name gets saved into the project.
+    /// </summary>
+    [Fact]
+    public void TrySetValue_ShouldRejectAStateNameTheTargetDoesNotHave()
+    {
+        StateReferencingInstanceMember stateRow = CreateStateSelectionRow("StyleCategoryState");
+
+        List<IVariableCategoryRow> rows = _adapter.CreateRows(new List<InstanceMember> { stateRow });
+
+        rows.Single().TrySetValue("StateTheTargetDoesNotHave").ShouldBeFalse();
     }
 
     [Fact]
@@ -65,8 +131,7 @@ public class VariableCategoryRowAdapterTests : BaseTestClass
     {
         CompositeInstanceMember composite = CreateColorComposite(10);
 
-        List<IVariableCategoryRow> rows =
-            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { composite });
+        List<IVariableCategoryRow> rows = _adapter.CreateRows(new List<InstanceMember> { composite });
 
         rows.Single().Value.ShouldBe(10);
         rows.Single().TrySetValue(30).ShouldBeTrue();
@@ -86,8 +151,7 @@ public class VariableCategoryRowAdapterTests : BaseTestClass
             InstanceMembers = new List<InstanceMember> { firstInstanceFontSize, secondInstanceFontSize }
         };
 
-        List<IVariableCategoryRow> rows =
-            VariableCategoryRowAdapter.CreateRows(new List<InstanceMember> { multiSelect });
+        List<IVariableCategoryRow> rows = _adapter.CreateRows(new List<InstanceMember> { multiSelect });
 
         rows.Single().RootVariableName.ShouldBe("FontSize");
         rows.Single().TrySetValue(36).ShouldBeTrue();

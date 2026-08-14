@@ -7,31 +7,18 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// <see cref="VariableCategoryCopyPasteService"/> rather than on the system clipboard (mirroring
 /// <c>CopyPasteLogic.CopiedData</c>).
 /// </summary>
-public class CopiedVariableCategory
-{
-    /// <summary>The name of the category the values came from, used to label the paste menu item.</summary>
-    public string CategoryName { get; }
-
-    /// <summary>The captured values, in the order they appeared in the source category.</summary>
-    public IReadOnlyList<CopiedVariableValue> Values { get; }
-
-    public CopiedVariableCategory(string categoryName, IReadOnlyList<CopiedVariableValue> values)
-    {
-        CategoryName = categoryName;
-        Values = values;
-    }
-}
+/// <param name="CategoryName">The name of the category the values came from, reported back when pasting.</param>
+/// <param name="Values">The captured values, in the order they appeared in the source category.</param>
+/// <param name="IndeterminateVariableNames">
+/// Variables that could not be captured because the source was a multi-selection whose instances
+/// disagree on the value. Reported so the user knows the copy is incomplete.
+/// </param>
+public record CopiedVariableCategory(
+    string CategoryName,
+    IReadOnlyList<CopiedVariableValue> Values,
+    IReadOnlyList<string> IndeterminateVariableNames);
 
 /// <summary>A single variable name/value pair captured by a category copy.</summary>
-public class CopiedVariableValue
-{
-    public string RootVariableName { get; }
-
-    public object Value { get; }
-
-    public CopiedVariableValue(string rootVariableName, object value)
-    {
-        RootVariableName = rootVariableName;
-        Value = value;
-    }
-}
+/// <param name="RootVariableName">The unqualified variable name, used to match a row on the paste target.</param>
+/// <param name="Value">The effective value at copy time.</param>
+public record CopiedVariableValue(string RootVariableName, object Value);

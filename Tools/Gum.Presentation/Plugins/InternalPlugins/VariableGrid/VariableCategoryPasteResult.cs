@@ -7,17 +7,10 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// have, cannot take, or would shadow a reference on is skipped rather than failing the whole paste -
 /// so the caller needs this to report the outcome.
 /// </summary>
-public class VariableCategoryPasteResult
-{
-    /// <summary>Names of the variables whose values were written to the target.</summary>
-    public IReadOnlyList<string> AppliedVariableNames { get; }
-
-    /// <summary>Names of the copied variables that were not written.</summary>
-    public IReadOnlyList<string> SkippedVariableNames { get; }
-
-    public VariableCategoryPasteResult(IReadOnlyList<string> appliedVariableNames, IReadOnlyList<string> skippedVariableNames)
-    {
-        AppliedVariableNames = appliedVariableNames;
-        SkippedVariableNames = skippedVariableNames;
-    }
-}
+/// <param name="AppliedVariableNames">Variables whose values were written to the target.</param>
+/// <param name="AlreadyMatchedVariableNames">Variables the target already showed with the copied value, left untouched.</param>
+/// <param name="SkippedVariableNames">Copied variables that were neither written nor matched.</param>
+public record VariableCategoryPasteResult(
+    IReadOnlyList<string> AppliedVariableNames,
+    IReadOnlyList<string> AlreadyMatchedVariableNames,
+    IReadOnlyList<string> SkippedVariableNames);

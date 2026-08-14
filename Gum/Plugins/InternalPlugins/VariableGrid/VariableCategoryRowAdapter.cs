@@ -7,24 +7,19 @@ using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
-/// <summary>
-/// Adapts the Variables tab's WPF rows to <see cref="IVariableCategoryRow"/> so the headless
-/// <see cref="VariableCategoryCopyPasteService"/> can read and write them without referencing WPF.
-/// </summary>
-public static class VariableCategoryRowAdapter
+/// <inheritdoc cref="IVariableCategoryRowAdapter"/>
+public class VariableCategoryRowAdapter : IVariableCategoryRowAdapter
 {
-    /// <summary>
-    /// Wraps each member of a category as a copy/paste row.
-    /// </summary>
+    /// <inheritdoc/>
     /// <remarks>
     /// Rows are taken exactly as the grid presents them, including composite rows (the color swatch backed
     /// by Red/Green/Blue) and multi-select wrappers. Expanding a composite into its channels here would
     /// name it differently depending on whether one or several objects are selected - the multi-select
     /// wrapper sits above the composite, not below it - so a copy in one mode would not match a paste in
     /// the other. Writing through the row as-is also keeps each wrapper's own behavior: the composite skips
-    /// unchanged channels, and the multi-select wrapper fans the value out and refreshes afterwards.
+    /// unchanged channels, and the multi-select wrapper fans the value out to every selected instance.
     /// </remarks>
-    public static List<IVariableCategoryRow> CreateRows(IEnumerable<InstanceMember> members) =>
+    public List<IVariableCategoryRow> CreateRows(IEnumerable<InstanceMember> members) =>
         members.Select(member => (IVariableCategoryRow)new InstanceMemberRow(member)).ToList();
 
     private class InstanceMemberRow : IVariableCategoryRow
@@ -38,9 +33,13 @@ public static class VariableCategoryRowAdapter
 
         public string RootVariableName => GetRootVariableName(_member);
 
+        // No recursion needed: DataUiGrid.TryCreateMultiGroup forces IsReadOnly onto multi-select wrappers
+        // (Any of the wrapped rows), and CompositeInstanceMember overrides it over its channels.
         public bool IsReadOnly => _member.IsReadOnly;
 
         public bool IsAssignedByReference => GetIsAssignedByReference(_member);
+
+        public bool IsIndeterminate => _member.IsIndeterminate;
 
         public object? Value => _member.Value;
 
@@ -60,15 +59,18 @@ public static class VariableCategoryRowAdapter
 
         public bool TrySetValue(object value)
         {
-            ApplyValueResult result = _member.SetValue(value, SetPropertyCommitType.Full);
-
-            if (result != ApplyValueResult.Success)
+            // A state name is only meaningful on the element that declares it. Writing one the target does
+            // not have would pass the CLR type gate (it is just a string) and save a dangling state name
+            // into the project, so validate against the row's available states.
+            if (GetIsStateSelection(_member) && _member.CustomOptions?.Contains(value) != true)
             {
                 return false;
             }
 
-            _member.CallAfterSetByUi();
-            return true;
+            // No CallAfterSetByUi here: nothing subscribes AfterSetByUi, and the category-level handler it
+            // reaches (DataUiGrid.HandleInstanceMemberSetByUi) re-reads every row in the whole grid - per
+            // pasted value - only for the caller's final full refresh to redo that work anyway.
+            return _member.SetValue(value, SetPropertyCommitType.Full) == ApplyValueResult.Success;
         }
 
         /// <summary>
@@ -90,6 +92,21 @@ public static class VariableCategoryRowAdapter
             // Composite rows fall through to here. Their name is the composite's own (for example "Color"),
             // which is stable across single- and multi-select because both build it the same way.
             return member.Name;
+        }
+
+        private static bool GetIsStateSelection(InstanceMember member)
+        {
+            if (member is StateReferencingInstanceMember stateReferencingMember)
+            {
+                return stateReferencingMember.IsStateSelection;
+            }
+
+            if (member is MultiSelectInstanceMember multiSelectMember && multiSelectMember.InstanceMembers.Count > 0)
+            {
+                return GetIsStateSelection(multiSelectMember.InstanceMembers[0]);
+            }
+
+            return false;
         }
 
         private static bool GetIsAssignedByReference(InstanceMember member)

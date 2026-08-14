@@ -39,6 +39,8 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
 
         public bool IsAssignedByReference => false;
 
+        public bool IsIndeterminate => false;
+
         public object? Value => _state.GetValue(RootVariableName);
 
         public Type? ValueType => Value?.GetType();

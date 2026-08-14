@@ -11,8 +11,11 @@ public interface IVariableCategoryCopyPasteService
     /// <summary>The most recently copied category, or null if nothing has been copied this session.</summary>
     CopiedVariableCategory? CopiedCategory { get; }
 
-    /// <summary>Captures the effective values of the supplied rows, replacing anything previously copied.</summary>
-    void Copy(string categoryName, IEnumerable<IVariableCategoryRow> rows);
+    /// <summary>
+    /// Captures the effective values of the supplied rows, replacing anything previously copied, and
+    /// returns the captured payload.
+    /// </summary>
+    CopiedVariableCategory Copy(string categoryName, IEnumerable<IVariableCategoryRow> rows);
 
     /// <summary>
     /// Writes the copied values onto the supplied rows, matching by variable name and recording the whole
