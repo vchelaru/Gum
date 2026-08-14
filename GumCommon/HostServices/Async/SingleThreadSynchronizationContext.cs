@@ -5,15 +5,14 @@ using System.Threading;
 namespace Gum.Async;
 
 /// <summary>
-/// A <see cref="SynchronizationContext"/> that funnels async continuations onto
-/// the game's primary thread by queuing them and draining the queue once per
-/// frame from <see cref="GumService.Update(Microsoft.Xna.Framework.GameTime)"/>.
+/// A <see cref="SynchronizationContext"/> that funnels async continuations onto the host's primary
+/// thread by queuing them and draining the queue once per frame from the owning service's
+/// <c>Update</c>.
 /// </summary>
 /// <remarks>
-/// Install via <c>GumService.UseSingleThreadedAsync()</c>. After install,
-/// <c>await</c> continuations in handlers (including
-/// <c>await dialogBox.ShowAsync(...)</c>) resume on the primary thread, so it is
-/// safe to mutate UI state after the await without thread-affinity surprises.
+/// Install via <c>GumService.UseSingleThreadedAsync()</c>. After install, <c>await</c> continuations
+/// in handlers (including <c>await dialogBox.ShowAsync(...)</c>) resume on the primary thread, so it
+/// is safe to mutate UI state after the await without thread-affinity surprises.
 /// </remarks>
 public class SingleThreadSynchronizationContext : SynchronizationContext
 {

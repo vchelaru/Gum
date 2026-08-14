@@ -30,7 +30,8 @@ public interface IGumHotReloadManager
 
     /// <summary>
     /// Starts watching the directory containing the specified .gumx project file for changes.
-    /// This is not typically called directly — use <see cref="GumService.EnableHotReload"/> instead.
+    /// This is not typically called directly — use <see cref="GumServiceSkiaBase.EnableHotReload"/>
+    /// or the MonoGame/Raylib GumService's equivalent instead.
     /// </summary>
     /// <param name="absoluteGumxSourcePath">The absolute path to the .gumx project file.</param>
     void Start(string absoluteGumxSourcePath);
@@ -42,10 +43,10 @@ public interface IGumHotReloadManager
 
     /// <summary>
     /// Checks for a pending reload and, if enough time has elapsed since the last file change, performs the reload.
-    /// This is not typically called directly — <see cref="GumService"/> calls this automatically each frame.
+    /// This is not typically called directly — the owning service calls this automatically each frame.
     /// </summary>
     /// <param name="roots">The roots whose direct children will be rebuilt from the reloaded project.
-    /// Typically the same collection passed to <see cref="GumService.Update(GameTime, IEnumerable{GraphicalUiElement})"/>.</param>
+    /// Typically the same collection passed to the owning service's per-frame Update.</param>
     void Update(IEnumerable<GraphicalUiElement> roots);
 }
 
@@ -53,8 +54,19 @@ public interface IGumHotReloadManager
 /// Default implementation of <see cref="IGumHotReloadManager"/>. Watches Gum project files on disk
 /// and hot-reloads the element tree when changes are detected.
 /// </summary>
+/// <remarks>
+/// Lives in GumCommon (not a MonoGame/Raylib-specific project) so any host — including Skia-family
+/// hosts via <c>GumServiceSkiaBase</c> — can reuse it (issue #4452). The two platform-specific
+/// operations a reload needs to re-run (applying the project's texture filter, and loading
+/// *Animations.ganx/.ganj files) are supplied by the owning service via the constructor instead of
+/// being hardcoded to a specific concrete GumService type.
+/// </remarks>
 public class GumHotReloadManager : IGumHotReloadManager
 {
+    private readonly Action<GumProjectSave> _applyProjectTextureFilter;
+    private readonly Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> _loadAnimationsFromProvider;
+    private readonly Action<string> _disposeCachedAsset;
+
     private string _projectSourcePath = "";
     private string _binGumDirectory = "";
     private FileSystemWatcher? _watcher;
@@ -62,6 +74,32 @@ public class GumHotReloadManager : IGumHotReloadManager
     private DateTime _lastChangeTime;
     private readonly List<string> _changedFontFiles = new List<string>();
     private readonly object _fontFileLock = new object();
+
+    /// <param name="applyProjectTextureFilter">
+    /// Applies the reloaded project's <see cref="GumProjectSave.TextureFilter"/> to the host's
+    /// renderer — the same operation the host's own Initialize runs on first load. Each host's
+    /// GumService already implements this (e.g. <c>GumService.ApplyProjectTextureFilter</c>).
+    /// </param>
+    /// <param name="loadAnimationsFromProvider">
+    /// Loads *Animations.ganx/.ganj files from the given file provider into the reloaded project.
+    /// Each host's GumService already implements this (e.g. <c>GumService.LoadAnimationsFromProvider</c>).
+    /// </param>
+    /// <param name="disposeCachedAsset">
+    /// Evicts a standardized (absolute, case-preserved) file path from the host's content cache, so a
+    /// changed font/texture reloads from disk instead of returning the stale cached version. The
+    /// concrete cache (<c>RenderingLibrary.Content.LoaderManager</c>) is an engine-specific type not
+    /// available in GumCommon, so the host supplies this hook (e.g.
+    /// <c>path => RenderingLibrary.Content.LoaderManager.Self.Dispose(path)</c>).
+    /// </param>
+    public GumHotReloadManager(
+        Action<GumProjectSave> applyProjectTextureFilter,
+        Func<GumProjectSave, Gum.Bundle.IGumFileProvider, int> loadAnimationsFromProvider,
+        Action<string> disposeCachedAsset)
+    {
+        _applyProjectTextureFilter = applyProjectTextureFilter;
+        _loadAnimationsFromProvider = loadAnimationsFromProvider;
+        _disposeCachedAsset = disposeCachedAsset;
+    }
 
     /// <inheritdoc/>
     public event Action? ReloadCompleted;
@@ -150,7 +188,7 @@ public class GumHotReloadManager : IGumHotReloadManager
     /// type that should trigger a hot reload - both the XML and JSON forms of the project, element,
     /// animation, and behavior formats, plus bitmap fonts. Internal (not private) so tests can pin
     /// the watched set directly; the actual reload dispatch (<c>GumProjectSave.Load</c>,
-    /// <c>GumService.LoadAnimationsFromProvider</c>) already handles both XML and JSON content, so
+    /// the injected animation loader) already handles both XML and JSON content, so
     /// this gate is the only place that needed the JSON siblings added (issue #4182).
     /// </summary>
     internal static bool IsWatchedExtension(string extension) =>
@@ -191,10 +229,6 @@ public class GumHotReloadManager : IGumHotReloadManager
         var destinationFontCache = Path.Combine(_binGumDirectory, "FontCache");
         Directory.CreateDirectory(destinationFontCache);
 
-        // global:: needed now that this file is in namespace Gum — a bare
-        // "RenderingLibrary.Content" would resolve against Gum.RenderingLibrary.
-        var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-
         foreach (var sourceFntPath in changedFonts)
         {
             var fileName = Path.GetFileName(sourceFntPath);
@@ -216,13 +250,13 @@ public class GumHotReloadManager : IGumHotReloadManager
             // Unload the cached font so it gets reloaded from the new file
             var absoluteFontPath = Path.Combine(destinationFontCache, fileName);
             var standardizedFont = ToolsUtilities.FileManager.Standardize(absoluteFontPath, preserveCase: true, makeAbsolute: true);
-            loaderManager.Dispose(standardizedFont);
+            _disposeCachedAsset(standardizedFont);
 
             // Unload the cached texture pages so they get reloaded too
             foreach (var pngPath in copiedPngs)
             {
                 var standardizedPng = ToolsUtilities.FileManager.Standardize(pngPath, preserveCase: true, makeAbsolute: true);
-                loaderManager.Dispose(standardizedPng);
+                _disposeCachedAsset(standardizedPng);
             }
         }
     }
@@ -252,7 +286,7 @@ public class GumHotReloadManager : IGumHotReloadManager
         // Re-apply the project's texture filter so editing it in the tool carries over on reload
         // (issue #3199). On XNALIKE this takes effect on the next Draw; on raylib it affects
         // textures loaded after this point (already-cached textures keep their prior filter).
-        GumService.ApplyProjectTextureFilter(newProject);
+        _applyProjectTextureFilter(newProject);
 
         foreach (var element in newProject.AllElements)
         {
@@ -275,12 +309,12 @@ public class GumHotReloadManager : IGumHotReloadManager
         string? sourceDirectory = Path.GetDirectoryName(_projectSourcePath);
         Gum.Bundle.LooseFileGumFileProvider animationProvider = new Gum.Bundle.LooseFileGumFileProvider(
             string.IsNullOrEmpty(sourceDirectory) ? "." : sourceDirectory);
-        GumService.LoadAnimationsFromProvider(newProject, animationProvider);
+        _loadAnimationsFromProvider(newProject, animationProvider);
 
         System.Diagnostics.Debug.WriteLine(
             $"[HotReload] rootList.Count = {rootList.Count}");
 
-        ApplyDiff(rootList, newProject, SystemManagers.Default);
+        ApplyDiff(rootList, newProject, ISystemManagers.Default!);
 
         System.Diagnostics.Debug.WriteLine("[HotReload] DONE");
 

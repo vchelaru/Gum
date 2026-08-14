@@ -41,7 +41,9 @@ public class HotReloadAnimationReloadTests : BaseTestClass
             Directory.CreateDirectory(screensDirectory);
             File.WriteAllBytes(Path.Combine(screensDirectory, "MainScreenAnimations.ganx"), Ganx());
 
-            GumHotReloadManager manager = new GumHotReloadManager();
+            GumHotReloadManager manager = new GumHotReloadManager(
+                GumService.ApplyProjectTextureFilter, GumService.LoadAnimationsFromProvider,
+                path => RenderingLibrary.Content.LoaderManager.Self.Dispose(path));
             manager.Start(gumxPath);
             // Release the OS watcher immediately; Start has already recorded the source path.
             manager.Stop();

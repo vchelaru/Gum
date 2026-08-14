@@ -178,6 +178,10 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="SkiaGum.Tests" />
+		<!-- Lets SilkNetGum's CursorExtensions reach FormsUtilities.LastEventRoots (internal) across
+		     the assembly boundary — SilkNetGum references this project for GumServiceSkiaBase
+		     instead of file-linking FormsUtilities.cs (issue #4452 phase 2). -->
+		<InternalsVisibleTo Include="SilkNetGum" />
 	</ItemGroup>
 
 	<!--

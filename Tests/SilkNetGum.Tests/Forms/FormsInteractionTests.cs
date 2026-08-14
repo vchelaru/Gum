@@ -1,6 +1,7 @@
 using Gum;
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
 using Gum.Input;
 using Gum.Wireframe;
 using Moq;
@@ -38,6 +39,33 @@ public class FormsInteractionTests : BaseTestClass
         GumService.Default.Root.DoUiActivityRecursively(FrameworkElement.MainCursor, keyboard.Object, 0);
 
         textBox.Text.ShouldBe("hi");
+    }
+
+    [Fact]
+    public void DoUiActivityRecursively_KeyCharsTyped_HidesPlaceholder()
+    {
+        // Regression test: Runtimes/SkiaGum/CustomSetPropertyOnRenderable.cs's TrySetPropertyOnText
+        // sets the Skia Text renderable's RawText directly instead of delegating to
+        // TextRuntime.Text/SetTextNoTranslate (which the shared MonoGame/Raylib dispatcher does), so
+        // it never raises PropertyChanged("Text") -- TextBoxBase.OnTextChanged, and therefore
+        // UpdatePlaceholderVisibility, never runs when the user types.
+        TextBox textBox = new();
+        textBox.Placeholder = "Enter text here";
+        textBox.AddToRoot();
+        textBox.IsFocused = true;
+
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        visual.PlaceholderTextInstance.Visible.ShouldBeTrue(
+            "sanity: placeholder should show while the text box is empty");
+
+        Mock<IInputReceiverKeyboard> keyboard = new();
+        keyboard.Setup(k => k.KeysTyped).Returns(new List<Keys>());
+        keyboard.Setup(k => k.GetStringTyped()).Returns("a");
+
+        GumService.Default.Root.DoUiActivityRecursively(FrameworkElement.MainCursor, keyboard.Object, 0);
+
+        visual.PlaceholderTextInstance.Visible.ShouldBeFalse(
+            "typing should hide the placeholder now that real text is present");
     }
 
     [Fact]

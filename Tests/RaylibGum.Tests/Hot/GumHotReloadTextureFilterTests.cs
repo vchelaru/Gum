@@ -48,7 +48,9 @@ public class GumHotReloadTextureFilterTests : BaseTestClass
             GumProjectSave project = new GumProjectSave { TextureFilter = "Linear" };
             project.Save(gumxPath, saveElements: false);
 
-            GumHotReloadManager manager = new GumHotReloadManager();
+            GumHotReloadManager manager = new GumHotReloadManager(
+                GumService.ApplyProjectTextureFilter, GumService.LoadAnimationsFromProvider,
+                path => LoaderManager.Self.Dispose(path));
             manager.Start(gumxPath);
             // Release the OS watcher immediately; Start has already recorded the source path.
             manager.Stop();
@@ -79,7 +81,9 @@ public class GumHotReloadTextureFilterTests : BaseTestClass
             GumProjectSave project = new GumProjectSave { TextureFilter = "Point" };
             project.Save(gumxPath, saveElements: false);
 
-            GumHotReloadManager manager = new GumHotReloadManager();
+            GumHotReloadManager manager = new GumHotReloadManager(
+                GumService.ApplyProjectTextureFilter, GumService.LoadAnimationsFromProvider,
+                path => LoaderManager.Self.Dispose(path));
             manager.Start(gumxPath);
             manager.Stop();
 

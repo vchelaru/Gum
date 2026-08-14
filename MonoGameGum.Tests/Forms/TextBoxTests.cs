@@ -573,6 +573,23 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleCharEntered_ShouldHidePlaceholder_WhenTypingIntoEmptyTextBox()
+    {
+        TextBox textBox = new();
+        textBox.Placeholder = "Enter text";
+
+        TextBoxBaseVisual visual = (TextBoxBaseVisual)textBox.Visual;
+        visual.PlaceholderTextInstance.Visible.ShouldBeTrue(
+            "sanity: placeholder should show while the text box is empty");
+
+        textBox.HandleCharEntered('a');
+
+        visual.PlaceholderTextInstance.Visible.ShouldBeFalse(
+            "typing routes through SetTextNoTranslate, which sets the TextNoTranslate " +
+            "property -- HandleTextComponentPropertyChanged must also react to that, not just Text");
+    }
+
+    [Fact]
     public void HandleCharEntered_ShouldUpdateBindingSource_OnEnterNoAcceptsReturn()
     {
         TextBox textBox = new();
