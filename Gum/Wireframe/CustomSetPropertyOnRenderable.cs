@@ -2170,9 +2170,12 @@ public partial class CustomSetPropertyOnRenderable
                     return createdFont.Value;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Fall through to null - the caller uses the base font / base-atlas scale fallback.
+                // Fall through to null - the caller uses the base font / base-atlas scale fallback -
+                // but surface the failure instead of leaving it completely silent.
+                PropertyAssignmentError?.Invoke(
+                    $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
 
             return null;
@@ -2667,9 +2670,13 @@ public partial class CustomSetPropertyOnRenderable
                                 return;
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // Fall through to the disk / system-font path.
+                            // Fall through to the disk / system-font path, but surface the failure -
+                            // previously silent, leaving Raylib's default font on screen with no
+                            // indication the in-memory creator failed.
+                            PropertyAssignmentError?.Invoke(
+                                $"Error creating in-memory font '{textRuntime.Font}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
                         }
                     }
 
