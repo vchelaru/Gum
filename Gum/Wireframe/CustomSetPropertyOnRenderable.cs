@@ -2685,6 +2685,16 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
                     }
+                    // A wired InMemoryFontCreator declining (returning null) is a documented, normal
+                    // signal -- IRaylibFontCreator.TryCreateFont falls through to disk/system-font on
+                    // purpose, and that fallback succeeding here is not a failure worth reporting. Only
+                    // surface it once NOTHING resolved a usable font, so this can't fire for a creator
+                    // that's working exactly as designed.
+                    if (InMemoryFontCreator != null && fontFromGum.BaseSize == 0)
+                    {
+                        PropertyAssignmentError?.Invoke(
+                            $"No usable font could be resolved for '{textRuntime.Font}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
+                    }
                     AssignFontIfChanged(asText, fontFromGum);
                 }
             }
