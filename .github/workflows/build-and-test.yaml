@@ -41,7 +41,7 @@ jobs:
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
       - name: Build Gum (tool)
         run: |
           dotnet restore "Gum.sln" --verbosity quiet
@@ -85,7 +85,7 @@ jobs:
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       # PublishAot's native link step shells out to vswhere.exe to locate the MSVC linker. Not
       # guaranteed to already be on PATH for this job's shell - add it defensively rather than
@@ -154,7 +154,7 @@ jobs:
       - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       - name: Cache .NET workloads (main only)
         id: cache-workloads
@@ -346,7 +346,7 @@ jobs:
         if: github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true'
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          dotnet-version: 10.0.x
 
       # On main: full cache (restore + save). On PRs: restore only, no save.
       # PR branch caches are scoped to that branch and never reused, so saving

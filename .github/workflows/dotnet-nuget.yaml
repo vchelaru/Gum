@@ -24,7 +24,7 @@ on:
         type: string
 
 env:
-  DOTNET_VERSIONS: '6.0.x;8.0.x;9.0.x' # Multiple .NET versions
+  DOTNET_VERSIONS: '6.0.x;8.0.x;10.0.x' # Multiple .NET versions
   CONFIGURATION: Release
   SOLUTION_FILE: 'AllLibraries.sln' # Specify which solution to build
 
@@ -49,7 +49,7 @@ jobs:
         dotnet-version: |
           6.0.x
           8.0.x
-          9.0.x
+          10.0.x
 
     - name: Install required workloads
       run: |
