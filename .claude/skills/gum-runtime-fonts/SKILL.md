@@ -47,6 +47,8 @@ Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.
 
 **Key gotcha:** Unless an `IInMemoryFontCreator` or `IRuntimeFontService` is registered, the `.fnt` file must already exist in `FontCache/`. Users often set `FontSize = 24` expecting it to work, but silently get `DefaultBitmapFont` because `Font24Arial.fnt` was never generated. There is no error or warning — the text just renders in the default font.
 
+All platforms (MonoGame/KNI/FNA and Raylib) raise `CustomSetPropertyOnRenderable.PropertyAssignmentError` when a wired `InMemoryFontCreator` throws, or declines and nothing else resolves a usable font — but it's a static event with no default subscriber, so even that diagnostic is silent unless the consumer subscribes to it themselves.
+
 ### Path 3: In-Memory Font Creation (IInMemoryFontCreator) — New
 
 Generates a `BitmapFont` entirely in memory at runtime — no pre-built `.fnt` files needed. The loading code already checks for this; it slots into the cascade between embedded resources and disk-based generation.

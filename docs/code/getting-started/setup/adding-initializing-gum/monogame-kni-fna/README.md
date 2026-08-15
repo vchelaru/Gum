@@ -44,6 +44,7 @@ Modify csproj:
 <PackageReference Include="Gum.KNI" Version="*" />
 <PackageReference Include="Gum.Shapes.KNI" Version="*" /> <!-- Recommended, optional: shape fill/gradient/shadow -->
 <PackageReference Include="KernSmith.KniGum" Version="*" /> <!-- Recommended, optional: dynamic fonts -->
+<PackageReference Include="KernSmith.Rasterizers.StbTrueType" Version="*" /> <!-- Only needed if targeting web (BlazorGL) -->
 <PackageReference Include="Gum.Expressions" Version="*" /> <!-- Optional: arithmetic expressions in variable references -->
 ```
 
@@ -53,6 +54,7 @@ Or add through command line:
 dotnet add package Gum.KNI
 dotnet add package Gum.Shapes.KNI     # Recommended, optional: shape fill/gradient/shadow
 dotnet add package KernSmith.KniGum   # Recommended, optional: dynamic fonts
+dotnet add package KernSmith.Rasterizers.StbTrueType   # Only needed if targeting web (BlazorGL)
 dotnet add package Gum.Expressions    # Optional: arithmetic expressions in variable references
 ```
 {% endtab %}
@@ -277,6 +279,23 @@ By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The 
 
 {% hint style="info" %}
 For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../../standard-visuals/textruntime/fonts.md) page.
+{% endhint %}
+
+{% hint style="warning" %}
+**KNI on web (BlazorGL):** dynamic fonts default to the FreeType rasterizer, which is native code and can't run in the browser. You must select the pure-C# StbTrueType backend instead (the `KernSmith.Rasterizers.StbTrueType` package added above), and register it yourself before Gum uses it — published web builds are trimmed by default, which strips KernSmith's normal automatic backend discovery. Add this once in `Program.cs`, before the host runs:
+
+```csharp
+using System.Runtime.CompilerServices;
+using KernSmith.Rasterizers.StbTrueType;
+
+RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
+```
+
+Then pass the backend explicitly when creating the font creator:
+
+```csharp
+new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.Rasterizer.RasterizerBackend.StbTrueType);
+```
 {% endhint %}
 
 ### About Expression Support (Optional)
