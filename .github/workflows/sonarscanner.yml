@@ -28,7 +28,7 @@ jobs:
       - name: Set up .NET 9
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Install workloads
         # android is included so SonarQube analyzes the MonoGameGum / KniGum Android
