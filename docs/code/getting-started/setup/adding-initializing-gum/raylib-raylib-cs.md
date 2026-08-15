@@ -16,12 +16,16 @@ Modify csproj:
 
 ```xml
 <PackageReference Include="Gum.raylib" />
+<PackageReference Include="KernSmith.RaylibGum" /> <!-- Recommended, optional: dynamic fonts -->
+<PackageReference Include="KernSmith.Rasterizers.StbTrueType" /> <!-- Only needed if targeting web -->
 ```
 
 Or add through command line:
 
 ```bash
 dotnet add package Gum.raylib
+dotnet add package KernSmith.RaylibGum               # Recommended, optional: dynamic fonts
+dotnet add package KernSmith.Rasterizers.StbTrueType # Only needed if targeting web
 ```
 
 {% hint style="warning" %}
@@ -93,6 +97,38 @@ public class Program
     }
 }
 </code></pre>
+
+## Adding Dynamic Fonts (Optional)
+
+By default, Gum uses pre-built bitmap font (.fnt) files for text rendering. The `KernSmith.RaylibGum` package added above enables dynamic in-memory font generation, which lets you set `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, and `UseFontSmoothing` on any `TextRuntime` without needing .fnt/.png files on disk:
+
+```csharp
+using RaylibGum.Renderables;
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithRaylibFontCreator();
+```
+
+{% hint style="info" %}
+For shipping games, you should register custom .ttf fonts rather than relying on system fonts. For more information, see the [Fonts](../../../../standard-visuals/textruntime/fonts.md) page.
+{% endhint %}
+
+{% hint style="warning" %}
+**On web:** dynamic fonts default to the FreeType rasterizer, which is native code and can't run in the browser. You must select the pure-C# StbTrueType backend instead (the `KernSmith.Rasterizers.StbTrueType` package added above), and register it yourself before Gum uses it — published web builds are trimmed by default, which strips KernSmith's normal automatic backend discovery. Add this to your web target's `Program.cs`, before `GumUI.Initialize()`:
+
+```csharp
+using System.Runtime.CompilerServices;
+using KernSmith.Rasterizers.StbTrueType;
+
+RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
+```
+
+Then pass the backend explicitly:
+
+```csharp
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithRaylibFontCreator(KernSmith.Rasterizer.RasterizerBackend.StbTrueType);
+```
+{% endhint %}
 
 ## Adding Expression Support (Optional)
 

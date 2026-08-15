@@ -22,4 +22,8 @@ Each platform package plugs into `CustomSetPropertyOnRenderable.InMemoryFontCrea
 
 These are opt-in NuGet add-ons a *game project* references directly — Gum does not wire one up by default. If `InMemoryFontCreator` is never set, Gum falls back to the tool's pre-generated bmfont.exe pipeline. Seeing a `KernSmith.*` package reference alongside `Gum.MonoGame`/etc. in a user's `.csproj` is expected, not a conflicting fork.
 
+## Rasterizer backend gotcha (wasm/AOT)
+
+KernSmith picks a glyph rasterizer via `RasterizerBackend`, each backend its own opt-in NuGet package (`KernSmith.Rasterizers.FreeType`/`Gdi`/`DirectWrite.TerraFX`/`StbTrueType`) so a consumer only pays for the one it needs — see the [KernSmith README](https://github.com/kaltinril/KernSmith). Gum's `KernSmith.GumCommon` references only `FreeType` (upstream's default, and native-only). `StbTrueType` is the sole pure-C# backend and the only one that runs on browser-wasm/AOT, but no Gum `KernSmith.*` package references it — a wasm consumer must add `KernSmith.Rasterizers.StbTrueType` themselves, and separately call `RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle)` before using it, since KernSmith's reflection-based backend auto-discovery is trimmed away under wasm/AOT publish (silent "backend is not registered" failure otherwise). Any fix that wires this into Gum's own packages must condition both the reference and the call on the browser-wasm RID — adding it unconditionally defeats the per-backend package split's whole purpose.
+
 See `docs/code/files-and-fonts/font-strategies.md` for the user-facing font strategy comparison.
