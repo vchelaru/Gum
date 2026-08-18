@@ -42,14 +42,12 @@
 			(see issue #4020). The precompiled apos-shapes.xnb workaround this csproj used to
 			ship is gone; consumers just reference the package.
 
-			0.7.10, not the latest (0.8.1): upstream's own changelog says the OpenGL shader
-			"still failed to load ... with Shader Compilation Failed" on macOS/WebGL through
-			0.7.9, fixed in 0.7.10 (#4410 - same exception this repo hit on Mesa llvmpipe).
-			0.7.11 changes DrawRing's second-radius semantics (rings render 2x thicker) with
-			no compensating change in Arc.cs, so staying at 0.7.10 avoids that behavior change
-			until Arc.cs and its tests are updated deliberately.
+			Bumped from 0.7.10 to 0.8.1 for issue #4473 (RectangleRuntime crashed on macOS/Linux
+			GL drivers under the pinned 0.7.10 shader). 0.7.11's DrawRing second-radius semantics
+			change (rings would render 2x thicker) is compensated for in Arc.cs's DrawRing call —
+			see AposShapeGeometryTests for the pixel-level regression guard.
 		-->
-		<PackageReference Include="Apos.Shapes" Version="0.7.10" />
+		<PackageReference Include="Apos.Shapes" Version="0.8.1" />
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" PrivateAssets="All" />
 	</ItemGroup>
 
