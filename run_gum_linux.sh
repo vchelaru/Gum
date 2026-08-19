@@ -1,13 +1,14 @@
 #!/bin/bash
 
 ################################################################################
-### Runs a locally-built Gum tool (from `dotnet build GumFull.sln`) through
-### Wine, for developers iterating on Gum tool source from Linux.
+### Builds GumFull.sln and runs the result through Wine, for developers
+### iterating on Gum tool source from Linux. One command: build + run any
+### commit, no Rider/Visual Studio/other IDE required.
 ###
 ### This is NOT the same as setup_gum_linux.sh, which downloads and installs
-### the official released build. This script instead launches your own build
-### output through an existing Wine prefix, so you can test source changes
-### without a Windows machine.
+### the official released build. This script instead builds and launches your
+### own checkout's source through an existing Wine prefix, so you can test
+### source changes without a Windows machine.
 ###
 ### A plain `dotnet build` does not produce a native Gum.exe apphost - only a
 ### framework-dependent Gum.dll, launched via `dotnet Gum.dll`. That works for
@@ -20,11 +21,9 @@
 ### but is far slower and produces a ~100MB+ single-file bundle for no benefit
 ### here) and launches that instead.
 ###
-### Prerequisites:
-###   1. A Wine prefix with the .NET 8 desktop runtime installed. The prefix
-###      created by setup_gum_linux.sh (default: ~/.wine_gum_dotnet8) already
-###      has this; run that script first if you haven't.
-###   2. A local build: `dotnet build GumFull.sln` from the repo root.
+### Prerequisite: a Wine prefix with the .NET 8 desktop runtime installed. The
+### prefix created by setup_gum_linux.sh (default: ~/.wine_gum_dotnet8)
+### already has this; run that script first if you haven't.
 ###
 ### Usage:
 ###   ./run_gum_linux.sh [Debug|Release]
@@ -38,17 +37,18 @@ CONFIGURATION="${1:-Debug}"
 GUM_WINE_PREFIX_PATH="${GUM_WINE_PREFIX_PATH:-$HOME/.wine_gum_dotnet8}"
 GUM_OUTPUT_DIR="$SCRIPT_DIR/Gum/bin/$CONFIGURATION"
 
-if [ ! -f "$GUM_OUTPUT_DIR/Gum.dll" ]; then
-    echo "ERROR: $GUM_OUTPUT_DIR/Gum.dll not found."
-    echo "Build the tool first: dotnet build GumFull.sln"
-    exit 1
-fi
-
 if [ ! -d "$GUM_WINE_PREFIX_PATH" ]; then
     echo "ERROR: No Wine prefix found at $GUM_WINE_PREFIX_PATH."
     echo "Run setup_gum_linux.sh first to install Wine and the .NET 8 desktop runtime into a prefix."
     exit 1
 fi
+
+# Full solution build - not just Gum.csproj - since plugin projects deploy
+# themselves into Gum/bin/.../Plugins/ via their own post-build steps, which
+# only run when those projects build (see GumFull.sln builds, not individual
+# csproj builds, in CLAUDE.md).
+echo "Building GumFull.sln ($CONFIGURATION)..."
+dotnet build "$SCRIPT_DIR/GumFull.sln" -c "$CONFIGURATION" --nologo -v quiet
 
 echo "Building a native Gum.exe apphost for $CONFIGURATION..."
 dotnet build "$SCRIPT_DIR/Gum/Gum.csproj" -c "$CONFIGURATION" -r win-x64 --self-contained false \
