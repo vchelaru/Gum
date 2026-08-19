@@ -1092,7 +1092,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             {
                 foreach (string file in validFiles)
                 {
-                    string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder);
+                    string fileName = FileManager.MakeRelative(file, _fileLocations.ProjectFolder, preserveCase: true);
                     AddNewInstanceForDrop(fileName, worldX, worldY);
                     shouldUpdate = true;
                 }
