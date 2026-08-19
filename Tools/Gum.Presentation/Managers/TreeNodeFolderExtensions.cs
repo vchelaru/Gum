@@ -7,8 +7,8 @@
 /// </summary>
 public static class TreeNodeFolderExtensions
 {
-    public static bool IsTopScreenContainerTreeNode(this ITreeNode treeNode) =>
-        treeNode.Parent == null && treeNode.Text == "Screens";
+    public static bool IsTopScreenContainerTreeNode(this ITreeNode? treeNode) =>
+        treeNode != null && treeNode.Parent == null && treeNode.Text == "Screens";
 
     public static bool IsScreensFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode != null &&
@@ -16,8 +16,8 @@ public static class TreeNodeFolderExtensions
         treeNode.Parent != null &&
         (treeNode.Parent.IsScreensFolderTreeNode() || treeNode.Parent.IsTopScreenContainerTreeNode());
 
-    public static bool IsTopComponentContainerTreeNode(this ITreeNode treeNode) =>
-        treeNode.Parent == null && treeNode.Text == "Components";
+    public static bool IsTopComponentContainerTreeNode(this ITreeNode? treeNode) =>
+        treeNode != null && treeNode.Parent == null && treeNode.Text == "Components";
 
     public static bool IsComponentsFolderTreeNode(this ITreeNode? treeNode) =>
         treeNode != null &&

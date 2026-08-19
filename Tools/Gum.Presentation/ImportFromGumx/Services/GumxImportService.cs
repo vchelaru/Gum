@@ -38,7 +38,7 @@ public class GumxImportService : IGumxImportService
     }
 
     private static readonly HashSet<string> _assetExtensions =
-        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".ttf", ".otf", ".fnt" };
+        new(StringComparer.OrdinalIgnoreCase) { ".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tga", ".achx", ".achj", ".ttf", ".otf", ".fnt" };
 
     /// <inheritdoc/>
     public async Task<ImportResult> ImportAsync(

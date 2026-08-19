@@ -85,6 +85,32 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsAchx()
+    {
+        ComponentSave element = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+
+        string result = _setVariableLogic.GetWhySourcefileIsInvalid(
+            "animation.achx", element, instance, "SourceFile");
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenExtensionIsAchj()
+    {
+        // .achj (JSON) counterpart of .achx (#4476/#4480) — setting a Sprite's SourceFile to an
+        // .achj must not be rejected by this validation gate.
+        ComponentSave element = new ComponentSave();
+        InstanceSave instance = new InstanceSave();
+
+        string result = _setVariableLogic.GetWhySourcefileIsInvalid(
+            "animation.achj", element, instance, "SourceFile");
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
     public void GetWhySourcefileIsInvalid_ShouldReturnNull_WhenPluginAcceptsExtension()
     {
         ComponentSave element = new ComponentSave();
@@ -304,6 +330,77 @@ public class SetVariableLogicTests : BaseTestClass
         response.Succeeded.ShouldBeTrue();
         mocker.GetMock<Gum.Undo.IUndoManager>()
             .Verify(x => x.RecordUndo(), Times.Once());
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldSetTextureAddressToCustom_WhenSourceFileExtensionIsAchx()
+    {
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave();
+        instance.Name = "SpriteInstance";
+        instance.BaseType = "Sprite";
+
+        container.DefaultState.SetValue(
+            "SpriteInstance.SourceFile",
+            "animation.achx");
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "SourceFile",
+            "",
+            container,
+            instance,
+            container.DefaultState,
+            refresh: false);
+
+        response.Succeeded.ShouldBeTrue();
+        VariableSave textureAddress = container.DefaultState.GetVariableSave("SpriteInstance.TextureAddress");
+        textureAddress.ShouldNotBeNull();
+        textureAddress.Value.ShouldBe(TextureAddress.Custom);
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ShouldSetTextureAddressToCustom_WhenSourceFileExtensionIsAchj()
+    {
+        // .achj (JSON) counterpart of the .achx test above (#4476/#4480) — this must not be
+        // rejected by GetWhySourcefileIsInvalid, and must also flip TextureAddress to Custom
+        // the same way .achx does, or per-frame texture coordinates never get applied.
+        ComponentSave container = new ComponentSave();
+        container.States.Add(new StateSave());
+        container.DefaultState.ParentContainer = container;
+
+        InstanceSave instance = new InstanceSave();
+        instance.Name = "SpriteInstance";
+        instance.BaseType = "Sprite";
+
+        container.DefaultState.SetValue(
+            "SpriteInstance.SourceFile",
+            "animation.achj");
+
+        Mock<ISelectedState> selectedState = mocker.GetMock<ISelectedState>();
+        selectedState
+            .Setup(x => x.SelectedStateSave)
+            .Returns(container.DefaultState);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "SourceFile",
+            "",
+            container,
+            instance,
+            container.DefaultState,
+            refresh: false);
+
+        response.Succeeded.ShouldBeTrue();
+        VariableSave textureAddress = container.DefaultState.GetVariableSave("SpriteInstance.TextureAddress");
+        textureAddress.ShouldNotBeNull();
+        textureAddress.Value.ShouldBe(TextureAddress.Custom);
     }
 
     [Fact]

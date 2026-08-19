@@ -607,7 +607,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             nineSlice.SetSingleTexture(null);
         }
-        else if (value.EndsWith(".achx"))
+        else if (IsAnimationChainFile(value))
         {
             AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
 
@@ -3022,7 +3022,7 @@ public partial class CustomSetPropertyOnRenderable
 
             graphicalUiElement.UpdateLayout();
         }
-        else if (value.EndsWith(".achx"))
+        else if (IsAnimationChainFile(value))
         {
             AnimationChainList? animationChainList = null;
             try
@@ -3125,6 +3125,13 @@ public partial class CustomSetPropertyOnRenderable
         handled = true;
         return handled;
     }
+
+    /// <summary>
+    /// Whether <paramref name="value"/> is an animation chain source file — .achx (XML) or
+    /// .achj (JSON, see AnimationChainListSave.FromFile).
+    /// </summary>
+    private static bool IsAnimationChainFile(string value) =>
+        value.EndsWith(".achx") || value.EndsWith(".achj");
 
     private static AnimationChainList? GetAnimationChainList(ref string value,
         // fully qualify to avoid Android namign conflicts

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Text.Json.Nodes;
 using System.Xml.Serialization;
 using ToolsUtilities;
 
@@ -73,7 +75,16 @@ namespace Gum.Content.AnimationChain
         {
             AnimationChainListSave? toReturn = null;
 
-            if (ManualDeserialization)
+            if (IsJsonFileName(fileName))
+            {
+                // JsonNode-based parsing does no reflection/codegen, so it works on Android/iOS
+                // (ManualDeserialization) the same as any other platform — no separate branch needed.
+                using (Stream stream = FileManager.GetStreamForFile(fileName))
+                {
+                    toReturn = ParseJson(JsonNode.Parse(stream)!.AsObject());
+                }
+            }
+            else if (ManualDeserialization)
             {
                 throw new NotImplementedException();
                 //toReturn = DeserializeManually(fileName);
@@ -181,6 +192,79 @@ namespace Gum.Content.AnimationChain
         {
             // do nothing, just need this to add it to the loader manager
         }
+
+        #region JSON (.achj)
+
+        /// <summary>True when <paramref name="fileName"/> has a .achj (JSON) extension; false for .achx or anything else.</summary>
+        private static bool IsJsonFileName(string fileName) =>
+            fileName.EndsWith(".achj", StringComparison.OrdinalIgnoreCase);
+
+        // Property names match FlatRedBall2's AnimationChain.Common .achj writer (camelCase) so a
+        // file authored by the FlatRedBall Animation Editor loads into Gum without a conversion
+        // step. Fields FRB2 added that Gum's AnimationFrameSave doesn't model yet — FlipDiagonal,
+        // Red/Green/Blue/Alpha, ColorOperation, per-frame shapes (#4477, #4478, #4479) — are simply
+        // not read; JsonObject's indexer returns null for a missing key, so those files still load,
+        // just without that data.
+        private static AnimationChainListSave ParseJson(JsonObject root)
+        {
+            AnimationChainListSave result = new AnimationChainListSave();
+
+            if (root["fileRelativeTextures"] is JsonValue frt)
+                result.FileRelativeTextures = frt.GetValue<bool>();
+
+            if (root["timeMeasurementUnit"] is JsonValue tmu)
+                result.TimeMeasurementUnit = Enum.Parse<TimeMeasurementUnit>(tmu.GetValue<string>()!);
+
+            if (root["coordinateType"] is JsonValue ct)
+                result.CoordinateType = Enum.Parse<TextureCoordinateType>(ct.GetValue<string>()!);
+
+            if (root["animationChains"] is JsonArray chainsArray)
+            {
+                foreach (JsonNode? chainNode in chainsArray)
+                {
+                    JsonObject chainObj = chainNode!.AsObject();
+                    AnimationChainSave chain = new AnimationChainSave
+                    {
+                        Name = chainObj["name"]?.GetValue<string>() ?? string.Empty
+                    };
+
+                    if (chainObj["frames"] is JsonArray framesArray)
+                    {
+                        foreach (JsonNode? frameNode in framesArray)
+                            chain.Frames.Add(ParseFrameJson(frameNode!.AsObject()));
+                    }
+
+                    result.AnimationChains.Add(chain);
+                }
+            }
+
+            return result;
+        }
+
+        private static AnimationFrameSave ParseFrameJson(JsonObject frameObj)
+        {
+            return new AnimationFrameSave
+            {
+                TextureName = frameObj["textureName"]?.GetValue<string>() ?? string.Empty,
+                FrameLength = FloatProperty(frameObj, "frameLength"),
+                LeftCoordinate = FloatProperty(frameObj, "leftCoordinate"),
+                RightCoordinate = FloatProperty(frameObj, "rightCoordinate", 1f),
+                TopCoordinate = FloatProperty(frameObj, "topCoordinate"),
+                BottomCoordinate = FloatProperty(frameObj, "bottomCoordinate", 1f),
+                FlipHorizontal = BoolProperty(frameObj, "flipHorizontal"),
+                FlipVertical = BoolProperty(frameObj, "flipVertical"),
+                RelativeX = FloatProperty(frameObj, "relativeX"),
+                RelativeY = FloatProperty(frameObj, "relativeY"),
+            };
+        }
+
+        private static float FloatProperty(JsonObject parent, string name, float defaultValue = 0f) =>
+            parent[name] is JsonValue value ? value.GetValue<float>() : defaultValue;
+
+        private static bool BoolProperty(JsonObject parent, string name, bool defaultValue = false) =>
+            parent[name] is JsonValue value ? value.GetValue<bool>() : defaultValue;
+
+        #endregion
 
         #endregion
     }

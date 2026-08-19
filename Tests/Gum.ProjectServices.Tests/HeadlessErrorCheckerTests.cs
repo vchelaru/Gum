@@ -467,6 +467,32 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetErrorsFor_ShouldWarn_WhenAchjHasOffsetsAndOriginNotCenter()
+    {
+        // .achj counterpart of the .achx test above (#4476) — the origin-offset check must
+        // recognize the JSON dialect too, not just XML.
+        string achjPath = WriteTempAchj(includeOffset: true);
+        try
+        {
+            ComponentSave component = BuildComponentWithSpriteUsingSourceFile(
+                achjPath,
+                xOrigin: HorizontalAlignment.Left,
+                yOrigin: VerticalAlignment.Top);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            ErrorResult warning = errors.ShouldHaveSingleItem();
+            warning.Severity.ShouldBe(ErrorSeverity.Warning);
+            warning.Message.ShouldContain("Center");
+            warning.Message.ShouldContain("AnimatedSprite");
+        }
+        finally
+        {
+            File.Delete(achjPath);
+        }
+    }
+
     private ComponentSave BuildComponentWithSpriteUsingSourceFile(
         string sourceFile,
         HorizontalAlignment xOrigin,
@@ -517,6 +543,27 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".achx");
         FileManager.XmlSerialize(achx, path);
+        return path;
+    }
+
+    private static string WriteTempAchj(bool includeOffset)
+    {
+        string relativeY = includeOffset ? "\"relativeY\": -3," : string.Empty;
+        string json = $$"""
+        {
+          "animationChains": [
+            {
+              "name": "Chain1",
+              "frames": [
+                { "textureName": "tex.png", "frameLength": 0.1, {{relativeY}} "leftCoordinate": 0 }
+              ]
+            }
+          ]
+        }
+        """;
+
+        string path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".achj");
+        File.WriteAllText(path, json);
         return path;
     }
 

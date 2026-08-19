@@ -55,7 +55,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
             var sourceFile = rfv.GetValue<string>(sourceFileVariableName);
 
-            if(sourceFile?.EndsWith(".achx") == true)
+            if(sourceFile?.EndsWith(".achx") == true || sourceFile?.EndsWith(".achj") == true)
             {
                 if(FileManager.IsRelative(sourceFile))
                 {
