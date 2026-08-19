@@ -56,7 +56,7 @@ namespace Gum.Managers
             {
                 ReactToImageFileChanged(file);
             }
-            else if(extension == "achx")
+            else if(extension == "achx" || extension == "achj")
             {
                 ReactToAnimationChainChanged(file);
             }

@@ -789,7 +789,7 @@ public class SetVariableLogic : ISetVariableLogic
                     return GeneralResponse.UnsuccessfulWith("File copy was cancelled");
                 }
 
-                if (!cancel && filePath.Extension == "achx")
+                if (!cancel && (filePath.Extension == "achx" || filePath.Extension == "achj"))
                 {
                     stateSave.SetValue($"{instancePrefix}TextureAddress", Gum.Managers.TextureAddress.Custom, "TextureAddress");
                     _guiCommands.RefreshVariables(force: true);
@@ -832,7 +832,8 @@ public class SetVariableLogic : ISetVariableLogic
             extension == "jpg" ||
             extension == "png" ||
             extension == "bmp" ||
-            extension == "achx";
+            extension == "achx" ||
+            extension == "achj";
 
         if (!isValidExtension)
         {
