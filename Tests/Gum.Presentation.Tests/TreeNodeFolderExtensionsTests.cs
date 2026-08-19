@@ -60,4 +60,23 @@ public class TreeNodeFolderExtensionsTests
 
         subfolder.Object.IsPartOfComponentsFolderStructure().ShouldBeTrue();
     }
+
+    [Fact]
+    public void IsTopScreenContainerTreeNode_ReturnsFalse_ForNull()
+    {
+        // Repro for the NullReferenceException in #4480: DragDropManager.OnFilesDroppedInTreeView
+        // calls this on IPluginManager.GetTreeNodeOver()'s result, which is legitimately null when
+        // no plugin reports a tree node under the cursor - it must not require a non-null receiver.
+        ITreeNode? node = null;
+
+        node.IsTopScreenContainerTreeNode().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsTopComponentContainerTreeNode_ReturnsFalse_ForNull()
+    {
+        ITreeNode? node = null;
+
+        node.IsTopComponentContainerTreeNode().ShouldBeFalse();
+    }
 }
