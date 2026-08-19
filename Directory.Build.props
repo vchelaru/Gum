@@ -1,0 +1,9 @@
+<Project>
+  <!-- Lets net8.0-windows tool/plugin projects compile on non-Windows OSes (NETSDK1100) by
+       pulling Windows Desktop reference assemblies instead of failing outright. Compile-only:
+       running the WPF tool still requires Windows or Wine (see setup_gum_linux.sh). No-op on
+       Windows itself, since NETSDK1100 never fires there. -->
+  <PropertyGroup>
+    <EnableWindowsTargeting Condition="'$(EnableWindowsTargeting)' == ''">true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
