@@ -515,6 +515,28 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void IsValidExtensionForFileDrop_ShouldAcceptAchxFiles()
+    {
+        // Act
+        bool result = _dragDropManager.IsValidExtensionForFileDrop("animations/Walk.achx");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsValidExtensionForFileDrop_ShouldAcceptAchjFiles()
+    {
+        // .achj (JSON) counterpart of .achx (#4476) — dropping one onto a Screen/Component must
+        // create a Sprite the same way .achx does.
+        // Act
+        bool result = _dragDropManager.IsValidExtensionForFileDrop("animations/Walk.achj");
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
     public void IsValidExtensionForFileDrop_ShouldRejectUnknownExtensions()
     {
         // Act

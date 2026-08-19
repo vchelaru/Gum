@@ -105,6 +105,8 @@ public class DragDropManager : IDragDropManager
             yield return "gif";
             yield return "svg";
             yield return "bmp";
+            yield return "achx";
+            yield return "achj";
         }
     }
 
