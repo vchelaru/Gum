@@ -4,8 +4,8 @@
     <type fullname="Gum.StateAnimation.SaveClasses.*" preserve="all" />
     <type fullname="Gum.Forms.Controls.*" preserve="all" />
     <type fullname="Gum.Wireframe.GraphicalUiElement" preserve="all" />
-    <!-- AnimationChainListSave/AnimationChainSave/AnimationFrameSave: loaded from .achx files by
-         AnimationChainListSave.FromFile, reachable at runtime via
+    <!-- AnimationChainListSave/AnimationChainSave/AnimationFrameSave: loaded from .achx/.achj files
+         by AnimationChainListSave.FromFile, reachable at runtime via
          CustomSetPropertyOnRenderable's AnimationChains property setter. -->
     <type fullname="Gum.Content.AnimationChain.*" preserve="all" />
   </assembly>

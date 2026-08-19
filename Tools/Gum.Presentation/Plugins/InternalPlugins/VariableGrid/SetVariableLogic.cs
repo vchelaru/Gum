@@ -1082,7 +1082,7 @@ public class SetVariableLogic : ISetVariableLogic
 
                     if (System.IO.File.Exists(absolute))
                     {
-                        if (absolute.ToLowerInvariant().EndsWith(".achx"))
+                        if (absolute.ToLowerInvariant().EndsWith(".achx") || absolute.ToLowerInvariant().EndsWith(".achj"))
                         {
                             // I think this is already loaded here, because when the GUE has
                             // its ACXH set, the texture and texture coordinate values are set

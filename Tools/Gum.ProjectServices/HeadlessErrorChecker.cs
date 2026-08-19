@@ -708,7 +708,9 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         var prefix = instanceName == null ? string.Empty : instanceName + ".";
 
         var sourceFile = rfv.GetValue<string>(prefix + "SourceFile");
-        if (string.IsNullOrEmpty(sourceFile) || !sourceFile.EndsWith(".achx", StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(sourceFile) ||
+            !(sourceFile.EndsWith(".achx", StringComparison.OrdinalIgnoreCase) ||
+              sourceFile.EndsWith(".achj", StringComparison.OrdinalIgnoreCase)))
         {
             return;
         }

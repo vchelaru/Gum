@@ -149,7 +149,7 @@ public class FileWatchManager : IFileWatchManager
         if(extension is "png" or "csv" or "resx"
             or "gumx" or "gumj" or "gusx" or "gusj" or "gutx" or "gutj" or "gucx" or "gucj"
             or "ganx" or "ganj" or "behx" or "behj" or "fnt"
-            or "achx" or "gif" or "tga" or "bmp")
+            or "achx" or "achj" or "gif" or "tga" or "bmp")
         {
             HandleFileSystemChange(fileName);
         }
