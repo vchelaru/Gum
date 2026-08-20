@@ -36,6 +36,18 @@ namespace Gum
         static int Main(string[] args)
         {
             StartupTiming.Mark("Main entry");
+
+            // Surface exceptions that would otherwise vanish silently - e.g. from a WinForms-hosted
+            // plugin control (EditorTabPlugin_XNA's KNI viewport) failing on its own message-pump
+            // thread, which doesn't route through any try/catch Gum itself owns. Without these, a
+            // failure here just looks like a blank, unresponsive editor with no diagnostic trail.
+            AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+                Console.Error.WriteLine("Unhandled exception: " + e.ExceptionObject);
+            System.Windows.Forms.Application.ThreadException += (s, e) =>
+                Console.Error.WriteLine("WinForms thread exception: " + e.Exception);
+            TaskScheduler.UnobservedTaskException += (s, e) =>
+                Console.Error.WriteLine("Unobserved task exception: " + e.Exception);
+            System.Windows.Forms.Application.SetUnhandledExceptionMode(System.Windows.Forms.UnhandledExceptionMode.CatchException);
             System.Windows.Media.RenderOptions.ProcessRenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
             System.Windows.Forms.Application.EnableVisualStyles();
             System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
@@ -74,6 +86,11 @@ namespace Gum
             App app = new();
             app.InitializeComponent();
             StartupTiming.Mark("App.InitializeComponent");
+
+            // See the AppDomain.UnhandledException comment in Main - same rationale, but for
+            // exceptions on the WPF dispatcher thread specifically.
+            app.DispatcherUnhandledException += (s, e) =>
+                Console.Error.WriteLine("WPF dispatcher unhandled exception: " + e.Exception);
 
             app.Startup += (_, _) => messenger.Send<ApplicationStartupMessage>();
             app.Exit += (_, _) =>

@@ -1178,9 +1178,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                         returnValue.Catalogs.Add(catalog);
                     }
                 }
-                catch
+                catch (Exception e)
                 {
-                    // todo - report the error
+                    Locator.GetRequiredService<IOutputManager>().AddError($"Failed to load plugin assembly '{dll}':\n{e}");
                 }
             }
         }
