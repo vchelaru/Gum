@@ -2216,7 +2216,7 @@ public partial class CustomSetPropertyOnRenderable
 
             }
 
-            var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, false, true));
+            var fullFileName = ToolsUtilities.FileManager.RemoveDotDotSlash(ToolsUtilities.FileManager.Standardize(fontFileNameName, preserveCase: true, makeAbsolute: true));
 #if ANDROID || IOS
             fullFileName = fullFileName.ToLowerInvariant();
 #endif

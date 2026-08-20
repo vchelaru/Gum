@@ -145,7 +145,7 @@ public class ContentLoader : IContentLoader
 
         Renderer renderer = Renderer.Self ?? managers.Renderer;
 
-        string fileNameStandardized = FileManager.Standardize(fileName, false, false);
+        string fileNameStandardized = FileManager.Standardize(fileName, preserveCase: true, makeAbsolute: false);
 
         Texture2D texture;
         using (var stream = GetUrlStream(fileName))

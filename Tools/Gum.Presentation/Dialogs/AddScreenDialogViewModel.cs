@@ -56,7 +56,7 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
             path = _projectState.ScreenFilePath.FullPath;
         }
         
-        string relativeToScreens = FileManager.MakeRelative(path, _fileLocations.ScreensFolder);
+        string relativeToScreens = FileManager.MakeRelative(path, _fileLocations.ScreensFolder, preserveCase: true);
 
         // Prevent issues with any code that's looking for a '/' instead of a '\' slash
         relativeToScreens = relativeToScreens.Replace('\\', '/');

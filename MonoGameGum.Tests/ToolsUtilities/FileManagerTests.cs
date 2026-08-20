@@ -138,6 +138,52 @@ public class FileManagerTests : IDisposable
     }
 
     [Fact]
+    public void GetAllFilesInDirectory_ShouldPreserveCase_WhenNoFileTypeSpecified()
+    {
+        // Regression for #4481: the no-fileType branch standardized each result through
+        // Standardize(files[i]) (default preserveCase: false), lowercasing every enumerated
+        // filename even though Directory.GetFiles returns the real on-disk casing.
+        string directory = Path.Combine(Path.GetTempPath(), "GumGetAllFilesInDirectoryTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, "MyFile.txt"), "contents");
+
+            List<string> files = FileManager.GetAllFilesInDirectory(directory, null);
+
+            files.ShouldContain(f => Path.GetFileName(f) == "MyFile.txt");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void FindAndAddExtension_ShouldPreserveCase_WhenMatchFound()
+    {
+        // Regression for #4481: FindAndAddExtension lowercased its input fileName via
+        // Standardize(fileName) (default preserveCase: false) before comparing it against
+        // case-preserved entries from GetAllFilesInDirectory, so a mixed-case lookup mismatched
+        // the actual on-disk file case.
+        string directory = Path.Combine(Path.GetTempPath(), "GumFindAndAddExtensionTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string realFile = Path.Combine(directory, "MyFile.txt");
+            File.WriteAllText(realFile, "contents");
+
+            string result = FileManager.FindAndAddExtension(Path.Combine(directory, "MyFile"));
+
+            Path.GetFileName(result).ShouldBe("MyFile.txt");
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void GetMacOSBundleResourcesPath_ShouldResolveRealFile_WhenContentShippedInResources()
     {
         // Build a real .app directory layout in a temp dir: content physically in Resources, nothing
