@@ -289,6 +289,16 @@ public class Sprite : SpriteBatchRenderableBase,
         set;
     }
 
+    /// <summary>
+    /// Whether the texture should be flipped diagonally (reflected across its main diagonal).
+    /// Only produces an undistorted result when <see cref="SourceRectangle"/> is square.
+    /// </summary>
+    public bool FlipDiagonal
+    {
+        get;
+        set;
+    }
+
     bool IRenderable.Wrap
     {
         get
@@ -365,6 +375,7 @@ public class Sprite : SpriteBatchRenderableBase,
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;
+        FlipDiagonal = frame.FlipDiagonal;
     }
 
     public override void Render(ISystemManagers managers)
@@ -426,7 +437,7 @@ public class Sprite : SpriteBatchRenderableBase,
                     this.Y -= offsetVector.Y;
                 }
 
-                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees);
+                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
 
                 this.X = oldX;
                 this.Y = oldY;
@@ -685,6 +696,48 @@ public class Sprite : SpriteBatchRenderableBase,
     }
 
 
+    internal readonly struct DiagonalFlipComposite
+    {
+        public DiagonalFlipComposite(Vector2 positionOffset, Vector2 origin, float rotationRadians)
+        {
+            PositionOffset = positionOffset;
+            Origin = origin;
+            RotationRadians = rotationRadians;
+        }
+
+        public Vector2 PositionOffset { get; }
+        public Vector2 Origin { get; }
+        public float RotationRadians { get; }
+    }
+
+    /// <summary>
+    /// Computes the draw-call adjustments needed to synthesize a diagonal (transpose) flip out of
+    /// MonoGame's rotation + <see cref="SpriteEffects.FlipHorizontally"/> primitives, since
+    /// SpriteEffects has no diagonal option. Re-pivots the draw around the sprite's own center
+    /// (rather than its top-left origin) and adds an extra 90 degree rotation, which permutes
+    /// texture corners in place - fixing the top-left/bottom-right corners and swapping
+    /// top-right/bottom-left, matching FlatRedBall's FlipDiagonal semantics - instead of rotating
+    /// the sprite's on-screen footprint. Only valid for square source rectangles; callers must
+    /// guard non-square cases themselves. <paramref name="baseRotationRadians"/> must already
+    /// include the caller's own rotation-sign conventions (the same value that would otherwise be
+    /// passed directly to SpriteRenderer.Draw) - callers are still responsible for XOR-ing their
+    /// own FlipHorizontal flag against this composite's implicit horizontal flip.
+    /// </summary>
+    internal static DiagonalFlipComposite GetDiagonalFlipComposite(float sourceWidth, float sourceHeight, Vector2 scale, float baseRotationRadians)
+    {
+        var center = new Vector2(sourceWidth / 2f, sourceHeight / 2f) * scale;
+        var cosBase = (float)System.Math.Cos(baseRotationRadians);
+        var sinBase = (float)System.Math.Sin(baseRotationRadians);
+
+        var positionOffset = new Vector2(
+            center.X * cosBase - center.Y * sinBase,
+            center.X * sinBase + center.Y * cosBase);
+        var origin = new Vector2(sourceWidth / 2f, sourceHeight / 2f);
+        var rotationRadians = baseRotationRadians - (float)(System.Math.PI / 2);
+
+        return new DiagonalFlipComposite(positionOffset, origin, rotationRadians);
+    }
+
     public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
         IRenderableIpso ipso, Texture2D texture, Color color,
         Rectangle? sourceRectangle = null,
@@ -692,7 +745,8 @@ public class Sprite : SpriteBatchRenderableBase,
         float rotationInDegrees = 0,
         bool treat0AsFullDimensions = false,
         // In the case of Text objects, we send in a line rectangle, but we want the Text object to be the owner of any resulting render states
-        object objectCausingRendering = null
+        object objectCausingRendering = null,
+        bool flipDiagonal = false
         )
     {
         if (objectCausingRendering == null)
@@ -713,6 +767,27 @@ public class Sprite : SpriteBatchRenderableBase,
 
         var flipHorizontal = ipso.GetAbsoluteFlipHorizontal();
         var effectiveParentFlipHorizontal = ipso.Parent?.GetAbsoluteFlipHorizontal() ?? false;
+
+        // FlipDiagonal (a reflection across the sprite's main diagonal) has no SpriteEffects
+        // primitive - MonoGame only supports horizontal/vertical reflection. It's synthesized as
+        // an extra 90 degree rotation about the sprite's own center combined with a horizontal
+        // flip (transpose = rotate90 + flipHorizontal, the same identity used by EXIF's
+        // "Transpose" orientation). Composing with the existing flipHorizontal via XOR keeps the
+        // two flags independent (a diagonal flip on an already horizontally-flipped sprite should
+        // cancel the horizontal component, not double it up).
+        // This only produces an undistorted result when the drawn rectangle is square - rotating
+        // a non-square rectangle 90 degrees about its center does not map it back onto its own
+        // footprint. Non-square frames with FlipDiagonal set render as if the flag weren't set.
+        // Combining FlipDiagonal with FlipVertical is not specifically handled and may not match
+        // FlatRedBall's exact three-flag composition.
+        var sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
+        var sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;
+        var applyDiagonalComposite = flipDiagonal && sourceWidth > 0 && sourceWidth == sourceHeight;
+
+        if (applyDiagonalComposite)
+        {
+            flipHorizontal = !flipHorizontal;
+        }
 
         if (flipHorizontal)
         {
@@ -801,12 +876,24 @@ public class Sprite : SpriteBatchRenderableBase,
 
             if (textureToUse != null)
             {
+                Vector2 drawPosition = new Vector2(leftAbsolute, topAbsolute);
+                Vector2 drawOrigin = origin;
+                float drawRotation = -rotationInRadians;
+
+                if (applyDiagonalComposite)
+                {
+                    var diagonal = GetDiagonalFlipComposite(sourceWidth, sourceHeight, scale, drawRotation);
+                    drawPosition += diagonal.PositionOffset;
+                    drawOrigin = diagonal.Origin;
+                    drawRotation = diagonal.RotationRadians;
+                }
+
                 spriteRenderer.Draw(textureToUse,
-                    new Vector2(leftAbsolute, topAbsolute),
+                    drawPosition,
                     sourceRectangle,
                     modifiedColor,
-                    -rotationInRadians,
-                    origin,
+                    drawRotation,
+                    drawOrigin,
                     scale,
                     effects,
                     0,

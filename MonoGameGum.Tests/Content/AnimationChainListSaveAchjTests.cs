@@ -53,6 +53,7 @@ public class AnimationChainListSaveAchjTests
                   "topCoordinate": 0.0,
                   "bottomCoordinate": 0.5,
                   "flipHorizontal": true,
+                  "flipDiagonal": true,
                   "relativeX": 2.5,
                   "relativeY": -1.5
                 }
@@ -78,6 +79,7 @@ public class AnimationChainListSaveAchjTests
             frame.BottomCoordinate.ShouldBe(0.5f);
             frame.FlipHorizontal.ShouldBeTrue();
             frame.FlipVertical.ShouldBeFalse();
+            frame.FlipDiagonal.ShouldBeTrue();
             frame.RelativeX.ShouldBe(2.5f);
             frame.RelativeY.ShouldBe(-1.5f);
         });
@@ -102,6 +104,7 @@ public class AnimationChainListSaveAchjTests
             frame.BottomCoordinate.ShouldBe(1f);
             frame.FlipHorizontal.ShouldBeFalse();
             frame.FlipVertical.ShouldBeFalse();
+            frame.FlipDiagonal.ShouldBeFalse();
             frame.RelativeX.ShouldBe(0f);
             frame.RelativeY.ShouldBe(0f);
         });
@@ -110,8 +113,8 @@ public class AnimationChainListSaveAchjTests
     [Fact]
     public void FromFile_AchjExtension_UnknownFrbTwoOnlyFields_AreIgnoredNotThrown()
     {
-        // FlipDiagonal, Red/Green/Blue/Alpha, ColorOperation, and shapes are FRB2 additions Gum
-        // doesn't model yet (#4477, #4478, #4479) — an achj file carrying them must still load.
+        // Red/Green/Blue/Alpha, ColorOperation, and shapes are FRB2 additions Gum doesn't model
+        // yet (#4477, #4479) — an achj file carrying them must still load.
         WithTempFile(".achj", """
         {
           "animationChains": [
@@ -121,7 +124,6 @@ public class AnimationChainListSaveAchjTests
                 {
                   "textureName": "flash.png",
                   "frameLength": 0.05,
-                  "flipDiagonal": true,
                   "red": 255,
                   "green": 0,
                   "blue": 0,
@@ -159,6 +161,7 @@ public class AnimationChainListSaveAchjTests
               <RightCoordinate>1</RightCoordinate>
               <TopCoordinate>0</TopCoordinate>
               <BottomCoordinate>1</BottomCoordinate>
+              <FlipDiagonal>true</FlipDiagonal>
             </Frame>
           </AnimationChain>
         </AnimationChainArraySave>
@@ -168,6 +171,7 @@ public class AnimationChainListSaveAchjTests
 
             save.AnimationChains.Count.ShouldBe(1);
             save.AnimationChains[0].Frames[0].TextureName.ShouldBe("walk_0.png");
+            save.AnimationChains[0].Frames[0].FlipDiagonal.ShouldBeTrue();
         });
     }
 
