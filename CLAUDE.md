@@ -24,13 +24,18 @@ Also load any skill whose trigger matches the area you're working in — before 
 **It also re-runs on a task-type shift, not just a new file path.** Moving from implementing/verifying into diagnosing an unexpected result is its own trigger — re-scan the skill list before investigating.
 
 Available agents:
-- **coder** — Writing or modifying code and unit tests for new features or bugs
 - **refactoring-specialist** — Refactoring and improving code structure
 - **docs-writer** — Writing or updating documentation
 - **product-manager** — Breaking down tasks and tracking progress
 - **security-auditor** — Security reviews and vulnerability assessments
 
 Select the agent that best matches the task at hand. For tasks that span multiple concerns (e.g., implement a feature and write tests), invoke the relevant agents in sequence.
+
+General implementation work (new features, bug fixes, unit tests) has no dedicated agent file — follow this file and whatever skills its triggers pull in directly (`tdd` for test discipline, `code-style.md` for style, `refactoring-direction` before touching a static singleton, etc.).
+
+**Work in a fresh worktree, not the primary checkout**, unless the user explicitly says to work in place — the current branch may already have unrelated in-progress work on it.
+
+**Boyscout principle:** while you're already reading a method or file for the task at hand, fix compiler warnings, dead code, and small inconsistencies you notice along the way — the context is already loaded, so it's cheap now and expensive later. Call out what you bundled in your final notes. Don't restructure classes or chase warnings into unrelated files as drive-by work.
 
 **Reviewing changes before merge is not a dedicated agent.** Use the `/code-review` skill at **low or medium effort** (e.g. `Skill({skill: "code-review", args: "medium"})`) for routine pre-commit review — it covers correctness bugs *and* quality/refactoring cleanups in one pass, inline, no subagents. The coder writes its own unit tests; the `tdd` skill owns test discipline and the testability gate.
 
@@ -57,6 +62,8 @@ Examples:
 If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Tests`, that pulls in `GumCommon` and `MonoGameGum` transitively — no need to also build the solution.
 
 **Don't initialize the FNA or Sokol submodules — or build `AllLibraries.sln`, which pulls them in — unless your change actually touches FNA or Sokol code.** A fresh clone/worktree leaves these submodules uninitialized; initializing them triggers a large recursive clone (FNA → SDL/FAudio/FNA3D/…) that can cost many minutes of wall-clock for near-zero added signal. For runtime/library changes, build the individual csprojs instead: `MonoGameGum.Tests` (covers `GumCommon` + `MonoGameGum`), plus `KniGum`, `RaylibGum`, and `SkiaGum`/`SkiaGum.Wpf` as relevant (none need submodules). `FnaGum` is `XNALIKE` — the same compile family as MonoGame/KNI, so if those build it almost certainly does — and Sokol is experimental; neither justifies a submodule clone for a typical `GumCommon` change. Build `AllLibraries.sln` (after the submodules are initialized) only when the change genuinely spans FNA/Sokol.
+
+**Zero new warnings** after every change — verify via the build output; suppress with a comment only when unavoidable. **Never launch Visual Studio, a sample `.exe`, `dotnet run`, or any GUI app** — verify with `dotnet build`/`dotnet test` only, manual/visual testing is the user's step.
 
 **Running focused tool unit tests (`GumToolUnitTests`).** Building this project triggers the plugin projects' post-build copy, which uses `$(SolutionDir)`. To run the csproj directly, supply it — with **backslashes** (forward slashes break the `copy`/`md` steps):
 

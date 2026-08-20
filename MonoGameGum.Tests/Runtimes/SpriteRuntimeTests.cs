@@ -48,8 +48,8 @@ public class SpriteRuntimeTests : BaseTestClass
         var sprite = new Sprite((Texture2D?)null);
 
         var chain = new AnimationChain { Name = "TestChain" };
-        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = false, FlipVertical = false });
-        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true });
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = false, FlipVertical = false, FlipDiagonal = false });
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true, FlipDiagonal = true });
 
         var chainList = new AnimationChainList();
         chainList.Add(chain);
@@ -62,6 +62,7 @@ public class SpriteRuntimeTests : BaseTestClass
 
         sprite.FlipHorizontal.ShouldBeTrue();
         sprite.FlipVertical.ShouldBeTrue();
+        sprite.FlipDiagonal.ShouldBeTrue();
     }
 
     [Fact]

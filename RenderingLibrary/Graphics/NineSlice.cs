@@ -187,6 +187,12 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     public bool FlipHorizontal { get; set; }
 
+    /// <summary>
+    /// Whether the texture should be flipped diagonally (reflected across its main diagonal).
+    /// Only produces an undistorted result when the frame's source rectangle is square.
+    /// </summary>
+    public bool FlipDiagonal { get; set; }
+
     public string Name
     {
         get;
@@ -1131,6 +1137,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         SourceRectangle = new Rectangle(left, top, width, height);
 
         FlipHorizontal = frame.FlipHorizontal;
+        FlipDiagonal = frame.FlipDiagonal;
     }
 
     public void SetSingleTexture(Texture2D? texture)

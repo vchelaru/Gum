@@ -7,7 +7,22 @@ description: Verify FlatRedBall (FRB1) still compiles after editing Gum source i
 
 FRB1 (FlatRedBall) compiles Gum **source** (not the DLLs) under a `net6.0` target with the `FRB` constant defined, via shared `.projitems`. A change that builds fine in the Gum solutions can still break FRB1 — so when you touch shared source, build an FRB canary.
 
-The projitems-sync rules (which files FRB1 pulls, and what to update when you add/rename/delete) live in `.claude/agents/coder.md` — read that, don't duplicate it here. This skill is only about **running the build**.
+## What FRB1 pulls in, and what to keep in sync when you touch it
+
+FRB1 consumes Gum source via two shared-source imports — update the matching one in the same change whenever you add, rename, move, or delete a `.cs` file:
+
+- **`GumCommon/` or `MonoGameGum/`** → `GumCoreShared.projitems` (add a `<Compile Include="$(MSBuildThisFileDirectory)<relative\path>" />` line, alphabetically). **Exception:** `MonoGameGum/GueDeriving/*Runtime.cs` (SpriteRuntime, TextRuntime, etc.) is deliberately excluded — FRB1 generates its own runtime classes per project and never uses Gum's `GueDeriving` types. Cross-backend sharing for these files instead happens via `<Compile Include>`/`Link` in `RaylibGum.csproj`/`SokolGum.csproj`.
+- **`MonoGameGum/Forms/` (esp. `Controls/`)** → `FlatRedBall.Forms.Shared.projitems` in the **FlatRedBall sibling repo** (typically `C:\Users\vchel\Documents\GitHub\FlatRedBall\`), one `<Compile Include>`+`<Link>` pair per file. A file split (e.g. extracting an enum into its own file) needs an entry added even though the original file's entry still resolves.
+
+If a shared `.cs` file gains a `using` that resolves through a NuGet package, add the matching `<PackageReference>` (pinned to the same version as `GumCommon.csproj`/`MonoGameGum.csproj`) to every FRB1-side csproj that imports `GumCoreShared.projitems` (grep to find them if unsure — currently `GumCore.DesktopGlNet6`, `GumCore.FNA`, `GumCore.Kni.DesktopGL`, `GumCore.Kni.Web`, `GumCoreAndroid`, `GumCoreiOS`).
+
+## Multi-target gating — FRB1 still targets net6.0
+
+`GumCommon` targets `net8.0`, but FRB1 multi-targets the same shared source down to `net6.0`. A BCL API added after net6.0 compiles fine in `GumCommon` and breaks FRB1 silently. Gate it: `#if NET7_0_OR_GREATER`/`#if NET8_0_OR_GREATER` around the `using` and the implementation, with a `NotSupportedException` fallback for older targets so the public signature stays stable everywhere. `ToolsUtilities/ToolsUtilitiesStandard.csproj` and `GumDataTypes/GumDataTypesNet6.csproj` also multi-target `netstandard2.0` for the same shared files — net8.0 isn't the floor there either; build those two csproj directly to catch it (neither is in `GumFull.sln`/`AllLibraries.sln`).
+
+## Guard symmetry — `#if !FRB` members can't be called from unguarded shared code
+
+The most common way a Gum change silently breaks FRB1: a member behind `#if !FRB` (e.g. on `TextRuntime`, which doesn't exist under FRB) gets called from shared, unguarded code. The non-FRB build stays green, so the break is invisible until this skill's canary runs. Whenever you add or move a member behind any platform `#if` (`!FRB`, `!RAYLIB`, `XNALIKE`, etc.), grep every call site — if any lives in unguarded shared source, guard the call site too or provide a same-named shim for the excluded platform (an FRB-only extension method on `GraphicalUiElement` is the established pattern — see `CustomSetPropertyOnRenderable.cs`).
 
 ## Precondition — skip entirely if absent
 

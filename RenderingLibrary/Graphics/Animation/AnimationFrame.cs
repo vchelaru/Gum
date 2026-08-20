@@ -59,6 +59,12 @@ namespace Gum.Graphics.Animation
         #endregion
         public bool FlipVertical;
 
+        /// <summary>
+        /// Whether the texture should be flipped diagonally (reflected across its main diagonal).
+        /// Only produces an undistorted result when the frame's source rectangle is square.
+        /// </summary>
+        public bool FlipDiagonal;
+
         #region XML Docs
         /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
@@ -267,6 +273,7 @@ namespace Gum.Graphics.Animation
             }
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
+            frame.FlipDiagonal = animationFrameSave.FlipDiagonal;
 
             if (coordinateType == TextureCoordinateType.UV)
             {

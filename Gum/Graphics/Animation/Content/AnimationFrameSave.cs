@@ -37,6 +37,17 @@ namespace Gum.Content.AnimationChain
         }
 
         /// <summary>
+        /// Whether the texture should be flipped diagonally (reflected across its main diagonal,
+        /// swapping which texture corner lands on which quad corner). Only produces an undistorted
+        /// result when the frame's source rectangle is square.
+        /// </summary>
+        public bool FlipDiagonal;
+        public bool ShouldSerializeFlipDiagonal()
+        {
+            return FlipDiagonal == true;
+        }
+
+        /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
         /// not explicitly be set by the user.
         /// </summary>
