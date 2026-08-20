@@ -1071,7 +1071,7 @@ namespace ToolsUtilities
 
         public static string FindAndAddExtension(string fileName)
         {
-            fileName = Standardize(fileName);
+            fileName = Standardize(fileName, preserveCase: true);
             // This takes a little bit of work
             string fileWithoutExtension = FileManager.RemoveExtension(fileName);
 
@@ -1169,7 +1169,7 @@ namespace ToolsUtilities
             {
                 for (int i = 0; i < files.Length; i++)
                 {
-                    files[i] = FileManager.Standardize(files[i]);
+                    files[i] = FileManager.Standardize(files[i], preserveCase: true);
                 }
                 arrayToReturn.AddRange(files);
             }

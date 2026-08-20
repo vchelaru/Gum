@@ -67,4 +67,26 @@ public class AddScreenDialogViewModelTests : BaseTestClass
         _projectCommands.Verify(x => x.AddScreen(It.Is<ScreenSave>(s => s.Name == "NewScreen")), Times.Once);
         _selectedState.VerifySet(x => x.SelectedScreen = It.Is<ScreenSave>(s => s.Name == "NewScreen"), Times.Once);
     }
+
+    [Fact]
+    public void OnAffirmative_PreservesFolderCasing_WhenFolderSelected()
+    {
+        // Regression for #4481: MakeRelative's 2-arg overload lowercases by default, so a mixed-case
+        // selected folder ("MyFolder") used to mangle the new screen's Name to "myfolder/NewScreen".
+        var screensRoot = new Mock<ITreeNode>();
+        screensRoot.Setup(x => x.Parent).Returns((ITreeNode?)null);
+        screensRoot.Setup(x => x.Text).Returns("Screens");
+
+        var folderNode = new Mock<ITreeNode>();
+        folderNode.Setup(x => x.Tag).Returns((object?)null);
+        folderNode.Setup(x => x.Parent).Returns(screensRoot.Object);
+        folderNode.Setup(x => x.GetFullFilePath()).Returns(new ToolsUtilities.FilePath("/project/Screens/MyFolder/"));
+
+        _selectedState.Setup(x => x.SelectedTreeNode).Returns(folderNode.Object);
+        _sut.Value = "NewScreen";
+
+        _sut.OnAffirmative();
+
+        _projectCommands.Verify(x => x.AddScreen(It.Is<ScreenSave>(s => s.Name == "MyFolder/NewScreen")), Times.Once);
+    }
 }

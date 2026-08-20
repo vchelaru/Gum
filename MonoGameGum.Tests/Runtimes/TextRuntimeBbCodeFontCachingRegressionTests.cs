@@ -151,14 +151,14 @@ public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
             .Replace('\\', '/') + "/";
 
     // Mirrors CustomSetPropertyOnRenderable.GetFontFileName: the same GetFontCacheFileNameFor call
-    // followed by the same RemoveDotDotSlash(Standardize(name, false, true)) normalization.
+    // followed by the same RemoveDotDotSlash(Standardize(name, preserveCase: true, true)) normalization.
     private static string GetBoldFontCacheKey()
     {
         string cacheFileName = BmfcSave.GetFontCacheFileNameFor(
             UnstubbedFontSize, UnstubbedFontName, outline: 0, useFontSmoothing: true,
             isItalic: false, isBold: true, fontFilePath: null);
         return FileManager.RemoveDotDotSlash(
-            FileManager.Standardize(cacheFileName, preserveCase: false, makeAbsolute: true));
+            FileManager.Standardize(cacheFileName, preserveCase: true, makeAbsolute: true));
     }
 
     // A cached IDisposable that is not a BitmapFont, so the resolver's "GetDisposable(...) as
