@@ -62,6 +62,20 @@ namespace WpfDataUi.Controls
             mAssociatedTextBox.GotFocus += HandleTextBoxGotFocus;
             mAssociatedTextBox.PreviewKeyDown += HandlePreviewKeydown;
             mAssociatedTextBox.TextChanged += HandleTextChanged;
+            mAssociatedTextBox.PreviewMouseLeftButtonDown += HandlePreviewMouseLeftButtonDown;
+        }
+
+        private void HandlePreviewMouseLeftButtonDown(object? sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // WPF's default double-click word-selection treats '.' and '-' as word breaks, so
+            // double-clicking a decimal like 123.45 only selects one side of the point (issue
+            // FlatRedBall#2135). For numeric fields the whole value is always what the user wants,
+            // so select it all ourselves and suppress the built-in word-select.
+            if (IsNumeric && e.ClickCount == 2)
+            {
+                mAssociatedTextBox.SelectAll();
+                e.Handled = true;
+            }
         }
 
         private void HandleTextChanged(object? sender, TextChangedEventArgs e)
