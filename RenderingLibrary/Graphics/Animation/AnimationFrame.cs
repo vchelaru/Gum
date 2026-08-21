@@ -65,6 +65,12 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public bool FlipDiagonal;
 
+        /// <summary>
+        /// The alpha (0-255) to scale the frame's render alpha by. Null means the frame doesn't
+        /// author an alpha and playback should leave the current alpha unchanged.
+        /// </summary>
+        public int? Alpha;
+
         #region XML Docs
         /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
@@ -274,6 +280,7 @@ namespace Gum.Graphics.Animation
             frame.FlipHorizontal = animationFrameSave.FlipHorizontal;
             frame.FlipVertical = animationFrameSave.FlipVertical;
             frame.FlipDiagonal = animationFrameSave.FlipDiagonal;
+            frame.Alpha = animationFrameSave.Alpha;
 
             if (coordinateType == TextureCoordinateType.UV)
             {

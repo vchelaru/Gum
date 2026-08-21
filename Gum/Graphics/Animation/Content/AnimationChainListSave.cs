@@ -202,7 +202,7 @@ namespace Gum.Content.AnimationChain
         // Property names match FlatRedBall2's AnimationChain.Common .achj writer (camelCase) so a
         // file authored by the FlatRedBall Animation Editor loads into Gum without a conversion
         // step. Fields FRB2 added that Gum's AnimationFrameSave doesn't model yet —
-        // Red/Green/Blue/Alpha, ColorOperation, per-frame shapes (#4477, #4479) — are simply
+        // Red/Green/Blue, ColorOperation, per-frame shapes (#4477, #4479) — are simply
         // not read; JsonObject's indexer returns null for a missing key, so those files still load,
         // just without that data.
         private static AnimationChainListSave ParseJson(JsonObject root)
@@ -256,6 +256,7 @@ namespace Gum.Content.AnimationChain
                 FlipDiagonal = BoolProperty(frameObj, "flipDiagonal"),
                 RelativeX = FloatProperty(frameObj, "relativeX"),
                 RelativeY = FloatProperty(frameObj, "relativeY"),
+                Alpha = IntProperty(frameObj, "alpha"),
             };
         }
 
@@ -264,6 +265,9 @@ namespace Gum.Content.AnimationChain
 
         private static bool BoolProperty(JsonObject parent, string name, bool defaultValue = false) =>
             parent[name] is JsonValue value ? value.GetValue<bool>() : defaultValue;
+
+        private static int? IntProperty(JsonObject parent, string name) =>
+            parent[name] is JsonValue value ? value.GetValue<int>() : (int?)null;
 
         #endregion
 

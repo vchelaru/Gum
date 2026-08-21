@@ -521,6 +521,11 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     public bool AnimateSelf(double secondDifference)

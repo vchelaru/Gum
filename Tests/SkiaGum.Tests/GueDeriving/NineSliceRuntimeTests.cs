@@ -126,6 +126,7 @@ public class NineSliceRuntimeTests
             RightCoordinate = 0.5f,
             TopCoordinate = 0f,
             BottomCoordinate = 0.5f,
+            Alpha = 255,
         };
         AnimationFrame frameB = new AnimationFrame
         {
@@ -135,6 +136,7 @@ public class NineSliceRuntimeTests
             RightCoordinate = 1f,
             TopCoordinate = 0.5f,
             BottomCoordinate = 1f,
+            Alpha = 60,
         };
 
         AnimationChain chain = new AnimationChain { Name = "TestChain" };
@@ -154,6 +156,7 @@ public class NineSliceRuntimeTests
 
         NineSlice contained = (NineSlice)sut.RenderableComponent;
         contained.Texture.ShouldBe(textureA);
+        sut.Alpha.ShouldBe(255);
 
         // Advance past the first frame.
         ((NineSlice)sut.RenderableComponent).AnimationLogic.AnimateSelf(1.1);
@@ -164,6 +167,7 @@ public class NineSliceRuntimeTests
         contained.SourceRectangle.Value.Top.ShouldBe(20);
         contained.SourceRectangle.Value.Width.ShouldBe(20);
         contained.SourceRectangle.Value.Height.ShouldBe(20);
+        sut.Alpha.ShouldBe(60);
     }
 
     [Fact]

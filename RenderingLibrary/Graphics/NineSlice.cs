@@ -1138,6 +1138,11 @@ public class NineSlice : SpriteBatchRenderableBase,
 
         FlipHorizontal = frame.FlipHorizontal;
         FlipDiagonal = frame.FlipDiagonal;
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     public void SetSingleTexture(Texture2D? texture)

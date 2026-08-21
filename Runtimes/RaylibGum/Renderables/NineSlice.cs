@@ -63,6 +63,11 @@ public class NineSlice : RenderableBase, IAnimatable, ITextureCoordinate, IClone
         // (no FlipHorizontal field on this renderable, and DrawTextureNPatch
         // does not support negative src rects). If/when flip support is added,
         // copy frame.FlipHorizontal / frame.FlipVertical here.
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     /// <inheritdoc/>

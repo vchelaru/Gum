@@ -55,7 +55,8 @@ public class AnimationChainListSaveAchjTests
                   "flipHorizontal": true,
                   "flipDiagonal": true,
                   "relativeX": 2.5,
-                  "relativeY": -1.5
+                  "relativeY": -1.5,
+                  "alpha": 128
                 }
               ]
             }
@@ -82,6 +83,7 @@ public class AnimationChainListSaveAchjTests
             frame.FlipDiagonal.ShouldBeTrue();
             frame.RelativeX.ShouldBe(2.5f);
             frame.RelativeY.ShouldBe(-1.5f);
+            frame.Alpha.ShouldBe(128);
         });
     }
 
@@ -107,13 +109,14 @@ public class AnimationChainListSaveAchjTests
             frame.FlipDiagonal.ShouldBeFalse();
             frame.RelativeX.ShouldBe(0f);
             frame.RelativeY.ShouldBe(0f);
+            frame.Alpha.ShouldBeNull();
         });
     }
 
     [Fact]
     public void FromFile_AchjExtension_UnknownFrbTwoOnlyFields_AreIgnoredNotThrown()
     {
-        // Red/Green/Blue/Alpha, ColorOperation, and shapes are FRB2 additions Gum doesn't model
+        // Red/Green/Blue, ColorOperation, and shapes are FRB2 additions Gum doesn't model
         // yet (#4477, #4479) — an achj file carrying them must still load.
         WithTempFile(".achj", """
         {
@@ -127,7 +130,6 @@ public class AnimationChainListSaveAchjTests
                   "red": 255,
                   "green": 0,
                   "blue": 0,
-                  "alpha": 255,
                   "colorOperation": "Add",
                   "shapes": { "rectangles": [], "circles": [], "polygons": [] }
                 }
@@ -162,6 +164,7 @@ public class AnimationChainListSaveAchjTests
               <TopCoordinate>0</TopCoordinate>
               <BottomCoordinate>1</BottomCoordinate>
               <FlipDiagonal>true</FlipDiagonal>
+              <Alpha>200</Alpha>
             </Frame>
           </AnimationChain>
         </AnimationChainArraySave>
@@ -172,6 +175,7 @@ public class AnimationChainListSaveAchjTests
             save.AnimationChains.Count.ShouldBe(1);
             save.AnimationChains[0].Frames[0].TextureName.ShouldBe("walk_0.png");
             save.AnimationChains[0].Frames[0].FlipDiagonal.ShouldBeTrue();
+            save.AnimationChains[0].Frames[0].Alpha.ShouldBe(200);
         });
     }
 

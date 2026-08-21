@@ -101,6 +101,11 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             SourceRectangle = null;
         }
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     public bool AnimateSelf(double secondDifference)

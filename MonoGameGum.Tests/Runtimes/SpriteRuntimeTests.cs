@@ -49,7 +49,7 @@ public class SpriteRuntimeTests : BaseTestClass
 
         var chain = new AnimationChain { Name = "TestChain" };
         chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = false, FlipVertical = false, FlipDiagonal = false });
-        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true, FlipDiagonal = true });
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true, FlipDiagonal = true, Alpha = 128 });
 
         var chainList = new AnimationChainList();
         chainList.Add(chain);
@@ -63,6 +63,27 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.FlipHorizontal.ShouldBeTrue();
         sprite.FlipVertical.ShouldBeTrue();
         sprite.FlipDiagonal.ShouldBeTrue();
+        sprite.Alpha.ShouldBe(128);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldLeaveSpriteAlphaUnchanged_WhenFrameAlphaIsNull()
+    {
+        // Alpha is nullable so authors can set it only on the frames that need it (e.g. a flash
+        // effect). A frame transitioning to a frame with no Alpha authored must not reset alpha
+        // back to opaque.
+        var sprite = new Sprite((Texture2D?)null) { Alpha = 64 };
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, Alpha = null });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.Alpha.ShouldBe(64);
     }
 
     [Fact]
