@@ -615,12 +615,38 @@ namespace WpfDataUi.Controls
                     result = l;
                     return true;
                 }
+                // long.TryParse fails outright on overflow (no Infinity concept for integer
+                // types). Only clamp when the text is a genuinely-overflowing number - a
+                // malformed value like "123.5" must still be rejected (FlatRedBall#2150).
+                else if (IsOverflowingNumber(text, long.MinValue, long.MaxValue, out double asDouble))
+                {
+                    result = asDouble > 0 ? (object)long.MaxValue : (object)long.MinValue;
+                    return true;
+                }
             }
             else if (targetType == typeof(decimal) || targetType == typeof(decimal?))
             {
                 if (decimal.TryParse(text, out decimal m))
                 {
                     result = m;
+                    return true;
+                }
+                else if (IsOverflowingNumber(text, (double)decimal.MinValue, (double)decimal.MaxValue, out double asDouble))
+                {
+                    result = asDouble > 0 ? (object)decimal.MaxValue : (object)decimal.MinValue;
+                    return true;
+                }
+            }
+            else if (targetType == typeof(short) || targetType == typeof(short?))
+            {
+                if (short.TryParse(text, out short s))
+                {
+                    result = s;
+                    return true;
+                }
+                else if (IsOverflowingNumber(text, short.MinValue, short.MaxValue, out double asDouble))
+                {
+                    result = asDouble > 0 ? (object)short.MaxValue : (object)short.MinValue;
                     return true;
                 }
             }
@@ -631,9 +657,25 @@ namespace WpfDataUi.Controls
                     result = b;
                     return true;
                 }
+                else if (IsOverflowingNumber(text, byte.MinValue, byte.MaxValue, out double asDouble))
+                {
+                    result = asDouble > 0 ? (object)byte.MaxValue : (object)byte.MinValue;
+                    return true;
+                }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Detects a number whose magnitude is outside [min, max] by parsing through double
+        /// (which has far more range than the integer/decimal types this backs). Used to tell
+        /// a genuine overflow apart from other TryParse failures (e.g. non-numeric or
+        /// fractional text) so only real overflows get clamped rather than silently accepted.
+        /// </summary>
+        private static bool IsOverflowingNumber(string text, double min, double max, out double asDouble)
+        {
+            return double.TryParse(text, out asDouble) && (asDouble < min || asDouble > max);
         }
 
         private static bool ContainsMathOperator(string text)

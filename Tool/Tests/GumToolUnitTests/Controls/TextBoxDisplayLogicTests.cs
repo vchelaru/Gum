@@ -163,4 +163,41 @@ public class TextBoxDisplayLogicTests
         succeeded.ShouldBeTrue();
         result.ShouldBe(expected);
     }
+
+    public static IEnumerable<object[]> OverflowingIntegerData()
+    {
+        yield return new object[] { "1e30", typeof(long), long.MaxValue };
+        yield return new object[] { "-1e30", typeof(long), long.MinValue };
+        yield return new object[] { "1e30", typeof(decimal), decimal.MaxValue };
+        yield return new object[] { "-1e30", typeof(decimal), decimal.MinValue };
+        yield return new object[] { "300", typeof(byte), byte.MaxValue };
+        yield return new object[] { "-5", typeof(byte), byte.MinValue };
+        yield return new object[] { "40000", typeof(short), short.MaxValue };
+        yield return new object[] { "-40000", typeof(short), short.MinValue };
+    }
+
+    [Theory]
+    [MemberData(nameof(OverflowingIntegerData))]
+    public void TryParseNumeric_OverflowingIntegerInput_ClampsInsteadOfRejecting(
+        string input, Type targetType, object expected)
+    {
+        // long/decimal/byte/short.TryParse fail outright on overflow (no Infinity concept
+        // for these types) - clamp through a double intermediate instead of rejecting the
+        // input, mirroring the pre-existing int-overflow clamp (FlatRedBall#2150 follow-up).
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object result);
+
+        succeeded.ShouldBeTrue();
+        result.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void TryParseNumeric_NonOverflowingMalformedInput_ReturnsFalseForLong()
+    {
+        // A fractional value is invalid for a long field but is not an overflow - it must
+        // still be rejected (not silently truncated) so the caller falls through to the
+        // normal invalid-syntax handling instead of accepting bad input.
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric("123.5", typeof(long), out object result);
+
+        succeeded.ShouldBeFalse();
+    }
 }
