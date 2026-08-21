@@ -236,8 +236,9 @@ internal class SpriteScreen : FrameworkElement
         }
 
         // AnimationChain-driven sprite — same .achx pipeline NineSliceScreen uses.
-        // 200% of source so the frame swaps are easy to see.
-        AddLabel(container, "AnimationChain-driven sprite (AnimatedFrame1.achx):");
+        // 200% of source so the frame swaps are easy to see. AnimatedFrame1.achx also
+        // authors per-frame Alpha (255 then 60), so the sprite should flash dim every cycle.
+        AddLabel(container, "AnimationChain-driven sprite, with per-frame Alpha (AnimatedFrame1.achx):");
         var animated = new SpriteRuntime();
         animated.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
         animated.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;

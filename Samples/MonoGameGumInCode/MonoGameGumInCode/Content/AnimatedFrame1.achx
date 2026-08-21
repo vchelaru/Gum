@@ -12,6 +12,7 @@
       <RightCoordinate>16</RightCoordinate>
       <TopCoordinate>0</TopCoordinate>
       <BottomCoordinate>16</BottomCoordinate>
+      <Alpha>255</Alpha>
       <ShapeCollectionSave>
         <Shapes />
         <AxisAlignedCubeSaves />
@@ -25,6 +26,7 @@
       <RightCoordinate>16</RightCoordinate>
       <TopCoordinate>0</TopCoordinate>
       <BottomCoordinate>16</BottomCoordinate>
+      <Alpha>60</Alpha>
       <ShapeCollectionSave>
         <Shapes />
         <AxisAlignedCubeSaves />
