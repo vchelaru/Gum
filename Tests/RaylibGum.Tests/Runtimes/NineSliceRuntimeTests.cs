@@ -41,6 +41,7 @@ public class NineSliceRuntimeTests : BaseTestClass
             RightCoordinate = 0.5f,
             TopCoordinate = 0f,
             BottomCoordinate = 0.5f,
+            Alpha = 255,
         };
         AnimationFrame frameB = new AnimationFrame
         {
@@ -50,6 +51,7 @@ public class NineSliceRuntimeTests : BaseTestClass
             RightCoordinate = 1f,
             TopCoordinate = 0.5f,
             BottomCoordinate = 1f,
+            Alpha = 60,
         };
 
         AnimationChain chain = new AnimationChain { Name = "TestChain" };
@@ -68,6 +70,7 @@ public class NineSliceRuntimeTests : BaseTestClass
 
         contained.Texture.ShouldNotBeNull();
         contained.Texture.Value.Id.ShouldBe<uint>(1);
+        sut.Alpha.ShouldBe(255);
 
         contained.AnimationLogic.AnimateSelf(1.1);
 
@@ -77,6 +80,7 @@ public class NineSliceRuntimeTests : BaseTestClass
         contained.SourceRectangle.Value.Y.ShouldBe(20f);
         contained.SourceRectangle.Value.Width.ShouldBe(20f);
         contained.SourceRectangle.Value.Height.ShouldBe(20f);
+        sut.Alpha.ShouldBe(60);
     }
 
     [Fact]

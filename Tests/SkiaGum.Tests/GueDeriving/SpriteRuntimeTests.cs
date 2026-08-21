@@ -300,8 +300,8 @@ public class SpriteRuntimeTests
         SKBitmap textureB = new SKBitmap(4, 4);
 
         AnimationChain chain = new AnimationChain { Name = "TestChain" };
-        chain.Add(new AnimationFrame { Texture = textureA, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
-        chain.Add(new AnimationFrame { Texture = textureB, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f });
+        chain.Add(new AnimationFrame { Texture = textureA, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f, Alpha = 255 });
+        chain.Add(new AnimationFrame { Texture = textureB, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f, Alpha = 60 });
 
         AnimationChainList chains = new AnimationChainList();
         chains.Add(chain);
@@ -312,6 +312,7 @@ public class SpriteRuntimeTests
         sut.Animate = true;
 
         sut.AnimationChainFrameIndex.ShouldBe(0);
+        sut.Alpha.ShouldBe(255);
 
         // Tick through GraphicalUiElement.AnimateSelf — same path GumService.Update
         // walks. If IAnimatable is duplicated across GumCommon and SkiaGum, the
@@ -319,6 +320,7 @@ public class SpriteRuntimeTests
         sut.AnimateSelf(0.15);
 
         sut.AnimationChainFrameIndex.ShouldBe(1);
+        sut.Alpha.ShouldBe(60);
     }
 
     [Fact]

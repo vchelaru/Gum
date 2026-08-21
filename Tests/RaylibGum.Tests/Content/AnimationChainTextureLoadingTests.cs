@@ -78,6 +78,42 @@ public class AnimationChainTextureLoadingTests : BaseTestClass
         }, count: 2);
     }
 
+    [Fact]
+    public void SpriteRuntime_AnimateSelfWithAlphaFrame_ShouldApplyAlpha()
+    {
+        WithTempTextures((tempRoot, fileNames) =>
+        {
+            AnimationChainListSave save = new AnimationChainListSave();
+            save.FileName = Path.Combine(tempRoot, "alpha.achx").Replace('\\', '/');
+            save.FileRelativeTextures = true;
+            save.AnimationChains = new List<AnimationChainSave>
+            {
+                new AnimationChainSave
+                {
+                    Name = "TestChain",
+                    Frames = new List<AnimationFrameSave>
+                    {
+                        new AnimationFrameSave { TextureName = fileNames[0], FrameLength = 0.1f, Alpha = 255 },
+                        new AnimationFrameSave { TextureName = fileNames[1], FrameLength = 0.1f, Alpha = 60 },
+                    }
+                }
+            };
+
+            AnimationChainList list = save.ToAnimationChainList();
+
+            SpriteRuntime spriteRuntime = new();
+            spriteRuntime.AnimationChains = list;
+            spriteRuntime.CurrentChainName = "TestChain";
+            spriteRuntime.Animate = true;
+
+            spriteRuntime.Alpha.ShouldBe(255);
+
+            spriteRuntime.AnimateSelf(0.15);
+
+            spriteRuntime.Alpha.ShouldBe(60);
+        }, count: 2);
+    }
+
     // Regression for #3549: the Pixel-coordinate conversion block in
     // AnimationFrame.ToAnimationFrame was gated behind
     // `#if MONOGAME || KNI || XNA4 || SOKOL`, missing RAYLIB and SKIA. On those

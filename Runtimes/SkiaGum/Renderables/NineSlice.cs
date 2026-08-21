@@ -55,6 +55,11 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
         {
             SourceRectangle = null;
         }
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     /// <inheritdoc/>
