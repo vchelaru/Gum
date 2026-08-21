@@ -366,6 +366,7 @@ namespace Gum.Managers
                 if (referencedFiles.Contains(file))
                 {
                     _wireframeObjectManager.RefreshAll(true, true);
+                    _guiCommands.RefreshVariables(force: true);
                 }
             }
         }
