@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -31,16 +32,28 @@ public class FileChangeReactionLogicTests : BaseTestClass
         out Mock<IPluginManager> pluginManagerMock,
         out Mock<IProjectState> projectStateMock)
     {
+        return BuildSut(out guiCommandsMock, out fileCommandsMock, out pluginManagerMock, out projectStateMock, out _, out _);
+    }
+
+    private static FileChangeReactionLogic BuildSut(
+        out Mock<IGuiCommands> guiCommandsMock,
+        out Mock<IFileCommands> fileCommandsMock,
+        out Mock<IPluginManager> pluginManagerMock,
+        out Mock<IProjectState> projectStateMock,
+        out Mock<ISelectedState> selectedStateMock,
+        out Mock<IWireframeObjectManager> wireframeObjectManagerMock)
+    {
         guiCommandsMock = new Mock<IGuiCommands>();
         fileCommandsMock = new Mock<IFileCommands>();
         pluginManagerMock = new Mock<IPluginManager>();
         projectStateMock = new Mock<IProjectState>();
+        selectedStateMock = new Mock<ISelectedState>();
 
-        Mock<IWireframeObjectManager> wireframeObjectManagerMock = new Mock<IWireframeObjectManager>();
+        wireframeObjectManagerMock = new Mock<IWireframeObjectManager>();
         wireframeObjectManagerMock.Setup(w => w.AllIpsos).Returns(new List<GraphicalUiElement>());
 
         return new FileChangeReactionLogic(
-            new Mock<ISelectedState>().Object,
+            selectedStateMock.Object,
             new Mock<IWireframeCommands>().Object,
             guiCommandsMock.Object,
             fileCommandsMock.Object,
@@ -145,6 +158,53 @@ public class FileChangeReactionLogicTests : BaseTestClass
 
             guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
             pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldRefreshVariables_WhenAnimationChainFileReferencedBySelectedElementChanges()
+    {
+        // Issue #4485: an external .achx/.achj edit (add/rename a chain) must refresh the
+        // Variables tab, not just the wireframe - otherwise the animation-chain-name dropdown
+        // keeps showing stale chain names until the instance is deselected and reselected.
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock,
+            out Mock<IProjectState> projectStateMock,
+            out Mock<ISelectedState> selectedStateMock,
+            out Mock<IWireframeObjectManager> wireframeObjectManagerMock);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumx" };
+        ScreenSave screen = new ScreenSave { Name = "MainMenu" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        InstanceSave spriteInstance = new InstanceSave { Name = "MySprite", BaseType = "Sprite", ParentContainer = screen };
+        screen.Instances.Add(spriteInstance);
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "MySprite.AnimationChains",
+            Type = "string",
+            Value = "Animations/Idle.achx",
+            IsFile = true,
+            SetsValue = true,
+        });
+        project.Screens.Add(screen);
+
+        ObjectFinder.Self.GumProjectSave = project;
+        selectedStateMock.Setup(s => s.SelectedElement).Returns(screen);
+        try
+        {
+            FilePath changedFile = new FilePath(@"C:\proj\Animations\Idle.achx");
+
+            sut.ReactToFileChanged(changedFile);
+
+            wireframeObjectManagerMock.Verify(w => w.RefreshAll(true, true), Times.Once);
+            guiCommandsMock.Verify(g => g.RefreshVariables(true), Times.Once);
         }
         finally
         {
