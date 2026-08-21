@@ -560,7 +560,7 @@ namespace WpfDataUi.Controls
         /// Returns true if the string was successfully parsed, with the result in <paramref name="result"/>.
         /// Falls through to false for non-numeric types so the caller can use ConvertFromString.
         /// </summary>
-        private static bool TryParseNumeric(string text, Type targetType, out object result)
+        public static bool TryParseNumeric(string text, Type targetType, out object result)
         {
             result = null;
 
@@ -568,6 +568,17 @@ namespace WpfDataUi.Controls
             {
                 if (float.TryParse(text, out float f))
                 {
+                    // Since .NET Core 3.0, float.TryParse succeeds on overflow and returns
+                    // +/-Infinity instead of failing. Clamp to a real value rather than letting
+                    // Infinity flow onto the bound property (FlatRedBall#2150).
+                    if (float.IsPositiveInfinity(f))
+                    {
+                        f = float.MaxValue;
+                    }
+                    else if (float.IsNegativeInfinity(f))
+                    {
+                        f = float.MinValue;
+                    }
                     result = f;
                     return true;
                 }
@@ -584,6 +595,15 @@ namespace WpfDataUi.Controls
             {
                 if (double.TryParse(text, out double d))
                 {
+                    // Same overflow-to-Infinity behavior as float.TryParse above (FlatRedBall#2150).
+                    if (double.IsPositiveInfinity(d))
+                    {
+                        d = double.MaxValue;
+                    }
+                    else if (double.IsNegativeInfinity(d))
+                    {
+                        d = double.MinValue;
+                    }
                     result = d;
                     return true;
                 }

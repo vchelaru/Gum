@@ -147,4 +147,20 @@ public class TextBoxDisplayLogicTests
     {
         TextBoxDisplayLogic.ClampToRange(-5, null, null).ShouldBe(-5m);
     }
+
+    [Theory]
+    [InlineData("1e309", typeof(float), float.MaxValue)]
+    [InlineData("-1e309", typeof(float), float.MinValue)]
+    [InlineData("1e309", typeof(double), double.MaxValue)]
+    [InlineData("-1e309", typeof(double), double.MinValue)]
+    public void TryParseNumeric_OverflowingInput_ClampsInsteadOfReturningInfinity(
+        string input, Type targetType, object expected)
+    {
+        // .NET Core 3.0+ float/double.TryParse succeeds on overflow and yields
+        // Infinity/-Infinity instead of failing (FlatRedBall#2150).
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object result);
+
+        succeeded.ShouldBeTrue();
+        result.ShouldBe(expected);
+    }
 }
