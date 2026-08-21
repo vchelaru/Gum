@@ -376,6 +376,11 @@ public class Sprite : SpriteBatchRenderableBase,
         FlipHorizontal = frame.FlipHorizontal;
         FlipVertical = frame.FlipVertical;
         FlipDiagonal = frame.FlipDiagonal;
+
+        if (frame.Alpha.HasValue)
+        {
+            Alpha = frame.Alpha.Value;
+        }
     }
 
     public override void Render(ISystemManagers managers)

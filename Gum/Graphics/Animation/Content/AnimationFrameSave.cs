@@ -48,6 +48,16 @@ namespace Gum.Content.AnimationChain
         }
 
         /// <summary>
+        /// The alpha (0-255) to scale the frame's render alpha by. Null means the frame doesn't
+        /// author an alpha and playback should leave the current alpha unchanged.
+        /// </summary>
+        public int? Alpha;
+        public bool ShouldSerializeAlpha()
+        {
+            return Alpha.HasValue;
+        }
+
+        /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
         /// not explicitly be set by the user.
         /// </summary>
