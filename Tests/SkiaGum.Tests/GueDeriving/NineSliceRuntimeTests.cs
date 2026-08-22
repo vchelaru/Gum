@@ -1,3 +1,4 @@
+using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
 using Gum.Wireframe;
@@ -137,6 +138,10 @@ public class NineSliceRuntimeTests
             TopCoordinate = 0.5f,
             BottomCoordinate = 1f,
             Alpha = 60,
+            Red = 10,
+            Green = 20,
+            Blue = 30,
+            ColorOperation = AnimationFrameColorOperation.Multiply,
         };
 
         AnimationChain chain = new AnimationChain { Name = "TestChain" };
@@ -168,6 +173,9 @@ public class NineSliceRuntimeTests
         contained.SourceRectangle.Value.Width.ShouldBe(20);
         contained.SourceRectangle.Value.Height.ShouldBe(20);
         sut.Alpha.ShouldBe(60);
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
     }
 
     [Fact]

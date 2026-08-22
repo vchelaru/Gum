@@ -1,4 +1,5 @@
-﻿using RenderingLibrary.Graphics;
+﻿using Gum.Content.AnimationChain;
+using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
 using SkiaSharp;
@@ -76,6 +77,11 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
 
     public Sprite()
     {
+        // RenderableShapeBase defaults Color to red, which would tint every drawn sprite red once
+        // GetPaint routes Color through a Modulate filter (mirrors SkiaGum.Renderables.NineSlice's
+        // constructor). White is the no-tint identity for SKBlendMode.Modulate.
+        Color = SKColors.White;
+
         AnimationLogic.ApplyFrame = ApplyAnimationFrame;
     }
 
@@ -106,6 +112,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         {
             Alpha = frame.Alpha.Value;
         }
+
+        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        {
+            Red = frame.Red ?? 255;
+            Green = frame.Green ?? 255;
+            Blue = frame.Blue ?? 255;
+        }
     }
 
     public bool AnimateSelf(double secondDifference)
@@ -122,6 +135,13 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // softer rotated-edge look back.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
         paint.IsAntialias = false;
+
+        // Modulate the image's texels by Color so per-frame Multiply color (#4490) and any
+        // manually-assigned Red/Green/Blue tint the sprite. Mirrors NineSlice.GetPaint — the base
+        // paint's Color is set too, but that only matters for non-image draws; DrawImage needs a
+        // ColorFilter. White (the default Color, see the constructor) is the identity, so this is
+        // a no-op for sprites that never touch Red/Green/Blue.
+        paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
         return paint;
     }
 

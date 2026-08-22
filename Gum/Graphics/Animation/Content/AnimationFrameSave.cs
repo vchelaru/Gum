@@ -15,6 +15,22 @@ namespace Gum.Content.AnimationChain
         Second
     }
 
+    /// <summary>
+    /// How a frame's per-frame color (<see cref="AnimationFrameSave.Red"/>/
+    /// <see cref="AnimationFrameSave.Green"/>/<see cref="AnimationFrameSave.Blue"/>) combines with
+    /// the sprite's texture, matching FlatRedBall2's <c>ColorOperation</c> enum
+    /// (<c>FlatRedBall2.Animation.ColorOperation</c>) authored by the FlatRedBall Animation Editor.
+    /// </summary>
+    public enum AnimationFrameColorOperation
+    {
+        /// <summary>Multiply the texture by the color (darken / colorize). White (255) is the identity.</summary>
+        Multiply,
+
+        /// <summary>Add the color to the texture (brighten / glow / flash). Black (0) is the identity.
+        /// Not applied to rendering by Gum yet (#4477) — requires a per-backend shader.</summary>
+        Add
+    }
+
     [Serializable]
     public class AnimationFrameSave
     {
@@ -55,6 +71,41 @@ namespace Gum.Content.AnimationChain
         public bool ShouldSerializeAlpha()
         {
             return Alpha.HasValue;
+        }
+
+        /// <summary>
+        /// The red channel (0-255) of the frame's per-frame color. Only combined with the texture
+        /// when <see cref="ColorOperation"/> is <see cref="AnimationFrameColorOperation.Multiply"/>;
+        /// null (the identity, 255) if unset.
+        /// </summary>
+        public int? Red;
+        public bool ShouldSerializeRed()
+        {
+            return Red.HasValue;
+        }
+
+        /// <summary>The green channel (0-255) of the frame's per-frame color. See <see cref="Red"/>.</summary>
+        public int? Green;
+        public bool ShouldSerializeGreen()
+        {
+            return Green.HasValue;
+        }
+
+        /// <summary>The blue channel (0-255) of the frame's per-frame color. See <see cref="Red"/>.</summary>
+        public int? Blue;
+        public bool ShouldSerializeBlue()
+        {
+            return Blue.HasValue;
+        }
+
+        /// <summary>
+        /// How <see cref="Red"/>/<see cref="Green"/>/<see cref="Blue"/> combine with the texture, or
+        /// null if the frame doesn't author a per-frame color.
+        /// </summary>
+        public AnimationFrameColorOperation? ColorOperation;
+        public bool ShouldSerializeColorOperation()
+        {
+            return ColorOperation.HasValue;
         }
 
         /// <summary>

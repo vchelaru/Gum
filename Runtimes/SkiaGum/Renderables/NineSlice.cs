@@ -1,3 +1,4 @@
+using Gum.Content.AnimationChain;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
@@ -59,6 +60,13 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
         if (frame.Alpha.HasValue)
         {
             Alpha = frame.Alpha.Value;
+        }
+
+        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        {
+            Red = frame.Red ?? 255;
+            Green = frame.Green ?? 255;
+            Blue = frame.Blue ?? 255;
         }
     }
 

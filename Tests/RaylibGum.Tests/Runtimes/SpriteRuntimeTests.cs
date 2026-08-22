@@ -1,3 +1,4 @@
+using Gum.Content.AnimationChain;
 using Gum.GueDeriving;
 using Gum.Graphics.Animation;
 using Raylib_cs;
@@ -60,6 +61,38 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.IsAnimationChainLooping = false;
 
         sut.IsAnimationChainLooping.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldApplyFrameColorToSprite_WhenFrameChanges()
+    {
+        Gum.Renderables.Sprite sprite = new();
+
+        AnimationChain chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f });
+        chain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            Alpha = 128,
+            Red = 10,
+            Green = 20,
+            Blue = 30,
+            ColorOperation = AnimationFrameColorOperation.Multiply,
+        });
+
+        AnimationChainList chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.Animate = true;
+
+        // 1.5s into chain crosses from frame 0 (ends at 1.0s) into frame 1.
+        sprite.AnimateSelf(1.5);
+
+        sprite.Alpha.ShouldBe(128);
+        sprite.Red.ShouldBe(10);
+        sprite.Green.ShouldBe(20);
+        sprite.Blue.ShouldBe(30);
     }
 
     [Fact]

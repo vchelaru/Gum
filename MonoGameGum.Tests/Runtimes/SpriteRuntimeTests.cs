@@ -1,4 +1,5 @@
-﻿using Gum.Graphics.Animation;
+﻿using Gum.Content.AnimationChain;
+using Gum.Graphics.Animation;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.GueDeriving;
 using RenderingLibrary.Graphics;
@@ -49,7 +50,18 @@ public class SpriteRuntimeTests : BaseTestClass
 
         var chain = new AnimationChain { Name = "TestChain" };
         chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = false, FlipVertical = false, FlipDiagonal = false });
-        chain.Add(new AnimationFrame { FrameLength = 1.0f, FlipHorizontal = true, FlipVertical = true, FlipDiagonal = true, Alpha = 128 });
+        chain.Add(new AnimationFrame
+        {
+            FrameLength = 1.0f,
+            FlipHorizontal = true,
+            FlipVertical = true,
+            FlipDiagonal = true,
+            Alpha = 128,
+            Red = 10,
+            Green = 20,
+            Blue = 30,
+            ColorOperation = AnimationFrameColorOperation.Multiply,
+        });
 
         var chainList = new AnimationChainList();
         chainList.Add(chain);
@@ -64,6 +76,9 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.FlipVertical.ShouldBeTrue();
         sprite.FlipDiagonal.ShouldBeTrue();
         sprite.Alpha.ShouldBe(128);
+        sprite.Red.ShouldBe(10);
+        sprite.Green.ShouldBe(20);
+        sprite.Blue.ShouldBe(30);
     }
 
     [Fact]
@@ -84,6 +99,48 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.CurrentChainName = "TestChain";
 
         sprite.Alpha.ShouldBe(64);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldLeaveSpriteColorUnchanged_WhenFrameColorOperationIsNotMultiply()
+    {
+        // ColorOperation is nullable/Add-capable so a frame that doesn't author Multiply must not
+        // reset Red/Green/Blue back to identity — Add is not applied to rendering (tracked
+        // separately in #4477) and an absent ColorOperation means "no per-frame color" entirely.
+        var sprite = new Sprite((Texture2D?)null) { Red = 11, Green = 22, Blue = 33 };
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, Red = 255, Green = 0, Blue = 0, ColorOperation = AnimationFrameColorOperation.Add });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.Red.ShouldBe(11);
+        sprite.Green.ShouldBe(22);
+        sprite.Blue.ShouldBe(33);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldDefaultUnsetChannelsTo255_WhenFrameColorOperationIsMultiply()
+    {
+        // FRB2's SpriteFrameColor.Apply treats an unset Multiply channel as 255 (identity).
+        var sprite = new Sprite((Texture2D?)null) { Red = 1, Green = 2, Blue = 3 };
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, Green = 40, ColorOperation = AnimationFrameColorOperation.Multiply });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.Red.ShouldBe(255);
+        sprite.Green.ShouldBe(40);
+        sprite.Blue.ShouldBe(255);
     }
 
     [Fact]

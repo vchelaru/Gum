@@ -7,6 +7,7 @@ using Shouldly;
 using Xunit;
 using RenderingLibrary.Content;
 using System;
+using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 
 namespace SkiaGum.Tests.GueDeriving;
@@ -301,7 +302,20 @@ public class SpriteRuntimeTests
 
         AnimationChain chain = new AnimationChain { Name = "TestChain" };
         chain.Add(new AnimationFrame { Texture = textureA, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f, Alpha = 255 });
-        chain.Add(new AnimationFrame { Texture = textureB, FrameLength = 0.1f, LeftCoordinate = 0f, RightCoordinate = 1f, TopCoordinate = 0f, BottomCoordinate = 1f, Alpha = 60 });
+        chain.Add(new AnimationFrame
+        {
+            Texture = textureB,
+            FrameLength = 0.1f,
+            LeftCoordinate = 0f,
+            RightCoordinate = 1f,
+            TopCoordinate = 0f,
+            BottomCoordinate = 1f,
+            Alpha = 60,
+            Red = 10,
+            Green = 20,
+            Blue = 30,
+            ColorOperation = AnimationFrameColorOperation.Multiply,
+        });
 
         AnimationChainList chains = new AnimationChainList();
         chains.Add(chain);
@@ -321,6 +335,9 @@ public class SpriteRuntimeTests
 
         sut.AnimationChainFrameIndex.ShouldBe(1);
         sut.Alpha.ShouldBe(60);
+        sut.Red.ShouldBe(10);
+        sut.Green.ShouldBe(20);
+        sut.Blue.ShouldBe(30);
     }
 
     [Fact]
