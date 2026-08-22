@@ -5,7 +5,7 @@ description: AnimationChain playback on Sprites and NineSlices — .achx -> Anim
 
 # Runtime Animation Chains
 
-Gum plays back FRB-style `.achx` animations on `Sprite` and `NineSlice`. An `.achx` is an XML file (deserialized as `AnimationChainListSave`) holding one or more named chains; each chain is a list of frames with a texture, source rect, frame length, optional flip flags, and optional `RelativeX`/`RelativeY` per-frame offsets.
+Gum plays back FRB-style `.achx`/`.achj` animations on `Sprite` and `NineSlice`. `.achx` (XML) and `.achj` (JSON, matching FlatRedBall2's `AnimationChain.Common` writer) both deserialize into `AnimationChainListSave` — see `AnimationChainListSave.FromFile`. Each chain is a list of frames with a texture, source rect, frame length, optional flip flags, optional `RelativeX`/`RelativeY` per-frame offsets, and optional per-frame color (see below).
 
 ## Pipeline: Save → Runtime
 
@@ -46,7 +46,11 @@ To match FRB visuals on a height-tracking Sprite, the offset has to be applied a
 
 XNA `NineSlice` now composes `AnimationChainLogic` (same pattern as Sprite) — the inline tick loop is gone. Its `ApplyFrame` handler distributes the frame's texture to all 9 internal sprites via `SetSingleTexture`, derives the `SourceRectangle` from the frame's UV coords, and copies `FlipHorizontal`. It does **not** apply `RelativeX/Y`. If `RelativeX/Y` support is ever needed on NineSlice, add the offset application in NineSlice's render path the same way Sprite does.
 
-Skia and Raylib `NineSlice` renderables do not yet expose `AnimationLogic` — animation on those backends is a follow-up tracked under #2753.
+Skia and Raylib `NineSlice` renderables also compose `AnimationLogic` and apply frames the same way as XNA — each has its own `ApplyAnimationFrame` in `Runtimes/{RaylibGum,SkiaGum}/Renderables/NineSlice.cs`.
+
+## Per-frame color (Alpha/Multiply/Add)
+
+`AnimationFrameSave`/`AnimationFrame` carry nullable `Red`/`Green`/`Blue`/`Alpha` (0-255) and an `AnimationFrameColorOperation?` (`Multiply`/`Add`), matching FRB2's Animation Editor fields. Each backend's `ApplyAnimationFrame` sets the renderable's own `Alpha` when authored, and `Red`/`Green`/`Blue` only when `ColorOperation == Multiply` (unset channel defaults to 255) — snapshotted once per frame change, not re-combined at render time, so a frame that authors neither leaves the renderable's current color alone. Alpha (#4489) and Multiply (#4490) are applied on all of XNA/Raylib/Skia; Skia's `Sprite` additionally needed a `Color`-driven `SKColorFilter.CreateBlendMode(..., Modulate)` in `GetPaint` since it previously ignored RGB entirely (NineSlice already had this filter). `Add` parses but isn't applied to rendering anywhere yet — it needs a per-backend pixel shader (#4477).
 
 ## Key Files
 
@@ -59,4 +63,5 @@ Skia and Raylib `NineSlice` renderables do not yet expose `AnimationLogic` — a
 | `RenderingLibrary/Graphics/Animation/AnimationChainList.cs` | `List<AnimationChain>`; `.achx` deserialization entry point |
 | `RenderingLibrary/Graphics/Sprite.cs` | `ApplyAnimationFrame` (frame-change side) and `Render` (per-render `RelativeX/Y` application) |
 | `RenderingLibrary/Graphics/NineSlice.cs` | `ApplyAnimationFrame` distributes frame texture across 9 slices; no `RelativeX/Y` support |
-| `Gum/Graphics/Animation/Content/AnimationFrameSave.cs` | XML-serializable frame; pixel or UV coords per `AnimationChainListSave.CoordinateType` |
+| `Gum/Graphics/Animation/Content/AnimationFrameSave.cs` | XML/JSON-serializable frame; pixel or UV coords per `AnimationChainListSave.CoordinateType`; per-frame color fields |
+| `Gum/Graphics/Animation/Content/AnimationChainListSave.cs` | `.achx` (XmlSerializer) and `.achj` (`ParseJson`/`ParseFrameJson`) parsing, dialect picked by extension in `FromFile` |

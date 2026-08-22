@@ -14,6 +14,7 @@ using Rectangle = System.Drawing.Rectangle;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum;
+using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using RenderingLibrary.Graphics.Animation;
 using System.Runtime.CompilerServices;
@@ -1142,6 +1143,13 @@ public class NineSlice : SpriteBatchRenderableBase,
         if (frame.Alpha.HasValue)
         {
             Alpha = frame.Alpha.Value;
+        }
+
+        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        {
+            Red = frame.Red ?? 255;
+            Green = frame.Green ?? 255;
+            Blue = frame.Blue ?? 255;
         }
     }
 

@@ -71,6 +71,27 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public int? Alpha;
 
+        /// <summary>
+        /// The red channel (0-255) of the frame's per-frame color. Only applied when
+        /// <see cref="ColorOperation"/> is <see cref="AnimationFrameColorOperation.Multiply"/>;
+        /// null (the identity, 255) if unset.
+        /// </summary>
+        public int? Red;
+
+        /// <summary>The green channel (0-255) of the frame's per-frame color. See <see cref="Red"/>.</summary>
+        public int? Green;
+
+        /// <summary>The blue channel (0-255) of the frame's per-frame color. See <see cref="Red"/>.</summary>
+        public int? Blue;
+
+        /// <summary>
+        /// How <see cref="Red"/>/<see cref="Green"/>/<see cref="Blue"/> combine with the texture, or
+        /// null if the frame doesn't author a per-frame color. Only <see cref="AnimationFrameColorOperation.Multiply"/>
+        /// is applied to rendering today (#4477 tracks <see cref="AnimationFrameColorOperation.Add"/>, which
+        /// needs a per-backend shader).
+        /// </summary>
+        public AnimationFrameColorOperation? ColorOperation;
+
         #region XML Docs
         /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
@@ -281,6 +302,10 @@ namespace Gum.Graphics.Animation
             frame.FlipVertical = animationFrameSave.FlipVertical;
             frame.FlipDiagonal = animationFrameSave.FlipDiagonal;
             frame.Alpha = animationFrameSave.Alpha;
+            frame.Red = animationFrameSave.Red;
+            frame.Green = animationFrameSave.Green;
+            frame.Blue = animationFrameSave.Blue;
+            frame.ColorOperation = animationFrameSave.ColorOperation;
 
             if (coordinateType == TextureCoordinateType.UV)
             {

@@ -56,7 +56,11 @@ public class AnimationChainListSaveAchjTests
                   "flipDiagonal": true,
                   "relativeX": 2.5,
                   "relativeY": -1.5,
-                  "alpha": 128
+                  "alpha": 128,
+                  "red": 10,
+                  "green": 20,
+                  "blue": 30,
+                  "colorOperation": "Multiply"
                 }
               ]
             }
@@ -84,6 +88,10 @@ public class AnimationChainListSaveAchjTests
             frame.RelativeX.ShouldBe(2.5f);
             frame.RelativeY.ShouldBe(-1.5f);
             frame.Alpha.ShouldBe(128);
+            frame.Red.ShouldBe(10);
+            frame.Green.ShouldBe(20);
+            frame.Blue.ShouldBe(30);
+            frame.ColorOperation.ShouldBe(AnimationFrameColorOperation.Multiply);
         });
     }
 
@@ -110,14 +118,45 @@ public class AnimationChainListSaveAchjTests
             frame.RelativeX.ShouldBe(0f);
             frame.RelativeY.ShouldBe(0f);
             frame.Alpha.ShouldBeNull();
+            frame.Red.ShouldBeNull();
+            frame.Green.ShouldBeNull();
+            frame.Blue.ShouldBeNull();
+            frame.ColorOperation.ShouldBeNull();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_ParsesAddColorOperation()
+    {
+        // Add is parsed into the data model like Multiply, even though only Multiply is applied
+        // to rendering today (#4477 tracks Add, which needs a per-backend shader).
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            {
+              "name": "Flash",
+              "frames": [
+                { "textureName": "flash.png", "frameLength": 0.05, "red": 255, "green": 0, "blue": 0, "colorOperation": "Add" }
+              ]
+            }
+          ]
+        }
+        """, path =>
+        {
+            AnimationFrameSave frame = AnimationChainListSave.FromFile(path).AnimationChains[0].Frames[0];
+
+            frame.Red.ShouldBe(255);
+            frame.Green.ShouldBe(0);
+            frame.Blue.ShouldBe(0);
+            frame.ColorOperation.ShouldBe(AnimationFrameColorOperation.Add);
         });
     }
 
     [Fact]
     public void FromFile_AchjExtension_UnknownFrbTwoOnlyFields_AreIgnoredNotThrown()
     {
-        // Red/Green/Blue, ColorOperation, and shapes are FRB2 additions Gum doesn't model
-        // yet (#4477, #4479) — an achj file carrying them must still load.
+        // Per-frame shapes are an FRB2 addition Gum doesn't model yet (#4479) — an achj file
+        // carrying them must still load.
         WithTempFile(".achj", """
         {
           "animationChains": [
@@ -127,10 +166,6 @@ public class AnimationChainListSaveAchjTests
                 {
                   "textureName": "flash.png",
                   "frameLength": 0.05,
-                  "red": 255,
-                  "green": 0,
-                  "blue": 0,
-                  "colorOperation": "Add",
                   "shapes": { "rectangles": [], "circles": [], "polygons": [] }
                 }
               ]
@@ -165,6 +200,10 @@ public class AnimationChainListSaveAchjTests
               <BottomCoordinate>1</BottomCoordinate>
               <FlipDiagonal>true</FlipDiagonal>
               <Alpha>200</Alpha>
+              <Red>10</Red>
+              <Green>20</Green>
+              <Blue>30</Blue>
+              <ColorOperation>Multiply</ColorOperation>
             </Frame>
           </AnimationChain>
         </AnimationChainArraySave>
@@ -173,9 +212,14 @@ public class AnimationChainListSaveAchjTests
             AnimationChainListSave save = AnimationChainListSave.FromFile(path);
 
             save.AnimationChains.Count.ShouldBe(1);
-            save.AnimationChains[0].Frames[0].TextureName.ShouldBe("walk_0.png");
-            save.AnimationChains[0].Frames[0].FlipDiagonal.ShouldBeTrue();
-            save.AnimationChains[0].Frames[0].Alpha.ShouldBe(200);
+            AnimationFrameSave frame = save.AnimationChains[0].Frames[0];
+            frame.TextureName.ShouldBe("walk_0.png");
+            frame.FlipDiagonal.ShouldBeTrue();
+            frame.Alpha.ShouldBe(200);
+            frame.Red.ShouldBe(10);
+            frame.Green.ShouldBe(20);
+            frame.Blue.ShouldBe(30);
+            frame.ColorOperation.ShouldBe(AnimationFrameColorOperation.Multiply);
         });
     }
 

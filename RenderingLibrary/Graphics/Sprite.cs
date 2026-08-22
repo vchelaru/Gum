@@ -9,6 +9,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Rectangle = System.Drawing.Rectangle;
+using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using RenderingLibrary.Graphics.Animation;
 using RenderingLibrary.Math;
@@ -380,6 +381,13 @@ public class Sprite : SpriteBatchRenderableBase,
         if (frame.Alpha.HasValue)
         {
             Alpha = frame.Alpha.Value;
+        }
+
+        if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
+        {
+            Red = frame.Red ?? 255;
+            Green = frame.Green ?? 255;
+            Blue = frame.Blue ?? 255;
         }
     }
 

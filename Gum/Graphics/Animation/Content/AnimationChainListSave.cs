@@ -201,10 +201,9 @@ namespace Gum.Content.AnimationChain
 
         // Property names match FlatRedBall2's AnimationChain.Common .achj writer (camelCase) so a
         // file authored by the FlatRedBall Animation Editor loads into Gum without a conversion
-        // step. Fields FRB2 added that Gum's AnimationFrameSave doesn't model yet —
-        // Red/Green/Blue, ColorOperation, per-frame shapes (#4477, #4479) — are simply
-        // not read; JsonObject's indexer returns null for a missing key, so those files still load,
-        // just without that data.
+        // step. Per-frame shapes (#4479) are the one FRB2 addition Gum's AnimationFrameSave
+        // doesn't model yet — simply not read; JsonObject's indexer returns null for a missing
+        // key, so those files still load, just without that data.
         private static AnimationChainListSave ParseJson(JsonObject root)
         {
             AnimationChainListSave result = new AnimationChainListSave();
@@ -257,6 +256,10 @@ namespace Gum.Content.AnimationChain
                 RelativeX = FloatProperty(frameObj, "relativeX"),
                 RelativeY = FloatProperty(frameObj, "relativeY"),
                 Alpha = IntProperty(frameObj, "alpha"),
+                Red = IntProperty(frameObj, "red"),
+                Green = IntProperty(frameObj, "green"),
+                Blue = IntProperty(frameObj, "blue"),
+                ColorOperation = ColorOperationProperty(frameObj, "colorOperation"),
             };
         }
 
@@ -268,6 +271,9 @@ namespace Gum.Content.AnimationChain
 
         private static int? IntProperty(JsonObject parent, string name) =>
             parent[name] is JsonValue value ? value.GetValue<int>() : (int?)null;
+
+        private static AnimationFrameColorOperation? ColorOperationProperty(JsonObject parent, string name) =>
+            parent[name] is JsonValue value ? Enum.Parse<AnimationFrameColorOperation>(value.GetValue<string>()!) : null;
 
         #endregion
 
