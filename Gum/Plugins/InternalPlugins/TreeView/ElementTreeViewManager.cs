@@ -547,15 +547,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void RefreshStandardsPaletteChips()
     {
-        var gumProject = _projectState.GumProjectSave;
-        List<string> typeNames = gumProject == null
-            ? new List<string>()
-            : gumProject.StandardElements
-                .Where(standard => standard.Name != "Component")
-                .Select(standard => standard.Name)
-                .ToList();
+        var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave);
 
-        _viewCreator.StandardsPalette.RefreshChips(SortStandardTypeNamesForPalette(typeNames));
+        _viewCreator.StandardsPalette.RefreshChips(typeNames);
     }
 
     /// <summary>
