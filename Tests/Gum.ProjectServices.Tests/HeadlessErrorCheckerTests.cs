@@ -1031,4 +1031,85 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     #endregion
+
+    #region GUM0006 — Missing referenced external file
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0006_WhenInstanceSourceFileIsMissing()
+    {
+        // Issue #4493: an instance's SourceFile (texture, .achx, etc.) pointing at a file that
+        // isn't on disk was never checked anywhere in the interactive Errors tab / tree "!" - only
+        // GumProjectDependencyWalker's gumcli-pack path caught it. Reuse that same walker (scoped
+        // to a single element) so this isn't a second, divergent implementation.
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            Project.FullFileName = Path.Combine(tempDirectory, "Project.gumx");
+
+            ComponentSave component = new ComponentSave { Name = "BrokenSpriteHolder" };
+            component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "MySprite.SourceFile",
+                Value = "Textures/DoesNotExist.png",
+                Type = "string",
+                IsFile = true,
+            });
+            component.States.Add(defaultState);
+            Project.Components.Add(component);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0006");
+            error.ElementName.ShouldBe("BrokenSpriteHolder");
+            error.Severity.ShouldBe(ErrorSeverity.Warning);
+            error.Message.ShouldContain("MySprite");
+            error.Message.ShouldContain("Textures/DoesNotExist.png");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0006_WhenInstanceSourceFileExists()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            Project.FullFileName = Path.Combine(tempDirectory, "Project.gumx");
+
+            string texturesDirectory = Path.Combine(tempDirectory, "Textures");
+            Directory.CreateDirectory(texturesDirectory);
+            File.WriteAllText(Path.Combine(texturesDirectory, "Exists.png"), string.Empty);
+
+            ComponentSave component = new ComponentSave { Name = "GoodSpriteHolder" };
+            component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "MySprite.SourceFile",
+                Value = "Textures/Exists.png",
+                Type = "string",
+                IsFile = true,
+            });
+            component.States.Add(defaultState);
+            Project.Components.Add(component);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.ShouldNotContain(e => e.Code == "GUM0006");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    #endregion
 }
