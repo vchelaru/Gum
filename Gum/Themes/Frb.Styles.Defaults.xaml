@@ -1398,10 +1398,11 @@
                     <Border
                         Grid.Row="1"
                         Height="4"
+                        Margin="2,0"
                         Background="{TemplateBinding Background}"
                         CornerRadius="4"
                         Opacity="0.4" />
-                    <Track x:Name="PART_Track" Grid.Row="1" Margin="8,0">
+                    <Track x:Name="PART_Track" Grid.Row="1">
                         <Track.DecreaseRepeatButton>
                             <RepeatButton Command="{x:Static Slider.DecreaseLarge}" Style="{StaticResource SliderRepeatButtonStyle}" />
                         </Track.DecreaseRepeatButton>
