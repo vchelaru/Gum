@@ -26,17 +26,28 @@ public partial class ElementTreeViewManager
 
     #region Menu helpers
 
-    private static readonly string[] StandardInstanceTypes =
+    /// <summary>
+    /// The standard element type names that can be added as a child/sibling instance for
+    /// <paramref name="gumProject"/>. Reads the project's actual <see cref="GumProjectSave.StandardElements"/>
+    /// instead of a hardcoded list, so a type that isn't seeded into this project (e.g. the deprecated
+    /// "ColoredRectangle", excluded from new projects since #2965 phase 2) never appears as a choice that
+    /// would crash when instantiated (#4499). "Component" is excluded because it's a StandardElementSave
+    /// used internally for default-value lookups, not a type meant to be instantiated directly.
+    /// </summary>
+    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject)
     {
-        "Circle",
-        "ColoredRectangle",
-        "Container",
-        "NineSlice",
-        "Polygon",
-        "Rectangle",
-        "Sprite",
-        "Text",
-    };
+        if (gumProject == null)
+        {
+            return new List<string>();
+        }
+
+        var typeNames = gumProject.StandardElements
+            .Where(standard => standard.Name != "Component")
+            .Select(standard => standard.Name)
+            .ToList();
+
+        return SortStandardTypeNamesForPalette(typeNames);
+    }
 
     private void AddMenuItem(string text, Action clickAction)
     {
@@ -487,7 +498,7 @@ public partial class ElementTreeViewManager
             parentMenuItem.Items.Add(new Separator());
         }
 
-        foreach (var type in StandardInstanceTypes)
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
         {
             var menuItem = new MenuItem
             {
@@ -522,7 +533,7 @@ public partial class ElementTreeViewManager
         var parentMenuItem = new MenuItem { Header = itemText };
         _contextMenu.Items.Add(parentMenuItem);
 
-        foreach (var type in StandardInstanceTypes)
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
         {
             var menuItem = new MenuItem
             {
