@@ -347,10 +347,22 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         var allElements = project.Screens.Cast<ElementSave>()
             .Concat(project.Components)
             .Concat(project.StandardElements);
-        foreach (var element in allElements)
+        // GetErrorsFor enables/disables ObjectFinder's cache (ref-counted) per call. Without this
+        // outer enable, each call rebuilds the cache from scratch, making a full-tree refresh
+        // O(n^2) in project size. Enabling here once means the per-call enable/disable inside the
+        // loop just increments/decrements the ref count instead of rebuilding (#4495).
+        ObjectFinder.Self.EnableCache();
+        try
         {
-            bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
-            _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+            foreach (var element in allElements)
+            {
+                bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
+                _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+            }
+        }
+        finally
+        {
+            ObjectFinder.Self.DisableCache();
         }
     }
 
