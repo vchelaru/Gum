@@ -306,12 +306,20 @@ public class GumProjectDependencyWalker
 
         // Build a name -> element lookup once for resolving instance BaseTypes; matches the
         // private dictionary the project-wide walk uses, scoped here to the single-element path.
-        Dictionary<string, ElementSave> elementsByName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
-        foreach (ElementSave e in project.AllElements)
+        // Only built when includeCore is set (the only place it's consulted below) - callers that
+        // scope to ExternalFiles/FontCache only (e.g. the interactive error checker, called once
+        // per element on a full-tree refresh) would otherwise pay this O(n) build for nothing,
+        // turning that refresh into O(n^2) in project size (#4495).
+        Dictionary<string, ElementSave>? elementsByName = null;
+        if (includeCore)
         {
-            if (!string.IsNullOrEmpty(e.Name) && !elementsByName.ContainsKey(e.Name))
+            elementsByName = new Dictionary<string, ElementSave>(StringComparer.OrdinalIgnoreCase);
+            foreach (ElementSave e in project.AllElements)
             {
-                elementsByName[e.Name] = e;
+                if (!string.IsNullOrEmpty(e.Name) && !elementsByName.ContainsKey(e.Name))
+                {
+                    elementsByName[e.Name] = e;
+                }
             }
         }
 
@@ -328,7 +336,7 @@ public class GumProjectDependencyWalker
                 foreach (InstanceSave instance in scopeElement.Instances)
                 {
                     if (includeCore && !string.IsNullOrEmpty(instance.BaseType)
-                        && elementsByName.TryGetValue(instance.BaseType, out ElementSave? instanceElement))
+                        && elementsByName!.TryGetValue(instance.BaseType, out ElementSave? instanceElement))
                     {
                         string? subfolder = instanceElement is ComponentSave ? "Components"
                             : instanceElement is StandardElementSave ? "Standards"
