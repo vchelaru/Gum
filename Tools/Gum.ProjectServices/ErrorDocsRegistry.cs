@@ -18,6 +18,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0003"] = "gum-tool/gum-elements/states/categories#gum0003-category-state-sets-its-own-category-selector",
             ["GUM0004"] = "gum-tool/project-files#missing-source-files-gum0004",
             ["GUM0005"] = "gum-tool/code-tab/orphaned-code-files",
+            ["GUM0006"] = "gum-tool/project-files#missing-referenced-external-file-gum0006",
         };
     }
 

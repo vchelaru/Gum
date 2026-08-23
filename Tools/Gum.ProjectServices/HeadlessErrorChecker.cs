@@ -1,3 +1,4 @@
+using Gum.Bundle;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -103,6 +104,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
         }
         errors.AddRange(GetMissingSourceFileErrorsFor(element));
+        errors.AddRange(GetMissingExternalFileErrorsFor(element, project));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
@@ -539,6 +541,49 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     $"\"{expectedRelativePath}\" but could not find it on disk. The element still exists " +
                     $"in the project in memory - saving it will recreate the file, or restore the file " +
                     $"to resolve this error."
+            });
+        }
+
+        return errors;
+    }
+
+    #endregion
+
+    #region GUM0006 — Missing referenced external file
+
+    /// <summary>
+    /// Surfaces instance/element variables flagged IsFile (Sprite/Svg/LottieAnimation SourceFile,
+    /// custom font files, etc.) whose value does not resolve to an existing file on disk. Reuses
+    /// <see cref="GumProjectDependencyWalker"/> scoped to a single element - the same walk
+    /// `gumcli pack` already performs to catch these before bundling - so missing references are
+    /// no longer silently ignored by the interactive Errors tab / tree "!" (issue #4493).
+    /// A Warning, not an Error: unlike a missing element/behavior file, a missing texture/font
+    /// doesn't affect codegen correctness, and <c>CodegenCommand</c> treats any Error as blocking
+    /// generation for that element - the same reasoning <see cref="GetAchxOriginErrorsFor"/>
+    /// already uses for its content-drift warning.
+    /// </summary>
+    private static List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project)
+    {
+        var errors = new List<ErrorResult>();
+
+        if (string.IsNullOrEmpty(project.FullFileName))
+        {
+            return errors;
+        }
+
+        var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
+        var walker = new GumProjectDependencyWalker();
+        var result = walker.Walk(project, projectRootDirectory, GumBundleInclusion.ExternalFiles, element);
+
+        foreach (var warning in result.MissingFiles)
+        {
+            errors.Add(new ErrorResult
+            {
+                ElementName = element.Name,
+                Code = "GUM0006",
+                Severity = ErrorSeverity.Warning,
+                Message = $"{warning.ReferencedFromElementName} references \"{warning.ReferencedPath}\", " +
+                    $"which was not found on disk."
             });
         }
 

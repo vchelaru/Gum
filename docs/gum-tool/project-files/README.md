@@ -137,6 +137,12 @@ When this happens the Gum tool reports a **GUM0004** error in the [Errors tab](.
 
 GUM0004 is a listed error only; it does not block saving the project.
 
+## Missing Referenced External File (GUM0006)
+
+An instance or element variable that references an external file, such as a Sprite's `Source File` (including `.achx`/`.achj` animation chains), or a `Custom Font File`, can point at a path that does not exist on disk, for example after a typo, a rename, or a moved file.
+
+When this happens the Gum tool reports a **GUM0006** warning in the [Errors tab](../editor-tab.md), naming the instance and the path it referenced. To resolve it, either point the variable at the correct file or restore the missing file to the expected location.
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:
