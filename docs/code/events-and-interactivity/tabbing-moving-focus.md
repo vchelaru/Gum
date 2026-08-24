@@ -4,6 +4,35 @@
 
 Gum supports tabbing focus between controls. Tabbing can be performed with the keyboard or gamepad.
 
+## What Determines Tab Order
+
+Tab order follows the order controls appear among their siblings. This applies to Tab and Shift+Tab on the keyboard, and to gamepad navigation while a container is in `TabOrder` mode (the default; see [Spatial (Any-Angle) Gamepad Navigation](#spatial-any-angle-gamepad-navigation) below). Gum has no separate property for setting tab order, so the only way to change it is to change where a control sits among its siblings.
+
+For a screen or component built in the Gum tool, sibling order comes from the order instances are listed in the `.gucx` file, which matches the order shown in the tool's tree view. Reordering an instance in the tree view changes its tab order. For controls created in code, sibling order comes from the order each control is added with `AddChild`.
+
+Tabbing also moves into nested containers on its own. If a container holds another container with its own children, tabbing enters the nested container in its turn and visits its children before moving on to the next sibling of the outer container. No extra setup is needed for a control nested inside a sub-panel, or inside a custom composite control, to receive focus at its turn.
+
+For example, the tree below matches what you would see in the tool's tree view. The tab order for each control is shown next to it:
+
+* `MainWindow`
+  * `NameTextBox` (tab order 1)
+  * `NameFieldsPanel`
+    * `EmailTextBox` (tab order 2)
+    * `PhoneTextBox` (tab order 3)
+  * `ButtonsPanel`
+    * `SaveButton` (tab order 4)
+    * `CancelButton` (tab order 5)
+  * `CloseButton` (tab order 6)
+
+Tabbing forward visits controls in this order:
+
+1. `NameTextBox`
+2. `EmailTextBox`
+3. `PhoneTextBox`
+4. `SaveButton`
+5. `CancelButton`
+6. `CloseButton`
+
 ## Keyboard Tabbing
 
 The keyboard can be used to interact with controls. Keyboards can be used to:

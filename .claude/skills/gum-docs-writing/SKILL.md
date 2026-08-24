@@ -146,6 +146,9 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 - Avoid passive voice, prefer "Gum displays a label" over "a label is displayed."
 - Screenshots (`.png`) for single states; animated GIFs (`.gif`) for multi-step interactions. Use them liberally.
 - **Never use an em dash (—).** Use a comma, period, or parenthetical instead. Check new/edited text for the character before finishing a doc pass.
+- Prefer plain language over jargon when a plainer phrasing says the same thing; keep Gum's own terms (control names, property names) since those are what readers need to look up.
+- Avoid hyphenated compound phrases where a plainer wording works.
+- After writing, re-read a passage and ask whether someone with no technical background could follow it; simplify if not, without dropping needed Gum keywords.
 
 ## Code Sample Placement Comments
 
