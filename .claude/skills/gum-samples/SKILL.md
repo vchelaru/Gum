@@ -39,6 +39,10 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 
 **MonoGame/KNI host init (landmine).** Referencing the package is not enough — the game host must call `ShapeRenderer.Self.Initialize()` (namespace `MonoGameAndGum.Renderables`) **after** `GumService.Default.Initialize(...)`, **and** set `GraphicsProfile.HiDef` (Apos.Shapes uses an SM4 effect that Reach can't load). Miss either and shape fills/effects silently do not draw — no error. See `docs/code/standard-visuals/shapes-apos.shapes.md`.
 
+## Host-embedded samples (SkiaGumWpfSample, MauiSkiaGum)
+
+`Samples/SkiaGumWpfSample/` and `Samples/MauiSkiaGum/` aren't feature samples — they demo Gum embedded inside a host UI framework (WPF, MAUI) that already has its own native controls. There, Gum is typically the visualization/canvas layer, not a Forms-control replacement for the host's own buttons/text boxes — see `GumSKElement`/`SkiaGumCanvasView` (`Runtimes/SkiaGum.Wpf/`, `Runtimes/SkiaGum.Maui/`), each owning its own `SystemManagers` so one host app can embed multiple independent Gum canvases. Don't add a Forms-control (Button, TextBox) demo here just because Forms exist on this backend.
+
 ## Docs coverage lags SilkNetGum
 
 `docs/code/layout/resizing-the-game-window.md` documents window-resize handling with `{% tabs %}` per backend but has no Silk.NET tab yet (only MonoGame/raylib-flavored guidance exists). When fixing or documenting Silk.NET resize behavior, add its tab there too instead of leaving the doc MonoGame/raylib-only.
