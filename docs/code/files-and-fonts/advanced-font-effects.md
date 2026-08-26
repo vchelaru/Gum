@@ -178,12 +178,12 @@ BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 
 ## Backend Selection (FreeType vs StbTrueType)
 
-KernSmith uses FreeType by default for glyph rasterization. FreeType produces the best results but requires a native library to be present. On platforms where that's a problem — most notably Blazor WASM — switch to the managed StbTrueType backend:
+KernSmith uses FreeType by default for glyph rasterization. FreeType produces the best results but requires a native library to be present. On platforms where that's a problem, most notably Blazor WASM, switch to the managed StbTrueType backend:
 
 ```csharp
 // Initialize
 var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
-options.Backend = KernSmith.Rasterizer.RasterizerBackend.StbTrueType;
+options.Backend = KernSmith.RasterizerBackend.StbTrueType;
 
 KernSmith.BmFontResult result =
     KernSmith.BmFont.GenerateFromSystem(bmfcSave.FontName, options);
@@ -191,6 +191,12 @@ BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 ```
 
 `GumFontGenerator.Generate` also takes a `RasterizerBackend?` argument as a shortcut for the same effect when you're not customizing other options.
+
+KernSmith always starts with FreeType. It does not look at the platform and pick for you, so a browser gets FreeType just like a desktop build does. Adding a backend's NuGet package makes that backend available, but it does not change the one KernSmith asks for, so a web build still has to name `StbTrueType` itself.
+
+{% hint style="warning" %}
+If the backend cannot run, the font is never built, and Gum uses its built in 18 pixel font instead without any error. Text in the wrong font, or text that ignores `FontSize`, usually means no backend was set. Listen to `CustomSetPropertyOnRenderable.PropertyAssignmentError` to see what went wrong.
+{% endhint %}
 
 ## Variation Axes
 

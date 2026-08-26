@@ -399,7 +399,7 @@ foreach (var label in titleLabels)
 * You're loading fonts from a non-standard source (embedded resource, network, custom pipeline) and want to keep the load step out of the property-driven path.
 * You need effects that `TextRuntime` does not expose — outline color, gradient fills, SDF, color fonts, or custom glyph subsets. Baked drop shadow is on the property path. See [Advanced Font Effects](advanced-font-effects.md).
 * You need a custom character set that doesn't match any `BmfcSave.Ranges` value you'd want to ship.
-* You need to override the rasterizer backend — for example forcing `RasterizerBackend.StbTrueType` on Blazor WASM where the native FreeType library isn't available.
+* You need a different rasterizer backend, such as `RasterizerBackend.StbTrueType` on Blazor WASM, where the native FreeType library is missing. KernSmith starts with FreeType on every platform, so on web this is a step you have to take, not a tweak. See [Backend Selection](advanced-font-effects.md#backend-selection-freetype-vs-stbtruetype).
 
 ## Build-Time Font Cache
 

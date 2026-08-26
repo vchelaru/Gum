@@ -282,7 +282,9 @@ For shipping games, you should register custom .ttf fonts rather than relying on
 {% endhint %}
 
 {% hint style="warning" %}
-**KNI on web (BlazorGL):** dynamic fonts default to the FreeType rasterizer, which is native code and can't run in the browser. You must select the pure-C# StbTrueType backend instead (the `KernSmith.Rasterizers.StbTrueType` package added above), and register it yourself before Gum uses it — published web builds are trimmed by default, which strips KernSmith's normal automatic backend discovery. Add this once in `Program.cs`, before the host runs:
+**KNI on web (BlazorGL):** fonts built at runtime start with the FreeType rasterizer, which is native code and cannot run in a browser. KernSmith starts with FreeType on every platform, so adding the `KernSmith.Rasterizers.StbTrueType` package above is not enough on its own. You also have to name that backend and make sure it gets registered. If the font cannot be built, Gum uses its built in 18 pixel font instead and shows no error, so the sign of this problem is text in the wrong font.
+
+Web builds are trimmed by default, which removes the code KernSmith uses to find backends on its own, so register it yourself. Add this once in `Program.cs`, before the host runs:
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -294,7 +296,7 @@ RuntimeHelpers.RunClassConstructor(typeof(StbTrueTypeRasterizer).TypeHandle);
 Then pass the backend explicitly when creating the font creator:
 
 ```csharp
-new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.Rasterizer.RasterizerBackend.StbTrueType);
+new KernSmith.Gum.KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBackend.StbTrueType);
 ```
 {% endhint %}
 
