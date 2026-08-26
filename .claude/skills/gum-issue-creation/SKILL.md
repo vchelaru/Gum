@@ -22,16 +22,25 @@ A value you printed while diagnosing something else is an observation, not a rep
 - **Bug reports get `--label bug`** (label exists, color `#fc2929`). Apply it at creation time.
 - The `bug` label is real and applies silently — don't second-guess it or omit it on later issues.
 
-## Multi-line bodies
-`gh` runs through the **Bash tool (bash, not PowerShell)** — do NOT use PowerShell here-strings (`@'...'@`); a stray `@` leaks onto the first body line. Write the body to a temp file and pass `--body-file`:
+## Multi-line GitHub bodies
+Use a real multi-line value for issue comments, issue bodies, and PR bodies. Never write literal `\n` sequences and expect GitHub Markdown to turn them into line breaks.
+
+Match the syntax to the active shell. In PowerShell, use a here-string:
+
+```powershell
+$githubBody = @'
+...body...
+'@
+gh issue create --title "..." --body $githubBody --label bug
+```
+
+In Bash, use a heredoc or `--body-file`:
 
 ```bash
-cat > /tmp/issue_body.md << 'EOF'
-...body...
-EOF
 gh issue create --title "..." --body-file /tmp/issue_body.md --label bug
-rm /tmp/issue_body.md
 ```
+
+After creating or editing a multi-line body, read it back before reporting success. Use `gh issue view <number> --json body` for issues and `gh pr view <number> --json body` for PRs.
 
 ## Body structure
 Keep it scannable for a future implementer:
