@@ -1,5 +1,6 @@
 using Gum.Bundle;
 using Gum.DataTypes;
+using Gum.ProjectServices;
 using Shouldly;
 using ToolsUtilities;
 
@@ -31,6 +32,20 @@ public class PackCommandTests : IDisposable
         Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
         entries.Keys.ShouldContain("Components/SpriteHolder.gucx");
         entries.Keys.ShouldContain("Textures/bg.png");
+    }
+
+    [Fact]
+    public void Pack_includes_project_relative_Font_ttf_without_generated_font_cache()
+    {
+        string projectPath = CreateProjectWithTextFontFile("FontFile");
+        string outputPath = Path.Combine(Path.GetDirectoryName(projectPath)!, "out.gumpkg");
+
+        CliTestHelper result = CliTestHelper.Run("pack", projectPath, "-o", outputPath);
+
+        result.ExitCode.ShouldBe(0, result.StandardError);
+        Dictionary<string, byte[]> entries = ReadBundleEntries(outputPath);
+        entries.Keys.ShouldContain("Fonts/LiberationSans.ttf");
+        entries.Keys.Any(entry => entry.StartsWith("FontCache/", StringComparison.Ordinal)).ShouldBeFalse();
     }
 
     [Fact]
@@ -305,8 +320,8 @@ public class PackCommandTests : IDisposable
 
     /// <summary>
     /// Creates a minimal project on disk (just the .gumx file with no element references)
-    /// and returns the .gumx path. Avoids the gumcli "new" template which pulls in standard
-    /// elements with default font references that show up as missing FontCache files.
+    /// and returns the .gumx path. Avoids the gumcli "new" template so tests that do not need
+    /// standard elements remain focused on their own dependencies.
     /// </summary>
     private string CreateCleanProject(string name)
     {
@@ -354,6 +369,43 @@ public class PackCommandTests : IDisposable
 
         AppendComponentReference(filePath, "SpriteHolder");
         return filePath;
+    }
+
+    private string CreateProjectWithTextFontFile(string name)
+    {
+        string projectDir = Path.Combine(_tempDirectory, name);
+        Directory.CreateDirectory(projectDir);
+        string projectPath = Path.Combine(projectDir, name + ".gumx");
+        new ProjectCreator().Create(projectPath);
+
+        string screenXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>TextScreen</Name>
+              <State>
+                <Name>Default</Name>
+                <Variable Type="bool" Name="Label.UseCustomFont" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+                <Variable Type="string" Name="Label.Font" IsFont="true" SetsValue="true"><Value xsi:type="xsd:string">Fonts/LiberationSans.ttf</Value></Variable>
+                <Variable Type="int" Name="Label.FontSize" SetsValue="true"><Value xsi:type="xsd:int">18</Value></Variable>
+                <Variable Type="int" Name="Label.OutlineThickness" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
+                <Variable Type="bool" Name="Label.UseFontSmoothing" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
+                <Variable Type="bool" Name="Label.IsItalic" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+                <Variable Type="bool" Name="Label.IsBold" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
+              </State>
+              <Instance><Name>Label</Name><BaseType>Text</BaseType><DefinedByBase>false</DefinedByBase></Instance>
+            </ScreenSave>
+            """;
+        File.WriteAllText(Path.Combine(projectDir, "Screens", "TextScreen.gusx"), screenXml);
+
+        string projectXml = File.ReadAllText(projectPath);
+        File.WriteAllText(projectPath, projectXml.Replace("</GumProjectSave>",
+            "  <ScreenReference Name=\"TextScreen\" />\n</GumProjectSave>"));
+
+        string fontsDirectory = Path.Combine(projectDir, "Fonts");
+        Directory.CreateDirectory(fontsDirectory);
+        File.WriteAllBytes(Path.Combine(fontsDirectory, "LiberationSans.ttf"), new byte[] { 0x00 });
+        return projectPath;
     }
 
     private static void WriteSpriteHolderComponent(string projectDir, string sourceFileRelative)
