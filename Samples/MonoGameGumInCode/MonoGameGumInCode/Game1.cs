@@ -102,6 +102,7 @@ namespace MonoGameGumInCode
             AddNavButton("Invisible", () => ShowScreen<InvisibleScreen>());
             AddNavButton("NineSlice", () => ShowScreen<NineSliceScreen>());
             AddNavButton("Sprite", () => ShowScreen<SpriteScreen>());
+            AddNavButton("Svg", () => ShowScreen<SvgScreen>());
             AddNavButton("Clip", () => ShowScreen<ClippingScreen>());
             AddNavButton("Render Target", () => ShowScreen<RenderTargetScreen>());
             AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());

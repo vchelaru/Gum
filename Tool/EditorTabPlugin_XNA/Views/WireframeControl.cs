@@ -222,6 +222,18 @@ public class WireframeControl : WpfGraphicsDeviceControl
             // The ContentManager is unused by ShapeRenderer as of Apos.Shapes.KNI 0.7.2+ (the shader
             // is embedded in the assembly, not loaded via content pipeline) but the parameter stays
             // for source compatibility — see ShapeRenderer.Initialize.
+            // Issue #4506 — keep the editor's Svg preview on the Skia plugin's Svg.Skia renderable
+            // (MainSkiaPlugin.HandleCreateRenderbleFor) rather than the Apos.Shapes-backed
+            // SvgRuntime that KniGumShapes registers for shipped games. Apos ignores CSS <style>
+            // blocks, text, use, clipPath, mask, filter and pattern, so letting it win here would
+            // silently downgrade what a real drawing looks like in the editor. Unlike Arc (#2925),
+            // which the plugin gave up so tool and runtime could share one path, Svg keeps two.
+            //
+            // Assignment order does not matter: RegisterRuntimeTypes is a [ModuleInitializer] that
+            // has already run by the time any of this executes, and the flag is read inside the
+            // registered factory at creation time.
+            Gum.GueDeriving.AposShapeRuntime.IsSvgRuntimeEnabled = false;
+
             if (!ShapeRenderer.Self.IsInitialized)
             {
                 ContentManager shapesContentManager = new ContentManager(renderHost.Services, "Content");

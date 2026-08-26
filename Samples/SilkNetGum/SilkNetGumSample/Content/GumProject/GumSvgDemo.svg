@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Demo drawing for SvgScreen. Deliberately uses only what BOTH backends read: presentation
+  attributes (fill / stroke / stroke-width / stroke-dasharray) rather than a CSS <style> block,
+  which Apos.Shapes ignores. See gum-logo-normal.svg for the CSS-class case.
+  viewBox is 2:1 so MaintainFileAspectRatio is visibly doing something.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 240 120">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a7bd5" />
+      <stop offset="0.5" stop-color="#6cc396" />
+      <stop offset="1" stop-color="#f4d35e" />
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="1" stop-color="#e8543f" />
+    </radialGradient>
+  </defs>
+
+  <!-- Gradient-filled panel with a solid stroke. -->
+  <rect x="4" y="4" width="232" height="112" rx="0"
+        fill="url(#sky)" stroke="#2b2b2b" stroke-width="3" />
+
+  <!-- Radial-gradient circle. -->
+  <circle cx="56" cy="60" r="34" fill="url(#glow)" stroke="#2b2b2b" stroke-width="2" />
+
+  <!-- Even-odd filled path (ring), to exercise the fill rule. -->
+  <path d="M136,26 A34,34 0 1,0 136,94 A34,34 0 1,0 136,26 Z M136,44 A16,16 0 1,1 136,76 A16,16 0 1,1 136,44 Z"
+        fill="#2b2b2b" fill-rule="evenodd" />
+
+  <!-- Dashed open stroke with round caps and joins. -->
+  <polyline points="180,96 196,40 212,80 228,32"
+            fill="none" stroke="#ffffff" stroke-width="5"
+            stroke-linecap="round" stroke-linejoin="round"
+            stroke-dasharray="10 6" />
+</svg>

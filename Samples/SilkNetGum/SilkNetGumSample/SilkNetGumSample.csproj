@@ -64,6 +64,9 @@
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\ZoomScreen.cs" Link="Screens\ZoomScreen.cs" />
 	  <!-- LayerCameraSettings screen-space-vs-world demo shared from MonoGameGumInCode, gated #elif SKIA (#4367). -->
 	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\LayerCameraSettingsScreen.cs" Link="Screens\LayerCameraSettingsScreen.cs" />
+	  <!-- SVG gallery shared from MonoGameGumInCode, gated #if SKIA (#4506). Deliberately NOT
+	       linked into Samples/raylib/GumTest.csproj — raylib has no SVG support (#4505). -->
+	  <Compile Include="..\..\MonoGameGumInCode\MonoGameGumInCode\Screens\SvgScreen.cs" Link="Screens\SvgScreen.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

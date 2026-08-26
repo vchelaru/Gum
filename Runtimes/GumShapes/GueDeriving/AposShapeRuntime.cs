@@ -28,6 +28,27 @@ public abstract class AposShapeRuntime : GraphicalUiElement
     private static bool _registered;
 
     /// <summary>
+    /// Whether the <c>Svg</c> standard type resolves to this backend's Apos.Shapes-backed
+    /// <see cref="SvgRuntime"/>. Defaults to <c>true</c>, which is what games want: it is the only
+    /// thing that makes an <c>Svg</c> element loaded from a .gumx render at all on MonoGame/KNI.
+    /// </summary>
+    /// <remarks>
+    /// The Gum tool sets this to <c>false</c>. The tool loads this assembly (through
+    /// EditorTabPlugin_XNA / KniGumShapes) <i>and</i> the Skia plugin, whose
+    /// <c>MainSkiaPlugin.HandleCreateRenderbleFor</c> draws <c>Svg</c> through Svg.Skia. Because
+    /// <c>RegisterGueInstantiation</c> is the primary creation path and a registered runtime
+    /// installs its own renderable, registering <c>Svg</c> here would outrank that plugin hook and
+    /// silently move the editor's preview onto Apos.Shapes — which ignores CSS <c>&lt;style&gt;</c>
+    /// blocks, <c>text</c>, <c>use</c>, <c>clipPath</c>, <c>mask</c>, <c>filter</c> and
+    /// <c>pattern</c>, so a real drawing would preview differently than it does today. The editor
+    /// therefore keeps Svg.Skia and only shipped games use this runtime (issues #4505, #4506).
+    ///
+    /// This is the opposite call from Arc's (issue #2925), where the plugin gave the type up so the
+    /// tool and runtime could share one path — Arc has no fidelity gap between the two backends.
+    /// </remarks>
+    public static bool IsSvgRuntimeEnabled { get; set; } = true;
+
+    /// <summary>
     /// Registers the Arc, ColoredCircle, Line, and RoundedRectangle runtime types with Gum so that
     /// instances loaded from .gumx project files are instantiated as the corresponding *Runtime classes.
     /// Called automatically by the runtime via the [ModuleInitializer] attribute - applications do not
@@ -127,6 +148,23 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             () => new global::MonoGameGum.GueDeriving.RoundedRectangleRuntime());
 #pragma warning restore CS0618
 
+        // Svg is registered unqualified, unlike the four above: it is a new type (issue #4506) with
+        // no MonoGameGum.GueDeriving shim and therefore no already-generated user code casting to
+        // the deprecated namespace, so the shim-instantiation workaround of issue #3380 doesn't
+        // apply. On FRB builds this file's namespace is MonoGameGum.GueDeriving, so the name
+        // resolves to the FRB-side type there, matching the qualified registrations above.
+        //
+        // IsSvgRuntimeEnabled is read inside the factory rather than around this call on purpose:
+        // this method is a [ModuleInitializer], so it runs the instant the assembly loads and a
+        // host cannot set a flag before it. Deferring the check to creation time makes the opt-out
+        // order-independent. Returning null! (not null) keeps the nullable-enabled
+        // Func<GraphicalUiElement> signature quiet; CreateGueForElement handles a null factory
+        // result by falling through to CustomCreateGraphicalComponentFunc - the same graceful
+        // degradation the RenderableRegistry factories above rely on for the #3112 gate.
+        ElementSaveExtensions.RegisterGueInstantiation(
+            "Svg",
+            () => IsSvgRuntimeEnabled ? new SvgRuntime() : null!);
+
         StandardElementsManager.Self.CustomGetDefaultState =
             CombineGetDefaultState(StandardElementsManager.Self.CustomGetDefaultState);
 
@@ -192,9 +230,20 @@ public abstract class AposShapeRuntime : GraphicalUiElement
             case "RoundedRectangle":
                 return StandardElementsManager.GetRoundedRectangleState();
 
+            // Issue #4506 — Svg now renders on this backend too, so it needs a default state here
+            // for the from-file path. Gated on the same flag as the runtime registration so that
+            // "Svg disabled" means fully disabled; in the tool this returns null and the Skia
+            // plugin's resolver answers, as it did before. (Either answer would be identical
+            // anyway - the plugin's DefaultStateManager.GetSvgState() forwards to this very
+            // method - but leaving the type wholly to one owner is easier to reason about.)
+            // Note the state includes color variables that this backend's SvgRuntime deliberately
+            // does not implement (see its remarks) - they no-op rather than tint.
+            case "Svg" when IsSvgRuntimeEnabled:
+                return StandardElementsManager.GetSvgState();
+
             // Not a shape this runtime knows about - null lets CombineGetDefaultState fall back
             // to whatever resolver was already registered (e.g. the Skia plugin, for
-            // Svg/LottieAnimation/Canvas) instead of guessing Container's default state.
+            // LottieAnimation/Canvas) instead of guessing Container's default state.
             default:
                 return null;
         }
