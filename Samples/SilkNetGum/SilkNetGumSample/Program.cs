@@ -77,6 +77,7 @@ unsafe class Program
     {
         () => new SilkNetGum.Screens.NineSliceScreen(),
         () => new SilkNetGum.Screens.SpriteScreen(),
+        () => new SilkNetGum.Screens.SvgScreen(),
         () => new SilkNetGum.Screens.TextScreen(),
         () => new SilkNetGum.Screens.CirclesScreen(),
         () => new SilkNetGum.Screens.RectanglesScreen(),
@@ -94,6 +95,7 @@ unsafe class Program
     {
         "NineSlice",
         "Sprite",
+        "Svg",
         "Text",
         "Circles",
         "Rectangles",
