@@ -149,22 +149,36 @@ internal class SvgScreen : FrameworkElement
     }
 
     // Height-driven: both dimensions absolute, with Width deliberately set to a value the file's
-    // 2:1 aspect ratio does NOT agree with. Skia stretches to fill the box; Apos.Shapes scales
-    // uniformly off the height and lets the width follow the file, because its DrawSvg takes a
-    // single em size (one em = the viewBox's height). Expected divergence — issue #4506.
+    // 2:1 aspect ratio does NOT agree with. Skia squashes the drawing to fill the box exactly
+    // (scaleX and scaleY are computed independently in VectorSprite.Render); Apos.Shapes scales
+    // uniformly off the height and keeps the file's proportions, because its DrawSvg takes a single
+    // em size (one em = the viewBox's height). Known, accepted divergence — tracked in issue #4509.
+    //
+    // Each drawing gets a host container twice its height wide, because on the Apos backend the
+    // drawing is wider than the Width the element reports to layout — without the container the
+    // 2:1 drawings would overrun the square boxes the stack is spacing them by and overlap each
+    // other, which reads as a rendering bug rather than the sizing difference being demonstrated.
     private static ContainerRuntime BuildAbsoluteHeightRow()
     {
         ContainerRuntime row = BuildRow();
 
         foreach (var height in new float[] { 40, 70, 100 })
         {
+            ContainerRuntime cell = new();
+            cell.WidthUnits = DimensionUnitType.Absolute;
+            cell.HeightUnits = DimensionUnitType.Absolute;
+            cell.Width = height * 2;
+            cell.Height = height;
+
             SvgRuntime svg = new();
             svg.SourceFile = DemoSvg;
             svg.HeightUnits = DimensionUnitType.Absolute;
             svg.Height = height;
             svg.WidthUnits = DimensionUnitType.Absolute;
             svg.Width = height; // intentionally square, i.e. inconsistent with the 2:1 file
-            row.AddChild(svg);
+            cell.AddChild(svg);
+
+            row.AddChild(cell);
         }
 
         return row;

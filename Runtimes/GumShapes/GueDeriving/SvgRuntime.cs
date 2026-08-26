@@ -34,8 +34,10 @@ namespace Gum.GueDeriving;
 /// name that says so.
 /// </description></item>
 /// <item><description>
-/// <b>Aspect-locked sizing.</b> See <see cref="Svg.Render"/> — height drives a uniform scale, so
-/// a non-uniform Width is aspect-corrected rather than stretched.
+/// <b>Height-dominant sizing.</b> See <see cref="Svg.Render"/> — height drives a uniform scale, so
+/// a Width that disagrees with the file's aspect ratio is not honored. Skia squashes to fill the
+/// box instead. Accepted divergence, tracked in issue #4509; the default
+/// <c>MaintainFileAspectRatio</c> height units keep the two backends in agreement.
 /// </description></item>
 /// </list>
 /// </remarks>

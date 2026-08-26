@@ -59,10 +59,15 @@ internal class Svg : RenderableShapeBase, IAspectRatio
 
         // DrawSvg's `size` is one em in world units, and one em is the viewBox's HEIGHT - so this
         // is a uniform scale driven by Height, and the drawn width follows the file's aspect ratio.
-        // An explicitly-set non-uniform Width is therefore aspect-corrected rather than stretched,
-        // which is where this diverges from SkiaGum's VectorSprite (issue #4506). Honoring a
-        // non-uniform Width would need its own ShapeBatch.Begin/End with a scale matrix, i.e. a
-        // batch flush per stretched SVG.
+        //
+        // Height-dominant is the accepted behavior here, NOT a match for SkiaGum's VectorSprite,
+        // which computes scaleX and scaleY independently and squashes the drawing to fill its box.
+        // When Width and Height disagree with the file's ratio this draws wider than the Width it
+        // reports to layout, so it can overrun a sibling. Tracked in issue #4509 along with the two
+        // ways out: scaling the batch through ShapeBatch.Begin's view matrix (Skia parity, at two
+        // batch flushes per stretched SVG), or a Vector2-size DrawSvg upstream. The common case is
+        // unaffected - SvgRuntime defaults to MaintainFileAspectRatio, where the dimensions already
+        // agree and both backends match.
         //
         // `rotation` turns around `position` and `origin` is the pivot measured out from the top
         // left, so passing Vector2.Zero rotates around the top-left corner - Gum's own convention.
