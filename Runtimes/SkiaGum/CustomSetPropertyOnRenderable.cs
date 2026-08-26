@@ -1503,7 +1503,8 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     asSvg.Texture = null;
                 }
-                break;
+                graphicalUiElement.UpdateLayout();
+                return true;
         }
         return false;
     }
