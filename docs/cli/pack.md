@@ -17,7 +17,11 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
 - `--include <categories>` — Comma-separated list of file categories to include. Defaults to `core,fontcache,external`. Valid values:
   - `core` — the `.gumx` plus all `.gusx`, `.gucx`, `.gutx`, and `.behx` files referenced by the project
   - `fontcache` — generated bitmap font files under `FontCache/` (`.fnt` + `.png` pages)
-  - `external` — files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures and custom font files outside `FontCache/`
+  - `external` — files referenced by the project but outside Core/FontCache, such as sprite source `.png` textures, `CustomFontFile` paths, and a `Font` value that points at a project-relative `.ttf` file rather than a system font family name (e.g. `Fonts/MyFont.ttf` vs. `Arial`)
+
+{% hint style="info" %}
+**Shipping September 2026:** Packing a `.ttf` referenced through the `Font` property (not just `CustomFontFile`) will ship in the September release, or now if building Gum from source. Before this, only `CustomFontFile` paths were bundled as external font files.
+{% endhint %}
 
 ## Examples
 
