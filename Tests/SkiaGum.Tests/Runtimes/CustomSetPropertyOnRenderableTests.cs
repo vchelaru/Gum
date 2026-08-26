@@ -2,6 +2,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using SkiaGum;
+using SkiaGum.Content;
 using SkiaGum.GueDeriving;
 using SkiaSharp;
 
@@ -76,5 +77,33 @@ public class CustomSetPropertyOnRenderableTests
 
         renderable.DropshadowBlurX.ShouldBe(7f);
         renderable.DropshadowBlurY.ShouldBe(7f);
+    }
+
+    [Fact]
+    public void SetProperty_SourceFileOnSvg_ShouldUpdateMaintainFileAspectRatioHeight()
+    {
+        const string svgMarkup = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 200 100\"><rect width=\"200\" height=\"100\" /></svg>";
+        string filePath = Path.Combine(Path.GetTempPath(), $"gum-svg-{Guid.NewGuid():N}.svg");
+        File.WriteAllText(filePath, svgMarkup);
+        SkiaResourceManager.Initialize(resourceAssembly: null);
+
+        try
+        {
+            GraphicalUiElement graphicalUiElement = new();
+            VectorSprite vectorSprite = new();
+            graphicalUiElement.SetContainedObject(vectorSprite);
+            graphicalUiElement.Width = 200;
+            graphicalUiElement.Height = 100;
+            graphicalUiElement.HeightUnits = Gum.DataTypes.DimensionUnitType.MaintainFileAspectRatio;
+            graphicalUiElement.UpdateLayout();
+
+            graphicalUiElement.SetProperty("SourceFile", filePath);
+
+            graphicalUiElement.AbsoluteHeight.ShouldBe(100);
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
     }
 }

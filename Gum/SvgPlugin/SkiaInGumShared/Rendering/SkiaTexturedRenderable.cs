@@ -14,7 +14,7 @@ namespace SkiaGum.Renderables
     /// and <see cref="IManagedObject"/> concerns so that shape classes can remain pure
     /// Skia drawing objects.
     /// </summary>
-    public class SkiaTexturedRenderable : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject
+    public class SkiaTexturedRenderable : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject, IAspectRatio
     {
         #region Fields
 
@@ -50,6 +50,15 @@ namespace SkiaGum.Renderables
         /// The underlying shape/content object that draws to a Skia surface.
         /// </summary>
         public ISkiaSurfaceDrawable Drawable => _drawable;
+
+        #endregion
+
+        #region IAspectRatio
+
+        // GraphicalUiElement's MaintainFileAspectRatio math casts its contained object
+        // (this wrapper) to IAspectRatio, not the Drawable it wraps -- forward it so
+        // aspect-ratio-driven drawables like RenderableSvg take effect. See issue #4512.
+        public float AspectRatio => (_drawable as IAspectRatio)?.AspectRatio ?? 1;
 
         #endregion
 
