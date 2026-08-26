@@ -72,3 +72,7 @@ if(needsRefresh)
 ```
 
 <figure><img src="../../.gitbook/assets/15_07 13 08.gif" alt=""><figcaption><p>Zooming and adjusting canvas size in response</p></figcaption></figure>
+
+{% hint style="info" %}
+Text looks soft when the camera or a layer zooms in, unless its font is built again at a larger size. See [Font Oversampling](../files-and-fonts/font-oversampling.md).
+{% endhint %}

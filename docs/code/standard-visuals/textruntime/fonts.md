@@ -65,6 +65,7 @@ For the full details on each path — when to use it, code samples, and the cost
 
 * [Font Strategies](../../files-and-fonts/font-strategies.md) — full walkthroughs.
 * [Font Performance](../../files-and-fonts/font-performance.md) — generation, memory, and draw-call costs.
+* [Font Oversampling](../../files-and-fonts/font-oversampling.md): keeping text sharp when the camera or a layer zooms in.
 
 {% hint style="info" %}
 **Choosing a font strategy?** Start at the [Fonts hub](../../files-and-fonts/fonts.md). It has a four-path decision tree that points you at the right approach in about a minute.

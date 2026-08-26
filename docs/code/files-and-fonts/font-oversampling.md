@@ -2,22 +2,22 @@
 
 ## Introduction
 
-When a camera or layer zooms in, text rasterized at its normal `FontSize` gets stretched along with everything else, so it looks soft or blocky compared to art rendered at native resolution. Font oversampling fixes this by regenerating the font atlas at a higher raster size while zoomed in, then scaling the drawn glyphs back down — so the text occupies the same layout space but its glyphs are rasterized at a higher pixel density, keeping edges crisp.
+When the camera or a layer zooms in, text is scaled up along with everything else. The font was drawn at its normal `FontSize`, so the letters end up soft or blocky next to art that is drawn at full size. Font oversampling fixes this. While the view is zoomed in, Gum builds the font again at a larger size, then draws the letters smaller so they fit. The text takes up the same space in your layout, but it is made of more pixels, so the edges stay sharp.
 
 {% hint style="info" %}
-Available in September 2026, or now if building Gum from source.
+Font oversampling is a preview feature. It first shipped in the `2026.8.18.1-preview.1` packages. You can also use it by building Gum from source.
 {% endhint %}
 
 {% hint style="info" %}
-Available on MonoGame, KNI, FNA, and Raylib. Not needed on SkiaGum or Silk.NET, since SkiaSharp rasterizes text natively at whatever size it's drawn -- it's crisp under zoom without any oversampling step.
+Works on MonoGame, KNI, FNA, and Raylib. SkiaGum and Silk.NET do not need it, since SkiaSharp draws text at whatever size it is asked for, so the text stays sharp when you zoom.
 {% endhint %}
 
 ## Enabling Oversampling
 
-Two things are required:
+You need two things:
 
-1. Set the global flag: `TextRuntime.UseFontOversampling = true`. This is a project-wide `static` switch, not a per-instance property — pixel-art games that want blocky text at any zoom level should leave it off.
-2. Register an in-memory font creator (`IInMemoryFontCreator` on MonoGame/KNI/FNA, `IRaylibFontCreator` on Raylib -- KernSmith ships both, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation)). Oversampling only makes sense with dynamic font generation; a disk-based `FontCache` holds a fixed set of pre-baked sizes and can't rasterize a new one on demand.
+1. Turn on the flag: `TextRuntime.UseFontOversampling = true`. This is one `static` switch for the whole game, not a property on each text. If you want blocky text in a pixel art game, leave it off.
+2. Give Gum a way to build fonts while the game runs (`IInMemoryFontCreator` on MonoGame/KNI/FNA, `IRaylibFontCreator` on Raylib). KernSmith does both, see [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation). Oversampling needs this, because a `FontCache` folder only holds the sizes you built ahead of time and cannot add a new one later.
 
 ```csharp
 // Initialize
@@ -26,29 +26,25 @@ CustomSetPropertyOnRenderable.InMemoryFontCreator =
     new KernSmithFontCreator(GraphicsDevice);
 ```
 
-Once both are set, oversampling runs automatically: every frame, each visible `TextRuntime` checks the effective zoom of the `Layer` it's on and regenerates its font when that zoom has moved by at least a full raster pixel. No manual per-frame code is needed for the common case.
+After that it runs on its own. Each frame, every text you can see checks the zoom of the `Layer` it sits on. If that zoom moved enough to change the font by a full pixel, the text builds its font again. You do not need to write any code that runs each frame.
 
-That per-`Layer` scoping matters: a layer with `LayerCameraSettings.IsInScreenSpace = true` (the normal setup for a HUD) is pinned to its own `Zoom` (default 1) regardless of the world camera's zoom, so text on a screen-space layer never regenerates — correctly, since it's never visually zoomed. Only text on a layer that actually tracks the world camera's zoom oversamples. See [Layer — LayerCameraSettings](../gum-code-reference/layer.md#layercamerasettings).
+The layer matters here. A layer with `LayerCameraSettings.IsInScreenSpace = true`, which is how most HUDs are set up, keeps its own `Zoom` (1 by default) no matter where the camera goes. Text on that layer never builds a new font, which is right, because it never looks zoomed. Only text on a layer that follows the camera zoom is oversampled. See [Layer, LayerCameraSettings](../gum-code-reference/layer.md#layercamerasettings).
 
 ## Manual Control
 
-`RegenerateOversampledFont(oversampleRatio)` is the method the automatic path calls internally; call it directly to force a specific raster ratio outside of camera-driven zoom (for example, a scripted zoom-in cutscene that doesn't go through `Camera.Zoom`). It returns `false` (and does nothing) if `UseFontOversampling` is off, no `IInMemoryFontCreator` is registered, or `oversampleRatio` isn't positive.
+`RegenerateOversampledFont(oversampleRatio)` is the method the automatic path calls. You can call it yourself to pick a size, such as during a cut scene that zooms without touching `Camera.Zoom`. It returns `false` and does nothing if `UseFontOversampling` is off, if no `IInMemoryFontCreator` is set, or if `oversampleRatio` is zero or less.
 
 ## Limitation: System Fonts vs. Registered `.ttf`
 
-Measurement-stable oversampling — where the box a `TextRuntime` measures against doesn't shift as the font is regenerated at different raster sizes — requires `Font` (or `CustomFontFile`) to resolve to an explicit `.ttf` file, not a bare system font family name. Oversampling still runs with a system font name like `"Arial"`, but width/wrap measurement isn't guaranteed stable across regenerations. See [Font Strategies — System Fonts vs Registered Fonts](font-strategies.md#system-fonts-vs-registered-fonts) for how to register a `.ttf`.
+For the text to keep the same size while its font is built again at other sizes, `Font` (or `CustomFontFile`) has to point at a real `.ttf` file, not just a font name like `"Arial"`. Oversampling still runs with a font name, but the width and the line breaks may shift a little each time the font is built. See [Font Strategies, System Fonts vs Registered Fonts](font-strategies.md#system-fonts-vs-registered-fonts) to learn how to register a `.ttf`.
 
 ## Limitation: `[FontSize]`/`[IsBold]`/`[IsItalic]`/`[OutlineThickness]` BBCode Runs on Raylib
 
-On Raylib, oversampling re-rasterizes a `TextRuntime`'s base font, and inline runs whose size comes from a plain scale (no tag, or an explicit `[FontScale=...]` tag) compose that oversample compensation correctly, same as MonoGame/KNI/FNA. Runs that swap in a differently-resolved font -- `[FontSize=...]`, `[IsBold=...]`, `[IsItalic=...]`, `[OutlineThickness=...]` -- still keep drawing at their own independently-resolved size, unaffected by oversampling, since composing compensation there risks destabilizing the line-height/baseline math those runs already depend on. MonoGame/KNI/FNA don't have this narrower limitation either -- oversampling compensation composes correctly with every inline run family there.
+On Raylib, oversampling builds the base font of a `TextRuntime` again. Runs that only scale that font, meaning runs with no tag or with a `[FontScale=...]` tag, come out at the right size, the same as on MonoGame, KNI, and FNA. Runs that ask for a different font, meaning `[FontSize=...]`, `[IsBold=...]`, `[IsItalic=...]`, and `[OutlineThickness=...]`, keep their own size and are not oversampled. Changing them would upset the line height and baseline math they already rely on. MonoGame, KNI, and FNA do not have this limit, and oversampling works with every kind of run there.
 
 ## Try It
 
-{% hint style="warning" %}
-Interactive XnaFiddle demo pending — XnaFiddle's pinned Gum package predates font oversampling, so the fiddle link can't be added yet (tracked: [XnaFiddle#127](https://github.com/vchelaru/XnaFiddle/issues/127)). The sample below is a reference you can paste into your own project.
-{% endhint %}
-
-Scroll to zoom the camera; the text stays crisp because it's oversampled. Toggle the checkbox off to compare against undersampled text at the same zoom. The font (`std/DroidSans.ttf`) is XnaFiddle's standard-content Droid Sans — no upload needed.
+Drag the **Zoom** slider to zoom the camera. The text stays sharp because it is oversampled. Turn off **Oversampling** to see how the same text looks without it. The font (`std/DroidSans.ttf`) ships with XnaFiddle, so there is nothing to upload.
 
 ```csharp
 using MonoGameGum;
@@ -57,11 +53,9 @@ using Gum.Forms.Controls;
 using Gum.Forms.DefaultVisuals.V3;
 using MonoGameGum.GueDeriving;
 using Gum.Wireframe;
-using KernSmith;
 using KernSmith.Gum;
 using RenderingLibrary;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 
 public class Game1 : Game
 {
@@ -70,20 +64,21 @@ public class Game1 : Game
 
     TextRuntime previewText;
     Label zoomLabel;
-    int previousScrollWheel;
+    Slider zoomSlider;
+    CheckBox oversampleCheck;
 
     public Game1()
     {
         graphics = new GraphicsDeviceManager(this);
+        IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
         GumUI.Initialize(this, DefaultVisualsVersion.V3);
 
-        // StbTrueType is required in Blazor WASM -- no native FreeType binary is available there.
         CustomSetPropertyOnRenderable.InMemoryFontCreator =
-            new KernSmithFontCreator(GraphicsDevice, RasterizerBackend.StbTrueType);
+            new KernSmithFontCreator(GraphicsDevice);
         KernSmithFontCreator.RegisterFont("Droid Sans",
             System.IO.Path.Combine(Content.RootDirectory, "std/DroidSans.ttf"));
 
@@ -91,45 +86,47 @@ public class Game1 : Game
 
         previewText = new TextRuntime();
         previewText.Font = "Droid Sans";
-        previewText.FontSize = 28;
-        previewText.Text = "Scroll to zoom the camera";
-        previewText.Anchor(Gum.Wireframe.Anchor.Center);
+        previewText.FontSize = 48;
+        previewText.Text = "Crisp under zoom";
         previewText.AddToRoot();
+        previewText.Anchor(Gum.Wireframe.Anchor.Center);
 
-        var oversampleCheck = new CheckBox();
+        oversampleCheck = new CheckBox();
         oversampleCheck.Text = "Oversampling";
+        oversampleCheck.Width = 200;
         oversampleCheck.IsChecked = true;
-        oversampleCheck.Width = 160;
-        oversampleCheck.Anchor(Gum.Wireframe.Anchor.TopLeft);
         oversampleCheck.X = 8;
         oversampleCheck.Y = 8;
+        oversampleCheck.AddToRoot();
         oversampleCheck.Checked += (_, _) => TextRuntime.UseFontOversampling = true;
         oversampleCheck.Unchecked += (_, _) => TextRuntime.UseFontOversampling = false;
-        oversampleCheck.AddToRoot();
 
         zoomLabel = new Label();
         zoomLabel.Text = "Zoom: 1.0x";
-        zoomLabel.Width = 160;
-        zoomLabel.Anchor(Gum.Wireframe.Anchor.TopLeft);
+        zoomLabel.Width = 200;
         zoomLabel.X = 8;
         zoomLabel.Y = 40;
         zoomLabel.AddToRoot();
 
-        previousScrollWheel = Mouse.GetState().ScrollWheelValue;
+        zoomSlider = new Slider();
+        zoomSlider.Minimum = 1;
+        zoomSlider.Maximum = 4;
+        zoomSlider.Value = 1;
+        zoomSlider.Width = 200;
+        zoomSlider.X = 8;
+        zoomSlider.Y = 70;
+        zoomSlider.AddToRoot();
+        zoomSlider.ValueChanged += (_, _) =>
+        {
+            GumUI.SystemManagers.Renderer.Camera.Zoom = (float)zoomSlider.Value;
+            zoomLabel.Text = $"Zoom: {zoomSlider.Value:0.0}x";
+        };
 
         base.Initialize();
     }
 
     protected override void Update(GameTime gameTime)
     {
-        var mouseState = Mouse.GetState();
-        int scrollDelta = mouseState.ScrollWheelValue - previousScrollWheel;
-        previousScrollWheel = mouseState.ScrollWheelValue;
-
-        var camera = SystemManagers.Default.Renderer.Camera;
-        camera.Zoom = MathHelper.Clamp(camera.Zoom + scrollDelta * 0.001f, 1f, 8f);
-        zoomLabel.Text = $"Zoom: {camera.Zoom:0.0}x";
-
         GumUI.Update(gameTime);
         base.Update(gameTime);
     }
@@ -143,8 +140,14 @@ public class Game1 : Game
 }
 ```
 
+[Try on XnaFiddle.NET](https://xnafiddle.net/#code=H4sIAAAAAAAACp1WbW_aMBD-zq-w0D4EDXl0q7SpVSdtQa3QhloBfdm-TCYcYDWxke2U0qn_fefECSZ1tmr5gnv3-O65N19zzcWKjKWQFyyDizw77eSFCI_0XKpMvxDQWAqjZBrQDGHJ8tTccJ2zVNObDxXEc0AvchiC4g8o9y3ccgVLhZhK-A2UmGbcrF8IqMdzAmKB1sTqO58rpna1R54oqeXS0DvB6Lk1vJXq_rTT2eTzlCckSZnWxJI6IifFb-d3h-B3odhmzRM9hAeewJgJtgJFVk56WmLybArK6u3xekTOPnuyKg_ozIJn8GgmuTA8A7JRaBW2VlRa-s7mkJInKbPiVAqnKcegCml5LMXxGpL7r_KRyAdQmmWbFAqR8-MCK0KKeoWojMh-FX9yRgRsw0FGZs11r_Rlv5Eey1wDlpPPU8CbRuVYHqt6di6VNJAYWBSUFFIlD5IvyEhww1nKn-AFkSJf1ANYp31y2Do3GB-XAjsI6dRX41wbzAiYKyU3oMzuUpTlZ0gPTY4hk2p3ju0ZK2BGKnJW37WfDbxuIg8WHWajTyZMG2yqJ1BfWXKPLujUzGcY_Gy3AS9BIWN0Aitur1tZ1B0qm48pE7rbPyAz3SEoo6NLesWwpWOZzbmAyA4XCEMnUpohjkSCJnd90tVm8a6wZU1RY5bdnp8ar8fotQbr-7JqEjsOVe3qC14jupbwTERejB4Qp1xYtB9UO3CK-UPw8acwxHnuxorrDclF1fAtFr8sFjNpk9LG7YtI1raU_lPihDTGjILy89WYIJeCasB8Hw1kzdtPb7cdfssXZo3494NBO2iki18cI3_GQsg7RHxqV__4uzqYxCaoovL2jES_-uRXzz5ur-2vNqPXWIj_MrvE18Dv2_qldCUrzn44NaCu1E-UnJAjOnjshmDBCu3VjYzvFTbXx8ErB2k-0LuHvaRe_tHkXkrpmAue5RlCj8J69uj0x0H9DUtzaL3dGrPTB4J2Ghv1x_ClYHc1KcVrJlaNNqjB-y2x3xTlO-k2lMbX1b4UaC3G-VaM2uIipWiZSmZ6TW97HsHWeON643fz3smADp79dnn2Cjln2m6b_YZ71Uq83iyYgchu55n9T2DlDuH96NA1aM-k8B5W_4PBULHtK_wf7EIap8AUbqXUPqNSCczzFtci5sjjVHIu7DeZFsIXPJ87fwBk4c0ZeQoAAA)
+
+{% hint style="info" %}
+The fiddle runs in a browser, so it creates its font creator as `new KernSmithFontCreator(GraphicsDevice, KernSmith.RasterizerBackend.StbTrueType)`. KernSmith always starts with the FreeType backend, and FreeType is native code that a browser cannot run. Without that second argument the font is never built, and Gum quietly uses its built in 18 pixel font instead. On desktop you can use the code above as it is. See [Backend Selection](advanced-font-effects.md#backend-selection-freetype-vs-stbtruetype).
+{% endhint %}
+
 ## Related Pages
 
-* [Font Strategies](font-strategies.md) — dynamic KernSmith generation and registering `.ttf` fonts.
-* [Camera](../gum-code-reference/camera.md) — zooming the camera.
-* [Layer](../gum-code-reference/layer.md) — `LayerCameraSettings` and screen-space layers.
+* [Font Strategies](font-strategies.md): building fonts with KernSmith and registering `.ttf` files.
+* [Camera](../gum-code-reference/camera.md): zooming the camera.
+* [Layer](../gum-code-reference/layer.md): `LayerCameraSettings` and screen space layers.

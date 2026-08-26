@@ -68,3 +68,7 @@ var layerCameraSettings = new LayerCameraSettings();
 layerCameraSettings.Zoom = 2; // objects on this layer are drawn at 2x zoom
 layer.LayerCameraSettings = layerCameraSettings;
 ```
+
+{% hint style="info" %}
+A layer's zoom also decides whether text on it builds its font again at a larger size. Screen space layers keep their own zoom, so text on them never does. See [Font Oversampling](../files-and-fonts/font-oversampling.md).
+{% endhint %}
