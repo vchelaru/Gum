@@ -475,12 +475,16 @@ public class GumProjectDependencyWalker
         HashSet<string> external,
         List<DependencyWarning> missing)
     {
-        // FontReferenceCollector relies on StateSave.ParentContainer (set by ElementSave.Initialize)
-        // and on ObjectFinder.Self resolving instance BaseTypes. Idempotent; calling Initialize
-        // here makes the walker correct even when callers used GumProjectSave.Load directly
-        // without going through ProjectLoader.
+        // Font-cache collection relies on StateSave.ParentContainer (set by ElementSave.Initialize)
+        // and on ObjectFinder.Self resolving instance BaseTypes. Project initialization sorts its
+        // element lists, so avoid it for ExternalFiles-only scoped walks such as gumcli check.
+        // ProjectLoader has already initialized normal pack inputs, and direct Font .ttf references
+        // only need the resolved font values below.
         StandardElementsManager.Self.Initialize();
-        project.Initialize(tolerateMissingDefaultStates: true);
+        if (includeFontCache)
+        {
+            project.Initialize(tolerateMissingDefaultStates: true);
+        }
 
         FontReferenceCollector collector = new FontReferenceCollector(
             instance => ObjectFinder.Self.GetElementSave(instance));

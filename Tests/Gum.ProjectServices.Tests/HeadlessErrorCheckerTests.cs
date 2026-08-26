@@ -40,6 +40,17 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetAllErrors_ShouldNotModifyProjectCollectionsWhenCheckingExternalFiles()
+    {
+        Project.FullFileName = Path.Combine(Path.GetTempPath(), "HeadlessErrorChecker", "Project.gumx");
+        Project.Screens.Add(new ScreenSave { Name = "MainMenu" });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetAllErrors(Project);
+
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetAllErrors_ShouldReturnError_WhenComponentInstanceHasInvalidBaseType()
     {
         ComponentSave component = new ComponentSave { Name = "BrokenComponent", BaseType = "Container" };

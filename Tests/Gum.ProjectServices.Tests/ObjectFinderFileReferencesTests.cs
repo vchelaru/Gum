@@ -139,45 +139,6 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
     }
 
     [Fact]
-    public void GetAllFilesInProject_includes_font_cache_fnt_path_for_text_with_default_font_settings()
-    {
-        ScreenSave screen = BuildScreen("MainMenu");
-        AddTextInstanceWithDefaultFont(screen, "Text1", "Arial", 18);
-        Project.Screens.Add(screen);
-        SetProjectFullFileName();
-
-        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
-            fontSize: 18, fontName: "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false);
-        string expectedFntAbsolute = Standardize(FakeProjectDirectory + fntRelative);
-
-        IEnumerable<string> files = ObjectFinder.Self.GetAllFilesInProject();
-
-        files.ShouldContain(expectedFntAbsolute);
-    }
-
-    [Fact]
-    public void GetAllFilesInProject_omits_font_cache_but_keeps_other_references_when_font_cache_is_excluded()
-    {
-        const string spriteRelative = "Textures/bg.png";
-
-        ScreenSave screen = BuildScreen("MainMenu");
-        AddSpriteInstance(screen, "Sprite1", spriteRelative);
-        AddTextInstanceWithDefaultFont(screen, "Text1", "Arial", 18);
-        Project.Screens.Add(screen);
-        SetProjectFullFileName();
-
-        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
-            fontSize: 18, fontName: "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false);
-
-        List<string> files = ObjectFinder.Self
-            .GetAllFilesInProject(GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles)
-            .ToList();
-
-        files.ShouldNotContain(Standardize(FakeProjectDirectory + fntRelative));
-        files.ShouldContain(Standardize(FakeProjectDirectory + spriteRelative));
-    }
-
-    [Fact]
     public void GetAllFilesInProject_includes_gucx_paths_for_component_instances()
     {
         ComponentSave button = BuildComponent("Button");
@@ -207,6 +168,45 @@ public class ObjectFinderFileReferencesTests : BaseTestClass
         IEnumerable<string> files = ObjectFinder.Self.GetAllFilesInProject();
 
         files.ShouldContain(Standardize(FakeProjectDirectory + spriteRelative));
+    }
+
+    [Fact]
+    public void GetAllFilesInProject_omits_font_cache_but_keeps_other_references_when_font_cache_is_excluded()
+    {
+        const string spriteRelative = "Textures/bg.png";
+
+        ScreenSave screen = BuildScreen("MainMenu");
+        AddSpriteInstance(screen, "Sprite1", spriteRelative);
+        AddTextInstanceWithDefaultFont(screen, "Text1", "Arial", 18);
+        Project.Screens.Add(screen);
+        SetProjectFullFileName();
+
+        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
+            fontSize: 18, fontName: "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false);
+
+        List<string> files = ObjectFinder.Self
+            .GetAllFilesInProject(GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles)
+            .ToList();
+
+        files.ShouldNotContain(Standardize(FakeProjectDirectory + fntRelative));
+        files.ShouldContain(Standardize(FakeProjectDirectory + spriteRelative));
+    }
+
+    [Fact]
+    public void GetAllFilesInProject_omits_missing_font_cache_fnt_path_for_text_with_default_font_settings()
+    {
+        ScreenSave screen = BuildScreen("MainMenu");
+        AddTextInstanceWithDefaultFont(screen, "Text1", "Arial", 18);
+        Project.Screens.Add(screen);
+        SetProjectFullFileName();
+
+        string fntRelative = BmfcSave.GetFontCacheFileNameFor(
+            fontSize: 18, fontName: "Arial", outline: 0, useFontSmoothing: true, isItalic: false, isBold: false);
+        string expectedFntAbsolute = Standardize(FakeProjectDirectory + fntRelative);
+
+        IEnumerable<string> files = ObjectFinder.Self.GetAllFilesInProject();
+
+        files.ShouldNotContain(expectedFntAbsolute);
     }
 
     [Fact]
