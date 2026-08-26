@@ -86,20 +86,22 @@ public class GumProjectDependencyWalker
                     CollectFileAndFontReferences(project, projectRootDirectory, inclusion, fontCache, external, missing);
                 }
 
-                if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+                if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
                     CollectFontCacheReferences(project, project.AllElements, projectRootDirectory,
-                        inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+                        inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
+                        fontCache, external, missing);
                 }
             }
             else
             {
                 CollectForSingleElement(project, scopeElement, projectRootDirectory, inclusion, core, fontCache, external, missing, isJsonFormat);
 
-                if (inclusion.HasFlag(GumBundleInclusion.FontCache))
+                if (inclusion.HasFlag(GumBundleInclusion.FontCache) || inclusion.HasFlag(GumBundleInclusion.ExternalFiles))
                 {
                     CollectFontCacheReferences(project, new[] { scopeElement }, projectRootDirectory,
-                        inclusion.HasFlag(GumBundleInclusion.ExternalFiles), fontCache, external, missing);
+                        inclusion.HasFlag(GumBundleInclusion.FontCache), inclusion.HasFlag(GumBundleInclusion.ExternalFiles),
+                        fontCache, external, missing);
                 }
             }
         }
@@ -467,6 +469,7 @@ public class GumProjectDependencyWalker
         GumProjectSave project,
         IEnumerable<ElementSave> elements,
         string projectRootDirectory,
+        bool includeFontCache,
         bool includeExternal,
         HashSet<string> fontCache,
         HashSet<string> external,
@@ -486,10 +489,18 @@ public class GumProjectDependencyWalker
 
         foreach (BmfcSave bmfc in fonts.Values)
         {
-            string fntRelative = bmfc.FontCacheFileName;
             string ownerName = string.IsNullOrEmpty(bmfc.FontName) ? "(font)" : bmfc.FontName;
-            AddFontCacheFntAndPages(fntRelative, ownerName, projectRootDirectory,
-                includeFontCache: true, includeExternal, fontCache, external, missing);
+
+            if (!string.IsNullOrEmpty(bmfc.FontFile))
+            {
+                AddExternalOrFontCache(bmfc.FontFile, ownerName, projectRootDirectory,
+                    includeFontCache: false, includeExternal, fontCache, external, missing);
+            }
+
+            if (includeFontCache)
+            {
+                AddFontCacheFntAndPages(bmfc.FontCacheFileName, projectRootDirectory, fontCache);
+            }
         }
     }
 
@@ -529,28 +540,24 @@ public class GumProjectDependencyWalker
 
     private static void AddFontCacheFntAndPages(
         string fntRelative,
-        string ownerName,
         string projectRootDirectory,
-        bool includeFontCache,
-        bool includeExternal,
-        HashSet<string> fontCache,
-        HashSet<string> external,
-        List<DependencyWarning> missing)
+        HashSet<string> fontCache)
     {
         string normalizedFnt = NormalizeRelative(fntRelative);
-        AddExternalOrFontCache(normalizedFnt, ownerName, projectRootDirectory,
-            includeFontCache, includeExternal, fontCache, external, missing);
+        string fntDirectoryRelative = Path.GetDirectoryName(normalizedFnt)?.Replace('\\', '/') ?? "FontCache";
+        string fntFullDir = Path.Combine(projectRootDirectory, fntDirectoryRelative.Replace('/', Path.DirectorySeparatorChar));
+        string fntFullPath = Path.Combine(projectRootDirectory, normalizedFnt.Replace('/', Path.DirectorySeparatorChar));
 
-        if (!includeFontCache)
+        if (!File.Exists(fntFullPath))
         {
             return;
         }
 
+        fontCache.Add(normalizedFnt);
+
         // Multi-page bitmap fonts emit MyFont.png OR MyFont_0.png, MyFont_1.png, etc.
         // Enumerate the FontCache directory for any .png whose name matches the .fnt base.
-        string fntDirectoryRelative = Path.GetDirectoryName(normalizedFnt)?.Replace('\\', '/') ?? "FontCache";
         string fntBaseName = Path.GetFileNameWithoutExtension(normalizedFnt);
-        string fntFullDir = Path.Combine(projectRootDirectory, fntDirectoryRelative.Replace('/', Path.DirectorySeparatorChar));
 
         if (!Directory.Exists(fntFullDir))
         {

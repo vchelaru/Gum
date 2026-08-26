@@ -27,6 +27,76 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
     }
 
     [Fact]
+    public void Walk_with_FontCache_and_ExternalFiles_includes_referenced_Font_ttf_without_generated_font_cache()
+    {
+        const string fontFilePath = "Fonts/LiberationSans.ttf";
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", fontFilePath, 18);
+
+        StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { textStandard });
+
+        string root = CreateProjectRoot(new[]
+        {
+            (fontFilePath, EmptyContent),
+        });
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(
+            project, root, GumBundleInclusion.FontCache | GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(fontFilePath);
+        result.FontCacheFiles.ShouldBeEmpty();
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_with_FontCache_does_not_report_missing_derived_cache_for_system_font()
+    {
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", "Liberation Sans", 18);
+
+        StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { textStandard });
+
+        string root = CreateProjectRoot(Array.Empty<(string, byte[])>());
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.FontCache);
+
+        result.FontCacheFiles.ShouldBeEmpty();
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Walk_with_ExternalFiles_reports_missing_referenced_Font_ttf()
+    {
+        const string fontFilePath = "Fonts/LiberationSans.ttf";
+        ScreenSave screen = TestProjectBuilder.BuildScreen("MainMenu");
+        TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", fontFilePath, 18);
+
+        StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        GumProjectSave project = TestProjectBuilder.BuildProject(
+            screens: new[] { screen },
+            standards: new[] { textStandard });
+
+        string root = CreateProjectRoot(Array.Empty<(string, byte[])>());
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(fontFilePath);
+        result.MissingFiles.ShouldContain(warning => warning.ReferencedPath == fontFilePath);
+    }
+
+    [Fact]
     public void Walk_with_FontCache_collects_font_when_state_sets_all_six_font_variables_directly()
     {
         // Regression guard for the simple direct-on-element path: a screen with a Text instance
