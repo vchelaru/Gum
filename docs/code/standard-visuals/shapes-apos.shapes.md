@@ -82,8 +82,10 @@ Whether you are using code-only or the Gum tool, add the following line of code 
 ```csharp
 // Initialize
 GumUI.Initialize(...);
-ShapeRenderer.Self.Initialize();
+MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize();
 ```
+
+`ShapeRenderer` lives in the `MonoGameAndGum.Renderables` namespace. The line above spells the namespace out so it can be pasted as-is. If you prefer, add `using MonoGameAndGum.Renderables;` to the file and call `ShapeRenderer.Self.Initialize();` instead.
 
 {% hint style="info" %}
 **December 2025 and earlier** used a different signature that took the graphics device and content manager: `ShapeRenderer.Self.Initialize(GraphicsDevice, Content);`. From January 2026 on, the parameterless `Initialize()` is the form to use.
@@ -125,7 +127,7 @@ public class Game1 : Game
     {
         GumUI.Initialize(this);
         // Initialize shape renderer after GumUI:
-        ShapeRenderer.Self.Initialize();
+        MonoGameAndGum.Renderables.ShapeRenderer.Self.Initialize();
 
         var circle = new CircleRuntime();
         circle.AddToRoot();
