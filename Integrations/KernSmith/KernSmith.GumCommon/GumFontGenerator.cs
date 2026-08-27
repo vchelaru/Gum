@@ -2,6 +2,7 @@ using KernSmith;
 using KernSmith.Output;
 using KernSmith.Rasterizer;
 using RenderingLibrary.Graphics.Fonts;
+using ToolsUtilities;
 
 namespace KernSmith.Gum;
 
@@ -29,7 +30,31 @@ public static class GumFontGenerator
             options.Backend = backend.Value;
         return string.IsNullOrEmpty(bmfcSave.FontFile)
             ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
-            : BmFont.Generate(bmfcSave.FontFile, options);
+            : BmFont.Generate(ReadFontBytes(bmfcSave.FontFile!), options);
+    }
+
+    /// <summary>
+    /// Reads a font file through <see cref="FileManager.GetStreamForFile"/> instead of handing its
+    /// path to KernSmith, so a font that only exists behind a host stream hook — a <c>.ttf</c>
+    /// packed into a <c>.gumpkg</c>, or one in a game's asset zip — rasterizes the same as one on
+    /// disk (#4515). Falls back to disk because FileManager routes exclusively to the hook once one
+    /// is installed, and a hook that doesn't carry this font must not hide a copy on disk.
+    /// </summary>
+    private static byte[] ReadFontBytes(string fontFile)
+    {
+        string fullPath = FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
+
+        try
+        {
+            using Stream stream = FileManager.GetStreamForFile(fullPath);
+            using MemoryStream memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+        catch (IOException) when (File.Exists(fullPath))
+        {
+            return File.ReadAllBytes(fullPath);
+        }
     }
 
     /// <summary>
