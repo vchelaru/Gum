@@ -63,7 +63,51 @@ button2.Text = "Bottom Docked Button";
 
 <figure><img src="../../.gitbook/assets/17_06 19 42.png" alt=""><figcaption><p>Buttons and background docked to a parent</p></figcaption></figure>
 
+## Property Assignment
+
+Both `Anchor` and `Dock` are methods which assign properties on the calling object.&#x20;
+
+`Anchor` modifies:
+
+* `X`
+* `XUnits`
+* `XOrigin`
+* `Y`
+* `YUnits`
+* `YOrigin`
+* `HorizontalAlignment` (if called on a `TextRuntime`)
+* `VerticalAlignment` (if called on a `TextRuntime`)
+
+`CenterVertically` and `CenterHorizontally` only modify variables on their respective axis.
+
+`Dock` modifies:
+
+* `X`
+* `XUnits`
+* `XOrigin`
+* `Y`
+* `YUnits`
+* `YOrigin`
+* `Height`
+* `HeightUnits`
+* `Width`
+* `WidthUnits`
+* `HorizontalAlignment` (if called on a `TextRuntime`)
+* `VerticalAlignment` (if called on a `TextRuntime`)
+
+`Left` , `Right`, and `FillVertically` do not modify `Width` or `WidthUnits`.&#x20;
+
+`Top`, `Bottom`, and `FillHorizontally` do not modify `Height` or `HeightUnits`.&#x20;
+
+SizeToChildren only modifies `Height`, `HeightUnits`,  `Width`, and `WidthUnits` .
+
+
+
 ## Modifications After Anchor and Dock
+
+{% hint style="info" %}
+Since `Dock` and `Anchor` values modify `X` and `Y`, calling either `Dock` or `Anchor` can overwrite any previously-set `X` and `Y` values. Similarly, `Width` and `Height` can also be overwritten depending on the call made. As a rule of thumb it's best to first call `Anchor` or `Dock`, then assign additional properties after.
+{% endhint %}
 
 Once either `Anchor` or `Dock` are called, additional property assignments can be made to the object, its parent, or its children, and positions and sizes will adjust accordingly.
 
