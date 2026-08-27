@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Gum.Managers;
 using Gum.DataTypes.Variables;
@@ -203,32 +204,26 @@ namespace Gum.DataTypes
             return "; added: " + string.Join(", ", added);
         }
 
+        /// <summary>
+        /// Sorts the project's elements, behaviors, and their reference lists by name. Malformed
+        /// projects (missing or nil entries, entries with no name) are tolerated rather than
+        /// failing the load - unnamed entries sort to the front.
+        /// </summary>
         public static void SortElementAndBehaviors(this GumProjectSave gumProjectSave)
         {
-            gumProjectSave.ScreenReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.ComponentReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.StandardElementReferences?.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.BehaviorReferences?.Sort((first, second) =>
-            {
-                if (first?.Name == null)
-                {
-                    return 0;
-                }
-                else if (second?.Name == null)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return first?.Name.CompareTo(second?.Name) ?? 0;
-                }
-            });
+            gumProjectSave.ScreenReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.ComponentReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.StandardElementReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.BehaviorReferences?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
 
-            gumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.Components.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.StandardElements.Sort((first, second) => first.Name.CompareTo(second.Name));
-            gumProjectSave.Behaviors.Sort((first, second) => first.Name?.CompareTo(second.Name) ?? 0);
+            gumProjectSave.Screens?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.Components?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.StandardElements?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
+            gumProjectSave.Behaviors?.Sort((first, second) => CompareByName(first?.Name, second?.Name));
         }
+
+        private static int CompareByName(string? first, string? second) =>
+            string.Compare(first, second, StringComparison.CurrentCulture);
 
         /// <summary>
         /// Adds any Standard Elements that have been created since the project was last saved.  This should be called
