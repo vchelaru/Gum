@@ -67,6 +67,12 @@ GumService.Default.Initialize(graphics, gumProjectFile: "MyProject/MyProject.gum
 
 If a sibling `.gumpkg` is found and the loose `.gumx` is **not** present, the loader transparently switches to bundle mode and serves all element, texture, and font reads from the bundle.
 
+That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib, or SkiaSharp's own rasterizer) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
+
+{% hint style="info" %}
+**Shipping September 2026:** Reading a bundled `.ttf` at runtime ships in the September release, or now if building Gum from source. Before this, the font was packed into the `.gumpkg` but the runtime looked for it on disk and fell back to the default font.
+{% endhint %}
+
 **Loose wins when both exist.** This is intentional — during development you keep the loose files (and hot reload) working, and in a published build you ship only the `.gumpkg`.
 
 {% hint style="warning" %}

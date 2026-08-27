@@ -37,6 +37,9 @@
     <None Include="Content\FontCache\Font18Arial-shadow.fnt" CopyToOutputDirectory="PreserveNewest" />
     <!-- #4057: a copy of Font18Arial.fnt with no "-shadow.fnt" sibling, for the no-shadow-registered test. -->
     <None Include="Content\FontCache\Font18ArialNoShadow.fnt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- #4515: a real .ttf whose bytes are served through an in-memory CustomGetStreamFromFile hook,
+         standing in for a font that lives inside a .gumpkg rather than on disk. -->
+    <None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

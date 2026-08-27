@@ -2635,8 +2635,13 @@ public partial class CustomSetPropertyOnRenderable
             {
                 if (textRuntime.FontSize > 0 && !string.IsNullOrEmpty(textRuntime.Font))
                 {
-                    string fontName = textRuntime.GetFontCacheFileName(
-                        BmfcSave.IsFontFilePath(textRuntime.Font) ? textRuntime.Font : null);
+                    // Same "which property is a font file" decision the XNA-like branch makes, so a
+                    // Font value that points at a .ttf/.otf rasterizes from that file instead of
+                    // being looked up as a system family name (#4515).
+                    string? fontFilePath = BmfcSave.ResolveTtfSourcePath(
+                        useCustomFont: false, customFontFile: null, textRuntime.Font);
+
+                    string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
 
                     string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
 
@@ -2668,7 +2673,7 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         try
                         {
-                            BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath: null);
+                            BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
 
                             Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
                             if (createdFont.HasValue && createdFont.Value.BaseSize != 0)

@@ -32,6 +32,63 @@ public class GumFontMapperTests
         second.ShouldBe(first);
     }
 
+    /// <summary>
+    /// #4515: a project-referenced .ttf can be packed into a .gumpkg, which serves its entries only
+    /// through the FileManager stream hook. Reading the font by path would miss it entirely.
+    /// </summary>
+    [Fact]
+    public void RegisterFontFile_WhenFileIsOnlyReachableThroughTheStreamHook_ReturnsNonNullFamilyKey()
+    {
+        byte[] fontBytes = File.ReadAllBytes(FixtureTtfPath);
+        string offDiskDirectory = Guid.NewGuid().ToString("N");
+        string offDiskPath = Path.Combine(AppContext.BaseDirectory, "NotOnDisk", offDiskDirectory, "TestFont.ttf");
+        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
+
+        try
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath =>
+                requestedPath.Contains(offDiskDirectory)
+                    ? new MemoryStream(fontBytes)
+                    : throw new FileNotFoundException($"Unexpected read of '{requestedPath}'.", requestedPath);
+
+            string? familyKey = GumFontMapper.RegisterFontFile(offDiskPath);
+
+            familyKey.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    /// <summary>
+    /// #4515: a host hook that doesn't carry this font must not hide a copy on disk, since
+    /// FileManager routes exclusively to the hook once one is installed.
+    /// </summary>
+    [Fact]
+    public void RegisterFontFile_WhenTheHookDoesNotHaveTheFontButDiskDoes_ReturnsNonNullFamilyKey()
+    {
+        string onDiskCopyPath = Path.Combine(
+            AppContext.BaseDirectory, "Assets", "Fonts", "HookMiss_" + Guid.NewGuid().ToString("N") + ".ttf");
+        File.Copy(FixtureTtfPath, onDiskCopyPath);
+        Func<string, Stream>? previousHook = ToolsUtilities.FileManager.CustomGetStreamFromFile;
+
+        try
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = requestedPath =>
+                throw new FileNotFoundException($"'{requestedPath}' is not in this bundle.", requestedPath);
+
+            string? familyKey = GumFontMapper.RegisterFontFile(onDiskCopyPath);
+
+            familyKey.ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
+            ToolsUtilities.FileManager.CustomGetStreamFromFile = previousHook;
+            try { File.Delete(onDiskCopyPath); } catch { /* best-effort */ }
+        }
+    }
+
     [Fact]
     public void RegisterFontFile_WithMissingFile_ReturnsNull()
     {

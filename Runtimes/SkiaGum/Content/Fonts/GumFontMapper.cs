@@ -87,7 +87,16 @@ public class GumFontMapper : FontMapper
             return null;
         }
 
-        SKTypeface? typeface = SKTypeface.FromFile(fullPath);
+        // Read through FileManager rather than SKTypeface.FromFile: a host stream hook — Gum's
+        // .gumpkg loader, or a game's asset zip — can serve a font that never touches disk, and
+        // FileExists above already sees those (#4515).
+        byte[]? fontData = ReadFontBytes(fullPath);
+        if (fontData == null)
+        {
+            return null;
+        }
+
+        SKTypeface? typeface = SKTypeface.FromStream(new MemoryStream(fontData));
         if (typeface == null)
         {
             return null;
@@ -95,6 +104,31 @@ public class GumFontMapper : FontMapper
 
         registry[fullPath] = typeface;
         return fullPath;
+    }
+
+    /// <summary>
+    /// Reads <paramref name="fullPath"/> through the FileManager stream hook, falling back to disk
+    /// because FileManager routes exclusively to the hook once one is installed — a hook that
+    /// doesn't carry this font must not hide a copy on disk. Null if neither source has it.
+    /// </summary>
+    private static byte[]? ReadFontBytes(string fullPath)
+    {
+        try
+        {
+            using Stream stream = ToolsUtilities.FileManager.GetStreamForFile(fullPath);
+            using MemoryStream memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+        catch (IOException)
+        {
+            if (File.Exists(fullPath))
+            {
+                return File.ReadAllBytes(fullPath);
+            }
+
+            return null;
+        }
     }
 
     /// <summary>
