@@ -31,4 +31,14 @@ public class NewProjectDialogViewModel : DialogViewModel
         get => Get<bool>();
         set => Set(value);
     }
+
+    /// <summary>
+    /// Whether the selected theme's DemoScreenGum is imported alongside its controls. Only
+    /// relevant when <see cref="IsIncludeFormsControls"/> is checked.
+    /// </summary>
+    public bool IsIncludeDemoScreenGum
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
 }

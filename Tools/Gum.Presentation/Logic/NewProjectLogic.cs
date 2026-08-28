@@ -72,7 +72,8 @@ public class NewProjectLogic : INewProjectLogic
 
         if (viewModel.IsIncludeFormsControls)
         {
-            _themeImporter.ImportTheme(viewModel.ThemeSelection.GetSelectedThemeOrDefault(), isIncludeDemoScreenGum: false);
+            _themeImporter.ImportTheme(
+                viewModel.ThemeSelection.GetSelectedThemeOrDefault(), viewModel.IsIncludeDemoScreenGum);
         }
 
         ScreenSave startingScreen = new() { Name = StartingScreenName };

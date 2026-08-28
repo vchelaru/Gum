@@ -54,7 +54,11 @@ public class NewProjectLogicTests
     /// Sets up the options dialog to return <paramref name="accepted"/>, with Forms inclusion set
     /// to <paramref name="isIncludeFormsControls"/> and, when given, a specific theme selected.
     /// </summary>
-    private void SetUpDialog(bool accepted, bool isIncludeFormsControls = true, string? selectedTheme = null)
+    private void SetUpDialog(
+        bool accepted,
+        bool isIncludeFormsControls = true,
+        string? selectedTheme = null,
+        bool isIncludeDemoScreenGum = false)
     {
         ThemeSelectionViewModel themeSelection = CreateThemeSelection();
         if (selectedTheme != null)
@@ -62,8 +66,11 @@ public class NewProjectLogicTests
             themeSelection.SelectedTheme = selectedTheme;
         }
 
-        NewProjectDialogViewModel viewModel =
-            new(themeSelection) { IsIncludeFormsControls = isIncludeFormsControls };
+        NewProjectDialogViewModel viewModel = new(themeSelection)
+        {
+            IsIncludeFormsControls = isIncludeFormsControls,
+            IsIncludeDemoScreenGum = isIncludeDemoScreenGum,
+        };
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(accepted);
@@ -148,6 +155,17 @@ public class NewProjectLogicTests
         _logic.CreateNewProject();
 
         _themeImporter.Verify(x => x.ImportTheme("Bubblegum", false), Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsTheDemoScreenGum_WhenCheckedInTheDialog()
+    {
+        SetUpDialog(accepted: true, isIncludeFormsControls: true, isIncludeDemoScreenGum: true);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme("Standard", true), Times.Once);
     }
 
     [Fact]

@@ -16,8 +16,9 @@
             Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
             Text="Adds buttons, text boxes, list boxes and other standard controls to the project."
             TextWrapping="Wrap" />
-        <controls:ThemeSelectionControl
-            DataContext="{Binding ThemeSelection}"
-            IsEnabled="{Binding DataContext.IsIncludeFormsControls, ElementName=Root}" />
+        <StackPanel IsEnabled="{Binding DataContext.IsIncludeFormsControls, ElementName=Root}">
+            <controls:ThemeSelectionControl DataContext="{Binding ThemeSelection}" />
+            <CheckBox Margin="0,8,0,0" IsChecked="{Binding IsIncludeDemoScreenGum}">Include DemoScreenGum</CheckBox>
+        </StackPanel>
     </StackPanel>
 </UserControl>
