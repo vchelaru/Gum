@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Managers;
 using Shouldly;
 using Xunit;
@@ -37,5 +38,49 @@ public class GumProjectSaveExtensionMethodsTests : BaseTestClass
         ObjectFinder.Self.GumProjectSave = project;
 
         Should.NotThrow(() => project.Initialize(tolerateMissingDefaultStates: true));
+    }
+
+    // A malformed .gumx (a reference or element with no Name, or a nil entry) must not take down the
+    // whole project load. The sort comparers used to dereference Name directly, which surfaced as
+    // InvalidOperationException("Failed to compare two elements in the array").
+    [Fact]
+    public void SortElementAndBehaviors_DoesNotThrow_AndSortsNamedItems_WhenNamesAreNull()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.ScreenReferences.Add(new ElementReference { Name = "ZScreen" });
+        project.ScreenReferences.Add(new ElementReference { Name = null });
+        project.ScreenReferences.Add(new ElementReference { Name = "AScreen" });
+        project.ComponentReferences.Add(new ElementReference { Name = null });
+        project.StandardElementReferences.Add(new ElementReference { Name = null });
+        project.BehaviorReferences.Add(new BehaviorReference { Name = null });
+
+        project.Screens.Add(new ScreenSave { Name = "ZScreen" });
+        project.Screens.Add(new ScreenSave { Name = null });
+        project.Screens.Add(new ScreenSave { Name = "AScreen" });
+        project.Components.Add(new ComponentSave { Name = null });
+        project.StandardElements.Add(new StandardElementSave { Name = null });
+        project.Behaviors.Add(new BehaviorSave { Name = null });
+
+        Should.NotThrow(() => project.SortElementAndBehaviors());
+
+        project.ScreenReferences[1].Name.ShouldBe("AScreen");
+        project.ScreenReferences[2].Name.ShouldBe("ZScreen");
+        project.Screens[1].Name.ShouldBe("AScreen");
+        project.Screens[2].Name.ShouldBe("ZScreen");
+    }
+
+    [Fact]
+    public void SortElementAndBehaviors_DoesNotThrow_WhenListsContainNullEntries()
+    {
+        GumProjectSave project = new GumProjectSave();
+        project.ScreenReferences.Add(new ElementReference { Name = "ZScreen" });
+        project.ScreenReferences.Add(null!);
+        project.ScreenReferences.Add(new ElementReference { Name = "AScreen" });
+        project.BehaviorReferences.Add(null!);
+        project.Screens.Add(new ScreenSave { Name = "ZScreen" });
+        project.Screens.Add(null!);
+        project.Behaviors.Add(null!);
+
+        Should.NotThrow(() => project.SortElementAndBehaviors());
     }
 }
