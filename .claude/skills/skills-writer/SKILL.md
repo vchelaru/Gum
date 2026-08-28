@@ -132,6 +132,14 @@ The description is loaded into every session's skill listing — it pays for its
 - Use real file paths and symbols from this repo. Skills age badly when they describe imaginary code.
 - Include a gotchas / landmines section — the most valuable content is what you only learn by getting it wrong once.
 
+## Plain Language
+
+Write skills in plain English. Short sentences, small words, no jargon, no invented hyphenated terms. Don't open a sentence with a heavy qualifier or dramatic emphasis. Assume the reader has no special vocabulary — use a technical term only when the topic actually needs it, and prefer the term this codebase already uses over a fancier synonym.
+
+❌ "This skill delivers a robust, developer-focused deep-dive into the nuanced, multi-faceted intricacies of undo state."
+
+✅ "This skill explains how undo state works and where it breaks."
+
 ## Include
 
 - Architecture: how major pieces fit together and why.
