@@ -21,7 +21,6 @@ public class NewProjectLogic : INewProjectLogic
     private readonly IProjectManager _projectManager;
     private readonly IDialogService _dialogService;
     private readonly IFileCommands _fileCommands;
-    private readonly IFormsFileService _formsFileService;
     private readonly IFormsThemeImporter _themeImporter;
     // Named for its first consumer; AddScreen is the call needed here.
     private readonly ICopyPasteProjectCommands _projectCommands;
@@ -31,7 +30,6 @@ public class NewProjectLogic : INewProjectLogic
         IProjectManager projectManager,
         IDialogService dialogService,
         IFileCommands fileCommands,
-        IFormsFileService formsFileService,
         IFormsThemeImporter themeImporter,
         ICopyPasteProjectCommands projectCommands,
         ISelectedState selectedState)
@@ -39,7 +37,6 @@ public class NewProjectLogic : INewProjectLogic
         _projectManager = projectManager;
         _dialogService = dialogService;
         _fileCommands = fileCommands;
-        _formsFileService = formsFileService;
         _themeImporter = themeImporter;
         _projectCommands = projectCommands;
         _selectedState = selectedState;
@@ -75,7 +72,7 @@ public class NewProjectLogic : INewProjectLogic
 
         if (viewModel.IsIncludeFormsControls)
         {
-            _themeImporter.ImportTheme(_formsFileService.DefaultThemeName, isIncludeDemoScreenGum: false);
+            _themeImporter.ImportTheme(viewModel.ThemeSelection.GetSelectedThemeOrDefault(), isIncludeDemoScreenGum: false);
         }
 
         ScreenSave startingScreen = new() { Name = StartingScreenName };

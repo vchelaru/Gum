@@ -73,7 +73,7 @@ public class GumFormsLogic
             return false;
         }
 
-        viewModel = new AddFormsViewModel(_formsFileService, _themeImporter, _projectState);
+        viewModel = new AddFormsViewModel(new ThemeSelectionViewModel(_formsFileService, _projectState), _themeImporter);
         blockedMessage = null;
         return true;
     }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
@@ -8,6 +9,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
+using GumFormsPlugin.ViewModels;
 using Moq;
 using Shouldly;
 
@@ -23,6 +25,7 @@ public class NewProjectLogicTests
     private readonly Mock<IDialogService> _dialogService = new();
     private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly Mock<IFormsFileService> _formsFileService = new();
+    private readonly Mock<IProjectState> _projectState = new();
     private readonly Mock<IFormsThemeImporter> _themeImporter = new();
     private readonly Mock<ICopyPasteProjectCommands> _projectCommands = new();
     private readonly Mock<ISelectedState> _selectedState = new();
@@ -31,25 +34,36 @@ public class NewProjectLogicTests
     public NewProjectLogicTests()
     {
         _formsFileService.Setup(x => x.DefaultThemeName).Returns("Standard");
+        _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string> { "Standard", "Bubblegum" });
+        _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
+        _projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
         _logic = new NewProjectLogic(
             _projectManager.Object,
             _dialogService.Object,
             _fileCommands.Object,
-            _formsFileService.Object,
             _themeImporter.Object,
             _projectCommands.Object,
             _selectedState.Object);
     }
 
+    private ThemeSelectionViewModel CreateThemeSelection() => new(_formsFileService.Object, _projectState.Object);
+
     /// <summary>
     /// Sets up the options dialog to return <paramref name="accepted"/>, with Forms inclusion set
-    /// to <paramref name="isIncludeFormsControls"/>.
+    /// to <paramref name="isIncludeFormsControls"/> and, when given, a specific theme selected.
     /// </summary>
-    private void SetUpDialog(bool accepted, bool isIncludeFormsControls = true)
+    private void SetUpDialog(bool accepted, bool isIncludeFormsControls = true, string? selectedTheme = null)
     {
-        NewProjectDialogViewModel viewModel = new() { IsIncludeFormsControls = isIncludeFormsControls };
+        ThemeSelectionViewModel themeSelection = CreateThemeSelection();
+        if (selectedTheme != null)
+        {
+            themeSelection.SelectedTheme = selectedTheme;
+        }
+
+        NewProjectDialogViewModel viewModel =
+            new(themeSelection) { IsIncludeFormsControls = isIncludeFormsControls };
         _dialogService
             .Setup(x => x.Show(It.IsAny<Action<NewProjectDialogViewModel>?>(), out viewModel))
             .Returns(accepted);
@@ -123,6 +137,17 @@ public class NewProjectLogicTests
         _projectCommands.Verify(
             x => x.AddScreen(It.Is<ScreenSave>(s => s.Name == NewProjectLogic.StartingScreenName)),
             Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_ImportsTheThemePickedInTheDialog_WhenItDiffersFromTheDefault()
+    {
+        SetUpDialog(accepted: true, isIncludeFormsControls: true, selectedTheme: "Bubblegum");
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _themeImporter.Verify(x => x.ImportTheme("Bubblegum", false), Times.Once);
     }
 
     [Fact]
