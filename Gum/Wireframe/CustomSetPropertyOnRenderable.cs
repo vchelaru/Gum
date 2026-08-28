@@ -175,6 +175,14 @@ public partial class CustomSetPropertyOnRenderable
     public static event Action<string>? PropertyAssignmentError;
 
     /// <summary>
+    /// Raises <see cref="PropertyAssignmentError"/>. Exposed so callers outside this class (e.g.
+    /// <c>TextRuntime.RegenerateOversampledFont</c>, which catches <see cref="InMemoryFontCreator"/>
+    /// failures on its own render-time path) can surface a failure the same way the property-assignment
+    /// cascade in this class does, instead of letting the exception propagate.
+    /// </summary>
+    internal static void RaisePropertyAssignmentError(string message) => PropertyAssignmentError?.Invoke(message);
+
+    /// <summary>
     /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
     /// the XNA-family backends, or a <c>.fs</c>/<c>.glsl</c> path on raylib, assigned via
     /// <c>ContainerRuntime.SourceShaderFile</c>) into a platform effect object, which is stored in

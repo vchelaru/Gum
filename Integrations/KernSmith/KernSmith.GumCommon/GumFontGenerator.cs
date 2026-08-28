@@ -14,6 +14,14 @@ namespace KernSmith.Gum;
 public static class GumFontGenerator
 {
     /// <summary>
+    /// Test seam for <see cref="OperatingSystem.IsBrowser"/> -- a normal desktop test run can never
+    /// observe IsBrowser() == true, so tests overwrite this to exercise the browser-wasm guard below.
+    /// Public because KernSmith.GumCommon is consumed as a separate compiled assembly by the platform
+    /// test projects (RaylibGum.Tests, etc.), where <c>internal</c> would not be visible.
+    /// </summary>
+    public static Func<bool> IsBrowserPlatform = OperatingSystem.IsBrowser;
+
+    /// <summary>
     /// Generates a <see cref="BmFontResult"/> from a Gum <see cref="BmfcSave"/> font descriptor.
     /// The result contains .fnt metadata and texture page pixel data entirely in memory.
     /// </summary>
@@ -23,8 +31,25 @@ public static class GumFontGenerator
     /// Use <see cref="RasterizerBackend.StbTrueType"/> on platforms where native
     /// libraries are unavailable (e.g., Blazor WASM).
     /// </param>
+    /// <exception cref="PlatformNotSupportedException">
+    /// <paramref name="backend"/> is null and this is running on browser-wasm. FreeType (the default
+    /// backend) is native code and cannot run there -- a silent fallback or an opaque KernSmith-internal
+    /// failure is worse than failing fast with the fix (found via a BlazorGL repro where the consumer
+    /// forgot the explicit backend argument; see also the render-time try/catch this bug motivated
+    /// around <c>TextRuntime.RegenerateOversampledFont</c>'s <c>TryCreateFont</c> calls).
+    /// </exception>
     public static BmFontResult Generate(BmfcSave bmfcSave, RasterizerBackend? backend = null)
     {
+        if (backend is null && IsBrowserPlatform())
+        {
+            throw new PlatformNotSupportedException(
+                "KernSmith's default rasterizer backend (FreeType) is native code and cannot run on " +
+                "browser-wasm. Pass KernSmith.RasterizerBackend.StbTrueType explicitly to the font " +
+                "creator (e.g. new KernSmithFontCreator(graphicsDevice, RasterizerBackend.StbTrueType)) " +
+                "and reference the KernSmith.Rasterizers.StbTrueType package -- see " +
+                "docs/code/files-and-fonts/font-oversampling.md.");
+        }
+
         FontGeneratorOptions options = BuildOptions(bmfcSave);
         if (backend.HasValue)
             options.Backend = backend.Value;
