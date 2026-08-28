@@ -30,7 +30,7 @@ public static class GumFontGenerator
             options.Backend = backend.Value;
         return string.IsNullOrEmpty(bmfcSave.FontFile)
             ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
-            : BmFont.Generate(ReadFontBytes(bmfcSave.FontFile!), options);
+            : BmFont.Generate(ReadFontFileBytes(bmfcSave.FontFile!), options);
     }
 
     /// <summary>
@@ -39,8 +39,9 @@ public static class GumFontGenerator
     /// packed into a <c>.gumpkg</c>, or one in a game's asset zip — rasterizes the same as one on
     /// disk (#4515). Falls back to disk because FileManager routes exclusively to the hook once one
     /// is installed, and a hook that doesn't carry this font must not hide a copy on disk.
+    /// Called by the platform packages' font registration as well as by generation.
     /// </summary>
-    private static byte[] ReadFontBytes(string fontFile)
+    public static byte[] ReadFontFileBytes(string fontFile)
     {
         string fullPath = FileManager.IsRelative(fontFile) ? FileManager.MakeAbsolute(fontFile) : fontFile;
 
