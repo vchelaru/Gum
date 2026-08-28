@@ -543,10 +543,20 @@ public class Renderer : IRenderer
             managers = SystemManagers.Default;
         }
 
+        // GraphicsDevice.Metrics only resets on Present (never mid-pass, e.g. from the Clear calls
+        // render-target baking issues), so a before/after delta across this whole pass is safe even
+        // when the pass bakes render targets. See RenderStateChangeStatistics.DrawCallCount remarks.
+        long drawCountBefore = GraphicsDevice?.Metrics.DrawCount ?? 0;
+
         Draw(managers, _layers);
 
         ForceEnd();
         EndFrame();
+
+        if (GraphicsDevice != null)
+        {
+            RenderStateChangeStatistics.AddDrawCalls((int)(GraphicsDevice.Metrics.DrawCount - drawCountBefore));
+        }
     }
 
     /// <summary>
