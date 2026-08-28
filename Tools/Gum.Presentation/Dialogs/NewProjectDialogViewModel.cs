@@ -1,4 +1,5 @@
 using Gum.Services.Dialogs;
+using GumFormsPlugin.ViewModels;
 
 namespace Gum.Dialogs;
 
@@ -9,15 +10,33 @@ namespace Gum.Dialogs;
 /// </summary>
 public class NewProjectDialogViewModel : DialogViewModel
 {
-    public NewProjectDialogViewModel()
+    /// <summary>
+    /// Theme picker, shared with the Add Forms dialog. Only relevant when
+    /// <see cref="IsIncludeFormsControls"/> is checked.
+    /// </summary>
+    public ThemeSelectionViewModel ThemeSelection { get; }
+
+    public NewProjectDialogViewModel(ThemeSelectionViewModel themeSelection)
     {
+        ThemeSelection = themeSelection;
         IsIncludeFormsControls = true;
     }
 
     /// <summary>
-    /// Whether the default Forms theme is imported into the new project.
+    /// Whether the selected Forms theme (<see cref="ThemeSelection"/>) is imported into the new
+    /// project.
     /// </summary>
     public bool IsIncludeFormsControls
+    {
+        get => Get<bool>();
+        set => Set(value);
+    }
+
+    /// <summary>
+    /// Whether the selected theme's DemoScreenGum is imported alongside its controls. Only
+    /// relevant when <see cref="IsIncludeFormsControls"/> is checked.
+    /// </summary>
+    public bool IsIncludeDemoScreenGum
     {
         get => Get<bool>();
         set => Set(value);

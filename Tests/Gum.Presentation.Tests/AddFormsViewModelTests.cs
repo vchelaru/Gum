@@ -13,6 +13,8 @@ namespace Gum.Presentation.Tests;
 /// IFormsFileService (which unblocked the VM's move into the headless Gum.Presentation assembly,
 /// ADR-0005 Phase 3, #3754) so DefaultThemeName went from a static const on the concrete
 /// FormsFileService to an instance member reachable through the interface.
+/// Theme picking itself moved into ThemeSelectionViewModel (shared with NewProjectDialogViewModel);
+/// see ThemeSelectionViewModelTests for that behavior's coverage.
 /// </summary>
 public class AddFormsViewModelTests
 {
@@ -31,32 +33,10 @@ public class AddFormsViewModelTests
         _projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
     }
 
-    private AddFormsViewModel CreateSut() => new(
-        _formsFileService.Object,
-        _themeImporter.Object,
-        _projectState.Object);
+    private ThemeSelectionViewModel CreateThemeSelection() =>
+        new(_formsFileService.Object, _projectState.Object);
 
-    [Fact]
-    public void Constructor_SelectsDefaultTheme_WhenPresentAmongAvailableThemes()
-    {
-        _formsFileService.Setup(x => x.GetAvailableThemes())
-            .Returns(new List<string> { "Bubblegum", "Standard" });
-
-        AddFormsViewModel sut = CreateSut();
-
-        sut.SelectedTheme.ShouldBe("Standard");
-    }
-
-    [Fact]
-    public void Constructor_FallsBackToFirstAvailableTheme_WhenDefaultThemeIsNotPresent()
-    {
-        _formsFileService.Setup(x => x.GetAvailableThemes())
-            .Returns(new List<string> { "Bubblegum" });
-
-        AddFormsViewModel sut = CreateSut();
-
-        sut.SelectedTheme.ShouldBe("Bubblegum");
-    }
+    private AddFormsViewModel CreateSut() => new(CreateThemeSelection(), _themeImporter.Object);
 
     [Fact]
     public void OnAffirmative_ImportsTheSelectedTheme()
@@ -65,7 +45,7 @@ public class AddFormsViewModelTests
             .Returns(new List<string> { "Standard", "Bubblegum" });
 
         AddFormsViewModel sut = CreateSut();
-        sut.SelectedTheme = "Bubblegum";
+        sut.ThemeSelection.SelectedTheme = "Bubblegum";
         sut.IsIncludeDemoScreenGum = true;
 
         bool? affirmativeResult = null;
