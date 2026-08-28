@@ -700,7 +700,22 @@ public class TextRuntime : InteractiveGue
         bmfcSave.FontSize = rasterFontSize;
 
 #if XNALIKE
-        var font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        BitmapFont? font;
+        try
+        {
+            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        }
+        catch (Exception ex)
+        {
+            // This runs from Text.OnPreRender, which the GumBatch entry path (Renderer.Draw(IRenderableIpso),
+            // used by FRB2's GumRenderBatch) invokes between Begin() and End() -- an uncaught exception here
+            // would escape past End(), leaving the SpriteBatch open and every subsequent frame's Begin()
+            // throwing "Begin has already been called" (found via a BlazorGL/WASM repro where the default
+            // FreeType rasterizer backend can't run and TryCreateFont throws instead of returning null).
+            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
+            return false;
+        }
         if (font == null)
         {
             return false;
@@ -734,7 +749,18 @@ public class TextRuntime : InteractiveGue
         // Raylib parity for #4317 (issue #4330): same shape as the XNALIKE branch above, but against
         // Raylib_cs.Font (a live GPU-resident font, not a BitmapFont) -- see IRaylibFontCreator and
         // Text.SetOversampledDisplayFont/MeasureLinesWidth (Runtimes/RaylibGum/Renderables/Text.cs).
-        Raylib_cs.Font? font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        Raylib_cs.Font? font;
+        try
+        {
+            font = CustomSetPropertyOnRenderableType.InMemoryFontCreator.TryCreateFont(bmfcSave);
+        }
+        catch (Exception ex)
+        {
+            // See the matching try/catch in the XNALIKE branch above -- same render-time reentrancy risk.
+            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                $"Error creating oversampled font via {CustomSetPropertyOnRenderableType.InMemoryFontCreator.GetType().Name}:\n{ex}");
+            return false;
+        }
         if (font == null || font.Value.BaseSize == 0)
         {
             return false;

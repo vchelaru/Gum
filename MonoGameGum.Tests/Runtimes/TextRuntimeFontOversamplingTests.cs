@@ -285,6 +285,56 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
         }
     }
 
+    // BlazorGL/WASM repro: the default (FreeType, native-only) rasterizer backend fails on wasm, and
+    // an IInMemoryFontCreator that throws instead of returning null used to have that exception escape
+    // RegenerateOversampledFont uncaught. It runs from Text.OnPreRender, which Renderer.Draw(IRenderableIpso)
+    // (the GumBatch entry path FRB2's GumRenderBatch uses) invokes between Begin() and End() -- an
+    // uncaught exception there skips End(), leaving the SpriteBatch open so every subsequent frame's
+    // Begin() throws "Begin has already been called". RegenerateOversampledFont must catch and report
+    // via PropertyAssignmentError instead, the same way the property-assignment cascade in
+    // CustomSetPropertyOnRenderable already does for InMemoryFontCreator failures on the non-oversampling
+    // path.
+    [Fact]
+    public void RegenerateOversampledFont_WhenInMemoryFontCreatorThrows_DoesNotPropagateAndReportsViaPropertyAssignmentError()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        var reportedMessages = new System.Collections.Generic.List<string>();
+        System.Action<string> handler = reportedMessages.Add;
+        try
+        {
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = new ThrowingFontCreator();
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            // Constructing/assigning FontSize above already routed through the same global
+            // ThrowingFontCreator via the ordinary property-assignment cascade (which reports its own
+            // PropertyAssignmentError messages) -- reset here so the assertions below isolate what
+            // RegenerateOversampledFont itself reports.
+            reportedMessages.Clear();
+
+            bool result = textRuntime.RegenerateOversampledFont(2.5f);
+
+            result.ShouldBeFalse();
+            reportedMessages.ShouldHaveSingleItem();
+            reportedMessages[0].ShouldContain("boom");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    private sealed class ThrowingFontCreator : IInMemoryFontCreator
+    {
+        public BitmapFont? TryCreateFont(BmfcSave bmfcSave) =>
+            throw new System.InvalidOperationException("boom");
+    }
+
     // Issue #4317: UpdateAutomaticFontOversampling(float) is the testable decision core behind the
     // Text.OnPreRender-wired automatic trigger -- given an effective zoom, decide whether to
     // re-rasterize. The parameterless overload (camera/layer lookup) isn't unit-tested here since it
