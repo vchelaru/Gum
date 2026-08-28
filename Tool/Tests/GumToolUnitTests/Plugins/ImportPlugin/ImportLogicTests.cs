@@ -1,6 +1,9 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.ProjectServices;
+using Gum.Services.Dialogs;
+using Moq;
 using Moq.AutoMock;
 using Shouldly;
 using System;
@@ -171,5 +174,41 @@ public class ImportLogicTests : BaseTestClass
         result.Instances[0].Name.ShouldBe("Background");
         result.Instances[1].Name.ShouldBe("TextInstance");
         result.Instances[2].Name.ShouldBe("FocusedIndicator");
+    }
+
+    [Fact]
+    public void ImportScreen_ShouldReturnScreen_WhenScreenImportServiceSucceeds()
+    {
+        // Arrange
+        var screenSave = new ScreenSave { Name = "NewScreen" };
+        _mocker.GetMock<IScreenImportService>()
+            .Setup(x => x.ImportScreen(It.IsAny<GumProjectSave>(), screenSave))
+            .Returns(ScreenImportResult.Ok(screenSave));
+
+        // Act
+        var result = _importLogic.ImportScreen(screenSave, saveProject: false);
+
+        // Assert
+        result.ShouldBeSameAs(screenSave);
+    }
+
+    [Fact]
+    public void ImportScreen_ShouldShowDialogAndReturnNull_WhenScreenImportServiceReportsConflict()
+    {
+        // Arrange
+        var screenSave = new ScreenSave { Name = "Dupe" };
+        _mocker.GetMock<IScreenImportService>()
+            .Setup(x => x.ImportScreen(It.IsAny<GumProjectSave>(), screenSave))
+            .Returns(ScreenImportResult.Conflict("Dupe"));
+
+        // Act
+        var result = _importLogic.ImportScreen(screenSave, saveProject: false);
+
+        // Assert
+        result.ShouldBeNull();
+        _mocker.GetMock<IDialogService>()
+            .Verify(x => x.ShowMessage(
+                It.Is<string>(msg => msg.Contains("Dupe")), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()),
+                Times.Once);
     }
 }

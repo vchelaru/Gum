@@ -30,6 +30,7 @@ public class Program
         rootCommand.AddCommand(ConvertToJsonCommand.Create());
         rootCommand.AddCommand(StageFormsBehaviorsCommand.Create());
         rootCommand.AddCommand(PackCommand.Create());
+        rootCommand.AddCommand(ImportScreenCommand.Create());
         rootCommand.AddCommand(CodegenCommand.Create());
         rootCommand.AddCommand(CodegenInitCommand.Create());
         rootCommand.AddCommand(FontsCommand.Create());

@@ -15,6 +15,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.ImportPlugin.Manager;
+using Gum.ProjectServices;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -183,12 +184,7 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             }
 
             progress.SetStatus("Copying Images / Fonts / FontCache…");
-            recorder.Measure("asset copy", () =>
-            {
-                CopyAssetTree(Path.Combine(stageDir, "Images"), Path.Combine(projectDir, "Images"));
-                CopyAssetTree(Path.Combine(stageDir, "Fonts"), Path.Combine(projectDir, "Fonts"));
-                CopyAssetTree(Path.Combine(stageDir, "FontCache"), Path.Combine(projectDir, "FontCache"));
-            });
+            recorder.Measure("asset copy", () => AssetTreeCopier.CopyStagedAssets(stageDir, projectDir));
 
             progress.SetStatus("Importing screen into project…");
             var screenSave = recorder.Measure(
@@ -387,19 +383,6 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             .Where(l => !l.StartsWith('>'))
             .TakeLast(maxLines);
         return string.Join("\n", lines);
-    }
-
-    private static void CopyAssetTree(string sourceDir, string destDir)
-    {
-        if (!Directory.Exists(sourceDir)) return;
-        Directory.CreateDirectory(destDir);
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
-        {
-            var rel = Path.GetRelativePath(sourceDir, file);
-            var dest = Path.Combine(destDir, rel);
-            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
-            File.Copy(file, dest, overwrite: true);
-        }
     }
 
     /// <summary>
