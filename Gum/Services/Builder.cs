@@ -36,6 +36,7 @@ using Gum.Settings;
 using ToolsUtilities;
 using Gum.Logic.FileWatch;
 using Gum.Reflection;
+using Gum.ProjectServices;
 using Gum.ProjectServices.FontGeneration;
 using Gum.Services.Fonts;
 using Gum.Localization;
@@ -212,6 +213,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IStateEditingIndicatorService, StateEditingIndicatorService>();
         services.AddSingleton<IDragDropManager, DragDropManager>();
         services.AddSingleton<MenuStripManager>();
+        services.AddSingleton<IScreenImportService, ScreenImportService>();
         services.AddSingleton<ImportLogic>();
         services.AddSingleton<IImportLogic>(provider => provider.GetRequiredService<ImportLogic>());
         services.AddSingleton<MainOutputViewModel>();

@@ -1,6 +1,7 @@
 ﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Services;
 using Gum.ToolStates;
 using System;
@@ -22,8 +23,9 @@ public class ImportLogic : IImportLogic
     private readonly IProjectManager _projectManager;
     private readonly IPluginManager _pluginManager;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IScreenImportService _screenImportService;
 
-    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, IStandardElementsManagerGumTool standardElementsManagerGumTool)
+    public ImportLogic(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands, IDialogService dialogService, IProjectManager projectManager, IPluginManager pluginManager, IStandardElementsManagerGumTool standardElementsManagerGumTool, IScreenImportService screenImportService)
     {
         _selectedState = selectedState;
         _guiCommands = guiCommands;
@@ -32,6 +34,7 @@ public class ImportLogic : IImportLogic
         _projectManager = projectManager;
         _pluginManager = pluginManager;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _screenImportService = screenImportService;
     }
 
     public ScreenSave? ImportScreen(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)
@@ -45,24 +48,15 @@ public class ImportLogic : IImportLogic
 
     public ScreenSave? ImportScreen(ScreenSave screenSave, bool saveProject = true)
     {
-        if (ObjectFinder.Self.GetElementSave(screenSave.Name) != null)
+        var result = _screenImportService.ImportScreen(_projectManager.GumProjectSave, screenSave);
+        if (!result.Success)
         {
-            _dialogService.ShowMessage($"This project already a screen named {screenSave.Name} in this project");
+            _dialogService.ShowMessage($"This project already a screen named {result.ConflictingScreenName} in this project");
             return null;
         }
 
-        var elementReferences = _projectManager.GumProjectSave.ScreenReferences;
-        elementReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-        var screens = _projectManager.GumProjectSave.Screens;
-        screens.Add(screenSave);
-        screens.Sort((first, second) => first.Name.CompareTo(second.Name));
-
-        screenSave.Initialize(null);
-
-        DoAfterImportLogic(saveProject, screenSave);
-        return screenSave;
+        DoAfterImportLogic(saveProject, result.ImportedScreen!);
+        return result.ImportedScreen;
     }
 
     public ComponentSave? ImportComponent(FilePath filePath, string? desiredDirectory = null, bool saveProject = true)

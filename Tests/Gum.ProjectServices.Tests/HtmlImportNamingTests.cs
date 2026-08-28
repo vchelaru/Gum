@@ -1,9 +1,7 @@
-using HtmlToGumPlugin;
 using Shouldly;
 using System.Collections.Generic;
-using Xunit;
 
-namespace GumToolUnitTests.Plugins.HtmlToGumPlugin;
+namespace Gum.ProjectServices.Tests;
 
 public class HtmlImportNamingTests
 {

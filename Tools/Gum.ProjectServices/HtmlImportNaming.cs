@@ -1,11 +1,12 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace HtmlToGumPlugin;
+namespace Gum.ProjectServices;
 
 /// <summary>
-/// Pure naming/conflict-resolution helpers for HTML import, kept separate from
-/// <see cref="MainHtmlToGumPlugin"/> so they can be unit tested without a WinForms/MEF host.
+/// Pure naming/conflict-resolution helpers for importing a Screen into a project. Shared by
+/// HtmlToGumPlugin's Content → Import → HTML… merge step and gumcli import-screen so the two
+/// import paths qualify/uniquify names identically.
 /// </summary>
 public static class HtmlImportNaming
 {
