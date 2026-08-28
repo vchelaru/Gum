@@ -45,6 +45,52 @@ internal class Svg : RenderableShapeBase, IAspectRatio
         }
     }
 
+    /// <summary>
+    /// Half a world unit of disagreement between the drawn width and the element's Width is
+    /// treated as none, so float noise doesn't cost two batch flushes. Not scaled by camera zoom -
+    /// a zoomed-in camera can magnify a skipped mismatch to a visible pixel or two.
+    /// </summary>
+    internal const float NonUniformScaleTolerance = 0.5f;
+
+    /// <summary>
+    /// Whether the width Apos.Shapes draws from the height differs visibly from the width the
+    /// element reports to layout. False for the <c>MaintainFileAspectRatio</c> default and for
+    /// degenerate dimensions, so the stretch path costs nothing in the common case.
+    /// </summary>
+    internal static bool RequiresNonUniformScale(float width, float height, float documentAspectRatio)
+    {
+        if (width <= 0 || height <= 0 || documentAspectRatio <= 0)
+        {
+            return false;
+        }
+
+        float drawnWidth = height * documentAspectRatio;
+
+        return System.Math.Abs(width - drawnWidth) > NonUniformScaleTolerance;
+    }
+
+    /// <summary>
+    /// The transform that turns Apos.Shapes' height-driven uniform scale into the non-uniform one
+    /// SkiaGum's <c>VectorSprite</c> produces, for use as a pre-multiplied view matrix.
+    /// </summary>
+    /// <remarks>
+    /// Apos maps a point of the drawing to <c>T(topLeft) * R(rotation) * S(height, height)</c>;
+    /// Skia composes <c>T * R * S(scaleX, scaleY)</c>. The heights already agree, so only x needs
+    /// correcting, and conjugating the x scale by the element's own rotation and position stretches
+    /// along the element's local axis rather than shearing a rotated drawing.
+    /// </remarks>
+    internal static Matrix CreateNonUniformScaleMatrix(float width, float height,
+        float documentAspectRatio, Vector2 topLeft, float rotationRadians)
+    {
+        float horizontalScale = width / (height * documentAspectRatio);
+
+        return Matrix.CreateTranslation(-topLeft.X, -topLeft.Y, 0)
+            * Matrix.CreateRotationZ(-rotationRadians)
+            * Matrix.CreateScale(horizontalScale, 1, 1)
+            * Matrix.CreateRotationZ(rotationRadians)
+            * Matrix.CreateTranslation(topLeft.X, topLeft.Y, 0);
+    }
+
     public override void Render(ISystemManagers managers)
     {
         if (Document == null)
@@ -57,28 +103,38 @@ internal class Svg : RenderableShapeBase, IAspectRatio
 
         var sb = ShapeRenderer.ShapeBatch;
 
-        // DrawSvg's `size` is one em in world units, and one em is the viewBox's HEIGHT - so this
-        // is a uniform scale driven by Height, and the drawn width follows the file's aspect ratio.
-        //
-        // Height-dominant is the accepted behavior here, NOT a match for SkiaGum's VectorSprite,
-        // which computes scaleX and scaleY independently and squashes the drawing to fill its box.
-        // When Width and Height disagree with the file's ratio this draws wider than the Width it
-        // reports to layout, so it can overrun a sibling. Tracked in issue #4509 along with the two
-        // ways out: scaling the batch through ShapeBatch.Begin's view matrix (Skia parity, at two
-        // batch flushes per stretched SVG), or a Vector2-size DrawSvg upstream. The common case is
-        // unaffected - SvgRuntime defaults to MaintainFileAspectRatio, where the dimensions already
-        // agree and both backends match.
-        //
+        var topLeft = new Vector2(this.GetAbsoluteLeft(), this.GetAbsoluteTop());
+        var rotationRadians = MathHelper.ToRadians(-this.GetAbsoluteRotation());
+
+        // Issue #4509 - DrawSvg's `size` is one em in world units, and one em is the viewBox's
+        // HEIGHT, so the drawn width always follows the file's aspect ratio. When Width disagrees,
+        // the batch is re-opened with a view matrix that stretches x, matching SkiaGum's
+        // VectorSprite (which scales x and y independently) including its effect on strokes, whose
+        // pen becomes elliptical. That costs two batch flushes, so it only happens on a real
+        // mismatch - the MaintainFileAspectRatio default never pays for it.
+        var requiresNonUniformScale = RequiresNonUniformScale(Width, Height, AspectRatio);
+
+        if (requiresNonUniformScale)
+        {
+            ShapeRenderer.PushView(
+                CreateNonUniformScaleMatrix(Width, Height, AspectRatio, topLeft, rotationRadians));
+        }
+
         // `rotation` turns around `position` and `origin` is the pivot measured out from the top
         // left, so passing Vector2.Zero rotates around the top-left corner - Gum's own convention.
         // That is why this needs no AdjustPositionForCenterRotation, unlike the center-rotating
         // DrawRectangle/DrawCircle paths.
         sb.DrawSvg(
             Document,
-            new Vector2(this.GetAbsoluteLeft(), this.GetAbsoluteTop()),
+            topLeft,
             Height,
-            rotation: MathHelper.ToRadians(-this.GetAbsoluteRotation()),
+            rotation: rotationRadians,
             origin: Vector2.Zero,
             aaSize: IsAntialiased ? 1 : 0);
+
+        if (requiresNonUniformScale)
+        {
+            ShapeRenderer.PopView();
+        }
     }
 }

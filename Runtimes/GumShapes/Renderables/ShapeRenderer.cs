@@ -23,7 +23,14 @@ public class ShapeRenderer
     Microsoft.Xna.Framework.Matrix? _currentView;
     RasterizerState? _currentRasterizerState;
     Gum.RenderingLibrary.Blend _currentBlend;
+    BlendState? _currentXnaBlendState;
     bool _isBatchBegun;
+
+    // Issue #4509 — the view the batch was opened with, saved while a single renderable draws
+    // through a transformed one. Apos.Shapes has no per-draw transform, so a non-uniformly scaled
+    // SVG has to re-open the batch around its own draw and restore the view afterwards.
+    Microsoft.Xna.Framework.Matrix? _viewBeforePush;
+    bool _isViewPushed;
 
     // Per-frame ShapeBatch begin counter, owned by the active Renderer and reset each frame.
     // Captured in BeginBatch so EnsureBlend's mid-run re-begins are counted too. Null when the
@@ -48,10 +55,12 @@ public class ShapeRenderer
         _currentView = view;
         _currentRasterizerState = rasterizerState;
         _currentBlend = shape.Blend;
+        _currentXnaBlendState = shape.GetEffectiveXnaBlendState();
         _isBatchBegun = true;
+        _isViewPushed = false;
         _statistics = statistics;
         _statistics?.RecordShapeBatchBegin();
-        _sb.Begin(view: view, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: rasterizerState);
+        _sb.Begin(view: view, blendState: _currentXnaBlendState, rasterizerState: rasterizerState);
     }
 
     /// <summary>
@@ -70,8 +79,48 @@ public class ShapeRenderer
         }
         _sb.End();
         _currentBlend = shape.Blend;
+        _currentXnaBlendState = shape.GetEffectiveXnaBlendState();
         _statistics?.RecordShapeBatchBegin();
-        _sb.Begin(view: _currentView, blendState: shape.GetEffectiveXnaBlendState(), rasterizerState: _currentRasterizerState);
+        _sb.Begin(view: _currentView, blendState: _currentXnaBlendState, rasterizerState: _currentRasterizerState);
+    }
+
+    /// <summary>
+    /// Re-opens the ShapeBatch with <paramref name="view"/> applied on top of the view it was
+    /// opened with, so the next draw is transformed in world space and still sees the camera.
+    /// Must be paired with <see cref="PopView"/> around that draw. No-op when no batch is open
+    /// (e.g. unit tests with no device) or a view is already pushed.
+    /// </summary>
+    public void PushView(Microsoft.Xna.Framework.Matrix view)
+    {
+        if (!_isBatchBegun || _isViewPushed)
+        {
+            return;
+        }
+        _viewBeforePush = _currentView;
+        _isViewPushed = true;
+        _sb.End();
+        // Row-vector order: the caller's world-space transform runs first, then the camera view
+        // BeginBatch was handed (zoom, scroll, any GumBatch.Begin forced matrix).
+        _currentView = _viewBeforePush.HasValue ? view * _viewBeforePush.Value : view;
+        _statistics?.RecordShapeBatchBegin();
+        _sb.Begin(view: _currentView, blendState: _currentXnaBlendState, rasterizerState: _currentRasterizerState);
+    }
+
+    /// <summary>
+    /// Restores the view <see cref="PushView"/> replaced, re-opening the ShapeBatch so following
+    /// shapes draw untransformed. No-op when no view is pushed.
+    /// </summary>
+    public void PopView()
+    {
+        if (!_isBatchBegun || !_isViewPushed)
+        {
+            return;
+        }
+        _isViewPushed = false;
+        _sb.End();
+        _currentView = _viewBeforePush;
+        _statistics?.RecordShapeBatchBegin();
+        _sb.Begin(view: _currentView, blendState: _currentXnaBlendState, rasterizerState: _currentRasterizerState);
     }
 
     /// <summary>
@@ -81,6 +130,7 @@ public class ShapeRenderer
     public void EndBatch()
     {
         _isBatchBegun = false;
+        _isViewPushed = false;
         _sb.End();
     }
 
@@ -153,8 +203,11 @@ public class ShapeRenderer
 
         IsInitialized = false;
         _isBatchBegun = false;
+        _isViewPushed = false;
         _currentView = null;
+        _viewBeforePush = null;
         _currentRasterizerState = null;
+        _currentXnaBlendState = null;
         _statistics = null;
     }
 }
