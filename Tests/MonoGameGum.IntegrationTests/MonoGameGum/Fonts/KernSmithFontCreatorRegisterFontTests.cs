@@ -22,10 +22,12 @@ public class KernSmithFontCreatorRegisterFontTests : IDisposable
     private const int CodepointA = 65;
 
     private readonly Func<string, Stream>? _previousHook;
+    private readonly string _previousRelativeDirectory;
 
     public KernSmithFontCreatorRegisterFontTests()
     {
         _previousHook = FileManager.CustomGetStreamFromFile;
+        _previousRelativeDirectory = FileManager.RelativeDirectory;
         FileManager.CustomGetStreamFromFile = null;
         KernSmithFontCreator.UnregisterFont(FamilyName);
     }
@@ -33,6 +35,7 @@ public class KernSmithFontCreatorRegisterFontTests : IDisposable
     public void Dispose()
     {
         FileManager.CustomGetStreamFromFile = _previousHook;
+        FileManager.RelativeDirectory = _previousRelativeDirectory;
         KernSmithFontCreator.UnregisterFont(FamilyName);
     }
 
@@ -60,6 +63,24 @@ public class KernSmithFontCreatorRegisterFontTests : IDisposable
     [Fact]
     public void RegisterFont_WhenTheHookDoesNotHaveTheFontButDiskDoes_RegistersTheFont()
     {
+        FileManager.CustomGetStreamFromFile = requestedPath =>
+            throw new FileNotFoundException($"'{requestedPath}' is not in this bundle.", requestedPath);
+
+        KernSmithFontCreator.RegisterFont(FamilyName, RelativeFixtureFontPath);
+
+        GeneratedCodepoints().ShouldContain(CodepointA);
+    }
+
+    /// <summary>
+    /// The title container is what knows where content lives on Android, iOS and consoles, so it
+    /// has to stay reachable when FileManager resolves the path somewhere the font isn't.
+    /// </summary>
+    [Fact]
+    public void RegisterFont_WhenFileManagerResolvesElsewhere_FallsBackToTheTitleContainer()
+    {
+        FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(), "GumNoFontsHere") + Path.DirectorySeparatorChar;
+        File.Exists(FileManager.MakeAbsolute(RelativeFixtureFontPath)).ShouldBeFalse();
+
         FileManager.CustomGetStreamFromFile = requestedPath =>
             throw new FileNotFoundException($"'{requestedPath}' is not in this bundle.", requestedPath);
 
