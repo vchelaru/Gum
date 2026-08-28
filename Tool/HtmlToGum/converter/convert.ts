@@ -17,6 +17,8 @@
 //                               instead of ../.out. Chromium shots go in <dir> when --out
 //                               is set; otherwise under ../.regress/ (gitignored).
 //
+// Per-phase wall clock lands in <out>/timings.json (see timings.ts).
+//
 // After emit: gumcli fonts (via gumcli.ts) bakes FontCache from Font/FontSize and any
 // Fonts/*.ttf web-font instances.
 //
@@ -45,6 +47,7 @@ import { samplePath } from './samples-path.js';
 import { nodeTsxArgs } from './tsx-run.js';
 import { treeHasFormControls } from './forms.js';
 import { intersectScreenshotClip } from './screenshot-clip.js';
+import { createPhaseTimer } from './timings.js';
 import {
   isolateElementForTransparentScreenshot,
   restoreRasterIsolation,
@@ -150,7 +153,9 @@ const chromiumTagged = flags.out
   : join(regressDir, `chromium-${tag}.png`);
 if (!flags.out) mkdirSync(regressDir, { recursive: true });
 
-async function renderTree(browser, width, height, { captureFonts = false } = {}) {
+const timer = createPhaseTimer();
+
+async function renderTree(browser, width, height, { captureFonts = false, label = 'render' } = {}) {
   const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
   await installTsxEvaluateShim(page);
   const capturedFonts = captureFonts ? attachFontCapture(page) : null;
@@ -160,40 +165,44 @@ async function renderTree(browser, width, height, { captureFonts = false } = {})
   const capturedImages = attachImageCapture(page);
   const url = /^https?:\/\//i.test(htmlFile) ? htmlFile : pathToFileURL(htmlFile).href;
   const gotoTimeoutMs = Number(process.env.HTMLTOGUM_GOTO_TIMEOUT_MS || 0);
-  await page.goto(url, {
+  await timer.time(`${label}.goto`, () => page.goto(url, {
     waitUntil: 'networkidle',
     ...(gotoTimeoutMs > 0 ? { timeout: gotoTimeoutMs } : {}),
+  }));
+  await timer.time(`${label}.quiescence`, async () => {
+    await installTsxEvaluateShim(page); // re-apply after navigation clears some contexts
+    await page.evaluate(() => document.fonts.ready);
+    // SPA / framework roots (e.g. Gameface Solid #root) need a beat after networkidle.
+    try {
+      await page.waitForFunction(
+        (sel) => {
+          const el = document.querySelector(sel);
+          return el && (el.children.length > 0 || (el.textContent || '').trim().length > 0);
+        },
+        rootSelector,
+        { timeout: 8000 },
+      );
+    } catch {
+      /* static pages already have content */
+    }
+    // Content exists now, but a framework-driven page may still be actively re-rendering it
+    // (hydration, lazy-loaded sections) — wait for it to settle before reading the DOM.
+    await waitForDomQuiescence(page);
   });
-  await installTsxEvaluateShim(page); // re-apply after navigation clears some contexts
-  await page.evaluate(() => document.fonts.ready);
-  // SPA / framework roots (e.g. Gameface Solid #root) need a beat after networkidle.
-  try {
-    await page.waitForFunction(
-      (sel) => {
-        const el = document.querySelector(sel);
-        return el && (el.children.length > 0 || (el.textContent || '').trim().length > 0);
-      },
-      rootSelector,
-      { timeout: 8000 },
-    );
-  } catch {
-    /* static pages already have content */
-  }
-  // Content exists now, but a framework-driven page may still be actively re-rendering it
-  // (hydration, lazy-loaded sections) — wait for it to settle before reading the DOM.
-  await waitForDomQuiescence(page);
   // Pin carousels / kill timers BEFORE extract so the box tree and the later chromium.png
   // reference show the same slide (Team Liquid hero, etc.). Do not debug this race in
   // site-fidelity agents — stabilizeDynamicMedia is the fix.
-  const captureMeta = await stabilizeDynamicMedia(page);
+  const captureMeta = await timer.time(`${label}.stabilize`, () => stabilizeDynamicMedia(page));
   if (captureMeta.suspectedRotatingMedia) {
     console.log(
       `stabilizeDynamicMedia: pinned ${captureMeta.pinnedSlideGroups} slide group(s), `
       + `paused ${captureMeta.pausedAnimations} animation(s)`,
     );
   }
-  const fontFaceRules = captureFonts ? await collectFontFaceRules(page) : [];
-  const tree = await page.evaluate(extractBoxTree, rootSelector);
+  const fontFaceRules = captureFonts
+    ? await timer.time(`${label}.font rules`, () => collectFontFaceRules(page))
+    : [];
+  const tree = await timer.time(`${label}.extract`, () => page.evaluate(extractBoxTree, rootSelector));
   return {
     page, tree, width, height, capturedFonts, capturedImages, fontFaceRules, pageUrl: url,
     captureMeta,
@@ -423,8 +432,15 @@ function runGumcliNew(gumxPath, template = 'empty') {
   if (r.status !== 0) throw new Error(`gumcli new exited ${r.status}`);
 }
 
+/** Box-tree size, so a slow run can be normalized against how big the page actually was. */
+function countBoxTreeNodes(node) {
+  let count = 1;
+  for (const child of node.children || []) count += countBoxTreeNodes(child);
+  return count;
+}
+
 async function main() {
-  const browser = await chromium.launch();
+  const browser = await timer.time('browser launch', () => chromium.launch());
   let tree;
   let responsiveMap = null;
   let mismatches = [];
@@ -433,7 +449,8 @@ async function main() {
   // Geometry always comes from the requested VIEWPORT. Training samples (when
   // responsive) only drive unit inference — PercentageOfParent / RelativeToParent /
   // Absolute — and must not replace the design-size box tree.
-  const primary = await renderTree(browser, VIEWPORT.width, VIEWPORT.height, { captureFonts: true });
+  const primary = await renderTree(
+    browser, VIEWPORT.width, VIEWPORT.height, { captureFonts: true, label: 'primary' });
   tree = primary.tree;
   shotPage = primary.page;
   const capturedFonts = primary.capturedFonts || new Map();
@@ -444,27 +461,27 @@ async function main() {
   if (flags.responsive) {
     const cache = new Map();
     cache.set(`${VIEWPORT.width}x${VIEWPORT.height}`, primary.tree);
-    async function treeAt(w, h) {
+    async function treeAt(w, h, label) {
       const key = `${w}x${h}`;
       if (cache.has(key)) return cache.get(key);
-      const r = await renderTree(browser, w, h);
+      const r = await renderTree(browser, w, h, { label });
       await r.page.close();
       cache.set(key, r.tree);
       return r.tree;
     }
-    const treeNarrow = await treeAt(TRAIN_NARROW, TRAIN_H);
-    const treeWide = await treeAt(TRAIN_WIDE, TRAIN_H);
-    ({ map: responsiveMap, mismatches } = computeResponsiveMap(
+    const treeNarrow = await treeAt(TRAIN_NARROW, TRAIN_H, 'train narrow');
+    const treeWide = await treeAt(TRAIN_WIDE, TRAIN_H, 'train wide');
+    ({ map: responsiveMap, mismatches } = await timer.time('responsive map', () => computeResponsiveMap(
       treeNarrow, treeWide,
       { width: TRAIN_NARROW, height: TRAIN_H },
       { width: TRAIN_WIDE, height: TRAIN_H },
-    ));
+    )));
   }
 
   rmSync(outProjectDir, { recursive: true, force: true });
   const gumxPath = join(outProjectDir, 'Generated.gumx');
   const useForms = flags.forms && treeHasFormControls(tree);
-  runGumcliNew(gumxPath, useForms ? 'forms' : 'empty');
+  await timer.time('gumcli new', () => runGumcliNew(gumxPath, useForms ? 'forms' : 'empty'));
   if (useForms) {
     console.log('forms: mapping HTML controls → Controls/* (pass --no-forms for visual-only)');
   } else if (!flags.forms) {
@@ -474,7 +491,8 @@ async function main() {
   const fontsDir = join(outProjectDir, 'Fonts');
 
   const assetMap = new Map();
-  await rasterizeEffects(shotPage, tree, imagesDir, assetMap, rootSelector);
+  await timer.time(
+    'raster capture', () => rasterizeEffects(shotPage, tree, imagesDir, assetMap, rootSelector));
 
   // Intersect root box with the viewport. Clamping only the origin (max(0,y)) while
   // keeping the full measured height overshoots when y is negative (mdbook body at
@@ -491,69 +509,81 @@ async function main() {
     VIEWPORT.height,
   );
   if (!clip) throw new Error('root screenshot clip is empty / outside the viewport');
-  await shotPage.screenshot({ path: chromiumPng, clip });
-  copyFileSync(chromiumPng, chromiumTagged);
-  await shotPage.close();
+  await timer.time('root screenshot', async () => {
+    await shotPage.screenshot({ path: chromiumPng, clip });
+    copyFileSync(chromiumPng, chromiumTagged);
+    await shotPage.close();
+  });
 
   // Reuse the still-open browser for SVG rasterization inside downloadImages() instead
   // of paying a second Chromium launch — close only after it's done with it.
-  const { assetMap: downloaded, assetSizeMap } = await downloadImages(tree, imagesDir, browser, capturedImages);
+  const { assetMap: downloaded, assetSizeMap } = await timer.time(
+    'image download', () => downloadImages(tree, imagesDir, browser, capturedImages));
   for (const [k, v] of downloaded) assetMap.set(k, v);
-  await browser.close();
+  await timer.time('browser close', () => browser.close());
 
-  const fontMap = await materializeWebFonts({
+  const fontMap = await timer.time('font materialize', () => materializeWebFonts({
     tree, captured: capturedFonts, rules: fontFaceRules, fontsDir, pageUrl,
+  }));
+  const nineSliceMap = await timer.time(
+    'nineslice', () => generateNineSliceAssets(tree, imagesDir, assetMap));
+
+  const screens = await timer.time('map to screen', () => {
+    const mapped = mapTreeToScreen(
+      tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap, useForms);
+    const result = [{ name: screenName, mapped, gusx: toGusx(screenName, mapped) }];
+
+    if (flags.responsive && flags.compareNaive) {
+      const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap, useForms);
+      const naiveName = `${screenName}Naive`;
+      result.push({ name: naiveName, mapped: naive, gusx: toGusx(naiveName, naive) });
+    }
+    return result;
   });
-  const nineSliceMap = generateNineSliceAssets(tree, imagesDir, assetMap);
 
-  const mapped = mapTreeToScreen(tree, assetMap, responsiveMap, fontMap, nineSliceMap, assetSizeMap, useForms);
-  const screens = [{ name: screenName, mapped, gusx: toGusx(screenName, mapped) }];
-
-  if (flags.responsive && flags.compareNaive) {
-    const naive = mapTreeToScreen(tree, assetMap, null, fontMap, nineSliceMap, assetSizeMap, useForms);
-    const naiveName = `${screenName}Naive`;
-    screens.push({ name: naiveName, mapped: naive, gusx: toGusx(naiveName, naive) });
-  }
-
-  const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
-  let gumx = readFileSync(gumxPath, 'utf8');
-  // forms template ships Demo screen refs — drop them so only our converted screen(s) remain.
-  gumx = gumx.replace(/^\s*<ScreenReference\b[^>]*\/>\s*\r?\n/gm, '');
-  // gumcli new --template empty emits no <ScreenReference> (empty list serializes to nothing);
-  // insert ours right before the first <StandardElementReference>, matching GumProjectSave's
-  // field order (ScreenReferences before StandardElementReferences).
-  const anchor = gumx.indexOf('  <StandardElementReference');
-  if (anchor === -1) {
-    throw new Error(`gumcli new did not produce a <StandardElementReference> anchor in ${gumxPath}`);
-  }
-  writeFileSync(gumxPath, gumx.slice(0, anchor) + screenRefs + '\n' + gumx.slice(anchor));
-  for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
-  writeFileSync(join(outProjectDir, 'boxtree.json'), JSON.stringify(tree, null, 2));
-  writeFileSync(
-    join(outProjectDir, 'capture-meta.json'),
-    JSON.stringify({
-      ...primary.captureMeta,
-      note: primary.captureMeta?.suspectedRotatingMedia
-        ? 'Rotating media was stabilized before extract. Do not probe timer races in fidelity agents.'
-        : undefined,
-    }, null, 2),
-  );
+  await timer.time('write project', async () => {
+    const screenRefs = screens.map((s) => `  <ScreenReference Name="${s.name}" />`).join('\n');
+    let gumx = readFileSync(gumxPath, 'utf8');
+    // forms template ships Demo screen refs — drop them so only our converted screen(s) remain.
+    gumx = gumx.replace(/^\s*<ScreenReference\b[^>]*\/>\s*\r?\n/gm, '');
+    // gumcli new --template empty emits no <ScreenReference> (empty list serializes to nothing);
+    // insert ours right before the first <StandardElementReference>, matching GumProjectSave's
+    // field order (ScreenReferences before StandardElementReferences).
+    const anchor = gumx.indexOf('  <StandardElementReference');
+    if (anchor === -1) {
+      throw new Error(`gumcli new did not produce a <StandardElementReference> anchor in ${gumxPath}`);
+    }
+    writeFileSync(gumxPath, gumx.slice(0, anchor) + screenRefs + '\n' + gumx.slice(anchor));
+    for (const s of screens) writeFileSync(join(outProjectDir, 'Screens', `${s.name}.gusx`), s.gusx);
+    writeFileSync(join(outProjectDir, 'boxtree.json'), JSON.stringify(tree, null, 2));
+    writeFileSync(
+      join(outProjectDir, 'capture-meta.json'),
+      JSON.stringify({
+        ...primary.captureMeta,
+        note: primary.captureMeta?.suspectedRotatingMedia
+          ? 'Rotating media was stabilized before extract. Do not probe timer races in fidelity agents.'
+          : undefined,
+      }, null, 2),
+    );
+  });
 
   // B-first: bake FontCache from Font/FontSize (+ .ttf paths) before the MonoGame host loads.
-  try {
-    runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
-    const { repaired } = repairEmptyCustomFonts(outProjectDir);
-    if (repaired.length) {
-      console.warn(
-        `  ! empty FontCache atlas for ${repaired.length} custom font(s) `
-        + `(${repaired.slice(0, 3).join(', ')}${repaired.length > 3 ? '…' : ''}) `
-        + `— falling back to Arial and re-baking`,
-      );
+  await timer.time('gumcli fonts', async () => {
+    try {
       runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+      const { repaired } = repairEmptyCustomFonts(outProjectDir);
+      if (repaired.length) {
+        console.warn(
+          `  ! empty FontCache atlas for ${repaired.length} custom font(s) `
+          + `(${repaired.slice(0, 3).join(', ')}${repaired.length > 3 ? '…' : ''}) `
+          + `— falling back to Arial and re-baking`,
+        );
+        runGumcliFonts(join(outProjectDir, 'Generated.gumx'));
+      }
+    } catch (e) {
+      console.warn(`  ! gumcli fonts failed: ${e.message}`);
     }
-  } catch (e) {
-    console.warn(`  ! gumcli fonts failed: ${e.message}`);
-  }
+  });
 
   console.log(`box tree root: ${tree.tag}#${tree.id} (${Math.round(tree.rect.width)}x${Math.round(tree.rect.height)})`);
   if (flags.responsive) {
@@ -584,6 +614,20 @@ async function main() {
   } else {
     console.log('warnings: none');
   }
+
+  // Machine-comparable phase record — the plugin merges this into its own import timing log.
+  writeFileSync(
+    join(outProjectDir, 'timings.json'),
+    JSON.stringify(timer.toJSON({
+      nodes: countBoxTreeNodes(tree),
+      instances: screens[0].mapped.instances.length,
+      variables: screens[0].mapped.variables.length,
+      imagesDownloaded: downloaded.size,
+      rastersCaptured: rasterCount,
+      webFonts: fontMap.size,
+      nineSlices: nineSliceMap.size,
+    }), null, 2),
+  );
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

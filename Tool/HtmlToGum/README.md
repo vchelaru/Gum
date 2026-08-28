@@ -62,6 +62,15 @@ Useful flags: `--no-responsive`, `--responsive=n,w`, `--tag=name`, `--no-forms` 
 
 Fonts: `npm run gumcli -- fonts <project.gumx>` (wraps in-repo `Tools/Gum.Cli`).
 
+## Import timings
+
+Every import writes a per-phase wall-clock record so a slow run can be attributed instead of guessed at:
+
+* The converter writes `timings.json` next to its output (`--out=<dir>`), with per-phase durations and page-size counts (nodes, instances, images, web fonts).
+* The plugin merges that with its own phases — converter process, asset copy, `ImportScreen`, `TryAutoSaveProject`, `LoadProject`, screen selection — and appends one aligned entry per import to `%APPDATA%\HtmlToGumPlugin\import-timings.log` (the path is also shown under "Show details" in the import result dialog).
+
+The UI-thread phases (`TryAutoSaveProject`, `LoadProject`, `select screen`) are timed separately because they, not the converter, are what leaves the result dialog unresponsive on a large page.
+
 ## Site fidelity (dev loop)
 
 Crawl a live site (same-origin links), convert each page, screenshot via `gumcli screenshot`, and pixel-diff against Chromium until every page is under a threshold (default **5%**). Harness sources live in `Tool/HtmlToGum/fidelity/`; the convert pipeline stays in `converter/`. Output is gitignored under `Tool/HtmlToGum/.site-fidelity/`.
