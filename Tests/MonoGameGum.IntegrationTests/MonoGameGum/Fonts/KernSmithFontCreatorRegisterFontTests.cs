@@ -89,6 +89,21 @@ public class KernSmithFontCreatorRegisterFontTests : IDisposable
         GeneratedCodepoints().ShouldContain(CodepointA);
     }
 
+    /// <summary>
+    /// #4527 — RegisterFont(family, path) must accept the same FileManager.RelativeDirectory-relative
+    /// string a Font/CustomFontFile path does for the same file, not one relative to the title
+    /// container root instead.
+    /// </summary>
+    [Fact]
+    public void RegisterFont_ResolvesPathFromFileManagerRelativeDirectory_LikeCustomFontFileDoes()
+    {
+        FileManager.RelativeDirectory = Path.Combine(AppContext.BaseDirectory, "Content") + Path.DirectorySeparatorChar;
+
+        KernSmithFontCreator.RegisterFont(FamilyName, "Fonts/Orbitron-Black.ttf");
+
+        GeneratedCodepoints().ShouldContain(CodepointA);
+    }
+
     private const string RelativeFixtureFontPath = "Content/Fonts/Orbitron-Black.ttf";
 
     private static string FixtureFontPath =>
