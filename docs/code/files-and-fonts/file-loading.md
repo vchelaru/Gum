@@ -69,12 +69,12 @@ This means a published build can ship a single `.gumpkg` next to the executable 
 
 ### Serving Files From Your Own Source
 
-`FileManager.CustomGetStreamFromFile` is the hook the `.gumpkg` loader uses, and your game can install one too. Set it to a function that takes a file path and returns a `Stream`, and Gum reads through it instead of the filesystem. This covers every file type Gum loads, including `.ttf` files rasterized at runtime, so a game whose assets live in a zip, an embedded resource store, or a download cache does not need loose files on disk.
+`FileManager.CustomGetStreamFromFile` holds a function that takes a file path and returns a `Stream`. When you assign one, Gum reads through it instead of reading the filesystem. This is the same property the `.gumpkg` loader uses, and your game can assign its own. It covers every file Gum loads, `.ttf` files included, so a game that keeps its assets in a zip, an embedded resource store, or a download cache can run with no loose files on disk.
 
-This is a lower-level hook than the `IContentLoader` described below. `IContentLoader` hands back an already-loaded object (a `Texture2D`, for example); `CustomGetStreamFromFile` hands back raw bytes and lets Gum do its normal parsing.
+`CustomGetStreamFromFile` sits below the `IContentLoader` described further down. `IContentLoader` returns a finished object, such as a `Texture2D`. `CustomGetStreamFromFile` returns raw bytes and leaves Gum to parse them as it normally would.
 
 {% hint style="info" %}
-**Shipping September 2026:** `.ttf` files reading through this hook ships in the September release, or now if building Gum from source. Before this, a `.ttf` was read straight off the filesystem while every other asset type honored the hook.
+**Shipping September 2026:** `.ttf` files reading through this function ships in the September release, or now if building Gum from source. Before this, Gum read a `.ttf` straight off the filesystem while every other kind of file went through the function.
 {% endhint %}
 
 ### File Caching

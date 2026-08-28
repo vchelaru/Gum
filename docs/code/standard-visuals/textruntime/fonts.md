@@ -10,7 +10,7 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 
 | Property | Type | Purpose |
 |---|---|---|
-| `Font` (a.k.a. `FontFamily`) | `string` | Font family name (e.g. `"Arial"`, `"Noto Sans CJK"`), or the path of a `.ttf` file to rasterize (see [Font file paths](#font-file-paths)). |
+| `Font` (a.k.a. `FontFamily`) | `string` | Font family name (e.g. `"Arial"`, `"Noto Sans CJK"`), or the path of a `.ttf` file to load (see [Font file paths](#font-file-paths)). |
 | `FontSize` | `int` | Point size. |
 | `IsBold` | `bool` | Bold style (see [Bold and italic](#bold-and-italic)). |
 | `IsItalic` | `bool` | Italic style (see [Bold and italic](#bold-and-italic)). |
@@ -27,11 +27,11 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 
 ### Bold and italic
 
-On MonoGame, KNI, FNA, and raylib, `IsBold` and `IsItalic` do not require a matching font file. A real bold or italic face is used when one is available, and the style is synthesized from the regular outlines when one is not, so setting `IsBold` never silently renders as regular. SkiaGum and Silk.NET instead select the closest available typeface without synthesizing. For the full rules on both, see [Bold and Italic With One Registered Face](../../files-and-fonts/font-strategies.md#bold-and-italic-with-one-registered-face) on the Font Strategies page.
+On MonoGame, KNI, FNA, and raylib, you do not need a bold or italic font file to use these properties. KernSmith takes a real bold or italic face when one is available, and otherwise builds the style out of the regular letters, so `IsBold` always produces bold text. SkiaGum and Silk.NET instead pick the closest typeface they have and never build one. For the full rules on both, see [Bold and Italic With One Registered Face](../../files-and-fonts/font-strategies.md#bold-and-italic-with-one-registered-face) on the Font Strategies page.
 
 ### Font file paths
 
-`Font` normally holds a family name, but a value ending in `.ttf` is treated as a file to rasterize instead. `CustomFontFile` works the same way: a `.fnt` value loads a pre-baked atlas, while a `.ttf` value is rasterized on demand. Paths resolve relative to `FileManager.RelativeDirectory` like every other Gum asset, so a `.ttf` inside a `.gumpkg` bundle or behind a custom stream hook loads the same as one on disk. See [Using a .ttf Path Directly](../../files-and-fonts/font-strategies.md#using-a-ttf-path-directly) on the Font Strategies page.
+`Font` usually holds a family name, but a value ending in `.ttf` names a font file to load instead. `CustomFontFile` works the same way: a `.fnt` value loads a ready-made atlas, and a `.ttf` value is turned into one as needed. Both resolve their paths from `FileManager.RelativeDirectory`, the same starting point every other Gum asset uses, so a `.ttf` inside a `.gumpkg` bundle or served by a custom stream function loads exactly like one on disk. See [Using a .ttf Path Directly](../../files-and-fonts/font-strategies.md#using-a-ttf-path-directly) on the Font Strategies page.
 
 ### Drop shadow
 
@@ -65,7 +65,7 @@ For KernSmith-only extras on the direct-assignment path (`HardShadow`, custom `P
 A `TextRuntime`'s font is chosen by one of these paths, in priority order:
 
 1. **`BitmapFont` is set directly** → that font is used; the component properties are ignored.
-2. **`UseCustomFont` is `true`** → `CustomFontFile` is loaded. A `.fnt` value is loaded as a pre-baked atlas; a `.ttf` value is rasterized through the same path as a `.ttf` assigned to `Font`.
+2. **`UseCustomFont` is `true`** → Gum loads `CustomFontFile`. A `.fnt` value loads as a ready-made atlas. A `.ttf` value takes the same route as a `.ttf` assigned to `Font`.
 3. **`UseCustomFont` is `false` and an `InMemoryFontCreator` is registered** (e.g. KernSmith) → the font is generated in memory from the component properties, including `HasDropshadow` and the dropshadow fields when enabled.
 4. **`UseCustomFont` is `false` and no `InMemoryFontCreator` is registered** → Gum looks for a matching `.fnt` file in the project's `FontCache` folder, named according to the component properties.
 

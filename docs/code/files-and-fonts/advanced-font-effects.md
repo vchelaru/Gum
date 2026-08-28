@@ -87,24 +87,24 @@ When `HasDropshadow` is true on the property path, `GumFontGenerator` leaves `Ch
 
 ## Forcing Synthetic Bold and Italic
 
-`TextRuntime.IsBold` and `IsItalic` map onto `options.Bold` and `options.Italic`, which prefer a real bold or italic face and only synthesize one when no such face exists. See [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face) for what that means on the property path.
+`TextRuntime.IsBold` and `IsItalic` set `options.Bold` and `options.Italic`. Those two prefer a real bold or italic face and build one out of the regular letters only when no real face exists. See [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face) for what that means on the property path.
 
-`ForceSyntheticBold` and `ForceSyntheticItalic` override that preference and synthesize even when a real face is available. `TextRuntime` does not expose them, so this is the only way to reach them:
+`ForceSyntheticBold` and `ForceSyntheticItalic` override that preference and build the style even when a real face is available. `TextRuntime` does not expose them, so this is the only way to reach them:
 
 ```csharp
 // Initialize
 var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
 options.Bold = true;
-options.ForceSyntheticBold = true;   // embolden the regular outlines
+options.ForceSyntheticBold = true;   // thicken the regular letters
 options.Italic = true;
-options.ForceSyntheticItalic = true; // shear the regular outlines
+options.ForceSyntheticItalic = true; // slant the regular letters
 
 KernSmith.BmFontResult result =
     KernSmith.BmFont.GenerateFromSystem(bmfcSave.FontName, options);
 BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 ```
 
-This is mostly useful for consistency: if a family ships a bold face on one platform but not another, forcing synthesis makes every platform render the same shapes. A real bold face is otherwise the better-looking choice.
+This mostly buys you consistency. If a family ships a bold face on one platform but not another, forcing the built style makes every platform draw the same letters. Otherwise a real bold face looks better.
 
 ## Gradient Fill
 
