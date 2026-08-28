@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
+using ToolsUtilities;
 
 namespace KernSmith.Gum;
 
@@ -48,8 +49,10 @@ public class KernSmithFontCreator : IInMemoryFontCreator
         => BmFont.RegisterFont(familyName, fontData, style, faceIndex);
 
     /// <summary>
-    /// Registers a font file under a family name by reading it via
-    /// TitleContainer.OpenStream, which resolves content files correctly
+    /// Registers a font file under a family name, reading it through
+    /// <see cref="FileManager.GetStreamForFile"/> so a font that only exists behind a host stream
+    /// hook (a .ttf packed into a .gumpkg, or one in a game's asset zip) registers the same as one
+    /// on disk, and otherwise via TitleContainer.OpenStream, which resolves content files correctly
     /// on all platforms (desktop, Android, iOS, consoles).
     /// </summary>
     /// <param name="familyName">Font family name (e.g., "Arial").</param>
@@ -68,15 +71,33 @@ public class KernSmithFontCreator : IInMemoryFontCreator
         ArgumentNullException.ThrowIfNull(familyName);
         ArgumentNullException.ThrowIfNull(filePath);
 
-        byte[] fontData;
-        using (Stream stream = TitleContainer.OpenStream(filePath))
-        using (MemoryStream ms = new())
+        BmFont.RegisterFont(familyName, ReadFontBytes(filePath), style, faceIndex);
+    }
+
+    /// <summary>
+    /// Prefers FileManager's stream hook so a bundled font registers like one on disk (#4523),
+    /// falling back to the title container: FileManager routes exclusively to the hook once one is
+    /// installed, and a hook that doesn't carry this font must not hide the shipped copy.
+    /// </summary>
+    private static byte[] ReadFontBytes(string filePath)
+    {
+        if (FileManager.CustomGetStreamFromFile != null)
         {
-            stream.CopyTo(ms);
-            fontData = ms.ToArray();
+            try
+            {
+                return GumFontGenerator.ReadFontFileBytes(filePath);
+            }
+            catch (IOException)
+            {
+                // Not in the hook and not at the absolute path it resolves to; the title container
+                // below still knows where this platform keeps its content.
+            }
         }
 
-        BmFont.RegisterFont(familyName, fontData, style, faceIndex);
+        using Stream stream = TitleContainer.OpenStream(filePath);
+        using MemoryStream memoryStream = new();
+        stream.CopyTo(memoryStream);
+        return memoryStream.ToArray();
     }
 
     /// <summary>

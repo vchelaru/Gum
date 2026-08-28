@@ -6,6 +6,7 @@ using RaylibGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics.Fonts;
+using ToolsUtilities;
 
 namespace KernSmith.Gum;
 
@@ -53,6 +54,24 @@ public class KernSmithRaylibFontCreator : IRaylibFontCreator
     /// <param name="faceIndex">TTC face index (0 for single-face font files).</param>
     public static void RegisterFont(string familyName, byte[] fontData, string? style = null, int faceIndex = 0)
         => BmFont.RegisterFont(familyName, fontData, style, faceIndex);
+
+    /// <summary>
+    /// Registers a font file under a family name, reading it through
+    /// <see cref="FileManager.GetStreamForFile"/> so a font that only exists behind a host stream
+    /// hook (a .ttf packed into a .gumpkg, or one in a game's asset zip) registers the same as one
+    /// on disk.
+    /// </summary>
+    /// <param name="familyName">Font family name (e.g., "Arial").</param>
+    /// <param name="filePath">Path to a .ttf, .otf, or .woff font file.</param>
+    /// <param name="style">Optional style name (e.g., "Bold", "Italic"), or null for the default variant.</param>
+    /// <param name="faceIndex">TTC face index (0 for single-face font files).</param>
+    public static void RegisterFont(string familyName, string filePath, string? style = null, int faceIndex = 0)
+    {
+        ArgumentNullException.ThrowIfNull(familyName);
+        ArgumentNullException.ThrowIfNull(filePath);
+
+        BmFont.RegisterFont(familyName, GumFontGenerator.ReadFontFileBytes(filePath), style, faceIndex);
+    }
 
     /// <summary>
     /// Removes a previously registered font.

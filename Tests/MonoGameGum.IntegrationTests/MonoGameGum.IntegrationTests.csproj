@@ -34,6 +34,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- A real .ttf for the KernSmith font-registration tests, which read it back both through
+		     a CustomGetStreamFromFile hook and off disk. -->
+		<None Include="Content\Fonts\Orbitron-Black.ttf" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Using Include="Xunit" />
 	</ItemGroup>
 
