@@ -63,7 +63,19 @@ In addition to loose files, Gum can load a project from a single-file `.gumpkg` 
 * If the loose `.gumx` exists, Gum loads from loose files (the dev-time path; hot reload also works in this mode).
 * If only a sibling `.gumpkg` exists, Gum reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory.
 
+"Fonts" here covers both kinds: the baked `FontCache` `.fnt` and `.png` pages, and a `.ttf` the project rasterizes at runtime.
+
 This means a published build can ship a single `.gumpkg` next to the executable instead of a folder tree of `.gusx`/`.gucx`/`.png`/`.fnt` files. See the [pack](../../cli/pack.md) page for the producer side and the runtime contract.
+
+### Serving Files From Your Own Source
+
+`FileManager.CustomGetStreamFromFile` holds a function that takes a file path and returns a `Stream`. When you assign one, Gum reads through it instead of reading the filesystem. This is the same property the `.gumpkg` loader uses, and your game can assign its own. It covers every file Gum loads, `.ttf` files included, so a game that keeps its assets in a zip, an embedded resource store, or a download cache can run with no loose files on disk.
+
+`CustomGetStreamFromFile` sits below the `IContentLoader` described further down. `IContentLoader` returns a finished object, such as a `Texture2D`. `CustomGetStreamFromFile` returns raw bytes and leaves Gum to parse them as it normally would.
+
+{% hint style="info" %}
+**Shipping September 2026:** `.ttf` files reading through this function ships in the September release, or now if building Gum from source. Before this, Gum read a `.ttf` straight off the filesystem while every other kind of file went through the function.
+{% endhint %}
 
 ### File Caching
 

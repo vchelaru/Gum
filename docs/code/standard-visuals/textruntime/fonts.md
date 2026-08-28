@@ -10,10 +10,10 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 
 | Property | Type | Purpose |
 |---|---|---|
-| `Font` (a.k.a. `FontFamily`) | `string` | Font family name (e.g. `"Arial"`, `"Noto Sans CJK"`). |
+| `Font` (a.k.a. `FontFamily`) | `string` | Font family name (e.g. `"Arial"`, `"Noto Sans CJK"`), or the path of a `.ttf` file to load (see [Font file paths](#font-file-paths)). |
 | `FontSize` | `int` | Point size. |
-| `IsBold` | `bool` | Bold style. |
-| `IsItalic` | `bool` | Italic style. |
+| `IsBold` | `bool` | Bold style (see [Bold and italic](#bold-and-italic)). |
+| `IsItalic` | `bool` | Italic style (see [Bold and italic](#bold-and-italic)). |
 | `OutlineThickness` | `int` | Outline thickness in pixels (0 = no outline). |
 | `HasDropshadow` | `bool` | When `true`, draws a drop shadow under the text at runtime (see [Drop shadow](#drop-shadow)). |
 | `DropshadowColor` | `Color` | Shadow color, applied at draw time independently of the text `Color`. Shortcut for the four channel properties below. |
@@ -22,8 +22,16 @@ By default all `TextRuntime` instances use an Arial 18-point font embedded in th
 | `DropshadowBlur` | `float` | Blur radius in pixels. `0` is a sharp shadow; larger values soften the edges. Single scalar (like shape `DropshadowBlur`), not a per-axis pair. |
 | `UseFontSmoothing` | `bool` | Whether to use anti-aliased glyph rasterization. |
 | `UseCustomFont` | `bool` | When `true`, ignore the property combo and load `CustomFontFile` directly. |
-| `CustomFontFile` | `string` | Path to a specific `.fnt` file (only used when `UseCustomFont` is `true`). |
+| `CustomFontFile` | `string` | Path to a specific `.fnt` or `.ttf` file (only used when `UseCustomFont` is `true`). See [Font file paths](#font-file-paths). |
 | `BitmapFont` | `BitmapFont` | A directly-assigned font instance — bypasses the property-driven font system entirely. |
+
+### Bold and italic
+
+On MonoGame, KNI, FNA, and raylib, you do not need a bold or italic font file to use these properties. KernSmith takes a real bold or italic face when one is available, and otherwise builds the style out of the regular letters, so `IsBold` always produces bold text. SkiaGum and Silk.NET instead pick the closest typeface they have and never build one. For the full rules on both, see [Bold and Italic With One Registered Face](../../files-and-fonts/font-strategies.md#bold-and-italic-with-one-registered-face) on the Font Strategies page.
+
+### Font file paths
+
+`Font` usually holds a family name, but a value ending in `.ttf` names a font file to load instead. `CustomFontFile` works the same way: a `.fnt` value loads a ready-made atlas, and a `.ttf` value is turned into one as needed. Both resolve their paths from `FileManager.RelativeDirectory`, the same starting point every other Gum asset uses, so a `.ttf` inside a `.gumpkg` bundle or served by a custom stream function loads exactly like one on disk. See [Using a .ttf Path Directly](../../files-and-fonts/font-strategies.md#using-a-ttf-path-directly) on the Font Strategies page.
 
 ### Drop shadow
 
@@ -57,7 +65,7 @@ For KernSmith-only extras on the direct-assignment path (`HardShadow`, custom `P
 A `TextRuntime`'s font is chosen by one of these paths, in priority order:
 
 1. **`BitmapFont` is set directly** → that font is used; the component properties are ignored.
-2. **`UseCustomFont` is `true`** → `CustomFontFile` is loaded from disk.
+2. **`UseCustomFont` is `true`** → Gum loads `CustomFontFile`. A `.fnt` value loads as a ready-made atlas. A `.ttf` value takes the same route as a `.ttf` assigned to `Font`.
 3. **`UseCustomFont` is `false` and an `InMemoryFontCreator` is registered** (e.g. KernSmith) → the font is generated in memory from the component properties, including `HasDropshadow` and the dropshadow fields when enabled.
 4. **`UseCustomFont` is `false` and no `InMemoryFontCreator` is registered** → Gum looks for a matching `.fnt` file in the project's `FontCache` folder, named according to the component properties.
 

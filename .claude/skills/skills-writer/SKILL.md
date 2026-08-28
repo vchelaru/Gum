@@ -31,6 +31,33 @@ A skill is rarely written whole; it grows as **pulls** act on it — and a pull 
 
 **Signpost quality bar.** A nudge must name *where to look* — a file, class, or relationship — not merely assert that something exists. "Animation events interact with children" raises a question without reducing search cost; "see event dispatch in `X.cs` — children suppress Y because Z" reduces it. A vague signpost is worse than none: it costs context and resolves nothing.
 
+## Prose Style — Clarity Beats Brevity
+
+Cut length that adds *reading*, never length that adds *understanding*. Density and clarity are
+separate axes: a longer sentence that lands the first time beats a compressed one the reader has to
+decode. The damping rules above govern which *facts* earn a line, not how tightly the sentence
+carrying them gets compressed.
+
+Three habits that buy density with clarity:
+
+- **Em-dash restatement.** `<claim> — <same claim, negated>` is one fact in two coats. Keep the
+  positive half and delete the rest.
+- **Algorithm name in place of observable effect.** Say what changes for the reader and point at an
+  API member they can inspect, not at the technique's academic name.
+- **Imperative that hides the subject.** "Set X to Y to do Z" makes the reader the subject and the
+  API an object. Make the API the subject so the line reads as documentation, not a command.
+
+**Read-aloud test.** If a clause after a dash repeats the clause before it, or the sentence runs out
+of breath, rewrite it. Do not shorten it.
+
+❌ "Set `Factory<T>.PartitionAxis = Axis.X` (or `Axis.Y`) to replace the default O(n×m) pairwise
+check with sweep-and-prune broad-phase culling. It engages automatically — nothing to opt into on
+the relationship itself."
+
+✅ "Setting `Factory<T>.PartitionAxis` to either `Axis.X` or `Axis.Y` enables axis-based
+partitioning, which reduces the deep collision count. Once the `PartitionAxis` is set, partitioning
+happens automatically."
+
 ## Authoritative Sources (do not duplicate)
 
 Before writing anything, identify where the ground truth already lives:

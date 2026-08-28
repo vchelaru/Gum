@@ -137,6 +137,22 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 - **Shipped in preview** — note that it's a preview feature.
 - **Fully shipped** — no flag; write it as current behavior.
 
+## Prose Style: Clarity Beats Brevity
+
+Cut length that adds *reading*, never length that adds *understanding*. Density and clarity are separate axes, and a longer sentence that lands the first time beats a compressed one the reader has to decode. Trimming a page is not the same as making it clearer, and a reader who has to re-read a sentence has not been saved anything.
+
+Three habits that cost words without buying understanding:
+
+- **Restating a claim as its own negation.** "The font is generated automatically, not something you opt into" is one fact wearing two coats. Keep the positive half and delete the rest.
+- **Naming the mechanism instead of the effect.** A reader wants to know what changes on screen and which property to set. The internal class, cache, or algorithm that does it belongs in a skill or a code comment, not in a user-facing page, unless the reader has to call it.
+- **Imperatives that hide the subject.** "Set `Font` to a `.ttf` path to bypass family lookup" makes the reader the subject and the property an object. Make the property the subject so the line reads as reference material a reader can scan.
+
+**Read-aloud test.** If a clause repeats the clause before it, or the sentence runs out of breath, rewrite it. Do not shorten it.
+
+❌ "Set `text.Font` to a path ending in `.ttf` to bypass family name resolution and route the value through the file backed rasterization path rather than the operating system font lookup. This happens automatically, and there is nothing to enable."
+
+✅ "Gum loads a `Font` value ending in `.ttf` as a font file rather than looking it up as an installed font family. It decides this from the extension alone, so there is no setting to turn on."
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.
