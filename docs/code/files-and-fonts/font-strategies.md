@@ -137,20 +137,32 @@ For these reasons, registering your own `.ttf` (or `.otf`) files is recommended 
 
 ### Registering Custom .ttf Fonts
 
-{% hint style="info" %}
-This section covers MonoGame/KNI's `KernSmithFontCreator.RegisterFont`. SkiaGum and Silk.NET load a `.ttf` file a different way — point `Font`/`CustomFontFile` directly at the `.ttf` path instead of calling a register method; see [Custom .ttf Files](font-strategies.md#custom-ttf-files) under Dynamic Generation on SkiaGum.
-{% endhint %}
+There are two ways to use a `.ttf` file with KernSmith:
 
-To use a `.ttf` file with KernSmith:
+* **Register it under a family name**, then set `Font` to that family name. That is what this section covers.
+* **Point `Font` (or `CustomFontFile`) straight at the `.ttf` path**, with no register call at all. See [Using a .ttf Path Directly](font-strategies.md#using-a-ttf-path-directly) below.
+
+To register a `.ttf` file:
 
 1. Add the `.ttf` file to your project's **Content** folder.
 2. Set its **Copy to Output Directory** to **Copy if newer**. For an easier approach that handles all content files at once, see the wildcard `.csproj` setup in [Loading a Gum Project (.gumx)](../getting-started/setup/loading-a-gum-project-.gumx.md#adding-the-gum-project-to-your-csproj).
-3. Call `KernSmithFontCreator.RegisterFont` before using the font:
+3. Call `RegisterFont` before using the font. The method is on the font creator type for your runtime: `KernSmithFontCreator` on MonoGame, KNI, and FNA, and `KernSmithRaylibFontCreator` on raylib. The parameters are the same on both.
 
+{% tabs %}
+{% tab title="MonoGame / KNI / FNA" %}
 ```csharp
 // Initialize
 KernSmithFontCreator.RegisterFont("Bungee", "Content/Fonts/Bungee-Regular.ttf");
 ```
+{% endtab %}
+
+{% tab title="Raylib" %}
+```csharp
+// Initialize
+KernSmithRaylibFontCreator.RegisterFont("Bungee", "Content/Fonts/Bungee-Regular.ttf");
+```
+{% endtab %}
+{% endtabs %}
 
 Once registered, use the font by its family name just like a system font:
 
@@ -180,6 +192,73 @@ A `byte[]` overload is also available for fonts loaded from embedded resources, 
 Registered fonts take priority over system fonts. If you register a font with the family name "Arial", KernSmith uses your registered `.ttf` instead of the system-installed Arial.
 {% endhint %}
 
+{% hint style="info" %}
+**Shipping September 2026:** the raylib `KernSmithRaylibFontCreator.RegisterFont(familyName, filePath)` overload ships in the September release, or now if building Gum from source. Before this, raylib had only the `byte[]` overload, so a raylib game had to read the file itself.
+{% endhint %}
+
+### Using a .ttf Path Directly
+
+Instead of registering a family name, you can set `Font` to the path of a `.ttf` file. Gum recognizes any `Font` value ending in `.ttf` as a file to rasterize rather than a family name to look up, so no register call is needed:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Fonts/Bungee-Regular.ttf";
+text.FontSize = 24;
+text.AddToRoot();
+```
+
+The same works with `CustomFontFile` when `UseCustomFont` is `true`. Paths resolve relative to `FileManager.RelativeDirectory` (your **Content** folder, or the folder holding your `.gumx` project), just like every other Gum asset. See [File Loading](file-loading.md).
+
+{% hint style="warning" %}
+On MonoGame, KNI, and FNA this is not the same base directory `RegisterFont` uses. `RegisterFont`'s `filePath` starts at your game's root, so a font at `Content/Fonts/MyFont.ttf` on disk is written `"Content/Fonts/MyFont.ttf"` there, but `"Fonts/MyFont.ttf"` when assigned to `Font` with the usual `Content/` relative directory. Tracked as [issue 4527](https://github.com/vchelaru/Gum/issues/4527).
+{% endhint %}
+
+{% hint style="info" %}
+Only the `.ttf` extension is recognized. An `.otf` file assigned this way is treated as a family name and will not resolve. Register `.otf` files by family name instead, using `RegisterFont`.
+{% endhint %}
+
+### Where a .ttf Can Live
+
+A `.ttf` is read through the same file indirection as every other Gum asset, on both the register-by-path route and the `.ttf`-path route. That means it does not have to be a loose file next to your executable. A font packed into a [`.gumpkg` bundle](../../cli/pack.md), or served by a game that has installed its own `FileManager.CustomGetStreamFromFile` hook (an asset zip, an embedded resource store, a download cache), loads the same way a file on disk does.
+
+If neither source has the font, Gum falls back to the default embedded 18 pixel Arial without raising an error. Subscribe to `CustomSetPropertyOnRenderable.PropertyAssignmentError` to see the failure.
+
+{% hint style="info" %}
+**Shipping September 2026:** reading a `.ttf` through the file indirection ships in the September release, or now if building Gum from source. Before this, a `.ttf` was read straight off the filesystem, so a bundled or custom-sourced font was unreachable and the `byte[]` overload of `RegisterFont` was the workaround.
+{% endhint %}
+
+### Bold and Italic With One Registered Face
+
+`IsBold` and `IsItalic` do not require you to register a bold or italic file. KernSmith uses a real bold or italic face when one is available, and synthesizes the style when one is not: emboldening the regular outlines for bold, and shearing them for italic (often called faux bold and faux italic).
+
+"Available" means either a style you registered for that family, or, for a system font, a styled face the operating system has installed. So all three of these produce bold text:
+
+```csharp
+// Initialize
+// A registered Bold face is used as-is.
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Regular.ttf");
+KernSmithFontCreator.RegisterFont("Crimson Pro", "Content/Fonts/CrimsonPro-Bold.ttf",
+    style: "Bold");
+
+// Only a regular face is registered, so bold is synthesized.
+KernSmithFontCreator.RegisterFont("Bungee", "Content/Fonts/Bungee-Regular.ttf");
+
+// A system font, where the OS supplies Arial Bold.
+var text = new TextRuntime();
+text.Font = "Arial";
+text.IsBold = true;
+```
+
+A real bold face is almost always better looking than a synthesized one, so register the styles you care about when you have them. But nothing silently renders as regular, and nothing silently swaps in a different typeface.
+
+{% hint style="info" %}
+This is KernSmith's behavior, so it covers MonoGame, KNI, FNA, and raylib. SkiaGum and Silk.NET behave differently, see [Bold and Italic on SkiaGum](font-strategies.md#bold-and-italic-on-skiagum).
+{% endhint %}
+
+KernSmith can also synthesize the style even when a real face exists, which is useful for making every platform render identically. `TextRuntime` does not expose that, so it needs the direct KernSmith path: see [Forcing Synthetic Bold and Italic](advanced-font-effects.md#forcing-synthetic-bold-and-italic) on the Advanced Font Effects page.
+
 ### When to Use This Strategy
 
 * You're using Latin, Cyrillic, Greek, or another small-charset script.
@@ -206,7 +285,7 @@ text.IsBold = true;
 
 ### Custom .ttf Files
 
-Point `Font` (or `CustomFontFile` with `UseCustomFont = true`) at a `.ttf` path instead of a family name — SkiaGum/Silk.NET load and cache the file automatically, the same way KernSmith's `RegisterFont` does for MonoGame/KNI:
+Point `Font` (or `CustomFontFile` with `UseCustomFont = true`) at a `.ttf` path instead of a family name. SkiaGum/Silk.NET load and cache the file automatically, the same as the [`.ttf`-path route](font-strategies.md#using-a-ttf-path-directly) on the KernSmith runtimes:
 
 ```csharp
 // Initialize
@@ -216,11 +295,21 @@ text.Font = "Content/Fonts/Bungee-Regular.ttf";
 text.FontSize = 24;
 ```
 
-For a font loaded from bytes (an embedded resource, for example) rather than a file on disk, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` directly and then assign `Font = familyName`.
+The file is read through the same indirection as every other Gum asset, so a `.ttf` inside a [`.gumpkg` bundle](../../cli/pack.md) or behind a `FileManager.CustomGetStreamFromFile` hook loads the same as one on disk. See [Where a .ttf Can Live](font-strategies.md#where-a-ttf-can-live).
+
+For a font loaded from bytes (an embedded resource, for example) rather than a file on disk, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` directly and then assign `Font = familyName`. That method also takes an optional style name, so you can register a `Bold` or `Italic` cut alongside the regular one.
 
 {% hint style="info" %}
 `Font`/`CustomFontFile` is detected as a file path purely by whether the string ends in `.ttf` — not by whether it looks like a path. A bare filename with no directory (`"MyFont.ttf"`) is loaded from disk the same as a full path; there's no slash detection involved, and it never falls through to an OS font-name lookup. Only the `.ttf` extension is recognized — `.otf` files are not auto-routed through this path today and resolve as a (likely-missing) system font family name instead.
 {% endhint %}
+
+### Bold and Italic on SkiaGum
+
+SkiaGum and Silk.NET pick a typeface for `IsBold`/`IsItalic`; they do not synthesize one. This differs from the KernSmith runtimes, which fall back to faux bold and faux italic (see [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face)). What you get depends on where the font came from:
+
+* **A font registered with `GumFontMapper.RegisterFont`** that has no cut for the requested style falls back to the family's regular cut. The text stays in your font, but it is not bolder or slanted. Register a `Bold` and `Italic` cut if you need those styles.
+* **A `.ttf` assigned by path** resolves to that one file, so it renders exactly as that file draws, whatever `IsBold` and `IsItalic` are set to.
+* **A system font family name** is resolved by SkiaSharp, which returns the closest installed face for the requested weight and slant.
 
 {% hint style="info" %}
 A dedicated SkiaGum fonts page is planned. For now, this section is the canonical reference. If something is unclear, ask on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).
@@ -241,6 +330,10 @@ text.AddToRoot();
 
 {% hint style="warning" %}
 This path loads the `.fnt` file as-is and bypasses KernSmith entirely, so `HasDropshadow` and the other KernSmith-driven properties (`OutlineThickness`, `IsBold`, `IsItalic`, `UseFontSmoothing`) have no effect here. If you need baked drop shadow with a font you own, register it as a `.ttf` and drive it through `Font`/`FontSize` instead — see [Registering Custom .ttf Fonts](font-strategies.md#registering-custom-ttf-fonts).
+{% endhint %}
+
+{% hint style="info" %}
+`CustomFontFile` also accepts a `.ttf` path, which is a different strategy: the font is rasterized on demand and the style properties above do apply. See [Using a .ttf Path Directly](font-strategies.md#using-a-ttf-path-directly). Everything on this page's **Custom Font File** section is about the `.fnt` case.
 {% endhint %}
 
 For information on creating your own `.fnt` file with Angelcode Bitmap Font Generator, see the [Use Custom Font](../../gum-tool/gum-elements/text/use-custom-font.md) page.

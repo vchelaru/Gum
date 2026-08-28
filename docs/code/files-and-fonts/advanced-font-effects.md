@@ -85,6 +85,27 @@ Because the shadow is baked into the glyph's own atlas cell, you may need to inc
 When `HasDropshadow` is true on the property path, `GumFontGenerator` leaves `ChannelConfig` unset so KernSmith keeps full RGBA in the atlas. A custom `Channels` assignment on a shadowed font routes through KernSmith's channel compositor and can discard baked shadow color — the same reason outlined fonts use a different layout than plain text. On the direct path, mirror that rule: do not override `Channels` when baking shadow unless you know the compositor layout you need.
 {% endhint %}
 
+## Forcing Synthetic Bold and Italic
+
+`TextRuntime.IsBold` and `IsItalic` map onto `options.Bold` and `options.Italic`, which prefer a real bold or italic face and only synthesize one when no such face exists. See [Bold and Italic With One Registered Face](font-strategies.md#bold-and-italic-with-one-registered-face) for what that means on the property path.
+
+`ForceSyntheticBold` and `ForceSyntheticItalic` override that preference and synthesize even when a real face is available. `TextRuntime` does not expose them, so this is the only way to reach them:
+
+```csharp
+// Initialize
+var options = KernSmith.Gum.GumFontGenerator.BuildOptions(bmfcSave);
+options.Bold = true;
+options.ForceSyntheticBold = true;   // embolden the regular outlines
+options.Italic = true;
+options.ForceSyntheticItalic = true; // shear the regular outlines
+
+KernSmith.BmFontResult result =
+    KernSmith.BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
+```
+
+This is mostly useful for consistency: if a family ships a bold face on one platform but not another, forcing synthesis makes every platform render the same shapes. A real bold face is otherwise the better-looking choice.
+
 ## Gradient Fill
 
 Gradient fills run vertically by default (top color to bottom color). Set both start and end colors and KernSmith fills each glyph with the gradient:
