@@ -125,6 +125,8 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         var stageDir = Path.Combine(Path.GetTempPath(), "html-to-gum-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(stageDir);
 
+        var recorder = new ImportPhaseRecorder();
+
         using var progress = new ImportProgressForm();
         progress.Show();
         progress.SetStatus("Running converter…");
@@ -135,8 +137,9 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             if (useTs && !File.Exists(tsxCli))
             {
                 progress.SetStatus("Installing converter dependencies (first run only)…");
-                var (installExitCode, installStdout, installStderr) = await RunProcessAsync(
-                        "cmd.exe", "/c npm install", converterDir, progress)
+                var (installExitCode, installStdout, installStderr) = await recorder
+                    .MeasureAsync("npm install", () => RunProcessAsync(
+                        "cmd.exe", "/c npm install", converterDir, progress))
                     .ConfigureAwait(true);
 
                 if (installExitCode != 0 || !File.Exists(tsxCli))
@@ -158,7 +161,8 @@ public class MainHtmlToGumPlugin : WpfPluginBase
                 : $"\"{convertMjs}\" {scriptArgs}";
 
             progress.SetStatus($"{(useTs ? "tsx convert.ts" : "node convert.mjs")} → {screenName}");
-            var (exitCode, stdout, stderr) = await RunProcessAsync(nodePath, args, converterDir, progress)
+            var (exitCode, stdout, stderr) = await recorder
+                .MeasureAsync("converter process", () => RunProcessAsync(nodePath, args, converterDir, progress))
                 .ConfigureAwait(true);
 
             if (exitCode != 0)
@@ -179,18 +183,24 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             }
 
             progress.SetStatus("Copying Images / Fonts / FontCache…");
-            CopyAssetTree(Path.Combine(stageDir, "Images"), Path.Combine(projectDir, "Images"));
-            CopyAssetTree(Path.Combine(stageDir, "Fonts"), Path.Combine(projectDir, "Fonts"));
-            CopyAssetTree(Path.Combine(stageDir, "FontCache"), Path.Combine(projectDir, "FontCache"));
+            recorder.Measure("asset copy", () =>
+            {
+                CopyAssetTree(Path.Combine(stageDir, "Images"), Path.Combine(projectDir, "Images"));
+                CopyAssetTree(Path.Combine(stageDir, "Fonts"), Path.Combine(projectDir, "Fonts"));
+                CopyAssetTree(Path.Combine(stageDir, "FontCache"), Path.Combine(projectDir, "FontCache"));
+            });
 
             progress.SetStatus("Importing screen into project…");
-            var screenSave = ElementReference.DeserializeElement<ScreenSave>(gusx, GumProjectSave.NativeVersion);
+            var screenSave = recorder.Measure(
+                "deserialize screen",
+                () => ElementReference.DeserializeElement<ScreenSave>(gusx, GumProjectSave.NativeVersion));
             if (subfolder != null)
             {
                 screenSave.Name = HtmlImportNaming.QualifyScreenName(screenSave.Name, subfolder);
             }
             var qualifiedScreenName = screenSave.Name;
-            var imported = importLogic.ImportScreen(screenSave, saveProject: false);
+            var imported = recorder.Measure(
+                "ImportScreen", () => importLogic.ImportScreen(screenSave, saveProject: false));
             if (imported is null)
             {
                 progress.Hide();
@@ -198,24 +208,29 @@ public class MainHtmlToGumPlugin : WpfPluginBase
                 return;
             }
 
-            fileCommands.TryAutoSaveProject();
+            // The remaining phases run on the UI thread, which is why the result dialog can come
+            // up unresponsive — keep them separately timed rather than lumped into one number.
+            recorder.Measure("TryAutoSaveProject", () => { fileCommands.TryAutoSaveProject(); });
             var gumxPath = projectState.GumProjectSave?.FullFileName;
             if (!string.IsNullOrEmpty(gumxPath))
             {
-                fileCommands.LoadProject(gumxPath);
+                recorder.Measure("LoadProject", () => { fileCommands.LoadProject(gumxPath); });
             }
 
-            // Re-resolve after reload so selection points at the live ElementSave.
-            var live = ObjectFinder.Self.GetElementSave(qualifiedScreenName);
-            if (live != null)
+            recorder.Measure("select screen", () =>
             {
-                selectedState.SelectedElement = live;
-            }
+                // Re-resolve after reload so selection points at the live ElementSave.
+                var live = ObjectFinder.Self.GetElementSave(qualifiedScreenName);
+                if (live != null)
+                {
+                    selectedState.SelectedElement = live;
+                }
+            });
 
             progress.Hide();
             ImportResultForm.Show(
                 $"Imported and selected screen \"{qualifiedScreenName}\".",
-                SummarizeConverterLog(stdout, maxLines: 300));
+                $"Timing log: {HtmlImportTimingLog.LogPath}\n\n" + SummarizeConverterLog(stdout, maxLines: 300));
         }
         catch (Exception ex)
         {
@@ -224,6 +239,18 @@ public class MainHtmlToGumPlugin : WpfPluginBase
         }
         finally
         {
+            HtmlImportTimingLog.Append(HtmlImportTimingLog.LogPath, HtmlImportTimingLog.Format(new ImportTimingRun
+            {
+                TimestampUtc = DateTime.UtcNow,
+                Source = opts.HtmlPath,
+                ScreenName = screenName,
+                ViewportWidth = opts.Width,
+                ViewportHeight = opts.Height,
+                Responsive = !opts.NoResponsive,
+                PluginPhases = recorder.Phases.ToList(),
+                PluginTotalMilliseconds = recorder.Total,
+                ConverterTimings = HtmlImportTimingLog.TryReadConverterTimings(stageDir),
+            }));
             try { Directory.Delete(stageDir, recursive: true); } catch { /* temp cleanup best-effort */ }
         }
     }
