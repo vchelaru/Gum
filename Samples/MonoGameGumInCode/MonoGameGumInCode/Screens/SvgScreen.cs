@@ -58,8 +58,8 @@ internal class SvgScreen : FrameworkElement
             BuildRotationRow()));
 
         right.AddChild(BuildSection(
-            "Absolute height, aspect-locked width",
-            BuildAbsoluteHeightRow()));
+            "Absolute width and height (square box, 2:1 file - squashed)",
+            BuildSquashedRow()));
         right.AddChild(BuildSection(
             "CSS <style> colors: honored on Skia, ignored by Apos.Shapes",
             BuildCssStyledRow()));
@@ -148,37 +148,24 @@ internal class SvgScreen : FrameworkElement
         return row;
     }
 
-    // Height-driven: both dimensions absolute, with Width deliberately set to a value the file's
-    // 2:1 aspect ratio does NOT agree with. Skia squashes the drawing to fill the box exactly
-    // (scaleX and scaleY are computed independently in VectorSprite.Render); Apos.Shapes scales
-    // uniformly off the height and keeps the file's proportions, because its DrawSvg takes a single
-    // em size (one em = the viewBox's height). Known, accepted divergence — tracked in issue #4509.
-    //
-    // Each drawing gets a host container twice its height wide, because on the Apos backend the
-    // drawing is wider than the Width the element reports to layout — without the container the
-    // 2:1 drawings would overrun the square boxes the stack is spacing them by and overlap each
-    // other, which reads as a rendering bug rather than the sizing difference being demonstrated.
-    private static ContainerRuntime BuildAbsoluteHeightRow()
+    // Both dimensions absolute, with Width deliberately set to a value the file's 2:1 aspect ratio
+    // does NOT agree with, so the square boxes squash the drawing. Both backends fill the box
+    // exactly: Skia computes scaleX and scaleY independently in VectorSprite.Render, and
+    // Apos.Shapes reaches the same result by re-opening the ShapeBatch with a stretching view
+    // matrix, since its DrawSvg takes a single em size (one em = the viewBox's height) - #4509.
+    private static ContainerRuntime BuildSquashedRow()
     {
         ContainerRuntime row = BuildRow();
 
-        foreach (var height in new float[] { 40, 70, 100 })
+        foreach (var size in new float[] { 40, 70, 100 })
         {
-            ContainerRuntime cell = new();
-            cell.WidthUnits = DimensionUnitType.Absolute;
-            cell.HeightUnits = DimensionUnitType.Absolute;
-            cell.Width = height * 2;
-            cell.Height = height;
-
             SvgRuntime svg = new();
             svg.SourceFile = DemoSvg;
             svg.HeightUnits = DimensionUnitType.Absolute;
-            svg.Height = height;
+            svg.Height = size;
             svg.WidthUnits = DimensionUnitType.Absolute;
-            svg.Width = height; // intentionally square, i.e. inconsistent with the 2:1 file
-            cell.AddChild(svg);
-
-            row.AddChild(cell);
+            svg.Width = size; // intentionally square, i.e. inconsistent with the 2:1 file
+            row.AddChild(svg);
         }
 
         return row;

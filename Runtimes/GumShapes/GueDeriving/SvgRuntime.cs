@@ -23,23 +23,15 @@ namespace Gum.GueDeriving;
 /// gated on nearly every member. Both types carry the same fully-qualified name in different
 /// assemblies, which never meet in one build. Issue #4506.
 ///
-/// Two deliberate differences from the Skia runtime:
-/// <list type="bullet">
-/// <item><description>
-/// <b>No color API.</b> Skia's <c>Color</c>/<c>Red</c>/<c>Green</c>/<c>Blue</c>/<c>Alpha</c>
-/// modulate the drawing through an <c>SKColorFilter</c> color matrix. Apos's colored
-/// <c>DrawSvg</c> overload instead <i>replaces</i> every paint in the file, producing a
-/// silhouette. Exposing the same property names for a different result is worse than omitting
-/// them, so this draws the file's own colors. A silhouette override can be added later under a
-/// name that says so.
-/// </description></item>
-/// <item><description>
-/// <b>Height-dominant sizing.</b> See <see cref="Svg.Render"/> — height drives a uniform scale, so
-/// a Width that disagrees with the file's aspect ratio is not honored. Skia squashes to fill the
-/// box instead. Accepted divergence, tracked in issue #4509; the default
-/// <c>MaintainFileAspectRatio</c> height units keep the two backends in agreement.
-/// </description></item>
-/// </list>
+/// One deliberate difference from the Skia runtime: <b>no color API</b>. Skia's
+/// <c>Color</c>/<c>Red</c>/<c>Green</c>/<c>Blue</c>/<c>Alpha</c> modulate the drawing through an
+/// <c>SKColorFilter</c> color matrix. Apos's colored <c>DrawSvg</c> overload instead
+/// <i>replaces</i> every paint in the file, producing a silhouette. Exposing the same property
+/// names for a different result is worse than omitting them, so this draws the file's own colors.
+/// A silhouette override can be added later under a name that says so.
+///
+/// Sizing matches Skia, including a Width that disagrees with the file's aspect ratio — see
+/// <see cref="Svg.Render"/> for what that costs on this backend.
 /// </remarks>
 public class SvgRuntime : InteractiveGue
 {
