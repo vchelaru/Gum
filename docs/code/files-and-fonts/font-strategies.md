@@ -209,11 +209,7 @@ text.FontSize = 24;
 text.AddToRoot();
 ```
 
-`CustomFontFile` accepts a `.ttf` path the same way when `UseCustomFont` is `true`. Both properties resolve their paths relative to `FileManager.RelativeDirectory`, which is your **Content** folder, or the folder holding your `.gumx` project. This is the same starting point every other Gum asset uses. See [File Loading](file-loading.md).
-
-{% hint style="warning" %}
-On MonoGame, KNI, and FNA, `RegisterFont` starts from a different folder. Its `filePath` starts at your game's root rather than at `RelativeDirectory`. A font sitting at `Content/Fonts/MyFont.ttf` is therefore written `"Content/Fonts/MyFont.ttf"` when you register it, and `"Fonts/MyFont.ttf"` when you assign it to `Font`. Tracked as [issue 4527](https://github.com/vchelaru/Gum/issues/4527).
-{% endhint %}
+`CustomFontFile` accepts a `.ttf` path the same way when `UseCustomFont` is `true`. Both properties resolve their paths relative to `FileManager.RelativeDirectory`, which is your **Content** folder, or the folder holding your `.gumx` project. This is the same starting point every other Gum asset uses, including `RegisterFont`'s `filePath` overload. See [File Loading](file-loading.md).
 
 {% hint style="info" %}
 Gum recognizes only the `.ttf` extension here. It reads an `.otf` value as a family name, so an `.otf` path will not resolve. Register `.otf` files under a family name with `RegisterFont` instead.
