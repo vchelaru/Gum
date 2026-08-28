@@ -57,8 +57,8 @@ public class KernSmithFontCreator : IInMemoryFontCreator
     /// </summary>
     /// <param name="familyName">Font family name (e.g., "Arial").</param>
     /// <param name="filePath">
-    /// Path to a .ttf, .otf, or .woff font file, relative to the
-    /// title container root (typically the Content directory).
+    /// Path to a .ttf, .otf, or .woff font file, relative to <see cref="FileManager.RelativeDirectory"/>
+    /// - the same base a <c>Font</c>/<c>CustomFontFile</c> path uses (#4527).
     /// </param>
     /// <param name="style">
     /// Optional style name (e.g., "Bold", "Italic", "Bold Italic").
@@ -75,26 +75,40 @@ public class KernSmithFontCreator : IInMemoryFontCreator
     }
 
     /// <summary>
-    /// Prefers FileManager's stream hook so a bundled font registers like one on disk (#4523),
-    /// falling back to the title container: FileManager routes exclusively to the hook once one is
-    /// installed, and a hook that doesn't carry this font must not hide the shipped copy.
+    /// Resolves <paramref name="filePath"/> from <see cref="FileManager.RelativeDirectory"/> via
+    /// <see cref="GumFontGenerator.ReadFontFileBytes"/> - the stream hook when one is installed,
+    /// otherwise disk - the same base and resolution order <c>Font</c>/<c>CustomFontFile</c> use.
+    /// Falls back to <see cref="TitleContainer"/>, which knows where content lives on platforms
+    /// plain file I/O can't reach (Android, iOS, consoles); the fallback path is translated to stay
+    /// relative to <see cref="FileManager.RelativeDirectory"/> too, so both routes accept the same
+    /// string for the same file (#4527). The translation only applies when RelativeDirectory sits
+    /// under the executable directory (the common desktop case); elsewhere <paramref name="filePath"/>
+    /// is handed to TitleContainer unchanged, matching prior behavior.
     /// </summary>
     private static byte[] ReadFontBytes(string filePath)
     {
-        if (FileManager.CustomGetStreamFromFile != null)
+        try
         {
-            try
+            return GumFontGenerator.ReadFontFileBytes(filePath);
+        }
+        catch (IOException)
+        {
+            // Not behind the hook and not on disk at the FileManager.RelativeDirectory-resolved
+            // path; fall through to the title container below.
+        }
+
+        string titleContainerPath = filePath;
+        if (FileManager.IsRelative(filePath))
+        {
+            string absolutePath = FileManager.MakeAbsolute(filePath);
+            string exeLocation = FileManager.ExeLocation;
+            if (absolutePath.StartsWith(exeLocation, StringComparison.OrdinalIgnoreCase))
             {
-                return GumFontGenerator.ReadFontFileBytes(filePath);
-            }
-            catch (IOException)
-            {
-                // Not in the hook and not at the absolute path it resolves to; the title container
-                // below still knows where this platform keeps its content.
+                titleContainerPath = absolutePath.Substring(exeLocation.Length).Replace('\\', '/');
             }
         }
 
-        using Stream stream = TitleContainer.OpenStream(filePath);
+        using Stream stream = TitleContainer.OpenStream(titleContainerPath);
         using MemoryStream memoryStream = new();
         stream.CopyTo(memoryStream);
         return memoryStream.ToArray();
