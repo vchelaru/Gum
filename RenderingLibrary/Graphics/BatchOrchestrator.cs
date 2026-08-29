@@ -10,6 +10,11 @@ namespace RenderingLibrary.Graphics;
 /// <see cref="IRenderable"/> instances — no MonoGame device required. See <c>BatchOrchestratorTests</c>
 /// for the full set of invariants this enforces.
 /// </para>
+/// <para>
+/// Reacts only to BatchKey changes in whatever order <see cref="Renderer.SiblingOrdering"/> already
+/// produced — it does not reorder or group draws by key itself. See <see cref="BatchKeyGroupedOrderer"/>
+/// for the layer that does.
+/// </para>
 /// </summary>
 public sealed class BatchOrchestrator
 {

@@ -612,6 +612,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         set;
     }
 
+    // Only the CharacterByCharacter path (the default - see TextRenderingMode's declaration) draws
+    // from a single known BitmapFont texture, matching the font resolution RenderCharacterByCharacter
+    // itself uses. RenderTarget mode either draws from a cached mTextureToRender (rare - only after
+    // a render-to-texture pass) or XNA's own SpriteFont (its texture isn't exposed here) - both
+    // fall back to null, which just opts them out of the finer grouping tier.
+    public override object? BatchSortKey =>
+        TextRenderingMode == TextRenderingMode.CharacterByCharacter
+            ? (mBitmapFont ?? DefaultBitmapFont)?.Texture
+            : null;
+
     public BitmapFont BitmapFont
     {
         get

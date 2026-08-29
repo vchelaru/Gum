@@ -95,6 +95,8 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
 
     public virtual string BatchKey => string.Empty;
 
+    public virtual object? BatchSortKey => null;
+
 
     public virtual void StartBatch(ISystemManagers systemManagers) 
     {

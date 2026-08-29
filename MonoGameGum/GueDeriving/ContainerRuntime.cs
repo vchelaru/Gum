@@ -213,4 +213,6 @@ public class ContainerRuntime : InteractiveGue
     // depend on whatever state leaked in from the prior Renderer.Begin/End cycle. Empty key
     // lets each child fire its own transition normally.
     public override string BatchKey => string.Empty;
+
+    public override object? BatchSortKey => null;
 }

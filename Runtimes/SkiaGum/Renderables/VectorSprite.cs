@@ -308,6 +308,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     public string BatchKey => string.Empty;
+    public object? BatchSortKey => null;
 
 
     #endregion

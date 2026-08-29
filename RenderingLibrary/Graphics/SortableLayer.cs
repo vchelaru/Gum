@@ -43,6 +43,7 @@ namespace RenderingLibrary.Graphics
 
 #if !NET8_0_OR_GREATER
     public string BatchKey => string.Empty;
+    public object? BatchSortKey => null;
     public void StartBatch(ISystemManagers systemManagers) { }
     public void EndBatch(ISystemManagers systemManagers) { }
 #endif

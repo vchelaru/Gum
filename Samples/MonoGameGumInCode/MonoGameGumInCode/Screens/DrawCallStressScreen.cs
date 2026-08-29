@@ -3,6 +3,7 @@ using Gum.GueDeriving;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using RenderingLibrary;
+using RenderingLibrary.Graphics;
 
 namespace MonoGameGumInCode.Screens;
 
@@ -14,11 +15,16 @@ namespace MonoGameGumInCode.Screens;
 // culling offscreen rows; this screen deliberately renders every row unculled so the draw-call
 // count reflects the whole list, matching a game that wants a StackPanel's non-virtualized layout.
 //
+// The "Group by texture" button opts into BatchKeyGroupedOrderer (via Renderer.SiblingOrdering),
+// which reorders draws into contiguous same-texture runs using each renderable's BatchSortKey -
+// the fix. Toggle it to see the draw-call count collapse from ~80 to ~2 live.
+//
 // Tick(elapsedSeconds) is unused today (no animation) but present for symmetry with TextScreen and
 // in case a future variant wants to grow/shrink the row count live.
 internal class DrawCallStressScreen : FrameworkElement
 {
     private readonly TextRuntime _drawCallLabel;
+    private readonly Button _orderingToggleButton;
 
     public DrawCallStressScreen() : base(new ContainerRuntime())
     {
@@ -30,13 +36,19 @@ internal class DrawCallStressScreen : FrameworkElement
         _drawCallLabel.Color = Color.White;
         this.AddChild(_drawCallLabel);
 
+        _orderingToggleButton = new Button();
+        _orderingToggleButton.X = 4;
+        _orderingToggleButton.Y = 24;
+        _orderingToggleButton.Click += (_, _) => ToggleOrdering();
+        this.AddChild(_orderingToggleButton.Visual);
+
         var stack = new ContainerRuntime();
         stack.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         stack.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
         stack.X = 4;
-        stack.Y = 28;
+        stack.Y = 56;
         stack.Width = -8;
-        stack.Height = -32;
+        stack.Height = -60;
         stack.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         stack.ClipsChildren = true;
         this.AddChild(stack);
@@ -59,12 +71,28 @@ internal class DrawCallStressScreen : FrameworkElement
             stack.Children.Add(row);
         }
 
+        UpdateOrderingButtonText();
         UpdateDrawCallLabel();
     }
 
     public void Tick(double elapsedSeconds)
     {
         UpdateDrawCallLabel();
+    }
+
+    private void ToggleOrdering()
+    {
+        bool isGrouped = Renderer.SiblingOrdering == BatchKeyGroupedOrderer.Instance;
+        Renderer.SiblingOrdering = isGrouped ? HierarchicalOrderer.Instance : BatchKeyGroupedOrderer.Instance;
+        UpdateOrderingButtonText();
+    }
+
+    private void UpdateOrderingButtonText()
+    {
+        bool isGrouped = Renderer.SiblingOrdering == BatchKeyGroupedOrderer.Instance;
+        _orderingToggleButton.Text = isGrouped
+            ? "Grouping by texture (click to use plain draw order)"
+            : "Plain draw order (click to group by texture)";
     }
 
     private void UpdateDrawCallLabel()

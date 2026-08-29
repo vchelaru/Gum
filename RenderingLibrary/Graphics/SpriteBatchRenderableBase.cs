@@ -27,7 +27,16 @@ public abstract class SpriteBatchRenderableBase : IRenderable
 
     void IRenderable.PreRender() { }
 
+    // BatchKey identifies the command stream (SpriteBatch vs Apos.Shapes), not a specific resource
+    // like texture — BatchOrchestrator reads this on every renderable regardless of draw order, so
+    // a coarser key here keeps that flush machinery cheap. Per-texture grouping instead goes
+    // through BatchSortKey below, which only BatchKeyGroupedOrderer reads.
     public string BatchKey => "SpriteBatch";
+
+    // Subclasses that carry a texture (Sprite, Text, NineSlice) override this with the Texture2D
+    // reference they're about to draw with, so BatchKeyGroupedOrderer can group same-texture draws
+    // into contiguous runs. Default null means "no finer grouping than BatchKey."
+    public virtual object? BatchSortKey => null;
 
     public void StartBatch(ISystemManagers systemManagers)
     {

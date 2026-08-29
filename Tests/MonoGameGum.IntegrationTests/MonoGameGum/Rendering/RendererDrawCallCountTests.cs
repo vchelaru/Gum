@@ -99,6 +99,53 @@ public class RendererDrawCallCountTests : BaseTestClass
         }
     }
 
+    /// <summary>
+    /// The fix for #2697: opting into <see cref="BatchKeyGroupedOrderer"/> reorders same-texture
+    /// draws into contiguous runs (via each renderable's <c>BatchSortKey</c>), so the same
+    /// alternating-texture scene collapses from one draw call per sprite to one per distinct
+    /// texture. Resets <see cref="Renderer.SiblingOrdering"/> in finally since it's a static shared
+    /// across tests.
+    /// </summary>
+    [Fact]
+    public void Draw_SpritesAlternatingBetweenTwoTextures_WithBatchKeyGroupedOrderer_AddsOneDrawCallPerTexture()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        Texture2D textureA = new(game.GraphicsDevice, 1, 1);
+        textureA.SetData(new[] { Color.Red });
+        Texture2D textureB = new(game.GraphicsDevice, 1, 1);
+        textureB.SetData(new[] { Color.Blue });
+
+        IRenderableOrderer originalOrdering = Renderer.SiblingOrdering;
+        try
+        {
+            Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance;
+
+            int baseline = DrawAndCountDrawCalls();
+
+            const int spriteCount = 10;
+            for (int i = 0; i < spriteCount; i++)
+            {
+                SpriteRuntime sprite = new();
+                sprite.Texture = i % 2 == 0 ? textureA : textureB;
+                sprite.Y = i * 10;
+                sprite.AddToRoot();
+            }
+            global::Gum.GumService.Default.Root.UpdateLayout();
+
+            int withSprites = DrawAndCountDrawCalls();
+
+            (withSprites - baseline).ShouldBe(2);
+        }
+        finally
+        {
+            Renderer.SiblingOrdering = originalOrdering;
+            textureA.Dispose();
+            textureB.Dispose();
+        }
+    }
+
     private class MinimalGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;

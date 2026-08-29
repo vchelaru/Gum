@@ -294,11 +294,18 @@ public class NineSlice : SpriteBatchRenderableBase,
         get { return mSprites[(int)NineSliceSections.Left].Texture; }
         set { mSprites[(int)NineSliceSections.Left].Texture = value; }
     }
-    public Texture2D CenterTexture 
+    public Texture2D CenterTexture
     {
         get { return mSprites[(int)NineSliceSections.Center].Texture; }
         set { mSprites[(int)NineSliceSections.Center].Texture = value; }
     }
+
+    // The 9 slices normally share one texture (a sheet carved into regions), so the center slice
+    // is a representative key for the whole NineSlice. A NineSlice built with genuinely different
+    // textures per corner degrades to a slightly less optimal grouping, not a correctness bug -
+    // the 9 slices already collapse into one GPU draw call among themselves regardless (they're
+    // consecutive same-texture SpriteBatch.Draw calls), this only affects grouping across siblings.
+    public override object? BatchSortKey => CenterTexture;
 
 
 

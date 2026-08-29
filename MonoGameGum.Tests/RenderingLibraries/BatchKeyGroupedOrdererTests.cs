@@ -55,6 +55,7 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         public bool Wrap => false;
 
         public string BatchKey { get; set; }
+        public object? BatchSortKey { get; set; }
         public void Render(ISystemManagers managers) { }
         public void PreRender() { }
         public void StartBatch(ISystemManagers managers) { }
@@ -117,6 +118,77 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
             "DrawRenderable:apos2",
             "DrawRenderable:apos3",
         });
+    }
+
+    [Fact]
+    public void BuildDrawList_AlternatingBatchSortKeysWithinSameBatchKey_GroupsSameSortKeyTogether()
+    {
+        // Three non-overlapping rows, each a "frame" sprite and a "text" sprite - both
+        // BatchKey="SpriteBatch" today, but different BatchSortKey (texture identity). Without
+        // reorder DFS alternates frame,text,frame,text,frame,text. The orderer should pull
+        // same-BatchSortKey items into one run each, exactly like it already does for BatchKey.
+        object frameTexture = new object();
+        object textTexture = new object();
+
+        FakeRenderable frame1 = new FakeRenderable("frame1") { X = 0, Y = 0, Width = 10, Height = 10, BatchSortKey = frameTexture };
+        FakeRenderable text1 = new FakeRenderable("text1") { X = 50, Y = 0, Width = 10, Height = 10, BatchSortKey = textTexture };
+        FakeRenderable frame2 = new FakeRenderable("frame2") { X = 0, Y = 20, Width = 10, Height = 10, BatchSortKey = frameTexture };
+        FakeRenderable text2 = new FakeRenderable("text2") { X = 50, Y = 20, Width = 10, Height = 10, BatchSortKey = textTexture };
+        FakeRenderable frame3 = new FakeRenderable("frame3") { X = 0, Y = 40, Width = 10, Height = 10, BatchSortKey = frameTexture };
+        FakeRenderable text3 = new FakeRenderable("text3") { X = 50, Y = 40, Width = 10, Height = 10, BatchSortKey = textTexture };
+
+        Layer layer = BuildLayer(frame1, text1, frame2, text2, frame3, text3);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "DrawRenderable:frame1",
+            "DrawRenderable:frame2",
+            "DrawRenderable:frame3",
+            "DrawRenderable:text1",
+            "DrawRenderable:text2",
+            "DrawRenderable:text3",
+        });
+    }
+
+    [Fact]
+    public void BuildDrawList_RowsOfOverlappingFrameAndText_GroupsAcrossRowsByTexture()
+    {
+        // The actual stress-screen shape (#2697): the frame overlaps its own row's text (text
+        // sits on top of the frame), so the precedence graph forces frame_i before text_i within
+        // a row - unlike test above, where frame/text don't overlap at all. This pins that the
+        // "stay on current bucket" tie-break still drains all frames before falling through to
+        // text, because every frame is independently available (no cross-row dependency blocks
+        // it), even though each row's text isn't available until that row's frame is chosen.
+        const int RowCount = 4;
+        object frameTexture = new object();
+        object textTexture = new object();
+        FakeRenderable[] all = new FakeRenderable[RowCount * 2];
+        for (int i = 0; i < RowCount; i++)
+        {
+            FakeRenderable frame = new FakeRenderable($"frame{i}") { X = 0, Y = i * 40, Width = 100, Height = 30, BatchSortKey = frameTexture };
+            FakeRenderable text = new FakeRenderable($"text{i}") { X = 10, Y = i * 40 + 5, Width = 80, Height = 20, BatchSortKey = textTexture };
+            all[i * 2] = frame;
+            all[i * 2 + 1] = text;
+        }
+
+        Layer layer = BuildLayer(all);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        List<string> expected = new List<string>();
+        for (int i = 0; i < RowCount; i++)
+        {
+            expected.Add($"DrawRenderable:frame{i}");
+        }
+        for (int i = 0; i < RowCount; i++)
+        {
+            expected.Add($"DrawRenderable:text{i}");
+        }
+        Describe(commands).ShouldBe(expected);
     }
 
     // Allocation guard (#4200): unlike HierarchicalOrderer (#4190), this orderer's window Entry
