@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using System.Collections.Generic;
+using System.Linq;
 using ToolsUtilities;
 
 namespace KernSmith.Gum;
@@ -14,7 +15,7 @@ namespace KernSmith.Gum;
 /// Creates <see cref="BitmapFont"/> instances in memory using KernSmith for Gum games.
 /// Generates font textures and metadata without any disk I/O.
 /// </summary>
-public class KernSmithFontCreator : IInMemoryFontCreator
+public class KernSmithFontCreator : IInMemoryFontCreator, IGrowableFontCreator
 {
     private readonly GraphicsDevice _graphicsDevice;
     private readonly RasterizerBackend? _backend;
@@ -219,6 +220,24 @@ public class KernSmithFontCreator : IInMemoryFontCreator
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// <see cref="IGrowableFontCreator"/> adapter over <see cref="TryAddGlyphs(BitmapFont, BmfcSave, string)"/>
+    /// (issue #4542) -- converts the richer KernSmith <see cref="GlyphAdditionResult"/> down to the
+    /// interface's plain list of characters this font cannot render, so TextRuntime's automatic
+    /// growth trigger (RenderingLibrary/MonoGameGum) can call it without depending on this optional
+    /// KernSmith package's types.
+    /// </summary>
+    IReadOnlyList<char>? IGrowableFontCreator.TryAddGlyphs(BitmapFont font, BmfcSave bmfcSave, string characters)
+    {
+        GlyphAdditionResult? result = TryAddGlyphs(font, bmfcSave, characters);
+        if (result == null)
+        {
+            return null;
+        }
+
+        return result.FailedCodepoints.Select(cp => (char)cp).ToArray();
     }
 
     private void ApplyGrowth(BitmapFont font, GlyphAdditionResult result)

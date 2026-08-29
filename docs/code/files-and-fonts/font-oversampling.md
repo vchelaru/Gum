@@ -149,5 +149,6 @@ The fiddle runs in a browser, so it creates its font creator as `new KernSmithFo
 ## Related Pages
 
 * [Font Strategies](font-strategies.md): building fonts with KernSmith and registering `.ttf` files.
+* [Automatic Glyph Growth](font-automatic-growth.md): adding characters to a live font that weren't baked in ahead of time.
 * [Camera](../gum-code-reference/camera.md): zooming the camera.
 * [Layer](../gum-code-reference/layer.md): `LayerCameraSettings` and screen space layers.

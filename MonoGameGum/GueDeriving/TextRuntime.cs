@@ -56,6 +56,9 @@ public class TextRuntime : InteractiveGue
 #if XNALIKE || RAYLIB
                 _containedText.OnPreRender = UpdateAutomaticFontOversampling;
 #endif
+#if XNALIKE
+                _containedText.OnGlyphGrowthCheck = CheckAndGrowFont;
+#endif
             }
             return _containedText;
         }
@@ -721,6 +724,11 @@ public class TextRuntime : InteractiveGue
             return false;
         }
 
+        // Issue #4542: this freshly-generated font was built from BmfcSave.Ranges alone -- it knows
+        // nothing about characters grown in at runtime, so replay this Text's own growth history into
+        // it before it becomes live, or continuous zooming would silently drop them on every regenerate.
+        ReplayGrownCharacters(font, bmfcSave);
+
         // Issue #4309: pins the OUTGOING (native) font as the measurement source, if nothing is pinned
         // yet, before swapping in this new (oversampled) display font -- see Text.SetOversampledDisplayFont.
         ContainedText.SetOversampledDisplayFont(font);
@@ -884,6 +892,167 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     internal void ResetAutomaticOversamplingState() => _lastAutoOversampleRatio = 1f;
 #endif
+#endif
+
+#if XNALIKE
+    // Issue #4542: characters this Text has ever asked to grow into a font, at any raster size --
+    // survives a RegenerateOversampledFont building a brand-new BitmapFont (replayed via
+    // ReplayGrownCharacters below). Kept per-instance, not per-font-identity: each Text only needs to
+    // guarantee ITS OWN previously-required glyphs survive ITS OWN regenerate. A shared BitmapFont's
+    // in-place mutation (KernSmithFontCreator.TryAddGlyphs -> BitmapFont.AddOrUpdateCharacter) already
+    // makes growth visible to every other Text sharing that same font object -- no cross-instance
+    // ledger is needed for that case, only for "a fresh font object was just built from Ranges alone".
+    readonly HashSet<char> _grownCharacters = new();
+
+    // Characters already reported as unrenderable for this Text (design decision #4's warning fired at
+    // least once for them). A single property assignment (e.g. Text = "...") can trigger several
+    // Text.UpdateWrappedText passes internally (width-reset dance in CustomSetPropertyOnRenderable.SetText,
+    // then the actual RawText assignment) -- without this, a persistently-unrenderable character would
+    // re-attempt growth and re-raise the same warning on every single pass, and again on every later
+    // property change that forces a re-wrap.
+    readonly HashSet<char> _failedGrowthCharacters = new();
+
+    /// <summary>
+    /// Issue #4542: when <see cref="UseAutomaticFontGrowth"/> is on, checks this Text's current
+    /// <see cref="Text.RawText"/> against its live font(s) for characters they don't have yet, and
+    /// grows them in place via <see cref="CustomSetPropertyOnRenderableType.InMemoryFontCreator"/> cast
+    /// to <see cref="IGrowableFontCreator"/>. Wired to <see cref="Text.OnGlyphGrowthCheck"/>, invoked
+    /// synchronously at the top of every <see cref="Text.UpdateWrappedText"/> call so wrap measurement
+    /// sees the grown glyph's real metrics immediately -- unlike oversampling regeneration, this can't
+    /// be deferred to the next frame's PreRender: a property setter like <see cref="Text"/> wraps
+    /// before it returns (e.g. a TextBox keystroke).
+    /// </summary>
+    void CheckAndGrowFont()
+    {
+        if (!UseAutomaticFontGrowth)
+        {
+            return;
+        }
+
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
+        {
+            return;
+        }
+
+        string? text = ContainedText.RawText;
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        // MeasurementFont is only pinned once oversampling has actually fired at least once (see
+        // Text.SetOversampledDisplayFont); before that, BitmapFont itself is the effective measurement
+        // font, matching Text.EffectiveMeasurementFont's own fallback order.
+        BitmapFont? measurementFont = ContainedText.MeasurementFont;
+        BitmapFont? displayFont = ContainedText.BitmapFont;
+        BitmapFont? primaryFont = measurementFont ?? displayFont;
+        if (primaryFont == null)
+        {
+            return;
+        }
+
+        GrowIfNeeded(growCreator, primaryFont, FontSize, text);
+
+        // Oversampling active: the separately-rasterized display font also needs the character, or
+        // drawing would disagree with wrapping about whether it exists (design decision #3).
+        if (measurementFont != null && displayFont != null && displayFont != measurementFont)
+        {
+            GrowIfNeeded(growCreator, displayFont, FontSize * _lastAutoOversampleRatio, text);
+        }
+    }
+
+    void GrowIfNeeded(IGrowableFontCreator growCreator, BitmapFont font, float fontSize, string text)
+    {
+        string missing = font.GetMissingCharacters(text);
+        if (missing.Length == 0)
+        {
+            return;
+        }
+
+        if (_failedGrowthCharacters.Count > 0)
+        {
+            missing = new string(missing.Where(c => !_failedGrowthCharacters.Contains(c)).ToArray());
+            if (missing.Length == 0)
+            {
+                return;
+            }
+        }
+
+        var fontFilePath = BmfcSave.ResolveTtfSourcePath(UseCustomFont, CustomFontFile, Font);
+        var bmfcSave = new BmfcSave();
+        CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
+        bmfcSave.FontSize = fontSize;
+
+        try
+        {
+            IReadOnlyList<char>? failed = growCreator.TryAddGlyphs(font, bmfcSave, missing);
+            if (failed is { Count: > 0 })
+            {
+                // Design decision #4: a glyph the font genuinely cannot render (no glyph in the source
+                // font file) surfaces as a warning, matching PropertyAssignmentError's existing
+                // pattern -- never a silent fallback to the space glyph. Remembered so it isn't
+                // re-attempted (and re-warned) on every subsequent wrap.
+                foreach (char c in failed)
+                {
+                    _failedGrowthCharacters.Add(c);
+                }
+                CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                    $"Font '{Font}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
+                    "no glyph for them exists in the font file.");
+            }
+
+            foreach (char c in missing)
+            {
+                if (failed == null || !failed.Contains(c))
+                {
+                    _grownCharacters.Add(c);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Mirrors the try/catch around InMemoryFontCreator.TryCreateFont elsewhere in this file --
+            // this can run synchronously from inside a property setter (Text=), so an uncaught
+            // exception here would escape into arbitrary game code instead of a render-time hook. The
+            // whole batch is remembered as failed too (can't tell which characters caused it, e.g. the
+            // atlas hit its max size), so it isn't retried (and re-warned) on every subsequent wrap.
+            foreach (char c in missing)
+            {
+                _failedGrowthCharacters.Add(c);
+            }
+            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                $"Error growing font via {growCreator.GetType().Name}:\n{ex}");
+        }
+    }
+
+    /// <summary>
+    /// Replays <see cref="_grownCharacters"/> into <paramref name="font"/>, a brand-new BitmapFont
+    /// <see cref="RegenerateOversampledFont"/> just built from <see cref="BmfcSave.Ranges"/> alone --
+    /// see design decision #3. A no-op when nothing has ever been grown, or growth isn't supported.
+    /// </summary>
+    void ReplayGrownCharacters(BitmapFont font, BmfcSave bmfcSave)
+    {
+        if (_grownCharacters.Count == 0)
+        {
+            return;
+        }
+
+        if (CustomSetPropertyOnRenderableType.InMemoryFontCreator is not IGrowableFontCreator growCreator)
+        {
+            return;
+        }
+
+        string replay = new string(_grownCharacters.ToArray());
+        try
+        {
+            growCreator.TryAddGlyphs(font, bmfcSave, replay);
+        }
+        catch (Exception ex)
+        {
+            CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
+                $"Error replaying grown characters into oversampled font via {growCreator.GetType().Name}:\n{ex}");
+        }
+    }
 #endif
 
     public TextOverflowHorizontalMode TextOverflowHorizontalMode
@@ -1127,6 +1296,19 @@ public class TextRuntime : InteractiveGue
     public static bool UseFontOversampling = false;
 
     /// <summary>
+    /// Whether a Text should automatically grow its live font's glyph atlas in place when
+    /// <see cref="Text"/> is assigned a character the font doesn't have yet (issue #4542), instead of
+    /// silently falling back to the space glyph. Off by default, mirroring <see cref="UseFontOversampling"/>'s
+    /// shape: games that never need it pay zero per-Text cost, and whether a project wants dynamic
+    /// glyph growth at all is a project-wide decision. Requires an
+    /// <c>RenderingLibrary.Graphics.Fonts.IGrowableFontCreator</c> registered via
+    /// <c>CustomSetPropertyOnRenderable.InMemoryFontCreator</c> (KernSmith implements it) -- MonoGame,
+    /// KniGum, and FnaGum only in this pass; RaylibGum uses a separate, non-BitmapFont font
+    /// representation and does not yet support growth (tracked as a follow-up).
+    /// </summary>
+    public static bool UseAutomaticFontGrowth = false;
+
+    /// <summary>
     /// Indicates whether the font should be assigned during object construction.
     /// </summary>
     /// <remarks>Set this field to <see langword="true"/> to assign the font in the constructor, or to <see
@@ -1185,6 +1367,13 @@ public class TextRuntime : InteractiveGue
             // TextRuntime is constructed, and the automatic per-frame oversampling trigger (#4317)
             // silently never engages for any normally-constructed instance.
             textRenderable.OnPreRender = UpdateAutomaticFontOversampling;
+#endif
+#if XNALIKE
+            // Same landmine as OnPreRender above (issue #4542): must be wired here too, or the
+            // automatic glyph-growth trigger silently never engages for any normally-constructed
+            // TextRuntime, since ContainedText's lazy-init getter never runs again once _containedText
+            // is assigned directly below.
+            textRenderable.OnGlyphGrowthCheck = CheckAndGrowFont;
 #endif
             _containedText = textRenderable;
 

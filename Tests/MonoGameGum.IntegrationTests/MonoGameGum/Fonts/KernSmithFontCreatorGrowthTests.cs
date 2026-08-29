@@ -8,6 +8,7 @@ using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -109,6 +110,70 @@ public class KernSmithFontCreatorGrowthTests : BaseTestClass
         newTextureWidth.ShouldBeGreaterThan(originalTextureWidth, "because the atlas must actually have grown to fit the new batch");
         rescaledAInfo.TULeft.ShouldBe(originalPixelLeft / (float)newTextureWidth, tolerance: 0.0001f,
             "because 'A's UV must be rescaled against the NEW texture width, not left stale from the old one");
+    }
+
+    // Issue #4542: TextRuntime's automatic growth trigger can't reference KernSmithFontCreator
+    // directly (that would make RenderingLibrary/MonoGameGum depend on the optional KernSmith
+    // package), so it goes through the IGrowableFontCreator interface instead -- this explicit
+    // implementation adapts the richer GlyphAdditionResult down to the interface's plain
+    // IReadOnlyList<char>? of failed characters.
+    [Fact]
+    public void IGrowableFontCreator_TryAddGlyphs_WhenFontWasNotCreatedByThisCreator_ReturnsNull()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice);
+        IGrowableFontCreator growable = creator;
+
+        BitmapFont untrackedFont = new BitmapFont((Texture2D)null!, MinimalFontData);
+        untrackedFont.SetFontPattern(256, 256);
+
+        IReadOnlyList<char>? result = growable.TryAddGlyphs(untrackedFont, BuildBmfcSave(ranges: "65"), "B");
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void IGrowableFontCreator_TryAddGlyphs_WhenAllCharactersSucceed_ReturnsEmptyList_AndGrowsTheFont()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice);
+        IGrowableFontCreator growable = creator;
+
+        BmfcSave bmfcSave = BuildBmfcSave(ranges: "65"); // just 'A'
+        BitmapFont? font = creator.TryCreateFont(bmfcSave);
+        font.ShouldNotBeNull();
+        font!.HasCharacter('B').ShouldBeFalse();
+
+        IReadOnlyList<char>? failed = growable.TryAddGlyphs(font, bmfcSave, "B");
+
+        failed.ShouldNotBeNull();
+        failed.ShouldBeEmpty();
+        font.HasCharacter('B').ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IGrowableFontCreator_TryAddGlyphs_WhenACharacterHasNoGlyphInTheFontFile_ListsItAsFailed()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+        KernSmithFontCreator creator = new(game.GraphicsDevice);
+        IGrowableFontCreator growable = creator;
+
+        // U+2192 ('->') is confirmed absent from Orbitron-Black.ttf's cmap (unlike U+20AC/U+2026,
+        // which it does contain) -- verified via KernSmith.BmFont.ReadFontInfo(...).AvailableCodepoints
+        // against the fixture, not guessed.
+        BmfcSave bmfcSave = BuildBmfcSave(ranges: "65");
+        BitmapFont? font = creator.TryCreateFont(bmfcSave);
+        font.ShouldNotBeNull();
+
+        IReadOnlyList<char>? failed = growable.TryAddGlyphs(font!, bmfcSave, "B→");
+
+        failed.ShouldNotBeNull();
+        failed.ShouldBe(new[] { '→' });
+        font!.HasCharacter('B').ShouldBeTrue("because a failure for one requested character must not block the others in the same batch");
+        font.HasCharacter('→').ShouldBeFalse();
     }
 
     // Incremental sessions require font file bytes -- KernSmith's BeginIncremental/ResumeIncremental

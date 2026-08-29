@@ -240,6 +240,15 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     internal Action? OnPreRender;
 
+    /// <summary>
+    /// Invoked synchronously at the very start of <see cref="UpdateWrappedText"/> (issue #4542), before
+    /// wrapping/measurement runs -- used by <c>TextRuntime</c> (XNALIKE) to grow this Text's live
+    /// font(s) with any characters <see cref="RawText"/> now needs but the font doesn't have yet. Must
+    /// be synchronous, unlike <see cref="OnPreRender"/>: a property setter like <see cref="RawText"/>
+    /// wraps immediately, before returning, so growth can't be deferred to next frame.
+    /// </summary>
+    internal Action? OnGlyphGrowthCheck;
+
     private float ComposeFontScale(float baseFontScale) =>
         baseFontScale * SystemManagers.GlobalFontScale * mOversampleCompensationScale;
 
@@ -935,6 +944,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// </summary>
     public void UpdateWrappedText()
     {
+        OnGlyphGrowthCheck?.Invoke();
+
         ///////////EARLY OUT/////////////
         if (this.BitmapFont == null && DefaultBitmapFont == null)
         {
