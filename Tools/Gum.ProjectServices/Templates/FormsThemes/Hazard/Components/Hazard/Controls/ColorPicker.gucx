@@ -18,10 +18,16 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="SaturationValueContainer.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">160</Value>
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="float" Name="SaturationValueContainer.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">160</Value>
+      <Value xsi:type="xsd:float">-24</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueContainer.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
     </Variable>
 
     <Variable Type="string" Name="SaturationValueDisplay.Parent" SetsValue="true">
@@ -132,13 +138,22 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="float" Name="HueContainer.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">160</Value>
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueContainer.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="float" Name="HueContainer.Width" SetsValue="true">
       <Value xsi:type="xsd:float">20</Value>
     </Variable>
     <Variable Type="float" Name="HueContainer.X" SetsValue="true">
-      <Value xsi:type="xsd:float">164</Value>
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="HueContainer.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="HueContainer.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
 
     <Variable Type="string" Name="HueDisplay.Parent" SetsValue="true">
