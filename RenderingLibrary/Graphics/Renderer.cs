@@ -543,20 +543,26 @@ public class Renderer : IRenderer
             managers = SystemManagers.Default;
         }
 
+#if !FNA
         // GraphicsDevice.Metrics only resets on Present (never mid-pass, e.g. from the Clear calls
         // render-target baking issues), so a before/after delta across this whole pass is safe even
         // when the pass bakes render targets. See RenderStateChangeStatistics.DrawCallCount remarks.
+        // FNA's GraphicsDevice has no Metrics API (confirmed against FNA-XNA/FNA source), so this is
+        // MonoGame/KNI-only; DrawCallCount stays at 0 on FNA until it's wired some other way.
         long drawCountBefore = GraphicsDevice?.Metrics.DrawCount ?? 0;
+#endif
 
         Draw(managers, _layers);
 
         ForceEnd();
         EndFrame();
 
+#if !FNA
         if (GraphicsDevice != null)
         {
             RenderStateChangeStatistics.AddDrawCalls((int)(GraphicsDevice.Metrics.DrawCount - drawCountBefore));
         }
+#endif
     }
 
     /// <summary>
