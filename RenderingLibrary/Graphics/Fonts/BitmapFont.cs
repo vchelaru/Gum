@@ -630,6 +630,31 @@ public class BitmapFont : IDisposable
     }
 
     /// <summary>
+    /// Recomputes every character's UV coordinates (<see cref="BitmapCharacterInfo.TULeft"/>/
+    /// <see cref="BitmapCharacterInfo.TVTop"/>/<see cref="BitmapCharacterInfo.TURight"/>/
+    /// <see cref="BitmapCharacterInfo.TVBottom"/>) from its already-stored pixel coordinates, against
+    /// a new texture size. Used after incremental atlas growth reallocates the texture pages at a
+    /// larger size: existing glyphs' pixel positions never move (KernSmith's "stable packing"), but
+    /// their UVs were computed against the old, smaller denominator and are wrong until rescaled here.
+    /// Pair with <see cref="ReplaceTexturePages"/> using the same new dimensions.
+    /// </summary>
+    public void RescaleTextureCoordinates(int newTextureWidth, int newTextureHeight)
+    {
+        foreach (BitmapCharacterInfo info in mCharacterInfo)
+        {
+            if (info == null)
+            {
+                continue;
+            }
+
+            info.TULeft = info.PixelLeft / (float)newTextureWidth;
+            info.TVTop = info.PixelTop / (float)newTextureHeight;
+            info.TURight = info.PixelRight / (float)newTextureWidth;
+            info.TVBottom = info.PixelBottom / (float)newTextureHeight;
+        }
+    }
+
+    /// <summary>
     /// Replaces this font's atlas texture pages, e.g. after incremental atlas growth reallocates
     /// them at a larger size or with an added page. Does not dispose the previous pages -- the
     /// caller owns their lifetime, matching the <see cref="Texture"/> setter.

@@ -305,6 +305,27 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
     }
 
     [Fact]
+    public void RescaleTextureCoordinates_ShouldRecomputeUVsFromStoredPixelCoordinates_ForAllCharacters()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        // Simulates a page-grow: pixel positions (where each glyph already lives in the atlas)
+        // never move, but the atlas got bigger, so UVs computed against the old 256x256 denominator
+        // are now wrong until recomputed against the new size.
+        font.RescaleTextureCoordinates(newTextureWidth: 512, newTextureHeight: 512);
+
+        font.Characters[32].TULeft.ShouldBe(206f / 512f);
+        font.Characters[32].TVTop.ShouldBe(102f / 512f);
+        font.Characters[32].TURight.ShouldBe(209f / 512f);
+        font.Characters[32].TVBottom.ShouldBe(103f / 512f);
+        font.Characters[32].PixelLeft.ShouldBe(206, "because pixel coordinates must stay the same -- only UVs change on a grow");
+
+        font.Characters[37].TULeft.ShouldBe(161f / 512f);
+        font.Characters[37].TVTop.ShouldBe(0f / 512f);
+    }
+
+    [Fact]
     public void MeasureString_ShouldIgnoreTrailingNewlines()
     {
 
