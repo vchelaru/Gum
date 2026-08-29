@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/Bubblegum/Controls/Button.gucx
 Components/Bubblegum/Controls/ButtonIcon.gucx
 Components/Bubblegum/Controls/CheckBox.gucx
+Components/Bubblegum/Controls/ColorPicker.gucx
 Components/Bubblegum/Controls/ComboBox.gucx
 Components/Bubblegum/Controls/DialogBox.gucx
 Components/Bubblegum/Controls/ItemsControl.gucx

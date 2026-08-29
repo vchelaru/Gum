@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Bubblegum/Controls/ColorPicker</Name>
+  <BaseType>Container</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">160</Value>
+    </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">184</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
+      <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
+
+    <Variable Type="bool" Name="SaturationValueContainer.ClipsChildren" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">160</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">160</Value>
+    </Variable>
+
+    <Variable Type="string" Name="SaturationValueDisplay.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">SaturationValueContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueDisplay.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueDisplay.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueDisplay.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueDisplay.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="SaturationValueOutline.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">SaturationValueContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueOutline.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueOutline.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueOutline.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueOutline.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueOutline.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueOutline.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueOutline.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="SaturationValueIndicator.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">SaturationValueContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">11</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicator.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">11</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="SaturationValueIndicator.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="SaturationValueIndicator.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+
+    <Variable Type="string" Name="SaturationValueIndicatorOuter.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">SaturationValueIndicator</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueIndicatorOuter.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueIndicatorOuter.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="SaturationValueIndicatorOuter.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorOuter.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueIndicatorOuter.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorOuter.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueIndicatorOuter.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="SaturationValueIndicatorInner.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">SaturationValueIndicator</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorInner.X" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorInner.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorInner.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueIndicatorInner.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="SaturationValueIndicatorInner.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="SaturationValueIndicatorInner.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="bool" Name="HueContainer.ClipsChildren" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="float" Name="HueContainer.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">160</Value>
+    </Variable>
+    <Variable Type="float" Name="HueContainer.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="float" Name="HueContainer.X" SetsValue="true">
+      <Value xsi:type="xsd:float">164</Value>
+    </Variable>
+
+    <Variable Type="string" Name="HueDisplay.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">HueContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="HueDisplay.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueDisplay.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="HueDisplay.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueDisplay.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="HueOutline.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">HueContainer</Value>
+    </Variable>
+    <Variable Type="int" Name="HueOutline.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="HueOutline.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="HueOutline.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="float" Name="HueOutline.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueOutline.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="HueOutline.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueOutline.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="HueIndicator.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">HueContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicator.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">5</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicator.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">20</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="HueIndicator.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+
+    <Variable Type="string" Name="HueIndicatorOuter.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">HueIndicator</Value>
+    </Variable>
+    <Variable Type="int" Name="HueIndicatorOuter.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HueIndicatorOuter.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HueIndicatorOuter.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorOuter.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueIndicatorOuter.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorOuter.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueIndicatorOuter.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+
+    <Variable Type="string" Name="HueIndicatorInner.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">HueIndicator</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorInner.X" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorInner.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorInner.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueIndicatorInner.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="HueIndicatorInner.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">-2</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HueIndicatorInner.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+  </State>
+  <Instance Name="SaturationValueContainer" BaseType="Container" />
+  <Instance Name="SaturationValueDisplay" BaseType="Sprite" />
+  <Instance Name="SaturationValueOutline" BaseType="Rectangle" />
+  <Instance Name="SaturationValueIndicator" BaseType="Container" />
+  <Instance Name="SaturationValueIndicatorOuter" BaseType="Rectangle" />
+  <Instance Name="SaturationValueIndicatorInner" BaseType="Rectangle" />
+  <Instance Name="HueContainer" BaseType="Container" />
+  <Instance Name="HueDisplay" BaseType="Sprite" />
+  <Instance Name="HueOutline" BaseType="Rectangle" />
+  <Instance Name="HueIndicator" BaseType="Container" />
+  <Instance Name="HueIndicatorOuter" BaseType="Rectangle" />
+  <Instance Name="HueIndicatorInner" BaseType="Rectangle" />
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>ColorPickerBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/Retro95/Controls/Button.gucx
 Components/Retro95/Controls/ButtonIcon.gucx
 Components/Retro95/Controls/CheckBox.gucx
+Components/Retro95/Controls/ColorPicker.gucx
 Components/Retro95/Controls/ComboBox.gucx
 Components/Retro95/Controls/DialogBox.gucx
 Components/Retro95/Controls/ItemsControl.gucx

@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/Hazard/Controls/Button.gucx
 Components/Hazard/Controls/ButtonIcon.gucx
 Components/Hazard/Controls/CheckBox.gucx
+Components/Hazard/Controls/ColorPicker.gucx
 Components/Hazard/Controls/ComboBox.gucx
 Components/Hazard/Controls/DialogBox.gucx
 Components/Hazard/Controls/ItemsControl.gucx

@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/ForestGlade/Controls/Button.gucx
 Components/ForestGlade/Controls/ButtonIcon.gucx
 Components/ForestGlade/Controls/CheckBox.gucx
+Components/ForestGlade/Controls/ColorPicker.gucx
 Components/ForestGlade/Controls/ComboBox.gucx
 Components/ForestGlade/Controls/DialogBox.gucx
 Components/ForestGlade/Controls/ItemsControl.gucx

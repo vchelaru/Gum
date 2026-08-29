@@ -642,6 +642,12 @@ public class FormsUtilities
                     component.Name,
                     typeof(DefaultFromFileSplitterRuntime), overwriteIfAlreadyExists: false);
             }
+            else if (behaviorNames.Contains(StandardFormsBehaviorNames.ColorPickerBehaviorName))
+            {
+                ElementSaveExtensions.RegisterGueInstantiationType(
+                    component.Name,
+                    typeof(DefaultFromFileColorPickerRuntime), overwriteIfAlreadyExists: false);
+            }
             else if (behaviorNames.Contains(StandardFormsBehaviorNames.StackPanelBehaviorName))
             {
                 ElementSaveExtensions.RegisterGueInstantiationType(

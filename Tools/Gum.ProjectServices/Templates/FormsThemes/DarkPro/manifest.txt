@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/DarkPro/Controls/Button.gucx
 Components/DarkPro/Controls/ButtonIcon.gucx
 Components/DarkPro/Controls/CheckBox.gucx
+Components/DarkPro/Controls/ColorPicker.gucx
 Components/DarkPro/Controls/ComboBox.gucx
 Components/DarkPro/Controls/DialogBox.gucx
 Components/DarkPro/Controls/ItemsControl.gucx

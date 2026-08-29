@@ -58,6 +58,7 @@
   <ComponentReference Name="Retro95/Controls/Button" />
   <ComponentReference Name="Retro95/Controls/ButtonIcon" />
   <ComponentReference Name="Retro95/Controls/CheckBox" />
+  <ComponentReference Name="Retro95/Controls/ColorPicker" />
   <ComponentReference Name="Retro95/Controls/ComboBox" />
   <ComponentReference Name="Retro95/Controls/DialogBox" />
   <ComponentReference Name="Retro95/Controls/ItemsControl" />
@@ -92,6 +93,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Retro95/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Retro95/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Retro95/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Retro95/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Retro95/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

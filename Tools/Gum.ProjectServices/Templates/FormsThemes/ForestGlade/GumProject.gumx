@@ -58,6 +58,7 @@
   <ComponentReference Name="ForestGlade/Controls/Button" />
   <ComponentReference Name="ForestGlade/Controls/ButtonIcon" />
   <ComponentReference Name="ForestGlade/Controls/CheckBox" />
+  <ComponentReference Name="ForestGlade/Controls/ColorPicker" />
   <ComponentReference Name="ForestGlade/Controls/ComboBox" />
   <ComponentReference Name="ForestGlade/Controls/DialogBox" />
   <ComponentReference Name="ForestGlade/Controls/ItemsControl" />
@@ -91,6 +92,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

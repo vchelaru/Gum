@@ -203,6 +203,15 @@ public class DarkProTemplateTests
                 continue;
             }
 
+            // ColorPicker's chrome is intentionally theme-neutral (a gray outline plus a
+            // black/white contrast pair that must stay legible against any user-picked hue),
+            // matching the code-only ColorPickerVisual, which hardcodes the same colors rather
+            // than reading them from a theme's Colors class.
+            if (component.Name == "DarkPro/Controls/ColorPicker")
+            {
+                continue;
+            }
+
             foreach (StateSave state in component.AllStates)
             {
                 HashSet<string> wired = new();

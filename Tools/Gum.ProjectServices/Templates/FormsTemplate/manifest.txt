@@ -1,6 +1,7 @@
 .gumfcs
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/InputDeviceSelectionItemBehavior.behx
@@ -38,6 +39,7 @@ Components/Controls/ButtonStandard.gucx
 Components/Controls/ButtonStandardIcon.gucx
 Components/Controls/ButtonTab.gucx
 Components/Controls/CheckBox.gucx
+Components/Controls/ColorPickerStandard.gucx
 Components/Controls/ComboBox.gucx
 Components/Controls/DialogBox.gucx
 Components/Controls/ItemsControl.gucx

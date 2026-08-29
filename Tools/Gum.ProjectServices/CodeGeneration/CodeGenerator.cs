@@ -1795,6 +1795,7 @@ public class CodeGenerator
     {
         { StandardFormsBehaviorNames.ButtonBehaviorName, "global::Gum.Forms.Controls.Button" },
         { StandardFormsBehaviorNames.CheckBoxBehaviorName, "global::Gum.Forms.Controls.CheckBox" },
+        { StandardFormsBehaviorNames.ColorPickerBehaviorName, "global::Gum.Forms.Controls.ColorPicker" },
         { StandardFormsBehaviorNames.ComboBoxBehaviorName, "global::Gum.Forms.Controls.ComboBox" },
         { StandardFormsBehaviorNames.ItemsControlBehaviorName, "global::Gum.Forms.Controls.ItemsControl" },
         { StandardFormsBehaviorNames.LabelBehaviorName, "global::Gum.Forms.Controls.Label" },
