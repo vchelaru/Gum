@@ -1,5 +1,6 @@
 using KernSmith;
 using KernSmith.Output;
+using KernSmith.Output.Model;
 using KernSmith.Rasterizer;
 using RenderingLibrary.Graphics.Fonts;
 using ToolsUtilities;
@@ -40,6 +41,69 @@ public static class GumFontGenerator
     /// </exception>
     public static BmFontResult Generate(BmfcSave bmfcSave, RasterizerBackend? backend = null)
     {
+        GuardBrowserBackend(backend);
+        FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
+        return string.IsNullOrEmpty(bmfcSave.FontFile)
+            ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
+            : BmFont.Generate(ReadFontFileBytes(bmfcSave.FontFile!), options);
+    }
+
+    /// <summary>
+    /// Starts an empty incremental glyph-addition session (KernSmith 0.21.0) for
+    /// <paramref name="bmfcSave"/>'s font: the atlas builds up as callers call
+    /// <see cref="BmFontIncrementalSession.AddGlyphs(string)"/>, instead of generating the whole
+    /// <see cref="BmfcSave.Ranges"/> character set up front. See KernSmith's
+    /// incremental-glyph-addition docs for the full session contract (stable packing, overflow
+    /// policies, the v1 unsupported-options list -- notably <see cref="BmfcSave.HasDropshadow"/>,
+    /// which throws <see cref="NotSupportedException"/> here via KernSmith's own validation).
+    /// </summary>
+    /// <param name="bmfcSave">The Gum font descriptor to start the session from.</param>
+    /// <param name="overflowPolicy">What to do when a glyph doesn't fit the current atlas.</param>
+    /// <param name="backend">Optional rasterizer backend override; see <see cref="Generate"/>.</param>
+    /// <exception cref="NotSupportedException">
+    /// <paramref name="bmfcSave"/> has no <see cref="BmfcSave.FontFile"/> -- incremental sessions
+    /// require font file bytes; KernSmith has no system-font overload for them.
+    /// </exception>
+    public static BmFontIncrementalSession BeginIncremental(BmfcSave bmfcSave,
+        AdditionOverflowPolicy overflowPolicy = AdditionOverflowPolicy.Grow, RasterizerBackend? backend = null)
+    {
+        GuardBrowserBackend(backend);
+        FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
+        return BmFont.BeginIncremental(ReadRequiredFontFileBytes(bmfcSave), options, overflowPolicy);
+    }
+
+    /// <summary>
+    /// Resumes an incremental glyph-addition session (KernSmith 0.21.0) from a previously generated
+    /// <paramref name="existing"/> model -- e.g. <see cref="Generate"/>'s <see cref="BmFontResult.Model"/>,
+    /// or a loaded <c>.fnt</c> -- so new glyphs pack alongside what's already placed without moving it.
+    /// <paramref name="bmfcSave"/> must map to the same options <paramref name="existing"/> was
+    /// generated with (padding, spacing, size, outline); a mismatch throws <see cref="ArgumentException"/>.
+    /// </summary>
+    /// <param name="bmfcSave">The Gum font descriptor the session resumes -- must match how <paramref name="existing"/> was generated.</param>
+    /// <param name="existing">The model providing the atlas's current occupancy, characters, and kerning.</param>
+    /// <param name="overflowPolicy">What to do when a glyph doesn't fit the current atlas.</param>
+    /// <param name="backend">Optional rasterizer backend override; see <see cref="Generate"/>.</param>
+    /// <exception cref="NotSupportedException">
+    /// <paramref name="bmfcSave"/> has no <see cref="BmfcSave.FontFile"/> -- incremental sessions
+    /// require font file bytes; KernSmith has no system-font overload for them.
+    /// </exception>
+    public static BmFontIncrementalSession ResumeIncremental(BmfcSave bmfcSave, BmFontModel existing,
+        AdditionOverflowPolicy overflowPolicy = AdditionOverflowPolicy.Grow, RasterizerBackend? backend = null)
+    {
+        GuardBrowserBackend(backend);
+        FontGeneratorOptions options = BuildOptionsWithBackend(bmfcSave, backend);
+        return BmFont.ResumeIncremental(ReadRequiredFontFileBytes(bmfcSave), options, existing, overflowPolicy);
+    }
+
+    /// <summary>
+    /// <paramref name="backend"/> is null and this is running on browser-wasm. FreeType (the default
+    /// backend) is native code and cannot run there -- a silent fallback or an opaque KernSmith-internal
+    /// failure is worse than failing fast with the fix (found via a BlazorGL repro where the consumer
+    /// forgot the explicit backend argument; see also the render-time try/catch this bug motivated
+    /// around <c>TextRuntime.RegenerateOversampledFont</c>'s <c>TryCreateFont</c> calls).
+    /// </summary>
+    private static void GuardBrowserBackend(RasterizerBackend? backend)
+    {
         if (backend is null && IsBrowserPlatform())
         {
             throw new PlatformNotSupportedException(
@@ -49,13 +113,29 @@ public static class GumFontGenerator
                 "and reference the KernSmith.Rasterizers.StbTrueType package -- see " +
                 "docs/code/files-and-fonts/font-oversampling.md.");
         }
+    }
 
+    private static FontGeneratorOptions BuildOptionsWithBackend(BmfcSave bmfcSave, RasterizerBackend? backend)
+    {
         FontGeneratorOptions options = BuildOptions(bmfcSave);
         if (backend.HasValue)
             options.Backend = backend.Value;
-        return string.IsNullOrEmpty(bmfcSave.FontFile)
-            ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
-            : BmFont.Generate(ReadFontFileBytes(bmfcSave.FontFile!), options);
+        return options;
+    }
+
+    /// <summary>
+    /// Reads <see cref="BmfcSave.FontFile"/>'s bytes for a session entry point, which -- unlike
+    /// <see cref="Generate"/> -- has no system-font overload in KernSmith.
+    /// </summary>
+    private static byte[] ReadRequiredFontFileBytes(BmfcSave bmfcSave)
+    {
+        if (string.IsNullOrEmpty(bmfcSave.FontFile))
+        {
+            throw new NotSupportedException(
+                "Incremental glyph sessions require a font file (BmfcSave.FontFile) -- KernSmith's " +
+                "BeginIncremental/ResumeIncremental only accept font file bytes, not a system font name.");
+        }
+        return ReadFontFileBytes(bmfcSave.FontFile!);
     }
 
     /// <summary>

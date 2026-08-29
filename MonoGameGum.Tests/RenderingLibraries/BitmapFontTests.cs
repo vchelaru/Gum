@@ -202,6 +202,109 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
     }
 
     [Fact]
+    public void AddOrUpdateCharacter_ShouldGrowCharacterArray_AndPreserveExistingCharacters()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, smallCharSetFontData);
+        font.SetFontPattern(256, 256);
+
+        int originalLength = font.Characters.Length;
+
+        FontFileCharLine newChar = new FontFileCharLine
+        {
+            Id = 65, // 'A'
+            X = 32,
+            Y = 64,
+            Width = 8,
+            Height = 12,
+            XOffset = 1,
+            YOffset = 2,
+            XAdvance = 9,
+            Page = 0,
+        };
+
+        font.AddOrUpdateCharacter(newChar, textureWidth: 256, textureHeight: 256);
+
+        font.Characters.Length.ShouldBe(66, "because AddOrUpdateCharacter must grow the array to hold the new id");
+        originalLength.ShouldBeLessThan(66);
+
+        BitmapCharacterInfo added = font.Characters[65];
+        added.TULeft.ShouldBe(32f / 256f);
+        added.TVTop.ShouldBe(64f / 256f);
+        added.TURight.ShouldBe((32f + 8f) / 256f);
+        added.TVBottom.ShouldBe((64f + 12f) / 256f);
+        added.XAdvance.ShouldBe(9);
+        added.XOffsetInPixels.ShouldBe(1);
+        added.PageNumber.ShouldBe(0);
+
+        // The original character (id 5) must survive the growth untouched.
+        font.Characters[5].XAdvance.ShouldBe(5);
+    }
+
+    [Fact]
+    public void AddOrUpdateCharacter_ShouldUpdateExistingCharacter_WithoutGrowingArray()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        int originalLength = font.Characters.Length;
+
+        FontFileCharLine updatedChar = new FontFileCharLine
+        {
+            Id = 33, // '!'
+            X = 1,
+            Y = 2,
+            Width = 3,
+            Height = 4,
+            XOffset = 0,
+            YOffset = 0,
+            XAdvance = 20,
+            Page = 0,
+        };
+
+        font.AddOrUpdateCharacter(updatedChar, textureWidth: 256, textureHeight: 256);
+
+        font.Characters.Length.ShouldBe(originalLength);
+        font.Characters[33].XAdvance.ShouldBe(20);
+    }
+
+    [Fact]
+    public void AddKerningPair_ShouldAddPairToExistingCharacter()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        font.AddKerningPair(first: 33, second: 34, amount: 5);
+
+        font.Characters[33].SecondLetterKearning[34].ShouldBe(5);
+    }
+
+    [Fact]
+    public void AddKerningPair_ShouldNotOverwriteExistingPair()
+    {
+        BitmapFont font = new BitmapFont((Texture2D)null!, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        font.AddKerningPair(first: 33, second: 34, amount: 5);
+        font.AddKerningPair(first: 33, second: 34, amount: 99);
+
+        font.Characters[33].SecondLetterKearning[34].ShouldBe(5);
+    }
+
+    [Fact]
+    public void ReplaceTexturePages_ShouldUpdateTexturesAndNames()
+    {
+        BitmapFont font = new BitmapFont(new Texture2D[] { null! }, basicBMFontFileData);
+        font.SetFontPattern(256, 256);
+
+        Texture2D[] grownPages = new Texture2D[] { null!, null! };
+
+        font.ReplaceTexturePages(grownPages);
+
+        font.Textures.Length.ShouldBe(2);
+        font.Textures.ShouldBe(grownPages);
+    }
+
+    [Fact]
     public void MeasureString_ShouldIgnoreTrailingNewlines()
     {
 
