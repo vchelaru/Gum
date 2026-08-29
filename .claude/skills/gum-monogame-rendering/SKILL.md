@@ -100,25 +100,19 @@ To get insertion-order paint order across the two batches, every batch transitio
 
 ## The BatchKey Transition Machinery
 
-`Renderer.Draw` reads `renderable.BatchKey` and tracks `currentBatchKey` and `lastBatchOwner` as **Renderer instance fields** (they persist across Begin/End cycles).
-
-The original transition condition (in `Renderer.cs`):
-
-```csharp
-if (!string.IsNullOrEmpty(renderable.BatchKey) && renderable.BatchKey != currentBatchKey)
-{
-    lastBatchOwner?.EndBatch(managers);
-    currentBatchKey = renderable.BatchKey;
-    lastBatchOwner = renderable;
-    renderable.StartBatch(managers);
-}
-```
+The transition logic lives in `BatchOrchestrator.OnRenderable` (`RenderingLibrary/Graphics/BatchOrchestrator.cs`), extracted from `Renderer` so it's unit-testable without a GPU (`BatchOrchestratorTests`). `Renderer` holds one instance as `_batchOrchestrator`; its `CurrentBatchKey`/`LastBatchOwner` persist across Begin/End cycles.
 
 Three behaviors worth internalizing:
 
 - **Empty BatchKey is treated as "no transition required."** A renderable with `BatchKey=""` (containers, GUE wrappers) does NOT flush the current batch. This is intentional for plain wrappers but becomes a bug when something with a non-empty BatchKey claims a batch it doesn't actually start.
 - **`SpriteBatchRenderableBase.StartBatch`** calls `spriteRenderer.Begin(false)` followed by `spriteRenderer.ForceSetRenderStatesToCurrent()`. **`EndBatch`** calls `spriteRenderer.End()` — flushes SpriteBatch directly (does NOT pop the SpriteBatchStack). The pairing of `Begin(false)` + `ForceSetRenderStatesToCurrent` is what re-applies the active `BeginParameters` (scissor/raster/blend/sampler/transform) to the underlying SpriteBatch — see "SpriteBatchStack: Begin(false) must re-apply currentParameters" below for why both calls are required.
 - **`RenderableShapeBase.StartBatch/EndBatch`** call `ShapeBatch.Begin/End` — separate GPU state stream, but the runtime now plumbs the active scissor rect through so shapes honor `ClipsChildren`. See "Shape Clipping: ShapeBatch Honors Scissor via rasterizerState" below.
+
+## Draw Order Is a Separate, Pluggable Layer: `IRenderableOrderer`
+
+`Renderer.SiblingOrdering` (`Renderer.cs`) decides what order renderables reach `Submit` — and therefore `SpriteBatch.Draw()` — before `BatchOrchestrator` ever runs. Default `HierarchicalOrderer` is plain DFS; `BatchKeyGroupedOrderer` (`BatchKeyGroupedOrderer.cs`, toggle: `RenderDiagnosticsService.SortByBatchKey`) reorders same-`BatchKey` draws into contiguous runs, sub-grouped by the finer `IRenderable.BatchSortKey` (e.g. a Texture2D reference — see `SpriteBatchRenderableBase.BatchSortKey`), without crossing overlapping bounds.
+
+**Landmine:** `BatchOrchestrator` only flushes on a `BatchKey` change, so its granularity caps what it can detect — a coarse key (e.g. one shared across many texture sources) means real per-texture draw-call cost hides inside MonoGame's own SpriteBatch batching over whatever order `SiblingOrdering` produced. Per-texture grouping goes through the separate `BatchSortKey` member instead, read only by `BatchKeyGroupedOrderer` — `BatchOrchestrator` never sees it, so it carries no flush cost under the default orderer.
 
 ## SpriteBatchStack: Push / Pop / Replace
 
@@ -136,9 +130,9 @@ Mid-walk `End()` from `SpriteBatchRenderableBase.EndBatch` does NOT pop the stac
 
 ## Cross-Cycle State (Critical)
 
-`Renderer.currentBatchKey` and `Renderer.lastBatchOwner` are instance fields that **persist across Begin/End cycles**. So when FRB2 draws Card N then Card N+1 in two separate `GumBatch.Begin/End` cycles:
+`Renderer._batchOrchestrator`'s `CurrentBatchKey` and `LastBatchOwner` **persist across Begin/End cycles**. So when FRB2 draws Card N then Card N+1 in two separate `GumBatch.Begin/End` cycles:
 
-- The outgoing state from Card N (e.g. `currentBatchKey="Apos.Shapes"`, `lastBatchOwner=Back`) is what Card N+1 sees on entry.
+- The outgoing state from Card N (e.g. `CurrentBatchKey="Apos.Shapes"`, `LastBatchOwner=Back`) is what Card N+1 sees on entry.
 - The Apos.Shapes `ShapeBatch` may still be **Begun with queued shapes** at the start of Card N+1's cycle — `Renderer.End` doesn't end it.
 
 This cross-cycle leakage is the single biggest source of "draw order looks weird across N renderables" bugs. Any fix to flushing must end the custom batch at `Renderer.End` so cycle boundaries are clean.
@@ -283,8 +277,9 @@ When changing batch logic:
 2. Does `Renderer.End` flush `lastBatchOwner`? If not, custom-batch draws leak across cycles.
 3. Does the transition logic flush in BOTH directions (custom→sprite and sprite→custom)? Empty BatchKey on a renderable with no real batch shouldn't trigger machinery, but transitions to/from non-empty keys must always flush the outgoing batch.
 4. Does mid-walk re-begin of SpriteBatch use `Begin(false)` (preserves params, no stack change) or `BeginType.Push` (changes stack)? Mismatching causes stack underflow at outer EndSpriteBatch.
-5. Are you assuming `currentBatchKey` is `""` at the start of a Renderer.Begin cycle? It's not — it persists from the previous cycle. Reset it explicitly if you need a clean state.
+5. Are you assuming `_batchOrchestrator.CurrentBatchKey` is `""` at the start of a Renderer.Begin cycle? It's not — it persists from the previous cycle. Call `FlushAndReset` if you need a clean state.
 6. If you touch `basicEffect.World/View` or `ShapeBatch.Begin(view:)`, does `ForcedMatrix` end up applied **exactly once** to sprite vertices and once to shape vertices? Remember that `SpriteBatch`'s own `transformMatrix` is ignored when a custom Effect is bound — only `basicEffect`'s World*View*Projection moves sprite vertices.
 7. If you touch `SpriteBatchStack.Begin(bool)`, does `Begin(false)` still call `SpriteBatch.Begin` with all seven `currentParameters` fields (sortMode, blendState, samplerState, depthStencilState, rasterizerState, effect, transformMatrix) AND assign `GraphicsDevice.ScissorRectangle` + `GraphicsDevice.RasterizerState` first? Empirical canary: text labels inside a `ScrollViewer` or `ListBox` clip to the container.
 8. If you touch `RenderableShapeBase.StartBatch` or `ShapeBatch.Begin` plumbing, does the active scissor state still flow to the shape batch? Empirical canary: rounded shape bodies inside a `ScrollViewer` / `ListBox` clip to the container. Setting `GraphicsDevice.ScissorRectangle` is not sufficient — `ShapeBatch.Begin` must also receive a `rasterizerState` with `ScissorTestEnable=true`.
 9. If you touch `Renderer.AdjustRenderStates` or the clip-change paths in `Renderer.Draw`, does a clip change (entry OR exit) flush the orchestrator (`_batchOrchestrator.FlushAndReset`) BEFORE `BeginSpriteBatch`? Empirical canary: the first item's shape background inside a `ScrollViewer` clips when scrolled past the top edge (not just the second item and beyond).
+10. Investigating draw-call/batching cost? Check `Renderer.SiblingOrdering`, not just `BatchOrchestrator` — they're separate layers (see "Draw Order Is a Separate, Pluggable Layer" above).

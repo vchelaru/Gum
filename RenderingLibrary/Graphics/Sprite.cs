@@ -226,6 +226,13 @@ public class Sprite : SpriteBatchRenderableBase,
         }
     }
 
+    // Null when RenderTargetTextureSource is set: the real draw resolves its texture dynamically
+    // via Renderer.TryGetBakedRenderTargetFor at Render time (see Render below), which Texture
+    // doesn't reflect. Reporting Texture here anyway would risk grouping this sprite by a texture
+    // it isn't actually drawing with - null just opts it out of the finer grouping tier instead
+    // (BatchKeyGroupedOrderer still groups it by the coarser BatchKey).
+    public override object? BatchSortKey => RenderTargetTextureSource != null ? null : Texture;
+
     public IRenderableIpso? RenderTargetTextureSource { get; set; }
 
     public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;

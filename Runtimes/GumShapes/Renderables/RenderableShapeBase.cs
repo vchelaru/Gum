@@ -903,6 +903,8 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
 
     public override string BatchKey => "Apos.Shapes";
 
+    public override object? BatchSortKey => null;
+
     public override void StartBatch(ISystemManagers systemManagers)
     {
         var sb = ShapeRenderer.ShapeBatch;

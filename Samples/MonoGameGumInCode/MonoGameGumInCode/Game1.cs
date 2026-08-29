@@ -108,6 +108,7 @@ namespace MonoGameGumInCode
             AddNavButton("RT Shader", () => ShowScreen<RenderTargetShaderScreen>());
             AddNavButton("Zoom", () => ShowScreen<ZoomScreen>());
             AddNavButton("Layer Camera", () => ShowScreen<LayerCameraSettingsScreen>());
+            AddNavButton("Draw Call Stress", () => ShowScreen<DrawCallStressScreen>());
 
             AddFitModeRadio("Zoom", isChecked: true, () => GumService.Default.EnableZoomToWindow());
             AddFitModeRadio("Expand", isChecked: false, () => GumService.Default.EnableExpandToWindow());
@@ -171,6 +172,7 @@ namespace MonoGameGumInCode
             // FrameworkElement.Activity() is FRB-only and unavailable here, so screens that animate
             // (e.g. TextScreen's typewriter reveal, #3701) get a host-driven per-frame Tick instead.
             (_currentScreen as TextScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
+            (_currentScreen as DrawCallStressScreen)?.Tick(gameTime.ElapsedGameTime.TotalSeconds);
 
             bool moveCameraWithMouse = false;
             if (moveCameraWithMouse)

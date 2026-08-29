@@ -1759,6 +1759,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     IVisible? IVisible.Parent =>((IRenderableIpso)this).Parent as IVisible;
 
     public string BatchKey => string.Empty;
+    public object? BatchSortKey => null;
 
     #endregion
 

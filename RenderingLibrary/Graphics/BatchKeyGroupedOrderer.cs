@@ -6,19 +6,21 @@ namespace RenderingLibrary.Graphics;
 
 /// <summary>
 /// <see cref="IRenderableOrderer"/> that reorders DFS draws within layer- and clip-bounded
-/// windows so that runs of same-<see cref="IRenderable.BatchKey"/> draws become contiguous.
-/// Pixel-correct: any two draws whose <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBounds"/>
-/// intersect maintain their original DFS-relative order, so the painter's algorithm result
-/// is unchanged. Opt in by setting <c>Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance</c>.
+/// windows so that runs of same-key draws become contiguous, keyed first by
+/// <see cref="IRenderable.BatchKey"/> and, within that, by the finer
+/// <see cref="IRenderable.BatchSortKey"/> (e.g. a Texture2D reference). Pixel-correct: any two
+/// draws whose <see cref="IPositionedSizedObjectExtensionMethods.GetAbsoluteBounds"/> intersect
+/// maintain their original DFS-relative order, so the painter's algorithm result is unchanged.
+/// Opt in by setting <c>Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance</c>.
 /// </summary>
 /// <remarks>
-/// The motivating case is a cross-batch-type scene (e.g. a list whose items contain both
-/// <c>SpriteBatch</c>-using and <c>Apos.Shapes</c>-using renderables). In DFS order the
-/// renderer flushes on every batch-type alternation; this orderer pulls each batch type
-/// into one run, collapsing flushes from ~one-per-item to one-per-distinct-key.
-///
-/// First-pass scope: keys are the existing <see cref="IRenderable.BatchKey"/> string only.
-/// Finer texture-level keying within <c>SpriteBatch</c> is a follow-up.
+/// Two motivating cases. Cross-batch-type: a list whose items mix <c>SpriteBatch</c>-using and
+/// <c>Apos.Shapes</c>-using renderables — in DFS order the renderer flushes on every batch-type
+/// alternation, so BatchKey grouping alone collapses flushes from ~one-per-item to
+/// one-per-distinct-key. Same-batch-type, different texture (#2697): a StackPanel mixing frame
+/// images and text all report the same BatchKey ("SpriteBatch"), so BatchOrchestrator never
+/// transitions between them, but SpriteBatch's own consecutive-same-texture batching still can't
+/// merge non-adjacent same-texture draws — BatchSortKey grouping is what collapses that case.
 /// </remarks>
 public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 {
@@ -30,6 +32,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         public IRenderableIpso Item;
         public System.Drawing.Rectangle Bounds;
         public string BatchKey;
+        public object? BatchSortKey;
     }
 
     // Scratch state pooled on the instance (#4200) so a build does not allocate after warm-up,
@@ -236,6 +239,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             Item = renderable,
             Bounds = GetEffectiveBounds(renderable),
             BatchKey = renderable.BatchKey ?? string.Empty,
+            BatchSortKey = renderable.BatchSortKey,
         });
     }
 
@@ -319,9 +323,12 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         }
 
         // Kahn's topological sort with a "stay on the current batch key" tiebreaker.
-        // Among items with indegree 0, prefer one whose BatchKey matches the last emitted
-        // (keeps batches contiguous); among matches, smallest DFS index for determinism.
-        // No match → smallest DFS overall.
+        // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
+        // last emitted exactly (keeps same-texture runs contiguous); failing that, one whose
+        // BatchKey alone matches (keeps the coarser SpriteBatch/Apos.Shapes grouping
+        // BatchOrchestrator relies on, even when BatchSortKey differs or is unset). Ties within
+        // a tier break by smallest DFS index for determinism. No match at all → smallest DFS
+        // overall.
         List<int> available = _availableBuffer;
         available.Clear();
         for (int i = 0; i < n; i++)
@@ -332,18 +339,33 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
         }
 
-        string? currentBucket = null;
+        string? currentBatchKey = null;
+        object? currentSortKey = null;
         while (available.Count > 0)
         {
             int chosen = -1;
             for (int k = 0; k < available.Count; k++)
             {
                 int idx = available[k];
-                if (window[idx].BatchKey == currentBucket)
+                if (window[idx].BatchKey == currentBatchKey && Equals(window[idx].BatchSortKey, currentSortKey))
                 {
                     if (chosen == -1 || idx < chosen)
                     {
                         chosen = idx;
+                    }
+                }
+            }
+            if (chosen == -1)
+            {
+                for (int k = 0; k < available.Count; k++)
+                {
+                    int idx = available[k];
+                    if (window[idx].BatchKey == currentBatchKey)
+                    {
+                        if (chosen == -1 || idx < chosen)
+                        {
+                            chosen = idx;
+                        }
                     }
                 }
             }
@@ -360,7 +382,8 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             }
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
-            currentBucket = window[chosen].BatchKey;
+            currentBatchKey = window[chosen].BatchKey;
+            currentSortKey = window[chosen].BatchSortKey;
             available.Remove(chosen);
 
             List<int> succ = successors[chosen];

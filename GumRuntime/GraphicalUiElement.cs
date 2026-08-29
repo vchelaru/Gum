@@ -652,6 +652,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     public virtual string BatchKey => mContainedObjectAsIpso?.BatchKey ?? string.Empty;
 
+    public virtual object? BatchSortKey => mContainedObjectAsIpso?.BatchSortKey;
+
     public virtual void StartBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.StartBatch(systemManagers);
     public virtual void EndBatch(ISystemManagers systemManagers) => mContainedObjectAsIpso?.EndBatch(systemManagers);
 

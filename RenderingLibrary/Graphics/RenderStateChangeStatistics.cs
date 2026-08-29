@@ -23,9 +23,11 @@ namespace RenderingLibrary.Graphics
         /// <summary>
         /// The number of GPU draw calls recorded since the last <see cref="Reset"/>. Unlike
         /// <see cref="ShapeBatchBeginCount"/> (an XNA/Apos.Shapes-specific begin count), this is a
-        /// backend-neutral draw-call total. It is currently populated only by the raylib renderer,
-        /// which owns a <c>RenderBatch</c> and banks its authoritative draw counter at each batch
-        /// flush; other backends leave it at zero until wired.
+        /// backend-neutral draw-call total. The raylib renderer owns a <c>RenderBatch</c> and banks
+        /// its authoritative draw counter at each batch flush; the MonoGame/KNI/FNA renderer
+        /// (<see cref="Renderer.Draw(SystemManagers)"/>) sources it from a before/after delta of
+        /// <c>GraphicsDevice.Metrics.DrawCount</c> for the pass (issue #2697). Skia leaves it at
+        /// zero until wired.
         /// </summary>
         public int DrawCallCount { get; private set; }
 

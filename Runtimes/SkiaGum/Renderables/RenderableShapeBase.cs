@@ -872,6 +872,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     public string BatchKey => string.Empty;
+    public object? BatchSortKey => null;
 
     #endregion
 
