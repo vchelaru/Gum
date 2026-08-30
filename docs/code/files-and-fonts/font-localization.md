@@ -38,6 +38,7 @@ If you're shipping a CJK or multi-locale game today, you have a few options:
 * **Ship one build per locale.** The build's FontCache (or KernSmith character range) contains only the glyphs for that locale. This is heavyweight but ships today.
 * **Use KernSmith with a wide character range.** Pay the full atlas cost once during a loading screen ([Font Preloading](font-preloading.md)) and don't worry about per-locale separation. Works fine for desktop; less attractive for web where atlas size becomes download size.
 * **Override the character range per session.** If you know the active locale at startup, configure KernSmith's character ranges before any text renders, so the first generation covers only the active locale's glyphs. This is fragile (changing locale at runtime forces a regeneration of every atlas) but it's available today.
+* **Turn on [Automatic Glyph Growth](font-automatic-growth.md)** (MonoGame, KNI, FNA) so a character missing from whatever range you did preload gets added to the live atlas on the spot, instead of falling back to a blank glyph.
 
 For web specifically, see [Fonts on Web](fonts-web.md) — the bandwidth tradeoff often pushes the answer toward "ship dynamic KernSmith and accept generation cost" regardless of locale strategy.
 

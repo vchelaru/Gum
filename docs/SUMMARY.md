@@ -335,6 +335,7 @@
     * [Font Cache](code/files-and-fonts/font-cache.md)
     * [Advanced Font Effects](code/files-and-fonts/advanced-font-effects.md)
     * [Font Oversampling](code/files-and-fonts/font-oversampling.md)
+    * [Automatic Glyph Growth](code/files-and-fonts/font-automatic-growth.md)
   * [File Loading](code/files-and-fonts/file-loading.md)
   * [Animation Chains](code/files-and-fonts/animation-chains.md)
   * [BitmapFont](code/files-and-fonts/bitmapfont.md)

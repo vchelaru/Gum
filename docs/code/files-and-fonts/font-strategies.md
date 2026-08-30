@@ -6,7 +6,7 @@ This page covers each font loading strategy in detail with code samples and trad
 
 The strategies are:
 
-* [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, and Raylib.
+* [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) — recommended for MonoGame, KNI, FNA, and Raylib.
 * [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum) — SkiaGum and Silk.NET rasterize glyphs themselves via SkiaSharp, separate from KernSmith.
 * [Custom Font File](font-strategies.md#custom-font-file) — load a specific `.fnt` file you ship with the game.
 * [Direct BitmapFont Assignment](font-strategies.md#direct-bitmapfont-assignment) — fully manual.
@@ -19,14 +19,14 @@ The strategies are:
 | MonoGame | Yes — via KernSmith.                                                                                                                   |
 | KNI      | Yes — via KernSmith.                                                                                                                   |
 | Raylib   | Yes — via KernSmith (`KernSmith.RaylibGum`).                                                                                           |
-| FNA      | Not yet. If you need it, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues).                            |
+| FNA      | Yes — via KernSmith (`KernSmith.FnaGum`).                                                                                              |
 | Sokol    | Not yet. Use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) for now.                                            |
 | SkiaGum  | Yes — uses SkiaSharp's own glyph rasterization. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
 | Silk.NET | Yes — renders through SkiaGum and shares its glyph rasterization; no KernSmith package needed. See [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). |
 
 ## Dynamic KernSmith Generation
 
-KernSmith is an in-memory font generator for MonoGame, KNI, and Raylib. Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
+KernSmith is an in-memory font generator for MonoGame, KNI, FNA, and Raylib. Install the NuGet package for your runtime and KernSmith generates font atlases at runtime so you can freely change font properties without managing files on disk.
 
 {% tabs %}
 {% tab title="MonoGame" %}
@@ -113,9 +113,30 @@ text.AddToRoot();
 {% endtab %}
 
 {% tab title="FNA" %}
-KernSmith is not currently published for FNA. If you need dynamic font generation on FNA, let us know on Discord or [open an issue](https://github.com/vchelaru/Gum/issues) — the request helps us prioritize.
+1. Add the `KernSmith.FnaGum` NuGet package to your project.
+2. Assign the `InMemoryFontCreator` after initializing Gum:
 
-In the meantime, use the [Build-Time Font Cache](font-strategies.md#build-time-font-cache) strategy.
+```csharp
+using Gum.Wireframe;
+
+// Initialize
+GumService.Default.Initialize(this);
+
+CustomSetPropertyOnRenderable.InMemoryFontCreator =
+    new KernSmithFontCreator(GraphicsDevice);
+```
+
+Once this is set up, font properties work automatically:
+
+```csharp
+// Initialize
+var text = new TextRuntime();
+text.Text = "Hello, World!";
+text.Font = "Times New Roman";
+text.FontSize = 24;
+text.IsBold = true;
+text.AddToRoot();
+```
 {% endtab %}
 
 {% tab title="Sokol" %}
@@ -261,6 +282,7 @@ KernSmith can also build the style even when a real face exists, which makes eve
 * You want to change font, size, style, outline thickness, or baked drop shadow without rebuilding atlases.
 * You don't want to check generated `.fnt` files into source control.
 * For CJK or other large charsets, this strategy still works — but you should pair it with [Font Preloading](font-preloading.md) so the per-atlas generation cost happens on a loading screen rather than during gameplay.
+* Player-typed or localized text can introduce characters you didn't plan for ahead of time — see [Automatic Glyph Growth](font-automatic-growth.md) to grow the live atlas instead of silently falling back to a blank glyph.
 
 ## Dynamic Generation on SkiaGum
 
@@ -493,7 +515,7 @@ foreach (var label in titleLabels)
 ## Build-Time Font Cache
 
 {% hint style="info" %}
-This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol and FNA today). For MonoGame, KNI, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum or Silk.NET see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
+This approach is primarily useful when your project already has pre-generated font files from the Gum tool, or when dynamic font generation is not yet available for your runtime (Sokol today). For MonoGame, KNI, FNA, and Raylib, [Dynamic KernSmith Generation](font-strategies.md#dynamic-kernsmith-generation) is the recommended approach; for SkiaGum or Silk.NET see [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
 {% endhint %}
 
 If `UseCustomFont` is `false` (the default) and no `InMemoryFontCreator` is registered, a `TextRuntime`'s font is determined by its font component values. These values combine to produce a file name, and the corresponding `.fnt` file must already exist in a `FontCache` folder.
@@ -503,7 +525,7 @@ For the naming convention, generation rules, and full details, see [Font Cache](
 ### When to Use This Strategy
 
 * Pixel-perfect determinism: the atlas in source control is the atlas the player sees, every time.
-* Dynamic generation isn't available for your runtime (Sokol and FNA today).
+* Dynamic generation isn't available for your runtime (Sokol today).
 * You want zero runtime CPU cost for font generation (atlases are loaded from disk, not generated).
 
 ## Missing Font Exceptions

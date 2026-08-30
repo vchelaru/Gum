@@ -47,6 +47,14 @@ public class BitmapFont : IDisposable
     // itself be out of range for a font whose character table is smaller than 33 entries.
     private BitmapCharacterInfo _defaultCharacterInfo;
 
+    // Codepoints this font actually has real glyph data for (issue #4542) -- distinct from
+    // mCharacterInfo's array bounds, since every slot in that array is pre-filled with the space
+    // glyph as a rendering fallback (GetCharacterInfo), giving no way to tell "really has this
+    // character" from "silently falling back to space". Tab/newline are synthesized structural
+    // whitespace (SetFontPattern), never their own <char> entry, but are always usable regardless
+    // of font content, so they're tracked as present too.
+    private readonly HashSet<int> mKnownCharacterIds = new();
+
     int mLineHeightInPixels;
 
     internal string mFontFile;
@@ -463,6 +471,7 @@ public class BitmapFont : IDisposable
         var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
         mCharacterInfo = new BitmapCharacterInfo[charArraySize];
         _defaultCharacterInfo = null;
+        mKnownCharacterIds.Clear();
         mLineHeightInPixels = parsedData.Common.LineHeight;
         BaselineY = parsedData.Common.Base;
 
@@ -535,6 +544,7 @@ public class BitmapFont : IDisposable
                 mCharacterInfo['\t'].Spacing = space.Spacing * 4;
                 mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
                 mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
+                mKnownCharacterIds.Add('\t');
             }
             if(mCharacterInfo.Length > (int)'\n')
             {
@@ -544,6 +554,7 @@ public class BitmapFont : IDisposable
                 mCharacterInfo['\n'].TULeft = 0;
                 //mCharacterInfo['\n'].XOffset = 0;
                 mCharacterInfo['\n'].XOffsetInPixels = 0;
+                mKnownCharacterIds.Add('\n');
             }
         }
 
@@ -558,6 +569,7 @@ public class BitmapFont : IDisposable
             }
             mCharacterInfo[charInfo.Id] = FillBitmapCharacterInfo(charInfo, textureWidth,
                 textureHeight, mLineHeightInPixels);
+            mKnownCharacterIds.Add(charInfo.Id);
         }
 
         // Prefer the font's real space glyph (now in its final, non-placeholder form) if the
@@ -601,11 +613,54 @@ public class BitmapFont : IDisposable
 
         BitmapCharacterInfo filled = FillBitmapCharacterInfo(charInfo, textureWidth, textureHeight, mLineHeightInPixels);
         mCharacterInfo[charInfo.Id] = filled;
+        mKnownCharacterIds.Add(charInfo.Id);
 
         if (charInfo.Id == (int)' ')
         {
             _defaultCharacterInfo = filled;
         }
+    }
+
+    /// <summary>
+    /// Whether this font has real glyph data for <paramref name="codepoint"/> -- as opposed to
+    /// silently falling back to the space glyph, which <see cref="GetCharacterInfo(int)"/> does for
+    /// any codepoint this returns false for. Used as a one-shot pre-pass (issue #4542) to detect
+    /// characters a string needs that this font doesn't have, before wrapping/measuring against it.
+    /// </summary>
+    public bool HasCharacter(int codepoint) => mKnownCharacterIds.Contains(codepoint);
+
+    /// <inheritdoc cref="HasCharacter(int)"/>
+    public bool HasCharacter(char character) => HasCharacter((int)character);
+
+    /// <summary>
+    /// Returns the distinct characters in <paramref name="text"/> this font has no real glyph data
+    /// for (see <see cref="HasCharacter(char)"/>), in first-encounter order, or an empty string when
+    /// every character is already present. A one-shot pre-pass over the whole string -- not a
+    /// per-character check in the hot wrap/measure loop.
+    /// </summary>
+    public string GetMissingCharacters(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        StringBuilder? missing = null;
+        HashSet<char>? seen = null;
+        foreach (char c in text)
+        {
+            if (!HasCharacter(c))
+            {
+                seen ??= new HashSet<char>();
+                if (seen.Add(c))
+                {
+                    missing ??= new StringBuilder();
+                    missing.Append(c);
+                }
+            }
+        }
+
+        return missing?.ToString() ?? string.Empty;
     }
 
     /// <summary>

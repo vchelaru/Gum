@@ -14,11 +14,11 @@ For the API surface (which properties on `TextRuntime` control the font, includi
 
 **Use dynamic font generation.** No font files on disk, no cache to manage, no preloading needed. The first time a `(font, size, style)` combination is used, the atlas is generated in memory — fast enough for most games with small character sets to do during gameplay without a noticeable hitch.
 
-How this works depends on the runtime: MonoGame, KNI, and Raylib use the KernSmith NuGet package. SkiaGum has its own built-in dynamic generation. Sokol and FNA don't have dynamic generation today — for those, follow Path D.
+How this works depends on the runtime: MonoGame, KNI, FNA, and Raylib use the KernSmith NuGet package. SkiaGum has its own built-in dynamic generation. Sokol doesn't have dynamic generation today — for that, follow Path D.
 
 This is the default recommendation for most projects.
 
-→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation) (MonoGame, KNI, or Raylib) or [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum).
+→ See [Font Strategies — Dynamic KernSmith](font-strategies.md#dynamic-kernsmith-generation) (MonoGame, KNI, FNA, or Raylib) or [Dynamic Generation on SkiaGum](font-strategies.md#dynamic-generation-on-skiagum). If your charset isn't fully known ahead of time (player-typed text, localization), pair this with [Automatic Glyph Growth](font-automatic-growth.md) (MonoGame, KNI, FNA).
 
 ### Path B — Large charset (CJK), single locale per build
 
@@ -37,7 +37,7 @@ This is the default recommendation for most projects.
 **Use the build-time FontCache.** Useful when:
 
 * You want pixel-perfect determinism (atlases are checked into source control and never regenerated).
-* Dynamic generation is not yet available for your runtime (Sokol and FNA today).
+* Dynamic generation is not yet available for your runtime (Sokol today).
 * You have hand-tuned `.fnt` files from another tool and want to ship them as-is.
 
 The Gum tool generates these atlases automatically while you edit your project. There is no opt-out yet.
@@ -53,6 +53,7 @@ The Gum tool generates these atlases automatically while you edit your project. 
 * [Font Localization](font-localization.md) — current behavior, known limitations, and the per-locale design that's coming.
 * [Font Cache](font-cache.md) — the build-time `.fnt` atlas system, naming convention, and when to use it.
 * [Font Oversampling](font-oversampling.md) — keeping text crisp under camera/layer zoom.
+* [Automatic Glyph Growth](font-automatic-growth.md) — adding characters to a live font that weren't baked in ahead of time.
 
 ## Need Outline Color, Gradients, or Other KernSmith Extras?
 

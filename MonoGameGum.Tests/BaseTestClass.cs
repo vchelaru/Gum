@@ -117,5 +117,14 @@ public class BaseTestClass : IDisposable
         // registered as a fallback via RegisterFallbackStandardElements must be cleared the same way,
         // or it leaks into unrelated tests.
         ObjectFinder.Self.ClearFallbackStandardElements();
+
+        // Same singleton, same hazard: a test that loads a GumProjectSave (even just to construct one
+        // in memory, never "Save"d to disk) leaves GumProjectSave.FullFileName possibly null. A later,
+        // unrelated test resolving a relative TextRuntime.CustomFontFile goes through
+        // CustomSetPropertyOnRenderable.ResolveFontFilePath, which -- when a project is loaded --
+        // resolves relative to FileManager.GetDirectory(gumProject.FullFileName) instead of
+        // FileManager.RelativeDirectory, throwing on a null FullFileName. Reset so only a test that
+        // deliberately sets this up (and is inside its own try/finally) sees a project loaded.
+        ObjectFinder.Self.GumProjectSave = null;
     }
 }
