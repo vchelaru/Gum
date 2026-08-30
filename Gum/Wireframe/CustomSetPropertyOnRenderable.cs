@@ -2406,6 +2406,94 @@ public partial class CustomSetPropertyOnRenderable
     }
 #endif
 
+#if RAYLIB
+    /// <summary>
+    /// Resolves (loading/generating as needed) a <see cref="Raylib_cs.Font"/> for <paramref name="fontFilePath"/>
+    /// (a .ttf source, or null to resolve by family name) combined with <paramref name="textRuntime"/>'s
+    /// other font properties (size, outline, bold, italic, dropshadow). Mirrors the XNALIKE side's
+    /// <c>GetOrCreateBakedFont</c> (BitmapFont) cascade -- shared by the family-name/Font path and the
+    /// CustomFontFile-as-.ttf path (#4558) so both bake through the same cache/InMemoryFontCreator/disk
+    /// cascade, and so <c>UseAutomaticFontGrowth</c> can track either identity.
+    /// </summary>
+    private static Raylib_cs.Font GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
+        global::RenderingLibrary.Content.LoaderManager loaderManager, string fallbackFontFamily, string? fontFilePath)
+    {
+        string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
+        string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+        // Cache hit: reuse the already-generated/loaded font rather than regenerating. A Raylib_cs.Font
+        // wraps an unmanaged GPU texture, so regenerating on every font property change would leak VRAM
+        // (the previous texture is never reclaimed).
+        //
+        // Only short-circuit on a USABLE cached font (BaseSize != 0). When no FontCache .fnt exists on
+        // disk and no stream hook supplies it, the loader caches an empty default(Font) (BaseSize 0)
+        // under this key (ContentLoader.LoadFont). Without this guard the early-return would hand that
+        // empty font to every text after the first instead of falling through to the disk / system-font
+        // fallback below.
+        if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont
+            && cachedManagedFont.Font.BaseSize != 0)
+        {
+            return cachedManagedFont.Font;
+        }
+
+        // In-memory font creation (no disk I/O). BuildFontSyncBmfcSave is shared with the XNALIKE
+        // path's GetOrCreateBakedFont; only the created-font type (Raylib_cs.Font vs BitmapFont) and how
+        // it is cached are necessarily platform-gated. Null/failure falls through to the disk/system-font
+        // path below.
+        if (InMemoryFontCreator != null)
+        {
+            try
+            {
+                BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
+
+                Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
+                if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
+                {
+                    // Heal a poisoned cache slot: the disk-fallback path below can legitimately cache an
+                    // empty (BaseSize 0) placeholder under this exact key when no FontCache .fnt exists on
+                    // disk (see the cache-hit guard above) -- e.g. when a font is requested before
+                    // InMemoryFontCreator gets wired up. AddDisposable's default
+                    // ExistingContentBehavior.ThrowException would throw on that occupied slot; left
+                    // unguarded, the caller's catch swallows it and the newly created (working) font --
+                    // and its GPU texture -- is discarded, forever re-triggering this (expensive)
+                    // rasterization on every subsequent request. Dispose the old entry first (a no-op if
+                    // nothing is cached) so the slot is free.
+                    loaderManager.Dispose(fullFileName);
+                    loaderManager.AddDisposable(fullFileName, new ManagedFont(createdFont.Value));
+                    return createdFont.Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fall through to the disk / system-font path, but surface the failure - previously
+                // silent, leaving Raylib's default font on screen with no indication the in-memory
+                // creator failed.
+                PropertyAssignmentError?.Invoke(
+                    $"Error creating in-memory font '{fontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
+            }
+        }
+
+        var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
+        if (fontFromGum.BaseSize == 0)
+        {
+            fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fallbackFontFamily);
+        }
+        // A wired InMemoryFontCreator declining (returning null) is a documented, normal signal --
+        // IRaylibFontCreator.TryCreateFont falls through to disk/system-font on purpose, and that
+        // fallback succeeding here is not a failure worth reporting. Only surface it once NOTHING
+        // resolved a usable font -- regardless of whether an InMemoryFontCreator was even wired, so a
+        // host that never wires one at all (e.g. no KernSmith integration configured) isn't silent
+        // either - #4553.
+        if (fontFromGum.BaseSize == 0)
+        {
+            PropertyAssignmentError?.Invoke(
+                $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
+        }
+
+        return fontFromGum;
+    }
+#endif
+
     public static void UpdateToFontValues(IText text, GraphicalUiElement graphicalUiElement)
     {
         // Font deferred-loading system
@@ -2627,16 +2715,34 @@ public partial class CustomSetPropertyOnRenderable
             // gracefully. Mirrors the XNA-like branch's !string.IsNullOrEmpty(CustomFontFile) guard.
             if (textRuntime.UseCustomFont == true && !string.IsNullOrEmpty(textRuntime.CustomFontFile))
             {
-                string fontName = textRuntime.CustomFontFile;
+                // #4558: a .ttf CustomFontFile routes through the same bake cascade (cache/
+                // InMemoryFontCreator/disk, via GetOrCreateBakedFont below) as Font-as-path uses,
+                // instead of loading natively via LoaderManager.LoadContent -- otherwise
+                // UseAutomaticFontGrowth has no InMemoryFontCreator-tracked identity to grow. Mirrors
+                // the XNALIKE branch's #3670/#3703 CustomFontFile-as-.ttf handling.
+                string? customTtfPath = BmfcSave.ResolveTtfSourcePath(
+                    useCustomFont: true, textRuntime.CustomFontFile, textRuntime.Font);
 
-                string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
-                if (fontFromGum.BaseSize == 0)
+                if (customTtfPath != null)
                 {
-                    fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                    var bakedFont = GetOrCreateBakedFont(textRuntime, loaderManager, asText.FontFamily, customTtfPath);
+                    AssignFontIfChanged(asText, bakedFont);
                 }
-                AssignFontIfChanged(asText, fontFromGum);
+                else
+                {
+                    // A non-.ttf CustomFontFile (e.g. an already-baked format raylib can't grow): load
+                    // it natively, same as before this fix. UseAutomaticFontGrowth doesn't apply here
+                    // since there's no InMemoryFontCreator-tracked identity for it.
+                    string fullFileName = ToolsUtilities.FileManager.Standardize(
+                        textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
+
+                    var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
+                    if (fontFromGum.BaseSize == 0)
+                    {
+                        fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
+                    }
+                    AssignFontIfChanged(asText, fontFromGum);
+                }
             }
             else
             {
@@ -2648,85 +2754,8 @@ public partial class CustomSetPropertyOnRenderable
                     string? fontFilePath = BmfcSave.ResolveTtfSourcePath(
                         useCustomFont: false, customFontFile: null, textRuntime.Font);
 
-                    string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
-
-                    string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
-
-                    // Cache hit: reuse the already-generated/loaded font rather than regenerating.
-                    // A Raylib_cs.Font wraps an unmanaged GPU texture, so regenerating on every font
-                    // property change would leak VRAM (the previous texture is never reclaimed). This
-                    // is the LoaderManager cache the MonoGame path also uses.
-                    //
-                    // Only short-circuit on a USABLE cached font (BaseSize != 0). When no FontCache .fnt
-                    // exists on disk and no stream hook supplies it, the loader caches an empty
-                    // default(Font) (BaseSize 0) under this key (ContentLoader.LoadFont). Without this
-                    // guard the early-return would hand that empty font to every text after the first
-                    // instead of falling through to the disk / system-font fallback below — so text lost
-                    // its font and, being RelativeToChildren, collapsed to zero size. Mirrors the MonoGame
-                    // path, which assigns the resolved font once at the end rather than early-returning on
-                    // any cache entry.
-                    if (loaderManager.GetDisposable(fullFileName) is ManagedFont cachedManagedFont
-                        && cachedManagedFont.Font.BaseSize != 0)
-                    {
-                        AssignFontIfChanged(asText, cachedManagedFont.Font);
-                        return;
-                    }
-
-                    // In-memory font creation (no disk I/O). BuildFontSyncBmfcSave is shared with the
-                    // MonoGame path in GetOrCreateBakedFont; only the created-font type (Raylib_cs.Font
-                    // vs BitmapFont) and how it is cached are necessarily platform-gated. Null/failure
-                    // falls through to the FontCache .fnt path.
-                    if (InMemoryFontCreator != null)
-                    {
-                        try
-                        {
-                            BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
-
-                            Raylib_cs.Font? createdFont = InMemoryFontCreator.TryCreateFont(bmfcSave);
-                            if (createdFont.HasValue && createdFont.Value.BaseSize != 0)
-                            {
-                                // Heal a poisoned cache slot: the disk-fallback path below can legitimately
-                                // cache an empty (BaseSize 0) placeholder under this exact key when no
-                                // FontCache .fnt exists on disk (see the cache-hit guard above) -- e.g. when
-                                // a font is requested before InMemoryFontCreator gets wired up. AddDisposable's
-                                // default ExistingContentBehavior.ThrowException would throw on that occupied
-                                // slot; left unguarded, the caller's catch swallows it and the newly created
-                                // (working) font -- and its GPU texture -- is discarded, forever re-triggering
-                                // this (expensive) rasterization on every subsequent request. Dispose the old
-                                // entry first (a no-op if nothing is cached) so the slot is free.
-                                loaderManager.Dispose(fullFileName);
-                                loaderManager.AddDisposable(fullFileName, new ManagedFont(createdFont.Value));
-                                AssignFontIfChanged(asText, createdFont.Value);
-                                return;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            // Fall through to the disk / system-font path, but surface the failure -
-                            // previously silent, leaving Raylib's default font on screen with no
-                            // indication the in-memory creator failed.
-                            PropertyAssignmentError?.Invoke(
-                                $"Error creating in-memory font '{textRuntime.Font}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
-                        }
-                    }
-
-                    var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
-                    if (fontFromGum.BaseSize == 0)
-                    {
-                        fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
-                    }
-                    // A wired InMemoryFontCreator declining (returning null) is a documented, normal
-                    // signal -- IRaylibFontCreator.TryCreateFont falls through to disk/system-font on
-                    // purpose, and that fallback succeeding here is not a failure worth reporting. Only
-                    // surface it once NOTHING resolved a usable font -- regardless of whether an
-                    // InMemoryFontCreator was even wired, so a host that never wires one at all (e.g. no
-                    // KernSmith integration configured) isn't silent either - #4553.
-                    if (fontFromGum.BaseSize == 0)
-                    {
-                        PropertyAssignmentError?.Invoke(
-                            $"No usable font could be resolved for '{textRuntime.Font}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
-                    }
-                    AssignFontIfChanged(asText, fontFromGum);
+                    var bakedFont = GetOrCreateBakedFont(textRuntime, loaderManager, asText.FontFamily, fontFilePath);
+                    AssignFontIfChanged(asText, bakedFont);
                 }
             }
         }
