@@ -25,6 +25,8 @@ KernSmith rasterizes every glyph in the requested character set into an atlas. T
 
 The rule of thumb: if your charset is "everything in this language", treat each new `(font, size, style)` combination as expensive. See [Font Preloading](font-preloading.md) for moving that cost off the gameplay path.
 
+[Automatic Glyph Growth](font-automatic-growth.md) is a different, cheaper cost: adding one new character updates the live texture's atlas in a small sub-rectangle, not a full regenerate. Only a texture reallocation (the atlas outgrowing its current page size) approaches full-regenerate cost.
+
 ## Batching Font Property Changes
 
 Every font-related setter on a `TextRuntime` — `Font`, `FontSize`, `IsBold`, `IsItalic`, `OutlineThickness`, `UseFontSmoothing` — regenerates the font atlas immediately when it runs. Setting four of these in a row produces four full atlas generations, and three of them are immediately thrown away. With a small Latin charset this is hard to notice. With a CJK charset on KernSmith it can be a multi-second hit per setter.
@@ -90,3 +92,4 @@ A quick reference of which costs apply to which [font strategy](font-strategies.
 * [Font Preloading](font-preloading.md) — move generation cost off the gameplay path.
 * [Fonts on Web](fonts-web.md) — for web targets the bandwidth/CPU tradeoff is different.
 * [Font Strategies](font-strategies.md) — what each strategy actually does.
+* [Automatic Glyph Growth](font-automatic-growth.md) — adding characters to a live font without a full regenerate.

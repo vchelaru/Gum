@@ -701,6 +701,12 @@ public class TextRuntime : InteractiveGue
         var bmfcSave = new BmfcSave();
         CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
         bmfcSave.FontSize = rasterFontSize;
+        // BmfcSave's own OutputWidth/OutputHeight default (512x256) is sized for a small, disk-
+        // persisted .fnt/.png cache file -- far too small a ceiling for an in-memory oversampled
+        // bake, which ReplayGrownCharacters below also reuses as the growth ceiling for this same
+        // font. See MaxInMemoryFontAtlasSize's own doc comment.
+        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
+        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
 
 #if XNALIKE
         BitmapFont? font;
@@ -982,6 +988,10 @@ public class TextRuntime : InteractiveGue
         var bmfcSave = new BmfcSave();
         CopyFontGenerationFieldsTo(bmfcSave, fontFilePath);
         bmfcSave.FontSize = fontSize;
+        // See MaxInMemoryFontAtlasSize's doc comment -- BmfcSave's own 512x256 disk-cache default
+        // would cap growth at a handful of glyphs.
+        bmfcSave.OutputWidth = MaxInMemoryFontAtlasSize;
+        bmfcSave.OutputHeight = MaxInMemoryFontAtlasSize;
 
         try
         {
@@ -996,8 +1006,13 @@ public class TextRuntime : InteractiveGue
                 {
                     _failedGrowthCharacters.Add(c);
                 }
+                // fontFilePath is null for a family-name-resolved system font (UseCustomFont false);
+                // Font is the only identity that applies there. When UseCustomFont is true, Font
+                // still holds whatever unrelated default/last value it was constructed or last set
+                // to (e.g. "Arial") -- CustomFontFile/fontFilePath is the actual font in that case.
+                string fontIdentity = fontFilePath ?? Font;
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
-                    $"Font '{Font}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
+                    $"Font '{fontIdentity}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
                     "no glyph for them exists in the font file.");
             }
 
@@ -1307,6 +1322,18 @@ public class TextRuntime : InteractiveGue
     /// representation and does not yet support growth (tracked as a follow-up).
     /// </summary>
     public static bool UseAutomaticFontGrowth = false;
+
+    /// <summary>
+    /// The page width/height, in pixels, used as the growth ceiling for a font <see cref="UseAutomaticFontGrowth"/>
+    /// grows, and as the bake size for a font <see cref="UseFontOversampling"/> regenerates -- both
+    /// in-memory-only KernSmith fonts, never disk-persisted. <see cref="BmfcSave.OutputWidth"/>/
+    /// <see cref="BmfcSave.OutputHeight"/>'s own default (512x256) is sized for a small persisted
+    /// .fnt/.png cache file; reused as a growth ceiling it fills after only a handful of glyphs at any
+    /// reasonable FontSize, throwing <c>KernSmith.AtlasPackingException</c>. 4096 matches
+    /// KernSmithRaylibFontCreator's own merged-atlas cap, kept in sync so raylib's growth parity
+    /// (issue #4546) can share the same ceiling. Lower this for a tighter VRAM budget.
+    /// </summary>
+    public static int MaxInMemoryFontAtlasSize = 4096;
 
     /// <summary>
     /// Indicates whether the font should be assigned during object construction.

@@ -28,7 +28,7 @@ After that it runs on its own. Assigning `Text` (or `TextNoTranslate`) checks th
 Two failure cases are both surfaced through the same `CustomSetPropertyOnRenderable.PropertyAssignmentError` event other font failures use — never a silent fallback to the space glyph:
 
 * The character has no glyph in the font file at all (e.g. asking a Latin-only font for a CJK character).
-* The atlas has grown as large as it's allowed to and the new character doesn't fit.
+* The atlas has grown as large as `TextRuntime.MaxInMemoryFontAtlasSize` (4096x4096 by default) allows and the new character doesn't fit.
 
 Subscribe once at startup if you want to see these:
 
@@ -40,6 +40,10 @@ CustomSetPropertyOnRenderable.PropertyAssignmentError += message =>
 ## Font Oversampling Interaction
 
 If [`UseFontOversampling`](font-oversampling.md) is also on, a grown character is added to both the pinned measurement font and the current oversampled display font, so wrapping and drawing never disagree about whether it exists. A zoom change that rebuilds the oversampled font at a new raster size replays every character grown so far into the fresh font — nothing is lost when you zoom.
+
+## Growth Ceiling
+
+`TextRuntime.MaxInMemoryFontAtlasSize` (default 4096) is the max page width/height, in pixels, for a font grown or oversampled in memory. It's separate from `BmfcSave.OutputWidth`/`OutputHeight`'s own 512x256 default, which is sized for a small disk-persisted `.fnt`/`.png` cache file and would otherwise cap growth at a handful of glyphs. Lower it for a tighter VRAM budget.
 
 ## Limitation: System Fonts vs. Registered `.ttf`
 

@@ -130,6 +130,72 @@ public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
         }
     }
 
+    // A TextRuntime constructed with UseCustomFont=true never touches the unrelated Font (family
+    // name) property, which stays at its DefaultFont ("Arial") the whole time -- the warning must
+    // name the actual .ttf, not that leftover, unrelated default.
+    [Fact]
+    public void Text_WhenUsingCustomFontFile_UnrenderableCharacterWarning_NamesTheFontFile_NotTheUnrelatedFontFamily()
+    {
+        bool savedFlag = TextRuntime.UseAutomaticFontGrowth;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        List<string> reportedMessages = new();
+        System.Action<string> handler = reportedMessages.Add;
+        try
+        {
+            TextRuntime.UseAutomaticFontGrowth = true;
+            GrowableStubFontCreator creator = new();
+            creator.UnrenderableCharacters.Add('Z');
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError += handler;
+
+            TextRuntime textRuntime = new();
+            textRuntime.UseCustomFont = true;
+            textRuntime.CustomFontFile = "SomeCustom.ttf";
+            reportedMessages.Clear();
+            textRuntime.Text = "Z";
+
+            reportedMessages.ShouldHaveSingleItem();
+            reportedMessages[0].ShouldContain("SomeCustom.ttf");
+            reportedMessages[0].ShouldNotContain("Arial");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= handler;
+            TextRuntime.UseAutomaticFontGrowth = savedFlag;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // BmfcSave.OutputWidth/OutputHeight default to 512x256 -- sized for a small, disk-persisted
+    // .fnt/.png cache file. Reused verbatim as a growth ceiling, that fills after only a handful of
+    // glyphs at any real FontSize and throws KernSmith.AtlasPackingException (observed manually
+    // testing this feature). Growth must raise the ceiling to TextRuntime.MaxInMemoryFontAtlasSize.
+    [Fact]
+    public void Text_WhenGrowing_UsesMaxInMemoryFontAtlasSize_NotBmfcSavesSmallDiskCacheDefault()
+    {
+        bool savedFlag = TextRuntime.UseAutomaticFontGrowth;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            TextRuntime.UseAutomaticFontGrowth = true;
+            GrowableStubFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            TextRuntime textRuntime = new();
+            textRuntime.Font = "StubFont";
+            textRuntime.Text = "C";
+
+            creator.LastBmfcSave.ShouldNotBeNull();
+            creator.LastBmfcSave!.OutputWidth.ShouldBe(TextRuntime.MaxInMemoryFontAtlasSize);
+            creator.LastBmfcSave.OutputHeight.ShouldBe(TextRuntime.MaxInMemoryFontAtlasSize);
+        }
+        finally
+        {
+            TextRuntime.UseAutomaticFontGrowth = savedFlag;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
     [Fact]
     public void Text_WhenInMemoryFontCreatorDoesNotSupportGrowth_DoesNothingSilently()
     {
@@ -217,6 +283,7 @@ char id=66   x=10  y=0   width=10    height=10    xoffset=0     yoffset=0     xa
     {
         public List<string> TryAddGlyphsCalls { get; } = new();
         public HashSet<char> UnrenderableCharacters { get; } = new();
+        public BmfcSave? LastBmfcSave { get; private set; }
 
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
@@ -227,6 +294,7 @@ char id=66   x=10  y=0   width=10    height=10    xoffset=0     yoffset=0     xa
 
         public IReadOnlyList<char>? TryAddGlyphs(BitmapFont font, BmfcSave bmfcSave, string characters)
         {
+            LastBmfcSave = bmfcSave;
             TryAddGlyphsCalls.Add(characters);
             List<char> failed = new();
             foreach (char c in characters)
