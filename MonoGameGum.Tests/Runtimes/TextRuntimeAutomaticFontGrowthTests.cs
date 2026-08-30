@@ -14,7 +14,6 @@ namespace MonoGameGum.Tests.Runtimes;
 // automatic, no explicit call needed from the game. Detection/growth must be synchronous inside the
 // Text assignment itself (not deferred to next-frame PreRender the way oversampling regeneration is),
 // since e.g. a TextBox keystroke measures wrap immediately, before the property setter returns.
-[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
 {
     [Fact]
@@ -151,12 +150,18 @@ public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
 
             TextRuntime textRuntime = new();
             textRuntime.UseCustomFont = true;
-            textRuntime.CustomFontFile = "SomeCustom.ttf";
+            // Absolute on purpose: CustomSetPropertyOnRenderable.ResolveFontFilePath only takes the
+            // FileManager.RelativeDirectory branch for a RELATIVE path; a rooted one short-circuits
+            // immediately (Path.IsPathRooted), independent of whatever ObjectFinder.Self.GumProjectSave
+            // currently is. This test doesn't care about path resolution, only that the warning names
+            // the file -- keep it deterministic rather than coupled to that unrelated global.
+            const string fontFile = @"C:\Fake\SomeCustom.ttf";
+            textRuntime.CustomFontFile = fontFile;
             reportedMessages.Clear();
             textRuntime.Text = "Z";
 
             reportedMessages.ShouldHaveSingleItem();
-            reportedMessages[0].ShouldContain("SomeCustom.ttf");
+            reportedMessages[0].ShouldContain(fontFile);
             reportedMessages[0].ShouldNotContain("Arial");
         }
         finally

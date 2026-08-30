@@ -16,7 +16,6 @@ namespace MonoGameGum.Tests.Runtimes;
 // (Gum/Wireframe/CustomSetPropertyOnRenderable.cs) must copy the base TextRuntime's dropshadow
 // fields onto every per-run BmfcSave, matching TextRuntime.CopyFontGenerationFieldsTo (the base-font
 // path). Deferred from #3624.
-[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeBbCodeDropshadowRegressionTests : BaseTestClass
 {
     [Fact]

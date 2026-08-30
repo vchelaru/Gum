@@ -15,7 +15,6 @@ namespace MonoGameGum.Tests.Runtimes;
 // parse and was silently treated as a closing tag (Pop) instead of pushing the requested size. Widening
 // the stack to float alongside TextRuntime.FontSize fixes this: a fractional inline run now resolves via
 // float.TryParse and reaches the per-run BmfcSave unrounded.
-[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeBbCodeFractionalFontSizeTests : BaseTestClass
 {
     [Fact]
