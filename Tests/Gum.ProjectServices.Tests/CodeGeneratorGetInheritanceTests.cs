@@ -211,4 +211,23 @@ public class CodeGeneratorGetInheritanceTests
 
         result.ShouldBe("global::Gum.Forms.Controls.ColorPicker");
     }
+
+    [Fact]
+    public void GetInheritance_MonoGameForms_ComponentWithExpanderBehavior_ReturnsExpander()
+    {
+        ComponentSave component = new ComponentSave();
+        component.Name = "Components/MyExpander";
+        component.BaseType = "Container";
+        component.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        { BehaviorName = "ExpanderBehavior" });
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGameForms
+        };
+
+        string? result = CodeGenerator.GetInheritance(component, settings);
+
+        result.ShouldBe("global::Gum.Forms.Controls.Expander");
+    }
 }

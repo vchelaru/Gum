@@ -4,6 +4,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/InputDeviceSelectionItemBehavior.behx
 Behaviors/InputDeviceSelectorBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -42,6 +43,7 @@ Components/Controls/CheckBox.gucx
 Components/Controls/ColorPickerStandard.gucx
 Components/Controls/ComboBox.gucx
 Components/Controls/DialogBox.gucx
+Components/Controls/ExpanderStandard.gucx
 Components/Controls/ItemsControl.gucx
 Components/Controls/ItemsControlAnimations.ganx
 Components/Controls/Keyboard.gucx

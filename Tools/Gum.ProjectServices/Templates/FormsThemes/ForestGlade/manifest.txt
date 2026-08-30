@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/ForestGlade/Controls/CheckBox.gucx
 Components/ForestGlade/Controls/ColorPicker.gucx
 Components/ForestGlade/Controls/ComboBox.gucx
 Components/ForestGlade/Controls/DialogBox.gucx
+Components/ForestGlade/Controls/Expander.gucx
 Components/ForestGlade/Controls/ItemsControl.gucx
 Components/ForestGlade/Controls/Label.gucx
 Components/ForestGlade/Controls/ListBox.gucx

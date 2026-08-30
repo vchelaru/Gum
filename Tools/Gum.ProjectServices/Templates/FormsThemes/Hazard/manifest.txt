@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/Hazard/Controls/CheckBox.gucx
 Components/Hazard/Controls/ColorPicker.gucx
 Components/Hazard/Controls/ComboBox.gucx
 Components/Hazard/Controls/DialogBox.gucx
+Components/Hazard/Controls/Expander.gucx
 Components/Hazard/Controls/ItemsControl.gucx
 Components/Hazard/Controls/Label.gucx
 Components/Hazard/Controls/ListBox.gucx

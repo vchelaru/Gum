@@ -8,6 +8,7 @@ public static class StandardFormsBehaviorNames
     public const string CheckBoxBehaviorName = "CheckBoxBehavior";
     public const string ColorPickerBehaviorName = "ColorPickerBehavior";
     public const string ComboBoxBehaviorName = "ComboBoxBehavior";
+    public const string ExpanderBehaviorName = "ExpanderBehavior";
     public const string ItemsControlBehaviorName = "ItemsControlBehavior";
     public const string LabelBehaviorName = "LabelBehavior";
     public const string ListBoxBehaviorName = "ListBoxBehavior";
@@ -32,6 +33,7 @@ public static class StandardFormsBehaviorNames
         CheckBoxBehaviorName,
         ColorPickerBehaviorName,
         ComboBoxBehaviorName,
+        ExpanderBehaviorName,
         ItemsControlBehaviorName,
         LabelBehaviorName,
         ListBoxBehaviorName,

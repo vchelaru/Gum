@@ -61,6 +61,7 @@
   <ComponentReference Name="Hazard/Controls/ColorPicker" />
   <ComponentReference Name="Hazard/Controls/ComboBox" />
   <ComponentReference Name="Hazard/Controls/DialogBox" />
+  <ComponentReference Name="Hazard/Controls/Expander" />
   <ComponentReference Name="Hazard/Controls/ItemsControl" />
   <ComponentReference Name="Hazard/Controls/Label" />
   <ComponentReference Name="Hazard/Controls/ListBox" />
@@ -95,6 +96,7 @@
   <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Hazard/Controls/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
   <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ListBox" />

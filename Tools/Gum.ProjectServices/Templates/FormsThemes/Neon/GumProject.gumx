@@ -61,6 +61,7 @@
   <ComponentReference Name="Neon/Controls/ColorPicker" />
   <ComponentReference Name="Neon/Controls/ComboBox" />
   <ComponentReference Name="Neon/Controls/DialogBox" />
+  <ComponentReference Name="Neon/Controls/Expander" />
   <ComponentReference Name="Neon/Controls/ItemsControl" />
   <ComponentReference Name="Neon/Controls/Label" />
   <ComponentReference Name="Neon/Controls/ListBox" />
@@ -95,6 +96,7 @@
   <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Neon/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="Neon/Controls/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
   <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/ListBox" />

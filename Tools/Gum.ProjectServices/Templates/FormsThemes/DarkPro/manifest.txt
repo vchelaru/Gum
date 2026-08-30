@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/DarkPro/Controls/CheckBox.gucx
 Components/DarkPro/Controls/ColorPicker.gucx
 Components/DarkPro/Controls/ComboBox.gucx
 Components/DarkPro/Controls/DialogBox.gucx
+Components/DarkPro/Controls/Expander.gucx
 Components/DarkPro/Controls/ItemsControl.gucx
 Components/DarkPro/Controls/Label.gucx
 Components/DarkPro/Controls/ListBox.gucx

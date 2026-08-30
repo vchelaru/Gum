@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/Retro95/Controls/CheckBox.gucx
 Components/Retro95/Controls/ColorPicker.gucx
 Components/Retro95/Controls/ComboBox.gucx
 Components/Retro95/Controls/DialogBox.gucx
+Components/Retro95/Controls/Expander.gucx
 Components/Retro95/Controls/ItemsControl.gucx
 Components/Retro95/Controls/Label.gucx
 Components/Retro95/Controls/ListBox.gucx
