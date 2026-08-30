@@ -2391,13 +2391,12 @@ public partial class CustomSetPropertyOnRenderable
         }
 #endif
 
-        // A wired InMemoryFontCreator declining (returning null, not throwing) is IInMemoryFontCreator's
-        // documented "creation fails or is not supported" signal, so it never hits the exception-catch
-        // diagnostic above. Only surface it once NOTHING resolved a usable font (embedded resource,
-        // in-memory creator, disk FontService generation, and a pre-existing disk file all failed), so a
-        // creator that intentionally declines some fonts by design -- and is then satisfied by a later
-        // fallback tier -- never gets a spurious error.
-        if (font == null && InMemoryFontCreator != null)
+        // Surface it once NOTHING resolved a usable font (embedded resource, in-memory creator, disk
+        // FontService generation, and a pre-existing disk file all failed) -- regardless of whether an
+        // InMemoryFontCreator was even wired. A host that never wires InMemoryFontCreator/FontService at
+        // all (e.g. gumcli's screenshot pipeline, or any runtime with no KernSmith/bmfont integration
+        // configured) used to fall back to the default font with zero diagnostics anywhere - #4553.
+        if (font == null)
         {
             PropertyAssignmentError?.Invoke(
                 $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and font service all failed) - falling back to the default font.");
@@ -2719,9 +2718,10 @@ public partial class CustomSetPropertyOnRenderable
                     // A wired InMemoryFontCreator declining (returning null) is a documented, normal
                     // signal -- IRaylibFontCreator.TryCreateFont falls through to disk/system-font on
                     // purpose, and that fallback succeeding here is not a failure worth reporting. Only
-                    // surface it once NOTHING resolved a usable font, so this can't fire for a creator
-                    // that's working exactly as designed.
-                    if (InMemoryFontCreator != null && fontFromGum.BaseSize == 0)
+                    // surface it once NOTHING resolved a usable font -- regardless of whether an
+                    // InMemoryFontCreator was even wired, so a host that never wires one at all (e.g. no
+                    // KernSmith integration configured) isn't silent either - #4553.
+                    if (fontFromGum.BaseSize == 0)
                     {
                         PropertyAssignmentError?.Invoke(
                             $"No usable font could be resolved for '{textRuntime.Font}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");

@@ -94,4 +94,34 @@ public class InMemoryFontCreatorTests : BaseTestClass
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
         }
     }
+
+    // #4553: a host that never wires InMemoryFontCreator at all (e.g. no KernSmith integration
+    // configured) hit the same silent-fallback gap as the throwing/declining creator cases above -
+    // the old guard only fired when InMemoryFontCreator was non-null.
+    [Fact]
+    public void UpdateToFontValues_WhenNoCreatorWiredAndNothingResolves_ShouldInvokePropertyAssignmentError()
+    {
+        string uniqueFontName = "GumNoCreatorWiredTest_" + Guid.NewGuid().ToString("N");
+        IRaylibFontCreator? saved = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        string? capturedMessage = null;
+        void Handler(string message) => capturedMessage = message;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = null;
+
+            TextRuntime textRuntime = new TextRuntime();
+            // A GUID-unique name has no FontCache .fnt on disk and isn't an installed system font, so
+            // nothing can resolve it - the exact "silent fallback to default font" shape from #4553.
+            textRuntime.Font = uniqueFontName;
+            textRuntime.FontSize = 20;
+
+            capturedMessage.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = saved;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
 }
