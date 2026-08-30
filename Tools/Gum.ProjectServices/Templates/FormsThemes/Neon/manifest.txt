@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/Neon/Controls/CheckBox.gucx
 Components/Neon/Controls/ColorPicker.gucx
 Components/Neon/Controls/ComboBox.gucx
 Components/Neon/Controls/DialogBox.gucx
+Components/Neon/Controls/Expander.gucx
 Components/Neon/Controls/ItemsControl.gucx
 Components/Neon/Controls/Label.gucx
 Components/Neon/Controls/ListBox.gucx

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BehaviorSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>ExpanderBehavior</Name>
+  <RequiredVariables />
+  <FormsProperty Type="string" Name="ToolTip" />
+  <FormsProperty Type="bool" Name="IsEnabled">
+    <Value xsi:type="xsd:boolean">true</Value>
+  </FormsProperty>
+  <FormsProperty Type="bool" Name="IsExpanded">
+    <Value xsi:type="xsd:boolean">false</Value>
+  </FormsProperty>
+  <ToolOnlyVariableReference>ExpanderCategoryState = IsEnabled ? (IsExpanded ? "Expanded" : "Collapsed") : (IsExpanded ? "DisabledExpanded" : "DisabledCollapsed")</ToolOnlyVariableReference>
+  <Category>
+    <Name>ExpanderCategory</Name>
+    <State>
+      <Name>Collapsed</Name>
+    </State>
+    <State>
+      <Name>Expanded</Name>
+    </State>
+    <State>
+      <Name>DisabledCollapsed</Name>
+    </State>
+    <State>
+      <Name>DisabledExpanded</Name>
+    </State>
+  </Category>
+  <RequiredInstances />
+  <RequiredAnimations />
+  <DefaultImplementation>Controls/ExpanderStandard</DefaultImplementation>
+</BehaviorSave>

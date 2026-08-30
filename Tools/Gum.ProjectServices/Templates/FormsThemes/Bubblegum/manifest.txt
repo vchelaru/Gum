@@ -3,6 +3,7 @@ Behaviors/CheckBoxBehavior.behx
 Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
+Behaviors/ExpanderBehavior.behx
 Behaviors/ItemsControlBehavior.behx
 Behaviors/LabelBehavior.behx
 Behaviors/ListBoxBehavior.behx
@@ -30,6 +31,7 @@ Components/Bubblegum/Controls/CheckBox.gucx
 Components/Bubblegum/Controls/ColorPicker.gucx
 Components/Bubblegum/Controls/ComboBox.gucx
 Components/Bubblegum/Controls/DialogBox.gucx
+Components/Bubblegum/Controls/Expander.gucx
 Components/Bubblegum/Controls/ItemsControl.gucx
 Components/Bubblegum/Controls/Label.gucx
 Components/Bubblegum/Controls/ListBox.gucx

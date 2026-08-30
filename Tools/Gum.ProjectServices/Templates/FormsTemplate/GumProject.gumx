@@ -67,6 +67,7 @@
   <ComponentReference Name="Controls/ColorPickerStandard" />
   <ComponentReference Name="Controls/ComboBox" />
   <ComponentReference Name="Controls/DialogBox" />
+  <ComponentReference Name="Controls/ExpanderStandard" />
   <ComponentReference Name="Controls/ItemsControl" />
   <ComponentReference Name="Controls/Keyboard" />
   <ComponentReference Name="Controls/KeyboardKey" />
@@ -112,6 +113,7 @@
   <BehaviorReference Name="ColorPickerBehavior" SourcePath="../FormsBehaviors/ColorPickerBehavior.behx" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../FormsBehaviors/ComboBoxBehavior.behx" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../FormsBehaviors/DialogBoxBehavior.behx" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../FormsBehaviors/ExpanderBehavior.behx" />
   <BehaviorReference Name="InputDeviceSelectionItemBehavior" />
   <BehaviorReference Name="InputDeviceSelectorBehavior" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../FormsBehaviors/ItemsControlBehavior.behx" />

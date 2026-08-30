@@ -61,6 +61,7 @@
   <ComponentReference Name="DarkPro/Controls/ColorPicker" />
   <ComponentReference Name="DarkPro/Controls/ComboBox" />
   <ComponentReference Name="DarkPro/Controls/DialogBox" />
+  <ComponentReference Name="DarkPro/Controls/Expander" />
   <ComponentReference Name="DarkPro/Controls/ItemsControl" />
   <ComponentReference Name="DarkPro/Controls/Label" />
   <ComponentReference Name="DarkPro/Controls/ListBox" />
@@ -96,6 +97,7 @@
   <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
   <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ListBox" />

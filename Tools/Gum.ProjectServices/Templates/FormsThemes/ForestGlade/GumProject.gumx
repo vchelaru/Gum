@@ -61,6 +61,7 @@
   <ComponentReference Name="ForestGlade/Controls/ColorPicker" />
   <ComponentReference Name="ForestGlade/Controls/ComboBox" />
   <ComponentReference Name="ForestGlade/Controls/DialogBox" />
+  <ComponentReference Name="ForestGlade/Controls/Expander" />
   <ComponentReference Name="ForestGlade/Controls/ItemsControl" />
   <ComponentReference Name="ForestGlade/Controls/Label" />
   <ComponentReference Name="ForestGlade/Controls/ListBox" />
@@ -95,6 +96,7 @@
   <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/DialogBox" />
+  <BehaviorReference Name="ExpanderBehavior" SourcePath="../../FormsBehaviors/ExpanderBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/Expander" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />
   <BehaviorReference Name="LabelBehavior" SourcePath="../../FormsBehaviors/LabelBehavior.behx" />
   <BehaviorReference Name="ListBoxBehavior" SourcePath="../../FormsBehaviors/ListBoxBehavior.behx" DefaultImplementationOverride="ForestGlade/Controls/ListBox" />
