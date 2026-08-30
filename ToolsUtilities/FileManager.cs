@@ -27,10 +27,19 @@ namespace ToolsUtilities
         public const char DefaultSlash = '\\';
         #region Fields
 
+        /// <summary>
+        /// Test-only override for <see cref="IsMobile"/>. Android/iOS are the only platforms with no
+        /// filesystem root to detect, so their "already resolved" signal is a fragile "starts with
+        /// ./" string marker instead - a real device is otherwise the only way to exercise that path.
+        /// Null (the default) falls back to the real <see cref="System.OperatingSystem"/> check.
+        /// </summary>
+        public static bool? IsMobileOverride { get; set; }
+
         static bool IsMobile =>
+            IsMobileOverride ??
 #if NET6_0_OR_GREATER
-            System.OperatingSystem.IsAndroid() ||
-                System.OperatingSystem.IsIOS() ;
+            (System.OperatingSystem.IsAndroid() ||
+                System.OperatingSystem.IsIOS());
 #else
         false;
 #endif
@@ -265,7 +274,12 @@ namespace ToolsUtilities
                 fileName = RelativeDirectory + fileName;
             }
 
-            fileName = TryRemoveLeadingDotSlash(fileName);
+            // Don't strip a leading "./" here: on mobile that's the only signal that fileName is
+            // already resolved. GetStreamForFile does its own IsRelative check, so stripping it
+            // first makes an already-resolved path look relative again and re-prepends
+            // RelativeDirectory, doubling it (#4548). GetStreamForFile hands the "./"-marked path
+            // to CustomGetStreamFromFile unchanged; the host-installed hook is what strips it,
+            // immediately before the real OS call.
 
             // Creating a filestream then using that enables us to open files that are open by other apps.
             using (var fileStream = GetStreamForFile(fileName))
@@ -816,12 +830,12 @@ namespace ToolsUtilities
             //ThrowExceptionIfFileDoesntExist(fileName);
 
 
-            if (IsMobile)
-            {
-                // Mobile platforms don't like ./ at the start of the file name, but that's what we use to identify an absolute path
-                fileName = TryRemoveLeadingDotSlash(fileName);
-            }
-
+            // Don't strip a leading "./" here: on mobile that's the only signal that fileName is
+            // already resolved. GetStreamForFile does its own IsRelative check, so stripping it
+            // first makes an already-resolved path look relative again and re-prepends
+            // RelativeDirectory, doubling it (#4548). GetStreamForFile hands the "./"-marked path
+            // to CustomGetStreamFromFile unchanged; the host-installed hook is what strips it,
+            // immediately before the real OS call.
 
             using (Stream stream = GetStreamForFile(fileName))
             {
@@ -838,15 +852,6 @@ namespace ToolsUtilities
             }
 
             return objectToReturn;
-        }
-
-        static string TryRemoveLeadingDotSlash(string fileName)
-        {
-            if (fileName != null && fileName.Length > 1 && fileName[0] == '.' && (fileName[1] == '/' || fileName[1] == '\\'))
-            {
-                fileName = fileName.Substring(2);
-            }
-            return fileName;
         }
 
         public static Stream GetStreamForFile(string fileName)
@@ -1513,10 +1518,12 @@ namespace ToolsUtilities
 #endif
         public static T XmlDeserialize<T>(string fileName, XmlSerializer serializer)
         {
-            if (IsMobile)
-            {
-                fileName = TryRemoveLeadingDotSlash(fileName);
-            }
+            // Don't strip a leading "./" here: on mobile that's the only signal that fileName is
+            // already resolved. GetStreamForFile does its own IsRelative check, so stripping it
+            // first makes an already-resolved path look relative again and re-prepends
+            // RelativeDirectory, doubling it (#4548). GetStreamForFile hands the "./"-marked path
+            // to CustomGetStreamFromFile unchanged; the host-installed hook is what strips it,
+            // immediately before the real OS call.
 
             using (Stream stream = GetStreamForFile(fileName))
             {
