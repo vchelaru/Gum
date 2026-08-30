@@ -79,6 +79,9 @@
     <Variable Type="DimensionUnitType" Name="ContentContainer.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
+    <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
+      <Value xsi:type="xsd:string">ContentContainer</Value>
+    </Variable>
     <Variable Type="ExpanderCategory" Name="ExpanderCategoryState" SetsValue="false" />
     <Variable Type="float" Name="HeaderBackground.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">8</Value>
