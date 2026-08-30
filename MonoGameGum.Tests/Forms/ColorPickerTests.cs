@@ -117,4 +117,20 @@ public class ColorPickerTests : BaseTestClass
 
         (gue is DefaultFromFileColorPickerRuntime).ShouldBeTrue();
     }
+
+    [Fact]
+    public void Resizing_StretchesSaturationValueSquareAndHueBar()
+    {
+        ColorPickerVisual visual = new();
+        visual.Width = 400;
+        visual.Height = 300;
+
+        visual.SaturationValueContainer.AbsoluteWidth.ShouldBe(400 - 24);
+        visual.SaturationValueContainer.AbsoluteHeight.ShouldBe(300);
+
+        visual.HueContainer.AbsoluteHeight.ShouldBe(300);
+        // HueContainer.XOrigin is Right, so AbsoluteX already reports the right edge - it should
+        // stay flush against the parent's right edge (400) at any size.
+        visual.HueContainer.AbsoluteX.ShouldBe(400);
+    }
 }
