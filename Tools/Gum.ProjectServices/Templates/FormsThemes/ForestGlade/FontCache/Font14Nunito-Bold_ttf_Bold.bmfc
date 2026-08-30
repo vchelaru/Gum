@@ -2,8 +2,8 @@
 fileVersion=1
 
 # font settings
-fontName=Nunito
-fontFile=
+fontName=
+fontFile=..\Fonts\Nunito-Bold.ttf
 fontSize=-14
 isBold=1
 isItalic=0
@@ -24,11 +24,19 @@ useFixedHeight=0
 forceZero=0
 
 # output file
-outWidth=256
-outHeight=256
+outWidth=8192
+outHeight=8192
 fontDescFormat=0
 textureFormat=png
 fourChnlPacked=0
+alphaChnl=0
+redChnl=4
+greenChnl=4
+blueChnl=4
+invA=0
+invR=0
+invG=0
+invB=0
 
 # outline
 outlineThickness=0
@@ -37,5 +45,7 @@ outlineThickness=0
 chars=32-126,160-255,9632-9727,10003-10007
 
 # output path
-outputPath=Font14Nunito_Bold
+outputPath=Font14Nunito-Bold_ttf_Bold
 
+# kernsmith extensions
+autofit=1

@@ -115,6 +115,39 @@ public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
         }
     }
 
+    // #4553: gumcli screenshot (and any other host that never wires InMemoryFontCreator/FontService,
+    // e.g. no KernSmith integration configured) hit this exact gap -- a .ttf-path Font with no
+    // pre-baked FontCache entry silently fell back to the default embedded font with zero diagnostics,
+    // because the old guard only fired when InMemoryFontCreator was non-null.
+    [Fact]
+    public void GetOrCreateBakedFont_WhenNoCreatorOrServiceWiredAndNothingResolves_ShouldInvokePropertyAssignmentError()
+    {
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        IRuntimeFontService? savedService = CustomSetPropertyOnRenderable.FontService;
+        string? capturedMessage = null;
+        void Handler(string message) => capturedMessage = message;
+        CustomSetPropertyOnRenderable.PropertyAssignmentError += Handler;
+        try
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = null;
+            CustomSetPropertyOnRenderable.FontService = null;
+
+            TextRuntime textRuntime = new();
+            // A GUID-unique name has no FontCache .fnt on disk and no cached/embedded entry, so
+            // nothing can resolve it -- the exact "silent fallback to default font" shape from #4553.
+            textRuntime.Font = UniqueFontName();
+            textRuntime.FontSize = 12;
+
+            capturedMessage.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            CustomSetPropertyOnRenderable.FontService = savedService;
+            CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
     // The guard the fix above must not break: a creator wired but never even consulted (because the
     // font was already resolved from cache) must stay completely silent -- otherwise every project
     // with a wired creator would get a spurious error on every successfully-resolved font.

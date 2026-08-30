@@ -62,7 +62,7 @@ testing after the fact. Sequence a new theme port like this:
 
 | File | Role |
 |------|------|
-| `Gum/GumFormsPlugin/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetSourceDestinations` — computes what gets copied where |
+| `Tools/Gum.Presentation/GumForms/Services/FormsFileService.cs` | `GetAvailableThemes`, `GetThemeDirectory`, `GetSourceDestinations` — computes what gets copied where |
 | `Tools/Gum.Presentation/GumForms/ViewModels/AddFormsViewModel.cs` | Add Forms dialog: theme selection, save/import |
 | `Tools/Gum.Presentation/GumForms/Services/ThemeRequirements.cs` | Parses optional `theme.txt` (font generator, Skia shapes) — project-level prerequisites, not content |
 | `Gum/GumFormsPlugin/GumFormsPlugin.csproj` | Postbuild `<Exec>` stages each theme into the built `Content/FormsThemes/<Name>/` — **one hand-written `xcopy` + `stage-forms-behaviors` block per theme, not a loop over the folder.** A new theme is invisible to `FormsFileService.GetAvailableThemes()` in a built tool until its own block is added here, mirroring the existing per-theme blocks exactly. |
@@ -279,3 +279,14 @@ template leaves the stale old file sitting in an already-built output even when 
 deletes the theme's output folder before `xcopy`-ing to prevent this; verify a source-side rename
 actually lands clean by planting a throwaway file in the built output and confirming a rebuild
 removes it.
+
+**A theme's checked-in FontCache silently goes stale when a Font value is repointed to a new
+bundled `.ttf`** — old entries stay valid, but nothing regenerates or re-commits the new one
+automatically. `gumcli screenshot` is where this becomes visible: unlike the real Gum tool (which
+bakes missing fonts on project load via `FontService`), `MonoGameScreenshotService`/
+`RaylibScreenshotService` never wire font generation at all, so a font missing from `FontCache`
+silently renders as the default embedded font with no glyph and no error. Fix by running
+`dotnet GumProjectFontGenerator.dll <path>\GumProject.gumx` directly against the theme's own
+folder (not a scratch copy) — it only fills in missing entries, so existing cached fonts are
+untouched — then delete any `FontCache` entry whose exact name/size key is no longer referenced
+anywhere in the theme.
