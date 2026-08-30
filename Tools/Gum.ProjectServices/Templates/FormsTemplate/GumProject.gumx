@@ -64,6 +64,7 @@
   <ComponentReference Name="Controls/ButtonStandardIcon" />
   <ComponentReference Name="Controls/ButtonTab" />
   <ComponentReference Name="Controls/CheckBox" />
+  <ComponentReference Name="Controls/ColorPickerStandard" />
   <ComponentReference Name="Controls/ComboBox" />
   <ComponentReference Name="Controls/DialogBox" />
   <ComponentReference Name="Controls/ItemsControl" />
@@ -108,6 +109,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../FormsBehaviors/ButtonBehavior.behx" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../FormsBehaviors/CheckBoxBehavior.behx" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../FormsBehaviors/ColorPickerBehavior.behx" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../FormsBehaviors/ComboBoxBehavior.behx" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../FormsBehaviors/DialogBoxBehavior.behx" />
   <BehaviorReference Name="InputDeviceSelectionItemBehavior" />

@@ -58,6 +58,7 @@
   <ComponentReference Name="Neon/Controls/Button" />
   <ComponentReference Name="Neon/Controls/ButtonIcon" />
   <ComponentReference Name="Neon/Controls/CheckBox" />
+  <ComponentReference Name="Neon/Controls/ColorPicker" />
   <ComponentReference Name="Neon/Controls/ComboBox" />
   <ComponentReference Name="Neon/Controls/DialogBox" />
   <ComponentReference Name="Neon/Controls/ItemsControl" />
@@ -91,6 +92,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Neon/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Neon/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Neon/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

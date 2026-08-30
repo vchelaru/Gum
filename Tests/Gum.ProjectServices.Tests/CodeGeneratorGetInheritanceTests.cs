@@ -192,4 +192,23 @@ public class CodeGeneratorGetInheritanceTests
             ObjectFinder.Self.GumProjectSave = null;
         }
     }
+
+    [Fact]
+    public void GetInheritance_MonoGameForms_ComponentWithColorPickerBehavior_ReturnsColorPicker()
+    {
+        ComponentSave component = new ComponentSave();
+        component.Name = "Components/MyColorPicker";
+        component.BaseType = "Container";
+        component.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        { BehaviorName = "ColorPickerBehavior" });
+
+        CodeOutputProjectSettings settings = new CodeOutputProjectSettings
+        {
+            OutputLibrary = OutputLibrary.MonoGameForms
+        };
+
+        string? result = CodeGenerator.GetInheritance(component, settings);
+
+        result.ShouldBe("global::Gum.Forms.Controls.ColorPicker");
+    }
 }

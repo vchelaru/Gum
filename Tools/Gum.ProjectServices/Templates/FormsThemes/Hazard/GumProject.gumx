@@ -58,6 +58,7 @@
   <ComponentReference Name="Hazard/Controls/Button" />
   <ComponentReference Name="Hazard/Controls/ButtonIcon" />
   <ComponentReference Name="Hazard/Controls/CheckBox" />
+  <ComponentReference Name="Hazard/Controls/ColorPicker" />
   <ComponentReference Name="Hazard/Controls/ComboBox" />
   <ComponentReference Name="Hazard/Controls/DialogBox" />
   <ComponentReference Name="Hazard/Controls/ItemsControl" />
@@ -91,6 +92,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Hazard/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Hazard/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

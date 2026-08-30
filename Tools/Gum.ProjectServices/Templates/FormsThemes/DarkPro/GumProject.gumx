@@ -58,6 +58,7 @@
   <ComponentReference Name="DarkPro/Controls/Button" />
   <ComponentReference Name="DarkPro/Controls/ButtonIcon" />
   <ComponentReference Name="DarkPro/Controls/CheckBox" />
+  <ComponentReference Name="DarkPro/Controls/ColorPicker" />
   <ComponentReference Name="DarkPro/Controls/ComboBox" />
   <ComponentReference Name="DarkPro/Controls/DialogBox" />
   <ComponentReference Name="DarkPro/Controls/ItemsControl" />
@@ -92,6 +93,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="DarkPro/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

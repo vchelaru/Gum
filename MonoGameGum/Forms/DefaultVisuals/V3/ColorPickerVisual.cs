@@ -1,4 +1,5 @@
 #pragma warning disable CS0618, GUM001 // Default visuals intentionally use deprecated MonoGameGum.GueDeriving shim types for backward compatibility until V1/V2/V3 visuals are retired. See issue #2715.
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Wireframe;
@@ -26,7 +27,6 @@ public class ColorPickerVisual : InteractiveGue
 {
     private const int SaturationValueSize = 160;
     private const int HueBarWidth = 20;
-    private const int HueBarHeight = 160;
     private const int Spacing = 4;
 
     /// <summary>
@@ -56,8 +56,10 @@ public class ColorPickerVisual : InteractiveGue
 
         SaturationValueContainer = new ContainerRuntime();
         SaturationValueContainer.Name = "SaturationValueContainer";
-        SaturationValueContainer.Width = SaturationValueSize;
-        SaturationValueContainer.Height = SaturationValueSize;
+        SaturationValueContainer.Width = -(Spacing + HueBarWidth);
+        SaturationValueContainer.WidthUnits = DimensionUnitType.RelativeToParent;
+        SaturationValueContainer.Height = 0;
+        SaturationValueContainer.HeightUnits = DimensionUnitType.RelativeToParent;
         SaturationValueContainer.HasEvents = true;
         SaturationValueContainer.ClipsChildren = true;
         this.AddChild(SaturationValueContainer);
@@ -68,9 +70,11 @@ public class ColorPickerVisual : InteractiveGue
 
         HueContainer = new ContainerRuntime();
         HueContainer.Name = "HueContainer";
-        HueContainer.X = SaturationValueSize + Spacing;
+        HueContainer.XOrigin = HorizontalAlignment.Right;
+        HueContainer.XUnits = GeneralUnitType.PixelsFromLarge;
         HueContainer.Width = HueBarWidth;
-        HueContainer.Height = HueBarHeight;
+        HueContainer.Height = 0;
+        HueContainer.HeightUnits = DimensionUnitType.RelativeToParent;
         HueContainer.HasEvents = true;
         HueContainer.ClipsChildren = true;
         this.AddChild(HueContainer);

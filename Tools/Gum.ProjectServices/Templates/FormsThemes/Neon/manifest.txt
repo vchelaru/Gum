@@ -1,5 +1,6 @@
 Behaviors/ButtonBehavior.behx
 Behaviors/CheckBoxBehavior.behx
+Behaviors/ColorPickerBehavior.behx
 Behaviors/ComboBoxBehavior.behx
 Behaviors/DialogBoxBehavior.behx
 Behaviors/ItemsControlBehavior.behx
@@ -26,6 +27,7 @@ Behaviors/WindowBehavior.behx
 Components/Neon/Controls/Button.gucx
 Components/Neon/Controls/ButtonIcon.gucx
 Components/Neon/Controls/CheckBox.gucx
+Components/Neon/Controls/ColorPicker.gucx
 Components/Neon/Controls/ComboBox.gucx
 Components/Neon/Controls/DialogBox.gucx
 Components/Neon/Controls/ItemsControl.gucx

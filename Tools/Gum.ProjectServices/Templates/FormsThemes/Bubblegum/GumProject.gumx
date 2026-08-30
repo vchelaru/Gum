@@ -58,6 +58,7 @@
   <ComponentReference Name="Bubblegum/Controls/Button" />
   <ComponentReference Name="Bubblegum/Controls/ButtonIcon" />
   <ComponentReference Name="Bubblegum/Controls/CheckBox" />
+  <ComponentReference Name="Bubblegum/Controls/ColorPicker" />
   <ComponentReference Name="Bubblegum/Controls/ComboBox" />
   <ComponentReference Name="Bubblegum/Controls/DialogBox" />
   <ComponentReference Name="Bubblegum/Controls/ItemsControl" />
@@ -91,6 +92,7 @@
   <StandardElementReference Name="Text" />
   <BehaviorReference Name="ButtonBehavior" SourcePath="../../FormsBehaviors/ButtonBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/Button" />
   <BehaviorReference Name="CheckBoxBehavior" SourcePath="../../FormsBehaviors/CheckBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/CheckBox" />
+  <BehaviorReference Name="ColorPickerBehavior" SourcePath="../../FormsBehaviors/ColorPickerBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ColorPicker" />
   <BehaviorReference Name="ComboBoxBehavior" SourcePath="../../FormsBehaviors/ComboBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/ComboBox" />
   <BehaviorReference Name="DialogBoxBehavior" SourcePath="../../FormsBehaviors/DialogBoxBehavior.behx" DefaultImplementationOverride="Bubblegum/Controls/DialogBox" />
   <BehaviorReference Name="ItemsControlBehavior" SourcePath="../../FormsBehaviors/ItemsControlBehavior.behx" />

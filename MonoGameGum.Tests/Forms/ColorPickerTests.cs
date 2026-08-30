@@ -1,5 +1,8 @@
 using System;
+using Gum.DataTypes;
+using Gum.Managers;
 using Gum.Forms.Controls;
+using Gum.Forms.DefaultFromFileVisuals;
 using Gum.Forms.DefaultVisuals.V3;
 using Color = System.Drawing.Color;
 using Shouldly;
@@ -93,5 +96,41 @@ public class ColorPickerTests : BaseTestClass
         picker.Hue = 400f;
 
         picker.Hue.ShouldBe(360f);
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldCreateFromFileColorPicker_IfElementExists()
+    {
+        GumProjectSave gumProject = new GumProjectSave();
+        var colorPickerComponent = new ComponentSave();
+        colorPickerComponent.States.Add(new Gum.DataTypes.Variables.StateSave() { Name = "Default" });
+        gumProject.Components.Add(colorPickerComponent);
+        colorPickerComponent.Name = "TestColorPickerComponent";
+        colorPickerComponent.Behaviors.Add(new Gum.DataTypes.Behaviors.ElementBehaviorReference
+        { BehaviorName = "ColorPickerBehavior" });
+
+        ObjectFinder.Self.GumProjectSave = gumProject;
+
+        Gum.Forms.FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        var gue = colorPickerComponent.ToGraphicalUiElement();
+
+        (gue is DefaultFromFileColorPickerRuntime).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Resizing_StretchesSaturationValueSquareAndHueBar()
+    {
+        ColorPickerVisual visual = new();
+        visual.Width = 400;
+        visual.Height = 300;
+
+        visual.SaturationValueContainer.AbsoluteWidth.ShouldBe(400 - 24);
+        visual.SaturationValueContainer.AbsoluteHeight.ShouldBe(300);
+
+        visual.HueContainer.AbsoluteHeight.ShouldBe(300);
+        // HueContainer.XOrigin is Right, so AbsoluteX already reports the right edge - it should
+        // stay flush against the parent's right edge (400) at any size.
+        visual.HueContainer.AbsoluteX.ShouldBe(400);
     }
 }

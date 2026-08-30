@@ -6,6 +6,7 @@ public static class StandardFormsBehaviorNames
 {
     public const string ButtonBehaviorName = "ButtonBehavior";
     public const string CheckBoxBehaviorName = "CheckBoxBehavior";
+    public const string ColorPickerBehaviorName = "ColorPickerBehavior";
     public const string ComboBoxBehaviorName = "ComboBoxBehavior";
     public const string ItemsControlBehaviorName = "ItemsControlBehavior";
     public const string LabelBehaviorName = "LabelBehavior";
@@ -29,6 +30,7 @@ public static class StandardFormsBehaviorNames
     {
         ButtonBehaviorName,
         CheckBoxBehaviorName,
+        ColorPickerBehaviorName,
         ComboBoxBehaviorName,
         ItemsControlBehaviorName,
         LabelBehaviorName,
