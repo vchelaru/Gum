@@ -285,10 +285,22 @@ public partial class WireframeObjectManager : IWireframeObjectManager
                 {
                     AllIpsos.Add(child);
                 }
-                // don't put this in the if containedElements.Contains 
+                // don't put this in the if containedElements.Contains
                 // check because we can have children which are attached
                 // to an item inside of component instnace using parent dot operator
-                AddChildrenRecursively(child, containedElements);
+
+                // If child itself owns instances (it's the root of a nested component
+                // instance, e.g. a ScrollBar nested inside a ScrollViewer), those instances
+                // are never members of any ancestor's ContainedElements - switch to child's
+                // own ContainedElements so its descendants are still found. Otherwise child
+                // is just a rendering pass-through (e.g. the target of a dot-operator Parent
+                // attachment) and its descendants still belong to the ancestor scope.
+                var childOwnElements = child.ContainedElements;
+                var nextContainedElements = childOwnElements.Count > 0
+                    ? childOwnElements.ToHashSet()
+                    : containedElements;
+
+                AddChildrenRecursively(child, nextContainedElements);
             }
 
         }
