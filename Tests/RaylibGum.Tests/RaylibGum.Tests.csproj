@@ -4,6 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Issue #4546: growth tests read a Raylib_cs.Font's native Recs/Glyphs pointer arrays and an
+         Image's raw pixel data to verify glyph placement/pixel content. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>

@@ -384,6 +384,15 @@ public class Text : IVisible, IRenderableIpso,
     internal Action? OnPreRender;
 
     /// <summary>
+    /// Runs synchronously at the top of every <see cref="UpdateWrappedText"/> call, before wrapping.
+    /// Used by <c>TextRuntime</c> (issue #4546, Raylib parity for #4542) to detect a character this
+    /// Text's live font is missing and grow it in place -- unlike <see cref="OnPreRender"/>'s
+    /// once-per-frame cadence, this can't be deferred: a property setter like <c>Text</c> wraps before
+    /// it returns (e.g. a TextBox keystroke), so wrap measurement must already see the grown glyph.
+    /// </summary>
+    internal Action? OnGlyphGrowthCheck;
+
+    /// <summary>
     /// The scale applied when drawing plain (non-BBCode) text: composes the public <see cref="FontScale"/>
     /// with <see cref="OversampleCompensationScale"/>.
     /// </summary>
@@ -963,6 +972,8 @@ public class Text : IVisible, IRenderableIpso,
     /// </summary>
     public void UpdateWrappedText()
     {
+        OnGlyphGrowthCheck?.Invoke();
+
         mWrappedText.Clear();
         this.UpdateLines(mWrappedText);
     }
