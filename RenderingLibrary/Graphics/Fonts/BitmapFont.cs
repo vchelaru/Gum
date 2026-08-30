@@ -578,6 +578,99 @@ public class BitmapFont : IDisposable
     }
 
     /// <summary>
+    /// Adds a new character to the font, or updates an existing one, without re-parsing the whole
+    /// .fnt content. Used by incremental atlas growth (e.g. KernSmith's <c>AddGlyphs</c>), where a
+    /// glyph is placed into an already-live atlas and the font's character table must reflect it
+    /// without disturbing every other character already parsed.
+    /// </summary>
+    /// <param name="charInfo">The character's atlas position and rendering metrics.</param>
+    /// <param name="textureWidth">The pixel width of the atlas page <paramref name="charInfo"/> was placed on.</param>
+    /// <param name="textureHeight">The pixel height of the atlas page <paramref name="charInfo"/> was placed on.</param>
+    public void AddOrUpdateCharacter(FontFileCharLine charInfo, int textureWidth, int textureHeight)
+    {
+        if (charInfo.Id >= mCharacterInfo.Length)
+        {
+            BitmapCharacterInfo[] grown = new BitmapCharacterInfo[charInfo.Id + 1];
+            Array.Copy(mCharacterInfo, grown, mCharacterInfo.Length);
+            for (int i = mCharacterInfo.Length; i < grown.Length; i++)
+            {
+                grown[i] = _defaultCharacterInfo;
+            }
+            mCharacterInfo = grown;
+        }
+
+        BitmapCharacterInfo filled = FillBitmapCharacterInfo(charInfo, textureWidth, textureHeight, mLineHeightInPixels);
+        mCharacterInfo[charInfo.Id] = filled;
+
+        if (charInfo.Id == (int)' ')
+        {
+            _defaultCharacterInfo = filled;
+        }
+    }
+
+    /// <summary>
+    /// Adds a kerning adjustment between two characters already present in this font. Used by
+    /// incremental atlas growth to merge in the kerning delta a glyph addition introduces. A pair
+    /// that already exists for <paramref name="first"/>/<paramref name="second"/> is left unchanged,
+    /// matching <see cref="SetFontPattern"/>'s parse-time kerning behavior.
+    /// </summary>
+    /// <param name="first">The character id that precedes <paramref name="second"/>.</param>
+    /// <param name="second">The character id that follows <paramref name="first"/>.</param>
+    /// <param name="amount">The pixel adjustment applied when <paramref name="second"/> follows <paramref name="first"/>.</param>
+    public void AddKerningPair(int first, int second, int amount)
+    {
+        if (first < mCharacterInfo.Length)
+        {
+            BitmapCharacterInfo character = mCharacterInfo[first];
+            if (!character.SecondLetterKearning.ContainsKey(second))
+            {
+                character.SecondLetterKearning.Add(second, amount);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Recomputes every character's UV coordinates (<see cref="BitmapCharacterInfo.TULeft"/>/
+    /// <see cref="BitmapCharacterInfo.TVTop"/>/<see cref="BitmapCharacterInfo.TURight"/>/
+    /// <see cref="BitmapCharacterInfo.TVBottom"/>) from its already-stored pixel coordinates, against
+    /// a new texture size. Used after incremental atlas growth reallocates the texture pages at a
+    /// larger size: existing glyphs' pixel positions never move (KernSmith's "stable packing"), but
+    /// their UVs were computed against the old, smaller denominator and are wrong until rescaled here.
+    /// Pair with <see cref="ReplaceTexturePages"/> using the same new dimensions.
+    /// </summary>
+    public void RescaleTextureCoordinates(int newTextureWidth, int newTextureHeight)
+    {
+        foreach (BitmapCharacterInfo info in mCharacterInfo)
+        {
+            if (info == null)
+            {
+                continue;
+            }
+
+            info.TULeft = info.PixelLeft / (float)newTextureWidth;
+            info.TVTop = info.PixelTop / (float)newTextureHeight;
+            info.TURight = info.PixelRight / (float)newTextureWidth;
+            info.TVBottom = info.PixelBottom / (float)newTextureHeight;
+        }
+    }
+
+    /// <summary>
+    /// Replaces this font's atlas texture pages, e.g. after incremental atlas growth reallocates
+    /// them at a larger size or with an added page. Does not dispose the previous pages -- the
+    /// caller owns their lifetime, matching the <see cref="Texture"/> setter.
+    /// </summary>
+    public void ReplaceTexturePages(Texture2D[] textures)
+    {
+        mTextures = textures;
+
+        mTextureNames = new string[textures.Length];
+        for (int i = 0; i < textures.Length; i++)
+        {
+            mTextureNames[i] = textures[i]?.Name;
+        }
+    }
+
+    /// <summary>
     /// Loads a .fnt file from disk and re-parses the font data, replacing the current character layout.
     /// Does not reload textures.
     /// </summary>
