@@ -114,10 +114,26 @@ Draw State Summary: 120 SpriteBatch.Begin(s)
 
 Use the breakdown to decide where to spend effort:
 
-* **Clip changes dominate** — each `ClipsChildren` container forces a begin on entry and another on exit. Forms controls add clipping containers freely, so a list or grid with many clipping items drives this number up. Reduce it by removing `ClipsChildren` where it isn't needed.
-* **Texture sets are high** — pack sprites, fonts, and the single-pixel texture onto shared PNGs (see [SinglePixelTexture](singlepixeltexture.md)).
-* **`Apos.Shapes` is high** — your scene mixes the `SpriteBatch` and Apos.Shapes batchers, which is the case [BatchKeyGroupedOrderer](batchkeygroupedorderer.md) targets. `SpriteBatch.Begin` counts (the other rows, and the total reported by `LastFrameDrawStates`) do not include Apos.Shapes begins, so this row is the only one the grouped orderer can reduce.
+* **Clip changes dominate:** each `ClipsChildren` container forces a begin on entry and another on exit. Forms controls add clipping containers freely, so a list or grid with many clipping items drives this number up. Reduce it by removing `ClipsChildren` where it isn't needed.
+* **Texture sets are high:** pack sprites, fonts, and the single-pixel texture onto shared PNGs (see [SinglePixelTexture](singlepixeltexture.md)). When an atlas isn't practical, opt into [BatchKeyGroupedOrderer](batchkeygroupedorderer.md) instead: it reorders draws so same-texture items become contiguous, which lets `SpriteBatch`'s own batching merge them without lowering the `SpriteBatch.Begin` count.
+* **`Apos.Shapes` is high:** your scene mixes the `SpriteBatch` and Apos.Shapes batchers, which is the other case [BatchKeyGroupedOrderer](batchkeygroupedorderer.md) targets. `SpriteBatch.Begin` counts (the other rows, and the total reported by `LastFrameDrawStates`) do not include Apos.Shapes begins, so this row is the only one that reflects cross-batcher cost.
 
 {% hint style="info" %}
 The clip-versus-state split is a heuristic. Clip-exit begins are identified exactly; clip-enter begins are inferred from whether the begin's renderable clips its children. A renderable that both clips and changes a non-clip state in the same begin is counted as a clip change. The totals are exact; only the clip/state attribution is approximate.
+{% endhint %}
+
+### Measuring GPU draw calls (DrawCallCount)
+
+`SpriteBatch.Begin` counts and texture-set counts are both proxies for cost. `Renderer.RenderStateChangeStatistics.DrawCallCount` is the actual number, a backend-neutral count of GPU draw calls for the frame, covering `SpriteBatch` and Apos.Shapes work alike. Use it when you want one number to compare before and after a change, such as toggling `BatchKeyGroupedOrderer` on a scene where the alternating renderables already share a `BatchKey` and won't move the begin count at all.
+
+```csharp
+// Draw
+int drawCalls = SystemManagers.Default.Renderer.RenderStateChangeStatistics.DrawCallCount;
+System.Diagnostics.Debug.WriteLine($"Draw calls last frame: {drawCalls}");
+```
+
+`DrawCallCount` resets at the start of every `Draw` call, so read it after `GumUI.Draw()` to see the count for the frame that just rendered.
+
+{% hint style="info" %}
+`DrawCallCount` is wired for MonoGame, KNI, and raylib. It stays at `0` on FNA and Skia until those backends wire up the same counter. It's available in September 2026, or now if building Gum from source.
 {% endhint %}
