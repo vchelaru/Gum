@@ -118,8 +118,16 @@ public class RectangleSelector
         if (!_isActive)
         {
             // Rectangle selector was never activated (no drag occurred)
-            // Reset state and let normal click handling take over
+            // Reset state and let normal click handling take over.
+            // _hasValidPush must also be cleared here, not just below - otherwise it stays true
+            // after an ordinary click (e.g. clicking empty canvas space to deselect), and a later,
+            // completely unrelated PrimaryDown sequence that never pushed inside the canvas (e.g.
+            // dragging the editor's own scroll bar or panel divider and moving the mouse into the
+            // wireframe window while still holding the button) passes HandleDrag's "is there a
+            // pending push" guard and computes a drag distance from the stale old push position,
+            // spuriously activating the marquee.
             _hasMovedEnough = false;
+            _hasValidPush = false;
             return;
         }
 
