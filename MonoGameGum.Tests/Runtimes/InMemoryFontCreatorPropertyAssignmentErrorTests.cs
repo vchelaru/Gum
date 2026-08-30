@@ -22,6 +22,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // stub (LoaderManager.Self is a process-wide static other test files also populate/query): a fixed
 // name could collide with another test's cached entry and short-circuit resolution before it ever
 // reaches the creator under test.
+[Collection(FontStaticsTestCollection.Name)]
 public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
 {
     [Fact]

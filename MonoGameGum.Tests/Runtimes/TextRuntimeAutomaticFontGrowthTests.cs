@@ -14,6 +14,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // automatic, no explicit call needed from the game. Detection/growth must be synchronous inside the
 // Text assignment itself (not deferred to next-frame PreRender the way oversampling regeneration is),
 // since e.g. a TextBox keystroke measures wrap immediately, before the property setter returns.
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeAutomaticFontGrowthTests : BaseTestClass
 {
     [Fact]

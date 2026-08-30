@@ -21,6 +21,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // internal-only Text.OversampleCompensationScale, which composes multiplicatively with FontScale
 // instead -- see the "ComposesWith" tests below. This file also covers the automatic, render-time
 // trigger (UpdateAutomaticFontOversampling) that replaces the old manual "press R" call.
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeFontOversamplingTests : BaseTestClass
 {
     // Issue #4330 (manual-test finding): the automatic per-frame trigger never actually engaged in a

@@ -17,6 +17,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // InlineVariable) and Font/FontSize/OutlineThickness/IsItalic/IsBold/UseCustomFont/HasDropshadow (the
 // font-stack path in ApplyFontVariables). Anything else in the state (X, Y, Width, etc.) is silently skipped,
 // and an unknown state name is a no-op - neither is an error.
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeBbCodeStateTests : BaseTestClass
 {
     [Fact]

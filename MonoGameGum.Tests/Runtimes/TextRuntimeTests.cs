@@ -19,6 +19,7 @@ using Xunit;
 
 namespace MonoGameGum.Tests.Runtimes;
 
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeTests : BaseTestClass
 {
 

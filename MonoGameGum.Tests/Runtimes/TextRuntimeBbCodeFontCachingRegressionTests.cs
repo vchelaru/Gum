@@ -35,6 +35,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // that, the test could pass vacuously if the key the resolver computes ever drifted away from the key
 // this test poisons: the resolver would then add under a fresh (empty) key, never collide, and
 // Should.NotThrow would be satisfied without the fix under test running at all.
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeBbCodeFontCachingRegressionTests : BaseTestClass
 {
     // Uses a font NOT in the test harness's stubbed embedded resources (which only cover Arial-18)

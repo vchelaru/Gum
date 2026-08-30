@@ -14,6 +14,7 @@ namespace MonoGameGum.Tests.Runtimes;
 // TextRuntime.HasDropshadow, using the same push/pop stack model as [IsBold]/[FontSize]/etc.
 // (Gum/Wireframe/CustomSetPropertyOnRenderable.cs). Distinct from #3625 (which only propagated the
 // base shadow onto per-run font swaps) - this is the tag actually changing the per-run value.
+[Collection(FontStaticsTestCollection.Name)]
 public class TextRuntimeBbCodeHasDropshadowTagTests : BaseTestClass
 {
     [Fact]
