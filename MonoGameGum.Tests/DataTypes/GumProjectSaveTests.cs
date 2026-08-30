@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Bundle;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary;
 using Shouldly;
@@ -304,6 +305,81 @@ public class GumProjectSaveTests : BaseTestClass
         finally
         {
             FileManager.RelativeDirectory = originalRelativeDirectory;
+        }
+    }
+
+    // Repro for #4548: on Android/iOS, FileManager has no filesystem root to detect an
+    // already-resolved path, so it marks one by a leading "./" instead. GumBundleLoader.Resolve
+    // absolutizes the project path once and hands GumProjectSave.Load a "./Content/..."-marked
+    // path; per-screen loads inherit that same marker through projectRootDirectory. But
+    // FileManager.XmlDeserialize strips the "./" marker (TitleContainer rejects it) *before*
+    // calling GetStreamForFile, which then sees an unmarked, "looks relative again" path and
+    // re-prepends RelativeDirectory - doubling the Content/ prefix.
+    [Fact]
+    public void Load_OnMobilePlatform_DoesNotDoublePrefixRelativeDirectoryForScreenReferences()
+    {
+        bool? originalIsMobileOverride = FileManager.IsMobileOverride;
+        string originalRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream> originalCustomGetStreamFromFile = FileManager.CustomGetStreamFromFile;
+
+        FileManager.IsMobileOverride = true;
+        FileManager.RelativeDirectory = "Content/";
+
+        const string projectXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <GumProjectSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <ScreenReference>
+                <ElementType>Screen</ElementType>
+                <LinkType>ReferenceOriginal</LinkType>
+                <Name>OpeningScreen</Name>
+              </ScreenReference>
+            </GumProjectSave>
+            """;
+        const string screenXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+              <Name>OpeningScreen</Name>
+            </ScreenSave>
+            """;
+
+        // Keyed exactly like real Android asset paths (no leading "./"), matching how
+        // RenderingLibrary.SystemManagers' real CustomGetStreamFromFile hook strips "./"
+        // immediately before calling TitleContainer.OpenStream.
+        Dictionary<string, string> files = new Dictionary<string, string>
+        {
+            ["Content/GumProject/Gum.gumx"] = projectXml,
+            ["Content/GumProject/Screens/OpeningScreen.gusx"] = screenXml,
+        };
+
+        FileManager.CustomGetStreamFromFile = path =>
+        {
+            // Real Android/iOS always use forward slashes; normalize here purely because this test
+            // forces IsMobileOverride while still running on a Windows/Unix desktop CLR, where
+            // Path.DirectorySeparatorChar (used internally by FileManager) can still be '\'.
+            string normalized = path.Replace('\\', '/');
+            string stripped = normalized.StartsWith("./") ? normalized.Substring(2) : normalized;
+            if (!files.TryGetValue(stripped, out string content))
+            {
+                throw new FileNotFoundException(path);
+            }
+            return new MemoryStream(Encoding.UTF8.GetBytes(content));
+        };
+
+        try
+        {
+            ProjectResolution resolution = GumBundleLoader.Resolve("GumProject/Gum.gumx");
+            GumProjectSave project = GumProjectSave.Load(resolution.ResolvedGumxPath, out GumLoadResult loadResult);
+
+            loadResult.ErrorMessage.ShouldBeNullOrEmpty();
+            loadResult.MissingFiles.ShouldBeEmpty();
+            project.ShouldNotBeNull();
+            project!.Screens.ShouldContain(s => s.Name == "OpeningScreen");
+        }
+        finally
+        {
+            FileManager.IsMobileOverride = originalIsMobileOverride;
+            FileManager.RelativeDirectory = originalRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = originalCustomGetStreamFromFile;
         }
     }
 
