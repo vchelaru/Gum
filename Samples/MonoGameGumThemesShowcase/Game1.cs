@@ -31,6 +31,9 @@ public class Game1 : Game
     KeyboardState _previousKeyboard;
     Color _clearColor;
 
+    // Sentinel for _currentThemeIndex meaning "no theme applied" — stock, unstyled V3 defaults.
+    const int UnthemedIndex = -1;
+
     // Authoring-only toggle (not part of the ShowcaseScreen root bookkeeping) that lets a
     // maintainer preview a hardcoded per-theme customization before manually capturing
     // screenshots. See ThemeOption.SetCustomized below for the per-theme values.
@@ -90,9 +93,9 @@ public class Game1 : Game
         GumUI.Initialize(this);
         GumUI.UseKeyboardDefaults();
 
-        // Press 1-7 to swap themes; the active screen is rebuilt so its
-        // controls pick up the newly-installed default templates. Editor has
-        // no named Background color, so a sensible dark surround is used; the
+        // Press 1-7 to swap themes, or 0 to revert to stock/un-themed V3 defaults; the active
+        // screen is rebuilt so its controls pick up the newly-installed default templates.
+        // Editor has no named Background color, so a sensible dark surround is used; the
         // Retro95 chrome is its Surface (battleship gray).
         _themes = new[]
         {
@@ -166,10 +169,33 @@ public class Game1 : Game
         }
 
         _currentThemeIndex = index;
+        _customizeCheckBox.IsEnabled = true;
         ThemeOption theme = _themes[index];
         theme.Apply(GraphicsDevice);
         _clearColor = theme.GetClearColor();
-        Window.Title = $"Gum Theme Showcase — {index + 1}. {theme.Name}  (1-{_themes.Length} swap theme, F1/F2 swap screen)";
+        Window.Title = $"Gum Theme Showcase — {index + 1}. {theme.Name}  (0: un-theme, 1-{_themes.Length} swap theme, F1/F2 swap screen)";
+    }
+
+    // Reverts to stock, unstyled V3 defaults — as if no theme had ever been applied.
+    //
+    // A theme's Apply() only ever *adds* entries to FrameworkElement.DefaultFormsTemplates
+    // (FormsUtilities.InitializeDefaults populates it with a TryAdd-style helper, so it never
+    // overwrites a key that's already set) and mutates the shared V3 Styling.ActiveStyle in
+    // place. Neither of those is reversible by calling InitializeDefaults again on its own —
+    // the theme's entries are already occupying those dictionary keys. Clearing the dictionary
+    // first is what makes InitializeDefaults' TryAdd calls actually take effect again, restoring
+    // every control's stock V3 visual; its unconditional `Styling.ActiveStyle = new(...)` then
+    // resets colors/fonts/nineslice/icons back to defaults in the same call.
+    void ApplyUntheme()
+    {
+        _currentThemeIndex = UnthemedIndex;
+        FrameworkElement.DefaultFormsTemplates.Clear();
+        FormsUtilities.InitializeDefaults();
+        _clearColor = Color.CornflowerBlue;
+        // "Show Customized" previews a hardcoded per-theme customization; there's no theme to
+        // customize while un-themed.
+        _customizeCheckBox.IsEnabled = false;
+        Window.Title = $"Gum Theme Showcase — Un-themed (stock V3 defaults)  (0: un-theme, 1-{_themes.Length} swap theme, F1/F2 swap screen)";
     }
 
     void RebuildScreen()
@@ -203,6 +229,17 @@ public class Game1 : Game
         else if (keyboard.IsKeyDown(Keys.F2) && _previousKeyboard.IsKeyUp(Keys.F2))
         {
             SwitchScreen(() => new ScreenshotScreen());
+        }
+
+        // 0 reverts to stock/un-themed V3 defaults.
+        if (keyboard.IsKeyDown(Keys.D0) && _previousKeyboard.IsKeyUp(Keys.D0))
+        {
+            if (_currentThemeIndex != UnthemedIndex)
+            {
+                RevertCustomizationIfChecked();
+                ApplyUntheme();
+                RebuildScreen();
+            }
         }
 
         // Number keys 1-7 swap the active theme and rebuild the current screen.
