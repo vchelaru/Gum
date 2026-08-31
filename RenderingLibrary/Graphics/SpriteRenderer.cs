@@ -126,6 +126,34 @@ public class SpriteRenderer
         private set;
     }
 
+    /// <summary>
+    /// Whether a FONT GLYPH's destination origin gets snapped to the nearest device pixel even when
+    /// the effective scale (zoom * sprite scale) isn't a whole number -- e.g. font oversampling or a
+    /// resize-driven camera zoom, both of which produce arbitrary fractional scales. Scoped to
+    /// <see cref="DimensionSnapping.DimensionSnapping"/> draws (font glyphs) only: a glyph's origin
+    /// is safe to snap independently of its (unsnapped) dimensions, since glyph cells don't need
+    /// edge-to-edge continuity with unrelated neighbors the way stacked/adjacent sprites do.
+    /// <see cref="DimensionSnapping.SideSnapping"/> draws (NineSlice pieces, generic stacked sprites)
+    /// are unaffected by this toggle and keep the original coupled behavior -- their shared edges
+    /// only line up when position and dimensions snap together, which requires
+    /// <c>isIntegerScale</c> either way. Defaults to true (the fix); set to false to reproduce the
+    /// old unsnapped-at-any-non-integer-scale glyph behavior for comparison.
+    /// </summary>
+    public static bool SnapPositionEvenWhenScaled = true;
+
+    /// <summary>
+    /// Decision core behind the main <c>Draw</c> overload's pixel-snapping: whether to snap a
+    /// sprite's destination origin to the nearest device pixel. At integer scale, snapping is always
+    /// safe (matches pre-fix behavior for every draw kind). At non-integer scale, snapping is safe
+    /// only for <see cref="DimensionSnapping.DimensionSnapping"/> draws (font glyphs, gated by
+    /// <see cref="SnapPositionEvenWhenScaled"/>) -- <see cref="DimensionSnapping.SideSnapping"/>
+    /// draws (NineSlice, stacked sprites) must stay coupled to dimension snapping or adjacent pieces'
+    /// edges drift apart. Split out so the decision is unit-testable without a live GraphicsDevice.
+    /// </summary>
+    internal static bool ShouldSnapPosition(bool isRotationNearZero, bool offsetPixel, bool isIntegerScale, DimensionSnapping dimensionSnapping) =>
+        isRotationNearZero && offsetPixel &&
+        (isIntegerScale || (SnapPositionEvenWhenScaled && dimensionSnapping == DimensionSnapping.DimensionSnapping));
+
     #endregion
 
     public void Initialize(GraphicsDevice graphicsDevice)
@@ -560,7 +588,15 @@ public class SpriteRenderer
             isIntegerScale = System.Math.Abs(MathFunctions.RoundToInt(zoomScale) - zoomScale) < .01f;
         }
 
-        if (radiansFromPerfectRotation < errorToTolerate && isIntegerScale && offsetPixel)
+        var isRotationNearZero = radiansFromPerfectRotation < errorToTolerate;
+        // Font-glyph position (origin) snapping no longer requires isIntegerScale -- see
+        // ShouldSnapPosition. Dimension (width/height) snapping still does everywhere, and
+        // SideSnapping draws (NineSlice, stacked sprites) keep position coupled to it too, so their
+        // shared edges stay aligned.
+        var shouldSnapPosition = ShouldSnapPosition(isRotationNearZero, offsetPixel, isIntegerScale, dimensionSnapping);
+        var shouldSnapDimensions = shouldSnapPosition && isIntegerScale;
+
+        if (shouldSnapPosition)
         {
             var effectivePixelOffsetX = Camera.PixelPerfectOffsetX;
             var effectivePixelOffsetY = Camera.PixelPerfectOffsetY;
@@ -595,7 +631,7 @@ public class SpriteRenderer
             float y = MathFunctions.RoundToInt(position.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
 
             // need to also adjust scale:
-            if(textureToUse != null)
+            if(shouldSnapDimensions && textureToUse != null)
             {
                 int sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
                 int sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;

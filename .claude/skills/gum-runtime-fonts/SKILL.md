@@ -7,6 +7,8 @@ description: Gum runtime font loading (MonoGame/KNI) — three loading paths (cu
 
 Gum renders text using **BitmapFont** — a `.fnt` descriptor file plus one or more `.png` texture atlases. There are three ways to get a BitmapFont onto a TextRuntime, each with different tradeoffs. Path 3 (in-memory generation, typically KernSmith) is the recommended route for new projects; pre-generated `.fnt` files on disk are the older path.
 
+For crisp text under camera/layer zoom, see `docs/code/files-and-fonts/font-oversampling.md` — `TextRuntime.UseFontOversampling` rebuilds the font bigger automatically when zoom changes; unrelated to the three loading paths below.
+
 ## `.fnt` encodings
 
 BMFont defines three encodings for the same data, and `ParsedFontFile` picks a branch off the first character. Gum's tool and KernSmith both emit **text**, so that is the only branch normal users reach. XML requires hand-authoring a file from BMFont's XML export and deserializes via `XmlSerializer` (so it is not Native AOT safe); binary throws outright. Treat gaps confined to the XML or binary branch as near-zero user impact.

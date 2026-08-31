@@ -34,6 +34,8 @@ The layer matters here. A layer with `LayerCameraSettings.IsInScreenSpace = true
 
 `RegenerateOversampledFont(oversampleRatio)` is the method the automatic path calls. You can call it yourself to pick a size, such as during a cut scene that zooms without touching `Camera.Zoom`. It returns `false` and does nothing if `UseFontOversampling` is off, if no `IInMemoryFontCreator` is set, or if `oversampleRatio` is zero or less.
 
+The automatic path debounces continuous zooming: it only rebuilds a font's atlas once the requested size has moved `TextRuntime.OversamplingRegenerateThresholdPixels` (1 pixel by default) from what was last rasterized. That 1px absolute threshold is a bigger fraction of a small `FontSize` than a large one, so small text can stay noticeably blurry for longer while zooming. Lower the threshold (down to `0` to regenerate on any change) if you want small text to re-crisp sooner, at the cost of rebuilding the atlas more often.
+
 ## Limitation: System Fonts vs. Registered `.ttf`
 
 For the text to keep the same size while its font is built again at other sizes, `Font` (or `CustomFontFile`) has to point at a real `.ttf` file, not just a font name like `"Arial"`. Oversampling still runs with a font name, but the width and the line breaks may shift a little each time the font is built. See [Font Strategies, System Fonts vs Registered Fonts](font-strategies.md#system-fonts-vs-registered-fonts) to learn how to register a `.ttf`.

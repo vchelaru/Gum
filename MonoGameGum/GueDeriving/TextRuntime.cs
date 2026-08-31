@@ -833,10 +833,11 @@ public class TextRuntime : InteractiveGue
 
     /// <summary>
     /// Given the current effective screen scale (see <see cref="GetEffectiveZoom"/>), re-rasterizes
-    /// this Text's font only when the requested raster pixel size would move by at least a full pixel
-    /// from what it was last rasterized at -- so continuously zooming doesn't regenerate every frame
-    /// for imperceptible deltas. Split out from the parameterless <see cref="UpdateAutomaticFontOversampling()"/>
-    /// so the decision logic is testable without a real Camera/Layer/SystemManagers graph.
+    /// this Text's font only when the requested raster pixel size would move by at least
+    /// <see cref="OversamplingRegenerateThresholdPixels"/> from what it was last rasterized at -- so
+    /// continuously zooming doesn't regenerate every frame for imperceptible deltas. Split out from
+    /// the parameterless <see cref="UpdateAutomaticFontOversampling()"/> so the decision logic is
+    /// testable without a real Camera/Layer/SystemManagers graph.
     /// </summary>
     /// <returns>True if the font was regenerated.</returns>
     internal bool UpdateAutomaticFontOversampling(float effectiveZoom)
@@ -863,7 +864,7 @@ public class TextRuntime : InteractiveGue
         var oversampleRatio = System.Math.Max(1f, effectiveZoom);
 
         var rasterDelta = System.MathF.Abs(FontSize * oversampleRatio - FontSize * _lastAutoOversampleRatio);
-        if (rasterDelta >= 1f && RegenerateOversampledFont(oversampleRatio))
+        if (rasterDelta >= OversamplingRegenerateThresholdPixels && RegenerateOversampledFont(oversampleRatio))
         {
             _lastAutoOversampleRatio = oversampleRatio;
             return true;
@@ -1486,6 +1487,15 @@ public class TextRuntime : InteractiveGue
     /// built here.
     /// </summary>
     public static bool UseFontOversampling = false;
+
+    /// <summary>
+    /// How far, in raster pixels, the requested oversampled size must move from what a Text was last
+    /// rasterized at before <see cref="UpdateAutomaticFontOversampling(float)"/> regenerates its font
+    /// again. Debounces continuous zooming so it doesn't rebuild a font atlas every frame for
+    /// imperceptible deltas -- callers who want a different regenerate-vs-smoothness tradeoff (e.g. a
+    /// lower threshold so small FontSizes re-crisp sooner) can change this project-wide. Defaults to 1.
+    /// </summary>
+    public static float OversamplingRegenerateThresholdPixels = 1f;
 
     /// <summary>
     /// Whether a Text should automatically grow its live font's glyph atlas in place when
