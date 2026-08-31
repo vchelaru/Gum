@@ -440,6 +440,43 @@ public class TextRuntimeFontOversamplingTests : BaseTestClass
     }
 
     [Fact]
+    public void UpdateAutomaticFontOversampling_UsesConfigurableRegenerateThreshold_InsteadOfHardcodedOnePixel()
+    {
+        bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
+        float savedThreshold = TextRuntime.OversamplingRegenerateThresholdPixels;
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            BitmapFont stubFont = new BitmapFont((Texture2D)null!, StubFontData);
+            stubFont.SetFontPattern(256, 256);
+            CapturingInMemoryFontCreator creator = new CapturingInMemoryFontCreator(stubFont);
+
+            TextRuntime.UseFontOversampling = true;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+            TextRuntime.OversamplingRegenerateThresholdPixels = 3f;
+
+            TextRuntime textRuntime = new();
+            textRuntime.FontSize = 20;
+            textRuntime.UpdateAutomaticFontOversampling(2.5f).ShouldBeTrue(); // raster = 50px baseline
+            creator.ResetCallTracking();
+
+            // 20 * 2.6 = 52 -- 2px past the 50px baseline. Under the default 1px threshold this would
+            // regenerate (see UpdateAutomaticFontOversampling_WhenRasterPixelDeltaAtLeastOne_RegeneratesAgain
+            // below), but a caller who raised the threshold to 3px must be honored instead.
+            bool result = textRuntime.UpdateAutomaticFontOversampling(2.6f);
+
+            result.ShouldBeFalse();
+            creator.WasCalled.ShouldBeFalse("because the caller-configured 3px threshold, not a hardcoded 1px, must govern this decision");
+        }
+        finally
+        {
+            TextRuntime.UseFontOversampling = savedUseFontOversampling;
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+            TextRuntime.OversamplingRegenerateThresholdPixels = savedThreshold;
+        }
+    }
+
+    [Fact]
     public void UpdateAutomaticFontOversampling_WhenRasterPixelDeltaAtLeastOne_RegeneratesAgain()
     {
         bool savedUseFontOversampling = TextRuntime.UseFontOversampling;
