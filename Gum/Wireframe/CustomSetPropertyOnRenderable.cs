@@ -155,12 +155,28 @@ public partial class CustomSetPropertyOnRenderable
     }
 
 #if !FRB
+    private static IRuntimeFontService? _fontService;
+
     /// <summary>
     /// Optional font service used for on-demand font creation. In the Gum tool this is
     /// assigned at startup; game runtimes can assign their own implementation.
     /// </summary>
-    public static IRuntimeFontService? FontService { get; set; }
+    public static IRuntimeFontService? FontService
+    {
+        get => _fontService;
+        set
+        {
+            _fontService = value;
+#if !RAYLIB
+            // #4563: a signature cached as unresolvable was only unresolvable against the *previous*
+            // FontService -- swapping it in (or clearing it) is a "try again" signal, not a no-op.
+            _knownUnresolvableFontKeys.Clear();
 #endif
+        }
+    }
+#endif
+
+    private static FontCreatorType? _inMemoryFontCreator;
 
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
@@ -170,7 +186,19 @@ public partial class CustomSetPropertyOnRenderable
     /// null or if creation fails, falls back to the disk-based <see cref="FontService"/> path (or
     /// the existing disk / system-font path on Raylib).
     /// </summary>
-    public static FontCreatorType? InMemoryFontCreator { get; set; }
+    public static FontCreatorType? InMemoryFontCreator
+    {
+        get => _inMemoryFontCreator;
+        set
+        {
+            _inMemoryFontCreator = value;
+#if !RAYLIB
+            // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
+            // a fresh attempt at any signature previously marked unresolvable.
+            _knownUnresolvableFontKeys.Clear();
+#endif
+        }
+    }
 
     public static event Action<string>? PropertyAssignmentError;
 
@@ -2271,6 +2299,16 @@ public partial class CustomSetPropertyOnRenderable
     public static HashSet<string> Tags => BbCodeParser.KnownTags;
 
 #if !RAYLIB
+    // #4563: signatures (GetOrCreateBakedFont's `fullFileName` cache key) for which every resolution
+    // tier has already failed. Checked up front so a repeated request for the identical signature
+    // short-circuits instead of re-running the in-memory-creator/FontService/disk cascade -- which can
+    // be slow to fail (e.g. a rasterizer backend unsupported on the current platform). This can't be
+    // folded into LoaderManager's own font cache: a `null` GetDisposable result there is indistinguishable
+    // from "never attempted", and Text.DefaultBitmapFont -- the fallback a naive fix might cache instead
+    // -- is itself null on most real hosts (SystemManagers/LoaderManager only populate it when the
+    // default font is a .fnt bitmap font, not the far more common SpriteFont/"hudFont" default).
+    private static readonly HashSet<string> _knownUnresolvableFontKeys = new();
+
     /// <summary>
     /// Resolves (loading/generating as needed) a <see cref="BitmapFont"/> for <paramref name="fontFilePath"/>
     /// (a .ttf/.otf source, or null to resolve by family name) combined with <paramref name="textRuntime"/>'s
@@ -2292,6 +2330,11 @@ public partial class CustomSetPropertyOnRenderable
         string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
 
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+        if (_knownUnresolvableFontKeys.Contains(fullFileName))
+        {
+            return null;
+        }
 
         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
 
@@ -2400,6 +2443,11 @@ public partial class CustomSetPropertyOnRenderable
         {
             PropertyAssignmentError?.Invoke(
                 $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and font service all failed) - falling back to the default font.");
+
+            // #4563: remember this signature is unresolvable so a repeated request (e.g. every other
+            // Text-bearing control sharing a broken/unsupported font) short-circuits at the
+            // top-of-function check above instead of re-running the whole cascade.
+            _knownUnresolvableFontKeys.Add(fullFileName);
         }
 
         return font;
