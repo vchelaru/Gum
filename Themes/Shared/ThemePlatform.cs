@@ -6,6 +6,7 @@ using SkiaGum.Content.Fonts;
 #else
 using Gum.Wireframe;
 using RenderingLibrary;
+using KernSmith;
 using KernSmith.Gum;
 #endif
 using System;
@@ -20,6 +21,50 @@ namespace Gum.Themes;
 /// </summary>
 internal static class ThemePlatform
 {
+#if !RAYLIB && !SKIA
+    // Test seams for SelectBackend() below -- swappable so its logic is unit-testable without a real
+    // browser host or a compile-time reference to KernSmith.Rasterizers.StbTrueType. Mirrors the
+    // established IsBrowserPlatform seam pattern in GumFontGenerator (KernSmith.GumCommon).
+    internal static Func<bool> IsBrowserPlatform = OperatingSystem.IsBrowser;
+    internal static Func<Type?> ResolveStbTrueTypeRasterizerType = () =>
+        Type.GetType("KernSmith.Rasterizers.StbTrueType.StbTrueTypeRasterizer, KernSmith.Rasterizers.StbTrueType");
+    internal static Action<Type> ForceStaticConstructor = type =>
+        System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(type.TypeHandle);
+
+    /// <summary>
+    /// Picks the KernSmith rasterizer backend a theme's font creator should use. FreeType (the
+    /// default, <c>null</c> here) is native code and cannot run on browser-wasm (#4564) -- there,
+    /// StbTrueType (the sole pure-C# backend) is required instead. Resolved by name via reflection
+    /// rather than a compile-time reference, so desktop/Raylib/SilkNet theme consumers never have to
+    /// carry the <c>KernSmith.Rasterizers.StbTrueType</c> package just because it exists (see the
+    /// <c>gum-kernsmith-integrations</c> skill's "per-backend package split"). Also force-runs the
+    /// backend's static constructor: KernSmith's reflection-based backend auto-discovery is trimmed
+    /// away under wasm/AOT publish and would otherwise silently fail to register it.
+    /// </summary>
+    /// <returns>
+    /// <see cref="RasterizerBackend.StbTrueType"/> on browser-wasm when the package is referenced;
+    /// otherwise <c>null</c>, which keeps the existing FreeType default -- and, on browser-wasm
+    /// without the package, the existing actionable <c>PlatformNotSupportedException</c> from
+    /// <c>GumFontGenerator.Generate</c> that names the missing package.
+    /// </returns>
+    internal static RasterizerBackend? SelectBackend()
+    {
+        if (!IsBrowserPlatform())
+        {
+            return null;
+        }
+
+        Type? stbType = ResolveStbTrueTypeRasterizerType();
+        if (stbType == null)
+        {
+            return null;
+        }
+
+        ForceStaticConstructor(stbType);
+        return RasterizerBackend.StbTrueType;
+    }
+#endif
+
     /// <summary>
     /// Assigns the backend-appropriate KernSmith in-memory font creator so themed controls can
     /// rasterize their fonts (system or embedded) at runtime without shipping <c>.fnt</c> files.
@@ -39,7 +84,7 @@ internal static class ThemePlatform
         var graphicsDevice = SystemManagers.Default?.Renderer?.GraphicsDevice
             ?? throw new InvalidOperationException(
                 "Gum must be initialized (GumService.Initialize) before applying a theme.");
-        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(graphicsDevice);
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = new KernSmithFontCreator(graphicsDevice, SelectBackend());
 #endif
     }
 

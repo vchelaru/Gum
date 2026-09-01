@@ -22,10 +22,15 @@ public class TextRuntimeDropshadowPlumbingTests
 
         try
         {
+            // #4563: a font signature the creator has already declined for is now cached, so the
+            // property that actually changes the font-cache key (HasDropshadow, which adds "_ds" --
+            // see GetFontCacheFileName_WhenHasDropshadowDiffersFromPlainKey below) is set LAST. That
+            // guarantees the one un-cached creator call captures every shadow field below, which are
+            // draw-time-only (not part of the font-cache key, see GumFontGenerator.ApplyShadowOptions)
+            // and were already live on the instance by the time HasDropshadow flips the key.
             TextRuntime text = new TextRuntime();
             text.Font = "Arial";
             text.FontSize = 24;
-            text.HasDropshadow = true;
             text.DropshadowOffsetX = 2f;
             text.DropshadowOffsetY = 3f;
             text.DropshadowBlur = 4f;
@@ -33,6 +38,7 @@ public class TextRuntimeDropshadowPlumbingTests
             text.DropshadowGreen = 20;
             text.DropshadowBlue = 30;
             text.DropshadowAlpha = 128;
+            text.HasDropshadow = true;
 
             creator.LastBmfcSave.ShouldNotBeNull();
             creator.LastBmfcSave!.HasDropshadow.ShouldBeTrue();

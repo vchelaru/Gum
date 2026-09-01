@@ -6,6 +6,9 @@ using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using ToolsUtilities;
 using Xunit;
 
@@ -112,6 +115,78 @@ public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
         {
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
+    // #4565: PropertyAssignmentError has no default subscriber -- only the Gum tool's editor plugin
+    // and tests subscribe -- so a consumer that never wires the event up got these failures
+    // completely silently. That's exactly what happened investigating #4563/#4564 on Blazor WASM: the
+    // real font-creator failure never surfaced anywhere visible, only its downstream symptom (repeated
+    // 404s probing a FontCache path that was never going to exist). Every raise now also goes to
+    // Console.Error so it's visible without opting in, on every platform and build configuration.
+    [Fact]
+    public void GetOrCreateBakedFont_WhenCreatorDeclinesAndNoFallbackResolves_ShouldWriteToConsoleError()
+    {
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        TextWriter originalError = Console.Error;
+        StringWriter capturedError = new StringWriter();
+        Console.SetError(capturedError);
+        try
+        {
+            DecliningFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            string fontName = UniqueFontName();
+            TextRuntime textRuntime = new();
+            textRuntime.Font = fontName;
+            textRuntime.FontSize = 12;
+
+            capturedError.ToString().ShouldContain(fontName);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
+        }
+    }
+
+    // #4563: a font signature that fails to resolve (creator declines/throws, nothing else resolves
+    // it either) previously wasn't cached, so every Text-bearing control requesting that same
+    // signature re-ran the whole creator/FontService/disk cascade from scratch -- costly when the
+    // creator is slow to fail (e.g. a rasterizer backend that isn't supported on the current
+    // platform). GetAndCreateFontIfNecessary (the inline [Font=...] BBCode path) already caches its
+    // failure; this pins GetOrCreateBakedFont doing the same for the base Font/CustomFontFile path.
+    //
+    // Counts only calls whose cache name contains our GUID-unique fontName, not raw CallCount --
+    // constructing a TextRuntime can itself trigger a resolution for its construction-time default
+    // font ("Arial"), which is incidental noise unrelated to the signature under test here.
+    [Fact]
+    public void GetOrCreateBakedFont_WhenCreatorDeclinesAndSameSignatureIsRequestedAgain_ShouldNotReinvokeCreator()
+    {
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        try
+        {
+            DecliningFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            string fontName = UniqueFontName();
+
+            TextRuntime first = new();
+            first.Font = fontName;
+
+            // A second, unrelated TextRuntime requesting the exact same signature (same family at
+            // the same default FontSize) should hit the cached failure instead of consulting the
+            // creator again.
+            TextRuntime second = new();
+            second.Font = fontName;
+
+            int callsForOurSignature = creator.SeenCacheNames.Count(name => name.Contains(fontName));
+            callsForOurSignature.ShouldBe(1,
+                "seen names: " + string.Join(" | ", creator.SeenCacheNames));
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
     }
 
@@ -228,10 +303,12 @@ char id=67 x=0 y=0 width=9 height=13 xoffset=0 yoffset=4 xadvance=9 page=0 chnl=
     private sealed class DecliningFontCreator : IInMemoryFontCreator
     {
         public int CallCount { get; private set; }
+        public List<string> SeenCacheNames { get; } = new();
 
         public BitmapFont? TryCreateFont(BmfcSave bmfcSave)
         {
             CallCount++;
+            SeenCacheNames.Add(bmfcSave.FontCacheFileName);
             return null;
         }
     }

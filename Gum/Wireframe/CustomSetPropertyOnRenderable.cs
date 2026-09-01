@@ -155,12 +155,28 @@ public partial class CustomSetPropertyOnRenderable
     }
 
 #if !FRB
+    private static IRuntimeFontService? _fontService;
+
     /// <summary>
     /// Optional font service used for on-demand font creation. In the Gum tool this is
     /// assigned at startup; game runtimes can assign their own implementation.
     /// </summary>
-    public static IRuntimeFontService? FontService { get; set; }
+    public static IRuntimeFontService? FontService
+    {
+        get => _fontService;
+        set
+        {
+            _fontService = value;
+#if !RAYLIB
+            // #4563: a signature cached as unresolvable was only unresolvable against the *previous*
+            // FontService -- swapping it in (or clearing it) is a "try again" signal, not a no-op.
+            _knownUnresolvableFontKeys.Clear();
 #endif
+        }
+    }
+#endif
+
+    private static FontCreatorType? _inMemoryFontCreator;
 
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
@@ -170,7 +186,19 @@ public partial class CustomSetPropertyOnRenderable
     /// null or if creation fails, falls back to the disk-based <see cref="FontService"/> path (or
     /// the existing disk / system-font path on Raylib).
     /// </summary>
-    public static FontCreatorType? InMemoryFontCreator { get; set; }
+    public static FontCreatorType? InMemoryFontCreator
+    {
+        get => _inMemoryFontCreator;
+        set
+        {
+            _inMemoryFontCreator = value;
+#if !RAYLIB
+            // #4563: same reasoning as FontService's setter above -- a new (or removed) creator gets
+            // a fresh attempt at any signature previously marked unresolvable.
+            _knownUnresolvableFontKeys.Clear();
+#endif
+        }
+    }
 
     public static event Action<string>? PropertyAssignmentError;
 
@@ -180,7 +208,21 @@ public partial class CustomSetPropertyOnRenderable
     /// failures on its own render-time path) can surface a failure the same way the property-assignment
     /// cascade in this class does, instead of letting the exception propagate.
     /// </summary>
-    internal static void RaisePropertyAssignmentError(string message) => PropertyAssignmentError?.Invoke(message);
+    /// <remarks>
+    /// Also writes <paramref name="message"/> to <see cref="Console.Error"/> unconditionally -- #4565:
+    /// <see cref="PropertyAssignmentError"/> has no default subscriber (only the Gum tool's editor
+    /// plugin and tests subscribe), so a consumer that never wires the event up got these failures
+    /// completely silently. This is the single choke point every <c>PropertyAssignmentError?.Invoke</c>
+    /// call site in this class routes through, so the console write covers all of them without each
+    /// site needing its own logging call. <c>Console.Error</c> (not <see cref="System.Diagnostics.Debug"/>,
+    /// which no-ops in a Release-configuration NuGet package) because it works in every build
+    /// configuration and is forwarded to the browser console on Blazor WASM.
+    /// </remarks>
+    internal static void RaisePropertyAssignmentError(string message)
+    {
+        Console.Error.WriteLine($"[Gum] {message}");
+        PropertyAssignmentError?.Invoke(message);
+    }
 
     /// <summary>
     /// Optional resolver that turns a render-target shader file reference (e.g. an <c>.fx</c> path on
@@ -465,7 +507,7 @@ public partial class CustomSetPropertyOnRenderable
                 throw new System.IO.FileNotFoundException(message, resolveException);
             }
             effectOwner.RenderTargetEffect = null;
-            PropertyAssignmentError?.Invoke(resolveException != null ? message + "\n" + resolveException.ToString() : message);
+            RaisePropertyAssignmentError(resolveException != null ? message + "\n" + resolveException.ToString() : message);
             return;
         }
 
@@ -2042,7 +2084,7 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         // Fall through to disk-based path, but surface the failure instead of leaving it
                         // completely silent (previously: catch { } with zero diagnostics anywhere - #4464).
-                        PropertyAssignmentError?.Invoke(
+                        RaisePropertyAssignmentError(
                             $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
                     }
                 }
@@ -2185,7 +2227,7 @@ public partial class CustomSetPropertyOnRenderable
             {
                 // Fall through to null - the caller uses the base font / base-atlas scale fallback -
                 // but surface the failure instead of leaving it completely silent.
-                PropertyAssignmentError?.Invoke(
+                RaisePropertyAssignmentError(
                     $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
 
@@ -2271,6 +2313,16 @@ public partial class CustomSetPropertyOnRenderable
     public static HashSet<string> Tags => BbCodeParser.KnownTags;
 
 #if !RAYLIB
+    // #4563: signatures (GetOrCreateBakedFont's `fullFileName` cache key) for which every resolution
+    // tier has already failed. Checked up front so a repeated request for the identical signature
+    // short-circuits instead of re-running the in-memory-creator/FontService/disk cascade -- which can
+    // be slow to fail (e.g. a rasterizer backend unsupported on the current platform). This can't be
+    // folded into LoaderManager's own font cache: a `null` GetDisposable result there is indistinguishable
+    // from "never attempted", and Text.DefaultBitmapFont -- the fallback a naive fix might cache instead
+    // -- is itself null on most real hosts (SystemManagers/LoaderManager only populate it when the
+    // default font is a .fnt bitmap font, not the far more common SpriteFont/"hudFont" default).
+    private static readonly HashSet<string> _knownUnresolvableFontKeys = new();
+
     /// <summary>
     /// Resolves (loading/generating as needed) a <see cref="BitmapFont"/> for <paramref name="fontFilePath"/>
     /// (a .ttf/.otf source, or null to resolve by family name) combined with <paramref name="textRuntime"/>'s
@@ -2292,6 +2344,11 @@ public partial class CustomSetPropertyOnRenderable
         string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
 
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
+
+        if (_knownUnresolvableFontKeys.Contains(fullFileName))
+        {
+            return null;
+        }
 
         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
 
@@ -2319,7 +2376,7 @@ public partial class CustomSetPropertyOnRenderable
             {
                 // Fall through to disk-based path, but surface the failure instead of leaving it
                 // completely silent (previously: catch { } with zero diagnostics anywhere - #4464).
-                PropertyAssignmentError?.Invoke(
+                RaisePropertyAssignmentError(
                     $"Error creating in-memory font '{fontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
         }
@@ -2398,8 +2455,13 @@ public partial class CustomSetPropertyOnRenderable
         // configured) used to fall back to the default font with zero diagnostics anywhere - #4553.
         if (font == null)
         {
-            PropertyAssignmentError?.Invoke(
+            RaisePropertyAssignmentError(
                 $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and font service all failed) - falling back to the default font.");
+
+            // #4563: remember this signature is unresolvable so a repeated request (e.g. every other
+            // Text-bearing control sharing a broken/unsupported font) short-circuits at the
+            // top-of-function check above instead of re-running the whole cascade.
+            _knownUnresolvableFontKeys.Add(fullFileName);
         }
 
         return font;
@@ -2468,7 +2530,7 @@ public partial class CustomSetPropertyOnRenderable
                 // Fall through to the disk / system-font path, but surface the failure - previously
                 // silent, leaving Raylib's default font on screen with no indication the in-memory
                 // creator failed.
-                PropertyAssignmentError?.Invoke(
+                RaisePropertyAssignmentError(
                     $"Error creating in-memory font '{fontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
         }
@@ -2486,7 +2548,7 @@ public partial class CustomSetPropertyOnRenderable
         // either - #4553.
         if (fontFromGum.BaseSize == 0)
         {
-            PropertyAssignmentError?.Invoke(
+            RaisePropertyAssignmentError(
                 $"No usable font could be resolved for '{fontName}' (in-memory creator, disk cache, and system font all failed) - falling back to raylib's default font.");
         }
 
@@ -3094,7 +3156,7 @@ public partial class CustomSetPropertyOnRenderable
                 }
                 sprite.AnimationChains = null;
 
-                PropertyAssignmentError?.Invoke(message + "\n" + ex.ToString());
+                RaisePropertyAssignmentError(message + "\n" + ex.ToString());
             }
 
 
@@ -3156,7 +3218,7 @@ public partial class CustomSetPropertyOnRenderable
                 }
                 sprite.Texture = null;
 
-                PropertyAssignmentError?.Invoke(loadException != null ? message + "\n" + loadException.ToString() : message);
+                RaisePropertyAssignmentError(loadException != null ? message + "\n" + loadException.ToString() : message);
             }
             else
             {
