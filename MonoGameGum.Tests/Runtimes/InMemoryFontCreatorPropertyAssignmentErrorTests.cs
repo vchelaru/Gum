@@ -7,6 +7,7 @@ using RenderingLibrary.Graphics.Fonts;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ToolsUtilities;
 using Xunit;
@@ -114,6 +115,38 @@ public class InMemoryFontCreatorPropertyAssignmentErrorTests : BaseTestClass
         {
             CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
             CustomSetPropertyOnRenderable.PropertyAssignmentError -= Handler;
+        }
+    }
+
+    // #4565: PropertyAssignmentError has no default subscriber -- only the Gum tool's editor plugin
+    // and tests subscribe -- so a consumer that never wires the event up got these failures
+    // completely silently. That's exactly what happened investigating #4563/#4564 on Blazor WASM: the
+    // real font-creator failure never surfaced anywhere visible, only its downstream symptom (repeated
+    // 404s probing a FontCache path that was never going to exist). Every raise now also goes to
+    // Console.Error so it's visible without opting in, on every platform and build configuration.
+    [Fact]
+    public void GetOrCreateBakedFont_WhenCreatorDeclinesAndNoFallbackResolves_ShouldWriteToConsoleError()
+    {
+        IInMemoryFontCreator? savedCreator = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        TextWriter originalError = Console.Error;
+        StringWriter capturedError = new StringWriter();
+        Console.SetError(capturedError);
+        try
+        {
+            DecliningFontCreator creator = new();
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = creator;
+
+            string fontName = UniqueFontName();
+            TextRuntime textRuntime = new();
+            textRuntime.Font = fontName;
+            textRuntime.FontSize = 12;
+
+            capturedError.ToString().ShouldContain(fontName);
+        }
+        finally
+        {
+            Console.SetError(originalError);
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = savedCreator;
         }
     }
 
