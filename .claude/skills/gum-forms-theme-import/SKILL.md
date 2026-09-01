@@ -14,8 +14,14 @@ bypassable — the tool never edits the user's game project.
 This is the **tool-content** side: a theme is a self-contained Gum project under
 `Tools/Gum.ProjectServices/Templates/FormsThemes/<Name>/` (its own `GumProject.gumx`,
 `Components/`, `Behaviors/`, `Screens/`, `Standards/`) that Add Forms copies into the user's
-project. `Bubblegum`, `Hazard`, and `DarkPro` have parity today (#3527 tracks porting the rest:
-Editor, ForestGlade, Neon, Retro95, Meadow).
+project. `Bubblegum`, `Hazard`, `DarkPro`, `Retro95`, `ForestGlade`, `Neon`, and `Meadow` have
+parity today (staged per-theme in `Gum/GumFormsPlugin/GumFormsPlugin.csproj`'s postbuild, alongside
+the default `Standard` theme — 8 entries in the tool's theme dropdown). `Editor` exists as a
+code-only theme (`Themes/Gum.Themes.Editor.*`) but was investigated and intentionally skipped: it
+doesn't follow the full-chrome-rebuild pattern the tool-content model assumes (it recolors V3's
+stock NineSlice visuals in place rather than replacing them), restyles only 9 of ~21 Forms
+controls, and introduces `Expander` — a control with no Add-Forms behavior infrastructure. Porting
+it would mean inventing a look the theme's own author chose not to build.
 
 ## Porting a new theme (#3527): do the landmines up front, not reactively
 

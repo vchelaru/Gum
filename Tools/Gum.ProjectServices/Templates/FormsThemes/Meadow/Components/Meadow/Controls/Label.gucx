@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ComponentSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Meadow/Controls/Label</Name>
+  <BaseType>Text</BaseType>
+  <State>
+    <Name>Default</Name>
+    <Variable Type="int" Name="Blue" SetsValue="true">
+      <Value xsi:type="xsd:int">91</Value>
+    </Variable>
+    <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+      <Value xsi:type="xsd:string">Fonts/Baloo2-Bold.ttf</Value>
+    </Variable>
+    <Variable Type="int" Name="FontSize" SetsValue="true">
+      <Value xsi:type="xsd:int">15</Value>
+    </Variable>
+    <Variable Type="int" Name="Green" SetsValue="true">
+      <Value xsi:type="xsd:int">106</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <Variable Type="bool" Name="IsBold" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="int" Name="Red" SetsValue="true">
+      <Value xsi:type="xsd:int">30</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
+    <Variable Type="TextCategory" Name="TextCategoryState" SetsValue="false" />
+    <Variable Type="float" Name="Width" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" Category="Dimensions" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
+    </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/Meadow/Styles.TealDark.FillColor</string>
+        <string>Font = Components/Meadow/Styles.Strong.Font</string>
+        <string>FontSize = Components/Meadow/Styles.Strong.FontSize</string>
+        <string>IsBold = Components/Meadow/Styles.Strong.IsBold</string>
+      </Value>
+    </VariableList>
+  </State>
+  <Category>
+    <Name>TextCategory</Name>
+    <State>
+      <Name>Normal</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/Baloo2-SemiBold.ttf</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Meadow/Styles.Normal.Font</string>
+          <string>FontSize = Components/Meadow/Styles.Normal.FontSize</string>
+          <string>IsBold = Components/Meadow/Styles.Normal.IsBold</string>
+          <string>IsItalic = Components/Meadow/Styles.Normal.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+    <State>
+      <Name>Strong</Name>
+      <Variable IsFont="true" Type="string" Name="Font" SetsValue="true">
+        <Value xsi:type="xsd:string">Fonts/Baloo2-Bold.ttf</Value>
+      </Variable>
+      <Variable Type="int" Name="FontSize" SetsValue="true">
+        <Value xsi:type="xsd:int">15</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsBold" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="bool" Name="IsItalic" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Font = Components/Meadow/Styles.Strong.Font</string>
+          <string>FontSize = Components/Meadow/Styles.Strong.FontSize</string>
+          <string>IsBold = Components/Meadow/Styles.Strong.IsBold</string>
+          <string>IsItalic = Components/Meadow/Styles.Strong.IsItalic</string>
+        </Value>
+      </VariableList>
+    </State>
+  </Category>
+  <Behaviors>
+    <ElementBehaviorReference>
+      <BehaviorName>LabelBehavior</BehaviorName>
+    </ElementBehaviorReference>
+  </Behaviors>
+  <VariablesHiddenFromInstances>
+    <string>ContainedType</string>
+    <string>ChildrenLayout</string>
+    <string>ClipsChildren</string>
+    <string>IsRenderTarget</string>
+    <string>ExposeChildrenEvents</string>
+  </VariablesHiddenFromInstances>
+</ComponentSave>

@@ -34,7 +34,7 @@ namespace Gum.ProjectServices.Tests;
 public class ThemeRecolorHelper
 {
     // Change this before running.
-    private const string ThemeName = "Hazard";
+    private const string ThemeName = "Meadow";
 
     [Fact(Skip = "Manual migration step. Set Skip = null and ThemeName, then run.")]
     public void ReapplyAndSave()
