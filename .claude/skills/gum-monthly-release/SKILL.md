@@ -99,11 +99,16 @@ gh release view <prior-release-tag> --repo vchelaru/Gum
 
 > You are expanding Gum PRs into release-notes bullets. For each PR number in this batch — [N1, N2, …] — run `gh pr view <N> --repo vchelaru/Gum --json number,title,author,files,commits`. If the commit list is sparse or the intent is unclear, also read `gh pr diff <N> --repo vchelaru/Gum`, and for PRs whose title references an issue number, `gh issue view <issue-num> --repo vchelaru/Gum` for the user-facing symptom. Standalone `jq`/`python` are not installed; use `gh --jq` only.
 >
-> The style is **user-impact-first, not mechanical**: the reader is a Gum customer deciding whether this release matters to them. Translate, e.g. *"Refactored TextRuntime font loading"* → *"Better error messages when fonts fail to load because Gum wasn't initialized"*; *"Added IsTilingMiddleSections to NineSlice"* → *"NineSlices can now optionally tile the middle section in tool and at runtime."* Keep bullets to one line unless a feature genuinely needs more; link docs (`https://docs.flatredball.com/gum/...`) when relevant.
+> The style is **user-impact-first, not mechanical**: the reader is a Gum customer deciding whether this release matters to them. Translate, e.g. *"Refactored TextRuntime font loading"* → *"Better error messages when fonts fail to load because Gum wasn't initialized"*; *"Added IsTilingMiddleSections to NineSlice"* → *"NineSlices can now optionally tile the middle section in tool and at runtime."*
+>
+> **Humans are lazy. One short sentence per bullet, no exceptions.** State the change and stop — cut every qualifying clause ("this only affects you if...", "instead of the old behavior of...", "note that...") unless deleting it would make the bullet actively wrong. A bullet with a semicolon or a second sentence is a compression failure, not thoroughness. If detail matters (who's affected by a breaking change, how to migrate), that detail belongs in the linked doc, not the bullet — link docs (`https://docs.flatredball.com/gum/...`) instead of inlining them.
+>
+> Bad: *"V1 and V2 default Forms visuals are removed. DefaultVisualsVersion.V1/.V2 and their backing classes no longer exist. Passing either value, or referencing a V1/V2 class directly, is now a compile error instead of a CS0618 warning. This only affects you if you explicitly requested V1/V2 or subclassed a V1/V2 visual directly; every backend already defaulted to V3 in practice."*
+> Good: *"V1 and V2 default Forms visuals removed, replaced by V3."*
 >
 > **Expand roll-ups — this is the single most important instruction.** A PR titled "Styling improvements" / "Font improvements" / "FRB fixes" / "Apos Shapes work" / "More work on X" almost always contains *several* distinct user-visible changes in its commit list. Emit **one bullet per distinct change**, never one bullet for the PR. The PR title is never the only signal; the per-commit changelog is. ("Bump version", `GITBOOK-NNN`, `Merge pull request` commits add nothing — for those, trust the title.)
 >
-> **Skip entirely** (return nothing): GitBook auto-syncs (`GITBOOK-NNN`), FRB-integration fix PRs ("FRB fixes" / "Oops fixed FRB" — FlatRedBall-1 patches the maintainer never wants in notes), internal-only first-party plugin/code-organization renames (e.g. `InternalPlugin` → `PriorityPlugin`), and **documentation-only PRs** (new or updated docs pages, troubleshooting sections, doc reorganization, broken-link fixes) — the maintainer does not include documentation in the release notes. For a *mixed* PR that also changes code, still surface the non-documentation user-facing change; only the documentation portion is dropped.
+> **Skip entirely** (return nothing): GitBook auto-syncs (`GITBOOK-NNN`), FRB-integration fix PRs ("FRB fixes" / "Oops fixed FRB" — FlatRedBall-1 patches the maintainer never wants in notes), internal-only first-party plugin/code-organization renames (e.g. `InternalPlugin` → `PriorityPlugin`), **documentation-only PRs** (new or updated docs pages, troubleshooting sections, doc reorganization, broken-link fixes) — the maintainer does not include documentation in the release notes, and **internal diagnostic logging** (e.g. per-phase timing added to the Output window, debug instrumentation) — not a user-visible capability change, so skip it without routing to Open Questions. For a *mixed* PR that also changes code, still surface the non-documentation user-facing change; only the documentation/diagnostic portion is dropped.
 >
 > **Clarity bar** — every bullet must answer "what changed and why do I care?" without opening the PR or knowing the codebase:
 > - No dangling internal class/method names. *"Property paths shared via the relocated `PropertyPathObserver`"* is unacceptable — name the user scenario or drop the class name.
@@ -129,9 +134,11 @@ Work from the **combined bullet list the Step 3 subagents returned**, not the ra
 
 **Documentation-only changes are excluded from the curated sections** — the maintainer does not want docs called out in the highlight bullets. The Step 3 subagents already drop them, but double-check that none slipped through as a Gum Tool or Gum Runtimes bullet. (Documentation PRs are *only* excluded from the curated highlights — they still appear in the complete What's Changed list per Step 7.5.)
 
+**One bullet = one change, one short sentence — never stitch bullets together to save space.** Each Step 3 subagent already returns one bullet per distinct change. When filing them into a section, keep them as separate list items, and keep each to a single short sentence — no semicolons chaining a second fact, no "this only affects you if..." caveats, no parenthetical PR-number lists like "(#4426, #4436, #4498)" tacked onto a combined sentence. A bullet that names more than one PR, or that runs past one sentence, is a compression failure — split it back into separate bullets, even when the changes are thematically related (a shared intro sentence is fine; the fixes below it still get one bullet each). No em dashes — use a period or comma instead. This is the single most common way a draft goes wrong: it's easy to re-merge Step 3's already-good short bullets into a longer "complete" paragraph while filing them, and that's exactly the failure to avoid.
+
 Sections, in order:
 
-1. **Breaking Changes** — bullets + a "For more information... see <migration-doc-url>" line. Omit the section entirely if the user said no breaking changes this month.
+1. **Breaking Changes** — one short sentence per change, naming what was removed/changed and its replacement (e.g. "X removed, replaced by Y"), plus a "See the upgrade guide for who's affected and how to fix it: <migration-doc-url>" line. Who's affected, why, and how to migrate are the doc's job, not the bullet's — do not restate them inline. Omit the section entirely if the user said no breaking changes this month.
 2. **Biggest Changes** — see Step 5.
 3. **Gum Tool** — anything affecting the Gum WPF tool (paths under `Tool/`, `Gum/`, plugins, tool-side projects).
 4. **Gum Runtimes** — anything affecting shipped runtime libraries (`MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, `GumCommon`'s runtime-facing pieces).
@@ -155,7 +162,7 @@ The user picks the spotlight features by gut feel: coolest / most impactful for 
 - Identify **up to 4 additional candidates** — also strong but didn't make your top 4.
 - Place the Top 4 in the **Biggest Changes** section in the markdown, each with:
   - `### <Feature name>` heading
-  - 1–3 sentence user-impact description
+  - 1–2 short sentences of user-impact description, same "cut every caveat" bar as regular bullets (see Step 3) — a spotlight section earns a heading and an image, not extra words
   - Doc link if available
   - `PLACEHOLDER!!!! IMAGE/GIF for <feature name>` line where the image goes
 - Put the additional candidates in the **Open Questions** block at the bottom (see Step 9) so the user can swap or re-rank.
@@ -209,7 +216,7 @@ Rules for the list:
 - **Order newest-first** (git log default) — matches GitHub's auto-generated "What's Changed".
 - **Exclude** GitBook auto-syncs and FRB-integration PRs (same filters as Step 2). These never appear, not even here.
 - **Keep everything else by default** — this list's job is completeness. Internal refactors **and documentation PRs** that were omitted from the curated sections still belong here. (Documentation is excluded from the curated highlights but retained in this complete list.)
-- **Repo-housekeeping is the one trim the user may request** (CLAUDE.md edits, skill-file changes, CI-only PRs, GitBook asset renames, stub-doc adds). Leave them in by default but offer to strip them (see Step 11). Remove with `grep -vxF -e "<exact line>" …` (exact, fixed-string match) — note `grep -P` fails in this environment's locale, and `/`-containing titles break naive `sed /…/d` because `/` is the sed delimiter.
+- **Repo-housekeeping is excluded from What's Changed by default, without asking** (CLAUDE.md edits, skill-file changes, CI-only PRs, GitBook asset renames, stub-doc adds). Filter with `grep -vxF -e "<exact line>" …` (exact, fixed-string match) — note `grep -P` fails in this environment's locale, and `/`-containing titles break naive `sed /…/d` because `/` is the sed delimiter.
 
 Sanity-check the count against the canonical set (`git log` PR count minus the FRB/GitBook exclusions) before moving on.
 
@@ -269,6 +276,16 @@ Critically: do not let the *presence* of a class name lull you into thinking a b
 
 If you find yourself producing a bullet you wouldn't be able to defend in a code review, that's the signal to investigate or OQ rather than ship.
 
+## Step 9.6: Compression audit (mandatory before writing)
+
+This is where the "it's SOOOOOOOO WORDY" failure actually happens: not in Step 3's per-PR bullets, but in Step 4's merge, when multiple already-good short bullets get stitched into one dense paragraph, or a single bullet grows a string of "this only affects you if..." caveats, to save space. Before writing the file, re-scan every bullet in Breaking Changes, Biggest Changes, Gum Tool, Gum Runtimes, and Tutorials and Templates:
+
+- Is it one short sentence? A bullet naming more than one PR number, or containing a semicolon or a second sentence, is almost always two bullets wearing one, or a caveat that belongs in a linked doc instead.
+- Does it state the change and stop, with no "this only affects you if..." / "instead of the old behavior of..." qualifier tacked on?
+- Does it avoid an em dash?
+
+Any "no" means split or cut it per the rule in Step 4.
+
 ## Step 10: Write the file and open it
 
 Write to `temp/release-notes-YYYY-MM-DD.md` at the repo root, where the date is parsed from the release tag from Step 1 question 1.
@@ -283,7 +300,7 @@ Confirm the path in chat so the user can find it again.
 
 ## Step 11: Walk through Open Questions
 
-After the file is open, work through the Open Questions block with the user **one question at a time**. As each is resolved, edit the file directly (move bullets between sections, swap Biggest Changes entries, fill in clarified user-impact descriptions). Among the questions to raise here: **offer to trim repo-housekeeping from the What's Changed list** (CLAUDE.md/skill-file/CI/stub-doc/GitBook-asset-rename PRs) — list the specific candidate lines so the user can say yes/no in one go. Once all are resolved, delete the Open Questions block.
+After the file is open, work through the Open Questions block with the user **one question at a time**. As each is resolved, edit the file directly (move bullets between sections, swap Biggest Changes entries, fill in clarified user-impact descriptions). Once all are resolved, delete the Open Questions block.
 
 The skill is done when the markdown file contains only the release notes — curated highlights + the What's Changed list + the two intentional placeholders (per-spotlight images and the Full Changelog compare link), no Open Questions — and the user is satisfied.
 
