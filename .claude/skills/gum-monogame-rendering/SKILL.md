@@ -28,6 +28,8 @@ Key contract difference: each `Renderer.Draw` is one top-level renderable. If a 
 
 `Renderer.End` historically was asymmetric with `RenderLayer`'s end-of-walk: it called `EndSpriteBatch` but **did not** flush the pending custom batch, so draws leaked across cycles. Fixed: `Renderer.End` now calls `_batchOrchestrator.FlushAndReset(...)` before `EndSpriteBatch`. If you change the End logic, preserve that ordering.
 
+`Renderer.GumBatchDrawMode.Deferred` (optional `Begin(mode:)` param, issue #4573) accumulates `Draw()` calls into a scratch list instead of submitting immediately. `End` stable-sorts it by `Z` (`Layer.SortByZ`, extracted out of `Layer.SortRenderables`) and runs it through `SiblingOrdering.BuildDrawList`/`Submit` once, so separate `Draw()` calls can batch together (e.g. under `BatchKeyGroupedOrderer`). `Immediate` (the default) is unchanged.
+
 ## PreRender Walk: Layered Path Has Two Phases, GumBatch Path Has One
 
 The layered path runs a recursive `PreRender` pass on `layer.Renderables` **before** `BeginSpriteBatch`. That pass does two jobs:
@@ -286,3 +288,4 @@ When changing batch logic:
 9. If you touch `Renderer.AdjustRenderStates` or the clip-change paths in `Renderer.Draw`, does a clip change (entry OR exit) flush the orchestrator (`_batchOrchestrator.FlushAndReset`) BEFORE `BeginSpriteBatch`? Empirical canary: the first item's shape background inside a `ScrollViewer` clips when scrolled past the top edge (not just the second item and beyond).
 10. Investigating draw-call/batching cost? Check `Renderer.SiblingOrdering`, not just `BatchOrchestrator` — they're separate layers (see "Draw Order Is a Separate, Pluggable Layer" above).
 11. Reset immediate-mode perf stats once per host frame, not on every `Begin`. Per-`Begin` reset wipes out an earlier camera pass's stats instead of accumulating them within the frame.
+12. Touching the `Deferred` flush? It owns its own scratch buffers (`_deferredImmediateModeRoots`/`_deferredImmediateModeCommands`), not `_scratchCommands`/`_bakeCommands` — those are already claimed by `RenderLayer`/the render-target bake.

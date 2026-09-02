@@ -92,54 +92,66 @@ namespace RenderingLibrary.Graphics
         public void Insert(int index, IRenderableIpso renderable) => mRenderables.Insert(index, renderable);
 
         /// <summary>
-        /// This is a stable sort on Z.  It's incredibly fast on already-sorted lists so we'll do this over something like the built-in 
+        /// This is a stable sort on Z.  It's incredibly fast on already-sorted lists so we'll do this over something like the built-in
         /// binary sorts that .NET offers.
         /// </summary>
         public void SortRenderables()
         {
+            SortByZ(mRenderables, SecondarySortOnY);
+        }
+
+        /// <summary>
+        /// Stable sort on <see cref="IRenderableIpso.Z"/> (then, when <paramref name="secondarySortOnY"/>
+        /// is true, on absolute Y for equal-Z entries), extracted out of <see cref="SortRenderables"/> so
+        /// a caller with a flat list of top-level renderables that isn't a <see cref="Layer"/> - the
+        /// deferred immediate-mode flush in <c>Renderer.End</c> - can sort the same way before handing
+        /// the list to <see cref="IRenderableOrderer.BuildDrawList(IList{IRenderableIpso}, List{DrawCommand}, ClipBoundsSource)"/>.
+        /// </summary>
+        internal static void SortByZ(List<IRenderableIpso> renderables, bool secondarySortOnY = false)
+        {
             /////////////Early Out//////////////
-            if (mRenderables.Count < 2)
+            if (renderables.Count < 2)
                 return;
             ///////////End Early Out////////////
 
             int whereObjectBelongs;
 
-            for (int i = 1; i < mRenderables.Count; i++)
+            for (int i = 1; i < renderables.Count; i++)
             {
-                var atI = mRenderables[i];
-                if ((atI).Z < (mRenderables[i - 1]).Z)
+                var atI = renderables[i];
+                if ((atI).Z < (renderables[i - 1]).Z)
                 {
                     if (i == 1)
                     {
-                        mRenderables.Insert(0, atI);
-                        mRenderables.RemoveAt(i + 1);
+                        renderables.Insert(0, atI);
+                        renderables.RemoveAt(i + 1);
                         continue;
                     }
 
                     for (whereObjectBelongs = i - 2; whereObjectBelongs > -1; whereObjectBelongs--)
                     {
-                        if (atI.Z >= (mRenderables[whereObjectBelongs]).Z)
+                        if (atI.Z >= (renderables[whereObjectBelongs]).Z)
                         {
-                            mRenderables.Insert(whereObjectBelongs + 1, atI);
-                            mRenderables.RemoveAt(i + 1);
+                            renderables.Insert(whereObjectBelongs + 1, atI);
+                            renderables.RemoveAt(i + 1);
                             break;
                         }
-                        else if (whereObjectBelongs == 0 && atI.Z < (mRenderables[0]).Z)
+                        else if (whereObjectBelongs == 0 && atI.Z < (renderables[0]).Z)
                         {
-                            mRenderables.Insert(0, atI);
-                            mRenderables.RemoveAt(i + 1);
+                            renderables.Insert(0, atI);
+                            renderables.RemoveAt(i + 1);
                             break;
                         }
                     }
                 }
             }
 
-            if (SecondarySortOnY)
+            if (secondarySortOnY)
             {
-                for (int i = 1; i < mRenderables.Count; i++)
+                for (int i = 1; i < renderables.Count; i++)
                 {
-                    var atI = mRenderables[i];
-                    var atIMinus1 = mRenderables[i - 1];
+                    var atI = renderables[i];
+                    var atIMinus1 = renderables[i - 1];
 
                     var atIAbsoluteY = atI.GetAbsoluteY();
 
@@ -147,26 +159,26 @@ namespace RenderingLibrary.Graphics
                     {
                         if (i == 1)
                         {
-                            mRenderables.Insert(0, atI);
-                            mRenderables.RemoveAt(i + 1);
+                            renderables.Insert(0, atI);
+                            renderables.RemoveAt(i + 1);
                             continue;
                         }
 
                         for (whereObjectBelongs = i - 2; whereObjectBelongs > -1; whereObjectBelongs--)
                         {
-                            if (atI.Z >= (mRenderables[whereObjectBelongs]).Z ||
-                                atIAbsoluteY >= (mRenderables[whereObjectBelongs]).GetAbsoluteY())
+                            if (atI.Z >= (renderables[whereObjectBelongs]).Z ||
+                                atIAbsoluteY >= (renderables[whereObjectBelongs]).GetAbsoluteY())
                             {
-                                mRenderables.Insert(whereObjectBelongs + 1, atI);
-                                mRenderables.RemoveAt(i + 1);
+                                renderables.Insert(whereObjectBelongs + 1, atI);
+                                renderables.RemoveAt(i + 1);
                                 break;
                             }
                             else if (whereObjectBelongs == 0 &&
-                                atI.Z < (mRenderables[0]).Z &&
-                                atIAbsoluteY < (mRenderables[0]).GetAbsoluteY())
+                                atI.Z < (renderables[0]).Z &&
+                                atIAbsoluteY < (renderables[0]).GetAbsoluteY())
                             {
-                                mRenderables.Insert(0, atI);
-                                mRenderables.RemoveAt(i + 1);
+                                renderables.Insert(0, atI);
+                                renderables.RemoveAt(i + 1);
                                 break;
                             }
                         }

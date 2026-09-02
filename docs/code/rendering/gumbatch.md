@@ -31,6 +31,24 @@ GumBatch draws through the same `Camera` as the rest of Gum, the one at `GumServ
 Because the matrix composes on top of the camera, setting `Camera.Zoom` to a non-default value **and** passing a scaling matrix to `Begin(Matrix)` applies the scale twice. Drive scaling from a single source: either leave the matrix off and use `Camera.Zoom`, or pass a matrix and keep `Camera.Zoom` at `1`.
 {% endhint %}
 
+### Batching Multiple Draw Calls: Deferred Mode
+
+`Begin` takes an optional `GumBatchDrawMode`, mirroring MonoGame's own `SpriteSortMode.Immediate`/`Deferred` distinction:
+
+```csharp
+// Draw
+Core.GumBatch.Begin(mode: RenderingLibrary.Graphics.Renderer.GumBatchDrawMode.Deferred);
+Core.GumBatch.Draw(cardOne);
+Core.GumBatch.Draw(cardTwo);
+Core.GumBatch.End();
+```
+
+`Immediate` is the default and matches every example on this page: each `Draw` call submits right away, in call order. `Deferred` instead collects every `Draw` call made before the matching `End` and, at `End`, sorts them by `Z` (same stable sort a `Layer` uses for its own top-level renderables) and runs them through the active `Renderer.SiblingOrdering`. This lets separate `Draw` calls batch together, for example under [BatchKeyGroupedOrderer](../performance-and-optimization/batchkeygroupedorderer.md), which they otherwise can't since each `Immediate` call is its own isolated submission. Reach for `Deferred` when you draw many small pieces of content through separate `Draw` calls (for example, one call per game entity) and want them to batch as if they were siblings under one parent.
+
+{% hint style="warning" %}
+`Deferred` only reorders Gum's own `Draw` calls relative to each other. It does not change when raw draws issued directly on `gumBatch.SpriteBatch` submit (see [Mixing with SpriteBatch](#mixing-with-spritebatch) below) - those still submit immediately, at their own call site. So a raw `SpriteBatch` draw interleaved with `Deferred` `Draw` calls no longer shares a predictable position with them in the final paint order, since Gum's own draws are pushed to the end of the cycle.
+{% endhint %}
+
 ### Rendering TextRuntimes
 
 The most flexible way to draw text with GumBatch is to create a `TextRuntime`. TextRuntimes support all of Gum's layout rules (wrapping, alignment, rotation, sizing) and integrate with Gum's font system so you can set `Font` and `FontSize` directly and let KernSmith create the atlas on demand.
