@@ -116,6 +116,8 @@ Three behaviors worth internalizing:
 
 **Landmine:** `BatchOrchestrator` only flushes on a `BatchKey` change, so its granularity caps what it can detect — a coarse key (e.g. one shared across many texture sources) means real per-texture draw-call cost hides inside MonoGame's own SpriteBatch batching over whatever order `SiblingOrdering` produced. Per-texture grouping goes through the separate `BatchSortKey` member instead, read only by `BatchKeyGroupedOrderer` — `BatchOrchestrator` never sees it, so it carries no flush cost under the default orderer.
 
+`BatchKeyGroupedOrderer.Instance` exposes `MergeBlockedByOverlapCount`/`NoCandidateInWindowBreakCount` (issue #4575), reset every `BuildDrawList` call — read them right after a draw to tell an overlap-forced batch break from genuine content alternation, instead of guessing from `GetDrawStateSummary` alone.
+
 ## SpriteBatchStack: Push / Pop / Replace
 
 `SpriteBatchStack` wraps a single `SpriteBatch` instance with a stack of `BeginParameters`:

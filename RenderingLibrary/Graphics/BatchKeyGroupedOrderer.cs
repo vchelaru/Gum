@@ -27,6 +27,25 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// <summary>Shared stateless instance.</summary>
     public static readonly BatchKeyGroupedOrderer Instance = new BatchKeyGroupedOrderer();
 
+    /// <summary>
+    /// Number of times <see cref="FlushWindow"/> had to switch away from the running
+    /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) even though
+    /// another item still in the window shared it - the switch happened because overlap forced
+    /// that item to wait behind something else, not because reordering couldn't have merged them.
+    /// Reset at the start of every <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/>
+    /// call, so it reflects only the build that just ran (issue #4575).
+    /// </summary>
+    public int MergeBlockedByOverlapCount { get; private set; }
+
+    /// <summary>
+    /// Number of times <see cref="FlushWindow"/> had to switch away from the running
+    /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) because no
+    /// remaining window entry shared it at all - genuine content alternation (or the window simply
+    /// ran out), not something reordering could have fixed. Reset at the start of every
+    /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call (issue #4575).
+    /// </summary>
+    public int NoCandidateInWindowBreakCount { get; private set; }
+
     private struct Entry
     {
         public IRenderableIpso Item;
@@ -52,12 +71,15 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     // single reusable set of buffers serves every call.
     private int[] _indegreeBuffer = Array.Empty<int>();
     private List<int>[] _successorsBuffer = Array.Empty<List<int>>();
+    private bool[] _drawnBuffer = Array.Empty<bool>();
     private readonly List<int> _availableBuffer = new List<int>();
 
     /// <inheritdoc/>
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
+        MergeBlockedByOverlapCount = 0;
+        NoCandidateInWindowBreakCount = 0;
 
         ClipBoundsSource clipBounds = camera != null
             ? new ClipBoundsSource(camera, layer)
@@ -73,6 +95,8 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
+        MergeBlockedByOverlapCount = 0;
+        NoCandidateInWindowBreakCount = 0;
         ProcessWindow(roots, clipBounds, destination);
     }
 
@@ -279,6 +303,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         int oldSize = _successorsBuffer.Length;
 
         _indegreeBuffer = new int[newSize];
+        _drawnBuffer = new bool[newSize];
 
         List<int>[] newSuccessors = new List<int>[newSize];
         Array.Copy(_successorsBuffer, newSuccessors, oldSize);
@@ -303,7 +328,9 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         EnsureGraphCapacity(n);
         int[] indegree = _indegreeBuffer;
         List<int>[] successors = _successorsBuffer;
+        bool[] drawn = _drawnBuffer;
         Array.Clear(indegree, 0, n);
+        Array.Clear(drawn, 0, n);
         for (int i = 0; i < n; i++)
         {
             successors[i].Clear();
@@ -381,7 +408,36 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 }
             }
 
+            // #4575 diagnostics: classify a key change (BatchKey and/or BatchSortKey differs from
+            // the last emitted item) as either overlap-blocked (a same-key item is still pending,
+            // just not yet unblocked) or a genuine break (nothing pending shares the old key).
+            // Skipped on the very first emission - there's no prior run to have broken yet.
+            if (currentBatchKey != null &&
+                !(window[chosen].BatchKey == currentBatchKey && Equals(window[chosen].BatchSortKey, currentSortKey)))
+            {
+                bool blockedCandidateExists = false;
+                for (int k = 0; k < n; k++)
+                {
+                    if (!drawn[k] && k != chosen &&
+                        window[k].BatchKey == currentBatchKey && Equals(window[k].BatchSortKey, currentSortKey))
+                    {
+                        blockedCandidateExists = true;
+                        break;
+                    }
+                }
+
+                if (blockedCandidateExists)
+                {
+                    MergeBlockedByOverlapCount++;
+                }
+                else
+                {
+                    NoCandidateInWindowBreakCount++;
+                }
+            }
+
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
+            drawn[chosen] = true;
             currentBatchKey = window[chosen].BatchKey;
             currentSortKey = window[chosen].BatchSortKey;
             available.Remove(chosen);

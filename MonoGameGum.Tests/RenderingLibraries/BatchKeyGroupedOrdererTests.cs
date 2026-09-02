@@ -348,6 +348,52 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_OverlapChain_RecordsMergeBlockedByOverlapAndNoCandidateBreaks()
+    {
+        // A chain: A(sb) overlaps B(apos), B(apos) overlaps C(sb), but A and C don't overlap each
+        // other. Overlap forces the emit order A, B, C - C (sb) can't jump ahead of B to rejoin A's
+        // run even though it shares A's key, so switching sb->apos is a real MergeBlockedByOverlap.
+        // The following switch apos->sb has no remaining apos candidate at all - NoCandidateInWindow.
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable b = new FakeRenderable("b", "Apos.Shapes") { X = 5, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable c = new FakeRenderable("c", "SpriteBatch") { X = 12, Y = 0, Width = 10, Height = 10 };
+
+        Layer layer = BuildLayer(a, b, c);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "DrawRenderable:a",
+            "DrawRenderable:b",
+            "DrawRenderable:c",
+        });
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(1);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void BuildDrawList_NonOverlappingAlternation_RecordsOnlyNoCandidateBreaks()
+    {
+        // Same non-overlapping scene as BuildDrawList_AlternatingBatchKeys_GroupsSameKeyTogether:
+        // the orderer fully collapses to one sb run then one apos run, so the single break between
+        // them is a genuine "nothing left to merge with" case, not an overlap block.
+        FakeRenderable sb1 = new FakeRenderable("sb1", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable apos1 = new FakeRenderable("apos1", "Apos.Shapes") { X = 50, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable sb2 = new FakeRenderable("sb2", "SpriteBatch") { X = 0, Y = 20, Width = 10, Height = 10 };
+        FakeRenderable apos2 = new FakeRenderable("apos2", "Apos.Shapes") { X = 50, Y = 20, Width = 10, Height = 10 };
+
+        Layer layer = BuildLayer(sb1, apos1, sb2, apos2);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void BuildDrawList_RenderUsingHierarchyFalse_DoesNotRecurse()
     {
         bool originalValue = Renderer.RenderUsingHierarchy;
