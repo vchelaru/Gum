@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Linq;
 using MonoGameGum.TestsCommon;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -391,6 +392,42 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
 
         BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
         BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void GetBreakGroups_RanksTheMostFrequentBreakFirst()
+    {
+        // Three identical, non-overlapping-with-each-other overlap chains (rows at Y=0,20,40),
+        // each producing the same pair of breaks: sb->apos (blocked by overlap) and apos->sb (no
+        // candidate). A fourth row uses distinct sb BatchSortKeys, so its breaks are separate,
+        // less-frequent groups. The most frequent groups (count 3) must sort first.
+        // SecondarySortOnY isolates each row into its own reorder window - without it the whole
+        // layer is one window, and Kahn's "stay on the current key" tiebreaker drains every
+        // available same-key item across ALL rows before switching, which mixes the rows' breaks
+        // together instead of keeping each row's chain independent.
+        Layer layer = BuildLayer();
+        layer.SecondarySortOnY = true;
+        for (int row = 0; row < 3; row++)
+        {
+            float y = row * 20;
+            layer.Add(new FakeRenderable($"a{row}", "SpriteBatch") { X = 0, Y = y, Width = 10, Height = 10 });
+            layer.Add(new FakeRenderable($"b{row}", "Apos.Shapes") { X = 5, Y = y, Width = 10, Height = 10 });
+            layer.Add(new FakeRenderable($"c{row}", "SpriteBatch") { X = 12, Y = y, Width = 10, Height = 10 });
+        }
+        // Both d and f need a BatchSortKey distinct from the rows-0-2 default (null) - otherwise
+        // f's break would merge into rows-0-2's apos->sb group (they'd share the same "to" key).
+        layer.Add(new FakeRenderable("d", "SpriteBatch") { X = 0, Y = 100, Width = 10, Height = 10, BatchSortKey = new object() });
+        layer.Add(new FakeRenderable("e", "Apos.Shapes") { X = 5, Y = 100, Width = 10, Height = 10 });
+        layer.Add(new FakeRenderable("f", "SpriteBatch") { X = 12, Y = 100, Width = 10, Height = 10, BatchSortKey = new object() });
+
+        List<DrawCommand> commands = new List<DrawCommand>();
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
+
+        groups[0].Count.ShouldBe(3);
+        groups.Count(g => g.Count == 3).ShouldBe(2); // sb->apos (blocked) and apos->sb (no candidate)
+        groups.Count(g => g.Count == 1).ShouldBe(2); // the distinct-BatchSortKey row's own pair
     }
 
     [Fact]

@@ -46,6 +46,88 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// </summary>
     public int NoCandidateInWindowBreakCount { get; private set; }
 
+    /// <summary>
+    /// One distinct kind of batch break and how many times it happened in the last build - e.g.
+    /// "46 times: SpriteRuntime (SpriteBatch/&lt;texture A&gt;) -&gt; RectangleRuntime
+    /// (Apos.Shapes), blocked by overlap". <see cref="FromSortKey"/>/<see cref="ToSortKey"/> are
+    /// raw <see cref="IRenderable.BatchSortKey"/> values (e.g. a <c>Texture2D</c> reference) -
+    /// Gum core doesn't know the backend type, so a caller that does (FRB2, a sample) formats them
+    /// (e.g. <c>((Texture2D)key)?.Name</c>) rather than Gum guessing a generic description.
+    /// </summary>
+    public readonly struct BatchBreakGroup
+    {
+        public string FromBatchKey { get; init; }
+        public object? FromSortKey { get; init; }
+        public Type FromRenderableType { get; init; }
+        public string ToBatchKey { get; init; }
+        public object? ToSortKey { get; init; }
+        public Type ToRenderableType { get; init; }
+        public bool BlockedByOverlap { get; init; }
+        public int Count { get; init; }
+    }
+
+    private readonly struct BreakGroupKey : IEquatable<BreakGroupKey>
+    {
+        public readonly string FromBatchKey;
+        public readonly object? FromSortKey;
+        public readonly Type FromRenderableType;
+        public readonly string ToBatchKey;
+        public readonly object? ToSortKey;
+        public readonly Type ToRenderableType;
+        public readonly bool BlockedByOverlap;
+
+        public BreakGroupKey(string fromBatchKey, object? fromSortKey, Type fromRenderableType,
+            string toBatchKey, object? toSortKey, Type toRenderableType, bool blockedByOverlap)
+        {
+            FromBatchKey = fromBatchKey;
+            FromSortKey = fromSortKey;
+            FromRenderableType = fromRenderableType;
+            ToBatchKey = toBatchKey;
+            ToSortKey = toSortKey;
+            ToRenderableType = toRenderableType;
+            BlockedByOverlap = blockedByOverlap;
+        }
+
+        public bool Equals(BreakGroupKey other) =>
+            FromBatchKey == other.FromBatchKey && Equals(FromSortKey, other.FromSortKey) &&
+            FromRenderableType == other.FromRenderableType && ToBatchKey == other.ToBatchKey &&
+            Equals(ToSortKey, other.ToSortKey) && ToRenderableType == other.ToRenderableType &&
+            BlockedByOverlap == other.BlockedByOverlap;
+
+        public override bool Equals(object? obj) => obj is BreakGroupKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(
+            FromBatchKey, FromSortKey, FromRenderableType, ToBatchKey, ToSortKey, ToRenderableType, BlockedByOverlap);
+    }
+
+    private readonly Dictionary<BreakGroupKey, int> _breakGroupCounts = new();
+
+    /// <summary>
+    /// Every distinct break this build produced, most-frequent first - "what's alternating," not
+    /// just a count of how often something did. Recomputed from this build's tallies each call;
+    /// cheap unless you're calling it every frame in a hot loop (issue #4575).
+    /// </summary>
+    public IReadOnlyList<BatchBreakGroup> GetBreakGroups()
+    {
+        List<BatchBreakGroup> result = new(_breakGroupCounts.Count);
+        foreach (KeyValuePair<BreakGroupKey, int> pair in _breakGroupCounts)
+        {
+            result.Add(new BatchBreakGroup
+            {
+                FromBatchKey = pair.Key.FromBatchKey,
+                FromSortKey = pair.Key.FromSortKey,
+                FromRenderableType = pair.Key.FromRenderableType,
+                ToBatchKey = pair.Key.ToBatchKey,
+                ToSortKey = pair.Key.ToSortKey,
+                ToRenderableType = pair.Key.ToRenderableType,
+                BlockedByOverlap = pair.Key.BlockedByOverlap,
+                Count = pair.Value,
+            });
+        }
+        result.Sort((a, b) => b.Count.CompareTo(a.Count));
+        return result;
+    }
+
     private struct Entry
     {
         public IRenderableIpso Item;
@@ -80,6 +162,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         destination.Clear();
         MergeBlockedByOverlapCount = 0;
         NoCandidateInWindowBreakCount = 0;
+        _breakGroupCounts.Clear();
 
         ClipBoundsSource clipBounds = camera != null
             ? new ClipBoundsSource(camera, layer)
@@ -97,6 +180,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         destination.Clear();
         MergeBlockedByOverlapCount = 0;
         NoCandidateInWindowBreakCount = 0;
+        _breakGroupCounts.Clear();
         ProcessWindow(roots, clipBounds, destination);
     }
 
@@ -368,6 +452,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
         string? currentBatchKey = null;
         object? currentSortKey = null;
+        Type? currentRenderableType = null;
         while (available.Count > 0)
         {
             int chosen = -1;
@@ -434,12 +519,19 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 {
                     NoCandidateInWindowBreakCount++;
                 }
+
+                BreakGroupKey groupKey = new(
+                    currentBatchKey, currentSortKey, currentRenderableType!,
+                    window[chosen].BatchKey, window[chosen].BatchSortKey, window[chosen].Item.GetType(),
+                    blockedCandidateExists);
+                _breakGroupCounts[groupKey] = _breakGroupCounts.TryGetValue(groupKey, out int existing) ? existing + 1 : 1;
             }
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
             drawn[chosen] = true;
             currentBatchKey = window[chosen].BatchKey;
             currentSortKey = window[chosen].BatchSortKey;
+            currentRenderableType = window[chosen].Item.GetType();
             available.Remove(chosen);
 
             List<int> succ = successors[chosen];
