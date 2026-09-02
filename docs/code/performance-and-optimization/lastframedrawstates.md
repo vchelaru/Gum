@@ -17,6 +17,12 @@ Internally Gum uses a SpriteBatch for rendering. It attempts to use as few Begin
 
 Gum provides a list of changes which can be inspected to spot where render problems might be occurring.
 
+### Immediate-mode (GumBatch) callers
+
+Everything on this page also works when Gum is driven through [GumBatch](../rendering/gumbatch.md)'s `Begin`/`Draw`/`End` instead of `GumUI.Draw()`. `LastFrameDrawStates`, `GetDrawStateSummary`, and `DrawCallCount` are all populated on that path too, and they reset once per **host frame** rather than once per `Begin`/`End` cycle. This lets a host that runs several cycles in one frame (for example one per camera, plus a screen-level overlay pass) accumulate them into one frame's total, instead of the last cycle wiping out the earlier ones.
+
+That per-frame reset is tied to the same signal `SystemManagers.Activity`/`GumUI.Update` already uses for other once-per-frame bookkeeping. A host that calls `Activity`/`Update` once per frame before drawing, the normal MonoGame `Update` then `Draw` shape, gets a correct per-frame snapshot automatically, with no extra call needed. A host that never advances Activity time never gets a second reset, so these numbers only reflect the very first frame and then keep growing for the life of the process. Call `Renderer.Self.EndFrame()` once per frame yourself if your host draws through GumBatch without ever calling Activity/Update.
+
 ### Code Example: Checking Performance
 
 The following code shows how to check the performance of a simple project. Note that this code creates visuals instead of Forms controls to intentionally create render breaks.
@@ -132,8 +138,8 @@ int drawCalls = SystemManagers.Default.Renderer.RenderStateChangeStatistics.Draw
 System.Diagnostics.Debug.WriteLine($"Draw calls last frame: {drawCalls}");
 ```
 
-`DrawCallCount` resets at the start of every `Draw` call, so read it after `GumUI.Draw()` to see the count for the frame that just rendered.
+`DrawCallCount` resets once per frame, so read it after `GumUI.Draw()` to see the count for the frame that just rendered. See [Immediate-mode (GumBatch) callers](#immediate-mode-gumbatch-callers) above for exactly when that reset happens on the `GumBatch` path.
 
 {% hint style="info" %}
-`DrawCallCount` is wired for MonoGame, KNI, and raylib. It stays at `0` on FNA and Skia until those backends wire up the same counter. It's available in September 2026, or now if building Gum from source.
+`DrawCallCount` is wired for MonoGame, KNI, and raylib, on both the `GumUI.Draw()` path and the `GumBatch` immediate-mode path. It stays at `0` on FNA and Skia until those backends wire up the same counter. It's available in September 2026, or now if building Gum from source.
 {% endhint %}
