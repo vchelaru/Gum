@@ -355,6 +355,10 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         // other. Overlap forces the emit order A, B, C - C (sb) can't jump ahead of B to rejoin A's
         // run even though it shares A's key, so switching sb->apos is a real MergeBlockedByOverlap.
         // The following switch apos->sb has no remaining apos candidate at all - NoCandidateInWindow.
+        // BuildDrawList no longer self-resets (issue #4575 follow-up: the tally now accumulates
+        // until Renderer says a frame boundary passed, so it can span multiple Begin/End cycles).
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
         FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
         FakeRenderable b = new FakeRenderable("b", "Apos.Shapes") { X = 5, Y = 0, Width = 10, Height = 10 };
         FakeRenderable c = new FakeRenderable("c", "SpriteBatch") { X = 12, Y = 0, Width = 10, Height = 10 };
@@ -380,6 +384,8 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         // Same non-overlapping scene as BuildDrawList_AlternatingBatchKeys_GroupsSameKeyTogether:
         // the orderer fully collapses to one sb run then one apos run, so the single break between
         // them is a genuine "nothing left to merge with" case, not an overlap block.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
         FakeRenderable sb1 = new FakeRenderable("sb1", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
         FakeRenderable apos1 = new FakeRenderable("apos1", "Apos.Shapes") { X = 50, Y = 0, Width = 10, Height = 10 };
         FakeRenderable sb2 = new FakeRenderable("sb2", "SpriteBatch") { X = 0, Y = 20, Width = 10, Height = 10 };
@@ -405,6 +411,8 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         // layer is one window, and Kahn's "stay on the current key" tiebreaker drains every
         // available same-key item across ALL rows before switching, which mixes the rows' breaks
         // together instead of keeping each row's chain independent.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
         Layer layer = BuildLayer();
         layer.SecondarySortOnY = true;
         for (int row = 0; row < 3; row++)
@@ -428,6 +436,44 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         groups[0].Count.ShouldBe(3);
         groups.Count(g => g.Count == 3).ShouldBe(2); // sb->apos (blocked) and apos->sb (no candidate)
         groups.Count(g => g.Count == 1).ShouldBe(2); // the distinct-BatchSortKey row's own pair
+    }
+
+    [Fact]
+    public void BuildDrawList_CalledTwiceWithoutReset_AccumulatesAcrossBothCalls()
+    {
+        // Renderer calls ResetBreakTally() at frame boundaries, not on every BuildDrawList call,
+        // so multiple cycles in one host frame (FRB2's per-camera + overlay shape) accumulate into
+        // one frame's total instead of the second cycle wiping out the first's tally.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable b = new FakeRenderable("b", "Apos.Shapes") { X = 5, Y = 0, Width = 10, Height = 10 };
+        Layer layer = BuildLayer(a, b);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1);
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(2);
+        BatchKeyGroupedOrderer.Instance.GetBreakGroups().Single().Count.ShouldBe(2);
+    }
+
+    [Fact]
+    public void GetBreakGroupsByType_FormatsAsShortTypeArrowWithCount()
+    {
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable b = new FakeRenderable("b", "Apos.Shapes") { X = 5, Y = 0, Width = 10, Height = 10 };
+        Layer layer = BuildLayer(a, b);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        var typeGroups = BatchKeyGroupedOrderer.Instance.GetBreakGroupsByType();
+
+        typeGroups.Single().ToString().ShouldBe("FakeRenderable->FakeRenderable (1)");
     }
 
     [Fact]

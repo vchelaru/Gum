@@ -32,8 +32,13 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) even though
     /// another item still in the window shared it - the switch happened because overlap forced
     /// that item to wait behind something else, not because reordering couldn't have merged them.
-    /// Reset at the start of every <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/>
-    /// call, so it reflects only the build that just ran (issue #4575).
+    /// Accumulates across every <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call
+    /// until <see cref="ResetBreakTally"/> runs - <see cref="Renderer"/> calls that once per host
+    /// frame (immediate-mode) or once per <c>Draw(SystemManagers)</c> call (layered), matching
+    /// <see cref="RenderStateChangeStatistics"/>'s own reset cadence on each path. A caller driving
+    /// this orderer directly (outside <see cref="Renderer"/>, e.g. a unit test) must call
+    /// <see cref="ResetBreakTally"/> itself between builds it wants measured independently
+    /// (issue #4575).
     /// </summary>
     public int MergeBlockedByOverlapCount { get; private set; }
 
@@ -41,18 +46,20 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     /// Number of times <see cref="FlushWindow"/> had to switch away from the running
     /// (<see cref="IRenderable.BatchKey"/>, <see cref="IRenderable.BatchSortKey"/>) because no
     /// remaining window entry shared it at all - genuine content alternation (or the window simply
-    /// ran out), not something reordering could have fixed. Reset at the start of every
-    /// <see cref="BuildDrawList(Layer, List{DrawCommand}, Camera?)"/> call (issue #4575).
+    /// ran out), not something reordering could have fixed. Same reset cadence as
+    /// <see cref="MergeBlockedByOverlapCount"/> (issue #4575).
     /// </summary>
     public int NoCandidateInWindowBreakCount { get; private set; }
 
     /// <summary>
-    /// One distinct kind of batch break and how many times it happened in the last build - e.g.
-    /// "46 times: SpriteRuntime (SpriteBatch/&lt;texture A&gt;) -&gt; RectangleRuntime
-    /// (Apos.Shapes), blocked by overlap". <see cref="FromSortKey"/>/<see cref="ToSortKey"/> are
-    /// raw <see cref="IRenderable.BatchSortKey"/> values (e.g. a <c>Texture2D</c> reference) -
-    /// Gum core doesn't know the backend type, so a caller that does (FRB2, a sample) formats them
-    /// (e.g. <c>((Texture2D)key)?.Name</c>) rather than Gum guessing a generic description.
+    /// One distinct kind of batch break and how many times it happened since the last
+    /// <see cref="ResetBreakTally"/> - e.g. "46 times: SpriteRuntime (SpriteBatch/&lt;texture
+    /// A&gt;) -&gt; RectangleRuntime (Apos.Shapes), blocked by overlap".
+    /// <see cref="FromSortKey"/>/<see cref="ToSortKey"/> are raw <see cref="IRenderable.BatchSortKey"/>
+    /// values (e.g. a <c>Texture2D</c> reference) - Gum core doesn't know the backend type, so a
+    /// caller that does (FRB2, a sample) formats them (e.g. <c>((Texture2D)key)?.Name</c>) rather
+    /// than Gum guessing a generic description. See <see cref="BatchBreakTypeGroup"/> for a
+    /// coarser, renderable-type-only rollup that needs no such formatting.
     /// </summary>
     public readonly struct BatchBreakGroup
     {
@@ -64,6 +71,86 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         public Type ToRenderableType { get; init; }
         public bool BlockedByOverlap { get; init; }
         public int Count { get; init; }
+    }
+
+    /// <summary>
+    /// A break rollup keyed only by the two renderable types involved - drops <c>BatchKey</c>,
+    /// <c>BatchSortKey</c>, and the overlap/no-candidate distinction that <see cref="BatchBreakGroup"/>
+    /// carries. This is the "what's alternating, at a glance" view: <c>ToString()</c> prints e.g.
+    /// <c>"Sprite-&gt;RoundedRectangle (14)"</c>, trimming the conventional "Runtime" suffix, ready
+    /// to print with no caller-side formatting or aggregation.
+    /// </summary>
+    public readonly struct BatchBreakTypeGroup
+    {
+        public Type FromRenderableType { get; init; }
+        public Type ToRenderableType { get; init; }
+        public int Count { get; init; }
+
+        public override string ToString() =>
+            $"{TrimRuntimeSuffix(FromRenderableType.Name)}->{TrimRuntimeSuffix(ToRenderableType.Name)} ({Count})";
+
+        private static string TrimRuntimeSuffix(string typeName) =>
+            typeName.EndsWith("Runtime", StringComparison.Ordinal)
+                ? typeName.Substring(0, typeName.Length - "Runtime".Length)
+                : typeName;
+    }
+
+    private readonly struct TypeGroupKey : IEquatable<TypeGroupKey>
+    {
+        public readonly Type FromRenderableType;
+        public readonly Type ToRenderableType;
+
+        public TypeGroupKey(Type fromRenderableType, Type toRenderableType)
+        {
+            FromRenderableType = fromRenderableType;
+            ToRenderableType = toRenderableType;
+        }
+
+        public bool Equals(TypeGroupKey other) =>
+            FromRenderableType == other.FromRenderableType && ToRenderableType == other.ToRenderableType;
+
+        public override bool Equals(object? obj) => obj is TypeGroupKey other && Equals(other);
+
+        public override int GetHashCode() => HashCode.Combine(FromRenderableType, ToRenderableType);
+    }
+
+    private readonly Dictionary<TypeGroupKey, int> _breakTypeGroupCounts = new();
+
+    /// <summary>
+    /// Every distinct (fromType, toType) break pair since the last <see cref="ResetBreakTally"/>,
+    /// most-frequent first. Coarser than <see cref="GetBreakGroups"/> - use this for "what's
+    /// alternating" at a glance, and <see cref="GetBreakGroups"/> when you need to know which
+    /// specific texture/key is involved (issue #4575).
+    /// </summary>
+    public IReadOnlyList<BatchBreakTypeGroup> GetBreakGroupsByType()
+    {
+        List<BatchBreakTypeGroup> result = new(_breakTypeGroupCounts.Count);
+        foreach (KeyValuePair<TypeGroupKey, int> pair in _breakTypeGroupCounts)
+        {
+            result.Add(new BatchBreakTypeGroup
+            {
+                FromRenderableType = pair.Key.FromRenderableType,
+                ToRenderableType = pair.Key.ToRenderableType,
+                Count = pair.Value,
+            });
+        }
+        result.Sort((a, b) => b.Count.CompareTo(a.Count));
+        return result;
+    }
+
+    /// <summary>
+    /// Clears <see cref="MergeBlockedByOverlapCount"/>, <see cref="NoCandidateInWindowBreakCount"/>,
+    /// and every tally behind <see cref="GetBreakGroups"/>/<see cref="GetBreakGroupsByType"/>.
+    /// <see cref="Renderer"/> calls this at the same points it resets
+    /// <see cref="RenderStateChangeStatistics"/>; call it yourself if you drive this orderer
+    /// directly (issue #4575).
+    /// </summary>
+    public void ResetBreakTally()
+    {
+        MergeBlockedByOverlapCount = 0;
+        NoCandidateInWindowBreakCount = 0;
+        _breakGroupCounts.Clear();
+        _breakTypeGroupCounts.Clear();
     }
 
     private readonly struct BreakGroupKey : IEquatable<BreakGroupKey>
@@ -160,9 +247,6 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     public void BuildDrawList(Layer layer, List<DrawCommand> destination, Camera? camera = null)
     {
         destination.Clear();
-        MergeBlockedByOverlapCount = 0;
-        NoCandidateInWindowBreakCount = 0;
-        _breakGroupCounts.Clear();
 
         ClipBoundsSource clipBounds = camera != null
             ? new ClipBoundsSource(camera, layer)
@@ -178,9 +262,6 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         ClipBoundsSource clipBounds = default)
     {
         destination.Clear();
-        MergeBlockedByOverlapCount = 0;
-        NoCandidateInWindowBreakCount = 0;
-        _breakGroupCounts.Clear();
         ProcessWindow(roots, clipBounds, destination);
     }
 
@@ -520,11 +601,15 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                     NoCandidateInWindowBreakCount++;
                 }
 
+                Type toRenderableType = window[chosen].Item.GetType();
                 BreakGroupKey groupKey = new(
                     currentBatchKey, currentSortKey, currentRenderableType!,
-                    window[chosen].BatchKey, window[chosen].BatchSortKey, window[chosen].Item.GetType(),
+                    window[chosen].BatchKey, window[chosen].BatchSortKey, toRenderableType,
                     blockedCandidateExists);
                 _breakGroupCounts[groupKey] = _breakGroupCounts.TryGetValue(groupKey, out int existing) ? existing + 1 : 1;
+
+                TypeGroupKey typeKey = new(currentRenderableType!, toRenderableType);
+                _breakTypeGroupCounts[typeKey] = _breakTypeGroupCounts.TryGetValue(typeKey, out int existingTypeCount) ? existingTypeCount + 1 : 1;
             }
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));

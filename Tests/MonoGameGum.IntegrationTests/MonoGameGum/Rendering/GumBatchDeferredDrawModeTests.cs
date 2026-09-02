@@ -125,6 +125,62 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
         }
     }
 
+    /// <summary>
+    /// Pins the Renderer-side wiring for issue #4575's follow-up: Renderer resets
+    /// BatchKeyGroupedOrderer's break tally at the same points it resets
+    /// RenderStateChangeStatistics - once per host frame on this (Deferred) path - so it
+    /// accumulates across multiple Begin/End cycles in one frame instead of the second cycle
+    /// wiping out the first's tally, and still resets cleanly on the next frame.
+    /// </summary>
+    [Fact]
+    public void Deferred_MultipleCyclesInOneHostFrame_AccumulateOrdererTally_ResetsNextFrame()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        double hostTime = 0;
+
+        Texture2D textureA = new(game.GraphicsDevice, 1, 1);
+        textureA.SetData(new[] { Color.Red });
+        Texture2D textureB = new(game.GraphicsDevice, 1, 1);
+        textureB.SetData(new[] { Color.Blue });
+
+        IRenderableOrderer originalOrdering = Renderer.SiblingOrdering;
+        try
+        {
+            Renderer.SiblingOrdering = BatchKeyGroupedOrderer.Instance;
+
+            void RunOneCycleOfAlternatingSprites()
+            {
+                renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+                for (int i = 0; i < 4; i++)
+                {
+                    renderer.Draw(CreateSprite(i % 2 == 0 ? textureA : textureB, i * 10));
+                }
+                renderer.End();
+            }
+
+            AdvanceHostFrame(managers, ref hostTime);
+            RunOneCycleOfAlternatingSprites();
+            ((BatchKeyGroupedOrderer)Renderer.SiblingOrdering).NoCandidateInWindowBreakCount.ShouldBe(1);
+
+            RunOneCycleOfAlternatingSprites(); // same host frame - no AdvanceHostFrame call
+            ((BatchKeyGroupedOrderer)Renderer.SiblingOrdering).NoCandidateInWindowBreakCount.ShouldBe(2);
+
+            AdvanceHostFrame(managers, ref hostTime);
+            RunOneCycleOfAlternatingSprites();
+            ((BatchKeyGroupedOrderer)Renderer.SiblingOrdering).NoCandidateInWindowBreakCount.ShouldBe(1);
+        }
+        finally
+        {
+            Renderer.SiblingOrdering = originalOrdering;
+            textureA.Dispose();
+            textureB.Dispose();
+        }
+    }
+
     private class MinimalGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;

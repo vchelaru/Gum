@@ -1569,6 +1569,14 @@ public class Renderer : IRenderer
     {
         spriteRenderer.ClearPerformanceRecordingVariables();
         RenderStateChangeStatistics.Reset();
+
+        // Same reset cadence as the two statistics above (every Draw(SystemManagers) call on the
+        // layered path, once per host frame on the immediate-mode path via
+        // TryResetPerformanceStatsForHostFrame) - see BatchKeyGroupedOrderer.ResetBreakTally.
+        if (SiblingOrdering is BatchKeyGroupedOrderer orderer)
+        {
+            orderer.ResetBreakTally();
+        }
     }
 
     /// <summary>
