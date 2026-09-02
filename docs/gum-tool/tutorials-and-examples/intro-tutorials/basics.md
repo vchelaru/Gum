@@ -49,7 +49,8 @@ Before you work on your project, you must first create a new project. You can sa
 To create a project:
 
 1. Select File->New Project
-2. Select a new location somewhere on your machine for the new project. If you are using a library like MonoGame or raylib, you may want to save the project in a folder under your game project, such as a Content or Resources folder.
+2. Un-check the Include Forms controls option - this tutorial assumes a completely empty project
+3. Select a new location somewhere on your machine for the new project. If you are using a library like MonoGame or raylib, you may want to save the project in a folder under your game project, such as a Content or Resources folder.
 
 Once your project has been saved you should see its name in Gum's title bar.
 
