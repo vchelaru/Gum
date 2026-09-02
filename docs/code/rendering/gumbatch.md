@@ -275,3 +275,7 @@ For a runnable example, see the `RenderTarget` screen in the Gum immediate-mode 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/MonoGameGumImmediateMode" %}
 
 If you are rendering multiple translucent objects onto the render target, see [Render Targets](render-targets.md) for the `BlendState` needed to accumulate alpha correctly (the default `BlendState` can "remove" alpha from the render target when new instances are drawn on top of existing content). That page also covers the equivalent raylib pattern.
+
+### Performance diagnostics
+
+`Begin`/`Draw`/`End` supports the same draw-call diagnostics as `GumUI.Draw()`. Reading `SystemManagers.Default.Renderer.GetDrawStateSummary()` or `RenderStateChangeStatistics.DrawCallCount` after an `End` call reports the cost for that frame, including across multiple `Begin`/`End` cycles run in the same frame (for example one per camera, plus a screen-level overlay pass). See [Measuring Draw Calls](../performance-and-optimization/lastframedrawstates.md#immediate-mode-gumbatch-callers) for the full detail on when these reset and what to do if your host never calls `SystemManagers.Activity`/`GumUI.Update`.

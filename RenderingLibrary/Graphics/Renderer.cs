@@ -87,7 +87,14 @@ public class Renderer : IRenderer
     private bool _renderTargetSweepCompletedForHostFrame;
     private bool _allLayersPreRenderedForHostFrame;
     private bool _referencedRenderTargetsCollectedForHostFrame;
+    private bool _perfStatsResetForHostFrame;
     private readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new();
+#if !FNA
+    // Set at the start of each immediate-mode Begin/End cycle (Renderer.Begin/Draw/End, the path
+    // GumBatch wraps) so End can take the same before/after GraphicsDevice.Metrics.DrawCount delta
+    // that Draw(SystemManagers) takes for the layered path. See RenderStateChangeStatistics.DrawCallCount remarks.
+    private long _immediateModeDrawCountBeforeCycle;
+#endif
     Camera mCamera;
 
     Texture2D mSinglePixelTexture;
@@ -460,6 +467,7 @@ public class Renderer : IRenderer
             _renderTargetSweepCompletedForHostFrame = false;
             _allLayersPreRenderedForHostFrame = false;
             _referencedRenderTargetsCollectedForHostFrame = false;
+            _perfStatsResetForHostFrame = false;
         }
     }
 
@@ -470,7 +478,25 @@ public class Renderer : IRenderer
             _renderTargetSweepCompletedForHostFrame = false;
             _allLayersPreRenderedForHostFrame = false;
             _referencedRenderTargetsCollectedForHostFrame = false;
+            _perfStatsResetForHostFrame = false;
         }
+    }
+
+    // Immediate-mode counterpart to Draw(SystemManagers)'s unconditional
+    // ClearPerformanceRecordingVariables() call: Begin/Draw/End (what GumBatch wraps) can run
+    // multiple cycles per host frame (one per camera, plus a screen-level overlay pass is a real
+    // shape - see FRB2's GumRenderBatch), so resetting on every Begin would wipe out earlier
+    // cycles' stats instead of accumulating them across the frame. Reset once, on the first Begin
+    // after a host frame boundary, then let AddDrawCalls/RecordShapeBatchBegin accumulate normally.
+    private void TryResetPerformanceStatsForHostFrame()
+    {
+        if (_perfStatsResetForHostFrame)
+        {
+            return;
+        }
+
+        ClearPerformanceRecordingVariables();
+        _perfStatsResetForHostFrame = true;
     }
 
     private void TrySweepUnusedRenderTargetsAtFrameBoundary()
@@ -695,6 +721,11 @@ public class Renderer : IRenderer
     // Immediate mode calls:
     public void Begin(Microsoft.Xna.Framework.Matrix? spriteBatchMatrix = null)
     {
+        TryResetPerformanceStatsForHostFrame();
+#if !FNA
+        _immediateModeDrawCountBeforeCycle = GraphicsDevice?.Metrics.DrawCount ?? 0;
+#endif
+
         SpriteBatchStack.PerformStartOfLayerRenderingLogic();
         spriteRenderer.ForcedMatrix = spriteBatchMatrix;
         spriteRenderer.BeginSpriteBatch(mRenderStateVariables, _layers[0], BeginType.Push, mCamera, null);
@@ -756,6 +787,14 @@ public class Renderer : IRenderer
         _batchOrchestrator.FlushAndReset(SystemManagers.Default);
 
         spriteRenderer.EndSpriteBatch();
+
+#if !FNA
+        if (GraphicsDevice != null)
+        {
+            RenderStateChangeStatistics.AddDrawCalls(
+                (int)(GraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
+        }
+#endif
     }
 
 

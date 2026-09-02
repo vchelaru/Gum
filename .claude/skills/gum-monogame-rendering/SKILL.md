@@ -137,6 +137,8 @@ Mid-walk `End()` from `SpriteBatchRenderableBase.EndBatch` does NOT pop the stac
 
 This cross-cycle leakage is the single biggest source of "draw order looks weird across N renderables" bugs. Any fix to flushing must end the custom batch at `Renderer.End` so cycle boundaries are clean.
 
+`RenderStateChangeStatistics` and `SpriteRenderer.LastFrameDrawStates` follow the same rule. `Renderer.Begin` resets both once per host frame, gated by `_perfStatsResetForHostFrame` (cleared in `NotifyHostFrameAdvanced`/`EndFrame`, same as `_allLayersPreRenderedForHostFrame`). `Renderer.End` then adds that cycle's `GraphicsDevice.Metrics.DrawCount` delta. Multiple `Begin`/`End` cycles in one host frame accumulate into one total instead of overwriting each other (FRB2's per-camera-plus-overlay shape). A host that never advances `SystemManagers.Activity`/`GumUI.Update` never resets past the first frame (#4571).
+
 ## SpriteBatchStack: Begin(false) must re-apply currentParameters
 
 `Begin(createNewParameters=false)` runs whenever the BatchOrchestrator transitions back to SpriteBatch from a custom batch (Apos.Shapes, future custom batches). It's reached via `SpriteBatchRenderableBase.StartBatch`, which sequences:
@@ -283,3 +285,4 @@ When changing batch logic:
 8. If you touch `RenderableShapeBase.StartBatch` or `ShapeBatch.Begin` plumbing, does the active scissor state still flow to the shape batch? Empirical canary: rounded shape bodies inside a `ScrollViewer` / `ListBox` clip to the container. Setting `GraphicsDevice.ScissorRectangle` is not sufficient — `ShapeBatch.Begin` must also receive a `rasterizerState` with `ScissorTestEnable=true`.
 9. If you touch `Renderer.AdjustRenderStates` or the clip-change paths in `Renderer.Draw`, does a clip change (entry OR exit) flush the orchestrator (`_batchOrchestrator.FlushAndReset`) BEFORE `BeginSpriteBatch`? Empirical canary: the first item's shape background inside a `ScrollViewer` clips when scrolled past the top edge (not just the second item and beyond).
 10. Investigating draw-call/batching cost? Check `Renderer.SiblingOrdering`, not just `BatchOrchestrator` — they're separate layers (see "Draw Order Is a Separate, Pluggable Layer" above).
+11. Reset immediate-mode perf stats once per host frame, not on every `Begin`. Per-`Begin` reset wipes out an earlier camera pass's stats instead of accumulating them within the frame.
