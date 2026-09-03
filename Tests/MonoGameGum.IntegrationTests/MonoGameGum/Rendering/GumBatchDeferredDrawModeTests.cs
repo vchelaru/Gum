@@ -5,6 +5,7 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System.Collections.Generic;
 using Xunit;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
@@ -316,6 +317,84 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
         renderer.End();
 
         probe.ObservedForcedMatrix.ShouldBeNull();
+    }
+
+    /// <summary>
+    /// Records the order renderables actually reach <c>Render</c> in.
+    /// </summary>
+    private class OrderProbe : ContainerRuntime
+    {
+        private readonly List<string> _log;
+        private readonly string _label;
+
+        public OrderProbe(List<string> log, string label, float y, float z)
+        {
+            _log = log;
+            _label = label;
+            Y = y;
+            Z = z;
+            Width = 10;
+            Height = 10;
+        }
+
+        public override void Render(ISystemManagers managers)
+        {
+            _log.Add(_label);
+            base.Render(managers);
+        }
+    }
+
+    /// <summary>
+    /// Issue #4583 proposed passing <c>_layers[0].SecondarySortOnY</c> to the deferred flush's
+    /// <c>SortByZ</c> so Deferred would stop diverging from Immediate on equal-Z renderables. The
+    /// premise has it backwards: the GumBatch path never adds its renderables to layer 0 (that
+    /// layer is only a render-state / clip-bounds source), so Immediate does no sorting at all - it
+    /// submits in call order - and Deferred's stable Z-sort leaves equal-Z entries in call order
+    /// too. The two modes already agree; honoring SecondarySortOnY in the deferred flush is what
+    /// would introduce a divergence. This pins the agreement.
+    /// </summary>
+    [Fact]
+    public void SecondarySortOnYOnLayerZero_DoesNotReorderEqualZDraws_InEitherMode()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        double hostTime = 0;
+
+        Layer layerZero = renderer.Layers[0];
+        bool originalSecondarySortOnY = layerZero.SecondarySortOnY;
+        try
+        {
+            layerZero.SecondarySortOnY = true;
+
+            // Drawn in an order that disagrees with Y, all at the same Z, so a Y-based secondary
+            // sort would visibly reorder them.
+            AdvanceHostFrame(managers, ref hostTime);
+            List<string> immediateOrder = new();
+            renderer.Begin();
+            renderer.Draw(new OrderProbe(immediateOrder, "A", y: 30, z: 0));
+            renderer.Draw(new OrderProbe(immediateOrder, "B", y: 10, z: 0));
+            renderer.Draw(new OrderProbe(immediateOrder, "C", y: 20, z: 0));
+            renderer.End();
+
+            immediateOrder.ShouldBe(new[] { "A", "B", "C" });
+
+            AdvanceHostFrame(managers, ref hostTime);
+            List<string> deferredOrder = new();
+            renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+            renderer.Draw(new OrderProbe(deferredOrder, "A", y: 30, z: 0));
+            renderer.Draw(new OrderProbe(deferredOrder, "B", y: 10, z: 0));
+            renderer.Draw(new OrderProbe(deferredOrder, "C", y: 20, z: 0));
+            renderer.End();
+
+            deferredOrder.ShouldBe(immediateOrder);
+        }
+        finally
+        {
+            layerZero.SecondarySortOnY = originalSecondarySortOnY;
+        }
     }
 
     private class MinimalGame : Game

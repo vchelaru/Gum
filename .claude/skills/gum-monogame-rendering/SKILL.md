@@ -30,6 +30,8 @@ Key contract difference: each `Renderer.Draw` is one top-level renderable. If a 
 
 `Renderer.GumBatchDrawMode.Deferred` (optional `Begin(mode:)` param, issue #4573) accumulates `Draw()` calls into a scratch list instead of submitting immediately. `End` stable-sorts it by `Z` (`Layer.SortByZ`, extracted out of `Layer.SortRenderables`) and runs it through `SiblingOrdering.BuildDrawList`/`Submit` once, so separate `Draw()` calls can batch together (e.g. under `BatchKeyGroupedOrderer`). `Immediate` (the default) is unchanged.
 
+Neither mode ever puts a renderable on `_layers[0]` — that layer is only a render-state and clip-bounds source — so `Immediate` does no sorting at all and submits in call order. That is why the deferred `SortByZ` keeps its default `secondarySortOnY: false`: passing `_layers[0].SecondarySortOnY` would reorder equal-Z draws that `Immediate` leaves in call order, creating the mode divergence rather than removing it. `GumBatchDeferredDrawModeTests.SecondarySortOnYOnLayerZero_DoesNotReorderEqualZDraws_InEitherMode` pins this.
+
 ## PreRender Walk: Layered Path Has Two Phases, GumBatch Path Has One
 
 The layered path runs a recursive `PreRender` pass on `layer.Renderables` **before** `BeginSpriteBatch`. That pass does two jobs:
