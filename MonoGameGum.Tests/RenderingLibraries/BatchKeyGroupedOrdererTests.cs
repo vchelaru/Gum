@@ -626,6 +626,50 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void BuildDrawList_FreeContainerChosenAfterAClipExit_DoesNotSwallowTheForcedTransition()
+    {
+        // A free container is exempt from break accounting because it submits nothing - but it
+        // must not CONSUME the pending forced transition a clip exit left behind either. The real
+        // renderable that follows is the one the GPU actually flushes for, so the hard boundary
+        // belongs to it. Without this, HardBoundaryTransitionCount undercounts and the break
+        // groups stop reconciling against the frame's true draw-call count.
+        //
+        // The free-container tier (#4579) is what makes this the likely path rather than a corner
+        // case: after a clip exits, an available wrapper now outranks the smallest-DFS fallback.
+        FakeRenderable clip = new FakeRenderable("clip", "SpriteBatch")
+        {
+            X = 0, Y = 0, Width = 10, Height = 10, ClipsChildren = true,
+        };
+
+        FakeRenderable container = new FakeRenderable("container", "") { X = 50, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable containerChild = AddChild(container, "containerChild");
+        containerChild.X = 50; containerChild.Y = 0; containerChild.Width = 10; containerChild.Height = 10;
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = BuildLayer(clip, container);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "BeginClip:clip",
+            "DrawRenderable:clip",
+            "EndClip:clip",
+            "DrawRenderable:container",
+            "DrawRenderable:containerChild",
+        });
+
+        // The clip entry has nothing running to force away from (NoPredecessor, not a hard
+        // boundary). The clip EXIT is the one that counts, and it must land on containerChild -
+        // note its key matches what the clip left running, so without the forced flag it would be
+        // recorded as no break at all.
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(1);
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void BuildDrawList_RenderUsingHierarchyFalse_DoesNotRecurse()
     {
         bool originalValue = Renderer.RenderUsingHierarchy;
@@ -879,22 +923,18 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
-    public void BuildDrawList_TwoNestedNonOverlappingCardGroups_DoesNotMergeAcrossContainers()
+    public void BuildDrawList_TwoNestedNonOverlappingCardGroups_MergesSameKeyRunsAcrossContainers()
     {
-        // Known limitation - see issue #4579. Two card-shaped groups (2x same-key "rectangle", 2x
-        // same-key "text", 1x "icon" each), each wrapped in its own container (mirroring a real
-        // Gum component instance), placed with zero bounding-box overlap between containers.
-        // Coordinates are the ACTUAL bounds measured from a live 2-card TestScreenFrb run
-        // (Solitaire sample, FlatRedBall2 repo) - not assumed ones.
+        // Issue #4579. Two card-shaped groups (2x same-key "rectangle", 2x same-key "text", 1x
+        // "icon" each), each wrapped in its own container (mirroring a real Gum component
+        // instance), placed with zero bounding-box overlap between containers. Coordinates are the
+        // ACTUAL bounds measured from a live 2-card TestScreenFrb run (Solitaire sample,
+        // FlatRedBall2 repo) - not assumed ones.
         //
-        // A flat (non-nested) version of this same scene merges perfectly (0 extra breaks per
-        // additional group) - the orderer CAN merge same-key items across non-overlapping groups.
-        // But once each group is wrapped in its own container, nothing merges across containers at
-        // all: the container itself never matches the running batch key (it's a transparent
-        // wrapper), so it's only reached via the "smallest DFS index" fallback tier - by which
-        // point the algorithm has already drained the first card's non-matching items instead of
-        // reaching into the second card's container while a same-key run was still active. This
-        // pins the CURRENT (suboptimal) behavior so a future fix has a red-then-green target.
+        // A transparent container is a free choice: it submits no vertices and leaves the running
+        // key alone, so the free-container tier picks both containers up front, which unblocks
+        // both cards' children while each same-key run is still active. The result is one run per
+        // distinct key regardless of how many card instances exist.
         BatchKeyGroupedOrderer.Instance.ResetBreakTally();
         object fontTex = new object();
         object iconTex = new object();
@@ -905,9 +945,7 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
             float dx = card * 100; // card0 Entity.X=0, card1 Entity.X=100 (measured)
             // Real cards are NESTED: each CardGum.Visual is its own container (empty BatchKey,
             // full card bounds), and Background/Border/RankText1/RankText2/SuitIcon are its
-            // CHILDREN - not flat top-level siblings like the previous version of this test
-            // assumed. Testing whether that nesting (not bounds/keys, both already proven fine)
-            // is what defeats cross-card merging.
+            // CHILDREN - not flat top-level siblings.
             FakeRenderable cardContainer = new FakeRenderable($"card{card}", "") { X = 360 + dx, Y = 264, Width = 80, Height = 112 };
             layer.Add(cardContainer);
 
@@ -930,22 +968,61 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         List<DrawCommand> commands = new List<DrawCommand>();
         BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
 
-        // Fully sequential per container - bg1/border1 never get pulled forward to merge with
-        // bg0/border0, even though nothing overlaps and their keys match exactly.
+        // Three runs, not six: both cards' Apos.Shapes rectangles merge, then both cards' font-
+        // texture texts, then both icons. Within a card, DFS order is still preserved wherever
+        // bounds overlap (bg before border, rank1 before rank2, texts before the icon they sit on).
         Describe(commands).ShouldBe(new[]
         {
             "DrawRenderable:card0",
+            "DrawRenderable:card1",
             "DrawRenderable:bg0",
             "DrawRenderable:border0",
-            "DrawRenderable:rank1_0",
-            "DrawRenderable:rank2_0",
-            "DrawRenderable:icon0",
-            "DrawRenderable:card1",
             "DrawRenderable:bg1",
             "DrawRenderable:border1",
+            "DrawRenderable:rank1_0",
+            "DrawRenderable:rank2_0",
             "DrawRenderable:rank1_1",
             "DrawRenderable:rank2_1",
+            "DrawRenderable:icon0",
             "DrawRenderable:icon1",
+        });
+
+        // The only remaining breaks are genuine content alternation (rect -> text -> icon), not
+        // per-instance repetition: adding more cards adds no further breaks.
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void BuildDrawList_FreeContainerOverlappingAnEarlierDraw_StaysBehindItAndBehindAnActiveRun()
+    {
+        // Guards the two ways the free-container tier could break the class's core promise
+        // (#4579). The container is transparent and so a "free" pick, but it must still be the
+        // LOWEST-priority tier above the smallest-DFS fallback:
+        //
+        //  1. It must not jump an overlap edge. The container's bounds cover apos0, so apos0 must
+        //     draw first - if the tier ignored indegree the container (and its child) would be
+        //     hoisted to the front and the child sprite would paint under apos0 instead of over.
+        //  2. It must not preempt a real same-key match. Once apos0 has started an Apos.Shapes
+        //     run, apos1 continues that run; the container waits even though picking it is free.
+        FakeRenderable apos0 = new FakeRenderable("apos0", "Apos.Shapes") { X = 0, Y = 0, Width = 100, Height = 100 };
+
+        FakeRenderable container = new FakeRenderable("container", "") { X = 0, Y = 0, Width = 100, Height = 100 };
+        FakeRenderable containerChild = AddChild(container, "containerChild");
+        containerChild.X = 0; containerChild.Y = 0; containerChild.Width = 100; containerChild.Height = 100;
+
+        FakeRenderable apos1 = new FakeRenderable("apos1", "Apos.Shapes") { X = 200, Y = 0, Width = 10, Height = 10 };
+
+        Layer layer = BuildLayer(apos0, container, apos1);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        Describe(commands).ShouldBe(new[]
+        {
+            "DrawRenderable:apos0",
+            "DrawRenderable:apos1",
+            "DrawRenderable:container",
+            "DrawRenderable:containerChild",
         });
     }
 
