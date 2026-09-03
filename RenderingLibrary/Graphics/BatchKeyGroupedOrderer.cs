@@ -194,7 +194,8 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
     /// <summary>
     /// Clears <see cref="MergeBlockedByOverlapCount"/>, <see cref="NoCandidateInWindowBreakCount"/>,
-    /// and every tally behind <see cref="GetBreakGroups"/>/<see cref="GetBreakGroupsByType"/>.
+    /// <see cref="HardBoundaryTransitionCount"/>, and every tally behind
+    /// <see cref="GetBreakGroups"/>/<see cref="GetBreakGroupsByType"/>.
     /// <see cref="Renderer"/> calls this at the same points it resets
     /// <see cref="RenderStateChangeStatistics"/>; call it yourself if you drive this orderer
     /// directly (issue #4575).
@@ -269,9 +270,10 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
     }
 
     /// <summary>
-    /// Every distinct break this build produced, most-frequent first - "what's alternating," not
-    /// just a count of how often something did. Recomputed from this build's tallies each call;
-    /// cheap unless you're calling it every frame in a hot loop (issue #4575).
+    /// Every distinct break since the last <see cref="ResetBreakTally"/>, most-frequent first -
+    /// "what's alternating," not just a count of how often something did. Recomputed from the
+    /// current tallies each call; cheap unless you're calling it every frame in a hot loop
+    /// (issue #4575).
     /// </summary>
     public IReadOnlyList<BatchBreakGroup> GetBreakGroups()
     {
