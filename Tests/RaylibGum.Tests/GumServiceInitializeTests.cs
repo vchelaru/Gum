@@ -1,7 +1,9 @@
 using Gum.Forms;
 using Gum.Forms.Controls;
+using Gum.Localization;
 using Gum.Wireframe;
 using RaylibGum;
+using RaylibGum.Renderables;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -34,6 +36,56 @@ public class GumServiceInitializeTests
         finally
         {
             GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_ShouldAssignDefaultLocalizationService()
+    {
+        // Tear down the assembly-wide state so we can observe a cold init, and clear the
+        // static LocalizationService so a leftover instance from another test can't mask
+        // Initialize() failing to assign one (#4576 - GumUI.LocalizationService returned
+        // null on raylib because SystemManagers.Initialize() never wired it up).
+        // Qualified as Gum.GumService (the modern, non-obsolete class) to stay warning-free -
+        // same reasoning as TestAssemblyInitialize.ApplyDefaultTestState.
+        Gum.GumService.Default.Uninitialize();
+        CustomSetPropertyOnRenderable.LocalizationService = null;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            CustomSetPropertyOnRenderable.LocalizationService.ShouldNotBeNull();
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.LocalizationService = null;
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_ShouldAssignThrowExceptionsForMissingFilesDelegate()
+    {
+        // Same shape as Initialize_ShouldAssignDefaultLocalizationService above: the docs
+        // (files-and-fonts/font-strategies.md) tell users to call
+        // GraphicalUiElement.ThrowExceptionsForMissingFiles(textRuntime) directly, but on raylib
+        // SystemManagers.Initialize() never assigned the delegate, so calling it NREs.
+        Gum.GumService.Default.Uninitialize();
+        GraphicalUiElement.ThrowExceptionsForMissingFiles = null;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            GraphicalUiElement.ThrowExceptionsForMissingFiles.ShouldNotBeNull();
+        }
+        finally
+        {
+            GraphicalUiElement.ThrowExceptionsForMissingFiles = null;
+            Gum.GumService.Default.Uninitialize();
             TestAssemblyInitialize.ApplyDefaultTestState();
         }
     }
