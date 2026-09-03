@@ -247,6 +247,77 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
         }
     }
 
+    /// <summary>
+    /// Records <see cref="SpriteRenderer.ForcedMatrix"/> as it stands at the moment this renderable
+    /// is actually submitted. Every re-<c>BeginSpriteBatch</c> (a clip enter/exit, a batch flush)
+    /// composes ForcedMatrix into the transform it hands the SpriteBatch, so whatever this captures
+    /// is what the GPU would be drawing with.
+    /// </summary>
+    private class ForcedMatrixProbe : ContainerRuntime
+    {
+        public Matrix? ObservedForcedMatrix { get; private set; }
+        public bool WasRendered { get; private set; }
+
+        public override void Render(ISystemManagers managers)
+        {
+            ObservedForcedMatrix = ((SystemManagers)managers).Renderer.SpriteRenderer.ForcedMatrix;
+            WasRendered = true;
+            base.Render(managers);
+        }
+    }
+
+    [Fact]
+    public void Deferred_WithForcedMatrixAndAClip_StillHasForcedMatrixWhenTheClippedSubtreeSubmits()
+    {
+        // Renderer.End() clears spriteRenderer.ForcedMatrix, then runs the Deferred submit. In
+        // Immediate mode every Draw() had already submitted while the matrix was still set, so
+        // nothing noticed. In Deferred mode the whole submit - including the re-BeginSpriteBatch
+        // that entering a clip forces - happens after the clear, so the clipped subtree renders at
+        // the camera transform instead of the caller's.
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        double hostTime = 0;
+
+        Matrix forced = Matrix.CreateScale(3f);
+
+        ContainerRuntime clip = new();
+        clip.ClipsChildren = true;
+        clip.Width = 100;
+        clip.Height = 100;
+
+        ForcedMatrixProbe probe = new();
+        probe.Width = 10;
+        probe.Height = 10;
+        clip.Children.Add(probe);
+
+        AdvanceHostFrame(managers, ref hostTime);
+        renderer.Begin(forced, Renderer.GumBatchDrawMode.Immediate);
+        renderer.Draw(clip);
+        renderer.End();
+
+        probe.WasRendered.ShouldBeTrue();
+        probe.ObservedForcedMatrix.ShouldBe(forced, "Immediate mode baseline");
+
+        AdvanceHostFrame(managers, ref hostTime);
+        renderer.Begin(forced, Renderer.GumBatchDrawMode.Deferred);
+        renderer.Draw(clip);
+        renderer.End();
+
+        // The two modes must agree - Deferred is meant to change batching, not transforms.
+        probe.ObservedForcedMatrix.ShouldBe(forced);
+
+        // And the matrix must not leak into the next cycle, which passes none.
+        AdvanceHostFrame(managers, ref hostTime);
+        renderer.Begin(null, Renderer.GumBatchDrawMode.Deferred);
+        renderer.Draw(clip);
+        renderer.End();
+
+        probe.ObservedForcedMatrix.ShouldBeNull();
+    }
+
     private class MinimalGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;
