@@ -434,8 +434,13 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
 
         groups[0].Count.ShouldBe(3);
-        groups.Count(g => g.Count == 3).ShouldBe(2); // sb->apos (blocked) and apos->sb (no candidate)
-        groups.Count(g => g.Count == 1).ShouldBe(2); // the distinct-BatchSortKey row's own pair
+        // sb->apos (blocked), apos->sb (no candidate), and rows 0-2's shared NoPredecessor break
+        // (each row's own "a{row}" starts its own Y-run with nothing before it, but all three
+        // share the same (nothing) -> (SpriteBatch, null) identity, so they merge into one group).
+        groups.Count(g => g.Count == 3).ShouldBe(3);
+        // the distinct-BatchSortKey row's own pair, plus its own NoPredecessor break ("d" has a
+        // distinct BatchSortKey, so it doesn't merge with rows 0-2's).
+        groups.Count(g => g.Count == 1).ShouldBe(3);
     }
 
     [Fact]
@@ -456,7 +461,9 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
 
         BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
         BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(2);
-        BatchKeyGroupedOrderer.Instance.GetBreakGroups().Single().Count.ShouldBe(2);
+        var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
+        groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoCandidateInWindow).Count.ShouldBe(2);
+        groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoPredecessor).Count.ShouldBe(2); // a starts each cycle with nothing before it
     }
 
     [Fact]
@@ -473,7 +480,149 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
 
         var typeGroups = BatchKeyGroupedOrderer.Instance.GetBreakGroupsByType();
 
-        typeGroups.Single().ToString().ShouldBe("FakeRenderable->FakeRenderable (1)");
+        // Two entries: a's own NoPredecessor break (nothing preceded it) and the a->b switch itself.
+        typeGroups.Count.ShouldBe(2);
+        typeGroups.Single(g => g.FromRenderableType == typeof(FakeRenderable)).ToString().ShouldBe("FakeRenderable->FakeRenderable (1)");
+    }
+
+    [Fact]
+    public void BuildDrawList_PlainContainerBetweenSameKeyItems_IsNotCountedAsABreak()
+    {
+        // A plain ContainerRuntime (empty BatchKey, not a render target or clip) is a complete
+        // no-op at the real GPU level - BatchOrchestrator.OnRenderable treats empty BatchKey as
+        // "participates in whatever batch the previous renderable established" (no flush), and
+        // InvisibleRenderable.Render submits no vertices. So a Container physically interposed
+        // between two same-key items (via the overlap chain A-container-B below) must not count
+        // as a break, and must not stop the orderer from recognizing A and B as one contiguous
+        // (sb,null) run once B unblocks.
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable container = new FakeRenderable("container", "") { X = 5, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable b = new FakeRenderable("b", "SpriteBatch") { X = 12, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable c = new FakeRenderable("c", "Apos.Shapes") { X = 100, Y = 0, Width = 10, Height = 10 };
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = BuildLayer(a, container, b, c);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1); // only b->c
+        var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
+        groups.Count.ShouldBe(2); // a's own NoPredecessor break, plus b->c
+        var noCandidate = groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoCandidateInWindow);
+        noCandidate.FromBatchKey.ShouldBe("SpriteBatch");
+        noCandidate.ToBatchKey.ShouldBe("Apos.Shapes");
+        groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoPredecessor).ToBatchKey.ShouldBe("SpriteBatch"); // a
+    }
+
+    [Fact]
+    public void BuildDrawList_RenderTargetBetweenSameKeyItems_IsCountedAsABreak()
+    {
+        // Unlike a plain Container, a render target IS a real cost even though it also reports an
+        // empty BatchKey: SubmitDrawRenderable/DrawRenderTargetToScreen give it its own
+        // FlushAndReset + BeginSpriteBatch(effectOverride:) cycle. So (unlike the plain-container
+        // test above) both the entry into it and the exit out of it must count as real breaks.
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable renderTarget = new FakeRenderable("renderTarget", "")
+        {
+            X = 5, Y = 0, Width = 10, Height = 10, IsRenderTarget = true,
+        };
+        FakeRenderable b = new FakeRenderable("b", "SpriteBatch") { X = 12, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable c = new FakeRenderable("c", "Apos.Shapes") { X = 100, Y = 0, Width = 10, Height = 10 };
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = BuildLayer(a, renderTarget, b, c);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(2); // a->renderTarget, renderTarget->b
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1); // b->c
+        BatchKeyGroupedOrderer.Instance.GetBreakGroups().Count.ShouldBe(4); // + a's own NoPredecessor break
+    }
+
+    [Fact]
+    public void BuildDrawList_ClipInsideOneRow_DoesNotLeakRunningKeyIntoTheNextRow()
+    {
+        // Regression pin: the running-key state that must persist ACROSS a clip boundary (so
+        // entering/exiting it is counted correctly, see the two clip tests below) must NOT persist
+        // across a SecondarySortOnY row boundary - each row still has to reorder independently.
+        // sbTop (row Y=0) ends the row on a "SpriteBatch" key by clipping; aposBottom (row Y=20)
+        // must not see that leak into its own running state.
+        FakeRenderable sbTop = new FakeRenderable("sbTop", "SpriteBatch") { Y = 0, Width = 10, Height = 10 };
+        FakeRenderable clipTop = new FakeRenderable("clipTop", "SpriteBatch")
+        {
+            X = 50, Y = 0, Width = 10, Height = 10, ClipsChildren = true,
+        };
+        FakeRenderable aposBottom = new FakeRenderable("aposBottom", "Apos.Shapes") { Y = 20, Width = 10, Height = 10 };
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = new Layer();
+        layer.SecondarySortOnY = true;
+        layer.Add(sbTop);
+        layer.Add(clipTop);
+        layer.Add(aposBottom);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        // aposBottom is the first (and only) item in its own row - if the fix regressed, it would
+        // incorrectly compare against clipTop's "SpriteBatch" key instead of starting fresh.
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(1); // sbTop -> clipTop only
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void BuildDrawList_EnteringAClip_IsCountedEvenWhenItsOwnKeyMatchesTheRunningKey()
+    {
+        // The bug this pins: entering a ClipsChildren renderable ALWAYS forces a real flush
+        // (Renderer.AdjustRenderStates restarts SpriteBatch on any clip change), regardless of
+        // whether the clip's own BatchKey happens to equal whatever was running. Before this fix,
+        // clip transitions never reached the break-comparison at all (a clip is always the first
+        // item of a freshly-flushed inner window, and "first emission" is unconditionally
+        // skipped) - so a same-key clip like this one would have been invisible to every counter.
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable clip = new FakeRenderable("clip", "SpriteBatch")
+        {
+            X = 50, Y = 0, Width = 10, Height = 10, ClipsChildren = true,
+        };
+        AddChild(clip, "child", "Apos.Shapes");
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = BuildLayer(a, clip);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(1); // a -> clip, same key
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1); // clip -> child (apos)
+    }
+
+    [Fact]
+    public void BuildDrawList_ExitingAClip_ForcesTheNextItemEvenWhenItsKeyMatches()
+    {
+        // The other half of the same bug: Renderer.Draw's didClipChange exit branch ALSO forces a
+        // flush when leaving a clip - so whatever comes next must count as a break too, even if
+        // its key happens to match whatever was running inside the clip.
+        FakeRenderable clip = new FakeRenderable("clip", "SpriteBatch")
+        {
+            X = 0, Y = 0, Width = 10, Height = 10, ClipsChildren = true,
+        };
+        FakeRenderable b = new FakeRenderable("b", "SpriteBatch") { X = 50, Y = 0, Width = 10, Height = 10 };
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        Layer layer = BuildLayer(clip, b);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(1); // clip -> b, same key
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(0);
     }
 
     [Fact]
@@ -673,6 +822,131 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
         int backgroundIdx = result.IndexOf("DrawRenderable:background");
         int iconIdx = result.IndexOf("DrawRenderable:icon");
         backgroundIdx.ShouldBeLessThan(iconIdx);
+    }
+
+    [Fact]
+    public void BuildDrawList_FirstItemInAWindow_IsRecordedAsANoPredecessorBreak()
+    {
+        // The very first item of a window has nothing to break from, but it is still a real,
+        // separately-submitted GPU batch - so it must show up in GetBreakGroups() too, or a
+        // caller summing group.Count to reconcile against DrawCallCount silently undercounts by
+        // one per window (the confusion this test exists to prevent).
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        FakeRenderable sb1 = new FakeRenderable("sb1", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable apos1 = new FakeRenderable("apos1", "Apos.Shapes") { X = 50, Y = 0, Width = 10, Height = 10 };
+
+        Layer layer = BuildLayer(sb1, apos1);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
+        groups.Count.ShouldBe(2);
+
+        var noPredecessor = groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoPredecessor);
+        noPredecessor.FromRenderableType.ShouldBe(typeof(BatchKeyGroupedOrderer.NoPredecessorMarker));
+        noPredecessor.ToRenderableType.ShouldBe(typeof(FakeRenderable));
+        noPredecessor.ToBatchKey.ShouldBe("SpriteBatch");
+        noPredecessor.Count.ShouldBe(1);
+
+        // Total draws this window = 2 (sb1, apos1). Every draw must now be attributable to
+        // exactly one break group entry (NoPredecessor for the first, NoCandidateInWindow for the
+        // switch to apos1) - the reconciliation the diagnostic exists to provide.
+        groups.Sum(g => g.Count).ShouldBe(2);
+    }
+
+    [Fact]
+    public void BuildDrawList_CalledTwiceWithoutReset_SumOfBreakGroupCountsMatchesTotalDrawsAcrossBothCycles()
+    {
+        // Mirrors FRB2's real per-camera + overlay shape: BuildDrawList runs once per cycle, and
+        // Renderer only resets the break tally once per host frame - not per cycle. Each cycle's
+        // own first item is a fresh NoPredecessor break, so the two cycles' single-item draws (2
+        // total) must sum to 2 in GetBreakGroups(), not silently undercount to 0.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        Layer layer = BuildLayer(a);
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands); // cycle 1
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands); // cycle 2
+
+        var groups = BatchKeyGroupedOrderer.Instance.GetBreakGroups();
+        var noPredecessor = groups.Single(g => g.Reason == BatchKeyGroupedOrderer.BreakReason.NoPredecessor);
+        noPredecessor.Count.ShouldBe(2);
+        groups.Sum(g => g.Count).ShouldBe(2); // 2 cycles x 1 draw each
+    }
+
+    [Fact]
+    public void BuildDrawList_TwoNestedNonOverlappingCardGroups_DoesNotMergeAcrossContainers()
+    {
+        // Known limitation - see issue #4579. Two card-shaped groups (2x same-key "rectangle", 2x
+        // same-key "text", 1x "icon" each), each wrapped in its own container (mirroring a real
+        // Gum component instance), placed with zero bounding-box overlap between containers.
+        // Coordinates are the ACTUAL bounds measured from a live 2-card TestScreenFrb run
+        // (Solitaire sample, FlatRedBall2 repo) - not assumed ones.
+        //
+        // A flat (non-nested) version of this same scene merges perfectly (0 extra breaks per
+        // additional group) - the orderer CAN merge same-key items across non-overlapping groups.
+        // But once each group is wrapped in its own container, nothing merges across containers at
+        // all: the container itself never matches the running batch key (it's a transparent
+        // wrapper), so it's only reached via the "smallest DFS index" fallback tier - by which
+        // point the algorithm has already drained the first card's non-matching items instead of
+        // reaching into the second card's container while a same-key run was still active. This
+        // pins the CURRENT (suboptimal) behavior so a future fix has a red-then-green target.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+        object fontTex = new object();
+        object iconTex = new object();
+
+        Layer layer = BuildLayer();
+        for (int card = 0; card < 2; card++)
+        {
+            float dx = card * 100; // card0 Entity.X=0, card1 Entity.X=100 (measured)
+            // Real cards are NESTED: each CardGum.Visual is its own container (empty BatchKey,
+            // full card bounds), and Background/Border/RankText1/RankText2/SuitIcon are its
+            // CHILDREN - not flat top-level siblings like the previous version of this test
+            // assumed. Testing whether that nesting (not bounds/keys, both already proven fine)
+            // is what defeats cross-card merging.
+            FakeRenderable cardContainer = new FakeRenderable($"card{card}", "") { X = 360 + dx, Y = 264, Width = 80, Height = 112 };
+            layer.Add(cardContainer);
+
+            FakeRenderable bg = AddChild(cardContainer, $"bg{card}", "Apos.Shapes");
+            bg.X = 360 + dx; bg.Y = 264; bg.Width = 80; bg.Height = 112;
+
+            FakeRenderable border = AddChild(cardContainer, $"border{card}", "Apos.Shapes");
+            border.X = 360 + dx; border.Y = 264; border.Width = 80; border.Height = 112;
+
+            FakeRenderable rank1 = AddChild(cardContainer, $"rank1_{card}");
+            rank1.BatchSortKey = fontTex; rank1.X = 369 + dx; rank1.Y = 268; rank1.Width = 14; rank1.Height = 30;
+
+            FakeRenderable rank2 = AddChild(cardContainer, $"rank2_{card}");
+            rank2.BatchSortKey = fontTex; rank2.X = 369 + dx; rank2.Y = 268; rank2.Width = 14; rank2.Height = 30;
+
+            FakeRenderable icon = AddChild(cardContainer, $"icon{card}");
+            icon.BatchSortKey = iconTex; icon.X = 374 + dx; icon.Y = 294; icon.Width = 52; icon.Height = 52;
+        }
+
+        List<DrawCommand> commands = new List<DrawCommand>();
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(layer, commands);
+
+        // Fully sequential per container - bg1/border1 never get pulled forward to merge with
+        // bg0/border0, even though nothing overlaps and their keys match exactly.
+        Describe(commands).ShouldBe(new[]
+        {
+            "DrawRenderable:card0",
+            "DrawRenderable:bg0",
+            "DrawRenderable:border0",
+            "DrawRenderable:rank1_0",
+            "DrawRenderable:rank2_0",
+            "DrawRenderable:icon0",
+            "DrawRenderable:card1",
+            "DrawRenderable:bg1",
+            "DrawRenderable:border1",
+            "DrawRenderable:rank1_1",
+            "DrawRenderable:rank2_1",
+            "DrawRenderable:icon1",
+        });
     }
 
     [Fact]
