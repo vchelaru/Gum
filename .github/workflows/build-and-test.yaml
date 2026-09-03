@@ -20,7 +20,7 @@ on:
 
 jobs:
   # The Gum tool (Gum.sln) builds with neither submodules nor .NET mobile
-  # workloads: it contains no FNA/Sokol projects and no mobile-TFM projects
+  # workloads: it contains no FNA projects and no mobile-TFM projects
   # (MonoGameGum/RaylibGum are not in it; the in-solution KniGum defaults to
   # net8.0). Isolating the tool build + its WPF unit tests onto their own
   # Windows runner lets this lane skip the ~5 min submodule-init + workload-
@@ -71,7 +71,7 @@ jobs:
   # DesktopGL too, not just raylib (both resolve opengl32.dll by name from the exe's own directory
   # before System32).
   #
-  # Needs neither FNA/Sokol submodules nor mobile workloads - the harness only references
+  # Needs neither the FNA submodule nor mobile workloads - the harness only references
   # MonoGameGum/GumCommon, and mobile TFMs are opt-in (IncludeIOS/IncludeAndroid), so restore
   # stays on just net8.0 with no flags needed.
   Native-AOT-Smoke:
@@ -138,7 +138,7 @@ jobs:
   # Splitting it into its own job lets it run concurrently with Build-and-Test
   # instead of adding to its critical path.
   #
-  # None of the CodeGen_* projects reference FnaGum/SokolGum, so this job skips
+  # None of the CodeGen_* projects reference FnaGum, so this job skips
   # submodule init entirely. Of the workloads Build-and-Test installs for
   # AllLibraries.sln (wasm-tools/ios/android/maui), only CodeGen_Maui_FullCodegen
   # needs one — maui — so this job installs just that, with its own cache key,
@@ -267,13 +267,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       # actions/checkout's `submodules: recursive` does shallow (--depth=1)
-      # submodule fetches. Sokol.NET's box2d submodule pins a SHA that lives
-      # on the `sokol-dev` branch and is not reachable from box2d's default
-      # branch (`main`), so a shallow fetch misses it. git then tries a
-      # direct-SHA fetch, falls back to credentialed cloning, and dies with
-      # "could not read Username" because GIT_TERMINAL_PROMPT=0 on runners.
-      # Doing `git submodule update --init --recursive` ourselves does full
-      # (non-shallow) clones, so the pinned SHA is always reachable.
+      # submodule fetches, which fail outright whenever a nested submodule pins a
+      # SHA that is not reachable from its remote's default branch: git falls back
+      # to a credentialed clone and dies with "could not read Username" because
+      # GIT_TERMINAL_PROMPT=0 on runners. Doing `git submodule update --init
+      # --recursive` ourselves does full (non-shallow) clones, so any pinned SHA
+      # is reachable. Only `fna` and its native submodules (SDL/FAudio/FNA3D/
+      # Theorafile) are fetched now that Sokol.NET is no longer a submodule.
       - uses: actions/checkout@v4
         with:
           submodules: false
@@ -304,7 +304,7 @@ jobs:
       # Cache the submodule object stores (.git/modules) + working trees, keyed on
       # the pinned submodule SHAs, so a hit turns the recursive non-shallow init
       # below into a fast local verify instead of re-cloning FNA's nested native
-      # submodules (SDL/FAudio/FNA3D/Theorafile) and Sokol.NET/box2d every run.
+      # submodules (SDL/FAudio/FNA3D/Theorafile) every run.
       # Keyed on the SHAs (not the workflow-file hash) so it re-caches only when a
       # submodule pointer actually moves. Save on main only, mirroring the workload
       # cache: a PR-scoped cache is not reused across PRs, and the 10 GB repo cache
@@ -323,7 +323,6 @@ jobs:
           path: |
             .git/modules
             fna
-            Sokol.NET
           key: submodules-${{ runner.os }}-${{ steps.submodule-key.outputs.shas }}
       - name: Restore cached submodules (PRs)
         id: cache-submodules-restore
@@ -333,7 +332,6 @@ jobs:
           path: |
             .git/modules
             fna
-            Sokol.NET
           key: submodules-${{ runner.os }}-${{ steps.submodule-key.outputs.shas }}
 
       # --jobs parallelizes the (still non-shallow) fetch of independent submodules
@@ -423,7 +421,6 @@ jobs:
       # Bucket A — RUN IN CI (headless: pure data, IO, codegen, analyzers, or
       # MonoGame's headless TestGame harness):
       #   - MonoGameGum.Tests              (headless TestGame harness)
-      #   - SokolGum.Tests                 (Sokol; headless)
       #   - GumToolUnitTests               (WPF tool unit tests; Windows only —
       #                                     now runs in the separate Build-Tool
       #                                     job at the top of this file, #3349)
@@ -528,10 +525,6 @@ jobs:
       - name: MonoGameGum.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "MonoGameGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
-
-      - name: SokolGum.Tests
-        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
-        run: dotnet test "Tests/SokolGum.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Bundle.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')

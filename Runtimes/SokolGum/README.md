@@ -1,7 +1,13 @@
 # SokolGum
 
-**Experimental** Gum backend targeting [Sokol.NET](https://github.com/lithiumtoast/Sokol.NET)
+**Experimental** Gum backend targeting [Sokol.NET](https://github.com/wiredmatt/Sokol.NET)
 (sokol_gfx / sokol_gp / sokol_app / fontstash via `sokol_fontstash.h`).
+
+> **Not built by CI, and not in `AllLibraries.sln`.** Sokol.NET used to be a git
+> submodule, but it pulls in 11 nested submodules of its own (including emsdk) and
+> ~143 MB of prebuilt native binaries, which broke `git pull` for anyone who
+> initialized it. It was removed; `Gum.sokol` is no longer published to NuGet.
+> To build this backend, clone Sokol.NET yourself — see [Getting Sokol.NET](#getting-sokolnet).
 
 Sibling to `Runtimes/RaylibGum/` and `Runtimes/SkiaGum/`. Renders UI through
 `sokol_gp` (2D primitives + scissor + blend) with text emitted through
@@ -221,20 +227,45 @@ windows — aspect-preserving letterbox would need a non-full viewport.
 
 ---
 
+## Getting Sokol.NET
+
+Clone it into `Sokol.NET/` at the repo root (sibling to `fna/`). **Do not pass
+`--recurse-submodules`** — Sokol.NET's 11 nested submodules are its native build
+toolchain, and nothing here needs them. A plain clone never fetches them:
+
+```sh
+# From the repo root
+git clone https://github.com/wiredmatt/Sokol.NET.git Sokol.NET
+git -C Sokol.NET checkout 66adbfb50f5d75ae017bcfcb77ffbcf7a70e93b9
+```
+
+That SHA is the last commit this backend was verified against; `main` will
+probably work too. `Sokol.NET/` is gitignored, so the clone won't show up as
+untracked.
+
+You get everything needed: the managed bindings under `src/sokol` + `src/imgui`,
+and the prebuilt native binaries under `libs/` that `Sokol.Native.targets` copies
+next to sample output.
+
+Then open `Samples/SokolGum/SokolGumSample.slnx` (or `SokolGumFromFile.slnx`) —
+each pulls in `Runtimes/Sokol`, `Runtimes/SokolGum`, and `GumCommon`. `AllLibraries.sln`
+does **not** reference any of them.
+
+---
+
 ## Dependencies
 
-- `Sokol.NET` — git submodule at `/Sokol.NET/` (sibling to `/fna/`).
-  No NuGet published.
-- `Runtimes/Sokol/Sokol.csproj` — proxy project wrapping the submodule's
-  `src/sokol/` + `src/imgui/` sources. The submodule's own
-  `sokol.csproj` can't be referenced directly because `SDebugUI.cs`
-  imports types from the sibling `imgui/` folder.
+- `Sokol.NET` — cloned by hand into `/Sokol.NET/` (see above). No NuGet published.
+- `Runtimes/Sokol/Sokol.csproj` — proxy project wrapping Sokol.NET's
+  `src/sokol/` + `src/imgui/` sources. Its own `sokol.csproj` can't be
+  referenced directly because `SDebugUI.cs` imports types from the sibling
+  `imgui/` folder.
 - `GumCommon.csproj` — standard core Gum dependency.
 
 Target framework: `net8.0`, matching every other Gum backend and
-sample in the repo. The Sokol.NET submodule's own `sokol.csproj`
-defaults to `net10.0`, but the source files it includes compile
-cleanly against `net8.0` — our proxy overrides the TFM.
+sample in the repo. Sokol.NET's own `sokol.csproj` defaults to `net10.0`,
+but the source files it includes compile cleanly against `net8.0` — our
+proxy overrides the TFM.
 
 ---
 
@@ -276,8 +307,10 @@ touch text rendering, test both samples at multiple window sizes,
 verify `.gumx` still loads, and run at least thickness-0, 1, 2, 3
 outlines to catch off-by-one artifacts.
 
-Automated tests live at `Tests/SokolGum.Tests/` — run via `dotnet
-test AllLibraries.sln --filter "FullyQualifiedName~SokolGum"`. The
+Automated tests live at `Tests/SokolGum.Tests/` — run via `dotnet test
+Tests/SokolGum.Tests/SokolGum.Tests.csproj` (they are no longer in
+`AllLibraries.sln`, so CI does not run them; run them yourself before
+sending a change). The
 tests cover runtime property forwarding and `CustomSetPropertyOnRenderable`
 dispatch. They do **not** cover the `GumService.Initialize` →
 `Update` → `Draw` path because that requires a live `sg_setup`

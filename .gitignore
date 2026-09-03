@@ -83,3 +83,7 @@ Tool/HtmlToGum/fidelity/frozen/**/chromium-reference.png
 Tool/HtmlToGum/fidelity/seeds.json
 
 # Keep package-lock.json under converter/ and fidelity/ — those are source, not build output.
+
+# Sokol.NET is no longer a submodule (see Runtimes/SokolGum/README.md). Developers who
+# want to build the Sokol runtime clone it into this folder themselves.
+Sokol.NET/

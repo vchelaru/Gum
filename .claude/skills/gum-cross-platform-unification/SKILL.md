@@ -88,7 +88,9 @@ If a runtime class exists on MonoGame, Raylib, Skia, and Sokol:
 3.  **Validate** (build and run tests for that pair).
 4.  Only after the first pair is stable and verified, proceed to the next platform (e.g., adding Skia to the existing unified file).
 
-This ensures changes remain reviewable, TDD stays manageable, and build errors (like those often found in Sokol) don't block the entire unification process.
+This ensures changes remain reviewable, TDD stays manageable, and a build error on one platform doesn't block the entire unification process.
+
+SokolGum cannot be compile-verified without first cloning Sokol.NET by hand (`Runtimes/SokolGum/README.md`) — it is in no solution CI builds. Unify its copy for consistency, then say the Sokol side is unverified rather than reporting the pair as green.
 
 ## Incremental Convergence: Mirror-`#if` Toward an Empty Diff
 

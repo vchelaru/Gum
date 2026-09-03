@@ -16,7 +16,11 @@ $successes = [System.Collections.Generic.List[string]]::new()
 # and needs the win-x64 runtime pack (NETSDK1112) the RID-less restore can't supply, and its
 # net9.0-ios head can't build on a Windows runner at all (needs a Mac). Build it in a dedicated
 # MAUI workflow instead.
-$excludeLeafNames = @('MauiSkiaGum.sln')
+#
+# The SokolGum samples need Sokol.NET, which is no longer a submodule (it dragged in 11 nested
+# submodules and ~143 MB of native binaries, and broke `git pull` for anyone who initialized it).
+# Building them requires cloning Sokol.NET by hand — see Runtimes/SokolGum/README.md.
+$excludeLeafNames = @('MauiSkiaGum.sln', 'SokolGumSample.slnx', 'SokolGumFromFile.slnx')
 
 $slns = Get-ChildItem -Path $Path -Recurse -File |
         Where-Object { $_.Extension -in '.sln', '.slnx' } |

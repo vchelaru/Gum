@@ -80,9 +80,10 @@ Gum's runtimes are published to NuGet. Install the package for your platform. Al
 | raylib | [![NuGet](https://img.shields.io/nuget/v/Gum.raylib?label=Gum.raylib)](https://www.nuget.org/packages/Gum.raylib) | Built-in |
 | SkiaSharp | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp?label=Gum.SkiaSharp)](https://www.nuget.org/packages/Gum.SkiaSharp) | Built-in |
 | Maui | [![NuGet](https://img.shields.io/nuget/v/Gum.SkiaSharp.Maui?label=Gum.SkiaSharp.Maui)](https://www.nuget.org/packages/Gum.SkiaSharp.Maui) | Built-in |
-| Sokol | [![NuGet](https://img.shields.io/nuget/v/Gum.sokol?label=Gum.sokol)](https://www.nuget.org/packages/Gum.sokol) | Built-in |
 | FNA | [![NuGet](https://img.shields.io/nuget/v/Gum.FNA?label=Gum.FNA)](https://www.nuget.org/packages/Gum.FNA) | — *(not supported)* |
 
 > Shapes is the recommended way to draw rectangles, circles, and other primitives in Gum. On MonoGame and KNI it ships as a separate add-on package (install it alongside the runtime); on the other platforms it's built into the runtime.
+
+> **Sokol** is no longer published. `Gum.sokol` versions up to `2026.9.2.1` remain on NuGet and still work, but receive no further updates: the backend depends on [Sokol.NET](https://github.com/wiredmatt/Sokol.NET), which is not actively maintained and whose submodule tree broke `git pull` for the Gum repo. The source still lives at `Runtimes/SokolGum/` and builds against a hand-cloned Sokol.NET — see [its README](Runtimes/SokolGum/README.md).
 
 Gum produces general-purpose XML, so it can be used in virtually any C# environment. Beyond the packaged runtimes listed above, integrations also exist for environments such as FlatRedBall, Meadow, Silk.NET, WPF, and Avalonia. For integration details — or for using GumCore to integrate with your own runtime — see the main documentation: https://docs.flatredball.com/gum/
