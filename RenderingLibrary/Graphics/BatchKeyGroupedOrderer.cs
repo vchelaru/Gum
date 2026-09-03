@@ -300,6 +300,19 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         public System.Drawing.Rectangle Bounds;
         public string BatchKey;
         public object? BatchSortKey;
+
+        /// <summary>
+        /// True for a plain wrapper (empty <see cref="IRenderable.BatchKey"/>, not a render target,
+        /// not a clip) — the shape a Gum component instance's root takes.
+        /// <see cref="BatchOrchestrator.OnRenderable"/> treats an empty BatchKey as a complete
+        /// no-op (no flush, no StartBatch/EndBatch, running key left alone) and
+        /// <c>InvisibleRenderable.Render</c> submits no vertices, so emitting one costs nothing at
+        /// the GPU level. That makes it both exempt from break accounting and a free choice for
+        /// the topological sort — see the free-container tier in <see cref="FlushWindow"/>.
+        /// Computed once per entry rather than per selection: <see cref="FlushWindow"/>'s tiebreak
+        /// scans it on every pick.
+        /// </summary>
+        public bool IsFreeContainer;
     }
 
     // Scratch state pooled on the instance (#4200) so a build does not allocate after warm-up,
@@ -547,12 +560,14 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
     private static void AddEntry(IRenderableIpso renderable, List<Entry> window)
     {
+        string batchKey = renderable.BatchKey ?? string.Empty;
         window.Add(new Entry
         {
             Item = renderable,
             Bounds = GetEffectiveBounds(renderable),
-            BatchKey = renderable.BatchKey ?? string.Empty,
+            BatchKey = batchKey,
             BatchSortKey = renderable.BatchSortKey,
+            IsFreeContainer = batchKey.Length == 0 && !renderable.IsRenderTarget && !renderable.ClipsChildren,
         });
     }
 
@@ -642,9 +657,20 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
         // Among items with indegree 0, prefer one whose (BatchKey, BatchSortKey) matches the
         // last emitted exactly (keeps same-texture runs contiguous); failing that, one whose
         // BatchKey alone matches (keeps the coarser SpriteBatch/Apos.Shapes grouping
-        // BatchOrchestrator relies on, even when BatchSortKey differs or is unset). Ties within
-        // a tier break by smallest DFS index for determinism. No match at all → smallest DFS
-        // overall.
+        // BatchOrchestrator relies on, even when BatchSortKey differs or is unset); failing that,
+        // a free container (Entry.IsFreeContainer) — emitting one submits nothing and leaves the
+        // running key alone, so it is strictly better than committing to a real key change, and
+        // it unblocks the container's children while the running key may still be worth
+        // continuing. Ties within a tier break by smallest DFS index for determinism. No match at
+        // all → smallest DFS overall.
+        //
+        // The free-container tier is what makes same-key runs merge across sibling instances of
+        // the same Gum component (#4579): each instance's root is a transparent wrapper whose
+        // bounds encompass its children, so those children have a precedence edge from it and stay
+        // unavailable until it is chosen. Without this tier a wrapper is only ever reached via the
+        // last-resort smallest-DFS tier — by which point the first instance's non-matching items
+        // have already been drained and the running key has moved on, so nothing merges across
+        // instances no matter how many identical, non-overlapping ones exist.
         List<int> available = _availableBuffer;
         available.Clear();
         for (int i = 0; i < n; i++)
@@ -688,6 +714,20 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
                 for (int k = 0; k < available.Count; k++)
                 {
                     int idx = available[k];
+                    if (window[idx].IsFreeContainer)
+                    {
+                        if (chosen == -1 || idx < chosen)
+                        {
+                            chosen = idx;
+                        }
+                    }
+                }
+            }
+            if (chosen == -1)
+            {
+                for (int k = 0; k < available.Count; k++)
+                {
+                    int idx = available[k];
                     if (chosen == -1 || idx < chosen)
                     {
                         chosen = idx;
@@ -700,23 +740,27 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
             // just not yet unblocked) or a genuine break (nothing pending shares the old key).
             // Skipped on the very first emission - there's no prior run to have broken yet.
             //
-            // Also skipped for a transparent item: empty BatchKey AND not a render target AND not
-            // a clip. BatchOrchestrator.OnRenderable treats empty BatchKey as a complete no-op (no
-            // flush, no StartBatch/EndBatch, _currentBatchKey left unchanged) for a plain
-            // ContainerRuntime, and InvisibleRenderable.Render submits no vertices - free at the
-            // real GPU level, so counting it here would be a false positive.
+            // Also skipped for a free container (Entry.IsFreeContainer) - it is free at the real
+            // GPU level, so counting it here would be a false positive.
             //
             // A render target or a pending forced transition (set when we just entered/exited a
             // clip, or just drew a render target) is UNCONDITIONALLY a break, regardless of
             // whether the key happens to match - HardBoundaryTransitionCount, never
             // MergeBlockedByOverlapCount/NoCandidateInWindowBreakCount, since no reordering could
             // ever have avoided it (issue #4575 follow-up).
-            bool chosenIsTransparentContainer = string.IsNullOrEmpty(window[chosen].BatchKey) &&
-                !window[chosen].Item.IsRenderTarget && !window[chosen].Item.ClipsChildren;
+            bool chosenIsFreeContainer = window[chosen].IsFreeContainer;
             bool forced = _forceNextTransition || window[chosen].Item.IsRenderTarget;
-            _forceNextTransition = false;
 
-            if (!chosenIsTransparentContainer)
+            // A free container is exempt from break accounting, so it must not CONSUME a pending
+            // forced transition either - the real renderable after it is the one the GPU actually
+            // flushes for, and the hard boundary belongs to it. Leaving the flag set keeps the
+            // break groups reconciling against the frame's true draw-call count.
+            if (!chosenIsFreeContainer)
+            {
+                _forceNextTransition = false;
+            }
+
+            if (!chosenIsFreeContainer)
             {
                 Type toRenderableType = window[chosen].Item.GetType();
 
@@ -777,7 +821,7 @@ public sealed class BatchKeyGroupedOrderer : IRenderableOrderer
 
             destination.Add(new DrawCommand(DrawCommandKind.DrawRenderable, window[chosen].Item));
             drawn[chosen] = true;
-            if (!chosenIsTransparentContainer)
+            if (!chosenIsFreeContainer)
             {
                 _runningBatchKey = window[chosen].BatchKey;
                 _runningSortKey = window[chosen].BatchSortKey;
