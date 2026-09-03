@@ -822,8 +822,6 @@ public class Renderer : IRenderer
 
     public void End()
     {
-        spriteRenderer.ForcedMatrix = null;
-
         if (_deferredImmediateModeRoots.Count > 0)
         {
             Layer.SortByZ(_deferredImmediateModeRoots);
@@ -842,6 +840,14 @@ public class Renderer : IRenderer
         _batchOrchestrator.FlushAndReset(SystemManagers.Default);
 
         spriteRenderer.EndSpriteBatch();
+
+        // Cleared only once everything this cycle submits has gone through. Every
+        // re-BeginSpriteBatch (a clip enter/exit, an orchestrator flush) composes ForcedMatrix
+        // into the transform it hands the SpriteBatch, and in Deferred mode all of those happen
+        // inside the Submit above - so clearing any earlier drops the caller's matrix on exactly
+        // the draws that needed it. Begin always reassigns it (null included), so no cycle can
+        // inherit a stale matrix from this one.
+        spriteRenderer.ForcedMatrix = null;
 
 #if !FNA
         if (GraphicsDevice != null)
