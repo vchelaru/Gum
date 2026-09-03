@@ -83,3 +83,19 @@ If both rows are low, your begins come from clipping instead, and the orderer wi
 {% hint style="info" %}
 `LastFrameDrawStates` only sees `SpriteBatch.Begin` calls. Apos.Shapes batch starts are not counted there, so the total batch count is higher than the reported number. `RenderStateChangeStatistics.DrawCallCount` is backend-neutral and counts every actual GPU draw call, including Apos.Shapes ones, so prefer it when you want a single before/after number.
 {% endhint %}
+
+### Diagnosing a Smaller-Than-Expected Win
+
+If the draw-call count drops less than you expected after enabling the orderer, two different things could be happening, and `BatchKeyGroupedOrderer.Instance` can tell you which without guessing:
+
+* **`MergeBlockedByOverlapCount`** - the orderer wanted to keep a run going, but a matching item was still pending behind something its bounds overlap. This is the orderer's own correctness rule (never reorder across overlapping bounds) doing its job; no amount of reordering fixes it. If this number is high, the real fix is removing the alternation itself, for example packing the alternating textures into one shared atlas, since same-texture consecutive draws merge for free regardless of overlap or Z order.
+* **`NoCandidateInWindowBreakCount`** - nothing pending shared the running key at all. That's genuine content alternation (or simply the end of a reorder window), and is exactly what the orderer is designed to collapse when it can.
+
+Both reset at the start of every `BuildDrawList` call, so read them right after the one draw pass you're measuring:
+
+```csharp
+// Draw
+var orderer = (BatchKeyGroupedOrderer)Renderer.SiblingOrdering;
+System.Diagnostics.Debug.WriteLine(
+    $"Overlap-blocked: {orderer.MergeBlockedByOverlapCount}, No candidate: {orderer.NoCandidateInWindowBreakCount}");
+```

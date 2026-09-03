@@ -19,6 +19,12 @@ namespace MonoGameGumInCode.Screens;
 // which reorders draws into contiguous same-texture runs using each renderable's BatchSortKey -
 // the fix. Toggle it to see the draw-call count collapse from ~80 to ~2 live.
 //
+// Each row is nested in its own transparent ContainerRuntime, matching what the Gum tool produces
+// for a reusable component, which also makes this cover #4579: a wrapper's bounds encompass its
+// children, so they stay blocked behind it in the reorderer's precedence graph until it is chosen.
+// Without the reorderer's free-container tier the wrapper is only reached by the last-resort tier,
+// and grouping collapses nothing (~80 either way) no matter how many identical rows exist.
+//
 // Tick(elapsedSeconds) is unused today (no animation) but present for symmetry with TextScreen and
 // in case a future variant wants to grow/shrink the row count live.
 internal class DrawCallStressScreen : FrameworkElement
@@ -56,6 +62,11 @@ internal class DrawCallStressScreen : FrameworkElement
         const int rowCount = 40;
         for (int i = 0; i < rowCount; i++)
         {
+            var rowContainer = new ContainerRuntime();
+            rowContainer.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
+            rowContainer.Width = 0;
+            rowContainer.Height = 32;
+
             var row = new NineSliceRuntime();
             row.SourceFileName = "Frame.png";
             row.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToParent;
@@ -68,7 +79,8 @@ internal class DrawCallStressScreen : FrameworkElement
             label.Y = 6;
             row.Children.Add(label);
 
-            stack.Children.Add(row);
+            rowContainer.Children.Add(row);
+            stack.Children.Add(rowContainer);
         }
 
         UpdateOrderingButtonText();

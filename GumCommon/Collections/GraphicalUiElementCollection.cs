@@ -79,13 +79,18 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
                 case NotifyCollectionChangedAction.Add:
                     if (e.NewItems != null)
                     {
-                        int index = e.NewStartingIndex;
+                        // e.NewStartingIndex is a RAW inner-collection index, which may also hold
+                        // non-GraphicalUiElement items this wrapper doesn't mirror (see
+                        // ToInnerIndex) - translate to the logical position among mirrored items
+                        // rather than assuming they line up.
+                        int rawIndex = e.NewStartingIndex;
                         foreach (var item in e.NewItems)
                         {
                             if (item is GraphicalUiElement gue)
                             {
-                                base.InsertItem(index++, gue);
+                                base.InsertItem(LogicalIndexOf(rawIndex), gue);
                             }
+                            rawIndex++;
                         }
                     }
                     break;
@@ -93,14 +98,29 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
                 case NotifyCollectionChangedAction.Remove:
                     if (e.OldItems != null)
                     {
-                        // Remove items at the specified index
-                        for (int i = 0; i < e.OldItems.Count; i++)
+                        // Key removal off the actual removed object rather than e.OldStartingIndex
+                        // (a raw index) - it may not equal this wrapper's logical index once a
+                        // non-GraphicalUiElement item is interleaved (see ToInnerIndex), and the
+                        // item is already gone from _innerCollection by the time this fires, so a
+                        // raw-index lookup there isn't available anyway.
+                        foreach (var item in e.OldItems)
                         {
-                            base.RemoveAt(e.OldStartingIndex);
+                            if (item is GraphicalUiElement gue)
+                            {
+                                int logicalIndex = base.Items.IndexOf(gue);
+                                if (logicalIndex >= 0)
+                                {
+                                    base.RemoveAt(logicalIndex);
+                                }
+                            }
                         }
                     }
                     break;
 
+                // Replace/Move below still assume a raw index equals this wrapper's logical
+                // index, so they share Add/Remove's latent bug when a non-GraphicalUiElement item
+                // is interleaved - untested and unproven in practice; fix alongside a pinning test
+                // if that changes (see the outer MoveItem's remarks).
                 case NotifyCollectionChangedAction.Replace:
                     if (e.NewItems != null && e.NewItems.Count > 0)
                     {
@@ -155,6 +175,37 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     }
 
     /// <summary>
+    /// Maps a logical index (position among this wrapper's GraphicalUiElement-only items) to the
+    /// corresponding index in <see cref="_innerCollection"/>, which may also hold raw
+    /// non-GraphicalUiElement items this wrapper doesn't mirror (e.g. a shape runtime's
+    /// auto-wired stroke renderable, attached to the inner collection directly via
+    /// <c>RenderableBase.Parent</c>'s own <c>Children.Add</c> before any user-added children
+    /// exist). Inserting at the logical end must land after ALL inner items, mirrored or not -
+    /// "add my new child" means "goes after everything currently there," not "goes right after
+    /// the last mirrored item, ahead of trailing raw ones."
+    /// </summary>
+    private int ToInnerIndex(int logicalIndex) =>
+        logicalIndex >= base.Items.Count ? _innerCollection.Count : _innerCollection.IndexOf(base.Items[logicalIndex]);
+
+    /// <summary>
+    /// The inverse of <see cref="ToInnerIndex"/>: how many of the first <paramref name="innerIndex"/>
+    /// items in <see cref="_innerCollection"/> are GraphicalUiElement (i.e. mirrored) - the logical
+    /// position a newly-added item at that raw index should be mirrored to.
+    /// </summary>
+    private int LogicalIndexOf(int innerIndex)
+    {
+        int logicalIndex = 0;
+        for (int i = 0; i < innerIndex; i++)
+        {
+            if (_innerCollection[i] is GraphicalUiElement)
+            {
+                logicalIndex++;
+            }
+        }
+        return logicalIndex;
+    }
+
+    /// <summary>
     /// Inserts an item into the collection at the specified index.
     /// </summary>
     protected override void InsertItem(int index, GraphicalUiElement item)
@@ -170,13 +221,14 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
+            int innerIndex = ToInnerIndex(index);
             if (_innerNoReset != null)
             {
-                _innerNoReset.InsertWithoutNotification(index, item);
+                _innerNoReset.InsertWithoutNotification(innerIndex, item);
             }
             else
             {
-                _innerCollection.Insert(index, item);
+                _innerCollection.Insert(innerIndex, item);
             }
             base.InsertItem(index, item);
         }
@@ -202,13 +254,16 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
+            // The item at `index` already exists in the inner collection - look up its actual
+            // position rather than assuming logical index == inner index (see ToInnerIndex).
+            int innerIndex = _innerCollection.IndexOf(base.Items[index]);
             if (_innerNoReset != null)
             {
-                _innerNoReset.RemoveAtWithoutNotification(index);
+                _innerNoReset.RemoveAtWithoutNotification(innerIndex);
             }
             else
             {
-                _innerCollection.RemoveAt(index);
+                _innerCollection.RemoveAt(innerIndex);
             }
             base.RemoveItem(index);
         }
@@ -234,13 +289,16 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
+            // The item currently at `index` already exists in the inner collection - look up its
+            // actual position rather than assuming logical index == inner index.
+            int innerIndex = _innerCollection.IndexOf(base.Items[index]);
             if (_innerNoReset != null)
             {
-                _innerNoReset.SetWithoutNotification(index, item);
+                _innerNoReset.SetWithoutNotification(innerIndex, item);
             }
             else
             {
-                _innerCollection[index] = item;
+                _innerCollection[innerIndex] = item;
             }
             base.SetItem(index, item);
         }
@@ -285,6 +343,13 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
     /// <summary>
     /// Moves an item from one index to another.
     /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="InsertItem"/>/<see cref="RemoveItem"/>/<see cref="SetItem"/> above, this
+    /// still assumes logical index == inner index and has the same latent bug when a raw
+    /// non-GraphicalUiElement item is interleaved (untested and unproven in practice - nothing
+    /// observed so far calls Move on a collection with such an item present; fix alongside a
+    /// pinning test if that changes).
+    /// </remarks>
     protected override void MoveItem(int oldIndex, int newIndex)
     {
         ThrowIfReadOnly();

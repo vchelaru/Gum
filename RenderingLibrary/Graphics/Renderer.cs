@@ -89,6 +89,14 @@ public class Renderer : IRenderer
     private bool _referencedRenderTargetsCollectedForHostFrame;
     private bool _perfStatsResetForHostFrame;
     private readonly HashSet<IRenderableIpso> _referencedRenderTargetOwners = new();
+
+    // GumBatchDrawMode.Deferred scratch state for the current Begin/End cycle (immediate-mode
+    // path only - RenderLayer has its own _scratchCommands). Separate buffers rather than reusing
+    // _scratchCommands/_bakeCommands so this can never stomp either of those in-flight lists,
+    // mirroring why the render-target bake owns _bakeCommands instead of sharing _scratchCommands.
+    private GumBatchDrawMode _immediateModeDrawMode = GumBatchDrawMode.Immediate;
+    private readonly List<IRenderableIpso> _deferredImmediateModeRoots = new();
+    private readonly List<DrawCommand> _deferredImmediateModeCommands = new();
 #if !FNA
     // Set at the start of each immediate-mode Begin/End cycle (Renderer.Begin/Draw/End, the path
     // GumBatch wraps) so End can take the same before/after GraphicsDevice.Metrics.DrawCount delta
@@ -719,8 +727,36 @@ public class Renderer : IRenderer
 
 
     // Immediate mode calls:
-    public void Begin(Microsoft.Xna.Framework.Matrix? spriteBatchMatrix = null)
+    /// <summary>
+    /// How <see cref="Draw(IRenderableIpso)"/> calls between a <see cref="Begin"/>/<see cref="End"/>
+    /// pair are submitted. Mirrors MonoGame's own <c>SpriteSortMode.Immediate</c>/<c>Deferred</c>
+    /// distinction for the same reason: batching needs more than one draw visible at once.
+    /// </summary>
+    public enum GumBatchDrawMode
     {
+        /// <summary>
+        /// Each <see cref="Draw(IRenderableIpso)"/> call submits immediately, in call order. The
+        /// default - existing behavior for every caller that doesn't opt into <see cref="Deferred"/>.
+        /// </summary>
+        Immediate,
+
+        /// <summary>
+        /// <see cref="Draw(IRenderableIpso)"/> calls accumulate instead of submitting immediately.
+        /// At <see cref="End"/> they are stable-sorted by <see cref="IRenderableIpso.Z"/> (same
+        /// algorithm as <see cref="Layer.SortRenderables"/>) and run through the active
+        /// <see cref="SiblingOrdering"/> as if they were siblings in one layer, so separate
+        /// <see cref="Draw(IRenderableIpso)"/> calls can batch together (e.g. with
+        /// <see cref="BatchKeyGroupedOrderer"/>). A raw draw issued directly on the wrapped
+        /// <c>SpriteBatch</c> between <see cref="Begin"/> and <see cref="End"/> no longer shares a
+        /// submission-order guarantee with Gum's own (now-deferred) draws - the same caveat
+        /// MonoGame gives for its own <c>SpriteSortMode.Deferred</c>.
+        /// </summary>
+        Deferred,
+    }
+
+    public void Begin(Microsoft.Xna.Framework.Matrix? spriteBatchMatrix = null, GumBatchDrawMode mode = GumBatchDrawMode.Immediate)
+    {
+        _immediateModeDrawMode = mode;
         TryResetPerformanceStatsForHostFrame();
 #if !FNA
         _immediateModeDrawCountBeforeCycle = GraphicsDevice?.Metrics.DrawCount ?? 0;
@@ -751,7 +787,17 @@ public class Renderer : IRenderer
         // are not supported on this path.
         InvokePreRenderRecursively(renderable);
 
-        Draw(SystemManagers.Default, _layers[0], renderable);
+        if (_immediateModeDrawMode == GumBatchDrawMode.Deferred)
+        {
+            // Accumulate instead of submitting now. Flushed at End() via the same
+            // SortByZ + SiblingOrdering.BuildDrawList + Submit pipeline RenderLayer uses, so
+            // draws from separate Draw() calls in this cycle can batch together.
+            _deferredImmediateModeRoots.Add(renderable);
+        }
+        else
+        {
+            Draw(SystemManagers.Default, _layers[0], renderable);
+        }
     }
 
     private void InvokePreRenderRecursively(IRenderableIpso renderable)
@@ -776,7 +822,14 @@ public class Renderer : IRenderer
 
     public void End()
     {
-        spriteRenderer.ForcedMatrix = null;
+        if (_deferredImmediateModeRoots.Count > 0)
+        {
+            Layer.SortByZ(_deferredImmediateModeRoots);
+            SiblingOrdering.BuildDrawList(
+                _deferredImmediateModeRoots, _deferredImmediateModeCommands, new ClipBoundsSource(mCamera, _layers[0]));
+            Submit(_deferredImmediateModeCommands, SystemManagers.Default, _layers[0]);
+            _deferredImmediateModeRoots.Clear();
+        }
 
         // Mirror RenderLayer's end-of-walk: flush any pending custom batch and reset state
         // before ending SpriteBatch. Without this, the next Renderer.Begin cycle inherits
@@ -787,6 +840,14 @@ public class Renderer : IRenderer
         _batchOrchestrator.FlushAndReset(SystemManagers.Default);
 
         spriteRenderer.EndSpriteBatch();
+
+        // Cleared only once everything this cycle submits has gone through. Every
+        // re-BeginSpriteBatch (a clip enter/exit, an orchestrator flush) composes ForcedMatrix
+        // into the transform it hands the SpriteBatch, and in Deferred mode all of those happen
+        // inside the Submit above - so clearing any earlier drops the caller's matrix on exactly
+        // the draws that needed it. Begin always reassigns it (null included), so no cycle can
+        // inherit a stale matrix from this one.
+        spriteRenderer.ForcedMatrix = null;
 
 #if !FNA
         if (GraphicsDevice != null)
@@ -1514,6 +1575,14 @@ public class Renderer : IRenderer
     {
         spriteRenderer.ClearPerformanceRecordingVariables();
         RenderStateChangeStatistics.Reset();
+
+        // Same reset cadence as the two statistics above (every Draw(SystemManagers) call on the
+        // layered path, once per host frame on the immediate-mode path via
+        // TryResetPerformanceStatsForHostFrame) - see BatchKeyGroupedOrderer.ResetBreakTally.
+        if (SiblingOrdering is BatchKeyGroupedOrderer orderer)
+        {
+            orderer.ResetBreakTally();
+        }
     }
 
     /// <summary>
@@ -1617,7 +1686,7 @@ public class GumBatch
         internalTextForRendering = new Text(systemManagers);
     }
 
-    public void Begin(Matrix? spriteBatchMatrix = null)
+    public void Begin(Matrix? spriteBatchMatrix = null, Renderer.GumBatchDrawMode mode = Renderer.GumBatchDrawMode.Immediate)
     {
         if(State == GumBatchState.BeginCalled)
         {
@@ -1631,7 +1700,7 @@ public class GumBatch
         systemManagers.Renderer.Camera.ClientLeft = systemManagers.Renderer.GraphicsDevice.Viewport.X;
         systemManagers.Renderer.Camera.ClientTop = systemManagers.Renderer.GraphicsDevice.Viewport.Y;
 
-        systemManagers.Renderer.Begin(spriteBatchMatrix);
+        systemManagers.Renderer.Begin(spriteBatchMatrix, mode);
     }
 
     public void DrawString(BitmapFont font, string text, Microsoft.Xna.Framework.Vector2 position, Microsoft.Xna.Framework.Color color)
