@@ -1,4 +1,5 @@
 ﻿using Gum.GueDeriving;
+using Gum.Localization;
 using Gum.Managers;
 using Gum.Wireframe;
 using GumRuntime;
@@ -18,7 +19,7 @@ using RenderingLibrary.Content;
 
 
 namespace RenderingLibrary;
-public class SystemManagers : ISystemManagers
+public partial class SystemManagers : ISystemManagers
 {
     int mPrimaryThreadId;
 
@@ -108,33 +109,45 @@ public class SystemManagers : ISystemManagers
 
     public void Initialize()
     {
-
-        Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
-
         bool fullInstantiation = true;
 
+        // Order below mirrors RenderingLibrary/SystemManagers.cs's fullInstantiation block
+        // (MonoGame/KNI/FNA) line-for-line wherever raylib has an equivalent, so the two files
+        // stay easy to diff against each other as they converge (#4576: raylib's copy had
+        // silently dropped the LocalizationService/ThrowExceptionsForMissingFiles wiring below
+        // because nothing kept the two in sync). Steps XNA has that raylib genuinely cannot
+        // (embedded font preloading, Renderer.ApplyCameraZoomOnWorldTranslation,
+        // Text.RenderBoundaryDefault, GraphicalUiElement.MissingFileBehavior - none of those
+        // members exist on raylib's own Renderer/Text) are intentionally omitted rather than
+        // stubbed out; tracked as remaining convergence gaps in #4577.
         if(fullInstantiation)
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
 
             GraphicalUiElement.SetPropertyOnRenderable = CustomSetPropertyOnRenderable.SetPropertyOnRenderable;
-            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
-            GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+            GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
+            GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
+            CustomSetPropertyOnRenderable.LocalizationService ??= new LocalizationService();
             // Wire the font loader here (not in a renderable's static ctor) so it is re-established on
             // every Initialize, matching the other delegates and MonoGame's SystemManagers. GumService
             // teardown nulls UpdateFontFromProperties; without re-wiring here, the direct font-property
             // setters silently stop loading fonts after a teardown/reinitialize cycle.
             GraphicalUiElement.UpdateFontFromProperties = CustomSetPropertyOnRenderable.UpdateToFontValues;
-            GraphicalUiElement.ApplyCachedTextureFromPixelData = PixelDataTextureApplier.ApplyCached;
-            GraphicalUiElement.ApplyPooledTextureFromPixelData = PixelDataTextureApplier.ApplyPooled;
+            GraphicalUiElement.ThrowExceptionsForMissingFiles = CustomSetPropertyOnRenderable.ThrowExceptionsForMissingFiles;
 
-            // raylib seems to use a resources folder, but I don't think we should make any
-            // assumptions
-            //ToolsUtilities.FileManager.RelativeDirectory = "Content/";
+            GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
+            GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+
+            Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
             StandardElementsManager.Self.Initialize();
+
+            // raylib seems to use a resources folder, but I don't think we should make any
+            // assumptions (unlike MonoGame/KNI/FNA, which default ToolsUtilities.FileManager.RelativeDirectory
+            // to "Content/" here - see #4577).
+            //ToolsUtilities.FileManager.RelativeDirectory = "Content/";
 
             RegisterComponentRuntimeInstantiations();
         }
