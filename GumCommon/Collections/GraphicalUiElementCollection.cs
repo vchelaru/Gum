@@ -324,13 +324,39 @@ public class GraphicalUiElementCollection : ObservableCollectionNoReset<Graphica
         _isUpdatingFromOuter = true;
         try
         {
-            if (_innerNoReset != null)
+            // Equal counts means every inner item is mirrored here, so a wholesale clear is
+            // both correct and cheaper. Otherwise the inner collection also holds raw
+            // non-GraphicalUiElement renderables this wrapper never mirrored - a shape runtime's
+            // auto-wired stroke (see ToInnerIndex) - and clearing wholesale would destroy the
+            // shape's stroke along with the user's children, with nothing to re-create it.
+            if (_innerCollection.Count == base.Items.Count)
             {
-                _innerNoReset.ClearWithoutNotification();
+                if (_innerNoReset != null)
+                {
+                    _innerNoReset.ClearWithoutNotification();
+                }
+                else
+                {
+                    _innerCollection.Clear();
+                }
             }
             else
             {
-                _innerCollection.Clear();
+                for (int i = base.Items.Count - 1; i > -1; i--)
+                {
+                    int innerIndex = _innerCollection.IndexOf(base.Items[i]);
+                    if (innerIndex > -1)
+                    {
+                        if (_innerNoReset != null)
+                        {
+                            _innerNoReset.RemoveAtWithoutNotification(innerIndex);
+                        }
+                        else
+                        {
+                            _innerCollection.RemoveAt(innerIndex);
+                        }
+                    }
+                }
             }
             base.ClearItems();
         }

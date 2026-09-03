@@ -79,6 +79,39 @@ public class GraphicalUiElementCollectionTests : BaseTestClass
     }
 
     [Fact]
+    public void Clear_OnAShapeRuntime_RemovesTheChildrenButKeepsTheAutoWiredStroke()
+    {
+        // A RectangleRuntime's Children wrap its fill renderable's raw child list, which already
+        // holds the auto-wired stroke - so a wholesale inner Clear() destroyed the stroke along
+        // with the user's children and nothing re-created it, leaving the rectangle unstroked.
+        RectangleRuntime rectangle = new();
+        IRenderableIpso fill = (IRenderableIpso)rectangle.RenderableComponent;
+        IRenderableIpso stroke = fill.Children.ShouldHaveSingleItem();
+
+        ContainerRuntime child = new();
+        rectangle.Children.Add(child);
+        rectangle.Children.Clear();
+
+        rectangle.Children.ShouldBeEmpty();
+        fill.Children.ShouldBe(new[] { stroke });
+    }
+
+    [Fact]
+    public void Clear_WithOnlyMirroredItems_EmptiesBothCollections()
+    {
+        ObservableCollection<IRenderableIpso> innerCollection = new();
+        GraphicalUiElementCollection wrapper = new(innerCollection);
+
+        wrapper.Add(new ContainerRuntime());
+        wrapper.Add(new ContainerRuntime());
+
+        wrapper.Clear();
+
+        wrapper.ShouldBeEmpty();
+        innerCollection.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Remove_WithARawNonGraphicalUiElementItemBeforeIt_RemovesTheCorrectItem()
     {
         // Same root cause as the Add test, for RemoveItem: the wrapper's logical index doesn't
