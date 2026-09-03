@@ -126,6 +126,72 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
     }
 
     /// <summary>
+    /// Ground-truth check prompted by an FRB2 report of RenderStateChangeStatistics.DrawCallCount
+    /// (13) exceeding the real GraphicsDevice.Metrics.DrawCount total for the whole frame (8) - a
+    /// subset can never legitimately exceed the whole. This independently measures the true
+    /// Metrics delta across two Begin/End cycles in one host frame (mirroring FRB2's per-camera +
+    /// overlay shape) and asserts Gum's own tally matches it exactly, to prove or disprove that
+    /// Renderer's own delta-tracking is the source of the discrepancy.
+    /// </summary>
+    [Fact]
+    public void MultipleCyclesInOneHostFrame_DrawCallCountMatchesTrueGpuTotalForTheFrame()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        double hostTime = 0;
+
+        Texture2D texture = new(game.GraphicsDevice, 1, 1);
+        texture.SetData(new[] { Color.Red });
+
+        RectangleRuntime cardA = new();
+        cardA.IsFilled = true;
+        cardA.Width = 10;
+        cardA.Height = 10;
+        RectangleRuntime cardB = new();
+        cardB.IsFilled = true;
+        cardB.Width = 10;
+        cardB.Height = 10;
+        cardB.X = 50;
+        SpriteRuntime overlayText = CreateSprite(texture, 0);
+
+        try
+        {
+            // Warm-up cycle: discard first-time costs (e.g. default texture load) before
+            // measuring, matching the pattern used elsewhere in this file.
+            AdvanceHostFrame(managers, ref hostTime);
+            renderer.Begin();
+            renderer.End();
+
+            AdvanceHostFrame(managers, ref hostTime);
+            long trueDrawCountBefore = game.GraphicsDevice.Metrics.DrawCount;
+
+            // Cycle 1: "main camera" pass drawing two cards, Deferred (FRB2's actual mode).
+            renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+            renderer.Draw(cardA);
+            renderer.Draw(cardB);
+            renderer.End();
+
+            // Cycle 2: "overlay" pass - a second Begin/End cycle in the SAME host frame, matching
+            // FRB2's per-camera-plus-overlay shape.
+            renderer.Begin();
+            renderer.Draw(overlayText);
+            renderer.End();
+
+            long trueDrawCountAfter = game.GraphicsDevice.Metrics.DrawCount;
+            int trueDrawCallCountThisFrame = (int)(trueDrawCountAfter - trueDrawCountBefore);
+
+            renderer.RenderStateChangeStatistics.DrawCallCount.ShouldBe(trueDrawCallCountThisFrame);
+        }
+        finally
+        {
+            texture.Dispose();
+        }
+    }
+
+    /// <summary>
     /// Pins the Renderer-side wiring for issue #4575's follow-up: Renderer resets
     /// BatchKeyGroupedOrderer's break tally at the same points it resets
     /// RenderStateChangeStatistics - once per host frame on this (Deferred) path - so it
