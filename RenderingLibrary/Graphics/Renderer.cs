@@ -824,11 +824,23 @@ public class Renderer : IRenderer
     {
         if (_deferredImmediateModeRoots.Count > 0)
         {
-            Layer.SortByZ(_deferredImmediateModeRoots);
-            SiblingOrdering.BuildDrawList(
-                _deferredImmediateModeRoots, _deferredImmediateModeCommands, new ClipBoundsSource(mCamera, _layers[0]));
-            Submit(_deferredImmediateModeCommands, SystemManagers.Default, _layers[0]);
-            _deferredImmediateModeRoots.Clear();
+            try
+            {
+                Layer.SortByZ(_deferredImmediateModeRoots);
+                SiblingOrdering.BuildDrawList(
+                    _deferredImmediateModeRoots, _deferredImmediateModeCommands, new ClipBoundsSource(mCamera, _layers[0]));
+                Submit(_deferredImmediateModeCommands, SystemManagers.Default, _layers[0]);
+            }
+            finally
+            {
+                // Both lists must be dropped even when a renderable's Render throws out of Submit.
+                // Otherwise the next End() re-submits this cycle's roots on top of its own - a
+                // stale draw in whatever frame follows an exception the game catches and continues
+                // from (#4584). Clearing the commands here also releases this cycle's renderable
+                // references instead of holding them until the next BuildDrawList overwrites them.
+                _deferredImmediateModeRoots.Clear();
+                _deferredImmediateModeCommands.Clear();
+            }
         }
 
         // Mirror RenderLayer's end-of-walk: flush any pending custom batch and reset state

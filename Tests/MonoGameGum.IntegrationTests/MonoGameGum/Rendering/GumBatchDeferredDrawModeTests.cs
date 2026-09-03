@@ -397,6 +397,73 @@ public class GumBatchDeferredDrawModeTests : BaseTestClass
         }
     }
 
+    /// <summary>
+    /// Renders normally but records how many times it was submitted.
+    /// </summary>
+    private class RenderCountProbe : ContainerRuntime
+    {
+        public int RenderCount { get; private set; }
+
+        public RenderCountProbe()
+        {
+            Width = 10;
+            Height = 10;
+        }
+
+        public override void Render(ISystemManagers managers)
+        {
+            RenderCount++;
+            base.Render(managers);
+        }
+    }
+
+    /// <summary>
+    /// Throws out of <c>Render</c>, so the deferred flush's Submit throws mid-cycle.
+    /// </summary>
+    private class ThrowingRenderProbe : RenderCountProbe
+    {
+        public override void Render(ISystemManagers managers)
+        {
+            base.Render(managers);
+            throw new InvalidOperationException("Simulated renderable failure.");
+        }
+    }
+
+    /// <summary>
+    /// Issue #4584: the deferred flush cleared its accumulated roots only after Submit returned, so
+    /// a renderable that threw left the whole failed cycle queued. The next Begin/End then drew the
+    /// previous cycle's roots on top of its own - a stale-draw corruption in whatever frame follows
+    /// an exception a game catches and continues from.
+    /// </summary>
+    [Fact]
+    public void Deferred_WhenSubmitThrows_DoesNotResubmitTheFailedCycleOnTheNextCycle()
+    {
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        SystemManagers managers = SystemManagers.Default;
+        Renderer renderer = managers.Renderer;
+        double hostTime = 0;
+
+        ThrowingRenderProbe thrower = new();
+        RenderCountProbe nextCycleProbe = new();
+
+        AdvanceHostFrame(managers, ref hostTime);
+        renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+        renderer.Draw(thrower);
+        Should.Throw<InvalidOperationException>(() => renderer.End());
+
+        thrower.RenderCount.ShouldBe(1);
+
+        AdvanceHostFrame(managers, ref hostTime);
+        renderer.Begin(mode: Renderer.GumBatchDrawMode.Deferred);
+        renderer.Draw(nextCycleProbe);
+        Should.NotThrow(() => renderer.End());
+
+        thrower.RenderCount.ShouldBe(1, "the failed cycle's roots must not survive into the next cycle");
+        nextCycleProbe.RenderCount.ShouldBe(1);
+    }
+
     private class MinimalGame : Game
     {
         private readonly GraphicsDeviceManager _graphics;
