@@ -91,6 +91,28 @@ public class GumServiceInitializeTests
     }
 
     [Fact]
+    public void Initialize_ShouldSetMissingFileBehaviorToThrowException()
+    {
+        // Same shape as Initialize_ShouldAssignThrowExceptionsForMissingFilesDelegate above:
+        // MonoGame/KNI/FNA's SystemManagers.Initialize() sets this to ThrowException, but raylib's
+        // never did, leaving raylib on the shared ConsumeSilently default (#4577).
+        Gum.GumService.Default.Uninitialize();
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            GraphicalUiElement.MissingFileBehavior.ShouldBe(MissingFileBehavior.ThrowException);
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
     public void Initialize_RegistersRootPopupRootAndModalRootInMainLayer()
     {
         // Tear down the assembly-wide state so we can observe a cold init.

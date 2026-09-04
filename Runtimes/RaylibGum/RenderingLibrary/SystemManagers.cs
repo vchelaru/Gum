@@ -22,6 +22,12 @@ namespace RenderingLibrary;
 public partial class SystemManagers : ISystemManagers
 {
     int mPrimaryThreadId;
+#if !RAYLIB
+    // Mirrors RenderingLibrary/SystemManagers.cs's _lastActivityTime, which feeds
+    // Renderer.NotifyHostFrameAdvanced() - not ported here since raylib's own Renderer has no
+    // equivalent member. Dead in this build; kept for cross-file diff parity. Tracked separately (#4598).
+    private double _lastActivityTime = double.NaN;
+#endif
 
     static bool IsMobile =>
     System.OperatingSystem.IsAndroid() ||
@@ -104,6 +110,10 @@ public partial class SystemManagers : ISystemManagers
 
     public SystemManagers()
     {
+        // Unlike XNA/KNI/FNA's Initialize() (which recreates Renderer on every call), raylib creates
+        // its Renderer once here and Initialize() never touches it - raylib doesn't have MonoGame's
+        // graphics-device-loss concept that motivated the XNA behavior. Not unified for now; revisit
+        // only if raylib ever needs to re-run Initialize() on an existing instance (#4577).
         Renderer = new Renderer();
     }
 
@@ -115,11 +125,11 @@ public partial class SystemManagers : ISystemManagers
         // (MonoGame/KNI/FNA) line-for-line wherever raylib has an equivalent, so the two files
         // stay easy to diff against each other as they converge (#4576: raylib's copy had
         // silently dropped the LocalizationService/ThrowExceptionsForMissingFiles wiring below
-        // because nothing kept the two in sync). Steps XNA has that raylib genuinely cannot
-        // (embedded font preloading, Renderer.ApplyCameraZoomOnWorldTranslation,
-        // Text.RenderBoundaryDefault, GraphicalUiElement.MissingFileBehavior - none of those
-        // members exist on raylib's own Renderer/Text) are intentionally omitted rather than
-        // stubbed out; tracked as remaining convergence gaps in #4577.
+        // because nothing kept the two in sync). Embedded font preloading has no raylib equivalent
+        // and is intentionally omitted. Renderer.ApplyCameraZoomOnWorldTranslation and
+        // Text.RenderBoundaryDefault don't exist on raylib's own Renderer/Text at all, and the
+        // Content/-folder default is intentionally XNA/KNI/FNA-only - all three are mirrored below
+        // as dead #if !RAYLIB code so the two files stay line-for-line comparable (#4577).
         if(fullInstantiation)
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -138,18 +148,27 @@ public partial class SystemManagers : ISystemManagers
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
 
+#if !RAYLIB
+            Renderer.ApplyCameraZoomOnWorldTranslation = true;
+#endif
+
             Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
             ElementSaveExtensions.CustomCreateGraphicalComponentFunc = RenderableCreator.HandleCreateGraphicalComponent;
 
             StandardElementsManager.Self.Initialize();
 
-            // raylib seems to use a resources folder, but I don't think we should make any
-            // assumptions (unlike MonoGame/KNI/FNA, which default ToolsUtilities.FileManager.RelativeDirectory
-            // to "Content/" here - see #4577).
-            //ToolsUtilities.FileManager.RelativeDirectory = "Content/";
+#if !RAYLIB
+            Text.RenderBoundaryDefault = false;
+#endif
+
+#if !RAYLIB
+            ToolsUtilities.FileManager.RelativeDirectory = "Content/";
+#endif
 
             RegisterComponentRuntimeInstantiations();
+
+            GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ThrowException;
         }
     }
 
@@ -200,6 +219,14 @@ public partial class SystemManagers : ISystemManagers
     /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
     public void Activity(double currentTime)
     {
+#if !RAYLIB
+        if (currentTime != _lastActivityTime)
+        {
+            _lastActivityTime = currentTime;
+            Renderer.NotifyHostFrameAdvanced();
+        }
+#endif
+
 #if !RAYLIB
 #if FULL_DIAGNOSTICS
         if (SpriteManager == null)
