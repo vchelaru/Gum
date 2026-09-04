@@ -28,19 +28,19 @@ The Gum WYSIWYG editor still saves loose files. `.gumpkg` is purely a packaging 
 Pack with default categories (everything):
 
 ```
-gumcli pack MyProject/MyProject.gumx
+gumcli pack GumProject/GumProject.gumx
 ```
 
-Pack to a specific output path:
+Pack to a specific output folder:
 
 ```
-gumcli pack MyProject/MyProject.gumx -o build/MyProject.gumpkg
+gumcli pack GumProject/GumProject.gumx -o build/GumProject.gumpkg
 ```
 
 Omit the font cache (e.g. when your build pipeline regenerates bitmap fonts via `gumcli fonts`):
 
 ```
-gumcli pack MyProject/MyProject.gumx --include core,external
+gumcli pack GumProject/GumProject.gumx --include core,external
 ```
 
 ## Output
@@ -48,7 +48,7 @@ gumcli pack MyProject/MyProject.gumx --include core,external
 The command prints per-category file counts together with uncompressed and compressed byte sizes plus the overall compression ratio, for example:
 
 ```
-Packed 83 files into C:\Games\MyProject\MyProject.gumpkg
+Packed 83 files into C:\Games\MyGame\GumProject.gumpkg
   Core:          42
   FontCache:     18
   External:      23
@@ -63,10 +63,16 @@ Pass the bundle to `Initialize` in place of the `.gumx`:
 
 ```csharp
 // Initialize
-GumService.Default.Initialize(graphics, gumProjectFile: "MyProject.gumpkg");
+GumService.Default.Initialize(graphics, gumProjectFile: "GumProject.gumpkg");
 ```
 
 The extension you pass decides how Gum loads the project. A path ending in `.gumx` (or `.gumj`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project is ignored unless you pass its path to `Initialize`.
+
+A bundle path resolves from the same starting folder as a loose project path, so the two differ only by the part that used to name the project folder. On MonoGame, KNI, and FNA that starting folder is your game's `Content` folder: `"GumProject/GumProject.gumx"` loads `Content/GumProject/GumProject.gumx`, and the sample above loads `Content/GumProject.gumpkg`. On raylib and Silk.NET the path starts at the folder holding the executable, so a project loaded as `"resources/GumProject/GumProject.gumx"` becomes `"resources/GumProject.gumpkg"`.
+
+{% hint style="warning" %}
+A bundle keeps the file name of the project it holds. Gum reads a `.gumpkg` by looking inside it for a project file of the same name, so `GumProject.gumpkg` must hold `GumProject.gumx`, and loading a renamed bundle throws. Use `-o` to choose the folder, not the file name.
+{% endhint %}
 
 That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib, or SkiaSharp's own rasterizer) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
 
@@ -99,23 +105,25 @@ Add the following to your game's `.csproj`, adjusting the paths to match your pr
 
 ```xml
 <ItemGroup>
-    <GumSourceFile Include="GumProject\**\*.*" />
+    <GumSourceFile Include="Content\GumProject\**\*.*" />
 </ItemGroup>
 
 <Target Name="PackGumProject"
         AfterTargets="Build"
         Condition="'$(Configuration)' == 'Release'"
         Inputs="@(GumSourceFile)"
-        Outputs="$(OutDir)MyProject.gumpkg">
+        Outputs="$(OutDir)Content\GumProject.gumpkg">
     <Exec Command="dotnet tool restore" />
-    <Exec Command="dotnet gumcli pack &quot;GumProject\MyProject.gumx&quot; -o &quot;$(OutDir)MyProject.gumpkg&quot;"
+    <Exec Command="dotnet gumcli pack &quot;Content\GumProject\GumProject.gumx&quot; -o &quot;$(OutDir)Content\GumProject.gumpkg&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 </Target>
 ```
 
+The paths above follow the MonoGame, KNI, and FNA layout, where the Gum project lives in `Content\GumProject` and the game loads it as `"GumProject.gumpkg"`. On raylib, swap `Content` for `resources` in both the item and the output path, and load the bundle as `"resources/GumProject.gumpkg"`.
+
 What each piece does:
 
-* `AfterTargets="Build"` runs the pack once the normal build finishes, so the bundle lands in the same output folder as your game.
+* `AfterTargets="Build"` runs the pack once the normal build finishes, so the bundle lands in the output folder alongside the rest of your content.
 * `Condition` limits packing to `Release` builds. Debug builds keep loading loose files, which is what hot reload needs.
 * `Inputs` and `Outputs` make the target incremental. MSBuild skips it when the bundle is newer than every file in the Gum project, so an unchanged project does not pay for a repack on every build.
 * `WorkingDirectory` lets you write the project path relative to the `.csproj` instead of spelling out an absolute path.
@@ -124,11 +132,11 @@ What each piece does:
 
 ### Keep loose files out of a release build
 
-The loose `.gumx` and its element files are still copied to the output folder by the `CopyToOutputDirectory` entry you added when [setting up the project](../code/getting-started/setup/loading-a-gum-project-.gumx.md). Add a condition so a `Release` build ships only the bundle:
+Every configuration copies the loose `.gumx` and its element files to the output folder, through the `CopyToOutputDirectory` entry you added when [setting up the project](../code/getting-started/setup/loading-a-gum-project-.gumx.md). Add a condition to that entry so a `Release` build ships only the bundle:
 
 ```xml
 <ItemGroup Condition="'$(Configuration)' != 'Release'">
-    <None Update="GumProject\**\*.*">
+    <None Update="Content\GumProject\**\*.*">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
 </ItemGroup>
@@ -142,7 +150,7 @@ If you only want a bundle in published output, target `Publish` and write into t
 
 ```xml
 <Target Name="PackGumProject" AfterTargets="Publish">
-    <Exec Command="dotnet gumcli pack &quot;GumProject\MyProject.gumx&quot; -o &quot;$(PublishDir)MyProject.gumpkg&quot;"
+    <Exec Command="dotnet gumcli pack &quot;Content\GumProject\GumProject.gumx&quot; -o &quot;$(PublishDir)Content\GumProject.gumpkg&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 </Target>
 ```
@@ -152,7 +160,7 @@ If you only want a bundle in published output, target `Publish` and write into t
 If your build also generates bitmap fonts, run [`gumcli fonts`](fonts.md) before packing so the `FontCache` files exist when `pack` looks for them:
 
 ```xml
-<Exec Command="dotnet gumcli fonts &quot;GumProject\MyProject.gumx&quot;"
+<Exec Command="dotnet gumcli fonts &quot;Content\GumProject\GumProject.gumx&quot;"
       WorkingDirectory="$(MSBuildProjectDirectory)" />
 ```
 
