@@ -153,6 +153,8 @@ Three habits that cost words without buying understanding:
 
 ✅ "Gum loads a `Font` value ending in `.ttf` as a font file rather than looking it up as an installed font family. It decides this from the extension alone, so there is no setting to turn on."
 
+**Run this as a pass before committing, not only while drafting.** The mechanical rules on this page (em dashes, `{% endhint %}` pairs, placement comments, SUMMARY indentation) can be grepped, and the prose rules cannot, so they are the half that silently gets skipped. Re-read every new or edited paragraph against the three habits above and against the passive-voice rule under **Tone and Style**.
+
 ## Tone and Style
 
 - Second person ("you"), present tense, instructional tone.
