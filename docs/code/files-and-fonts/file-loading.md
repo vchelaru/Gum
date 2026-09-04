@@ -58,10 +58,10 @@ It's recommended practice to set the RelativeDirectory to your Gum project's loc
 
 ### Loading from a `.gumpkg` Bundle
 
-In addition to loose files, Gum can load a project from a single-file `.gumpkg` bundle produced by [`gumcli pack`](../../cli/pack.md). When `GumService.Initialize` is called with a `.gumx` path:
+In addition to loose files, Gum can load a project from a single-file `.gumpkg` bundle produced by [`gumcli pack`](../../cli/pack.md). The path you hand to `GumService.Initialize` decides which one you get:
 
-* If the loose `.gumx` exists, Gum loads from loose files (the dev-time path; hot reload also works in this mode).
-* If only a sibling `.gumpkg` exists, Gum reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory.
+* A path ending in `.gumx` (or `.gumj`) loads loose files. This is the dev-time path, and hot reload works in this mode.
+* A path ending in `.gumpkg` reads element XML, textures, and fonts from inside the bundle via `FileManager.CustomGetStreamFromFile`. No loose copy is needed in the output directory. MonoGame, KNI, FNA, and raylib load bundles; SkiaGum and Silk.NET read loose files only.
 
 "Fonts" here covers both kinds: the baked `FontCache` `.fnt` and `.png` pages, and a `.ttf` the project rasterizes at runtime.
 

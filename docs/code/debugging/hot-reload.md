@@ -59,7 +59,7 @@ If your code clears (`= null`) or replaces the `Tag` on a visual that was create
 ## Platform Support
 
 {% hint style="info" %}
-Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. If a sibling `.gumpkg` exists alongside the loose `.gumx`, the loose path wins (see [pack](../../cli/pack.md)) and watchers fire normally. A bundle-only deployment (no loose `.gumx`) loads at startup but cannot hot-reload.
+Hot reload requires loose project files on disk; it does not watch inside `.gumpkg` bundles. Initializing with a `.gumx` path loads loose files and watchers fire normally, even when a `.gumpkg` sits next to them (see [pack](../../cli/pack.md)). Initializing with a `.gumpkg` path loads at startup but cannot hot-reload.
 
 If hot reload from a `.gumpkg` (e.g. for a hot-swap-on-deploy workflow) would be useful to you, let us know on [Discord](https://discord.gg/EvqwmSQuBz) or file an issue on [GitHub](https://github.com/vchelaru/Gum/issues) — real usage reports help us prioritize.
 {% endhint %}
