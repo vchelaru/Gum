@@ -6,8 +6,8 @@
     AllLibraries.sln / GumFull.sln); the Exists() guard makes this a no-op when the DLL is absent,
     so source-only builds keep working with zero impact.
 
-    Imported by RaylibGum, SkiaGum, and SilkNetGum. SokolGum does not currently bundle the
-    analyzer — a pre-existing gap this consolidation preserves rather than silently changes.
+    Imported by RaylibGum, SkiaGum, SilkNetGum, MonoGameGumShapes, and KniGumShapes. SokolGum
+    does not bundle the analyzer — a deliberate gap while that runtime is dormant (#4603).
   -->
   <ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('$(MSBuildThisFileDirectory)..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
     <None Include="$(MSBuildThisFileDirectory)..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
