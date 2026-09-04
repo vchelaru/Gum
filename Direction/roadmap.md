@@ -1,7 +1,7 @@
 # Gum — Roadmap
 
 > Living document. Items move between horizons as reality changes — this is intent, not a
-> contract. Date significant changes. Last updated 2026-06-20.
+> contract. Date significant changes. Last updated 2026-09-04.
 
 Horizons describe *confidence and proximity*, not fixed dates:
 
@@ -50,10 +50,12 @@ Horizons describe *confidence and proximity*, not fixed dates:
 
 ## Parked (deliberately not now)
 
-- **Silk.NET game-readiness** (the full interactive Forms-controls layer) — high cost vs. thin
-  demand (a single voice). Revisit only if real demand appears.
 - **raylib codegen** — gated on first deciding raylib is a real strategic audience; don't build it
   speculatively.
+
+(Silk.NET game-readiness, formerly parked here, shipped: real Forms input and the shared
+`GumServiceSkiaBase` landed in #4452/#4459. Demand materialized as a Stride runtime request
+(#4600), scoped directly against SilkNetGum as the template.)
 
 ## Strategic threads
 

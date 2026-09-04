@@ -1,0 +1,110 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.Stride: a first-class Stride input host runtime that renders through SkiaGum, modeled
+		directly on SilkNetGum (issue #4600). Stride can host an SKCanvas: a CPU Skia surface
+		blitted into the composited frame each frame, see GumService.Initialize/GumSceneRenderer.
+		So this is cheap the same way SilkNetGum is: only an input adapter over Stride.Input, not a
+		from-scratch renderer (see ADR 0014-clarify-engine-scope-cost-to-integrate-not-owns-ui).
+
+		It ProjectReferences SkiaGum.csproj for the render/Forms source and GumServiceSkiaBase, the
+		same as SilkNetGum. What stays file-linked locally is only the input host half SkiaGum omits
+		because it is render-only (Cursor/CursorExtensions/FormsUtilities' input seam).
+
+		Unlike every other Gum runtime, GumService.Stride.cs's Initialize also constructs and
+		registers its own SceneRenderer into the caller's GraphicsCompositor: Stride's rendering is
+		driven by that pipeline, not a user-owned Draw() method, so there is no call site for the
+		caller to invoke Draw from. See GumService.Initialize's remarks for the full reasoning and
+		the registerSceneRenderer opt-out for callers who want to place/order the renderer themselves.
+	-->
+	<Import Project="..\RuntimePackage.props" />
+
+	<PropertyGroup>
+		<PackageId>Gum.Stride</PackageId>
+		<Version>2026.9.4.1</Version>
+		<NoWarn>1591</NoWarn>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<!-- Overrides RuntimePackage.props' shared net8.0: Stride's own packages (Stride.Input,
+		     Stride.CommunityToolkit) only ship net10.0(+platform)-targeted builds. A net10.0 project
+		     referencing the net8.0 GumCommon/SkiaGum is fine (same modern .NET family, no
+		     netstandard-style compat gap). -->
+		<TargetFramework>net10.0</TargetFramework>
+		<!-- GumService.Stride.cs's texture upload does an unsafe pointer read off the Skia surface's
+		     pixel buffer (SKPixmap.GetPixels()). -->
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<!--
+		SKIA selects the Skia render aliases (Texture2D=SKBitmap, Color=SKColor) in the shared
+		source; STRIDE selects this project's input host. Both are required.
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;STRIDE;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;STRIDE;FULL_DIAGNOSTICS</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_No_Diagnostics|AnyCPU'">
+		<DefineConstants>TRACE;SKIA;STRIDE</DefineConstants>
+	</PropertyGroup>
+
+	<!-- ScreenBase is NOT file-linked here (unlike RaylibGum/SokolGum, which are self-contained and
+	     need their own copy): this project ProjectReferences SkiaGum.csproj below, which already
+	     compiles Forms/ScreenBase.cs. See SilkNetGum.csproj's identical comment for the full
+	     same-FQN-fork reasoning: the same trap this project would otherwise repeat. -->
+
+	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
+	<ItemGroup>
+		<Compile Include="..\..\GumRuntime\Input\ButtonState.cs" Link="Input\ButtonState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\MouseState.cs" Link="Input\MouseState.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchCollection.cs" Link="Input\TouchCollection.cs" />
+		<Compile Include="..\..\GumRuntime\Input\TouchLocation.cs" Link="Input\TouchLocation.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
+		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
+		<!-- Vendored patched build (see /NuGet.config and /ThirdParty/nuget-local), fixes halo
+		     stroke-join spiking at acute glyph corners, needed for per-run outline thickness (#4037).
+		     Must track SkiaGum.csproj's reference: see SilkNetGum.csproj's identical comment. -->
+		<PackageReference Include="Topten.RichTextKit" Version="0.4.167-gumfix.1" />
+		<!-- Input + the AddSceneRenderer/AddGraphicsCompositor extension methods GumService.Stride.cs
+		     uses to self-register its GumSceneRenderer. Stride.CommunityToolkit.Windows/.Bepu (window
+		     backend, physics) are a consuming game's choice, not this adapter's concern. -->
+		<PackageReference Include="Stride.Engine" Version="4.4.0-beta5" />
+		<PackageReference Include="Stride.Input" Version="4.4.0-beta5" />
+		<PackageReference Include="Stride.CommunityToolkit" Version="1.0.0-preview.63" />
+		<!-- Stride's runtime (unlike its WPF GameStudio editor) exposes no clipboard API; this is the
+		     cross-platform fallback for Gum.Input.StrideGumClipboard. -->
+		<PackageReference Include="TextCopy" Version="6.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<!-- Supplies GumServiceSkiaBase + the render/Forms source this project would otherwise have
+		     to file-link directly (mirrors SilkNetGum.csproj's identical reference). SkiaGum.csproj
+		     carries no concrete GumService of its own (that lives in SkiaGum.Standalone.csproj), so
+		     this is a normal reference: no Gum.GumService naming collision with this project's own
+		     GumService. -->
+		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
+	</ItemGroup>
+
+	<Import Project="..\RuntimePackage.Analyzers.props" />
+
+	<!--
+		Guards against a consumer whose own AssemblyName collides with this package's assembly name
+		(StrideGum), which would silently overwrite the runtime DLL in the shared output folder. See
+		SilkNetGum.csproj's identical guard and #4311.
+	-->
+	<ItemGroup>
+		<None Include="build\Gum.Stride.targets" Pack="true" PackagePath="buildTransitive\Gum.Stride.targets" Visible="false" />
+	</ItemGroup>
+
+</Project>

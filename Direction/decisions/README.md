@@ -34,3 +34,4 @@ re-litigating it.
 | [0011](0011-route-skia-sprite-nineslice-container-polygon-dispatch.md) | Route Skia's Sprite/NineSlice/Container/Polygon dispatch through their Runtimes | Accepted | 2026-07-29 |
 | [0012](0012-converge-backends-on-one-shared-render-walk.md) | Converge every backend on one shared render walk, including render-target bakes | Accepted | 2026-07-31 |
 | [0013](0013-adopt-json-project-format-for-native-aot.md) | Adopt JSON as an AOT-safe project file format, phased in alongside XML | Accepted | 2026-07-31 |
+| [0014](0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md) | Clarify the engine-scope boundary: cost-to-integrate, not "ships its own UI" | Accepted | 2026-09-04 |
