@@ -49,4 +49,6 @@ void Start(Scene rootScene)
 }
 ```
 
+The camera is required. Stride renders the scene through it, so the window stays empty without one. `Add3DCamera` matches the 3D scene above, and `Add2DCamera` is the equivalent for a 2D game.
+
 Next, you can begin adding Gum to your project. For more information see the [Adding/Initializing Gum](../adding-initializing-gum/stride.md) page.

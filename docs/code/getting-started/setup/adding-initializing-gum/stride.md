@@ -62,7 +62,7 @@ Next, add StrideGum as a project reference in your game project. Your project mi
 
 ## Initializing Gum
 
-Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`:
+Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`. Stride also renders the scene through a camera, so add one or the window stays empty:
 
 ```csharp
 using Gum;
@@ -77,9 +77,12 @@ game.Run(start: Start);
 void Start(Scene rootScene)
 {
     game.AddGraphicsCompositor().AddCleanUIStage();
+    game.Add2DCamera();
     GumService.Default.Initialize(game);
 }
 ```
+
+`Add2DCamera` suits a UI-only or 2D game. Use `Add3DCamera` instead if your game draws a 3D scene. Gum draws in screen space and ignores the camera, so either one works for the UI.
 
 `Initialize` adds Gum's scene renderer to the compositor, and Stride runs Gum's update and draw every frame from there. Stride is the one runtime where you never call `Update` and `Draw` yourself, so the per-frame calls the other setup pages show have no equivalent here.
 
