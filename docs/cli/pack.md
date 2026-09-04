@@ -31,7 +31,7 @@ Pack with default categories (everything):
 gumcli pack GumProject/GumProject.gumx
 ```
 
-Pack to a specific output folder:
+Pack to a specific output path:
 
 ```
 gumcli pack GumProject/GumProject.gumx -o build/GumProject.gumpkg
@@ -68,13 +68,17 @@ GumService.Default.Initialize(graphics, gumProjectFile: "GumProject.gumpkg");
 
 The extension you pass decides how Gum loads the project. A path ending in `.gumx` (or `.gumj`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project is ignored unless you pass its path to `Initialize`.
 
-A bundle path resolves from the same starting folder as a loose project path, so the two differ only by the part that used to name the project folder. On MonoGame, KNI, and FNA that starting folder is your game's `Content` folder: `"GumProject/GumProject.gumx"` loads `Content/GumProject/GumProject.gumx`, and the sample above loads `Content/GumProject.gumpkg`. On raylib and Silk.NET the path starts at the folder holding the executable, so a project loaded as `"resources/GumProject/GumProject.gumx"` becomes `"resources/GumProject.gumpkg"`.
+A bundle path resolves from the same starting folder as a loose project path. On MonoGame, KNI, and FNA that folder is your game's `Content` folder, so `"GumProject/GumProject.gumx"` loads `Content/GumProject/GumProject.gumx` and the sample above loads `Content/GumProject.gumpkg`. On raylib the path starts at the folder holding the executable, so a project loaded as `"resources/GumProject/GumProject.gumx"` becomes `"resources/GumProject.gumpkg"`.
 
 {% hint style="warning" %}
-A bundle keeps the file name of the project it holds. Gum reads a `.gumpkg` by looking inside it for a project file of the same name, so `GumProject.gumpkg` must hold `GumProject.gumx`, and loading a renamed bundle throws. Use `-o` to choose the folder, not the file name.
+A bundle keeps the file name of the project it holds. Gum reads a `.gumpkg` by looking inside it for a project file of the same name, so `GumProject.gumpkg` must hold `GumProject.gumx`, and loading a renamed bundle throws. The comparison is exact, including capitalization, on every platform. `-o` names the file to write, so point it at a different folder rather than a different name.
 {% endhint %}
 
-That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib, or SkiaSharp's own rasterizer) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
+{% hint style="info" %}
+Bundle loading is available on MonoGame, KNI, FNA, and raylib. SkiaGum and Silk.NET load loose project files only, so pass them a `.gumx` path.
+{% endhint %}
+
+That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
 
 {% hint style="info" %}
 **Shipping September 2026:** Reading a bundled `.ttf` at runtime ships in the September release, or now if building Gum from source. Before this, the font was packed into the `.gumpkg` but the runtime looked for it on disk and fell back to the default font.
@@ -114,6 +118,7 @@ Add the following to your game's `.csproj`, adjusting the paths to match your pr
         Inputs="@(GumSourceFile)"
         Outputs="$(OutDir)Content\GumProject.gumpkg">
     <Exec Command="dotnet tool restore" />
+    <MakeDir Directories="$(OutDir)Content" />
     <Exec Command="dotnet gumcli pack &quot;Content\GumProject\GumProject.gumx&quot; -o &quot;$(OutDir)Content\GumProject.gumpkg&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 </Target>
@@ -123,9 +128,10 @@ The paths above follow the MonoGame, KNI, and FNA layout, where the Gum project 
 
 What each piece does:
 
-* `AfterTargets="Build"` runs the pack once the normal build finishes, so the bundle lands in the output folder alongside the rest of your content.
-* `Condition` limits packing to `Release` builds. Debug builds keep loading loose files, which is what hot reload needs.
+* `AfterTargets="Build"` runs the pack once the normal build finishes, so the bundle lands in the build output alongside the rest of your content. `dotnet publish` does not carry it any further, so see [Packing for publish](pack.md#packing-for-publish) if you publish.
+* `Condition` limits packing to `Release` builds, since Debug builds keep loading loose files, which is what hot reload needs. Your game has to ask for the bundle only in the configuration that produces one, or it looks for a `.gumpkg` that was never written.
 * `Inputs` and `Outputs` make the target incremental. MSBuild skips it when the bundle is newer than every file in the Gum project, so an unchanged project does not pay for a repack on every build.
+* `MakeDir` creates the content folder, because `pack` writes the bundle but does not create the folder holding it.
 * `WorkingDirectory` lets you write the project path relative to the `.csproj` instead of spelling out an absolute path.
 
 `gumcli pack` returns a non-zero exit code when a referenced file is missing or the project fails to load, and `Exec` turns that into a build failure. A project with a broken reference fails the build instead of shipping a bundle with holes in it.
@@ -142,14 +148,16 @@ Every configuration copies the loose `.gumx` and its element files to the output
 </ItemGroup>
 ```
 
-Each configuration then ships only the files it loads, so make sure the path your game passes to `Initialize` matches the configuration it was built in.
+Each configuration then ships only the files it loads.
 
-### Packing on publish instead
+### Packing for publish
 
-If you only want a bundle in published output, target `Publish` and write into the publish folder:
+A bundle written into the build output is not copied to the publish folder, so a game you ship with `dotnet publish` wants its own target:
 
 ```xml
-<Target Name="PackGumProject" AfterTargets="Publish">
+<Target Name="PackGumProjectForPublish" AfterTargets="Publish">
+    <Exec Command="dotnet tool restore" />
+    <MakeDir Directories="$(PublishDir)Content" />
     <Exec Command="dotnet gumcli pack &quot;Content\GumProject\GumProject.gumx&quot; -o &quot;$(PublishDir)Content\GumProject.gumpkg&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 </Target>

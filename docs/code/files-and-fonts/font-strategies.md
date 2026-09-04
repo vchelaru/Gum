@@ -313,7 +313,7 @@ text.Font = "Content/Fonts/Bungee-Regular.ttf";
 text.FontSize = 24;
 ```
 
-SkiaGum reads the file the same way it reads any other asset, so a `.ttf` inside a [`.gumpkg` bundle](../../cli/pack.md), or one served by your own `FileManager.CustomGetStreamFromFile` function, loads exactly like a file on disk. See [Where a .ttf Can Live](font-strategies.md#where-a-ttf-can-live).
+SkiaGum reads the file the same way it reads any other asset, so a `.ttf` served by your own `FileManager.CustomGetStreamFromFile` function loads exactly like a file on disk. SkiaGum and Silk.NET load loose project files only, so a [`.gumpkg` bundle](../../cli/pack.md) is not an option there. See [Where a .ttf Can Live](font-strategies.md#where-a-ttf-can-live).
 
 For a font you already hold as bytes, an embedded resource for example, call `SkiaGum.Content.Fonts.GumFontMapper.RegisterFont(familyName, fontBytes)` and then assign `Font = familyName`. That method also takes an optional style name, so you can register a bold or italic version alongside the regular one.
 
