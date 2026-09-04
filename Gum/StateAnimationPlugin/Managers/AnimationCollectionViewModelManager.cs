@@ -66,7 +66,7 @@ public class AnimationCollectionViewModelManager : IAnimationCollectionViewModel
         {
             try
             {
-                model = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
+                model = ElementAnimationsSave.Load(fileName.FullPath);
             }
             catch (Exception exception)
             {
@@ -94,7 +94,7 @@ public class AnimationCollectionViewModelManager : IAnimationCollectionViewModel
             var save = viewModel.ToSave();
 
             _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
-            FileManager.XmlSerialize(save, fileName.FullPath);
+            save.Save(fileName.FullPath);
         }
     }
 
@@ -106,7 +106,7 @@ public class AnimationCollectionViewModelManager : IAnimationCollectionViewModel
         if (fileName != null)
         {
             _fileWatchManager.IgnoreNextChangeUntil(fileName.FullPath);
-            FileManager.XmlSerialize(save, fileName.FullPath);
+            save.Save(fileName.FullPath);
         }
     }
 }

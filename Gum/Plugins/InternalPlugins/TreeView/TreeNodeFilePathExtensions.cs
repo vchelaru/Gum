@@ -61,17 +61,23 @@ public static class TreeNodeFilePathExtensions
             throw new InvalidOperationException();
         }
 
+        // Extensions follow the open project's own format so a .gumj project resolves
+        // .gusj/.gucj/.gutj/.behj (issue #4595).
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(
+            Locator.GetRequiredService<IProjectManager>().GumProjectSave?.FullFileName ?? "");
+
         if (treeNode.IsStandardElementTreeNode() ||
             treeNode.IsComponentTreeNode() ||
             treeNode.IsScreenTreeNode())
         {
             ElementSave element = (ElementSave)treeNode.Tag!;
-            return treeNode.Parent!.GetTreeNodeFullFilePath() + treeNode.Text + "." + element.FileExtension;
+            return treeNode.Parent!.GetTreeNodeFullFilePath() + treeNode.Text + "." + element.GetFileExtension(isJsonFormat);
         }
 
         if (treeNode.IsBehaviorTreeNode())
         {
-            return treeNode.Parent!.GetTreeNodeFullFilePath() + treeNode.Text + "." + BehaviorReference.Extension;
+            return treeNode.Parent!.GetTreeNodeFullFilePath() + treeNode.Text + "." +
+                (isJsonFormat ? BehaviorReference.JsonExtension : BehaviorReference.Extension);
         }
 
         return treeNode.Parent!.GetTreeNodeFullFilePath() + treeNode.Text + "\\";

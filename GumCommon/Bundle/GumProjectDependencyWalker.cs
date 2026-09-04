@@ -193,10 +193,15 @@ public class GumProjectDependencyWalker
         }
         if (Directory.Exists(projectRootDirectory))
         {
-            string[] gumxFiles = Directory.GetFiles(projectRootDirectory, "*." + GumProjectSave.ProjectExtension, SearchOption.TopDirectoryOnly);
-            if (gumxFiles.Length == 1)
+            // Both formats are candidates - a bundled project can be .gumx or .gumj, and globbing
+            // only for .gumx made a JSON project unresolvable here (issue #4595).
+            string[] projectFiles = Directory
+                .GetFiles(projectRootDirectory, "*." + GumProjectSave.ProjectExtension, SearchOption.TopDirectoryOnly)
+                .Concat(Directory.GetFiles(projectRootDirectory, "*." + GumProjectSave.ProjectJsonExtension, SearchOption.TopDirectoryOnly))
+                .ToArray();
+            if (projectFiles.Length == 1)
             {
-                return NormalizeRelative(Path.GetFileName(gumxFiles[0]));
+                return NormalizeRelative(Path.GetFileName(projectFiles[0]));
             }
         }
         return null;

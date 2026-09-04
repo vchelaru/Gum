@@ -7,7 +7,17 @@ description: Gum save/load data model. Triggers: GumProjectSave, ScreenSave, Com
 
 ## Overview
 
-Gum projects are serialized as XML files using .NET's `XmlSerializer`. Each logical type has its own file extension: `.gumx` (project), `.gusx` (screen), `.gucx` (component), `.gutx` (standard element), `.behx` (behavior).
+Gum projects are serialized as XML files using .NET's `XmlSerializer`. Each logical type has its own file extension: `.gumx` (project), `.gusx` (screen), `.gucx` (component), `.gutx` (standard element), `.behx` (behavior), `.ganx` (element animations).
+
+A project can instead be JSON, which is the AOT-safe format. Every extension is its XML counterpart with the trailing `x` swapped for `j` (`.gumj`/`.gusj`/`.gucj`/`.gutj`/`.behj`/`.ganj`); serializers live in `GumDataTypes/Serialization/Json/`. The project file's own extension is the single source of truth — `GumProjectSave.IsJsonFormat(fileName)` — and there is no content-sniffing anywhere in load or save.
+
+**Landmine:** any code composing an element's or behavior's on-disk path must route the extension through the project's format — `ElementSave.GetFileExtension(bool)`, `ElementReference.GetExtension(bool)`, `BehaviorReference.GetRelativeFilePath(bool)`, or the `IFileCommands.GetFullPathXmlFile` overloads, which already do. Using the bare `ElementSave.FileExtension` / `BehaviorReference.Extension` inside a JSON project writes a file the project never loads back, so the edit looks saved and is silently lost.
+
+**Landmine:** the animation sidecar carries two decisions — the file's extension and the serializer — and they must not be made separately. Read and write it through `ElementAnimationsSave.Load` / `.Save`, which dispatch on the file's own extension, and build the file name with `ElementAnimationsSave.GetFileNameSuffix(bool)`. The tool resolves the sidecar by the project's format while the runtime's `GumAnimationLoader` JSON-parses every `*Animations.ganj` it finds, so XML written to a `.ganj` reads fine in the tool and fails in the game.
+
+`ProjectFormatExtensionGuardTests` (in `GumToolUnitTests/Architecture/`) is a source scan that fails when a new bare-extension or raw-serializer site appears; its baselines list every sanctioned exception.
+
+Import and copy paths need more than a path fix: the source project's format is independent of the destination's, so a file moving between projects has to be deserialized and re-saved rather than byte-copied.
 
 All save classes live in `GumDataTypes/`.
 

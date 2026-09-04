@@ -375,13 +375,18 @@ public class FileCommands : IFileCommands
     }
 
     /// <summary>
-    /// Computes the full path to <paramref name="elementSave"/>'s XML file, using
+    /// Computes the full path to <paramref name="elementSave"/>'s file, using
     /// <paramref name="elementSaveName"/> for the file name and Subfolder path. Inlined from the
     /// (Locator-based) <c>ElementSave.GetFullPathXmlFile(string)</c> extension method - that method
     /// resolves <see cref="IProjectManager"/> via <c>Locator</c>, which is a WinForms-tool-only
     /// static and can't be referenced from this headless assembly, so this uses the already-injected
     /// <see cref="_projectManager"/> instead. Behavior is identical. Mirrors the private duplicate in
     /// <c>DragDropManager</c>.
+    /// <para>
+    /// The extension follows the open project's own format, so a .gumj project resolves
+    /// .gusj/.gucj/.gutj. Hardcoding the XML extension here silently wrote element edits to a file
+    /// the project never loads back (issue #4595).
+    /// </para>
     /// </summary>
     private FilePath? GetFullPathXmlFileForElement(ElementSave elementSave, string elementSaveName)
     {
@@ -391,7 +396,7 @@ public class FileCommands : IFileCommands
             return null;
         }
 
-        var extension = elementSave.FileExtension;
+        var extension = elementSave.GetFileExtension(GumProjectSave.IsJsonFormat(gumProject.FullFileName));
 
         var reference =
             gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
@@ -673,9 +678,14 @@ public class FileCommands : IFileCommands
         var matchingReference = _projectManager.GumProjectSave.BehaviorReferences
             ?.FirstOrDefault(item => item.Name == behaviorName);
 
+        // Same project-format routing as the element overload above (issue #4595): a .gumj project
+        // stores behaviors as .behj, and saving to .behx would write content it never loads back.
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(_projectManager.GumProjectSave.FullFileName);
+
         string relativeFilePath = matchingReference != null
-            ? matchingReference.GetRelativeFilePath()
-            : BehaviorReference.Subfolder + "\\" + behaviorName + "." + BehaviorReference.Extension;
+            ? matchingReference.GetRelativeFilePath(isJsonFormat)
+            : BehaviorReference.Subfolder + "\\" + behaviorName + "." +
+                (isJsonFormat ? BehaviorReference.JsonExtension : BehaviorReference.Extension);
 
         return directory + relativeFilePath;
     }

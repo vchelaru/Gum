@@ -146,7 +146,7 @@ public static class GumAnimationLoader
     }
 
     private static readonly string[] AnimationFileSuffixes =
-        { "Animations.ganx", "Animations.ganj" };
+        { ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: false), ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true) };
 
     private static readonly string[] AnimationCategoryFolders =
         { "Screens/", "Components/", "StandardElements/" };

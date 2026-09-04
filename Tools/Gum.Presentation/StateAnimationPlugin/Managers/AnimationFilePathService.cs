@@ -1,3 +1,4 @@
+using Gum.StateAnimation.SaveClasses;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -25,7 +26,7 @@ public class AnimationFilePathService : IAnimationFilePathService
     /// happened to resolve for the element itself.
     /// </summary>
     private string AnimationsFileNameSuffix =>
-        "Animations." + (GumProjectSave.IsJsonFormat(_projectManager.GumProjectSave?.FullFileName ?? "") ? "ganj" : "ganx");
+        ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(_projectManager.GumProjectSave?.FullFileName ?? ""));
 
     /// <inheritdoc/>
     public FilePath? GetAbsoluteAnimationFileNameFor(string elementName)

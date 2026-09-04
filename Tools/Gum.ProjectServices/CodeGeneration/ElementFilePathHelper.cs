@@ -14,6 +14,15 @@ public static class ElementFilePathHelper
     /// <paramref name="forcedElementName"/> to resolve the path the element had under a different
     /// name, which rename uses to locate files still sitting at the old name.
     /// </summary>
+    /// <remarks>
+    /// The extension is always the XML one - this helper has no access to the project's own file
+    /// name, so it cannot tell a .gumx project from a .gumj one. Every caller today uses the result
+    /// only via <c>RemoveExtension()</c> to reach a sibling file (.codsj settings, the Animations
+    /// sidecar), where the extension is inert. Do NOT use it to read or write the element file
+    /// itself: inside a .gumj project that path points at a file the project never loads back
+    /// (issue #4595). Use <c>IFileCommands.GetFullPathXmlFile</c> (tool) or
+    /// <see cref="ElementSave.GetFileExtension(bool)"/> with the project's format instead.
+    /// </remarks>
     public static FilePath? GetFullPathXmlFile(ElementSave? element, string? projectDirectory,
         string? forcedElementName = null)
     {

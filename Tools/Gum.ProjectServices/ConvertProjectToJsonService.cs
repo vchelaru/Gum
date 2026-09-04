@@ -151,15 +151,15 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         }
 
         string elementXmlPath = GetElementXmlPath(element, projectDirectory);
-        string animationXmlPath = FileManager.RemoveExtension(elementXmlPath) + "Animations.ganx";
+        string animationXmlPath = FileManager.RemoveExtension(elementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: false);
 
         if (!FileManager.FileExists(animationXmlPath))
         {
             return 0;
         }
 
-        ElementAnimationsSave animations = FileManager.XmlDeserialize<ElementAnimationsSave>(animationXmlPath);
-        string animationJsonPath = FileManager.RemoveExtension(elementXmlPath) + "Animations.ganj";
+        ElementAnimationsSave animations = ElementAnimationsSave.Load(animationXmlPath);
+        string animationJsonPath = FileManager.RemoveExtension(elementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(animationJsonPath);
         GumJsonFileSerializer.WriteToFile(animationJsonPath, GumAnimationJsonFileSerializer.SerializeElementAnimations(animations));
 

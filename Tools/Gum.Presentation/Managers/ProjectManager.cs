@@ -534,7 +534,12 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
                 string gumProjectDirectory = FileManager.GetDirectory(gumProjectSave.FullFileName);
 
-                gumProjectSave.SaveStandardElements(gumProjectDirectory);
+                // Both flags must be passed explicitly: the defaults (verbose XML) would recreate
+                // the standard as a .gutx a .gumj project never loads back, and in a compact-format
+                // project would write a verbose file its siblings don't match (issue #4595).
+                gumProjectSave.SaveStandardElements(gumProjectDirectory,
+                    useCompact: gumProjectSave.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion,
+                    isJsonFormat: GumProjectSave.IsJsonFormat(gumProjectSave.FullFileName));
             }
         }
 
@@ -657,7 +662,12 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 }
                 catch (UnauthorizedAccessException exception)
                 {
-                    var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName) + DateTime.Now.ToString("s") + "gumx";
+                    // Keep the project's own extension so the fallback copy saves in the same format
+                    // (and stays loadable). "s" formats as 2026-09-03T12:34:56, whose colons are
+                    // illegal in a Windows file name, so use a colon-free stamp (issue #4595).
+                    var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName)
+                        + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss")
+                        + "." + FileManager.GetExtension(GumProjectSave.FullFileName);
                     _retryService.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
 
                     string fileName = TryGetFileNameFromException(exception);

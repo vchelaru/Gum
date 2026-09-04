@@ -103,7 +103,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             errors.AddRange(GetBehaviorErrorsFor(asComponent, project));
         }
-        errors.AddRange(GetMissingSourceFileErrorsFor(element));
+        errors.AddRange(GetMissingSourceFileErrorsFor(element, project));
         errors.AddRange(GetMissingExternalFileErrorsFor(element, project));
         errors.AddRange(GetMissingElementBaseTypeErrorFor(element));
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
@@ -525,13 +525,14 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// comment in ElementReference.ToElementSave), because saving the element is exactly what
     /// recreates the missing file.
     /// </summary>
-    private static List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element)
+    private static List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element, GumProjectSave project)
     {
         var errors = new List<ErrorResult>();
 
         if (element.IsSourceFileMissing)
         {
-            var expectedRelativePath = $"{element.Subfolder}/{element.Name}.{element.FileExtension}";
+            var expectedRelativePath = $"{element.Subfolder}/{element.Name}." +
+                element.GetFileExtension(GumProjectSave.IsJsonFormat(project?.FullFileName ?? ""));
             errors.Add(new ErrorResult
             {
                 ElementName = element.Name,

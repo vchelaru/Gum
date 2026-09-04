@@ -412,7 +412,9 @@ public class DragDropManager : IDragDropManager
             return null;
         }
 
-        var extension = elementSave.FileExtension;
+        // Extension follows the open project's own format so a .gumj project resolves
+        // .gusj/.gucj/.gutj (issue #4595).
+        var extension = elementSave.GetFileExtension(GumProjectSave.IsJsonFormat(gumProject.FullFileName));
 
         var reference =
             gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??
@@ -1033,7 +1035,10 @@ public class DragDropManager : IDragDropManager
             var isTargetRootScreenTreeNode = targetTreeNode.IsTopScreenContainerTreeNode();
             foreach (FilePath file in files)
             {
-                if (file.Extension == GumProjectSave.ScreenExtension && isTargetRootScreenTreeNode)
+                // A JSON-format screen file drops the same way its XML counterpart does (issue #4595).
+                bool isScreenFile = file.Extension == GumProjectSave.ScreenExtension
+                    || file.Extension == GumProjectSave.ScreenJsonExtension;
+                if (isScreenFile && isTargetRootScreenTreeNode)
                 {
                     _importLogic.ImportScreen(file);
                 }

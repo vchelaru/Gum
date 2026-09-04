@@ -64,6 +64,35 @@ public class FileElementAnimationsProviderTests : IDisposable
         second.ShouldBeSameAs(first);
     }
 
+    [Fact]
+    public void GetAnimationsFor_ReturnsDeserializedAnimations_FromTheComponentsGanj_WhenProjectIsJsonFormat()
+    {
+        // Issue #4595: a .gumj project stores animations as .ganj. Looking only for .ganx made
+        // codegen and the error checker silently see zero animations.
+        _project.FullFileName = Path.Combine(_tempDirectory, "Project.gumj");
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        WriteGanj("Components", "FooAnimations.ganj", animationName: "Anim", keyframeStateName: "Cat/Idle");
+
+        ElementAnimationsSave? result = new FileElementAnimationsProvider().GetAnimationsFor(element, _project);
+
+        result.ShouldNotBeNull();
+        result!.Animations.Single().States.Single().StateName.ShouldBe("Cat/Idle");
+    }
+
+    private void WriteGanj(string relativeDirectory, string fileName, string animationName, string keyframeStateName)
+    {
+        string directory = Path.Combine(_tempDirectory, relativeDirectory);
+        Directory.CreateDirectory(directory);
+
+        AnimationSave animation = new AnimationSave { Name = animationName };
+        animation.States.Add(new AnimatedStateSave { StateName = keyframeStateName });
+        ElementAnimationsSave animations = new ElementAnimationsSave();
+        animations.Animations.Add(animation);
+
+        File.WriteAllText(Path.Combine(directory, fileName),
+            Gum.DataTypes.Serialization.Json.GumAnimationJsonFileSerializer.SerializeElementAnimations(animations));
+    }
+
     private void WriteGanx(string relativeDirectory, string fileName, string animationName, string keyframeStateName)
     {
         string directory = Path.Combine(_tempDirectory, relativeDirectory);

@@ -96,28 +96,23 @@ public static class CheckReferencesCommand
         return ExecuteDetect(service, loadResult.Project!, json);
     }
 
-    private static string? GetElementSavePath(string projectDirectory, ElementSave element)
+    private static string? GetElementSavePath(string projectDirectory, ElementSave element, bool isJsonFormat)
     {
-        string subfolder;
-        string extension;
-        switch (element)
+        string subfolder = element switch
         {
-            case ScreenSave:
-                subfolder = ElementReference.ScreenSubfolder;
-                extension = GumProjectSave.ScreenExtension;
-                break;
-            case ComponentSave:
-                subfolder = ElementReference.ComponentSubfolder;
-                extension = GumProjectSave.ComponentExtension;
-                break;
-            case StandardElementSave:
-                subfolder = ElementReference.StandardSubfolder;
-                extension = GumProjectSave.StandardExtension;
-                break;
-            default:
-                return null;
+            ScreenSave => ElementReference.ScreenSubfolder,
+            ComponentSave => ElementReference.ComponentSubfolder,
+            StandardElementSave => ElementReference.StandardSubfolder,
+            _ => null
+        };
+        if (subfolder == null)
+        {
+            return null;
         }
-        return Path.Combine(projectDirectory, subfolder, element.Name + "." + extension);
+        // Extension follows the project's own format - writing .gucx into a .gumj project saves
+        // content the project never loads back (issue #4595).
+        return Path.Combine(projectDirectory, subfolder,
+            element.Name + "." + element.GetFileExtension(isJsonFormat));
     }
 
     private static int ExecuteDetect(IReferencePropagationService service, GumProjectSave project, bool json)
@@ -145,9 +140,10 @@ public static class CheckReferencesCommand
         // element-type subfolder + name + extension.
         string projectDirectory = Path.GetDirectoryName(projectFilePath) ?? "";
         bool useCompact = project.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(projectFilePath);
         foreach (ElementSave element in modified)
         {
-            string elementPath = GetElementSavePath(projectDirectory, element);
+            string elementPath = GetElementSavePath(projectDirectory, element, isJsonFormat);
             if (!string.IsNullOrEmpty(elementPath))
             {
                 element.Save(elementPath, useCompact);
