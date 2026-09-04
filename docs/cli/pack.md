@@ -59,13 +59,14 @@ Ratio:           27.0%
 
 ## Loading a `.gumpkg` at runtime
 
-In MonoGame, load the project the same way you would a loose project:
+Pass the bundle to `Initialize` in place of the `.gumx`:
 
 ```csharp
-GumService.Default.Initialize(graphics, gumProjectFile: "MyProject/MyProject.gumx");
+// Initialize
+GumService.Default.Initialize(graphics, gumProjectFile: "MyProject.gumpkg");
 ```
 
-If a sibling `.gumpkg` is found and the loose `.gumx` is **not** present, the loader transparently switches to bundle mode and serves all element, texture, and font reads from the bundle.
+The extension you pass decides how Gum loads the project. A path ending in `.gumx` (or `.gumj`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project stays unused until you name it.
 
 That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib, or SkiaSharp's own rasterizer) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
 
@@ -73,10 +74,103 @@ That includes a `.ttf` the project references through `Font` or `CustomFontFile`
 **Shipping September 2026:** Reading a bundled `.ttf` at runtime ships in the September release, or now if building Gum from source. Before this, the font was packed into the `.gumpkg` but the runtime looked for it on disk and fell back to the default font.
 {% endhint %}
 
-**Loose wins when both exist.** This is intentional — during development you keep the loose files (and hot reload) working, and in a published build you ship only the `.gumpkg`.
+Because the choice is just the string you pass, you can keep loose files while developing, where [hot reload](../code/debugging/hot-reload.md) works, and load the bundle in a published build:
+
+```csharp
+// Initialize
+#if DEBUG
+GumService.Default.Initialize(graphics, gumProjectFile: "MyProject/MyProject.gumx");
+#else
+GumService.Default.Initialize(graphics, gumProjectFile: "MyProject.gumpkg");
+#endif
+```
 
 {% hint style="warning" %}
-The bundle loader requires .NET 7 or greater (it uses `System.Formats.Tar`). On older targets the `.gumpkg` is ignored and the loader falls back to loose-file resolution.
+The bundle loader requires .NET 7 or greater (it uses `System.Formats.Tar`). On older targets, passing a `.gumpkg` path throws.
+{% endhint %}
+
+## Packing From Your Build
+
+Running `gumcli pack` by hand before every release is easy to forget, and a stale `.gumpkg` looks exactly like a fresh one. An MSBuild target packs the project as part of the build instead, so the bundle is always as new as the files it came from.
+
+### Make GumCli available to the build
+
+Install **GumCli** as a *local* tool so the version is recorded in source control and build machines do not need a global install. Run this once in your repository root:
+
+```
+dotnet new tool-manifest
+dotnet tool install GumCli
+```
+
+This creates `.config/dotnet-tools.json`, which you check in. On a fresh clone or a build server, `dotnet tool restore` installs the recorded version, and you invoke the tool as `dotnet gumcli`.
+
+If you would rather install **GumCli** globally (`dotnet tool install -g GumCli`), invoke it as plain `gumcli` in the examples below, and make sure every build machine has it installed.
+
+### Add the target
+
+Add the following to your game's `.csproj`, adjusting the paths to match your project:
+
+```xml
+<ItemGroup>
+    <GumSourceFile Include="GumProject\**\*.*" />
+</ItemGroup>
+
+<Target Name="PackGumProject"
+        AfterTargets="Build"
+        Condition="'$(Configuration)' == 'Release'"
+        Inputs="@(GumSourceFile)"
+        Outputs="$(OutDir)MyProject.gumpkg">
+    <Exec Command="dotnet tool restore" />
+    <Exec Command="dotnet gumcli pack &quot;GumProject\MyProject.gumx&quot; -o &quot;$(OutDir)MyProject.gumpkg&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+</Target>
+```
+
+What each piece does:
+
+* `AfterTargets="Build"` runs the pack once the normal build finishes, so the bundle lands in the same output folder as your game.
+* `Condition` limits packing to `Release` builds. Debug builds keep loading loose files, which is what hot reload needs.
+* `Inputs` and `Outputs` make the target incremental. MSBuild skips it when the bundle is newer than every file in the Gum project, so an unchanged project does not pay for a repack on every build.
+* `WorkingDirectory` lets you write the project path relative to the `.csproj` instead of spelling out an absolute path.
+
+`gumcli pack` returns a non-zero exit code when a referenced file is missing or the project fails to load, and `Exec` turns that into a build failure. A project with a broken reference fails the build instead of shipping a bundle with holes in it.
+
+### Keep loose files out of a release build
+
+The loose `.gumx` and its element files are still copied to the output folder by the `CopyToOutputDirectory` entry you added when [setting up the project](../code/getting-started/setup/loading-a-gum-project-.gumx.md). Add a condition so a `Release` build ships only the bundle:
+
+```xml
+<ItemGroup Condition="'$(Configuration)' != 'Release'">
+    <None Update="GumProject\**\*.*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+</ItemGroup>
+```
+
+Pair this with the `#if DEBUG` initialization shown above, and each configuration ships the files it actually loads.
+
+### Packing on publish instead
+
+If you only want a bundle in published output, target `Publish` and write into the publish folder:
+
+```xml
+<Target Name="PackGumProject" AfterTargets="Publish">
+    <Exec Command="dotnet gumcli pack &quot;GumProject\MyProject.gumx&quot; -o &quot;$(PublishDir)MyProject.gumpkg&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+</Target>
+```
+
+### Regenerating fonts first
+
+If your build also generates bitmap fonts, run [`gumcli fonts`](fonts.md) before packing so the `FontCache` files exist when `pack` looks for them:
+
+```xml
+<Exec Command="dotnet gumcli fonts &quot;GumProject\MyProject.gumx&quot;"
+      WorkingDirectory="$(MSBuildProjectDirectory)" />
+```
+
+{% hint style="info" %}
+`gumcli fonts` is Windows only, since it drives `bmfont.exe`. On a Linux or macOS build agent, either commit the generated `FontCache` files to source control, or pack with `--include core,external` and let the runtime rasterize fonts from a `.ttf`.
 {% endhint %}
 
 ## Exit Codes
