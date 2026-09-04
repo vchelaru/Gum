@@ -1,6 +1,7 @@
 # 0002. Target code-first C# frameworks, not full engines
 
-- **Status:** Accepted
+- **Status:** Accepted (reasoning refined by [0014](0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md);
+  conclusion for Unity/Godot unchanged)
 - **Date:** 2026-06-20
 - **Deciders:** Victor Chelaru, Claude
 

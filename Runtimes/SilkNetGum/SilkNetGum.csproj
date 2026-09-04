@@ -47,10 +47,13 @@
 	     two separately-compiled FormsUtilities types with the same FQN would silently split state
 	     between them (the IAnimatable trap SkiaGum.csproj already documents). ===== -->
 
-	<ItemGroup>
-		<!-- ScreenBase stays per-backend (news up ContainerRuntime); Window.cs arrives via GumCommon. -->
-		<Compile Include="..\..\MonoGameGum\Forms\ScreenBase.cs" Link="Forms\ScreenBase.cs" />
-	</ItemGroup>
+	<!-- ScreenBase is NOT file-linked here (unlike RaylibGum/SokolGum, which are self-contained and
+	     need their own copy): this project ProjectReferences SkiaGum.csproj below, which already
+	     compiles Forms/ScreenBase.cs (it news up ContainerRuntime, a per-backend GueDeriving type
+	     GumCommon can't reference, so SkiaGum.csproj is the one place it's compiled for the whole
+	     Skia family). File-linking it again here would create a second, separately-compiled
+	     Gum.Forms.ScreenBase type in this assembly, distinct from SkiaGum.dll's: the same same-FQN
+	     fork trap the FormsUtilities/IAnimatable comments above already call out. -->
 
 	<!-- ===== Input host half (the stack SkiaGum omits because it is render-only) ===== -->
 	<ItemGroup>
@@ -61,19 +64,6 @@
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.cs" Link="Input\Cursor.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\Cursor.Forms.cs" Link="Input\Cursor.Forms.cs" />
 		<Compile Include="..\..\MonoGameGum\Input\CursorExtensions.cs" Link="Input\CursorExtensions.cs" />
-	</ItemGroup>
-
-	<!--
-		The shared UISpriteSheet.png backing the V3 default visuals. SkiaGum's SystemManagers
-		(compiled in here) hardcodes AssemblyPrefix = "SkiaGum.Content" and resolves the resource
-		against typeof(SystemManagers).Assembly (= this assembly), so the LogicalName must be the
-		"SkiaGum.Content.*" name it looks up rather than the default "SilkNetGum.Content.*".
-	-->
-	<ItemGroup>
-		<None Remove="Content\UISpriteSheet.png" />
-		<EmbeddedResource Include="Content\UISpriteSheet.png">
-			<LogicalName>SkiaGum.Content.UISpriteSheet.png</LogicalName>
-		</EmbeddedResource>
 	</ItemGroup>
 
 	<ItemGroup>

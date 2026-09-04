@@ -21,8 +21,8 @@
   understood as a permanent maintenance tax — see the private growth strategy.)
 - **Tool vs. code-first.** How do we balance investment between the WYSIWYG tool and
   code-only / code-generation workflows?
-- **Scope boundaries (beyond engines).** Full engines are settled (ADR-0002); what *other*
-  boundaries should Gum name as explicitly out of scope?
+- **Scope boundaries (beyond engines).** Full engines are settled (ADR-0002, refined by
+  ADR-0014); what *other* boundaries should Gum name as explicitly out of scope?
 
 ## Resolved
 
@@ -34,3 +34,7 @@
   emerging. See `vision.md` ("Who it's for"). The earlier "cross-engine teams" idea was retracted.
 - **Scope: full engines** — settled (2026-06-20): Unity and Godot are deliberately out, for now
   and possibly permanently. See `decisions/0002-target-code-first-frameworks-not-engines.md`.
+- **Scope: full engines, refined test** — settled (2026-09-04): the boundary is cost-to-integrate
+  (can the engine host `SKCanvas` cheaply?), not "does it ship its own UI." Unblocks Stride
+  (issue #4600) without reopening Unity/Godot. See
+  `decisions/0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md`.

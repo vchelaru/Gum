@@ -32,7 +32,13 @@ Current state:
 - **MonoGame** — most mature; the primary runtime.
 - **raylib** — advanced; close to parity with the MonoGame runtime.
 - **Skia** — advanced on the *rendering* axis.
-- **Silk.NET** — lacking; an example of a host runtime that still needs significant work.
+- **Silk.NET** — now the reference implementation for interactive Skia-hosted runtimes: real
+  Forms input (keyboard/gamepad/clipboard) shipped, and its `GumService` subclasses the shared
+  `GumServiceSkiaBase` extracted in #4452/#4459. Stride (#4600) builds on it directly.
 - **KNI / FNA** — MonoGame-family runtimes.
+- **Stride** — `Runtimes/StrideGum` package landed (#4600): real Forms input (keyboard/gamepad/
+  clipboard) against `Stride.Input`, modeled on Silk.NET (see ADR-0014). Cheap because Stride can
+  host an `SKCanvas`. In-repo `Samples/StrideGum` still outstanding. Multiple user requests
+  (issue #2159 and others).
 
 Expanding and maturing additional runtimes is an active strategy for growing Gum's reach.
