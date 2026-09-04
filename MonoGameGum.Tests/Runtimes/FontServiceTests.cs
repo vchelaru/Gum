@@ -1,3 +1,4 @@
+using Gum.DataTypes.Variables;
 using Gum.Wireframe;
 using Gum.GueDeriving;
 using Microsoft.Xna.Framework.Graphics;
@@ -374,15 +375,13 @@ public class FontServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void StringSetPath_ShouldNotDeferFontGeneration_WhenOnlyInstanceLayoutSuspended()
+    public void StringSetPath_ShouldDeferFontGeneration_WhenOnlyInstanceLayoutSuspended()
     {
-        // Documents the "KNOWN GAP" in CustomSetPropertyOnRenderable.UpdateToFontValues:
-        // the string-set path only defers for IsAllLayoutSuspended, not for the
-        // per-instance suspension flag. ApplyState (which uses SetProperty) will
-        // therefore load fonts immediately even if the user has called SuspendLayout
-        // on the instance. The gap is intentional — see the comment block in
-        // CustomSetPropertyOnRenderable.UpdateToFontValues for why fixing it would
-        // require resolving a cascading-layout issue.
+        // Was pinned as a "KNOWN GAP" (#4567): the string-set path used to defer only for
+        // IsAllLayoutSuspended, not the per-instance suspension flag, so ApplyState (which uses
+        // SetProperty under instance-level SuspendLayout, not the global flag) loaded fonts
+        // immediately. CustomSetPropertyOnRenderable.UpdateToFontValues now defers for both flags,
+        // matching the direct-property-setter path.
         TextRuntime textRuntime = new();
         var capturedCalls = StartCapturingFontCalls();
 
@@ -390,7 +389,15 @@ public class FontServiceTests : BaseTestClass
         textRuntime.SetProperty("Font", "Consolas");
         textRuntime.SetProperty("FontSize", 24);
 
-        capturedCalls.Count.ShouldBe(2);
+        capturedCalls.Count.ShouldBe(0);
+        textRuntime.IsFontDirty.ShouldBeTrue();
+
+        textRuntime.ResumeLayout(recursive: true);
+
+        capturedCalls.Count.ShouldBe(1);
+        capturedCalls[0].FontName.ShouldBe("Consolas");
+        capturedCalls[0].FontSize.ShouldBe(24);
+        textRuntime.IsFontDirty.ShouldBeFalse();
     }
 
     [Fact]
@@ -679,6 +686,174 @@ public class FontServiceTests : BaseTestClass
         textRuntime.UpdateLayout();
 
         textRuntime.IsFontDirty.ShouldBeFalse();   // cleared — no per-layout retry
+    }
+
+    #endregion
+
+    #region Order-Dependent Property Application (issue #4567)
+
+    [Fact]
+    public void ApplyState_ShouldNotRequestStalePropertyCombo_WhenFontSortsAlphabeticallyBeforeFontSizeAndIsBold()
+    {
+        // Repro for #4567. ApplyState (GraphicalUiElement.ApplyState) applies a state's variables
+        // one SetProperty call at a time, in the order StateSaveExtensionMethods.Initialize() sorts
+        // state.Variables into -- alphabetical. "Font" sorts before both "FontSize" and "IsBold", so
+        // setting Font fires an immediate UpdateToFontValues call (see the KNOWN GAP comment on
+        // CustomSetPropertyOnRenderable.UpdateToFontValues) using FontSize/IsBold's still-default
+        // values (TextRuntime.DefaultFontSize = 18, IsBold = false) instead of this state's actual
+        // FontSize=15/IsBold=true. That transient combo doesn't match anything gumcli fonts
+        // pre-generates, so it logs a "no usable font" warning even though the text is ultimately
+        // rendered correctly once FontSize and IsBold are applied moments later.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = "Fonts/Baloo2-Bold.ttf", SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+        textRuntime.ApplyState(state);
+
+        // Currently captures 3 calls: (FontSize=18, IsBold=false) when Font is set, then
+        // (FontSize=15, IsBold=false) when FontSize is set, then (FontSize=15, IsBold=true) once
+        // IsBold itself is finally set -- only the last one reflects the state's actual values.
+        capturedCalls.ShouldNotBeEmpty();
+        capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 15 && bmfc.IsBold,
+            "every font request during this ApplyState call should reflect the state's actual " +
+            "FontSize/IsBold, not a stale default caught mid-way through applying the state");
+    }
+
+    [Fact]
+    public void ApplyState_ShouldNotFlushFontPrematurely_WhenStateAppliesNestedCategoryState()
+    {
+        // Gap test found while scoping a fix for #4567. A state's own Variables can include a
+        // category-state assignment (e.g. "ButtonCategoryState" = "Highlighted"). GraphicalUiElement
+        // resolves that by calling ApplyState AGAIN, on the same instance, nested inside the outer
+        // ApplyState's own variable-application loop. "ButtonCategoryState" sorts alphabetically
+        // before "Font"/"FontSize"/"IsBold", so the nested call fires before the outer state's own
+        // font properties are applied. Any fix that makes font realization defer-until-resume for a
+        // single ApplyState call must also make that defer reentrancy-safe across this nesting --
+        // otherwise the nested call's own resume flushes a font using the not-yet-applied outer
+        // values, reintroducing #4567's staleness through a different door.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        StateSaveCategory category = new StateSaveCategory { Name = "ButtonCategory" };
+        StateSave highlightedState = new StateSave { Name = "Highlighted" };
+        highlightedState.Variables.Add(new VariableSave { Type = "int", Name = "OutlineThickness", Value = 2, SetsValue = true });
+        category.States.Add(highlightedState);
+        textRuntime.AddCategory(category);
+
+        StateSave outerState = new StateSave { Name = "Default" };
+        outerState.Variables.Add(new VariableSave { Type = "string", Name = "ButtonCategoryState", Value = "Highlighted", SetsValue = true });
+        outerState.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = "Fonts/Baloo2-Bold.ttf", SetsValue = true });
+        outerState.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+        outerState.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+        textRuntime.ApplyState(outerState);
+
+        capturedCalls.ShouldNotBeEmpty();
+        capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 15 && bmfc.IsBold && bmfc.OutlineThickness == 2,
+            "no font request during this ApplyState call -- including one triggered by the nested " +
+            "category-state ApplyState -- should reflect anything other than the final, fully " +
+            "applied combination (outer Font/FontSize/IsBold plus the nested category's OutlineThickness)");
+    }
+
+    [Fact]
+    public void ApplyState_ShouldDeferUntilGlobalResume_WhenCalledWhileGloballySuspended()
+    {
+        // Must-stay-green pin: the pre-existing global-suspend defer/flush path (unrelated to
+        // #4567's per-instance gap) must keep working once ApplyState's own suspend condition is
+        // touched to close that gap.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = "Fonts/Baloo2-Bold.ttf", SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+        try
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = true;
+            textRuntime.ApplyState(state);
+
+            capturedCalls.ShouldBeEmpty();
+            textRuntime.IsFontDirty.ShouldBeTrue();
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = false;
+        }
+
+        textRuntime.UpdateFontRecursive();
+
+        capturedCalls.Count.ShouldBe(1);
+        capturedCalls[0].FontSize.ShouldBe(15);
+        capturedCalls[0].IsBold.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ApplyState_AppliedTwiceInSequence_ShouldEachResolveItsOwnFinalCombo_NotLeftoversFromThePrevious()
+    {
+        // Worse-than-expected discovery while writing this gap test: a SECOND, unrelated ApplyState
+        // call can silently get served a WRONG font from cache, with no warning at all, because of
+        // #4567's staleness in a PRIOR call. The Default state's own #4567 staleness (see the first
+        // test in this region) makes a transient, never-rendered lookup for (FontSize=15,
+        // IsBold=false) during its OWN application -- that lookup fails to resolve a real font,
+        // silently caches Text.DefaultBitmapFont under that filename in LoaderManager (same shape as
+        // RaylibGum.Tests' font-cache-poisoning regression), and never calls CreateFontIfNecessary
+        // again. So when Disabled later legitimately asks for that exact (15, IsBold=false) combo,
+        // it is served the poisoned cache entry directly -- CreateFontIfNecessary is never invoked,
+        // and the mock captures nothing. `ShouldNotBeEmpty()` below is what should be true (a real
+        // font lookup must happen for Disabled's own combo); today it is false because the poisoned
+        // cache from Default's OWN #4567 staleness swallows it first.
+        TextRuntime textRuntime = new();
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        StateSave defaultState = new StateSave { Name = "Default" };
+        defaultState.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = "Fonts/Baloo2-Bold.ttf", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+        StateSave disabledState = new StateSave { Name = "Disabled" };
+        disabledState.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = false, SetsValue = true });
+
+        textRuntime.ApplyState(defaultState);
+        capturedCalls.Clear();
+
+        textRuntime.ApplyState(disabledState);
+
+        capturedCalls.ShouldNotBeEmpty(
+            "Disabled's own (FontSize=15, IsBold=false) combo must trigger a real font lookup, not " +
+            "silently reuse a cache entry poisoned by Default's own #4567 staleness");
+        capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 15 && bmfc.IsBold == false,
+            "the second ApplyState call should resolve Font/FontSize carried over from the first " +
+            "call plus its own IsBold override -- not a stale combination from mid-way through either call");
+    }
+
+    [Fact]
+    public void ApplyState_OnStackedChild_ShouldNotRequestStalePropertyCombo()
+    {
+        // Extends the base #4567 repro onto a stacking parent's child, since UpdateLayout cascading
+        // through a stack is a documented tricky area for font realization (see the "Layout
+        // Suspension / Font Batching" region above) -- confirms the fix holds in that topology too.
+        ContainerRuntime parent = new();
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
+        TextRuntime childText = new();
+        parent.AddChild(childText);
+        List<BmfcSave> capturedCalls = StartCapturingFontCalls();
+
+        StateSave state = new StateSave { Name = "Highlighted" };
+        state.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = "Fonts/Baloo2-Bold.ttf", SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+        state.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+        childText.ApplyState(state);
+
+        capturedCalls.ShouldNotBeEmpty();
+        capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 15 && bmfc.IsBold,
+            "a stacked child's ApplyState call must resolve the same final combo as an unstacked one");
     }
 
     #endregion

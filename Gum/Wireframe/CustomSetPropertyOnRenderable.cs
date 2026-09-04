@@ -2564,30 +2564,32 @@ public partial class CustomSetPropertyOnRenderable
         // reached via SetProperty -> SetPropertyOnRenderable -> TrySetPropertyOnText.
         // The direct-property-setter path goes through GraphicalUiElement.UpdateToFontValues() instead.
         //
-        // KNOWN GAP: the two paths handle suspension differently:
-        //   - GUE.UpdateToFontValues() defers for BOTH IsAllLayoutSuspended and IsLayoutSuspended.
-        //   - This static method only defers for IsAllLayoutSuspended (see reason below).
-        //   This means that when fonts are set by string during ApplyState (which uses instance-level
-        //   SuspendLayout, not IsAllLayoutSuspended), those font loads still happen immediately.
-        //   Fixing that gap requires resolving the cascading-layout issue described below.
+        // Both paths now defer identically, for BOTH IsAllLayoutSuspended and the per-instance
+        // IsLayoutSuspended (#4567). Previously this static method only deferred for the global flag,
+        // so a state applied via ApplyState -- which suspends per-instance, not globally -- realized
+        // each font-affecting property (Font, FontSize, IsBold, ...) immediately as it was set, one at
+        // a time, using whatever the OTHER properties currently held. Since ApplyState applies a
+        // state's variables alphabetically, "Font" is realized before "FontSize"/"IsBold" are even
+        // applied, producing spurious font-cache lookups for combinations that were never the state's
+        // actual final values (and could poison the LoaderManager cache with a fallback font under that
+        // combination's filename, silently serving it to a later, unrelated request for the exact same
+        // combo). Deferring here instead means ApplyState's single SuspendLayout/ResumeLayout pair
+        // around its whole variable loop now also covers font realization: only the FINAL, fully
+        // applied combination is ever looked up, via the existing resume-time flush below.
         //
-        // January 28, 2025 - why we cannot simply early-return for IsLayoutSuspended:
-        // If we defer here, bitmap values are not assigned until layout is later resumed via
-        // ResumeLayoutUpdateIfDirtyRecursive. At that point mIsLayoutSuspended is already false,
-        // so when UpdateFontRecursive assigns the BitmapFont to a Text with Width or Height
-        // RelativeToChildren, it triggers UpdateLayout which cascades up through parents that have
-        // already completed their own layout pass. This causes redundant layout calls throughout
-        // a list box or any deeply nested stack. Solving this would require suppressing that
-        // UpdateLayout call inside UpdateToFontValues when called from UpdateFontRecursive, or
-        // performing a single top-down layout pass at the end rather than cascading bottom-up.
+        // The cascading-UpdateLayout concern this early-return used to be withheld over (the resume-time
+        // flush's own layout, running after mIsLayoutSuspended is already cleared, re-entering already
+        // laid-out parents) is the same one the direct-setter path already solves via
+        // SuppressLayoutFromFontChange during ResumeLayoutUpdateIfDirtyRecursive -- see the "Layout
+        // Suspension / Font Batching" tests in FontServiceTests.cs. That machinery is shared, not
+        // path-specific, so extending the defer to this path inherits the same protection.
         //
-        // IsAllLayoutSuspended is safe to defer because:
-        //   a) WireframeObjectManager calls RootGue.UpdateFontRecursive() before RootGue.UpdateLayout(),
-        //      so any per-element UpdateLayout calls triggered by font assignment are immediately
-        //      superseded by the full UpdateLayout pass.
-        //   b) mIsLayoutSuspended is always false during IsAllLayoutSuspended (ApplyState skips
-        //      SuspendLayout when the global flag is set), so there is no cascading risk.
-        if (GraphicalUiElement.IsAllLayoutSuspended)
+        // GraphicalUiElement.ApplyState's own suspend/resume was made reentrancy-safe alongside this
+        // change: a state's Variables can include a category-state assignment (e.g.
+        // "ButtonCategoryState" = "Highlighted"), which triggers a NESTED ApplyState call on the same
+        // instance mid-loop. ApplyState now skips re-suspending when the instance is already suspended,
+        // so the nested call's own resume doesn't prematurely flush before the outer call finishes.
+        if (GraphicalUiElement.IsAllLayoutSuspended || graphicalUiElement.IsLayoutSuspended)
         {
             graphicalUiElement.IsFontDirty = true;
             return;
