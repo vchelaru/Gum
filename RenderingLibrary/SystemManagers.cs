@@ -39,7 +39,12 @@ namespace RenderingLibrary;
 public partial class SystemManagers : ISystemManagers
 {
     int mPrimaryThreadId;
+#if !RAYLIB
+    // Feeds Renderer.NotifyHostFrameAdvanced() below, which doesn't exist on raylib's own Renderer.
+    // Mirrored as dead code in raylib's SystemManagers.cs so the two files stay line-for-line
+    // comparable; porting this to raylib is tracked separately (#4598).
     private double _lastActivityTime = double.NaN;
+#endif
 
     static bool IsMobile =>
         System.OperatingSystem.IsAndroid() ||
@@ -216,6 +221,10 @@ public partial class SystemManagers : ISystemManagers
 
         mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
+        // Recreated on every Initialize() call (e.g. graphics-device-loss recovery). raylib has no
+        // such concept and instead creates its Renderer once in its constructor, never recreating it
+        // here - not unified for now; revisit only if raylib ever needs to re-run Initialize() on an
+        // existing instance (#4577).
         Renderer = new Renderer();
         Renderer.Initialize(graphicsDevice, this);
 
@@ -266,7 +275,14 @@ public partial class SystemManagers : ISystemManagers
 
             GraphicalUiElement.AddRenderableToManagers = CustomSetPropertyOnRenderable.AddRenderableToManagers;
             GraphicalUiElement.RemoveRenderableFromManagers = CustomSetPropertyOnRenderable.RemoveRenderableFromManagers;
+
+#if !RAYLIB
+            // Currently has no reader (SpriteRenderer.cs's check is commented out) - kept live here
+            // for parity with the flag's original intent, but not ported to raylib, whose Renderer has
+            // no equivalent member. Mirrored as dead code in raylib's SystemManagers.cs so the two
+            // files stay line-for-line comparable (#4577).
             Renderer.ApplyCameraZoomOnWorldTranslation = true;
+#endif
 
             Renderer.Camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
 
@@ -274,9 +290,18 @@ public partial class SystemManagers : ISystemManagers
 
             StandardElementsManager.Self.Initialize();
 
+#if !RAYLIB
+            // raylib's Text class has no equivalent member - mirrored as dead code in raylib's
+            // SystemManagers.cs so the two files stay line-for-line comparable (#4577).
             Text.RenderBoundaryDefault = false;
+#endif
 
+#if !RAYLIB
+            // raylib apps commonly use their own resources folder; defaulting this here would be an
+            // unwarranted assumption for raylib, so this stays XNA/KNI/FNA-only. Mirrored as dead code
+            // in raylib's SystemManagers.cs so the two files stay line-for-line comparable (#4577).
             ToolsUtilities.FileManager.RelativeDirectory = "Content/";
+#endif
 
             RegisterComponentRuntimeInstantiations();
 
@@ -343,11 +368,13 @@ public partial class SystemManagers : ISystemManagers
     /// <exception cref="InvalidOperationException">Exception thrown if the SystemManagers hasn't yet been initialized.</exception>
     public void Activity(double currentTime)
     {
+#if !RAYLIB
         if (currentTime != _lastActivityTime)
         {
             _lastActivityTime = currentTime;
             Renderer.NotifyHostFrameAdvanced();
         }
+#endif
 
 #if !RAYLIB
 #if FULL_DIAGNOSTICS

@@ -8,6 +8,7 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
 using System.Linq;
+using ToolsUtilities;
 
 namespace RaylibGum.Tests;
 
@@ -87,6 +88,76 @@ public class GumServiceInitializeTests
             GraphicalUiElement.ThrowExceptionsForMissingFiles = null;
             Gum.GumService.Default.Uninitialize();
             TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_ShouldSetMissingFileBehaviorToThrowException()
+    {
+        // Same shape as Initialize_ShouldAssignThrowExceptionsForMissingFilesDelegate above:
+        // MonoGame/KNI/FNA's SystemManagers.Initialize() sets this to ThrowException, but raylib's
+        // never did, leaving raylib on the shared ConsumeSilently default (#4577).
+        Gum.GumService.Default.Uninitialize();
+        GraphicalUiElement.MissingFileBehavior = MissingFileBehavior.ConsumeSilently;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            GraphicalUiElement.MissingFileBehavior.ShouldBe(MissingFileBehavior.ThrowException);
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_ShouldNotChangeRelativeDirectory()
+    {
+        // Unlike MonoGame/KNI/FNA's SystemManagers.Initialize() (which defaults
+        // ToolsUtilities.FileManager.RelativeDirectory to "Content/"), raylib intentionally leaves it
+        // alone: raylib apps commonly use their own resources folder, and defaulting this would be an
+        // unwarranted assumption (#4577).
+        Gum.GumService.Default.Uninitialize();
+        FileManager.RelativeDirectory = System.IO.Path.GetTempPath();
+        string sentinel = FileManager.RelativeDirectory;
+
+        try
+        {
+            Gum.GumService.Default.Initialize(DefaultVisualsVersion.V3);
+
+            FileManager.RelativeDirectory.ShouldBe(sentinel);
+        }
+        finally
+        {
+            Gum.GumService.Default.Uninitialize();
+            TestAssemblyInitialize.ApplyDefaultTestState();
+        }
+    }
+
+    [Fact]
+    public void Initialize_ShouldNotRecreateRenderer()
+    {
+        // Unlike MonoGame/KNI/FNA's SystemManagers.Initialize() (which recreates Renderer on every
+        // call, e.g. to recover from graphics-device loss), raylib creates its Renderer once in its
+        // constructor and Initialize() never touches it (#4577).
+        var sut = new SystemManagers();
+        var rendererBeforeInitialize = sut.Renderer;
+
+        try
+        {
+            sut.Initialize();
+
+            sut.Renderer.ShouldBeSameAs(rendererBeforeInitialize);
+        }
+        finally
+        {
+            // Initialize() re-points the static component-instantiation registry (Polygon/Rectangle/
+            // Text) at whichever SystemManagers instance called it - restore it to SystemManagers.Default
+            // so later tests don't construct runtimes bound to this throwaway instance.
+            SystemManagers.Default.Initialize();
         }
     }
 
