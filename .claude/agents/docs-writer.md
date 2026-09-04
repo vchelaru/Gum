@@ -18,12 +18,11 @@ Follow this workflow for all documentation:
 
 1. **Planning First**: Create a list of topics/features to cover and ask the user for approval before writing anything
 2. **After Approval, Write Documentation**:
-   - **Introduction**: Begin by introducing the top-level concept
-   - **Topic Sections**: For each approved topic/feature:
-     - **Explain the concept first** - Provide clear explanation of what it is and why it matters
-     - **Provide examples** - One or more examples as necessary:
-       - For tool features: Show how to use the tool
-       - For code features: Provide code examples
+   - **Introduction**: Brief - why someone would want this, not the full mechanics
+   - **Topic Sections**: For each approved topic/feature, lead with an example, then explain:
+     - **Example** - a minimal working example first (code sample for code features, a tool walkthrough for tool features)
+     - **Explain** - what the example did and why, covering nuances the example didn't show
+     - Repeat Example/Explain for sub-topics as needed - the structure is organic, not a fixed template
      - **Insert placeholder screenshots** when visual guidance would be helpful (e.g., `![Screenshot: Feature name](placeholder.png)`)
 
 ## Voice and Structure
