@@ -6,31 +6,19 @@
 		SKCanvas + an IInputContext (view.CreateInput()), so this project references
 		Silk.NET.Input only (never Silk.NET.Windowing) and makes no SDL-vs-GLFW commitment.
 
-		It is SELF-CONTAINED like RaylibGum / SokolGum: it references GumCommon only and file-links
-		the shared render + Forms + input source, rather than ProjectReferencing SkiaGum. Splitting
-		the input stack (Cursor / CursorExtensions) from FormsUtilities across an assembly boundary
-		fails to compile — CursorExtensions reaches FormsUtilities' internal LastEventRoots and the
-		concrete GumService — so everything must live in one assembly, the pattern every other
-		runtime already uses. The link set is SkiaGum's render half (its local Renderables /
-		GueDeriving / RenderingLibrary / Helpers / Content source, globbed, plus the same shared
-		GueDeriving / Animation / V3-DefaultVisuals / FormsUtilities links SkiaGum.csproj carries)
-		PLUS the input stack SkiaGum omits because it is render-only.
+		It ProjectReferences SkiaGum.csproj for the render/Forms source and GumServiceSkiaBase
+		(issue #4452 phase 2 — see the ItemGroup comment further down); it is no longer
+		self-contained like RaylibGum/SokolGum. What stays file-linked locally is only the input
+		host half SkiaGum omits because it is render-only (Cursor/CursorExtensions/FormsUtilities'
+		input seam).
 	-->
+	<Import Project="..\RuntimePackage.props" />
+
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.SilkNet</PackageId>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2026.4.5.1</Version>
-
 		<NoWarn>1591</NoWarn>
-
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 	</PropertyGroup>
 
 	<!--
@@ -114,29 +102,17 @@
 		<ProjectReference Include="..\SkiaGum\SkiaGum.csproj" />
 	</ItemGroup>
 
-	<!--
-		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers get
-		GUM001 namespace-migration warnings + code fixes. Mirrors SkiaGum/RaylibGum: not a
-		ProjectReference (source-linkers must not require Tools/Gum.Analyzers/ to build), and the
-		Exists() guard makes it a no-op when the DLL is absent.
-	-->
-	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
-		<None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs/"
-			  Visible="false" />
-	</ItemGroup>
+	<Import Project="..\RuntimePackage.Analyzers.props" />
 
 	<!--
 		Guards against a consumer whose own AssemblyName collides with this package's assembly
 		name (SilkNetGum), which silently overwrites the runtime DLL in the shared output folder
 		(the exact failure this project's own sample worked around - see
-		Samples/SilkNetGum/SilkNetGumSample/SilkNetGumSample.csproj). NuGet auto-imports
-		buildTransitive\Gum.SilkNet.targets into every consumer; it imports the shared check
-		packed alongside it. See #4311.
+		Samples/SilkNetGum/SilkNetGumSample/SilkNetGumSample.csproj). Gum.SilkNet.targets
+		(per-package name, so it stays local) imports the shared AssemblyNameCollisionGuard.targets
+		check from RuntimePackage.props. See #4311.
 	-->
 	<ItemGroup>
-		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
 		<None Include="build\Gum.SilkNet.targets" Pack="true" PackagePath="buildTransitive\Gum.SilkNet.targets" Visible="false" />
 	</ItemGroup>
 

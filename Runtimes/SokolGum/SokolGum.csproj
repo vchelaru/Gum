@@ -1,21 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\RuntimePackage.props" />
+
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RootNamespace>SokolGum</RootNamespace>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.sokol</PackageId>
 		<Version>2026.4.17.1</Version>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -195,13 +188,10 @@
 	</ItemGroup>
 
 	<!--
-		Guards against a consumer whose own AssemblyName collides with this package's assembly
-		name (SokolGum), which silently overwrites the runtime DLL in the shared output folder.
-		NuGet auto-imports buildTransitive\Gum.sokol.targets into every consumer; it imports the
-		shared check packed alongside it. See #4311.
+		Gum.sokol.targets (per-package name, so it stays local) imports the shared
+		AssemblyNameCollisionGuard.targets check from RuntimePackage.props. See #4311.
 	-->
 	<ItemGroup>
-		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
 		<None Include="build\Gum.sokol.targets" Pack="true" PackagePath="buildTransitive\Gum.sokol.targets" Visible="false" />
 	</ItemGroup>
 

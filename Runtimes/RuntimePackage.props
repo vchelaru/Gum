@@ -1,0 +1,29 @@
+<Project>
+  <!--
+    Shared NuGet package metadata for Gum's runtime host packages (RaylibGum, SokolGum, SkiaGum,
+    SilkNetGum, and any future host package, e.g. a Stride adapter). Each project imports this and
+    layers on its own PackageId, Version, DefineConstants, and item groups. Extracted from four
+    independently copy-pasted csproj blocks (#4601) so a new runtime package doesn't start life as
+    a 5th copy-paste.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
+  </PropertyGroup>
+
+  <!--
+    Guards against a consumer whose own AssemblyName collides with this package's assembly name,
+    which would silently overwrite the runtime DLL in the shared output folder. Each package still
+    declares its own buildTransitive\Gum.<name>.targets locally (filename/PackagePath are
+    package-specific), which imports this shared check. See #4311.
+  -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
+  </ItemGroup>
+</Project>

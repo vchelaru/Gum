@@ -1,19 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\RuntimePackage.props" />
+
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<Nullable>enable</Nullable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.SkiaSharp</PackageId>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<Version>2026.4.5.1</Version>
-
 		<NoWarn>1591</NoWarn>
-
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -184,20 +176,7 @@
 		<InternalsVisibleTo Include="SilkNetGum" />
 	</ItemGroup>
 
-	<!--
-		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers
-		get GUM001 namespace-migration warnings + code fixes. This is NOT a ProjectReference
-		because we do not want source-linkers' .sln files to require Tools/Gum.Analyzers/
-		to build. The analyzer is built independently (e.g. via AllLibraries.sln /
-		GumFull.sln) and the Exists() guard makes this include a no-op if the DLL is not
-		present, so source-only builds keep working with zero impact.
-	-->
-	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
-		<None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs/"
-			  Visible="false" />
-	</ItemGroup>
+	<Import Project="..\RuntimePackage.Analyzers.props" />
 
 	<ItemGroup>
 		<Folder Include="Xna\" />
@@ -210,13 +189,10 @@
 	</ItemGroup>
 
 	<!--
-		Guards against a consumer whose own AssemblyName collides with this package's assembly
-		name (SkiaGum), which silently overwrites the runtime DLL in the shared output folder.
-		NuGet auto-imports buildTransitive\Gum.SkiaSharp.targets into every consumer; it imports
-		the shared check packed alongside it. See #4311.
+		Gum.SkiaSharp.targets (per-package name, so it stays local) imports the shared
+		AssemblyNameCollisionGuard.targets check from RuntimePackage.props. See #4311.
 	-->
 	<ItemGroup>
-		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
 		<None Include="build\Gum.SkiaSharp.targets" Pack="true" PackagePath="buildTransitive\Gum.SkiaSharp.targets" Visible="false" />
 	</ItemGroup>
 
