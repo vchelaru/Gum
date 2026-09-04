@@ -29,6 +29,7 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         IMessenger messenger,
         IHotkeyManager hotkeyManager,
         ISelectionHistory selectionHistory,
+        IProjectFileDropLogic projectFileDropLogic,
         IWritableOptions<LayoutSettings> layoutSettings
         )
     {
@@ -52,11 +53,40 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
             e.Handled = keyArgs.Handled;
         };
         this.PreviewMouseDown += OnPreviewMouseDown;
+
+        // Dropping a project file anywhere in the window opens it, the same as File > Load Project.
+        // Tunneling handlers, so the drop wins over the wireframe canvas and the element tree, which
+        // both accept file drops of their own but reject a .gumx/.gumj.
+        this.AllowDrop = true;
+        DragEventHandler acceptProjectDrag = (_, e) =>
+        {
+            if (projectFileDropLogic.GetProjectFileToOpen(GetDroppedFiles(e)) != null)
+            {
+                e.Effects = DragDropEffects.Copy;
+                e.Handled = true;
+            }
+        };
+        // DragEnter as well as DragOver, so the wireframe never gets to report the drag as rejected.
+        this.PreviewDragEnter += acceptProjectDrag;
+        this.PreviewDragOver += acceptProjectDrag;
+        this.PreviewDrop += (_, e) =>
+        {
+            if (projectFileDropLogic.TryOpenDroppedProject(GetDroppedFiles(e)))
+            {
+                e.Handled = true;
+            }
+        };
+
         this.Loaded += (_, _) =>
         {
             mainWindowViewModel.LoadWindowSettings(layoutSettings.CurrentValue.MainWindow);
         };
     }
+
+    private static string[]? GetDroppedFiles(DragEventArgs e) =>
+        e.Data?.GetDataPresent(DataFormats.FileDrop) == true
+            ? e.Data.GetData(DataFormats.FileDrop) as string[]
+            : null;
 
     private void OnPreviewMouseDown(object sender, MouseButtonEventArgs e)
     {

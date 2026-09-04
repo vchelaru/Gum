@@ -111,12 +111,7 @@ namespace Gum.CommandLine
                             // The containing project may itself be XML or JSON-formatted (issue #4182) -
                             // whichever project file sits next to the element wins.
                             GlueProjectToLoad = System.IO.Directory.GetFiles(gluxDirectory)
-                                .FirstOrDefault(item =>
-                                {
-                                    string lowerItem = item.ToLowerInvariant();
-                                    return lowerItem.EndsWith("." + GumProjectSave.ProjectExtension) ||
-                                        lowerItem.EndsWith("." + GumProjectSave.ProjectJsonExtension);
-                                });
+                                .FirstOrDefault(GumProjectSave.IsProjectFile);
                         }
 
                     }
