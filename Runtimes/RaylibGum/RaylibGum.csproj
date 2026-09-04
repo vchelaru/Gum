@@ -1,23 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\RuntimePackage.props" />
+
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<Nullable>enable</Nullable>
 		<!-- Building the raylib Font struct from a parsed .fnt requires writing its
 		     Recs/Glyphs pointer arrays (see ContentLoader bitmap-font stream loading, #3037). -->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageId>Gum.raylib</PackageId>
 		<Version>2026.4.5.1</Version>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
-
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -251,20 +243,7 @@
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 	</ItemGroup>
 
-	<!--
-		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers
-		get GUM001 namespace-migration warnings + code fixes. This is NOT a ProjectReference
-		because we do not want source-linkers' .sln files to require Tools/Gum.Analyzers/
-		to build. The analyzer is built independently (e.g. via AllLibraries.sln /
-		GumFull.sln) and the Exists() guard makes this include a no-op if the DLL is not
-		present, so source-only builds keep working with zero impact.
-	-->
-	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
-		<None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs/"
-			  Visible="false" />
-	</ItemGroup>
+	<Import Project="..\RuntimePackage.Analyzers.props" />
 
 	<ItemGroup>
 		<Folder Include="Forms\Data\" />
@@ -280,13 +259,10 @@
 	</ItemGroup>
 
 	<!--
-		Guards against a consumer whose own AssemblyName collides with this package's assembly
-		name (RaylibGum), which silently overwrites the runtime DLL in the shared output folder.
-		NuGet auto-imports buildTransitive\Gum.raylib.targets into every consumer; it imports the
-		shared check packed alongside it. See #4311.
+		Gum.raylib.targets (per-package name, so it stays local) imports the shared
+		AssemblyNameCollisionGuard.targets check from RuntimePackage.props. See #4311.
 	-->
 	<ItemGroup>
-		<None Include="..\..\AssemblyNameCollisionGuard.targets" Pack="true" PackagePath="buildTransitive\AssemblyNameCollisionGuard.targets" Visible="false" />
 		<None Include="build\Gum.raylib.targets" Pack="true" PackagePath="buildTransitive\Gum.raylib.targets" Visible="false" />
 	</ItemGroup>
 

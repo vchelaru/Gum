@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    Bundles the Gum.Analyzers Roslyn analyzer DLL into the package so NuGet consumers get GUM001
+    namespace-migration warnings + code fixes. Not a ProjectReference: source-linkers' .sln files
+    must not require Tools/Gum.Analyzers/ to build. The analyzer builds independently (e.g. via
+    AllLibraries.sln / GumFull.sln); the Exists() guard makes this a no-op when the DLL is absent,
+    so source-only builds keep working with zero impact.
+
+    Imported by RaylibGum, SkiaGum, and SilkNetGum. SokolGum does not currently bundle the
+    analyzer — a pre-existing gap this consolidation preserves rather than silently changes.
+  -->
+  <ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('$(MSBuildThisFileDirectory)..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
+    <None Include="$(MSBuildThisFileDirectory)..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs/"
+          Visible="false" />
+  </ItemGroup>
+</Project>
