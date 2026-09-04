@@ -15,7 +15,7 @@ The "**big three**" refers to the three backends below (Silk.NET/Skia, raylib, M
 |---|---|---|---|
 | MonoGameGumInCode | MonoGame (XNA) | `Samples/MonoGameGumInCode/MonoGameGumInCode/` | `FrameworkElement`; nav button in `Game1.BuildNavStrip` |
 | raylib gallery | raylib | `Samples/raylib/` | `FrameworkElement`; nav button in `Program.BuildNavStrip` (`Examples.Shapes` namespace) |
-| SilkNetGum | SkiaSharp via Silk.NET | `Samples/SilkNetGum/SilkNetGum/` | `FrameworkElement`; factory in `Program.codeScreenFactories`, keyboard nav |
+| SilkNetGum | SkiaSharp via Silk.NET | `Samples/SilkNetGum/SilkNetGumSample/` | `FrameworkElement`; factory in `Program.codeScreenFactories`, keyboard nav |
 
 Each has a `Screens/` folder with one `*Screen.cs` per feature (`SpriteScreen`, `NineSliceScreen`, …). **MonoGameGumInCode is the reference** — mirror its screen section-for-section in the other two so the same screen can be opened side by side and any per-backend rendering difference stands out as a backend bug. The existing screen headers say exactly this ("Raylib mirror of …", "Mirror of MonoGameGumInCode.Screens…").
 
@@ -52,3 +52,5 @@ raylib and Skia render shapes natively. MonoGame's shape rendering comes from th
 These samples exist for visual confirmation; they have no automated assertions. After adding a screen, build the sample and tell the user to run it and eyeball the new screen. Behavioral correctness still gets a unit test in the matching `Tests/*` project (see [[tdd]]) — the sample is the visual complement, not a replacement.
 
 A brand-new standalone sample project (not one of the "big three") still ships a `.sln` alongside its `.csproj`, mirroring `FontPlayground.MonoGame.sln` — the user opens and runs these in Visual Studio, not via `dotnet run`.
+
+That `.sln` also enrolls the sample in CI automatically: `build-samples.yaml` runs `.github/scripts/build-all.ps1 -Path Samples`, which globs every `.sln`/`.slnx` under `Samples/` and builds it on a `windows-latest` runner. A sample that can't restore or build there (a Mac-only head, a hand-cloned dependency) has to be added to that script's `$excludeLeafNames`.

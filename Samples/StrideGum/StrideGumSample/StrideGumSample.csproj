@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<!-- net10.0 matches Runtimes/StrideGum: Stride's own packages only ship net10.0 builds. -->
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<!-- Stride.CommunityToolkit.Windows drags in Stride's editor-side package manager, whose own
+		     transitive SSH.NET has a published advisory (NU1903). Nothing here can pick a different
+		     version, and this sample ships no binaries, so audit only what this project references
+		     directly. -->
+		<NuGetAuditMode>direct</NuGetAuditMode>
+	</PropertyGroup>
+
+	<!--
+		Two warnings this project emits are Stride's, not Gum's, and neither is suppressible from
+		here: CS0162 "Unreachable code detected" against a temp file, which is the inline C# task
+		Stride's _StrideCollectUpToDateCheckInputDesignTime target compiles; and "[AssetCompiler]
+		Could not find game settings asset at location [GameSettings]", which Stride's asset
+		compiler emits for any code-only game with no asset folder. Both are expected here.
+	-->
+
+
+	<ItemGroup>
+		<!-- The window/host backend and physics are a consuming game's choice, which is why
+		     Runtimes/StrideGum references neither. Bepu supplies Add3DGround. -->
+		<PackageReference Include="Stride.CommunityToolkit.Bepu" Version="1.0.0-preview.63" />
+		<PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Runtimes\StrideGum\StrideGum.csproj" />
+	</ItemGroup>
+
+</Project>
