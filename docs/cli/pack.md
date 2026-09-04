@@ -74,16 +74,7 @@ That includes a `.ttf` the project references through `Font` or `CustomFontFile`
 **Shipping September 2026:** Reading a bundled `.ttf` at runtime ships in the September release, or now if building Gum from source. Before this, the font was packed into the `.gumpkg` but the runtime looked for it on disk and fell back to the default font.
 {% endhint %}
 
-Because the choice is just the string you pass, you can keep loose files while developing, where [hot reload](../code/debugging/hot-reload.md) works, and load the bundle in a published build:
-
-```csharp
-// Initialize
-#if DEBUG
-GumService.Default.Initialize(graphics, gumProjectFile: "MyProject/MyProject.gumx");
-#else
-GumService.Default.Initialize(graphics, gumProjectFile: "MyProject.gumpkg");
-#endif
-```
+Because the choice is just the string you pass, a game can keep loose files while developing, where [hot reload](../code/debugging/hot-reload.md) works, and load the bundle in a published build. How it decides between the two paths is up to you.
 
 {% hint style="warning" %}
 The bundle loader requires .NET 7 or greater (it uses `System.Formats.Tar`). On older targets, passing a `.gumpkg` path throws.
@@ -147,7 +138,7 @@ The loose `.gumx` and its element files are still copied to the output folder by
 </ItemGroup>
 ```
 
-Pair this with the `#if DEBUG` initialization shown above, and each configuration ships the files it actually loads.
+Each configuration then ships only the files it loads, so make sure the path your game passes to `Initialize` matches the configuration it was built in.
 
 ### Packing on publish instead
 
