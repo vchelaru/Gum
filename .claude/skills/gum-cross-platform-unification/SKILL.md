@@ -13,7 +13,7 @@ Reference implementations: `TextRuntime.cs` (#2509, #2510) and `ContainerRuntime
 
 ### Apos.Shapes ↔ SkiaGum shape runtime pair
 
-Shape runtimes that exist on the Apos.Shapes side (`MonoGameGumShapes` / `KniGumShapes`) and SkiaGum — `RoundedRectangleRuntime`, `ArcRuntime`, `ColoredCircleRuntime`, `LineRuntime` — follow the same source-sharing pattern but with a different canonical home: **`Runtimes/SkiaGum/GueDeriving/`** rather than `MonoGameGum/GueDeriving/`. The Apos csprojs file-link via `<Compile Include="..\SkiaGum\GueDeriving\FooRuntime.cs" Link="GueDeriving\FooRuntime.cs" />`.
+Shape runtimes that exist on the Apos.Shapes side (`MonoGameGumShapes` / `KniGumShapes`) and SkiaGum — `RoundedRectangleRuntime`, `ArcRuntime`, `ColoredCircleRuntime`, `LineRuntime` — follow the same source-sharing pattern but with a different canonical home: **`Runtimes/SkiaGum/GueDeriving/`** rather than `MonoGameGum/GueDeriving/`. The Apos csprojs file-link via `<Compile Include="..\SkiaGum\GueDeriving\FooRuntime.cs" Link="GueDeriving\FooRuntime.cs" />`, declared once in `Runtimes/GumShapes/Directory.Build.props` rather than in either csproj.
 
 Why a different home: these runtimes wrap Skia-specific renderables on one side and Apos.Shapes-specific renderables on the other. Neither platform's renderable surface aligns with the MonoGame/Raylib/Sokol axis, so putting the canonical file in `MonoGameGum/GueDeriving/` would be misleading. Reference implementation: `RoundedRectangleRuntime.cs`. Platform divergence uses `#if SKIA` (no `RAYLIB` / `XNALIKE` involved on this pair).
 
