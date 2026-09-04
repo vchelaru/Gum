@@ -18,6 +18,15 @@ public class BaseTestClass : IDisposable
 
     public BaseTestClass()
     {
+        // Dispose clears these too, but only for tests that derive from this class. Several test
+        // classes in this project don't, so a global suspend flag one of them leaves set would
+        // otherwise land on whatever runs next -- and both flags make font and layout work silently
+        // no-op rather than fail, so the damage shows up as a confusing assertion somewhere else.
+        // Clearing on the way in as well means a test starts from a known state no matter what ran
+        // before it.
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+        GraphicalUiElement.SuppressFontRegeneration = false;
+
         GumService.Default.InitializeForTesting();
         CreateMockCursor();
     }
@@ -38,6 +47,9 @@ public class BaseTestClass : IDisposable
     public virtual void Dispose()
     {
         GraphicalUiElement.IsAllLayoutSuspended = false;
+        // Paired with IsAllLayoutSuspended: the same "silently skip font work" hazard, and the
+        // tests that set it rely on their own finally alone until now.
+        GraphicalUiElement.SuppressFontRegeneration = false;
         GraphicalUiElement.CanvasWidth = 800;
         GraphicalUiElement.CanvasHeight = 600;
         GraphicalUiElement.GlobalFontScale = 1;
