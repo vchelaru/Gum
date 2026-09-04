@@ -853,6 +853,18 @@ public class GumProjectSave
     public static bool IsJsonFormat(string fileName) =>
         string.Equals(FileManager.GetExtension(fileName), ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// True when <paramref name="fileName"/> is a Gum project file in either format -
+    /// <see cref="ProjectExtension"/> or <see cref="ProjectJsonExtension"/>, case-insensitive.
+    /// Use this rather than hand-rolling the pair of extension comparisons.
+    /// </summary>
+    public static bool IsProjectFile(string fileName)
+    {
+        string extension = FileManager.GetExtension(fileName);
+        return string.Equals(extension, ProjectExtension, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(extension, ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
+    }
+
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Serializes this GumProjectSave instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]

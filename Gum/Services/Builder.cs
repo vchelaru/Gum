@@ -212,6 +212,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IExposeVariableService, ExposeVariableService>();
         services.AddSingleton<IStateEditingIndicatorService, StateEditingIndicatorService>();
         services.AddSingleton<IDragDropManager, DragDropManager>();
+        services.AddSingleton<IProjectFileDropLogic, ProjectFileDropLogic>();
         services.AddSingleton<MenuStripManager>();
         services.AddSingleton<IScreenImportService, ScreenImportService>();
         services.AddSingleton<ImportLogic>();
