@@ -1,53 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+	<!-- Shared metadata, item excludes, and the SkiaGum source links live in Directory.Build.props. -->
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-
 		<PackageId>Gum.Shapes.KNI</PackageId>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-
-		<Version>2026.4.5.1</Version>
-		<NoWarn>1591</NoWarn>
-
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Remove="bin\**" />
-		<Compile Remove="obj\**" />
-		<Compile Remove="XnbTest\**" />
-		<EmbeddedResource Remove="bin\**" />
-		<EmbeddedResource Remove="obj\**" />
-		<EmbeddedResource Remove="XnbTest\**" />
-		<None Remove="bin\**" />
-		<None Remove="obj\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
-		<Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
-		<Compile Include="..\SkiaGum\GueDeriving\LineRuntime.cs" Link="GueDeriving\LineRuntime.cs" />
-		<Compile Include="..\SkiaGum\GueDeriving\RoundedRectangleRuntime.cs" Link="GueDeriving\RoundedRectangleRuntime.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<!--
-			As of Apos.Shapes.KNI 0.7.2 the shader is precompiled and embedded in the assembly —
-			no content pipeline, no buildTransitive content, no PrivateAssets blocking needed
-			(see issue #4020). The precompiled apos-shapes.xnb workaround this csproj used to
-			ship is gone; consumers just reference the package.
-
-			Bumped from 0.7.10 to 0.8.1 for issue #4473 (RectangleRuntime crashed on macOS/Linux
-			GL drivers under the pinned 0.7.10 shader). 0.7.11's DrawRing second-radius semantics
-			change (rings would render 2x thicker) is compensated for in Arc.cs's DrawRing call —
-			see AposShapeGeometryTests for the pixel-level regression guard.
-		-->
-		<PackageReference Include="Apos.Shapes.KNI" Version="0.8.1" />
+		<PackageReference Include="Apos.Shapes.KNI" Version="$(AposShapesVersion)" />
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" PrivateAssets="All" />
@@ -58,27 +17,12 @@
 		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" PrivateAssets="All" />
 		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" PrivateAssets="All" />
-
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
 	</ItemGroup>
 
-	<!--
-		Bundle the Gum.Analyzers Roslyn analyzer DLL into this package so NuGet consumers
-		get GUM001 namespace-migration warnings + code fixes. This is NOT a ProjectReference
-		because we do not want source-linkers' .sln files to require Tools/Gum.Analyzers/
-		to build. The analyzer is built independently (e.g. via AllLibraries.sln /
-		GumFull.sln) and the Exists() guard makes this include a no-op if the DLL is not
-		present, so source-only builds keep working with zero impact.
-	-->
-	<ItemGroup Condition="'$(IncludeAnalyzers)' != 'false' AND Exists('..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll')">
-	  <None Include="..\..\Tools\Gum.Analyzers\bin\$(Configuration)\netstandard2.0\Gum.Analyzers.dll"
-		    Pack="true"
-		    PackagePath="analyzers/dotnet/cs/"
-		    Visible="false" />
-	</ItemGroup>
-
+	<Import Project="..\RuntimePackage.Analyzers.props" />
 
 </Project>

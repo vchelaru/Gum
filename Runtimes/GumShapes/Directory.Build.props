@@ -3,8 +3,68 @@
   <PropertyGroup>
     <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'KniGumShapes'">obj\KNI\</BaseIntermediateOutputPath>
     <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'KniGumShapes'">bin\KNI\</BaseOutputPath>
-    
+
     <BaseIntermediateOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGumShapes'">obj\MonoGame\</BaseIntermediateOutputPath>
     <BaseOutputPath Condition="'$(MSBuildProjectName)' == 'MonoGameGumShapes'">bin\MonoGame\</BaseOutputPath>
+
+    <!--
+      Both projects live in this one folder, so each one's default item globs would otherwise
+      pick up the OTHER one's generated sources. The SDK's own DefaultItemExcludes only covers
+      the project's own BaseOutputPath/BaseIntermediateOutputPath, which the redirects above
+      have narrowed to bin\KNI\ + obj\KNI\ (or bin\MonoGame\ + obj\MonoGame\) — so e.g.
+      obj\KNI\Debug\net8.0\KniGumShapes.AssemblyInfo.cs is not excluded from MonoGameGumShapes
+      and would compile into it as a duplicate assembly attribute. Exclude bin and obj wholesale.
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);bin\**;obj\**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <!--
+    Shared NuGet package metadata for the two Apos.Shapes-backed shape packages
+    (Gum.Shapes.MonoGame / Gum.Shapes.KNI). They are a coupled pair — released together and
+    bumped in lockstep in every commit since they were split — so Version lives here too.
+    PackageId and the platform PackageReferences stay in each csproj.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>2026.4.5.1</Version>
+    <NoWarn>1591</NoWarn>
+
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      One version for both packages: MonoGameGumShapes references Apos.Shapes and KniGumShapes
+      references Apos.Shapes.KNI, but the two must stay on the same version — the shared runtime
+      sources linked below are written against one shader/API generation.
+
+      As of Apos.Shapes 0.7.2 the shader is precompiled and embedded in the assembly — no content
+      pipeline, no buildTransitive content, no PrivateAssets blocking needed (see issue #4020).
+      The precompiled apos-shapes.xnb workaround these csprojs used to ship is gone; consumers
+      just reference the package.
+
+      Bumped from 0.7.10 to 0.8.1 for issue #4473 (RectangleRuntime crashed on macOS/Linux GL
+      drivers under the pinned 0.7.10 shader). 0.7.11's DrawRing second-radius semantics change
+      (rings would render 2x thicker) is compensated for in Arc.cs's DrawRing call — see
+      AposShapeGeometryTests for the pixel-level regression guard.
+    -->
+    <AposShapesVersion>0.8.1</AposShapesVersion>
+  </PropertyGroup>
+
+  <!--
+    Shape runtimes shared with SkiaGum. SkiaGum is the canonical home for the Apos-specific
+    shape runtimes; see the gum-cross-platform-unification skill.
+  -->
+  <ItemGroup>
+    <Compile Include="..\SkiaGum\CustomSetPropertyOnRenderable.cs" Link="CustomSetPropertyOnRenderable.cs" />
+    <Compile Include="..\SkiaGum\GueDeriving\ArcRuntime.cs" Link="GueDeriving\ArcRuntime.cs" />
+    <Compile Include="..\SkiaGum\GueDeriving\LineRuntime.cs" Link="GueDeriving\LineRuntime.cs" />
+    <Compile Include="..\SkiaGum\GueDeriving\RoundedRectangleRuntime.cs" Link="GueDeriving\RoundedRectangleRuntime.cs" />
+  </ItemGroup>
 </Project>
