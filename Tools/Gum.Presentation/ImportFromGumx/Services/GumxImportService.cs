@@ -1,6 +1,9 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
+using Gum.DataTypes.Serialization;
+using Gum.DataTypes.Serialization.Json;
+using Gum.StateAnimation.SaveClasses;
 using Gum.Commands;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Plugins.ImportPlugin.Services;
@@ -59,7 +62,7 @@ public class GumxImportService : IGumxImportService
         // The set of names is needed downstream regardless of resolution so writers can decide
         // whether to skip the file write (Skip) or skip the IImportLogic registration (Overwrite,
         // since the element is already known in-memory and will refresh on the post-import reload).
-        var conflicts = FindConflictingElements(selections, nameMap, projectDir);
+        var conflicts = FindConflictingElements(selections, nameMap, projectDir, IsDestinationJsonFormat);
         if (conflicts.Count > 0 && conflictResolution == ConflictResolution.Cancel)
         {
             result.ConflictingElements.AddRange(conflicts);
@@ -208,12 +211,12 @@ public class GumxImportService : IGumxImportService
     }
 
     /// <summary>
-    /// Copies the sibling .ganx (or JSON .ganj - issue #4182) state-animation file for each
-    /// element, if one exists in the source. The naming convention is
-    /// {elementName}Animations.ganx/.ganj, located in the same subfolder as the element file
-    /// (e.g. Components/Controls/ButtonAnimations.ganx). Both extensions are attempted - a plain
-    /// byte copy, so there's no format-specific parsing to keep in sync. Silently skips elements
-    /// that have neither file.
+    /// Copies the sibling state-animation file for each element, if one exists in the source. The
+    /// naming convention is {elementName}Animations.ganx/.ganj, located in the same subfolder as
+    /// the element file (e.g. Components/Controls/ButtonAnimations.ganx). Both source extensions
+    /// are attempted, and whichever is found is re-serialized into the destination project's own
+    /// format - a byte copy would put XML inside a .ganj the runtime then fails to parse
+    /// (issue #4595). Silently skips elements that have neither file.
     /// </summary>
     private async Task CopyGanxFilesAsync(
         IEnumerable<ElementSave> elements,
@@ -227,32 +230,49 @@ public class GumxImportService : IGumxImportService
             string sourceName = element.Name;
             string destName = nameMap.TryGetValue(sourceName, out var mapped) ? mapped : sourceName;
 
-            foreach (string extension in new[] { "ganx", "ganj" })
+            string destPath = Path.Combine(projectDir, elementSubfolder,
+                destName + ElementAnimationsSave.GetFileNameSuffix(IsDestinationJsonFormat));
+
+            foreach (bool isSourceJson in new[] { false, true })
             {
-                string relativeSourcePath = $"{elementSubfolder}/{sourceName}Animations.{extension}";
-                string destPath = Path.Combine(projectDir, elementSubfolder, $"{destName}Animations.{extension}");
+                string relativeSourcePath = $"{elementSubfolder}/{sourceName}" +
+                    ElementAnimationsSave.GetFileNameSuffix(isSourceJson);
 
                 byte[]? bytes = await _sourceService.FetchBinaryAsync(relativeSourcePath, sourceBase);
-                if (bytes != null)
+                if (bytes == null)
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-                    await File.WriteAllBytesAsync(destPath, bytes);
+                    continue;
                 }
+
+                string content = System.Text.Encoding.UTF8.GetString(bytes).TrimStart('﻿');
+                ElementAnimationsSave animations = isSourceJson
+                    ? GumAnimationJsonFileSerializer.DeserializeElementAnimations(content)
+                    : FileManager.XmlDeserializeFromStream<ElementAnimationsSave>(new MemoryStream(bytes));
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+                animations.Save(destPath);
+                break;
             }
         }
     }
 
+    /// <summary>
+    /// A conflict is a destination file that already exists, so every path here uses the
+    /// destination project's own format - in a .gumj project the existing file is a .gucj, and
+    /// probing for .gucx would report no conflict and then silently overwrite (issue #4595).
+    /// </summary>
     private static List<string> FindConflictingElements(
         ImportSelections selections,
         Dictionary<string, string> nameMap,
-        string projectDir)
+        string projectDir,
+        bool isJsonFormat)
     {
         var conflicts = new List<string>();
 
         foreach (var component in selections.TransitiveComponents.Concat(selections.DirectComponents))
         {
             string destName = nameMap.TryGetValue(component.Name, out var mapped) ? mapped : component.Name;
-            string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
+            string destPath = Path.Combine(projectDir, "Components", destName + "." + ComponentExtension(isJsonFormat));
             if (File.Exists(destPath))
                 conflicts.Add(destName);
         }
@@ -260,14 +280,14 @@ public class GumxImportService : IGumxImportService
         foreach (var screen in selections.DirectScreens)
         {
             string destName = nameMap.TryGetValue(screen.Name, out var mapped) ? mapped : screen.Name;
-            string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
+            string destPath = Path.Combine(projectDir, "Screens", destName + "." + ScreenExtension(isJsonFormat));
             if (File.Exists(destPath))
                 conflicts.Add(destName);
         }
 
         foreach (var behavior in selections.Behaviors)
         {
-            string destPath = Path.Combine(projectDir, "Behaviors", $"{behavior.Name}.{BehaviorReference.Extension}");
+            string destPath = Path.Combine(projectDir, "Behaviors", behavior.Name + "." + BehaviorExtension(isJsonFormat));
             if (File.Exists(destPath))
                 conflicts.Add(behavior.Name);
         }
@@ -339,10 +359,14 @@ public class GumxImportService : IGumxImportService
         string sourceBase,
         string projectDir)
     {
-        string relativeSrc = $"Standards/{standard.Name}.{GumProjectSave.StandardExtension}";
-        string destPath = Path.Combine(projectDir, "Standards", $"{standard.Name}.{GumProjectSave.StandardExtension}");
+        // Source extension follows the SOURCE project's format, destination the destination's -
+        // the two are independent, so this is a re-serialize rather than a copy (issue #4595).
+        bool isSourceJson = GumProjectSave.IsJsonFormat(source.FullFileName ?? "");
+        string relativeSrc = $"Standards/{standard.Name}." + StandardExtension(isSourceJson);
+        string destPath = Path.Combine(projectDir, "Standards",
+            standard.Name + "." + StandardExtension(IsDestinationJsonFormat));
 
-        if (await CopyElementFileAsync(relativeSrc, sourceBase, destPath))
+        if (await CopyElementFileAsync<StandardElementSave>(relativeSrc, sourceBase, destPath))
         {
             // Standards are not imported via IImportLogic — they are loaded on project reload.
             // Ensure the destination directory exists (done inside CopyElementFileAsync).
@@ -379,7 +403,8 @@ public class GumxImportService : IGumxImportService
         {
             // Element is already in the destination project; bypass IImportLogic registration
             // and write the file directly. The post-import save+reload picks up the new content.
-            string destPath = Path.Combine(projectDir, "Components", $"{destName}.{GumProjectSave.ComponentExtension}");
+            string destPath = Path.Combine(projectDir, "Components",
+                destName + "." + ComponentExtension(IsDestinationJsonFormat));
             WriteElementToDisk(clone, destPath);
         }
         else
@@ -413,7 +438,8 @@ public class GumxImportService : IGumxImportService
 
         if (isConflict && conflictResolution == ConflictResolution.Overwrite)
         {
-            string destPath = Path.Combine(projectDir, "Screens", $"{destName}.{GumProjectSave.ScreenExtension}");
+            string destPath = Path.Combine(projectDir, "Screens",
+                destName + "." + ScreenExtension(IsDestinationJsonFormat));
             WriteElementToDisk(clone, destPath);
         }
         else
@@ -534,13 +560,17 @@ public class GumxImportService : IGumxImportService
         bool isConflict = conflictNameSet.Contains(behavior.Name);
         if (isConflict && conflictResolution == ConflictResolution.Skip) { return; }
 
+        // Source extension follows the SOURCE project's format, destination the destination's
+        // (issue #4595).
+        bool isSourceJson = GumProjectSave.IsJsonFormat(source.FullFileName ?? "");
         var matchingReference = source.BehaviorReferences?.FirstOrDefault(item => item.Name == behavior.Name);
         string relativeSrc = matchingReference != null
-            ? matchingReference.GetRelativeFilePath()
-            : $"Behaviors/{behavior.Name}.{BehaviorReference.Extension}";
-        string destPath = Path.Combine(projectDir, "Behaviors", $"{behavior.Name}.{BehaviorReference.Extension}");
+            ? matchingReference.GetRelativeFilePath(isSourceJson)
+            : $"Behaviors/{behavior.Name}." + BehaviorExtension(isSourceJson);
+        string destPath = Path.Combine(projectDir, "Behaviors",
+            behavior.Name + "." + BehaviorExtension(IsDestinationJsonFormat));
 
-        if (await CopyElementFileAsync(relativeSrc, sourceBase, destPath) && !isConflict)
+        if (await CopyBehaviorFileAsync(relativeSrc, sourceBase, destPath) && !isConflict)
         {
             _importLogic.ImportBehavior(new FilePath(destPath), saveProject: false);
         }
@@ -550,13 +580,77 @@ public class GumxImportService : IGumxImportService
     /// Standards path: file-copy preserves the source XML byte-for-byte. Standards are not
     /// renamed during import, so no in-memory mutation is required.
     /// </summary>
-    private async Task<bool> CopyElementFileAsync(string relativeSourcePath, string sourceBase, string destPath)
+    /// <summary>
+    /// Fetches a source element/behavior file and writes it to <paramref name="destPath"/> in the
+    /// destination project's own format. The source and destination formats are independent - a
+    /// .gumx source imported into a .gumj project has to be re-serialized, not byte-copied, or the
+    /// destination gets XML inside a .gucj the project can never load (issue #4595).
+    /// </summary>
+    private async Task<bool> CopyElementFileAsync<T>(string relativeSourcePath, string sourceBase, string destPath)
+        where T : ElementSave, new()
     {
         string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
         if (content == null) return false;
 
         Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
-        await File.WriteAllTextAsync(destPath, content);
+
+        T? element = DeserializeElementText<T>(relativeSourcePath, content);
+        if (element == null) return false;
+
+        element.Save(destPath, UseCompact);
         return true;
     }
+
+    /// <summary>Behavior counterpart of <see cref="CopyElementFileAsync{T}"/>.</summary>
+    private async Task<bool> CopyBehaviorFileAsync(string relativeSourcePath, string sourceBase, string destPath)
+    {
+        string? content = await _sourceService.FetchElementTextAsync(relativeSourcePath, sourceBase);
+        if (content == null) return false;
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
+
+        BehaviorSave? behavior =
+            string.Equals(FileManager.GetExtension(relativeSourcePath), BehaviorReference.JsonExtension,
+                StringComparison.OrdinalIgnoreCase)
+                ? GumJsonFileSerializer.DeserializeBehavior(content)
+                : GumFileSerializer.DeserializeBehaviorSave(content, GumProjectSave.NativeVersion);
+        if (behavior == null) return false;
+
+        behavior.Save(destPath, UseCompact);
+        return true;
+    }
+
+    /// <summary>
+    /// Deserializes element text whose format is decided by <paramref name="relativeSourcePath"/>'s
+    /// own extension - the source project's format, which need not match the destination's.
+    /// </summary>
+    private static T? DeserializeElementText<T>(string relativeSourcePath, string content)
+        where T : ElementSave, new()
+    {
+        string extension = FileManager.GetExtension(relativeSourcePath);
+        string jsonExtension = new T().GetFileExtension(isJsonFormat: true);
+
+        return string.Equals(extension, jsonExtension, StringComparison.OrdinalIgnoreCase)
+            ? GumJsonFileSerializer.DeserializeElement<T>(content)
+            : GumFileSerializer.DeserializeElementSave<T>(content, GumProjectSave.NativeVersion);
+    }
+
+    private static string ComponentExtension(bool isJsonFormat) =>
+        isJsonFormat ? GumProjectSave.ComponentJsonExtension : GumProjectSave.ComponentExtension;
+
+    private static string ScreenExtension(bool isJsonFormat) =>
+        isJsonFormat ? GumProjectSave.ScreenJsonExtension : GumProjectSave.ScreenExtension;
+
+    private static string StandardExtension(bool isJsonFormat) =>
+        isJsonFormat ? GumProjectSave.StandardJsonExtension : GumProjectSave.StandardExtension;
+
+    private static string BehaviorExtension(bool isJsonFormat) =>
+        isJsonFormat ? BehaviorReference.JsonExtension : BehaviorReference.Extension;
+
+    /// <summary>True when the destination project is JSON-formatted (.gumj).</summary>
+    private bool IsDestinationJsonFormat =>
+        GumProjectSave.IsJsonFormat(_projectState.GumProjectSave?.FullFileName ?? "");
+
+    private bool UseCompact =>
+        _projectState.GumProjectSave?.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion;
 }

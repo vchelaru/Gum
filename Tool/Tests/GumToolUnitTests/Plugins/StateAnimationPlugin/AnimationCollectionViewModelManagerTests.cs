@@ -77,6 +77,69 @@ public class AnimationCollectionViewModelManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void GetElementAnimationsSave_deserializes_ganj_as_json()
+    {
+        // Issue #4595: the path was resolved as .ganj for a JSON project but the file was still
+        // read with the XML deserializer, so a converted project's animations came back empty and
+        // the next save overwrote them.
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        FilePath ganjPath = new FilePath(Path.Combine(_tempDirectory, "FooAnimations.ganj"));
+
+        ElementAnimationsSave toWrite = new ElementAnimationsSave { ElementName = "Foo" };
+        toWrite.Animations.Add(new AnimationSave { Name = "Walk", Loops = true });
+        toWrite.Save(ganjPath.FullPath);
+
+        _animationFilePathService
+            .Setup(x => x.GetAbsoluteAnimationFileNameFor(It.IsAny<ElementSave>()))
+            .Returns(ganjPath);
+
+        ElementAnimationsSave? loaded = _manager.GetElementAnimationsSave(element);
+
+        loaded.ShouldNotBeNull();
+        loaded.Animations.Count.ShouldBe(1);
+        loaded.Animations[0].Name.ShouldBe("Walk");
+        loaded.Animations[0].Loops.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SaveElementAnimations_writes_json_when_path_is_ganj()
+    {
+        // The write side of the same bug: XML written to a .ganj path parses in the tool but breaks
+        // the runtime's animation loader, which JSON-deserializes every *Animations.ganj it finds.
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        FilePath ganjPath = new FilePath(Path.Combine(_tempDirectory, "FooAnimations.ganj"));
+        _animationFilePathService
+            .Setup(x => x.GetAbsoluteAnimationFileNameFor(It.IsAny<ElementSave>()))
+            .Returns(ganjPath);
+
+        ElementAnimationsSave toWrite = new ElementAnimationsSave { ElementName = "Foo" };
+        toWrite.Animations.Add(new AnimationSave { Name = "Walk" });
+
+        _manager.SaveElementAnimations(element, toWrite);
+
+        File.ReadAllText(ganjPath.FullPath).TrimStart('\uFEFF', ' ', '\r', '\n').ShouldStartWith("{");
+        ElementAnimationsSave.Load(ganjPath.FullPath).Animations[0].Name.ShouldBe("Walk");
+    }
+
+    [Fact]
+    public void SaveElementAnimations_writes_xml_when_path_is_ganx()
+    {
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        FilePath ganxPath = new FilePath(Path.Combine(_tempDirectory, "FooAnimations.ganx"));
+        _animationFilePathService
+            .Setup(x => x.GetAbsoluteAnimationFileNameFor(It.IsAny<ElementSave>()))
+            .Returns(ganxPath);
+
+        ElementAnimationsSave toWrite = new ElementAnimationsSave { ElementName = "Foo" };
+        toWrite.Animations.Add(new AnimationSave { Name = "Walk" });
+
+        _manager.SaveElementAnimations(element, toWrite);
+
+        File.ReadAllText(ganxPath.FullPath).TrimStart('\uFEFF', ' ', '\r', '\n').ShouldStartWith("<");
+        ElementAnimationsSave.Load(ganxPath.FullPath).Animations[0].Name.ShouldBe("Walk");
+    }
+
+    [Fact]
     public void GetElementAnimationsSave_returns_null_when_file_missing()
     {
         ComponentSave element = new ComponentSave { Name = "Foo" };

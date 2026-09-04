@@ -12,6 +12,8 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using ToolsUtilities;
+using Gum.StateAnimation.SaveClasses;
+using System.Linq;
 
 namespace GumToolUnitTests.Plugins.ImportFromGumxPlugin;
 
@@ -30,6 +32,7 @@ public class GumxImportServiceTests : IDisposable
     private readonly FakeImportLogic _importLogic;
     private readonly FakeFileCommands _fileCommands = new();
     private readonly FakeProjectState _projectState;
+    private readonly GumProjectSave _gumProject;
 
     // ── system under test ─────────────────────────────────────────────────
     private readonly GumxSourceService _sourceService = new();
@@ -43,8 +46,8 @@ public class GumxImportServiceTests : IDisposable
         Directory.CreateDirectory(_projectDir);
         Directory.CreateDirectory(_sourceDir);
 
-        var gumProject = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx") };
-        _projectState  = new FakeProjectState(_projectDir, gumProject);
+        _gumProject = new GumProjectSave { FullFileName = Path.Combine(_projectDir, "Test.gumx") };
+        _projectState  = new FakeProjectState(_projectDir, _gumProject);
         _importLogic   = new FakeImportLogic(_projectDir);
 
         _sut = new GumxImportService(_importLogic, _projectState, _fileCommands, _sourceService);
@@ -186,33 +189,100 @@ public class GumxImportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ImportAsync_CopiesJsonAnimationSidecar_WhenSourceHasGanjFile()
+    public async Task ImportAsync_ConvertsJsonAnimationSidecarToXml_WhenDestinationProjectIsXmlFormat()
     {
-        // Issue #4182: importing from a source project whose animations were converted to JSON
-        // must copy the .ganj sidecar the same way .ganx already is - both are a plain byte copy,
-        // no format-specific parsing involved.
+        // Issue #4182 made the .ganj sidecar importable at all; issue #4595 made it land in the
+        // DESTINATION project's format. A .ganj byte-copied into a .gumx project is invisible to
+        // the Animations tab, which resolves the sidecar off the open project's format - so the
+        // source's JSON is re-serialized as XML here, animations intact.
         string componentName = "AnimatedButton";
         WriteSourceComponent(componentName);
-        string sourceGanjPath = Path.Combine(_sourceDir, "Components", $"{componentName}Animations.ganj");
-        File.WriteAllText(sourceGanjPath, "{}");
+        WriteSourceAnimationSidecar(componentName, isJsonFormat: true, animationName: "Blink");
 
         ComponentSave component = ComponentNoAssets(componentName);
         GumProjectSave source = SourceProject();
         source.Components.Add(component);
 
-        ImportSelections selections = new ImportSelections
-        {
-            DirectComponents = new() { component },
-            TransitiveComponents = new(),
-            DirectScreens = new(),
-            Behaviors = new(),
-            Standards = new(),
-        };
-
-        await _sut.ImportAsync(selections, source, _sourceDir, destinationSubfolder: "");
+        await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "");
 
         string destGanjPath = Path.Combine(_projectDir, "Components", $"{componentName}Animations.ganj");
+        string destGanxPath = Path.Combine(_projectDir, "Components", $"{componentName}Animations.ganx");
+        File.Exists(destGanjPath).ShouldBeFalse();
+        File.Exists(destGanxPath).ShouldBeTrue();
+        ElementAnimationsSave.Load(destGanxPath).Animations.Single().Name.ShouldBe("Blink");
+    }
+
+    [Fact]
+    public async Task ImportAsync_ConvertsXmlAnimationSidecarToJson_WhenDestinationProjectIsJsonFormat()
+    {
+        // The mirror of the test above: a .gumj destination receives .ganj, whatever the source was.
+        // A byte-copied .ganx here would be silently ignored by the tool, and a byte-copied XML
+        // payload written to a .ganj path would break the runtime's JSON animation loader.
+        _gumProject.FullFileName = Path.Combine(_projectDir, "Test.gumj");
+
+        string componentName = "AnimatedButton";
+        WriteSourceComponent(componentName);
+        WriteSourceAnimationSidecar(componentName, isJsonFormat: false, animationName: "Blink");
+
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        await _sut.ImportAsync(SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "");
+
+        string destGanjPath = Path.Combine(_projectDir, "Components", $"{componentName}Animations.ganj");
+        string destGanxPath = Path.Combine(_projectDir, "Components", $"{componentName}Animations.ganx");
+        File.Exists(destGanxPath).ShouldBeFalse();
         File.Exists(destGanjPath).ShouldBeTrue();
+        ElementAnimationsSave.Load(destGanjPath).Animations.Single().Name.ShouldBe("Blink");
+    }
+
+    [Fact]
+    public async Task ImportAsync_OverwriteResolution_WritesConflictingComponentInDestinationFormat_WhenProjectIsJsonFormat()
+    {
+        // The Overwrite path is the one GumxImportService writes itself (it bypasses IImportLogic),
+        // so the destination extension is its own decision. A .gumj project only ever loads .gucj,
+        // so writing .gucx here would silently discard the import (issue #4595).
+        _gumProject.FullFileName = Path.Combine(_projectDir, "Test.gumj");
+        _importLogic.IsJsonFormat = true;
+
+        string componentName = "JsonDestButton";
+        WriteSourceComponent(componentName);
+
+        Directory.CreateDirectory(Path.Combine(_projectDir, "Components"));
+        string destJsonPath = Path.Combine(_projectDir, "Components", $"{componentName}.gucj");
+        new ComponentSave { Name = componentName }.Save(destJsonPath);
+
+        ComponentSave component = ComponentNoAssets(componentName);
+        GumProjectSave source = SourceProject();
+        source.Components.Add(component);
+
+        ImportResult result = await _sut.ImportAsync(
+            SelectionsForComponent(component), source, _sourceDir, destinationSubfolder: "",
+            conflictResolution: ConflictResolution.Overwrite);
+
+        // The pre-existing .gucj must have been seen as the conflict, and the overwrite must have
+        // landed on it rather than creating a stray .gucx alongside.
+        result.ConflictingElements.ShouldBeEmpty();
+        File.Exists(Path.Combine(_projectDir, "Components", $"{componentName}.gucx")).ShouldBeFalse();
+        File.Exists(destJsonPath).ShouldBeTrue();
+    }
+
+    private static ImportSelections SelectionsForComponent(ComponentSave component) => new()
+    {
+        DirectComponents = new() { component },
+        TransitiveComponents = new(),
+        DirectScreens = new(),
+        Behaviors = new(),
+        Standards = new(),
+    };
+
+    private void WriteSourceAnimationSidecar(string componentName, bool isJsonFormat, string animationName)
+    {
+        ElementAnimationsSave animations = new();
+        animations.Animations.Add(new AnimationSave { Name = animationName });
+        animations.Save(Path.Combine(_sourceDir, "Components",
+            componentName + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat)));
     }
 
     [Fact]
@@ -487,8 +557,11 @@ public class GumxImportServiceTests : IDisposable
         // (mirrors how FormsTemplate/Bubblegum link out to a shared Behaviors location).
         string sharedDir = Path.Combine(Path.GetDirectoryName(_sourceDir)!, "GumSharedBehaviors_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(sharedDir);
-        const string sharedContent = "<BehaviorSave><Name>LinkedBehavior</Name><Marker>shared</Marker></BehaviorSave>";
-        File.WriteAllText(Path.Combine(sharedDir, "LinkedBehavior.behx"), sharedContent);
+        // A real BehaviorSave field carries the marker: the import re-serializes into the
+        // destination project's own format rather than byte-copying (issue #4595), so only
+        // round-trippable content survives.
+        new BehaviorSave { Name = "LinkedBehavior", DefaultImplementation = "Shared/Linked" }
+            .Save(Path.Combine(sharedDir, "LinkedBehavior.behx"));
 
         try
         {
@@ -516,7 +589,9 @@ public class GumxImportServiceTests : IDisposable
             // Assert
             string destPath = Path.Combine(_projectDir, "Behaviors", "LinkedBehavior.behx");
             File.Exists(destPath).ShouldBeTrue();
-            File.ReadAllText(destPath).ShouldBe(sharedContent);
+            BehaviorSave imported = BehaviorReference.DeserializeBehavior(destPath, GumProjectSave.NativeVersion);
+            imported.Name.ShouldBe("LinkedBehavior");
+            imported.DefaultImplementation.ShouldBe("Shared/Linked");
             _importLogic.ImportedBehaviorPaths.ShouldContain(destPath);
         }
         finally
@@ -575,12 +650,12 @@ public class GumxImportServiceTests : IDisposable
         string destBehaviorDir = Path.Combine(_projectDir, "Behaviors");
         Directory.CreateDirectory(destBehaviorDir);
         string destPath = Path.Combine(destBehaviorDir, $"{behaviorName}.{BehaviorReference.Extension}");
-        File.WriteAllText(destPath, "<BehaviorSave><Name>Clickable</Name><Marker>original</Marker></BehaviorSave>");
+        new BehaviorSave { Name = behaviorName, DefaultImplementation = "Original" }.Save(destPath);
 
         string srcDir = Path.Combine(_sourceDir, "Behaviors");
         Directory.CreateDirectory(srcDir);
-        const string newContent = "<BehaviorSave><Name>Clickable</Name><Marker>updated</Marker></BehaviorSave>";
-        File.WriteAllText(Path.Combine(srcDir, $"{behaviorName}.{BehaviorReference.Extension}"), newContent);
+        new BehaviorSave { Name = behaviorName, DefaultImplementation = "Updated" }
+            .Save(Path.Combine(srcDir, $"{behaviorName}.{BehaviorReference.Extension}"));
 
         BehaviorSave behavior = new BehaviorSave { Name = behaviorName };
         GumProjectSave source = SourceProject();
@@ -602,7 +677,8 @@ public class GumxImportServiceTests : IDisposable
 
         // Assert
         result.ConflictingElements.ShouldBeEmpty();
-        File.ReadAllText(destPath).ShouldBe(newContent);
+        BehaviorReference.DeserializeBehavior(destPath, GumProjectSave.NativeVersion)
+            .DefaultImplementation.ShouldBe("Updated");
         _importLogic.ImportedBehaviorPaths.ShouldBeEmpty();
     }
 
@@ -929,6 +1005,16 @@ public class GumxImportServiceTests : IDisposable
 
         public FakeImportLogic(string projectDir) { _projectDir = projectDir; }
 
+        /// <summary>
+        /// The real ImportLogic saves through IFileCommands, which resolves the extension off the
+        /// open project's format. Mirror that here so a .gumj-destination test sees .gucj/.gusj,
+        /// as it would in the tool (issue #4595).
+        /// </summary>
+        public bool IsJsonFormat { get; set; }
+
+        private string ExtensionFor(string xmlExtension) =>
+            IsJsonFormat ? xmlExtension.Substring(0, xmlExtension.Length - 1) + "j" : xmlExtension;
+
         public List<string> ImportedComponentPaths { get; } = new();
         public List<string> ImportedScreenPaths    { get; } = new();
         public List<string> ImportedBehaviorPaths  { get; } = new();
@@ -947,7 +1033,7 @@ public class GumxImportServiceTests : IDisposable
         {
             _registeredComponents.Add(component);
             string destPath = Path.Combine(
-                _projectDir, "Components", $"{component.Name}.{GumProjectSave.ComponentExtension}");
+                _projectDir, "Components", $"{component.Name}.{ExtensionFor(GumProjectSave.ComponentExtension)}");
             Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             component.Save(destPath, useCompactFormat: true);
             ImportedComponentPaths.Add(destPath);
@@ -964,7 +1050,7 @@ public class GumxImportServiceTests : IDisposable
         {
             _registeredScreens.Add(screen);
             string destPath = Path.Combine(
-                _projectDir, "Screens", $"{screen.Name}.{GumProjectSave.ScreenExtension}");
+                _projectDir, "Screens", $"{screen.Name}.{ExtensionFor(GumProjectSave.ScreenExtension)}");
             Directory.CreateDirectory(Path.GetDirectoryName(destPath)!);
             screen.Save(destPath, useCompactFormat: true);
             ImportedScreenPaths.Add(destPath);

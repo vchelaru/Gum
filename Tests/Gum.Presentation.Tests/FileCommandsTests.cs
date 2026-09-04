@@ -384,6 +384,63 @@ public class FileCommandsTests : BaseTestClass
         File.Exists(Path.Combine(newDir, "DialogueScreen.gusx")).ShouldBeTrue();
     }
 
+    [Fact]
+    public void GetFullFileName_ShouldReturnJsonExtension_WhenProjectIsJsonFormat()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumj");
+        ComponentSave component = new() { Name = "MyComponent" };
+
+        FilePath result = _fileCommands.GetFullFileName(component);
+
+        FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
+        FilePath expected = expectedDirectory.Original + "Components\\MyComponent.gucj";
+        result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void GetFullPathXmlFile_ForBehavior_ShouldReturnJsonExtension_WhenProjectIsJsonFormat()
+    {
+        _tempDirectory = CreateTempDirectory();
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumj");
+        _gumProject.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+
+        FilePath result = _fileCommands.GetFullPathXmlFile(behavior);
+
+        FilePath expectedDirectory = FileManager.GetDirectory(_gumProject.FullFileName);
+        FilePath expected = expectedDirectory.Original + "Behaviors\\ButtonBehavior.behj";
+        result.FullPath.ShouldBe(expected.FullPath);
+    }
+
+    [Fact]
+    public void ForceSaveElement_ShouldWriteJsonFile_WhenProjectIsJsonFormat()
+    {
+        _tempDirectory = CreateTempDirectory();
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, "Components"));
+        _gumProject.FullFileName = Path.Combine(_tempDirectory, "MyProject.gumj");
+
+        ComponentSave component = new() { Name = "MyComponent" };
+        component.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default" });
+        _gumProject.Components.Add(component);
+        _gumProject.ComponentReferences.Add(new ElementReference
+        {
+            Name = "MyComponent",
+            ElementType = ElementType.Component
+        });
+
+        bool isNew;
+        _projectManager.Setup(p => p.AskUserForProjectNameIfNecessary(out isNew)).Returns(true);
+
+        _fileCommands.ForceSaveElement(component);
+
+        string jsonPath = Path.Combine(_tempDirectory, "Components", "MyComponent.gucj");
+        string xmlPath = Path.Combine(_tempDirectory, "Components", "MyComponent.gucx");
+
+        File.Exists(xmlPath).ShouldBeFalse("An XML .gucx file must NOT be written for a .gumj project");
+        File.Exists(jsonPath).ShouldBeTrue("The component must be saved as .gucj");
+    }
+
     #region Helpers
 
     private static string CreateResxContent(Dictionary<string, string> entries)

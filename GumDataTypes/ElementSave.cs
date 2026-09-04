@@ -91,6 +91,23 @@ namespace Gum.DataTypes
             get;
         }
 
+        /// <summary>
+        /// <see cref="FileExtension"/> (XML) or its JSON counterpart, matching the project's actual
+        /// format. Every JSON element extension is its XML counterpart with the trailing "x" swapped
+        /// for "j" (gusx-&gt;gusj, gucx-&gt;gucj, gutx-&gt;gutj), the same convention used by
+        /// <see cref="ElementReference.GetExtension(bool)"/>.
+        /// <para>
+        /// Any code composing an element's on-disk path must use this rather than
+        /// <see cref="FileExtension"/> directly - writing to the XML path inside a .gumj project
+        /// saves content the project never loads back (issue #4595).
+        /// </para>
+        /// </summary>
+        public string GetFileExtension(bool isJsonFormat)
+        {
+            string extension = FileExtension;
+            return isJsonFormat ? extension.Substring(0, extension.Length - 1) + "j" : extension;
+        }
+
         [XmlIgnore]
         public StateSave DefaultState
         {
@@ -205,10 +222,8 @@ namespace Gum.DataTypes
         public void Save(string fileName, bool useCompactFormat = false)
         {
             // No content-sniffing between XML and JSON - the target file's own extension decides
-            // the format, symmetric with ElementReference.DeserializeElement. Every JSON element
-            // extension is its XML counterpart with the trailing "x" swapped for "j"
-            // (gusx->gusj, gucx->gucj, gutx->gutj).
-            string jsonExtension = FileExtension.Substring(0, FileExtension.Length - 1) + "j";
+            // the format, symmetric with ElementReference.DeserializeElement.
+            string jsonExtension = GetFileExtension(isJsonFormat: true);
             bool isJsonFormat = string.Equals(FileManager.GetExtension(fileName), jsonExtension, StringComparison.OrdinalIgnoreCase);
             if (isJsonFormat)
             {

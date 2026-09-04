@@ -29,7 +29,9 @@ public static class ElementSaveExtensionMethodsGumTool
             return null;
         }
 
-        var extension = elementSave.FileExtension;
+        // Extension follows the open project's own format so a .gumj project resolves
+        // .gusj/.gucj/.gutj (issue #4595).
+        var extension = elementSave.GetFileExtension(GumProjectSave.IsJsonFormat(gumProject.FullFileName));
 
         var reference =
             gumProject.ScreenReferences.FirstOrDefault(item => item.Name == elementSave.Name) ??

@@ -1,3 +1,4 @@
+using Gum.StateAnimation.SaveClasses;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using StateAnimationPlugin.Managers;
@@ -19,14 +20,16 @@ public static class AnimationTabRefreshLogic
 {
     /// <summary>
     /// Decides whether an on-disk file change should live-reload the Animations tab (issue #3410):
-    /// true only when <paramref name="changedFile"/> is a <c>.ganx</c> and is the selected element's
-    /// own animation sidecar (<paramref name="selectedElementAnimationFile"/>). Other elements' .ganx
-    /// files reload lazily when that element is next selected, so they are ignored here.
+    /// true only when <paramref name="changedFile"/> is an animation sidecar (<c>.ganx</c> or its
+    /// JSON counterpart <c>.ganj</c>) and is the selected element's own sidecar
+    /// (<paramref name="selectedElementAnimationFile"/>). Other elements' sidecars reload lazily
+    /// when that element is next selected, so they are ignored here.
     /// </summary>
     public static bool ShouldReloadAnimationsForChangedFile(FilePath changedFile,
         FilePath? selectedElementAnimationFile)
     {
-        if (changedFile.Extension != "ganx")
+        if (changedFile.Extension != ElementAnimationsSave.FileExtension &&
+            changedFile.Extension != ElementAnimationsSave.JsonFileExtension)
         {
             return false;
         }

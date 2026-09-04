@@ -70,6 +70,31 @@ public class CheckReferencesCommandTests : IDisposable
         result.ExitCode.ShouldBe(2);
     }
 
+    [Fact]
+    public void CheckReferences_WithFix_OnJsonProject_RewritesTheJsonElement()
+    {
+        // Issue #4595: --fix reconstructed the element's save path from the XML extension, so on a
+        // .gumj project it wrote a .gucx the project never loads - reporting "fixed" while the
+        // real .gucj kept the broken reference.
+        string xmlPath = CreateProjectWithUnpropagatedComponent("FixJson");
+        CliTestHelper.Run("convert-to-json", xmlPath).ExitCode.ShouldBe(0);
+
+        string jsonProjectPath = Path.ChangeExtension(xmlPath, ".gumj");
+        string componentDir = Path.Combine(Path.GetDirectoryName(xmlPath)!, "Components");
+
+        // Delete the XML siblings so a stale-file read cannot mask the bug.
+        File.Delete(xmlPath);
+        File.Delete(Path.Combine(componentDir, "BadComponent.gucx"));
+
+        CliTestHelper result = CliTestHelper.Run("check-references", jsonProjectPath, "--fix");
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(Path.Combine(componentDir, "BadComponent.gucx"))
+            .ShouldBeFalse("--fix must not resurrect an XML file inside a JSON project");
+        File.ReadAllText(Path.Combine(componentDir, "BadComponent.gucj"))
+            .ShouldContain("\"X\"", customMessage: "the propagated scalar should be persisted in the .gucj");
+    }
+
     private string CreateTestProject(string name)
     {
         string filePath = Path.Combine(_tempDirectory, name, name + ".gumx");

@@ -77,11 +77,15 @@ namespace StateAnimationPlugin.Managers
                 }
                 var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName);
 
-                var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + "Animations.ganx");
-                
+                // Suffix follows the open project's own format so a .gumj project moves .ganj
+                // rather than looking for a .ganx that doesn't exist (issue #4595).
+                var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(gumProject.FullFileName));
+
+                var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + suffix);
+
                 if(oldFile.Exists())
                 {
-                    var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + "Animations.ganx");
+                    var newFile = new FilePath(projectDirectory + elementSave.Subfolder + "/" + elementSave.Name + suffix);
 
                     var newDirectory = newFile.GetDirectoryContainingThis();
 
@@ -184,7 +188,7 @@ namespace StateAnimationPlugin.Managers
                 {
                     try
                     {
-                        var animationSave = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
+                        var animationSave = ElementAnimationsSave.Load(fileName.FullPath);
 
                         var potentialAnimations = animationSave.Animations
                             .SelectMany(item => item.Animations)
@@ -208,7 +212,7 @@ namespace StateAnimationPlugin.Managers
 
                         if(didChange)
                         {
-                            FileManager.XmlSerialize(animationSave, fileName.FullPath);
+                            animationSave.Save(fileName.FullPath);
                         }
                     }
                     catch (Exception e)

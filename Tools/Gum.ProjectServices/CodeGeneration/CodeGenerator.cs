@@ -1,6 +1,7 @@
 using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Serialization.Json;
 using Gum.DataTypes.Variables;
 using Gum.Localization;
 using Gum.Managers;
@@ -3732,8 +3733,12 @@ public class CodeGenerator
             return null;
         }
 
-        FilePath animationFileName = fullPathXmlForElement.RemoveExtension().FullPath + "Animations.ganx";
-        
+        // Suffix follows the open project's own format so a .gumj project finds .ganj rather than
+        // silently generating code with no animations (issue #4595).
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(ObjectFinder.Self.GumProjectSave?.FullFileName ?? "");
+        FilePath animationFileName = fullPathXmlForElement.RemoveExtension().FullPath +
+            ElementAnimationsSave.GetFileNameSuffix(isJsonFormat);
+
         if (!animationFileName.Exists())
         {
             return null;
@@ -3741,7 +3746,7 @@ public class CodeGenerator
 
         try
         {
-            return FileManager.XmlDeserialize<ElementAnimationsSave>(animationFileName.FullPath);
+            return ElementAnimationsSave.Load(animationFileName.FullPath);
         }
         catch
         {

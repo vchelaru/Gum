@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Serialization.Json;
 using Gum.ProjectServices.CodeGeneration;
 using Gum.StateAnimation.SaveClasses;
 using System;
@@ -34,7 +35,10 @@ public class FileElementAnimationsProvider : IElementAnimationsProvider
             return null;
         }
 
-        FilePath animationFilePath = elementXmlPath.RemoveExtension() + "Animations.ganx";
+        // Suffix follows the project's own format so a .gumj project finds .ganj rather than
+        // silently reporting no animations (issue #4595).
+        FilePath animationFilePath = elementXmlPath.RemoveExtension() +
+            ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(project.FullFileName));
         if (!animationFilePath.Exists())
         {
             return null;
@@ -48,7 +52,7 @@ public class FileElementAnimationsProvider : IElementAnimationsProvider
             return cached.Animations;
         }
 
-        ElementAnimationsSave animations = FileManager.XmlDeserialize<ElementAnimationsSave>(fullPath);
+        ElementAnimationsSave animations = ElementAnimationsSave.Load(fullPath);
         _cache[fullPath] = new CachedAnimations(lastWriteUtc, animations);
         return animations;
     }

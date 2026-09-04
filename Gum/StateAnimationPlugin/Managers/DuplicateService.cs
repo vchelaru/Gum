@@ -1,3 +1,4 @@
+using Gum.StateAnimation.SaveClasses;
 ﻿using Gum;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -34,8 +35,12 @@ namespace StateAnimationPlugin.Managers
             ///
             var projectDirectory = FileManager.GetDirectory(project.FullFileName);
 
-            var oldFile = new FilePath(projectDirectory + oldElement.Subfolder + "/" + oldElement.Name + "Animations.ganx");
-            var newFile = new FilePath(projectDirectory + newElement.Subfolder + "/" + newElement.Name + "Animations.ganx");
+            // Suffix follows the open project's own format so a .gumj project duplicates .ganj
+            // rather than looking for a .ganx that doesn't exist (issue #4595).
+            var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(project.FullFileName));
+
+            var oldFile = new FilePath(projectDirectory + oldElement.Subfolder + "/" + oldElement.Name + suffix);
+            var newFile = new FilePath(projectDirectory + newElement.Subfolder + "/" + newElement.Name + suffix);
 
             if (oldFile.Exists())
             {

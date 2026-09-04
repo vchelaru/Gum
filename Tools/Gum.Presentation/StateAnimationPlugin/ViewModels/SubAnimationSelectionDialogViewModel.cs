@@ -80,7 +80,7 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
 
             try
             {
-                save = FileManager.XmlDeserialize<ElementAnimationsSave>(fileName.FullPath);
+                save = ElementAnimationsSave.Load(fileName.FullPath);
             }
             catch (Exception exception)
             {
