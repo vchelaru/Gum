@@ -23,12 +23,12 @@ dotnet add package Gum.Stride --prerelease
 ```
 
 {% hint style="info" %}
-`Gum.Stride` has published preview versions only so far, which is why the version above is spelled out. NuGet also needs to be told to include prereleases when it searches: pass `--prerelease` on the command line, or check **Include prerelease** in the Visual Studio NuGet window.
+`Gum.Stride` has published preview versions only so far, so the version is spelled out above. To find the package in a search, pass `--prerelease` on the command line, or check **Include prerelease** in the Visual Studio NuGet window.
 {% endhint %}
 
-`Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, and focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
+`Gum.Stride` renders through SkiaSharp and adds real Forms input (mouse, keyboard, gamepad, focus) through `Stride.Input`. Stride owns the window and the render pipeline, and Gum draws into the frame Stride composites.
 
-`Gum.Stride` does not choose a window backend for you, so your project also needs a Stride host package. The Gum sample uses the Stride Community Toolkit's Windows host:
+`Gum.Stride` leaves the choice of window backend to you, so your project also needs a Stride host package. The Gum sample uses the Community Toolkit's Windows host:
 
 ```xml
 <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
@@ -62,7 +62,7 @@ Next, add StrideGum as a project reference in your game project. Your project mi
 
 ## Initializing Gum
 
-Stride draws everything through a `GraphicsCompositor`, and Gum plugs into that pipeline, so a compositor must already exist on your game when Gum initializes. Create the compositor first, then call `Initialize`:
+Stride draws through a `GraphicsCompositor`, and Gum draws as part of that pipeline, so create the compositor before calling `Initialize`:
 
 ```csharp
 using Gum;
@@ -81,9 +81,9 @@ void Start(Scene rootScene)
 }
 ```
 
-That one call is the entire setup. On Gum's other runtimes you also call `Update` and `Draw` once per frame; on Stride you do not. `Initialize` adds Gum's own scene renderer to the compositor, and Stride ticks Gum's update and draw from there every frame. If you are coming from one of the other setup pages looking for the per-frame calls, Stride gives you no place to make them.
+`Initialize` adds Gum's scene renderer to the compositor, and Stride runs Gum's update and draw every frame from there. Stride is the one runtime where you never call `Update` and `Draw` yourself, so the per-frame calls the other setup pages show have no equivalent here.
 
-Controls can be added as soon as `Initialize` returns.
+You can add controls as soon as `Initialize` returns.
 
 To load a Gum project (a `.gumx` file) at the same time, pass its path:
 
@@ -94,7 +94,7 @@ GumService.Default.Initialize(game, "Content/GumProject/GumProject.gumx");
 
 ### Placing the Scene Renderer Yourself (Optional)
 
-`Initialize` registers one `GumSceneRenderer` for you, which is all a single UI layer needs. Pass `registerSceneRenderer: false` to skip that and place `GumSceneRenderer` instances yourself. Do this if you need control over where Gum draws relative to your other renderers, or if you want more than one Gum draw pass:
+`Initialize` registers one `GumSceneRenderer`, which is all a single UI layer needs. Pass `registerSceneRenderer: false` to place `GumSceneRenderer` instances yourself, either to control where Gum draws among your other renderers or to add more than one Gum draw pass:
 
 ```csharp
 // Initialize
@@ -102,7 +102,7 @@ GumService.Default.Initialize(game, registerSceneRenderer: false);
 game.AddSceneRenderer(new GumSceneRenderer());
 ```
 
-The two paths are mutually exclusive, so the renderer can never be added twice. For more detail, see the documentation on `GumService.Initialize` in your IDE.
+For more detail, see the documentation on `GumService.Initialize` in your IDE.
 
 ## Adding Expression Support (Optional)
 
@@ -141,8 +141,8 @@ button.Anchor(Anchor.Center);
 button.Click += (_, _) => button.Text = $"Clicked\n{System.DateTime.Now}";
 ```
 
-`Button` comes from `Gum.Forms.Controls` and `Anchor` from `Gum.Wireframe`, so add both usings.
+`Button` comes from `Gum.Forms.Controls`, `Anchor` from `Gum.Wireframe`.
 
-For a working project, including a larger demo with a `Label`, `TextBox`, `CheckBox`, and `ListBox` in a `StackPanel`, see the Gum Stride sample:
+For a working project with a larger demo (`Label`, `TextBox`, `CheckBox`, and `ListBox` in a `StackPanel`), see the Gum Stride sample:
 
 {% embed url="https://github.com/vchelaru/Gum/tree/main/Samples/StrideGum" %}

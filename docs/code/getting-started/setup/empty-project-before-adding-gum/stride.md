@@ -8,7 +8,7 @@ Gum can be used in Stride projects by importing Gum's `Gum.Stride` NuGet package
 
 Before using Gum, you should first verify that you can create a normal windowed Stride project. For the full API reference, see the Stride documentation: [https://doc.stride3d.net/](https://doc.stride3d.net/)
 
-Stride games can be created two ways: with the Stride Game Studio editor, or as a plain console project using the Stride Community Toolkit ([https://stride3d.github.io/stride-community-toolkit/](https://stride3d.github.io/stride-community-toolkit/)). The steps below use the Community Toolkit, which is what the Gum Stride sample uses.
+Stride games can be created two ways: with the Stride Game Studio editor, or as a plain console project using the Stride Community Toolkit ([https://stride3d.github.io/stride-community-toolkit/](https://stride3d.github.io/stride-community-toolkit/)). The steps below use the Community Toolkit, matching the Gum Stride sample.
 
 {% tabs %}
 {% tab title="Visual Studio" %}
