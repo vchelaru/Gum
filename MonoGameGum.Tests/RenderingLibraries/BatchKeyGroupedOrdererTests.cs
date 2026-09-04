@@ -467,6 +467,50 @@ public class BatchKeyGroupedOrdererTests : BaseTestClass
     }
 
     [Fact]
+    public void MultipleBuildsWithoutReset_AccumulateAllThreeCounters_AndResetBreakTallyClearsThemAll()
+    {
+        // Pins what the published guide (docs/code/performance-and-optimization/batchkeygroupedorderer.md)
+        // tells readers: all three counters, HardBoundaryTransitionCount included, keep counting
+        // across BuildDrawList calls and only ResetBreakTally clears them.
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        // Overlap chain: a(sb) overlaps b(apos) overlaps c(sb), so c can't rejoin a's run.
+        FakeRenderable a = new FakeRenderable("a", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable b = new FakeRenderable("b", "Apos.Shapes") { X = 5, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable c = new FakeRenderable("c", "SpriteBatch") { X = 12, Y = 0, Width = 10, Height = 10 };
+        List<DrawCommand> commands = new List<DrawCommand>();
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(BuildLayer(a, b, c), commands);
+
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(1);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(1);
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(0);
+
+        // A second, unrelated build in the same tally window: entering the clip is a hard boundary
+        // even though its key matches, and the apos child inside it is a no-candidate break.
+        FakeRenderable sb = new FakeRenderable("sb", "SpriteBatch") { X = 0, Y = 0, Width = 10, Height = 10 };
+        FakeRenderable clip = new FakeRenderable("clip", "SpriteBatch")
+        {
+            X = 50, Y = 0, Width = 10, Height = 10, ClipsChildren = true,
+        };
+        AddChild(clip, "child", "Apos.Shapes");
+
+        BatchKeyGroupedOrderer.Instance.BuildDrawList(BuildLayer(sb, clip), commands);
+
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(1);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(2);
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(1);
+
+        BatchKeyGroupedOrderer.Instance.ResetBreakTally();
+
+        BatchKeyGroupedOrderer.Instance.MergeBlockedByOverlapCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.NoCandidateInWindowBreakCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.HardBoundaryTransitionCount.ShouldBe(0);
+        BatchKeyGroupedOrderer.Instance.GetBreakGroups().ShouldBeEmpty();
+        BatchKeyGroupedOrderer.Instance.GetBreakGroupsByType().ShouldBeEmpty();
+    }
+
+    [Fact]
     public void GetBreakGroupsByType_FormatsAsShortTypeArrowWithCount()
     {
         BatchKeyGroupedOrderer.Instance.ResetBreakTally();

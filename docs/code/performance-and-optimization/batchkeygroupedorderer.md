@@ -86,16 +86,19 @@ If both rows are low, your begins come from clipping instead, and the orderer wi
 
 ### Diagnosing a Smaller-Than-Expected Win
 
-If the draw-call count drops less than you expected after enabling the orderer, two different things could be happening, and `BatchKeyGroupedOrderer.Instance` can tell you which without guessing:
+If the draw-call count drops less than you expected after enabling the orderer, three counters on `BatchKeyGroupedOrderer.Instance` tell you where the remaining draw calls come from, without guessing:
 
 * **`MergeBlockedByOverlapCount`** - the orderer wanted to keep a run going, but a matching item was still pending behind something its bounds overlap. This is the orderer's own correctness rule (never reorder across overlapping bounds) doing its job; no amount of reordering fixes it. If this number is high, the real fix is removing the alternation itself, for example packing the alternating textures into one shared atlas, since same-texture consecutive draws merge for free regardless of overlap or Z order.
 * **`NoCandidateInWindowBreakCount`** - nothing pending shared the running key at all. That's genuine content alternation (or simply the end of a reorder window), and is exactly what the orderer is designed to collapse when it can.
+* **`HardBoundaryTransitionCount`** - entering or leaving a renderable that clips its children, or one that draws to a render target, forced the break on its own. Gum restarts the batch on every clip change, and a render target gets its own flush plus bind and restore cycle, so no reordering can avoid either. If this number dominates, your draw calls come from clipping and render targets rather than from alternation, and the fix is to use fewer of them.
 
-Both reset at the start of every `BuildDrawList` call, so read them right after the one draw pass you're measuring:
+All three keep counting until `ResetBreakTally` runs, which happens on the same cadence as `RenderStateChangeStatistics`: once per `Renderer.Draw(SystemManagers)` pass, which is what `GumUI.Draw()` runs, and once per host frame when you draw through [GumBatch](lastframedrawstates.md#immediate-mode-gumbatch-callers)'s `Begin`/`Draw`/`End`. On the GumBatch path that means the values cover every `Begin`/`End` cycle in the frame, not only the cycle you just ran. If you drive the orderer yourself, for example from a unit test, call `ResetBreakTally` between the builds you want measured separately.
 
 ```csharp
 // Draw
 var orderer = (BatchKeyGroupedOrderer)Renderer.SiblingOrdering;
 System.Diagnostics.Debug.WriteLine(
-    $"Overlap-blocked: {orderer.MergeBlockedByOverlapCount}, No candidate: {orderer.NoCandidateInWindowBreakCount}");
+    $"Overlap-blocked: {orderer.MergeBlockedByOverlapCount}, No candidate: {orderer.NoCandidateInWindowBreakCount}, Hard boundary: {orderer.HardBoundaryTransitionCount}");
 ```
+
+The counters are totals. For the detail behind them, `GetBreakGroups()` returns every distinct break since the last reset, most frequent first: the renderable types on each side, their `BatchKey` and `BatchSortKey` values, and a `BreakReason` naming which of the cases above caused it. `GetBreakGroupsByType()` rolls the same data up to just the two renderable types, and its `ToString()` prints text you can log as-is, such as `Sprite->RoundedRectangle (14)`.
