@@ -1,4 +1,5 @@
-﻿using Gum.GueDeriving;
+﻿using Gum.DataTypes.Variables;
+using Gum.GueDeriving;
 using Gum.Wireframe;
 using RaylibGum.Renderables;
 using RenderingLibrary.Content;
@@ -308,14 +309,14 @@ public class TextRuntimeTests : BaseTestClass
         });
     }
 
-    // Documents (and pins on Raylib) the intentional KNOWN GAP described in the comment block now shared
-    // verbatim with the MonoGame copy of UpdateToFontValues: the static string path defers ONLY for the
-    // global IsAllLayoutSuspended flag, NOT for per-instance SuspendLayout. So a string set under instance
-    // suspension still loads eagerly. Mirrors MonoGame's
-    // StringSetPath_ShouldNotDeferFontGeneration_WhenOnlyInstanceLayoutSuspended — proving the copied
-    // comment's claim is true on Raylib, not just transcribed.
+    // Was pinned (#4567) as the intentional KNOWN GAP shared verbatim with the MonoGame copy of
+    // UpdateToFontValues: the static string path used to defer ONLY for the global
+    // IsAllLayoutSuspended flag, not per-instance SuspendLayout. UpdateToFontValues now defers for
+    // both, matching the direct-property-setter path. Mirrors MonoGame's
+    // StringSetPath_ShouldDeferFontGeneration_WhenOnlyInstanceLayoutSuspended — proving the fix
+    // holds on Raylib too, not just transcribed.
     [Fact]
-    public void StringSetPath_ShouldNotDeferFontLoad_WhenOnlyInstanceLayoutSuspended()
+    public void StringSetPath_ShouldDeferFontLoad_WhenOnlyInstanceLayoutSuspended()
     {
         string uniqueFontName = NewUniqueFontName();
         WithFontLoadRecording(uniqueFontName, fontRequestCount =>
@@ -325,7 +326,13 @@ public class TextRuntimeTests : BaseTestClass
             textRuntime.SuspendLayout();
             textRuntime.SetProperty("Font", uniqueFontName);
 
+            fontRequestCount().ShouldBe(0);
+            textRuntime.IsFontDirty.ShouldBeTrue();
+
+            textRuntime.ResumeLayout(recursive: true);
+
             fontRequestCount().ShouldBeGreaterThan(0);
+            textRuntime.IsFontDirty.ShouldBeFalse();
         });
     }
 
@@ -360,6 +367,83 @@ public class TextRuntimeTests : BaseTestClass
             };
 
             body(() => fontRequestCount);
+        }
+        finally
+        {
+            GraphicalUiElement.IsAllLayoutSuspended = savedSuspended;
+            LoaderManager.Self.CacheTextures = savedCacheTextures;
+            FileManager.RelativeDirectory = savedRelativeDirectory;
+            FileManager.CustomGetStreamFromFile = savedHook;
+        }
+    }
+
+    // Mirrors MonoGame's FontServiceTests.ApplyState_ShouldNotFlushFontPrematurely_WhenStateAppliesNestedCategoryState
+    // (#4567 gap audit). Raylib compiles the literal same Gum/Wireframe/CustomSetPropertyOnRenderable.cs
+    // and GumRuntime/GraphicalUiElement.cs, so the nested-ApplyState-via-category-state reentrancy hazard
+    // -- a fix that defers font realization for a suspended instance must not let a NESTED ApplyState
+    // call (triggered by a category-state variable like "ButtonCategoryState") resume/flush before the
+    // OUTER ApplyState call finishes applying its own remaining font-affecting variables -- applies here
+    // identically. Unlike WithFontLoadRecording's plain count, this records every requested PATH so we
+    // can assert none of them reflect a stale, partially-applied combo (wrong size or missing the
+    // BmfcSave "_Bold" filename suffix).
+    [Fact]
+    public void ApplyState_ShouldNotFlushFontPrematurely_WhenStateAppliesNestedCategoryState()
+    {
+        string uniqueFontName = NewUniqueFontName();
+        WithFontLoadRecordingPaths(uniqueFontName, requestedPaths =>
+        {
+            TextRuntime textRuntime = new();
+
+            StateSaveCategory category = new StateSaveCategory { Name = "ButtonCategory" };
+            StateSave highlightedState = new StateSave { Name = "Highlighted" };
+            highlightedState.Variables.Add(new VariableSave { Type = "int", Name = "OutlineThickness", Value = 2, SetsValue = true });
+            category.States.Add(highlightedState);
+            textRuntime.AddCategory(category);
+
+            StateSave outerState = new StateSave { Name = "Default" };
+            outerState.Variables.Add(new VariableSave { Type = "string", Name = "ButtonCategoryState", Value = "Highlighted", SetsValue = true });
+            outerState.Variables.Add(new VariableSave { Type = "string", Name = "Font", Value = uniqueFontName, SetsValue = true });
+            outerState.Variables.Add(new VariableSave { Type = "int", Name = "FontSize", Value = 15, SetsValue = true });
+            outerState.Variables.Add(new VariableSave { Type = "bool", Name = "IsBold", Value = true, SetsValue = true });
+
+            textRuntime.ApplyState(outerState);
+
+            List<string> paths = requestedPaths();
+            paths.ShouldNotBeEmpty();
+            paths.ShouldAllBe(p => p.Contains("Font15", StringComparison.OrdinalIgnoreCase)
+                    && p.Contains("_Bold", StringComparison.OrdinalIgnoreCase),
+                "no requested font-cache path -- including one triggered by the nested category-state " +
+                "ApplyState -- should reflect anything other than the final, fully applied combination " +
+                $"(FontSize=15, IsBold=true): {string.Join(", ", paths)}");
+        });
+    }
+
+    // Same isolation strategy as WithFontLoadRecording, but records every requested path (not just a
+    // count) so a caller can assert on the SHAPE of each request (e.g. size/bold suffix), not just how
+    // many happened.
+    private static void WithFontLoadRecordingPaths(string uniqueFontName, Action<Func<List<string>>> body)
+    {
+        bool savedCacheTextures = LoaderManager.Self.CacheTextures;
+        string savedRelativeDirectory = FileManager.RelativeDirectory;
+        Func<string, Stream>? savedHook = FileManager.CustomGetStreamFromFile;
+        bool savedSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+        try
+        {
+            LoaderManager.Self.CacheTextures = false;
+            FileManager.RelativeDirectory = Path.Combine(Path.GetTempPath(),
+                "GumRaylibDeferFontTest_" + Guid.NewGuid().ToString("N")).Replace('\\', '/') + "/";
+
+            List<string> requestedPaths = new();
+            FileManager.CustomGetStreamFromFile = incomingPath =>
+            {
+                if (incomingPath.Contains(uniqueFontName, StringComparison.OrdinalIgnoreCase))
+                {
+                    requestedPaths.Add(incomingPath);
+                }
+                return null!;
+            };
+
+            body(() => requestedPaths);
         }
         finally
         {

@@ -6824,7 +6824,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         else
         {
             bool didSuspend = false;
-            if (GraphicalUiElement.IsAllLayoutSuspended == false)
+            // Also check this.IsLayoutSuspended: a state's own Variables can include a category-state
+            // assignment (e.g. "ButtonCategoryState" = "Highlighted"), which TrySetValueOnThis resolves
+            // by calling ApplyState AGAIN on this same instance, nested inside this loop. Without this
+            // check, that nested call would see IsAllLayoutSuspended still false, suspend/resume on its
+            // own, and its ResumeLayout would prematurely clear mIsLayoutSuspended -- and flush any
+            // deferred font load -- before THIS (outer) call finishes applying its own remaining
+            // variables (#4567). Skipping suspend/resume when already suspended lets the nested call's
+            // variables apply under the outer suspension, so only the outermost ApplyState flushes.
+            if (GraphicalUiElement.IsAllLayoutSuspended == false && this.IsLayoutSuspended == false)
             {
                 didSuspend = true;
                 this.SuspendLayout(true);
