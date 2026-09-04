@@ -66,7 +66,7 @@ Pass the bundle to `Initialize` in place of the `.gumx`:
 GumService.Default.Initialize(graphics, gumProjectFile: "MyProject.gumpkg");
 ```
 
-The extension you pass decides how Gum loads the project. A path ending in `.gumx` (or `.gumj`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project stays unused until you name it.
+The extension you pass decides how Gum loads the project. A path ending in `.gumx` (or `.gumj`) reads loose files, and a path ending in `.gumpkg` serves every element, texture, and font read from inside the bundle. Gum does not look for a sibling file of the other kind, so a `.gumpkg` sitting next to your loose project is ignored unless you pass its path to `Initialize`.
 
 That includes a `.ttf` the project references through `Font` or `CustomFontFile`. Runtime font generation (KernSmith on MonoGame, KNI, FNA, and raylib, or SkiaSharp's own rasterizer) reads the font out of the bundle, so a project that rasterizes its fonts at runtime runs from a `.gumpkg` alone with no loose files and no `FontCache/` folder.
 
