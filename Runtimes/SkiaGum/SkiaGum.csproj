@@ -174,6 +174,10 @@
 		     the assembly boundary — SilkNetGum references this project for GumServiceSkiaBase
 		     instead of file-linking FormsUtilities.cs (issue #4452 phase 2). -->
 		<InternalsVisibleTo Include="SilkNetGum" />
+		<!-- Same reason, for the Stride runtime host prototype (issue #4600): GumStride is the
+		     external project name (Skia_GumUi_Stride/GumStride.csproj) before extraction into
+		     Runtimes/StrideGum. -->
+		<InternalsVisibleTo Include="GumStride" />
 	</ItemGroup>
 
 	<Import Project="..\RuntimePackage.Analyzers.props" />
