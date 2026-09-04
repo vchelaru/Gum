@@ -76,10 +76,6 @@ That includes a `.ttf` the project references through `Font` or `CustomFontFile`
 
 Because the choice is just the string you pass, a game can keep loose files while developing, where [hot reload](../code/debugging/hot-reload.md) works, and load the bundle in a published build. How it decides between the two paths is up to you.
 
-{% hint style="warning" %}
-The bundle loader requires .NET 7 or greater (it uses `System.Formats.Tar`). On older targets, passing a `.gumpkg` path throws.
-{% endhint %}
-
 ## Packing From Your Build
 
 Running `gumcli pack` by hand before every release is easy to forget, and a stale `.gumpkg` looks exactly like a fresh one. An MSBuild target packs the project as part of the build instead, so the bundle is always as new as the files it came from.
