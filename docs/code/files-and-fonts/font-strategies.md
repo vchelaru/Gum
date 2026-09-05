@@ -299,6 +299,10 @@ BmfcSave.AddFontRange(BmfcSave.GenerateRangesFromFile("Content/Localisation/loc.
 
 Both `AddFontRange` and `AddCharacters` are static and apply to every `BmfcSave` created afterward, so call them once before creating any `Text`.
 
+{% hint style="info" %}
+`AddFontRange` and `AddCharacters` only add to the default range, they can't replace it. To generate a font from an exact character set instead of extending the default, see [Custom Character Sets](advanced-font-effects.md#custom-character-sets), which replaces the set entirely but requires the manual generation path rather than `TextRuntime`'s font properties.
+{% endhint %}
+
 ### When to Use This Strategy
 
 * You're using Latin, Cyrillic, Greek, or another small-charset script.
