@@ -23,9 +23,9 @@ public partial class SystemManagers : ISystemManagers
 {
     int mPrimaryThreadId;
 #if !RAYLIB
-    // Mirrors RenderingLibrary/SystemManagers.cs's _lastActivityTime, which feeds
-    // Renderer.NotifyHostFrameAdvanced() - not ported here since raylib's own Renderer has no
-    // equivalent member. Dead in this build; kept for cross-file diff parity. Tracked separately (#4598).
+    // Mirrors RenderingLibrary/SystemManagers.cs's _lastActivityTime, which gates the
+    // Renderer.NotifyHostFrameAdvanced() call in Activity below. Dead in this build; kept for
+    // cross-file diff parity.
     private double _lastActivityTime = double.NaN;
 #endif
 
@@ -220,6 +220,13 @@ public partial class SystemManagers : ISystemManagers
     public void Activity(double currentTime)
     {
 #if !RAYLIB
+        // XNALIKE-only, and intentionally never ported to raylib (#4598). NotifyHostFrameAdvanced()
+        // resets the once-per-host-frame latches on the XNA Renderer (render-target sweep, layer
+        // pre-render, referenced-RT collection, perf-stat reset). Those latches exist only because
+        // GumBatch lets a host run several Begin/Draw/End cycles per frame, so the work behind them
+        // has to be skipped after the first cycle. raylib has no GumBatch: Renderer.Draw runs once
+        // per host frame and does that same work unconditionally at the top of it, so there is
+        // nothing to latch and no member to call here.
         if (currentTime != _lastActivityTime)
         {
             _lastActivityTime = currentTime;
