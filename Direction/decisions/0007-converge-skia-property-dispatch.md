@@ -1,6 +1,6 @@
 # 0007. Converge the Skia property dispatcher via runtime-type-first dispatch
 
-- **Status:** Accepted
+- **Status:** Accepted (the "may never be worth it" framing in Consequences is superseded by 0015 — the rest of this decision stands)
 - **Date:** 2026-07-13
 - **Deciders:** Victor Chelaru, Claude
 
