@@ -1,11 +1,13 @@
 ---
 name: user-asks
-description: Answering Discord/GitHub user questions — search skills→docs→code, cite the docs URL, suggest doc/API fixes with confidence, or file an issue. Triggers: pasted user question, "how do I", GitHub issue triage, "answer this person", "user asks".
+description: Answering Discord/GitHub user questions — search skills→docs→code, cite the docs URL, suggest doc/API fixes with confidence, or file an issue. Triggers: pasted user question, "how do I", GitHub issue triage, "answer this person", "user asks", third-person phrasing about the asker ("they need", "they're trying to", "someone asked").
 ---
 
 # Answering User Questions
 
 Use when the user pastes a question from someone (Discord text, a GitHub issue, a `#N` reference) or asks you to help answer a person. Goal: a short reply they can paste back, grounded in a citable docs URL, plus a fix suggestion when docs or the API fall short.
+
+**Relay signal, easy to miss: third-person pronouns about the asker mean this skill applies, even with no explicit "someone asked me" framing or pasted quote.** A message phrased as the user's own technical question can still be a relayed one — "they probably need X", "a user of mine is trying to Y", "I think there's 2 parts to *their* question." Any "they"/"someone"/"a user of mine" referring to a person other than the one you're talking to is enough on its own to classify this as a relay. Don't wait for an explicit "someone asked me" or a pasted quote before recognizing it.
 
 ## 1. Classify First
 
