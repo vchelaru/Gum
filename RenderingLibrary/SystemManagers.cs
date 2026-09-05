@@ -362,6 +362,31 @@ public partial class SystemManagers : ISystemManagers
     }
 
     /// <summary>
+    /// Returns the embedded texture cached under <paramref name="embeddedTexture2dName"/>, loading
+    /// and caching it via <see cref="LoadEmbeddedTexture2d"/> on the first call. Prefer this over
+    /// <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested more than
+    /// once, so the callers share one texture instead of each getting a fresh copy.
+    /// </summary>
+    /// <returns>
+    /// The texture, or null when there is no graphics device (headless unit tests). Declared
+    /// non-nullable so the shared Forms sources can call this with no per-backend branch: raylib's
+    /// Texture2D is a struct and every other backend's is a class, so a nullable return needs
+    /// <c>.Value</c> on one and <c>!</c> on the others. Null-check the result before using it if you
+    /// may run without a graphics device.
+    /// </returns>
+    public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
+    {
+        var cacheName = $"EmbeddedResource.{AssemblyPrefix}.{embeddedTexture2dName}";
+
+        if (Content.LoaderManager.Self.GetDisposable(cacheName) is Texture2D cached)
+        {
+            return cached;
+        }
+
+        return LoadEmbeddedTexture2d(embeddedTexture2dName)!;
+    }
+
+    /// <summary>
     /// Performs every-frame activity for all contained systems in the SystemManager.
     /// </summary>
     /// <param name="currentTime">The amount of time that has passed since the game started.</param>

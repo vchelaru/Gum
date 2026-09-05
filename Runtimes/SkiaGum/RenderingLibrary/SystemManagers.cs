@@ -291,5 +291,23 @@ namespace RenderingLibrary
 
             return texture;
         }
+
+        /// <summary>
+        /// Returns the embedded texture cached under <paramref name="embeddedTexture2dName"/>,
+        /// loading and caching it via <see cref="LoadEmbeddedTexture2d"/> on the first call. Prefer
+        /// this over <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested
+        /// more than once, so the callers share one bitmap instead of each decoding a fresh copy.
+        /// </summary>
+        public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
+        {
+            var cacheName = $"EmbeddedResource.{AssemblyPrefix}.{embeddedTexture2dName}";
+
+            if (Content.LoaderManager.Self.GetDisposable(cacheName) is Texture2D cached)
+            {
+                return cached;
+            }
+
+            return LoadEmbeddedTexture2d(embeddedTexture2dName)!;
+        }
     }
 }

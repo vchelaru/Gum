@@ -21,4 +21,19 @@ public class LoadEmbeddedTexture2dTests
         texture.Width.ShouldBeGreaterThan(0);
         texture.Height.ShouldBeGreaterThan(0);
     }
+
+    // GetOrLoadEmbeddedTexture2d reuses the cached bitmap instead of decoding a fresh one per call,
+    // which is what lets Styling and FormsUtilities share one line across every backend. Issue #4451.
+    [Fact]
+    public void GetOrLoadEmbeddedTexture2d_CalledTwice_ShouldReturnTheSameBitmap()
+    {
+        SystemManagers systemManagers = new SystemManagers();
+        systemManagers.Initialize();
+
+        SKBitmap first = systemManagers.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
+        SKBitmap second = systemManagers.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
+
+        first.ShouldNotBeNull();
+        second.ShouldBeSameAs(first);
+    }
 }

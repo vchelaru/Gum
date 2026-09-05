@@ -95,14 +95,10 @@ public class FormsUtilities
                 "You must call this method after initializing SystemManagers.Default, or you must explicitly specify a SystemsManager instance");
         }
 
-        // Written as an exclusion rather than an enumeration of every backend so a new runtime
-        // linking this file gets a compiling default instead of an undeclared-variable error:
-        // raylib alone returns a nullable value type here, everything else a nullable reference.
-#if RAYLIB
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png").Value;
-#else
-        Texture2D uiSpriteSheet = systemManagers.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#endif
+        // Each backend's GetOrLoadEmbeddedTexture2d returns its own texture type non-nullable, so
+        // this needs no per-backend branch even though raylib's Texture2D is a struct and every
+        // other backend's is a class.
+        Texture2D uiSpriteSheet = systemManagers.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
 
         // DefaultVisualsVersion has only one member (V3, aliased as Newest), so no switch is needed
         // here -- this used to also register V1/V2 legacy default visuals, removed in #4447.

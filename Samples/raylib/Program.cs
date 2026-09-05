@@ -84,7 +84,6 @@ public class BasicShapes
 
         // Demo the auto-fit helpers — flip via the Zoom/Expand radio buttons in the nav strip.
         GumUI.EnableZoomToWindow();
-        var standardTexture = SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png");
 
         InitializeStyling();
         BuildNavStrip();

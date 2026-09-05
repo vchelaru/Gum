@@ -167,6 +167,38 @@ public sealed class SystemManagers : ISystemManagers, IDisposable
         return DecodeRgba8(fileData, embeddedTexture2dName);
     }
 
+    /// <summary>
+    /// Returns the embedded texture cached under <paramref name="embeddedTexture2dName"/>, loading
+    /// and caching it via <see cref="LoadEmbeddedTexture2d"/> on the first call. Prefer this over
+    /// <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested more than
+    /// once, so the callers share one texture instead of each decoding a fresh copy.
+    /// </summary>
+    /// <returns>
+    /// The texture, or null when the embedded resource is missing or fails to decode. Declared
+    /// non-nullable so the shared Forms sources can call this with no per-backend branch.
+    /// </returns>
+    public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
+    {
+        var cacheName = $"EmbeddedResource.SokolGum.Content.{embeddedTexture2dName}";
+
+        if (LoaderManager.Self.GetDisposable(cacheName) is Texture2D cached)
+        {
+            return cached;
+        }
+
+        var texture = LoadEmbeddedTexture2d(embeddedTexture2dName);
+
+        // Null when the resource is missing or fails to decode. Caching that would put a null in
+        // LoaderManager's dictionary, which DisposeAndClear dereferences at shutdown.
+        if (texture != null)
+        {
+            LoaderManager.Self.AddDisposable(cacheName, texture,
+                LoaderManager.ExistingContentBehavior.Replace);
+        }
+
+        return texture!;
+    }
+
     private static unsafe Texture2D? DecodeRgba8(byte[] bytes, string label)
     {
         int width = 0, height = 0, channels = 0;
