@@ -821,9 +821,13 @@ public partial class CustomSetPropertyOnRenderable
                 switch (propertyName)
                 {
                     case "Radius":
-                        var radius = (float)value;
-                        graphicalUiElement.Width = radius * 2;
-                        graphicalUiElement.Height = radius * 2;
+                        // CircleRuntime.Radius (obsolete, kept for back-compat) already proxies
+                        // Width = Height = Radius * 2 and pushes to the renderable -- call it
+                        // directly instead of duplicating that assignment here, matching core's
+                        // TrySetPropertyOnCircleRuntime.
+#pragma warning disable CS0618
+                        circleRuntime.Radius = (float)value;
+#pragma warning restore CS0618
                         handled = true;
                         break;
                 }
@@ -1058,27 +1062,9 @@ public partial class CustomSetPropertyOnRenderable
                     break;
 #endif
                 case "Alpha":
-                    {
-                        int valueAsInt;
-                        if (value is int asInt)
-                        {
-                            valueAsInt = asInt;
-                        }
-                        else if (value is float asFloat)
-                        {
-                            valueAsInt = (int)asFloat;
-                        }
-                        else
-                        {
-                            valueAsInt = 255;
-                        }
-                        if (containerRuntime != null)
-                        {
-                            containerRuntime.Alpha = valueAsInt;
-                        }
-                        handled = true;
-                        break;
-                    }
+                    containerRuntime?.SetAlphaFromDispatch(value);
+                    handled = true;
+                    break;
             }
         }
 #if SKIA

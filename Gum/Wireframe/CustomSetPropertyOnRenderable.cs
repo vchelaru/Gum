@@ -401,26 +401,8 @@ public partial class CustomSetPropertyOnRenderable
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
             case "Alpha":
-                {
-                    int valueAsInt;
-                    if (value is int asInt)
-                    {
-                        valueAsInt = asInt;
-                    }
-                    else if (value is float asFloat)
-                    {
-                        valueAsInt = (int)asFloat;
-                    }
-                    else
-                    {
-                        valueAsInt = 255;
-                    }
-                    if (containerRuntime != null)
-                    {
-                        containerRuntime.Alpha = valueAsInt;
-                    }
-                    return true;
-                }
+                containerRuntime?.SetAlphaFromDispatch(value);
+                return true;
         }
 
         return false;

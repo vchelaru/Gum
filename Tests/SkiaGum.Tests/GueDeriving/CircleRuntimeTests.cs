@@ -106,6 +106,7 @@ public class CircleRuntimeTests
 
         sut.Width.ShouldBe(40f);
         sut.Height.ShouldBe(40f);
+        sut.Radius.ShouldBe(20f);
     }
 
     [Fact]

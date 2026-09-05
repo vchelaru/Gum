@@ -37,6 +37,27 @@ public class ContainerRuntimeTests
     }
 
     [Fact]
+    public void Dispatch_Alpha_WithFloatValue_TruncatesToInt()
+    {
+        ContainerRuntime sut = new();
+
+        sut.SetProperty("Alpha", 128.9f);
+
+        sut.Alpha.ShouldBe(128);
+    }
+
+    [Fact]
+    public void Dispatch_Alpha_WithUnsupportedValueType_DefaultsTo255()
+    {
+        ContainerRuntime sut = new();
+        sut.Alpha = 10;
+
+        sut.SetProperty("Alpha", "not a number");
+
+        sut.Alpha.ShouldBe(255);
+    }
+
+    [Fact]
     public void Dispatch_IsRenderTarget_RoutesToRuntime()
     {
         ContainerRuntime sut = new();
