@@ -205,9 +205,32 @@ public partial class SystemManagers : ISystemManagers
 
         //Texture2D texture = Texture2D.FromStream(Renderer.GraphicsDevice, stream);
 
-        var resourceName = $"{AssemblyPrefix}.{embeddedTexture2dName}";
-        // raylib textures aren't disposable...
-        //Content.LoaderManager.Self.AddDisposable($"EmbeddedResource.{resourceName}", texture);
+        // Deliberately uncached: this always uploads a fresh texture. Use
+        // GetOrLoadEmbeddedTexture2d below to share one.
+        return texture;
+    }
+
+    /// <summary>
+    /// Returns the embedded texture cached under <paramref name="embeddedTexture2dName"/>, loading
+    /// and caching it via <see cref="LoadEmbeddedTexture2d"/> on the first call. Prefer this over
+    /// <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested more than
+    /// once, so the callers share one GPU texture instead of each uploading a fresh copy.
+    /// </summary>
+    public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
+    {
+        var cacheName = $"EmbeddedResource.{AssemblyPrefix}.{embeddedTexture2dName}";
+
+        if (Content.LoaderManager.Self.GetDisposable(cacheName) is ManagedTexture cached)
+        {
+            return cached.Texture;
+        }
+
+        var texture = LoadEmbeddedTexture2d(embeddedTexture2dName)!.Value;
+
+        // raylib's Texture2D is a struct, so it reaches the IDisposable cache through
+        // ManagedTexture, the same wrapper ContentLoader uses for file-loaded textures.
+        Content.LoaderManager.Self.AddDisposable(cacheName, new ManagedTexture(texture),
+            Content.LoaderManager.ExistingContentBehavior.Replace);
 
         return texture;
     }

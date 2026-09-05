@@ -362,6 +362,26 @@ public partial class SystemManagers : ISystemManagers
     }
 
     /// <summary>
+    /// Returns the embedded texture cached under <paramref name="embeddedTexture2dName"/>, loading
+    /// and caching it via <see cref="LoadEmbeddedTexture2d"/> on the first call. Prefer this over
+    /// <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested more than
+    /// once, so the callers share one texture instead of each getting a fresh copy.
+    /// </summary>
+    public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
+    {
+        var cacheName = $"EmbeddedResource.{AssemblyPrefix}.{embeddedTexture2dName}";
+
+        if (Content.LoaderManager.Self.GetDisposable(cacheName) is Texture2D cached)
+        {
+            return cached;
+        }
+
+        // Null when there's no graphics device, which unit tests rely on; the callers assign to a
+        // non-nullable local and already tolerated that from LoadEmbeddedTexture2d.
+        return LoadEmbeddedTexture2d(embeddedTexture2dName)!;
+    }
+
+    /// <summary>
     /// Performs every-frame activity for all contained systems in the SystemManager.
     /// </summary>
     /// <param name="currentTime">The amount of time that has passed since the game started.</param>

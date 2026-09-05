@@ -64,22 +64,9 @@ public class Styling
         NineSlice = new();
         Icons = new();
 
-#if XNALIKE
-        if (spriteSheet == null)
-        {
-            this.SpriteSheet = (Texture2D)global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable($"EmbeddedResource.{SystemManagers.AssemblyPrefix}.UISpriteSheet.png");
-        }
-        else
-        {
-            this.SpriteSheet = spriteSheet;
-        }
-#elif RAYLIB
-        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!.Value;
-#elif SOKOL
-        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#elif SKIA
-        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.LoadEmbeddedTexture2d("UISpriteSheet.png")!;
-#endif
+        // Get-or-load rather than load: Styling is constructed per default-visual class, so loading
+        // here would decode (and on raylib, upload) a duplicate sprite sheet every time.
+        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
 
         // Set the backing field directly rather than going through the ActiveStyle property:
         // ActiveStyle's getter lazily constructs a Styling(null) when unset, and re-entering that
