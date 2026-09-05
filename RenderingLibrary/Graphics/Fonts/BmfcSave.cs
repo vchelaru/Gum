@@ -115,6 +115,13 @@ public class BmfcSave
     /// Uses a comma-separated format of individual codepoints or "start-end" ranges
     /// (e.g., "32-126,160-255,9472-9580").
     /// </summary>
+    /// <remarks>
+    /// On the property-driven <c>TextRuntime</c> path, the runtime sets this field itself,
+    /// from <c>GumProjectSave.FontRanges</c> when a project is loaded, or from
+    /// <see cref="GetEffectiveDefaultRanges"/> otherwise. Game code does not set this field
+    /// directly on that path. To add characters or codepoint ranges to the default set, call
+    /// <see cref="AddFontRange"/> or <see cref="AddCharacters"/> once at startup.
+    /// </remarks>
     public string Ranges = GetEffectiveDefaultRanges();
 
     /// <summary>
@@ -566,6 +573,11 @@ public class BmfcSave
     /// Generates a character range string from the unique characters found in a text file.
     /// Reads the file, collects all unique codepoints, and produces a compact range string.
     /// </summary>
+    /// <remarks>
+    /// This reads every character in the file. A file holding text for more than one language,
+    /// such as a shared localization file, returns the union of every language's characters, not
+    /// just one. Pass a file containing only the characters you want covered for a tighter range.
+    /// </remarks>
     /// <param name="fileName">The path to the text file to analyze.</param>
     /// <returns>A comma-separated range string covering all characters found in the file.</returns>
     public static string GenerateRangesFromFile(string fileName)
