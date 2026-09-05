@@ -276,12 +276,39 @@ This is KernSmith's behavior, so it covers MonoGame, KNI, FNA, and raylib. SkiaG
 
 KernSmith can also build the style even when a real face exists, which makes every platform render the same letters. `TextRuntime` does not expose that option, so reaching it means calling KernSmith yourself. See [Forcing Synthetic Bold and Italic](advanced-font-effects.md#forcing-synthetic-bold-and-italic) on the Advanced Font Effects page.
 
+### Character Ranges
+
+Every `BmfcSave` starts with `BmfcSave.DefaultRanges`, `32-126,160-255` (ASCII plus Latin-1 Supplement). Extend that default project-wide with `BmfcSave.AddFontRange`, which takes the same comma-separated `start-end`/single-codepoint format, or `BmfcSave.AddCharacters`, which takes literal characters and converts each one to its codepoint:
+
+```csharp
+// Initialize
+BmfcSave.AddFontRange("19968-40959"); // CJK Unified Ideographs
+BmfcSave.AddCharacters("日本語"); // add exact characters instead of a whole block
+```
+
+For a localized game, `BmfcSave.GenerateRangesFromFile` builds the range from your actual localization file instead of guessing a Unicode block:
+
+```csharp
+// Initialize
+BmfcSave.AddFontRange(BmfcSave.GenerateRangesFromFile("Content/Localisation/loc.csv"));
+```
+
+{% hint style="info" %}
+`GenerateRangesFromFile` reads every character in the file. A localization file holding every supported language returns the union of all of them, not just the language your player selected. Split the file per language first for a tighter range.
+{% endhint %}
+
+Both `AddFontRange` and `AddCharacters` are static and apply to every `BmfcSave` created afterward, so call them once before creating any `Text`.
+
+{% hint style="info" %}
+`AddFontRange` and `AddCharacters` only add to the default range, they can't replace it. To generate a font from an exact character set instead of extending the default, see [Custom Character Sets](advanced-font-effects.md#custom-character-sets), which replaces the set entirely but requires the manual generation path rather than `TextRuntime`'s font properties.
+{% endhint %}
+
 ### When to Use This Strategy
 
 * You're using Latin, Cyrillic, Greek, or another small-charset script.
 * You want to change font, size, style, outline thickness, or baked drop shadow without rebuilding atlases.
 * You don't want to check generated `.fnt` files into source control.
-* For CJK or other large charsets, this strategy still works — but you should pair it with [Font Preloading](font-preloading.md) so the per-atlas generation cost happens on a loading screen rather than during gameplay.
+* For CJK or other large charsets, this strategy still works. Pair it with [Character Ranges](font-strategies.md#character-ranges) to build a range that matches your actual content, and with [Font Preloading](font-preloading.md) so the per-atlas generation cost happens on a loading screen rather than during gameplay.
 * Player-typed or localized text can introduce characters you didn't plan for ahead of time — see [Automatic Glyph Growth](font-automatic-growth.md) to grow the live atlas instead of silently falling back to a blank glyph.
 
 ## Dynamic Generation on SkiaGum

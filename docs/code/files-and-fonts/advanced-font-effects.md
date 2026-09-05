@@ -167,6 +167,10 @@ BitmapFont bitmapFont = CreateBitmapFont(result, GraphicsDevice);
 
 A tightly-subsetted atlas can be dramatically smaller than the default ASCII set — useful for a HUD font that only ever shows numbers, or a CJK font where you've pre-scanned your localization tables.
 
+{% hint style="info" %}
+This replaces the character set entirely. To extend the default set instead on `TextRuntime`'s property-driven path, see [Character Ranges](font-strategies.md#character-ranges).
+{% endhint %}
+
 ## Custom Glyphs
 
 `CustomGlyphs` lets you inject raw pixel data for specific codepoints — handy for inserting button-prompt icons (gamepad face buttons, key glyphs) into a normal text run so they flow inline with the surrounding text:
