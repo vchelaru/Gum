@@ -1062,7 +1062,10 @@ public partial class CustomSetPropertyOnRenderable
                     break;
 #endif
                 case "Alpha":
-                    containerRuntime?.SetAlphaFromDispatch(value);
+                    if (containerRuntime != null)
+                    {
+                        containerRuntime.Alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
+                    }
                     handled = true;
                     break;
             }

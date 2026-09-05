@@ -35,29 +35,6 @@ public class ContainerRuntime : InteractiveGue
         }
     }
 
-    /// <summary>
-    /// Assigns <see cref="Alpha"/> from a dispatched string-path property value, which arrives as
-    /// <see cref="int"/> or <see cref="float"/> depending on caller. Shared by the core
-    /// (XNA-like/raylib) and Skia dispatchers so the int/float normalization isn't duplicated in
-    /// each (see <c>TrySetPropertyOnContainer</c> in
-    /// <c>Gum.Wireframe.CustomSetPropertyOnRenderable</c> and <c>SkiaGum.CustomSetPropertyOnRenderable</c>).
-    /// </summary>
-    public void SetAlphaFromDispatch(object value)
-    {
-        if (value is int intValue)
-        {
-            Alpha = intValue;
-        }
-        else if (value is float floatValue)
-        {
-            Alpha = (int)floatValue;
-        }
-        else
-        {
-            Alpha = 255;
-        }
-    }
-
     public bool IsRenderTarget
     {
         get => (RenderableComponent as InvisibleRenderable)?.IsRenderTarget ?? false;

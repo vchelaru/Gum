@@ -24,6 +24,8 @@ If a shared `.cs` file gains a `using` that resolves through a NuGet package, ad
 
 The most common way a Gum change silently breaks FRB1: a member behind `#if !FRB` (e.g. on `TextRuntime`, which doesn't exist under FRB) gets called from shared, unguarded code. The non-FRB build stays green, so the break is invisible until this skill's canary runs. Whenever you add or move a member behind any platform `#if` (`!FRB`, `!RAYLIB`, `XNALIKE`, etc.), grep every call site — if any lives in unguarded shared source, guard the call site too or provide a same-named shim for the excluded platform (an FRB-only extension method on `GraphicalUiElement` is the established pattern — see `CustomSetPropertyOnRenderable.cs`).
 
+A member needs no `#if` of its own to fall into this trap: FRB compiles none of `MonoGameGum/GueDeriving/*Runtime.cs`, so under `FRB` the `ContainerRuntimeType`/`SpriteRuntimeType` aliases in `CustomSetPropertyOnRenderable.cs` resolve to the small `IContainerRuntime`/`ISpriteRuntime` shim interfaces, and unguarded dispatch code can touch only what those shims declare. Keep the shims describing data (Glue generates the classes that must implement them) and put shared value normalization in FRB-compiled source instead — `InvisibleRenderable.NormalizeDispatchedAlpha` is the pattern.
+
 ## Precondition — skip entirely if absent
 
 This is only doable when a **FlatRedBall checkout exists as a sibling of the Gum repo** (i.e. `<gum-repo>/../FlatRedBall/`). The cross-repo csproj imports are sibling-relative (`..\..\..\..\FlatRedBall\…`), so without that layout the build can't resolve. If the sibling is absent, **skip FRB verification and say so** — it is not a failure; the maintainer/CI covers it. Do not hardcode an absolute path; check for the sibling.

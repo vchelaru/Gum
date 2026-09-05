@@ -401,7 +401,10 @@ public partial class CustomSetPropertyOnRenderable
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
             case "Alpha":
-                containerRuntime?.SetAlphaFromDispatch(value);
+                if (containerRuntime != null)
+                {
+                    containerRuntime.Alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
+                }
                 return true;
         }
 
