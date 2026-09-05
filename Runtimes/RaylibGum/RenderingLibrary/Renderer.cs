@@ -218,6 +218,11 @@ public class Renderer : IRenderer
         Draw(systemManagers, _layers);
     }
 
+    // Every frame-boundary step below runs unconditionally, because this Draw is the host frame on
+    // raylib — there is no GumBatch here issuing several Begin/Draw/End cycles per frame. That is
+    // why this Renderer has no BeginFrame/EndFrame/NotifyHostFrameAdvanced and none of the
+    // _*ForHostFrame latch flags the XNA Renderer carries: those exist purely to make this work
+    // happen once across multiple cycles. Deliberate, not a porting gap (#4598).
     private void Draw(SystemManagers managers, List<Layer> layers)
     {
         // Frame-boundary RT sweep — release per-renderable shadow RTs whose owner wasn't drawn
