@@ -367,6 +367,13 @@ public partial class SystemManagers : ISystemManagers
     /// <see cref="LoadEmbeddedTexture2d"/> anywhere the same texture may be requested more than
     /// once, so the callers share one texture instead of each getting a fresh copy.
     /// </summary>
+    /// <returns>
+    /// The texture, or null when there is no graphics device (headless unit tests). Declared
+    /// non-nullable so the shared Forms sources can call this with no per-backend branch: raylib's
+    /// Texture2D is a struct and every other backend's is a class, so a nullable return needs
+    /// <c>.Value</c> on one and <c>!</c> on the others. Null-check the result before using it if you
+    /// may run without a graphics device.
+    /// </returns>
     public Texture2D GetOrLoadEmbeddedTexture2d(string embeddedTexture2dName)
     {
         var cacheName = $"EmbeddedResource.{AssemblyPrefix}.{embeddedTexture2dName}";
@@ -376,8 +383,6 @@ public partial class SystemManagers : ISystemManagers
             return cached;
         }
 
-        // Null when there's no graphics device, which unit tests rely on; the callers assign to a
-        // non-nullable local and already tolerated that from LoadEmbeddedTexture2d.
         return LoadEmbeddedTexture2d(embeddedTexture2dName)!;
     }
 

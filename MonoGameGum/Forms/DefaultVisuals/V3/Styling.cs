@@ -66,7 +66,11 @@ public class Styling
 
         // Get-or-load rather than load: Styling is constructed per default-visual class, so loading
         // here would decode (and on raylib, upload) a duplicate sprite sheet every time.
-        this.SpriteSheet = spriteSheet ?? SystemManagers.Default.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
+        // SystemManagers.Default is null before Initialize and after Uninitialize, and ActiveStyle's
+        // lazy getter can construct a Styling in either state, so fall back to an unset sheet
+        // instead of throwing.
+        Texture2D? loaded = SystemManagers.Default?.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
+        this.SpriteSheet = spriteSheet ?? loaded ?? default!;
 
         // Set the backing field directly rather than going through the ActiveStyle property:
         // ActiveStyle's getter lazily constructs a Styling(null) when unset, and re-entering that
