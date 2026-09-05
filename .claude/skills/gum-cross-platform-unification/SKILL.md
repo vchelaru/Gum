@@ -103,6 +103,8 @@ For each difference inside the region you're converging, apply the same two-buck
 
 Either way, the **cross-file diff for those lines goes to zero** while each platform keeps compiling its own behavior. The metric is literally `git diff --no-index <copyA> <copyB>` shrinking every PR. When it reaches empty, the two files *are* one file: delete one, add a `<Compile Include="…" Link="…">` to the orphaned csproj, done.
 
+**For runtime-type-first dispatch specifically, the platform-necessary bucket is much narrower.** Once dispatch is keyed on a shared runtime type (not a per-backend renderable type), the call itself — `if (gue is FooRuntime f) f.Bar = value;` — should converge to identical code with no guard, because `FooRuntime` is the same source file everywhere. A value-type conversion (e.g. `Color` vs `SKColor`) is not an exception either — route it through a shared helper/alias rather than an `#if`. Any `#if` that survives convergence here means the runtime hasn't reached property parity yet — a phase-1 gap to fix on the runtime, not a permanent guard in the dispatcher.
+
 **Gotcha that confuses fresh readers:** a converged "home" file can carry `#if RAYLIB` branches even though the file is compiled into `MonoGameGum`, where `RAYLIB` is **not** defined. `Gum/Wireframe/CustomSetPropertyOnRenderable.cs` is the example: it's the single shared source for both platforms (linked into `RaylibGum.csproj` via `<Compile Include>`), so its `#if RAYLIB … namespace RaylibGum.Renderables;` branch is live in the Raylib build and simply dead code in the MonoGame build compiling the same file. Seeing `#if RAYLIB` inside a MonoGame-compiled file is not a bug.
 
 **Gotcha — the `#nullable` context travels with the consuming project, not the file.** A
