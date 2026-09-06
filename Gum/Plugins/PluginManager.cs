@@ -1185,19 +1185,31 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         bool foundAnyPluginAssembly = catalogFactory.Scans
             .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
 
+        // FileManager's own recursive search is no longer what finds plugins, but it is compiled
+        // into every runtime and backs content lookup there, so where it goes wrong is worth
+        // catching. Null unless the two searches actually disagree.
+        string? walkDiagnostic = System.IO.Directory.Exists(PluginFolder)
+            ? new DirectoryWalkComparison().Compare(PluginFolder, "dll")
+            : null;
+
         _pluginScanReport = new PluginScanReport(
             PluginFolder,
             System.IO.Directory.Exists(PluginFolder),
             catalogFactory.Scans,
             System.Windows.Forms.Application.ExecutablePath,
             // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
-            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
+            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder),
+            walkDiagnostic);
 
         // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
         // so - Gum otherwise starts looking healthy. The dialog carries the same text.
         if (!foundAnyPluginAssembly)
         {
             outputManager.AddError(_pluginScanReport.Describe());
+        }
+        else if (walkDiagnostic != null)
+        {
+            outputManager.AddError(walkDiagnostic);
         }
 
         returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));

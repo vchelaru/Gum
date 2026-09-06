@@ -46,12 +46,17 @@ public record PluginFileScan(
 /// no plugin assembly was found. "The folder is empty" and "the folder has files the scan did not
 /// match" are different bugs that produce the same count of zero.
 /// </param>
+/// <param name="WalkDiagnostic">
+/// Set only when Gum's own recursive file search disagrees with the framework's over this folder,
+/// which is a bug in Gum worth reporting. Null in the normal case.
+/// </param>
 public record PluginScanReport(
     string FolderPath,
     bool FolderExists,
     IReadOnlyList<PluginFileScan> Files,
     string ExecutablePath = "",
-    IReadOnlyList<string>? FolderEntries = null)
+    IReadOnlyList<string>? FolderEntries = null,
+    string? WalkDiagnostic = null)
 {
     /// <summary>
     /// Assemblies that reference the one declaring <c>PluginBase</c>, so could hold a plugin. When
@@ -115,6 +120,12 @@ public record PluginScanReport(
             {
                 text.AppendLine($"    {scan.FileName} - {scan.Detail}");
             }
+        }
+
+        if (!string.IsNullOrEmpty(WalkDiagnostic))
+        {
+            text.AppendLine();
+            text.Append(WalkDiagnostic);
         }
 
         return text.ToString();
