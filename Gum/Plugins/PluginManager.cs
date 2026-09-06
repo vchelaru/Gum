@@ -1160,30 +1160,18 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         pluginDirectories.Add(PluginFolder);
 
-        IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
-        PluginCatalogFactory catalogFactory = new(outputManager);
+        PluginCatalogFactory catalogFactory = new(Locator.GetRequiredService<IOutputManager>());
 
         foreach (var directory in pluginDirectories)
         {
             List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
-            string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
 
-            //dllFiles.Add(executablePath + "Gum.exe");
             foreach (string dll in dllFiles)
             {
-                try
+                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll);
+                if (catalog != null)
                 {
-                    Assembly loadedAssembly = Assembly.LoadFrom(dll);
-
-                    ComposablePartCatalog? catalog = catalogFactory.CreateResilientCatalog(loadedAssembly);
-                    if (catalog != null)
-                    {
-                        returnValue.Catalogs.Add(catalog);
-                    }
-                }
-                catch (Exception e)
-                {
-                    outputManager.AddError($"Failed to load plugin assembly '{dll}':\n{e}");
+                    returnValue.Catalogs.Add(catalog);
                 }
             }
         }
