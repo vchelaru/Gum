@@ -1172,9 +1172,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 continue;
             }
 
-            List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
-
-            foreach (string dll in dllFiles)
+            foreach (string dll in FindDllFiles(directory, outputManager))
             {
                 ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll);
                 if (catalog != null)
@@ -1331,6 +1329,33 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     /// <inheritdoc/>
     public PluginScanReport? GetPluginScanReport() => _pluginScanReport;
+
+    /// <summary>
+    /// Every .dll under <paramref name="folder"/>, at any depth.
+    /// </summary>
+    /// <remarks>
+    /// Uses the framework's own recursive enumeration rather than
+    /// <c>FileManager.GetAllFilesInDirectory</c>, which has been seen returning nothing for a plugin
+    /// folder that demonstrably held dozens of DLLs — every plugin silently missing, with the folder
+    /// reporting as present and empty. Finding plugins is the one place in Gum where a walk quietly
+    /// returning nothing is indistinguishable from a correct answer, so it uses the platform API.
+    /// </remarks>
+    private static IEnumerable<string> FindDllFiles(string folder, IOutputManager outputManager)
+    {
+        try
+        {
+            return System.IO.Directory
+                .EnumerateFiles(folder, "*.dll", System.IO.SearchOption.AllDirectories)
+                // EnumerateFiles' "*.dll" also matches longer extensions and 8.3 short names.
+                .Where(x => x.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        catch (Exception exception)
+        {
+            outputManager.AddError($"Could not search '{folder}' for plugins:\n{exception}");
+            return [];
+        }
+    }
 
     /// <summary>
     /// Everything under <paramref name="folder"/>, as paths relative to it, so a scan that found no
