@@ -52,6 +52,12 @@ public class MainVariableGridPlugin : PriorityPlugin
         this.RefreshVariableView += HandleRefreshVariableView;
         this.AfterUndo += HandleAfterUndo;
         this.VariableSet += HandleVariableSet;
+        this.FocusVariableFilter += HandleFocusVariableFilter;
+    }
+
+    private void HandleFocusVariableFilter()
+    {
+        _propertyGridManager.FocusVariableFilter();
     }
 
     private void HandleElementRenamed(ElementSave save, string arg2)

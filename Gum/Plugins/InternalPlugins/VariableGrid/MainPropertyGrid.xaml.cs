@@ -7,6 +7,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Gum
 {
@@ -81,6 +82,22 @@ namespace Gum
             {
                 RefreshVariableFilter();
             }
+        }
+
+        /// <summary>
+        /// Puts the caret in the filter box with any existing filter selected, so typing replaces it.
+        /// Called by <see cref="Gum.Plugins.InternalPlugins.VariableGrid.PropertyGridManager"/> in
+        /// response to the focus-filter hotkey.
+        /// </summary>
+        public void FocusVariableFilter()
+        {
+            // Dispatched at Loaded priority: the caller may have just brought a hidden Variables tab
+            // forward, and a TextBox that hasn't been laid out yet refuses focus.
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+            {
+                VariableFilterTextBox.Focus();
+                VariableFilterTextBox.SelectAll();
+            }));
         }
 
         private void HandleClearVariableFilterClicked(object? sender, RoutedEventArgs e)

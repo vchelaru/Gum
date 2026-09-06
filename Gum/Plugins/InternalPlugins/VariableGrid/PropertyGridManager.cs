@@ -57,6 +57,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     WpfDataUi.DataUiGrid mVariablesDataGrid;
     MainPropertyGrid mainControl;
+    private IPluginTab? _variablesTab;
 
     ElementSaveDisplayer mPropertyGridDisplayer;
 
@@ -195,7 +196,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         // Plugin-scoped and dependency-free, so it is created here rather than registered app-wide.
         mainControl = new Gum.MainPropertyGrid(new VariableFilterService());
 
-        _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _variablesTab = _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
         mVariablesDataGrid = mainControl.DataGrid;
 
@@ -204,6 +205,22 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
         mainControl.AddVariableClicked += HandleAddVariable;
+    }
+
+    /// <summary>
+    /// Brings the Variables tab forward and puts the caret in its filter box, so the hotkey works
+    /// from anywhere in the app rather than only when the tab already happens to be showing.
+    /// </summary>
+    public void FocusVariableFilter()
+    {
+        if (_variablesTab != null)
+        {
+            // Show as well as select: the tab may have been closed rather than merely unselected.
+            _variablesTab.Show();
+            _variablesTab.IsSelected = true;
+        }
+
+        mainControl?.FocusVariableFilter();
     }
 
     private void HandleBehaviorVariableSelected(object? sender, EventArgs e)

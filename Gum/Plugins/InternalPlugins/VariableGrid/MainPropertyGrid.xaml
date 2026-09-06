@@ -65,7 +65,7 @@
           VerticalContentAlignment="Center"
           PreviewKeyDown="HandleVariableFilterPreviewKeyDown"
           Text="{Binding VariableFilterText, UpdateSourceTrigger=PropertyChanged}"
-          ToolTip="Show only variables whose name contains this text. Press Escape to clear." />
+          ToolTip="Show only variables whose name contains this text. Press Ctrl+E to focus, Escape to clear." />
         <TextBlock
           Grid.Column="1"
           Margin="5,0,0,0"
@@ -73,6 +73,16 @@
           Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
           IsHitTestVisible="False"
           Text="Filter variables"
+          Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+        <!--  Shares the right-hand slot with the clear button, which has the opposite visibility.  -->
+        <TextBlock
+          Grid.Column="1"
+          Margin="0,0,4,0"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+          IsHitTestVisible="False"
+          Text="Ctrl+E"
           Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
         <Button
           Grid.Column="1"

@@ -144,6 +144,7 @@ public interface IPluginManager
     void FillTopLevelNames(ElementSave element, List<TopLevelName> names);
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();
+    void FocusVariableFilter();
     bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf);
 
     // Widened for #3753: MainBehaviorsPlugin/MainEditorTabPlugin previously took the concrete

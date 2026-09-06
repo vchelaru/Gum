@@ -196,6 +196,32 @@ public class HotkeyManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void PreviewKeyDownAppWide_CtrlE_InvokesFocusVariableFilterAndSetsHandled()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.E, IsCtrlDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        e.Handled.ShouldBeTrue();
+        _guiCommands.Verify(g => g.FocusVariableFilter(), Times.Once);
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_AltGrE_IsLeftForTheFocusedControl()
+    {
+        // Windows reports AltGr as Ctrl+Alt, and AltGr+E is the Euro sign on several European
+        // layouts, so the Ctrl+E hotkey must not swallow it.
+        GumKeyEventArgs e = new() { Key = GumKey.E, IsCtrlDown = true, IsAltDown = true };
+
+        bool handled = _hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeFalse();
+        e.Handled.ShouldBeFalse();
+        _guiCommands.Verify(g => g.FocusVariableFilter(), Times.Never);
+    }
+
+    [Fact]
     public void PreviewKeyDownAppWide_CtrlZ_InvokesPerformUndo()
     {
         GumKeyEventArgs e = new() { Key = GumKey.Z, IsCtrlDown = true };

@@ -17,6 +17,7 @@ public interface IHotkeyManager
     KeyCombination ReorderDown { get; }
     KeyCombination GoToDefinition { get; }
     KeyCombination Search { get; }
+    KeyCombination FocusVariableFilter { get; }
     KeyCombination NudgeUp { get; }
     KeyCombination NudgeDown { get; }
     KeyCombination NudgeRight { get; }

@@ -18,9 +18,13 @@ public static class KeyCombinationExtensions
 
     public static bool IsPressed(this KeyCombination kc, KeyEventArgs args)
     {
-        if (kc.IsCtrlDown && (args.Modifiers & Keys.Control) != Keys.Control) return false;
-        if (kc.IsShiftDown && (args.Modifiers & Keys.Shift) != Keys.Shift) return false;
-        if (kc.IsAltDown && (args.Modifiers & Keys.Alt) != Keys.Alt) return false;
+        if (!kc.ModifiersMatch(
+                (args.Modifiers & Keys.Control) == Keys.Control,
+                (args.Modifiers & Keys.Shift) == Keys.Shift,
+                (args.Modifiers & Keys.Alt) == Keys.Alt))
+        {
+            return false;
+        }
 
         return kc.Key == null || args.KeyCode == ToWinFormsKey(kc.Key.Value);
     }
@@ -31,9 +35,15 @@ public static class KeyCombinationExtensions
 
     public static bool IsPressed(this KeyCombination kc, System.Windows.Input.KeyEventArgs args)
     {
-        if (kc.IsCtrlDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Control) != System.Windows.Input.ModifierKeys.Control) return false;
-        if (kc.IsShiftDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Shift) != System.Windows.Input.ModifierKeys.Shift) return false;
-        if (kc.IsAltDown && (args.KeyboardDevice.Modifiers & System.Windows.Input.ModifierKeys.Alt) != System.Windows.Input.ModifierKeys.Alt) return false;
+        System.Windows.Input.ModifierKeys modifiers = args.KeyboardDevice.Modifiers;
+
+        if (!kc.ModifiersMatch(
+                (modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control,
+                (modifiers & System.Windows.Input.ModifierKeys.Shift) == System.Windows.Input.ModifierKeys.Shift,
+                (modifiers & System.Windows.Input.ModifierKeys.Alt) == System.Windows.Input.ModifierKeys.Alt))
+        {
+            return false;
+        }
 
         if (kc.Key == null)
         {
