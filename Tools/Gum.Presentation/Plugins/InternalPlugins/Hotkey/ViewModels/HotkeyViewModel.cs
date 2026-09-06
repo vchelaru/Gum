@@ -29,6 +29,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.ReorderDown, "Reorder Down");
             Add(_hotkeyManager.GoToDefinition, "Go to Definition");
             Add(_hotkeyManager.Search, "Search");
+            Add(_hotkeyManager.FocusVariableFilter, "Filter Variables");
             
             Add(_hotkeyManager.NudgeUp, "Nudge Up");
             Add(_hotkeyManager.NudgeUp5, "Nudge Up 5");

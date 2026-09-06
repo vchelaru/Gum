@@ -42,4 +42,26 @@ public class KeyCombinationExtensionsTests : BaseTestClass
 
         combo.IsPressed(args).ShouldBeTrue();
     }
+
+    [Fact]
+    public void IsPressed_GumKeyEventArgs_KeyedCombinationWithUnrequestedModifierDown_ReturnsFalse()
+    {
+        // Windows reports AltGr as Ctrl+Alt, so a Ctrl shortcut that ignored the extra Alt would
+        // swallow every AltGr character a non-US layout types (AltGr+E is the Euro sign).
+        KeyCombination combo = KeyCombination.Ctrl(GumKey.E);
+        GumKeyEventArgs args = new() { Key = GumKey.E, IsCtrlDown = true, IsAltDown = true };
+
+        combo.IsPressed(args).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsPressed_GumKeyEventArgs_NoKeyOnCombinationWithExtraModifierDown_StillMatches()
+    {
+        // A modifier-only combination qualifies a mouse gesture rather than naming a shortcut, so
+        // holding something else alongside it must not stop it matching.
+        KeyCombination combo = KeyCombination.Shift();
+        GumKeyEventArgs args = new() { Key = GumKey.Up, IsShiftDown = true, IsCtrlDown = true };
+
+        combo.IsPressed(args).ShouldBeTrue();
+    }
 }

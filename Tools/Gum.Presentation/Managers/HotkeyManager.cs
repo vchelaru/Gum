@@ -37,6 +37,11 @@ public class HotkeyManager : IHotkeyManager
     public KeyCombination ReorderDown { get; private set; } = KeyCombination.Alt(GumKey.Down);
     public KeyCombination GoToDefinition { get; private set; } = KeyCombination.Pressed(GumKey.F12);
     public KeyCombination Search { get; private set; } = KeyCombination.Ctrl(GumKey.F);
+
+    // Ctrl+F stays the tree search everywhere, so the variable filter gets Ctrl+E - the Windows
+    // convention for focusing a search field.
+    public KeyCombination FocusVariableFilter { get; private set; } = KeyCombination.Ctrl(GumKey.E);
+
     public KeyCombination NudgeUp { get; private set; } = KeyCombination.Pressed(GumKey.Up);
     public KeyCombination NudgeDown { get; private set; } = KeyCombination.Pressed(GumKey.Down);
     public KeyCombination NudgeRight { get; private set; } = KeyCombination.Pressed(GumKey.Right);
@@ -145,6 +150,7 @@ public class HotkeyManager : IHotkeyManager
         Action? match = true switch
         {
             _ when Search.IsPressed(e)  => _guiCommands.FocusSearch,
+            _ when FocusVariableFilter.IsPressed(e) => _guiCommands.FocusVariableFilter,
             _ when RedoAlt.IsPressed(e) || Redo.IsPressed(e) => _undoManager.PerformRedo,
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
             _ when NavigateBack.IsPressed(e) => _selectionHistory.NavigateBack,

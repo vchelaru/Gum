@@ -6,6 +6,14 @@ The Variables tab displays the variables for the currently-selected element, ins
 
 <figure><img src="../../.gitbook/assets/VariablesTab.png" alt=""><figcaption><p>Variables for the ExitButton instance</p></figcaption></figure>
 
+## Filtering Variables
+
+An element can have more variables than fit on screen, so a filter box sits above the variable list. Type in it and the tab shows only the variables whose name contains what you typed. Matching ignores capitalization, so typing `vis` finds `Visible`.
+
+Matching variables stay inside their own categories, which means a filter also shows you where a variable lives. Categories holding no matches hide while you are filtering, and clearing the filter restores every category, including which ones you had expanded.
+
+Press `Ctrl+E` from anywhere in Gum to bring the **Variables** tab forward and put the cursor in the filter box. Press `Escape` to clear the filter and move focus back to the variable list, or click the **X** button at the right of the box.
+
 ## Default and Explicitly Set Values
 
 Gum helps you visualize which variables are explicitly set at the current selection level. If a variable is not explicitly set, then it inherits the value from the next level down.

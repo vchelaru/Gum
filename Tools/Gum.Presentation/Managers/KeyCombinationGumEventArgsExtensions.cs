@@ -14,9 +14,7 @@ public static class KeyCombinationGumEventArgsExtensions
 {
     public static bool IsPressed(this KeyCombination kc, GumKeyEventArgs args)
     {
-        if (kc.IsCtrlDown && !args.IsCtrlDown) return false;
-        if (kc.IsShiftDown && !args.IsShiftDown) return false;
-        if (kc.IsAltDown && !args.IsAltDown) return false;
+        if (!kc.ModifiersMatch(args.IsCtrlDown, args.IsShiftDown, args.IsAltDown)) return false;
 
         return kc.Key == null || args.Key == kc.Key;
     }

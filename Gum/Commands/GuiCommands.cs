@@ -131,6 +131,12 @@ public class GuiCommands : IGuiCommands
     }
 
     /// <inheritdoc/>
+    public void FocusVariableFilter()
+    {
+        _pluginManager.FocusVariableFilter();
+    }
+
+    /// <inheritdoc/>
     public ISpinner ShowSpinner() => _spinnerFactory.Create();
 
     /// <inheritdoc/>

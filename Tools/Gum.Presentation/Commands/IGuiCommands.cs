@@ -14,6 +14,11 @@ public interface IGuiCommands
     void FocusSearch();
 
     /// <summary>
+    /// Shows the Variables tab and puts the caret in its filter box.
+    /// </summary>
+    void FocusVariableFilter();
+
+    /// <summary>
     /// Shows a progress spinner and returns it as a framework-neutral <see cref="ISpinner"/>.
     /// </summary>
     ISpinner ShowSpinner();

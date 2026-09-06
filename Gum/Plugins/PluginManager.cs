@@ -706,6 +706,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void FocusSearch() =>
         CallMethodOnPlugin(plugin => plugin.CallFocusSearch());
 
+    public void FocusVariableFilter() =>
+        CallMethodOnPlugin(plugin => plugin.CallFocusVariableFilter());
+
     public bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
     {
         bool shouldExclude = false;

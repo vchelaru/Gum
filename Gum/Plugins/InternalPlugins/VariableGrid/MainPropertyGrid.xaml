@@ -65,7 +65,7 @@
           VerticalContentAlignment="Center"
           PreviewKeyDown="HandleVariableFilterPreviewKeyDown"
           Text="{Binding VariableFilterText, UpdateSourceTrigger=PropertyChanged}"
-          ToolTip="Show only variables whose name contains this text. Press Escape to clear." />
+          ToolTip="Show only variables whose name contains this text. Press Ctrl+E to focus, Escape to clear." />
         <TextBlock
           Grid.Column="1"
           Margin="5,0,0,0"
