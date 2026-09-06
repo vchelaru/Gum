@@ -4,8 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Text;
 
 namespace Gum.Plugins;
@@ -26,6 +28,7 @@ internal class PluginCatalogFactory
     private const int MaxReportedLoaderErrors = 10;
 
     private readonly IOutputManager _outputManager;
+    private readonly List<PluginFileScan> _scans = [];
 
     public PluginCatalogFactory(IOutputManager outputManager)
     {
@@ -33,30 +36,64 @@ internal class PluginCatalogFactory
     }
 
     /// <summary>
+    /// One entry per file passed to <see cref="CreateCatalogForFile"/>, for the scan report shown
+    /// in the "Manage Plugins" dialog.
+    /// </summary>
+    public IReadOnlyList<PluginFileScan> Scans => _scans;
+
+    /// <summary>
     /// Loads <paramref name="dllPath"/> and returns a catalog over it, or null if the file holds
     /// no usable types. Reports anything the user could act on to the Output tab.
     /// </summary>
     public ComposablePartCatalog? CreateCatalogForFile(string dllPath)
     {
+        string fileName = Path.GetFileName(dllPath);
         Assembly assembly;
 
         try
         {
             assembly = Assembly.LoadFrom(dllPath);
         }
-        catch (BadImageFormatException)
+        catch (BadImageFormatException) when (!IsManagedAssembly(dllPath))
         {
-            // A native DLL, which is what this means, is expected in a plugin folder and can
-            // never be loaded as a managed assembly. Nothing to report.
+            // A native DLL, which a plugin ships alongside itself in runtimes/<rid>/native. It can
+            // never load as managed, so it isn't a failure and there is nothing to report.
+            _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.NotManagedAssembly, false, null));
             return null;
         }
         catch (Exception exception)
         {
+            _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.LoadFailed, false, exception.Message));
             _outputManager.AddError($"Failed to load plugin assembly '{dllPath}':\n{exception}");
             return null;
         }
 
+        _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.Loaded, CouldContainPlugins(assembly), null));
+
         return CreateResilientCatalog(assembly);
+    }
+
+    /// <summary>
+    /// Whether the file at <paramref name="path"/> carries a CLI header, which is what separates a
+    /// native DLL from a managed assembly that failed to load for some other reason (a truncated
+    /// or corrupted plugin, say). Without this check a damaged plugin would be dismissed as native
+    /// and vanish silently — the exact failure this scan exists to expose.
+    /// </summary>
+    internal static bool IsManagedAssembly(string path)
+    {
+        try
+        {
+            using FileStream stream = File.OpenRead(path);
+            using PEReader peReader = new(stream);
+
+            return peReader.HasMetadata;
+        }
+        catch (Exception)
+        {
+            // Unreadable or not a PE file at all. Treat as unmanaged; the caller stays quiet, and a
+            // file Gum can't even open is not a diagnosis anyone can act on.
+            return false;
+        }
     }
 
     /// <summary>

@@ -15,6 +15,12 @@ public class PluginsDialogViewModel : DialogViewModel
 
     public ObservableCollection<PluginItemViewModel> Plugins { get; } = [];
 
+    /// <summary>
+    /// What the plugin-folder scan found, as copyable text. A plugin missing from the list above is
+    /// otherwise indistinguishable from one that was never installed.
+    /// </summary>
+    public string Diagnostics { get; }
+
     public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager)
     {
         Title = "Manage Plugins";
@@ -28,6 +34,9 @@ public class PluginsDialogViewModel : DialogViewModel
         {
             Plugins.Add(new PluginItemViewModel(summary, pluginManager, dialogService));
         }
+
+        Diagnostics = pluginManager.GetPluginScanReport()?.Describe()
+            ?? "Plugins have not been loaded, so there is nothing to report.";
     }
 }
 

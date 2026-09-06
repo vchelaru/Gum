@@ -734,6 +734,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _pluginEnablementStore = pluginEnablementStore;
     }
 
+    private PluginScanReport? _pluginScanReport;
+
 
     public void Initialize()
     {
@@ -1160,10 +1162,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         pluginDirectories.Add(PluginFolder);
 
-        PluginCatalogFactory catalogFactory = new(Locator.GetRequiredService<IOutputManager>());
+        IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
+        PluginCatalogFactory catalogFactory = new(outputManager);
 
         foreach (var directory in pluginDirectories)
         {
+            if (!System.IO.Directory.Exists(directory))
+            {
+                continue;
+            }
+
             List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
 
             foreach (string dll in dllFiles)
@@ -1174,6 +1182,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                     returnValue.Catalogs.Add(catalog);
                 }
             }
+        }
+
+        _pluginScanReport = new PluginScanReport(PluginFolder, System.IO.Directory.Exists(PluginFolder),
+            catalogFactory.Scans);
+
+        // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
+        // so - Gum otherwise starts looking healthy. The dialog carries the same text.
+        if (!_pluginScanReport.PluginAssemblies.Any())
+        {
+            outputManager.AddError(_pluginScanReport.Describe());
         }
 
         returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
@@ -1302,6 +1320,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     /// <inheritdoc/>
     public IReadOnlyList<PluginSummary> GetAllPluginSummaries() =>
         AllPluginContainers.Select(ToPluginSummary).ToList();
+
+    /// <inheritdoc/>
+    public PluginScanReport? GetPluginScanReport() => _pluginScanReport;
 
     /// <inheritdoc/>
     public PluginSummary DisableUserPlugin(object pluginHandle)

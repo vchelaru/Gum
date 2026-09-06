@@ -180,6 +180,13 @@ public interface IPluginManager
     IReadOnlyList<PluginSummary> GetAllPluginSummaries();
 
     /// <summary>
+    /// Returns what the plugin-folder scan found at startup, or null if plugins were never loaded.
+    /// Shown in the "Manage Plugins" dialog so a plugin that is missing from the list can be told
+    /// apart from one that was never installed.
+    /// </summary>
+    PluginScanReport? GetPluginScanReport();
+
+    /// <summary>
     /// Disables the plugin identified by <paramref name="pluginHandle"/> as user-initiated
     /// (persisting the disabled state) and returns its updated summary.
     /// </summary>

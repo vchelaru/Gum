@@ -103,6 +103,27 @@ public class PluginCatalogFactoryTests
 
             catalog.ShouldBeNull();
             outputManager.Verify(m => m.AddError(It.IsAny<string>()), Times.Never);
+            factory.Scans.ShouldHaveSingleItem().Outcome.ShouldBe(PluginFileOutcome.NotManagedAssembly);
+        }
+        finally
+        {
+            File.Delete(nativeDllPath);
+        }
+    }
+
+    // A truncated or corrupted plugin dll also throws BadImageFormatException. Treating that as
+    // "native, nothing to see" would silently drop a real plugin - the failure this all exists for.
+    [Fact]
+    public void IsManagedAssembly_TellsACorruptAssemblyApartFromANativeDll()
+    {
+        string nativeDllPath = Path.Combine(Path.GetTempPath(), $"gum-test-native-{Guid.NewGuid():N}.dll");
+        File.WriteAllBytes(nativeDllPath, [0x4D, 0x5A, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04]);
+
+        try
+        {
+            PluginCatalogFactory.IsManagedAssembly(nativeDllPath).ShouldBeFalse();
+            PluginCatalogFactory.IsManagedAssembly(typeof(PluginCatalogFactoryTests).Assembly.Location)
+                .ShouldBeTrue();
         }
         finally
         {
