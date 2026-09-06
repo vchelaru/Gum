@@ -27,20 +27,23 @@ public class MainErrorsPlugin : PriorityPlugin
     PluginTab tabPage;
     private ErrorTabHeader _tabPageHeader;
     private readonly ISelectedState _selectedState;
+    private readonly IClipboardService _clipboardService;
 
     #endregion
 
     [ImportingConstructor]
-    public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState)
+    public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
+        IClipboardService clipboardService)
     {
         this.errorChecker = errorChecker;
         _messenger = messenger;
         _selectedState = selectedState;
+        _clipboardService = clipboardService;
     }
 
     public override void StartUp()
     {
-        viewModel = new AllErrorsViewModel();
+        viewModel = new AllErrorsViewModel(_clipboardService);
 
         _messenger.Register<RequestErrorRefreshMessage>(
             this,
