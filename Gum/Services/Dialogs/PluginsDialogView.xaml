@@ -6,50 +6,52 @@
   xmlns:local="clr-namespace:Gum.Services.Dialogs"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   d:DesignHeight="450"
-  d:DesignWidth="450"
-  Width="450" Height="450"
+  d:DesignWidth="500"
+  MinWidth="500"
+  MinHeight="400"
+  MaxHeight="600"
   local:Dialog.DialogTitle="{Binding Title}"
+  local:Dialog.ScrollContent="False"
   mc:Ignorable="d">
-  <Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
+  <!-- Tabs rather than a second stacked section: the dialog window is SizeToContent, so anything
+       that changes height once open either clips or resizes the window under the user. Both tabs
+       share this one fixed area and scroll inside it, so neither can overflow. -->
+  <TabControl>
+    <TabItem Header="Plugins">
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding Plugins}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <CheckBox
+                Margin="4,4,4,0"
+                IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                Content="{Binding DisplayText}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </TabItem>
 
-    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
-      <ItemsControl ItemsSource="{Binding Plugins}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
-            <CheckBox
-              Margin="4,4,4,0"
-              IsChecked="{Binding IsEnabled, Mode=TwoWay}"
-              Content="{Binding DisplayText}" />
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </ScrollViewer>
-
-    <!-- Says which folder was searched and what was in it, so a plugin missing from the list above
+    <!-- Says which folder was searched and what was in it, so a plugin missing from the Plugins tab
          can be told apart from one that was never installed. Read-only but selectable, since the
          useful thing to do with it is paste it into a bug report. -->
-    <Expander
-      Grid.Row="1"
-      Margin="4,8,4,4"
-      Header="Plugin folder scan">
+    <TabItem Header="Folder scan">
       <TextBox
-        MaxHeight="160"
-        Margin="0,4,0,0"
+        Padding="4"
+        BorderThickness="0"
         FontFamily="Consolas"
         HorizontalScrollBarVisibility="Auto"
         IsReadOnly="True"
         Text="{Binding Diagnostics, Mode=OneWay}"
         TextWrapping="Wrap"
         VerticalScrollBarVisibility="Auto" />
-    </Expander>
-  </Grid>
+    </TabItem>
+  </TabControl>
 </UserControl>
