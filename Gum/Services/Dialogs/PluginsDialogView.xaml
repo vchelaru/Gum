@@ -46,55 +46,44 @@
 
     <!-- Says which folder was searched and what was in it, so a plugin missing from the Plugins tab
          can be told apart from one that was never installed. Read-only but selectable, since the
-         useful thing to do with it is paste it into a bug report. VerticalContentAlignment is set
-         explicitly because the app's TextBox style centers content, which for a multi-line box
-         floats the text in the middle of the box. -->
+         useful thing to do with it is paste it into a bug report.
+
+         The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does not
+         pass VerticalScrollBarVisibility through to its PART_ContentHost. Lines do not wrap - these
+         are long file paths, and wrapping breaks them mid-path, so scrolling sideways reads better
+         than a ragged column. -->
     <TabItem Header="Folder scan">
-      <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="*" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <!-- The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does
-             not pass VerticalScrollBarVisibility through to its PART_ContentHost, so the box just
-             grew past the viewport with no way to reach the rest. Horizontal scrolling is off so
-             the viewport width stays fixed and the text wraps into it. -->
-        <ScrollViewer
-          Grid.Row="0"
-          HorizontalScrollBarVisibility="Disabled"
-          VerticalScrollBarVisibility="Auto">
-          <TextBox
-            Padding="4"
-            AcceptsReturn="True"
-            BorderThickness="0"
-            FontFamily="Consolas"
-            IsReadOnly="True"
-            Text="{Binding Diagnostics, Mode=OneWay}"
-            TextWrapping="Wrap"
-            VerticalContentAlignment="Top" />
-        </ScrollViewer>
-
-        <!-- Labelled rather than icon-only: this is what a confused user is told to click, so it
-             has to be findable without hovering. -->
-        <Button
-          Grid.Row="1"
-          Margin="4"
-          Padding="8,4"
-          HorizontalAlignment="Right"
-          Command="{Binding CopyDiagnosticsCommand}"
-          ToolTip="Copy this scan to the clipboard">
-          <StackPanel Orientation="Horizontal">
-            <materialDesign:PackIcon
-              Width="16"
-              Height="16"
-              Margin="0,0,6,0"
-              VerticalAlignment="Center"
-              Kind="ContentCopy" />
-            <TextBlock VerticalAlignment="Center" Text="Copy" />
-          </StackPanel>
-        </Button>
-      </Grid>
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Auto"
+        VerticalScrollBarVisibility="Auto">
+        <TextBox
+          Padding="4"
+          AcceptsReturn="True"
+          BorderThickness="0"
+          FontFamily="Consolas"
+          IsReadOnly="True"
+          Text="{Binding Diagnostics, Mode=OneWay}"
+          TextWrapping="NoWrap"
+          VerticalContentAlignment="Top" />
+      </ScrollViewer>
     </TabItem>
   </TabControl>
+
+  <!-- On the dialog's own button row next to Close, rather than inside the tab: a second action row
+       stacked within the tab outline reads as though it belongs to the text box. -->
+  <local:Dialog.AuxiliaryActions>
+    <Button
+      Command="{Binding CopyDiagnosticsCommand}"
+      ToolTip="Copy the folder scan to the clipboard">
+      <StackPanel Orientation="Horizontal">
+        <materialDesign:PackIcon
+          Width="16"
+          Height="16"
+          Margin="0,0,6,0"
+          VerticalAlignment="Center"
+          Kind="ContentCopy" />
+        <TextBlock VerticalAlignment="Center" Text="Copy Scan" />
+      </StackPanel>
+    </Button>
+  </local:Dialog.AuxiliaryActions>
 </UserControl>
