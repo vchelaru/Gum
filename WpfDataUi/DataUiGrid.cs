@@ -161,9 +161,21 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            // Every path that replaces the collection wholesale lands here, both SetCategories and
+            // PopulateCategories, so this is where the filter's remembered rows stop describing
+            // anything on screen. Invalidating per caller instead would leave the snapshot pinning
+            // discarded categories whenever a new caller forgot to do it.
+            _memberFilter.Invalidate();
             return; // subscriptions are managed manually by SetCategories when Reset is fired
+        }
+
         Subscribe(e.NewItems);
         Unsubscribe(e.OldItems);
+
+        // Categories are also swapped in one at a time rather than wholesale (a selection change
+        // reconciles them in place), and a category arriving that way brings its full member list.
+        _memberFilter.Apply(Categories, _memberFilterPredicate);
     }
 
     private void Subscribe(IList newItems)
@@ -192,11 +204,8 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     /// </summary>
     public void SetCategories(IList<MemberCategory> newCategories)
     {
+        // Runs before the replacement below, whose Reset drops the filter snapshot this reads from.
         StoreExpandedStates();
-
-        // The snapshot describes categories that are about to be replaced, so it cannot be restored over
-        // the incoming ones.
-        _memberFilter.Invalidate();
 
         foreach (MemberCategory category in newCategories)
         {

@@ -42,17 +42,17 @@ public class MemberCategoryFilter
             return;
         }
 
-        if (!IsFiltering)
-        {
-            TakeSnapshot(categories);
-            IsFiltering = true;
-        }
+        IsFiltering = true;
 
         foreach (MemberCategory category in categories)
         {
+            // Snapshot per category on first sight rather than all at once: the grid also swaps
+            // categories in one at a time, and one arriving mid-filter carries its full member list
+            // and would otherwise never be narrowed.
             if (!_snapshots.TryGetValue(category, out CategorySnapshot? snapshot))
             {
-                continue;
+                snapshot = new CategorySnapshot(category.Members.ToList(), category.IsExpanded);
+                _snapshots[category] = snapshot;
             }
 
             List<InstanceMember> matches = snapshot.Members.Where(isMatch).ToList();
@@ -132,16 +132,6 @@ public class MemberCategoryFilter
         }
 
         Invalidate();
-    }
-
-    private void TakeSnapshot(IList<MemberCategory> categories)
-    {
-        _snapshots.Clear();
-
-        foreach (MemberCategory category in categories)
-        {
-            _snapshots[category] = new CategorySnapshot(category.Members.ToList(), category.IsExpanded);
-        }
     }
 
     private class CategorySnapshot

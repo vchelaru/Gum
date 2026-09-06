@@ -138,6 +138,75 @@ public class MemberCategoryFilterTests
         NamesIn(rebuilt).ShouldBe(new[] { "Visible", "Alpha" });
     }
 
+    [StaFact]
+    public void DataUiGrid_ShouldFilterCategoriesRebuiltByAClearRatherThanBySetCategories()
+    {
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterResetDisplay", "Visible", "Alpha") });
+        grid.ApplyMemberFilter(Contains("vis"));
+
+        // PopulateCategories() clears and refills Categories directly when Instance changes, without
+        // going through SetCategories. The snapshot describes the discarded categories from here on.
+        MemberCategory rebuilt = CreateCategory("FilterResetDisplay", "Visible", "Alpha");
+        grid.Categories.Clear();
+        grid.Categories.Add(rebuilt);
+
+        grid.ApplyMemberFilter(Contains("vis"));
+
+        NamesIn(rebuilt).ShouldBe(new[] { "Visible" });
+    }
+
+    [StaFact]
+    public void DataUiGrid_ShouldKeepFilteringWhenCategoriesAreReconciledInPlace()
+    {
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterSwapDisplay", "Visible", "Alpha") });
+        grid.ApplyMemberFilter(Contains("vis"));
+
+        // Selecting a different element goes through PropertyGridManager.ReconcileCategories, which
+        // swaps categories one at a time instead of replacing the collection, so no Reset is fired.
+        MemberCategory replacement = CreateCategory("FilterSwapDisplay", "Visible", "Alpha");
+        grid.Categories.RemoveAt(0);
+        grid.Categories.Insert(0, replacement);
+
+        NamesIn(replacement).ShouldBe(new[] { "Visible" });
+    }
+
+    [StaFact]
+    public void DataUiGrid_ShouldKeepFilteringWhenACategoryIsAppendedInPlace()
+    {
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterAppendDisplay", "Visible") });
+        grid.ApplyMemberFilter(Contains("vis"));
+
+        // A newly selected instance can bring a category the previous one didn't have.
+        MemberCategory added = CreateCategory("FilterAppendText", "Visible", "Alpha");
+        grid.Categories.Add(added);
+
+        NamesIn(added).ShouldBe(new[] { "Visible" });
+    }
+
+    [StaFact]
+    public void DataUiGrid_ShouldKeepFilteringWhenInstanceIsSetBeforeSetCategories()
+    {
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterInstanceDisplay", "Visible", "Alpha") });
+        grid.ApplyMemberFilter(Contains("vis"));
+
+        // PropertyGridManager assigns Instance (which runs PopulateCategories) and only then calls
+        // SetCategories, so the real selection-change sequence is not SetCategories on its own.
+        grid.Instance = new FakeInstance();
+        MemberCategory rebuilt = CreateCategory("FilterInstanceDisplay", "Visible", "Alpha");
+        grid.SetCategories(new List<MemberCategory> { rebuilt });
+
+        NamesIn(rebuilt).ShouldBe(new[] { "Visible" });
+    }
+
+    private class FakeInstance
+    {
+        public string SomeProperty { get; set; } = "";
+    }
+
     [Fact]
     public void Invalidate_ShouldDropTheSnapshotSoNewCategoriesAreNotRestoredOver()
     {
