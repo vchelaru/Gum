@@ -58,9 +58,9 @@ public class PluginCatalogFactoryTests
 
     // A plugin's dependencies sit in the same folder and get scanned too. Vortice.Direct3D12 is the
     // standing example: two of its types can never reflection-load, and it holds no plugins, so the
-    // skipped types are not something the user can act on.
+    // skipped types are not something the user can act on and are not worth a line.
     [Fact]
-    public void CreateCatalogForLoadableTypes_ReportsAsOutput_WhenAssemblyCannotContainPlugins()
+    public void CreateCatalogForLoadableTypes_ReportsNothing_WhenAssemblyCannotContainPlugins()
     {
         Mock<IOutputManager> outputManager = new();
         ReflectionTypeLoadException exception = new(
@@ -68,10 +68,13 @@ public class PluginCatalogFactoryTests
             [new TypeLoadException("Could not load type 'Union'.")]);
         PluginCatalogFactory factory = new(outputManager.Object);
 
-        factory.CreateCatalogForLoadableTypes("Vortice.Direct3D12", exception, couldContainPlugins: false);
+        ComposablePartCatalog? catalog = factory.CreateCatalogForLoadableTypes(
+            "Vortice.Direct3D12", exception, couldContainPlugins: false);
 
+        // Still catalogued - staying quiet must not mean dropping the types that did load.
+        catalog.ShouldNotBeNull();
         outputManager.Verify(m => m.AddError(It.IsAny<string>()), Times.Never);
-        outputManager.Verify(m => m.AddOutput(It.Is<string>(v => v.Contains("Vortice.Direct3D12"))), Times.Once);
+        outputManager.Verify(m => m.AddOutput(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]

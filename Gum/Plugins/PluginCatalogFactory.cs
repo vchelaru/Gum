@@ -14,8 +14,8 @@ namespace Gum.Plugins;
 /// Turns the files in the plugin folder into MEF catalogs. The folder holds more than plugins —
 /// it is scanned recursively, so it also turns up each plugin's managed dependencies and the
 /// native DLLs those ship in <c>runtimes/&lt;rid&gt;/native</c>. Neither can host a plugin, and
-/// both fail to load in their own way, so this class separates a failure the user can act on
-/// (a plugin that will not appear) from the expected noise.
+/// both fail to load in their own way, so this class reports only the one failure the user can
+/// act on — a plugin that will not appear — and stays silent about the rest.
 /// </summary>
 internal class PluginCatalogFactory
 {
@@ -104,31 +104,26 @@ internal class PluginCatalogFactory
         ReflectionTypeLoadException exception, bool couldContainPlugins)
     {
         Type[] loadableTypes = exception.Types.OfType<Type>().ToArray();
-        int skippedCount = exception.Types.Length - loadableTypes.Length;
-        string report = BuildReport(assemblyName, exception, skippedCount, exception.Types.Length,
-            couldContainPlugins);
 
-        // An assembly that can't hold a plugin has nothing the user can act on - Vortice.Direct3D12
-        // is the standing example, with two types that never load - so it stays out of the errors.
+        // Only worth reporting when a plugin could have been among the skipped types. An assembly
+        // that can't hold one has nothing the user can act on, now or ever - Vortice.Direct3D12 is
+        // the standing example, with two types that can never load and no MEF parts.
         if (couldContainPlugins)
         {
-            _outputManager.AddError(report);
-        }
-        else
-        {
-            _outputManager.AddOutput(report);
+            int skippedCount = exception.Types.Length - loadableTypes.Length;
+            _outputManager.AddError(BuildReport(assemblyName, exception, skippedCount, exception.Types.Length));
         }
 
         return loadableTypes.Length > 0 ? new TypeCatalog(loadableTypes) : null;
     }
 
     private static string BuildReport(string assemblyName, ReflectionTypeLoadException exception,
-        int skippedCount, int totalCount, bool couldContainPlugins)
+        int skippedCount, int totalCount)
     {
         StringBuilder report = new();
-        report.AppendLine($"Assembly '{assemblyName}' loaded, but {skippedCount} of its {totalCount} " +
-            "types could not be loaded and were skipped." +
-            (couldContainPlugins ? " Any plugin among them will not appear in Gum:" : ""));
+        report.AppendLine($"Plugin assembly '{assemblyName}' loaded, but {skippedCount} of its " +
+            $"{totalCount} types could not be loaded and were skipped. Any plugin among them will " +
+            "not appear in Gum:");
 
         // Deduplicated - a missing dependency reports the same message once per referencing type.
         List<string> messages = (exception.LoaderExceptions ?? [])
