@@ -27,6 +27,9 @@ public class FileManagerTests : IDisposable
     // extension-filtered file search, including the one that finds plugins and the one a game uses
     // to resolve a content file whose extension was not given.
     [Theory]
+    // th-TH is the culture this was reported under: a Thai user saw no plugins at all, because
+    // every path parsed as having no extension.
+    [InlineData("th-TH")]
     [InlineData("en-US")]
     [InlineData("tr-TR")]
     [InlineData("")]
