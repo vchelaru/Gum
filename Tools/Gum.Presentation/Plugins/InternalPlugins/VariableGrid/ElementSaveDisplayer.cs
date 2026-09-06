@@ -126,7 +126,7 @@ public class ElementSaveDisplayer
         _shapeVariableVersionGate = new ShapeVariableVersionGate();
     }
 
-    private List<PropertyData> GetProperties(ElementSave instanceOwner, InstanceSave instanceSave, StateSave stateSave)
+    private List<PropertyData> GetProperties(ElementSave? instanceOwner, InstanceSave? instanceSave, StateSave? stateSave)
     {
         // search terms: display properties, display variables, show variables, variable display, variable displayer
         List<PropertyData> propertyList = new List<PropertyData>();
@@ -148,8 +148,8 @@ public class ElementSaveDisplayer
         return propertyList;
     }
 
-    private void FillPropertyList(List<PropertyData> propertyList, ElementSave instanceOwner,
-        InstanceSave instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
+    private void FillPropertyList(List<PropertyData> propertyList, ElementSave? instanceOwner,
+        InstanceSave? instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
     {
         var currentState = _selectedState.SelectedStateSave;
         bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
@@ -411,7 +411,7 @@ public class ElementSaveDisplayer
         return variablesSetThroughReference;
     }
 
-    public List<VariableCategoryDescriptor> GetCategories(BehaviorSave behavior, InstanceSave instance)
+    public List<VariableCategoryDescriptor> GetCategories(BehaviorSave behavior, InstanceSave? instance)
     {
         var categories = new List<VariableCategoryDescriptor>();
 
@@ -447,7 +447,7 @@ public class ElementSaveDisplayer
     }
 
 
-    public List<VariableCategoryDescriptor> GetCategories(ElementSave instanceOwner, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    public List<VariableCategoryDescriptor> GetCategories(ElementSave instanceOwner, InstanceSave? instance, StateSave stateSave, StateSaveCategory? stateSaveCategory)
     {
         var categories = new List<VariableCategoryDescriptor>();
 
@@ -733,8 +733,8 @@ public class ElementSaveDisplayer
         }
     }
 
-    private VariableGridEntry? CreateEntryFromPropertyData(ElementSave instanceOwner, InstanceSave instance,
-        StateSave stateSave, StateSaveCategory stateSaveCategory, PropertyData propertyData)
+    private VariableGridEntry? CreateEntryFromPropertyData(ElementSave? instanceOwner, InstanceSave? instance,
+        StateSave? stateSave, StateSaveCategory? stateSaveCategory, PropertyData propertyData)
     {
         // early continue
         var browsableAttribute = propertyData.Attributes?.FirstOrDefault(item => item is BrowsableAttribute);
@@ -908,7 +908,7 @@ public class ElementSaveDisplayer
         return stateToPullFrom.GetVariableRecursive(variable);
     }
 
-    private void FillPropertyList(List<PropertyData> properties, InstanceSave instanceSave, ElementSave instanceOwner)
+    private void FillPropertyList(List<PropertyData> properties, InstanceSave instanceSave, ElementSave? instanceOwner)
     {
         ElementSave instanceBaseType;
         StateSave defaultStateForInstanceBaseTypeElement;
@@ -941,7 +941,7 @@ public class ElementSaveDisplayer
     /// <summary>
     /// Retrieves the base element type and its default state for the specified instance.
     /// </summary>
-    private void GetDefaultState(InstanceSave instanceSave, out ElementSave instanceBaseType, out StateSave defaultState)
+    private void GetDefaultState(InstanceSave instanceSave, out ElementSave? instanceBaseType, out StateSave defaultState)
     {
         instanceBaseType = instanceSave.GetBaseElementSave();
         if (instanceBaseType != null)
