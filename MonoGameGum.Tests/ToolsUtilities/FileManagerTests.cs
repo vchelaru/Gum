@@ -1,6 +1,7 @@
 ﻿using Shouldly;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,10 +13,33 @@ namespace MonoGameGum.Tests.ToolsUtilities;
 public class FileManagerTests : IDisposable
 {
     private readonly Func<string, Stream>? _previousHook = FileManager.CustomGetStreamFromFile;
+    private readonly CultureInfo _previousCulture = CultureInfo.CurrentCulture;
 
     public void Dispose()
     {
         FileManager.CustomGetStreamFromFile = _previousHook;
+        CultureInfo.CurrentCulture = _previousCulture;
+    }
+
+    // GetExtension read the final dot with the ordinal char overload but located the separators with
+    // LastIndexOf(string), which compares by the current culture. Where that reported a separator
+    // past the dot, every path returned no extension at all - which silently emptied every
+    // extension-filtered file search, including the one that finds plugins and the one a game uses
+    // to resolve a content file whose extension was not given.
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("tr-TR")]
+    [InlineData("")]
+    public void GetExtension_ReadsTheExtension_WhateverTheCurrentCulture(string cultureName)
+    {
+        CultureInfo.CurrentCulture = new CultureInfo(cultureName);
+
+        FileManager.GetExtension(@"C:\Gum Tool\Test\Plugins\CodeOutputPlugin\CodeOutputPlugin.dll")
+            .ShouldBe("dll");
+        FileManager.GetExtension("C:/Gum Tool/Test/Plugins/CodeOutputPlugin/CodeOutputPlugin.dll")
+            .ShouldBe("dll");
+        // A dot in a folder name, with no extension on the file itself, still has none.
+        FileManager.GetExtension(@"C:\folder.with.dots\FileWithNoExtension").ShouldBe("");
     }
 
     [Fact]
