@@ -129,7 +129,10 @@ public static class DimensionUnitTypeExtensions
             case DimensionUnitType.Ratio:
                 return HierarchyDependencyType.DependsOnSiblings;
             default:
-                throw new NotImplementedException($"Need to handle {unitType}");
+                // Units are persisted as raw ints, so a hand-edited or corrupt file can hold a
+                // value this enum does not define. Treating it as independent keeps layout running
+                // on an otherwise-valid project; the tool reports the bad value as GUM0007.
+                return HierarchyDependencyType.NoDependency;
         }
     }
 }

@@ -51,7 +51,7 @@ public class VariableGridEntry
     private readonly string _variableName;
     private readonly bool _isVariable;
     private readonly bool _isReadOnlyFromDescriptor;
-    private readonly Attribute[] _attributes;
+    private readonly Attribute[]? _attributes;
     private readonly TypeConverter? _converter;
     private readonly Type? _componentType;
 
@@ -277,7 +277,7 @@ public class VariableGridEntry
     /// clipboard).
     /// </summary>
     public VariableGridEntry(
-        Attribute[] attributes,
+        Attribute[]? attributes,
         TypeConverter? converter,
         Type? componentType,
         bool isReadOnly,

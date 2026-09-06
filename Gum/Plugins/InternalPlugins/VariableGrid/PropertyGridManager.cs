@@ -914,7 +914,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return (false, false);
     }
 
-    private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave instance)
+    private List<MemberCategory> GetMemberCategories(BehaviorSave behavior, InstanceSave? instance)
     {
         mLastElement = null;
         mLastState = null;
@@ -930,7 +930,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return ToWpf(descriptors);
     }
 
-    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory? stateCategory, InstanceSave instance)
+    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory? stateCategory, InstanceSave? instance)
     {
         List<MemberCategory> categories = new List<MemberCategory>();
 
@@ -1034,7 +1034,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return categories;
     }
 
-    private List<MemberCategory> GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave instance, StateSave stateSave, StateSaveCategory stateSaveCategory)
+    private List<MemberCategory> GetMemberCategoriesForState(ElementSave instanceOwner, InstanceSave? instance, StateSave stateSave, StateSaveCategory? stateSaveCategory)
     {
         var descriptors = mPropertyGridDisplayer.GetCategories(instanceOwner, instance, stateSave, stateSaveCategory);
         var categories = ToWpf(descriptors);
