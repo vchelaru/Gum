@@ -63,7 +63,9 @@ Landmine: the backing `_expansionStates` dictionary is **static** and keyed only
 
 ### Hiding a Row
 
-A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGrid.RefreshDelegateBasedElementVisibility`. `MemberCategory.Visibility` then collapses the category once it holds nothing, and row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`WpfDataUi/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGrid.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
+A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGrid.RefreshDelegateBasedElementVisibility`. Row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`WpfDataUi/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGrid.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
+
+Emptying a category hides its header only because each category `DataTemplate` binds the `Expander`'s `Visibility` to `MemberCategory.Visibility` (which is computed from `Members.Count`). Those templates are the three `MemberCategory` `DataTemplate`s in `Gum/Themes/Frb.Styles.Defaults.xaml` and `WpfDataUi/Themes/Generic.xaml` — a new one that omits the binding leaves empty headers stacked on screen, with nothing in the model to indicate the mistake.
 
 ### Structural Rebuild vs. Partial Refresh
 
