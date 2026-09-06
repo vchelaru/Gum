@@ -46,7 +46,8 @@ public partial class AllErrorsViewModel : ViewModel
         CopyAllErrorsCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanCopySelectedError() => SelectedItem != null;
+    // Clipboard.SetText throws on empty text, so blank rows must not reach it.
+    private bool CanCopySelectedError() => !string.IsNullOrEmpty(SelectedItem?.ClipboardText);
 
     [RelayCommand(CanExecute = nameof(CanCopySelectedError))]
     private void CopySelectedError()
@@ -57,7 +58,7 @@ public partial class AllErrorsViewModel : ViewModel
         }
     }
 
-    private bool CanCopyAllErrors() => Errors.Count > 0;
+    private bool CanCopyAllErrors() => Errors.Any(item => !string.IsNullOrEmpty(item.ClipboardText));
 
     [RelayCommand(CanExecute = nameof(CanCopyAllErrors))]
     private void CopyAllErrors()

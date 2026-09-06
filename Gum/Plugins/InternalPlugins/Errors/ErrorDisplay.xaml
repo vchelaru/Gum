@@ -35,7 +35,7 @@
                 </ContextMenu>
             </ListBox.ContextMenu>
             <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
+                <Style BasedOn="{StaticResource {x:Type ListBoxItem}}" TargetType="{x:Type ListBoxItem}">
                     <!--  Right-clicking a row does not select it in WPF, so the context menu would otherwise act on whatever was selected before.  -->
                     <EventSetter Event="PreviewMouseRightButtonDown" Handler="HandleItemPreviewMouseRightButtonDown" />
                 </Style>

@@ -133,4 +133,17 @@ public class AllErrorsViewModelTests
         viewModel.CopySelectedErrorCommand.CanExecute(null).ShouldBeTrue();
         viewModel.CopyAllErrorsCommand.CanExecute(null).ShouldBeTrue();
     }
+
+    [Fact]
+    public void CopyCommands_CannotExecute_WhenEveryErrorIsBlank()
+    {
+        // Clipboard.SetText throws on empty text, so a blank error must not reach it.
+        AllErrorsViewModel viewModel = CreateViewModel();
+        ErrorViewModel blank = new();
+        viewModel.Errors.Add(blank);
+        viewModel.SelectedItem = blank;
+
+        viewModel.CopySelectedErrorCommand.CanExecute(null).ShouldBeFalse();
+        viewModel.CopyAllErrorsCommand.CanExecute(null).ShouldBeFalse();
+    }
 }
