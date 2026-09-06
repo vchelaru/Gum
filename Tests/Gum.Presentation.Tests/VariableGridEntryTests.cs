@@ -114,6 +114,30 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void GetValue_ShouldReturnNull_WhenIsVariableFalseAndStateSaveIsNull()
+    {
+        // Issue #4643: entries built for a behavior's required instance pass a null StateSave.
+        // isVariable=false (VariableList-backed) entries must not crash if that ever happens.
+        ComponentSave component = CreateComponent("MyComponent");
+        VariableGridEntry sut = CreateSut("SomeList", stateSave: null!, component, isVariable: false);
+
+        object? value = sut.GetValue(component);
+
+        value.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetValue_ShouldNotThrow_WhenIsVariableFalseAndStateSaveIsNull()
+    {
+        // Issue #4643: the isVariable=false write path dereferenced the (nullable-in-practice)
+        // StateSave unguarded; assert it degrades to a no-op instead of throwing.
+        ComponentSave component = CreateComponent("MyComponent");
+        VariableGridEntry sut = CreateSut("SomeList", stateSave: null!, component, isVariable: false);
+
+        Should.NotThrow(() => sut.SetValue(component, new List<string> { "a" }, VariablePropertyCommitType.Full));
+    }
+
+    [Fact]
     public void ResetToDefault_ShouldRemoveVariableAndRecordUndo_WhenElementIsNotStandardElement()
     {
         ComponentSave component = CreateComponent("MyComponent");

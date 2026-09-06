@@ -106,7 +106,8 @@ public class StateReferencingInstanceMember : InstanceMember
         set => _entry.StateSaveCategory = value;
     }
 
-    public StateSave StateSave => _entry.StateSave;
+    /// <inheritdoc cref="Gum.Plugins.InternalPlugins.VariableGrid.VariableGridEntry.StateSave"/>
+    public StateSave? StateSave => _entry.StateSave;
 
     public InstanceSave? InstanceSave => _entry.InstanceSave;
 
@@ -262,7 +263,10 @@ public class StateReferencingInstanceMember : InstanceMember
     /// (built by the relocated <c>ElementSaveDisplayer</c>) into the real WPF row the live grid needs.
     /// </summary>
     public StateReferencingInstanceMember(VariableGridEntry entry) :
-        base(entry.Name, entry.StateSave)
+        // entry.StateSave is genuinely null for a behavior's required-instance entries (Name/BaseType
+        // only). InstanceMember.Instance already tolerates a null Instance elsewhere in its own logic
+        // (see its "Instance != null" checks), so this is a real, accepted null - not an assertion.
+        base(entry.Name, entry.StateSave!)
     {
         _entry = entry;
 

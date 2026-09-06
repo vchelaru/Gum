@@ -47,7 +47,7 @@ public class VariableGridEntry
     private readonly IClipboardService _clipboardService;
 
     private readonly IStateContainer _stateListCategoryContainer;
-    private readonly StateSave _stateSave;
+    private readonly StateSave? _stateSave;
     private readonly string _variableName;
     private readonly bool _isVariable;
     private readonly bool _isReadOnlyFromDescriptor;
@@ -62,8 +62,13 @@ public class VariableGridEntry
     /// <summary>The category this variable belongs to, if any (drives the "part of a category" reset/remove rules).</summary>
     public StateSaveCategory? StateSaveCategory { get; set; }
 
-    /// <summary>The state this entry reads/writes non-recursively (see <see cref="GetValue"/>).</summary>
-    public StateSave StateSave => _stateSave;
+    /// <summary>
+    /// The state this entry reads/writes non-recursively (see <see cref="GetValue"/>). Null for
+    /// entries built from a behavior's required instance (Name/BaseType only - see
+    /// <c>ElementSaveDisplayer.GetCategories(BehaviorSave, InstanceSave)</c>), which has no
+    /// <see cref="Gum.DataTypes.Variables.StateSave"/> to read/write against.
+    /// </summary>
+    public StateSave? StateSave => _stateSave;
 
     /// <summary>The selected instance this entry belongs to, or null when it belongs to the element/behavior itself.</summary>
     public InstanceSave? InstanceSave { get; }
@@ -283,7 +288,7 @@ public class VariableGridEntry
         bool isReadOnly,
         bool isAssignedByReference,
         bool isVariable,
-        StateSave stateSave,
+        StateSave? stateSave,
         StateSaveCategory? stateSaveCategory,
         string variableName,
         InstanceSave? instanceSave,
@@ -550,7 +555,7 @@ public class VariableGridEntry
         else
         {
             var effectiveVariableName = VariableSave?.Name ?? _variableName;
-            return _stateSave.GetValueRecursive(effectiveVariableName);
+            return _stateSave?.GetValueRecursive(effectiveVariableName);
         }
     }
 
@@ -659,7 +664,9 @@ public class VariableGridEntry
 
             var existingVariableList = elementSave != null ? GetVariableListFromThisOrBase(elementSave, Name) : null;
             var type = existingVariableList?.Type ?? TryGetTypeFromVariableListSave()?.ToString();
-            _stateSave.SetValue(_variableName, newValue, instanceSave, type);
+            // _stateSave is null for entries built from a behavior's required instance (Name/BaseType
+            // only), which never reach this VariableList write path - guard anyway rather than trust that.
+            _stateSave?.SetValue(_variableName, newValue, instanceSave, type);
 
             return NotifyVariableLogic(gumElementOrInstanceSaveAsObject, commitType, trySave: commitType == VariablePropertyCommitType.Full);
         }
@@ -921,7 +928,10 @@ public class VariableGridEntry
                 var instanceInElement = elementSave.Instances
                     .FirstOrDefault(item => item.Name == sourceObjectName);
 
-                if (instanceInElement != null)
+                // StateSave is null for entries built from a behavior's required instance, but those
+                // are never ElementSave-typed, so this branch never actually sees that case - guard
+                // anyway rather than assert it away with a null-forgiving StateSave!.
+                if (instanceInElement != null && StateSave != null)
                 {
                     handledByExposedVariable = true;
 
