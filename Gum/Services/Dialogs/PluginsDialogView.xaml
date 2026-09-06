@@ -4,6 +4,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:Gum.Services.Dialogs"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   d:DesignHeight="450"
   d:DesignWidth="500"
@@ -49,23 +50,51 @@
          explicitly because the app's TextBox style centers content, which for a multi-line box
          floats the text in the middle of the box. -->
     <TabItem Header="Folder scan">
-      <!-- The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does
-           not pass VerticalScrollBarVisibility through to its PART_ContentHost, so the box just
-           grew past the viewport with no way to reach the rest. Horizontal scrolling is off so the
-           viewport width stays fixed and the text wraps into it. -->
-      <ScrollViewer
-        HorizontalScrollBarVisibility="Disabled"
-        VerticalScrollBarVisibility="Auto">
-        <TextBox
-          Padding="4"
-          AcceptsReturn="True"
-          BorderThickness="0"
-          FontFamily="Consolas"
-          IsReadOnly="True"
-          Text="{Binding Diagnostics, Mode=OneWay}"
-          TextWrapping="Wrap"
-          VerticalContentAlignment="Top" />
-      </ScrollViewer>
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does
+             not pass VerticalScrollBarVisibility through to its PART_ContentHost, so the box just
+             grew past the viewport with no way to reach the rest. Horizontal scrolling is off so
+             the viewport width stays fixed and the text wraps into it. -->
+        <ScrollViewer
+          Grid.Row="0"
+          HorizontalScrollBarVisibility="Disabled"
+          VerticalScrollBarVisibility="Auto">
+          <TextBox
+            Padding="4"
+            AcceptsReturn="True"
+            BorderThickness="0"
+            FontFamily="Consolas"
+            IsReadOnly="True"
+            Text="{Binding Diagnostics, Mode=OneWay}"
+            TextWrapping="Wrap"
+            VerticalContentAlignment="Top" />
+        </ScrollViewer>
+
+        <!-- Labelled rather than icon-only: this is what a confused user is told to click, so it
+             has to be findable without hovering. -->
+        <Button
+          Grid.Row="1"
+          Margin="4"
+          Padding="8,4"
+          HorizontalAlignment="Right"
+          Command="{Binding CopyDiagnosticsCommand}"
+          ToolTip="Copy this scan to the clipboard">
+          <StackPanel Orientation="Horizontal">
+            <materialDesign:PackIcon
+              Width="16"
+              Height="16"
+              Margin="0,0,6,0"
+              VerticalAlignment="Center"
+              Kind="ContentCopy" />
+            <TextBlock VerticalAlignment="Center" Text="Copy" />
+          </StackPanel>
+        </Button>
+      </Grid>
     </TabItem>
   </TabControl>
 </UserControl>

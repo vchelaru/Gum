@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Plugins;
 
 namespace Gum.Services.Dialogs;
@@ -21,11 +22,20 @@ public class PluginsDialogViewModel : DialogViewModel
     /// </summary>
     public string Diagnostics { get; }
 
-    public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager)
+    /// <summary>
+    /// Puts <see cref="Diagnostics"/> on the clipboard. The point of the scan is to end up in a bug
+    /// report, and selecting several screens of text by hand is a poor way to get it there.
+    /// </summary>
+    public RelayCommand CopyDiagnosticsCommand { get; }
+
+    public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager,
+        IClipboardService clipboardService)
     {
         Title = "Manage Plugins";
         AffirmativeText = "Close";
         NegativeText = null;
+
+        CopyDiagnosticsCommand = new RelayCommand(() => clipboardService.SetText(Diagnostics));
 
         // Sorted by name so a plugin can be found by scanning; MEF hands them back in load order,
         // which is effectively arbitrary.
