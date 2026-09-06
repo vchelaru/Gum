@@ -48,18 +48,23 @@
          explicitly because the app's TextBox style centers content, which for a multi-line box
          floats the text in the middle of the box. -->
     <TabItem Header="Folder scan">
-      <TextBox
-        Padding="4"
-        AcceptsReturn="True"
-        BorderThickness="0"
-        FontFamily="Consolas"
-        HorizontalScrollBarVisibility="Auto"
-        IsReadOnly="True"
-        Text="{Binding Diagnostics, Mode=OneWay}"
-        TextWrapping="Wrap"
-        VerticalAlignment="Stretch"
-        VerticalContentAlignment="Top"
-        VerticalScrollBarVisibility="Auto" />
+      <!-- The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does
+           not pass VerticalScrollBarVisibility through to its PART_ContentHost, so the box just
+           grew past the viewport with no way to reach the rest. Horizontal scrolling is off so the
+           viewport width stays fixed and the text wraps into it. -->
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <TextBox
+          Padding="4"
+          AcceptsReturn="True"
+          BorderThickness="0"
+          FontFamily="Consolas"
+          IsReadOnly="True"
+          Text="{Binding Diagnostics, Mode=OneWay}"
+          TextWrapping="Wrap"
+          VerticalContentAlignment="Top" />
+      </ScrollViewer>
     </TabItem>
   </TabControl>
 </UserControl>
