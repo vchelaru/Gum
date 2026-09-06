@@ -59,9 +59,19 @@ Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitTyp
 
 `DataUiGrid.SetCategories()` captures `{name → IsExpanded}` from existing categories, replaces the list, then re-applies the saved values by name. Category collapse state persists across selection changes within a session. `IsExpanded` is `Mode=TwoWay` in the XAML template so user gestures write back to the model immediately.
 
+Landmine: the backing `_expansionStates` dictionary is **static** and keyed only by category name, so every `DataUiGrid` in the tool shares one expansion memory and same-named categories in different grids overwrite each other. Anything that expands a category programmatically must keep that out of the dictionary, or it persists as the user's preference for every later selection.
+
+### Hiding a Row
+
+A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGrid.RefreshDelegateBasedElementVisibility`. Row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`WpfDataUi/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGrid.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
+
+Emptying a category hides its header only because each category `DataTemplate` binds the `Expander`'s `Visibility` to `MemberCategory.Visibility` (which is computed from `Members.Count`). Those templates are the three `MemberCategory` `DataTemplate`s in `Gum/Themes/Frb.Styles.Defaults.xaml` and `WpfDataUi/Themes/Generic.xaml` — a new one that omits the binding leaves empty headers stacked on screen, with nothing in the model to indicate the mistake.
+
 ### Structural Rebuild vs. Partial Refresh
 
 `PropertyGridManager.RefreshDataGrid` tracks the previous display target (element, state, instances, behavior). If unchanged and `force=false`, it calls `Refresh()` to update values without recreating categories. If the target changed, it calls `SetCategories` with a fresh list from `ElementSaveDisplayer`. Pass `force: true` to always rebuild.
+
+Landmine: `SetCategories` is not the only way the grid's categories change. `PropertyGridManager.ReconcileCategories` retargets, swaps (`RemoveAt` plus `Insert`), appends, and drops categories **one at a time** on the live `Categories` collection, so it fires `Add`/`Remove` and never the `Reset` that `SetCategories` produces. Anything deriving state from the category list has to handle both shapes — hooking `SetCategories` alone leaves the state stale after an ordinary selection change, with no error anywhere.
 
 ### Control Recycling (SingleDataUiContainer)
 

@@ -113,6 +113,21 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
+    /// <summary>
+    /// What the user has typed into the Variables tab's filter box (#4631). The view turns this into a
+    /// row predicate through <see cref="IVariableFilterService"/>, since the rows are WPF types this
+    /// assembly cannot reference.
+    /// </summary>
+    public string VariableFilterText
+    {
+        get => Get<string>();
+        set => Set(value);
+    }
+
+    /// <summary>Whether the filter box is empty and should show its prompt text.</summary>
+    [DependsOn(nameof(VariableFilterText))]
+    public bool IsFilterWatermarkVisible => string.IsNullOrEmpty(VariableFilterText);
+
     public VariableSave EffectiveSelectedBehaviorVariable
     {
         get
@@ -132,6 +147,7 @@ public class MainControlViewModel : ViewModel
     {
         _deleteVariableService = deleteVariableService;
         _editVariableService = editVariableService;
+        VariableFilterText = "";
     }
 
     private void RefreshBehaviorVariablesContextMenuItems()

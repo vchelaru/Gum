@@ -1722,7 +1722,8 @@
                     <Expander
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
-                        IsExpanded="{Binding IsExpanded}">
+                        IsExpanded="{Binding IsExpanded}"
+                        Visibility="{Binding Visibility}">
                         <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>
@@ -1744,7 +1745,8 @@
                         md:ExpanderAssist.HeaderBackground="{Binding HeaderColor}"
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
-                        IsExpanded="{Binding IsExpanded}">
+                        IsExpanded="{Binding IsExpanded}"
+                        Visibility="{Binding Visibility}">
 
                         <ItemsControl
                             AlternationCount="2"

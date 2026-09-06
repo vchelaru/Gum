@@ -41,14 +41,57 @@
       Visibility="{Binding HasCategoryNotification, Converter={StaticResource BoolToVisibilityConverter}}" />
     <Grid Grid.Row="3">
       <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
         <RowDefinition />
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
+      <Grid
+        Grid.Row="0"
+        Margin="2,2,2,4"
+        Visibility="{Binding ShowVariableGrid, Converter={StaticResource BoolToVisibilityConverter}}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ContentPresenter
+          Grid.Column="0"
+          Margin="2,0,4,0"
+          VerticalAlignment="Center"
+          Content="{wpf:FluentIcon Icon=Search}" />
+        <TextBox
+          Name="VariableFilterTextBox"
+          Grid.Column="1"
+          Padding="0,0,18,0"
+          VerticalContentAlignment="Center"
+          PreviewKeyDown="HandleVariableFilterPreviewKeyDown"
+          Text="{Binding VariableFilterText, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="Show only variables whose name contains this text. Press Escape to clear." />
+        <TextBlock
+          Grid.Column="1"
+          Margin="5,0,0,0"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+          IsHitTestVisible="False"
+          Text="Filter variables"
+          Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+        <Button
+          Grid.Column="1"
+          Margin="0,0,2,0"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          Click="HandleClearVariableFilterClicked"
+          Style="{StaticResource IconButton}"
+          ToolTip="Clear filter"
+          Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+          <ContentPresenter Content="{wpf:FluentIcon Icon=Dismiss}" />
+        </Button>
+      </Grid>
       <WpfDataUi:DataUiGrid
         Name="DataGrid"
+        Grid.Row="1"
         Style="{StaticResource DataUiGrid.VariableGrid}"
         Visibility="{Binding ShowVariableGrid, Converter={StaticResource BoolToVisibilityHiddenConverter}}" />
-      <Grid Visibility="{Binding ShowBehaviorUi, Converter={StaticResource BoolToVisibilityConverter}}">
+      <Grid Grid.Row="1" Visibility="{Binding ShowBehaviorUi, Converter={StaticResource BoolToVisibilityConverter}}">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition />
@@ -71,7 +114,7 @@
         </ListBox>
       </Grid>
       <Button
-        Grid.Row="1"
+        Grid.Row="2"
         Margin="0,2,0,0"
         BorderThickness="1"
         Click="HandleAddVariableClicked"

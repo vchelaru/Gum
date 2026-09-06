@@ -28,6 +28,10 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     private readonly Dictionary<InstanceMember, Func<InstanceMember, bool>> _membersWithOptionalVisibility
         = new();
 
+    private readonly MemberCategoryFilter _memberFilter = new();
+
+    private Func<InstanceMember, bool>? _memberFilterPredicate;
+
     #endregion
 
     #region Dependency Properties
@@ -157,9 +161,21 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            // Every path that replaces the collection wholesale lands here, both SetCategories and
+            // PopulateCategories, so this is where the filter's remembered rows stop describing
+            // anything on screen. Invalidating per caller instead would leave the snapshot pinning
+            // discarded categories whenever a new caller forgot to do it.
+            _memberFilter.Invalidate();
             return; // subscriptions are managed manually by SetCategories when Reset is fired
+        }
+
         Subscribe(e.NewItems);
         Unsubscribe(e.OldItems);
+
+        // Categories are also swapped in one at a time rather than wholesale (a selection change
+        // reconciles them in place), and a category arriving that way brings its full member list.
+        _memberFilter.Apply(Categories, _memberFilterPredicate);
     }
 
     private void Subscribe(IList newItems)
@@ -188,6 +204,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     /// </summary>
     public void SetCategories(IList<MemberCategory> newCategories)
     {
+        // Runs before the replacement below, whose Reset drops the filter snapshot this reads from.
         StoreExpandedStates();
 
         foreach (MemberCategory category in newCategories)
@@ -200,13 +217,31 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         Unsubscribe(Categories);
         Categories.ReplaceAll(newCategories);
         Subscribe((IList)newCategories);
+
+        // Selecting a different object rebuilds the grid, which would otherwise silently drop a filter
+        // the box still shows as active.
+        _memberFilter.Apply(Categories, _memberFilterPredicate);
+    }
+
+    /// <summary>
+    /// Shows only the members <paramref name="isMatch"/> accepts, expanding whichever categories hold
+    /// them. Passing null clears the filter and restores every category's members, their order, and the
+    /// expansion state the user had chosen. The predicate is remembered and re-applied whenever the grid
+    /// rebuilds its categories.
+    /// </summary>
+    public void ApplyMemberFilter(Func<InstanceMember, bool>? isMatch)
+    {
+        _memberFilterPredicate = isMatch;
+        _memberFilter.Apply(Categories, isMatch);
     }
 
     private void StoreExpandedStates()
     {
         foreach (var item in Categories)
         {
-            _expansionStates[item.Name] = item.IsExpanded;
+            // A filter force-expands the categories holding its matches. Persisting that would let a
+            // search the user has already dismissed reorganize the grid for every later selection.
+            _expansionStates[item.Name] = _memberFilter.GetPreFilterIsExpanded(item);
         }
     }
 
