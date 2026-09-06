@@ -1,4 +1,7 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using CommunityToolkit.Mvvm.Input;
 using Gum.Plugins;
 
 namespace Gum.Services.Dialogs;
@@ -13,16 +16,37 @@ public class PluginsDialogViewModel : DialogViewModel
 
     public ObservableCollection<PluginItemViewModel> Plugins { get; } = [];
 
-    public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager)
+    /// <summary>
+    /// What the plugin-folder scan found, as copyable text. A plugin missing from the list above is
+    /// otherwise indistinguishable from one that was never installed.
+    /// </summary>
+    public string Diagnostics { get; }
+
+    /// <summary>
+    /// Puts <see cref="Diagnostics"/> on the clipboard. The point of the scan is to end up in a bug
+    /// report, and selecting several screens of text by hand is a poor way to get it there.
+    /// </summary>
+    public RelayCommand CopyDiagnosticsCommand { get; }
+
+    public PluginsDialogViewModel(IDialogService dialogService, IPluginManager pluginManager,
+        IClipboardService clipboardService)
     {
         Title = "Manage Plugins";
         AffirmativeText = "Close";
         NegativeText = null;
 
-        foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries())
+        CopyDiagnosticsCommand = new RelayCommand(() => clipboardService.SetText(Diagnostics));
+
+        // Sorted by name so a plugin can be found by scanning; MEF hands them back in load order,
+        // which is effectively arbitrary.
+        foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries()
+                     .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             Plugins.Add(new PluginItemViewModel(summary, pluginManager, dialogService));
         }
+
+        Diagnostics = pluginManager.GetPluginScanReport()?.Describe()
+            ?? "Plugins have not been loaded, so there is nothing to report.";
     }
 }
 

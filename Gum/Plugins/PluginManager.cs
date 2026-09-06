@@ -734,6 +734,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _pluginEnablementStore = pluginEnablementStore;
     }
 
+    private PluginScanReport? _pluginScanReport;
+
 
     public void Initialize()
     {
@@ -1160,62 +1162,47 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         pluginDirectories.Add(PluginFolder);
 
+        IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
+        PluginCatalogFactory catalogFactory = new(outputManager);
+
         foreach (var directory in pluginDirectories)
         {
-            List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
-            string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
-
-            //dllFiles.Add(executablePath + "Gum.exe");
-            foreach (string dll in dllFiles)
+            if (!System.IO.Directory.Exists(directory))
             {
-                try
-                {
-                    Assembly loadedAssembly = Assembly.LoadFrom(dll);
+                continue;
+            }
 
-                    ComposablePartCatalog? catalog = CreateResilientCatalog(loadedAssembly);
-                    if (catalog != null)
-                    {
-                        returnValue.Catalogs.Add(catalog);
-                    }
-                }
-                catch (Exception e)
+            foreach (string dll in FindDllFiles(directory, outputManager))
+            {
+                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll);
+                if (catalog != null)
                 {
-                    Locator.GetRequiredService<IOutputManager>().AddError($"Failed to load plugin assembly '{dll}':\n{e}");
+                    returnValue.Catalogs.Add(catalog);
                 }
             }
+        }
+
+        bool foundAnyPluginAssembly = catalogFactory.Scans
+            .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
+
+        _pluginScanReport = new PluginScanReport(
+            PluginFolder,
+            System.IO.Directory.Exists(PluginFolder),
+            catalogFactory.Scans,
+            System.Windows.Forms.Application.ExecutablePath,
+            // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
+            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
+
+        // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
+        // so - Gum otherwise starts looking healthy. The dialog carries the same text.
+        if (!foundAnyPluginAssembly)
+        {
+            outputManager.AddError(_pluginScanReport.Describe());
         }
 
         returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
 
         return returnValue;
-    }
-
-    /// <summary>
-    /// Builds a MEF catalog for a plugin-folder assembly without letting a single unloadable type
-    /// abort plugin loading. <see cref="AssemblyCatalog"/> enumerates an assembly's types lazily
-    /// during composition, so an assembly that contains a type which can't be reflection-loaded —
-    /// e.g. a plugin's native-interop dependency such as Vortice.Direct3D12, whose explicit-layout
-    /// <c>Union</c> struct overlaps object and non-object fields — would throw a
-    /// <see cref="ReflectionTypeLoadException"/> later, outside the per-DLL try/catch in
-    /// <see cref="CreateCatalog"/>, and take down every plugin. Forcing the type enumeration here
-    /// surfaces that failure eagerly so it can be contained, and the catalog is then built from
-    /// only the types that did load. Dependency assemblies expose no MEF parts, so a
-    /// <see cref="TypeCatalog"/> over their loadable types is equivalent to an AssemblyCatalog but
-    /// resilient. Returns null if nothing loadable remains.
-    /// </summary>
-    private static ComposablePartCatalog? CreateResilientCatalog(Assembly assembly)
-    {
-        try
-        {
-            // Surface any unloadable types now rather than during deferred MEF composition.
-            assembly.GetTypes();
-            return new AssemblyCatalog(assembly);
-        }
-        catch (ReflectionTypeLoadException ex)
-        {
-            Type[] loadableTypes = ex.Types.OfType<Type>().ToArray();
-            return loadableTypes.Length > 0 ? new TypeCatalog(loadableTypes) : null;
-        }
     }
 
     // Eventually we may add support for this but not on the first pass
@@ -1339,6 +1326,67 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     /// <inheritdoc/>
     public IReadOnlyList<PluginSummary> GetAllPluginSummaries() =>
         AllPluginContainers.Select(ToPluginSummary).ToList();
+
+    /// <inheritdoc/>
+    public PluginScanReport? GetPluginScanReport() => _pluginScanReport;
+
+    /// <summary>
+    /// Every .dll under <paramref name="folder"/>, at any depth.
+    /// </summary>
+    /// <remarks>
+    /// Uses the framework's own recursive enumeration rather than
+    /// <c>FileManager.GetAllFilesInDirectory</c>. A plugin search that quietly returns nothing looks
+    /// exactly like a correct answer — Gum starts, and every external plugin is simply absent — so
+    /// this one place is worth keeping on the platform API rather than on Gum's own file walk.
+    /// </remarks>
+    private static IEnumerable<string> FindDllFiles(string folder, IOutputManager outputManager)
+    {
+        try
+        {
+            return System.IO.Directory
+                .EnumerateFiles(folder, "*.dll", System.IO.SearchOption.AllDirectories)
+                // EnumerateFiles' "*.dll" also matches longer extensions and 8.3 short names.
+                .Where(x => x.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        catch (Exception exception)
+        {
+            outputManager.AddError($"Could not search '{folder}' for plugins:\n{exception}");
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Everything under <paramref name="folder"/>, as paths relative to it, so a scan that found no
+    /// plugin can say whether the folder was empty or held files it didn't match. Deliberately does
+    /// not reuse the extension-filtered walk the scan itself uses — the point is to see past it.
+    /// </summary>
+    private static List<string> ListFolderEntries(string folder)
+    {
+        const int maxEntries = 100;
+        List<string> entries = new();
+
+        try
+        {
+            foreach (string path in System.IO.Directory.EnumerateFileSystemEntries(
+                         folder, "*", System.IO.SearchOption.AllDirectories))
+            {
+                if (entries.Count == maxEntries)
+                {
+                    entries.Add("...more not listed.");
+                    break;
+                }
+
+                entries.Add(path.Substring(folder.Length).TrimStart('\\', '/'));
+            }
+        }
+        catch (Exception exception)
+        {
+            entries.Add($"(could not be listed: {exception.Message})");
+        }
+
+        return entries;
+    }
 
     /// <inheritdoc/>
     public PluginSummary DisableUserPlugin(object pluginHandle)

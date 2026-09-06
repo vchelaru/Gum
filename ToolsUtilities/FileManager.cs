@@ -175,7 +175,8 @@ namespace ToolsUtilities
                 {
                     try
                     {
-                        if (fileName.StartsWith(".\\") || fileName.StartsWith("./"))
+                        if (fileName.StartsWith(".\\", StringComparison.Ordinal) ||
+                            fileName.StartsWith("./", StringComparison.Ordinal))
                         {
                             fileName = fileName.Substring(2);
                         }
@@ -374,9 +375,13 @@ namespace ToolsUtilities
                 }
 
 
+                // char overloads, so all three are ordinal. LastIndexOf(string) compares by the
+                // current culture, and a culture-sensitive search for a separator can report a
+                // position past the final dot - which made this return "" for every path on some
+                // machines, and silently emptied every extension-filtered file search.
                 int dotIndex = fileName.LastIndexOf('.');
-                int lastSlash = fileName.LastIndexOf("/");
-                int lastBackSlash = fileName.LastIndexOf("\\");
+                int lastSlash = fileName.LastIndexOf('/');
+                int lastBackSlash = fileName.LastIndexOf('\\');
 
                 if (dotIndex != -1)
                 {
@@ -517,7 +522,7 @@ namespace ToolsUtilities
                     directory = directory.ToLower().Replace('\\', '/');
 
 
-                    if (directory.EndsWith("/") == false)
+                    if (directory.EndsWith("/", StringComparison.Ordinal) == false)
                     {
                         // Do this to simplify the code below by allowing a "contains" call
                         directory += "/";
@@ -664,7 +669,8 @@ namespace ToolsUtilities
                         pathToMakeRelative = relativepath;
                     }
                 }
-                if (pathToMakeRelative.StartsWith("\\") || pathToMakeRelative.StartsWith("/"))
+                if (pathToMakeRelative.StartsWith("\\", StringComparison.Ordinal) ||
+                    pathToMakeRelative.StartsWith("/", StringComparison.Ordinal))
                 {
                     pathToMakeRelative = pathToMakeRelative.Substring(1);
                 }
@@ -1156,7 +1162,8 @@ namespace ToolsUtilities
             //if (directory == "")
             //    directory = mRelativeDirectory;
 
-            if (directory.EndsWith(@"\") == false && directory.EndsWith("/") == false)
+            if (directory.EndsWith(@"\", StringComparison.Ordinal) == false &&
+                directory.EndsWith("/", StringComparison.Ordinal) == false)
             {
                 directory += @"/";
             }
@@ -1569,7 +1576,8 @@ namespace ToolsUtilities
 
         public static bool IsUrl(string fileName)
         {
-            return fileName.IndexOf("http:") == 0 || fileName.IndexOf("https:") == 0;
+            return fileName.StartsWith("http:", StringComparison.Ordinal) ||
+                fileName.StartsWith("https:", StringComparison.Ordinal);
         }
     }
 }

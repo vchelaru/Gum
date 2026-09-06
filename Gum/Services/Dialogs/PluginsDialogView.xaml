@@ -4,27 +4,86 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:Gum.Services.Dialogs"
+  xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  d:DesignHeight="350"
-  d:DesignWidth="450"
-  Width="450" Height="350"
+  d:DesignHeight="450"
+  d:DesignWidth="500"
+  MinWidth="500"
+  HorizontalAlignment="Stretch"
+  VerticalAlignment="Stretch"
   local:Dialog.DialogTitle="{Binding Title}"
+  local:Dialog.ScrollContent="False"
   mc:Ignorable="d">
-  <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <ItemsControl ItemsSource="{Binding Plugins}">
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel />
-        </ItemsPanelTemplate>
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <CheckBox
-            Margin="4,4,4,0"
-            IsChecked="{Binding IsEnabled, Mode=TwoWay}"
-            Content="{Binding DisplayText}" />
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
-  </ScrollViewer>
+  <!-- No height constraint of any kind here, and that is deliberate. A MaxHeight makes WPF size a
+       Stretch element to the cap and center it in the leftover space; a MinHeight stops the content
+       shrinking with the window, so the tabs get clipped instead of scrolled. Either way the inner
+       ScrollViewers never see a viewport smaller than their content and never offer a scrollbar.
+       Height comes from the window, and the two tabs scroll inside whatever they are given. -->
+  <TabControl
+    HorizontalContentAlignment="Stretch"
+    VerticalContentAlignment="Stretch">
+    <TabItem Header="Plugins">
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <ItemsControl ItemsSource="{Binding Plugins}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <CheckBox
+                Margin="4,4,4,0"
+                IsChecked="{Binding IsEnabled, Mode=TwoWay}"
+                Content="{Binding DisplayText}" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </TabItem>
+
+    <!-- Says which folder was searched and what was in it, so a plugin missing from the Plugins tab
+         can be told apart from one that was never installed. Read-only but selectable, since the
+         useful thing to do with it is paste it into a bug report.
+
+         The scrolling is the ScrollViewer's, not the TextBox's: the app's TextBox template does not
+         pass VerticalScrollBarVisibility through to its PART_ContentHost. Lines do not wrap - these
+         are long file paths, and wrapping breaks them mid-path, so scrolling sideways reads better
+         than a ragged column. -->
+    <TabItem Header="Folder scan">
+      <ScrollViewer
+        HorizontalScrollBarVisibility="Auto"
+        VerticalScrollBarVisibility="Auto">
+        <TextBox
+          Padding="4"
+          AcceptsReturn="True"
+          BorderThickness="0"
+          FontFamily="Consolas"
+          IsReadOnly="True"
+          Text="{Binding Diagnostics, Mode=OneWay}"
+          TextWrapping="NoWrap"
+          VerticalContentAlignment="Top" />
+      </ScrollViewer>
+    </TabItem>
+  </TabControl>
+
+  <!-- On the dialog's own button row next to Close, rather than inside the tab: a second action row
+       stacked within the tab outline reads as though it belongs to the text box. -->
+  <local:Dialog.AuxiliaryActions>
+    <Button
+      Command="{Binding CopyDiagnosticsCommand}"
+      ToolTip="Copy the folder scan to the clipboard">
+      <StackPanel Orientation="Horizontal">
+        <materialDesign:PackIcon
+          Width="16"
+          Height="16"
+          Margin="0,0,6,0"
+          VerticalAlignment="Center"
+          Kind="ContentCopy" />
+        <TextBlock VerticalAlignment="Center" Text="Copy Scan" />
+      </StackPanel>
+    </Button>
+  </local:Dialog.AuxiliaryActions>
 </UserControl>

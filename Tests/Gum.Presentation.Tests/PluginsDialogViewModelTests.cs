@@ -1,4 +1,5 @@
 using Gum.Plugins;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
@@ -25,11 +26,44 @@ public class PluginsDialogViewModelTests
         pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([summary]);
         Mock<IDialogService> dialogService = new();
 
-        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object);
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
 
         viewModel.Plugins.Count.ShouldBe(1);
         viewModel.Plugins[0].DisplayText.ShouldBe("My Plugin");
         viewModel.Plugins[0].IsEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Constructor_SortsPluginsByNameIgnoringCase()
+    {
+        PluginSummary zebra = new("Zebra Plugin", "Zebra Plugin", true, false, new object());
+        PluginSummary apple = new("apple Plugin", "apple Plugin", true, false, new object());
+        PluginSummary middle = new("Middle Plugin", "Middle Plugin", true, false, new object());
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([zebra, apple, middle]);
+        Mock<IDialogService> dialogService = new();
+
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
+
+        viewModel.Plugins.Select(p => p.DisplayText)
+            .ShouldBe(["apple Plugin", "Middle Plugin", "Zebra Plugin"]);
+    }
+
+    [Fact]
+    public void CopyDiagnosticsCommand_PutsTheScanOnTheClipboard()
+    {
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([]);
+        pluginManager.Setup(p => p.GetPluginScanReport()).Returns(
+            new PluginScanReport(@"C:\Gum\Plugins", FolderExists: true, []));
+        Mock<IClipboardService> clipboardService = new();
+        PluginsDialogViewModel viewModel =
+            new(Mock.Of<IDialogService>(), pluginManager.Object, clipboardService.Object);
+
+        viewModel.CopyDiagnosticsCommand.Execute(null);
+
+        clipboardService.Verify(c => c.SetText(viewModel.Diagnostics), Times.Once);
+        viewModel.Diagnostics.ShouldContain(@"C:\Gum\Plugins");
     }
 
     [Fact]
@@ -42,7 +76,7 @@ public class PluginsDialogViewModelTests
         pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([initial]);
         pluginManager.Setup(p => p.DisableUserPlugin(handle)).Returns(disabled);
         Mock<IDialogService> dialogService = new();
-        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object);
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
 
         viewModel.Plugins[0].IsEnabled = false;
 
@@ -60,7 +94,7 @@ public class PluginsDialogViewModelTests
         pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([disabled]);
         pluginManager.Setup(p => p.TryEnablePlugin(handle)).Returns(reenabled);
         Mock<IDialogService> dialogService = new();
-        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object);
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
 
         viewModel.Plugins[0].IsEnabled = true;
 
@@ -82,7 +116,7 @@ public class PluginsDialogViewModelTests
         dialogService
             .Setup(d => d.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
             .Returns(MessageDialogResult.Negative);
-        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object);
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object, Mock.Of<IClipboardService>());
 
         viewModel.Plugins[0].IsEnabled = true;
 
