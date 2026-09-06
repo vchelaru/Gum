@@ -9,14 +9,17 @@
   d:DesignWidth="500"
   MinWidth="500"
   MinHeight="400"
-  MaxHeight="600"
+  HorizontalAlignment="Stretch"
+  VerticalAlignment="Stretch"
   local:Dialog.DialogTitle="{Binding Title}"
   local:Dialog.ScrollContent="False"
   mc:Ignorable="d">
-  <!-- Tabs rather than a second stacked section: the dialog window is SizeToContent, so anything
-       that changes height once open either clips or resizes the window under the user. Both tabs
-       share this one fixed area and scroll inside it, so neither can overflow. -->
-  <TabControl>
+  <!-- No MaxHeight anywhere: WPF caps a Stretch element at its MaxHeight and then centers it in the
+       leftover space, so the content would float mid-window and stop growing when the window did.
+       Both tabs scroll internally instead, which bounds tall content without bounding the control. -->
+  <TabControl
+    HorizontalContentAlignment="Stretch"
+    VerticalContentAlignment="Stretch">
     <TabItem Header="Plugins">
       <ScrollViewer
         HorizontalScrollBarVisibility="Disabled"
@@ -41,16 +44,21 @@
 
     <!-- Says which folder was searched and what was in it, so a plugin missing from the Plugins tab
          can be told apart from one that was never installed. Read-only but selectable, since the
-         useful thing to do with it is paste it into a bug report. -->
+         useful thing to do with it is paste it into a bug report. VerticalContentAlignment is set
+         explicitly because the app's TextBox style centers content, which for a multi-line box
+         floats the text in the middle of the box. -->
     <TabItem Header="Folder scan">
       <TextBox
         Padding="4"
+        AcceptsReturn="True"
         BorderThickness="0"
         FontFamily="Consolas"
         HorizontalScrollBarVisibility="Auto"
         IsReadOnly="True"
         Text="{Binding Diagnostics, Mode=OneWay}"
         TextWrapping="Wrap"
+        VerticalAlignment="Stretch"
+        VerticalContentAlignment="Top"
         VerticalScrollBarVisibility="Auto" />
     </TabItem>
   </TabControl>
