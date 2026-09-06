@@ -1160,6 +1160,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         pluginDirectories.Add(PluginFolder);
 
+        IOutputManager outputManager = Locator.GetRequiredService<IOutputManager>();
+        PluginCatalogFactory catalogFactory = new(outputManager);
+
         foreach (var directory in pluginDirectories)
         {
             List<string> dllFiles = FileManager.GetAllFilesInDirectory(directory, "dll");
@@ -1172,7 +1175,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 {
                     Assembly loadedAssembly = Assembly.LoadFrom(dll);
 
-                    ComposablePartCatalog? catalog = CreateResilientCatalog(loadedAssembly);
+                    ComposablePartCatalog? catalog = catalogFactory.CreateResilientCatalog(loadedAssembly);
                     if (catalog != null)
                     {
                         returnValue.Catalogs.Add(catalog);
@@ -1180,7 +1183,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-                    Locator.GetRequiredService<IOutputManager>().AddError($"Failed to load plugin assembly '{dll}':\n{e}");
+                    outputManager.AddError($"Failed to load plugin assembly '{dll}':\n{e}");
                 }
             }
         }
@@ -1188,34 +1191,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
 
         return returnValue;
-    }
-
-    /// <summary>
-    /// Builds a MEF catalog for a plugin-folder assembly without letting a single unloadable type
-    /// abort plugin loading. <see cref="AssemblyCatalog"/> enumerates an assembly's types lazily
-    /// during composition, so an assembly that contains a type which can't be reflection-loaded —
-    /// e.g. a plugin's native-interop dependency such as Vortice.Direct3D12, whose explicit-layout
-    /// <c>Union</c> struct overlaps object and non-object fields — would throw a
-    /// <see cref="ReflectionTypeLoadException"/> later, outside the per-DLL try/catch in
-    /// <see cref="CreateCatalog"/>, and take down every plugin. Forcing the type enumeration here
-    /// surfaces that failure eagerly so it can be contained, and the catalog is then built from
-    /// only the types that did load. Dependency assemblies expose no MEF parts, so a
-    /// <see cref="TypeCatalog"/> over their loadable types is equivalent to an AssemblyCatalog but
-    /// resilient. Returns null if nothing loadable remains.
-    /// </summary>
-    private static ComposablePartCatalog? CreateResilientCatalog(Assembly assembly)
-    {
-        try
-        {
-            // Surface any unloadable types now rather than during deferred MEF composition.
-            assembly.GetTypes();
-            return new AssemblyCatalog(assembly);
-        }
-        catch (ReflectionTypeLoadException ex)
-        {
-            Type[] loadableTypes = ex.Types.OfType<Type>().ToArray();
-            return loadableTypes.Length > 0 ? new TypeCatalog(loadableTypes) : null;
-        }
     }
 
     // Eventually we may add support for this but not on the first pass
