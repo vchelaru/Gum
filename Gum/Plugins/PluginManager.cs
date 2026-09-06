@@ -1185,31 +1185,19 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         bool foundAnyPluginAssembly = catalogFactory.Scans
             .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
 
-        // FileManager's own recursive search is no longer what finds plugins, but it is compiled
-        // into every runtime and backs content lookup there, so where it goes wrong is worth
-        // catching. Null unless the two searches actually disagree.
-        string? walkDiagnostic = System.IO.Directory.Exists(PluginFolder)
-            ? new DirectoryWalkComparison().Compare(PluginFolder, "dll")
-            : null;
-
         _pluginScanReport = new PluginScanReport(
             PluginFolder,
             System.IO.Directory.Exists(PluginFolder),
             catalogFactory.Scans,
             System.Windows.Forms.Application.ExecutablePath,
             // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
-            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder),
-            walkDiagnostic);
+            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
 
         // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
         // so - Gum otherwise starts looking healthy. The dialog carries the same text.
         if (!foundAnyPluginAssembly)
         {
             outputManager.AddError(_pluginScanReport.Describe());
-        }
-        else if (walkDiagnostic != null)
-        {
-            outputManager.AddError(walkDiagnostic);
         }
 
         returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
@@ -1347,10 +1335,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     /// </summary>
     /// <remarks>
     /// Uses the framework's own recursive enumeration rather than
-    /// <c>FileManager.GetAllFilesInDirectory</c>, which has been seen returning nothing for a plugin
-    /// folder that demonstrably held dozens of DLLs — every plugin silently missing, with the folder
-    /// reporting as present and empty. Finding plugins is the one place in Gum where a walk quietly
-    /// returning nothing is indistinguishable from a correct answer, so it uses the platform API.
+    /// <c>FileManager.GetAllFilesInDirectory</c>. A plugin search that quietly returns nothing looks
+    /// exactly like a correct answer — Gum starts, and every external plugin is simply absent — so
+    /// this one place is worth keeping on the platform API rather than on Gum's own file walk.
     /// </remarks>
     private static IEnumerable<string> FindDllFiles(string folder, IOutputManager outputManager)
     {
