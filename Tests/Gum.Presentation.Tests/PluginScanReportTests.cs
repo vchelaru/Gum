@@ -22,6 +22,22 @@ public class PluginScanReportTests
         description.ShouldContain("GumFull.sln");
     }
 
+    // "Empty folder" and "the scan looked somewhere else" both report zero dlls and need opposite
+    // fixes, so the raw listing and the path it was derived from have to be in the text.
+    [Fact]
+    public void Describe_ShowsFolderContentsAndExecutablePath_WhenNothingWasFound()
+    {
+        PluginScanReport empty = new(@"C:\Gum\Plugins", FolderExists: true, [],
+            ExecutablePath: @"C:\Gum\Gum.exe", FolderEntries: []);
+        PluginScanReport withEntries = new(@"C:\Gum\Plugins", FolderExists: true, [],
+            ExecutablePath: @"C:\Gum\Gum.exe", FolderEntries: [@"CodeOutputPlugin\CodeOutputPlugin.pdb"]);
+
+        empty.Describe().ShouldContain("completely empty");
+        empty.Describe().ShouldContain(@"C:\Gum\Gum.exe");
+        withEntries.Describe().ShouldContain(@"CodeOutputPlugin\CodeOutputPlugin.pdb");
+        withEntries.Describe().ShouldNotContain("completely empty");
+    }
+
     [Fact]
     public void Describe_ListsPluginAssembliesAndFailures_WithoutTheMissingPluginsAdvice()
     {

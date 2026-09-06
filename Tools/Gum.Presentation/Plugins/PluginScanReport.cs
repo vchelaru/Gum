@@ -37,7 +37,21 @@ public record PluginFileScan(
 /// never loads is otherwise indistinguishable from one that was never installed — this says which,
 /// and names the folder that was actually searched.
 /// </summary>
-public record PluginScanReport(string FolderPath, bool FolderExists, IReadOnlyList<PluginFileScan> Files)
+/// <param name="ExecutablePath">
+/// What <paramref name="FolderPath"/> was derived from. When the scan finds nothing, the first
+/// question is whether it looked in the right place, and that is answered here rather than guessed.
+/// </param>
+/// <param name="FolderEntries">
+/// Every file and folder actually present under <paramref name="FolderPath"/>, gathered only when
+/// no plugin assembly was found. "The folder is empty" and "the folder has files the scan did not
+/// match" are different bugs that produce the same count of zero.
+/// </param>
+public record PluginScanReport(
+    string FolderPath,
+    bool FolderExists,
+    IReadOnlyList<PluginFileScan> Files,
+    string ExecutablePath = "",
+    IReadOnlyList<string>? FolderEntries = null)
 {
     /// <summary>
     /// Assemblies that reference the one declaring <c>PluginBase</c>, so could hold a plugin. When
@@ -53,6 +67,10 @@ public record PluginScanReport(string FolderPath, bool FolderExists, IReadOnlyLi
     {
         StringBuilder text = new();
         text.AppendLine($"Plugin folder: {FolderPath}");
+        if (!string.IsNullOrEmpty(ExecutablePath))
+        {
+            text.AppendLine($"Derived from:  {ExecutablePath}");
+        }
 
         if (!FolderExists)
         {
@@ -77,6 +95,7 @@ public record PluginScanReport(string FolderPath, bool FolderExists, IReadOnlyLi
         text.AppendLine();
         if (pluginAssemblies.Count == 0)
         {
+            AppendFolderContents(text);
             text.Append(NoPluginAssembliesAdvice);
         }
         else
@@ -99,6 +118,33 @@ public record PluginScanReport(string FolderPath, bool FolderExists, IReadOnlyLi
         }
 
         return text.ToString();
+    }
+
+    /// <summary>
+    /// Lists what is actually in the folder. Reporting only a count of zero leaves "empty folder"
+    /// and "the scan looked in the wrong place" indistinguishable, and they need different fixes.
+    /// </summary>
+    private void AppendFolderContents(StringBuilder text)
+    {
+        if (FolderEntries is null)
+        {
+            return;
+        }
+
+        if (FolderEntries.Count == 0)
+        {
+            text.AppendLine("The folder is completely empty - not one file or subfolder.");
+        }
+        else
+        {
+            text.AppendLine($"The folder does contain {FolderEntries.Count} other entries:");
+            foreach (string entry in FolderEntries)
+            {
+                text.AppendLine("    " + entry);
+            }
+        }
+
+        text.AppendLine();
     }
 
     // Plugins that ship as their own DLL are absent from the list whenever this folder is empty,

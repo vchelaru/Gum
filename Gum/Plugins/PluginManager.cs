@@ -1184,12 +1184,20 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             }
         }
 
-        _pluginScanReport = new PluginScanReport(PluginFolder, System.IO.Directory.Exists(PluginFolder),
-            catalogFactory.Scans);
+        bool foundAnyPluginAssembly = catalogFactory.Scans
+            .Any(x => x.Outcome == PluginFileOutcome.Loaded && x.CouldContainPlugins);
+
+        _pluginScanReport = new PluginScanReport(
+            PluginFolder,
+            System.IO.Directory.Exists(PluginFolder),
+            catalogFactory.Scans,
+            System.Windows.Forms.Application.ExecutablePath,
+            // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
+            foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
 
         // Every plugin shipping as its own DLL is missing when this happens, and nothing else says
         // so - Gum otherwise starts looking healthy. The dialog carries the same text.
-        if (!_pluginScanReport.PluginAssemblies.Any())
+        if (!foundAnyPluginAssembly)
         {
             outputManager.AddError(_pluginScanReport.Describe());
         }
@@ -1323,6 +1331,38 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     /// <inheritdoc/>
     public PluginScanReport? GetPluginScanReport() => _pluginScanReport;
+
+    /// <summary>
+    /// Everything under <paramref name="folder"/>, as paths relative to it, so a scan that found no
+    /// plugin can say whether the folder was empty or held files it didn't match. Deliberately does
+    /// not reuse the extension-filtered walk the scan itself uses — the point is to see past it.
+    /// </summary>
+    private static List<string> ListFolderEntries(string folder)
+    {
+        const int maxEntries = 100;
+        List<string> entries = new();
+
+        try
+        {
+            foreach (string path in System.IO.Directory.EnumerateFileSystemEntries(
+                         folder, "*", System.IO.SearchOption.AllDirectories))
+            {
+                if (entries.Count == maxEntries)
+                {
+                    entries.Add("...more not listed.");
+                    break;
+                }
+
+                entries.Add(path.Substring(folder.Length).TrimStart('\\', '/'));
+            }
+        }
+        catch (Exception exception)
+        {
+            entries.Add($"(could not be listed: {exception.Message})");
+        }
+
+        return entries;
+    }
 
     /// <inheritdoc/>
     public PluginSummary DisableUserPlugin(object pluginHandle)
