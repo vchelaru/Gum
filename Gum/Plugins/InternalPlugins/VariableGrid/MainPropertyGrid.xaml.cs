@@ -83,6 +83,22 @@ namespace Gum
             }
         }
 
+        private void HandleClearVariableFilterClicked(object? sender, RoutedEventArgs e)
+        {
+            ClearVariableFilter();
+
+            // Focus stays in the box so the user can type a different filter straight away.
+            VariableFilterTextBox.Focus();
+        }
+
+        private void ClearVariableFilter()
+        {
+            if (_subscribedViewModel != null)
+            {
+                _subscribedViewModel.VariableFilterText = "";
+            }
+        }
+
         private void HandleVariableFilterPreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key != Key.Escape)
@@ -90,10 +106,7 @@ namespace Gum
                 return;
             }
 
-            if (_subscribedViewModel != null)
-            {
-                _subscribedViewModel.VariableFilterText = "";
-            }
+            ClearVariableFilter();
 
             DataGrid.Focus();
             e.Handled = true;

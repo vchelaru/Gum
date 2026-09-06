@@ -61,6 +61,7 @@
         <TextBox
           Name="VariableFilterTextBox"
           Grid.Column="1"
+          Padding="0,0,18,0"
           VerticalContentAlignment="Center"
           PreviewKeyDown="HandleVariableFilterPreviewKeyDown"
           Text="{Binding VariableFilterText, UpdateSourceTrigger=PropertyChanged}"
@@ -73,6 +74,17 @@
           IsHitTestVisible="False"
           Text="Filter variables"
           Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource BoolToVisibilityConverter}}" />
+        <Button
+          Grid.Column="1"
+          Margin="0,0,2,0"
+          HorizontalAlignment="Right"
+          VerticalAlignment="Center"
+          Click="HandleClearVariableFilterClicked"
+          Style="{StaticResource IconButton}"
+          ToolTip="Clear filter"
+          Visibility="{Binding IsFilterWatermarkVisible, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+          <ContentPresenter Content="{wpf:FluentIcon Icon=Dismiss}" />
+        </Button>
       </Grid>
       <WpfDataUi:DataUiGrid
         Name="DataGrid"
