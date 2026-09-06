@@ -1,4 +1,6 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Gum.Plugins;
 
 namespace Gum.Services.Dialogs;
@@ -19,7 +21,10 @@ public class PluginsDialogViewModel : DialogViewModel
         AffirmativeText = "Close";
         NegativeText = null;
 
-        foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries())
+        // Sorted by name so a plugin can be found by scanning; MEF hands them back in load order,
+        // which is effectively arbitrary.
+        foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries()
+                     .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase))
         {
             Plugins.Add(new PluginItemViewModel(summary, pluginManager, dialogService));
         }

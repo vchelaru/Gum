@@ -33,6 +33,22 @@ public class PluginsDialogViewModelTests
     }
 
     [Fact]
+    public void Constructor_SortsPluginsByNameIgnoringCase()
+    {
+        PluginSummary zebra = new("Zebra Plugin", "Zebra Plugin", true, false, new object());
+        PluginSummary apple = new("apple Plugin", "apple Plugin", true, false, new object());
+        PluginSummary middle = new("Middle Plugin", "Middle Plugin", true, false, new object());
+        Mock<IPluginManager> pluginManager = new();
+        pluginManager.Setup(p => p.GetAllPluginSummaries()).Returns([zebra, apple, middle]);
+        Mock<IDialogService> dialogService = new();
+
+        PluginsDialogViewModel viewModel = new(dialogService.Object, pluginManager.Object);
+
+        viewModel.Plugins.Select(p => p.DisplayText)
+            .ShouldBe(["apple Plugin", "Middle Plugin", "Zebra Plugin"]);
+    }
+
+    [Fact]
     public void IsEnabled_SetFalse_DisablesPluginByHandle_AndAdoptsReturnedSummary()
     {
         object handle = new();
