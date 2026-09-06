@@ -147,7 +147,7 @@ When this happens the Gum tool reports a **GUM0006** warning in the [Errors tab]
 
 Gum saves variables that pick from a fixed list of options, such as `Width Units`, `X Units`, and `Children Layout`, as plain numbers rather than names. A file that has been hand edited, merged badly, or written by a tool using a different set of options can end up holding a number that matches none of the options.
 
-When this happens the Gum tool reports a **GUM0007** error in the [Errors tab](../editor-tab.md), naming the element, the state, the variable, the number it found, and the full list of values that variable accepts. To resolve it, select the element and set the variable to one of the listed values in the **Variables** tab.
+When this happens the Gum tool reports a **GUM0007** error in the [Errors tab](../editor-tab.md), naming the element, the state, the variable, and the number it found. To resolve it, select the element and pick a valid option for that variable in the **Variables** tab.
 
 Gum treats an unrecognized `Width Units`, `Height Units`, `X Units`, or `Y Units` value as `Absolute`, so the element still renders and the rest of the project keeps working. Other variables holding an unrecognized number may behave unpredictably until you correct them.
 

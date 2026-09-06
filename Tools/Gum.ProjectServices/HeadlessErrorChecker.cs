@@ -9,7 +9,6 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ToolsUtilities;
 
 namespace Gum.ProjectServices;
@@ -759,8 +758,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     Severity = ErrorSeverity.Error,
                     Message =
                         $"The variable {variable.Name} in state {state.Name} has a value of " +
-                        $"{variable.Value}, which is not a valid {variableType.Name}. " +
-                        $"Valid values are: {string.Join(", ", GetSuggestableNames(variableType))}."
+                        $"{variable.Value}, which is not a valid {variableType.Name}."
                 });
             }
         }
@@ -787,19 +785,6 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         Type? toReturn = resolved?.IsEnum == true ? resolved : null;
         _enumTypesByName[typeName] = toReturn;
         return toReturn;
-    }
-
-    /// <summary>
-    /// Returns the member names worth telling the user to pick from, dropping obsolete aliases
-    /// (<see cref="DimensionUnitType.RelativeToContainer"/> and friends) that still resolve but
-    /// should not be suggested.
-    /// </summary>
-    private static IEnumerable<string> GetSuggestableNames(Type enumType)
-    {
-        return enumType
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(field => !field.IsDefined(typeof(ObsoleteAttribute), inherit: false))
-            .Select(field => field.Name);
     }
 
     /// <summary>

@@ -1157,8 +1157,6 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         error.Message.ShouldContain("Default");
         error.Message.ShouldContain("14");
         error.Message.ShouldContain("DimensionUnitType");
-        error.Message.ShouldContain("PercentageOfParent");
-        error.Message.ShouldNotContain("RelativeToContainer", Case.Sensitive);
     }
 
     [Fact]
