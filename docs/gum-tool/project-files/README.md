@@ -143,6 +143,18 @@ An instance or element variable that references an external file, such as a Spri
 
 When this happens the Gum tool reports a **GUM0006** warning in the [Errors tab](../editor-tab.md), naming the instance and the path it referenced. To resolve it, either point the variable at the correct file or restore the missing file to the expected location.
 
+## Invalid Enum Variable Value (GUM0007)
+
+Gum saves variables that pick from a fixed list of options, such as `Width Units`, `X Units`, and `Children Layout`, as plain numbers rather than names. A file that has been hand edited, merged badly, or written by a tool using a different set of options can end up holding a number that matches none of the options.
+
+When this happens the Gum tool reports a **GUM0007** error in the [Errors tab](../editor-tab.md), naming the element, the state, the variable, the number it found, and the full list of values that variable accepts. To resolve it, select the element and set the variable to one of the listed values in the **Variables** tab.
+
+Gum treats an unrecognized `Width Units`, `Height Units`, `X Units`, or `Y Units` value as `Absolute`, so the element still renders and the rest of the project keeps working. Other variables holding an unrecognized number may behave unpredictably until you correct them.
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:

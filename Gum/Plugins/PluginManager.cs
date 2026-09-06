@@ -80,6 +80,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     private IGuiCommands _guiCommands;
     private IMessenger _messenger;
     private IDialogService _dialogService;
+    private IOutputManager _outputManager;
 
     public static string PluginFolder
     {
@@ -138,6 +139,29 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     #region >>>Methods called by Gum when certain events happen<<<
 
+    /// <summary>
+    /// Writes a plugin callback failure to the Output tab and disables the plugin for the rest of
+    /// the session. Reporting is non-modal so a failure raised mid-refresh does not interrupt what
+    /// the user is doing, and reaches release builds rather than only DEBUG ones.
+    /// </summary>
+    private void ReportPluginFailure(PluginContainer container, Exception exception, string details)
+    {
+        // Disable first. Reporting brings the Output tab forward, which runs arbitrary tab-selection
+        // handlers, and a throw there must not leave the faulty plugin enabled or escape the caller's
+        // catch as a second, unhandled exception.
+        container.Fail(exception, details);
+
+        try
+        {
+            _outputManager.AddError(
+                $"{details} (plugin {container.Name}). This plugin is disabled for the rest of this session; " +
+                $"restart Gum to re-enable it.\n{exception}");
+        }
+        catch (Exception reportingException)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to report plugin failure: {reportingException}");
+        }
+    }
 
     void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
     {
@@ -166,10 +190,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-#if DEBUG
-                    _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                    container.Fail(e, "Failed in " + methodName);
+                    ReportPluginFailure(container, e, "Failed in " + methodName);
                 }
                 finally
                 {
@@ -255,10 +276,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-#if DEBUG
-                    _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                    container.Fail(e, "Failed in " + TryHandleDelete);
+                    ReportPluginFailure(container, e, "Failed in " + TryHandleDelete);
                 }
             }
         }
@@ -528,10 +546,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-#if DEBUG
-                    _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                    container.Fail(e, $"Failed in {nameof(GetDeleteStateResponse)}");
+                    ReportPluginFailure(container, e, $"Failed in {nameof(GetDeleteStateResponse)}");
                 }
             }
         }
@@ -567,10 +582,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-#if DEBUG
-                    _dialogService.ShowMessage("Error in plugin " + plugin.FriendlyName + ":\n\n" + e.ToString());
-#endif
-                    container.Fail(e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
+                    ReportPluginFailure(container, e, $"Failed in {nameof(GetDeleteStateCategoryResponse)}");
                 }
             }
         }
@@ -742,6 +754,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _guiCommands = Locator.GetRequiredService<IGuiCommands>();
         _messenger = Locator.GetRequiredService<IMessenger>();
         _dialogService = Locator.GetRequiredService<IDialogService>();
+        _outputManager = Locator.GetRequiredService<IOutputManager>();
 
         _messenger.Register<AfterUndoMessage>(this, (_, _) => AfterUndo());
         using (StartupTiming.Time("  PluginEnablementStore.Load"))

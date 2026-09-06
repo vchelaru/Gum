@@ -22,6 +22,30 @@ public class MainOutputViewModelTests
     }
 
     [Fact]
+    public void AddError_RaisesErrorAdded_SoTheOutputTabCanSurfaceItself()
+    {
+        MainOutputViewModel viewModel = new();
+        int errorAddedCount = 0;
+        viewModel.ErrorAdded += () => errorAddedCount++;
+
+        viewModel.AddError("bad thing");
+
+        errorAddedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AddOutput_DoesNotRaiseErrorAdded()
+    {
+        MainOutputViewModel viewModel = new();
+        int errorAddedCount = 0;
+        viewModel.ErrorAdded += () => errorAddedCount++;
+
+        viewModel.AddOutput("hello");
+
+        errorAddedCount.ShouldBe(0);
+    }
+
+    [Fact]
     public void AddOutput_AppendsValue_AndRaisesPropertyChanged()
     {
         MainOutputViewModel viewModel = new();

@@ -9,6 +9,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ToolsUtilities;
 
 namespace Gum.ProjectServices;
@@ -33,17 +34,20 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     private readonly ITypeResolver _typeResolver;
     private readonly List<IAdditionalErrorSource> _additionalErrorSources;
+    private readonly Dictionary<string, Type?> _enumTypesByName;
 
     public HeadlessErrorChecker(ITypeResolver typeResolver)
     {
         _typeResolver = typeResolver;
         _additionalErrorSources = new List<IAdditionalErrorSource>();
+        _enumTypesByName = new Dictionary<string, Type?>();
     }
 
     public HeadlessErrorChecker(ITypeResolver typeResolver, IEnumerable<IAdditionalErrorSource> additionalErrorSources)
     {
         _typeResolver = typeResolver;
         _additionalErrorSources = new List<IAdditionalErrorSource>(additionalErrorSources);
+        _enumTypesByName = new Dictionary<string, Type?>();
     }
 
     /// <inheritdoc/>
@@ -109,6 +113,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetMissingBaseTypeErrorsFor(element));
         errors.AddRange(GetParentErrorsFor(element));
         errors.AddRange(GetInvalidVariableTypeErrorsFor(element));
+        errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
@@ -711,6 +716,125 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         }
 
         return errors;
+    }
+
+    #endregion
+
+    #region GUM0007 — Enum variable value is not defined
+
+    /// <summary>
+    /// Enum variables are persisted as raw ints, so a hand-edited file, a merge, or a file written
+    /// by a different Gum version can hold a number the enum does not define. Nothing on the load
+    /// path rejects it, and the failure otherwise surfaces far from the data as a layout exception
+    /// naming only the number.
+    /// </summary>
+    private IEnumerable<ErrorResult> GetInvalidEnumValueErrorsFor(ElementSave elementSave)
+    {
+        var errors = new List<ErrorResult>();
+
+        foreach (var state in elementSave.AllStates)
+        {
+            foreach (var variable in state.Variables)
+            {
+                if (variable.Value == null || string.IsNullOrEmpty(variable.Type))
+                {
+                    continue;
+                }
+
+                var variableType = ResolveEnumType(variable.Type);
+                if (variableType == null)
+                {
+                    continue;
+                }
+
+                if (IsDefinedValue(variableType, variable.Value))
+                {
+                    continue;
+                }
+
+                errors.Add(new ErrorResult
+                {
+                    ElementName = elementSave.Name,
+                    Code = "GUM0007",
+                    Severity = ErrorSeverity.Error,
+                    Message =
+                        $"The variable {variable.Name} in state {state.Name} has a value of " +
+                        $"{variable.Value}, which is not a valid {variableType.Name}. " +
+                        $"Valid values are: {string.Join(", ", GetSuggestableNames(variableType))}."
+                });
+            }
+        }
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Resolves a variable's type name to the enum behind it, unwrapping a nullable enum
+    /// (<c>"Orientation?"</c>) to the enum itself, and returns null for anything that is not one.
+    /// Results are cached because <see cref="ITypeResolver.GetTypeFromString"/> is a linear scan
+    /// over every type in several assemblies, and this runs for every variable in every state.
+    /// </summary>
+    private Type? ResolveEnumType(string typeName)
+    {
+        if (_enumTypesByName.TryGetValue(typeName, out Type? cached))
+        {
+            return cached;
+        }
+
+        Type? resolved = _typeResolver.GetTypeFromString(typeName);
+        resolved = Nullable.GetUnderlyingType(resolved ?? typeof(object)) ?? resolved;
+
+        Type? toReturn = resolved?.IsEnum == true ? resolved : null;
+        _enumTypesByName[typeName] = toReturn;
+        return toReturn;
+    }
+
+    /// <summary>
+    /// Returns the member names worth telling the user to pick from, dropping obsolete aliases
+    /// (<see cref="DimensionUnitType.RelativeToContainer"/> and friends) that still resolve but
+    /// should not be suggested.
+    /// </summary>
+    private static IEnumerable<string> GetSuggestableNames(Type enumType)
+    {
+        return enumType
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => !field.IsDefined(typeof(ObsoleteAttribute), inherit: false))
+            .Select(field => field.Name);
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="value"/> names a member of <paramref name="enumType"/>.
+    /// Values arrive either as the enum itself (once coerced on load) or as a raw number read from
+    /// the file, which XML and JSON box as different integral types. Anything else - a string, a
+    /// float - cannot be measured and is left to the variable-type checks. A combination of flags
+    /// names no single member, so flags enums are treated as always valid.
+    /// </summary>
+    private static bool IsDefinedValue(Type enumType, object value)
+    {
+        if (enumType.IsDefined(typeof(FlagsAttribute), inherit: false))
+        {
+            return true;
+        }
+
+        if (value.GetType() == enumType)
+        {
+            return Enum.IsDefined(enumType, value);
+        }
+
+        if (value is not (byte or sbyte or short or ushort or int or uint or long or ulong))
+        {
+            return true;
+        }
+
+        try
+        {
+            return Enum.IsDefined(enumType, Convert.ChangeType(value, Enum.GetUnderlyingType(enumType)));
+        }
+        catch (OverflowException)
+        {
+            // Too large to be any member of the enum, so it is exactly the bad value being hunted.
+            return false;
+        }
     }
 
     #endregion

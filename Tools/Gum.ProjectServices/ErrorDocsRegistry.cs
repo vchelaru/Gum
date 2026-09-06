@@ -19,6 +19,7 @@ public class ErrorDocsRegistry : IErrorDocsRegistry
             ["GUM0004"] = "gum-tool/project-files#missing-source-files-gum0004",
             ["GUM0005"] = "gum-tool/code-tab/orphaned-code-files",
             ["GUM0006"] = "gum-tool/project-files#missing-referenced-external-file-gum0006",
+            ["GUM0007"] = "gum-tool/project-files#invalid-enum-variable-value-gum0007",
         };
     }
 

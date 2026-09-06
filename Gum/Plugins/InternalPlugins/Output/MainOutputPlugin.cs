@@ -22,7 +22,16 @@ namespace Gum.Plugins.Output
         public override void StartUp()
         {
             MainOutputPluginView view = new() { DataContext = _mainOutputViewModel, Margin = new(4)};
-            _tabManager.AddControl(view, "Output", TabLocation.RightBottom);
+            IPluginTab tab = _tabManager.AddControl(view, "Output", TabLocation.RightBottom);
+
+            // Errors written to Output are silent otherwise, so bring the tab forward rather than
+            // interrupting with a dialog. Selecting a hidden tab deselects the visible one in this
+            // dock area without showing anything, so show it first.
+            _mainOutputViewModel.ErrorAdded += () =>
+            {
+                tab.Show();
+                tab.IsSelected = true;
+            };
         }
     }
 }

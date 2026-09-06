@@ -1123,4 +1123,156 @@ public class HeadlessErrorCheckerTests : BaseTestClass
     }
 
     #endregion
+
+    #region GUM0007 — Enum variable value is not defined
+
+    [Theory]
+    [InlineData(14)]
+    [InlineData(14L)]
+    [InlineData((DimensionUnitType)14)]
+    public void GetErrorsFor_ShouldReportGum0007_WhenEnumVariableValueIsNotDefined(object value)
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("DimensionUnitType"))
+            .Returns(typeof(DimensionUnitType));
+
+        ComponentSave component = new ComponentSave { Name = "BrokenButton" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Background.WidthUnits",
+            Value = value,
+            Type = "DimensionUnitType",
+            SetsValue = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.Single(item => item.Code == "GUM0007");
+        error.ElementName.ShouldBe("BrokenButton");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+        error.Message.ShouldContain("Background.WidthUnits");
+        error.Message.ShouldContain("Default");
+        error.Message.ShouldContain("14");
+        error.Message.ShouldContain("DimensionUnitType");
+        error.Message.ShouldContain("PercentageOfParent");
+        error.Message.ShouldNotContain("RelativeToContainer", Case.Sensitive);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0007_WhenEnumVariableValueIsDefined()
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("DimensionUnitType"))
+            .Returns(typeof(DimensionUnitType));
+
+        ComponentSave component = new ComponentSave { Name = "GoodButton" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Background.WidthUnits",
+            Value = DimensionUnitType.RelativeToParent,
+            Type = "DimensionUnitType",
+            SetsValue = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(item => item.Code == "GUM0007");
+    }
+
+    /// <summary>
+    /// A non-enum variable whose value happens to be an int must not be measured against
+    /// <see cref="Enum.IsDefined"/>, or every numeric variable in the project reports an error.
+    /// </summary>
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0007_WhenVariableTypeIsNotAnEnum()
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("int"))
+            .Returns(typeof(int));
+
+        ComponentSave component = new ComponentSave { Name = "Counter" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Background.SomeCount",
+            Value = 14,
+            Type = "int",
+            SetsValue = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(item => item.Code == "GUM0007");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0007_WhenNullableEnumVariableValueIsNotDefined()
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("DimensionUnitType?"))
+            .Returns(typeof(DimensionUnitType?));
+
+        ComponentSave component = new ComponentSave { Name = "NullableButton" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Background.WidthUnits",
+            Value = 14,
+            Type = "DimensionUnitType?",
+            SetsValue = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.Single(item => item.Code == "GUM0007");
+        error.Message.ShouldContain("DimensionUnitType");
+    }
+
+    /// <summary>
+    /// A combination of flags is a legitimate value that names no single member, so
+    /// <see cref="Enum.IsDefined"/> rejects it. Flags enums are skipped rather than reported.
+    /// </summary>
+    [Flags]
+    private enum TestFlags
+    {
+        None = 0,
+        First = 1,
+        Second = 2,
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0007_WhenEnumIsFlagsAndValueIsACombination()
+    {
+        _mockTypeResolver.Setup(item => item.GetTypeFromString("TestFlags"))
+            .Returns(typeof(TestFlags));
+
+        ComponentSave component = new ComponentSave { Name = "FlaggedComponent" };
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle" });
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+        defaultState.Variables.Add(new VariableSave
+        {
+            Name = "Background.SomeFlags",
+            Value = TestFlags.First | TestFlags.Second,
+            Type = "TestFlags",
+            SetsValue = true,
+        });
+        component.States.Add(defaultState);
+        Project.Components.Add(component);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldNotContain(item => item.Code == "GUM0007");
+    }
+
+    #endregion
 }

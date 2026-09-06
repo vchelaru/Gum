@@ -336,6 +336,20 @@ namespace Gum.Converters
         public static bool TryConvertToGeneralUnit(object unitType, out GeneralUnitType result)
         {
             result = GeneralUnitType.PixelsFromSmall;
+
+            // The ConvertToGeneralUnit overloads map an undefined value onto a usable default rather
+            // than throwing, so an undefined value has to be rejected here instead of by the catch.
+            if (unitType is DimensionUnitType dimensionUnit &&
+                !Enum.IsDefined(typeof(DimensionUnitType), dimensionUnit))
+            {
+                return false;
+            }
+            if (unitType is PositionUnitType positionUnit &&
+                !Enum.IsDefined(typeof(PositionUnitType), positionUnit))
+            {
+                return false;
+            }
+
             try
             {
                 result = ConvertToGeneralUnit(unitType);
@@ -393,7 +407,10 @@ namespace Gum.Converters
                 case PositionUnitType.PixelsFromBaseline:
                     return GeneralUnitType.PixelsFromBaseline;
                 default:
-                    throw new NotImplementedException();
+                    // XUnits/YUnits are persisted as raw ints and read back here while building an
+                    // element from file data, so a value this enum does not define must not throw.
+                    // The tool reports the bad value as GUM0007.
+                    return GeneralUnitType.PixelsFromSmall;
             }
         }
 
@@ -421,7 +438,10 @@ namespace Gum.Converters
                 case DimensionUnitType.RelativeToMaxParentOrChildren:
                     return GeneralUnitType.PixelsFromLarge;
                 default:
-                    throw new NotImplementedException();
+                    // Matches DimensionUnitTypeExtensions.GetDependencyType: a value the enum does
+                    // not define comes from bad file data, and is treated as Absolute rather than
+                    // throwing.
+                    return GeneralUnitType.PixelsFromSmall;
             }
         }
 

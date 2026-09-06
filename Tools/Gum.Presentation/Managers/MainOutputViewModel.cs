@@ -8,6 +8,12 @@ public interface IOutputManager
 {
     void AddOutput(string value);
     void AddError(string value);
+
+    /// <summary>
+    /// Raised when <see cref="AddError"/> appends a line, so the Output tab can bring itself to the
+    /// front. Errors written here are otherwise easy to miss, since nothing else signals them.
+    /// </summary>
+    event Action? ErrorAdded;
 }
 
 public partial class MainOutputViewModel : ViewModel, IOutputManager
@@ -35,6 +41,9 @@ public partial class MainOutputViewModel : ViewModel, IOutputManager
         }
     }
 
+    /// <inheritdoc/>
+    public event Action? ErrorAdded;
+
     public void AddError(string value)
     {
         OutputText += "\n[" + DateTime.Now.ToShortTimeString() + "] ERROR:  " + value;
@@ -43,6 +52,8 @@ public partial class MainOutputViewModel : ViewModel, IOutputManager
         {
             OutputText = OutputText.Substring(MaxCharacterLength / 2);
         }
+
+        ErrorAdded?.Invoke();
     }
 
     [RelayCommand]
