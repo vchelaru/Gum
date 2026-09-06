@@ -590,4 +590,27 @@ public class ElementSaveDisplayerFormsPropertiesTests : BaseTestClass
         member.ShouldNotBeNull();
         member.GetValueType(member.Instance!).ShouldBe(typeof(Gum.Forms.Controls.ResizeBehavior?));
     }
+
+    [Fact]
+    public void GetCategories_BehaviorRequiredInstance_SetNameAndBaseType_DoesNotThrow()
+    {
+        // Issue #4643: GetCategories(BehaviorSave, InstanceSave) builds its Name/BaseType entries
+        // with a null StateSave (CreateEntryFromPropertyData(null, instance, null, null, item)).
+        // Reproduces "select a required instance under a behavior, edit Name/BaseType" to check
+        // whether that null StateSave is ever actually dereferenced unguarded.
+        BehaviorInstanceSave requiredInstance = new BehaviorInstanceSave
+        {
+            Name = "RequiredButton",
+            BaseType = "Controls/ButtonStandard"
+        };
+        _buttonBehavior.RequiredInstances.Add(requiredInstance);
+
+        List<VariableCategoryDescriptor> categories = _displayer.GetCategories(_buttonBehavior, requiredInstance);
+
+        VariableGridEntry nameEntry = categories.SelectMany(c => c.Members).Single(m => m.Name.EndsWith(".Name"));
+        VariableGridEntry baseTypeEntry = categories.SelectMany(c => c.Members).Single(m => m.Name.EndsWith(".BaseType"));
+
+        Should.NotThrow(() => nameEntry.SetValue(requiredInstance, "RenamedButton", VariablePropertyCommitType.Full));
+        Should.NotThrow(() => baseTypeEntry.SetValue(requiredInstance, "Controls/OtherButton", VariablePropertyCommitType.Full));
+    }
 }
