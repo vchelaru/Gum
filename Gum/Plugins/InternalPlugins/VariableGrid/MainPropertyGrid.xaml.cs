@@ -1,9 +1,12 @@
 using Gum.Extensions;
+using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
 using System;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Gum
 {
@@ -16,6 +19,8 @@ namespace Gum
 
         public event EventHandler SelectedBehaviorVariableChanged;
 
+        private readonly IVariableFilterService _variableFilterService;
+
         private MainControlViewModel? _subscribedViewModel;
 
         public object Instance
@@ -25,8 +30,10 @@ namespace Gum
         }
 
 
-        public MainPropertyGrid()
+        public MainPropertyGrid(IVariableFilterService variableFilterService)
         {
+            _variableFilterService = variableFilterService;
+
             InitializeComponent();
 
             DataContextChanged += HandleDataContextChanged;
@@ -53,6 +60,7 @@ namespace Gum
             if (_subscribedViewModel != null)
             {
                 _subscribedViewModel.BehaviorVariablesContextMenuItems.CollectionChanged -= HandleBehaviorVariablesContextMenuItemsChanged;
+                _subscribedViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
             }
 
             _subscribedViewModel = e.NewValue as MainControlViewModel;
@@ -60,9 +68,54 @@ namespace Gum
             if (_subscribedViewModel != null)
             {
                 _subscribedViewModel.BehaviorVariablesContextMenuItems.CollectionChanged += HandleBehaviorVariablesContextMenuItemsChanged;
+                _subscribedViewModel.PropertyChanged += HandleViewModelPropertyChanged;
             }
 
             RebuildBehaviorVariablesContextMenu();
+            RefreshVariableFilter();
+        }
+
+        private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MainControlViewModel.VariableFilterText))
+            {
+                RefreshVariableFilter();
+            }
+        }
+
+        private void HandleVariableFilterPreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Escape)
+            {
+                return;
+            }
+
+            if (_subscribedViewModel != null)
+            {
+                _subscribedViewModel.VariableFilterText = "";
+            }
+
+            DataGrid.Focus();
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// Turns what the user typed into a row predicate. The predicate lives here rather than on the
+        /// ViewModel because rows are WPF <see cref="WpfDataUi.DataTypes.InstanceMember"/>s, which the
+        /// headless assembly holding the ViewModel cannot reference.
+        /// </summary>
+        private void RefreshVariableFilter()
+        {
+            string? filterText = _subscribedViewModel?.VariableFilterText;
+
+            if (!_variableFilterService.HasFilter(filterText))
+            {
+                DataGrid.ApplyMemberFilter(null);
+                return;
+            }
+
+            DataGrid.ApplyMemberFilter(member =>
+                _variableFilterService.IsMatch(filterText, member.Name ?? "", member.DisplayName));
         }
 
         private void HandleBehaviorVariablesContextMenuItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) =>

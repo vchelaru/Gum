@@ -28,6 +28,10 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     private readonly Dictionary<InstanceMember, Func<InstanceMember, bool>> _membersWithOptionalVisibility
         = new();
 
+    private readonly MemberCategoryFilter _memberFilter = new();
+
+    private Func<InstanceMember, bool>? _memberFilterPredicate;
+
     #endregion
 
     #region Dependency Properties
@@ -190,6 +194,10 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
     {
         StoreExpandedStates();
 
+        // The snapshot describes categories that are about to be replaced, so it cannot be restored over
+        // the incoming ones.
+        _memberFilter.Invalidate();
+
         foreach (MemberCategory category in newCategories)
         {
             if (_expansionStates.TryGetValue(category.Name, out bool expanded))
@@ -200,13 +208,31 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         Unsubscribe(Categories);
         Categories.ReplaceAll(newCategories);
         Subscribe((IList)newCategories);
+
+        // Selecting a different object rebuilds the grid, which would otherwise silently drop a filter
+        // the box still shows as active.
+        _memberFilter.Apply(Categories, _memberFilterPredicate);
+    }
+
+    /// <summary>
+    /// Shows only the members <paramref name="isMatch"/> accepts, expanding whichever categories hold
+    /// them. Passing null clears the filter and restores every category's members, their order, and the
+    /// expansion state the user had chosen. The predicate is remembered and re-applied whenever the grid
+    /// rebuilds its categories.
+    /// </summary>
+    public void ApplyMemberFilter(Func<InstanceMember, bool>? isMatch)
+    {
+        _memberFilterPredicate = isMatch;
+        _memberFilter.Apply(Categories, isMatch);
     }
 
     private void StoreExpandedStates()
     {
         foreach (var item in Categories)
         {
-            _expansionStates[item.Name] = item.IsExpanded;
+            // A filter force-expands the categories holding its matches. Persisting that would let a
+            // search the user has already dismissed reorganize the grid for every later selection.
+            _expansionStates[item.Name] = _memberFilter.GetPreFilterIsExpanded(item);
         }
     }
 

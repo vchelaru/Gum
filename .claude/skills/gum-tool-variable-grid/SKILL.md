@@ -59,6 +59,12 @@ Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitTyp
 
 `DataUiGrid.SetCategories()` captures `{name → IsExpanded}` from existing categories, replaces the list, then re-applies the saved values by name. Category collapse state persists across selection changes within a session. `IsExpanded` is `Mode=TwoWay` in the XAML template so user gestures write back to the model immediately.
 
+Landmine: the backing `_expansionStates` dictionary is **static** and keyed only by category name, so every `DataUiGrid` in the tool shares one expansion memory and same-named categories in different grids overwrite each other. Anything that expands a category programmatically must keep that out of the dictionary, or it persists as the user's preference for every later selection.
+
+### Hiding a Row
+
+A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGrid.RefreshDelegateBasedElementVisibility`. `MemberCategory.Visibility` then collapses the category once it holds nothing, and row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`WpfDataUi/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGrid.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
+
 ### Structural Rebuild vs. Partial Refresh
 
 `PropertyGridManager.RefreshDataGrid` tracks the previous display target (element, state, instances, behavior). If unchanged and `force=false`, it calls `Refresh()` to update values without recreating categories. If the target changed, it calls `SetCategories` with a fresh list from `ElementSaveDisplayer`. Pass `force: true` to always rebuild.

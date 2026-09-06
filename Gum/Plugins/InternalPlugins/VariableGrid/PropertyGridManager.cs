@@ -192,7 +192,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _clipboardService,
             _projectState);
 
-        mainControl = new Gum.MainPropertyGrid();
+        // Plugin-scoped and dependency-free, so it is created here rather than registered app-wide.
+        mainControl = new Gum.MainPropertyGrid(new VariableFilterService());
 
         _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
 
