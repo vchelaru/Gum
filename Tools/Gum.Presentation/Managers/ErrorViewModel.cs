@@ -48,6 +48,12 @@ public class ErrorViewModel : ViewModel
     public bool HasCodeWithoutHelpUrl => HasCode && !HasHelpUrl;
 
     /// <summary>
+    /// The error as a single line of plain text, for copying to the clipboard. Matches what the
+    /// Errors tab shows: the code prefixes the message when one is assigned.
+    /// </summary>
+    public string ClipboardText => HasCode ? $"{Code}: {Message}" : Message;
+
+    /// <summary>
     /// Label for a per-error action button (e.g. "Delete File"). Null when the error has no action.
     /// </summary>
     public string? ActionName { get; set; }

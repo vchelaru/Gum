@@ -14,6 +14,32 @@
             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
             ItemsSource="{Binding Errors}"
             SelectedItem="{Binding SelectedItem}">
+            <ListBox.InputBindings>
+                <KeyBinding
+                    Command="{Binding CopySelectedErrorCommand}"
+                    Gesture="Ctrl+C" />
+                <KeyBinding
+                    Command="{Binding CopyAllErrorsCommand}"
+                    Gesture="Ctrl+Shift+C" />
+            </ListBox.InputBindings>
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem
+                        Command="{Binding CopySelectedErrorCommand}"
+                        Header="_Copy"
+                        InputGestureText="Ctrl+C" />
+                    <MenuItem
+                        Command="{Binding CopyAllErrorsCommand}"
+                        Header="Copy _All Errors"
+                        InputGestureText="Ctrl+Shift+C" />
+                </ContextMenu>
+            </ListBox.ContextMenu>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <!--  Right-clicking a row does not select it in WPF, so the context menu would otherwise act on whatever was selected before.  -->
+                    <EventSetter Event="PreviewMouseRightButtonDown" Handler="HandleItemPreviewMouseRightButtonDown" />
+                </Style>
+            </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <local:ErrorListEntry />

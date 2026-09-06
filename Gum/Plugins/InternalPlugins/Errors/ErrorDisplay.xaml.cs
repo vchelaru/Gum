@@ -1,4 +1,5 @@
 ﻿using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace Gum.Plugins.Errors
 {
@@ -10,6 +11,14 @@ namespace Gum.Plugins.Errors
         public ErrorDisplay()
         {
             InitializeComponent();
+        }
+
+        private void HandleItemPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is ListBoxItem item)
+            {
+                item.IsSelected = true;
+            }
         }
     }
 }

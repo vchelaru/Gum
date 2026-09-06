@@ -73,6 +73,7 @@ internal static class PluginBridgedServiceTypes
         typeof(PropertyGridManager),
         typeof(IVariableReferenceLogic),
         typeof(IErrorChecker),
+        typeof(IClipboardService),
         typeof(IMessenger),
         typeof(FileWatchLogic),
         typeof(PeriodicUiTimer),

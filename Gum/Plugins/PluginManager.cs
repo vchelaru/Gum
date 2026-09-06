@@ -878,13 +878,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             // Medium-tier plugin ctor drains (cheapest-first batch): MainHideShowToolsPlugin
             // (MainPanelViewModel), MainVariableGridPlugin (PropertyGridManager,
-            // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger),
+            // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger, IClipboardService),
             // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
             // transient; this bridges the single instance MainFileWatchPlugin consumes.
             batch.AddExportedValue<MainPanelViewModel>(Locator.GetRequiredService<MainPanelViewModel>());
             batch.AddExportedValue<PropertyGridManager>(Locator.GetRequiredService<PropertyGridManager>());
             batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
             batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
+            batch.AddExportedValue<IClipboardService>(Locator.GetRequiredService<IClipboardService>());
             batch.AddExportedValue<IMessenger>(Locator.GetRequiredService<IMessenger>());
             batch.AddExportedValue<FileWatchLogic>(Locator.GetRequiredService<FileWatchLogic>());
             batch.AddExportedValue<PeriodicUiTimer>(Locator.GetRequiredService<PeriodicUiTimer>());
