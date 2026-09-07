@@ -48,6 +48,8 @@ public class ErrorChecker : IErrorChecker
                     vm.HelpUrl = _errorDocsRegistry.GetUrl(vm.Code);
                 }
             }
+
+            ApplyDefaultElementName(list, element);
         }
 
         return list.ToArray();
@@ -68,9 +70,25 @@ public class ErrorChecker : IErrorChecker
             {
                 ObjectFinder.Self.DisableCache();
             }
+
+            ApplyDefaultElementName(list, element);
         }
 
         return list.ToArray();
+    }
+
+    // Plugin-contributed errors don't always know which element they belong to (e.g. a check that
+    // isn't scoped to the selected element). Falling back to the selected element keeps every row
+    // in the tab equally useful to copy, even when the plugin itself set no ElementName.
+    private static void ApplyDefaultElementName(List<ErrorViewModel> list, ElementSave element)
+    {
+        foreach (var vm in list)
+        {
+            if (string.IsNullOrEmpty(vm.ElementName))
+            {
+                vm.ElementName = element.Name;
+            }
+        }
     }
 
     private ErrorViewModel ToViewModel(ErrorResult errorResult)
@@ -78,7 +96,8 @@ public class ErrorChecker : IErrorChecker
         ErrorViewModel vm = new ErrorViewModel
         {
             Message = errorResult.Message,
-            Code = errorResult.Code
+            Code = errorResult.Code,
+            ElementName = errorResult.ElementName
         };
         if (errorResult.Code != null)
         {

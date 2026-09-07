@@ -19,6 +19,12 @@ public class ErrorViewModel : ViewModel
     } = string.Empty;
 
     /// <summary>
+    /// The element this error belongs to, shown in the Errors tab and included in
+    /// <see cref="ClipboardText"/> so a copied error reads with context. Empty when unknown.
+    /// </summary>
+    public string ElementName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Stable error code (e.g. <c>"GUM0001"</c>) for searchability and doc linking.
     /// Null if the error has not been assigned a code.
     /// </summary>
@@ -49,9 +55,17 @@ public class ErrorViewModel : ViewModel
 
     /// <summary>
     /// The error as a single line of plain text, for copying to the clipboard. Matches what the
-    /// Errors tab shows: the code prefixes the message when one is assigned.
+    /// Errors tab shows: the element name and code prefix the message when set, mirroring
+    /// <c>gumcli check</c>'s <c>{ElementName}: {message}</c> shape.
     /// </summary>
-    public string ClipboardText => HasCode ? $"{Code}: {Message}" : Message;
+    public string ClipboardText
+    {
+        get
+        {
+            string codeAndMessage = HasCode ? $"{Code}: {Message}" : Message;
+            return string.IsNullOrEmpty(ElementName) ? codeAndMessage : $"{ElementName}: {codeAndMessage}";
+        }
+    }
 
     /// <summary>
     /// Label for a per-error action button (e.g. "Delete File"). Null when the error has no action.

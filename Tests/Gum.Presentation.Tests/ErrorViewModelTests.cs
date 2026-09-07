@@ -52,6 +52,27 @@ public class ErrorViewModelTests
     }
 
     [Fact]
+    public void ClipboardText_IncludesElementName_WhenSet()
+    {
+        ErrorViewModel viewModel = new()
+        {
+            ElementName = "MyComponent",
+            Code = "GUM0003",
+            Message = "self-referential state"
+        };
+
+        viewModel.ClipboardText.ShouldBe("MyComponent: GUM0003: self-referential state");
+    }
+
+    [Fact]
+    public void ClipboardText_OmitsElementName_WhenNotSet()
+    {
+        ErrorViewModel viewModel = new() { Message = "some message" };
+
+        viewModel.ClipboardText.ShouldBe("some message");
+    }
+
+    [Fact]
     public void OwnerPlugin_ComparesByReference()
     {
         object owner = new();
