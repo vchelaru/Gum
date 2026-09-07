@@ -80,7 +80,7 @@ partial class LabelContainer : global::Gum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"LabelInstance");
         NonLabelShouldAppearAfterLabel = this.Visual?.GetGraphicalUiElementByName("NonLabelShouldAppearAfterLabel") as global::Gum.GueDeriving.ColoredRectangleRuntime;
         CustomInitialize();
     }

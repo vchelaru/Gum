@@ -48,11 +48,11 @@ partial class SettingsView : global::Gum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        FullscreenCheckboxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
-        MusicVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"MusicVolumeLabel");
-        MusicSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"MusicSliderInstance");
-        SoundVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"SoundVolumeLabel");
-        SoundSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Slider>(this.Visual,"SoundSliderInstance");
+        FullscreenCheckboxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CheckBox>(this.Visual,"FullscreenCheckboxInstance");
+        MusicVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"MusicVolumeLabel");
+        MusicSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"MusicSliderInstance");
+        SoundVolumeLabel = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"SoundVolumeLabel");
+        SoundSliderInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Slider>(this.Visual,"SoundSliderInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

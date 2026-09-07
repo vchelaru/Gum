@@ -49,10 +49,10 @@ partial class PlayerJoinView : global::Gum.Forms.Controls.FrameworkElement
     {
         base.ReactToVisualChanged();
         InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
-        PlayerJoinViewItem1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem1");
-        PlayerJoinViewItem2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem2");
-        PlayerJoinViewItem3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem3");
-        PlayerJoinViewItem4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem4");
+        PlayerJoinViewItem1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem1");
+        PlayerJoinViewItem2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem2");
+        PlayerJoinViewItem3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem3");
+        PlayerJoinViewItem4 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<PlayerJoinViewItem>(this.Visual,"PlayerJoinViewItem4");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

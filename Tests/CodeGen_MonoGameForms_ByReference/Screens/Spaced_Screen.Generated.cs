@@ -48,7 +48,7 @@ partial class Spaced_Screen : global::Gum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        Spaced_ComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Spaced_Component>(this.Visual,"Spaced ComponentInstance");
+        Spaced_ComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Spaced_Component>(this.Visual,"Spaced ComponentInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

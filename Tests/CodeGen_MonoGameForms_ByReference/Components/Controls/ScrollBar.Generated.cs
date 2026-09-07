@@ -77,11 +77,11 @@ partial class ScrollBar : global::Gum.Forms.Controls.ScrollBar
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        UpButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonIcon>(this.Visual,"UpButtonInstance");
-        DownButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonIcon>(this.Visual,"DownButtonInstance");
+        UpButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"UpButtonInstance");
+        DownButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonIcon>(this.Visual,"DownButtonInstance");
         TrackInstance = this.Visual?.GetGraphicalUiElementByName("TrackInstance") as global::Gum.GueDeriving.ContainerRuntime;
         TrackBackground = this.Visual?.GetGraphicalUiElementByName("TrackBackground") as global::Gum.GueDeriving.NineSliceRuntime;
-        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandard>(this.Visual,"ThumbInstance");
+        ThumbInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandard>(this.Visual,"ThumbInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

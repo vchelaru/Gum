@@ -46,8 +46,8 @@ partial class TreeViewItem : global::Gum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        ToggleButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TreeViewToggle>(this.Visual,"ToggleButtonInstance");
-        ListBoxItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ListBoxItem>(this.Visual,"ListBoxItemInstance");
+        ToggleButtonInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TreeViewToggle>(this.Visual,"ToggleButtonInstance");
+        ListBoxItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ListBoxItem>(this.Visual,"ListBoxItemInstance");
         InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
         CustomInitialize();
     }

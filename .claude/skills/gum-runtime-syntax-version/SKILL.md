@@ -33,6 +33,17 @@ Reads the consumer's `.csproj`:
 
 When the runtime surface that codegen cares about changes in a way that requires the tool to emit different code (renamed/removed role interfaces, new runtime types, namespace changes). Bump all four assemblies in lock step and add a row to the version table.
 
+## Gate on a safe floor, not the exact release that added the API
+
+A codegen check like `context.ResolvedSyntaxVersion >= N` doesn't need to match the version that
+introduced the target API — it only needs to guarantee the API exists. If an API shipped mid-cycle
+inside an already-stamped version (so some assemblies at that version have it and some don't), gate
+on the *next* bumped version instead. The cost is early adopters keep seeing the old code path a
+little longer; the alternative — gating loosely to minimize that — risks emitting code that fails to
+compile against older runtimes still reporting that version. See `AddFindByNameAssignment` in
+`CodeGenerator.cs`, which gates `FindFormsControl<T>` on `ResolvedSyntaxVersion >= 1` even though the
+method shipped mid-version-0.
+
 ## When NOT to bump
 
 Pure renderable / Forms / sample changes that the codegen doesn't pattern-match against. The version is for **codegen gates**, not a general changelog.

@@ -59,10 +59,10 @@ partial class InputDeviceSelector : global::Gum.Forms.Controls.FrameworkElement
         ContainerInstance1 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance1") as global::Gum.GueDeriving.ContainerRuntime;
         InputDeviceContainerInstance = this.Visual?.GetGraphicalUiElementByName("InputDeviceContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
         ContainerInstance2 = this.Visual?.GetGraphicalUiElementByName("ContainerInstance2") as global::Gum.GueDeriving.ContainerRuntime;
-        InputDeviceSelectionItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
-        InputDeviceSelectionItemInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
-        InputDeviceSelectionItemInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
-        InputDeviceSelectionItemInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance3");
+        InputDeviceSelectionItemInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance");
+        InputDeviceSelectionItemInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance1");
+        InputDeviceSelectionItemInstance2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance2");
+        InputDeviceSelectionItemInstance3 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<InputDeviceSelectionItem>(this.Visual,"InputDeviceSelectionItemInstance3");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

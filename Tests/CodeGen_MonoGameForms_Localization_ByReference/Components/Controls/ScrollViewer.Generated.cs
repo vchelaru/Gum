@@ -113,8 +113,8 @@ partial class ScrollViewer : global::Gum.Forms.Controls.ScrollViewer
     {
         base.ReactToVisualChanged();
         Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
-        VerticalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ScrollBar>(this.Visual,"VerticalScrollBarInstance");
-        HorizontalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ScrollBar>(this.Visual,"HorizontalScrollBarInstance");
+        VerticalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ScrollBar>(this.Visual,"VerticalScrollBarInstance");
+        HorizontalScrollBarInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ScrollBar>(this.Visual,"HorizontalScrollBarInstance");
         ClipContainerInstance = this.Visual?.GetGraphicalUiElementByName("ClipContainerInstance") as global::Gum.GueDeriving.ContainerRuntime;
         InnerPanelInstance = this.Visual?.GetGraphicalUiElementByName("InnerPanelInstance") as global::Gum.GueDeriving.ContainerRuntime;
         FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;

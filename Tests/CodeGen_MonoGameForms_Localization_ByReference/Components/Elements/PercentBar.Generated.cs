@@ -89,8 +89,8 @@ partial class PercentBar : global::Gum.Forms.Controls.FrameworkElement
         Background = this.Visual?.GetGraphicalUiElementByName("Background") as global::Gum.GueDeriving.NineSliceRuntime;
         BarContainer = this.Visual?.GetGraphicalUiElementByName("BarContainer") as global::Gum.GueDeriving.NineSliceRuntime;
         Bar = this.Visual?.GetGraphicalUiElementByName("Bar") as global::Gum.GueDeriving.NineSliceRuntime;
-        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<CautionLines>(this.Visual,"CautionLinesInstance");
-        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<VerticalLines>(this.Visual,"VerticalLinesInstance");
+        CautionLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<CautionLines>(this.Visual,"CautionLinesInstance");
+        VerticalLinesInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<VerticalLines>(this.Visual,"VerticalLinesInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

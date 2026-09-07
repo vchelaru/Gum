@@ -1477,9 +1477,22 @@ public class CodeGenerator
 
                 var classNameString = GetClassNameForType(instance, context.VisualApi, context);
 
-                context.StringBuilder.AppendLine(
-                    $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
-                    $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{instance.Name}\");");
+                // FindFormsControl<T>(name) shipped mid syntax-version-0 (2026 May release,
+                // before the version-1 bump in June), so gate on >= 1 to guarantee the target
+                // runtime has it rather than matching its exact introduction — see
+                // gum-runtime-syntax-version's "Gate on a safe floor" section.
+                if (context.ResolvedSyntaxVersion >= 1)
+                {
+                    context.StringBuilder.AppendLine(
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<{classNameString}>(this.Visual,\"{instance.Name}\");");
+                }
+                else
+                {
+                    context.StringBuilder.AppendLine(
+                        $"{context.Tabs}{_codeGenerationNameVerifier.ToCSharpName(instance.Name)} = " +
+                        $"global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<{classNameString}>(this.Visual,\"{instance.Name}\");");
+                }
             }
             else
             {
