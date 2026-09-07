@@ -33,6 +33,7 @@ public class ErrorCheckerTests : BaseTestClass
 
         errors.Length.ShouldBe(1);
         errors[0].Message.ShouldContain("NonExistentBase");
+        errors[0].ElementName.ShouldBe("DerivedComponent");
     }
 
     [Fact]
@@ -61,5 +62,29 @@ public class ErrorCheckerTests : BaseTestClass
 
         errors.Length.ShouldBe(1);
         errors[0].Message.ShouldContain("NonExistentType");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldDefaultElementName_WhenPluginErrorHasNone()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave component = new ComponentSave { Name = "SomeComponent" };
+        project.Components.Add(component);
+
+        ITypeResolver typeResolver = new DefaultTypeResolver();
+        IHeadlessErrorChecker headlessErrorChecker = new HeadlessErrorChecker(typeResolver);
+        Mock<IPluginManager> mockPluginManager = new Mock<IPluginManager>();
+        mockPluginManager
+            .Setup(m => m.FillWithErrors(It.IsAny<List<ErrorViewModel>>(), It.IsAny<object?>()))
+            .Callback<List<ErrorViewModel>, object?>(
+                (list, _) => list.Add(new ErrorViewModel { Message = "plugin error" }));
+        IErrorDocsRegistry errorDocsRegistry = new ErrorDocsRegistry();
+        ErrorChecker sut = new ErrorChecker(headlessErrorChecker, mockPluginManager.Object, errorDocsRegistry);
+
+        ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
+
+        errors.ShouldContain(e => e.Message == "plugin error" && e.ElementName == "SomeComponent");
     }
 }

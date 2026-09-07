@@ -73,6 +73,7 @@ public class OrphanCodeFileReporter
         _orphans.ToList().Select(orphan => new ErrorViewModel
         {
             Code = ErrorCode,
+            ElementName = orphan.ElementName ?? string.Empty,
             Message = $"Orphaned {GetKindDescription(orphan.Kind)}, no matching element in the project: " +
                 $"{orphan.FilePath.FullPath}",
             ActionName = "Delete File",

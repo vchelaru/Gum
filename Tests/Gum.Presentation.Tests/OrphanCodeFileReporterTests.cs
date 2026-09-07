@@ -45,6 +45,7 @@ public class OrphanCodeFileReporterTests : BaseTestClass
         errors[0].Message.ShouldContain("DeletedScreen.Generated.cs");
         errors[0].Code.ShouldBe("GUM0005");
         errors[0].HasAction.ShouldBeTrue();
+        errors[0].ElementName.ShouldBe("DeletedScreen");
     }
 
     [Fact]
