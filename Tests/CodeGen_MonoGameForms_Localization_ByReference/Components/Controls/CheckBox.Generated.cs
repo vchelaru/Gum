@@ -100,7 +100,7 @@ partial class CheckBox : global::Gum.Forms.Controls.CheckBox
         base.ReactToVisualChanged();
         CheckBoxBackground = this.Visual?.GetGraphicalUiElementByName("CheckBoxBackground") as global::Gum.GueDeriving.NineSliceRuntime;
         TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
-        InnerCheck = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"InnerCheck");
+        InnerCheck = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"InnerCheck");
         FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
         CustomInitialize();
     }

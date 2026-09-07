@@ -44,7 +44,7 @@ partial class ContainerOfFormsObjects : global::Gum.Forms.Controls.FrameworkElem
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        ButtonStandardIconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<ButtonStandardIcon>(this.Visual,"ButtonStandardIconInstance");
+        ButtonStandardIconInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<ButtonStandardIcon>(this.Visual,"ButtonStandardIconInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

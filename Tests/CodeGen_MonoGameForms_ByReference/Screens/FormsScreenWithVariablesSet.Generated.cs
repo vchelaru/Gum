@@ -52,11 +52,11 @@ partial class FormsScreenWithVariablesSet : global::Gum.Forms.Controls.Framework
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        TextBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"TextBoxInstance");
-        TextBoxInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"TextBoxInstance1");
-        MaxLettersToShow10 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"MaxLettersToShow10");
-        MaxLinesSetTo2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<TextBox>(this.Visual,"MaxLinesSetTo2");
-        StackPanelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<StackPanel>(this.Visual,"StackPanelInstance");
+        TextBoxInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"TextBoxInstance");
+        TextBoxInstance1 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"TextBoxInstance1");
+        MaxLettersToShow10 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"MaxLettersToShow10");
+        MaxLinesSetTo2 = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<TextBox>(this.Visual,"MaxLinesSetTo2");
+        StackPanelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<StackPanel>(this.Visual,"StackPanelInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

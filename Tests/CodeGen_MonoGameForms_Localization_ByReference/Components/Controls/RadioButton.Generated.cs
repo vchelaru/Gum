@@ -92,7 +92,7 @@ partial class RadioButton : global::Gum.Forms.Controls.RadioButton
     {
         base.ReactToVisualChanged();
         RadioBackground = this.Visual?.GetGraphicalUiElementByName("RadioBackground") as global::Gum.GueDeriving.NineSliceRuntime;
-        Radio = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Icon>(this.Visual,"Radio");
+        Radio = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Icon>(this.Visual,"Radio");
         TextInstance = this.Visual?.GetGraphicalUiElementByName("TextInstance") as global::Gum.GueDeriving.TextRuntime;
         FocusedIndicator = this.Visual?.GetGraphicalUiElementByName("FocusedIndicator") as global::Gum.GueDeriving.NineSliceRuntime;
         CustomInitialize();

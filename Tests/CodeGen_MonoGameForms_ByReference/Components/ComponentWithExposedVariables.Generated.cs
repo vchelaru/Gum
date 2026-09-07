@@ -61,7 +61,7 @@ partial class ComponentWithExposedVariables : global::Gum.Forms.Controls.Framewo
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        SpriteComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<SpriteComponent>(this.Visual,"SpriteComponentInstance");
+        SpriteComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<SpriteComponent>(this.Visual,"SpriteComponentInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code

@@ -51,9 +51,9 @@ partial class GeneralScreen : global::Gum.Forms.Controls.FrameworkElement
     protected override void ReactToVisualChanged()
     {
         base.ReactToVisualChanged();
-        SpriteComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<SpriteComponent>(this.Visual,"SpriteComponentInstance");
-        NineSliceComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<NineSliceComponent>(this.Visual,"NineSliceComponentInstance");
-        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.TryGetFrameworkElementByName<Label>(this.Visual,"LabelInstance");
+        SpriteComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<SpriteComponent>(this.Visual,"SpriteComponentInstance");
+        NineSliceComponentInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<NineSliceComponent>(this.Visual,"NineSliceComponentInstance");
+        LabelInstance = global::Gum.Forms.GraphicalUiElementFormsExtensions.FindFormsControl<Label>(this.Visual,"LabelInstance");
         CustomInitialize();
     }
     //Not assigning variables because Object Instantiation Type is set to By Name rather than Fully In Code
