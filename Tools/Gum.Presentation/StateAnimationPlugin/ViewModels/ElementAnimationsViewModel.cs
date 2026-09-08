@@ -771,18 +771,6 @@ public partial class ElementAnimationsViewModel : ViewModel
         }
     }
 
-    public IEnumerable<ErrorViewModel> GetErrors()
-    {
-        List<ErrorViewModel> toReturn = new List<ErrorViewModel>();
-        foreach(var animation in Animations)
-        {
-            var animationErrors = animation.GetErrors();
-            toReturn.AddRange(animationErrors);
-        }
-        return toReturn;
-    }
-
-
     [RelayCommand]
     private void ToggleInterpolationClamping()
     {
