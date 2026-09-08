@@ -34,11 +34,54 @@ dotnet add package Gum.Stride --prerelease
 <PackageReference Include="Stride.CommunityToolkit.Windows" Version="1.0.0-preview.63" />
 ```
 
-Your project must target `net10.0`, since Stride's own packages ship `net10.0` builds only.
+Your project must target `net10.0` at minimum, since Stride's own packages ship `net10.0` builds only. Targeting `net10.0-windows7.0` instead unlocks GPU-accelerated rendering on Direct3D11; see [Skia Render Path](#skia-render-path) below.
 
 {% hint style="warning" %}
 Don't name your project `StrideGum`, that's the assembly name inside the `Gum.Stride` package. A same-named project produces a same-named output DLL that silently overwrites the runtime's copy in your `bin` folder, causing a `TypeLoadException` at runtime with no build warning. Gum's build now catches this for you: if your `AssemblyName` collides, the build fails with an error telling you to change it.
 {% endhint %}
+
+## Skia Render Path
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
+Gum renders Stride's UI through SkiaSharp, and it can hand that drawing to the GPU two different ways. Which one you get depends on the graphics API your Stride project already builds against, chosen independently of Gum through Stride's own `StrideGraphicsApi` property (`Direct3D11` is Stride's Windows default):
+
+{% tabs %}
+{% tab title="Direct3D11" %}
+Gum renders directly into a GPU texture, with no CPU round trip. To use it, target `net10.0-windows7.0` instead of plain `net10.0`:
+
+```xml
+<TargetFramework>net10.0-windows7.0</TargetFramework>
+```
+
+That TFM change is the only setup step. The `Gum.Stride` NuGet package brings in the GPU renderer automatically; you don't add a separate package reference.
+{% endtab %}
+
+{% tab title="Direct3D12" %}
+Gum rasterizes with Skia on the CPU and uploads the result to a GPU texture every frame. There's no GPU-direct render path for Direct3D12 yet, and no TFM change unlocks one, so stay on plain `net10.0`.
+{% endtab %}
+
+{% tab title="Vulkan" %}
+Gum rasterizes with Skia on the CPU and uploads the result to a GPU texture every frame, the same as Direct3D12. A GPU-direct render path for Vulkan exists but isn't wired into Gum yet. Stay on plain `net10.0`, which Vulkan on Linux and macOS requires anyway, since `net10.0-windows7.0` is a Windows-only TFM.
+{% endtab %}
+{% endtabs %}
+
+Check `GumService.Default.IsUsingGpuPath` at runtime to confirm which path is active:
+
+```csharp
+// Initialize
+GumService.Default.Initialize(game);
+
+var renderPathLabel = new Label
+{
+    Text = GumService.Default.IsUsingGpuPath ? "GPU path" : "CPU path",
+};
+renderPathLabel.AddToRoot();
+```
+
+`Label` comes from `Gum.Forms.Controls`.
 
 ## Adding Source (Optional)
 

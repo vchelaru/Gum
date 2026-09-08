@@ -27,8 +27,14 @@
 		<!-- Overrides RuntimePackage.props' shared net8.0: Stride's own packages (Stride.Input,
 		     Stride.CommunityToolkit) only ship net10.0(+platform)-targeted builds. A net10.0 project
 		     referencing the net8.0 GumCommon/SkiaGum is fine (same modern .NET family, no
-		     netstandard-style compat gap). -->
-		<TargetFramework>net10.0</TargetFramework>
+		     netstandard-style compat gap).
+		     Two TFMs (#4617): SkiaGameRendering.Stride.D3D11 (the zero-copy GPU path) only ships
+		     net10.0-windows7.0, so it's referenced only under that TFM below; non-Windows/other-API
+		     consumers still get a net10.0 build with the CPU raster-and-upload path. Clearing the
+		     singular TargetFramework the import above set is required: the SDK only multi-targets off
+		     TargetFrameworks when TargetFramework is empty. -->
+		<TargetFramework></TargetFramework>
+		<TargetFrameworks>net10.0;net10.0-windows7.0</TargetFrameworks>
 		<!-- GumService.Stride.cs's texture upload does an unsafe pointer read off the Skia surface's
 		     pixel buffer (SKPixmap.GetPixels()). -->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -50,6 +56,19 @@
 		<DefineConstants>TRACE;SKIA;STRIDE</DefineConstants>
 	</PropertyGroup>
 
+	<!-- Selects the zero-copy GPU path's source in GumService.Stride.cs (#4617), gated to the TFM
+	     that actually references SkiaGameRendering.Stride.D3D11 above. -->
+	<PropertyGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
+		<DefineConstants>$(DefineConstants);STRIDE_GPU_ANGLE</DefineConstants>
+		<!-- TargetPlatformIdentifier/Version/SupportedOSPlatformVersion all correctly resolve to
+		     Windows/7.0 for this inner build (verified via -getProperty), which per CA1416's own docs
+		     should suppress it; the analyzer still fires on every windows7.0-only API (Keys,
+		     SkiaStrideRenderTarget2D) here, a known limitation with multi-targeted (TargetFrameworks,
+		     not TargetFramework) projects mixing a platform-neutral and a platform-specific TFM. Not
+		     an actual platform risk: this whole TFM only builds/ships for Windows. -->
+		<NoWarn>$(NoWarn);CA1416</NoWarn>
+	</PropertyGroup>
+
 	<!-- ScreenBase is NOT file-linked here (unlike RaylibGum/SokolGum, which are self-contained and
 	     need their own copy): this project ProjectReferences SkiaGum.csproj below, which already
 	     compiles Forms/ScreenBase.cs. See SilkNetGum.csproj's identical comment for the full
@@ -67,7 +86,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+		<!-- 3.119.4, not SkiaGum.csproj's 3.119.1: SkiaGameRendering.Stride.D3D11 (below, windows7.0
+		     only) pins SkiaSharp 3.119.4 exactly, and NuGet flags anything lower in this project's own
+		     graph as a downgrade. Different projects in the same solution resolving different patch
+		     versions is normal (see StrideGum.csproj's TargetFrameworks remarks for why the two
+		     packages can't just share a version file: SkiaGameRendering isn't a Gum-managed csproj). -->
+		<PackageReference Include="SkiaSharp" Version="3.119.4" />
 		<PackageReference Include="SkiaSharp.Extended" Version="3.0.0" />
 		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
 		<PackageReference Include="Svg.Skia" Version="1.0.0.19" />
@@ -84,6 +108,14 @@
 		<!-- Stride's runtime (unlike its WPF GameStudio editor) exposes no clipboard API; this is the
 		     cross-platform fallback for Gum.Input.StrideGumClipboard. -->
 		<PackageReference Include="TextCopy" Version="6.2.1" />
+	</ItemGroup>
+
+	<!-- Zero-copy GPU path for the D3D11 backend (#4617): Skia renders straight into the Stride
+	     Texture via ANGLE, no CPU rasterize-and-upload. Only ships net10.0-windows7.0, so it's scoped
+	     to that TFM; net10.0 consumers (Linux/macOS, or Windows on Vulkan/D3D12) keep the CPU
+	     SKSurface path below unconditionally. -->
+	<ItemGroup Condition="'$(TargetFramework)'=='net10.0-windows7.0'">
+		<PackageReference Include="SkiaGameRendering.Stride.D3D11" Version="0.15.0-beta" />
 	</ItemGroup>
 
 	<ItemGroup>

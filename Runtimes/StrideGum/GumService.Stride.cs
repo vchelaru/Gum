@@ -9,6 +9,9 @@ using Gum.Forms.Controls;
 using Gum.Input;
 using Gum.Wireframe;
 using RenderingLibrary;
+#if STRIDE_GPU_ANGLE
+using SkiaGameRendering.Stride.D3D11;
+#endif
 using SkiaSharp;
 using Stride.CommunityToolkit.Engine;
 using Stride.Core.Mathematics;
@@ -46,18 +49,44 @@ public class GumService : GumServiceSkiaBase, IGumService
     private InputManager? _inputManager;
     private GraphicsDevice? _graphicsDevice;
 
-    // Owns the Skia-to-Stride bridge: Gum renders into _skSurface (CPU-side), which is copied into
-    // _skiaTexture each frame and blitted into the composited frame via _spriteBatch. GumService owns
-    // this state (not GumSceneRenderer) so Initialize can create it synchronously -- Root is usable
-    // immediately after Initialize returns, matching every other runtime's Initialize-then-build-UI
-    // pattern, rather than deferring setup until Stride's own SceneRendererBase.InitializeCore fires.
+    // Owns the Skia-to-Stride bridge, one of two ways (#4617):
+    // - D3D11, net10.0-windows7.0 builds only: _gpuTarget renders straight into its own Stride
+    //   Texture via ANGLE (zero-copy) and composites itself on End -- see
+    //   SkiaGameRendering.Stride.D3D11.SkiaStrideRenderTarget2D. That package only ships
+    //   net10.0-windows7.0 (see StrideGum.csproj's TargetFrameworks/STRIDE_GPU_ANGLE remarks), so this
+    //   whole path is compiled out of the plain net10.0 build -- there _useGpuPath is always false.
+    // - Everything else (Vulkan/D3D12/Null, or any net10.0 consumer): the original CPU path -- Gum
+    //   renders into _skSurface (CPU raster), which is copied into _skiaTexture each frame and
+    //   blitted into the composited frame via _spriteBatch.
+    // GumService owns this state (not GumSceneRenderer) so Initialize can create it synchronously --
+    // Root is usable immediately after Initialize returns, matching every other runtime's
+    // Initialize-then-build-UI pattern, rather than deferring setup until Stride's own
+    // SceneRendererBase.InitializeCore fires.
+    private bool _useGpuPath;
+#if STRIDE_GPU_ANGLE
+    private SkiaStrideRenderTarget2D? _gpuTarget;
+#endif
     private SKSurface? _skSurface;
     private Texture? _skiaTexture;
     private SpriteBatch? _spriteBatch;
+    // The canvas SystemManagers.Default.Canvas is pointed at -- _skSurface.Canvas (CPU path) or
+    // _gpuTarget.Canvas (GPU path). Stable across frames on both paths even though the GPU target's
+    // own Canvas getter is only accessible while a Begin/End pass is open: RecreateSurface captures it
+    // once via a throwaway Begin/EndWithoutDrawing, since SkiaStrideTarget's underlying SKSurface (and
+    // therefore its Canvas) is allocated once in its constructor and does not change between passes.
+    private SKCanvas? _canvas;
     private int _surfaceWidth;
     private int _surfaceHeight;
 
     private readonly Stopwatch _clock = new();
+
+    /// <summary>
+    /// <see langword="true"/> once <see cref="Initialize"/> has picked the zero-copy GPU render path
+    /// (D3D11 via ANGLE, only available in <c>net10.0-windows7.0</c> builds); <see langword="false"/>
+    /// when running the CPU raster-and-upload fallback (#4617), including on every non-D3D11 backend
+    /// and every net10.0 (non-Windows-TFM) build.
+    /// </summary>
+    public bool IsUsingGpuPath => _useGpuPath;
 
     /// <summary>
     /// Gets the default cursor, which represents the mouse.
@@ -135,7 +164,7 @@ public class GumService : GumServiceSkiaBase, IGumService
         var backBuffer = game.GraphicsDevice.Presenter.BackBuffer;
         RecreateSurface(backBuffer.Width, backBuffer.Height);
 
-        InitializeCore(_skSurface!.Canvas, game.Input, _surfaceWidth, _surfaceHeight, gumProjectFile);
+        InitializeCore(_canvas!, game.Input, _surfaceWidth, _surfaceHeight, gumProjectFile);
 
         if (registerSceneRenderer)
         {
@@ -163,6 +192,13 @@ public class GumService : GumServiceSkiaBase, IGumService
         base.Initialize(canvas, width, height, gumProjectFile);
     }
 
+    /// <summary>
+    /// Decides which of the two render paths (see the class's <c>_useGpuPath</c> remarks) a
+    /// <see cref="GraphicsDevice"/> should use. Only D3D11 has a <c>SkiaGameRendering.Stride.D3D11</c>
+    /// adapter today (#4617); every other backend keeps the CPU raster-and-upload path.
+    /// </summary>
+    internal static bool ShouldUseGpuPath(GraphicsPlatform platform) => platform == GraphicsPlatform.Direct3D11;
+
     private void RecreateSurface(int width, int height)
     {
         if (width <= 0 || height <= 0 || _graphicsDevice == null) return;
@@ -170,11 +206,36 @@ public class GumService : GumServiceSkiaBase, IGumService
         _surfaceWidth = width;
         _surfaceHeight = height;
 
+#if STRIDE_GPU_ANGLE
+        _gpuTarget?.Dispose();
+        _gpuTarget = null;
+#endif
         _skSurface?.Dispose();
+        _skSurface = null;
         _skiaTexture?.Dispose();
+        _skiaTexture = null;
+
+#if STRIDE_GPU_ANGLE
+        _useGpuPath = ShouldUseGpuPath(GraphicsDevice.Platform);
+        if (_useGpuPath)
+        {
+            _gpuTarget = new SkiaStrideRenderTarget2D(_graphicsDevice, width, height);
+
+            // SkiaStrideRenderTarget2D.Canvas only reads while a pass is open; capture the reference
+            // once here (see the class's _canvas remarks for why the reference itself stays valid
+            // after End) rather than reopening a pass on every SystemManagers.Default.Canvas read.
+            _gpuTarget.Begin();
+            _canvas = _gpuTarget.Canvas;
+            _gpuTarget.EndWithoutDrawing();
+            return;
+        }
+#else
+        _useGpuPath = false;
+#endif
 
         var info = new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul);
         _skSurface = SKSurface.Create(info);
+        _canvas = _skSurface.Canvas;
 
         _skiaTexture = Texture.New2D(
             _graphicsDevice,
@@ -201,18 +262,34 @@ public class GumService : GumServiceSkiaBase, IGumService
         if (backBuffer.Width != _surfaceWidth || backBuffer.Height != _surfaceHeight)
         {
             RecreateSurface(backBuffer.Width, backBuffer.Height);
-            SystemManagers.Default.Canvas = _skSurface!.Canvas;
+            SystemManagers.Default.Canvas = _canvas!;
             HandleResize(_surfaceWidth, _surfaceHeight);
         }
+
+        if (_canvas == null) return;
+
+#if STRIDE_GPU_ANGLE
+        if (_useGpuPath)
+        {
+            if (_gpuTarget == null) return;
+
+            _gpuTarget.Begin();
+            Update(_clock.Elapsed.TotalSeconds);
+            Draw();
+            // Flushes Skia's GPU work, restores Stride's D3D11 state, and composites the target onto
+            // the backbuffer via its own SpriteBatch -- no manual blit needed on this path.
+            _gpuTarget.End(drawContext.GraphicsContext);
+            return;
+        }
+#endif
 
         if (_skSurface == null || _skiaTexture == null || _spriteBatch == null) return;
 
         Update(_clock.Elapsed.TotalSeconds);
 
-        var canvas = _skSurface.Canvas;
-        canvas.Clear(SKColors.Empty);
+        _canvas.Clear(SKColors.Empty);
         Draw();
-        canvas.Flush();
+        _canvas.Flush();
 
         SKPixmap pixmap = _skSurface.PeekPixels();
         IntPtr pixelPointer = pixmap.GetPixels();
@@ -232,6 +309,9 @@ public class GumService : GumServiceSkiaBase, IGumService
 
     internal void DisposeStrideResources()
     {
+#if STRIDE_GPU_ANGLE
+        _gpuTarget?.Dispose();
+#endif
         _skSurface?.Dispose();
         _skiaTexture?.Dispose();
         _spriteBatch?.Dispose();
