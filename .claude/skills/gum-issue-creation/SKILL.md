@@ -50,6 +50,6 @@ Keep it scannable for a future implementer:
 - **Reach** — how a user lands on the broken code path, and whether that path is the recommended route or a legacy corner the tool never produces on its own. A defect reachable only through hand-authored input is near-zero impact; say so instead of letting it read like an ordinary bug.
 
 ## Title
-Specific and self-describing — names the feature area and the gap (e.g. `Animation keyframe "Could not find state or animation" error should name the missing reference`), not a generic summary.
+Specific and self-describing, phrased as what should be true (`X should Y`) rather than a description of the current problem, e.g. `Animation keyframe "Could not find state or animation" error should name the missing reference`, not a generic summary.
 
 After creating, report the issue URL back to the user.
