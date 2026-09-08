@@ -11,18 +11,17 @@ using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 
 namespace GumToolUnitTests.Plugins.StateAnimationPlugin;
 
 /// <summary>
 /// Characterizes how the animation view models detect missing-state errors (<c>RefreshErrors</c> →
-/// <c>GetErrors</c>) and how a state rename propagates to animation keyframes. Companion to
-/// <see cref="RenameManagerTests"/>: those pin the keyframe-mutating overloads in isolation, these
-/// pin the resulting error state — the same error the tree "!" indicator and the Errors tab surface
-/// (issue #3293), and that a rename must rewrite the keyframe before recomputing so it leaves no
-/// stale error (issue #3383).
+/// <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>) and how a state rename propagates to
+/// animation keyframes. Companion to <see cref="RenameManagerTests"/>: those pin the
+/// keyframe-mutating overloads in isolation, these pin the resulting error state — the same error
+/// the tree "!" indicator and the Errors tab surface (issue #3293), and that a rename must rewrite
+/// the keyframe before recomputing so it leaves no stale error (issue #3383).
 ///
 /// These were the behaviors repeatedly mis-read while reasoning about #3293/#3383; they are pinned
 /// here so future changes start from executable ground truth rather than speculation.
@@ -47,7 +46,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
         viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
 
         viewModel.RefreshErrors(element);
-        viewModel.GetErrors().ShouldBeEmpty();
+        viewModel.Animations[0].Keyframes[0].IsMissingReference.ShouldBeFalse();
     }
 
     [Fact]
@@ -79,8 +78,9 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
         viewModel.RefreshErrors(element);
 
-        viewModel.GetErrors().Count().ShouldBe(1);
-        viewModel.GetErrors().Single().Message.ShouldContain("Cat/Missing");
+        AnimatedKeyframeViewModel keyframe = viewModel.Animations[0].Keyframes[0];
+        keyframe.IsMissingReference.ShouldBeTrue();
+        keyframe.MissingReferenceMessage.ShouldContain("Missing");
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
 
         viewModel.RefreshErrors(element);
 
-        viewModel.GetErrors().ShouldBeEmpty();
+        viewModel.Animations[0].Keyframes[0].IsMissingReference.ShouldBeFalse();
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class AnimationStateRenameErrorTests : BaseTestClass
             RenameManagerFor(element), viewModel, element, idle, "Idle");
 
         viewModel.Animations[0].Keyframes[0].StateName.ShouldBe("Cat/Walk");
-        viewModel.GetErrors().ShouldBeEmpty();
+        viewModel.Animations[0].Keyframes[0].IsMissingReference.ShouldBeFalse();
     }
 
     private static ComponentSave ElementWithCategorizedState(string categoryName, string stateName)

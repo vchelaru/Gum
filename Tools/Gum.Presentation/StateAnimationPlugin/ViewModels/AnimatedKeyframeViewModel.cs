@@ -168,8 +168,7 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     /// <summary>
     /// True when this keyframe points at a state or animation whose reference is missing
     /// (<see cref="HasValidState"/> is false). Named events are never considered broken. Drives the
-    /// broken-keyframe icon in the keyframe list (issue #3386); mirrors the broken-keyframe condition
-    /// in <c>AnimationViewModel.GetErrors</c>.
+    /// broken-keyframe icon in the keyframe list (issue #3386).
     /// </summary>
     [DependsOn(nameof(HasValidState))]
     [DependsOn(nameof(StateName))]

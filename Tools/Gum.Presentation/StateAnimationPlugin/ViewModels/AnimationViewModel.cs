@@ -64,8 +64,7 @@ public partial class AnimationViewModel : ViewModel
 
     /// <summary>
     /// True when any keyframe references a missing state or animation. Drives the animation-list
-    /// error icon (issue #3401); mirrors <see cref="GetErrors"/> and
-    /// <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>.
+    /// error icon (issue #3401); mirrors <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>.
     /// </summary>
     public bool HasBrokenKeyframe => Keyframes.Any(keyframe => keyframe.IsMissingReference);
 
@@ -402,30 +401,6 @@ public partial class AnimationViewModel : ViewModel
             _selectedState.CustomCurrentStateSave = stateToSet;
             _selectedState.SelectedStateSave = null;
             _wireframeObjectManager.RootGue?.ApplyState(stateToSet);
-        }
-    }
-
-    public IEnumerable<ErrorViewModel> GetErrors()
-    {
-        foreach(var keyframe in this.Keyframes)
-        {
-            if(!keyframe.HasValidState)
-            {
-                if (!string.IsNullOrEmpty(keyframe.StateName))
-                {
-                    yield return new ErrorViewModel()
-                    {
-                        Message = $"{this.Name} Keyframe at time {keyframe.Time} references a state {keyframe.StateName} which does not exist."
-                    };
-                }
-                else if (!string.IsNullOrEmpty(keyframe.AnimationName))
-                {
-                    yield return new ErrorViewModel()
-                    {
-                        Message = $"{this.Name} Keyframe at time {keyframe.Time} references an animation {keyframe.AnimationName} which does not exist."
-                    };
-                }
-            }
         }
     }
 

@@ -6,9 +6,8 @@ namespace Gum.Presentation.Tests;
 /// <summary>
 /// Pins <see cref="AnimatedKeyframeViewModel.IsMissingReference"/>, the flag the keyframe-list
 /// icon uses to mark a keyframe that references a state/animation which no longer exists (issue
-/// #3386). Mirrors the broken-keyframe logic in <c>AnimationViewModel.GetErrors</c>: a keyframe is
-/// broken only when it points at a state/animation (not a named event) and its reference is invalid.
-/// Relocated out of GumToolUnitTests into headless Gum.Presentation.Tests once
+/// #3386): a keyframe is broken only when it points at a state/animation (not a named event) and
+/// its reference is invalid. Relocated out of GumToolUnitTests into headless Gum.Presentation.Tests once
 /// AnimatedKeyframeViewModel's dead WPF BitmapFrame plumbing was removed (ADR-0005, issue #3754).
 /// </summary>
 public class AnimatedKeyframeViewModelTests
