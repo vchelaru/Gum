@@ -7,6 +7,7 @@ using RenderingLibrary;
 using Shouldly;
 using System;
 using System.Collections.Generic;
+using V3Styling = Gum.Forms.DefaultVisuals.V3.Styling;
 
 namespace MonoGameGum.Tests.V3;
 
@@ -257,6 +258,37 @@ public class GumServiceUninitializeTests
             // After Uninitialize, Gamepads is a different array instance of the same length.
             FormsUtilities.Gamepads.ShouldNotBeSameAs(originalGamepads);
             FormsUtilities.Gamepads.Length.ShouldBe(4);
+        }
+        finally
+        {
+            RestoreFormsUtilitiesState(savedCursor, savedPopupRoot, savedModalRoot);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Styling.ActiveStyle — issue #4626, must not survive pointing at a
+    // texture LoaderManager.Self.DisposeAndClear() just disposed.
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public void FormsUtilities_Uninitialize_ResetsStylingActiveStyle()
+    {
+        ICursor? savedCursor = FormsUtilities.Cursor;
+        InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
+        InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
+
+        try
+        {
+            V3Styling sentinel = new(spriteSheet: null, useDefaults: false);
+            V3Styling.ActiveStyle = sentinel;
+
+            FormsUtilities.Uninitialize();
+
+            // The lazy getter (_activeStyle ??= new Styling(null)) only rebuilds when the
+            // backing field is null, so Uninitialize must null it rather than leave the
+            // sentinel (which would still be pointing at the just-disposed sprite sheet
+            // in the real GumService.Uninitialize flow).
+            V3Styling.ActiveStyle.ShouldNotBeSameAs(sentinel);
         }
         finally
         {

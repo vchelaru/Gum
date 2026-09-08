@@ -493,6 +493,13 @@ public class FormsUtilities
         cursor = null;
         keyboard = null;
         Gamepads = new Gum.Input.GamePad[4];
+
+        // Null the backing field (not just leave the instance) so ActiveStyle's lazy getter
+        // (_activeStyle ??= new Styling(null)) rebuilds against the live LoaderManager cache
+        // next access, instead of returning a Styling still pointing at the UISpriteSheet
+        // texture that GumService.Uninitialize's LoaderManager.Self.DisposeAndClear() just
+        // disposed (issue #4626).
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
     }
 
     public static void RegisterFromFileFormRuntimeDefaults()
