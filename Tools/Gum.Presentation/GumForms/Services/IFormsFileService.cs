@@ -30,4 +30,10 @@ public interface IFormsFileService
     /// file paths (in the user's Gum project directory).
     /// </summary>
     Dictionary<string, FilePath> GetSourceDestinations(string themeName, bool isIncludeDemoScreenGum);
+
+    /// <summary>
+    /// Returns the absolute path to the theme's preview image (<c>preview.png</c> in its folder),
+    /// or null when the theme ships none.
+    /// </summary>
+    string? GetThemePreviewImagePath(string themeName);
 }

@@ -7,8 +7,8 @@ using GumFormsPlugin.ViewModels;
 namespace Gum.Controls
 {
     /// <summary>
-    /// Theme picker (combo box + project-change requirements panel), shared between the Add Forms
-    /// dialog and the New Project dialog. Bind this control's own DataContext to a
+    /// Theme picker (combo box + preview image + project-change requirements panel), shared between
+    /// the Add Forms dialog and the New Project dialog. Bind this control's own DataContext to a
     /// <see cref="ThemeSelectionViewModel"/> (e.g. <c>DataContext="{Binding ThemeSelection}"</c>);
     /// its own bindings are relative to that.
     /// </summary>
@@ -37,7 +37,8 @@ namespace Gum.Controls
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(ThemeSelectionViewModel.HasRequirements))
+            if (e.PropertyName == nameof(ThemeSelectionViewModel.HasRequirements) ||
+                e.PropertyName == nameof(ThemeSelectionViewModel.HasPreviewImage))
             {
                 RefitHostWindow();
             }
