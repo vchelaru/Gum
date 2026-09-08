@@ -110,7 +110,25 @@ public static class CheckCommand
             Console.WriteLine($"{severity}: {error.ElementName}: {error.Message}");
         }
 
+        int errorCount = errors.Count(e => e.Severity == ErrorSeverity.Error);
+        int warningCount = errors.Count(e => e.Severity == ErrorSeverity.Warning);
+
         Console.WriteLine();
-        Console.WriteLine($"{errors.Count} error(s) found.");
+        Console.WriteLine(FormatSummary(errorCount, warningCount));
+    }
+
+    private static string FormatSummary(int errorCount, int warningCount)
+    {
+        if (errorCount == 0)
+        {
+            return "No errors found.";
+        }
+
+        if (warningCount == 0)
+        {
+            return $"{errorCount} error(s) found.";
+        }
+
+        return $"{errorCount} error(s), {warningCount} warning(s) found.";
     }
 }
