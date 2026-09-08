@@ -71,6 +71,31 @@ public class CheckCommandTests : IDisposable
         result.StandardOutput.ShouldContain("\"severity\":");
     }
 
+    [Fact]
+    public void Check_ProjectWithOnlyWarnings_ShouldReturnExitCode0AndNotReportAsError()
+    {
+        string filePath = CreateProjectWithMissingSpriteTexture("Warnings");
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath);
+
+        result.ExitCode.ShouldBe(0);
+        result.StandardOutput.ShouldContain("warning:");
+        result.StandardOutput.ShouldContain("No errors found.");
+        result.StandardOutput.ShouldNotContain("error(s) found.");
+    }
+
+    [Fact]
+    public void Check_ProjectWithErrorsAndWarnings_ShouldReportBothCountsSeparately()
+    {
+        string filePath = CreateProjectWithBadInstance("ErrorsAndWarnings");
+        AddMissingSpriteTextureComponent(filePath);
+
+        CliTestHelper result = CliTestHelper.Run("check", filePath);
+
+        result.ExitCode.ShouldBe(1);
+        result.StandardOutput.ShouldContain("1 error(s), 1 warning(s) found.");
+    }
+
     /// <summary>
     /// Creates a clean project via the CLI and returns the .gumx path.
     /// </summary>
@@ -119,6 +144,60 @@ public class CheckCommandTests : IDisposable
         File.WriteAllText(filePath, gumxContent);
 
         return filePath;
+    }
+
+    /// <summary>
+    /// Creates a project with a component whose Sprite instance points its SourceFile at a
+    /// texture that doesn't exist on disk. That's a Warning-only ErrorResult (GUM0006) - unlike
+    /// a missing element/behavior file, it has no accompanying Error.
+    /// </summary>
+    private string CreateProjectWithMissingSpriteTexture(string name)
+    {
+        string filePath = CreateTestProject(name);
+        AddMissingSpriteTextureComponent(filePath);
+        return filePath;
+    }
+
+    /// <summary>
+    /// Adds a component with a Sprite instance whose SourceFile doesn't exist on disk to the
+    /// given .gumx, triggering a Warning-severity "missing referenced file" result (GUM0006).
+    /// </summary>
+    private static void AddMissingSpriteTextureComponent(string gumxFilePath)
+    {
+        string componentDir = Path.Combine(Path.GetDirectoryName(gumxFilePath)!, "Components");
+        Directory.CreateDirectory(componentDir);
+
+        string componentXml =
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <ComponentSave xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+              <Name>SpriteWithMissingTexture</Name>
+              <BaseType>Container</BaseType>
+              <State>
+                <Name>Default</Name>
+                <Variable>
+                  <IsFile>true</IsFile>
+                  <Type>string</Type>
+                  <Name>MySprite.SourceFile</Name>
+                  <Value xsi:type="xsd:string">Textures/DoesNotExist.png</Value>
+                  <SetsValue>true</SetsValue>
+                </Variable>
+              </State>
+              <Instance>
+                <Name>MySprite</Name>
+                <BaseType>Sprite</BaseType>
+              </Instance>
+            </ComponentSave>
+            """;
+
+        string componentPath = Path.Combine(componentDir, "SpriteWithMissingTexture.gucx");
+        File.WriteAllText(componentPath, componentXml);
+
+        string gumxContent = File.ReadAllText(gumxFilePath);
+        const string componentRef = """  <ComponentReference Name="SpriteWithMissingTexture" />""";
+
+        gumxContent = gumxContent.Replace("</GumProjectSave>", componentRef + "\n</GumProjectSave>");
+        File.WriteAllText(gumxFilePath, gumxContent);
     }
 
     public void Dispose()
