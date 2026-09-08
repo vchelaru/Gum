@@ -72,4 +72,35 @@ public class ThemeSelectionViewModelTests
 
         sut.GetSelectedThemeOrDefault().ShouldBe("Standard");
     }
+
+    [Fact]
+    public void Constructor_SetsPreviewImagePath_WhenSelectedThemeHasOne()
+    {
+        _formsFileService.Setup(x => x.GetAvailableThemes())
+            .Returns(new List<string> { "Standard", "Bubblegum" });
+        _formsFileService.Setup(x => x.GetThemePreviewImagePath("Standard"))
+            .Returns("C:/Themes/Standard/preview.png");
+
+        ThemeSelectionViewModel sut = CreateSut();
+
+        sut.PreviewImagePath.ShouldBe("C:/Themes/Standard/preview.png");
+        sut.HasPreviewImage.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelectedTheme_ClearsPreviewImagePath_WhenNewThemeHasNone()
+    {
+        _formsFileService.Setup(x => x.GetAvailableThemes())
+            .Returns(new List<string> { "Standard", "Bubblegum" });
+        _formsFileService.Setup(x => x.GetThemePreviewImagePath("Standard"))
+            .Returns("C:/Themes/Standard/preview.png");
+        _formsFileService.Setup(x => x.GetThemePreviewImagePath("Bubblegum"))
+            .Returns((string?)null);
+
+        ThemeSelectionViewModel sut = CreateSut();
+        sut.SelectedTheme = "Bubblegum";
+
+        sut.PreviewImagePath.ShouldBeNull();
+        sut.HasPreviewImage.ShouldBeFalse();
+    }
 }

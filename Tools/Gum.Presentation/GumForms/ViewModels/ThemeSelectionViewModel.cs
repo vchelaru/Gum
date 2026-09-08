@@ -31,7 +31,7 @@ public class ThemeSelectionViewModel : ViewModel
             if (Set(value))
             {
                 RefreshRequirementsDescription();
-                NotifyPropertyChanged(nameof(HasRequirements));
+                RefreshPreviewImage();
             }
         }
     }
@@ -50,7 +50,21 @@ public class ThemeSelectionViewModel : ViewModel
         private set => Set(value);
     }
 
+    [DependsOn(nameof(RequirementsDescription))]
     public bool HasRequirements => !string.IsNullOrEmpty(RequirementsDescription);
+
+    /// <summary>
+    /// Absolute path to the selected theme's preview image, or null when it ships none. Bound in
+    /// the shared theme-picker control so New Project and Add Forms both show it under the dropdown.
+    /// </summary>
+    public string? PreviewImagePath
+    {
+        get => Get<string?>();
+        private set => Set(value);
+    }
+
+    [DependsOn(nameof(PreviewImagePath))]
+    public bool HasPreviewImage => !string.IsNullOrEmpty(PreviewImagePath);
 
     public ThemeSelectionViewModel(IFormsFileService formsFileService, IProjectState projectState)
     {
@@ -63,6 +77,7 @@ public class ThemeSelectionViewModel : ViewModel
                         ?? AvailableThemes.FirstOrDefault();
 
         RefreshRequirementsDescription();
+        RefreshPreviewImage();
     }
 
     /// <summary>
@@ -86,5 +101,13 @@ public class ThemeSelectionViewModel : ViewModel
         RequirementsDescription = diff.HasChanges
             ? string.Join(Environment.NewLine, diff.DescribeChanges().Select(c => "• " + c))
             : string.Empty;
+    }
+
+    private void RefreshPreviewImage()
+    {
+        string? theme = SelectedTheme;
+        PreviewImagePath = string.IsNullOrEmpty(theme)
+            ? null
+            : _formsFileService.GetThemePreviewImagePath(theme);
     }
 }

@@ -18,6 +18,7 @@ public class FormsFileService : IFormsFileService
     public string DefaultThemeName => "Standard";
 
     private const string FormsGumxName = "GumProject.gumx";
+    private const string PreviewImageFileName = "preview.png";
 
     private readonly IProjectState _projectState;
 
@@ -87,11 +88,12 @@ public class FormsFileService : IFormsFileService
                 continue;
             }
 
-            // Skip per-theme metadata files (file-list manifest and prerequisite
-            // declarations). They describe the theme but aren't part of the user's project.
+            // Skip per-theme metadata files (file-list manifest, prerequisite declarations, and
+            // the gallery preview image). They describe the theme but aren't part of the user's project.
             var fileName = Path.GetFileName(sourceFile);
             if (string.Equals(fileName, "manifest.txt", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(fileName, ThemeRequirements.ThemeRequirementsFileName, StringComparison.OrdinalIgnoreCase))
+                string.Equals(fileName, ThemeRequirements.ThemeRequirementsFileName, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(fileName, PreviewImageFileName, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -133,6 +135,13 @@ public class FormsFileService : IFormsFileService
         }
 
         return sourceDestinations;
+    }
+
+    /// <inheritdoc/>
+    public string? GetThemePreviewImagePath(string themeName)
+    {
+        string path = Path.Combine(GetThemeDirectory(themeName), PreviewImageFileName);
+        return File.Exists(path) ? path : null;
     }
 
     private static string GetThemesRoot() =>

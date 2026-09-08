@@ -81,6 +81,71 @@ public class FormsFileServiceTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetThemePreviewImagePath_ReturnsPath_WhenPreviewPngExists()
+    {
+        string themeName = "TestTheme_" + Guid.NewGuid().ToString("N");
+        string themeDir = CreateFixtureTheme(themeName);
+        File.WriteAllBytes(Path.Combine(themeDir, "preview.png"), new byte[] { 1, 2, 3 });
+        try
+        {
+            var projectState = new Mock<IProjectState>();
+            var formsFileService = new FormsFileService(projectState.Object);
+
+            string? previewPath = formsFileService.GetThemePreviewImagePath(themeName);
+
+            previewPath.ShouldNotBeNull();
+            File.Exists(previewPath).ShouldBeTrue();
+        }
+        finally
+        {
+            Directory.Delete(themeDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetThemePreviewImagePath_ReturnsNull_WhenThemeHasNoPreviewImage()
+    {
+        string themeName = "TestTheme_" + Guid.NewGuid().ToString("N");
+        string themeDir = CreateFixtureTheme(themeName);
+        try
+        {
+            var projectState = new Mock<IProjectState>();
+            var formsFileService = new FormsFileService(projectState.Object);
+
+            string? previewPath = formsFileService.GetThemePreviewImagePath(themeName);
+
+            previewPath.ShouldBeNull();
+        }
+        finally
+        {
+            Directory.Delete(themeDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetSourceDestinations_ExcludesPreviewImage()
+    {
+        string themeName = "TestTheme_" + Guid.NewGuid().ToString("N");
+        string themeDir = CreateFixtureTheme(themeName);
+        File.WriteAllBytes(Path.Combine(themeDir, "preview.png"), new byte[] { 1, 2, 3 });
+        try
+        {
+            var projectState = new Mock<IProjectState>();
+            projectState.Setup(p => p.ProjectDirectory).Returns("C:/SomeProject/");
+            var formsFileService = new FormsFileService(projectState.Object);
+
+            var sourceDestinations = formsFileService.GetSourceDestinations(
+                themeName, isIncludeDemoScreenGum: false);
+
+            sourceDestinations.Keys.ShouldNotContain(k => k.EndsWith("preview.png"));
+        }
+        finally
+        {
+            Directory.Delete(themeDir, recursive: true);
+        }
+    }
+
     private static string CreateFixtureTheme(string themeName)
     {
         string themeDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content", "FormsThemes", themeName);
