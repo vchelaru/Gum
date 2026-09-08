@@ -2,8 +2,12 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<!-- net10.0 matches Runtimes/StrideGum: Stride's own packages only ship net10.0 builds. -->
-		<TargetFramework>net10.0</TargetFramework>
+		<!-- net10.0-windows7.0, not the plain net10.0 Runtimes/StrideGum also ships (#4617): this
+		     sample already depends on Stride.CommunityToolkit.Windows below, so it's Windows-only in
+		     practice already, and targeting the windows7.0 TFM is what actually pulls in
+		     Gum.Stride's zero-copy GPU path (SkiaGameRendering.Stride.D3D11) instead of silently
+		     falling back to the CPU path this sample would otherwise still exercise. -->
+		<TargetFramework>net10.0-windows7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<!-- Stride.CommunityToolkit.Windows drags in Stride's editor-side package manager, whose own

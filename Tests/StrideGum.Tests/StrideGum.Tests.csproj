@@ -21,8 +21,12 @@
     <!-- SKSurface for the in-memory raster canvas; Stride.Input types (InputManager / IMouseDevice /
          IKeyboardDevice / IGamePadDevice / Keys) for mocking input in the Cursor/Keyboard/GamePad
          tests. -->
-    <PackageReference Include="SkiaSharp" VersionOverride="3.119.1" />
+    <!-- Matches Gum.Stride's own bump: SkiaGameRendering.Stride.D3D11 pins 3.119.4 exactly. -->
+    <PackageReference Include="SkiaSharp" VersionOverride="3.119.4" />
     <PackageReference Include="Stride.Input" VersionOverride="4.4.0-beta5" />
+    <!-- GraphicsPlatform, for GumServiceGpuPathTests. Not otherwise pulled in transitively by
+         Stride.Input. -->
+    <PackageReference Include="Stride.Graphics" VersionOverride="4.4.0-beta5" />
   </ItemGroup>
 
   <ItemGroup>
