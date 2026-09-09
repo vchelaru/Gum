@@ -117,7 +117,7 @@ Be careful setting CacheTextures to false since all existing textures will be di
 
 ### Customizing How Content Loads
 
-By default Gum resolves a `SourceFile` name to a texture by reading a file from disk (relative to `FileManager.RelativeDirectory`). You can replace this behavior with your own logic — for example, to load assets from a custom store, or to hand back a texture your game engine has *already* loaded so the same image isn't loaded into memory twice.
+By default Gum resolves a `SourceFile` name to a texture by reading a file from disk (relative to `FileManager.RelativeDirectory`). You can replace this behavior with your own logic. For example, you can load assets from a custom store, or hand back a texture your game engine has *already* loaded so the same image does not occupy video memory twice.
 
 Gum performs all of its loading through an `IContentLoader`, which has two methods:
 
@@ -134,7 +134,7 @@ The active loader is held by `LoaderManager.Self.ContentLoader`. Each runtime (M
 
 #### Wrapping the Built-in Loader
 
-The cleanest approach is to *wrap* the built-in loader: intercept only the content names you care about, and forward everything else to the default loader. This keeps Gum's normal file loading — and its texture caching — working for all the assets you don't handle yourself.
+The cleanest approach is to *wrap* the built-in loader: intercept only the content names you care about, and forward everything else to the default loader. This keeps Gum's normal file loading, and its texture caching, working for all the assets you do not handle yourself.
 
 ```csharp
 // Class scope
@@ -173,7 +173,7 @@ public class CustomContentLoader : RenderingLibrary.Content.IContentLoader
 }
 ```
 
-Install it after Gum has initialized (so the default loader exists to wrap) but before any content loads:
+`LoaderManager.Self.ContentLoader` already holds your backend's default loader, which Gum installs during `GumService.Default.Initialize`. Read that property and pass it to your own loader, then assign your loader back to the same property. Do this after `Initialize` and before any content loads. If you install earlier, `ContentLoader` is still `null` and your wrapper has nothing to fall back to.
 
 ```csharp
 // Initialize
@@ -182,7 +182,67 @@ loaderManager.ContentLoader = new CustomContentLoader(loaderManager.ContentLoade
 ```
 
 {% hint style="warning" %}
-Texture caching lives inside the content loader, not above it. A custom `IContentLoader` that does **not** delegate to the built-in loader will bypass Gum's cache (`LoaderManager.CacheTextures`) entirely — every load goes straight to your code. Wrapping the built-in loader, as shown above, preserves caching for the names you forward. If your custom source already manages its own assets, that's usually fine — you simply don't need Gum's cache for those.
+Texture caching lives inside the content loader, not above it. A custom `IContentLoader` that does **not** delegate to the built-in loader bypasses Gum's cache (`LoaderManager.CacheTextures`) entirely, so every load goes straight to your code. Wrapping the built-in loader, as shown above, preserves caching for the names you forward. If your custom source already manages its own assets, that is usually fine, and you simply do not need Gum's cache for those.
+{% endhint %}
+
+#### What Your Loader Receives
+
+Gum resolves a relative content name against `FileManager.RelativeDirectory` before it calls your loader, so a `SourceFile` of `atlas.png` arrives as a full path such as `C:/MyGame/Content/atlas.png`. A test like `contentName == "atlas.png"` never matches. Compare with `EndsWith` or `Contains` instead.
+
+Gum also does not check whether the name refers to a real file before calling your loader, so a content name can stand for something that is not a file at all. You are free to invent a name such as `cart://atlas.png` for content your loader resolves on its own. Gum prefixes an invented name the same way it prefixes any other relative name, which is a second reason to match on part of the name rather than all of it.
+
+#### Sharing a Texture Your Game Already Loaded
+
+A game that draws its own sprites usually holds textures the UI needs too, such as a shared atlas containing item icons and character portraits. Your loader can return one of those textures directly, so the atlas occupies video memory once instead of twice. `Texture2D` below is your backend's texture type, so it comes from MonoGame on MonoGame and from `Raylib_cs` on Raylib.
+
+```csharp
+// Class scope
+public class AtlasContentLoader : RenderingLibrary.Content.IContentLoader
+{
+    RenderingLibrary.Content.IContentLoader _defaultLoader;
+
+    public AtlasContentLoader(RenderingLibrary.Content.IContentLoader defaultLoader)
+    {
+        _defaultLoader = defaultLoader;
+    }
+
+    public T LoadContent<T>(string contentName)
+    {
+        // typeof(T) is the standard way to branch in an IContentLoader.
+        if (typeof(T) == typeof(Texture2D) && contentName.EndsWith("atlas.png"))
+        {
+            return (T)(object)MyRenderer.SharedAtlas;
+        }
+
+        return _defaultLoader.LoadContent<T>(contentName);
+    }
+
+    public T TryLoadContent<T>(string contentName)
+    {
+        if (typeof(T) == typeof(Texture2D) && contentName.EndsWith("atlas.png"))
+        {
+            return (T)(object)MyRenderer.SharedAtlas;
+        }
+
+        return _defaultLoader.TryLoadContent<T>(contentName);
+    }
+}
+```
+
+Install it the same way as any other wrapper, handing it the loader Gum already has:
+
+```csharp
+// Initialize
+var loaderManager = RenderingLibrary.Content.LoaderManager.Self;
+loaderManager.ContentLoader = new AtlasContentLoader(loaderManager.ContentLoader);
+```
+
+Gum never disposes a texture you return this way, because the texture never enters Gum's cache. Your game keeps ownership of the atlas and decides when to unload it.
+
+Every sprite drawn from the atlas shares one texture, so set each sprite's texture coordinates to pick its own frame out of that texture. See [TextureAddress](../standard-visuals/spriteruntime/textureaddress.md).
+
+{% hint style="warning" %}
+Do not put a texture your game owns into Gum's cache with `LoaderManager.AddDisposable`. Gum disposes everything in that cache when you set `CacheTextures` to `false` or call `DisposeAndClear`, which unloads a texture your game is still drawing. Returning the texture from a loader keeps ownership with your game.
 {% endhint %}
 
 #### Loading Through the MonoGame Content Pipeline
