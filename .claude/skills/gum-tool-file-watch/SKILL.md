@@ -48,6 +48,19 @@ A second `PeriodicUiTimer` at 200ms drives the File Watch debug panel UI only â€
 
 `RefreshRootDirectory()` is called on project load and whenever a variable that `IsFile == true` changes value.
 
+## Saving Edits Back to Disk
+
+Edits are written out through `IFileCommands.TryAutoSaveElement(ElementSave)` /
+`TryAutoSaveCurrentElement()` / `TryAutoSaveObject(object)` in
+`Tools/Gum.Presentation/Commands/FileCommands.cs`, each of which no-ops unless
+`IProjectManager.AutoSave` is true (`ProjectManager.cs`, backed by `GeneralSettingsFile`,
+user-toggleable in Project Properties).
+
+**Landmine:** "the element is edited" does not imply "the file on disk changed" â€” with AutoSave off,
+in-memory changes sit unsaved until an explicit save. Code that mutates an element other than the
+currently-selected one (e.g. a cascading delete affecting other elements' instances) should call
+`TryAutoSaveElement` for that element, not assume it needs saving unconditionally.
+
 ## Ignore Mechanism
 
 `IgnoreNextChangeUntil(FilePath, DateTime?)` suppresses the next detected change for a file until the given time. Default is **5 seconds** from now.

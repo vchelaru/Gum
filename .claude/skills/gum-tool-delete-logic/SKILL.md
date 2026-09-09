@@ -82,7 +82,8 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 | `Tools/Gum.Presentation/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Data mutation + delete-dialog orchestration via `IDeleteDialogService` |
 | `Gum/Services/Dialogs/DeleteDialogService.cs` | WPF shell: creates/shows `DeleteOptionsWindow`, calls the concrete `PluginManager` |
-| `Gum/Logic/RenameLogic.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
+| `Tools/Gum.Presentation/Logic/ReferenceTypes.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
+| `Tools/Gum.Presentation/Logic/ReferenceFinder.cs` | `GetReferencesToVariable()` — enumerates every instance-level assignment of a variable project-wide, including through the inheritance chain; used by `DeleteVariableService.GetIfCanDeleteVariable` to block variable deletes today |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |
 | `Gum/Plugins/InternalPlugins/StatePlugin/StateTreeViewRightClickService.cs` | State/category right-click menu; calls AskTo* methods |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Element tree right-click; calls DeleteSelection |
