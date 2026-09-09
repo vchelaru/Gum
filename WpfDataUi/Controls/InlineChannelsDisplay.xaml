@@ -1,0 +1,40 @@
+<UserControl
+    x:Class="WpfDataUi.Controls.InlineChannelsDisplay"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <StackPanel>
+        <Grid x:Name="MainGrid">
+            <Grid.ContextMenu>
+                <ContextMenu />
+            </Grid.ContextMenu>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <Label
+                x:Name="Label"
+                MinWidth="100"
+                VerticalAlignment="Center" />
+
+            <!--  One equal-width labeled field per channel, built in code (RebuildFields) since the
+                  channel count varies per composite type.  -->
+            <UniformGrid
+                x:Name="FieldsPanel"
+                Grid.Column="1"
+                Rows="1" />
+        </Grid>
+
+        <!--  Subtext (e.g. "Exposed as ...") mirrored from InstanceMember.DetailText, like the other displayers.  -->
+        <TextBlock
+            x:Name="HintTextBlock"
+            Margin="0,0,4,4"
+            HorizontalAlignment="Left"
+            FontSize="10"
+            TextWrapping="Wrap"
+            Visibility="Collapsed" />
+    </StackPanel>
+</UserControl>
