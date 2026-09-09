@@ -104,6 +104,9 @@ public class UndoManager : IUndoManager
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
         => _elementStrategy.ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges);
 
+    public void AttachCrossElementVariableRemovals(IEnumerable<CrossElementVariableChange> removals)
+        => _elementStrategy.AttachCrossElementVariableRemovals(removals);
+
     public UndoLock RequestLock()
     {
         // UndoLock lives in the headless Gum.Presentation assembly and can no longer reach back

@@ -409,6 +409,8 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshStateTreeView,
                 out bool shouldRefreshBehaviorView);
 
+            ReplayCrossElementVariableRemovals(undoSnapshot.CrossElementVariableRemovals, restoring: true);
+
             //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
             //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
             //{
@@ -513,29 +515,26 @@ public class ElementUndoStrategy : IUndoStrategy
         return false;
     }
 
-    private UndoSnapshot? GetRedoSnapshot(ElementHistory elementHistory)
+    private UndoSnapshot? GetRedoSnapshot(ElementHistory elementHistory) => GetActionToRedo(elementHistory)?.RedoState;
+
+    private HistoryAction? GetActionToRedo(ElementHistory? elementHistory)
     {
-        UndoSnapshot? redoSnapshot = null;
-
-        if (elementHistory != null)
+        if (elementHistory == null)
         {
-            var indexToApply = elementHistory.UndoIndex + 1;
-
-
-            if (indexToApply < elementHistory.Actions.Count)
-            {
-                redoSnapshot = elementHistory.Actions[indexToApply].RedoState;
-            }
+            return null;
         }
 
-        return redoSnapshot;
+        var indexToApply = elementHistory.UndoIndex + 1;
+
+        return indexToApply < elementHistory.Actions.Count ? elementHistory.Actions[indexToApply] : null;
     }
 
     public void PerformRedo()
     {
         var elementHistory = GetValidUndosForElement(_selectedState.SelectedElement);
 
-        UndoSnapshot? redoSnapshot = GetRedoSnapshot(elementHistory);
+        var actionToRedo = GetActionToRedo(elementHistory);
+        UndoSnapshot? redoSnapshot = actionToRedo?.RedoState;
 
         //////////////////////////////////////Early Out//////////////////////////////////////////
         if (!CanRedo(elementHistory, redoSnapshot))
@@ -554,6 +553,8 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshWireframe,
                 out bool shouldRefreshStateTreeView,
                 out bool shouldRefreshBehaviorView);
+
+            ReplayCrossElementVariableRemovals(actionToRedo!.CrossElementVariableRemovals, restoring: false);
 
             if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
                 redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
@@ -584,6 +585,72 @@ public class ElementUndoStrategy : IUndoStrategy
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
     {
         ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges, out bool _, out bool _, out bool _);
+    }
+
+    /// <summary>
+    /// Attaches instance-level variable removals made on other elements to the most recently recorded
+    /// action for the currently selected element (the owner). Must be called after the RequestLock
+    /// that performed the removals has disposed, so TryRecord has already appended the owner's own
+    /// action to attach to. See ADR 0016.
+    /// </summary>
+    public void AttachCrossElementVariableRemovals(IEnumerable<CrossElementVariableChange> removals)
+    {
+        var list = removals as IReadOnlyCollection<CrossElementVariableChange> ?? removals.ToList();
+        if (list.Count == 0 || _selectedState.SelectedElement == null)
+        {
+            return;
+        }
+
+        if (!mUndos.TryGetValue(_selectedState.SelectedElement, out var history) || history.Actions.Count == 0)
+        {
+            return;
+        }
+
+        history.Actions[history.Actions.Count - 1].CrossElementVariableRemovals = list.ToList();
+    }
+
+    /// <summary>
+    /// Restores (undo, <paramref name="restoring"/> true) or re-removes (redo, false) each cross-element
+    /// variable removal attached to an action, tolerating an instance or element deleted since the
+    /// action was recorded by skipping it. Mirrors a normal edit: saves each element it touches and
+    /// notifies plugins via the same VariableSet event a live edit fires.
+    /// </summary>
+    private void ReplayCrossElementVariableRemovals(List<CrossElementVariableChange>? removals, bool restoring)
+    {
+        if (removals == null)
+        {
+            return;
+        }
+
+        foreach (var removal in removals)
+        {
+            if (!removal.Container.Instances.Contains(removal.Instance) ||
+                !removal.Container.AllStates.Contains(removal.State))
+            {
+                continue;
+            }
+
+            var variables = removal.State.Variables;
+            bool changed;
+            if (restoring)
+            {
+                changed = !variables.Contains(removal.Variable);
+                if (changed)
+                {
+                    variables.Add(removal.Variable);
+                }
+            }
+            else
+            {
+                changed = variables.Remove(removal.Variable);
+            }
+
+            if (changed)
+            {
+                _fileCommands.TryAutoSaveElement(removal.Container);
+                _pluginNotifier.VariableSet(removal.Container, removal.Instance, removal.Variable.GetRootName(), null);
+            }
+        }
     }
 
     private AddedAndRemovedInstances? ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,

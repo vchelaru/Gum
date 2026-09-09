@@ -8,6 +8,13 @@ public class HistoryAction
     public UndoSnapshot UndoState { get; set; }
     public UndoSnapshot RedoState { get; set; }
 
+    /// <summary>
+    /// Instance-level variable assignments on OTHER elements that this action's owning element caused
+    /// to be removed (e.g. deleting a variable that instances elsewhere had assigned). Null when this
+    /// action has none. Undo restores each entry; redo removes it again. See ADR 0016.
+    /// </summary>
+    public List<CrossElementVariableChange>? CrossElementVariableRemovals { get; set; }
+
     public override string ToString()
     {
         return $"Undo:{UndoState}";
