@@ -51,6 +51,22 @@ public class DeleteVariableServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void DeleteVariable_WhenNoReferencesExist_ShouldNotAttachCrossElementRemovals()
+    {
+        // The most common case: nobody references the variable at all. This must delete plainly and
+        // must never call AttachCrossElementVariableRemovals with an empty/pointless entry.
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse());
+
+        _service.DeleteVariable(variable, owner);
+
+        owner.DefaultState.Variables.ShouldNotContain(variable);
+        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+    }
+
+    [Fact]
     public void DeleteVariable_WhenReferencedOnlyByInstanceValueOverride_ShouldRemoveFromBothElements()
     {
         var (owner, variable) = MakeOwnerWithCustomVariable();

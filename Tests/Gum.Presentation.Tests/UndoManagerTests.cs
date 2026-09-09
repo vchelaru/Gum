@@ -1262,4 +1262,70 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.PerformRedo();
         component.DefaultState.GetValueOrDefault<float>("X").ShouldBe(3f);
     }
+
+    [Fact]
+    public void PerformUndoAndRedo_WithTwoConsecutiveCascadingDeletes_ShouldKeepEachActionsCrossElementDataIsolated()
+    {
+        // AttachCrossElementVariableRemovals always attaches to "the most recently recorded action."
+        // A second cascading delete must attach to its OWN action, not overwrite or bleed into the
+        // first one's - each undo/redo step must only touch the element it was actually recorded for.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var variable1 = new VariableSave { Name = "Variable1", Type = "float", IsCustomVariable = true, Value = 1f };
+        var variable2 = new VariableSave { Name = "Variable2", Type = "float", IsCustomVariable = true, Value = 2f };
+        component.DefaultState.Variables.Add(variable1);
+        component.DefaultState.Variables.Add(variable2);
+
+        var screenA = new ScreenSave { Name = "ScreenA" };
+        screenA.States.Add(new StateSave { Name = "Default", ParentContainer = screenA });
+        var instanceA = new InstanceSave { Name = "InstanceA", BaseType = "Component1", ParentContainer = screenA };
+        screenA.Instances.Add(instanceA);
+        var variableA = new VariableSave { Name = "InstanceA.Variable1", Type = "float", Value = 10f };
+        screenA.DefaultState.Variables.Add(variableA);
+
+        var screenB = new ScreenSave { Name = "ScreenB" };
+        screenB.States.Add(new StateSave { Name = "Default", ParentContainer = screenB });
+        var instanceB = new InstanceSave { Name = "InstanceB", BaseType = "Component1", ParentContainer = screenB };
+        screenB.Instances.Add(instanceB);
+        var variableB = new VariableSave { Name = "InstanceB.Variable2", Type = "float", Value = 20f };
+        screenB.DefaultState.Variables.Add(variableB);
+
+        // Action 1: delete Variable1, cascading to ScreenA only.
+        _undoManager.RecordState();
+        component.DefaultState.Variables.Remove(variable1);
+        screenA.DefaultState.Variables.Remove(variableA);
+        _undoManager.RecordUndo();
+        _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = screenA, Instance = instanceA, State = screenA.DefaultState, Variable = variableA }
+        });
+
+        // Action 2: delete Variable2, cascading to ScreenB only.
+        component.DefaultState.Variables.Remove(variable2);
+        screenB.DefaultState.Variables.Remove(variableB);
+        _undoManager.RecordUndo();
+        _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = screenB, Instance = instanceB, State = screenB.DefaultState, Variable = variableB }
+        });
+
+        // Undo action 2: only ScreenB's variable comes back, ScreenA's stays removed.
+        _undoManager.PerformUndo();
+        screenB.DefaultState.Variables.ShouldContain(variableB);
+        screenA.DefaultState.Variables.ShouldNotContain(variableA);
+
+        // Undo action 1: ScreenA's variable now comes back too; ScreenB's remains restored (untouched).
+        _undoManager.PerformUndo();
+        screenA.DefaultState.Variables.ShouldContain(variableA);
+        screenB.DefaultState.Variables.ShouldContain(variableB);
+
+        // Redo action 1: only ScreenA's variable is removed again.
+        _undoManager.PerformRedo();
+        screenA.DefaultState.Variables.ShouldNotContain(variableA);
+        screenB.DefaultState.Variables.ShouldContain(variableB);
+
+        // Redo action 2: ScreenB's variable is removed again too.
+        _undoManager.PerformRedo();
+        screenA.DefaultState.Variables.ShouldNotContain(variableA);
+        screenB.DefaultState.Variables.ShouldNotContain(variableB);
+    }
 }
