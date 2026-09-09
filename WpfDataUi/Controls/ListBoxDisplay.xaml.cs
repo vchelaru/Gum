@@ -51,6 +51,13 @@ public partial class ListBoxDisplay : UserControl, IDataUi
             {
                 // Clear stale green background from a previous pooled use.
                 this.ListBox.ClearValue(ListBox.BackgroundProperty);
+                // A pooled instance (or this control's very first bind, since the backing
+                // field starts at -1 rather than null) may not be "not editing" for this
+                // InstanceMember. Reset so the next Add appends instead of indexing an
+                // in-progress edit position that may not exist in the new list.
+                NewEntryGrid.Visibility = Visibility.Collapsed;
+                NotEditingEntryStackPanel.Visibility = Visibility.Visible;
+                IndexEditing = null;
             }
 
             Refresh();
