@@ -26,6 +26,8 @@ public class UndoManagerTests : BaseTestClass
     private readonly Mock<IMessenger> _messenger;
     private readonly Mock<IUndoPluginNotifier> _pluginNotifier;
     private readonly FakeAnimationUndoProvider _animationUndoProvider;
+    private readonly Mock<IReferenceFinderProjectProvider> _projectProvider;
+    private readonly GumProjectSave _project;
     private readonly UndoManager _undoManager;
 
     /// <summary>
@@ -63,6 +65,9 @@ public class UndoManagerTests : BaseTestClass
         _messenger = new Mock<IMessenger>();
         _pluginNotifier = new Mock<IUndoPluginNotifier>();
         _animationUndoProvider = new FakeAnimationUndoProvider();
+        _project = new GumProjectSave();
+        _projectProvider = new Mock<IReferenceFinderProjectProvider>();
+        _projectProvider.Setup(x => x.GumProjectSave).Returns(_project);
 
         ComponentSave component = new();
         component.States.Add(new Gum.DataTypes.Variables.StateSave
@@ -91,7 +96,8 @@ public class UndoManagerTests : BaseTestClass
             _fileCommands.Object,
             _messenger.Object,
             _pluginNotifier.Object,
-            _animationUndoProvider
+            _animationUndoProvider,
+            _projectProvider.Object
             );
     }
 
@@ -953,6 +959,8 @@ public class UndoManagerTests : BaseTestClass
         var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
         otherScreen.DefaultState.Variables.Add(instanceVariable);
 
+        _project.Screens.Add(otherScreen);
+
         return (otherScreen, instance, instanceVariable);
     }
 
@@ -1110,6 +1118,7 @@ public class UndoManagerTests : BaseTestClass
         var variableB2 = new VariableSave { Name = "Instance2.Variable1", Type = "float", Value = 2f };
         screenB.DefaultState.Variables.Add(variableB1);
         screenB.DefaultState.Variables.Add(variableB2);
+        _project.Screens.Add(screenB);
 
         _undoManager.RecordState();
 
@@ -1166,6 +1175,109 @@ public class UndoManagerTests : BaseTestClass
 
         Should.NotThrow(() => _undoManager.PerformUndo());
         otherScreen.DefaultState.ShouldBeNull();
+    }
+
+    [Fact]
+    public void PerformUndo_WithAttachedCrossElementVariableRemoval_ShouldSkipElementDeletedFromProjectSinceRecording()
+    {
+        // Whole-element deletion is a separate, non-undoable action (its own undo history is
+        // discarded with it) - the ScreenSave object can still be referenced here even after being
+        // removed from the project, so this must be checked explicitly or undoing an earlier
+        // cascading delete would resurrect a file for a screen the user already deleted.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var ownerVariable = new VariableSave { Name = "Variable1", Type = "float", IsCustomVariable = true, Value = 5f };
+        component.DefaultState.Variables.Add(ownerVariable);
+
+        var (otherScreen, instance, instanceVariable) = SetUpOtherElementWithAssignedVariable();
+
+        _undoManager.RecordState();
+
+        component.DefaultState.Variables.Remove(ownerVariable);
+        otherScreen.DefaultState.Variables.Remove(instanceVariable);
+
+        _undoManager.RecordUndo();
+        _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = otherScreen, Instance = instance, State = otherScreen.DefaultState, Variable = instanceVariable }
+        });
+
+        // Simulate whole-element-deleting the screen after the cascading delete was recorded.
+        _project.Screens.Remove(otherScreen);
+
+        Should.NotThrow(() => _undoManager.PerformUndo());
+
+        otherScreen.DefaultState.Variables.ShouldNotContain(instanceVariable);
+        _fileCommands.Verify(x => x.TryAutoSaveElement(otherScreen), Times.Never);
+    }
+
+    [Fact]
+    public void PerformRedo_WithAttachedCrossElementVariableRemoval_ShouldRemoveByNameEvenIfTheVariableObjectWasReplaced()
+    {
+        // StateSave.SetValue creates a NEW VariableSave when none exists under that name. If the user
+        // re-assigns the instance override (after undo restored it) through the normal edit path
+        // rather than mutating the captured object directly, redo must still find and remove it by
+        // name - a reference-based Remove would silently miss the replacement object and leave a
+        // dangling override.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var ownerVariable = new VariableSave { Name = "Variable1", Type = "float", IsCustomVariable = true, Value = 5f };
+        component.DefaultState.Variables.Add(ownerVariable);
+
+        var (otherScreen, instance, instanceVariable) = SetUpOtherElementWithAssignedVariable();
+
+        _undoManager.RecordState();
+
+        component.DefaultState.Variables.Remove(ownerVariable);
+        otherScreen.DefaultState.Variables.Remove(instanceVariable);
+
+        _undoManager.RecordUndo();
+        _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = otherScreen, Instance = instance, State = otherScreen.DefaultState, Variable = instanceVariable }
+        });
+
+        _undoManager.PerformUndo();
+        otherScreen.DefaultState.Variables.ShouldContain(instanceVariable);
+
+        // The user re-assigns the value through the normal edit path (StateSave.SetValue), which
+        // replaces the restored VariableSave with a brand-new object of the same Name.
+        otherScreen.DefaultState.Variables.Remove(instanceVariable);
+        var replacement = otherScreen.DefaultState.SetValue(instanceVariable.Name, 42f, instanceVariable.Type);
+
+        _undoManager.PerformRedo();
+
+        otherScreen.DefaultState.Variables.ShouldNotContain(replacement);
+        otherScreen.DefaultState.Variables.Any(v => v.Name == instanceVariable.Name).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void PerformUndo_WithAttachedCrossElementVariableRemoval_ShouldNotDuplicateIfSameNamedVariableAlreadyExists()
+    {
+        // Mirror of the redo-side replacement case: if a same-named override already exists on undo
+        // (e.g. the user re-created it independently), restoring must not add a second VariableSave
+        // with the same Name.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var ownerVariable = new VariableSave { Name = "Variable1", Type = "float", IsCustomVariable = true, Value = 5f };
+        component.DefaultState.Variables.Add(ownerVariable);
+
+        var (otherScreen, instance, instanceVariable) = SetUpOtherElementWithAssignedVariable();
+
+        _undoManager.RecordState();
+
+        component.DefaultState.Variables.Remove(ownerVariable);
+        otherScreen.DefaultState.Variables.Remove(instanceVariable);
+
+        _undoManager.RecordUndo();
+        _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = otherScreen, Instance = instance, State = otherScreen.DefaultState, Variable = instanceVariable }
+        });
+
+        // The user independently re-creates a same-named override before undoing.
+        var recreated = otherScreen.DefaultState.SetValue(instanceVariable.Name, 42f, instanceVariable.Type);
+
+        _undoManager.PerformUndo();
+
+        otherScreen.DefaultState.Variables.Count(v => v.Name == instanceVariable.Name).ShouldBe(1);
     }
 
     [Fact]
@@ -1288,6 +1400,9 @@ public class UndoManagerTests : BaseTestClass
         screenB.Instances.Add(instanceB);
         var variableB = new VariableSave { Name = "InstanceB.Variable2", Type = "float", Value = 20f };
         screenB.DefaultState.Variables.Add(variableB);
+
+        _project.Screens.Add(screenA);
+        _project.Screens.Add(screenB);
 
         // Action 1: delete Variable1, cascading to ScreenA only.
         _undoManager.RecordState();

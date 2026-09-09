@@ -28,6 +28,7 @@ public class ElementUndoStrategy : IUndoStrategy
     private readonly IMessenger _messenger;
     private readonly IUndoPluginNotifier _pluginNotifier;
     private readonly IAnimationUndoProvider _animationUndoProvider;
+    private readonly IReferenceFinderProjectProvider _projectProvider;
     private readonly Func<bool> _areUndoLocksActive;
     private readonly Action<UndoOperation> _raiseUndosChanged;
 
@@ -63,6 +64,7 @@ public class ElementUndoStrategy : IUndoStrategy
         IMessenger messenger,
         IUndoPluginNotifier pluginNotifier,
         IAnimationUndoProvider animationUndoProvider,
+        IReferenceFinderProjectProvider projectProvider,
         Func<bool> areUndoLocksActive,
         Action<UndoOperation> raiseUndosChanged)
     {
@@ -73,6 +75,7 @@ public class ElementUndoStrategy : IUndoStrategy
         _messenger = messenger;
         _pluginNotifier = pluginNotifier;
         _animationUndoProvider = animationUndoProvider;
+        _projectProvider = projectProvider;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
     }
@@ -611,9 +614,9 @@ public class ElementUndoStrategy : IUndoStrategy
 
     /// <summary>
     /// Restores (undo, <paramref name="restoring"/> true) or re-removes (redo, false) each cross-element
-    /// variable removal attached to an action, tolerating an instance or element deleted since the
-    /// action was recorded by skipping it. Mirrors a normal edit: saves each element it touches and
-    /// notifies plugins via the same VariableSet event a live edit fires.
+    /// variable removal attached to an action, tolerating an instance, state, or whole element deleted
+    /// since the action was recorded by skipping it. Mirrors a normal edit: saves each element it
+    /// touches and notifies plugins via the same VariableSet event a live edit fires.
     /// </summary>
     private void ReplayCrossElementVariableRemovals(List<CrossElementVariableChange>? removals, bool restoring)
     {
@@ -624,17 +627,30 @@ public class ElementUndoStrategy : IUndoStrategy
 
         foreach (var removal in removals)
         {
-            if (!removal.Container.Instances.Contains(removal.Instance) ||
+            // Whole-element deletion is a separate, non-undoable action (its own history is discarded
+            // with it) - the deleted element's object can still be referenced here since C# references
+            // don't get cleared by removing it from the project's element lists, so this must be
+            // checked explicitly or a stale reference resurrects a file for a screen/component the
+            // user already deleted.
+            if (_projectProvider.GumProjectSave?.AllElements.Contains(removal.Container) != true ||
+                !removal.Container.Instances.Contains(removal.Instance) ||
                 !removal.Container.AllStates.Contains(removal.State))
             {
                 continue;
             }
 
             var variables = removal.State.Variables;
+
+            // Match by name, not by the captured object reference: StateSave.SetValue creates a NEW
+            // VariableSave when none exists under that name, so a value re-assigned after the cascade
+            // removed the original is a different object with the same Name - and VariableSave has no
+            // value-equality override, so reference-based Contains/Remove would silently miss it.
+            var existing = variables.FirstOrDefault(v => v.Name == removal.Variable.Name);
+
             bool changed;
             if (restoring)
             {
-                changed = !variables.Contains(removal.Variable);
+                changed = existing == null;
                 if (changed)
                 {
                     variables.Add(removal.Variable);
@@ -642,7 +658,11 @@ public class ElementUndoStrategy : IUndoStrategy
             }
             else
             {
-                changed = variables.Remove(removal.Variable);
+                changed = existing != null;
+                if (changed)
+                {
+                    variables.Remove(existing!);
+                }
             }
 
             if (changed)

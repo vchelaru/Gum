@@ -78,7 +78,8 @@ public class VariableCategoryCopyPasteUndoTests : BaseTestClass
             new Mock<IFileCommands>().Object,
             new Mock<IMessenger>().Object,
             new Mock<IUndoPluginNotifier>().Object,
-            new NoAnimationUndoProvider());
+            new NoAnimationUndoProvider(),
+            new Mock<IReferenceFinderProjectProvider>().Object);
     }
 
     /// <summary>

@@ -846,5 +846,39 @@ public class ReferenceFinderTests : BaseTestClass
         result.VariableChanges[0].Variable.SourceObject.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void GetReferencesToVariable_WithBehaviorOwner_ShouldNotMatchElementInstanceOverrides()
+    {
+        // Regression guard: cascading delete (DeleteVariableService) is currently only reachable for
+        // ElementSave owners. The instance-override scan gates on `owner as ElementSave`, so a
+        // BehaviorSave owner must never produce a VariableChanges match here even when an unrelated
+        // element instance happens to have an override with a matching root name - if this ever started
+        // matching, DeleteVariableService would cascade-remove it while AttachCrossElementVariableRemovals
+        // (which only knows about the currently selected ElementSave) would silently misattach the data.
+        var behavior = new BehaviorSave { Name = "MyBehavior" };
+        var requiredVariable = new VariableSave { Name = "RequiredVar", Type = "float" };
+        behavior.RequiredVariables.Variables.Add(requiredVariable);
+
+        ComponentSave someComponent = new ComponentSave { Name = "SomeComponent" };
+        someComponent.States.Add(new StateSave { Name = "Default", ParentContainer = someComponent });
+        _project.Components.Add(someComponent);
+
+        ScreenSave screen1 = new ScreenSave { Name = "Screen1" };
+        StateSave defaultStateScreen = new StateSave { Name = "Default", ParentContainer = screen1 };
+        screen1.States.Add(defaultStateScreen);
+        InstanceSave instance = new InstanceSave { Name = "RequiredVarInstance", BaseType = "SomeComponent", ParentContainer = screen1 };
+        screen1.Instances.Add(instance);
+        VariableSave instanceVariable = new VariableSave { Name = "RequiredVarInstance.RequiredVar", Type = "float", Value = 7f };
+        defaultStateScreen.Variables.Add(instanceVariable);
+        _project.Screens.Add(screen1);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            behavior,
+            oldFullName: "RequiredVar",
+            oldStrippedOrExposedName: "RequiredVar");
+
+        result.VariableChanges.ShouldBeEmpty();
+    }
+
     #endregion
 }

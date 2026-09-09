@@ -55,7 +55,8 @@ public class UndoManager : IUndoManager
         IFileCommands fileCommands,
         IMessenger messenger,
         IUndoPluginNotifier pluginNotifier,
-        IAnimationUndoProvider animationUndoProvider)
+        IAnimationUndoProvider animationUndoProvider,
+        IReferenceFinderProjectProvider projectProvider)
     {
         UndoLocks = new ObservableCollection<UndoLock>();
         UndoLocks.CollectionChanged += HandleUndoLockChanged;
@@ -63,7 +64,7 @@ public class UndoManager : IUndoManager
         bool AreUndoLocksActive() => UndoLocks.Count > 0;
 
         _elementStrategy = new ElementUndoStrategy(selectedState, renameLogic, guiCommands, fileCommands,
-            messenger, pluginNotifier, animationUndoProvider, AreUndoLocksActive, InvokeUndosChanged);
+            messenger, pluginNotifier, animationUndoProvider, projectProvider, AreUndoLocksActive, InvokeUndosChanged);
         _behaviorStrategy = new BehaviorUndoStrategy(selectedState, guiCommands, fileCommands,
             messenger, pluginNotifier, AreUndoLocksActive, InvokeUndosChanged);
 
