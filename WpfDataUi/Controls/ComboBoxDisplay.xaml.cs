@@ -58,8 +58,8 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             if (instanceMemberChanged)
             {
                 this.RefreshAllContextMenus(force: true);
-                // Clear stale green foreground from a previous pooled use.
-                ComboBox.ClearValue(Control.ForegroundProperty);
+                // Clear stale green background from a previous pooled use.
+                ComboBox.ClearValue(Control.BackgroundProperty);
             }
 
             Refresh();
@@ -275,7 +275,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
         HintTextBlock.Text = InstanceMember?.DetailText;
 
-        SyncForegroundWithState();
+        SyncBackgroundWithState();
 
         RefreshAllContextMenus();
         
@@ -333,7 +333,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         }
         this.SuppressSettingProperty = false;
 
-        SyncForegroundWithState();
+        SyncBackgroundWithState();
 
         return ApplyValueResult.Success;
     }
@@ -528,10 +528,10 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         // problem: https://github.com/vchelaru/Gum/issues/676.
         this.TrySetValueOnInstance();
 
-        SyncForegroundWithState();
+        SyncBackgroundWithState();
     }
 
-    private void SyncForegroundWithState()
+    private void SyncBackgroundWithState()
     {
         Dispatcher.BeginInvoke(() =>
         {
@@ -540,13 +540,19 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
                 return;
             }
 
+            // Green background for a default value, matching TextBoxDisplayLogic (FlatRedBall#1755).
             if (InstanceMember?.IsDefault == true)
             {
-                ComboBox.Foreground = Brushes.Green;
+                ComboBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+            }
+            else if (ComboBox.TryFindResource("Frb.Brushes.Field.Background") != null)
+            {
+                ComboBox.SetResourceReference(Control.BackgroundProperty,
+                    "Frb.Brushes.Field.Background");
             }
             else
             {
-                ComboBox.ClearValue(Control.ForegroundProperty);
+                ComboBox.ClearValue(Control.BackgroundProperty);
             }
         });
 
