@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -49,6 +50,8 @@ namespace SampleProject
             CreateTwiceXMember(character, category);
 
             CreateYAsAngle(character, category);
+
+            CreatePositionAsInlineChannels(character, category);
 
             SetHealthDisplayToUseSlider(character, DataGrid);
 
@@ -123,6 +126,42 @@ namespace SampleProject
             category.Members.Add(member);
         }
 
+        /// <summary>
+        /// Demonstrates <see cref="InlineChannelsDisplay"/>: a generic composite displayer for a
+        /// vector-shaped value, here composing character.X/Y/Z into a System.Numerics.Vector3. The
+        /// same pattern applies to any other vector type (e.g. Microsoft.Xna.Framework.Vector2/3) -
+        /// only the Compose/Decompose delegates below need to know the concrete type.
+        /// </summary>
+        private void CreatePositionAsInlineChannels(Character character, MemberCategory category)
+        {
+            InstanceMember xMember = new("X", character);
+            xMember.CustomGetEvent += (_) => character.X;
+            xMember.CustomSetEvent += (_, value) => character.X = (float)value;
+            xMember.CustomGetTypeEvent += (_) => typeof(float);
 
+            InstanceMember yMember = new("Y", character);
+            yMember.CustomGetEvent += (_) => character.Y;
+            yMember.CustomSetEvent += (_, value) => character.Y = (float)value;
+            yMember.CustomGetTypeEvent += (_) => typeof(float);
+
+            InstanceMember zMember = new("Z", character);
+            zMember.CustomGetEvent += (_) => character.Z;
+            zMember.CustomSetEvent += (_, value) => character.Z = (float)value;
+            zMember.CustomGetTypeEvent += (_) => typeof(float);
+
+            CompositeInstanceMember positionMember = new(
+                "Position",
+                new List<InstanceMember> { xMember, yMember, zMember },
+                typeof(Vector3),
+                channels => new Vector3((float)channels[0]!, (float)channels[1]!, (float)channels[2]!),
+                value =>
+                {
+                    Vector3 vector = (Vector3)value;
+                    return new object?[] { vector.X, vector.Y, vector.Z };
+                });
+            positionMember.PreferredDisplayer = typeof(InlineChannelsDisplay);
+
+            category.Members.Add(positionMember);
+        }
     }
 }
