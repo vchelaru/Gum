@@ -135,4 +135,82 @@ public class DeleteVariableServiceTests : BaseTestClass
         owner.DefaultState.Variables.ShouldContain(variable);
         _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
     }
+
+    [Fact]
+    public void DeleteVariable_WhenBothInstanceOverrideAndVariableReferenceBindingExist_ShouldBlockEntirelyRatherThanPartiallyDelete()
+    {
+        // A mix of a cascadable override and a still-blocking VariableReferences binding must fail
+        // closed: nothing gets removed anywhere, not just the binding's own instance.
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        var screenWithOverride = new ScreenSave { Name = "Screen1" };
+        screenWithOverride.States.Add(new StateSave { Name = "Default", ParentContainer = screenWithOverride });
+        var instance = new InstanceSave { Name = "Variable1Instance", BaseType = "Component1", ParentContainer = screenWithOverride };
+        screenWithOverride.Instances.Add(instance);
+        var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
+        screenWithOverride.DefaultState.Variables.Add(instanceVariable);
+
+        var screenWithBinding = new ScreenSave { Name = "Screen2" };
+        var variableReferenceList = new VariableListSave<string> { Name = "VariableReferences" };
+        variableReferenceList.ValueAsIList.Add("SomeInstance.X = Components/Component1.Variable1");
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse
+            {
+                VariableChanges =
+                {
+                    new VariableChange { Container = screenWithOverride, State = screenWithOverride.DefaultState, Variable = instanceVariable }
+                },
+                VariableReferenceChanges =
+                {
+                    new VariableReferenceChange { Container = screenWithBinding, VariableReferenceList = variableReferenceList, LineIndex = 0, ChangedSide = SideOfEquals.Right }
+                }
+            });
+
+        _service.DeleteVariable(variable, owner);
+
+        owner.DefaultState.Variables.ShouldContain(variable);
+        screenWithOverride.DefaultState.Variables.ShouldContain(instanceVariable);
+        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+    }
+
+    [Fact]
+    public void DeleteVariable_WhenReferencedByMultipleInstanceOverrides_ShouldCascadeAndAttachAllOfThem()
+    {
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        var screenA = new ScreenSave { Name = "Screen1" };
+        screenA.States.Add(new StateSave { Name = "Default", ParentContainer = screenA });
+        var instanceA = new InstanceSave { Name = "InstanceA", BaseType = "Component1", ParentContainer = screenA };
+        screenA.Instances.Add(instanceA);
+        var variableA = new VariableSave { Name = "InstanceA.Variable1", Type = "float", Value = 1f };
+        screenA.DefaultState.Variables.Add(variableA);
+
+        var screenB = new ScreenSave { Name = "Screen2" };
+        screenB.States.Add(new StateSave { Name = "Default", ParentContainer = screenB });
+        var instanceB = new InstanceSave { Name = "InstanceB", BaseType = "Component1", ParentContainer = screenB };
+        screenB.Instances.Add(instanceB);
+        var variableB = new VariableSave { Name = "InstanceB.Variable1", Type = "float", Value = 2f };
+        screenB.DefaultState.Variables.Add(variableB);
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse
+            {
+                VariableChanges =
+                {
+                    new VariableChange { Container = screenA, State = screenA.DefaultState, Variable = variableA },
+                    new VariableChange { Container = screenB, State = screenB.DefaultState, Variable = variableB }
+                }
+            });
+
+        _service.DeleteVariable(variable, owner);
+
+        screenA.DefaultState.Variables.ShouldNotContain(variableA);
+        screenB.DefaultState.Variables.ShouldNotContain(variableB);
+
+        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(
+            It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
+                System.Linq.Enumerable.Count(removals) == 2)),
+            Times.Once);
+    }
 }
