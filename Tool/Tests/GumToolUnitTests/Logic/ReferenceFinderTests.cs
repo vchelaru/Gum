@@ -813,5 +813,38 @@ public class ReferenceFinderTests : BaseTestClass
         result.VariableChanges[0].Variable.ShouldBe(instanceVariable);
     }
 
+    [Fact]
+    public void GetReferencesToVariable_ExposedNameOnInheritingElement_IsDetected_AndHasNonNullSourceObject()
+    {
+        // Component2 inherits from Component1 and exposes its own inner instance's property AS
+        // "Variable1" - shadowing/re-declaring the same name, not overriding an instance value.
+        // DeleteVariableService must keep this case blocking (ADR 0016), not cascade it: the
+        // exposed VariableSave's own Name is "InnerButton.X" (an instance-qualified reference), so it
+        // has a non-null SourceObject just like a plain instance override does. A filter that uses
+        // "SourceObject != null" alone to decide cascade-vs-block cannot tell the two apart.
+        ComponentSave component1 = new ComponentSave { Name = "Component1" };
+        component1.States.Add(new StateSave { Name = "Default", ParentContainer = component1 });
+        _project.Components.Add(component1);
+
+        ComponentSave component2 = new ComponentSave { Name = "Component2", BaseType = "Component1" };
+        StateSave defaultStateComponent2 = new StateSave { Name = "Default", ParentContainer = component2 };
+        component2.States.Add(defaultStateComponent2);
+        InstanceSave innerInstance = new InstanceSave { Name = "InnerButton", BaseType = "Button", ParentContainer = component2 };
+        component2.Instances.Add(innerInstance);
+        VariableSave exposedVariable = new VariableSave { Name = "InnerButton.X", Type = "float", ExposedAsName = "Variable1" };
+        defaultStateComponent2.Variables.Add(exposedVariable);
+        _project.Components.Add(component2);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            component1,
+            oldFullName: "Variable1",
+            oldStrippedOrExposedName: "Variable1");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Container.ShouldBe(component2);
+        result.VariableChanges[0].Variable.ShouldBe(exposedVariable);
+        result.VariableChanges[0].Variable.SourceObject.ShouldNotBeNull();
+    }
+
     #endregion
 }

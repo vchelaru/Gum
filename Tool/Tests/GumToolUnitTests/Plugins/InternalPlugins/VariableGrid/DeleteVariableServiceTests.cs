@@ -137,6 +137,39 @@ public class DeleteVariableServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void DeleteVariable_WhenReferencedByExposedNameOnInheritingElement_ShouldStillBlock()
+    {
+        // Regression test: an exposed variable's own Name is itself instance-qualified (e.g.
+        // "InnerButton.X" exposed as "Variable1"), so it has a non-null SourceObject just like a plain
+        // instance override does (confirmed by ReferenceFinderTests). A filter keyed on SourceObject
+        // alone would misclassify this as cascadable and delete the derived element's exposed-variable
+        // declaration outright instead of blocking. The real discriminator is ExposedAsName.
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        var derivedComponent = new ComponentSave { Name = "Component2", BaseType = "Component1" };
+        var defaultStateDerived = new StateSave { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(defaultStateDerived);
+        var exposedVariable = new VariableSave { Name = "InnerButton.X", Type = "float", ExposedAsName = "Variable1" };
+        defaultStateDerived.Variables.Add(exposedVariable);
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse
+            {
+                VariableChanges =
+                {
+                    new VariableChange { Container = derivedComponent, State = defaultStateDerived, Variable = exposedVariable }
+                }
+            });
+
+        _service.DeleteVariable(variable, owner);
+
+        owner.DefaultState.Variables.ShouldContain(variable);
+        defaultStateDerived.Variables.ShouldContain(exposedVariable);
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+    }
+
+    [Fact]
     public void DeleteVariable_WhenBothInstanceOverrideAndVariableReferenceBindingExist_ShouldBlockEntirelyRatherThanPartiallyDelete()
     {
         // A mix of a cascadable override and a still-blocking VariableReferences binding must fail
@@ -212,5 +245,78 @@ public class DeleteVariableServiceTests : BaseTestClass
             It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
                 System.Linq.Enumerable.Count(removals) == 2)),
             Times.Once);
+    }
+
+    [Fact]
+    public void DeleteVariable_WhenOverrideIsInANonDefaultState_ShouldCascadeInThatState()
+    {
+        // CrossElementVariableChange.State documents that the override isn't necessarily in the
+        // default state - a category state override must cascade (and later restore) in that same
+        // state, not DefaultState.
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        var otherScreen = new ScreenSave { Name = "Screen1" };
+        otherScreen.States.Add(new StateSave { Name = "Default", ParentContainer = otherScreen });
+        var category = new StateSaveCategory { Name = "MyCategory" };
+        var categoryState = new StateSave { Name = "On", ParentContainer = otherScreen };
+        category.States.Add(categoryState);
+        otherScreen.Categories.Add(category);
+
+        var instance = new InstanceSave { Name = "Variable1Instance", BaseType = "Component1", ParentContainer = otherScreen };
+        otherScreen.Instances.Add(instance);
+        var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
+        categoryState.Variables.Add(instanceVariable);
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse
+            {
+                VariableChanges =
+                {
+                    new VariableChange { Container = otherScreen, State = categoryState, Variable = instanceVariable }
+                }
+            });
+
+        _service.DeleteVariable(variable, owner);
+
+        categoryState.Variables.ShouldNotContain(instanceVariable);
+        otherScreen.DefaultState.Variables.ShouldNotContain(instanceVariable);
+
+        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(
+            It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
+                System.Linq.Enumerable.Single(removals).State == categoryState)),
+            Times.Once);
+    }
+
+    [Fact]
+    public void DeleteVariable_OnBehavior_ShouldStillRemoveTheRequiredVariable()
+    {
+        // Regression check: restructuring DeleteVariable/GetIfCanDeleteVariable around the new
+        // cascade must not disturb the (unrelated, un-cascaded) BehaviorSave path.
+        var behavior = new Gum.DataTypes.Behaviors.BehaviorSave { Name = "MyBehavior" };
+        var requiredVariable = new VariableSave { Name = "RequiredVar", Type = "float", IsCustomVariable = true };
+        behavior.RequiredVariables.Variables.Add(requiredVariable);
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(behavior, requiredVariable.Name, requiredVariable.GetRootName()))
+            .Returns(new VariableChangeResponse());
+
+        _service.DeleteVariable(requiredVariable, behavior);
+
+        behavior.RequiredVariables.Variables.ShouldNotContain(requiredVariable);
+        _fileCommands.Verify(x => x.TryAutoSaveObject(behavior), Times.Once);
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
+    }
+
+    [Fact]
+    public void DeleteVariable_WhenVariableIsNotContainedInTarget_ShouldBlockAndNotTouchUndo()
+    {
+        var (owner, _) = MakeOwnerWithCustomVariable();
+        var variableNotInOwner = new VariableSave { Name = "NotThere", Type = "float", IsCustomVariable = true };
+
+        _service.DeleteVariable(variableNotInOwner, owner);
+
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _undoManager.Verify(x => x.RequestLock(), Times.Never);
+        _renameLogic.Verify(x => x.GetChangesForRenamedVariable(
+            It.IsAny<IStateContainer>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
     }
 }

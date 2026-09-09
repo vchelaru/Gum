@@ -103,12 +103,18 @@ public class DeleteVariableService : IDeleteVariableService
     }
 
     /// <summary>
-    /// Instance-level value overrides on other elements (<see cref="VariableChange.Variable"/> with a
-    /// non-null <c>SourceObject</c>) are cascaded rather than blocking - they're returned via
-    /// <paramref name="cascadingInstanceOverrides"/> for the caller to remove and record for undo.
-    /// Anything else that reuses the same rename-impact lookup - a VariableReferences binding, or an
-    /// inheriting element's own exposed-name entry - still blocks: those aren't a simple "restore this
-    /// value" case, so silently deleting through them would leave a dangling reference. See ADR 0016.
+    /// Plain instance-level value overrides on other elements are cascaded rather than blocking -
+    /// they're returned via <paramref name="cascadingInstanceOverrides"/> for the caller to remove and
+    /// record for undo. Anything else that reuses the same rename-impact lookup - a VariableReferences
+    /// binding, or an inheriting element's own exposed-name entry - still blocks: those aren't a simple
+    /// "restore this value" case, so silently deleting through them would leave a dangling reference or
+    /// destroy an unrelated exposed-variable declaration. See ADR 0016.
+    ///
+    /// The discriminator is <see cref="VariableSave.ExposedAsName"/>, not <see cref="VariableSave.SourceObject"/>:
+    /// an exposed variable's own <c>Name</c> is itself instance-qualified (e.g. "InnerButton.X" exposed
+    /// as "Variable1"), so it has a non-null SourceObject too - SourceObject alone can't tell a plain
+    /// override apart from an exposed-name entry. Confirmed by
+    /// ReferenceFinderTests.GetReferencesToVariable_ExposedNameOnInheritingElement_IsDetected_AndHasNonNullSourceObject.
     /// </summary>
     private GeneralResponse GetIfCanDeleteVariable(VariableSave variable, IStateContainer stateContainer,
         out List<VariableChange> cascadingInstanceOverrides)
@@ -134,7 +140,7 @@ public class DeleteVariableService : IDeleteVariableService
 
         var renames = _renameLogic.GetChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
 
-        var blockingChanges = renames.VariableChanges.Where(c => c.Variable.SourceObject == null).ToList();
+        var blockingChanges = renames.VariableChanges.Where(c => !string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
 
         if (blockingChanges.Count > 0 || renames.VariableReferenceChanges.Count > 0)
         {
@@ -146,7 +152,7 @@ public class DeleteVariableService : IDeleteVariableService
                 $"Cannot delete variable {variable.Name} because it is referenced by other elements.\n\n{blockingResponse.GetChangesDetails()}");
         }
 
-        cascadingInstanceOverrides = renames.VariableChanges.Where(c => c.Variable.SourceObject != null).ToList();
+        cascadingInstanceOverrides = renames.VariableChanges.Where(c => string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
 
         return GeneralResponse.SuccessfulResponse;
     }

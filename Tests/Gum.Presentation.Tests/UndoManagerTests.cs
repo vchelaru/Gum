@@ -957,6 +957,35 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void AttachCrossElementVariableRemovals_WithEmptyList_ShouldBeANoOp()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        component.DefaultState.SetValue("X", 10f);
+        _undoManager.RecordState();
+        component.DefaultState.SetValue("X", 11f);
+        _undoManager.RecordUndo();
+
+        Should.NotThrow(() => _undoManager.AttachCrossElementVariableRemovals(System.Array.Empty<CrossElementVariableChange>()));
+
+        _undoManager.CurrentElementHistory.Actions.Single().CrossElementVariableRemovals.ShouldBeNull();
+    }
+
+    [Fact]
+    public void AttachCrossElementVariableRemovals_WithNoRecordedActionYet_ShouldBeANoOp()
+    {
+        // Guards against attaching data that would silently land on the wrong (unrelated, previous)
+        // action if a future caller invoked this before anything was actually recorded.
+        var (otherScreen, instance, instanceVariable) = SetUpOtherElementWithAssignedVariable();
+
+        Should.NotThrow(() => _undoManager.AttachCrossElementVariableRemovals(new[]
+        {
+            new CrossElementVariableChange { Container = otherScreen, Instance = instance, State = otherScreen.DefaultState, Variable = instanceVariable }
+        }));
+
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
     public void PerformUndo_WithAttachedCrossElementVariableRemoval_ShouldRestoreVariableOnOtherElement()
     {
         ComponentSave component = _selectedState.Object.SelectedComponent!;
