@@ -43,7 +43,7 @@ public class CompositeMemberLogicApplyTests : BaseTestClass
         _nameVerifier = new Mock<INameVerifier>();
         _clipboardService = new Mock<IClipboardService>();
 
-        _realUndoManager = new UndoManager(null!, null!, null!, null!, null!, null!, null!);
+        _realUndoManager = new UndoManager(null!, null!, null!, null!, null!, null!, null!, null!);
         _undoManager = new Mock<IUndoManager>();
         _undoManager.Setup(x => x.RequestLock()).Returns(() => _realUndoManager.RequestLock());
 

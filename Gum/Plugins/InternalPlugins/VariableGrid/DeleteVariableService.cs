@@ -46,20 +46,19 @@ public class DeleteVariableService : IDeleteVariableService
 
     public void DeleteVariable(VariableSave variable, IStateContainer stateContainer)
     {
-
-
-
-        var response = GetIfCanDeleteVariable(variable, stateContainer);
+        var response = GetIfCanDeleteVariable(variable, stateContainer, out var cascadingInstanceOverrides);
 
         if(response.Succeeded == false)
         {
             _dialogService.ShowMessage(response.Message);
+            return;
         }
-        else
-        {
 
-            using var undoLock = _undoManager.RequestLock();
-            var elementSave = stateContainer as ElementSave;
+        var elementSave = stateContainer as ElementSave;
+        var crossElementRemovals = new List<CrossElementVariableChange>();
+
+        using (_undoManager.RequestLock())
+        {
             if(elementSave != null)
             {
                 elementSave.DefaultState.Variables.Remove(variable);
@@ -71,14 +70,57 @@ public class DeleteVariableService : IDeleteVariableService
                 _fileCommands.TryAutoSaveObject(behavior);
             }
 
-            _guiCommands.RefreshVariables(force: true);
+            // Instance-level value overrides elsewhere in the project are cascaded (removed, and
+            // recorded so undo/redo can restore/re-remove them). See ADR 0016.
+            foreach (var change in cascadingInstanceOverrides)
+            {
+                if (change.Container is ElementSave changeElement &&
+                    changeElement.GetInstance(change.Variable.SourceObject) is { } instance)
+                {
+                    change.State.Variables.Remove(change.Variable);
+                    _fileCommands.TryAutoSaveElement(changeElement);
+                    _pluginManager.VariableSet(changeElement, instance, change.Variable.GetRootName(), null);
 
-            _pluginManager.VariableDelete(elementSave, variable.Name);
+                    crossElementRemovals.Add(new CrossElementVariableChange
+                    {
+                        Container = changeElement,
+                        Instance = instance,
+                        State = change.State,
+                        Variable = change.Variable
+                    });
+                }
+            }
         }
+
+        if (crossElementRemovals.Count > 0)
+        {
+            _undoManager.AttachCrossElementVariableRemovals(crossElementRemovals);
+        }
+
+        _guiCommands.RefreshVariables(force: true);
+
+        _pluginManager.VariableDelete(elementSave, variable.Name);
     }
 
-    private GeneralResponse GetIfCanDeleteVariable(VariableSave variable, IStateContainer stateContainer)
+    /// <summary>
+    /// Plain instance-level value overrides on other elements are cascaded rather than blocking -
+    /// they're returned via <paramref name="cascadingInstanceOverrides"/> for the caller to remove and
+    /// record for undo. Anything else that reuses the same rename-impact lookup - a VariableReferences
+    /// binding, or an inheriting element's own exposed-name entry - still blocks: those aren't a simple
+    /// "restore this value" case, so silently deleting through them would leave a dangling reference or
+    /// destroy an unrelated exposed-variable declaration. See ADR 0016.
+    ///
+    /// The discriminator is <see cref="VariableSave.ExposedAsName"/>, not <see cref="VariableSave.SourceObject"/>:
+    /// an exposed variable's own <c>Name</c> is itself instance-qualified (e.g. "InnerButton.X" exposed
+    /// as "Variable1"), so it has a non-null SourceObject too - SourceObject alone can't tell a plain
+    /// override apart from an exposed-name entry. Confirmed by
+    /// ReferenceFinderTests.GetReferencesToVariable_ExposedNameOnInheritingElement_IsDetected_AndHasNonNullSourceObject.
+    /// </summary>
+    private GeneralResponse GetIfCanDeleteVariable(VariableSave variable, IStateContainer stateContainer,
+        out List<VariableChange> cascadingInstanceOverrides)
     {
+        cascadingInstanceOverrides = new List<VariableChange>();
+
         var isVariableContained = false;
 
         if (stateContainer is ElementSave elementSave)
@@ -98,12 +140,19 @@ public class DeleteVariableService : IDeleteVariableService
 
         var renames = _renameLogic.GetChangesForRenamedVariable(stateContainer, variable.Name, variable.GetRootName());
 
-        var changesDetails = renames.GetChangesDetails();
-        if (!string.IsNullOrEmpty(changesDetails))
+        var blockingChanges = renames.VariableChanges.Where(c => !string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
+
+        if (blockingChanges.Count > 0 || renames.VariableReferenceChanges.Count > 0)
         {
+            var blockingResponse = new VariableChangeResponse();
+            blockingResponse.VariableChanges.AddRange(blockingChanges);
+            blockingResponse.VariableReferenceChanges.AddRange(renames.VariableReferenceChanges);
+
             return GeneralResponse.UnsuccessfulWith(
-                $"Cannot delete variable {variable.Name} because it is referenced by other elements.\n\n{changesDetails}");
+                $"Cannot delete variable {variable.Name} because it is referenced by other elements.\n\n{blockingResponse.GetChangesDetails()}");
         }
+
+        cascadingInstanceOverrides = renames.VariableChanges.Where(c => string.IsNullOrEmpty(c.Variable.ExposedAsName)).ToList();
 
         return GeneralResponse.SuccessfulResponse;
     }

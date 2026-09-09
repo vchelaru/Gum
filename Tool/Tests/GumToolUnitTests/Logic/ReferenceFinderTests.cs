@@ -749,5 +749,136 @@ public class ReferenceFinderTests : BaseTestClass
         result.VariableReferenceChanges[0].ChangedSide.ShouldBe(SideOfEquals.Right);
     }
 
+    [Fact]
+    public void GetReferencesToVariable_InstanceValueOverride_IsDetected()
+    {
+        // Component1 has a custom variable Variable1. Screen1 has an instance of Component1 with
+        // Variable1 explicitly assigned. This is the plain-override case #4658/ADR 0016 cascades on
+        // delete: it must be found as a VariableChange (not a VariableReferenceChange).
+        ComponentSave component1 = new ComponentSave { Name = "Component1" };
+        component1.States.Add(new StateSave { Name = "Default", ParentContainer = component1 });
+        _project.Components.Add(component1);
+
+        ScreenSave screen1 = new ScreenSave { Name = "Screen1" };
+        StateSave defaultStateScreen = new StateSave { Name = "Default", ParentContainer = screen1 };
+        screen1.States.Add(defaultStateScreen);
+        InstanceSave instance = new InstanceSave { Name = "Variable1Instance", BaseType = "Component1", ParentContainer = screen1 };
+        screen1.Instances.Add(instance);
+        VariableSave instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
+        defaultStateScreen.Variables.Add(instanceVariable);
+        _project.Screens.Add(screen1);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            component1,
+            oldFullName: "Variable1",
+            oldStrippedOrExposedName: "Variable1");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Container.ShouldBe(screen1);
+        result.VariableChanges[0].State.ShouldBe(defaultStateScreen);
+        result.VariableChanges[0].Variable.ShouldBe(instanceVariable);
+        result.VariableReferenceChanges.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_InstanceValueOverride_OnInstanceOfInheritingElement_IsDetected()
+    {
+        // Component2 inherits from Component1 (which declares Variable1). Screen1 has an instance of
+        // Component2 (not Component1 directly) with Variable1 overridden. The inheritance fan-out this
+        // ADR relies on: deleting Component1.Variable1 must still find and cascade this override.
+        ComponentSave component1 = new ComponentSave { Name = "Component1" };
+        component1.States.Add(new StateSave { Name = "Default", ParentContainer = component1 });
+        _project.Components.Add(component1);
+
+        ComponentSave component2 = new ComponentSave { Name = "Component2", BaseType = "Component1" };
+        component2.States.Add(new StateSave { Name = "Default", ParentContainer = component2 });
+        _project.Components.Add(component2);
+
+        ScreenSave screen1 = new ScreenSave { Name = "Screen1" };
+        StateSave defaultStateScreen = new StateSave { Name = "Default", ParentContainer = screen1 };
+        screen1.States.Add(defaultStateScreen);
+        InstanceSave instance = new InstanceSave { Name = "Variable1Instance", BaseType = "Component2", ParentContainer = screen1 };
+        screen1.Instances.Add(instance);
+        VariableSave instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
+        defaultStateScreen.Variables.Add(instanceVariable);
+        _project.Screens.Add(screen1);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            component1,
+            oldFullName: "Variable1",
+            oldStrippedOrExposedName: "Variable1");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Container.ShouldBe(screen1);
+        result.VariableChanges[0].Variable.ShouldBe(instanceVariable);
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_ExposedNameOnInheritingElement_IsDetected_AndHasNonNullSourceObject()
+    {
+        // Component2 inherits from Component1 and exposes its own inner instance's property AS
+        // "Variable1" - shadowing/re-declaring the same name, not overriding an instance value.
+        // DeleteVariableService must keep this case blocking (ADR 0016), not cascade it: the
+        // exposed VariableSave's own Name is "InnerButton.X" (an instance-qualified reference), so it
+        // has a non-null SourceObject just like a plain instance override does. A filter that uses
+        // "SourceObject != null" alone to decide cascade-vs-block cannot tell the two apart.
+        ComponentSave component1 = new ComponentSave { Name = "Component1" };
+        component1.States.Add(new StateSave { Name = "Default", ParentContainer = component1 });
+        _project.Components.Add(component1);
+
+        ComponentSave component2 = new ComponentSave { Name = "Component2", BaseType = "Component1" };
+        StateSave defaultStateComponent2 = new StateSave { Name = "Default", ParentContainer = component2 };
+        component2.States.Add(defaultStateComponent2);
+        InstanceSave innerInstance = new InstanceSave { Name = "InnerButton", BaseType = "Button", ParentContainer = component2 };
+        component2.Instances.Add(innerInstance);
+        VariableSave exposedVariable = new VariableSave { Name = "InnerButton.X", Type = "float", ExposedAsName = "Variable1" };
+        defaultStateComponent2.Variables.Add(exposedVariable);
+        _project.Components.Add(component2);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            component1,
+            oldFullName: "Variable1",
+            oldStrippedOrExposedName: "Variable1");
+
+        result.VariableChanges.Count.ShouldBe(1);
+        result.VariableChanges[0].Container.ShouldBe(component2);
+        result.VariableChanges[0].Variable.ShouldBe(exposedVariable);
+        result.VariableChanges[0].Variable.SourceObject.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void GetReferencesToVariable_WithBehaviorOwner_ShouldNotMatchElementInstanceOverrides()
+    {
+        // Regression guard: cascading delete (DeleteVariableService) is currently only reachable for
+        // ElementSave owners. The instance-override scan gates on `owner as ElementSave`, so a
+        // BehaviorSave owner must never produce a VariableChanges match here even when an unrelated
+        // element instance happens to have an override with a matching root name - if this ever started
+        // matching, DeleteVariableService would cascade-remove it while AttachCrossElementVariableRemovals
+        // (which only knows about the currently selected ElementSave) would silently misattach the data.
+        var behavior = new BehaviorSave { Name = "MyBehavior" };
+        var requiredVariable = new VariableSave { Name = "RequiredVar", Type = "float" };
+        behavior.RequiredVariables.Variables.Add(requiredVariable);
+
+        ComponentSave someComponent = new ComponentSave { Name = "SomeComponent" };
+        someComponent.States.Add(new StateSave { Name = "Default", ParentContainer = someComponent });
+        _project.Components.Add(someComponent);
+
+        ScreenSave screen1 = new ScreenSave { Name = "Screen1" };
+        StateSave defaultStateScreen = new StateSave { Name = "Default", ParentContainer = screen1 };
+        screen1.States.Add(defaultStateScreen);
+        InstanceSave instance = new InstanceSave { Name = "RequiredVarInstance", BaseType = "SomeComponent", ParentContainer = screen1 };
+        screen1.Instances.Add(instance);
+        VariableSave instanceVariable = new VariableSave { Name = "RequiredVarInstance.RequiredVar", Type = "float", Value = 7f };
+        defaultStateScreen.Variables.Add(instanceVariable);
+        _project.Screens.Add(screen1);
+
+        VariableChangeResponse result = _referenceFinder.GetReferencesToVariable(
+            behavior,
+            oldFullName: "RequiredVar",
+            oldStrippedOrExposedName: "RequiredVar");
+
+        result.VariableChanges.ShouldBeEmpty();
+    }
+
     #endregion
 }

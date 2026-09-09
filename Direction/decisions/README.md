@@ -35,3 +35,5 @@ re-litigating it.
 | [0012](0012-converge-backends-on-one-shared-render-walk.md) | Converge every backend on one shared render walk, including render-target bakes | Accepted | 2026-07-31 |
 | [0013](0013-adopt-json-project-format-for-native-aot.md) | Adopt JSON as an AOT-safe project file format, phased in alongside XML | Accepted | 2026-07-31 |
 | [0014](0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md) | Clarify the engine-scope boundary: cost-to-integrate, not "ships its own UI" | Accepted | 2026-09-04 |
+| [0015](0015-treat-dispatcher-merge-as-incremental-goal.md) | Treat the Skia/core dispatcher merge as an incremental long-term goal, not a rejected option | Accepted | 2026-09-04 |
+| [0016](0016-cross-element-undo-transactions-for-cascading-deletes.md) | Cross-element undo transactions for cascading deletes | Accepted | 2026-09-09 |

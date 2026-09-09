@@ -18,4 +18,6 @@ public interface IUndoPluginNotifier
     void InstancesDelete(ElementSave elementSave, InstanceSave[] instances);
 
     void BehaviorSelected(BehaviorSave? behaviorSave);
+
+    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue);
 }
