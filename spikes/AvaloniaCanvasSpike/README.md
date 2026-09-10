@@ -47,16 +47,16 @@ dotnet test spikes/AvaloniaCanvasSpike/AvaloniaCanvasSpike.MonoGame.Tests
 
 Fill this in per OS and per head, then copy the numbers into the phase doc.
 
-| | Windows | macOS | Linux |
+| | Windows (MonoGame / KNI) | macOS | Linux |
 |---|---|---|---|
-| Device created with off-screen window | | | |
-| First frame renders the sample screen | | | |
-| Click selects the element under the cursor at 100% / 150% / 200% | | | |
+| Device created with off-screen window | yes / yes | | |
+| First frame renders the sample screen | yes / yes (2026-09-10) | | |
+| Click selects the element under the cursor at 100% / 150% / 200% | 100%: yes after the edge fix / same | | |
 | Resize keeps mapping correct, no smearing | | | |
-| render+readback ms avg at window size / at 4K | | | |
+| render+readback ms avg at window size / at 4K | 1024x720: 1.8 / 23.9 | | |
 | Wheel zoom keeps overlay aligned | | | |
-| Off-screen SDL window stays invisible (macOS may clamp `Window.Position`) | | | |
-| Notes | | | |
+| Off-screen SDL window stays invisible (macOS may clamp `Window.Position`) | yes / n/a (KNI cannot move it) | | |
+| Notes | KNI ~13x slower on readback on the same machine | | |
 
 ## Known limitations, deliberately
 

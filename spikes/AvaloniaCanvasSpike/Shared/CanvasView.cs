@@ -253,8 +253,8 @@ public sealed class CanvasView : Grid
         }
 
         float zoom = _renderer.Zoom;
-        double left = _selected.AbsoluteX * zoom / _scaling;
-        double top = _selected.AbsoluteY * zoom / _scaling;
+        double left = _selected.AbsoluteLeft * zoom / _scaling;
+        double top = _selected.AbsoluteTop * zoom / _scaling;
         double width = _selected.AbsoluteWidth * zoom / _scaling;
         double height = _selected.AbsoluteHeight * zoom / _scaling;
 

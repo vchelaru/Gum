@@ -95,10 +95,18 @@ MonoGame DesktopGL and KNI `nkast.Kni.Platform.SDL2.GL` 4.2.9001.1 (the package 
 confirmed; it is the same KNI version the tool ships). Verified on Windows by `dotnet build` of
 both heads and `dotnet test` of a headless test per backend that creates the device with no host
 window, renders the MonoGameGumFromFile sample screen to a render target, reads it back, and
-hit-tests the centre pixel. **Both backends pass.** The Avalonia window itself has not been run
-here (GUI launches are the owner's step); macOS and Linux runs are still open.
+hit-tests the centre pixel. **Both backends pass.** On 2026-09-10 both Avalonia heads were run on
+Windows and showed the sample screen, status line, click selection, and zoom. macOS and Linux
+runs are still open.
 
 Findings so far:
+
+- **Measured on Windows at 1024x720, 100% scale: MonoGame DesktopGL 1.8 ms average render plus
+  readback; KNI SDL2.GL 23.9 ms average (32.6 ms worst seen).** Same scene, same host, same
+  machine. KNI's GL readback path is roughly an order of magnitude slower here. That is not yet
+  a verdict (it may be a `GetData` implementation difference or a driver path), but if it holds
+  on macOS/Linux it decides the backend question in MonoGame's favour, and at 4K it would be
+  the difference between interactive and not.
 
 - **Single-threaded is workable.** The `Game` never owns a loop; the host calls `Game.Tick()` from
   its UI thread after one `RunOneFrame()`. This keeps SDL and the UI toolkit on the main thread,
@@ -139,6 +147,7 @@ acceptance bar. A no-go with fallback (3) triggered also changes phase 30's Skia
 
 - [x] A `GraphicsDevice` is created on **Windows** with no WinForms handle on both backends (headless tests, 2026-09-09).
 - [ ] A `GraphicsDevice` is created on macOS and/or Linux with no WinForms handle, and the path is written down.
+- [x] A real Gum screen renders in an Avalonia window on **Windows** on both backends (2026-09-10).
 - [ ] A real Gum screen renders in an Avalonia window on that OS; click selects the right element at 100/150/200%.
 - [ ] Drag latency and frame time are recorded for 1080p and 4K on that OS.
 - [ ] Two render targets on one device work.

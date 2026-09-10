@@ -259,8 +259,9 @@ public sealed class GumCanvasGame : Game, ICanvasRenderer
 
     private static bool Contains(GraphicalUiElement element, float x, float y)
     {
-        float left = element.AbsoluteX;
-        float top = element.AbsoluteY;
+        // AbsoluteX/Y are the origin, which is the centre for centred elements; use the edges.
+        float left = element.AbsoluteLeft;
+        float top = element.AbsoluteTop;
         return x >= left && y >= top
             && x <= left + element.AbsoluteWidth
             && y <= top + element.AbsoluteHeight;
