@@ -149,6 +149,18 @@ public sealed class CanvasView : Grid
     }
 
     /// <inheritdoc/>
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Key == Key.P && _renderer != null)
+        {
+            _renderer.SkipPresent = !_renderer.SkipPresent;
+            _recentFrameTimes.Clear();
+            e.Handled = true;
+        }
+    }
+
+    /// <inheritdoc/>
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
@@ -216,8 +228,9 @@ public sealed class CanvasView : Grid
         string selection = _selected == null ? "none" : $"{_selected.Name} ({_selected.GetType().Name})";
         _status.Text =
             $"{_renderer.LoadedElementName}  {_renderer.PixelWidth}x{_renderer.PixelHeight}px  scale {_scaling:0.##}  zoom {_renderer.Zoom:0.##}\n" +
-            $"render+readback {average:0.0} ms avg ({_renderer.LastFrameMilliseconds:0.0} ms last)  selected: {selection}\n" +
-            $"click to select, wheel to zoom";
+            $"frame {average:0.0} ms avg ({_renderer.LastFrameMilliseconds:0.0} last) = draw {_renderer.LastDrawMilliseconds:0.0} + readback {_renderer.LastReadbackMilliseconds:0.0} + present {_renderer.LastPresentMilliseconds:0.0}{(_renderer.SkipPresent ? " (skipped)" : "")}\n" +
+            $"selected: {selection}\n" +
+            $"click to select, wheel to zoom, P to toggle present";
     }
 
     private static void CopyIntoBitmap(byte[] rgba, int width, int height, WriteableBitmap bitmap)

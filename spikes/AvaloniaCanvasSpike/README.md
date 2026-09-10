@@ -18,7 +18,9 @@ Two heads share one source tree (`Shared/`), so the backends can be compared lik
   `MonoGameScreenshotService`). It never owns a loop: the host calls `RenderFrame()`, which calls
   `Game.Tick()` on the host's thread. `Draw` renders `GumService.Default.Draw()` into a
   `RenderTarget2D` and `GetData`s it into an RGBA buffer. Single-threaded on purpose: on macOS both
-  SDL and the UI toolkit must live on the main thread.
+  SDL and the UI toolkit must live on the main thread. Three settings are required or `Tick`
+  sleeps: `IsFixedTimeStep = false`, `SynchronizeWithVerticalRetrace = false`, and
+  `InactiveSleepTime = TimeSpan.Zero` (the hidden window is never the active window).
 - `CanvasView` (Avalonia, code-only) owns a `WriteableBitmap` in device pixels, copies the buffer
   in on a 60 Hz `DispatcherTimer`, shows it in an `Image` with nearest-neighbour sampling, maps
   pointer DIPs to world units (`dip * RenderScaling / zoom`), and draws the hit element's bounds
@@ -53,10 +55,15 @@ Fill this in per OS and per head, then copy the numbers into the phase doc.
 | First frame renders the sample screen | yes / yes (2026-09-10) | | |
 | Click selects the element under the cursor at 100% / 150% / 200% | 100%: yes after the edge fix / same | | |
 | Resize keeps mapping correct, no smearing | | | |
-| render+readback ms avg at window size / at 4K | 1024x720: 1.8 / 23.9 | | |
+| frame ms avg at 1024x720 / at 4K (headless test, 60 frames) | 1.65 / 10.3 vs 1.26 / 7.3 | | |
 | Wheel zoom keeps overlay aligned | | | |
 | Off-screen SDL window stays invisible (macOS may clamp `Window.Position`) | yes / n/a (KNI cannot move it) | | |
-| Notes | KNI ~13x slower on readback on the same machine | | |
+| Notes | readback is ~90% of the frame on both; an early "KNI 13x slower" reading was `InactiveSleepTime`, now zeroed | | |
+
+The `FrameTimingTests` test prints the draw / readback / present split for both sizes, with and
+without presenting the hidden window, so the same comparison can be produced on any machine with
+`dotnet test ... --filter FrameTimingTests --logger "console;verbosity=detailed"`. In the window,
+press `P` to toggle presenting.
 
 ## Known limitations, deliberately
 

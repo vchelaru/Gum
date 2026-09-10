@@ -55,6 +55,9 @@ public sealed class GumCanvasGame : Game, ICanvasRenderer
         };
         IsFixedTimeStep = false;
         IsMouseVisible = true;
+        // The hidden window is never the active window, and the XNA default sleeps 20 ms per
+        // tick while inactive. That was the whole KNI "slowness" in the first measurements.
+        InactiveSleepTime = TimeSpan.Zero;
     }
 
     /// <inheritdoc/>
@@ -79,6 +82,18 @@ public sealed class GumCanvasGame : Game, ICanvasRenderer
 
     /// <inheritdoc/>
     public double LastFrameMilliseconds { get; private set; }
+
+    /// <inheritdoc/>
+    public double LastDrawMilliseconds { get; private set; }
+
+    /// <inheritdoc/>
+    public double LastReadbackMilliseconds { get; private set; }
+
+    /// <inheritdoc/>
+    public double LastPresentMilliseconds { get; private set; }
+
+    /// <inheritdoc/>
+    public bool SkipPresent { get; set; }
 
     /// <inheritdoc/>
     public string LoadedElementName { get; private set; }
@@ -181,12 +196,30 @@ public sealed class GumCanvasGame : Game, ICanvasRenderer
             return;
         }
 
+        long drawStart = Stopwatch.GetTimestamp();
         GraphicsDevice.SetRenderTarget(_renderTarget);
         GraphicsDevice.Clear(new Color(40, 40, 40, 255));
         GumService.Default.Draw();
         GraphicsDevice.SetRenderTarget(null);
+        long readbackStart = Stopwatch.GetTimestamp();
 
         _renderTarget.GetData(_pixelBuffer);
+        long readbackEnd = Stopwatch.GetTimestamp();
+
+        LastDrawMilliseconds = Stopwatch.GetElapsedTime(drawStart, readbackStart).TotalMilliseconds;
+        LastReadbackMilliseconds = Stopwatch.GetElapsedTime(readbackStart, readbackEnd).TotalMilliseconds;
+    }
+
+    /// <inheritdoc/>
+    protected override void EndDraw()
+    {
+        // base.EndDraw presents (swaps) the hidden 1x1 window, which is where vsync would block.
+        long presentStart = Stopwatch.GetTimestamp();
+        if (!SkipPresent)
+        {
+            base.EndDraw();
+        }
+        LastPresentMilliseconds = Stopwatch.GetElapsedTime(presentStart).TotalMilliseconds;
     }
 
     /// <inheritdoc/>

@@ -24,6 +24,21 @@ public interface ICanvasRenderer : IDisposable
     /// <summary>Milliseconds spent in the last <see cref="RenderFrame"/>, including readback.</summary>
     double LastFrameMilliseconds { get; }
 
+    /// <summary>Milliseconds the last frame spent drawing the scene into the render target.</summary>
+    double LastDrawMilliseconds { get; }
+
+    /// <summary>Milliseconds the last frame spent reading the render target back to CPU.</summary>
+    double LastReadbackMilliseconds { get; }
+
+    /// <summary>Milliseconds the last frame spent presenting the backend's own hidden window.</summary>
+    double LastPresentMilliseconds { get; }
+
+    /// <summary>
+    /// When true, the backend's swap to its hidden window is skipped. Nothing is ever shown
+    /// there, so this isolates whether vsync on that window is stalling the frame.
+    /// </summary>
+    bool SkipPresent { get; set; }
+
     /// <summary>Name of the element currently loaded.</summary>
     string LoadedElementName { get; }
 

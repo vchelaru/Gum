@@ -101,16 +101,30 @@ runs are still open.
 
 Findings so far:
 
-- **Measured on Windows at 1024x720, 100% scale: MonoGame DesktopGL 1.8 ms average render plus
-  readback; KNI SDL2.GL 23.9 ms average (32.6 ms worst seen).** Same scene, same host, same
-  machine. KNI's GL readback path is roughly an order of magnitude slower here. That is not yet
-  a verdict (it may be a `GetData` implementation difference or a driver path), but if it holds
-  on macOS/Linux it decides the backend question in MonoGame's favour, and at 4K it would be
-  the difference between interactive and not.
+- **The backends perform the same; an earlier "KNI is 13x slower" reading was a configuration
+  trap, now fixed.** The first Windows run showed KNI at 23.9 ms per frame against MonoGame's
+  1.8 ms. Splitting the frame into draw / readback / present showed KNI's three parts summing to
+  about 3 ms, with 20 ms unaccounted for inside `Game.Tick()`: the XNA-family default
+  `InactiveSleepTime` of 20 ms, applied because the backend's hidden window is never the active
+  window. Setting it to zero removes it. **Any host that steps a `Game` from its own UI thread
+  must set `InactiveSleepTime = TimeSpan.Zero`**, or the canvas silently runs at ~40 fps.
+  Measured after the fix, 60-frame averages on Windows (headless test, same scene):
+
+  | Size | MonoGame DesktopGL | KNI SDL2.GL |
+  |---|---|---|
+  | 1024x720 | 1.65 ms (readback 1.23) | 1.26 ms (readback 0.77) |
+  | 3840x2160 | 10.3 ms (readback 9.7) | 7.3 ms (readback 6.7) |
+
+  Both desktop GL backends read back with `glGetTexImage` (checked in both repos), presenting
+  the hidden window costs under 0.1 ms, and draw is under 0.5 ms. **Readback is the whole cost
+  and it scales with pixel count**, so 4K at 60 Hz is feasible but not free; the real host
+  should read back only when the scene changed, as the WPF host already honours a requested
+  frame rate by skipping passes.
 
 - **Single-threaded is workable.** The `Game` never owns a loop; the host calls `Game.Tick()` from
   its UI thread after one `RunOneFrame()`. This keeps SDL and the UI toolkit on the main thread,
-  which macOS requires. `IsFixedTimeStep = false` and vsync off are needed or `Tick` sleeps.
+  which macOS requires. `IsFixedTimeStep = false`, vsync off, and `InactiveSleepTime = TimeSpan.Zero`
+  are all required or `Tick` sleeps.
 - **KNI's `GameWindow` has no `Position`**, so its 1x1 window cannot be parked off-screen the way
   the CLI parks MonoGame's. A KNI-based host needs another way to hide it (borderless + hidden,
   or a handle-less device). MonoGame's `Window.Position` works.

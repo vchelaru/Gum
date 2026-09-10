@@ -16,6 +16,7 @@
     <Compile Include="..\Shared\GumCanvasGame.cs" Link="Shared\GumCanvasGame.cs" />
     <Compile Include="..\Shared\SpikeOptions.cs" Link="Shared\SpikeOptions.cs" />
     <Compile Include="..\AvaloniaCanvasSpike.MonoGame.Tests\HeadlessRenderTests.cs" Link="HeadlessRenderTests.cs" />
+    <Compile Include="..\AvaloniaCanvasSpike.MonoGame.Tests\FrameTimingTests.cs" Link="FrameTimingTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
