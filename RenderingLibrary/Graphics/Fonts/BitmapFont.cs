@@ -153,7 +153,26 @@ public class BitmapFont : IDisposable
     /// Loads a bitmap font from a .fnt file on disk, loading the referenced texture pages.
     /// </summary>
     /// <param name="fontFile">Path to the .fnt file.</param>
-    public BitmapFont(string fontFile)
+    /// <inheritdoc cref="BitmapFont(string, bool)"/>
+    public BitmapFont(string fontFile) : this(fontFile, checkForShadowSibling: true)
+    {
+    }
+
+    /// <summary>
+    /// Loads a bitmap font from a .fnt file on disk, loading the referenced texture pages.
+    /// </summary>
+    /// <param name="fontFile">Path to the .fnt file.</param>
+    /// <param name="checkForShadowSibling">
+    /// Issue #4665: whether to probe for a "-shadow.fnt" sibling (see
+    /// <see cref="LoadShadowSiblingIfPresent"/>). The primary filename already bakes in whether a
+    /// dropshadow was requested (<c>BmfcSave.GetFontCacheFileNameFor</c> appends a "_ds{blur}"
+    /// suffix), so a dropshadow and non-dropshadow request for the same base font never share a
+    /// cache entry/instance - it's safe for a caller that knows the answer up front (e.g.
+    /// <c>CustomSetPropertyOnRenderable.GetOrCreateBakedFont</c>, from <c>TextRuntime.HasDropshadow</c>)
+    /// to skip this probe entirely rather than pay it for every font nobody ever configured with a
+    /// dropshadow. Defaults to <see langword="true"/> for callers (the tool, tests) with no such signal.
+    /// </param>
+    public BitmapFont(string fontFile, bool checkForShadowSibling)
     {
         Encoding encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
         string fontContents = ContainsAscii(fontFile) ? FileManager.FromFileText(fontFile, encoding) : FileManager.FromFileText(fontFile);
@@ -165,7 +184,10 @@ public class BitmapFont : IDisposable
 
         SetFontPattern();
 
-        LoadShadowSiblingIfPresent(fontFile);
+        if (checkForShadowSibling)
+        {
+            LoadShadowSiblingIfPresent(fontFile);
+        }
     }
 
     /// <summary>
