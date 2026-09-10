@@ -31,6 +31,19 @@ Horizons describe *confidence and proximity*, not fixed dates:
     the architecture calls are recorded in
     [ADR-0003](decisions/0003-decouple-tool-ui-from-logic.md) (the approach) and
     [ADR-0004](decisions/0004-viewmodels-expose-neutral-presentation-state.md) (the ViewModel rule).
+  - **Status (2026-09-09):** Phases 0–4b are landed (see `avalonia-migration/foundation.md`).
+    The bet this enabled is now taken — see the next item. Remaining decoupling gaps are worked as
+    part of the migration, not as a separate track.
+
+- **Cross-platform (Mac / Linux / Windows) editor on Avalonia — full cutover.** Promoted from
+  **Later** on 2026-09-09 by [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md). The
+  decoupling groundwork is done, and the macOS Wine route was measured as a dead end, so the
+  highest-ceiling option is now also the one with the clearest path. Ships natively on all three
+  OSes, then retires WPF/WinForms from the tool graph.
+  - **Plan:** [`avalonia-migration/README.md`](avalonia-migration/README.md) — twelve phases,
+    highest risk (the canvas backend) first, everything landing on `main` beside the WPF tool.
+  - **Scope discipline:** parity, not new features. Anything the WPF tool does not do today is
+    a separate roadmap item.
 
 ## Next
 
@@ -41,12 +54,7 @@ Horizons describe *confidence and proximity*, not fixed dates:
 
 ## Later
 
-- **Cross-platform (Mac / Linux) WYSIWYG editor.** Highest *ceiling* of any option — it unlocks the
-  OS-locked-out slice of the **strong** (MonoGame) audience, not a new small one — but also the
-  highest cost (the tool is WPF; cross-platform means a major lift and a permanent maintenance
-  step-up). Could be built on Gum's own Avalonia / Skia stack (ultimate dogfooding). **Needs a
-  dedicated scoping pass before committing** — see `open-questions.md`. The UI/logic decoupling now
-  in flight (see **Now**) is the enabling groundwork that lowers the cost of a future "yes."
+(The cross-platform editor moved to **Now** on 2026-09-09 — ADR-0017.)
 
 ## Parked (deliberately not now)
 

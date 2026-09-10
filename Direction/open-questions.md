@@ -6,12 +6,6 @@
 
 ## Open
 
-- **Cross-platform (Mac/Linux) editor — pursue?** Highest-ceiling bet (unlocks the OS-locked-out
-  slice of the MonoGame audience), but highest cost (WPF → cross-platform; permanent maintenance
-  step-up). Could be built on Gum's own Avalonia/Skia stack (dogfooding). Needs a dedicated
-  scoping pass before committing. Currently parked in `roadmap.md` → Later. The UI/logic decoupling
-  now in flight is no-regret groundwork that lowers the cost of a future "yes," so this decision
-  can be deferred without blocking progress.
 - **raylib — real audience, or just finish-and-ride-goodwill?** Committing to raylib as a
   strategic audience would justify raylib codegen and deeper investment; current lean is to finish
   the runtime cheaply and *not* chase it (small audience, low attention — ride the 3rd-party video
@@ -26,6 +20,10 @@
 
 ## Resolved
 
+- **Cross-platform (Mac/Linux) editor — pursue?** — settled (2026-09-09): **yes, full Avalonia
+  cutover**, WPF/WinForms retired at the end. The decoupling groundwork reached the point where
+  deferral bought no more information, and the macOS Wine path was measured as a dead end. See
+  `decisions/0017-commit-to-avalonia-full-cutover.md` and the plan in `avalonia-migration/`.
 - **North star / mission** — settled (2026-06-20): *"Gum is the visual UI editor and
   cross-framework runtime for code-first C# game frameworks — the ones that ship no UI of their
   own."* See `vision.md` (mission).

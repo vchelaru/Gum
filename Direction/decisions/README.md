@@ -37,3 +37,4 @@ re-litigating it.
 | [0014](0014-clarify-engine-scope-cost-to-integrate-not-owns-ui.md) | Clarify the engine-scope boundary: cost-to-integrate, not "ships its own UI" | Accepted | 2026-09-04 |
 | [0015](0015-treat-dispatcher-merge-as-incremental-goal.md) | Treat the Skia/core dispatcher merge as an incremental long-term goal, not a rejected option | Accepted | 2026-09-04 |
 | [0016](0016-cross-element-undo-transactions-for-cascading-deletes.md) | Cross-element undo transactions for cascading deletes | Accepted | 2026-09-09 |
+| [0017](0017-commit-to-avalonia-full-cutover.md) | Commit to a full Avalonia cutover for the Gum tool | Accepted | 2026-09-09 |

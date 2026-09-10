@@ -28,6 +28,11 @@ then open only the file relevant to the topic. You do not need to load everythin
   resolution as an ADR and link it.
 - **`decisions/`** — **Architecture Decision Records (ADRs)**: append-only, numbered records
   of significant decisions. See `decisions/README.md`.
+- **`ui-decoupling-plan.md`** — the phased UI/logic decoupling plan behind ADR-0003 (Phases 0–4b,
+  now largely complete). Living; its Phase 5 "bet" was decided by ADR-0017.
+- **`avalonia-migration/`** — the execution plan for ADR-0017: `README.md` (primary plan),
+  `foundation.md` (what is already done on `main`), and one `phase-NN-*.md` per conversion area.
+  Living. **Start here for any Avalonia / cross-platform editor work.**
 
 ## Two lifecycles (why this is a collection, not one doc)
 
