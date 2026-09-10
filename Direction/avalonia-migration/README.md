@@ -39,13 +39,23 @@ cutover) and replaces its process:
 - **The WPF tool stays shippable until the cutover PR.** No user-facing regression during the
   migration.
 - **The purity guard has three parts, and the compiler is only the first.** The head and
-  everything it references target plain `net8.0`, so a WPF/WinForms leak is a build error. But
+  everything it references target plain `net10.0`, so a WPF/WinForms leak is a build error. But
   `System.Drawing.Common`, `Microsoft.Win32.Registry`, P/Invoke, and `Process.Start("explorer.exe")`
   all compile on every TFM and fail at runtime off Windows, so a banned-API analyzer (phase 25/100)
   and non-Windows runtime tests (phase 100/110) are the other two parts. `coverage-matrix.md` lists
   every known instance and which guard catches it.
 - **Highest-risk work first.** The canvas backend spike gates the canvas integration, not the
   other way round.
+
+## Prerequisite: the tool graph targets `net10.0` (added 2026-09-09)
+
+The tool graph (`Gum`, `Gum.Presentation`, `Gum.ProjectServices`, the plugins, the tests) still
+targets `net10.0`, while the repo SDK pin, CI, and ~70 other projects are already on `net10.0`.
+.NET 8 leaves LTS support in November 2026, inside this migration's window. So before phase 20:
+one mechanical PR bumps every tool-graph project from `net10.0` / `net8.0-windows` to `net10.0` /
+`net10.0-windows`, keeps `GumFull.sln` green, and updates `CLAUDE.md`. Every phase doc's
+`net10.0` means "the plain TFM with no `-windows` suffix"; the suffix is what the compiler guard
+keys on, not the version.
 
 ## Phases
 
@@ -81,7 +91,7 @@ risk is the chance the phase changes the plan.
 
 - **10, 20, and 25 run in parallel from day one.** 10 is throwaway and touches nothing on `main`;
   20 and 25 are WPF-side changes on `main` that the head then inherits.
-- **30 needs 20** (a `net8.0` head must be able to compose the service graph). 30 does not wait
+- **30 needs 20** (a `net10.0` head must be able to compose the service graph). 30 does not wait
   on 10, but no canvas work starts until 10 returns a go.
 - **40 is decided during 30** and consumed by everything after; it is a contract, not a big code
   change, but it is the one user-facing compatibility decision in the plan.

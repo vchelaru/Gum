@@ -4,7 +4,7 @@
 
 Fix the Windows assumptions that live *below* the UI, in code both heads share: the headless
 assemblies (`Gum.Presentation`, `Gum.ProjectServices`, `ToolsUtilities`, `GumCommon`) and the
-tool-side services that will move there. None of these are caught by the `net8.0` compiler
+tool-side services that will move there. None of these are caught by the `net10.0` compiler
 boundary; they compile everywhere and fail at runtime on macOS/Linux. The audit that found them is
 `coverage-matrix.md` sections 3, 5, and 6. Added 2026-09-09 after that audit.
 

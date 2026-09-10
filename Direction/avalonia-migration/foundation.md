@@ -9,7 +9,7 @@
 ## The one-paragraph version
 
 The tool went from a WPF + WinForms hybrid with ~475 static `.Self` calls, two `WindowsFormsHost`s,
-and all logic inside the `net8.0-windows` `Gum` project, to: a headless `net8.0` `Gum.Presentation`
+and all logic inside the `net8.0-windows` `Gum` project, to: a headless `net10.0` `Gum.Presentation`
 assembly holding the ViewModels, the service interfaces, and most concrete logic (356 source files,
 939 tests); zero `WindowsFormsHost`s; a native WPF element tree bound to a plain observable node
 model; a canvas that renders to a texture, reads pixels back to CPU through a neutral interface,

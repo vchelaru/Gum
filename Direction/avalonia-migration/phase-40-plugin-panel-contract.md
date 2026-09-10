@@ -82,7 +82,7 @@ views (19 XAML) are phase 80, their tab registrations move to the new contract h
 2. Add the neutral menu API to `PluginBase`; migrate every `AddMenuItem` caller; shrink `WpfPluginBase`.
 3. Audit each row above: which tabs, menus, dialogs it creates; classify "TFM-only", "views to
    re-author", "canvas".
-4. Flip the TFM-only projects to `net8.0` now (they are cheap wins that prove the guard).
+4. Flip the TFM-only projects to `net10.0` now (they are cheap wins that prove the guard).
 5. Define the OS-portable plugin folder convention; leave the WPF post-build untouched.
 6. Draft the compatibility notice and migration guide for external plugin authors; park until the
    owner decides.
@@ -111,6 +111,6 @@ that adds a tab or menu.
 ## Done when
 
 - [ ] Every in-repo plugin adds tabs and menus through the neutral contract; `WpfPluginBase` has no members left.
-- [ ] TFM-only plugin projects target `net8.0`.
+- [ ] TFM-only plugin projects target `net10.0`.
 - [ ] Audit table above is complete and dated; each "views to re-author" row has a phase-80 issue.
 - [ ] Compatibility decision recorded as an ADR; notice drafted.

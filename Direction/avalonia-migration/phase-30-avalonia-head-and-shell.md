@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Add `Gum.Avalonia` to the repo: a `net8.0` desktop app that composes `AddGumCore()` +
+Add `Gum.Avalonia` to the repo: a `net10.0` desktop app that composes `AddGumCore()` +
 `AddGumAvalonia()`, opens a main window with the tool's panel layout, binds the existing menu
 ViewModels and command services, runs the headless startup chain, and builds on Windows, macOS, and
 Linux in CI. Panels are placeholders except where a later phase fills them. From this PR on, the
@@ -59,7 +59,7 @@ packaging (110).
 
 ## Tasks
 
-1. Scaffold `Tool/Gum.Avalonia` (`net8.0`, `Avalonia` + `Avalonia.Desktop` + `Avalonia.Skia`,
+1. Scaffold `Tool/Gum.Avalonia` (`net10.0`, `Avalonia` + `Avalonia.Desktop` + `Avalonia.Skia`,
    Fluent base theme), referencing `Gum.Presentation`, `Gum.ProjectServices`, `GumCommon`, `GumExpressions`.
 2. `AddGumAvalonia()` with the seam implementations above; composition root that mirrors
    `Program.cs` (host, `Locator.Register`, messenger, startup chain).
@@ -69,7 +69,7 @@ packaging (110).
 6. Startup chain runs to "project loaded" with placeholder panels; opening a `.gumx` from the
    command line works.
 7. CI matrix job; headless smoke test (phase 100 seed) on all three OSes.
-8. Update `CLAUDE.md` Building and Testing for the new head; note that `Gum.Avalonia` is `net8.0`
+8. Update `CLAUDE.md` Building and Testing for the new head; note that `Gum.Avalonia` is `net10.0`
    and has no `$(SolutionDir)` post-build.
 
 ## Key files
@@ -87,7 +87,7 @@ its first build). Does not need phase 10, but nothing canvas-related is added he
 ## Risks
 
 - `ICollectionView` and other `System.Windows.Data` types in VM public surfaces are compile errors
-  under `net8.0`; each is an ADR-0004 fix on the WPF side first.
+  under `net10.0`; each is an ADR-0004 fix on the WPF side first.
 - Two heads sharing one `DialogViewResolver` need an unambiguous view-lookup rule per assembly.
 - macOS runners are slower and scarcer; keep the head's CI job small (build + smoke only).
 

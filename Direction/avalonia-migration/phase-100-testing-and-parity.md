@@ -41,7 +41,7 @@ packaging.
   (drag, resize, DPI) stays a manual checklist per phase 50.
 - **A banned-API analyzer is part of the guard, because the compiler is not enough.**
   `System.Drawing.Common`, `Microsoft.Win32.Registry`, `System.Management`, P/Invoke, and literal
-  `*.exe` process launches all compile under `net8.0` and fail at runtime off Windows
+  `*.exe` process launches all compile under `net10.0` and fail at runtime off Windows
   (`coverage-matrix.md` §8). Phase 25 seeds the list on the headless projects; this phase
   enforces it on the head and every project it references, in CI, as a build error.
 - **Non-Windows runtime tests are the final guard.** The full-startup test runs on macOS and Linux
@@ -50,7 +50,7 @@ packaging.
   phase 25's case-mismatch error is exercised on Linux.
 - **`GumToolUnitTests` is split, not ported.** Logic tests move to `Gum.Presentation.Tests`;
   WPF-view tests stay in the Windows-only project until cutover deletes them with the views;
-  Avalonia-view tests go in a new `Tests/Gum.Avalonia.Tests` (net8.0, `Avalonia.Headless`).
+  Avalonia-view tests go in a new `Tests/Gum.Avalonia.Tests` (net10.0, `Avalonia.Headless`).
 - **Seam-contract tests run against both implementations** where the seam is testable without a
   window: `IDialogService` (result routing), `IClipboardService`, `IThemingService`,
   `ITabManager` (tab model), `IInputHostControl` (coordinate math).

@@ -10,7 +10,7 @@
 
 ## Legend for "Guard"
 
-- **TFM** — caught by the compiler once the consumer targets plain `net8.0` (WPF, WinForms,
+- **TFM** — caught by the compiler once the consumer targets plain `net10.0` (WPF, WinForms,
   `net8.0-windows` project references).
 - **Analyzer** — compiles fine on any TFM, throws or misbehaves at runtime off Windows; caught only
   by a banned-API analyzer (phase 100) or a non-Windows runtime test.
@@ -39,7 +39,7 @@
 | `Tool/HtmlToGum` | WPF + WinForms | inherits `WpfPluginBase` for menus; `cmd.exe /c npm install` | 40 (menu contract), 25 (shell) | TFM + Runtime |
 | `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | mixes view tests and logic tests | 100 (split), 120 (delete view tests) | TFM |
 
-Already `net8.0` and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
+Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
 `Gum.ProjectServices.MonoGame/SkiaGum`, `Gum.Cli`, `Gum.ImageDiff`, `GumExpressions`,
 `CommonFormsAndControls` (empty), `KniGum`, `MonoGameGum`, `SkiaGum*`, `Gum.FormsStaging`.
 
@@ -121,7 +121,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 
 ## 8. What the compiler will not catch — the purity guard has three parts
 
-1. **TFM** (`net8.0` head and every reference) — catches groups 1 and 2.
+1. **TFM** (`net10.0` head and every reference) — catches groups 1 and 2.
 2. **Banned-API analyzer** in the head graph (phase 100): `System.Drawing.Bitmap/Graphics/Image/
    FontFamily`, `Microsoft.Win32.Registry*`, `System.Management.*`, `DllImport`/`LibraryImport`
    outside an explicitly per-OS file, `Process.Start` with a literal `*.exe`, string literals

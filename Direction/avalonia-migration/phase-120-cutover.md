@@ -54,7 +54,7 @@ verification on all three OSes, release notes announcing the change and the plug
    with `Gum.Cli` bundled.
 3. Workflows: `build-and-test.yaml` tool job → three-OS Avalonia build + tests;
    `build-and-release.yml` → Avalonia artifacts only.
-4. Delete the retired projects and files; flip every remaining tool-graph csproj to `net8.0`.
+4. Delete the retired projects and files; flip every remaining tool-graph csproj to `net10.0`.
 5. Re-run the `coverage-matrix.md` sweep on the tool graph: `UseWPF`, `UseWindowsForms`,
    `System.Windows`, `net8.0-windows`, `System.Drawing.Common`, `Microsoft.Win32`,
    `System.Management`, `DllImport`/`LibraryImport`, `explorer.exe`, `cmd.exe`, literal `.exe`

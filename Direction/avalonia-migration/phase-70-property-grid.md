@@ -26,7 +26,7 @@ After the canvases, this is the largest job in the plan.
   getters/setters, per-member editor selection, and 16 custom editors (angle, color channels,
   file pickers, string lists, toggle-button options, plus/minus boxes, sliders, nullable bools).
   A generic reflection grid would still need every one of those ported.
-- **Port the model first, as a `net8.0` assembly.** `InstanceMember`, `CompositeInstanceMember`,
+- **Port the model first, as a `net10.0` assembly.** `InstanceMember`, `CompositeInstanceMember`,
   `MemberCategory`, `IMemberDefinition*`, `TypeMemberDisplayProperties`, and the editor-selection
   logic move out of `WpfDataUi` into a neutral project (`DataUi.Core`, or into `Gum.Presentation`
   if the dependency direction allows), with the `System.Windows` usings on `MemberCategory` /

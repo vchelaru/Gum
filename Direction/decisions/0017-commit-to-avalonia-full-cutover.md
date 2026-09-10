@@ -48,7 +48,7 @@ Execution rules, all binding:
   rendering to a render target, read back to CPU, and presented in an Avalonia bitmap on macOS or
   Linux is the single novel risk. It gates everything after it. Fallback: render the editor canvas
   through SkiaGum (Gum's own Skia runtime), accepting a bitmap-font fidelity gap to close.
-- **Compiler-enforced boundary, not convention.** The head targets plain `net8.0`; anything it
+- **Compiler-enforced boundary, not convention.** The head targets plain `net10.0`; anything it
   references must too. That is the purity guard. No custom scanner.
 - **ViewModels and services are reused unchanged (ADR-0004/0005).** Only views (AXAML), the
   framework-specific seam implementations, the property grid, and the plugin panel contract are
@@ -63,7 +63,7 @@ The plan, phase docs, and the inventory of already-finished work live in
 ## Consequences
 
 - **Easier:** Mac and Linux users get a native editor; the tool's audience stops being OS-gated.
-  The `net8.0` head makes every remaining WPF leak a compile error. Plugin authors get one
+  The `net10.0` head makes every remaining WPF leak a compile error. Plugin authors get one
   cross-platform contract.
 - **Harder / cost:** a large, multi-month lift dominated by the canvas backend, the property-grid
   re-author, ~83 XAML files to re-author as AXAML, and eleven plugin projects to de-WPF. Packaging
@@ -83,7 +83,7 @@ The plan, phase docs, and the inventory of already-finished work live in
   duplicates what `Gum.Presentation` already did more correctly. Salvage the docs, drop the code.
 - **Fix the tool under Wine (Direct3D 9.3 path, DXVK, GPTK/CrossOver).** Rejected: measured dead end
   on vanilla Wine + MoltenVK; GPTK/CrossOver are third-party, paid, and still not native.
-- **Multi-target the existing `Gum` project (`net8.0;net8.0-windows`) with `#if` guards.** Rejected:
+- **Multi-target the existing `Gum` project (`net10.0;net8.0-windows`) with `#if` guards.** Rejected:
   `UseWPF`/`UseWindowsForms` cannot be cleanly conditioned and the view code would need pervasive
   `#if`; a separate head is cleaner.
 - **A web-hosted editor (KNI's Blazor/WASM target).** Not rejected forever, but out of scope: a

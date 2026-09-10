@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Let a plain `net8.0` head compose the tool's service graph. Today all 127 DI registrations live in
+Let a plain `net10.0` head compose the tool's service graph. Today all 127 DI registrations live in
 `Gum/Services/Builder.cs` inside the `net8.0-windows` WPF project, and the startup sequence lives in
-`Gum/Program.cs`. A `net8.0` project cannot reference either. This was the blocker the stalled
+`Gum/Program.cs`. A `net10.0` project cannot reference either. This was the blocker the stalled
 branch hit as "Phase 8" and estimated as the biggest job in the migration; on `main` it is now a
 relocation, because the service *implementations* have already moved to `Gum.Presentation`.
 
 ## Builds on
 
-- `Gum.Presentation` (net8.0) holds the interfaces and most concrete services (foundation.md).
+- `Gum.Presentation` (`net8.0` today, `net10.0` after the prerequisite bump) holds the interfaces and most concrete services (foundation.md).
 - Seam interfaces already exist for the framework-specific pieces: `IDispatcher`, `IDialogService`,
   `IClipboardService`, `ISpinnerFactory`, `IAppScaleProvider`, `IRenderDiagnosticsService`,
   `IThemingService`, `ITabManager`, `IInputHostControl`. Their WPF implementations sit in
@@ -48,7 +48,7 @@ relocation, because the service *implementations* have already moved to `Gum.Pre
 ## Scope
 
 **In:** `Builder.cs` split; helpers relocated; `Program.InitializeGum` extracted; VM scan covers
-both assemblies; `GumFull.sln` green and tool behavior identical; a `net8.0` test proves
+both assemblies; `GumFull.sln` green and tool behavior identical; a `net10.0` test proves
 `AddGumCore()` composes without WPF (resolve every core interface in a headless container with
 stub seams).
 
@@ -57,6 +57,9 @@ the relocation forces.
 
 ## Tasks
 
+0. Prerequisite (own PR, before anything else here): bump the tool graph from `net10.0` /
+   `net8.0-windows` to `net10.0` / `net10.0-windows` (see the README prerequisite). Mechanical;
+   `GumFull.sln` green; `CLAUDE.md` build notes updated.
 1. Classify each of the 127 registrations: core (impl in `Gum.Presentation`/`Gum.ProjectServices`/
    `GumCommon`), WPF seam impl, or "still in `Gum/`, not a seam." Record the third list as issues.
 2. Create `AddGumCore()` in `Gum.Presentation`; move the core registrations and the reflection helpers.
@@ -80,13 +83,13 @@ None. Runs in parallel with phase 10. **Blocks phase 30.**
 
 ## Risks
 
-- Hidden WPF in a "core" implementation surfaces only when compiled under `net8.0`; that is the
+- Hidden WPF in a "core" implementation surfaces only when compiled under `net10.0`; that is the
   point, but it may lengthen the "not yet movable" list. Fix each as a decoupling PR, don't `#if`.
 - Startup order faults are silent under WPF today; the extracted sequence must not reorder anything.
 
 ## Done when
 
 - [ ] `AddGumCore()` lives in `Gum.Presentation`; `AddGumWpf()` in `Gum/`; `GumFull.sln` green; tool identical.
-- [ ] Headless composition test passes on a `net8.0` runner.
+- [ ] Headless composition test passes on a `net10.0` runner.
 - [ ] `InitializeGum` runs from a headless class; WPF `Program.cs` is a thin caller.
 - [ ] The "not yet movable" list is issues, and its count is in this doc with a date.

@@ -22,7 +22,7 @@ low risk per file and wide.
 ## Decisions
 
 - **One AXAML per XAML, same VM, same name, in the Avalonia head** (or in the plugin project once
-  it is `net8.0`), so the mapping is mechanical and reviewable file by file.
+  it is `net10.0`), so the mapping is mechanical and reviewable file by file.
 - **Converters are rewritten as Avalonia `IValueConverter`s once, in a shared head folder.** Many of
   the 14 `Gum/Converters` plus 8 `PropertyGridHelpers/Converters` and 5 theme converters exist to
   turn neutral VM state into WPF types; where a converter only existed to bridge a type ADR-0004 has
@@ -66,8 +66,8 @@ Themes (15) are phase 90; `WpfDataUi` (18) is phase 70; the two canvas views are
 3. Panels in the order above; register each through the phase-40 tab contract.
 4. Dialogs: delete-options, references, add/import/rename, project properties, theming, hotkeys,
    plugins; all through `IDialogService`.
-5. State Animation plugin views; make the project `net8.0` when its last WPF reference is gone.
-6. Remaining plugin views; flip each project to `net8.0` as it clears.
+5. State Animation plugin views; make the project `net10.0` when its last WPF reference is gone.
+6. Remaining plugin views; flip each project to `net10.0` as it clears.
 7. Small controls (spinner, warning bars, color swatch) as Avalonia `UserControl`s or templated controls.
 
 ## Key files
@@ -91,4 +91,4 @@ Blocks phase 100's per-panel parity checklist.
 
 - [ ] Every XAML in the table has an AXAML twin bound to the same VM, or a documented reason it does not exist.
 - [ ] Converters folder has no bridge-only converters left.
-- [ ] Every plugin project that has no canvas is `net8.0`.
+- [ ] Every plugin project that has no canvas is `net10.0`.

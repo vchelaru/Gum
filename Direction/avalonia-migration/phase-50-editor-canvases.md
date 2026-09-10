@@ -28,7 +28,7 @@ the interaction model. This is the largest single body of work in the plan.
 - **One shared `GraphicsDevice` per process, both canvases on it.** Same as today via
   `GraphicsDeviceService`; a second device would split `LoaderManager`'s texture cache. Phase 10
   confirms two render targets on one device.
-- **`XnaAndWinforms`, `InputLibrary`, and `FlatRedBall.SpecializedXnaControls` become `net8.0`.**
+- **`XnaAndWinforms`, `InputLibrary`, and `FlatRedBall.SpecializedXnaControls` become `net10.0`.**
   The device service, the render-surface host base, `Cursor`, `IInputHostControl`, and
   `ImageRegionSelectionControl`'s logic are needed by the Avalonia head, so they cannot stay
   `net8.0-windows`. Split each into a neutral core (kept name) and a WPF adapter file that moves to
@@ -50,14 +50,14 @@ the interaction model. This is the largest single body of work in the plan.
 
 **In:** Avalonia render-surface host; Avalonia input host adapter; both canvases hosted as tabs via
 the phase-40 contract; scroll bars in Avalonia bound to `ScrollBarLogic`; drop reader; DPI and
-resize correctness; the two helper projects made `net8.0`; the second canvas's own overlays
+resize correctness; the two helper projects made `net10.0`; the second canvas's own overlays
 (background, line grid, nine-slice guide, texture outline) rendering.
 
 **Out:** rewriting any input handler; new canvas features; theming of the canvas chrome (90).
 
 ## Tasks
 
-1. Split `XnaAndWinforms` → neutral `GraphicsDeviceService` + render-surface base (`net8.0`) and a
+1. Split `XnaAndWinforms` → neutral `GraphicsDeviceService` + render-surface base (`net10.0`) and a
    WPF-only host file in `Gum/`; same for `InputLibrary` (`Cursor`, `IInputHostControl` neutral;
    `WpfInputHostAdapter` moves to `Gum/`). Keep the WPF tool identical.
 2. Avalonia render-surface host: `WriteableBitmap` writer, render-loop trigger, resize, DPI.
@@ -98,5 +98,5 @@ and the cutover bar. Phase 60's drag-drop needs the drop reader from here.
 ## Done when
 
 - [ ] Both canvases render, select, move, resize, rotate, drop, zoom, scroll on all three OSes.
-- [ ] `XnaAndWinforms` and `InputLibrary` are `net8.0`; the WPF tool is unchanged.
+- [ ] `XnaAndWinforms` and `InputLibrary` are `net10.0`; the WPF tool is unchanged.
 - [ ] Per-OS quirk list recorded; no feature-flagged-off canvas behavior.
