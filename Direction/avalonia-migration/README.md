@@ -50,9 +50,9 @@ cutover) and replaces its process:
 ## Prerequisite: the tool graph targets `net10.0` (added 2026-09-09)
 
 The tool graph (`Gum`, `Gum.Presentation`, `Gum.ProjectServices`, the plugins, the tests) still
-targets `net10.0`, while the repo SDK pin, CI, and ~70 other projects are already on `net10.0`.
+targets `net8.0`, while the repo SDK pin, CI, and ~70 other projects are already on `net10.0`.
 .NET 8 leaves LTS support in November 2026, inside this migration's window. So before phase 20:
-one mechanical PR bumps every tool-graph project from `net10.0` / `net8.0-windows` to `net10.0` /
+one mechanical PR bumps every tool-graph project from `net8.0` / `net8.0-windows` to `net10.0` /
 `net10.0-windows`, keeps `GumFull.sln` green, and updates `CLAUDE.md`. Every phase doc's
 `net10.0` means "the plain TFM with no `-windows` suffix"; the suffix is what the compiler guard
 keys on, not the version.
