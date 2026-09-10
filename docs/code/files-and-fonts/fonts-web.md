@@ -23,7 +23,7 @@ The reasoning is that **bandwidth dominates page-load perception**. A small `.tt
 
 ## Loose Projects and Per-File Round Trips
 
-The tradeoff above is about bandwidth and CPU. A loose `.gumx`/`.gumj` project adds a separate cost on streaming-only platforms (Blazor WASM, and Android and iOS): every file check becomes a network round trip instead of a local disk read. This includes each `.fnt`/`.png` load, and, unconditionally, the sibling `-shadow.fnt` probe Gum runs on every font load. A slow or failing round trip stalls the frame it happens on, so a screen that creates several new font sizes at once can visibly hitch even when the files involved are small.
+The tradeoff above is about bandwidth and CPU. A loose `.gumx`/`.gumj` project adds a separate cost on streaming-only platforms (Blazor WASM, and Android and iOS): every file check becomes a network round trip instead of a local disk read. This includes each `.fnt`/`.png` load, plus the sibling `-shadow.fnt` load Gum makes for a font configured with a drop shadow. A slow or failing round trip stalls the frame it happens on, so a screen that creates several new font sizes at once can visibly hitch even when the files involved are small.
 
 Pack the project into a `.gumpkg` bundle for these platforms. Gum downloads the bundle once and serves every element, texture, and font from an in-memory index afterward, so file checks no longer touch the network at all. See [Loading from a `.gumpkg` Bundle](file-loading.md#loading-from-a-gumpkg-bundle) and the [pack](../../cli/pack.md) command reference.
 
