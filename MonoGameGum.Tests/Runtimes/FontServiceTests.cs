@@ -1,6 +1,9 @@
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
 using Gum.GueDeriving;
+using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
 using Moq;
 using RenderingLibrary.Content;
@@ -934,6 +937,78 @@ public class FontServiceTests : BaseTestClass
 
         capturedCalls.ShouldNotBeEmpty();
         capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 24);
+    }
+
+    #endregion
+
+    #region SetGraphicalUiElement / ElementSave Construction (issue #4665)
+
+    // Builds a ScreenSave that stacks `childCount` Container children top-to-bottom, sized to
+    // fit its children - the classic shape where adding each child forces the parent (and thus
+    // every already-placed sibling's stacked position) to re-layout, per the gum-layout skill's
+    // "avoid O(n^2) recalculations" note. Mirrors HotReloadStructuralDiffTests' EnsureStandard/
+    // AddInstance helpers.
+    private static GraphicalUiElement BuildStackedScreen(int childCount)
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+        project.StandardElements.Add(containerStandard);
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            Type = "ChildrenLayout",
+            SetsValue = true
+        });
+        screen.States.Add(screenDefault);
+        project.Screens.Add(screen);
+
+        for (int i = 0; i < childCount; i++)
+        {
+            string name = $"Child{i}";
+            InstanceSave instance = new InstanceSave { Name = name, BaseType = "Container", ParentContainer = screen };
+            screen.Instances.Add(instance);
+
+            screenDefault.Variables.Add(new VariableSave { Name = $"{name}.Width", Value = 50f, Type = "float", SetsValue = true });
+            screenDefault.Variables.Add(new VariableSave { Name = $"{name}.Height", Value = 50f, Type = "float", SetsValue = true });
+        }
+
+        return screen.ToGraphicalUiElement();
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldNotScaleLayoutCallsWithChildCount()
+    {
+        // Issue #4665: SetGraphicalUiElement (the runtime path every non-codegen game/Forms
+        // VisualTemplate uses to inflate a component/screen from an ElementSave) adds and sets
+        // up each child one at a time with layout never suspended, so a stacking parent
+        // re-computes its stacked layout - touching every already-placed sibling - once per
+        // child added. That is the O(n^2)-shaped waste GraphicalUiElement.IsAllLayoutSuspended
+        // exists to avoid (see the "Layout Suspension" notes in the gum-layout skill and
+        // Tools/Gum.Presentation/Wireframe/WireframeObjectManager.cs's RefreshAll, which already
+        // wraps its own equivalent tree-build this way). SetGraphicalUiElement should do the same
+        // internally so per-child cost stays flat regardless of how many children are inflated.
+        int before3 = GraphicalUiElement.UpdateLayoutCallCount;
+        BuildStackedScreen(3);
+        int callsFor3 = GraphicalUiElement.UpdateLayoutCallCount - before3;
+
+        int before15 = GraphicalUiElement.UpdateLayoutCallCount;
+        BuildStackedScreen(15);
+        int callsFor15 = GraphicalUiElement.UpdateLayoutCallCount - before15;
+
+        double perChildFor3 = callsFor3 / 3.0;
+        double perChildFor15 = callsFor15 / 15.0;
+
+        // With the whole tree-build batched into a single suspend/resume, per-child cost should
+        // not grow with the number of children (allow some slack for the fixed setup overhead).
+        perChildFor15.ShouldBeLessThanOrEqualTo(perChildFor3 * 1.5,
+            $"per-child layout calls should stay roughly flat as child count grows (3 children: {callsFor3} calls, {perChildFor3:F1}/child; 15 children: {callsFor15} calls, {perChildFor15:F1}/child)");
     }
 
     #endregion
