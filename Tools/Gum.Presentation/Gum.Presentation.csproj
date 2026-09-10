@@ -52,6 +52,9 @@
 		     through ILogger. Both are abstractions-only packages with no framework dependency. -->
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+		<!-- WritableOptions<T> binds a configuration section and writes it back; ConfigurationExtensions
+		     supplies services.Configure<T>(IConfiguration) and pulls Configuration.Abstractions in. -->
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
 		<!-- Cross-platform purity guard (Direction/avalonia-migration/coverage-matrix.md section 8):
 		     System.Drawing.Common's GDI+ types, the registry, and P/Invoke compile on any TFM but
 		     fail at runtime off Windows, so the compiler alone cannot keep this assembly portable.

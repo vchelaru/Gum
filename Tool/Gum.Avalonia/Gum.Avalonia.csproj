@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.Avalonia: the cross-platform (Windows / macOS / Linux) head of the Gum tool. See
+		Direction/avalonia-migration/README.md. It composes the same headless service graph as the
+		WPF head (Gum.Presentation's AddGumCore) and supplies Avalonia implementations of every
+		contract in GumCoreServiceCollectionExtensions.HeadProvidedContracts.
+
+		This project targets plain net10.0 and must never reference WPF, WinForms, or any
+		net10.0-windows project. The banned-symbol list turns the runtime-only Windows APIs into
+		build errors as well.
+	-->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<AssemblyName>Gum.Avalonia</AssemblyName>
+		<RootNamespace>Gum.Avalonia</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+		<NoWarn>1591</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+		<ProjectReference Include="..\..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
+	</ItemGroup>
+
+</Project>

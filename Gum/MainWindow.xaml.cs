@@ -126,7 +126,6 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
     }
 }
 
-public record ThemeChangedMessage(IEffectiveThemeSettings settings);
 
 
 //// Need this to respect taskbar in maximized state while using custom window chrome

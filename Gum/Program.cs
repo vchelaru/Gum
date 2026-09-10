@@ -140,11 +140,4 @@ namespace Gum
         public const int Success = 0;
         public const int UnexpectedFailure = 1;
     }
-
-    public record ApplicationStartupMessage;
-
-    public class ApplicationTeardownMessage(List<Action> teardownList)
-    {
-        public void OnTearDown(Action action) => teardownList.Add(action);
-    }
 }

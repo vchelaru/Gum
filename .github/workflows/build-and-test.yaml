@@ -57,6 +57,37 @@ jobs:
           reporter: dotnet-trx
           fail-on-error: true
 
+  # The Avalonia head (Direction/avalonia-migration/phase-30) must build and its headless tests must
+  # pass on all three desktop OSes from the first PR that adds it. Plain net10.0, no submodules, no
+  # workloads; the matrix is what proves the purity guard (a WPF/WinForms leak fails on macOS/Linux).
+  Build-Avalonia-Head:
+    if: github.event_name != 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build Gum.Avalonia
+        run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
+      - name: Gum.Avalonia.Tests (headless)
+        run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Tests Avalonia head (${{ matrix.os }})
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
   # End-to-end Native AOT smoke test for issue #4105: RegisterRuntimeTypesThroughReflection walked
   # every loaded assembly via unguarded reflection, which crashed GumService.Initialize under
   # Native AOT when it hit trimmed framework metadata - a failure mode only a real `dotnet publish

@@ -1,5 +1,21 @@
 # Phase 30 — The Avalonia head and shell
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work`. `Tool/Gum.Avalonia` (plain `net10.0`,
+> code-only Avalonia 11.3, in `Gum.sln` and `GumFull.sln`) composes `AddGumCore()` +
+> `AddGumAvalonia()`, opens the five-region shell with the standard menus, runs the shared
+> `GumStartupSequence`, and captures itself with `--exit-after`/`--screenshot`. Seam
+> implementations: dispatcher, clipboard, app scale, theming (Fluent variant + accent resources,
+> OS dark mode from platform settings), modifier keys, trash (recycle bin / Finder / `gio`), status
+> bar spinner, GUI commands, a synchronous dialog service over Avalonia's async dialogs (nested
+> dispatcher loop), a dialog-view registry with the four generic dialogs, delete confirmation, and
+> the tab manager. The standard menus are now a neutral `MenuModel` built by
+> `StandardMenuModelBuilder` in `Gum.Presentation` (the WPF `MenuStripManager` still builds its own
+> WPF items; phase 40 switches it to the model). `IWritableOptions`, the app messages, and the
+> palette message moved to `Gum.Presentation`. `Tests/Gum.Avalonia.Tests` (Avalonia.Headless.XUnit)
+> proves every `HeadProvidedContracts` entry resolves and the window constructs; CI builds and tests
+> the head on Windows, macOS, and Linux. Placeholders: no plugins load yet (`NullPluginManager`,
+> phase 40), no tree/grid/canvas panels (60/70/50), Fluent's default chrome and dark palette (90).
+
 ## Purpose
 
 Add `Gum.Avalonia` to the repo: a `net10.0` desktop app that composes `AddGumCore()` +
