@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>AvaloniaCanvasSpike.Tests</RootNamespace>
+    <DefineConstants>$(DefineConstants);KNI_BACKEND</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Same renderer and the same test as the MonoGame test project, compiled against KNI. -->
+    <Compile Include="..\Shared\ICanvasRenderer.cs" Link="Shared\ICanvasRenderer.cs" />
+    <Compile Include="..\Shared\GumCanvasGame.cs" Link="Shared\GumCanvasGame.cs" />
+    <Compile Include="..\Shared\SpikeOptions.cs" Link="Shared\SpikeOptions.cs" />
+    <Compile Include="..\AvaloniaCanvasSpike.MonoGame.Tests\HeadlessRenderTests.cs" Link="HeadlessRenderTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
+    <PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
+    <PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="4.2.9001.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\MonoGameGum\KniGum\KniGum.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
+  </ItemGroup>
+
+</Project>

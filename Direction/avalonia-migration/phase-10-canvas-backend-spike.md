@@ -88,8 +88,32 @@ shell, anything in `Gum.Avalonia`. Removing any sanctioned singleton.
 8. Write the recommendation: backend package, device-creation path that worked, Option A vs B,
    latency numbers, fallback triggered or not. Update phase 50 accordingly.
 
+## Spike status (2026-09-09, Windows only so far)
+
+The spike exists at `spikes/AvaloniaCanvasSpike/` (README there). Two heads share one source:
+MonoGame DesktopGL and KNI `nkast.Kni.Platform.SDL2.GL` 4.2.9001.1 (the package name is now
+confirmed; it is the same KNI version the tool ships). Verified on Windows by `dotnet build` of
+both heads and `dotnet test` of a headless test per backend that creates the device with no host
+window, renders the MonoGameGumFromFile sample screen to a render target, reads it back, and
+hit-tests the centre pixel. **Both backends pass.** The Avalonia window itself has not been run
+here (GUI launches are the owner's step); macOS and Linux runs are still open.
+
+Findings so far:
+
+- **Single-threaded is workable.** The `Game` never owns a loop; the host calls `Game.Tick()` from
+  its UI thread after one `RunOneFrame()`. This keeps SDL and the UI toolkit on the main thread,
+  which macOS requires. `IsFixedTimeStep = false` and vsync off are needed or `Tick` sleeps.
+- **KNI's `GameWindow` has no `Position`**, so its 1x1 window cannot be parked off-screen the way
+  the CLI parks MonoGame's. A KNI-based host needs another way to hide it (borderless + hidden,
+  or a handle-less device). MonoGame's `Window.Position` works.
+- **`GumService.Initialize(GraphicsDevice, projectFile)` exists** as a `Game`-free overload. If
+  a `GraphicsDevice` can be created without a `Game` on SDL2.GL, the spike's `Game` wrapper goes
+  away entirely. Not tried yet.
+- Both backends need `HiDef` for Apos.Shapes (#4403), same as the CLI.
+
 ## Key files
 
+- `spikes/AvaloniaCanvasSpike/` — the spike (shared source, two heads, two headless test projects)
 - `Tools/Gum.ProjectServices.MonoGame/MonoGameScreenshotService.cs` — the proven cross-platform device path
 - `.github/workflows/build-and-test.yaml` — the Mesa software-GL override used for GL tests on Windows runners
 - `XnaAndWinforms/GraphicsDeviceService.cs`, `WpfGraphicsDeviceControl.cs`, `WpfRenderSurfaceHost.cs`
@@ -113,6 +137,7 @@ acceptance bar. A no-go with fallback (3) triggered also changes phase 30's Skia
 
 ## Done when
 
+- [x] A `GraphicsDevice` is created on **Windows** with no WinForms handle on both backends (headless tests, 2026-09-09).
 - [ ] A `GraphicsDevice` is created on macOS and/or Linux with no WinForms handle, and the path is written down.
 - [ ] A real Gum screen renders in an Avalonia window on that OS; click selects the right element at 100/150/200%.
 - [ ] Drag latency and frame time are recorded for 1080p and 4K on that OS.

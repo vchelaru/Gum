@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>AvaloniaCanvasSpike.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Only the renderer, not the Avalonia host: this proves device creation, render, readback,
+         and hit testing headlessly, the same way Gum.Cli.Tests exercises the CLI renderer. -->
+    <Compile Include="..\Shared\ICanvasRenderer.cs" Link="Shared\ICanvasRenderer.cs" />
+    <Compile Include="..\Shared\GumCanvasGame.cs" Link="Shared\GumCanvasGame.cs" />
+    <Compile Include="..\Shared\SpikeOptions.cs" Link="Shared\SpikeOptions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+    <ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+    <ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+  </ItemGroup>
+
+</Project>
