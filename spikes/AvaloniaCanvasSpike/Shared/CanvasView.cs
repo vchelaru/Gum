@@ -29,7 +29,7 @@ public sealed class CanvasView : Grid
     private WriteableBitmap? _bitmap;
     private GraphicalUiElement? _selected;
     private double _scaling;
-    private Size _lastLayoutSize;
+    private string _lastError;
 
     /// <summary>Creates the view; the renderer is created on first attach to a window.</summary>
     public CanvasView(Func<ICanvasRenderer> rendererFactory)
@@ -37,7 +37,7 @@ public sealed class CanvasView : Grid
         _rendererFactory = rendererFactory;
         _recentFrameTimes = new Queue<double>();
         _scaling = 1.0;
-        _lastLayoutSize = default;
+        _lastError = "";
 
         Background = Brushes.Black;
         ClipToBounds = true;
@@ -68,7 +68,7 @@ public sealed class CanvasView : Grid
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Bottom,
             IsHitTestVisible = false,
-            FontFamily = new FontFamily("monospace"),
+            Text = "starting...",
         };
 
         Children.Add(_image);
@@ -79,7 +79,7 @@ public sealed class CanvasView : Grid
         {
             Interval = TimeSpan.FromMilliseconds(1000.0 / 60.0),
         };
-        _frameTimer.Tick += (_, _) => RenderAndPresent();
+        _frameTimer.Tick += (_, _) => Guarded(RenderAndPresent);
 
         Focusable = true;
     }
@@ -90,9 +90,27 @@ public sealed class CanvasView : Grid
         base.OnAttachedToVisualTree(e);
         TopLevel? topLevel = TopLevel.GetTopLevel(this);
         _scaling = topLevel?.RenderScaling ?? 1.0;
-        _renderer = _rendererFactory();
-        ResizeToBounds();
+        Guarded(() =>
+        {
+            _renderer = _rendererFactory();
+            ResizeToBounds();
+        });
         _frameTimer.Start();
+    }
+
+    private void Guarded(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception exception)
+        {
+            // The spike's job is to surface what breaks on each OS, so show it instead of dying.
+            _lastError = exception.ToString();
+            _status.Text = _lastError;
+            _frameTimer.Stop();
+        }
     }
 
     /// <inheritdoc/>
@@ -107,15 +125,11 @@ public sealed class CanvasView : Grid
     }
 
     /// <inheritdoc/>
-    protected override Size ArrangeOverride(Size finalSize)
+    protected override void OnSizeChanged(SizeChangedEventArgs e)
     {
-        Size arranged = base.ArrangeOverride(finalSize);
-        if (arranged != _lastLayoutSize)
-        {
-            _lastLayoutSize = arranged;
-            ResizeToBounds();
-        }
-        return arranged;
+        base.OnSizeChanged(e);
+        // Bounds is only current after arrange completes, which is when this fires.
+        ResizeToBounds();
     }
 
     /// <inheritdoc/>
@@ -151,7 +165,7 @@ public sealed class CanvasView : Grid
 
     private void ResizeToBounds()
     {
-        if (_renderer == null || Bounds.Width < 1 || Bounds.Height < 1)
+        if (_renderer == null || Bounds.Width < 1 || Bounds.Height < 1 || _lastError.Length > 0)
         {
             return;
         }
@@ -179,8 +193,13 @@ public sealed class CanvasView : Grid
 
     private void RenderAndPresent()
     {
-        if (_renderer == null || _bitmap == null)
+        if (_renderer == null)
         {
+            return;
+        }
+        if (_bitmap == null)
+        {
+            _status.Text = $"waiting for layout (bounds {Bounds.Width:0}x{Bounds.Height:0}, scale {_scaling:0.##})";
             return;
         }
 
