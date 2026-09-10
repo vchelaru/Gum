@@ -1012,4 +1012,96 @@ public class FontServiceTests : BaseTestClass
     }
 
     #endregion
+
+    #region Lazy Shadow-Sibling Probe (issue #4665)
+
+    [Fact]
+    public void FontResolution_ShouldNotProbeForShadow_WhenHasDropshadowIsFalse()
+    {
+        // Issue #4665: BitmapFont's shadow-sibling probe used to run unconditionally on every font
+        // load, even for fonts nobody ever configured with a dropshadow. Font resolution should now
+        // only check for a shadow when the resolving Text actually wants one.
+        TextRuntime textRuntime = new();
+
+        int shadowProbeCount = 0;
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbeCount++;
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            // "Arial"/18 is TextRuntime's own default, resolved via the embedded resource (or the
+            // cache LoaderManager already seeded from it) - no disk I/O for the primary font, so any
+            // probe counted here can only be the shadow-sibling check.
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 18;
+
+            shadowProbeCount.ShouldBe(0, "no dropshadow was requested, so the shadow-sibling probe should never fire");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    [Fact]
+    public void FontResolution_ShouldProbeForShadow_WhenHasDropshadowIsTrue()
+    {
+        // Companion to the above: resolving a font that isn't the embedded default goes through
+        // CustomSetPropertyOnRenderable.GetOrCreateBakedFont's disk-load path, which now decides
+        // whether to check for a "-shadow.fnt" sibling based on TextRuntime.HasDropshadow. A
+        // zero-page .fnt keeps this test out of MonoGame texture loading (no real GraphicsDevice is
+        // set up by GumService.InitializeForTesting).
+        TextRuntime textRuntime = new();
+        textRuntime.HasDropshadow = true;
+
+        const string zeroPageFntContent =
+            "info face=\"GumFontResolutionTest4665\" size=-14 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=16 base=12 scaleW=1 scaleH=1 pages=0 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "chars count=0\n";
+
+        int shadowProbeCount = 0;
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbeCount++;
+                    throw new System.IO.FileNotFoundException();
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(zeroPageFntContent));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            // A single property change - unsuspended, each font-affecting property change triggers
+            // its own resolution (see the "Layout Suspension / Font Batching" region above), so
+            // setting only one keeps this test's probe count meaningful.
+            textRuntime.Font = "GumFontResolutionTest4665";
+
+            shadowProbeCount.ShouldBe(1, "HasDropshadow is true, so the shadow-sibling probe should fire once");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    #endregion
 }
