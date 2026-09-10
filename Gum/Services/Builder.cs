@@ -266,6 +266,7 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IFileSystemRevealService, FileSystemRevealService>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<FileChangeReactionLogic>();

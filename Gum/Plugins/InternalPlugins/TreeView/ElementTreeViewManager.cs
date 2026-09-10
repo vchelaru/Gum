@@ -207,6 +207,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IPluginManager _pluginManager;
     private readonly IDispatcher _dispatcher;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
 
     public bool HasMouseOver
     {
@@ -244,8 +245,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         StandardElementsManagerGumTool standardElementsManagerGumTool,
         IDragDropManager dragDropManager,
         IPluginManager pluginManager,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IFileSystemRevealService fileSystemRevealService)
     {
+        _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _editCommands = editCommands;
         _guiCommands = guiCommands;

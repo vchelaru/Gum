@@ -34,6 +34,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Cross-platform purity guard; see Gum.Presentation.csproj for the rationale. -->
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="....BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<!-- ScreenshotDiffService (#4174) decodes/diffs rendered PNGs via the shared, dependency-free
 		     PixelComparer rather than duplicating pixel-comparison logic. -->

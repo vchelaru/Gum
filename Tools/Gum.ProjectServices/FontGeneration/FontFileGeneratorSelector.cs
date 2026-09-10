@@ -19,6 +19,7 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     private readonly IFontFileGenerator _bmFontGenerator;
     private readonly IFontFileGenerator _kernSmithGenerator;
     private readonly Func<FontGeneratorType> _getGeneratorType;
+    private readonly Func<bool> _isBmFontSupported;
 
     /// <summary>
     /// Initializes a new instance of <see cref="FontFileGeneratorSelector"/>.
@@ -29,14 +30,20 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     /// A delegate that returns the current project's <see cref="FontGeneratorType"/>.
     /// Called on every <see cref="GenerateFont"/> invocation so it reflects the latest project state.
     /// </param>
+    /// <param name="isBmFontSupported">
+    /// Whether bmfont.exe can run here; defaults to <see cref="FontGeneratorResolver.IsBmFontSupported"/>.
+    /// A <see cref="FontGeneratorType.BmFont"/> request is served by KernSmith when this is false.
+    /// </param>
     public FontFileGeneratorSelector(
         IFontFileGenerator bmFontGenerator,
         IFontFileGenerator kernSmithGenerator,
-        Func<FontGeneratorType> getGeneratorType)
+        Func<FontGeneratorType> getGeneratorType,
+        Func<bool>? isBmFontSupported = null)
     {
         _bmFontGenerator = bmFontGenerator;
         _kernSmithGenerator = kernSmithGenerator;
         _getGeneratorType = getGeneratorType;
+        _isBmFontSupported = isBmFontSupported ?? (() => FontGeneratorResolver.IsBmFontSupported);
     }
 
     /// <inheritdoc/>
@@ -48,9 +55,10 @@ public class FontFileGeneratorSelector : IFontFileGenerator
     /// <inheritdoc/>
     public bool RequiresSizeEstimation => CurrentGenerator.RequiresSizeEstimation;
 
-    private IFontFileGenerator CurrentGenerator => _getGeneratorType() switch
-    {
-        FontGeneratorType.KernSmith => _kernSmithGenerator,
-        _ => _bmFontGenerator
-    };
+    private IFontFileGenerator CurrentGenerator =>
+        FontGeneratorResolver.Resolve(_getGeneratorType(), _isBmFontSupported()) switch
+        {
+            FontGeneratorType.KernSmith => _kernSmithGenerator,
+            _ => _bmFontGenerator
+        };
 }

@@ -138,9 +138,10 @@ public class MainHtmlToGumPlugin : WpfPluginBase
             if (useTs && !File.Exists(tsxCli))
             {
                 progress.SetStatus("Installing converter dependencies (first run only)…");
+                (string shell, string shellArguments) = Gum.Services.ShellCommand.Build("npm install");
                 var (installExitCode, installStdout, installStderr) = await recorder
                     .MeasureAsync("npm install", () => RunProcessAsync(
-                        "cmd.exe", "/c npm install", converterDir, progress))
+                        shell, shellArguments, converterDir, progress))
                     .ConfigureAwait(true);
 
                 if (installExitCode != 0 || !File.Exists(tsxCli))

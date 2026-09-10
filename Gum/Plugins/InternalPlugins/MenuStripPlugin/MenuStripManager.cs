@@ -11,6 +11,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Messages;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using CommunityToolkit.Mvvm.Messaging;
 using ToolsUtilities;
@@ -28,6 +29,7 @@ namespace Gum.Managers
         private readonly IFileCommands _fileCommands;
         private readonly IProjectManager _projectManager;
         private readonly IMessenger _messenger;
+        private readonly IFileSystemRevealService _fileSystemRevealService;
         private readonly MenuStripStateLogic _menuStripStateLogic;
 
         private Menu _menu;
@@ -63,7 +65,8 @@ namespace Gum.Managers
             IDialogService dialogService,
             IFileCommands fileCommands,
             IProjectManager projectManager,
-            IMessenger messenger)
+            IMessenger messenger,
+            IFileSystemRevealService fileSystemRevealService)
         {
             _selectedState = selectedState;
             _undoManager = undoManager;
@@ -72,6 +75,7 @@ namespace Gum.Managers
             _fileCommands = fileCommands;
             _projectManager = projectManager;
             _messenger = messenger;
+            _fileSystemRevealService = fileSystemRevealService;
             _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
         }
 
@@ -220,12 +224,14 @@ namespace Gum.Managers
                 // The notices file ships next to the executable (see Gum.csproj). Fall back to
                 // the copy on GitHub if it can't be found locally.
                 string localPath = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
-                string target = System.IO.File.Exists(localPath) ? localPath : thirdPartyNoticesUrl;
-                System.Diagnostics.Process.Start(new ProcessStartInfo
+                if (System.IO.File.Exists(localPath))
                 {
-                    FileName = target,
-                    UseShellExecute = true
-                });
+                    _fileSystemRevealService.OpenFile(localPath);
+                }
+                else
+                {
+                    _fileSystemRevealService.OpenUrl(thirdPartyNoticesUrl);
+                }
             };
 
 
@@ -233,14 +239,7 @@ namespace Gum.Managers
             string documentationLink = "https://docs.flatredball.com/gum";
             _documentationMenuItem.Header = $"View Docs ({documentationLink})";
             _documentationMenuItem.ToolTip = "External link to Gum documentation";
-            _documentationMenuItem.Click += (_, _) =>
-            {
-                System.Diagnostics.Process.Start(new ProcessStartInfo
-                {
-                    FileName = documentationLink,
-                    UseShellExecute = true
-                });
-            };
+            _documentationMenuItem.Click += (_, _) => _fileSystemRevealService.OpenUrl(documentationLink);
 
             _viewMenuItem = new MenuItem();
             _viewMenuItem.Header = "View";
@@ -250,13 +249,7 @@ namespace Gum.Managers
             _openSettingsFolderMenuItem.Header = "Open Settings Folder...";
             _openSettingsFolderMenuItem.ToolTip = "Open the folder containing Gum's global settings files";
             _openSettingsFolderMenuItem.Click += (_, _) =>
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = FileManager.UserApplicationDataForThisApplication,
-                    UseShellExecute = true
-                });
-            };
+                _fileSystemRevealService.OpenFolder(FileManager.UserApplicationDataForThisApplication);
 
             _helpMenuItem = new MenuItem();
             _helpMenuItem.Header = "Help";

@@ -1,0 +1,15 @@
+# Symbols that compile on every target framework but fail at runtime off Windows.
+# Consumed by Microsoft.CodeAnalysis.BannedApiAnalyzers (RS0030) in the headless assemblies and
+# the Avalonia head. See Direction/avalonia-migration/coverage-matrix.md, section 8.
+# Format: <prefix>:<fully qualified symbol>;<message>
+
+T:System.Drawing.Bitmap;GDI+ is Windows-only on .NET 7+. Decode with SkiaSharp (see ImageHeader) or keep the work in the head.
+T:System.Drawing.Graphics;GDI+ is Windows-only on .NET 7+. Draw with the renderer or SkiaSharp.
+T:System.Drawing.Image;GDI+ is Windows-only on .NET 7+. Decode with SkiaSharp.
+T:System.Drawing.Font;GDI+ is Windows-only on .NET 7+. Enumerate fonts through SKFontManager.
+T:System.Drawing.FontFamily;GDI+ is Windows-only on .NET 7+. Enumerate fonts through SKFontManager.
+T:System.Drawing.Icon;GDI+ is Windows-only on .NET 7+.
+T:Microsoft.Win32.Registry;The registry is Windows-only. Put OS-specific detection behind a seam implemented by the head.
+T:Microsoft.Win32.RegistryKey;The registry is Windows-only. Put OS-specific detection behind a seam implemented by the head.
+T:System.Runtime.InteropServices.DllImportAttribute;P/Invoke belongs in a per-OS file in the head, not in shared code.
+T:System.Runtime.InteropServices.LibraryImportAttribute;P/Invoke belongs in a per-OS file in the head, not in shared code.

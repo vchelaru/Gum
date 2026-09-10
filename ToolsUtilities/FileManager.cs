@@ -999,7 +999,7 @@ namespace ToolsUtilities
     public static partial class FileManager
     {
         public static string UserApplicationData =>
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\";
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + Path.DirectorySeparatorChar;
 
         public static void CopyFilesRecursively(string source, string target)
         {
@@ -1356,7 +1356,7 @@ namespace ToolsUtilities
 
         public static string MyDocuments
         {
-            get { return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"\"; }
+            get { return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + Path.DirectorySeparatorChar; }
         }
 
         public static void SaveByteArray(byte[] whatToSave, string fileName)
@@ -1466,7 +1466,7 @@ namespace ToolsUtilities
 
                 applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
 
-                return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + @"\" + applicationDataName + @"\";
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), applicationDataName) + Path.DirectorySeparatorChar;
             }
         }
 

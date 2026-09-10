@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using Gum.Services;
 
 namespace Gum.Plugins.Errors
 {
@@ -16,12 +16,8 @@ namespace Gum.Plugins.Errors
 
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-                FileName = e.Uri.AbsoluteUri,
-                UseShellExecute = true
-            };
-            Process.Start(startInfo);
+            // View code-behind has no constructor injection; the WPF view goes away at cutover.
+            Locator.GetRequiredService<IFileSystemRevealService>().OpenUrl(e.Uri.AbsoluteUri);
             e.Handled = true;
         }
     }

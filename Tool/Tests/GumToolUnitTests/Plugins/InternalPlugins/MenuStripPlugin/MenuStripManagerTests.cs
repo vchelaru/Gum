@@ -3,6 +3,7 @@ using Gum.Commands;
 using Gum.Managers;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -23,6 +24,7 @@ public class MenuStripManagerTests : BaseTestClass
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<IProjectManager> _projectManager;
     private readonly Mock<IMessenger> _messenger;
+    private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
     private readonly MenuStripManager _menuStripManager;
 
     public MenuStripManagerTests()
@@ -34,6 +36,7 @@ public class MenuStripManagerTests : BaseTestClass
         _fileCommands = new Mock<IFileCommands>();
         _projectManager = new Mock<IProjectManager>();
         _messenger = new Mock<IMessenger>();
+        _fileSystemRevealService = new Mock<IFileSystemRevealService>();
 
         _menuStripManager = new MenuStripManager(
             _selectedState.Object,
@@ -42,7 +45,8 @@ public class MenuStripManagerTests : BaseTestClass
             _dialogService.Object,
             _fileCommands.Object,
             _projectManager.Object,
-            _messenger.Object
+            _messenger.Object,
+            _fileSystemRevealService.Object
         );
     }
 
@@ -246,7 +250,8 @@ public class MenuStripManagerTests : BaseTestClass
             _dialogService.Object,
             _fileCommands.Object,
             _projectManager.Object,
-            _messenger.Object);
+            _messenger.Object,
+            _fileSystemRevealService.Object);
         Menu secondMenu = new Menu();
         secondManager.PopulateMenu(secondMenu);
 

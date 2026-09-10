@@ -102,7 +102,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | Site | What | Removed by |
 |---|---|---|
 | `ToolsUtilities/FileManager.cs:1002,1359,1469` | appends `@"\"` to special folders | 25 — `Path.Combine` / `DirectorySeparatorChar` |
-| `ToolsUtilities/FilePath.cs:80–81` | paths compared `ToLowerInvariant()` (Windows semantics) | 25 — per-OS policy + a "case mismatch" project error (GUM code) so Windows-authored projects fail loudly on Linux, not silently |
+| `ToolsUtilities/FilePath.cs:80–81` | paths compared `ToLowerInvariant()` (Windows semantics) | **100** (moved from 25 on 2026-09-10, needs the Linux corpus) — per-OS policy + a "case mismatch" project error (GUM code) so Windows-authored projects fail loudly on Linux, not silently |
 | `FileManager.cs:203,899` | already special-cases macOS | keep; extend to Linux in 25 |
 | `Gum/Services/Builder.cs:50`, `StateAnimationPlugin/Managers/SettingsManager.cs:30`, `HtmlToGum` | settings under `SpecialFolder.ApplicationData` | fine on Unix (`~/.config`); verify in 25 |
 | ~180 backslash literals in `.cs` under the tool graph | mostly `\n` in messages; a few real separators | 25 — audit the real ones, leave messages |

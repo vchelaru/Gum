@@ -1,8 +1,7 @@
-﻿using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using ToolsUtilities;
+using Gum.Services;
 
 namespace Gum.Controls;
 
@@ -71,16 +70,12 @@ public partial class TitleFilePathDisplay : UserControl
         {
             try
             {
-                var startInfo = new ProcessStartInfo
-                {
-                    UseShellExecute = true,
-                    FileName = FileManager.GetDirectory(FullPath)
-                };
-                Process.Start(startInfo);
+                // View code-behind has no constructor injection; the WPF view goes away at cutover.
+                Locator.GetRequiredService<IFileSystemRevealService>().RevealFile(FullPath);
             }
             catch
             {
-                // Silently fail if we can't open Explorer
+                // Silently fail if we can't open the file manager
             }
         }
     }

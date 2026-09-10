@@ -5,7 +5,6 @@ using Gum.ToolStates;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 using Gum.Services.Dialogs;
-using System.Diagnostics;
 using Gum.Services;
 using Gum.Services.Fonts;
 
@@ -21,6 +20,7 @@ public class MainFontPlugin : PriorityPlugin
     private readonly IFontManager _fontManager;
     private readonly IDialogService _dialogService;
     private readonly FontCacheLogic _fontCacheLogic;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
 
     [ImportingConstructor]
     public MainFontPlugin(
@@ -28,10 +28,12 @@ public class MainFontPlugin : PriorityPlugin
         IFontManager fontManager,
         IDialogService dialogService,
         IProjectState projectState,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IFileSystemRevealService fileSystemRevealService)
     {
         _fontManager = fontManager;
         _dialogService = dialogService;
+        _fileSystemRevealService = fileSystemRevealService;
         _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState, dispatcher);
     }
 
@@ -83,14 +85,7 @@ public class MainFontPlugin : PriorityPlugin
     private void HandleViewFontCache(object? sender, System.Windows.RoutedEventArgs e)
     {
         string folder = _fontCacheLogic.GetOrCreateFontCacheFolder();
-
-        var processStartInfo = new ProcessStartInfo
-        {
-            FileName = folder,
-            UseShellExecute = true
-        };
-
-        Process.Start(processStartInfo);
+        _fileSystemRevealService.OpenFolder(folder);
     }
 
     private async Task HandleRefreshFontCache(bool forceRecreate) =>

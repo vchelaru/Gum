@@ -67,20 +67,40 @@ internal class SvgExportCommand : ISvgExportCommand
     }
 
     /// <summary>
-    /// Locates gumcli.exe, expected in a GumCli subfolder next to Gum.exe. Returns null if
-    /// it cannot be found. Virtual so tests can supply a deterministic result.
+    /// Locates the bundled gumcli, expected in a GumCli subfolder next to the tool: the native
+    /// executable (<c>gumcli.exe</c> on Windows, <c>gumcli</c> elsewhere), else <c>gumcli.dll</c>
+    /// to run through <c>dotnet</c>. Returns null if none exists. Virtual so tests can supply a
+    /// deterministic result.
     /// </summary>
     protected virtual string? FindGumCliPath()
     {
-        string exeDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        string cliPath = Path.Combine(exeDirectory, "GumCli", "gumcli.exe");
+        string cliFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GumCli");
+        string executableName = OperatingSystem.IsWindows() ? "gumcli.exe" : "gumcli";
 
-        if (File.Exists(cliPath))
+        foreach (string candidate in new[] { executableName, "gumcli.dll" })
         {
-            return cliPath;
+            string cliPath = Path.Combine(cliFolder, candidate);
+            if (File.Exists(cliPath))
+            {
+                return cliPath;
+            }
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// The process to start for <paramref name="gumCliPath"/>: the file itself when it is an
+    /// executable, or <c>dotnet</c> with the assembly prepended when it is a <c>.dll</c>.
+    /// </summary>
+    internal static (string fileName, string arguments) BuildProcessInvocation(string gumCliPath, string arguments)
+    {
+        if (gumCliPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+        {
+            return ("dotnet", $"\"{gumCliPath}\" {arguments}");
+        }
+
+        return (gumCliPath, arguments);
     }
 
     /// <summary>
@@ -92,10 +112,12 @@ internal class SvgExportCommand : ISvgExportCommand
     {
         try
         {
+            (string fileName, string arguments) = BuildProcessInvocation(
+                gumCliPath, BuildSvgExportArguments(projectPath, elementName, outputPath));
             ProcessStartInfo startInfo = new()
             {
-                FileName = gumCliPath,
-                Arguments = BuildSvgExportArguments(projectPath, elementName, outputPath),
+                FileName = fileName,
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,

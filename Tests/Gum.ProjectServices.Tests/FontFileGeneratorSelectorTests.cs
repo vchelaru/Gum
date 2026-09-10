@@ -26,6 +26,21 @@ public class FontFileGeneratorSelectorTests
     }
 
     [Fact]
+    public async Task GenerateFont_ShouldDelegateToKernSmith_WhenBmFontIsRequestedButUnsupported()
+    {
+        RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator();
+        RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator();
+        FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
+            bmFont, kernSmith, () => FontGeneratorType.BmFont, isBmFontSupported: () => false);
+
+        BmfcSave bmfcSave = new BmfcSave();
+        await selector.GenerateFont(bmfcSave, "/tmp/test.fnt", createTask: false);
+
+        kernSmith.WasCalled.ShouldBeTrue();
+        bmFont.WasCalled.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task GenerateFont_ShouldDelegateToKernSmith_WhenGeneratorTypeIsKernSmith()
     {
         RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator();

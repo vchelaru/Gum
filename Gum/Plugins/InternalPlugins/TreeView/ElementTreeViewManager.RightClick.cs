@@ -164,38 +164,31 @@ public partial class ElementTreeViewManager
             {
                 fullFile = treeNode.GetFullFilePath().FullPath;
             }
-            fullFile = fullFile.Replace("/", "\\");
+            bool isFolder = fullFile.EndsWith("\\") || fullFile.EndsWith("/");
 
-            if (fullFile.EndsWith("\\") || fullFile.EndsWith("/"))
+            try
             {
-                try
+                if (isFolder)
                 {
-                    var doesExist = System.IO.File.Exists(fullFile);
-
-                    if (!doesExist)
+                    if (!System.IO.Directory.Exists(fullFile))
                     {
-                        // file doesn't exist, but if it's a standard folder we can make one:
+                        // The folder doesn't exist, but if it's a standard folder we can make one:
                         if (treeNode.IsTopComponentContainerTreeNode() ||
                             treeNode.IsTopScreenContainerTreeNode())
                         {
                             System.IO.Directory.CreateDirectory(fullFile);
                         }
                     }
-                    var startInfo = new ProcessStartInfo
-                    {
-                        UseShellExecute = true ,
-                        FileName = fullFile
-                    };
-                    Process.Start(startInfo );
+                    _fileSystemRevealService.OpenFolder(fullFile);
                 }
-                catch (Exception exc)
+                else
                 {
-                    _dialogService.ShowMessage("Could not open location:\n\n" + exc.ToString());
+                    _fileSystemRevealService.RevealFile(fullFile);
                 }
             }
-            else
+            catch (Exception exc)
             {
-                Process.Start("explorer.exe", "/select," + fullFile);
+                _dialogService.ShowMessage("Could not open location:\n\n" + exc.ToString());
             }
         }
     }
