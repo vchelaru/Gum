@@ -1103,5 +1103,51 @@ public class FontServiceTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void FontResolution_ShouldAttachShadowFont_WhenHasDropshadowIsTrueAndSiblingExists()
+    {
+        // Positive companion to the above: not just "was it checked" but "does asking for a
+        // dropshadow actually still work end-to-end" - a genuinely-present "-shadow.fnt" sibling
+        // must end up attached to the Text this TextRuntime wraps.
+        TextRuntime textRuntime = new();
+        textRuntime.HasDropshadow = true;
+
+        const string zeroPageFntContent =
+            "info face=\"GumFontResolutionTest4665Positive\" size=-14 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=16 base=12 scaleW=1 scaleH=1 pages=0 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "chars count=0\n";
+
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // As in BitmapFontTests: the shadow font's own constructor also probes for ITS OWN
+                // "-shadow.fnt" sibling. Reject only that doubly-nested case so the fixture doesn't
+                // recurse forever, while every real (single) request - primary or shadow - succeeds.
+                if (path.EndsWith("-shadow-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new System.IO.FileNotFoundException();
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(zeroPageFntContent));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            textRuntime.Font = "GumFontResolutionTest4665Positive";
+
+            Text underlyingText = (Text)textRuntime.RenderableComponent;
+            underlyingText.BitmapFont.ShouldNotBeNull();
+            underlyingText.BitmapFont.ShadowFont.ShouldNotBeNull(
+                "HasDropshadow was true and a real shadow sibling existed - it should be attached");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
     #endregion
 }

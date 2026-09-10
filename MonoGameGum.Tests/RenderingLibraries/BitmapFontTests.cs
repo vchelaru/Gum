@@ -192,10 +192,13 @@ chars count=0
     }
 
     [Fact]
-    public void Constructor_ShouldProbeForShadowSibling_WhenCheckForShadowSiblingIsTrue()
+    public void Constructor_ShouldAttachShadowFont_WhenCheckForShadowSiblingIsTrueAndSiblingExists()
     {
         // Companion to the above: when a caller DOES want the check (the default, and what every
-        // other existing caller of the single-argument constructor still gets), it must still run.
+        // other existing caller of the single-argument constructor still gets), it must still run -
+        // and pins the actual positive outcome (issue #4665's "can you still ask for a shadow font"
+        // question): a genuinely-present "-shadow.fnt" sibling must end up attached as ShadowFont,
+        // not just probed-for.
         bool shadowProbed = false;
         Func<string, System.IO.Stream>? previousHook = FileManager.CustomGetStreamFromFile;
         try
@@ -227,6 +230,7 @@ chars count=0
             BitmapFont font = new BitmapFont("ShouldCheckShadow.fnt");
 
             shadowProbed.ShouldBeTrue();
+            font.ShadowFont.ShouldNotBeNull("a real '-shadow.fnt' sibling was present and should have been attached");
         }
         finally
         {
