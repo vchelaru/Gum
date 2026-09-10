@@ -34,12 +34,12 @@ public class SkiaShapeStandardsLogic : ISkiaShapeStandardsLogic
     };
 
     private readonly IFileCommands _fileCommands;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
+    private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IProjectState _projectState;
 
     public SkiaShapeStandardsLogic(
         IFileCommands fileCommands,
-        StandardElementsManagerGumTool standardElementsManagerGumTool,
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
         IProjectState projectState)
     {
         _fileCommands = fileCommands;

@@ -18,6 +18,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
+    <!-- GumCoreCompositionTests builds a real ServiceCollection against AddGumCore(). -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <!-- SetVariableLogicTests uses AutoMocker (matches GumToolUnitTests.csproj's own
          VersionOverride pin; not centrally versioned there either). -->
     <PackageReference Include="Moq.AutoMock" VersionOverride="3.5.0" />

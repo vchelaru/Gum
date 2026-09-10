@@ -48,6 +48,10 @@
 		     has no WPF/WinForms dependency; pin matches Gum.csproj's Microsoft.Extensions.Hosting version
 		     (which pulls Options in transitively there) so a single bump propagates predictably. -->
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
+		<!-- AddGumCore() (phase 20) registers the headless service graph from here; PeriodicUiTimer logs
+		     through ILogger. Both are abstractions-only packages with no framework dependency. -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
 		<!-- Cross-platform purity guard (Direction/avalonia-migration/coverage-matrix.md section 8):
 		     System.Drawing.Common's GDI+ types, the registry, and P/Invoke compile on any TFM but
 		     fail at runtime off Windows, so the compiler alone cannot keep this assembly portable.
@@ -68,6 +72,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<!-- LocalizationServiceExtensions loads localization databases from CSV. CsvLibrary is plain net10.0. -->
+		<ProjectReference Include="..\..\Gum\CsvLibrary\CsvLibrary.csproj" />
 		<!-- VariableReferenceLogic parses VariableReferences lines with Roslyn (GetAssignmentSyntax)
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->

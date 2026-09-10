@@ -126,7 +126,6 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
     }
 }
 
-public record CloseMainWindowMessage;
 public record ThemeChangedMessage(IEffectiveThemeSettings settings);
 
 

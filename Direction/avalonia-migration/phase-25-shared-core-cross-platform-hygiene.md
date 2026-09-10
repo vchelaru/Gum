@@ -1,5 +1,13 @@
 # Phase 25 — Cross-platform hygiene of the shared core
 
+> **Status 2026-09-10:** tasks 1, 2, 3, 4, 5, 7 landed on `avalonia-migration-work`:
+> `System.Drawing.Common` gone from `Gum.Presentation`; `FontGeneratorResolver`;
+> `IFileSystemRevealService` + `ShellCommand` with all seven call sites migrated; `gumcli` located
+> by OS name and run via `dotnet` for a `.dll`; `FileManager` separators;
+> `BannedSymbols.CrossPlatform.txt` enforced on `Gum.Presentation` and `Gum.ProjectServices`.
+> Task 6, the case-mismatch project error, is deferred to phase 100 where the Linux parity corpus
+> can exercise it; `coverage-matrix.md` §6 notes this.
+
 ## Purpose
 
 Fix the Windows assumptions that live *below* the UI, in code both heads share: the headless

@@ -17,11 +17,7 @@ using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Reflection;
 using Gum.Services;
-using Gum.Settings;
-using Gum.ToolStates;
-using Gum.Wireframe;
-using GumRuntime;
-using Microsoft.Extensions.Configuration;
+using Gum.Startup;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -120,7 +116,8 @@ namespace Gum
             app.MainWindow.Visibility = Visibility.Visible;
             StartupTiming.Mark("MainWindow visible");
 
-            await InitializeGum(host.Services).ConfigureAwait(true);
+            await new GumStartupSequence(host.Services, new WpfHeadStartup(host.Services))
+                .RunAsync().ConfigureAwait(true);
             StartupTiming.Mark("InitializeGum complete");
 
             if (host.Services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
@@ -135,98 +132,6 @@ namespace Gum
             return RunResponseCodes.Success;
         }
 
-        private static async Task InitializeGum(IServiceProvider services)
-        {
-            var projectManager = services.GetRequiredService<IProjectManager>();
-
-            // This has to happen before plugins are loaded since they may depend on settings...
-            projectManager.LoadSettings();
-            StartupTiming.Mark("ProjectManager.LoadSettings");
-
-            // Migration needs the whole (WinForms-entangled) settings object, so it resolves the
-            // concrete ProjectManager directly rather than going through the narrowed IProjectManager
-            // (same singleton - LoadSettings() above already ran against it).
-            MigrateAppSettings(services, services.GetRequiredService<ProjectManager>().GeneralSettingsFile);
-            StartupTiming.Mark("MigrateAppSettings");
-            services.GetRequiredService<IThemingService>().ApplyInitialTheme();
-            StartupTiming.Mark("ApplyInitialTheme");
-            services.GetRequiredService<ITypeManager>().Initialize();
-            StartupTiming.Mark("TypeManager.Initialize");
-
-            services.GetRequiredService<ElementTreeViewManager>().Initialize();
-            StartupTiming.Mark("ElementTreeViewManager.Initialize");
-
-            (services.GetRequiredService<IWireframeObjectManager>() as WireframeObjectManager).Initialize();
-            StartupTiming.Mark("WireframeObjectManager.Initialize");
-            // This has to be initialized very early because other things depend on it.
-
-            // ProperGridManager before MenuStripManager. Why does it need to be initialized before MainMenuStripPlugin?
-            // Is htere a way to move this to a plugin?
-            services.GetRequiredService<PropertyGridManager>().InitializeEarly();
-            StartupTiming.Mark("PropertyGridManager.InitializeEarly");
-
-            PluginManager pluginManager = services.GetRequiredService<PluginManager>();
-            pluginManager.Initialize();
-            StartupTiming.Mark("PluginManager.Initialize");
-
-            StandardElementsManager.Self.Initialize();
-            StandardElementsManager.Self.CustomGetDefaultState =
-                pluginManager.GetDefaultStateFor;
-            StartupTiming.Mark("StandardElementsManager.Initialize");
-
-            ElementSaveExtensions.VariableChangedThroughReference +=
-                pluginManager.VariableSet;
-
-            Locator.GetRequiredService<StandardElementsManagerGumTool>().Initialize();
-            StartupTiming.Mark("StandardElementsManagerGumTool.Initialize");
-
-            VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
-
-
-            // ProjectManager.Initialize used to happen here, but I
-            // moved it down because it may load a project, and if it
-            // does, then we need to make sure that the wireframe controls
-            // are set up properly before that happens.
-            // XnaInitialize is where wireframe controls are initialized.
-            pluginManager.XnaInitialized();
-            StartupTiming.Mark("PluginManager.XnaInitialized");
-
-            await projectManager.Initialize();
-            StartupTiming.Mark("ProjectManager.Initialize (project load)");
-
-            PeriodicUiTimer fileWatchTimer = services.GetRequiredService<PeriodicUiTimer>();
-
-            var fileWatchManager = Locator.GetRequiredService<IFileWatchManager>();
-
-            fileWatchTimer.Tick += () =>
-            {
-                GumProjectSave? gumProject = Locator.GetRequiredService<IProjectState>().GumProjectSave;
-                if (gumProject != null && !string.IsNullOrEmpty(gumProject.FullFileName))
-                {
-                    fileWatchManager.Flush();
-                }
-            };
-
-            fileWatchTimer.Start(TimeSpan.FromMilliseconds(500));
-        }
-
-        private static void MigrateAppSettings(IServiceProvider services, GeneralSettingsFile legacySettings)
-        {
-            IConfiguration config = services.GetRequiredService<IConfiguration>();
-
-            ApplyIfNotExists<ThemeSettings>(x => ThemeSettingsMigration.MigrateExplicitLegacyColors(legacySettings, x));
-            ApplyIfNotExists<LayoutSettings>(x => LayoutSettings.MigrateLegacyLayout(legacySettings, x));
-
-            void ApplyIfNotExists<T>(Action<T> applyAction) where T : class, new()
-            {
-                if (config.GetSection(typeof(T).Name) is { } section &&
-                    section.Exists())
-                {
-                    return;
-                }
-                services.GetRequiredService<IWritableOptions<T>>().Update(applyAction);
-            }
-        }
     }
 
 

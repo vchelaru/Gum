@@ -1,5 +1,28 @@
 # Phase 20 — Composition root and startup chain go headless
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work`. `AddGumCore()` lives in
+> `Gum.Presentation` (`GumCoreServiceCollectionExtensions`, with the reflection helpers and
+> `Locator`); the WPF `Builder.cs` is `AddGumCore()` + `AddGumWpf()`. Twenty implementations that
+> had no WPF coupling moved out of `Gum/` by plain file move (`CircularReferenceManager`,
+> `CommandLineManager`, `CsvLocalizationLoader`, `DeleteVariableService`, `ErrorChecker`,
+> `IErrorChecker`, `FavoriteComponentManager`, `FileLocations`, `FileWatchIgnoreList`, `FontManager`,
+> `ToolFontGenerationCallbacks`, `LocalizationServiceExtensions`, `PeriodicUiTimer`, `ProjectState`,
+> `ReorderLogic`, `RetryService`, `SkiaShapeStandardsLogic`, `TypeManagerTypeResolverAdapter`,
+> `UserProjectSettings`, `UserProjectSettingsManager`, `WireframeCommands`, `CloseMainWindowMessage`);
+> `CsvLibrary` is plain `net10.0` and referenced by `Gum.Presentation`. The startup order is
+> `GumStartupSequence` in `Gum.Presentation`, with the five framework-specific steps behind
+> `IHeadStartup` (`WpfHeadStartup` implements them). `GumCoreCompositionTests` composes the core with
+> every `HeadProvidedContracts` entry stubbed and resolves the whole singleton graph.
+>
+> **Still head-provided** (the "not yet movable" list, each with its owning phase):
+> `PluginManager` and its four notifier ports (40), `StandardElementsManagerGumTool`,
+> `FilePickingFolderProvider`, `VariableTypeConverterProvider`, `CompositeMemberRegistry` (all 70,
+> they name `WpfDataUi` editors or the converter web), `ElementTreeViewManager` (60),
+> `PropertyGridManager` (70), `GuiCommands` (30, Win32), `ThemingService` (90, registry),
+> `RecycleBinService` (30, `Microsoft.VisualBasic` recycle bin), `WinFormsModifierKeyState` (30),
+> `ClipboardService` (30), `SpinnerFactory` (30), `MenuStripManager` (30/40), the dialog resolver
+> family (30). Settings migration (`IWritableOptions`) stays in the head's `MigrateLegacySettings`.
+
 ## Purpose
 
 Let a plain `net10.0` head compose the tool's service graph. Today all 127 DI registrations live in
