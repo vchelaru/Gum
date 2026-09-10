@@ -37,6 +37,17 @@ public abstract class PluginBase : IPlugin
     [Import] public ITabManager TabManager { get => _tabManager; set => _tabManager = value; }
     [Import] public IDialogService DialogService { get => _dialogService; set => _dialogService = value; }
 
+    private Gum.Menus.MenuModel? _menu;
+    /// <summary>The head's menu model. Optional so heads that still render menus themselves compose.</summary>
+    [Import(AllowDefault = true)] public Gum.Menus.MenuModel? Menu { get => _menu; set => _menu = value; }
+
+    /// <summary>Adds a menu item at the given path (top menu, submenus, item) and returns its model.</summary>
+    public Gum.Menus.MenuItemModel AddMenuEntry(IEnumerable<string> menuAndSubmenus, Action? click = null) =>
+        (_menu ?? throw new InvalidOperationException("This head does not export a MenuModel for plugins.")).AddMenuItem(menuAndSubmenus, click);
+
+    /// <summary>Adds a menu item at the given path and returns its model.</summary>
+    public Gum.Menus.MenuItemModel AddMenuEntry(Action? click, params string[] menuAndSubmenus) => AddMenuEntry(menuAndSubmenus, click);
+
     #region Events
 
     public event Action<GumProjectSave>? ProjectLoad;

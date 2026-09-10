@@ -1,4 +1,5 @@
 using System;
+using Gum.Plugins;
 using Gum.Settings;
 using Gum.Startup;
 using Microsoft.Extensions.Configuration;
@@ -46,8 +47,8 @@ public class AvaloniaHeadStartup : IHeadStartup
     public void InitializePropertyGrid() { }
 
     /// <inheritdoc/>
-    public void InitializePlugins() { }
+    public void InitializePlugins() => _services.GetRequiredService<PluginManager>().Initialize();
 
     /// <inheritdoc/>
-    public void RenderSurfaceReady() { }
+    public void RenderSurfaceReady() => _services.GetRequiredService<PluginManager>().XnaInitialized();
 }

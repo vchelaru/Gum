@@ -16,7 +16,7 @@ namespace Gum.Plugins.BaseClasses;
 /// Plugins that don't touch menus or the delete dialog can inherit <see cref="PluginBase"/>
 /// directly and stay WPF-free.
 /// </summary>
-public abstract class WpfPluginBase : PluginBase
+public abstract class WpfPluginBase : PluginBase, IDeleteOptionsDialogPlugin
 {
     private MenuStripManager _menuStripManager;
 
@@ -104,6 +104,12 @@ public abstract class WpfPluginBase : PluginBase
 
     public void CallDeleteOptionsWindowShow(DeleteOptionsWindow optionsWindow, Array objectsToDelete) =>
         DeleteOptionsWindowShow?.Invoke(optionsWindow, objectsToDelete);
+
+    void IDeleteOptionsDialogPlugin.CallDeleteOptionsWindowShow(object optionsWindow, Array objectsToDelete) =>
+        CallDeleteOptionsWindowShow((DeleteOptionsWindow)optionsWindow, objectsToDelete);
+
+    void IDeleteOptionsDialogPlugin.CallDeleteConfirmed(object optionsWindow, Array deletedObjects) =>
+        CallDeleteConfirmed((DeleteOptionsWindow)optionsWindow, deletedObjects);
 
     public void CallDeleteConfirmed(DeleteOptionsWindow optionsWindow, Array deletedObjects) =>
         DeleteConfirmed?.Invoke(optionsWindow, deletedObjects);

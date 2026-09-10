@@ -6,13 +6,11 @@ using System.Reflection;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.IO;
-using System.Windows.Forms;
 using Gum.Diagnostics;
 using Gum.Plugins.BaseClasses;
+using Gum.Input;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
-using Gum.Gui.Plugins;
-using Gum.Gui.Windows;
 using ToolsUtilities;
 using Gum.DataTypes.Behaviors;
 using RenderingLibrary.Graphics;
@@ -38,12 +36,9 @@ using Gum.Services.Fonts;
 using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
-using Gum.Controls;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
-using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
-using Gum.ViewModels;
 
 namespace Gum.Plugins;
 
@@ -63,6 +58,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     #region Fields
 
     private readonly IPluginEnablementStore _pluginEnablementStore;
+    private readonly IPluginHostConfiguration _hostConfiguration;
 
     private List<Assembly> mExternalAssemblies = new List<Assembly>();
     private List<string> mReferenceListInternal = new List<string>();
@@ -86,7 +82,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     {
         get
         {
-            return FileManager.GetDirectory(Application.ExecutablePath) + "Plugins\\";
+            return Path.Combine(AppContext.BaseDirectory, "Plugins") + Path.DirectorySeparatorChar;
         }
     }
 
@@ -171,7 +167,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             if (this.PluginContainers.ContainsKey(plugin) == false)
@@ -259,7 +255,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];
@@ -290,11 +286,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     /// </summary>
     /// <param name="window">The window to modify.</param>
     /// <param name="objectsToDelete">An array of objects that may be deleted, which could be any Gum type.</param>
-    public void ShowDeleteDialog(DeleteOptionsWindow window, Array objectsToDelete) =>
-        CallMethodOnPlugin(plugin => (plugin as WpfPluginBase)?.CallDeleteOptionsWindowShow(window, objectsToDelete));
+    public void ShowDeleteDialog(object window, Array objectsToDelete) =>
+        CallMethodOnPlugin(plugin => (plugin as IDeleteOptionsDialogPlugin)?.CallDeleteOptionsWindowShow(window, objectsToDelete));
 
-    public void DeleteConfirmed(DeleteOptionsWindow window, Array objectsToDelete) =>
-        CallMethodOnPlugin(plugin => (plugin as WpfPluginBase)?.CallDeleteConfirmed(window, objectsToDelete));
+    public void DeleteConfirmed(object window, Array objectsToDelete) =>
+        CallMethodOnPlugin(plugin => (plugin as IDeleteOptionsDialogPlugin)?.CallDeleteConfirmed(window, objectsToDelete));
 
     public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
@@ -527,7 +523,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];
@@ -563,7 +559,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is PriorityPlugin)).ToArray();
+        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             PluginContainer container = this.PluginContainers[plugin];
@@ -591,7 +587,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         return response;
     }
 
-    internal void XnaInitialized() =>
+    public void XnaInitialized() =>
         CallMethodOnPlugin(plugin => plugin.CallXnaInitialized());
 
     public void HandleWireframeResized() =>
@@ -639,11 +635,15 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     // resolve the singleton here.
     public System.Numerics.Vector2? GetWorldCursorPosition()
     {
-        InputLibrary.Cursor typedCursor = InputLibrary.Cursor.Self;
+        IGumCursorState? cursor = _hostConfiguration.CursorState;
         Vector2? toReturn = null;
+        if (cursor == null)
+        {
+            return null;
+        }
         CallMethodOnPlugin(plugin =>
         {
-            var innerResult = plugin.CallGetWorldCursorPosition(typedCursor);
+            var innerResult = plugin.CallGetWorldCursorPosition(cursor);
 
             if(innerResult != null)
             {
@@ -744,9 +744,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     // DI-built singleton bridged as IPluginManager below (#3880). PluginManager now has no [Export]
     // members of its own, so it's no longer catalog-discoverable and MEF never touches this ctor;
     // don't add an [Export] here (or reintroduce one on this class) without re-checking that.
-    public PluginManager(IPluginEnablementStore pluginEnablementStore)
+    public PluginManager(IPluginEnablementStore pluginEnablementStore, IPluginHostConfiguration hostConfiguration)
     {
         _pluginEnablementStore = pluginEnablementStore;
+        _hostConfiguration = hostConfiguration;
     }
 
     private PluginScanReport? _pluginScanReport;
@@ -783,7 +784,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // because if we don't, then Glue looks for them in the Startup
         // path, which could depend on whether Glue is launched from a shortcut
         // or not - this is really common for released versions.
-        string executablePath = FileManager.GetDirectory(System.Windows.Forms.Application.ExecutablePath);
+        string executablePath = AppContext.BaseDirectory;
 
         //Load Internal List
         mReferenceListInternal.Add(executablePath + "Ionic.Zip.dll");
@@ -871,7 +872,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             batch.AddExportedValue<IGuiCommands>(Locator.GetRequiredService<IGuiCommands>());
             batch.AddExportedValue<IFileCommands>(Locator.GetRequiredService<IFileCommands>());
             batch.AddExportedValue<ITabManager>(Locator.GetRequiredService<ITabManager>());
-            batch.AddExportedValue<MenuStripManager>(Locator.GetRequiredService<MenuStripManager>());
             batch.AddExportedValue<IDialogService>(Locator.GetRequiredService<IDialogService>());
 
             // Per-plugin services needed at construction time (via [ImportingConstructor]):
@@ -897,8 +897,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger, IClipboardService),
             // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
             // transient; this bridges the single instance MainFileWatchPlugin consumes.
-            batch.AddExportedValue<MainPanelViewModel>(Locator.GetRequiredService<MainPanelViewModel>());
-            batch.AddExportedValue<PropertyGridManager>(Locator.GetRequiredService<PropertyGridManager>());
             batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
             batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
             batch.AddExportedValue<IClipboardService>(Locator.GetRequiredService<IClipboardService>());
@@ -940,7 +938,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // host container (already built before LoadPlugins) and the plugin is only a consumer of it, never
             // a dependency. IUserProjectSettingsManager and IOutputManager feed its TreeViewStateService.
             // Its other ctor-time deps (ISelectedState, IMessenger, IErrorChecker, IProjectState) are bridged above.
-            batch.AddExportedValue<ElementTreeViewManager>(Locator.GetRequiredService<ElementTreeViewManager>());
             batch.AddExportedValue<IUserProjectSettingsManager>(Locator.GetRequiredService<IUserProjectSettingsManager>());
             batch.AddExportedValue<IOutputManager>(Locator.GetRequiredService<IOutputManager>());
 
@@ -981,7 +978,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             batch.AddExportedValue<IAnimationUndoProviderRegistrar>(Locator.GetRequiredService<IAnimationUndoProviderRegistrar>());
 
             // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
-            batch.AddExportedValue<MainWindowViewModel>(Locator.GetRequiredService<MainWindowViewModel>());
 
             // MainGumFormsPlugin ctor drain (#4404): the plugin used to assemble GumFormsLogic itself from
             // five bridged services plus a Locator call. The logic is DI-built now because new-project
@@ -1001,6 +997,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             // BehaviorReferencesChanged) were widened onto the interface, so the concrete PluginManager bridge
             // is no longer needed here.
             batch.AddExportedValue<IPluginManager>(instance);
+
+            // The head's own exports: its shell view models, menu model, and whatever else its plugins take.
+            _hostConfiguration.AddHeadExports(batch);
 
             var container = new CompositionContainer(catalog);
 
@@ -1192,7 +1191,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             foreach (string dll in FindDllFiles(directory, outputManager))
             {
-                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll);
+                ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll, _hostConfiguration);
                 if (catalog != null)
                 {
                     returnValue.Catalogs.Add(catalog);
@@ -1207,7 +1206,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             PluginFolder,
             System.IO.Directory.Exists(PluginFolder),
             catalogFactory.Scans,
-            System.Windows.Forms.Application.ExecutablePath,
+            Environment.ProcessPath ?? AppContext.BaseDirectory,
             // Only when the scan came up empty: otherwise this is a few hundred lines nobody reads.
             foundAnyPluginAssembly ? null : ListFolderEntries(PluginFolder));
 
@@ -1218,7 +1217,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             outputManager.AddError(_pluginScanReport.Describe());
         }
 
-        returnValue.Catalogs.Add(new AssemblyCatalog(System.Reflection.Assembly.GetExecutingAssembly()));
+        foreach (Assembly internalAssembly in _hostConfiguration.InternalPluginAssemblies)
+        {
+            returnValue.Catalogs.Add(new AssemblyCatalog(internalAssembly));
+        }
 
         return returnValue;
     }

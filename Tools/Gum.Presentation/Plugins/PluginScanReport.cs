@@ -18,6 +18,9 @@ public enum PluginFileOutcome
 
     /// <summary>Found, but could not be loaded. The only outcome a user can act on.</summary>
     LoadFailed,
+
+    /// <summary>Loaded, but this head cannot run it (a WPF plugin on the cross-platform head).</summary>
+    NotHostable,
 }
 
 /// <param name="FileName">File name only; the folder is on the report.</param>

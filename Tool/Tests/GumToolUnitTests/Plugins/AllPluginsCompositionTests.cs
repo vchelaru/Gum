@@ -45,7 +45,7 @@ public class AllPluginsCompositionTests : BaseTestClass
     // internals to this test project.
     private static readonly Assembly[] PluginAssemblies =
     {
-        typeof(Gum.Plugins.PluginManager).Assembly,
+        typeof(Gum.MainWindow).Assembly,
         typeof(global::CodeOutputPlugin.MainCodeOutputPlugin).Assembly,
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,

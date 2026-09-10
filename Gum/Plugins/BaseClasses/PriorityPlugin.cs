@@ -5,7 +5,7 @@ namespace Gum.Plugins.BaseClasses
     // This can't be done on the base class - it must be done on the
     // class that inherits from PriorityPlugin...oh well
     //[Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-    public abstract class PriorityPlugin : WpfPluginBase
+    public abstract class PriorityPlugin : WpfPluginBase, IPriorityPlugin
     {
         // Default so subclasses don't each have to write one. No subclass overrides it, so this is
         // the name shown in the "Manage Plugins" dialog and in "Error in plugin ..." messages -

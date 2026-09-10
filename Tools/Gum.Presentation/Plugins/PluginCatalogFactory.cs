@@ -47,6 +47,12 @@ internal class PluginCatalogFactory
     /// </summary>
     public ComposablePartCatalog? CreateCatalogForFile(string dllPath)
     {
+        return CreateCatalogForFile(dllPath, null);
+    }
+
+    /// <summary>As <see cref="CreateCatalogForFile(string)"/>, with a head that can refuse an assembly it cannot run.</summary>
+    public ComposablePartCatalog? CreateCatalogForFile(string dllPath, IPluginHostConfiguration? host)
+    {
         string fileName = Path.GetFileName(dllPath);
         Assembly assembly;
 
@@ -67,6 +73,13 @@ internal class PluginCatalogFactory
             _outputManager.AddError($"Failed to load plugin assembly '{dllPath}':\n{exception}");
             return null;
         }
+        if (host != null && !host.CanHostExternalAssembly(assembly, out string? reason))
+        {
+            _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.NotHostable, CouldContainPlugins(assembly), reason));
+            _outputManager.AddError($"Skipped plugin assembly '{fileName}': {reason}.");
+            return null;
+        }
+
 
         _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.Loaded, CouldContainPlugins(assembly), null));
 

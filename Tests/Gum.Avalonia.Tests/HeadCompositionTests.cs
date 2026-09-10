@@ -21,9 +21,16 @@ public class HeadCompositionTests
         List<string> missing = new List<string>();
         foreach (Type contract in GumCoreServiceCollectionExtensions.HeadProvidedContracts)
         {
-            if (services.GetService(contract) == null)
+            // Resolve on a worker with a deadline so a construction that blocks names itself
+            // instead of hanging the whole run.
+            Task<object?> resolve = Task.Run(() => services.GetService(contract));
+            if (!resolve.Wait(TimeSpan.FromSeconds(20)))
             {
-                missing.Add(contract.Name);
+                missing.Add($"{contract.Name}: did not resolve within 20 s");
+            }
+            else if (resolve.Result == null)
+            {
+                missing.Add($"{contract.Name}: resolved to null");
             }
         }
 

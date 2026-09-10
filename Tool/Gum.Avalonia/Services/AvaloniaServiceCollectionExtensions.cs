@@ -39,14 +39,14 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<IDialogService, AvaloniaDialogService>();
         services.AddSingleton<IDeleteDialogService, AvaloniaDeleteDialogService>();
 
-        // Plugins: none load in this head yet (phase 40 brings the plugin host across), so every
-        // plugin-facing port resolves to a no-op host.
-        services.AddSingleton<NullPluginManager>();
-        services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<NullPluginManager>());
-        services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<NullPluginManager>());
-        services.AddSingleton<IDeletePluginNotifier>(provider => provider.GetRequiredService<NullPluginManager>());
-        services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<NullPluginManager>());
-        services.AddSingleton<IRenamePluginNotifier>(provider => provider.GetRequiredService<NullPluginManager>());
+        // Plugins: the shared MEF host, configured with this head's built-in plugins and exports.
+        services.AddSingleton<IPluginHostConfiguration, AvaloniaPluginHostConfiguration>();
+        services.AddSingleton<PluginManager>();
+        services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
+        services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        services.AddSingleton<IDeletePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
+        services.AddSingleton<IRenamePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
 
         // Property-grid-coupled contracts: placeholders until phase 70 re-authors the grid.
         services.AddSingleton<IStandardElementsManagerGumTool, NullStandardElementsManagerGumTool>();

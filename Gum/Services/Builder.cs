@@ -81,6 +81,7 @@ file static class ServiceCollectionExtensions
         // PluginManager: DI-constructed (lightweight ctor taking only IPluginEnablementStore); Initialize()
         // does the heavy two-stage MEF setup. Still WPF-side because it hosts WpfPluginBase's menu and
         // delete-window calls. The narrow plugin-notifier ports all resolve to this one singleton.
+        services.AddSingleton<IPluginHostConfiguration, WpfPluginHostConfiguration>();
         services.AddSingleton<PluginManager>();
         services.AddSingleton<IPluginManager>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<IUndoPluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
