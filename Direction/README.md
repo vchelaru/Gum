@@ -31,8 +31,9 @@ then open only the file relevant to the topic. You do not need to load everythin
 - **`ui-decoupling-plan.md`** — the phased UI/logic decoupling plan behind ADR-0003 (Phases 0–4b,
   now largely complete). Living; its Phase 5 "bet" was decided by ADR-0017.
 - **`avalonia-migration/`** — the execution plan for ADR-0017: `README.md` (primary plan),
-  `foundation.md` (what is already done on `main`), and one `phase-NN-*.md` per conversion area.
-  Living. **Start here for any Avalonia / cross-platform editor work.**
+  `foundation.md` (what is already done on `main`), `coverage-matrix.md` (every Windows-only
+  dependency in the tool graph and the phase that removes it), and one `phase-NN-*.md` per
+  conversion area. Living. **Start here for any Avalonia / cross-platform editor work.**
 
 ## Two lifecycles (why this is a collection, not one doc)
 

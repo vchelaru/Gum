@@ -35,6 +35,10 @@ low risk per file and wide.
   never needs a `Window` type in shared code.
 - **Order: panels users touch most first** (Errors, Output, Undos, Alignment, Project Properties,
   Recent Files), then dialogs, then the State Animation plugin's seven views, then the rest.
+- **State Animation's Skia-in-WPF surface becomes a native Avalonia draw.** The plugin targets the
+  Windows 10 SDK only because of `SkiaSharp.Views.WPF`; Avalonia renders on Skia already, so the
+  preview uses an `ICustomDrawOperation` with the Skia API lease instead of a hosted view. That
+  removes the last reason for the win10 TFM.
 
 ## Scope
 

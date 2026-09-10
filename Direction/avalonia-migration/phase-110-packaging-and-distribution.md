@@ -38,6 +38,12 @@ There is no signing, notarization, or non-Windows artifact.
   as the WPF zip, labeled preview, until phase 120 makes them the only artifacts.
 - **Content and plugin layout is identical on all OSes**, relative to the executable, and the
   Windows layout does not change for the WPF tool during the transition.
+- **Executable and native-library facts per OS are part of the publish, not an afterthought.**
+  The bundled CLI is `gumcli` (no `.exe`) on macOS/Linux and phase 25's lookup handles that; the
+  main assembly is `Gum.dll` behind a native host, so `PluginManager`'s reference list must use
+  the loaded assembly's location, not the literal `Gum.exe`; KernSmith's FreeType rasterizer and
+  the chosen GL backend (phase 10) ship native libraries per RID that the publish must include;
+  `bmfont.exe` is not shipped in non-Windows packages.
 
 ## Scope
 

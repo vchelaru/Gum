@@ -86,15 +86,23 @@ entirely view code. Roughly 210 PRs.
 | XAML files in `WpfDataUi` | 18 | the property grid: 16 editors + container + grid |
 | Plugin projects targeting `net8.0-windows` | 11 | all internal-in-repo; see phase 40 |
 | DI registrations in `Gum/Services/Builder.cs` | 127 | still in the WPF project; see phase 20 |
-| Third-party WPF-only packages | 7 | MaterialDesignThemes, ControlzEx, FluentIcons.Wpf, PixiEditor.ColorPicker, SharpVectors, Xceed AvalonDock (vestigial), Microsoft.AppCenter |
+| Third-party WPF-only packages / DLL refs | 10 | MaterialDesignThemes, ControlzEx, FluentIcons.Wpf, PixiEditor.ColorPicker, SharpVectors, SkiaSharp.Views.WPF, Xceed AvalonDock + Toolkit + DataGrid (vestigial), Microsoft.AppCenter, System.Management (dead) |
+| GDI+ (`System.Drawing.Common`) call sites that throw off Windows | 3 live | `ImageHeader` fallback in **`Gum.Presentation`**, `FontTypeConverter`, `ThemedScrollbar`; see `coverage-matrix.md` §3 |
+| P/Invoke / registry sites | 6 | window activation, monitor DPI, chrome hit-test, cursor warp, OS dark-mode registry read; see `coverage-matrix.md` §4 |
+| Shell / process launches with Windows names | 4 | `explorer.exe`, `cmd.exe`, `gumcli.exe`, `Gum.exe`; plus shipped `bmfont.exe`; see `coverage-matrix.md` §5 |
 
 Helper projects still `net8.0-windows`: `XnaAndWinforms` (device service + WPF surface host),
 `InputLibrary` (`Cursor`, `WpfInputHostAdapter`; references KNI and `Gum.Presentation`),
+`FlatRedBall.SpecializedXnaControls` (`ImageRegionSelectionControl`, the second canvas),
 `WpfDataUi`, `CsvLibrary` (no actual WPF use; TFM only), `CommonFormsAndControls` (empty, net8.0).
+
+The full sweep, with every site and its owning phase, is `coverage-matrix.md`.
 
 ## Canvas backend — the one thing the foundation did not touch
 
 The editor's only graphics backend is `nkast.Kni.Platform.WinForms.DX11` at
 `GraphicsProfile.FL10_0`, created against a window handle in `XnaAndWinforms/GraphicsDeviceService.cs`.
 This is Windows-only and is the exact root cause of the macOS Wine failure (Wine offers only 9.3).
-Nothing on `main` has attempted a non-Windows device. That is phase 10.
+Nothing on `main` has attempted a non-Windows device *for the editor*. But `Gum.ProjectServices.MonoGame`
+already creates one for `gumcli screenshot` with `MonoGame.Framework.DesktopGL`, and CI runs it on
+macOS and under Mesa software GL on Windows. That precedent is phase 10's starting point.

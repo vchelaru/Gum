@@ -33,9 +33,21 @@ packaging.
      core, re-save, and generate code; assert byte equality against committed baselines produced
      by the WPF tool, **per OS**, and under hostile settings (a non-invariant culture such as
      `de-DE`, forced `core.autocrlf`, explicit path-separator checks).
-- **Canvas pixels are a manual checklist, not CI.** Runners have no GPU. The `Gum.Cli screenshot`
-  + `Gum.ImageDiff` pair can compare the *runtime* render across OSes, which is a useful proxy,
-  but editor-canvas correctness is verified by hand per phase 50.
+- **Canvas pixels: a Mesa software-GL smoke test in CI, a manual checklist for interaction.**
+  CI already runs GL rendering headlessly on Windows runners through a Mesa override (the
+  `gumcli screenshot --backend raylib` and `diff-screenshots` tests) and on `macos-15` natively.
+  Phase 50's Avalonia surface gets the same treatment: render one fixture screen to the surface,
+  read the bitmap back, and compare with `Gum.ImageDiff` against a baseline. Interaction
+  (drag, resize, DPI) stays a manual checklist per phase 50.
+- **A banned-API analyzer is part of the guard, because the compiler is not enough.**
+  `System.Drawing.Common`, `Microsoft.Win32.Registry`, `System.Management`, P/Invoke, and literal
+  `*.exe` process launches all compile under `net8.0` and fail at runtime off Windows
+  (`coverage-matrix.md` §8). Phase 25 seeds the list on the headless projects; this phase
+  enforces it on the head and every project it references, in CI, as a build error.
+- **Non-Windows runtime tests are the final guard.** The full-startup test runs on macOS and Linux
+  runners, not only Windows, because path, case-sensitivity, and shell issues only show there.
+  The parity corpus includes a project whose file references differ from disk only by case, so
+  phase 25's case-mismatch error is exercised on Linux.
 - **`GumToolUnitTests` is split, not ported.** Logic tests move to `Gum.Presentation.Tests`;
   WPF-view tests stay in the Windows-only project until cutover deletes them with the views;
   Avalonia-view tests go in a new `Tests/Gum.Avalonia.Tests` (net8.0, `Avalonia.Headless`).

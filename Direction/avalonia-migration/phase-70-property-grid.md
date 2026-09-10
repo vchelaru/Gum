@@ -39,6 +39,13 @@ After the canvases, this is the largest job in the plan.
   code-behind, extract it WPF-side with a test first.
 - **Test every editor against the same fixture** in both heads: a member of each type, set and
   read back, with undo.
+- **Two Windows-only mechanics inside the editors are redesigned, not ported.**
+  `TextBoxDisplay` warps the mouse with `user32 SetCursorPos` during drag-to-change-value; there
+  is no cross-platform cursor warp, so the Avalonia editor uses pointer capture and relative
+  deltas. `FilePickingLogic` opens `Microsoft.Win32` dialogs directly; both heads go through
+  `IDialogService`. The installed-font list (`FontTypeConverter` uses GDI+ `FontFamily.Families`)
+  moves behind a small font-enumeration seam with a SkiaSharp implementation
+  (`SKFontManager.Default.FontFamilies`), shared by both heads.
 
 ## Scope
 

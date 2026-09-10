@@ -28,10 +28,15 @@ the interaction model. This is the largest single body of work in the plan.
 - **One shared `GraphicsDevice` per process, both canvases on it.** Same as today via
   `GraphicsDeviceService`; a second device would split `LoaderManager`'s texture cache. Phase 10
   confirms two render targets on one device.
-- **`XnaAndWinforms` and `InputLibrary` become `net8.0`.** The device service, the render-surface
-  host base, `Cursor`, and `IInputHostControl` are needed by the Avalonia head, so they cannot stay
+- **`XnaAndWinforms`, `InputLibrary`, and `FlatRedBall.SpecializedXnaControls` become `net8.0`.**
+  The device service, the render-surface host base, `Cursor`, `IInputHostControl`, and
+  `ImageRegionSelectionControl`'s logic are needed by the Avalonia head, so they cannot stay
   `net8.0-windows`. Split each into a neutral core (kept name) and a WPF adapter file that moves to
-  `Gum/`. `System.Drawing.Point` in `Cursor` becomes a neutral point type.
+  `Gum/`. `Cursor` keeps `System.Drawing.Point` (an in-box primitive, fine cross-platform) but
+  drops the `PointToClient` host coupling into the adapter.
+- **`ScreenshotService` stops using `Microsoft.Win32.SaveFileDialog` directly.** It is the one
+  canvas-side site that bypasses `IDialogService`; route it through the service WPF-side first
+  (a phase-20 "not yet movable" item), then it works in the head for free.
 - **Avalonia `IInputHostControl` adapter feeds the same `Cursor`.** Pointer position, focus, size,
   and capture come from Avalonia events; the handlers are untouched.
 - **Render on the UI thread, driven by the render loop**, matching the WPF host. Off-thread only if

@@ -39,8 +39,15 @@ each WPF-only third-party dependency with an Avalonia-native equivalent or drop 
   | `FluentIcons.Wpf` | Fluent icon glyphs | `FluentIcons.Avalonia` (same icon enum, same author) |
   | `PixiEditor.ColorPicker` | color picker in `ColorDisplay`/swatch | an Avalonia color picker (`Avalonia.Controls.ColorPicker` in 11.x) wrapped behind the existing `ColorDisplay` VM |
   | `SharpVectors` | SVG rendering in WPF views | `Svg.Skia`'s Avalonia control (already a dependency for the Skia plugin) |
-  | `Xceed.Wpf.AvalonDock` (DLL refs) | vestigial utility types in `Dialog.cs` | delete |
+  | `Xceed.Wpf.AvalonDock`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | vestigial utility types in `Dialog.cs` | delete |
+  | `System.Management` (WMI) | **no usage found**; dead package reference | delete (boyscout) |
   | `Microsoft.AppCenter.*` | analytics + crash reporting | drop, or a cross-platform replacement; **owner decision**, tracked in the plan README |
+
+- **OS dark-mode detection comes from Avalonia, not the registry.** `ThemingService.IsSystemInDarkMode`
+  reads `HKCU\...\Personalize\AppsUseLightTheme`; the Avalonia `IThemingService` uses
+  `IPlatformSettings.GetColorValues()` and its change event, which works on all three OSes.
+- **Custom chrome loses its P/Invoke.** `TitleBarClickPassthrough` calls `user32 GetCursorPos`;
+  Avalonia's `ExtendClientAreaToDecorationsHint` plus pointer events cover the same hit-testing.
 
 - **App scale** (`AppScale.cs`, `IAppScaleProvider`) maps to Avalonia's `RenderScaling` plus a
   user scale factor applied as a `LayoutTransform` on the root, same semantics as today.

@@ -32,7 +32,11 @@ relocation, because the service *implementations* have already moved to `Gum.Pre
   auto-registration scans one assembly today; it must scan `Gum.Presentation` and the head assembly.
 - **Registrations that cannot move yet are listed, not hidden.** Any implementation still in
   `Gum/` that is not a seam impl is a decoupling gap: file an issue per item, register it from
-  `AddGumWpf()` for now, and make `AddGumCore()`'s completeness a tracked number.
+  `AddGumWpf()` for now, and make `AddGumCore()`'s completeness a tracked number. Known members
+  of that list from the 2026-09-09 audit: `GuiCommands` (Win32 force-foreground),
+  `MainWindowViewModel` (Win32 monitor-DPI placement), `MenuStripManager` (WPF `MenuItem`
+  rendering), `ThemingService` (registry read), `ScreenshotService` (direct `SaveFileDialog`).
+  Each has an owning phase in `coverage-matrix.md`.
 - **`InitializeGum` becomes a headless startup service.** The ordered sequence in `Program.cs`
   (type manager, standard elements, wireframe, plugins, file watch, project load, command line)
   moves into `Gum.Presentation` as a class both heads call, with the framework-specific steps

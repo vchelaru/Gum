@@ -60,15 +60,17 @@ Variables tab), theming (90), packaging (110).
 |---|---|---|---|
 | `Tool/EditorTabPlugin_XNA` | net8.0-windows, WPF+WinForms | 1 | the wireframe canvas; phase 50 |
 | `Gum/TextureCoordinateSelectionPlugin` | net8.0-windows, WPF+WinForms | 1 | second canvas; phase 50 |
+| `FlatRedBall.SpecializedXnaControls` (not a plugin, but in the graph) | net8.0-windows, WPF | 0 | `ImageRegionSelectionControl`, the second canvas's control; phase 50 |
 | `Gum/StateAnimationPlugin` | net8.0-windows10.0.19041, WPF+WinForms | 7 | largest view set; phase 80 |
 | `Gum/CodeOutputPlugin` | net8.0-windows, WPF+WinForms | 1 | uses `WpfDataUi`; phase 70 + 80 |
 | `Gum/GumFormsPlugin` | net8.0-windows, WPF | 1 | uses `WpfDataUi`; phase 70 + 80 |
 | `Gum/ImportFromGumxPlugin` | net8.0-windows, WPF | 2 | uses `WpfDataUi`; phase 70 + 80 |
-| `Gum/SvgPlugin` (SkiaPlugin) | net8.0-windows, WinForms | 0 | uses `WpfDataUi`, KNI; likely TFM-only |
+| `Gum/SvgPlugin` (SkiaPlugin) | net8.0-windows, WinForms | 0 | **confirmed** zero `System.Windows` files; references `WpfDataUi`, so TFM flip waits on phase 70's model split |
 | `Gum/PerformanceMeasurementPlugin` | net8.0-windows, WPF+WinForms | 1 | phase 80 |
-| `Gum/ConvertToJsonPlugin` | net8.0-windows, WPF | 0 | likely TFM-only |
-| `Gum/EventOutputPlugin` | net8.0-windows | 0 | likely TFM-only |
-| `Tool/HtmlToGum` | net8.0-windows, WPF+WinForms | 0 | inherits `WpfPluginBase` for menus |
+| `Gum/ConvertToJsonPlugin` | net8.0-windows, WPF | 0 | **confirmed** TFM-only; flip now |
+| `Gum/EventOutputPlugin` | net8.0-windows | 0 | **confirmed** TFM-only; flip now |
+| `Gum/CsvLibrary` (not a plugin) | net8.0-windows | 0 | **confirmed** TFM-only; flip now |
+| `Tool/HtmlToGum` | net8.0-windows, WPF+WinForms | 0 | inherits `WpfPluginBase` for menus; runs `cmd.exe /c npm install` (phase 25's shell helper); Node lookup is PATH-based already |
 
 Internal plugins under `Gum/Plugins/InternalPlugins/` (22 folders) compile into `Gum.csproj`; their
 views (19 XAML) are phase 80, their tab registrations move to the new contract here.

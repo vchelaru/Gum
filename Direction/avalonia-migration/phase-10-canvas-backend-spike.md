@@ -26,9 +26,21 @@ The output is a go/no-go with measured numbers and a chosen approach, not shippa
 ## Decisions
 
 - **Prove a non-Windows device first, everything else second.** The tool's only backend is
-  `nkast.Kni.Platform.WinForms.DX11`. There is no GL/SDL backend anywhere in the tool graph. Until a
+  `nkast.Kni.Platform.WinForms.DX11`. There is no GL/SDL backend anywhere in the *tool* graph. Until a
   `GraphicsDevice` exists on macOS or Linux, latency and DPI are unmeasurable. The KNI desktop-GL
   platform package name is confirmed against the KNI repo, not guessed.
+- **Two candidate backends, evaluated side by side; the in-repo precedent is MonoGame, not KNI.**
+  `Gum.ProjectServices.MonoGame` (used by `gumcli screenshot`) already creates a device
+  cross-platform with `MonoGame.Framework.DesktopGL`: a `Game` subclass with a
+  `GraphicsDeviceManager`, SDL2 window, render to `RenderTarget2D`, read back. CI runs it on
+  `macos-15` and, on Windows, under a Mesa software-GL override. The tool compiles
+  `RenderingLibrary` as linked sources against the KNI packages with `GUM; MONOGAME` defines, and
+  KNI and MonoGame share the `Microsoft.Xna.Framework` API surface, so the spike must answer:
+  (a) KNI desktop-GL, headless, or (b) switch the tool's linked `RenderingLibrary` compile to
+  MonoGame DesktopGL and reuse the CLI's proven device path (hidden SDL window). (b) has the
+  precedent and the CI story; (a) keeps the tool on the runtime it ships to KNI users. Measure
+  both if (a) works at all; record the choice as an ADR because it changes what the tool's
+  renderer is built on.
 - **Prefer KNI over SkiaGum for the editor canvas.** The WYSIWYG canvas must match what a MonoGame
   game renders, including bitmap fonts and sprite sampling, and the editor's wireframe objects,
   selection handles, and `Renderer.Self` pipeline are built on `RenderingLibrary`. Switching to
@@ -78,6 +90,8 @@ shell, anything in `Gum.Avalonia`. Removing any sanctioned singleton.
 
 ## Key files
 
+- `Tools/Gum.ProjectServices.MonoGame/MonoGameScreenshotService.cs` — the proven cross-platform device path
+- `.github/workflows/build-and-test.yaml` — the Mesa software-GL override used for GL tests on Windows runners
 - `XnaAndWinforms/GraphicsDeviceService.cs`, `WpfGraphicsDeviceControl.cs`, `WpfRenderSurfaceHost.cs`
 - `IRenderTargetPixelBufferWriter` in `Gum.Presentation` and the WPF `WriteableBitmap` writer (#3834)
 - `InputLibrary/Cursor.cs`, `InputLibrary/IInputHostControl.cs`, `InputLibrary/WpfInputHostAdapter.cs`

@@ -33,9 +33,15 @@ Avalonia head exists on `main` and every later phase lands into it.
   through the same model (phase 40 makes that the only way).
 - **Standard window decoration first.** The ControlzEx custom chrome is phase 90 polish.
 - **Seam implementations are one class each, in the head:** `AvaloniaDispatcher`,
-  `AvaloniaDialogService` (reusing `DialogViewResolver`'s cross-assembly lookup with AXAML views),
-  `AvaloniaClipboardService`, `AvaloniaSpinnerFactory`, `AvaloniaAppScaleProvider`, a file-reveal
-  service that shells out per OS, and an `IInputHostControl` adapter (consumed in phase 50).
+  `AvaloniaDialogService` (reusing `DialogViewResolver`'s cross-assembly lookup with AXAML views;
+  file pickers via Avalonia's `StorageProvider`), `AvaloniaClipboardService`,
+  `AvaloniaSpinnerFactory`, `AvaloniaAppScaleProvider`, the `IFileSystemRevealService` from phase
+  25, and an `IInputHostControl` adapter (consumed in phase 50).
+- **Two Win32 dependencies become seams here.** `GuiCommands` force-foregrounds the window with
+  `user32` after font generation; `MainWindowViewModel` restores window placement with `Shcore`/
+  `user32` monitor DPI calls (the reason it is still in `Gum/`). Both become a small window-host
+  seam (`Activate`, `GetScreens`/placement) implemented per head; Avalonia's `Window.Activate()`
+  and `Screens` cover them. Until then they stay in `AddGumWpf()` per phase 20's list.
 - **CI builds the head on `windows-latest`, `macos-latest`, `ubuntu-latest` from the first PR**, and
   runs the phase-100 headless smoke test on each. A red head build blocks merge like any other.
 - **Location:** `Tool/Gum.Avalonia/` beside `Tool/EditorTabPlugin_XNA/`, in `Gum.sln` and
@@ -75,7 +81,8 @@ packaging (110).
 
 ## Dependencies
 
-Needs phase 20. Does not need phase 10, but nothing canvas-related is added here. Blocks 40–100.
+Needs phase 20, and phase 25's reveal seam and banned-API list (the head enforces the list from
+its first build). Does not need phase 10, but nothing canvas-related is added here. Blocks 40–100.
 
 ## Risks
 

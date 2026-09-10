@@ -21,7 +21,9 @@ feature-flagged off; (4) `gum.exe` and everything it loads has zero `UseWPF`/`Us
 1. `foundation.md` — what is already done on `main`. Most of what a naive "port WPF to Avalonia"
    plan would start with is finished. Do not redo it.
 2. This file, top to bottom.
-3. The phase doc for the work you are picking up. Each opens with **Purpose**, **Builds on**
+3. `coverage-matrix.md` — every Windows-only dependency found in the tool graph and the phase
+   that removes it. Re-run its sweep at the end of each phase; an unowned row is a plan defect.
+4. The phase doc for the work you are picking up. Each opens with **Purpose**, **Builds on**
    (the foundation it assumes), and **Decisions**, then scope, tasks, key files, dependencies,
    risks, and a done checklist.
 
@@ -36,8 +38,12 @@ cutover) and replaces its process:
   WPF head and both build in CI from the first PR. There is no migration branch.
 - **The WPF tool stays shippable until the cutover PR.** No user-facing regression during the
   migration.
-- **The compiler is the purity guard.** The head and everything it references target plain
-  `net8.0`. A WPF leak is a build error, not a scanner warning.
+- **The purity guard has three parts, and the compiler is only the first.** The head and
+  everything it references target plain `net8.0`, so a WPF/WinForms leak is a build error. But
+  `System.Drawing.Common`, `Microsoft.Win32.Registry`, P/Invoke, and `Process.Start("explorer.exe")`
+  all compile on every TFM and fail at runtime off Windows, so a banned-API analyzer (phase 25/100)
+  and non-Windows runtime tests (phase 100/110) are the other two parts. `coverage-matrix.md` lists
+  every known instance and which guard catches it.
 - **Highest-risk work first.** The canvas backend spike gates the canvas integration, not the
   other way round.
 
@@ -50,6 +56,7 @@ risk is the chance the phase changes the plan.
 |---|---|---|---|---|
 | 10 | Canvas backend spike: KNI desktop-GL device, headless, presented in Avalonia on macOS/Linux | M | **Highest** | [phase-10-canvas-backend-spike.md](phase-10-canvas-backend-spike.md) |
 | 20 | Composition root: move `AddGumCore()` and the startup chain to `Gum.Presentation`; split `AddGumWpf()` | S–M | Low | [phase-20-composition-root.md](phase-20-composition-root.md) |
+| 25 | Cross-platform hygiene of the shared core: GDI+, `bmfont.exe`, shell/reveal, paths, case sensitivity, banned-API list | S–M | Low | [phase-25-shared-core-cross-platform-hygiene.md](phase-25-shared-core-cross-platform-hygiene.md) |
 | 30 | Avalonia head and shell: `Gum.Avalonia` project, window, panels, menus, seam impls, CI on three OSes | M | Medium | [phase-30-avalonia-head-and-shell.md](phase-30-avalonia-head-and-shell.md) |
 | 40 | Plugin panel contract and plugin compatibility decision | M | Medium | [phase-40-plugin-panel-contract.md](phase-40-plugin-panel-contract.md) |
 | 50 | Editor canvases in Avalonia (wireframe + texture-coordinate), input, scroll bars | **H** | High | [phase-50-editor-canvases.md](phase-50-editor-canvases.md) |
@@ -67,13 +74,13 @@ risk is the chance the phase changes the plan.
 10 canvas spike ─────────────────────────────┐
                                              ├─> 50 canvases ─┐
 20 composition root ─> 30 shell ─> 40 plugin contract ────────┼─> 60 trees ─┐
-                                                              ├─> 70 grid  ─┼─> 100 parity ─> 110 packaging ─> 120 cutover
+25 core hygiene ────────┘                                     ├─> 70 grid  ─┼─> 100 parity ─> 110 packaging ─> 120 cutover
                                                               ├─> 80 views ─┤
                                                               └─> 90 theme ─┘
 ```
 
-- **10 and 20 run in parallel from day one.** 10 is throwaway and touches nothing on `main`;
-  20 is a mechanical relocation on `main`.
+- **10, 20, and 25 run in parallel from day one.** 10 is throwaway and touches nothing on `main`;
+  20 and 25 are WPF-side changes on `main` that the head then inherits.
 - **30 needs 20** (a `net8.0` head must be able to compose the service graph). 30 does not wait
   on 10, but no canvas work starts until 10 returns a go.
 - **40 is decided during 30** and consumed by everything after; it is a contract, not a big code

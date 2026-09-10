@@ -55,8 +55,11 @@ verification on all three OSes, release notes announcing the change and the plug
 3. Workflows: `build-and-test.yaml` tool job → three-OS Avalonia build + tests;
    `build-and-release.yml` → Avalonia artifacts only.
 4. Delete the retired projects and files; flip every remaining tool-graph csproj to `net8.0`.
-5. `grep` the tool graph for `UseWPF`, `UseWindowsForms`, `System.Windows`, `net8.0-windows`;
-   zero hits.
+5. Re-run the `coverage-matrix.md` sweep on the tool graph: `UseWPF`, `UseWindowsForms`,
+   `System.Windows`, `net8.0-windows`, `System.Drawing.Common`, `Microsoft.Win32`,
+   `System.Management`, `DllImport`/`LibraryImport`, `explorer.exe`, `cmd.exe`, literal `.exe`
+   paths, `bmfont.exe`, `@"\"`; zero hits outside explicitly per-OS files. Update the matrix to
+   all-removed and date it.
 6. Rewrite `CLAUDE.md`, `code-style.md`, and the skills listed above; close out the two history docs.
 7. Release notes and docs banner; keep the last WPF release downloadable and linked.
 8. Clean-checkout build and launch on Windows, macOS, Linux; screenshot each for the release.
