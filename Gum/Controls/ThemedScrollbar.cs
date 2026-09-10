@@ -1,3 +1,4 @@
+#pragma warning disable WFO1000 // WinForms designer-serialization analyzer; this control is never designer-hosted and goes away with the WPF head.
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	  <TargetFramework>net8.0-windows</TargetFramework>
+	  <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <UseWindowsForms>true</UseWindowsForms>
@@ -40,7 +40,6 @@
          Gum.csproj (see Gum/Embedded/SkiaShapes/ and Gum/Logic/SkiaShapeStandardsLogic.cs)
          so the project-authoring half is no longer Skia-plugin-specific. SkiaPlugin
          keeps the rendering half. -->
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="SkiaSharp.Extended">
       <Version>1.60.0</Version>
     </PackageReference>
@@ -54,7 +53,6 @@
       <Version>0.5.18</Version>
     </PackageReference>
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
-    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
   </ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <ItemGroup>

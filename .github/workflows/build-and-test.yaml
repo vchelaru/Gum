@@ -193,7 +193,7 @@ jobs:
       - name: Codegen Drift Check
         run: |
           dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
-          $cli = "Tools/Gum.Cli/bin/Release/net8.0/GumCli.exe"
+          $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
           $gumxProjects = @(
             "Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
@@ -616,11 +616,11 @@ jobs:
           if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
           $dests = @(
             "Tests/RaylibGum.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
-            "Tests/Gum.Cli.Tests/bin/Release/net8.0",
+            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0",
+            "Tests/Gum.Cli.Tests/bin/Release/net10.0",
             "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0",
             "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net8.0"
+            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0"
           )
           foreach ($dest in $dests) {
             Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force

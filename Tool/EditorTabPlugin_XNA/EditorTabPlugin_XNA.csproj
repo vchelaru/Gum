@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 
 
 		<OutputType>Library</OutputType>
@@ -41,7 +41,6 @@
 		</Compile>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<!--
 			ShadowDusk compiles a render-target Container's SourceShaderFile (.fx) into an Effect at
 			runtime (no content pipeline) for the WYSIWYG preview; see RenderTargetShaderResolver.
@@ -51,7 +50,6 @@
 		<PackageReference Include="ShadowDusk.Compiler" Version="0.17.0" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
@@ -36,8 +36,6 @@
 		<AppDesigner Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<Resource Include="Content\Icons\OpenFolder.png" />

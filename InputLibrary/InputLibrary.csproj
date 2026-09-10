@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net8.0-windows</TargetFramework>
+		<TargetFramework>net10.0-windows</TargetFramework>
 		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
 		<NoWarn>$(NoWarn);CA1416</NoWarn>
 		<OutputType>Library</OutputType>
@@ -20,15 +20,13 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<!--
 			Cursor implements IGumCursorState so the headless wireframe-editing family (Gum.Presentation,
 			part of #3846) can poll live cursor state without referencing this project directly — a
-			net8.0 project can't reference this net8.0-windows7.0 one (NU1201), but the reverse (this
-			net8.0-windows7.0 project referencing a plain net8.0 one) is the normal, allowed direction.
+			net10.0 project can't reference this net10.0-windows one (NU1201), but the reverse (this
+			net10.0-windows project referencing a plain net10.0 one) is the normal, allowed direction.
 		-->
 		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 	</ItemGroup>
