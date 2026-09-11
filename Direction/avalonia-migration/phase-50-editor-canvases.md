@@ -16,9 +16,11 @@
 > the selected element with handles, rulers and scroll bars, and the Texture Coordinates tab
 > appears for a NineSlice selection.
 >
-> **Open:** the Avalonia render-target shader resolver returns null (ShadowDusk's compiler ships
-> Windows binaries), so shaded containers preview unshaded; the manual interaction checklist and
-> the macOS/Linux runs (task 8) are the owner's step.
+> **Done 2026-09-11:** the render-target shader resolver is shared
+> (`EditorTabPlugin.Core/Services/RenderTargetShaderResolver.cs`); the WPF head compiles the
+> DirectX target and this head the OpenGL target for its SDL2/GL device (ShadowDusk ships native
+> compiler binaries for win-x64, linux-x64, osx-x64 and osx-arm64). The manual interaction
+> checklist and the macOS/Linux runs (task 8) are the owner's step.
 
 ## Purpose
 

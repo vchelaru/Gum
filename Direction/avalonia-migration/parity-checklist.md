@@ -22,6 +22,7 @@
 | Delete with references | delete dialog options, reference listing | | | |
 | Texture coordinates | region select, drag edges, zoom, scroll, snapping | | | |
 | Import from gumx | pick project, choose elements, import | | | |
+| Import HTML | Content > Import > HTML: options dialog with Browse, converter progress in the Output tab, result dialog with the log | | | |
 | Code output tab | settings grid, generated code, save | | | |
 | Gum Forms tab | add Forms, theme import | | | |
 | Errors tab | errors listed, click navigates, "!" tree icons | | | |

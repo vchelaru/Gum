@@ -105,9 +105,9 @@ Paths under `Tool/Gum.Avalonia/` unless noted. "Phase N" means another phase own
 | `TextureCoordinateSelectionPlugin/Views/MainControl`, `EditorTabPlugin_XNA/Views/EditorControls` | phase 50 (done there) |
 | `Gum/MainWindow`, `Gum/App` | phase 30: `Shell/MainWindow`, `App` |
 
-**Not done in this phase, with reasons:** `Tool/HtmlToGum` stays `net10.0-windows` (its import options
-are two WinForms forms that need a dialog view model and a view per head first; see
-`coverage-matrix.md`). The Avalonia Project Properties form cannot yet add or remove localization
+**Not done in this phase, with reasons:** `Tool/HtmlToGum` stayed `net10.0-windows` until
+2026-09-11, when its plugin moved into `Gum.Presentation` with dialog view models and a view per
+head (see `coverage-matrix.md`). The Avalonia Project Properties form cannot yet add or remove localization
 files or browse for the single-pixel texture (phase 70's file editors). Icons are text glyphs until
 phase 90. The WPF `DeleteOptionsWindow` remains a `Window` until CodeOutputPlugin moves to the
 neutral delete options.
@@ -203,4 +203,4 @@ Blocks phase 100's per-panel parity checklist.
 
 - [x] Every XAML in the table has an AXAML twin bound to the same VM, or a documented reason it does not exist. (See the inventory above; the twins are C# views, per the phase 30 convention.)
 - [x] Converters folder has no bridge-only converters left. (`Tool/Gum.Avalonia/Converters/` holds only type adapters and themed-look converters; the WPF visibility, inverse-bool, null and count converters have no Avalonia twin because `IsVisible` is a bool and `BoolConverters`/`ObjectConverters` cover the rest.)
-- [ ] Every plugin project that has no canvas is `net10.0`. Done: ConvertToJson, EventOutput (phase 40), PerformanceMeasurement (here); State Animation is a net10.0 core plus a WPF head that retires at cutover. Open: CodeOutput, GumForms, ImportFromGumx, SvgPlugin (phase 70's property-grid consumers) and HtmlToGum (deferred, above).
+- [ ] Every plugin project that has no canvas is `net10.0`. Done: ConvertToJson, EventOutput (phase 40), PerformanceMeasurement (here), HtmlToGum (shared plugin in `Gum.Presentation`, 2026-09-11); State Animation is a net10.0 core plus a WPF head that retires at cutover. Open: CodeOutput, GumForms, ImportFromGumx, SvgPlugin (phase 70's property-grid consumers).

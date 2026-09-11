@@ -90,7 +90,7 @@ Variables tab), theming (90), packaging (110).
 | `Gum/ConvertToJsonPlugin` | **net10.0** (done 2026-09-10) | 0 | over `Gum.Presentation`, banned-API guard, loads in the Avalonia head |
 | `Gum/EventOutputPlugin` | **net10.0** (done 2026-09-10) | 0 | same |
 | `Gum/CsvLibrary` (not a plugin) | **net10.0** (done in phase 20) | 0 | referenced by `Gum.Presentation` |
-| `Tool/HtmlToGum` | net10.0-windows, WPF+WinForms | 0 | menu is `AddMenuEntry` now; still references `Gum.csproj` and WinForms; `cmd.exe /c npm install` went through phase 25's `ShellCommand`; TFM flip once it references `Gum.Presentation` (phase 80 sweep) |
+| `Tool/HtmlToGum` | **shared** (2026-09-11): the plugin moved into `Gum.Presentation` (`HtmlToGumPlugin/`), so both heads load it; the folder keeps the converter | 0 | dialogs are `ImportHtmlOptionsViewModel` and `ImportHtmlResultViewModel` with a view per head; progress is the spinner plus Output tab lines |
 
 Internal plugins under `Gum/Plugins/InternalPlugins/` (22 folders) compile into `Gum.csproj`; their
 views (19 XAML) are phase 80, their tab registrations move to the new contract here.
