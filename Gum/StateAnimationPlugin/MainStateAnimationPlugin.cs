@@ -4,7 +4,6 @@ using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Extensions;
-using Gum.Gui.Windows;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Messages;
@@ -12,6 +11,7 @@ using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Responses;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows;
-using System.Windows.Controls;
 using ToolsUtilities;
 
 
@@ -36,7 +35,7 @@ namespace StateAnimationPlugin;
 /// model onto the window's DataContext.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
+public class MainStateAnimationPlugin : PluginBase, IAnimationUndoProvider
 {
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
@@ -66,10 +65,9 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
     private IPluginTab? pluginTab;
     private MenuItemModel? menuItem;
 
-    // Owned here (not by ElementDeleteService) because materializing a WPF CheckBox from the
-    // framework-neutral DeleteOptionCheckboxViewModel is a view concern (ADR-0005). Set by
-    // HandleDeleteOptionsWindowShow, read back by HandleDeleteConfirmed, then cleared.
-    private CheckBox? _deleteAnimationFileCheckBox;
+    // The "delete the animation file" option this plugin added to the current delete confirmation,
+    // if any. Set by HandleDeleteOptionsShow, read back by HandleDeleteConfirmed, then cleared.
+    private DeleteOptionCheckboxViewModel? _deleteAnimationFileOption;
 
     #endregion
 
@@ -244,8 +242,8 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
         this.GetDeleteStateResponse = _controller.HandleGetDeleteStateResponse;
         this.GetDeleteStateCategoryResponse = _controller.HandleGetDeleteStateCategoryResponse;
 
-        this.DeleteOptionsWindowShow += HandleDeleteOptionsWindowShow;
-        this.DeleteConfirmed += HandleDeleteConfirmed;
+        this.DeleteOptionsShow += HandleDeleteOptionsShow;
+        this.DeleteOptionsConfirmed += HandleDeleteConfirmed;
 
         // Undo/redo restore element state without firing the granular StateAdd/StateDelete events, so
         // recompute the view model (and its keyframe error state) afterward - otherwise a broken
@@ -260,44 +258,31 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
     }
 
     /// <summary>
-    /// Materializes <see cref="ElementDeleteService.HandleDeleteOptionsWindowShow"/>'s
-    /// framework-neutral checkbox request into a real WPF control and adds it to the
-    /// DeleteOptionsWindow, if one is requested.
+    /// Adds <see cref="ElementDeleteService.HandleDeleteOptionsWindowShow"/>'s "delete the animation
+    /// file" option to the delete confirmation, if one is requested. Each head renders it.
     /// </summary>
-    private void HandleDeleteOptionsWindowShow(DeleteOptionsWindow deleteWindow, Array objectsToDelete)
+    private void HandleDeleteOptionsShow(DeleteOptionsDialogViewModel dialog, Array objectsToDelete)
     {
-        // A cancelled delete never fires DeleteConfirmed, so clear the previous dialog's checkbox
-        // here - otherwise a later delete that adds no checkbox would read the stale checked state.
-        _deleteAnimationFileCheckBox = null;
+        // A cancelled delete never fires DeleteOptionsConfirmed, so clear the previous dialog's option
+        // here - otherwise a later delete that adds no option would read the stale checked state.
+        _deleteAnimationFileOption = _elementDeleteService.HandleDeleteOptionsWindowShow(objectsToDelete);
 
-        var checkboxViewModel = _elementDeleteService.HandleDeleteOptionsWindowShow(objectsToDelete);
-
-        if (checkboxViewModel != null)
+        if (_deleteAnimationFileOption != null)
         {
-            _deleteAnimationFileCheckBox = checkboxViewModel.ToCheckBox();
-            deleteWindow.MainStackPanel.Children.Add(_deleteAnimationFileCheckBox);
+            dialog.CheckBoxes.Add(_deleteAnimationFileOption);
         }
     }
 
     /// <summary>
-    /// Reads back the checkbox added by <see cref="HandleDeleteOptionsWindowShow"/> (if any) and
-    /// hands its final checked state to <see cref="ElementDeleteService.HandleConfirmDelete"/>,
-    /// then removes the checkbox from the window.
+    /// Hands the final state of the option added by <see cref="HandleDeleteOptionsShow"/> (if any) to
+    /// <see cref="ElementDeleteService.HandleConfirmDelete"/>.
     /// </summary>
-    private void HandleDeleteConfirmed(DeleteOptionsWindow deleteOptionsWindow, Array deletedObjects)
+    private void HandleDeleteConfirmed(DeleteOptionsDialogViewModel dialog, Array deletedObjects)
     {
-        bool isChecked = _deleteAnimationFileCheckBox?.IsChecked == true;
+        bool isChecked = _deleteAnimationFileOption?.IsChecked == true;
+        _deleteAnimationFileOption = null;
 
         _elementDeleteService.HandleConfirmDelete(deletedObjects, isChecked);
-
-        if (_deleteAnimationFileCheckBox != null)
-        {
-            if (deleteOptionsWindow.MainStackPanel.Children.Contains(_deleteAnimationFileCheckBox))
-            {
-                deleteOptionsWindow.MainStackPanel.Children.Remove(_deleteAnimationFileCheckBox);
-            }
-            _deleteAnimationFileCheckBox = null;
-        }
     }
 
     /// <summary>

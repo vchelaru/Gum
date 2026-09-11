@@ -44,6 +44,7 @@ public class DialogViewRegistry
         Register<AddAnimationDialogViewModel>(() => new AddAnimationDialogView());
         Register<AddStateKeyframeDialog>(() => new AddStateKeyframeDialogView());
         Register<SubAnimationSelectionDialogViewModel>(() => new SubAnimationSelectionDialogView());
+        Register<DeleteOptionsDialogViewModel>(() => new DeleteOptionsDialogView());
     }
 
     /// <summary>The view-model types with a registered view (subclasses resolve through these).</summary>

@@ -293,6 +293,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void DeleteConfirmed(object window, Array objectsToDelete) =>
         CallMethodOnPlugin(plugin => (plugin as IDeleteOptionsDialogPlugin)?.CallDeleteConfirmed(window, objectsToDelete));
 
+    /// <inheritdoc/>
+    public void ShowDeleteOptions(DeleteOptionsDialogViewModel dialog, Array objectsToDelete) =>
+        CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsShow(dialog, objectsToDelete));
+
+    /// <inheritdoc/>
+    public void ConfirmDeleteOptions(DeleteOptionsDialogViewModel dialog, Array deletedObjects) =>
+        CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsConfirmed(dialog, deletedObjects));
+
     public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
 

@@ -30,6 +30,13 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   first: Behaviors' Edit/OK/Cancel (`BehaviorsViewModel` commands), the Errors help link
   (`AllErrorsViewModel.OpenHelpCommand`), and History's focus-on-tab (`UndosViewModel.FocusCurrentItem`).
   `AlignmentViewModel` and `IToolsVisibility` are now bridged to plugins.
+- **Delete confirmation is neutral.** `PluginBase.DeleteOptionsShow` / `DeleteOptionsConfirmed` carry a
+  `DeleteOptionsDialogViewModel` (check boxes and pick-one groups). The Avalonia head shows it through
+  `IDialogService` (`DeleteOptionsDialogView`); the WPF head renders the same options into its
+  `DeleteOptionsWindow`, which stays a WPF `Window` only because CodeOutputPlugin (phase 70's area)
+  still adds WPF controls through `WpfPluginBase`'s pair. `DeleteObjectPlugin` moved to
+  Gum.Presentation on the neutral events; State Animation switched too and no longer needs
+  `WpfPluginBase`.
 
 ## Purpose
 
