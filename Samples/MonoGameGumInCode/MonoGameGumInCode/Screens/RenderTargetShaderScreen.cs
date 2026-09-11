@@ -52,7 +52,10 @@ namespace MonoGameGumInCode.Screens;
 /// <c>SKRuntimeEffect.CreateShader</c> (<c>resources/Grayscale.sksl</c>). Left is the unmodified
 /// bear for comparison. A fourth, MonoGame-only cell (<c>Content/Grayscale.slang</c>) repeats the
 /// SourceShaderFile wiring style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's
-/// Slang frontend converts it to <c>.fx</c> text before compiling.
+/// Slang frontend converts it to <c>.fx</c> text before compiling. A second, MonoGame-only row
+/// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
+/// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
+/// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -70,6 +73,12 @@ internal class RenderTargetShaderScreen : FrameworkElement
     // boilerplate, no technique/pass block. ShadowDusk's Slang frontend converts it to .fx text
     // before compiling; see RenderTargetShaderResolver.ResolveFxSource for the tool-side twin.
     private const string SlangShaderFileName = "Grayscale.slang";
+    // Two more single-pass, parameterless Slang examples (issue #4679). Blur's radius is a
+    // constant baked into the shader itself, sized for this demo's 128x128 cells — Gum's
+    // render-target-effect blit sets no shader parameters and runs a single pass, so an
+    // adjustable blur isn't possible without new engine work.
+    private const string BlurSlangShaderFileName = "Blur.slang";
+    private const string SepiaSlangShaderFileName = "Sepia.slang";
 #endif
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
@@ -131,13 +140,33 @@ internal class RenderTargetShaderScreen : FrameworkElement
         // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
         // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
         // frontend wiring (issue #4677) end to end, not just that .fx still works.
-        string slangEffectPath = ToolsUtilities.FileManager.RelativeDirectory + SlangShaderFileName;
-        EffectType? slangEffect = CompileEffectFromFile(slangEffectPath, out _);
-        row.AddChild(BuildCell("SourceShaderFile (.slang)",
-            effect: null,
-            sourceShaderFile: slangEffect != null ? SlangShaderFileName : null));
+        row.AddChild(BuildSlangSourceShaderFileCell("SourceShaderFile (.slang)", SlangShaderFileName));
+
+        // Second row, XNA-like only: two more example shaders (issue #4679), same wiring style.
+        var effectsRow = new ContainerRuntime();
+        effectsRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        effectsRow.StackSpacing = 48;
+        effectsRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        effectsRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        effectsRow.Width = 0;
+        effectsRow.Height = 0;
+        root.AddChild(effectsRow);
+
+        effectsRow.AddChild(BuildSlangSourceShaderFileCell("Blur (.slang, fixed radius)", BlurSlangShaderFileName));
+        effectsRow.AddChild(BuildSlangSourceShaderFileCell("Sepia (.slang)", SepiaSlangShaderFileName));
 #endif
     }
+
+#if !RAYLIB && !SKIA
+    // Compiles a .slang shader (relative to FileManager.RelativeDirectory) and wires it up via
+    // SourceShaderFile, gating on a known-good compile the same way the .fx cell above does.
+    private static ContainerRuntime BuildSlangSourceShaderFileCell(string caption, string slangFileName)
+    {
+        string effectPath = ToolsUtilities.FileManager.RelativeDirectory + slangFileName;
+        EffectType? effect = CompileEffectFromFile(effectPath, out _);
+        return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
+    }
+#endif
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs /
     // SKColor all expose a (byte,byte,byte,byte) form), matching RenderTargetScreen's Rgba helper.
