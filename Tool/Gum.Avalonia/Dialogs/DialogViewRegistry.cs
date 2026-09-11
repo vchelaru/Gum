@@ -75,7 +75,7 @@ public class DialogViewRegistry
 
         return new TextBlock
         {
-            Text = $"No Avalonia view is registered for {viewModel.GetType().Name} yet (phase 80).",
+            Text = $"No Avalonia view is registered for {viewModel.GetType().Name}.",
             TextWrapping = TextWrapping.Wrap,
             Margin = new Thickness(16),
             DataContext = viewModel,

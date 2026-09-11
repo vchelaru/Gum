@@ -42,9 +42,9 @@ public sealed class MainPanelView : Grid
                 new RowDefinition(new GridLength(2, GridUnitType.Star)),
             },
         };
-        centerGrid.Children.Add(CreateRegion(tabs.CenterTop, "States (phase 60)", 0, 0));
+        centerGrid.Children.Add(CreateRegion(tabs.CenterTop, 0, 0));
         centerGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
-        centerGrid.Children.Add(CreateRegion(tabs.CenterBottom, "Variables (phase 70)", 2, 0));
+        centerGrid.Children.Add(CreateRegion(tabs.CenterBottom, 2, 0));
 
         Grid rightGrid = new Grid
         {
@@ -55,11 +55,11 @@ public sealed class MainPanelView : Grid
                 new RowDefinition(new GridLength(tabs.BottomRightHeight, GridUnitType.Pixel)),
             },
         };
-        rightGrid.Children.Add(CreateRegion(tabs.RightTop, "Editor (phase 50)", 0, 0));
+        rightGrid.Children.Add(CreateRegion(tabs.RightTop, 0, 0));
         rightGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
-        rightGrid.Children.Add(CreateRegion(tabs.RightBottom, "Output (phase 40)", 2, 0));
+        rightGrid.Children.Add(CreateRegion(tabs.RightBottom, 2, 0));
 
-        Children.Add(CreateRegion(tabs.Left, "Project (phase 60)", 0, 0));
+        Children.Add(CreateRegion(tabs.Left, 0, 0));
         Children.Add(CreateSplitter(GridResizeDirection.Columns, 0, 1));
         SetColumn(centerGrid, 2);
         Children.Add(centerGrid);
@@ -76,7 +76,7 @@ public sealed class MainPanelView : Grid
         };
     }
 
-    private Grid CreateRegion(ObservableCollection<AvaloniaPluginTab> source, string placeholder, int row, int column)
+    private Grid CreateRegion(ObservableCollection<AvaloniaPluginTab> source, int row, int column)
     {
         TabControl tabControl = new TabControl
         {
@@ -102,20 +102,8 @@ public sealed class MainPanelView : Grid
             }
         };
 
-        TextBlock empty = new TextBlock
-        {
-            Text = placeholder,
-            Opacity = 0.5,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            IsHitTestVisible = false,
-            IsVisible = source.Count == 0,
-        };
-        source.CollectionChanged += (_, _) => empty.IsVisible = source.Count == 0;
-
         Grid host = new Grid().WithThemeResource(Panel.BackgroundProperty, "Frb.Surface01");
         host.Children.Add(tabControl);
-        host.Children.Add(empty);
         SetRow(host, row);
         SetColumn(host, column);
         return host;
