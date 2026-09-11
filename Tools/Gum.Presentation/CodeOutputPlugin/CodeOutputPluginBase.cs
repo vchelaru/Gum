@@ -1,4 +1,4 @@
-using CodeOutputPlugin.Manager;
+﻿using CodeOutputPlugin.Manager;
 using Gum.ProjectServices.CodeGeneration;
 using Gum;
 using Gum.Commands;
@@ -31,8 +31,8 @@ namespace CodeOutputPlugin;
 /// The Code Output plugin: the Code tab (a preview of the generated code and the code generation
 /// settings) and code generation in response to project, element, instance, state, and variable
 /// events. Each head exports a subclass named <c>MainCodeOutputPlugin</c> that supplies the tab's
-/// view through <see cref="CreateTabHost"/>; the WPF one also adds the "delete custom code" option
-/// to the delete dialog.
+/// view through <see cref="CreateTabHost"/>. The delete dialog's "delete custom code" option is
+/// handled here for the neutral dialog, and by the WPF subclass for that head's own window.
 /// </summary>
 public abstract class CodeOutputPluginBase : PluginBase
 {
@@ -150,6 +150,14 @@ public abstract class CodeOutputPluginBase : PluginBase
             this,
             (_, message) => HandleRequestCodeGeneration(message));
 
+        // The neutral delete dialog (the Avalonia head's): offer to delete hand-edited custom code
+        // and act on the answer. The WPF head raises its own window's events instead, which
+        // MainCodeOutputPlugin there handles the same way.
+        DeleteOptionsShow += HandleDeleteOptionsShow;
+        DeleteOptionsConfirmed += HandleDeleteOptionsConfirmed;
+        // The project's code settings do not depend on the tab, so they load from here on.
+        ProjectLoad += HandleProjectLoaded;
+
         viewModel = new ViewModels.CodeWindowViewModel(
             projectState,
             fileCommands,
@@ -158,6 +166,26 @@ public abstract class CodeOutputPluginBase : PluginBase
             new CodeGenerationAutoSetupService());
 
         _settingsMembers = new CodeOutputSettingsMembers(projectState, syntaxVersionDetectionService, viewModel);
+    }
+
+    private DeleteOptionCheckboxViewModel? _deleteCustomCodeOption;
+
+    // One option covers the whole batch, so deleting a folder's worth of elements asks once. A
+    // cancelled delete never confirms, so the previous dialog's option is dropped here.
+    private void HandleDeleteOptionsShow(DeleteOptionsDialogViewModel dialog, Array objectsToDelete)
+    {
+        _deleteCustomCodeOption = _codeFileDeleteService.HandleDeleteOptionsWindowShow(objectsToDelete, codeOutputProjectSettings);
+        if (_deleteCustomCodeOption != null)
+        {
+            dialog.CheckBoxes.Add(_deleteCustomCodeOption);
+        }
+    }
+
+    private void HandleDeleteOptionsConfirmed(DeleteOptionsDialogViewModel dialog, Array deletedObjects)
+    {
+        bool deleteEditedCustomCode = _deleteCustomCodeOption?.IsChecked == true;
+        _deleteCustomCodeOption = null;
+        _codeFileDeleteService.HandleConfirmDelete(deletedObjects, deleteEditedCustomCode, codeOutputProjectSettings);
     }
 
     private void HandleRequestCodeGeneration(RequestCodeGenerationMessage message)
@@ -207,7 +235,6 @@ public abstract class CodeOutputPluginBase : PluginBase
         this.CategoryDelete += (category) => HandleRefreshAndExport();
         this.VariableRemovedFromCategory += (name, category) => HandleRefreshAndExport();
 
-        this.ProjectLoad += HandleProjectLoaded;
     }
 
 

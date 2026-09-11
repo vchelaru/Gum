@@ -214,8 +214,8 @@ public sealed class CodeOutputView : Grid, ICodeOutputTabHost
 
 /// <summary>
 /// The Avalonia head's Code Output plugin: <see cref="CodeOutputPluginBase"/> with
-/// <see cref="CodeOutputView"/>. The delete dialog's "delete custom code" option is not offered yet,
-/// so deleting an element here keeps its hand-written code file.
+/// <see cref="CodeOutputView"/>. The base handles the delete dialog's "delete custom code" option
+/// through the neutral dialog events.
 /// </summary>
 [Export(typeof(PluginBase))]
 public class MainCodeOutputPlugin : CodeOutputPluginBase

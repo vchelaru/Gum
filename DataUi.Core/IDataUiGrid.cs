@@ -11,6 +11,9 @@ namespace WpfDataUi;
 /// </summary>
 public interface IDataUiGrid
 {
+    /// <summary>The model behind the grid, for category and member changes beyond this interface.</summary>
+    DataUiGridModel Model { get; }
+
     /// <summary>The object whose members are shown; see <see cref="DataUiGridModel.Instance"/>.</summary>
     object? Instance { get; set; }
 

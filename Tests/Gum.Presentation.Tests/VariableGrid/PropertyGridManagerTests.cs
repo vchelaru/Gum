@@ -46,6 +46,7 @@ public class PropertyGridManagerTests
     {
         private readonly DataUiGridModel _model = new DataUiGridModel();
 
+        public DataUiGridModel Model => _model;
         public object? Instance { get => _model.Instance; set => _model.Instance = value; }
         public bool IsEnabled { get; set; } = true;
         public BulkObservableCollection<MemberCategory> Categories => _model.Categories;
