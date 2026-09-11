@@ -29,7 +29,7 @@
     <!-- Runtime HLSL .fx/.slang compiler used by RenderTargetShaderScreen to build a post-process
          shader at runtime without the content pipeline (issue #816). 0.19.0+ is required for the
          .slang input frontend (ShadowDusk.Compiler.Slang.SlangFrontend). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.19.0" />
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.20.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
