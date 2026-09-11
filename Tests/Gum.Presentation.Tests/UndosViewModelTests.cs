@@ -1,3 +1,5 @@
+using Gum.Plugins.InternalPlugins.Undos;
+using System.Collections.ObjectModel;
 using Gum.Plugins.Undos;
 using Gum.ToolStates;
 using Gum.Undo;
@@ -37,6 +39,23 @@ public class UndosViewModelTests : BaseTestClass
 
         raisedPropertyNames.ShouldContain(nameof(UndosViewModel.HistoryItems));
         raisedPropertyNames.ShouldContain(nameof(UndosViewModel.UndoIndex));
+    }
+
+    [Fact]
+    public void HistoryItems_StaysTheSameCollection_WhenTheHistoryIsEmpty()
+    {
+        // A view bound to the collection before a refresh must keep showing it.
+        ObservableCollection<UndoItemViewModel> bound = _viewModel.HistoryItems;
+        _selectedState.Setup(s => s.SelectedBehavior).Returns((Gum.DataTypes.Behaviors.BehaviorSave?)null);
+        _undoManager.Setup(u => u.CurrentElementHistory).Returns((ElementHistory?)null);
+
+        _undoManager.Raise(
+            undoManager => undoManager.UndosChanged += null,
+            _undoManager.Object,
+            new UndoOperationEventArgs { Operation = UndoOperation.EntireHistoryChange });
+
+        _viewModel.HistoryItems.ShouldBeSameAs(bound);
+        bound.Select(item => item.Display).ShouldBe(new[] { "No history" });
     }
 
     [Fact]

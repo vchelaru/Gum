@@ -23,8 +23,15 @@ public sealed class OutputView : DockPanel
     {
         Margin = new Thickness(4);
 
-        // The WPF Output tab's clear button uses the IconButton style.
-        Button clear = new Button { Content = "Clear", HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 4), Classes = { GumChromeStyles.IconButtonClass } };
+        // The WPF Output tab's clear button: the TextGrammarDismiss icon in the IconButton style.
+        Button clear = new Button
+        {
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.TextGrammarDismiss, 16),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 0, 0, 4),
+            Classes = { GumChromeStyles.IconButtonClass },
+        };
+        ToolTip.SetTip(clear, "Clear Output");
         clear.Bind(Button.CommandProperty, new Binding(nameof(MainOutputViewModel.ClearOutputCommand)));
         SetDock(clear, Dock.Top);
         Children.Add(clear);

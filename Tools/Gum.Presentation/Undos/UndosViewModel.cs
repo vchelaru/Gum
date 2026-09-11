@@ -60,16 +60,14 @@ namespace Gum.Plugins.Undos
 
             var elementHistory = _undoManager.CurrentElementHistory;
 
+            // Always the same collection: a view bound to it before the refresh keeps showing it.
+            _historyItems.Clear();
             if (elementHistory == null || elementHistory.Actions.Count() == 0)
             {
-                _historyItems = new ObservableCollection<UndoItemViewModel>
-                    {
-                        new UndoItemViewModel { Display = "No history" }
-                    };
+                _historyItems.Add(new UndoItemViewModel { Display = "No history" });
             }
             else
             {
-                _historyItems.Clear();
                 List<string> undoStringList = GetUndoStringList(elementHistory);
                 List<UndoItemViewModel> toReturn = new List<UndoItemViewModel>();
                 for (int i = 0; i < undoStringList.Count; i++)
