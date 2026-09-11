@@ -1,5 +1,25 @@
 # Phase 60 — Element tree and state tree in Avalonia
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work` except the per-OS checklist run. The
+> element tree's model and logic moved to a new `net10.0` project, `Tool/TreeViewPlugin.Core`
+> (namespaces unchanged): `GumTreeNode`, `ElementTreeViewManager`, `MainTreeViewPlugin`,
+> `TreeDragPayload`, the selection decision classes (now on neutral `TreeModifierKeys` /
+> `TreePointerButton`), `TreeSelectionModel` (the click, range, keyboard, drag-start and prune
+> rules that lived inside the WPF `GumTreeView`), `TreeDropLogic`, and `TreeIconCatalog`. The
+> manager reaches its panel through `IElementTreeView`, created by each head's
+> `IElementTreeViewFactory`: `WpfElementTreeView` and `AvaloniaElementTreeView`. Its right-click
+> menu is built as `ContextMenuItemViewModel` items. The states tree shares
+> `StateTreePluginBase`, `StateTreeRightClickService` and `StateTreeKeyboardHandler` (all in
+> `Gum.Presentation`); each head builds only its tree control.
+>
+> **Decision change:** the Avalonia element tree is a flat, virtualized row list over the node
+> model rather than Avalonia's `TreeView`. Selection lives on the nodes (multi-select), a drop needs
+> one row's bounds without its children, and scrolling to a node needs its row index; the flat
+> list gives all three directly. The states tree does use Avalonia's `TreeView`.
+>
+> **Open:** in-place rename is not part of either tree today (rename goes through a dialog, so it
+> arrives with phase 80); the checklist run on macOS/Linux is the owner's step.
+
 ## Purpose
 
 Render the project's element tree (screens, components, standards, behaviors, folders, instances)

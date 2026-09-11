@@ -1,5 +1,25 @@
 # Phase 50 — Editor canvases in Avalonia
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work` except the per-OS runs.
+> `XnaAndWinforms`, `InputLibrary`, and `FlatRedBall.SpecializedXnaControls` are plain `net10.0`;
+> their WPF pieces moved to `XnaAndWinforms.Wpf` (`WpfGraphicsDeviceControl`,
+> `WpfRenderSurfaceHost`, `WpfInputHostAdapter`). The per-frame sequence is the shared
+> `RenderTargetFrameLoop`; `Cursor` polls an `IInputHostControl`; canvases expose `ICanvasHost`.
+> The Avalonia head runs a hidden 1x1 KNI SDL2/GL `Game` behind a reference-counted
+> `GameRenderDeviceHost`, reads each frame back into an RGBA `WriteableBitmap`, and drives frames
+> from a render-priority `DispatcherTimer`. Both canvases split into neutral cores with thin heads:
+> `Tool/EditorTabPlugin.Core` (`WireframeCanvasCore`, `EditorTabPluginBase`) and
+> `Tool/TextureCoordinatePlugin.Core` (`TextureCoordinateDisplayController`,
+> `TextureCoordinatePluginBase`, `ImageRegionSelectionCore`). `ScreenshotService` saves through
+> `IDialogService`. Tree-node and search-result drags reach the Avalonia canvas through
+> `TreeDragPayload` (phase 60). Verified on Windows by unattended head runs: the wireframe shows
+> the selected element with handles, rulers and scroll bars, and the Texture Coordinates tab
+> appears for a NineSlice selection.
+>
+> **Open:** the Avalonia render-target shader resolver returns null (ShadowDusk's compiler ships
+> Windows binaries), so shaded containers preview unshaded; the manual interaction checklist and
+> the macOS/Linux runs (task 8) are the owner's step.
+
 ## Purpose
 
 Host both live editor canvases in the Avalonia head on the cross-platform device phase 10 proved:

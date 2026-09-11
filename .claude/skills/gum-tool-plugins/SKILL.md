@@ -1,6 +1,6 @@
 ---
 name: gum-tool-plugins
-description: Gum tool plugin system, including visualization plugins (EditorTabPlugin_XNA, TextureCoordinateSelectionPlugin). Triggers: plugin registration, PluginBase, PriorityPlugin, PluginManager, plugin events, finding which internal plugin owns a feature.
+description: Gum tool plugin system, including visualization plugins (EditorTabPlugin.Core/EditorTabPlugin_XNA, TextureCoordinatePlugin.Core). Triggers: plugin registration, PluginBase, PriorityPlugin, PluginManager, plugin events, finding which internal plugin owns a feature.
 ---
 
 # Gum Tool Plugin System Reference
@@ -75,11 +75,27 @@ Most events are defined on `PluginBase` — subscribe in `StartUp()`. The full l
 
 ## Visualization Plugins
 
-Visualization/rendering is handled by **external** plugin projects, not by Gum.csproj itself.
+Visualization/rendering is handled by plugin projects, not by Gum.csproj itself. Each canvas is a
+framework-neutral core (net10.0) plus a thin plugin per head.
 
-**EditorTabPlugin_XNA** (`Tool/EditorTabPlugin_XNA/`) is the primary visualization plugin. It uses KNI (the runtime the Gum tool uses for rendering) and owns all runtime/rendering concerns: creating runtime instances for the wireframe preview, rendering, and wiring all `CustomSetPropertyOnRenderable` statics in its `StartUp()` method (SetPropertyOnRenderable, UpdateFontFromProperties, ThrowExceptionsForMissingFiles, AddRenderableToManagers, RemoveRenderableFromManagers, FontService, PropertyAssignmentError).
+**Editor tab.** `Tool/EditorTabPlugin.Core` holds the wireframe canvas logic (`WireframeCanvasCore`),
+editors, rulers, services, and the abstract `EditorTabPluginBase`, which owns all runtime/rendering
+concerns: creating runtime instances for the wireframe preview, rendering, and wiring all
+`CustomSetPropertyOnRenderable` statics in its `StartUp()` (SetPropertyOnRenderable,
+UpdateFontFromProperties, ThrowExceptionsForMissingFiles, AddRenderableToManagers,
+RemoveRenderableFromManagers, FontService, PropertyAssignmentError). The WPF head's plugin is
+`Tool/EditorTabPlugin_XNA` (`MainEditorTabPlugin`, external DLL); the Avalonia head's is
+`Tool/Gum.Avalonia/Plugins/EditorTab/AvaloniaEditorTabPlugin`. A head supplies only the canvas
+control, tab layout, scroll bars, context menu and drop reader through the base class's hooks.
 
-**TextureCoordinateSelectionPlugin** (`Gum/TextureCoordinateSelectionPlugin/`) piggybacks on the statics that EditorTabPlugin_XNA sets up — it does not wire its own `CustomSetPropertyOnRenderable` statics.
+**Texture coordinates.** `Tool/TextureCoordinatePlugin.Core` (`TextureCoordinatePluginBase`,
+`TextureCoordinateDisplayController`) over `ImageRegionSelectionCore`; heads in
+`Gum/TextureCoordinateSelectionPlugin` (WPF) and `Tool/Gum.Avalonia/Plugins/TextureCoordinates`.
+It piggybacks on the statics the editor tab sets up.
+
+Both canvases draw through `ICanvasHost` (`XnaAndWinforms`, net10.0): `WpfGraphicsDeviceControl`
+(`XnaAndWinforms.Wpf`) in the WPF head, `AvaloniaGraphicsDeviceControl` in the Avalonia head. Logic
+added to a canvas goes in the core, never in one head's plugin.
 
 **Gum.csproj is save-class territory.** It should operate purely on save classes (data model) without runtime/rendering dependencies. Runtime code that still exists in Gum.csproj (like `WireframeObjectManager`) is legacy being actively refactored out to plugins. Do not add new runtime/rendering code to Gum.csproj.
 

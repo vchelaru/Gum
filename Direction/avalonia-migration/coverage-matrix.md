@@ -22,16 +22,17 @@
 |---|---|---|---|---|
 | `Gum/Gum.csproj` | WPF + WinForms | the WPF head itself | 120 (retired or reduced to the entry point) | TFM |
 | `WpfDataUi` | WPF + WinForms | property grid views | 70 (model split), 120 (delete) | TFM |
-| `XnaAndWinforms` | WPF | device service + WPF surface host | 50 (split neutral core / WPF adapter) | TFM |
-| `InputLibrary` | WPF | `Cursor` uses `System.Drawing.Point` + `WpfInputHostAdapter` | 50 | TFM |
-| `FlatRedBall.SpecializedXnaControls` | WPF | `ImageRegionSelectionControl`, the second canvas | 50 | TFM |
-| `Tool/EditorTabPlugin_XNA` | WPF + WinForms | wireframe canvas view + `nkast.Kni.Platform.WinForms.DX11` | 10 (backend), 50 (view) | TFM |
-| `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | second canvas view | 50 | TFM |
+| `XnaAndWinforms` | **done** (net10.0, 2026-09-10) | neutral device host + frame loop; WPF pieces in `XnaAndWinforms.Wpf` (net10.0-windows, WPF head only) | 50 | TFM |
+| `InputLibrary` | **done** (net10.0, 2026-09-10) | `Cursor` polls `IInputHostControl`; the WPF adapter moved to `XnaAndWinforms.Wpf` | 50 | TFM |
+| `FlatRedBall.SpecializedXnaControls` | **done** (net10.0, 2026-09-10) | `ImageRegionSelectionCore` over `ICanvasHost` | 50 | TFM |
+| `Tool/EditorTabPlugin_XNA` | WPF + WinForms | thin WPF head over `Tool/EditorTabPlugin.Core` (net10.0); the Avalonia head has its own | 50 (split done), 120 (delete) | TFM |
+| `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | thin WPF head over `Tool/TextureCoordinatePlugin.Core` (net10.0) | 50 (split done), 120 (delete) | TFM |
 | `Gum/StateAnimationPlugin` | WPF + WinForms, win10 SDK for `SkiaSharp.Views.WPF` | 7 views + Skia-in-WPF preview | 80 | TFM |
 | `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
+| `Tool/TreeViewPlugin.Core` | **new** (net10.0, 2026-09-10) | element tree model, manager, selection, plugin; the WPF view stays in `Gum/` | 60 | TFM |
 | `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
@@ -82,8 +83,8 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | warps the mouse during drag-to-change-value | 70 — redesign with pointer capture; no cross-platform cursor warp |
 | `Gum/Dialogs/ThemingService.cs` | `Microsoft.Win32.Registry` `AppsUseLightTheme` | detect OS dark mode | 90 — Avalonia `IPlatformSettings.GetColorValues()` |
 | `Gum/Services/Dialogs/DialogService.cs`, `WpfDataUi/Controls/FilePickingLogic.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl), 70 |
-| `Tool/EditorTabPlugin_XNA/Services/ScreenshotService.cs` | `Microsoft.Win32.SaveFileDialog` **directly**, bypassing `IDialogService` | export canvas as image | 50 — decoupling gap, route through `IDialogService` WPF-side first |
-| `XnaAndWinforms/WpfGraphicsDeviceControl.cs` | `HwndSource`, `WindowInteropHelper` | device window handle | 10/50 — the GL backend needs no HWND |
+| `Tool/EditorTabPlugin_XNA/Services/ScreenshotService.cs` | **done** (phase 40/50): saves through `IDialogService.SaveFile` | export canvas as image | 50 |
+| `XnaAndWinforms.Wpf/WpfGraphicsDeviceControl.cs` | `HwndSource`, `WindowInteropHelper` | device window handle, WPF head only | 50 (moved out of the neutral core; the Avalonia head uses a hidden SDL2/GL window), 120 (delete) |
 
 ## 5. Process launches, shell, shipped executables
 
