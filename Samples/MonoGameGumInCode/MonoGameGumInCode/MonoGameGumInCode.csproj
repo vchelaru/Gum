@@ -26,9 +26,10 @@
   <ItemGroup>
     <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
     <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
-    <!-- Runtime HLSL .fx compiler used by RenderTargetShaderScreen to build a post-process
-         shader at runtime without the content pipeline (issue #816). -->
-    <PackageReference Include="ShadowDusk.Compiler" Version="0.17.0" />
+    <!-- Runtime HLSL .fx/.slang compiler used by RenderTargetShaderScreen to build a post-process
+         shader at runtime without the content pipeline (issue #816). 0.19.0+ is required for the
+         .slang input frontend (ShadowDusk.Compiler.Slang.SlangFrontend). -->
+    <PackageReference Include="ShadowDusk.Compiler" Version="0.19.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
@@ -52,6 +53,11 @@
     <!-- Raw .fx text (NOT built through MGCB) — RenderTargetShaderScreen compiles it at runtime
          via ShadowDusk and references it by path through ContainerRuntime.SourceShaderFile (#3206). -->
     <None Update="Content\**\*.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- Raw .slang text (NOT built through MGCB) — RenderTargetShaderScreen converts it to .fx via
+         ShadowDusk's Slang frontend before compiling (issue #4677). -->
+    <None Update="Content\**\*.slang">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <!-- #3670/#3703 CustomFontFile=.ttf demo -->

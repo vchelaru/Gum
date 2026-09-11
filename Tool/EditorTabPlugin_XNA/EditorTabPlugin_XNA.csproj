@@ -43,12 +43,14 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<!--
-			ShadowDusk compiles a render-target Container's SourceShaderFile (.fx) into an Effect at
-			runtime (no content pipeline) for the WYSIWYG preview; see RenderTargetShaderResolver.
-			Pulls native shader-compiler binaries transitively (e.g. win-x64 libvkd3d-shader-1.dll),
-			which the PostBuild step copies alongside the plugin so they load when invoked.
+			ShadowDusk compiles a render-target Container's SourceShaderFile (.fx or .slang) into an
+			Effect at runtime (no content pipeline) for the WYSIWYG preview; see
+			RenderTargetShaderResolver. 0.19.0+ is required for the .slang input frontend
+			(ShadowDusk.Compiler.Slang.SlangFrontend). Pulls native shader-compiler binaries
+			transitively (e.g. win-x64 libvkd3d-shader-1.dll), which the PostBuild step copies
+			alongside the plugin so they load when invoked.
 		-->
-		<PackageReference Include="ShadowDusk.Compiler" Version="0.17.0" />
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.19.0" />
 		<PackageReference Include="nkast.Kni.Platform.WinForms.DX11" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
