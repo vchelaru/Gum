@@ -1115,6 +1115,83 @@ public class HeadlessErrorCheckerTests : BaseTestClass
             IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
             errors.ShouldNotContain(e => e.Code == "GUM0006");
+            errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    #endregion
+
+    #region GUM0008 — Referenced file name differs from the file on disk only by case
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0008InsteadOfGum0006_WhenInstanceSourceFileDiffersOnlyByCase()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            Project.FullFileName = Path.Combine(tempDirectory, "Project.gumx");
+            Directory.CreateDirectory(Path.Combine(tempDirectory, "Textures"));
+            File.WriteAllText(Path.Combine(tempDirectory, "Textures", "hero.png"), string.Empty);
+
+            ComponentSave component = new ComponentSave { Name = "HeroHolder" };
+            component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "MySprite.SourceFile",
+                Value = "Textures/Hero.png",
+                Type = "string",
+                IsFile = true,
+            });
+            component.States.Add(defaultState);
+            Project.Components.Add(component);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.Count.ShouldBe(1, string.Join(" | ", errors.Select(e => e.Code + ": " + e.Message)));
+            ErrorResult error = errors[0];
+            error.Code.ShouldBe("GUM0008");
+            error.ElementName.ShouldBe("HeroHolder");
+            error.Message.ShouldContain("Textures/Hero.png");
+            error.Message.ShouldContain("Textures/hero.png");
+            // A warning where this file system still resolves the reference, an error where it does not.
+            bool loadsHere = File.Exists(Path.Combine(tempDirectory, "Textures", "Hero.png"));
+            error.Severity.ShouldBe(loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0008InsteadOfGum0004_WhenElementFileDiffersOnlyByCase()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            Project.FullFileName = Path.Combine(tempDirectory, "Project.gumx");
+            Directory.CreateDirectory(Path.Combine(tempDirectory, "Components"));
+            File.WriteAllText(Path.Combine(tempDirectory, "Components", "button.gucx"), string.Empty);
+
+            // The loader flags the file missing only where the file system is case-sensitive.
+            bool loadsHere = File.Exists(Path.Combine(tempDirectory, "Components", "Button.gucx"));
+            ComponentSave component = new ComponentSave { Name = "Button", IsSourceFileMissing = !loadsHere };
+            Project.Components.Add(component);
+
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            ErrorResult error = errors.ShouldHaveSingleItem();
+            error.Code.ShouldBe("GUM0008");
+            error.Message.ShouldContain("Components/Button.gucx");
+            error.Message.ShouldContain("Components/button.gucx");
+            error.Severity.ShouldBe(loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error);
         }
         finally
         {

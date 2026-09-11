@@ -155,6 +155,12 @@ Gum treats an unrecognized `Width Units`, `Height Units`, `X Units`, or `Y Units
 Available in October 2026, or now if building Gum from source.
 {% endhint %}
 
+## File Name Case Mismatch (GUM0008)
+
+A project can reference a file whose name differs from the file on disk only by letter case: a Sprite's `SourceFile` set to `Textures/Hero.png` when the file is saved as `Textures/hero.png`, or a component named `Button` whose file is `Components/button.gucx`. Windows ignores the difference, so the project works there, but on a case-sensitive file system such as Linux the file is not found.
+
+When this happens the Gum tool reports a **GUM0008** entry in the [Errors tab](../editor-tab.md), naming what referenced the file, the name it used, and the name on disk. It is a warning on a file system where the file still loads and an error where it does not. To resolve it, rename the file to match the reference, or change the reference to match the file.
+
 ## Version Control (.gitignore)
 
 The following `.gitignore` entries are recommended for Gum projects:
