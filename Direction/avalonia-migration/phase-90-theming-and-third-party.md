@@ -1,5 +1,27 @@
 # Phase 90 — Theming, icons, and third-party WPF library replacement
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work` except the per-OS screenshot pass.
+> Nothing is hand-ported: `FrbThemeResources` (`Tool/Gum.Avalonia/Themes`) loads the WPF palette
+> dictionaries (`Palette`, `Frb.Accents`, `Frb.Brushes`, `Frb.Brushes.Light/Dark`), embedded
+> unchanged, into the application resources, with the light and dark files as Light/Dark theme
+> dictionaries. `GumIconGeometries` and the `GumIcon` control draw `GumIcons.xaml` the same way, so
+> the planned change to make `GumFigmaIconRipper` emit an Avalonia file is not needed; running the
+> ripper updates both heads. Light/dark switches through `RequestedThemeVariant`, OS dark mode comes
+> from `IPlatformSettings`, and the accent from `SystemAccentColor` plus the `Frb.*Primary*` keys
+> (`AvaloniaThemingService`, phase 30). The style base is Fluent; the shell, trees, palette and drop
+> indicator bind to `Frb.*` keys (`WithThemeResource`, `ThemeBrushes`). Tree icons tint from the same
+> `Frb.Colors.Icon.*` keys through `AvaloniaTreeIcons` over the shared `TreeIconCatalog`. The head's
+> `--theme light|dark` option shows the other variant in an unattended run without saving it.
+>
+> Third-party: none of `MaterialDesignThemes`, `ControlzEx`, `FluentIcons.Wpf`,
+> `PixiEditor.ColorPicker`, `SharpVectors`, or AvalonDock is in the Avalonia graph. In the WPF head
+> the Xceed assemblies (their one remaining use was a visual-tree helper in `Dialog.cs`) and the
+> unused `System.Management` package are removed. Standard window chrome ships.
+>
+> **Open:** AppCenter is an owner decision (it is not in the Avalonia head; the WPF head keeps it
+> until cutover). The theming dialog's view belongs to phase 80. The dark/light pass on macOS and
+> Linux is the owner's step.
+
 ## Purpose
 
 Give the Avalonia head the tool's look: the FRB light/dark themes, accent colors, app scaling, the

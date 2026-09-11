@@ -56,8 +56,8 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 | TFM |
 | `SharpVectors` | `Gum.csproj` | SVG in WPF views | 90 | TFM |
 | `SkiaSharp.Views.WPF` | `StateAnimationPlugin` | Skia surface inside WPF (the reason for the win10 SDK TFM) | 80 | TFM |
-| `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | `Gum.csproj` | vestigial utility types in `Dialog.cs` | 90 (delete) | TFM |
-| `System.Management` | `Gum.csproj` | **no usage found** — dead reference | 90 (delete, boyscout) | TFM |
+| `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | **done** (removed 2026-09-10) | the one helper `Dialog.cs` used is now a local visual-tree search | 90 | TFM |
+| `System.Management` | **done** (removed 2026-09-10) | had no usage | 90 | TFM |
 | `Microsoft.AppCenter.Analytics/.Crashes` | `Gum.csproj` | telemetry + crash reporting; service retired upstream | 90 (owner decision) | TFM |
 | `WindowsBase`, `PresentationCore`, `System.Xaml` | `WpfDataUi/SampleProject` only | a sample, **not in the graph** | none needed | — |
 
@@ -81,7 +81,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `Gum/ViewModels/MainWindowViewModel.cs` | `Shcore GetDpiForMonitor`, `user32 MonitorFromRect/GetMonitorInfo` | restore window placement per monitor DPI | 30 — Avalonia `Screens`; this is why the VM is still in `Gum/` |
 | `Gum/Behaviors/TitleBarClickPassthrough.cs` | `user32 GetCursorPos` | custom chrome hit-testing | 90 (chrome) / 120 (delete) |
 | `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | warps the mouse during drag-to-change-value | 70 — redesign with pointer capture; no cross-platform cursor warp |
-| `Gum/Dialogs/ThemingService.cs` | `Microsoft.Win32.Registry` `AppsUseLightTheme` | detect OS dark mode | 90 — Avalonia `IPlatformSettings.GetColorValues()` |
+| `Gum/Dialogs/ThemingService.cs` | `Microsoft.Win32.Registry` `AppsUseLightTheme` | detect OS dark mode | 90 — **Avalonia side done** (`AvaloniaThemingService` reads `IPlatformSettings.GetColorValues()`); the WPF file goes at 120 |
 | `Gum/Services/Dialogs/DialogService.cs`, `WpfDataUi/Controls/FilePickingLogic.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl), 70 |
 | `Tool/EditorTabPlugin_XNA/Services/ScreenshotService.cs` | **done** (phase 40/50): saves through `IDialogService.SaveFile` | export canvas as image | 50 |
 | `XnaAndWinforms.Wpf/WpfGraphicsDeviceControl.cs` | `HwndSource`, `WindowInteropHelper` | device window handle, WPF head only | 50 (moved out of the neutral core; the Avalonia head uses a hidden SDL2/GL window), 120 (delete) |

@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
+using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
@@ -14,6 +15,7 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Themes;
 using Gum.CommandLine;
 using Gum.DataTypes;
+using Gum.Dialogs;
 using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Startup;
@@ -86,6 +88,7 @@ public sealed class App : Application
             await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
             StartupTiming.Mark("InitializeGum complete");
             ApplyStartupSelection();
+            ApplyThemeOverride();
             if (_services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
                 desktop.Shutdown();
@@ -117,6 +120,20 @@ public sealed class App : Application
         {
             selectedState.SelectedInstance = selectedInstance;
         }
+    }
+
+    // An unattended run can show the other theme variant without changing the saved setting.
+    private void ApplyThemeOverride()
+    {
+        if (_options.Theme is not { } theme)
+        {
+            return;
+        }
+
+        RequestedThemeVariant = string.Equals(theme, "light", StringComparison.OrdinalIgnoreCase)
+            ? ThemeVariant.Light
+            : ThemeVariant.Dark;
+        _services.GetRequiredService<IMessenger>().Send(new ThemeChangedMessage(_services.GetRequiredService<IThemingService>().EffectiveSettings));
     }
 
     private void CaptureAndExit(Window window, IClassicDesktopStyleApplicationLifetime desktop)
