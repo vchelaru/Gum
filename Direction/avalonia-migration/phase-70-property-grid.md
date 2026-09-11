@@ -100,9 +100,15 @@ the four plugin panels.
 
 ## Done when
 
-- [ ] Neutral model project exists; WPF grid consumes it; WPF tool identical.
+- [x] Neutral model project exists; WPF grid consumes it; WPF tool identical.
 - [ ] All 16 editors + grid work in Avalonia; shared fixture test green in both heads.
+  All editors and the grid are done and tested against `EditorFixture` in the Avalonia head
+  (headless); the WPF editors are covered by `GumToolUnitTests` and by the shared logic's tests,
+  but the fixture itself does not run against the WPF controls yet.
 - [ ] Variables tab and the four plugin panels function on all three OSes with undo.
+  Done in code and green in the headless suites (which run on every OS in CI), and the head
+  starts with all four plugins loaded (`--exit-after` smoke run on Windows). Not yet run by hand
+  on macOS or Linux, and the Avalonia delete dialog lacks Code Output's custom-code option.
 
 ## Status (2026-09-10)
 
@@ -184,3 +190,14 @@ Work is on the phase-70 branch, one commit per part.
   CPU path (`FAST_GL_SKIA_RENDERING` stays off), so they need nothing from the graphics backend.
   Plugins load their NuGet dependencies from the application folder, so the Avalonia head now
   references `SkiaSharp.Extended`, `SkiaSharp.Skottie`, and `Svg.Skia` as `Gum.csproj` does.
+- **Part 8: the Code Output plugin.** The plugin body (service composition, the 20-odd editor
+  events, code generation, rename and delete handling) is `CodeOutputPluginBase` in
+  `Gum.Presentation`, and the Code tab's settings rows, which lived in the WPF `CodeWindow`
+  code-behind, are `CodeOutputSettingsMembers` there too (tested). Each head exports a thin
+  `MainCodeOutputPlugin` that supplies its Code view through `ICodeOutputTabHost`: the WPF one
+  stays in the plugin assembly and keeps the delete dialog's "delete custom code" check box
+  (implementing `IDeleteOptionsDialogPlugin` directly), and the Avalonia one is
+  `Tool/Gum.Avalonia/Plugins/CodeOutput/`. `AvaloniaPluginTab` now implements
+  `ITabSelectionState`, which the shared tab controller needs. Not done: the Avalonia delete
+  dialog does not take plugin options yet, so deleting an element in that head keeps its
+  hand-written code file (the safe side); generated files are still removed.

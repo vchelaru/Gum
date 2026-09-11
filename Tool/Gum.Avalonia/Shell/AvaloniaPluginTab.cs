@@ -9,7 +9,7 @@ namespace Gum.Avalonia.Shell;
 /// <see cref="ITabManager.AddControl"/>: an Avalonia control is shown as is; anything else is
 /// shown through the head's data templates (a ViewModel gets its view).
 /// </summary>
-public class AvaloniaPluginTab : ViewModel, IPluginTab, ITabDockingCandidate, ITabAutoSelectCandidate
+public class AvaloniaPluginTab : ViewModel, IPluginTab, ITabDockingCandidate, ITabAutoSelectCandidate, ITabSelectionState
 {
     /// <summary>Creates a hidden-by-default tab; the manager makes it visible when added.</summary>
     public AvaloniaPluginTab(object content)

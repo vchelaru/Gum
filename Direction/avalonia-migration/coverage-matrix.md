@@ -28,7 +28,7 @@
 | `Tool/EditorTabPlugin_XNA` | WPF + WinForms | wireframe canvas view + `nkast.Kni.Platform.WinForms.DX11` | 10 (backend), 50 (view) | TFM |
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | second canvas view | 50 | TFM |
 | `Gum/StateAnimationPlugin` | WPF + WinForms, win10 SDK for `SkiaSharp.Views.WPF` | 7 views + Skia-in-WPF preview | 80 | TFM |
-| `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
+| `Gum/CodeOutputPlugin` | the WPF head's Code view and delete-dialog option only (phase 70) | the plugin body is `CodeOutputPluginBase` and the settings rows `CodeOutputSettingsMembers`, both in `Gum.Presentation`; the Avalonia head exports its own subclass and Code view (`Tool/Gum.Avalonia/Plugins/CodeOutput/`); the delete dialog's "delete custom code" option stays WPF-only until the Avalonia delete dialog takes plugin options | 70, 80 (delete option) | TFM |
 | `Gum/GumFormsPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog view in each head (WPF `Gum/PluginViews/`, Avalonia `Plugins/PluginDialogs/`); Forms themes staged to both heads | 70 | TFM |
 | `Gum/ImportFromGumxPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog through `IDialogService`, views in each head as above | 70 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
