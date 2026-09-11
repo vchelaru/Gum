@@ -587,27 +587,9 @@ public class DataUiGridModel
                 {
                     throw new Exception("This member does not have a display name, so it cannot have camel cases inserted");
                 }
-                member.DisplayName = InsertSpacesInCamelCaseString(member.DisplayName);
+                member.DisplayName = DataUiText.InsertSpacesInCamelCase(member.DisplayName);
             }
         }
-    }
-
-    static string InsertSpacesInCamelCaseString(string originalString)
-    {
-        // Normally in reverse loops you go til i > -1, but
-        // we don't want the character at index 0 to be tested.
-        for (int i = originalString.Length - 1; i > 0; i--)
-        {
-            if (char.IsUpper(originalString[i]) && i != 0
-                // make sure there's not already a space there
-                && originalString[i - 1] != ' '
-                )
-            {
-                originalString = originalString.Insert(i, " ");
-            }
-        }
-
-        return originalString;
     }
 
     #endregion

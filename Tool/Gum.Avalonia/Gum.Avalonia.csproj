@@ -64,6 +64,7 @@
 		<!-- The editor tab's neutral core (canvas, editors, rulers); this head adds the Avalonia canvas control and layout. -->
 		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
+		<ProjectReference Include="..\..\AvaloniaDataUi\AvaloniaDataUi.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

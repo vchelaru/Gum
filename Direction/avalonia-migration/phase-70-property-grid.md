@@ -129,3 +129,17 @@ Work is on the phase-70 branch, one commit per part.
   and its controls for the Gum-specific `GumDisplayers` keys. The filter box's predicate moved from
   the WPF view into `PropertyGridManager`. The installed-font list goes through
   `IInstalledFontProvider` (SkiaSharp).
+- **Part 3: the Avalonia grid and the simple editors.** `AvaloniaDataUi` (net10.0, Avalonia,
+  banned-API analyzer, views built in C#) holds `DataUiGrid` (an `IDataUiGrid` over
+  `DataUiGridModel`: collapsible categories bound to `IsExpanded`/`IsVisible`/`HeaderColor`,
+  category right-click menus built when they open), `SingleDataUiContainer` (editor choice through
+  the grid's `DisplayerRegistry`, `PropertiesToSetOnDisplayer`, `UiCreated`, tooltips), and the
+  text, multi-line, check box, nullable bool, combo box (and editable), slider, and plus/minus
+  editors on a shared `DataUiDisplayBase` (member tracking, read-only disabling, detail text,
+  right-click "Make Default" plus the member's entries). Label scrubbing uses pointer capture and
+  relative deltas through `LabelDragScrubLogic`. The combo box's option list and the slider's
+  display-multiplier math were extracted to `ComboBoxDisplayLogic`/`SliderDisplayLogic` and the WPF
+  editors now use them. The Avalonia grid tints default and indeterminate values on every field;
+  the WPF Variables tab's "is edited" row icon (`OverridesIsDefaultStyling`) is not reproduced, a
+  theming decision left to phase 90. Rows are not pooled (Avalonia editors are cheap to build);
+  re-binding a displayer resets its per-member state, as the WPF pooling fix (#4664) requires.

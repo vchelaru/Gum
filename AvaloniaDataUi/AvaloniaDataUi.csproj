@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		AvaloniaDataUi: the Avalonia property grid (phase 70 of Direction/avalonia-migration/). The
+		DataUiGrid, its row host, and the standard editors, all built in C#, over the neutral member
+		model in DataUi.Core. The WPF twin is WpfDataUi; both implement DataUi.Core's IDataUi and
+		IDataUiGrid, so the tool drives either the same way. No Gum dependency: the tool's own editors
+		(units toggles, color swatch, ...) live in the Avalonia head.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<RootNamespace>AvaloniaDataUi</RootNamespace>
+		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.17" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\DataUi.Core\DataUi.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
+	</ItemGroup>
+
+</Project>

@@ -40,7 +40,13 @@ namespace WpfDataUi.Controls
         /// <summary>
         /// The number of decimal points to show on the text box when dragging the slider.
         /// </summary>
-        public int DecimalPointsFromSlider { get; set; } = 2;
+        public int DecimalPointsFromSlider
+        {
+            get => _sliderLogic.DecimalPointsFromSlider;
+            set => _sliderLogic.DecimalPointsFromSlider = value;
+        }
+
+        readonly SliderDisplayLogic _sliderLogic = new SliderDisplayLogic();
 
         InstanceMember? _instanceMember;
         public InstanceMember? InstanceMember
@@ -86,13 +92,12 @@ namespace WpfDataUi.Controls
         /// value is 1, which means that the displayed value will match the underlying value. A value of 2 would
         /// make the displayed value be double the underlying value. This value applies to the min and max values too.
         /// </summary>
-        double displayedValueMultiplier = 1;
         public double DisplayedValueMultiplier
         {
-            get => displayedValueMultiplier;
+            get => _sliderLogic.DisplayedValueMultiplier;
             set
             {
-                displayedValueMultiplier = value;
+                _sliderLogic.DisplayedValueMultiplier = value;
 
                 RefreshMinAndMaxValues();
             }
@@ -235,34 +240,7 @@ namespace WpfDataUi.Controls
         {
             var result = mTextBoxLogic.TryGetValueOnUi(out value);
 
-            if (displayedValueMultiplier != 1 && value != null)
-            {
-                if (value is float asFloat)
-                {
-                    value = (float)(asFloat / displayedValueMultiplier);
-                }
-                else if (value is double asDouble)
-                {
-                    value = (double)(asDouble / displayedValueMultiplier);
-                }
-                else if (value is int asInt)
-                {
-                    value = (int)(asInt / displayedValueMultiplier);
-                }
-                else if (value is decimal asDecimal)
-                {
-                    value = (decimal)(asDecimal / (decimal)displayedValueMultiplier);
-                }
-                else if (value is long asLong)
-                {
-                    value = (long)(asLong / displayedValueMultiplier);
-                }
-                else if (value is byte asByte)
-                {
-                    value = (byte)(asByte / displayedValueMultiplier);
-                }
-
-            }
+            value = _sliderLogic.ToInstanceValue(value);
 
             return result;
         }
@@ -271,34 +249,7 @@ namespace WpfDataUi.Controls
         {
             if(valueOnInstance != null)
             {
-                object multipliedValue = valueOnInstance;
-                if(displayedValueMultiplier != 1)
-                {
-                    if (valueOnInstance is float asFloat)
-                    {
-                        multipliedValue = asFloat * displayedValueMultiplier;
-                    }
-                    else if (valueOnInstance is double asDouble)
-                    {
-                        multipliedValue = asDouble * displayedValueMultiplier;
-                    }
-                    else if (valueOnInstance is int asInt)
-                    {
-                        multipliedValue = asInt * displayedValueMultiplier;
-                    }
-                    else if (valueOnInstance is decimal asDecimal)
-                    {
-                        multipliedValue = asDecimal * (decimal)displayedValueMultiplier;
-                    }
-                    else if (valueOnInstance is long asLong)
-                    {
-                        multipliedValue = asLong * (long)displayedValueMultiplier;
-                    }
-                    else if(valueOnInstance is byte asByte)
-                    {
-                        multipliedValue = asByte * (byte)displayedValueMultiplier;
-                    }
-                }
+                object multipliedValue = _sliderLogic.ToDisplayedValue(valueOnInstance);
 
                 SetTextBoxValue(multipliedValue);
 
@@ -323,29 +274,10 @@ namespace WpfDataUi.Controls
             _isSettingSliderValueProgrammatically = true;
             try
             {
-                if (valueOnInstance is float)
+                double? position = _sliderLogic.ToSliderPosition(valueOnInstance);
+                if (position != null)
                 {
-                    this.Slider.Value = (float)valueOnInstance;
-                }
-                else if (valueOnInstance is double)
-                {
-                    this.Slider.Value = (double)valueOnInstance;
-                }
-                else if(valueOnInstance is int)
-                {
-                    this.Slider.Value = (int)valueOnInstance;
-                }
-                else if(valueOnInstance is decimal)
-                {
-                    this.Slider.Value = (double)(decimal)valueOnInstance;
-                }
-                else if(valueOnInstance is long)
-                {
-                    this.Slider.Value = (long)valueOnInstance;
-                }
-                else if(valueOnInstance is byte)
-                {
-                    this.Slider.Value = (byte)valueOnInstance;
+                    this.Slider.Value = position.Value;
                 }
             }
             finally
@@ -394,23 +326,7 @@ namespace WpfDataUi.Controls
 
         private void ApplySliderValueToTextBox()
         {
-            var value = Slider.Value;
-
-            var propertyType = _instanceMember?.PropertyType;
-            if (propertyType == typeof(int) || 
-                propertyType == typeof(uint) || 
-                propertyType == typeof(long) || 
-                propertyType == typeof(ulong) ||
-                propertyType == typeof(byte) ||
-                propertyType == typeof(short))
-            {
-                this.TextBox.Text = ((int)value).ToString();
-            }
-            else
-            {
-
-                this.TextBox.Text = value.ToString($"f{DecimalPointsFromSlider}");
-            }
+            this.TextBox.Text = _sliderLogic.FormatSliderValue(Slider.Value, _instanceMember?.PropertyType);
         }
 
         private void TextBox_LostFocus_1(object? sender, RoutedEventArgs e)
