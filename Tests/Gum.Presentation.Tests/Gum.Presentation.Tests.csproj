@@ -18,6 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="AutoFixture.AutoMoq" />
     <!-- GumCoreCompositionTests builds a real ServiceCollection against AddGumCore(). -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <!-- SetVariableLogicTests uses AutoMocker (matches GumToolUnitTests.csproj's own
@@ -33,6 +34,10 @@
     <ProjectReference Include="..\..\Tool\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\..\Tool\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
+    <ProjectReference Include="..\..\Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
+    <ProjectReference Include="..\..\Tool\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
+    <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
   </ItemGroup>
 
   <ItemGroup>

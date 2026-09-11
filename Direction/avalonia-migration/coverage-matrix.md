@@ -38,7 +38,7 @@
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
 | `Tool/HtmlToGum` | **done** (2026-09-11): plugin logic lives in `Tools/Gum.Presentation/HtmlToGumPlugin/` (shared plugin, dialog view models); each head has its views; `Tool/HtmlToGum` keeps only the converter | same | 80 | TFM |
-| `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | mixes view tests and logic tests | 100 (split), 120 (delete view tests) | TFM |
+| `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | **split 2026-09-11**: every test that compiled without WPF (543 tests: logic, managers, data types, neutral plugin services, dialog view models) moved to `Tests/Gum.Presentation.Tests`, which runs on every OS and covers both heads; 513 WPF-bound tests remain (controls, WPF plugins, WPF editor canvas, input adapters) | 120 (delete view tests) | TFM |
 
 Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
 `Gum.ProjectServices.MonoGame/SkiaGum`, `Gum.Cli`, `Gum.ImageDiff`, `GumExpressions`,

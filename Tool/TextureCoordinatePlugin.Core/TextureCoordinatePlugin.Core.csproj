@@ -15,6 +15,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="GumToolUnitTests" />
+		<InternalsVisibleTo Include="Gum.Presentation.Tests" />
 		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 		<InternalsVisibleTo Include="TextureCoordinateSelectionPlugin" />
 		<InternalsVisibleTo Include="Gum.Avalonia" />
