@@ -2,10 +2,12 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Managers;
+using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
+using ToolsUtilities;
 
 namespace Gum.Logic;
 
@@ -25,6 +27,7 @@ public class NewProjectLogic : INewProjectLogic
     // Named for its first consumer; AddScreen is the call needed here.
     private readonly ICopyPasteProjectCommands _projectCommands;
     private readonly ISelectedState _selectedState;
+    private readonly IDefaultFontBundler _defaultFontBundler;
 
     public NewProjectLogic(
         IProjectManager projectManager,
@@ -32,7 +35,8 @@ public class NewProjectLogic : INewProjectLogic
         IFileCommands fileCommands,
         IFormsThemeImporter themeImporter,
         ICopyPasteProjectCommands projectCommands,
-        ISelectedState selectedState)
+        ISelectedState selectedState,
+        IDefaultFontBundler defaultFontBundler)
     {
         _projectManager = projectManager;
         _dialogService = dialogService;
@@ -40,6 +44,7 @@ public class NewProjectLogic : INewProjectLogic
         _themeImporter = themeImporter;
         _projectCommands = projectCommands;
         _selectedState = selectedState;
+        _defaultFontBundler = defaultFontBundler;
     }
 
     /// <inheritdoc/>
@@ -69,6 +74,11 @@ public class NewProjectLogic : INewProjectLogic
         {
             return;
         }
+
+        // The Text standard's Font default (StandardElementsManager) points at this bundled
+        // file rather than a system font name, so every new project needs it on disk regardless
+        // of whether a Forms theme (which brings its own fonts) is also imported below (#4674).
+        _defaultFontBundler.CopyTo(FileManager.GetDirectory(_projectManager.GumProjectSave!.FullFileName));
 
         if (viewModel.IsIncludeFormsControls)
         {

@@ -967,7 +967,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextAccent.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextAccent.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1018,7 +1018,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextBlack.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextBlack.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1075,7 +1075,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextDarkGray.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextDarkGray.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1126,7 +1126,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextEmphasis.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextEmphasis.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1177,7 +1177,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextGray.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextGray.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1228,7 +1228,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextH1.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextH1.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1279,7 +1279,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextH2.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextH2.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1330,7 +1330,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextH3.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextH3.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1381,7 +1381,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextLightGray.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextLightGray.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1432,7 +1432,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextNormal.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextNormal.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1483,7 +1483,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextPrimary.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextPrimary.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1534,7 +1534,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextPrimaryDark.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextPrimaryDark.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1585,7 +1585,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextPrimaryLight.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextPrimaryLight.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1636,7 +1636,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextSmall.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextSmall.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1687,7 +1687,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextStrong.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextStrong.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1757,7 +1757,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextSuccess.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextSuccess.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1808,7 +1808,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextTiny.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextTiny.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1859,7 +1859,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextTitle.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextTitle.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1910,7 +1910,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextWarning.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextWarning.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1961,7 +1961,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextWarning1.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextWarning1.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -2012,7 +2012,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TextWhite.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TextWhite.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>

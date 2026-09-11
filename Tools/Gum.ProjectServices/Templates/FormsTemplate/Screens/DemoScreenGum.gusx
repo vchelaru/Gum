@@ -559,7 +559,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="LabelInstance1.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="LabelInstance1.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1020,7 +1020,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TitleText.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TitleText.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1071,7 +1071,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TitleText1.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TitleText1.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
@@ -1122,7 +1122,7 @@
       <Value xsi:type="xsd:string"></Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="TitleText2.Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/LiberationSans-Regular.ttf</Value>
     </Variable>
     <Variable Type="float" Name="TitleText2.FontScale" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>

@@ -37,13 +37,24 @@ public class DiffStandardsCommandTests : IDisposable
 
         string textPath = Path.Combine(Path.GetDirectoryName(filePath)!, "Standards", "Text.gutx");
         string content = File.ReadAllText(textPath);
-        File.WriteAllText(textPath, content.Replace(">Arial<", ">DefinitelyNotArial<"));
+        // Find the scaffolded Font variable's actual value and corrupt it, rather than hardcoding
+        // a literal like the old default "Arial" - #4674 changed that default to a bundled .ttf
+        // path, which silently no-op'd this Replace (nothing to find) and made the test pass with
+        // exit code 0 instead of the drift it was supposed to force. The assertion below turns any
+        // future default-value change into a loud, obvious failure here instead of a silent no-op.
+        System.Text.RegularExpressions.Match fontValueMatch = System.Text.RegularExpressions.Regex.Match(
+            content, @"(<Variable IsFont=""true""[^>]*>\s*<Value[^>]*>)([^<]*)(</Value>)");
+        fontValueMatch.Success.ShouldBeTrue("could not locate the Font variable in the scaffolded Text.gutx");
+        string driftedContent = content.Remove(fontValueMatch.Groups[2].Index, fontValueMatch.Groups[2].Length)
+            .Insert(fontValueMatch.Groups[2].Index, "DefinitelyNotTheDefaultFont");
+        driftedContent.ShouldNotBe(content);
+        File.WriteAllText(textPath, driftedContent);
 
         CliTestHelper result = CliTestHelper.Run("diff-standards", filePath);
 
         result.ExitCode.ShouldBe(1);
         result.StandardOutput.ShouldContain("Text.gutx:");
-        result.StandardOutput.ShouldContain("DefinitelyNotArial");
+        result.StandardOutput.ShouldContain("DefinitelyNotTheDefaultFont");
     }
 
     [Fact]

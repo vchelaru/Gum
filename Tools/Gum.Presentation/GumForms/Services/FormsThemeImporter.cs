@@ -85,27 +85,29 @@ public class FormsThemeImporter : IFormsThemeImporter
 
     private void AddAllElementsToProject(Dictionary<string, FilePath> sourceDestinations)
     {
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations)
+        // Each import triggers a synchronous post-import error check (PluginManager.ElementImported
+        // -> MainErrorsPlugin -> HeadlessErrorChecker), which resolves every VariableReferences
+        // owner's BaseType via ObjectFinder. A screen's own instances are typically Components, so a
+        // screen imported before the components it places crashes that check with a
+        // NullReferenceException (ObjectFinder can't find a not-yet-imported component). Behaviors
+        // and Components never depend on Screens, so importing strictly in that order - Behaviors,
+        // then Components, then Screens - is always dependency-safe, regardless of the filesystem
+        // enumeration order sourceDestinations was built in.
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "behx"))
         {
-            string extension = item.Value.Extension;
-
-            if (extension == "gusx")
-            {
-                // add screen
-                _importLogic.ImportScreen(item.Value, saveProject: false);
-            }
-            else if (extension == "gucx")
-            {
-                // add component
-                _importLogic.ImportComponent(item.Value, saveProject: false);
-            }
-            else if (extension == "behx")
-            {
-                // add behavior
-                _importLogic.ImportBehavior(item.Value, saveProject: false);
-            }
-            // standards are already added
+            _importLogic.ImportBehavior(item.Value, saveProject: false);
         }
+
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gucx"))
+        {
+            _importLogic.ImportComponent(item.Value, saveProject: false);
+        }
+
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gusx"))
+        {
+            _importLogic.ImportScreen(item.Value, saveProject: false);
+        }
+        // standards are already added
     }
 
     private void SaveFilesToDestination(Dictionary<string, FilePath> sourceDestinations)
@@ -133,7 +135,14 @@ public class FormsThemeImporter : IFormsThemeImporter
 
     private bool GetIfShouldSave(Dictionary<string, FilePath> sourceDestinations)
     {
-        List<FilePath> existingFiles = sourceDestinations.Values.Where(item => item.Exists()).ToList();
+        // A destination file that already exists but is byte-identical to the theme's own copy
+        // (e.g. a bundled Fonts/*.ttf the plain "File > New Project" bundler already wrote - #4674)
+        // isn't a real conflict - overwriting it would be a no-op. Drop those before any block/prompt
+        // logic runs, the same way RemoveUnmodifiedAndUnusedStandards drops an unmodified .gutx below.
+        List<FilePath> existingFiles = sourceDestinations
+            .Where(kvp => kvp.Value.Exists() && !AreFilesIdentical(kvp.Key, kvp.Value.FullPath))
+            .Select(kvp => kvp.Value)
+            .ToList();
 
         bool doStandardsExist = existingFiles.Any(item => item.Extension == "gutx");
         List<FilePath> nonStandardFiles = existingFiles.Where(item => item.Extension != "gutx").ToList();
@@ -197,6 +206,26 @@ public class FormsThemeImporter : IFormsThemeImporter
         }
 
         return shouldSave;
+    }
+
+    private static bool AreFilesIdentical(string sourcePath, string destinationPath)
+    {
+        // The source is always a real on-disk theme file in production, but some test doubles use
+        // placeholder source keys with no backing file - treat that as "not identical" (preserves
+        // the original always-block behavior) rather than throwing.
+        if (!File.Exists(sourcePath))
+        {
+            return false;
+        }
+
+        FileInfo sourceInfo = new FileInfo(sourcePath);
+        FileInfo destinationInfo = new FileInfo(destinationPath);
+        if (sourceInfo.Length != destinationInfo.Length)
+        {
+            return false;
+        }
+
+        return File.ReadAllBytes(sourcePath).SequenceEqual(File.ReadAllBytes(destinationPath));
     }
 
     private void RemoveUnmodifiedAndUnusedStandards(List<string> standardFiles)
