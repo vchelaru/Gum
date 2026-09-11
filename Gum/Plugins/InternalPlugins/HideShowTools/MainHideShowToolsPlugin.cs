@@ -1,7 +1,7 @@
+using Gum.Menus;
 using Gum.Controls;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
-using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
@@ -11,7 +11,7 @@ namespace Gum.Plugins.InternalPlugins.HideShowTools;
 [Export(typeof(PluginBase))]
 internal class MainHideShowToolsPlugin : PriorityPlugin
 {
-    private MenuItem _hideShowMenuItem;
+    private MenuItemModel _hideShowMenuItem = null!;
     private readonly HideShowToolsLogic _hideShowToolsLogic;
 
     [ImportingConstructor]
@@ -22,11 +22,10 @@ internal class MainHideShowToolsPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-        _hideShowMenuItem = AddMenuItem("View", "Hide Tools");
-        _hideShowMenuItem.Click += HandleMenuItemClick;
+        _hideShowMenuItem = AddMenuEntry(HandleMenuItemClick, "View", "Hide Tools");
     }
 
-    private void HandleMenuItemClick(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleMenuItemClick()
     {
         bool isVisible = _hideShowToolsLogic.ToggleToolsVisibility();
 

@@ -1,22 +1,22 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Plugins.BaseClasses;
 using Gum.Services.Dialogs;
 using Gum.Settings;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 {
     // As of ADR-0005 Phase 3, the display/filtering/dialog logic for the "Load Recent" menu lives in
     // RecentFilesLogic (Gum.Presentation) so it can be unit tested headlessly. This plugin builds only
-    // the actual WPF MenuItems and forwards clicks into that logic.
+    // the menu entries (through the shared menu model) and forwards clicks into that logic.
     [Export(typeof(PluginBase))]
     internal class MainRecentFilesPlugin : PriorityPlugin
     {
-        MenuItem recentFilesMenuItem;
+        private MenuItemModel _recentFilesMenuItem = null!;
         private readonly RecentFilesLogic _recentFilesLogic;
 
         [ImportingConstructor]
@@ -27,7 +27,10 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         public override void StartUp()
         {
-            recentFilesMenuItem = this.AddMenuItemTo("Load Recent", null, "File", preferredIndex: 2);
+            // Just after "Load Project...", before the first separator.
+            MenuItemModel fileMenu = Menu!.GetItem("File")!;
+            _recentFilesMenuItem = new MenuItemModel("Load Recent");
+            fileMenu.Items.Insert(System.Math.Min(2, fileMenu.Items.Count), _recentFilesMenuItem);
 
             RefreshMenuItems();
 
@@ -41,7 +44,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
 
         private void RefreshMenuItems()
         {
-            recentFilesMenuItem.Items.Clear();
+            _recentFilesMenuItem.Items.Clear();
 
             var favorites = _recentFilesLogic.GetFavoriteProjects().ToList();
             foreach (var item in favorites)
@@ -54,32 +57,26 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
             {
                 if (favorites.Count > 0)
                 {
-                    recentFilesMenuItem.Items.Add(new Separator());
+                    _recentFilesMenuItem.Items.Add(MenuItemModel.Separator());
                 }
-
                 foreach (var item in nonFavorites)
                 {
                     AddMenuItemFor(item);
                 }
             }
 
-            recentFilesMenuItem.Items.Add(new Separator());
-            var moreItem = new MenuItem { Header = "More..." };
-            moreItem.Click += HandleLoadRecentClicked;
-            recentFilesMenuItem.Items.Add(moreItem);
+            _recentFilesMenuItem.Items.Add(MenuItemModel.Separator());
+            _recentFilesMenuItem.Items.Add(new MenuItemModel("More...", HandleLoadRecentClicked));
         }
 
         private void AddMenuItemFor(RecentProjectReference item)
         {
             var filePath = item.FilePath;
             string name = RecentFilesLogic.GetDisplayedNameForGumxFilePath(filePath);
-
-            var mi = new MenuItem { Header = name };
-            mi.Click += (_, _) => _recentFilesLogic.LoadProject(filePath.FullPath);
-            recentFilesMenuItem.Items.Add(mi);
+            _recentFilesMenuItem.Items.Add(new MenuItemModel(name, () => _recentFilesLogic.LoadProject(filePath.FullPath)));
         }
 
-        private void HandleLoadRecentClicked(object? sender, System.Windows.RoutedEventArgs e)
+        private void HandleLoadRecentClicked()
         {
             _recentFilesLogic.ShowLoadRecentDialog();
             RefreshMenuItems();

@@ -33,10 +33,10 @@
 | `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
 | `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
-| `Gum/ConvertToJsonPlugin` | WPF flag only | zero `System.Windows` files | 40 (TFM flip now) | TFM |
-| `Gum/EventOutputPlugin` | none | zero `System.Windows` files | 40 (TFM flip now) | TFM |
-| `Gum/CsvLibrary` | none | zero `System.Windows` files | 40 (TFM flip now) | TFM |
-| `Tool/HtmlToGum` | WPF + WinForms | inherits `WpfPluginBase` for menus; `cmd.exe /c npm install` | 40 (menu contract), 25 (shell) | TFM + Runtime |
+| `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
+| `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
+| `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
+| `Tool/HtmlToGum` | WPF + WinForms | menu is `AddMenuEntry` (done); references `Gum.csproj` + WinForms | 80 (TFM flip once it references `Gum.Presentation`) | TFM |
 | `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | mixes view tests and logic tests | 100 (split), 120 (delete view tests) | TFM |
 
 Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
@@ -95,7 +95,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `SvgExportCommand.cs:76` | looks for `GumCli/gumcli.exe` | 25 (name per OS) + 110 (bundle layout) |
 | `Tool/HtmlToGum/MainHtmlToGumPlugin.cs:143` | `cmd.exe /c npm install` | 25 — `/bin/sh -c` off Windows; Node lookup already PATH-based |
 | `Gum/Libraries/bmfont.exe`, `Tools/Gum.ProjectServices/Templates/FormsTemplate/Libraries/bmfont.exe` | Windows-only font generator; `GumProjectSave.FontGenerator` **defaults to `BmFont`**; `HeadlessFontGenerationService` throws `PlatformNotSupportedException` off Windows | 25 — KernSmith default off Windows + migration prompt; keep bmfont for Windows back-compat until cutover decides |
-| `Gum/Plugins/PluginManager.cs:794` | reference list contains `Gum.exe` for compiling plugins | 110/120 — main assembly is `Gum.dll` in a self-contained publish; use the assembly location, not a name |
+| `Tools/Gum.Presentation/Plugins/PluginManager.cs` (`LoadReferenceLists`) | reference list contains `Gum.exe` for compiling plugins | 110/120 — main assembly is `Gum.dll` in a self-contained publish; use the assembly location, not a name |
 
 ## 6. Path and file-system assumptions (netstandard `ToolsUtilities` and shared core)
 

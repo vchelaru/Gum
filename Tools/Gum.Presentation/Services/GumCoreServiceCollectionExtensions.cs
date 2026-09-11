@@ -11,6 +11,7 @@ using Gum.Localization;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Mvvm;
 using Gum.Plugins;
 using Gum.Plugins.AlignmentButtons;
@@ -130,6 +131,9 @@ public static class GumCoreServiceCollectionExtensions
                 provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
+        // The main menu as a framework-neutral model; each head renders it with its own menu control.
+        services.AddSingleton<StandardMenuModelBuilder>();
+        services.AddSingleton<MenuModel>(provider => provider.GetRequiredService<StandardMenuModelBuilder>().Model);
         services.AddSingleton<IRetryService, RetryService>();
         services.AddSingleton<LocalizationService>();
         services.AddSingleton<ILocalizationService>(provider => provider.GetRequiredService<LocalizationService>());

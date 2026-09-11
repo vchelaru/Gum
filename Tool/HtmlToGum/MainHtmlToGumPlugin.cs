@@ -36,11 +36,10 @@ public class MainHtmlToGumPlugin : WpfPluginBase
 
     public override void StartUp()
     {
-        var menuItem = AddMenuItem(new[] { "Content", "Import", "HTML…" });
-        menuItem.Click += HandleImportHtml;
+        AddMenuEntry(HandleImportHtml, "Content", "Import", "HTML…");
     }
 
-    private async void HandleImportHtml(object? sender, System.Windows.RoutedEventArgs e)
+    private async void HandleImportHtml()
     {
         var projectState = Locator.GetRequiredService<IProjectState>();
         var importLogic = Locator.GetRequiredService<IImportLogic>();

@@ -38,3 +38,4 @@ re-litigating it.
 | [0015](0015-treat-dispatcher-merge-as-incremental-goal.md) | Treat the Skia/core dispatcher merge as an incremental long-term goal, not a rejected option | Accepted | 2026-09-04 |
 | [0016](0016-cross-element-undo-transactions-for-cascading-deletes.md) | Cross-element undo transactions for cascading deletes | Accepted | 2026-09-09 |
 | [0017](0017-commit-to-avalonia-full-cutover.md) | Commit to a full Avalonia cutover for the Gum tool | Accepted | 2026-09-09 |
+| [0018](0018-external-wpf-plugins-break-at-avalonia-cutover.md) | External WPF plugins break at the Avalonia cutover, with notice | Accepted | 2026-09-10 |

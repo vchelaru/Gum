@@ -41,7 +41,7 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
     /// <inheritdoc/>
     public void AddHeadExports(CompositionBatch batch)
     {
-        batch.AddExportedValue<MenuModel>(_services.GetRequiredService<StandardMenuModelBuilder>().Model);
+        batch.AddExportedValue<MenuModel>(_services.GetRequiredService<MenuModel>());
         batch.AddExportedValue<ShellViewModel>(_services.GetRequiredService<ShellViewModel>());
         batch.AddExportedValue<AvaloniaTabManager>(_services.GetRequiredService<AvaloniaTabManager>());
     }

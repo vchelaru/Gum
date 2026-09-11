@@ -1,550 +1,133 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Windows.Controls;
-using Gum.ToolStates;
-using Gum.DataTypes;
-using Gum.Wireframe;
-using Gum.Undo;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
-using Gum.Commands;
-using Gum.Dialogs;
-using Gum.Messages;
-using Gum.Services;
-using Gum.Services.Dialogs;
-using CommunityToolkit.Mvvm.Messaging;
-using ToolsUtilities;
+using System.Windows;
+using System.Windows.Controls;
+using Gum.Menus;
 
 namespace Gum.Managers
 {
+    /// <summary>
+    /// Renders the shared <see cref="MenuModel"/> built by <see cref="StandardMenuModelBuilder"/>
+    /// into the WPF main menu and keeps the two in sync: every model item maps to exactly one
+    /// <see cref="MenuItem"/> for its lifetime, so plugins that hold the returned item keep a live
+    /// handle across layout passes; header, enabled, and check state follow the model's property
+    /// changes; and an item's children are rebuilt when the model collection changes.
+    /// </summary>
     public class MenuStripManager
     {
-        #region Fields
+        private readonly StandardMenuModelBuilder _builder;
+        private readonly Dictionary<MenuItemModel, MenuItem> _itemsByModel = new Dictionary<MenuItemModel, MenuItem>();
 
-        private readonly ISelectedState _selectedState;
-        private readonly IUndoManager _undoManager;
-        private readonly IEditCommands _editCommands;
-        private readonly IDialogService _dialogService;
-        private readonly IFileCommands _fileCommands;
-        private readonly IProjectManager _projectManager;
-        private readonly IMessenger _messenger;
-        private readonly IFileSystemRevealService _fileSystemRevealService;
-        private readonly MenuStripStateLogic _menuStripStateLogic;
+        private Menu? _menu;
+        private NotifyCollectionChangedEventHandler? _topLevelHandler;
 
-        private Menu _menu;
-
-        private MenuItem _fileMenuItem;
-        private MenuItem _editMenuItem;
-        private MenuItem _viewMenuItem;
-        private MenuItem _contentMenuItem;
-        private MenuItem _helpMenuItem;
-
-        private MenuItem _removeStateMenuItem;
-        private MenuItem _removeElementMenuItem;
-        private MenuItem _removeVariableMenuItem;
-        private MenuItem _aboutMenuItem;
-        private MenuItem _thirdPartyLicensesMenuItem;
-        private MenuItem _documentationMenuItem;
-        private MenuItem _saveAllMenuItem;
-        private MenuItem _newProjectMenuItem;
-        private MenuItem _findFileReferencesMenuItem;
-        private MenuItem _pluginsMenuItem;
-        private MenuItem _managePluginsMenuItem;
-        private MenuItem _undoMenuItem;
-        private MenuItem _redoMenuItem;
-        private MenuItem _standardsPaletteMenuItem;
-        private MenuItem _openSettingsFolderMenuItem;
-
-        #endregion
-
-        public MenuStripManager(
-            ISelectedState selectedState,
-            IUndoManager undoManager,
-            IEditCommands editCommands,
-            IDialogService dialogService,
-            IFileCommands fileCommands,
-            IProjectManager projectManager,
-            IMessenger messenger,
-            IFileSystemRevealService fileSystemRevealService)
+        public MenuStripManager(StandardMenuModelBuilder builder)
         {
-            _selectedState = selectedState;
-            _undoManager = undoManager;
-            _editCommands = editCommands;
-            _dialogService = dialogService;
-            _fileCommands = fileCommands;
-            _projectManager = projectManager;
-            _messenger = messenger;
-            _fileSystemRevealService = fileSystemRevealService;
-            _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
+            _builder = builder;
         }
 
+        /// <summary>The model this menu renders. Plugins may add and remove items through it.</summary>
+        public MenuModel Model => _builder.Model;
+
+        /// <summary>Builds the standard menus into the model and renders them into <paramref name="menu"/>.</summary>
         public void PopulateMenu(Menu menu)
         {
+            if (_topLevelHandler != null)
+            {
+                Model.TopLevelItems.CollectionChanged -= _topLevelHandler;
+            }
+            _itemsByModel.Clear();
             _menu = menu;
-            _menu.Items.Clear();
 
-            // Load Recent handled in MainRecentFilesPlugin
+            _builder.Build();
 
-            #region Local Functions
-            MenuItem Add(MenuItem parent, string text, Action clickEvent)
-            {
-                var mi = new MenuItem();
-                mi.Header = text;
-                if (clickEvent != null)
-                {
-                    mi.Click += (_, _) => clickEvent();
-                }
-                parent.Items.Add(mi);
-                return mi;
-            }
-
-            void AddSeparator(MenuItem parent)
-            {
-                parent.Items.Add(new Separator());
-            }
-            #endregion
-
-            _removeElementMenuItem = new MenuItem();
-            _removeStateMenuItem = new MenuItem();
-            _removeVariableMenuItem = new MenuItem();
-            _aboutMenuItem = new MenuItem();
-            _thirdPartyLicensesMenuItem = new MenuItem();
-            _documentationMenuItem = new MenuItem();
-            _saveAllMenuItem = new MenuItem();
-            _newProjectMenuItem = new MenuItem();
-            _contentMenuItem = new MenuItem();
-            _findFileReferencesMenuItem = new MenuItem();
-            _pluginsMenuItem = new MenuItem();
-            _managePluginsMenuItem = new MenuItem();
-
-            _editMenuItem = new MenuItem();
-            _editMenuItem.Header = "Edit";
-
-            // InputGestureText is display-only in WPF; actual keyboard bindings
-            // are handled by HotkeyManager.
-            _undoMenuItem = Add(_editMenuItem, "Undo", _undoManager.PerformUndo);
-            _undoMenuItem.InputGestureText = "Ctrl+Z";
-            _undoMenuItem.IsEnabled = false;
-
-            _redoMenuItem = Add(_editMenuItem, "Redo", _undoManager.PerformRedo);
-            _redoMenuItem.InputGestureText = "Ctrl+Y";
-            _redoMenuItem.IsEnabled = false;
-
-            _undoManager.UndosChanged += HandleUndosChanged;
-
-            AddSeparator(_editMenuItem);
-
-            var addMenuItem = Add(_editMenuItem, "Add", null);
-            var removeMenuItem = Add(_editMenuItem, "Remove", null);
-
-            removeMenuItem.Items.Add(_removeElementMenuItem);
-            removeMenuItem.Items.Add(_removeStateMenuItem);
-            removeMenuItem.Items.Add(_removeVariableMenuItem);
-
-            Add(addMenuItem, "Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
-            Add(addMenuItem, "Component", () => _dialogService.Show<AddComponentDialogViewModel>());
-            Add(addMenuItem, "Instance", () => _dialogService.Show<AddInstanceDialogViewModel>());
-            Add(addMenuItem, "State", () => _dialogService.Show<AddStateDialogViewModel>());
-
-            _removeElementMenuItem.Header = "Element";
-            _removeElementMenuItem.Click += RemoveElementClicked;
-
-            _removeStateMenuItem.Header = "State";
-            _removeStateMenuItem.Click += RemoveStateOrCategoryClicked;
-
-            _removeVariableMenuItem.Header = "Variable";
-            _removeVariableMenuItem.Click += HandleRemoveBehaviorVariableClicked;
-
-
-            _newProjectMenuItem.Header = "New Project";
-            // NewProject prompts for a save location itself so it can honour a cancelled dialog.
-            // Forcing a save here too re-prompts even when the user backed out.
-            _newProjectMenuItem.Click += (_, _) => _fileCommands.NewProject();
-
-            _pluginsMenuItem.Header = "Plugins";
-            _pluginsMenuItem.Items.Add(_managePluginsMenuItem);
-            _managePluginsMenuItem.Header = "Manage Plugins";
-            _managePluginsMenuItem.Click += (_, _) =>
-            {
-                _dialogService.Show<PluginsDialogViewModel>();
-            };
-
-
-            _findFileReferencesMenuItem.Header = "Find file references...";
-            _findFileReferencesMenuItem.Click += (_, _) =>
-            {
-                string message = "Enter entire or partial file name:";
-                string title = "Find file references";
-
-                if (_dialogService.GetUserString(message, title) is { } result)
-                {
-                    var elements = ObjectFinder.Self.GetElementsReferencing(result);
-
-                    message = "File referenced by:";
-
-                    if (elements.Count == 0)
-                    {
-                        message += "\nNothing references this file";
-                    }
-                    else
-                    {
-                        foreach (var element in elements)
-                        {
-                            message += "\n" + element.ToString();
-                        }
-                    }
-                    _dialogService.ShowMessage(message);
-                }
-
-            };
-
-
-            _contentMenuItem.Header = "Content";
-            _contentMenuItem.Items.Add(_findFileReferencesMenuItem);
-
-            _saveAllMenuItem.Header = "Save All";
-            _saveAllMenuItem.Click += (_, _) => SaveProject(saveAll: true);
-
-            _aboutMenuItem.Header = "About...";
-            _aboutMenuItem.Click += (_, _) =>
-            {
-                var version = Assembly.GetEntryAssembly()
-                    ?.GetCustomAttributes<AssemblyMetadataAttribute>()
-                    .FirstOrDefault(a => a.Key == "BuildVersion")?.Value ?? "unknown";
-                _dialogService.ShowMessage("Gum version " + version, "About");
-            };
-
-            const string thirdPartyNoticesUrl =
-                "https://github.com/vchelaru/Gum/blob/main/THIRD-PARTY-NOTICES.txt";
-            _thirdPartyLicensesMenuItem.Header = "Third-Party Licenses...";
-            _thirdPartyLicensesMenuItem.ToolTip = "Licenses and attributions for third-party components Gum redistributes";
-            _thirdPartyLicensesMenuItem.Click += (_, _) =>
-            {
-                // The notices file ships next to the executable (see Gum.csproj). Fall back to
-                // the copy on GitHub if it can't be found locally.
-                string localPath = System.IO.Path.Combine(AppContext.BaseDirectory, "THIRD-PARTY-NOTICES.txt");
-                if (System.IO.File.Exists(localPath))
-                {
-                    _fileSystemRevealService.OpenFile(localPath);
-                }
-                else
-                {
-                    _fileSystemRevealService.OpenUrl(thirdPartyNoticesUrl);
-                }
-            };
-
-
-
-            string documentationLink = "https://docs.flatredball.com/gum";
-            _documentationMenuItem.Header = $"View Docs ({documentationLink})";
-            _documentationMenuItem.ToolTip = "External link to Gum documentation";
-            _documentationMenuItem.Click += (_, _) => _fileSystemRevealService.OpenUrl(documentationLink);
-
-            _viewMenuItem = new MenuItem();
-            _viewMenuItem.Header = "View";
-
-
-            _openSettingsFolderMenuItem = new MenuItem();
-            _openSettingsFolderMenuItem.Header = "Open Settings Folder...";
-            _openSettingsFolderMenuItem.ToolTip = "Open the folder containing Gum's global settings files";
-            _openSettingsFolderMenuItem.Click += (_, _) =>
-                _fileSystemRevealService.OpenFolder(FileManager.UserApplicationDataForThisApplication);
-
-            _helpMenuItem = new MenuItem();
-            _helpMenuItem.Header = "Help";
-            _helpMenuItem.Items.Add(_aboutMenuItem);
-            _helpMenuItem.Items.Add(_thirdPartyLicensesMenuItem);
-            _helpMenuItem.Items.Add(_documentationMenuItem);
-            _helpMenuItem.Items.Add(_openSettingsFolderMenuItem);
-
-
-            _fileMenuItem = new MenuItem();
-            _fileMenuItem.Header = "File";
-
-            _fileMenuItem.Items.Add(_newProjectMenuItem);
-            Add(_fileMenuItem, "Load Project...", () => _projectManager.LoadProject());
-            // Load Recent is inserted at index 2 by MainRecentFilesPlugin
-
-            AddSeparator(_fileMenuItem);
-
-            Add(_fileMenuItem, "Save Project", () => SaveProject(saveAll: false));
-            _fileMenuItem.Items.Add(_saveAllMenuItem);
-
-            AddSeparator(_fileMenuItem);
-
-            Add(_fileMenuItem, "Export", null);
-
-            _menu.Items.Add(_fileMenuItem);
-            _menu.Items.Add(_editMenuItem);
-
-            Add(_viewMenuItem, "Theming", () =>
-            {
-                _dialogService.Show<ThemingDialogViewModel>();
-            });
-
-            // Experimental: replace the Standard tree folder with a chip palette at the bottom of the
-            // Project panel. Opt-in while experimental; persisted in the global settings file. The
-            // settings file is loaded after PopulateMenu, so read it defensively here; RefreshUI() syncs
-            // the checkmark once settings are available.
-            _standardsPaletteMenuItem = new MenuItem
-            {
-                Header = "Standards palette (experimental)",
-                IsCheckable = true,
-                IsChecked = _projectManager.EffectiveUseStandardsPalette
-            };
-            // WPF toggles IsChecked before Click fires for a checkable item.
-            _standardsPaletteMenuItem.Click += (_, _) =>
-            {
-                _projectManager.UseStandardsPalette = _standardsPaletteMenuItem.IsChecked;
-                _projectManager.SaveGeneralSettings();
-                _messenger.Send(new StandardsPaletteSettingChangedMessage(_projectManager.EffectiveUseStandardsPalette));
-            };
-            _viewMenuItem.Items.Add(_standardsPaletteMenuItem);
-
-            _menu.Items.Add(_viewMenuItem);
-            _menu.Items.Add(_contentMenuItem);
-            _menu.Items.Add(_pluginsMenuItem);
-            _menu.Items.Add(_helpMenuItem);
-
-            RefreshUI();
+            Populate(_menu.Items, Model.TopLevelItems);
+            _topLevelHandler = (_, _) => Populate(_menu.Items, Model.TopLevelItems);
+            Model.TopLevelItems.CollectionChanged += _topLevelHandler;
         }
 
-        private void HandleUndosChanged(object? sender, UndoOperationEventArgs e)
+        /// <summary>Syncs the selection-dependent headers, enabled flags, and check marks.</summary>
+        public void RefreshUI() => _builder.RefreshUI();
+
+        /// <summary>The WPF item rendered for <paramref name="model"/>. The model must be in the menu.</summary>
+        public MenuItem GetMenuItem(MenuItemModel model)
         {
-            UpdateUndoRedoEnabled();
-        }
-
-        // UndosChanged can fire from background threads; marshal to the UI thread for WPF controls.
-        private void UpdateUndoRedoEnabled()
-        {
-            if (_undoMenuItem?.Dispatcher.CheckAccess() == false)
+            if (!_itemsByModel.TryGetValue(model, out MenuItem? menuItem))
             {
-                _undoMenuItem.Dispatcher.BeginInvoke(UpdateUndoRedoEnabled);
-                return;
+                throw new InvalidOperationException($"'{model.Header}' is not in the rendered menu.");
             }
-            if (_undoMenuItem != null) _undoMenuItem.IsEnabled = _undoManager.CanUndo();
-            if (_redoMenuItem != null) _redoMenuItem.IsEnabled = _undoManager.CanRedo();
-        }
-
-        private void HandleRemoveBehaviorVariableClicked(object? sender, System.Windows.RoutedEventArgs e)
-        {
-            if(_selectedState.SelectedBehavior != null && _selectedState.SelectedBehaviorVariable != null)
-            {
-                _editCommands.RemoveBehaviorVariable(
-                    _selectedState.SelectedBehavior,
-                    _selectedState.SelectedBehaviorVariable);
-            }
-        }
-
-        private void SaveProject(bool saveAll)
-        {
-            if (ObjectFinder.Self.GumProjectSave == null)
-            {
-                _dialogService.ShowMessage("There is no project loaded.  Either load a project or create a new project before saving");
-            }
-            else
-            {
-                // Don't do an auto save, force it!
-                _fileCommands.ForceSaveProject(saveAll);
-            }
-        }
-
-        public void RefreshUI()
-        {
-            MenuStripRefreshState state = _menuStripStateLogic.GetRefreshState();
-
-            // The settings file loads after PopulateMenu, so keep the checkmark in sync here.
-            if (_standardsPaletteMenuItem != null)
-            {
-                _standardsPaletteMenuItem.IsChecked = state.StandardsPaletteChecked;
-            }
-
-            _removeStateMenuItem.Header = state.RemoveStateHeader;
-            _removeStateMenuItem.IsEnabled = state.RemoveStateEnabled;
-
-            _removeElementMenuItem.Header = state.RemoveElementHeader;
-            _removeElementMenuItem.IsEnabled = state.RemoveElementEnabled;
-
-            _removeVariableMenuItem.Header = state.RemoveVariableHeader;
-            _removeVariableMenuItem.IsEnabled = state.RemoveVariableEnabled;
-        }
-
-
-        private void RemoveElementClicked(object? sender, System.Windows.RoutedEventArgs e)
-        {
-            _editCommands.DeleteSelection();
-        }
-
-        private void RemoveStateOrCategoryClicked(object? sender, System.Windows.RoutedEventArgs e)
-        {
-            if (_selectedState.SelectedStateSave != null)
-            {
-                _editCommands.AskToDeleteState(
-                    _selectedState.SelectedStateSave, _selectedState.SelectedStateContainer);
-            }
-            else if (_selectedState.SelectedStateCategorySave != null)
-            {
-                _editCommands.AskToDeleteStateCategory(
-                    _selectedState.SelectedStateCategorySave, _selectedState.SelectedStateContainer);
-            }
-        }
-
-        public MenuItem AddMenuItem(IEnumerable<string> menuAndSubmenus)
-        {
-#if DEBUG
-            if (_menu == null)
-            {
-                throw new InvalidOperationException("PopulateMenu must be called before AddMenuItem.");
-            }
-#endif
-
-            var parts = menuAndSubmenus.ToList();
-            string menuName = parts.Last();
-
-            var menuItem = new MenuItem { Header = menuName };
-
-            string topMenuName = parts.First();
-
-            var currentParent =
-                _menu.Items.OfType<MenuItem>().FirstOrDefault(
-                    item => item.Header as string == topMenuName);
-
-            if (currentParent == null)
-            {
-                currentParent = new MenuItem { Header = topMenuName };
-
-                // Don't call Add - this will put the menu item after the "Help" menu item, which should be last
-                int indexToInsertAt = _menu.Items.Count - 1;
-                _menu.Items.Insert(indexToInsertAt, currentParent);
-            }
-
-            // Walk through intermediate submenus (e.g., "File" > "Export" > "Export as Image")
-            for (int i = 1; i < parts.Count - 1; i++)
-            {
-                var submenu = currentParent.Items.OfType<MenuItem>()
-                    .FirstOrDefault(item => item.Header as string == parts[i]);
-
-                if (submenu == null)
-                {
-                    submenu = new MenuItem { Header = parts[i] };
-                    currentParent.Items.Add(submenu);
-                }
-
-                currentParent = submenu;
-            }
-
-            currentParent.Items.Add(menuItem);
-
-            ApplyLayout(topMenuName);
-
             return menuItem;
         }
 
-        // Stable per-menu layout. Items in each inner list form a group; separators are
-        // inserted between groups. Items not listed here fall through to a trailing group
-        // (separator + items in insertion order) so third-party plugins remain visible.
-        private static readonly Dictionary<string, string[][]> _menuLayouts = new()
+        private void Populate(ItemCollection target, ObservableCollection<MenuItemModel> items)
         {
-            ["Content"] = new[]
+            target.Clear();
+            foreach (MenuItemModel item in items)
             {
-                new[] { "Find file references..." },
-                new[] { "Add Forms Components", "Import" },
-                new[]
-                {
-                    "Clear Font Cache",
-                    "Re-create missing font files",
-                    "Force re-create all font files",
-                    "View Font Cache",
-                },
-            },
-        };
-
-        /// <summary>
-        /// Re-orders the children of the given top-level menu according to the layout
-        /// table and re-inserts group separators. Safe to call repeatedly; no-op if the
-        /// menu name has no layout entry. Call this after any direct manipulation of
-        /// a managed menu's <c>Items</c> collection (e.g. removing an item) so that
-        /// the declared group order is restored.
-        /// </summary>
-        public void ApplyLayout(string topMenuName)
-        {
-            if (!_menuLayouts.TryGetValue(topMenuName, out var groups))
-            {
-                return;
-            }
-
-            var parent = _menu.Items.OfType<MenuItem>()
-                .FirstOrDefault(item => item.Header as string == topMenuName);
-            if (parent == null)
-            {
-                return;
-            }
-
-            var existing = parent.Items.OfType<MenuItem>().ToList();
-            var byHeader = existing.ToDictionary(mi => mi.Header as string ?? "", mi => mi);
-
-            parent.Items.Clear();
-
-            var placed = new HashSet<MenuItem>();
-            bool anyEmitted = false;
-            foreach (var group in groups)
-            {
-                var groupItems = new List<MenuItem>();
-                foreach (var header in group)
-                {
-                    if (byHeader.TryGetValue(header, out var mi))
-                    {
-                        groupItems.Add(mi);
-                        placed.Add(mi);
-                    }
-                }
-                if (groupItems.Count == 0)
-                {
-                    continue;
-                }
-                if (anyEmitted)
-                {
-                    parent.Items.Add(new Separator());
-                }
-                foreach (var mi in groupItems)
-                {
-                    parent.Items.Add(mi);
-                }
-                anyEmitted = true;
-            }
-
-            var leftovers = existing.Where(mi => !placed.Contains(mi)).ToList();
-            if (leftovers.Count > 0)
-            {
-                if (anyEmitted)
-                {
-                    parent.Items.Add(new Separator());
-                }
-                foreach (var mi in leftovers)
-                {
-                    parent.Items.Add(mi);
-                }
+                target.Add(item.IsSeparator ? new Separator() : GetOrCreate(item));
             }
         }
 
-        public MenuItem GetItem(string name)
+        private MenuItem GetOrCreate(MenuItemModel model)
         {
-#if DEBUG
-            if (_menu == null)
+            if (_itemsByModel.TryGetValue(model, out MenuItem? existing))
             {
-                throw new InvalidOperationException("PopulateMenu must be called before GetItem.");
+                return existing;
             }
-#endif
 
-            foreach (var item in _menu.Items.OfType<MenuItem>())
+            MenuItem menuItem = new MenuItem
             {
-                if (item.Header as string == name)
+                Header = model.Header,
+                IsEnabled = model.IsEnabled,
+                // The model toggles its own check state in Invoke; WPF must not toggle it as well.
+                IsCheckable = false,
+                IsChecked = model.IsChecked,
+                InputGestureText = model.InputGestureText,
+                ToolTip = model.ToolTip,
+            };
+
+            menuItem.Click += (_, e) =>
+            {
+                // Click bubbles from children through their parent items; only the picked item
+                // invokes, and a submenu header's click just opens it.
+                if (ReferenceEquals(e.Source, menuItem) && model.Items.Count == 0)
                 {
-                    return item;
+                    model.Invoke();
                 }
+            };
+
+            model.PropertyChanged += (_, e) => Apply(menuItem, model, e);
+            Populate(menuItem.Items, model.Items);
+            model.Items.CollectionChanged += (_, _) => Populate(menuItem.Items, model.Items);
+
+            _itemsByModel[model] = menuItem;
+            return menuItem;
+        }
+
+        private static void Apply(MenuItem menuItem, MenuItemModel model, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(MenuItemModel.Header):
+                    menuItem.Header = model.Header;
+                    break;
+                case nameof(MenuItemModel.IsEnabled):
+                    menuItem.IsEnabled = model.IsEnabled;
+                    break;
+                case nameof(MenuItemModel.IsChecked):
+                    menuItem.IsChecked = model.IsChecked;
+                    break;
+                case nameof(MenuItemModel.InputGestureText):
+                    menuItem.InputGestureText = model.InputGestureText;
+                    break;
+                case nameof(MenuItemModel.ToolTip):
+                    menuItem.ToolTip = model.ToolTip;
+                    break;
             }
-            return null;
         }
     }
 }

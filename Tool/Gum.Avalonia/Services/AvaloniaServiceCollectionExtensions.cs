@@ -4,7 +4,6 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Menus;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
@@ -58,7 +57,6 @@ public static class AvaloniaServiceCollectionExtensions
         // Shell.
         services.AddSingleton<AvaloniaTabManager>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<AvaloniaTabManager>());
-        services.AddSingleton<StandardMenuModelBuilder>();
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<AvaloniaHeadStartup>();

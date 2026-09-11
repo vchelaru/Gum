@@ -33,6 +33,9 @@ public static class HeadTestServices
         services.ConfigureWritable<LayoutSettings>(configuration, nameof(LayoutSettings), settingsPath);
         services.AddGumCore();
         services.AddGumAvalonia();
-        return services.BuildServiceProvider();
+        ServiceProvider provider = services.BuildServiceProvider();
+        // The plugin host and a few not-yet-drained services still reach the container through the locator.
+        Locator.Register(provider);
+        return provider;
     }
 }

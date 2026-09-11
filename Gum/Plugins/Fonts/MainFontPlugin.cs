@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+using System;
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -39,27 +40,10 @@ public class MainFontPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-        var clearFontCacheMenuItem = this.AddMenuItem(new[] {
-            "Content", "Clear Font Cache" });
-        clearFontCacheMenuItem.Click += HandleClearFontCache;
-
-        var refreshFontCacheMenuItem = this.AddMenuItem(new[]
-        {
-            "Content", "Re-create missing font files"
-        });
-        refreshFontCacheMenuItem.Click += (_,_) => HandleRefreshFontCache(forceRecreate:false);
-
-
-        var forceFontRecreationMenuItem = this.AddMenuItem(new[]
-        {
-            "Content", "Force re-create all font files"
-        });
-        forceFontRecreationMenuItem.Click += (_, _) => HandleRefreshFontCache(forceRecreate: true);
-
-        var viewFontCache = this.AddMenuItem(new[]
-        {
-            "Content", "View Font Cache"});
-        viewFontCache.Click += HandleViewFontCache;
+        AddMenuEntry(HandleClearFontCache, "Content", "Clear Font Cache");
+        AddMenuEntry(() => HandleRefreshFontCache(forceRecreate: false), "Content", "Re-create missing font files");
+        AddMenuEntry(() => HandleRefreshFontCache(forceRecreate: true), "Content", "Force re-create all font files");
+        AddMenuEntry(HandleViewFontCache, "Content", "View Font Cache");
 
 
 
@@ -70,19 +54,19 @@ public class MainFontPlugin : PriorityPlugin
     private void HandleProjectLoaded(GumProjectSave save) =>
         _fontCacheLogic.ScheduleMissingFontCreationForLoadedProject();
 
-    private void HandleClearFontCache(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleClearFontCache()
     {
         try
         {
             _fontManager.DeleteFontCacheFolder();
         }
-        catch
+        catch (Exception exception)
         {
-            _dialogService.ShowMessage("Error deleting font cache:\n" + e.ToString());
+            _dialogService.ShowMessage("Error deleting font cache:\n" + exception);
         }
     }
 
-    private void HandleViewFontCache(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleViewFontCache()
     {
         string folder = _fontCacheLogic.GetOrCreateFontCacheFolder();
         _fileSystemRevealService.OpenFolder(folder);

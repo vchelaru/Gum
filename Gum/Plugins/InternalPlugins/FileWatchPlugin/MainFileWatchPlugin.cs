@@ -1,3 +1,4 @@
+using Gum.Menus;
 using Gum.DataTypes;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.BaseClasses;
@@ -26,7 +27,7 @@ public class MainFileWatchPlugin : PriorityPlugin
     FileWatchViewModel viewModel;
 
     IPluginTab pluginTab;
-    System.Windows.Controls.MenuItem showFileWatchMenuItem;
+    MenuItemModel showFileWatchMenuItem;
 
     #endregion
 
@@ -53,8 +54,7 @@ public class MainFileWatchPlugin : PriorityPlugin
         pluginTab.TabShown += HandleTabShown;
         pluginTab.CanClose = true;
 
-        showFileWatchMenuItem = this.AddMenuItem("View", "Show File Watch");
-        showFileWatchMenuItem.Click += HandleShowFileWatch;
+        showFileWatchMenuItem = AddMenuEntry(HandleShowFileWatch, "View", "Show File Watch");
 
         const int millisecondsTimerFrequency = 200;
         refreshDisplayTimer.Tick += HandleRefreshDisplayTimerElapsed;
@@ -92,7 +92,7 @@ public class MainFileWatchPlugin : PriorityPlugin
         showFileWatchMenuItem.Header = "Show File Watch";
     }
 
-    private void HandleShowFileWatch(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleShowFileWatch()
     {
         pluginTab.IsVisible = !pluginTab.IsVisible;
         if(pluginTab.IsVisible)

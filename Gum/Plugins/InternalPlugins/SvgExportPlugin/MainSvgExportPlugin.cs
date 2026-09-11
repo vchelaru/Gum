@@ -1,10 +1,10 @@
+using Gum.Menus;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
-using System.Windows.Controls;
 
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 
@@ -14,7 +14,7 @@ namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 [Export(typeof(PluginBase))]
 internal class MainSvgExportPlugin : PriorityPlugin
 {
-    private MenuItem _exportSvgMenuItem;
+    private MenuItemModel _exportSvgMenuItem = null!;
     private readonly ISvgExportCommand _svgExportCommand;
     private readonly SvgExportMenuLogic _svgExportMenuLogic;
 
@@ -34,9 +34,8 @@ internal class MainSvgExportPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-        _exportSvgMenuItem = AddMenuItem("File", "Export", "Export to SVG");
+        _exportSvgMenuItem = AddMenuEntry(HandleExportSvgClicked, "File", "Export", "Export to SVG");
         _exportSvgMenuItem.IsEnabled = false;
-        _exportSvgMenuItem.Click += HandleExportSvgClicked;
 
         this.ElementSelected += HandleElementSelected;
 
@@ -56,7 +55,7 @@ internal class MainSvgExportPlugin : PriorityPlugin
         _exportSvgMenuItem.IsEnabled = isExportable;
     }
 
-    private void HandleExportSvgClicked(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleExportSvgClicked()
     {
         if (!_svgExportMenuLogic.TryPrepareExport(out var element, out var projectSave))
         {

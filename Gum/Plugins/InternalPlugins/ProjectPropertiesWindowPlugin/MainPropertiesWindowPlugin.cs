@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Gui.Controls;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -74,7 +74,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-        this.AddMenuItem(new List<string> { "Edit", "Properties" }).Click += HandlePropertiesClicked;
+        AddMenuEntry(HandlePropertiesClicked, "Edit", "Properties");
 
         _changeLogic = new ProjectPropertiesChangeLogic(
             _projectManager,
@@ -149,7 +149,7 @@ class MainPropertiesWindowPlugin : PriorityPlugin
         }
     }
 
-    private void HandlePropertiesClicked(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandlePropertiesClicked()
     {
         try
         {

@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+using Gum.Commands;
+using Gum.Services.Dialogs;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -17,42 +18,35 @@ internal class ScreenshotService
     private readonly SelectionManager _selectionManager;
     private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
+    private readonly IDialogService _dialogService;
 
     public ScreenshotService(
         SelectionManager selectionManager,
         IWireframeCommands wireframeCommands,
-        IGuiCommands guiCommands)
+        IGuiCommands guiCommands,
+        IDialogService dialogService)
     {
         _selectionManager = selectionManager;
         _wireframeCommands = wireframeCommands;
         _guiCommands = guiCommands;
+        _dialogService = dialogService;
     }
 
-    public void InitializeMenuItem(System.Windows.Controls.MenuItem item)
+    /// <summary>
+    /// Asks for a PNG path and captures the canvas on the next render. Bound to
+    /// File > Export > Export as Image by the plugin.
+    /// </summary>
+    public void ExportAsImage()
     {
-        item.Click += HandleExportAsImageClicked;
-    }
-
-    private void HandleExportAsImageClicked(object? sender, System.Windows.RoutedEventArgs e)
-    {
-        // Create OpenFileDialog 
-        Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-
-
-
-        // Set filter for file extension and default file extension 
-        dlg.DefaultExt = ".png";
-        dlg.Filter = "PNG Files (*.png)|*.png";
-
-
-        var result = dlg.ShowDialog();
-
-
-        // Get the selected file name and display in a TextBox 
-        if (result == true)
+        string? fileName = _dialogService.SaveFile(new SaveFileDialogOptions
         {
-            nextScreenshotFileLocation = dlg.FileName;
+            Title = "Export as Image",
+            Filter = "PNG Files (*.png)|*.png",
+        });
 
+        if (!string.IsNullOrEmpty(fileName))
+        {
+            nextScreenshotFileLocation = fileName;
         }
     }
 

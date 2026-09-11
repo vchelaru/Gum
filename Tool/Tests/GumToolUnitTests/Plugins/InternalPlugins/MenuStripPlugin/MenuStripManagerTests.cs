@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Services;
@@ -25,6 +26,7 @@ public class MenuStripManagerTests : BaseTestClass
     private readonly Mock<IProjectManager> _projectManager;
     private readonly Mock<IMessenger> _messenger;
     private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
+    private readonly Mock<IDispatcher> _dispatcher;
     private readonly MenuStripManager _menuStripManager;
 
     public MenuStripManagerTests()
@@ -37,8 +39,14 @@ public class MenuStripManagerTests : BaseTestClass
         _projectManager = new Mock<IProjectManager>();
         _messenger = new Mock<IMessenger>();
         _fileSystemRevealService = new Mock<IFileSystemRevealService>();
+        _dispatcher = new Mock<IDispatcher>();
+        _dispatcher.Setup(d => d.Post(It.IsAny<Action>())).Callback<Action>(action => action());
 
-        _menuStripManager = new MenuStripManager(
+        _menuStripManager = CreateManager();
+    }
+
+    private MenuStripManager CreateManager() =>
+        new MenuStripManager(new StandardMenuModelBuilder(
             _selectedState.Object,
             _undoManager.Object,
             _editCommands.Object,
@@ -46,9 +54,8 @@ public class MenuStripManagerTests : BaseTestClass
             _fileCommands.Object,
             _projectManager.Object,
             _messenger.Object,
-            _fileSystemRevealService.Object
-        );
-    }
+            _fileSystemRevealService.Object,
+            _dispatcher.Object));
 
     [StaFact]
     public void PopulateMenu_ShouldCreateSixTopLevelMenuItems()
@@ -122,7 +129,7 @@ public class MenuStripManagerTests : BaseTestClass
         var menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        var result = _menuStripManager.AddMenuItem(new[] { "Edit", "Properties" });
+        var result = AddMenuItem(_menuStripManager, new[] { "Edit", "Properties" });
 
         result.Header.ShouldBe("Properties");
         var editMenu = (MenuItem)menu.Items[1];
@@ -136,7 +143,7 @@ public class MenuStripManagerTests : BaseTestClass
         var menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        var result = _menuStripManager.AddMenuItem(new[] { "Tools", "My Tool" });
+        var result = AddMenuItem(_menuStripManager, new[] { "Tools", "My Tool" });
 
         menu.Items.Count.ShouldBe(7);
         ((MenuItem)menu.Items[5]).Header.ShouldBe("Tools");
@@ -191,7 +198,7 @@ public class MenuStripManagerTests : BaseTestClass
         var menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        var result = _menuStripManager.GetItem("Nonexistent");
+        var result = GetItem(_menuStripManager, "Nonexistent");
 
         result.ShouldBeNull();
     }
@@ -208,7 +215,7 @@ public class MenuStripManagerTests : BaseTestClass
         var menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        var result = _menuStripManager.GetItem(menuName);
+        var result = GetItem(_menuStripManager, menuName);
 
         result.ShouldNotBeNull();
         (result.Header as string).ShouldBe(menuName);
@@ -234,34 +241,26 @@ public class MenuStripManagerTests : BaseTestClass
         _menuStripManager.PopulateMenu(firstMenu);
 
         // Register in one order
-        _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Import" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "View Font Cache" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Clear Font Cache" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Import" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Add Forms Components" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Force re-create all font files" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Re-create missing font files" });
 
         object[] firstHeaders = HeadersOf(firstMenu, "Content");
 
-        MenuStripManager secondManager = new MenuStripManager(
-            _selectedState.Object,
-            _undoManager.Object,
-            _editCommands.Object,
-            _dialogService.Object,
-            _fileCommands.Object,
-            _projectManager.Object,
-            _messenger.Object,
-            _fileSystemRevealService.Object);
+        MenuStripManager secondManager = CreateManager();
         Menu secondMenu = new Menu();
         secondManager.PopulateMenu(secondMenu);
 
         // Register in a different order
-        secondManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
-        secondManager.AddMenuItem(new[] { "Content", "Re-create missing font files" });
-        secondManager.AddMenuItem(new[] { "Content", "Import" });
-        secondManager.AddMenuItem(new[] { "Content", "Force re-create all font files" });
-        secondManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
-        secondManager.AddMenuItem(new[] { "Content", "View Font Cache" });
+        AddMenuItem(secondManager, new[] { "Content", "Add Forms Components" });
+        AddMenuItem(secondManager, new[] { "Content", "Re-create missing font files" });
+        AddMenuItem(secondManager, new[] { "Content", "Import" });
+        AddMenuItem(secondManager, new[] { "Content", "Force re-create all font files" });
+        AddMenuItem(secondManager, new[] { "Content", "Clear Font Cache" });
+        AddMenuItem(secondManager, new[] { "Content", "View Font Cache" });
 
         object[] secondHeaders = HeadersOf(secondMenu, "Content");
 
@@ -288,26 +287,20 @@ public class MenuStripManagerTests : BaseTestClass
         Menu menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Import" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "View Font Cache" });
+        MenuItem addForms = AddMenuItem(_menuStripManager, new[] { "Content", "Add Forms Components" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Import" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Clear Font Cache" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "View Font Cache" });
 
-        MenuItem content = (MenuItem)menu.Items.OfType<MenuItem>()
-            .First(mi => mi.Header as string == "Content");
-        MenuItem addForms = content.Items.OfType<MenuItem>()
-            .First(mi => mi.Header as string == "Add Forms Components");
-
-        // Simulate the project-load handler removing the item when the project
-        // already has forms imported.
-        content.Items.Remove(addForms);
+        // Simulate the project-load handler removing the item from the model when the project
+        // already has forms imported; the rendered menu follows the model.
+        MenuItemModel content = _menuStripManager.Model.GetItem("Content")!;
+        content.Items.Remove(content.Items.First(item => item.Header == "Add Forms Components"));
+        HeadersOf(menu, "Content").ShouldNotContain("Add Forms Components");
 
         // Now simulate re-adding it on a subsequent project load (forms not present).
-        // The Forms plugin uses AddMenuItemTo which appends directly into the parent's
-        // Items collection, so mimic that path here and then re-apply the layout.
-        MenuItem readded = new MenuItem { Header = "Add Forms Components" };
-        content.Items.Add(readded);
-        _menuStripManager.ApplyLayout("Content");
+        MenuItem readded = AddMenuItem(_menuStripManager, new[] { "Content", "Add Forms Components" });
+        readded.ShouldNotBeSameAs(addForms);
 
         object[] headers = HeadersOf(menu, "Content");
 
@@ -321,19 +314,77 @@ public class MenuStripManagerTests : BaseTestClass
     }
 
     [StaFact]
+    public void AddMenuItem_ReturnsTheSameWpfItem_AcrossLayoutPasses()
+    {
+        Menu menu = new Menu();
+        _menuStripManager.PopulateMenu(menu);
+
+        MenuItem clearFontCache = AddMenuItem(_menuStripManager, new[] { "Content", "Clear Font Cache" });
+        // A later registration re-applies the Content layout, which reorders the model's children.
+        AddMenuItem(_menuStripManager, new[] { "Content", "Import" });
+
+        MenuItem content = GetItem(_menuStripManager, "Content")!;
+        content.Items.OfType<MenuItem>().ShouldContain(item => ReferenceEquals(item, clearFontCache));
+    }
+
+    [StaFact]
+    public void ModelChanges_FlowIntoTheRenderedItem()
+    {
+        Menu menu = new Menu();
+        _menuStripManager.PopulateMenu(menu);
+
+        MenuItemModel model = _menuStripManager.Model.AddMenuItem(new[] { "View", "Show Thing" });
+        MenuItem rendered = _menuStripManager.GetMenuItem(model);
+
+        model.Header = "Hide Thing";
+        model.IsEnabled = false;
+
+        rendered.Header.ShouldBe("Hide Thing");
+        rendered.IsEnabled.ShouldBeFalse();
+    }
+
+    [StaFact]
+    public void CheckableItem_TogglesOnceThroughTheModel()
+    {
+        Menu menu = new Menu();
+        _projectManager.SetupProperty(p => p.UseStandardsPalette, (bool?)false);
+        _menuStripManager.PopulateMenu(menu);
+
+        MenuItem viewMenu = GetItem(_menuStripManager, "View")!;
+        MenuItem palette = viewMenu.Items.OfType<MenuItem>()
+            .First(mi => (mi.Header as string)!.StartsWith("Standards palette"));
+        palette.IsChecked.ShouldBeFalse();
+
+        palette.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+
+        palette.IsChecked.ShouldBeTrue();
+        _projectManager.VerifySet(p => p.UseStandardsPalette = true, Times.Once);
+    }
+
+    [StaFact]
     public void ContentMenu_UnknownItem_GoesToEndWithSeparator()
     {
         Menu menu = new Menu();
         _menuStripManager.PopulateMenu(menu);
 
-        _menuStripManager.AddMenuItem(new[] { "Content", "Add Forms Components" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Clear Font Cache" });
-        _menuStripManager.AddMenuItem(new[] { "Content", "Some Third-Party Plugin Item" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Add Forms Components" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Clear Font Cache" });
+        AddMenuItem(_menuStripManager, new[] { "Content", "Some Third-Party Plugin Item" });
 
         object[] headers = HeadersOf(menu, "Content");
 
         headers[^2].ShouldBe("<separator>");
         headers[^1].ShouldBe("Some Third-Party Plugin Item");
+    }
+
+    // Plugins add through the model; these mirror that path and hand back the rendered WPF item.
+    private static MenuItem AddMenuItem(MenuStripManager manager, IEnumerable<string> path) =>
+        manager.GetMenuItem(manager.Model.AddMenuItem(path));
+
+    private static MenuItem? GetItem(MenuStripManager manager, string name)
+    {
+        MenuItemModel? model = manager.Model.GetItem(name);
+        return model == null ? null : manager.GetMenuItem(model);
     }
 
     private static object[] HeadersOf(Menu menu, string topMenuName)

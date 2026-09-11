@@ -35,11 +35,10 @@ internal class MainImportFromGumxPlugin : WpfPluginBase
 
     public override void StartUp()
     {
-        var menuItem = this.AddMenuItem(new[] { "Content", "Import", ".gumx…" });
-        menuItem.Click += HandleImportFromGumx;
+        AddMenuEntry(HandleImportFromGumx, "Content", "Import", ".gumx…");
     }
 
-    private void HandleImportFromGumx(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleImportFromGumx()
     {
         if (!_importFromGumxLogic.CanImport)
         {

@@ -24,7 +24,7 @@ namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 /// <see cref="OrphanCodeFileScanService"/> — this plugin is WPF menu/event plumbing only.
 /// </summary>
 [Export(typeof(PluginBase))]
-internal class MainOrphanCodeFilePlugin : WpfPluginBase
+internal class MainOrphanCodeFilePlugin : PluginBase
 {
     public override string FriendlyName => "Orphan Code File Plugin";
 
@@ -69,8 +69,7 @@ internal class MainOrphanCodeFilePlugin : WpfPluginBase
 
     public override void StartUp()
     {
-        var menuItem = this.AddMenuItem(new[] { "Content", "Scan for Orphaned Code Files…" });
-        menuItem.Click += (_, _) => HandleScanRequested();
+        AddMenuEntry(HandleScanRequested, "Content", "Scan for Orphaned Code Files…");
 
         this.ProjectLoad += HandleProjectLoad;
         this.GetAllErrors += HandleGetAllErrors;

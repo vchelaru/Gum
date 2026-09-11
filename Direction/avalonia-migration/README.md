@@ -120,9 +120,9 @@ risk is the chance the phase changes the plan.
 
 ## Open decisions (owner calls, tracked here until an ADR settles them)
 
-- **External plugin compatibility at cutover** (phase 40): break WPF-only third-party plugins, or
-  ship a compatibility shim. Recommendation in the phase doc: break, with advance notice and a
-  migration guide, because a shim would drag WPF back into the graph.
+- **External plugin compatibility at cutover** (phase 40): **settled by ADR-0018 (2026-09-10)**:
+  break WPF-only third-party plugins at cutover, with an obsolete shim in the WPF tool until then,
+  advance notice, and a migration guide (`plugin-compatibility-notice.md`).
 - **Canvas fallback** (phase 10): if a KNI desktop-GL device cannot be created headlessly on
   macOS/Linux, switch the editor canvas to SkiaGum and accept a bitmap-font fidelity task.
 - **Artifact formats per OS** (phase 110): decided at implementation, recorded there.

@@ -1,8 +1,8 @@
+using Gum.Menus;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.Hotkey.Views;
 using System;
 using System.ComponentModel.Composition;
-using System.Windows.Controls;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey
@@ -12,7 +12,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
     {
         IPluginTab pluginTab;
         HotkeyView hotkeyView;
-        MenuItem menuItem;
+        MenuItemModel menuItem = null!;
         private readonly HotkeyViewModel _hotkeyViewModel;
 
         [ImportingConstructor]
@@ -23,7 +23,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
 
         public override void StartUp()
         {
-            menuItem = this.AddMenuItemTo("View Hotkeys", HandleToggleTabVisibility, "View");
+            menuItem = AddMenuEntry(HandleToggleTabVisibility, "View", "View Hotkeys");
             hotkeyView = new Views.HotkeyView()
             {
                 DataContext = _hotkeyViewModel
@@ -45,7 +45,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
         }
 
 
-        private void HandleToggleTabVisibility(object? sender, System.Windows.RoutedEventArgs e)
+        private void HandleToggleTabVisibility()
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
         }

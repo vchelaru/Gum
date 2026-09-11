@@ -155,7 +155,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         // Default settings until LoadSettings() replaces this with the loaded (or newly-created)
         // file. Avoids a null-before-load window that every narrowed IProjectManager member above
         // would otherwise need to guard against (some plugins read these before LoadSettings runs -
-        // see MenuStripManager.PopulateMenu).
+        // see StandardMenuModelBuilder.Build).
         GeneralSettingsFile = new GeneralSettingsFile();
     }
 

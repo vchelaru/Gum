@@ -1,3 +1,4 @@
+using Gum.Menus;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.Commands;
@@ -63,7 +64,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 
     StateAnimationPlugin.Views.MainWindow? _mainWindow;
     private IPluginTab? pluginTab;
-    private MenuItem? menuItem;
+    private MenuItemModel? menuItem;
 
     // Owned here (not by ElementDeleteService) because materializing a WPF CheckBox from the
     // framework-neutral DeleteOptionCheckboxViewModel is a view concern (ADR-0005). Set by
@@ -207,9 +208,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 
     private void CreateMenuItems()
     {
-        menuItem = AddMenuItem("View", "View Animations");
-
-        menuItem.Click += HandleToggleTabVisibility;
+        menuItem = AddMenuEntry(HandleToggleTabVisibility, "View", "View Animations");
     }
 
     private void AssignEvents()
@@ -330,7 +329,7 @@ public class MainStateAnimationPlugin : WpfPluginBase, IAnimationUndoProvider
 
     #endregion
 
-    private void HandleToggleTabVisibility(object? sender, System.Windows.RoutedEventArgs e)
+    private void HandleToggleTabVisibility()
     {
         if(pluginTab != null)
         {

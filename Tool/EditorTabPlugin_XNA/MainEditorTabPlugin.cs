@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using EditorTabPlugin_XNA.Views;
@@ -261,7 +261,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
             new NineSliceCoordinateRefresher(),
             new PreciseHitTester());
 
-        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands);
+        _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService);
         _singlePixelTextureService = new SinglePixelTextureService();
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
@@ -309,8 +309,7 @@ internal class MainEditorTabPlugin : PriorityPlugin, IRecipient<UiBaseFontSizeCh
 
         AssignEvents();
 
-        var menuItem = AddMenuItem("File", "Export", "Export as Image");
-        _screenshotService.InitializeMenuItem(menuItem);
+        AddMenuEntry(_screenshotService.ExportAsImage, "File", "Export", "Export as Image");
         BeforeRender += _screenshotService.HandleBeforeRender;
         AfterRender += _screenshotService.HandleAfterRender;
 

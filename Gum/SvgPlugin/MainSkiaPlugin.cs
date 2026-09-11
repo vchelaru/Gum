@@ -117,8 +117,7 @@ namespace SkiaPlugin
 
         private void AddMenuItems()
         {
-            var item = this.AddMenuItem(new List<string>() { "Plugins", "Add Skia Standard Elements" });
-            item.Click += (_, _) =>
+            AddMenuEntry(() =>
             {
                 var projectState = Locator.GetRequiredService<IProjectState>();
                 if(projectState.NeedsToSaveProject)
@@ -130,7 +129,7 @@ namespace SkiaPlugin
                     Locator.GetRequiredService<ISkiaShapeStandardsLogic>().AddAllStandards();
                     _guiCommands.RefreshElementTreeView();
                 }
-            };
+            }, "Plugins", "Add Skia Standard Elements");
         }
 
         private void AssignEvents()

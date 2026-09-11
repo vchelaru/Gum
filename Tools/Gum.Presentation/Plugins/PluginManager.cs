@@ -839,6 +839,155 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     }
 
 
+    /// <summary>
+    /// Bridges the core services plugins import (property imports on <see cref="PluginBase"/> and
+    /// per-plugin <c>[ImportingConstructor]</c> parameters) into <paramref name="batch"/>. The
+    /// head adds its own exports after this through <see cref="IPluginHostConfiguration.AddHeadExports"/>.
+    /// </summary>
+    public void AddCoreExports(CompositionBatch batch)
+    {
+        // PluginManager's own [ImportingConstructor] dep (#3880): MEF activates PluginManager itself
+        // as an implicit part (see the ctor's comment), so its ctor param must be bridged like any
+        // plugin dependency even though PluginManager is not a PluginBase.
+        batch.AddExportedValue<IPluginEnablementStore>(Locator.GetRequiredService<IPluginEnablementStore>());
+        batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
+        batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
+        batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
+        batch.AddExportedValue<ISelectionHistory>(Locator.GetRequiredService<ISelectionHistory>());
+        batch.AddExportedValue<IProjectManager>(Locator.GetRequiredService<IProjectManager>());
+
+        // Shared services consumed by PluginBase (via property imports) and by individual
+        // plugins that need them at construction time (via [ImportingConstructor]).
+        batch.AddExportedValue<IGuiCommands>(Locator.GetRequiredService<IGuiCommands>());
+        batch.AddExportedValue<IFileCommands>(Locator.GetRequiredService<IFileCommands>());
+        batch.AddExportedValue<ITabManager>(Locator.GetRequiredService<ITabManager>());
+        batch.AddExportedValue<IDialogService>(Locator.GetRequiredService<IDialogService>());
+
+        // Per-plugin services needed at construction time (via [ImportingConstructor]):
+        // MainSkiaPlugin (IWireframeCommands), MainFontPlugin (IFontManager, IProjectState),
+        // MainGumFormsPlugin (IImportLogic, IFileWatchManager, IProjectState). IProjectState and
+        // IFileWatchManager are also stepping stones for later, heavier plugin drains.
+        batch.AddExportedValue<IWireframeCommands>(Locator.GetRequiredService<IWireframeCommands>());
+        batch.AddExportedValue<IFontManager>(Locator.GetRequiredService<IFontManager>());
+        batch.AddExportedValue<IProjectState>(Locator.GetRequiredService<IProjectState>());
+        batch.AddExportedValue<IImportLogic>(Locator.GetRequiredService<IImportLogic>());
+        batch.AddExportedValue<IFileWatchManager>(Locator.GetRequiredService<IFileWatchManager>());
+        // MainConvertToJsonPlugin (#4219): mutes the file watcher for each JSON file it writes
+        // during "Convert to JSON", the same way FileCommands/ProjectManager do for their saves.
+        batch.AddExportedValue<IFileWatchIgnoreList>(Locator.GetRequiredService<IFileWatchIgnoreList>());
+
+        // MainInheritancePlugin (InheritanceLogic) and MainFavoriteComponentPlugin
+        // (IFavoriteComponentManager) construction-time deps:
+        batch.AddExportedValue<InheritanceLogic>(Locator.GetRequiredService<InheritanceLogic>());
+        batch.AddExportedValue<IFavoriteComponentManager>(Locator.GetRequiredService<IFavoriteComponentManager>());
+
+        // Medium-tier plugin ctor drains (cheapest-first batch): MainHideShowToolsPlugin
+        // (MainPanelViewModel), MainVariableGridPlugin (PropertyGridManager,
+        // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger, IClipboardService),
+        // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
+        // transient; this bridges the single instance MainFileWatchPlugin consumes.
+        batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
+        batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
+        batch.AddExportedValue<IClipboardService>(Locator.GetRequiredService<IClipboardService>());
+        batch.AddExportedValue<IFileSystemRevealService>(Locator.GetRequiredService<IFileSystemRevealService>());
+        batch.AddExportedValue<IMessenger>(Locator.GetRequiredService<IMessenger>());
+        batch.AddExportedValue<FileWatchLogic>(Locator.GetRequiredService<FileWatchLogic>());
+        batch.AddExportedValue<PeriodicUiTimer>(Locator.GetRequiredService<PeriodicUiTimer>());
+
+        // Cheap/medium-tier ctor drains: DeleteObjectPlugin (IDeleteLogic; its IWireframeCommands
+        // dep is already bridged above), MainHotkeyPlugin (HotkeyViewModel),
+        // MainOutputPlugin (MainOutputViewModel). HotkeyViewModel is a transient ViewModel
+        // (auto-registered via the ViewModel scan in Builder.cs); this bridges the single instance the
+        // plugin's tab consumes. MainOutputViewModel is the IOutputManager singleton.
+        batch.AddExportedValue<IDeleteLogic>(Locator.GetRequiredService<IDeleteLogic>());
+        batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
+        batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
+
+        // Heavy-tier ctor drain: MainPropertiesWindowPlugin (IDispatcher, IWireframeObjectManager;
+        // its IFontManager / IWireframeCommands / IDialogService / FileWatchLogic / IProjectState
+        // deps are already bridged above).
+        batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
+        batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
+
+        // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,
+        // which share IHotkeyManager. MainTextureCoordinatePlugin adds ISetVariableLogic;
+        // MainStatePlugin adds IEditCommands, ICopyPasteLogic, IVariableInCategoryPropagationLogic.
+        // Their remaining ctor-time deps (ISelectedState, IGuiCommands, IFileCommands, IElementCommands,
+        // IDialogService, IWireframeCommands, IUndoManager, ITabManager, IProjectManager,
+        // IFileWatchManager, IMessenger) are already bridged above.
+        batch.AddExportedValue<ISetVariableLogic>(Locator.GetRequiredService<ISetVariableLogic>());
+        batch.AddExportedValue<IHotkeyManager>(Locator.GetRequiredService<IHotkeyManager>());
+        batch.AddExportedValue<IEditCommands>(Locator.GetRequiredService<IEditCommands>());
+        batch.AddExportedValue<ICopyPasteLogic>(Locator.GetRequiredService<ICopyPasteLogic>());
+        batch.AddExportedValue<IVariableInCategoryPropagationLogic>(Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
+
+        // Heavy-tier ctor drain: MainTreeViewPlugin. ElementTreeViewManager is the ~3k-line WinForms
+        // tree manager (host singleton, registered concrete — no interface, see Builder.cs). It takes
+        // PluginManager in its own ctor, but that's not a construction cycle here: it's resolved from the
+        // host container (already built before LoadPlugins) and the plugin is only a consumer of it, never
+        // a dependency. IUserProjectSettingsManager and IOutputManager feed its TreeViewStateService.
+        // Its other ctor-time deps (ISelectedState, IMessenger, IErrorChecker, IProjectState) are bridged above.
+        batch.AddExportedValue<IUserProjectSettingsManager>(Locator.GetRequiredService<IUserProjectSettingsManager>());
+        batch.AddExportedValue<IOutputManager>(Locator.GetRequiredService<IOutputManager>());
+
+        // Heavy-tier ctor drain: MainCodeOutputPlugin. These feed the code-generation services it
+        // builds in its ctor (CodeGenerator/CodeGenerationService/etc.): INameVerifier and ITypeManager
+        // for name/type resolution, LocalizationService for generated-text handling, IRetryService for
+        // the file-write retry path. Its other ctor-time deps (IGuiCommands, IDialogService, IProjectState,
+        // IOutputManager, ISelectedState, IMessenger, IFileCommands) are bridged above.
+        batch.AddExportedValue<INameVerifier>(Locator.GetRequiredService<INameVerifier>());
+        batch.AddExportedValue<ITypeManager>(Locator.GetRequiredService<ITypeManager>());
+        batch.AddExportedValue<LocalizationService>(Locator.GetRequiredService<LocalizationService>());
+        batch.AddExportedValue<IRetryService>(Locator.GetRequiredService<IRetryService>());
+
+        // Heavy-tier ctor drain: MainEditorTabPlugin (external Tool/EditorTabPlugin_XNA — the central
+        // editor/wireframe plugin). IReorderLogic and INameVerifier feed the EditingManager it builds;
+        // FileLocations is used for drag-drop file paths; IUiSettingsService feeds the SelectionManager;
+        // IThemingService feeds the BackgroundManager and the theme apply; IDragDropManager handles wireframe
+        // drops; WireframeCommands (concrete — passed to BackgroundManager, whose ctor takes the concrete) is
+        // distinct from the already-bridged IWireframeCommands interface but resolves to the same singleton.
+        // Its remaining ctor-time deps (ISelectedState, IProjectManager, IGuiCommands, IOutputManager,
+        // LocalizationService, IVariableInCategoryPropagationLogic, IWireframeObjectManager, IUndoManager,
+        // IDialogService, IHotkeyManager, IElementCommands, IFileCommands, ISetVariableLogic, IMessenger) are
+        // bridged above. PluginManager stays a body Locator call (host-into-its-own-plugin cycle smell).
+        batch.AddExportedValue<IReorderLogic>(Locator.GetRequiredService<IReorderLogic>());
+        batch.AddExportedValue<FileLocations>(Locator.GetRequiredService<FileLocations>());
+        batch.AddExportedValue<IUiSettingsService>(Locator.GetRequiredService<IUiSettingsService>());
+        batch.AddExportedValue<IThemingService>(Locator.GetRequiredService<IThemingService>());
+        batch.AddExportedValue<IDragDropManager>(Locator.GetRequiredService<IDragDropManager>());
+        batch.AddExportedValue<WireframeCommands>(Locator.GetRequiredService<WireframeCommands>());
+
+        // EditingManager drain (#3338): MainEditorTabPlugin builds EditingManager, which now injects
+        // ICircularReferenceManager (drained from a ctor-body Locator call). Its other drained dep,
+        // IFavoriteComponentManager, is already bridged above.
+        batch.AddExportedValue<ICircularReferenceManager>(Locator.GetRequiredService<ICircularReferenceManager>());
+
+        // Animation undo (#3406): MainStateAnimationPlugin injects this to register itself as the
+        // live IAnimationUndoProvider with the already-constructed UndoManager/ElementUndoStrategy.
+        batch.AddExportedValue<IAnimationUndoProviderRegistrar>(Locator.GetRequiredService<IAnimationUndoProviderRegistrar>());
+
+        // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
+
+        // MainGumFormsPlugin ctor drain (#4404): the plugin used to assemble GumFormsLogic itself from
+        // five bridged services plus a Locator call. The logic is DI-built now because new-project
+        // creation imports the default theme through the same services, outside the plugin.
+        batch.AddExportedValue<GumFormsLogic>(Locator.GetRequiredService<GumFormsLogic>());
+
+        // PluginManager self-injection (#3753): re-investigated the long-standing "host-into-its-own-
+        // plugin cycle smell" assumption and found no real construction cycle. PluginManager is
+        // DI-constructed with an empty ctor (see Builder.cs) and is fully built *before* LoadPlugins
+        // ever runs — `instance` here already IS that singleton, so bridging it is identical in effect
+        // to a plugin fetching it via Locator, just relocated to the composition root like every other
+        // bridge. The consuming ctors (MainEditorTabPlugin, MainBehaviorsPlugin, MainPropertiesWindowPlugin)
+        // only store the reference and call methods on it later (StartUp/event handlers), long after this
+        // composition finishes, so there is nothing time-sensitive about when the reference becomes
+        // available. All three now take IPluginManager — the six methods that were concrete-only
+        // (HighlightTreeNode, HandleWireframeResized, CameraChanged, BeforeRender, AfterRender,
+        // BehaviorReferencesChanged) were widened onto the interface, so the concrete PluginManager bridge
+        // is no longer needed here.
+        batch.AddExportedValue<IPluginManager>(this);
+    }
+
     private void LoadPlugins(PluginManager instance)
     {
         #region Get the Catalog
@@ -857,149 +1006,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
             }
 
             var batch = new CompositionBatch();
-            // PluginManager's own [ImportingConstructor] dep (#3880): MEF activates PluginManager itself
-            // as an implicit part (see the ctor's comment), so its ctor param must be bridged like any
-            // plugin dependency even though PluginManager is not a PluginBase.
-            batch.AddExportedValue<IPluginEnablementStore>(Locator.GetRequiredService<IPluginEnablementStore>());
-            batch.AddExportedValue<ISelectedState>(Locator.GetRequiredService<ISelectedState>());
-            batch.AddExportedValue<IElementCommands>(Locator.GetRequiredService<IElementCommands>());
-            batch.AddExportedValue<IUndoManager>(Locator.GetRequiredService<IUndoManager>());
-            batch.AddExportedValue<ISelectionHistory>(Locator.GetRequiredService<ISelectionHistory>());
-            batch.AddExportedValue<IProjectManager>(Locator.GetRequiredService<IProjectManager>());
-
-            // Shared services consumed by PluginBase (via property imports) and by individual
-            // plugins that need them at construction time (via [ImportingConstructor]).
-            batch.AddExportedValue<IGuiCommands>(Locator.GetRequiredService<IGuiCommands>());
-            batch.AddExportedValue<IFileCommands>(Locator.GetRequiredService<IFileCommands>());
-            batch.AddExportedValue<ITabManager>(Locator.GetRequiredService<ITabManager>());
-            batch.AddExportedValue<IDialogService>(Locator.GetRequiredService<IDialogService>());
-
-            // Per-plugin services needed at construction time (via [ImportingConstructor]):
-            // MainSkiaPlugin (IWireframeCommands), MainFontPlugin (IFontManager, IProjectState),
-            // MainGumFormsPlugin (IImportLogic, IFileWatchManager, IProjectState). IProjectState and
-            // IFileWatchManager are also stepping stones for later, heavier plugin drains.
-            batch.AddExportedValue<IWireframeCommands>(Locator.GetRequiredService<IWireframeCommands>());
-            batch.AddExportedValue<IFontManager>(Locator.GetRequiredService<IFontManager>());
-            batch.AddExportedValue<IProjectState>(Locator.GetRequiredService<IProjectState>());
-            batch.AddExportedValue<IImportLogic>(Locator.GetRequiredService<IImportLogic>());
-            batch.AddExportedValue<IFileWatchManager>(Locator.GetRequiredService<IFileWatchManager>());
-            // MainConvertToJsonPlugin (#4219): mutes the file watcher for each JSON file it writes
-            // during "Convert to JSON", the same way FileCommands/ProjectManager do for their saves.
-            batch.AddExportedValue<IFileWatchIgnoreList>(Locator.GetRequiredService<IFileWatchIgnoreList>());
-
-            // MainInheritancePlugin (InheritanceLogic) and MainFavoriteComponentPlugin
-            // (IFavoriteComponentManager) construction-time deps:
-            batch.AddExportedValue<InheritanceLogic>(Locator.GetRequiredService<InheritanceLogic>());
-            batch.AddExportedValue<IFavoriteComponentManager>(Locator.GetRequiredService<IFavoriteComponentManager>());
-
-            // Medium-tier plugin ctor drains (cheapest-first batch): MainHideShowToolsPlugin
-            // (MainPanelViewModel), MainVariableGridPlugin (PropertyGridManager,
-            // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger, IClipboardService),
-            // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
-            // transient; this bridges the single instance MainFileWatchPlugin consumes.
-            batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
-            batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
-            batch.AddExportedValue<IClipboardService>(Locator.GetRequiredService<IClipboardService>());
-            batch.AddExportedValue<IFileSystemRevealService>(Locator.GetRequiredService<IFileSystemRevealService>());
-            batch.AddExportedValue<IMessenger>(Locator.GetRequiredService<IMessenger>());
-            batch.AddExportedValue<FileWatchLogic>(Locator.GetRequiredService<FileWatchLogic>());
-            batch.AddExportedValue<PeriodicUiTimer>(Locator.GetRequiredService<PeriodicUiTimer>());
-
-            // Cheap/medium-tier ctor drains: DeleteObjectPlugin (IDeleteLogic; its IWireframeCommands
-            // dep is already bridged above), MainHotkeyPlugin (HotkeyViewModel),
-            // MainOutputPlugin (MainOutputViewModel). HotkeyViewModel is a transient ViewModel
-            // (auto-registered via the ViewModel scan in Builder.cs); this bridges the single instance the
-            // plugin's tab consumes. MainOutputViewModel is the IOutputManager singleton.
-            batch.AddExportedValue<IDeleteLogic>(Locator.GetRequiredService<IDeleteLogic>());
-            batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
-            batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
-
-            // Heavy-tier ctor drain: MainPropertiesWindowPlugin (IDispatcher, IWireframeObjectManager;
-            // its IFontManager / IWireframeCommands / IDialogService / FileWatchLogic / IProjectState
-            // deps are already bridged above).
-            batch.AddExportedValue<IDispatcher>(Locator.GetRequiredService<IDispatcher>());
-            batch.AddExportedValue<IWireframeObjectManager>(Locator.GetRequiredService<IWireframeObjectManager>());
-
-            // Heavy-tier ctor drains (combined PR): MainTextureCoordinatePlugin and MainStatePlugin,
-            // which share IHotkeyManager. MainTextureCoordinatePlugin adds ISetVariableLogic;
-            // MainStatePlugin adds IEditCommands, ICopyPasteLogic, IVariableInCategoryPropagationLogic.
-            // Their remaining ctor-time deps (ISelectedState, IGuiCommands, IFileCommands, IElementCommands,
-            // IDialogService, IWireframeCommands, IUndoManager, ITabManager, IProjectManager,
-            // IFileWatchManager, IMessenger) are already bridged above.
-            batch.AddExportedValue<ISetVariableLogic>(Locator.GetRequiredService<ISetVariableLogic>());
-            batch.AddExportedValue<IHotkeyManager>(Locator.GetRequiredService<IHotkeyManager>());
-            batch.AddExportedValue<IEditCommands>(Locator.GetRequiredService<IEditCommands>());
-            batch.AddExportedValue<ICopyPasteLogic>(Locator.GetRequiredService<ICopyPasteLogic>());
-            batch.AddExportedValue<IVariableInCategoryPropagationLogic>(Locator.GetRequiredService<IVariableInCategoryPropagationLogic>());
-
-            // Heavy-tier ctor drain: MainTreeViewPlugin. ElementTreeViewManager is the ~3k-line WinForms
-            // tree manager (host singleton, registered concrete — no interface, see Builder.cs). It takes
-            // PluginManager in its own ctor, but that's not a construction cycle here: it's resolved from the
-            // host container (already built before LoadPlugins) and the plugin is only a consumer of it, never
-            // a dependency. IUserProjectSettingsManager and IOutputManager feed its TreeViewStateService.
-            // Its other ctor-time deps (ISelectedState, IMessenger, IErrorChecker, IProjectState) are bridged above.
-            batch.AddExportedValue<IUserProjectSettingsManager>(Locator.GetRequiredService<IUserProjectSettingsManager>());
-            batch.AddExportedValue<IOutputManager>(Locator.GetRequiredService<IOutputManager>());
-
-            // Heavy-tier ctor drain: MainCodeOutputPlugin. These feed the code-generation services it
-            // builds in its ctor (CodeGenerator/CodeGenerationService/etc.): INameVerifier and ITypeManager
-            // for name/type resolution, LocalizationService for generated-text handling, IRetryService for
-            // the file-write retry path. Its other ctor-time deps (IGuiCommands, IDialogService, IProjectState,
-            // IOutputManager, ISelectedState, IMessenger, IFileCommands) are bridged above.
-            batch.AddExportedValue<INameVerifier>(Locator.GetRequiredService<INameVerifier>());
-            batch.AddExportedValue<ITypeManager>(Locator.GetRequiredService<ITypeManager>());
-            batch.AddExportedValue<LocalizationService>(Locator.GetRequiredService<LocalizationService>());
-            batch.AddExportedValue<IRetryService>(Locator.GetRequiredService<IRetryService>());
-
-            // Heavy-tier ctor drain: MainEditorTabPlugin (external Tool/EditorTabPlugin_XNA — the central
-            // editor/wireframe plugin). IReorderLogic and INameVerifier feed the EditingManager it builds;
-            // FileLocations is used for drag-drop file paths; IUiSettingsService feeds the SelectionManager;
-            // IThemingService feeds the BackgroundManager and the theme apply; IDragDropManager handles wireframe
-            // drops; WireframeCommands (concrete — passed to BackgroundManager, whose ctor takes the concrete) is
-            // distinct from the already-bridged IWireframeCommands interface but resolves to the same singleton.
-            // Its remaining ctor-time deps (ISelectedState, IProjectManager, IGuiCommands, IOutputManager,
-            // LocalizationService, IVariableInCategoryPropagationLogic, IWireframeObjectManager, IUndoManager,
-            // IDialogService, IHotkeyManager, IElementCommands, IFileCommands, ISetVariableLogic, IMessenger) are
-            // bridged above. PluginManager stays a body Locator call (host-into-its-own-plugin cycle smell).
-            batch.AddExportedValue<IReorderLogic>(Locator.GetRequiredService<IReorderLogic>());
-            batch.AddExportedValue<FileLocations>(Locator.GetRequiredService<FileLocations>());
-            batch.AddExportedValue<IUiSettingsService>(Locator.GetRequiredService<IUiSettingsService>());
-            batch.AddExportedValue<IThemingService>(Locator.GetRequiredService<IThemingService>());
-            batch.AddExportedValue<IDragDropManager>(Locator.GetRequiredService<IDragDropManager>());
-            batch.AddExportedValue<WireframeCommands>(Locator.GetRequiredService<WireframeCommands>());
-
-            // EditingManager drain (#3338): MainEditorTabPlugin builds EditingManager, which now injects
-            // ICircularReferenceManager (drained from a ctor-body Locator call). Its other drained dep,
-            // IFavoriteComponentManager, is already bridged above.
-            batch.AddExportedValue<ICircularReferenceManager>(Locator.GetRequiredService<ICircularReferenceManager>());
-
-            // Animation undo (#3406): MainStateAnimationPlugin injects this to register itself as the
-            // live IAnimationUndoProvider with the already-constructed UndoManager/ElementUndoStrategy.
-            batch.AddExportedValue<IAnimationUndoProviderRegistrar>(Locator.GetRequiredService<IAnimationUndoProviderRegistrar>());
-
-            // MainWindowPlugin ctor drain (#3753): updates the main window title on project load/save.
-
-            // MainGumFormsPlugin ctor drain (#4404): the plugin used to assemble GumFormsLogic itself from
-            // five bridged services plus a Locator call. The logic is DI-built now because new-project
-            // creation imports the default theme through the same services, outside the plugin.
-            batch.AddExportedValue<GumFormsLogic>(Locator.GetRequiredService<GumFormsLogic>());
-
-            // PluginManager self-injection (#3753): re-investigated the long-standing "host-into-its-own-
-            // plugin cycle smell" assumption and found no real construction cycle. PluginManager is
-            // DI-constructed with an empty ctor (see Builder.cs) and is fully built *before* LoadPlugins
-            // ever runs — `instance` here already IS that singleton, so bridging it is identical in effect
-            // to a plugin fetching it via Locator, just relocated to the composition root like every other
-            // bridge. The consuming ctors (MainEditorTabPlugin, MainBehaviorsPlugin, MainPropertiesWindowPlugin)
-            // only store the reference and call methods on it later (StartUp/event handlers), long after this
-            // composition finishes, so there is nothing time-sensitive about when the reference becomes
-            // available. All three now take IPluginManager — the six methods that were concrete-only
-            // (HighlightTreeNode, HandleWireframeResized, CameraChanged, BeforeRender, AfterRender,
-            // BehaviorReferencesChanged) were widened onto the interface, so the concrete PluginManager bridge
-            // is no longer needed here.
-            batch.AddExportedValue<IPluginManager>(instance);
-
+            instance.AddCoreExports(batch);
             // The head's own exports: its shell view models, menu model, and whatever else its plugins take.
-            _hostConfiguration.AddHeadExports(batch);
+            instance._hostConfiguration.AddHeadExports(batch);
 
             var container = new CompositionContainer(catalog);
 

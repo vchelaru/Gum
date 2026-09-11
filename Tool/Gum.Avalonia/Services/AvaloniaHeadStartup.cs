@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.Settings;
 using Gum.Startup;
@@ -8,9 +10,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Gum.Avalonia.Services;
 
 /// <summary>
-/// This head's framework-specific startup steps. Settings migration is the same as the WPF head's;
-/// the view and plugin steps are placeholders until phases 40 through 70 bring those subsystems
-/// across.
+/// This head's framework-specific startup steps. Settings migration is the same as the WPF head's
+/// and plugins load through the shared host; the tree-view and property-grid steps are
+/// placeholders until phases 60 and 70 bring those subsystems across.
 /// </summary>
 public class AvaloniaHeadStartup : IHeadStartup
 {
@@ -47,7 +49,16 @@ public class AvaloniaHeadStartup : IHeadStartup
     public void InitializePropertyGrid() { }
 
     /// <inheritdoc/>
-    public void InitializePlugins() => _services.GetRequiredService<PluginManager>().Initialize();
+    public void InitializePlugins()
+    {
+        PluginManager pluginManager = _services.GetRequiredService<PluginManager>();
+        pluginManager.Initialize();
+
+        // Until the plugin-management dialog comes across, the Output tab is where a user can see
+        // which plugins this head composed.
+        string names = string.Join(", ", pluginManager.Plugins.Select(plugin => plugin.FriendlyName).OrderBy(name => name));
+        _services.GetRequiredService<IOutputManager>().AddOutput($"Loaded {pluginManager.Plugins.Count()} plugin(s): {names}");
+    }
 
     /// <inheritdoc/>
     public void RenderSurfaceReady() => _services.GetRequiredService<PluginManager>().XnaInitialized();

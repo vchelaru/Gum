@@ -9,8 +9,8 @@
 > bar spinner, GUI commands, a synchronous dialog service over Avalonia's async dialogs (nested
 > dispatcher loop), a dialog-view registry with the four generic dialogs, delete confirmation, and
 > the tab manager. The standard menus are now a neutral `MenuModel` built by
-> `StandardMenuModelBuilder` in `Gum.Presentation` (the WPF `MenuStripManager` still builds its own
-> WPF items; phase 40 switches it to the model). `IWritableOptions`, the app messages, and the
+> `StandardMenuModelBuilder` in `Gum.Presentation` (phase 40 made the WPF `MenuStripManager` a
+> renderer of the same model). `IWritableOptions`, the app messages, and the
 > palette message moved to `Gum.Presentation`. `Tests/Gum.Avalonia.Tests` (Avalonia.Headless.XUnit)
 > proves every `HeadProvidedContracts` entry resolves and the window constructs; CI builds and tests
 > the head on Windows, macOS, and Linux. Placeholders: no plugins load yet (`NullPluginManager`,

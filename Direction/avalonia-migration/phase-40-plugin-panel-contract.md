@@ -1,5 +1,25 @@
 # Phase 40 — Plugin panel contract and plugin compatibility
 
+> **Status 2026-09-10:** landed on `avalonia-migration-work`. The MEF plugin host (`PluginManager`,
+> `PluginContainer`, `PluginCatalogFactory`) lives in `Gum.Presentation`; each head supplies an
+> `IPluginHostConfiguration` (its built-in plugin assemblies, its exports, whether it can host an
+> external assembly, the canvas cursor). `PluginManager.AddCoreExports` is the one bridged-service
+> list; `IPriorityPlugin` and `IDeleteOptionsDialogPlugin` replace the WPF type checks. Menus:
+> `PluginBase.AddMenuEntry` over the shared `MenuModel`, which the WPF `MenuStripManager` now
+> renders (one WPF item per model item, kept in sync) and `AvaloniaMenuBuilder` renders on the
+> other side; every in-repo caller migrated, including Load Recent's submenu and the editor tab's
+> "Export as Image" (now through `IDialogService.SaveFile`). `WpfPluginBase` keeps only the
+> delete-dialog events plus an `[Obsolete]` `AddMenuItem` shim for external WPF plugins.
+> `ConvertToJsonPlugin` and `EventOutputPlugin` target plain `net10.0` over `Gum.Presentation`,
+> carry the banned-API guard, copy into both heads' `Plugins/` folders, and load in the Avalonia
+> head (`Tests/Gum.Avalonia.Tests/PluginHostTests` composes them; the head logs the loaded plugin
+> names to the Output tab). The WPF head refuses nothing; the Avalonia head refuses assemblies that
+> reference WPF/WinForms with a `NotHostable` scan outcome. Compatibility decision: ADR-0018 (break
+> at cutover, with notice); draft notice in `plugin-compatibility-notice.md`. The VM-first tab rule
+> is implemented on the Avalonia side (`AvaloniaPluginTab` shows a control as is and anything else
+> through a `ContentControl`); the WPF `MainPanelViewModel` still casts to `FrameworkElement`,
+> which is fine because every WPF plugin hands it one, and it goes away with the WPF head.
+
 ## Purpose
 
 Define the one contract by which a plugin hands the tool a tab, a menu item, or a dialog, so that
@@ -54,7 +74,7 @@ compatibility notice draft; `gum-tool-plugins` skill updated.
 **Out:** authoring each plugin's AXAML views (phase 80 for most, 50 for the two canvases, 70 for the
 Variables tab), theming (90), packaging (110).
 
-## Plugin audit (2026-09-09)
+## Plugin audit (2026-09-09, TFM column refreshed 2026-09-10)
 
 | Project | TFM | XAML | Notes |
 |---|---|---|---|
@@ -63,14 +83,14 @@ Variables tab), theming (90), packaging (110).
 | `FlatRedBall.SpecializedXnaControls` (not a plugin, but in the graph) | net8.0-windows, WPF | 0 | `ImageRegionSelectionControl`, the second canvas's control; phase 50 |
 | `Gum/StateAnimationPlugin` | net8.0-windows10.0.19041, WPF+WinForms | 7 | largest view set; phase 80 |
 | `Gum/CodeOutputPlugin` | net8.0-windows, WPF+WinForms | 1 | uses `WpfDataUi`; phase 70 + 80 |
-| `Gum/GumFormsPlugin` | net8.0-windows, WPF | 1 | uses `WpfDataUi`; phase 70 + 80 |
+| `Gum/GumFormsPlugin` | net10.0-windows, WPF | 1 | uses `WpfDataUi`; phase 70 + 80. Menu presence now toggles through the model (`PluginBase`, no longer `WpfPluginBase`) |
 | `Gum/ImportFromGumxPlugin` | net8.0-windows, WPF | 2 | uses `WpfDataUi`; phase 70 + 80 |
 | `Gum/SvgPlugin` (SkiaPlugin) | net8.0-windows, WinForms | 0 | **confirmed** zero `System.Windows` files; references `WpfDataUi`, so TFM flip waits on phase 70's model split |
 | `Gum/PerformanceMeasurementPlugin` | net8.0-windows, WPF+WinForms | 1 | phase 80 |
-| `Gum/ConvertToJsonPlugin` | net8.0-windows, WPF | 0 | **confirmed** TFM-only; flip now |
-| `Gum/EventOutputPlugin` | net8.0-windows | 0 | **confirmed** TFM-only; flip now |
-| `Gum/CsvLibrary` (not a plugin) | net8.0-windows | 0 | **confirmed** TFM-only; flip now |
-| `Tool/HtmlToGum` | net8.0-windows, WPF+WinForms | 0 | inherits `WpfPluginBase` for menus; runs `cmd.exe /c npm install` (phase 25's shell helper); Node lookup is PATH-based already |
+| `Gum/ConvertToJsonPlugin` | **net10.0** (done 2026-09-10) | 0 | over `Gum.Presentation`, banned-API guard, loads in the Avalonia head |
+| `Gum/EventOutputPlugin` | **net10.0** (done 2026-09-10) | 0 | same |
+| `Gum/CsvLibrary` (not a plugin) | **net10.0** (done in phase 20) | 0 | referenced by `Gum.Presentation` |
+| `Tool/HtmlToGum` | net10.0-windows, WPF+WinForms | 0 | menu is `AddMenuEntry` now; still references `Gum.csproj` and WinForms; `cmd.exe /c npm install` went through phase 25's `ShellCommand`; TFM flip once it references `Gum.Presentation` (phase 80 sweep) |
 
 Internal plugins under `Gum/Plugins/InternalPlugins/` (22 folders) compile into `Gum.csproj`; their
 views (19 XAML) are phase 80, their tab registrations move to the new contract here.
@@ -92,7 +112,8 @@ views (19 XAML) are phase 80, their tab registrations move to the new contract h
 
 - `Tools/Gum.Presentation/Plugins/BaseClasses/PluginBase.cs`, `Gum/Plugins/BaseClasses/WpfPluginBase.cs`
 - `Tools/Gum.Presentation/Managers/ITabManager.cs`, `MainPanelViewModel`
-- `Gum/Plugins/PluginManager.cs`, `Gum/Plugins/InternalPlugins/MenuStripPlugin/MenuStripManager.cs`
+- `Tools/Gum.Presentation/Plugins/PluginManager.cs`, `IPluginHostConfiguration.cs`; `Gum/Plugins/WpfPluginHostConfiguration.cs`; `Tool/Gum.Avalonia/Services/AvaloniaPluginHostConfiguration.cs`
+- `Tools/Gum.Presentation/Menus/` (model, builder); `Gum/Plugins/InternalPlugins/MenuStripPlugin/MenuStripManager.cs` (WPF renderer); `Tool/Gum.Avalonia/Shell/AvaloniaMenuBuilder.cs`
 - `Gum/Services/Dialogs/DialogViewResolver.cs`
 - `.claude/skills/gum-tool-plugins/`
 
@@ -110,7 +131,8 @@ that adds a tab or menu.
 
 ## Done when
 
-- [ ] Every in-repo plugin adds tabs and menus through the neutral contract; `WpfPluginBase` has no members left.
-- [ ] TFM-only plugin projects target `net10.0`.
-- [ ] Audit table above is complete and dated; each "views to re-author" row has a phase-80 issue.
-- [ ] Compatibility decision recorded as an ADR; notice drafted.
+- [x] Every in-repo plugin adds menus through the neutral contract (2026-09-10). Tabs: every caller already passes through `CreateTab(object, …)`; WPF plugins hand a `FrameworkElement`, Avalonia plugins a control or ViewModel.
+- [x] `WpfPluginBase` has no members left except the delete-dialog events (phase 80) and the `[Obsolete]` `AddMenuItem` shim ADR-0018 keeps until cutover.
+- [x] TFM-only plugin projects target `net10.0` (`ConvertToJsonPlugin`, `EventOutputPlugin`, `CsvLibrary`).
+- [x] Audit table above is complete and dated. The "views to re-author" rows are tracked in phase 80's doc rather than as issues while the work runs on one branch.
+- [x] Compatibility decision recorded as ADR-0018; notice drafted in `plugin-compatibility-notice.md`.
