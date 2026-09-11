@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.ImportPlugin.Manager;
@@ -95,6 +96,59 @@ public class FormsThemeImporterTests
         finally
         {
             System.IO.File.Delete(existingFile);
+        }
+    }
+
+    [Fact]
+    public void ImportTheme_ImportsComponentsAndBehaviorsBeforeScreens_RegardlessOfSourceOrder()
+    {
+        // A screen's own instances are typically Components. Each import triggers a synchronous
+        // post-import error check that resolves those instances' BaseType via ObjectFinder, so a
+        // screen imported before the component(s) it places throws (the component isn't registered
+        // yet). Deliberately insert the screen entry FIRST in the dictionary to prove the importer
+        // reorders by dependency instead of relying on source/enumeration order.
+        string tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "FormsThemeImporterTests_" + System.Guid.NewGuid());
+        string sourceDir = System.IO.Path.Combine(tempRoot, "source");
+        System.IO.Directory.CreateDirectory(sourceDir);
+        string sourceScreen = System.IO.Path.Combine(sourceDir, "Demo.gusx");
+        string sourceComponent = System.IO.Path.Combine(sourceDir, "Button.gucx");
+        string sourceBehavior = System.IO.Path.Combine(sourceDir, "ButtonBehavior.behx");
+        System.IO.File.WriteAllText(sourceScreen, "");
+        System.IO.File.WriteAllText(sourceComponent, "");
+        System.IO.File.WriteAllText(sourceBehavior, "");
+
+        try
+        {
+            List<string> importOrder = new();
+            _importLogic.Setup(x => x.ImportScreen(It.IsAny<FilePath>(), null, false))
+                .Callback(() => importOrder.Add("screen"))
+                .Returns((ScreenSave?)null);
+            _importLogic.Setup(x => x.ImportComponent(It.IsAny<FilePath>(), null, false))
+                .Callback(() => importOrder.Add("component"))
+                .Returns((ComponentSave?)null);
+            _importLogic.Setup(x => x.ImportBehavior(It.IsAny<FilePath>(), null, false))
+                .Callback(() => importOrder.Add("behavior"))
+                .Returns((BehaviorSave)null!);
+
+            string destDir = System.IO.Path.Combine(tempRoot, "dest");
+            // Deliberately insert the screen entry FIRST, so a pass proves the importer reorders
+            // by dependency instead of relying on source/enumeration order.
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath>
+                {
+                    [sourceScreen] = System.IO.Path.Combine(destDir, "Demo.gusx"),
+                    [sourceComponent] = System.IO.Path.Combine(destDir, "Button.gucx"),
+                    [sourceBehavior] = System.IO.Path.Combine(destDir, "ButtonBehavior.behx"),
+                });
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: true);
+
+            importOrder.ShouldBe(new[] { "behavior", "component", "screen" });
+        }
+        finally
+        {
+            System.IO.Directory.Delete(tempRoot, recursive: true);
         }
     }
 

@@ -85,27 +85,29 @@ public class FormsThemeImporter : IFormsThemeImporter
 
     private void AddAllElementsToProject(Dictionary<string, FilePath> sourceDestinations)
     {
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations)
+        // Each import triggers a synchronous post-import error check (PluginManager.ElementImported
+        // -> MainErrorsPlugin -> HeadlessErrorChecker), which resolves every VariableReferences
+        // owner's BaseType via ObjectFinder. A screen's own instances are typically Components, so a
+        // screen imported before the components it places crashes that check with a
+        // NullReferenceException (ObjectFinder can't find a not-yet-imported component). Behaviors
+        // and Components never depend on Screens, so importing strictly in that order - Behaviors,
+        // then Components, then Screens - is always dependency-safe, regardless of the filesystem
+        // enumeration order sourceDestinations was built in.
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "behx"))
         {
-            string extension = item.Value.Extension;
-
-            if (extension == "gusx")
-            {
-                // add screen
-                _importLogic.ImportScreen(item.Value, saveProject: false);
-            }
-            else if (extension == "gucx")
-            {
-                // add component
-                _importLogic.ImportComponent(item.Value, saveProject: false);
-            }
-            else if (extension == "behx")
-            {
-                // add behavior
-                _importLogic.ImportBehavior(item.Value, saveProject: false);
-            }
-            // standards are already added
+            _importLogic.ImportBehavior(item.Value, saveProject: false);
         }
+
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gucx"))
+        {
+            _importLogic.ImportComponent(item.Value, saveProject: false);
+        }
+
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gusx"))
+        {
+            _importLogic.ImportScreen(item.Value, saveProject: false);
+        }
+        // standards are already added
     }
 
     private void SaveFilesToDestination(Dictionary<string, FilePath> sourceDestinations)
