@@ -119,6 +119,9 @@ public static class FrbThemeResources
         // 5px after the header and 10px before the edge (Fluent puts 24px before the shortcut).
         resources["MenuIconPresenterMargin"] = new Thickness(6, 0, 6, 0);
         resources["MenuInputGestureTextMargin"] = new Thickness(5, 0, 10, 0);
+        // The submenu chevron sits close to its item, as the WPF arrow does, instead of 24px out; the
+        // column is shared by every item in the menu, so the gap widens the whole drop-down.
+        resources["MenuFlyoutItemChevronMargin"] = new Thickness(8, 0, 4, 0);
         resources["ComboBoxDropdownBorderPadding"] = new Thickness(4);
         resources["TextControlThemeMinHeight"] = 22d;
         resources["TextControlThemePadding"] = new Thickness(4, 1, 4, 1);

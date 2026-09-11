@@ -47,6 +47,8 @@ public class ChromeStylesTests
         header.Bounds.X.ShouldBe(28);
         TextBlock gesture = child.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText");
         gesture.Margin.ShouldBe(new Thickness(5, 0, 10, 0));
+        global::Avalonia.Controls.Shapes.Path chevron = child.GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().First(path => path.Name == "PART_ChevronPath");
+        chevron.Margin.ShouldBe(new Thickness(8, 0, 4, 0));
         window.Close();
     }
 
