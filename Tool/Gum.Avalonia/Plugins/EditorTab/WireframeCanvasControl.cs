@@ -8,7 +8,6 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Services.Dialogs;
-using InputLibrary;
 
 namespace Gum.Avalonia.Plugins.EditorTab;
 
@@ -17,10 +16,8 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 /// <see cref="WireframeCanvasCore"/>, forwarding its frames and translating its Avalonia input
 /// into the neutral events the core handles. The counterpart of the WPF <c>WireframeControl</c>.
 /// </summary>
-public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl, IWireframeCanvasHost
+public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
 {
-    private readonly AvaloniaInputHostAdapter _inputHost;
-
     /// <summary>The framework-neutral canvas this control renders.</summary>
     public WireframeCanvasCore Core { get; }
 
@@ -30,15 +27,8 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl, IWir
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);
 
-        _inputHost = new AvaloniaInputHostAdapter(this);
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
     }
-
-    /// <inheritdoc/>
-    public IInputHostControl InputHost => _inputHost;
-
-    /// <inheritdoc/>
-    public bool IsPointerOver => base.IsPointerOver;
 
     /// <inheritdoc/>
     protected override void OnKeyDown(KeyEventArgs e)

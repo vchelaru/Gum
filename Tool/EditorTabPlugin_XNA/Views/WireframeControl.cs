@@ -2,7 +2,6 @@ using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services.Dialogs;
-using InputLibrary;
 using System;
 using System.Windows.Input;
 using XnaAndWinforms;
@@ -14,10 +13,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 /// <see cref="WireframeCanvasCore"/>, forwarding its frames and translating its WPF input into the
 /// neutral events the core handles.
 /// </summary>
-public class WireframeControl : WpfGraphicsDeviceControl, IWireframeCanvasHost
+public class WireframeControl : WpfGraphicsDeviceControl
 {
-    private readonly WpfInputHostAdapter _inputHost;
-    private bool _isPointerOver;
 
     /// <summary>The framework-neutral canvas this control renders.</summary>
     public WireframeCanvasCore Core { get; }
@@ -27,7 +24,6 @@ public class WireframeControl : WpfGraphicsDeviceControl, IWireframeCanvasHost
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);
 
-        _inputHost = new WpfInputHostAdapter(this);
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
 
         KeyDown += HandleKeyDown;
@@ -37,15 +33,7 @@ public class WireframeControl : WpfGraphicsDeviceControl, IWireframeCanvasHost
         MouseMove += (_, e) => Core.HandleMouseMove(e.ToGumMouseEventArgs(this));
         MouseUp += (_, e) => Core.HandleMouseUp(e.ToGumMouseEventArgs(this));
         MouseWheel += HandleMouseWheel;
-        MouseEnter += (_, _) => _isPointerOver = true;
-        MouseLeave += (_, _) => _isPointerOver = false;
     }
-
-    /// <inheritdoc/>
-    public IInputHostControl InputHost => _inputHost;
-
-    /// <inheritdoc/>
-    public bool IsPointerOver => _isPointerOver;
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
     {

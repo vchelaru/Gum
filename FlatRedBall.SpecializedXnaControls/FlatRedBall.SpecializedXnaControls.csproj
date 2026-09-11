@@ -1,17 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	  <TargetFramework>net10.0-windows</TargetFramework>
+	  <TargetFramework>net10.0</TargetFramework>
 
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <!--
-      ImageRegionSelectionControl is a WPF element (WpfGraphicsDeviceControl), so this project needs
-      WPF but not WinForms.
+      The region-selection canvas logic (ImageRegionSelectionCore), the rectangle selectors, camera
+      panning, and zoom numbers, all framework-neutral. The WPF ImageRegionSelectionControl lives
+      in the WPF texture-coordinates plugin; the Avalonia head has its own control.
     -->
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-	  <!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
-	  <NoWarn>$(NoWarn);CA1416</NoWarn>
 	  <Nullable>enable</Nullable>
 
   </PropertyGroup>
@@ -37,8 +34,14 @@
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
-    <ProjectReference Include="..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
   </ItemGroup>
   <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <AdditionalFiles Include="..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
   </ItemGroup>
 </Project>

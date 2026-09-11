@@ -95,6 +95,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MonoGameGum", "MonoGameGum"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GumShapes", "GumShapes", "{F8995C77-B444-4EA1-AD31-CB5D8A377B41}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinatePlugin.Core", "Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj", "{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -561,6 +563,18 @@ Global
 		{E38EEA74-1FC0-401C-94EF-2DDC57A80745}.Release|x64.Build.0 = Release|Any CPU
 		{E38EEA74-1FC0-401C-94EF-2DDC57A80745}.Release|x86.ActiveCfg = Release|Any CPU
 		{E38EEA74-1FC0-401C-94EF-2DDC57A80745}.Release|x86.Build.0 = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|x64.Build.0 = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Debug|x86.Build.0 = Debug|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|x64.ActiveCfg = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|x64.Build.0 = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|x86.ActiveCfg = Release|Any CPU
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -603,6 +617,7 @@ Global
 		{6BAF55F2-3A35-457C-8713-1E127BAA6D8B} = {E9BDDA50-D0CD-4172-959F-66E2C1DFEB50}
 		{E38EEA74-1FC0-401C-94EF-2DDC57A80745} = {C2B7AC55-755F-98EC-7131-AA75D4EC5C29}
 		{F8995C77-B444-4EA1-AD31-CB5D8A377B41} = {BB4FD3E1-BF37-801A-7591-DC4DC6E3BB2D}
+		{1BFA329E-82AB-4DDF-BF3C-18F57A912ACF} = {C2B7AC55-755F-98EC-7131-AA75D4EC5C29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {691B2E2F-58CB-4FD2-8480-695E8DE0CCE2}

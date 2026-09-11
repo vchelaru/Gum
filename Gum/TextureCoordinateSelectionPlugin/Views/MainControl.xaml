@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="TextureCoordinateSelectionPlugin.Views.MainControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -7,7 +7,7 @@
     xmlns:input="clr-namespace:Gum.Input;assembly=Gum"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:specializedxnacontrols="clr-namespace:FlatRedBall.SpecializedXnaControls;assembly=FlatRedBall.SpecializedXnaControls"
+    xmlns:specializedxnacontrols="clr-namespace:FlatRedBall.SpecializedXnaControls"
     d:DesignHeight="450"
     d:DesignWidth="800"
     mc:Ignorable="d">
@@ -67,9 +67,9 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <specializedxnacontrols:ImageRegionSelectionControl x:Name="InnerControl" input:CameraZoomScope.OwnsCameraZoom="True" />
-            <ScrollBar x:Name="VerticalScrollBar" Grid.Column="1" />
+            <ScrollBar x:Name="VerticalScrollBarElement" Grid.Column="1" />
             <ScrollBar
-                x:Name="HorizontalScrollBar"
+                x:Name="HorizontalScrollBarElement"
                 Grid.Row="1"
                 Orientation="Horizontal" />
         </Grid>

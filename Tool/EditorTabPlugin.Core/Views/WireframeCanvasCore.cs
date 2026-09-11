@@ -27,13 +27,13 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Views;
 /// device, the per-frame activity (cursor, rulers, selection), the draw, and the neutral key and
 /// mouse handling. A head's control (<c>WireframeControl</c> on WPF, the Avalonia canvas control)
 /// owns one of these, forwards its frame and input events to it, and implements
-/// <see cref="IWireframeCanvasHost"/> for what the core needs back.
+/// <see cref="ICanvasHost"/> for what the core needs back.
 /// </summary>
 public sealed class WireframeCanvasCore
 {
     #region Fields
 
-    private readonly IWireframeCanvasHost _host;
+    private readonly ICanvasHost _host;
     private readonly IDialogService _dialogService;
     private readonly IOutputManager _outputManager;
     private readonly IPluginManager _pluginManager;
@@ -142,7 +142,7 @@ public sealed class WireframeCanvasCore
     #endregion
 
     /// <summary>Creates the core over its host control.</summary>
-    public WireframeCanvasCore(IWireframeCanvasHost host, IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager)
+    public WireframeCanvasCore(ICanvasHost host, IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager)
     {
         _host = host;
         _dialogService = dialogService;

@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using XnaAndWinforms;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,7 +10,6 @@ using FlatRedBall.SpecializedXnaControls.Input;
 using RenderingLibrary.Content;
 using ToolsUtilities;
 using System.Reflection;
-using System.Windows.Input;
 using RenderingLibrary.Math;
 using InputLibrary;
 using ToolsUtilitiesStandard.Helpers;
@@ -27,11 +25,12 @@ public enum ZoomDirection
 }
 
 /// <summary>
-/// The texture-coordinate editing canvas - a WPF-native XNA/KNI surface (see
-/// <see cref="WpfGraphicsDeviceControl"/>) showing a texture with draggable
-/// <see cref="RectangleSelector"/> regions over it.
+/// The texture-coordinate editing canvas without a UI framework: a texture with draggable
+/// <see cref="RectangleSelector"/> regions over it, zoom levels, and camera panning. A head's
+/// control (<c>ImageRegionSelectionControl</c> on WPF, the Avalonia canvas control) owns one of
+/// these, forwards its frames and wheel input, and implements <see cref="ICanvasHost"/>.
 /// </summary>
-public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
+public class ImageRegionSelectionCore
 {
     #region Fields
 
@@ -423,8 +422,12 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
 
     #region Methods
 
-    public ImageRegionSelectionControl()
+    private readonly ICanvasHost _host;
+
+    /// <summary>Creates the canvas over its host control and initializes rendering.</summary>
+    public ImageRegionSelectionCore(ICanvasHost host)
     {
+        _host = host;
         CustomInitialize();
     }
 
@@ -440,7 +443,6 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
 
     public void CustomInitialize()
     {
-        if (!DesignerProperties.GetIsInDesignMode(this))
         {
             mTimeManager = new TimeManager();
 
@@ -448,14 +450,14 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
             // Route the GPU device/content-service lookup through IRenderDeviceHost rather than
             // reading GraphicsDevice/Services directly off this control, so the initialization
             // sequence below only depends on the render-host contract, not on a concrete control type.
-            IRenderDeviceHost renderHost = RenderDeviceHost;
+            IRenderDeviceHost renderHost = _host.RenderDeviceHost;
 
             mManagers = new SystemManagers();
             mManagers.Initialize(renderHost.GraphicsDevice);
             mManagers.Name = "Image Region Selection";
             // The default font is an embedded resource of XnaAndWinforms, so resolve that assembly
             // through one of its types.
-            Assembly assembly = Assembly.GetAssembly(typeof(WpfGraphicsDeviceControl));
+            Assembly assembly = typeof(RenderTargetFrameLoop).Assembly;
 
             FilePath targetFntFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial.fnt";
             FilePath targetPngFileName = FileManager.UserApplicationDataForThisApplication + "Font18Arial_0.png";
@@ -500,7 +502,7 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
 
             CreateNewSelector();
 
-            mInputHost = new WpfInputHostAdapter(this);
+            mInputHost = _host.InputHost;
 
             mCursor = new InputLibrary.Cursor();
             mCursor.Initialize(mInputHost);
@@ -509,28 +511,15 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
             mKeyboard.Initialize(mInputHost);
 
             mCameraPanningLogic = new CameraPanningLogic(mManagers, mCursor, mKeyboard);
-            XnaUpdate += mCameraPanningLogic.Activity;
             var camera = mManagers.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
             mCameraPanningLogic.Panning += HandlePanning;
-
-
-
-            MouseWheel += HandleMouseWheel;
             ZoomNumbers = new Zooming.ZoomNumbers();
         }
     }
 
-    /// <inheritdoc/>
-    protected override void OnMouseDown(MouseButtonEventArgs e)
-    {
-        base.OnMouseDown(e);
-
-        if (e.ChangedButton == MouseButton.Left && e.ClickCount == 2)
-        {
-            DoubleClick?.Invoke(this, EventArgs.Empty);
-        }
-    }
+    /// <summary>The host calls this on a double click over the canvas.</summary>
+    public void RaiseDoubleClick() => DoubleClick?.Invoke(this, EventArgs.Empty);
 
     private RegionSelection.RectangleSelector CreateNewSelector()
     {
@@ -601,8 +590,10 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
         }
     }
 
-    protected override void Draw()
+    /// <summary>The host calls this with the render target bound and cleared.</summary>
+    public void Draw()
     {
+        mCameraPanningLogic?.Activity();
         this.PerformActivity();
 
         // Plugins should be removing textures if they are null, but a texture may become null and a plugin
@@ -610,21 +601,25 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
         var isDisposed = this.CurrentTexture?.IsDisposed;
         if(isDisposed == false)
         {
-            base.Draw();
             mManagers.Renderer.Draw(mManagers);
         }
     }
 
-    void HandleMouseWheel(object? sender, MouseWheelEventArgs e)
+    /// <summary>
+    /// Zooms on a wheel tick when zoom levels are configured. Returns true when the tick was
+    /// consumed, so the host can stop a containing scroll viewer from scrolling too.
+    /// </summary>
+    public bool HandleMouseWheel(int delta)
     {
+        bool handled = false;
         if (mAvailableZoomLevels != null)
         {
             if (ZoomIndex != -1)
             {
-                float value = e.Delta;
+                float value = delta;
 
                 // Stop a containing scroll viewer from also scrolling on the same wheel tick.
-                e.Handled = true;
+                handled = true;
 
 
                 ZoomDirection? zoomDirection = null;
@@ -644,6 +639,7 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
                 }
             }
         }
+        return handled;
     }
 
     public void HandleZoom(ZoomDirection zoomDirection, bool considerCursor)

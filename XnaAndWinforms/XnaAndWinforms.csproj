@@ -28,6 +28,10 @@
 		<EmbeddedResource Include="Content\Font18Arial_0.png" />
 	</ItemGroup>
 	<ItemGroup>
+		<!-- ICanvasHost hands a canvas the host control's polled input. -->
+		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

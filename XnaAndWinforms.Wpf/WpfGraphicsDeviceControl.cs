@@ -1,3 +1,4 @@
+using InputLibrary;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.ComponentModel;
@@ -22,7 +23,7 @@ namespace XnaAndWinforms;
 /// <c>InputLibrary.WpfInputHostAdapter</c>), so the two stay consistent; the cost is that on a
 /// scaled display the canvas renders at fewer pixels than the monitor has and WPF scales the bitmap up.
 /// </remarks>
-public class WpfGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient
+public class WpfGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient, ICanvasHost
 {
     #region Fields
 
@@ -32,6 +33,7 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameCli
 
     private ISharedRenderDeviceHost? _deviceHost;
     private RenderTargetFrameLoop? _frameLoop;
+    private WpfInputHostAdapter? _inputHost;
 
     #endregion
 
@@ -69,6 +71,12 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameCli
     /// ContentManager which look the device up through it.
     /// </summary>
     public IServiceProvider Services => _deviceHost!.Services;
+
+    /// <inheritdoc/>
+    public IInputHostControl InputHost => _inputHost ??= new WpfInputHostAdapter(this);
+
+    /// <inheritdoc/>
+    public bool IsPointerOver => IsMouseOver;
 
     #endregion
 

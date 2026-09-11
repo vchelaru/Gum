@@ -29,7 +29,7 @@ public class TextureCoordinateDisplayControllerTests
             new Mock<ISetVariableLogic>().Object,
             new Mock<ITabManager>().Object,
             _hotkeyManagerMock.Object,
-            new ScrollBarLogicWpf(new ScrollBarLogic()),
+            new CameraScrollBarBinder(new ScrollBarLogic()),
             new Mock<IMessenger>().Object,
             new Mock<IThemingService>().Object);
     }

@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using FlatRedBall.SpecializedXnaControls;
 using Gum;
 using Gum.Commands;
@@ -25,7 +25,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.Views;
 using Color = System.Drawing.Color;
@@ -51,7 +50,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ITabManager _tabManager;
     private readonly IHotkeyManager _hotkeyManager;
-    private readonly ScrollBarLogicWpf _scrollBarLogic;
+    private readonly CameraScrollBarBinder _scrollBarLogic;
     private readonly BackgroundManager _backgroundManager;
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
@@ -75,14 +74,14 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     /// the view itself is what set the values
     /// </summary>
     bool shouldRefreshAccordingToVariableSets = true;
-    MainControl mainControl;
+    private ITextureCoordinateView _view = null!;
 
-    SystemManagers SystemManagers => mainControl.InnerControl.SystemManagers;
+    SystemManagers SystemManagers => _view.Canvas.SystemManagers;
 
     Texture2D CurrentTexture
     {
-        get => mainControl.InnerControl.CurrentTexture;
-        set => mainControl.InnerControl.CurrentTexture = value;
+        get => _view.Canvas.CurrentTexture;
+        set => _view.Canvas.CurrentTexture = value;
     }
 
     public TextureCoordinateDisplayController(ISelectedState selectedState,
@@ -92,7 +91,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         ISetVariableLogic setVariableLogic,
         ITabManager tabManager,
         IHotkeyManager hotkeyManager,
-        ScrollBarLogicWpf scrollBarLogic,
+        CameraScrollBarBinder scrollBarLogic,
         IMessenger messenger,
         IThemingService themingService)
     {
@@ -111,11 +110,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _textureOutlineManager = new TextureOutlineManager();
     }
 
-    public IPluginTab CreateControl(object dataContext, out IList<int> availableZoomLevels)
+    public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, out IList<int> availableZoomLevels)
     {
-        mainControl = new MainControl();
+        _view = view;
         //var control = new ImageRegionSelectionControl();
-        var innerControl = mainControl.InnerControl;
+        var innerControl = _view.Canvas;
 
         innerControl.AvailableZoomLevels = new int[]
         {
@@ -137,16 +136,16 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         innerControl.StartRegionChanged += HandleStartRegionChanged;
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
-        innerControl.KeyDown += HandleKeyDown;
+        _view.KeyDown += HandleKeyDown;
 
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
-        var pluginTab = _tabManager.AddControl(mainControl, "Texture Coordinates", TabLocation.RightBottom);
+        var pluginTab = _tabManager.AddControl(_view.View, "Texture Coordinates", TabLocation.RightBottom);
         innerControl.DoubleClick += (_, _) =>
             HandleRegionDoubleClicked(innerControl);
 
         availableZoomLevels = innerControl.AvailableZoomLevels;
-        mainControl.DataContext = dataContext;
+        _view.DataContext = dataContext;
 
         _backgroundManager.Initialize(SystemManagers);
         _lineGridManager.Initialize(SystemManagers);
@@ -162,27 +161,27 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     private void InitializeScrollBarLogic()
     {
-        _scrollBarLogic.Initialize(mainControl.VerticalScrollBar, mainControl.HorizontalScrollBar, SystemManagers.Renderer.Camera);
+        _scrollBarLogic.Initialize(_view.VerticalScrollBar, _view.HorizontalScrollBar, SystemManagers.Renderer.Camera);
 
-        mainControl.InnerControl.SizeChanged += (_, _) =>
+        _view.CanvasResized += () =>
         {
             UpdateScrollBarsToTexture();
         };
 
-        mainControl.InnerControl.MouseWheelZoom += (_, _) =>
+        _view.Canvas.MouseWheelZoom += (_, _) =>
         {
             UpdateScrollBarsToTexture();
-            ZoomLevelChanged?.Invoke(mainControl.InnerControl.ZoomValue);
+            ZoomLevelChanged?.Invoke(_view.Canvas.ZoomValue);
         };
 
-        mainControl.InnerControl.Panning += () =>
+        _view.Canvas.Panning += () =>
         {
             UpdateScrollBarsToTexture();
         };
     }
 
-    internal void HandleKeyDown(object? sender, KeyEventArgs e) =>
-        HandleKeyDown(e.ToGumKeyEventArgs(), handled => e.Handled = handled);
+    internal void HandleKeyDown(GumKeyEventArgs keyArgs) =>
+        HandleKeyDown(keyArgs, handled => keyArgs.Handled = handled);
 
     // Split from the WPF handler above so the app-wide/camera key routing can be tested without a
     // real WPF key event (KeyEventArgs needs a live PresentationSource to construct).
@@ -203,7 +202,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             setHandled(true);
         }
 
-        var camera = mainControl.InnerControl.SystemManagers.Renderer.Camera;
+        var camera = _view.Canvas.SystemManagers.Renderer.Camera;
         if (_hotkeyManager.MoveCameraRight.IsPressed(keyArgs))
         {
             camera.X += 10;
@@ -222,11 +221,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         }
         if (_hotkeyManager.ZoomCameraIn.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(keyArgs))
         {
-            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
+            _view.Canvas.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
         }
         if (_hotkeyManager.ZoomCameraOut.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(keyArgs))
         {
-            mainControl.InnerControl.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
+            _view.Canvas.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
         }
 
         UpdateScrollBarsToTexture();
@@ -243,7 +242,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     private void UpdateScrollBarsToTexture()
     {
-        var texture = mainControl.InnerControl.CurrentTexture;
+        var texture = _view.Canvas.CurrentTexture;
         var width = texture?.Width ?? 1024;
         var height = texture?.Height ?? 1024;
         _scrollBarLogic.UpdateScrollBarsToCamera(width, height);
@@ -256,7 +255,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void UpdateZoom(int zoomLevel)
     {
-        mainControl.InnerControl.ZoomValue = zoomLevel;
+        _view.Canvas.ZoomValue = zoomLevel;
         UpdateScrollBarsToTexture();
     }
 
@@ -267,11 +266,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         if (!_isSnapToGridEnabled)
         {
-            mainControl.InnerControl.SnappingGridSize = null;
+            _view.Canvas.SnappingGridSize = null;
         }
         else
         {
-            mainControl.InnerControl.SnappingGridSize = _snapToGridSize;
+            _view.Canvas.SnappingGridSize = _snapToGridSize;
         }
         RefreshLineGrid();
     }
@@ -292,21 +291,21 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             textureToAssign = null;
         }
 
-        mainControl.InnerControl.CurrentTexture = textureToAssign;
+        _view.Canvas.CurrentTexture = textureToAssign;
 
         if (_currentExposedSource != null)
         {
-            mainControl.InnerControl.CanChangeX = _currentExposedSource.ExposedLeftName != null;
-            mainControl.InnerControl.CanChangeY = _currentExposedSource.ExposedTopName != null;
-            mainControl.InnerControl.CanChangeWidth = _currentExposedSource.ExposedWidthName != null;
-            mainControl.InnerControl.CanChangeHeight = _currentExposedSource.ExposedHeightName != null;
+            _view.Canvas.CanChangeX = _currentExposedSource.ExposedLeftName != null;
+            _view.Canvas.CanChangeY = _currentExposedSource.ExposedTopName != null;
+            _view.Canvas.CanChangeWidth = _currentExposedSource.ExposedWidthName != null;
+            _view.Canvas.CanChangeHeight = _currentExposedSource.ExposedHeightName != null;
         }
         else
         {
-            mainControl.InnerControl.CanChangeX = true;
-            mainControl.InnerControl.CanChangeY = true;
-            mainControl.InnerControl.CanChangeWidth = true;
-            mainControl.InnerControl.CanChangeHeight = true;
+            _view.Canvas.CanChangeX = true;
+            _view.Canvas.CanChangeY = true;
+            _view.Canvas.CanChangeWidth = true;
+            _view.Canvas.CanChangeHeight = true;
 
             var instance = _selectedState.SelectedInstance;
             if (instance != null)
@@ -316,19 +315,19 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                 {
                     if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureLeft"))
                     {
-                        mainControl.InnerControl.CanChangeX = false;
+                        _view.Canvas.CanChangeX = false;
                     }
                     if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureTop"))
                     {
-                        mainControl.InnerControl.CanChangeY = false;
+                        _view.Canvas.CanChangeY = false;
                     }
                     if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureWidth"))
                     {
-                        mainControl.InnerControl.CanChangeWidth = false;
+                        _view.Canvas.CanChangeWidth = false;
                     }
                     if (ObjectFinder.Self.IsVariableHiddenRecursively(instanceElement, "TextureHeight"))
                     {
-                        mainControl.InnerControl.CanChangeHeight = false;
+                        _view.Canvas.CanChangeHeight = false;
                     }
                 }
             }
@@ -343,7 +342,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         _nineSliceGuideManager.ShowGuides = showNineSliceGuides;
         _nineSliceGuideManager.CurrentTexture = textureToAssign;
-        _nineSliceGuideManager.Selector = mainControl.InnerControl.RectangleSelector;
+        _nineSliceGuideManager.Selector = _view.Canvas.RectangleSelector;
         _nineSliceGuideManager.CustomFrameWidth = customFrameTextureCoordinateWidth;
         _nineSliceGuideManager.Refresh();
     }
@@ -429,7 +428,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _lineGridManager.Refresh();
     }
 
-    public void HandleRegionDoubleClicked(ImageRegionSelectionControl control)
+    public void HandleRegionDoubleClicked(ImageRegionSelectionCore control)
     {
         if (_currentExposedSource != null) return;
 
@@ -544,7 +543,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     private void HandleRegionChanged(object? sender, EventArgs e)
     {
-        var control = sender as ImageRegionSelectionControl;
+        var control = sender as ImageRegionSelectionCore;
 
         var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
 
@@ -596,7 +595,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             _guiCommands.RefreshVariableValues();
         }
 
-        _nineSliceGuideManager.Selector = mainControl.InnerControl.RectangleSelector;
+        _nineSliceGuideManager.Selector = _view.Canvas.RectangleSelector;
         _nineSliceGuideManager.Refresh();
     }
 
@@ -645,12 +644,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void RefreshSelector(RefreshType refreshType)
     {
-        if (mainControl.InnerControl.CurrentTexture == null)
+        if (_view.Canvas.CurrentTexture == null)
         {
             return;
         }
 
-        var control = mainControl.InnerControl;
+        var control = _view.Canvas;
 
         // early out
         if (refreshType == RefreshType.OnlyIfGrabbed &&
@@ -727,7 +726,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
                     selector.Visible = true;
                     selector.ShowHandles = true;
-                    selector.ShowMoveCursorWhenOver = mainControl.InnerControl.CanChangeX || mainControl.InnerControl.CanChangeY;
+                    selector.ShowMoveCursorWhenOver = _view.Canvas.CanChangeX || _view.Canvas.CanChangeY;
 
                     this.CenterCameraOnSelection();
 
@@ -767,21 +766,21 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     public void CenterCameraOnSelection()
     {
         var camera = SystemManagers.Renderer.Camera;
-        mainControl.Dispatcher.BeginInvoke(() =>
+        _view.InvokeWhenLoaded(() =>
         {
-            var selector = mainControl.InnerControl.RectangleSelector;
+            var selector = _view.Canvas.RectangleSelector;
             if(selector != null)
             {
                 camera.X = selector.Left + selector.Width / 2.0f - camera.ClientWidth/(2 * camera.Zoom);
                 camera.Y = selector.Top + selector.Height / 2.0f - camera.ClientHeight/(2 * camera.Zoom);
                 UpdateScrollBarsToTexture();
             }
-        }, System.Windows.Threading.DispatcherPriority.Loaded);
+        });
     }
 
     internal void UpdateButtonSizes(double baseFontSize)
     {
-        mainControl?.UpdateButtonSizes(baseFontSize);
+        _view?.UpdateButtonSizes(baseFontSize);
     }
 
     internal void SetCheckerboardVisible(bool visible)

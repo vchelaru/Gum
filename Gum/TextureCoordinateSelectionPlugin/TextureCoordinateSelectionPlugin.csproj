@@ -28,6 +28,7 @@
     <ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
     <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\Gum.csproj" />
+    <ProjectReference Include="..\..\Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
     <ProjectReference Include="..\..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
@@ -40,6 +41,7 @@
       <PluginOutputFiles Include="$(TargetPath)" />
       <PluginOutputFiles Include="$(TargetDir)$(TargetName).pdb" />
       <PluginOutputFiles Include="$(TargetDir)FlatRedBall.SpecializedXnaControls.dll" />
+      <PluginOutputFiles Include="$(TargetDir)TextureCoordinatePlugin.Core.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
   </Target>

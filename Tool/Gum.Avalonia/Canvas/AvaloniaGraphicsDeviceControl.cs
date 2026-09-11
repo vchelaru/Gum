@@ -6,6 +6,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using InputLibrary;
 using Microsoft.Xna.Framework.Graphics;
 using XnaAndWinforms;
 
@@ -24,7 +25,7 @@ namespace Gum.Avalonia.Canvas;
 /// scaled display the canvas renders at fewer pixels than the monitor has and Avalonia scales the
 /// bitmap up, matching the WPF head.
 /// </remarks>
-public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient
+public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient, ICanvasHost
 {
     private const double FrameTimerHertz = 60.0;
 
@@ -35,6 +36,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
     private ISharedRenderDeviceHost? _deviceHost;
     private RenderTargetFrameLoop? _frameLoop;
+    private AvaloniaInputHostAdapter? _inputHost;
     private float _desiredFramesPerSecondBeforeInit = 30;
 
     /// <summary>Creates the control and, outside the designer, the shared device.</summary>
@@ -108,6 +110,9 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => _deviceHost!.Services;
+
+    /// <inheritdoc/>
+    public IInputHostControl InputHost => _inputHost ??= new AvaloniaInputHostAdapter(this);
 
     /// <summary>Raised once per rendered frame, after <see cref="PreDrawUpdate"/> and before <see cref="Draw"/>.</summary>
     public event Action? XnaUpdate;

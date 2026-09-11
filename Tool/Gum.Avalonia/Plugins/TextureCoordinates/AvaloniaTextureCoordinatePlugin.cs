@@ -1,3 +1,4 @@
+using System.ComponentModel.Composition;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Dialogs;
@@ -7,20 +8,20 @@ using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
 using Gum.Undo;
-using System.ComponentModel.Composition;
+using TextureCoordinateSelectionPlugin;
 using TextureCoordinateSelectionPlugin.Views;
 
-namespace TextureCoordinateSelectionPlugin;
+namespace Gum.Avalonia.Plugins.TextureCoordinates;
 
 /// <summary>
-/// The WPF head's texture-coordinates tab: <see cref="TextureCoordinatePluginBase"/> with the
-/// XAML <see cref="MainControl"/> as its view.
+/// The Avalonia head's texture-coordinates tab: <see cref="TextureCoordinatePluginBase"/> with
+/// <see cref="TextureCoordinateView"/> as its view.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainTextureCoordinatePlugin : TextureCoordinatePluginBase
+public class AvaloniaTextureCoordinatePlugin : TextureCoordinatePluginBase
 {
     [ImportingConstructor]
-    public MainTextureCoordinatePlugin(
+    public AvaloniaTextureCoordinatePlugin(
         ISelectedState selectedState,
         IWireframeCommands wireframeCommands,
         IUndoManager undoManager,
@@ -39,5 +40,5 @@ public class MainTextureCoordinatePlugin : TextureCoordinatePluginBase
     }
 
     /// <inheritdoc/>
-    protected override ITextureCoordinateView CreateView() => new MainControl();
+    protected override ITextureCoordinateView CreateView() => new TextureCoordinateView();
 }
