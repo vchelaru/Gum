@@ -7,7 +7,7 @@ description: Gum Variables tab and DataUiGrid. Triggers: Variables tab, DataUiGr
 
 ## Overview
 
-The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. Built on `DataUiGrid` (a WPF `ItemsControl` subclass) from the `WpfDataUi` library. Categories render as collapsible `Expander` sections.
+The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. The grid's model is framework-neutral in `DataUi.Core` (net10.0: `InstanceMember`, `MemberCategory`, `DataUiGridModel`, `DisplayerRegistry`, and the editor logic classes, still in the `WpfDataUi.*` namespaces). `WpfDataUi` holds only the WPF views (`DataUiGrid`, an `ItemsControl` over a `DataUiGridModel`, plus the editors). Categories render as collapsible `Expander` sections.
 
 > Icons rendered inside the Variables grid (unit selectors, alignment, dock/anchor, origin/sizing toggle-button option displays) come from the `GumIcon`/`PathGeometry` pipeline. For authoring or replacing them see [gum-icons](../gum-icons/SKILL.md).
 
@@ -35,16 +35,18 @@ The **Variables tab** displays and edits properties of the selected element, ins
 
 | Purpose | File Path |
 |---------|-----------|
-| DataUiGrid control | `WpfDataUi/DataUiGrid.cs` |
+| Grid logic (categories, filter, expansion memory, multi-select) | `DataUi.Core/DataUiGridModel.cs` |
+| Editor choice (preferred displayer, custom options, type, text) | `DataUi.Core/DisplayerRegistry.cs`, keys in `DataUi.Core/DataTypes/StandardDisplayers.cs` |
+| WPF DataUiGrid control (renders the model) | `WpfDataUi/DataUiGrid.cs` |
 | DataUiGrid XAML template | `WpfDataUi/Themes/Generic.xaml` |
-| MemberCategory / InstanceMember models | `WpfDataUi/DataTypes/` |
+| MemberCategory / InstanceMember models | `DataUi.Core/DataTypes/` |
 | Gum-specific member subclass | `Gum/Plugins/InternalPlugins/VariableGrid/StateReferencingInstanceMember.cs` |
 | Plugin wiring selection events | `Gum/Plugins/InternalPlugins/VariableGrid/MainVariableGridPlugin.cs` |
 | Category population manager | `Gum/Plugins/InternalPlugins/VariableGrid/PropertyGridManager.cs` |
 | Category factory | `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` |
 | Behavior categories | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorShowingLogic.cs` |
 | Host UserControl | `Gum/Plugins/InternalPlugins/VariableGrid/MainPropertyGrid.xaml(.cs)` |
-| Composite member model | `WpfDataUi/DataTypes/CompositeInstanceMember.cs` |
+| Composite member model | `DataUi.Core/DataTypes/CompositeInstanceMember.cs` |
 | Composite descriptor registry | `Gum/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
 
 Landmine: `PropertyGridManager.cs` (under `Gum/`) and `ElementSaveDisplayer.cs`/`ShapeVariableVersionGate.cs` (under `Tools/Gum.Presentation/`) compile into **separate assemblies** (`Gum.csproj` references `Gum.Presentation.csproj`) — an `internal` pure-logic class added in `Gum.Presentation` for `PropertyGridManager` to call must be `public`; `Gum.Presentation`'s `InternalsVisibleTo` only covers its own test projects, not `Gum`.
@@ -63,15 +65,15 @@ Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitTyp
 
 ### SetCategories Expansion Preservation
 
-`DataUiGrid.SetCategories()` captures `{name → IsExpanded}` from existing categories, replaces the list, then re-applies the saved values by name. Category collapse state persists across selection changes within a session. `IsExpanded` is `Mode=TwoWay` in the XAML template so user gestures write back to the model immediately.
+`DataUiGridModel.SetCategories()` captures `{name → IsExpanded}` from existing categories, replaces the list, then re-applies the saved values by name. Category collapse state persists across selection changes within a session. `IsExpanded` is `Mode=TwoWay` in the XAML template so user gestures write back to the model immediately.
 
 Landmine: the backing `_expansionStates` dictionary is **static** and keyed only by category name, so every `DataUiGrid` in the tool shares one expansion memory and same-named categories in different grids overwrite each other. Anything that expands a category programmatically must keep that out of the dictionary, or it persists as the user's preference for every later selection.
 
 ### Hiding a Row
 
-A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGrid.RefreshDelegateBasedElementVisibility`. Row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`WpfDataUi/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGrid.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
+A row is hidden by removing it from `category.Members`, not by a visibility flag — see `DataUiGridModel.RefreshDelegateBasedElementVisibility`. Row striping stays correct because removed rows no longer count toward `AlternationIndex`. Removal loses the row's position though, and that method re-adds with `Add` (appending), so anything that restores rows needs its own ordered snapshot: `MemberCategoryFilter` (`DataUi.Core/MemberCategoryFilter.cs`) does this for the Variables tab filter box, and `DataUiGridModel.ApplyMemberFilter` re-applies its predicate after every `SetCategories`.
 
-Emptying a category hides its header only because each category `DataTemplate` binds the `Expander`'s `Visibility` to `MemberCategory.Visibility` (which is computed from `Members.Count`). Those templates are the three `MemberCategory` `DataTemplate`s in `Gum/Themes/Frb.Styles.Defaults.xaml` and `WpfDataUi/Themes/Generic.xaml` — a new one that omits the binding leaves empty headers stacked on screen, with nothing in the model to indicate the mistake.
+Emptying a category hides its header only because each category `DataTemplate` binds the `Expander`'s `Visibility` to the neutral `MemberCategory.IsVisible` bool (computed from `Members.Count`) through a `BooleanToVisibilityConverter`. Those templates are the three `MemberCategory` `DataTemplate`s in `Gum/Themes/Frb.Styles.Defaults.xaml` and `WpfDataUi/Themes/Generic.xaml` — a new one that omits the binding leaves empty headers stacked on screen, with nothing in the model to indicate the mistake.
 
 ### Structural Rebuild vs. Partial Refresh
 
@@ -97,7 +99,7 @@ All members in the Variables tab use `StateReferencingInstanceMember` (subclass 
 
 Most variables render with a default control inferred from their type. A variable gets a *different* control — slider, angle dial, alignment/origin toggles, parent dropdown — through three knobs on `InstanceMember`:
 
-- **`PreferredDisplayer`** (a `Type`) — selects which WPF control renders the row; `SingleDataUiContainer` instantiates it. This is what creates e.g. a `SliderDisplay`.
+- **`PreferredDisplayer`** (a `Type`) — selects which control renders the row. Neutral code assigns a key type (`StandardDisplayers.Slider`, ...) that each head's `DisplayerRegistry` resolves to its own control; a concrete WPF control type still works inside the WPF head. The row host (`SingleDataUiContainer`) instantiates the resolved control.
 - **`PropertiesToSetOnDisplayer`** (a `Dictionary<string, object>`) — after the control exists, the container *reflectively* sets each named property on it. A slider's `MinValue`/`MaxValue` (the "range") are just two such pushes onto a control already chosen by `PreferredDisplayer` — they do **not** create the slider on their own.
 - **`UiCreated` event** — for config that must be computed per-instance instead of a constant (see `MakeDegreesAngle`, and the WpfDataUi sample's per-character `MaxValue`).
 
@@ -107,9 +109,9 @@ Gum's built-in variables are wired in `StandardElementsManager.GumTool.cs` (slid
 
 The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md).
 
-**Landmine: a new custom `IDataUi` displayer must wire its own right-click menu and default-value highlighting — nothing does either for you.** `SingleDataUiContainer`/`DataUiGrid` never touch `ContextMenu` or background color. Every existing displayer (`ColorDisplay`, `SliderDisplay`, `TextBoxDisplay`, ...) attaches a WPF `ContextMenu` to its root element in XAML and calls `this.RefreshContextMenu(yourRoot.ContextMenu)` from `Refresh()` — skip it and `InstanceMember.ContextMenuEvents` (Make Default, Copy Qualified Variable Name, expose/un-expose) silently never reach an actual menu; right-click does nothing. Default-value background tinting (the green `TextBoxDisplayLogic.DefaultValueBackground` / gray `IndeterminateValueBackground`, driven by `InstanceMember.IsDefault`/`.IsIndeterminate`) is likewise opt-in per displayer — copy the pattern from `TextBoxDisplayLogic.RefreshBackgroundColor`, don't assume a new control gets it for free. Both gaps compile fine and only show up as "this row behaves differently from every other row" in manual testing.
+**Landmine: a new custom `IDataUi` displayer must wire its own right-click menu and default-value highlighting — nothing does either for you.** `SingleDataUiContainer`/`DataUiGrid` never touch `ContextMenu` or background color. Every existing displayer (`ColorDisplay`, `SliderDisplay`, `TextBoxDisplay`, ...) attaches a WPF `ContextMenu` to its root element in XAML and calls `this.RefreshContextMenu(yourRoot.ContextMenu)` from `Refresh()` — skip it and `InstanceMember.ContextMenuEvents` (Make Default, Copy Qualified Variable Name, expose/un-expose) silently never reach an actual menu; right-click does nothing. Default-value background tinting (driven by `InstanceMember.ValueState`; the WPF brushes are `DataUiBrushes.DefaultValueBackground` / `IndeterminateValueBackground`) is likewise opt-in per displayer — copy the pattern from `WpfDataUiTextBox.ApplyValueState`, don't assume a new control gets it for free. Both gaps compile fine and only show up as "this row behaves differently from every other row" in manual testing.
 
-Same opt-in-per-displayer trap for click-drag-over-label-to-scrub a numeric value: it's implemented only in `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` (`Label_MouseMove`, `EnableLabelDragValueChange`, `LabelDragValueRounding`/`LabelDragChangeMultiplier`), not on `DataUiGrid`/`SingleDataUiContainer`. A custom or composite displayer (e.g. `CornerRadiusDisplay`) gets no drag-scrub on any of its fields unless it copies that logic itself.
+Same opt-in-per-displayer trap for click-drag-over-label-to-scrub a numeric value: the value math is `LabelDragScrubLogic` (`DataUi.Core/Controls/`), wired by `TextBoxDisplay` (`EnableLabelDragValueChange`, `LabelDragValueRounding`/`LabelDragChangeMultiplier`), not by `DataUiGrid`/`SingleDataUiContainer`. The view feeds it relative pointer deltas from pointer capture; nothing warps the cursor. A custom or composite displayer gets no drag-scrub on its fields unless it drives the same logic.
 
 ---
 

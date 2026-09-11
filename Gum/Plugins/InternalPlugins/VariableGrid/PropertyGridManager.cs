@@ -989,11 +989,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         foreach (var descriptor in descriptors)
         {
             var category = new MemberCategory(descriptor.Name);
-            if (!string.IsNullOrEmpty(descriptor.HeaderColorHex))
-            {
-                category.HeaderColor =
-                    (System.Windows.Media.Brush)(new System.Windows.Media.BrushConverter().ConvertFrom(descriptor.HeaderColorHex)!);
-            }
+            category.HeaderColor = descriptor.GetHeaderColor();
 
             foreach (var entry in descriptor.Members)
             {

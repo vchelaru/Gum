@@ -24,7 +24,7 @@ namespace Gum
 
         private MainControlViewModel? _subscribedViewModel;
 
-        public object Instance
+        public object? Instance
         {
             get { return DataGrid.Instance; }
             set { DataGrid.Instance = value; }

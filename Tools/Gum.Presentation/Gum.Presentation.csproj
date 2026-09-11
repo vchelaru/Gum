@@ -81,6 +81,7 @@
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+		<ProjectReference Include="..\..\DataUi.Core\DataUi.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

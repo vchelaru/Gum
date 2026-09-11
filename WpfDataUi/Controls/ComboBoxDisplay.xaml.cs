@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -543,7 +543,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             // Green background for a default value, matching TextBoxDisplayLogic (FlatRedBall#1755).
             if (InstanceMember?.IsDefault == true)
             {
-                ComboBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                ComboBox.Background = DataUiBrushes.DefaultValueBackground;
             }
             else if (ComboBox.TryFindResource("Frb.Brushes.Field.Background") != null)
             {

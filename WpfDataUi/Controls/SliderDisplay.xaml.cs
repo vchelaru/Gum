@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -131,7 +131,7 @@ namespace WpfDataUi.Controls
         {
             InitializeComponent();
 
-            mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
+            mTextBoxLogic = WpfDataUiTextBox.CreateLogic(this, TextBox);
             mTextBoxLogic.MinValue = 0;
             mTextBoxLogic.MaxValue = (decimal)this.MaxValue;
 

@@ -1,27 +1,19 @@
-using Microsoft.Win32;
-using System.Diagnostics;
+using System.IO;
 
 namespace WpfDataUi.Controls;
 
 /// <summary>
-/// Shared file-picker plumbing for IDataUi controls that open an OpenFileDialog or
-/// FolderBrowserDialog and optionally reveal the selected file in Windows Explorer.
-/// Composed by controls such as FileSelectionDisplay and MultiFileDisplay, similar to
-/// how TextBoxDisplayLogic is composed by text-based controls.
+/// Shared file-picker plumbing for IDataUi controls that open a file picker and optionally reveal
+/// the selected file in the OS file manager. Composed by controls such as FileSelectionDisplay and
+/// MultiFileDisplay, similar to how TextBoxDisplayLogic is composed by text-based controls. The
+/// dialogs themselves go through <see cref="FilePicker"/>.
 /// </summary>
 public class FilePickingLogic
 {
     /// <summary>
-    /// OpenFileDialog filter string (e.g. "Localization Files (*.csv;*.resx)|*.csv;*.resx").
-    /// Ignored when <see cref="IsFolderDialog"/> is true.
+    /// File-dialog filter string (e.g. "Localization Files (*.csv;*.resx)|*.csv;*.resx").
     /// </summary>
     public string Filter { get; set; } = string.Empty;
-
-    /// <summary>
-    /// When true, <see cref="ShowOpenDialog"/> uses a FolderBrowserDialog instead of an
-    /// OpenFileDialog.
-    /// </summary>
-    public bool IsFolderDialog { get; set; }
 
     /// <summary>
     /// Optional base directory used when resolving relative paths for
@@ -30,40 +22,23 @@ public class FilePickingLogic
     public static string FolderRelativeTo { get; set; } = string.Empty;
 
     /// <summary>
-    /// Shows the open-file (or folder) dialog and returns the selected path, or null
-    /// if the user cancelled.
+    /// Opens the dialogs for every picker in the process. Assigned once at tool startup; with none
+    /// assigned the pickers do nothing.
+    /// </summary>
+    public static IDataUiFilePicker? FilePicker { get; set; }
+
+    /// <summary>
+    /// Shows the open-file dialog and returns the selected path, or null if the user cancelled.
     /// </summary>
     public string? ShowOpenDialog()
     {
-        if (IsFolderDialog)
-        {
-            System.Windows.Forms.FolderBrowserDialog fbd = new System.Windows.Forms.FolderBrowserDialog();
-            System.Windows.Forms.DialogResult result = fbd.ShowDialog();
-
-            if (result == System.Windows.Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
-            {
-                return fbd.SelectedPath;
-            }
-            return null;
-        }
-        else
-        {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            fileDialog.Filter = Filter;
-
-            bool? shouldOpen = fileDialog.ShowDialog();
-            if (shouldOpen.HasValue && shouldOpen.Value)
-            {
-                return fileDialog.FileName;
-            }
-            return null;
-        }
+        return FilePicker?.PickFile(Filter);
     }
 
     /// <summary>
-    /// Opens Windows Explorer and selects the given file. If the path is relative and
-    /// <see cref="FolderRelativeTo"/> is set, the path is resolved against it first.
-    /// No-op if the path is empty or the resolved file does not exist.
+    /// Opens the OS file manager and selects the given file. If <see cref="FolderRelativeTo"/> is
+    /// set, the path is resolved against it first. No-op if the path is empty or the resolved file
+    /// does not exist.
     /// </summary>
     public void ShowInExplorer(string fileToOpen)
     {
@@ -74,12 +49,12 @@ public class FilePickingLogic
 
         if (!string.IsNullOrEmpty(FolderRelativeTo))
         {
-            fileToOpen = RemoveDotDotSlash(FolderRelativeTo + fileToOpen).Replace("/", "\\");
+            fileToOpen = RemoveDotDotSlash(FolderRelativeTo + fileToOpen);
         }
 
-        if (System.IO.File.Exists(fileToOpen))
+        if (File.Exists(fileToOpen))
         {
-            Process.Start("explorer.exe", "/select," + fileToOpen);
+            FilePicker?.RevealFile(fileToOpen);
         }
     }
 

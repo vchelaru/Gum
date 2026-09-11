@@ -198,6 +198,8 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IEditCommands, EditCommands>();
         services.AddSingleton<IVariableInCategoryPropagationLogic, VariableInCategoryPropagationLogic>();
         services.AddSingleton<IFileSystemRevealService, FileSystemRevealService>();
+        // The property grid's file pickers, through the head's dialog service (phase 70).
+        services.AddSingleton<WpfDataUi.Controls.IDataUiFilePicker, DialogServiceFilePicker>();
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<FileChangeReactionLogic>();

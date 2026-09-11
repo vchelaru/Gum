@@ -1,7 +1,7 @@
 using Shouldly;
 using WpfDataUi.Controls;
 
-namespace GumToolUnitTests.Controls;
+namespace Gum.Presentation.Tests.DataUi;
 
 public class TextBoxDisplayLogicTests
 {

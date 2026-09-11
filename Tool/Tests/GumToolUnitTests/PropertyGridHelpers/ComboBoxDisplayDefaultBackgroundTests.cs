@@ -10,7 +10,7 @@ namespace GumToolUnitTests.PropertyGridHelpers;
 
 /// <summary>
 /// FlatRedBall#1755: a default-valued combo box variable should get the same green
-/// background <see cref="TextBoxDisplayLogic"/> uses for a default text field, not a
+/// background <see cref="DataUiBrushes"/> gives for a default text field, not a
 /// green foreground.
 /// </summary>
 public class ComboBoxDisplayDefaultBackgroundTests : BaseTestClass
@@ -33,7 +33,7 @@ public class ComboBoxDisplayDefaultBackgroundTests : BaseTestClass
         ComboBox comboBox = GetComboBox(display);
         // Reference-equality via a bool, not ShouldBe(brush): Shouldly's failure-message
         // formatter calls Brush.ToString(), which throws off the owning thread.
-        ReferenceEquals(comboBox.Background, TextBoxDisplayLogic.DefaultValueBackground).ShouldBeTrue();
+        ReferenceEquals(comboBox.Background, DataUiBrushes.DefaultValueBackground).ShouldBeTrue();
     }
 
     [StaFact]
@@ -46,7 +46,7 @@ public class ComboBoxDisplayDefaultBackgroundTests : BaseTestClass
         PumpDispatcher();
 
         ComboBox comboBox = GetComboBox(display);
-        ReferenceEquals(comboBox.Background, TextBoxDisplayLogic.DefaultValueBackground).ShouldBeFalse();
+        ReferenceEquals(comboBox.Background, DataUiBrushes.DefaultValueBackground).ShouldBeFalse();
     }
 
     private static DefaultableInstanceMember MakeMember(bool isDefault)

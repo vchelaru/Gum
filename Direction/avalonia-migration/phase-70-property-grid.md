@@ -103,3 +103,20 @@ the four plugin panels.
 - [ ] Neutral model project exists; WPF grid consumes it; WPF tool identical.
 - [ ] All 16 editors + grid work in Avalonia; shared fixture test green in both heads.
 - [ ] Variables tab and the four plugin panels function on all three OSes with undo.
+
+## Status (2026-09-10)
+
+Work is on the phase-70 branch, one commit per part.
+
+- **Part 1: neutral model project.** `DataUi.Core` (net10.0, banned-API analyzer) now holds
+  `InstanceMember`, `MemberCategory`, the composite and multi-select members, `DataUiGridModel`
+  (categories, filter, expansion memory, multi-select grouping, reflection population),
+  `DisplayerRegistry` with the neutral `StandardDisplayers` keys, and the editor logic
+  (`TextBoxDisplayLogic` behind `IDataUiTextBox`, `FilePickingLogic` behind `IDataUiFilePicker`,
+  `InlineChannelsDisplayLogic`, `LabelDragScrubLogic`). Namespaces stay `WpfDataUi.*`. The model's
+  WPF types are gone: `HeaderColor` is `System.Drawing.Color?`, category visibility is
+  `IsVisible`, `FirstGridLength` is a `double`, context-menu handlers are `EventHandler`, and
+  `MemberCategoryContextMenuItem` raises its own `CanExecuteChanged` (the WPF template wraps it for
+  `CommandManager.RequerySuggested`). `WpfDataUi` keeps only the views over the model. File
+  pickers now go through `IDialogService` in both heads (`DialogServiceFilePicker`); the unused
+  folder mode and the never-called `SetCursorPos` import are deleted.

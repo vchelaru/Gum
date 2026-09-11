@@ -1,10 +1,7 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using WpfDataUi.EventArguments;
 
 namespace WpfDataUi.DataTypes
@@ -32,7 +29,12 @@ namespace WpfDataUi.DataTypes
 
     #endregion
 
-    public class InstanceMember : DependencyObject, INotifyPropertyChanged
+    /// <summary>
+    /// One row of a data grid: a named, typed value read from and written to an owning instance,
+    /// through reflection or custom get/set events. Framework-neutral, so the WPF and Avalonia grids
+    /// render the same rows.
+    /// </summary>
+    public class InstanceMember : INotifyPropertyChanged
     {
         #region Fields
 
@@ -44,18 +46,17 @@ namespace WpfDataUi.DataTypes
 
         Type mPreferredDisplayer;
 
-        GridLength mFirstGridLength;
-        GridLength mSecondGridLength;
+        double mFirstGridLength;
 
         #endregion
 
         #region Properties
 
-        // Using a DependencyProperty as the backing store for MyProperty.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty MyPropertyProperty =
-            DependencyProperty.Register("Value", typeof(object), typeof(InstanceMember), new PropertyMetadata(null));
-
-        public Dictionary<string, RoutedEventHandler> ContextMenuEvents
+        /// <summary>
+        /// Right-click menu entries for this row, keyed by header. Each displayer's menu shows them
+        /// after the automatic "Make Default" entry.
+        /// </summary>
+        public Dictionary<string, EventHandler> ContextMenuEvents
         {
             get;
             private set;
@@ -63,21 +64,17 @@ namespace WpfDataUi.DataTypes
 
         public Dictionary<string, object> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object>();
 
-        public GridLength FirstGridLength
+        /// <summary>
+        /// Width, in device-independent pixels, of the label column. Displayers bind their first
+        /// column to it.
+        /// </summary>
+        public double FirstGridLength
         {
             get { return mFirstGridLength; }
             set
             {
                 mFirstGridLength = value;
                 OnPropertyChanged("FirstGridLength");
-            }
-        }
-
-        public GridLength SecondGridLength
-        {
-            get
-            {
-                return mSecondGridLength;
             }
         }
 
@@ -345,6 +342,15 @@ namespace WpfDataUi.DataTypes
 
         public virtual bool IsIndeterminate { get; } = false;
 
+        /// <summary>
+        /// Whether the shown value is the default, differs across a multi-selection, or is set
+        /// explicitly. Displayers tint their field from this.
+        /// </summary>
+        public DataUiValueState ValueState =>
+            IsDefault ? DataUiValueState.Default
+            : IsIndeterminate ? DataUiValueState.Indeterminate
+            : DataUiValueState.Custom;
+
         // Used to "new" this up, but doing so makes combo boxes
         // have no options. If this is null, combo box displayers
         // use the default full enum list.
@@ -405,7 +411,8 @@ namespace WpfDataUi.DataTypes
         public EventHandler BeforeSetByUi;
         public EventHandler AfterSetByUi;
 
-        public event Action<UserControl> UiCreated;
+        /// <summary>Raised with the displayer control each time a row host creates or reuses one for this member.</summary>
+        public event Action<object>? UiCreated;
 
         /// <summary>
         /// Action which is called whenever an error occurs when the user enters a value.
@@ -449,20 +456,17 @@ namespace WpfDataUi.DataTypes
 
         public InstanceMember()
         {
-            ContextMenuEvents = new Dictionary<string, RoutedEventHandler>();
-            mFirstGridLength = new GridLength(100);
-            mSecondGridLength = new GridLength(100);
+            ContextMenuEvents = new Dictionary<string, EventHandler>();
+            mFirstGridLength = 100;
+            Name = string.Empty;
             UniqueId = mNextUniqueId;
             mNextUniqueId++;
         }
 
         public InstanceMember(string name, object instance)
         {
-            ContextMenuEvents = new Dictionary<string, RoutedEventHandler>();
-
-
-            mFirstGridLength = new GridLength(100);
-            mSecondGridLength = new GridLength(100);
+            ContextMenuEvents = new Dictionary<string, EventHandler>();
+            mFirstGridLength = 100;
             UniqueId = mNextUniqueId;
             mNextUniqueId++;
             Instance = instance;
@@ -527,7 +531,11 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        internal void CallUiCreated(UserControl control)
+        /// <summary>
+        /// Raises <see cref="UiCreated"/>. Called by the grid's row host after it assigns a displayer
+        /// to this member.
+        /// </summary>
+        public void CallUiCreated(object control)
         {
             UiCreated?.Invoke(control);
         }

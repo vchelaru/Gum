@@ -21,59 +21,30 @@ public class NullableEnumComboBoxDisplayTests : BaseTestClass
     }
 
     [Fact]
-    public void SingleDataUiContainer_RoutingPredicate_NullableEnum_RoutesToComboBoxDisplay()
+    public void SingleDataUiContainer_Registry_NullableEnum_RoutesToComboBoxDisplay()
     {
-        // The TypeDisplayerAssociation is evaluated in order in
-        // SingleDataUiContainer.CreateInternalControl. Find the first predicate that
-        // matches typeof(SampleEnum?). It must be the ComboBoxDisplay association,
-        // not the textbox fallback (which is only reached when no predicate matches).
-        Type? matchedDisplayer = null;
-        foreach (KeyValuePair<Func<Type, bool>, Type> kvp in SingleDataUiContainer.TypeDisplayerAssociation)
-        {
-            if (kvp.Key(typeof(SampleEnum?)))
-            {
-                matchedDisplayer = kvp.Value;
-                break;
-            }
-        }
+        // The neutral selection picks the combo box key for Nullable<TEnum>; the WPF registry must
+        // resolve it to ComboBoxDisplay rather than the textbox fallback.
+        Type controlType = SingleDataUiContainer.DisplayerRegistry.SelectControlType(MakeMemberOfType(typeof(SampleEnum?)));
 
-        matchedDisplayer.ShouldBe(typeof(ComboBoxDisplay));
+        controlType.ShouldBe(typeof(ComboBoxDisplay));
     }
 
     [Fact]
-    public void SingleDataUiContainer_RoutingPredicate_NonNullableEnum_StillRoutesToComboBoxDisplay()
+    public void SingleDataUiContainer_Registry_NonNullableEnum_StillRoutesToComboBoxDisplay()
     {
-        // Regression guard: do not break the existing non-nullable enum routing
-        // when adding the nullable-enum branch.
-        Type? matchedDisplayer = null;
-        foreach (KeyValuePair<Func<Type, bool>, Type> kvp in SingleDataUiContainer.TypeDisplayerAssociation)
-        {
-            if (kvp.Key(typeof(SampleEnum)))
-            {
-                matchedDisplayer = kvp.Value;
-                break;
-            }
-        }
+        Type controlType = SingleDataUiContainer.DisplayerRegistry.SelectControlType(MakeMemberOfType(typeof(SampleEnum)));
 
-        matchedDisplayer.ShouldBe(typeof(ComboBoxDisplay));
+        controlType.ShouldBe(typeof(ComboBoxDisplay));
     }
 
     [Fact]
-    public void SingleDataUiContainer_RoutingPredicate_NullablePrimitive_NotRoutedToComboBoxDisplay()
+    public void SingleDataUiContainer_Registry_NullablePrimitive_FallsBackToTextBoxDisplay()
     {
-        // Make sure the new "nullable enum" predicate doesn't accidentally match
-        // typeof(int?) etc. — only Nullable<TEnum> should reach ComboBoxDisplay.
-        Type? matchedDisplayer = null;
-        foreach (KeyValuePair<Func<Type, bool>, Type> kvp in SingleDataUiContainer.TypeDisplayerAssociation)
-        {
-            if (kvp.Key(typeof(int?)))
-            {
-                matchedDisplayer = kvp.Value;
-                break;
-            }
-        }
+        // Only Nullable<TEnum> should reach ComboBoxDisplay; typeof(int?) takes the text fallback.
+        Type controlType = SingleDataUiContainer.DisplayerRegistry.SelectControlType(MakeMemberOfType(typeof(int?)));
 
-        matchedDisplayer.ShouldBeNull();
+        controlType.ShouldBe(typeof(TextBoxDisplay));
     }
 
     [StaFact]

@@ -21,7 +21,7 @@
 | Project | Flags | Real coupling | Removed by | Guard |
 |---|---|---|---|---|
 | `Gum/Gum.csproj` | WPF + WinForms | the WPF head itself | 120 (retired or reduced to the entry point) | TFM |
-| `WpfDataUi` | WPF + WinForms | property grid views | 70 (model split), 120 (delete) | TFM |
+| `WpfDataUi` | WPF + WinForms | property grid views only; the model, grid logic, and editor logic moved to `DataUi.Core` (net10.0, **done** in 70) | 120 (delete) | TFM |
 | `XnaAndWinforms` | WPF | device service + WPF surface host | 50 (split neutral core / WPF adapter) | TFM |
 | `InputLibrary` | WPF | `Cursor` uses `System.Drawing.Point` + `WpfInputHostAdapter` | 50 | TFM |
 | `FlatRedBall.SpecializedXnaControls` | WPF | `ImageRegionSelectionControl`, the second canvas | 50 | TFM |
@@ -79,9 +79,9 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `Gum/Commands/GuiCommands.cs` | `user32`/`kernel32` `SetForegroundWindow`+`AttachThreadInput`, `WindowInteropHelper` | force the tool to the foreground after font generation | 30 — head-side window activation seam; `GuiCommands` stays in `AddGumWpf()` until then (phase 20 list) |
 | `Gum/ViewModels/MainWindowViewModel.cs` | `Shcore GetDpiForMonitor`, `user32 MonitorFromRect/GetMonitorInfo` | restore window placement per monitor DPI | 30 — Avalonia `Screens`; this is why the VM is still in `Gum/` |
 | `Gum/Behaviors/TitleBarClickPassthrough.cs` | `user32 GetCursorPos` | custom chrome hit-testing | 90 (chrome) / 120 (delete) |
-| `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | warps the mouse during drag-to-change-value | 70 — redesign with pointer capture; no cross-platform cursor warp |
+| `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | **done** (70): the import was never called and is deleted; label scrubbing is `LabelDragScrubLogic` fed relative deltas | 70 |
 | `Gum/Dialogs/ThemingService.cs` | `Microsoft.Win32.Registry` `AppsUseLightTheme` | detect OS dark mode | 90 — Avalonia `IPlatformSettings.GetColorValues()` |
-| `Gum/Services/Dialogs/DialogService.cs`, `WpfDataUi/Controls/FilePickingLogic.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl), 70 |
+| `Gum/Services/Dialogs/DialogService.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl). `FilePickingLogic` now goes through `IDataUiFilePicker` over `IDialogService` (**done** in 70) |
 | `Tool/EditorTabPlugin_XNA/Services/ScreenshotService.cs` | `Microsoft.Win32.SaveFileDialog` **directly**, bypassing `IDialogService` | export canvas as image | 50 — decoupling gap, route through `IDialogService` WPF-side first |
 | `XnaAndWinforms/WpfGraphicsDeviceControl.cs` | `HwndSource`, `WindowInteropHelper` | device window handle | 10/50 — the GL backend needs no HWND |
 

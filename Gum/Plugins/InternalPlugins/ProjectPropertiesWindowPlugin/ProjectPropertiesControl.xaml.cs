@@ -27,7 +27,7 @@ public partial class ProjectPropertiesControl : UserControl
     {
         get
         {
-            return (ProjectPropertiesViewModel)DataGrid.Instance;
+            return (ProjectPropertiesViewModel)DataGrid.Instance!;
         }
         internal set
         {

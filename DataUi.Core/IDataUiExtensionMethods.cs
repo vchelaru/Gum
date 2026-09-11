@@ -1,56 +1,24 @@
-﻿using System;
-using System.Runtime.InteropServices.ComTypes;
-using System.Windows;
-using System.Windows.Controls;
+using System;
+using System.Collections.Generic;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi;
 
-// This class lets us inspect the Click event for equality so we only have to replace items if they really do differ.
-// By doing this, Refresh calls can be much faster:
-public class MenuItemExposedClick : MenuItem
+/// <summary>One entry in a displayer's right-click menu.</summary>
+public sealed class DataUiContextMenuEntry
 {
-    public IDataUi Owner { get; set; }
-
-    RoutedEventHandler storedClick;
-    public RoutedEventHandler ClickHandler => storedClick;
-
-    public void SetMakeDefaultClick(IDataUi dataUi)
+    /// <summary>Creates an entry.</summary>
+    public DataUiContextMenuEntry(string header, Action execute)
     {
-        Owner = dataUi;
-        this.SetClick(MakeDefault);
+        Header = header;
+        Execute = execute;
     }
 
-    private void MakeDefault(object? sender, RoutedEventArgs e)
-    {
-        Owner.InstanceMember.OldValue = Owner.InstanceMember.Value;
-        Owner.InstanceMember.IsDefault = true;
-        Owner.Refresh();
+    /// <summary>The menu text.</summary>
+    public string Header { get; }
 
-        // the instance member may have undone the IsDefault, so let's only do this if it's still set to default:
-        if (Owner is ISetDefaultable && Owner.InstanceMember.IsDefault)
-        {
-            ((ISetDefaultable)Owner).SetToDefault();
-        }
-
-        Owner.InstanceMember.CallAfterSetByUi();
-    }
-
-    public void SetClick(RoutedEventHandler clickEventHandler)
-    {
-        storedClick = clickEventHandler;
-        base.Click += clickEventHandler;
-    }
-
-    //public bool IsEquivalentTo(MenuItemExposedClick other)
-    //{
-    //    return storedClick == other.storedClick && 
-    //        Header is string thisHeaderString && 
-    //        other.Header is string otherHeaderString && 
-    //        thisHeaderString == otherHeaderString &&
-    //        Owner == other.Owner
-    //        ;
-    //}
+    /// <summary>What clicking the entry does.</summary>
+    public Action Execute { get; }
 }
 
 public static class IDataUiExtensionMethods
@@ -95,7 +63,6 @@ public static class IDataUiExtensionMethods
                 if(dataUi.InstanceMember.Value != valueOnUi)
                 {
                     dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
-                    //dataUi.InstanceMember.Value = valueOnUi;
                     result = dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
                     if(result == ApplyValueResult.Success)
                     {
@@ -123,7 +90,6 @@ public static class IDataUiExtensionMethods
             if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
             {
                 dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
-                //dataUi.InstanceMember.Value = valueToSet;
                 result = dataUi.InstanceMember.SetValue(valueToSet, commitType);
                 dataUi.InstanceMember.CallAfterSetByUi();
             }
@@ -184,9 +150,6 @@ public static class IDataUiExtensionMethods
 
     }
 
-
-
-
     private static void GetIfValuesCanBeSetOnInstance(IDataUi dataUi, out ApplyValueResult result, out bool hasErrorOccurred)
     {
         result = ApplyValueResult.UnknownError;
@@ -240,94 +203,55 @@ public static class IDataUiExtensionMethods
         return type;
     }
 
-    public static void RefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
+    /// <summary>
+    /// The "Make Default" action: resets the member to its default, refreshes the displayer, clears
+    /// any in-progress edit state, and reports the change as a UI set.
+    /// </summary>
+    public static void MakeDefault(this IDataUi dataUi)
     {
-
-        var areSame = true;
-
-        var expectedCount = 1;
-        if(dataUi.InstanceMember != null)
-        {
-            expectedCount += dataUi.InstanceMember.ContextMenuEvents.Count;
-        }
-
-        if(expectedCount != contextMenu.Items.Count)
-        {
-            areSame = false;
-        }
-
-        if(areSame && contextMenu.Items.Count > 0)
-        {
-            // first item is default, so compare that:
-            var firstExistingItem = (MenuItemExposedClick) contextMenu.Items[0];
-            if(firstExistingItem.Owner != dataUi)
-            {
-                areSame = false;
-            }
-        }
-
-        if(areSame && contextMenu.Items.Count > 0 && dataUi.InstanceMember != null)
-        {
-            int index = 1;
-            foreach(var kvp in dataUi.InstanceMember.ContextMenuEvents)
-            {
-                var item = (MenuItemExposedClick)contextMenu.Items[index];
-                var isInstanceTheSame = item.Header is string asString &&
-                    asString == kvp.Key &&
-                    item.ClickHandler == kvp.Value &&
-                    item.Tag == dataUi.InstanceMember;
-
-                if(!isInstanceTheSame)
-                {
-                    areSame = false;
-                }
-                index++;
-            }
-        }
-
-        if(!areSame)
-        {
-            ForceRefreshContextMenu(dataUi, contextMenu);
-        }
-    }
-
-    public static void ForceRefreshContextMenu(this IDataUi dataUi, ContextMenu contextMenu)
-    {
-        if(contextMenu == null)
+        InstanceMember? member = dataUi.InstanceMember;
+        if (member == null)
         {
             return;
         }
-        contextMenu.Items.Clear();
 
-        var shouldAddMakeDefault = dataUi.InstanceMember == null ||
-            dataUi.InstanceMember.SupportsMakeDefault;
+        member.OldValue = member.Value;
+        member.IsDefault = true;
+        dataUi.Refresh();
 
-        if(shouldAddMakeDefault  && contextMenu != null)
+        // The instance member may have undone the IsDefault, so only clear edit state if it held.
+        if (dataUi is ISetDefaultable setDefaultable && member.IsDefault)
         {
-            var makeDefault = new MenuItemExposedClick();
-            makeDefault.Header = "Make Default";
-            makeDefault.SetMakeDefaultClick(dataUi);
-            contextMenu.Items.Add(makeDefault);
+            setDefaultable.SetToDefault();
         }
 
-        if (dataUi.InstanceMember != null)
-        {
-            foreach (var kvp in dataUi.InstanceMember.ContextMenuEvents)
-            {
-                AddContextMenuItem(kvp.Key, kvp.Value, contextMenu).Tag = dataUi.InstanceMember;
-            }
-        }
+        member.CallAfterSetByUi();
     }
 
-    private static MenuItem AddContextMenuItem(string text, RoutedEventHandler handler, ContextMenu contextMenu)
+    /// <summary>
+    /// The displayer's right-click entries: "Make Default" when the member supports it, then the
+    /// member's <see cref="InstanceMember.ContextMenuEvents"/> in order.
+    /// </summary>
+    public static List<DataUiContextMenuEntry> GetContextMenuEntries(this IDataUi dataUi)
     {
+        List<DataUiContextMenuEntry> entries = new List<DataUiContextMenuEntry>();
+        InstanceMember? member = dataUi.InstanceMember;
 
-        var menuItem = new MenuItemExposedClick();
-        menuItem.Header = text;
-        menuItem.SetClick(handler);
+        bool shouldAddMakeDefault = member == null || member.SupportsMakeDefault;
+        if (shouldAddMakeDefault)
+        {
+            entries.Add(new DataUiContextMenuEntry("Make Default", dataUi.MakeDefault));
+        }
 
-        contextMenu.Items.Add(menuItem);
+        if (member != null)
+        {
+            foreach (KeyValuePair<string, EventHandler> kvp in member.ContextMenuEvents)
+            {
+                EventHandler handler = kvp.Value;
+                entries.Add(new DataUiContextMenuEntry(kvp.Key, () => handler(member, EventArgs.Empty)));
+            }
+        }
 
-        return menuItem;
+        return entries;
     }
 }

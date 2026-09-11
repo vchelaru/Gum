@@ -1,18 +1,21 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Data;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
 {
+    /// <summary>
+    /// The value logic behind a text-field displayer: parsing typed text (including math such as
+    /// "10*2"), number formatting, min/max clamping, the Enter/Escape/focus editing rules, and
+    /// pushing the value to the member. The view adapts its text box as an <see cref="IDataUiTextBox"/>
+    /// and forwards its events to the Handle* methods.
+    /// </summary>
     public class TextBoxDisplayLogic
     {
         #region Properties
 
-        TextBox mAssociatedTextBox;
+        IDataUiTextBox mAssociatedTextBox;
         IDataUi mContainer;
 
         public bool HasUserChangedAnything { get; set; }
@@ -55,30 +58,23 @@ namespace WpfDataUi.Controls
 
         #endregion
 
-        public TextBoxDisplayLogic(IDataUi container, TextBox textBox)
+        public TextBoxDisplayLogic(IDataUi container, IDataUiTextBox textBox)
         {
             mAssociatedTextBox = textBox;
             mContainer = container;
-            mAssociatedTextBox.GotFocus += HandleTextBoxGotFocus;
-            mAssociatedTextBox.PreviewKeyDown += HandlePreviewKeydown;
-            mAssociatedTextBox.TextChanged += HandleTextChanged;
-            mAssociatedTextBox.PreviewMouseLeftButtonDown += HandlePreviewMouseLeftButtonDown;
         }
 
-        private void HandlePreviewMouseLeftButtonDown(object? sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            // WPF's default double-click word-selection treats '.' and '-' as word breaks, so
-            // double-clicking a decimal like 123.45 only selects one side of the point (issue
-            // FlatRedBall#2135). For numeric fields the whole value is always what the user wants,
-            // so select it all ourselves and suppress the built-in word-select.
-            if (IsNumeric && e.ClickCount == 2)
-            {
-                mAssociatedTextBox.SelectAll();
-                e.Handled = true;
-            }
-        }
+        /// <summary>
+        /// Whether a press with <paramref name="clickCount"/> clicks should select the whole field
+        /// instead of the text box's own word selection. Default double-click word selection treats
+        /// '.' and '-' as word breaks, so double-clicking a decimal like 123.45 only selects one side
+        /// of the point (issue FlatRedBall#2135); for numeric fields the whole value is always what
+        /// the user wants. The view selects all and suppresses its built-in handling when true.
+        /// </summary>
+        public bool ShouldSelectAllOnClick(int clickCount) => IsNumeric && clickCount == 2;
 
-        private void HandleTextChanged(object? sender, TextChangedEventArgs e)
+        /// <summary>Call when the field's text changes.</summary>
+        public void HandleTextChanged()
         {
             HasUserChangedAnything = true;
         }
@@ -122,12 +118,15 @@ namespace WpfDataUi.Controls
             return result;
         }
 
-        private void HandlePreviewKeydown(object? sender, System.Windows.Input.KeyEventArgs e)
+        /// <summary>
+        /// Enter commits: clamps, applies to the member, and re-syncs on success, or restores the text
+        /// from the start of editing on failure. Returns true when the key is consumed (only when
+        /// <see cref="HandlesEnter"/>).
+        /// </summary>
+        public bool HandleEnterKey()
         {
-            if (e.Key == Key.Enter && (HandlesEnter))
+            if (HandlesEnter)
             {
-                e.Handled = true;
-
                 ClampTextBoxValuesToMinMax();
 
                 var result = TryApplyToInstance();
@@ -142,15 +141,21 @@ namespace WpfDataUi.Controls
                     mAssociatedTextBox.Text = TextAtStartOfEditing;
                 }
 
+                return true;
             }
-            else if (e.Key == Key.Escape)
-            {
-                HasUserChangedAnything = false;
-                mAssociatedTextBox.Text = TextAtStartOfEditing;
-            }
+
+            return false;
         }
 
-        void HandleTextBoxGotFocus(object? sender, System.Windows.RoutedEventArgs e)
+        /// <summary>Escape abandons the edit, restoring the text from the start of editing.</summary>
+        public void HandleEscapeKey()
+        {
+            HasUserChangedAnything = false;
+            mAssociatedTextBox.Text = TextAtStartOfEditing;
+        }
+
+        /// <summary>Call when the field gains focus: remembers the text for Escape and selects it all.</summary>
+        public void HandleGotFocus()
         {
             TextAtStartOfEditing = mAssociatedTextBox.Text;
 
@@ -696,11 +701,6 @@ namespace WpfDataUi.Controls
             return false;
         }
 
-        public static SolidColorBrush DefaultValueBackground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(180, 255, 180)) { Opacity = 0.5 };
-        public static SolidColorBrush IndeterminateValueBackground = new SolidColorBrush(System.Windows.Media.Colors.LightGray);
-        public static SolidColorBrush CustomValueBackground = System.Windows.Media.Brushes.White;
-
-
         public object GetValueInDirection(int direction, object value)
         {
             if (value is int asInt)
@@ -776,38 +776,15 @@ namespace WpfDataUi.Controls
             RefreshBackgroundColor();
         }
 
+        /// <summary>Tints the field for the member's <see cref="InstanceMember.ValueState"/>.</summary>
         public void RefreshBackgroundColor()
         {
-            mAssociatedTextBox.Dispatcher.BeginInvoke(() =>
+            if (InstanceMember == null)
             {
-                
-                if (DataUiGrid.GetOverridesIsDefaultStyling(mAssociatedTextBox))
-                {
-                    return;
-                }
+                return;
+            }
 
-                if (InstanceMember.IsDefault)
-                {
-                    mAssociatedTextBox.Background = DefaultValueBackground;
-                }
-                else if (InstanceMember.IsIndeterminate)
-                {
-                    mAssociatedTextBox.Background = IndeterminateValueBackground;
-                }
-                else
-                {
-                    if (mAssociatedTextBox.TryFindResource("Frb.Brushes.Field.Background") != null)
-                    {
-                        mAssociatedTextBox.SetResourceReference(TextBox.BackgroundProperty,
-                            "Frb.Brushes.Field.Background");
-                    }
-                    else
-                    {
-                        mAssociatedTextBox.ClearValue(TextBox.BackgroundProperty);
-                    }
-                }
-            });
-
+            mAssociatedTextBox.ApplyValueState(InstanceMember.ValueState);
         }
     }
 }

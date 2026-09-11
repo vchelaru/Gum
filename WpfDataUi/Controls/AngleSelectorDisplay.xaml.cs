@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
@@ -8,16 +8,6 @@ using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
 {
-    #region enums
-
-    public enum AngleType
-    {
-        Degrees,
-        Radians
-    }
-
-    #endregion
-
     /// <summary>
     /// Interaction logic for AngleSelectorDisplay.xaml
     /// </summary>
@@ -181,7 +171,7 @@ namespace WpfDataUi.Controls
 
             Line.DataContext = this;
 
-            mTextBoxLogic = new TextBoxDisplayLogic(this, this.TextBox);
+            mTextBoxLogic = WpfDataUiTextBox.CreateLogic(this, this.TextBox);
 
             this.RefreshContextMenu(TopRowGrid.ContextMenu);
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -293,15 +283,15 @@ namespace WpfDataUi.Controls
                 {
                     if (InstanceMember?.IsDefault == true)
                     {
-                        TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                        TextBox.Background = DataUiBrushes.DefaultValueBackground;
                     }
                     else if (InstanceMember?.IsIndeterminate == true)
                     {
-                        TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+                        TextBox.Background = DataUiBrushes.IndeterminateValueBackground;
                     }
                     else
                     {
-                        TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
+                        TextBox.Background = DataUiBrushes.CustomValueBackground;
                     }
                 }
             });

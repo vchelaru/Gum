@@ -36,6 +36,7 @@
 		<AppDesigner Include="Properties\" />
 	</ItemGroup>
 	<ItemGroup>
+	  <ProjectReference Include="..\DataUi.Core\DataUi.Core.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<Resource Include="Content\Icons\OpenFolder.png" />

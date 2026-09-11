@@ -314,7 +314,7 @@ public class StateReferencingInstanceMember : InstanceMember
         PopulateContextMenu();
     }
 
-    private void HandleUiCreated(System.Windows.Controls.UserControl obj)
+    private void HandleUiCreated(object obj)
     {
         if (RootVariableName == "VariableReferences" && obj is StringListTextBoxDisplay asTextBox)
         {

@@ -6,7 +6,7 @@ using WpfDataUi;
 using WpfDataUi.DataTypes;
 using Xunit;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace Gum.Presentation.Tests.DataUi;
 
 public class MemberCategoryFilterTests
 {
@@ -38,8 +38,8 @@ public class MemberCategoryFilterTests
 
         NamesIn(display).ShouldBe(new[] { "Visible" });
         NamesIn(position).ShouldBeEmpty();
-        // MemberCategory.Visibility already collapses an empty category, so emptying it hides the header.
-        position.Visibility.ShouldBe(System.Windows.Visibility.Collapsed);
+        // MemberCategory.IsVisible already hides an empty category, so emptying it hides the header.
+        position.IsVisible.ShouldBeFalse();
     }
 
     [Fact]
@@ -95,13 +95,13 @@ public class MemberCategoryFilterTests
         display.IsExpanded.ShouldBeTrue();
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldNotPersistFilterForcedExpansionAcrossSelectionChanges()
+    [Fact]
+    public void DataUiGridModel_ShouldNotPersistFilterForcedExpansionAcrossSelectionChanges()
     {
-        // Unique names: DataUiGrid's expansion memory is a static dictionary keyed by category name.
+        // Unique names: DataUiGridModel's expansion memory is a static dictionary keyed by category name.
         MemberCategory display = CreateCategory("FilterPersistenceDisplay", "Visible", "Alpha");
         display.IsExpanded = false;
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { display });
         display.IsExpanded = false;
 
@@ -121,10 +121,10 @@ public class MemberCategoryFilterTests
         rebuilt.IsExpanded.ShouldBeFalse();
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldReapplyAnActiveFilterAfterCategoriesAreRebuilt()
+    [Fact]
+    public void DataUiGridModel_ShouldReapplyAnActiveFilterAfterCategoriesAreRebuilt()
     {
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterReapplyDisplay", "Visible", "Alpha") });
         grid.ApplyMemberFilter(Contains("vis"));
 
@@ -138,10 +138,10 @@ public class MemberCategoryFilterTests
         NamesIn(rebuilt).ShouldBe(new[] { "Visible", "Alpha" });
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldFilterCategoriesRebuiltByAClearRatherThanBySetCategories()
+    [Fact]
+    public void DataUiGridModel_ShouldFilterCategoriesRebuiltByAClearRatherThanBySetCategories()
     {
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterResetDisplay", "Visible", "Alpha") });
         grid.ApplyMemberFilter(Contains("vis"));
 
@@ -156,10 +156,10 @@ public class MemberCategoryFilterTests
         NamesIn(rebuilt).ShouldBe(new[] { "Visible" });
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldKeepFilteringWhenCategoriesAreReconciledInPlace()
+    [Fact]
+    public void DataUiGridModel_ShouldKeepFilteringWhenCategoriesAreReconciledInPlace()
     {
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterSwapDisplay", "Visible", "Alpha") });
         grid.ApplyMemberFilter(Contains("vis"));
 
@@ -172,10 +172,10 @@ public class MemberCategoryFilterTests
         NamesIn(replacement).ShouldBe(new[] { "Visible" });
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldKeepFilteringWhenACategoryIsAppendedInPlace()
+    [Fact]
+    public void DataUiGridModel_ShouldKeepFilteringWhenACategoryIsAppendedInPlace()
     {
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterAppendDisplay", "Visible") });
         grid.ApplyMemberFilter(Contains("vis"));
 
@@ -186,10 +186,10 @@ public class MemberCategoryFilterTests
         NamesIn(added).ShouldBe(new[] { "Visible" });
     }
 
-    [StaFact]
-    public void DataUiGrid_ShouldKeepFilteringWhenInstanceIsSetBeforeSetCategories()
+    [Fact]
+    public void DataUiGridModel_ShouldKeepFilteringWhenInstanceIsSetBeforeSetCategories()
     {
-        DataUiGrid grid = new DataUiGrid();
+        DataUiGridModel grid = new DataUiGridModel();
         grid.SetCategories(new List<MemberCategory> { CreateCategory("FilterInstanceDisplay", "Visible", "Alpha") });
         grid.ApplyMemberFilter(Contains("vis"));
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,13 +8,12 @@ using WpfDataUi.DataTypes;
 namespace WpfDataUi
 {
     /// <summary>
-    /// Interaction logic for SingleDataUiContainer.xaml
+    /// The WPF row host: creates (or reuses) the displayer control for its <see cref="InstanceMember"/>
+    /// DataContext. Which control is chosen is decided by <see cref="DisplayerRegistry"/>.
     /// </summary>
     public partial class SingleDataUiContainer : UserControl
     {
         #region Fields
-
-        static List<KeyValuePair<Func<Type, bool>, Type>> mTypeDisplayerAssociation = new List<KeyValuePair<Func<Type, bool>, Type>>();
 
         // Controls are expensive to create (WPF InitializeComponent builds a full visual tree).
         // When a SingleDataUiContainer is removed from the visual tree during a grid rebuild,
@@ -37,21 +35,11 @@ namespace WpfDataUi
             }
         }
 
-        object Instance
-        {
-            get
-            {
-                return InstanceMember.Instance;
-            }
-        }
-
-        public static List<KeyValuePair<Func<Type, bool>, Type>> TypeDisplayerAssociation
-        {
-            get
-            {
-                return mTypeDisplayerAssociation;
-            }
-        }
+        /// <summary>
+        /// Maps displayer keys to this head's controls and picks the control for each row. Pre-filled
+        /// with the WpfDataUi editors; the tool registers its own displayers at startup.
+        /// </summary>
+        public static DisplayerRegistry DisplayerRegistry { get; }
 
         #endregion
 
@@ -59,37 +47,23 @@ namespace WpfDataUi
 
         static SingleDataUiContainer()
         {
-            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item == typeof(bool),
-                typeof(CheckBoxDisplay))
-                );
-
-
-            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item == typeof(bool?),
-                typeof(NullableBoolDisplay))
-                );
-
-
-            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item!= null && item.IsEnum,
-                typeof(ComboBoxDisplay))
-                );
-
-            // Nullable enums (e.g., FormsProperty Type="ResizeBehavior?") render as a
-            // dropdown picker, same as their non-nullable counterpart. The combo box
-            // populates a null entry alongside the underlying enum's values so the
-            // user can clear the value back to null.
-            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item != null && Nullable.GetUnderlyingType(item)?.IsEnum == true,
-                typeof(ComboBoxDisplay))
-                );
-
-            mTypeDisplayerAssociation.Add(new KeyValuePair<Func<Type, bool>, Type>(
-                (item) => item != null && typeof(IEnumerable).IsAssignableFrom(item) && item != typeof(string),
-                typeof(ListBoxDisplay))
-                );
+            DisplayerRegistry = new DisplayerRegistry();
+            DisplayerRegistry.Register(typeof(StandardDisplayers.TextBox), typeof(TextBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.MultiLineTextBox), typeof(MultiLineTextBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.CheckBox), typeof(CheckBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.NullableBool), typeof(NullableBoolDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.ComboBox), typeof(ComboBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.EditableComboBox), typeof(EditableComboBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.ListBox), typeof(ListBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.Slider), typeof(SliderDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.PlusMinus), typeof(PlusMinusTextBox));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.AngleSelector), typeof(AngleSelectorDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.FileSelection), typeof(FileSelectionDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.MultiFile), typeof(MultiFileDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.StringList), typeof(StringListTextBoxDisplay));
+            DisplayerRegistry.Register(typeof(StandardDisplayers.InlineChannels), typeof(InlineChannelsDisplay));
         }
+
         public SingleDataUiContainer()
         {
             this.DataContextChanged += HandleDataContextChanged;
@@ -153,48 +127,20 @@ namespace WpfDataUi
                 throw new NullReferenceException(nameof(InstanceMember));
             }
 
+            Type controlType = DisplayerRegistry.SelectControlType(InstanceMember);
 
-            UserControl controlToAdd = null;
+            UserControl controlToAdd;
 
-            if (InstanceMember.PreferredDisplayer != null)
+            // Reuse the existing control for an explicitly preferred displayer: faster, and it keeps
+            // focus when a row is re-bound to a member of the same kind.
+            if (InstanceMember.PreferredDisplayer != null && this.UserControl != null && this.UserControl.GetType() == controlType)
             {
-                var preferredDisplayer = InstanceMember.PreferredDisplayer;
-                if(this.UserControl != null && this.UserControl.GetType() == preferredDisplayer)
-                {
-                    // reuse the existing control for speed, and to fix a potential bug when losing focus:
-                    controlToAdd = this.UserControl;
-                }
-                else
-                {
-                    controlToAdd = TryGetFromPool(preferredDisplayer)
-                        ?? (UserControl)Activator.CreateInstance(preferredDisplayer);
-                }
+                controlToAdd = this.UserControl;
             }
-
-            // give preference to CustomOptions...:
-            if(controlToAdd == null && InstanceMember.CustomOptions != null && InstanceMember.CustomOptions.Count != 0)
+            else
             {
-                controlToAdd = TryGetFromPool(typeof(ComboBoxDisplay)) ?? new ComboBoxDisplay();
-            }
-
-            // ... then fall back if that isn't found:
-            if (controlToAdd == null)
-            {
-                var type = InstanceMember.PropertyType;
-
-                foreach (var kvp in mTypeDisplayerAssociation)
-                {
-                    if (kvp.Key(type))
-                    {
-                        controlToAdd = TryGetFromPool(kvp.Value)
-                            ?? (UserControl)Activator.CreateInstance(kvp.Value);
-                    }
-                }
-            }
-
-            if (controlToAdd == null)
-            {
-                controlToAdd = TryGetFromPool(typeof(TextBoxDisplay)) ?? new TextBoxDisplay();
+                controlToAdd = TryGetFromPool(controlType)
+                    ?? (UserControl)Activator.CreateInstance(controlType)!;
             }
 
             var displayerType = controlToAdd.GetType();

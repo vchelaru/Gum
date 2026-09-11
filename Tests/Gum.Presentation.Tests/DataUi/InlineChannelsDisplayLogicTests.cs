@@ -4,7 +4,7 @@ using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using Xunit;
 
-namespace GumToolUnitTests.Controls;
+namespace Gum.Presentation.Tests.DataUi;
 
 public class InlineChannelsDisplayLogicTests
 {

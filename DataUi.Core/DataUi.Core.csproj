@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		DataUi.Core: the framework-neutral member model behind the property grid (phase 70 of
+		Direction/avalonia-migration/). InstanceMember, MemberCategory, the grid's category and
+		filter logic (DataUiGridModel), displayer selection (DisplayerRegistry), and the editor
+		logic classes (TextBoxDisplayLogic, FilePickingLogic, InlineChannelsDisplayLogic). The WPF
+		grid (WpfDataUi) and the Avalonia grid (AvaloniaDataUi) are two views over this model.
+
+		The namespaces stay WpfDataUi.* so existing consumers compile unchanged. Plain net10.0 with
+		no UI framework; the banned-symbol list keeps Windows-only APIs out.
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<RootNamespace>WpfDataUi</RootNamespace>
+		<AssemblyName>DataUi.Core</AssemblyName>
+		<!-- LateBinder is shared source that picks its namespace from this symbol. -->
+		<DefineConstants>$(DefineConstants);WpfDataUi</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="WpfDataUi" />
+		<InternalsVisibleTo Include="AvaloniaDataUi" />
+		<InternalsVisibleTo Include="Gum.Presentation.Tests" />
+		<InternalsVisibleTo Include="GumToolUnitTests" />
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
+	</ItemGroup>
+
+</Project>

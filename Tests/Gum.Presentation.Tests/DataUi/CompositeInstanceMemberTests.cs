@@ -4,7 +4,7 @@ using Shouldly;
 using WpfDataUi.DataTypes;
 using Xunit;
 
-namespace GumToolUnitTests.DataTypes;
+namespace Gum.Presentation.Tests.DataUi;
 
 public class CompositeInstanceMemberTests
 {

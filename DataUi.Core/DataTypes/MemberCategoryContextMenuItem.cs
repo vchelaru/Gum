@@ -8,6 +8,11 @@ namespace WpfDataUi.DataTypes;
 /// <see cref="ICommand"/> so the menu can be built purely by binding (unlike
 /// <see cref="InstanceMember.ContextMenuEvents"/>, whose menu each displayer assembles in code).
 /// </summary>
+/// <remarks>
+/// <see cref="ICommand"/> is the framework-neutral BCL interface. A head that re-evaluates commands
+/// on its own schedule (WPF's <c>CommandManager.RequerySuggested</c>) wraps the item at binding
+/// time; one that builds the menu when it opens needs nothing extra.
+/// </remarks>
 public class MemberCategoryContextMenuItem : ICommand
 {
     private readonly Action _execute;
@@ -17,15 +22,7 @@ public class MemberCategoryContextMenuItem : ICommand
     public string Header { get; }
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Forwarded to <see cref="CommandManager.RequerySuggested"/> so WPF re-evaluates
-    /// <see cref="CanExecute"/> when the menu opens, rather than only when the category is rebuilt.
-    /// </remarks>
-    public event EventHandler? CanExecuteChanged
-    {
-        add => CommandManager.RequerySuggested += value;
-        remove => CommandManager.RequerySuggested -= value;
-    }
+    public event EventHandler? CanExecuteChanged;
 
     public MemberCategoryContextMenuItem(string header, Action execute, Func<bool>? canExecute = null)
     {
@@ -39,4 +36,7 @@ public class MemberCategoryContextMenuItem : ICommand
 
     /// <inheritdoc/>
     public void Execute(object? parameter) => _execute();
+
+    /// <summary>Tells bound menus to re-read <see cref="CanExecute"/>.</summary>
+    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
