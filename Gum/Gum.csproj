@@ -68,30 +68,6 @@
 			<SpecificVersion>False</SpecificVersion>
 			<HintPath>Libraries\TargaImage.dll</HintPath>
 		</Reference>
-		<Reference Include="Xceed.Wpf.AvalonDock, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.dll</HintPath>
-		</Reference>
-		<Reference Include="Xceed.Wpf.AvalonDock.Themes.Aero, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Aero.dll</HintPath>
-		</Reference>
-		<Reference Include="Xceed.Wpf.AvalonDock.Themes.Metro, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.Metro.dll</HintPath>
-		</Reference>
-		<Reference Include="Xceed.Wpf.AvalonDock.Themes.VS2010, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.AvalonDock.Themes.VS2010.dll</HintPath>
-		</Reference>
-		<Reference Include="Xceed.Wpf.DataGrid, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.DataGrid.dll</HintPath>
-		</Reference>
-		<Reference Include="Xceed.Wpf.Toolkit, Version=2.3.0.0, Culture=neutral, PublicKeyToken=3e4669d2f30244f4, processorArchitecture=MSIL">
-			<SpecificVersion>False</SpecificVersion>
-			<HintPath>Libraries\Xceed\Xceed.Wpf.Toolkit.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\THIRD-PARTY-NOTICES.txt" Link="THIRD-PARTY-NOTICES.txt">
@@ -417,7 +393,6 @@
 			<Version>0.5.18</Version>
 		</PackageReference>
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
-		<PackageReference Include="System.Management" Version="9.0.3" />
 
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />

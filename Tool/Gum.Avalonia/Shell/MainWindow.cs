@@ -8,6 +8,7 @@ using Avalonia.Layout;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Themes;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Menus;
@@ -54,6 +55,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         MinWidth = 640;
         MinHeight = 400;
         FontSize = appScaleProvider.BaseFontSize;
+        this.WithThemeResource(BackgroundProperty, "Frb.Brushes.Background");
+        this.WithThemeResource(ForegroundProperty, "Frb.Brushes.Foreground");
         if (appScaleProvider is AvaloniaAppScaleProvider scale)
         {
             scale.BaseFontSizeChanged += () => FontSize = scale.BaseFontSize;
@@ -70,8 +73,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             Child = _statusText,
             Height = 24,
             BorderThickness = new Thickness(0, 1, 0, 0),
-            BorderBrush = new global::Avalonia.Media.SolidColorBrush(global::Avalonia.Media.Color.FromArgb(255, 60, 60, 60)),
-        };
+        }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Border");
         DockPanel.SetDock(statusBar, Dock.Bottom);
 
         DockPanel root = new DockPanel();

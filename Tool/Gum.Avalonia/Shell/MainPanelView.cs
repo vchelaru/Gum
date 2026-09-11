@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Shell;
 
@@ -107,10 +109,7 @@ public sealed class MainPanelView : Grid
         };
         source.CollectionChanged += (_, _) => empty.IsVisible = source.Count == 0;
 
-        Grid host = new Grid
-        {
-            Background = new SolidColorBrush(Color.FromArgb(255, 36, 36, 36)),
-        };
+        Grid host = new Grid().WithThemeResource(Panel.BackgroundProperty, "Frb.Surface01");
         host.Children.Add(tabControl);
         host.Children.Add(empty);
         SetRow(host, row);
@@ -123,8 +122,7 @@ public sealed class MainPanelView : Grid
         GridSplitter splitter = new GridSplitter
         {
             ResizeDirection = direction,
-            Background = new SolidColorBrush(Color.FromArgb(255, 60, 60, 60)),
-        };
+        }.WithThemeResource(TemplatedControl.BackgroundProperty, "Frb.Brushes.Border");
         if (direction == GridResizeDirection.Columns)
         {
             splitter.Width = 4;

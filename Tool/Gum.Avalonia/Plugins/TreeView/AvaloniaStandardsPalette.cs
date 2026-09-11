@@ -8,6 +8,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.TreeView;
 
@@ -23,9 +24,13 @@ public sealed class AvaloniaStandardsPalette : Border
     private const double ChipIconSize = 14;
     private const double DragThreshold = 4;
 
-    private static readonly IBrush ChipBorderBrush = new SolidColorBrush(Color.FromArgb(0xff, 0x55, 0x55, 0x55));
-    private static readonly IBrush PrimaryBrush = new SolidColorBrush(Color.Parse("#3e9ece"));
-    private static readonly IBrush SelectedFillBrush = new SolidColorBrush(Color.FromArgb(0x40, 0x3e, 0x9e, 0xce));
+    private static readonly IBrush FallbackBorder = new SolidColorBrush(Color.FromArgb(0xff, 0x45, 0x45, 0x45));
+    private static readonly IBrush FallbackPrimary = new SolidColorBrush(Color.Parse("#3e9ece"));
+    private static readonly IBrush FallbackFill = new SolidColorBrush(Color.FromArgb(0x26, 0x3e, 0x9e, 0xce));
+
+    private IBrush ChipBorderBrush => ThemeBrushes.Get(this, "Frb.Brushes.Border", FallbackBorder);
+    private IBrush PrimaryBrush => ThemeBrushes.Get(this, "Frb.Brushes.Primary", FallbackPrimary);
+    private IBrush SelectedFillBrush => ThemeBrushes.Get(this, "Frb.Brushes.Primary.Transparent", FallbackFill);
 
     private readonly UniformGrid _chipsPanel;
     private readonly Dictionary<string, Border> _chipsByType;
@@ -109,7 +114,7 @@ public sealed class AvaloniaStandardsPalette : Border
         }
     }
 
-    private static void ApplySelectionVisual(Border chip, bool isSelected)
+    private void ApplySelectionVisual(Border chip, bool isSelected)
     {
         chip.BorderBrush = isSelected ? PrimaryBrush : ChipBorderBrush;
         chip.Background = isSelected ? SelectedFillBrush : Brushes.Transparent;

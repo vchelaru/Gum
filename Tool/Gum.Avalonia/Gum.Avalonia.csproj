@@ -86,6 +86,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- The FRB palette and chrome icons, read from the WPF tool's own dictionaries (FrbThemeResources, GumIconGeometries). -->
+		<EmbeddedResource Include="..\..\Gum\Themes\Palette.xaml" LogicalName="Gum.Avalonia.Themes.Palette.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Accents.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Accents.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.Light.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.Light.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.Dark.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.Dark.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\GumIcons.xaml" LogicalName="Gum.Avalonia.Themes.GumIcons.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 	</ItemGroup>
 

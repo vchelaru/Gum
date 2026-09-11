@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -11,6 +12,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Themes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 
@@ -24,9 +26,6 @@ namespace Gum.Avalonia.Plugins.States;
 /// </summary>
 public sealed class AvaloniaStateTreeView : DockPanel
 {
-    private static readonly IBrush SubtleBrush = new SolidColorBrush(Color.FromArgb(0xb0, 0xff, 0xff, 0xff));
-    private static readonly IBrush ManillaBrush = new SolidColorBrush(Color.Parse("#ffdd95"));
-
     private readonly IStateTreeViewRightClickService _rightClickService;
     private readonly StateTreeKeyboardHandler _keyboardHandler;
     private readonly global::Avalonia.Controls.TreeView _tree;
@@ -81,9 +80,8 @@ public sealed class AvaloniaStateTreeView : DockPanel
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
             Background = Brushes.Transparent,
-            Foreground = SubtleBrush,
             [!Button.CommandProperty] = new Binding(nameof(StateTreeViewModel.AddCategoryCommand)),
-        };
+        }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
         SetDock(addCategory, global::Avalonia.Controls.Dock.Bottom);
         Children.Add(addCategory);
         Children.Add(_tree);
@@ -104,11 +102,10 @@ public sealed class AvaloniaStateTreeView : DockPanel
         {
             Text = "behavior",
             FontSize = 10,
-            Foreground = ManillaBrush,
             Margin = new Thickness(6, 0, 0, 0),
             VerticalAlignment = VerticalAlignment.Center,
             [!Visual.IsVisibleProperty] = new Binding(nameof(StateTreeViewItem.IsRequiredBySelectedBehavior)),
-        };
+        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
         ToolTip.SetTip(requiredByBehavior, "Required by the selected behavior");
         Grid.SetColumn(requiredByBehavior, 1);
         row.Children.Add(requiredByBehavior);
@@ -121,9 +118,8 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 Padding = new Thickness(4, 0),
                 Margin = new Thickness(4, 0, 0, 0),
                 Background = Brushes.Transparent,
-                Foreground = SubtleBrush,
                 [!Button.CommandProperty] = new Binding(nameof(CategoryViewModel.AddStateCommand)),
-            };
+            }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
             ToolTip.SetTip(addState, $"Add state to {item.Title}");
             Grid.SetColumn(addState, 2);
             row.Children.Add(addState);

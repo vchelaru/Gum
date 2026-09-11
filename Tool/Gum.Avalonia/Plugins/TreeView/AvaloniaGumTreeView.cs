@@ -14,6 +14,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Themes;
 using Gum.Controls;
 using Gum.Input;
 using Gum.Managers;
@@ -81,10 +82,9 @@ public sealed class AvaloniaGumTreeView : UserControl
         };
         _dropIndicator = new Border
         {
-            BorderBrush = new SolidColorBrush(Color.Parse("#3e9ece")),
             IsVisible = false,
             IsHitTestVisible = false,
-        };
+        }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Primary");
         _dropOverlay = new global::Avalonia.Controls.Canvas { IsHitTestVisible = false };
         _dropOverlay.Children.Add(_dropIndicator);
 
@@ -669,8 +669,8 @@ internal sealed class TreeRowView : Border
 {
     private const double Indent = 16;
 
-    private static readonly IBrush SelectedBrush = new SolidColorBrush(Color.FromArgb(0x90, 0x3e, 0x9e, 0xce));
-    private static readonly IBrush HotBrush = new SolidColorBrush(Color.FromArgb(0x38, 0x3e, 0x9e, 0xce));
+    private static readonly IBrush FallbackFill = new SolidColorBrush(Color.FromArgb(0x26, 0x3e, 0x9e, 0xce));
+    private static readonly IBrush FallbackBorder = new SolidColorBrush(Color.Parse("#3e9ece"));
 
     private readonly AvaloniaGumTreeView _owner;
     private readonly Border _indent;
@@ -685,7 +685,9 @@ internal sealed class TreeRowView : Border
         _owner = owner;
         _iconIndex = -1;
         Background = Brushes.Transparent;
-        Padding = new Thickness(2, 1);
+        BorderThickness = new Thickness(1);
+        BorderBrush = Brushes.Transparent;
+        Padding = new Thickness(1, 0);
 
         _indent = new Border();
         _expander = new TextBlock
@@ -785,7 +787,11 @@ internal sealed class TreeRowView : Border
         _indent.Width = Row.Level * Indent;
         _expander.Text = _node.HasChildren ? (_node.IsExpanded ? "▾" : "▸") : string.Empty;
         _text.Text = _node.Text;
-        Background = _node.IsSelected ? SelectedBrush : _node.IsHot ? HotBrush : Brushes.Transparent;
+        // Hovered and selected rows share the primary wash; a selected row adds the primary border.
+        Background = _node.IsSelected || _node.IsHot
+            ? ThemeBrushes.Get(this, "Frb.Brushes.Primary.Transparent", FallbackFill)
+            : Brushes.Transparent;
+        BorderBrush = _node.IsSelected ? ThemeBrushes.Get(this, "Frb.Brushes.Primary", FallbackBorder) : Brushes.Transparent;
 
         if (_iconIndex != _node.ImageIndex)
         {

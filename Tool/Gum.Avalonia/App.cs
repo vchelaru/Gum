@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Themes;
 using Gum.CommandLine;
 using Gum.DataTypes;
 using Gum.Diagnostics;
@@ -41,6 +42,7 @@ public sealed class App : Application
     public override void Initialize()
     {
         Styles.Add(new FluentTheme());
+        FrbThemeResources.Install(Resources);
     }
 
     /// <inheritdoc/>
