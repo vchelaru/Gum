@@ -173,7 +173,7 @@ public sealed class ImportFileDialogView : DockPanel
         browse.Bind(Button.CommandProperty, new Binding(nameof(ImportBaseDialogViewModel.BrowseCommand)));
         DialogWindow.SetAuxiliaryActions(this, browse);
 
-        filter.AttachedToVisualTree += (_, _) => filter.Focus();
+        DialogWindow.FocusWhenOpened(filter);
     }
 
     // The WPF view binds the list's selection into SelectedFiles through a behavior; this is that sync.

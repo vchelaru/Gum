@@ -5,11 +5,13 @@ using System.Globalization;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using AvaloniaDataUi.Controls;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -42,7 +44,7 @@ public class DataUiGrid : UserControl, IDataUiGrid
         ItemsControl categories = new ItemsControl
         {
             ItemsSource = _model.Categories,
-            ItemTemplate = new FuncDataTemplate<MemberCategory>((category, _) => CreateCategoryView(category)),
+            ItemTemplate = new FuncDataTemplate<MemberCategory>((category, _) => new DataUiCategoryView(this, category)),
         };
 
         Content = new ScrollViewer
@@ -51,7 +53,43 @@ public class DataUiGrid : UserControl, IDataUiGrid
             HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
             VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
         };
+
+        // Rows alternate a faint dark stripe, as in the WPF grid: 10% black, then 5%.
+        Styles.Add(RowStripe(offset: 1, opacity: 0.10));
+        Styles.Add(RowStripe(offset: 0, opacity: 0.05));
     }
+
+    /// <summary>Defines the <see cref="CategoryHeaderBackground"/> property.</summary>
+    public static readonly StyledProperty<IBrush?> CategoryHeaderBackgroundProperty =
+        AvaloniaProperty.Register<DataUiGrid, IBrush?>(nameof(CategoryHeaderBackground));
+
+    /// <summary>Defines the <see cref="CategoryHeaderForeground"/> property.</summary>
+    public static readonly StyledProperty<IBrush?> CategoryHeaderForegroundProperty =
+        AvaloniaProperty.Register<DataUiGrid, IBrush?>(nameof(CategoryHeaderForeground));
+
+    /// <summary>
+    /// The header strip of a category with no <see cref="MemberCategory.HeaderColor"/>; transparent
+    /// when unset.
+    /// </summary>
+    public IBrush? CategoryHeaderBackground
+    {
+        get => GetValue(CategoryHeaderBackgroundProperty);
+        set => SetValue(CategoryHeaderBackgroundProperty, value);
+    }
+
+    /// <summary>The category names' text brush; the inherited foreground when unset.</summary>
+    public IBrush? CategoryHeaderForeground
+    {
+        get => GetValue(CategoryHeaderForegroundProperty);
+        set => SetValue(CategoryHeaderForegroundProperty, value);
+    }
+
+    private static Style RowStripe(int offset, double opacity) =>
+        new Style(selector => selector.OfType<ItemsControl>().Class(DataUiCategoryView.RowsClass)
+            .Child().OfType<ContentPresenter>().NthChild(2, offset))
+        {
+            Setters = { new Setter(ContentPresenter.BackgroundProperty, new SolidColorBrush(Colors.Black, opacity)) },
+        };
 
     /// <summary>Maps displayer keys to controls for this grid's rows.</summary>
     public DisplayerRegistry Displayers { get; set; }
@@ -158,45 +196,4 @@ public class DataUiGrid : UserControl, IDataUiGrid
 
     /// <summary>The live row hosts, for tests.</summary>
     internal IReadOnlyCollection<SingleDataUiContainer> LiveContainers => _liveContainers;
-
-    private Control CreateCategoryView(MemberCategory category)
-    {
-        TextBlock headerText = new TextBlock
-        {
-            FontWeight = FontWeight.Medium,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        headerText.Bind(TextBlock.TextProperty, new Binding(nameof(MemberCategory.Name)));
-
-        Border header = new Border
-        {
-            Background = Brushes.Transparent,
-            Padding = new Thickness(0, 2),
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            Child = headerText,
-        };
-        DataUiContextMenus.AttachCategoryMenu(header, category);
-
-        ItemsControl rows = new ItemsControl
-        {
-            ItemTemplate = new FuncDataTemplate<InstanceMember>((_, _) => new SingleDataUiContainer(this)),
-        };
-        rows.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(MemberCategory.Members)));
-
-        Expander expander = new Expander
-        {
-            Header = header,
-            Content = rows,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Margin = new Thickness(0, 0, 0, 2),
-        };
-        expander.Bind(Expander.IsExpandedProperty, new Binding(nameof(MemberCategory.IsExpanded)) { Mode = BindingMode.TwoWay });
-        expander.Bind(IsVisibleProperty, new Binding(nameof(MemberCategory.IsVisible)));
-        if (category.HeaderColor is System.Drawing.Color headerColor)
-        {
-            expander.Background = new SolidColorBrush(Color.FromArgb(headerColor.A, headerColor.R, headerColor.G, headerColor.B));
-        }
-        return expander;
-    }
 }

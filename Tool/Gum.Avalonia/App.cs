@@ -51,6 +51,7 @@ public sealed class App : Application
         {
             Source = new Uri("avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"),
         });
+        Styles.Add(GumChromeStyles.Create());
     }
 
     /// <inheritdoc/>

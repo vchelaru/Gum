@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -156,6 +157,9 @@ public sealed class ImportFromGumxView : Grid
 /// <summary>The read-only list of one Standard's differences from the destination project. Twin of the WPF <c>StandardDiffDetailsView</c>.</summary>
 public sealed class StandardDiffDetailsView : ScrollViewer
 {
+    // A ScrollViewer subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ScrollViewer);
+
     /// <summary>Builds the view.</summary>
     public StandardDiffDetailsView()
     {

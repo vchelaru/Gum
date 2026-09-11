@@ -94,6 +94,7 @@ public sealed class MainPanelView : Grid
             ContentTemplate = new FuncDataTemplate<AvaloniaPluginTab>((tab, _) =>
                 tab?.Content is Control control ? control : new ContentControl { Content = tab?.Content }),
         };
+        tabControl.Classes.Add(GumChromeStyles.MainTabsClass);
         tabControl.SelectionChanged += (_, _) =>
         {
             if (tabControl.SelectedItem is AvaloniaPluginTab selected)

@@ -1,8 +1,10 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
+using Avalonia.Threading;
 using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Dialogs;
@@ -44,6 +46,35 @@ public sealed class DialogWindow : Window
 
     /// <summary>Places <paramref name="actions"/> at the left of <paramref name="view"/>'s button row.</summary>
     public static void SetAuxiliaryActions(Control view, Control? actions) => view.SetValue(AuxiliaryActionsProperty, actions);
+
+    /// <summary>
+    /// Gives <paramref name="target"/> keyboard focus once its dialog window has opened, then runs
+    /// <paramref name="afterFocus"/>. Focusing it as it attaches is too early: the window takes
+    /// focus as it opens, so the user had to click into the field first.
+    /// </summary>
+    public static void FocusWhenOpened(Control target, Action? afterFocus = null)
+    {
+        target.AttachedToVisualTree += HandleAttached;
+
+        void HandleAttached(object? sender, VisualTreeAttachmentEventArgs e)
+        {
+            target.AttachedToVisualTree -= HandleAttached;
+            if (TopLevel.GetTopLevel(target) is Window window)
+            {
+                window.Opened += HandleOpened;
+            }
+        }
+
+        void HandleOpened(object? sender, EventArgs e)
+        {
+            ((Window)sender!).Opened -= HandleOpened;
+            Dispatcher.UIThread.Post(() =>
+            {
+                target.Focus();
+                afterFocus?.Invoke();
+            }, DispatcherPriority.Input);
+        }
+    }
 
     /// <summary>Builds the window around <paramref name="content"/>, whose DataContext is the view model.</summary>
     public DialogWindow(DialogViewModel viewModel, Control content)

@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -48,6 +49,9 @@ public sealed class OutputView : DockPanel
 /// <summary>The Hotkeys tab: every hotkey and its binding. Twin of the WPF <c>HotkeyView</c>.</summary>
 public sealed class HotkeyView : ListBox
 {
+    // A ListBox subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ListBox);
+
     /// <summary>Builds the view.</summary>
     public HotkeyView()
     {
@@ -61,6 +65,9 @@ public sealed class HotkeyView : ListBox
 /// </summary>
 public sealed class FileWatchView : ScrollViewer
 {
+    // A ScrollViewer subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ScrollViewer);
+
     /// <summary>Builds the view.</summary>
     public FileWatchView()
     {

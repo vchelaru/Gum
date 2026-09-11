@@ -58,14 +58,13 @@ public sealed class GetUserStringDialogView : StackPanel
         checkBox.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.CheckboxText)) { Converter = NotNullConverter.Instance });
         Children.Add(checkBox);
 
-        AttachedToVisualTree += (_, _) =>
+        DialogWindow.FocusWhenOpened(textBox, () =>
         {
-            textBox.Focus();
             if (DataContext is GetUserStringDialogBaseViewModel { PreSelect: true })
             {
                 textBox.SelectAll();
             }
-        };
+        });
     }
 }
 

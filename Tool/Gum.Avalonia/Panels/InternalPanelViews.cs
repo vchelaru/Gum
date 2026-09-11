@@ -28,6 +28,9 @@ namespace Gum.Avalonia.Panels;
 /// </summary>
 public sealed class ErrorsView : ListBox
 {
+    // A ListBox subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ListBox);
+
     /// <summary>Builds the view.</summary>
     public ErrorsView()
     {
@@ -126,6 +129,9 @@ public sealed class ErrorTabHeaderView : StackPanel
 /// </summary>
 public sealed class UndosView : ListBox
 {
+    // A ListBox subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ListBox);
+
     private UndosViewModel? _subscribed;
 
     /// <summary>Builds the view.</summary>

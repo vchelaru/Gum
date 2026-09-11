@@ -17,6 +17,9 @@ namespace Gum.Avalonia.Plugins.StateAnimation;
 /// </summary>
 public sealed class KeyframeDetailView : ScrollViewer
 {
+    // A ScrollViewer subclass gets no theme (styles match the exact type) and so draws nothing.
+    protected override Type StyleKeyOverride => typeof(ScrollViewer);
+
     /// <summary>Builds the view; its DataContext is an <see cref="AnimatedKeyframeViewModel"/>.</summary>
     public KeyframeDetailView()
     {
