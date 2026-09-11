@@ -1,0 +1,24 @@
+{
+  "Name": "TestScreen",
+  "BaseType": null,
+  "States": [
+    {
+      "Name": "Default",
+      "Variables": [],
+      "VariableLists": []
+    }
+  ],
+  "Categories": [],
+  "Instances": [
+    {
+      "Name": "TextInstance",
+      "BaseType": "Text",
+      "DefinedByBase": false,
+      "Locked": false,
+      "IsSlot": false
+    }
+  ],
+  "Events": [],
+  "Behaviors": [],
+  "VariablesHiddenFromInstances": []
+}

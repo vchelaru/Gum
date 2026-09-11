@@ -1,5 +1,25 @@
 # Phase 100 — Testing and parity
 
+> **Status 2026-09-10:** the three automated layers exist on `avalonia-migration-work`.
+> (1) Composition smoke: `HeadCompositionTests` resolves every head-provided contract, shows the
+> main window headlessly, and asserts no WPF/WinForms assembly is loaded into the process.
+> (2) Full startup: `HeadProcessTests` runs the real head executable unattended on a copied fixture
+> project (`--exit-after`, `--screenshot`) and requires a clean exit and no startup failure on
+> stderr; it needs a display and a GL driver, so it runs locally and is skipped on CI until the job
+> gets Mesa's software GL (as the raylib job has) or a virtual display. The startup sequence still
+> runs in-process through `GumStartupSequence` in the head itself. (3) Byte parity:
+> `ProjectSaveParityTests` loads and re-saves the corpus in `Tests/Gum.ProjectServices.Tests/ParityCorpus`
+> (a version-1 Forms project, a compact XML project, and its JSON conversion) under `de-DE`,
+> `en-US` and `tr-TR` and compares every file byte for byte; its README documents the
+> baseline-update switch (`GUM_UPDATE_PARITY_BASELINES=1`). Mechanism decision: a bespoke byte
+> compare with an in-test update switch, not Verify, because the corpus is whole project folders
+> and per-OS line endings come from the checkout. Head-side tests cover the tree control, theme
+> resources and icons. The manual checklist is `parity-checklist.md` (per-OS columns, not yet run).
+>
+> **Open:** the case-mismatch corpus project (phase 25's error) and generated-code parity are not in
+> the corpus yet; the `GumToolUnitTests` split (logic tests out of the Windows-only project) is
+> deferred until phases 70 and 80 land, since both are moving the code those tests cover.
+
 ## Purpose
 
 Prove, automatically and on every OS, that the Avalonia head composes, starts, and produces the

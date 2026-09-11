@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScreenSave xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Spaced Screen</Name>
+  <State>
+    <Name>Default</Name>
+    <Variable>
+      <Type>Category1</Type>
+      <Name>Spaced ComponentInstance.Category1State</Name>
+      <Value xsi:type="xsd:string">State with space</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Spaced ComponentInstance.X</Name>
+      <Value xsi:type="xsd:float">22</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+    <Variable>
+      <Type>float</Type>
+      <Name>Spaced ComponentInstance.Y</Name>
+      <Value xsi:type="xsd:float">28</Value>
+      <SetsValue>true</SetsValue>
+    </Variable>
+  </State>
+  <Instance>
+    <Name>Spaced ComponentInstance</Name>
+    <BaseType>Spaced Component</BaseType>
+    <DefinedByBase>false</DefinedByBase>
+  </Instance>
+  <Behaviors />
+</ScreenSave>

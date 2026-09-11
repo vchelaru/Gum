@@ -96,6 +96,8 @@ public sealed class App : Application
         }
         catch (Exception exception)
         {
+            // Also on stderr, so an unattended run (and HeadProcessTests) can see it.
+            Console.Error.WriteLine("Startup failed: " + exception);
             window.ShowStartupFailure(exception);
         }
     }

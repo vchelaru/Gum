@@ -38,6 +38,20 @@ public class HeadCompositionTests
         missing.ShouldBeEmpty(string.Join(", ", missing));
     }
 
+    [Fact]
+    public void ComposingTheHead_LoadsNoWindowsOnlyUiAssembly()
+    {
+        string[] windowsOnly = { "PresentationFramework", "PresentationCore", "WindowsBase", "System.Windows.Forms", "System.Xaml" };
+
+        _ = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+
+        List<string> loaded = AppDomain.CurrentDomain.GetAssemblies()
+            .Select(assembly => assembly.GetName().Name ?? string.Empty)
+            .Where(name => windowsOnly.Contains(name))
+            .ToList();
+        loaded.ShouldBeEmpty(string.Join(", ", loaded));
+    }
+
     [AvaloniaFact]
     public void MainWindow_ConstructsAndShows_Headless()
     {

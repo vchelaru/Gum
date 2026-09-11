@@ -79,6 +79,10 @@ jobs:
         run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
       - name: Gum.Avalonia.Tests (headless)
         run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      # Save byte-parity (ProjectSaveParityTests) must hold on every OS, not only on the Windows
+      # runner that runs this suite in the main test job; the other tests here are headless too.
+      - name: Gum.ProjectServices.Tests (save parity on every OS)
+        run: dotnet test Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
       - name: Publish Test Results
         if: always()
         uses: dorny/test-reporter@v2
