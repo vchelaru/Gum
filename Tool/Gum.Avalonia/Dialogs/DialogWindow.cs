@@ -188,11 +188,10 @@ public sealed class DialogWindow : Window
         };
     }
 
-    // The WPF dialog's action buttons: the tool's primary button, 64 wide at least, 16 by 4 padding.
+    // The WPF dialog's action buttons: the default (primary) button, 64 wide at least, 16 by 4 padding.
     private static Button CreateFooterButton(string name, string textPath, string commandPath)
     {
         Button button = new Button { Name = name, MinWidth = 64, Padding = new Thickness(16, 4), Margin = new Thickness(5, 0, 0, 0) };
-        button.Classes.Add(GumChromeStyles.PrimaryButtonClass);
         button.Bind(ContentProperty, new Binding(textPath));
         button.Bind(Button.CommandProperty, new Binding(commandPath));
         return button;

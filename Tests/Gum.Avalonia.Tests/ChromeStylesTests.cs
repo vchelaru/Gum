@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 using AvaloniaDataUi.Controls;
 using Gum.Avalonia.Themes;
@@ -106,5 +107,33 @@ public class ChromeStylesTests
         buttons.ShouldAllBe(b => b.Bounds.Width == 34);
         buttons.Select(b => b.Bounds.Top).Distinct().Count().ShouldBe(1);
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Buttons_DefaultToTheWpfPrimaryLook_AndTheToolClassesOptOut()
+    {
+        Button plain = new Button { Content = "OK" };
+        Button flat = new Button { Content = "x", Classes = { GumChromeStyles.FlatButtonClass } };
+        Button icon = new Button { Content = "+", Classes = { GumChromeStyles.IconButtonClass } };
+        StackPanel panel = new StackPanel { Children = { plain, flat, icon } };
+        Window window = new Window { Content = panel, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        try
+        {
+            plain.Background.ShouldBeSameAs(Application.Current!.Resources["Frb.Brushes.Primary"]);
+            plain.Foreground.ShouldBeSameAs(Application.Current.Resources["Frb.Brushes.Primary.Contrast"]);
+            plain.FontWeight.ShouldBe(FontWeight.Bold);
+            plain.Padding.ShouldBe(new Thickness(4, 2, 4, 3));
+
+            flat.Background.ShouldBe(Brushes.Transparent);
+            flat.FontWeight.ShouldBe(FontWeight.Normal);
+            icon.Background.ShouldBe(Brushes.Transparent);
+            icon.FontWeight.ShouldBe(FontWeight.Normal);
+        }
+        finally
+        {
+            window.Close();
+        }
     }
 }

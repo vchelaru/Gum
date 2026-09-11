@@ -4,7 +4,6 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
-using Gum.Avalonia.Themes;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -39,7 +38,8 @@ public class DialogWindowChromeTests
             .Where(button => button.Name is DialogWindow.AffirmativeButtonName or DialogWindow.NegativeButtonName)
             .ToArray();
         buttons.Length.ShouldBe(2);
-        buttons.ShouldAllBe(button => button.Classes.Contains(GumChromeStyles.PrimaryButtonClass));
+        // The default button look, as the WPF dialog's buttons have.
+        buttons.ShouldAllBe(button => button.FontWeight == FontWeight.Bold);
         buttons.ShouldAllBe(button => button.MinWidth == 64);
         window.Close();
     }

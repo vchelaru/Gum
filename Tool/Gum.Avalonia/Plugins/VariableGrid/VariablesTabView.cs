@@ -87,6 +87,8 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
             Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Classes = { GumChromeStyles.IconButtonClass },
         };
         ToolTip.SetTip(clearFilter, "Clear filter");
         clearFilter.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)) { Converter = BoolConverters.Not });

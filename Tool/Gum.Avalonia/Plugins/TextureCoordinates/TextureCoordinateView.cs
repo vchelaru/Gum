@@ -13,6 +13,7 @@ using Gum.Input;
 using TextureCoordinateSelectionPlugin.Models;
 using TextureCoordinateSelectionPlugin.ViewModels;
 using TextureCoordinateSelectionPlugin.Views;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.TextureCoordinates;
 
@@ -135,8 +136,10 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         e.Handled = keyArgs.Handled;
     }
 
+    // The WPF control's +/- use MaterialDesignToolForegroundButton, a flat text button.
     private static Button ToolButton(string content) => new Button
     {
+        Classes = { GumChromeStyles.FlatButtonClass },
         Content = content,
         MinWidth = 24,
         Padding = new Thickness(0),

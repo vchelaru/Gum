@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using AvaloniaDataUi;
 using Gum.Plugins.PropertiesWindowPlugin;
-using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Panels;
 
@@ -23,7 +22,6 @@ public sealed class ProjectPropertiesView : DockPanel
         _presenter = new ProjectPropertiesGridPresenter(Grid);
 
         Button close = new Button { Content = "Close", HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(4) };
-        close.Classes.Add(GumChromeStyles.PrimaryButtonClass);
         close.Click += (_, _) => _presenter.ViewModel?.RequestClose();
         SetDock(close, Dock.Bottom);
         Children.Add(close);

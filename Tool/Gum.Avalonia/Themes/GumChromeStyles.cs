@@ -28,9 +28,9 @@ namespace Gum.Avalonia.Themes;
 /// <item>The property grid's option buttons: a field-colored group whose chosen button has a
 /// Primary outline rather than a fill.</item>
 /// <item>Check boxes: the WPF template, a small outlined box instead of Fluent's 20px box on a 32px row.</item>
-/// <item><see cref="FlatButtonClass"/>: the WPF head's borderless tool buttons.</item>
-/// <item><see cref="PrimaryButtonClass"/>: the WPF head's default button, a bold Primary fill.</item>
-/// <item><see cref="IconButtonClass"/>: the WPF <c>IconButton</c>, a flat outlined button.</item>
+/// <item>Buttons: the WPF default <c>Button</c> style, bold text on a Primary fill, lighter when
+/// hovered and darker when pressed; <see cref="FlatButtonClass"/> (the WPF head's borderless tool
+/// buttons) and <see cref="IconButtonClass"/> (the WPF <c>IconButton</c>) opt out.</item>
 /// <item>Menus, separators, scroll bars and combo box rows: the WPF metrics and colors on Fluent's
 /// templates.</item>
 /// </list>
@@ -45,9 +45,6 @@ public static class GumChromeStyles
 
     /// <summary>The class for a borderless button that shows a fill only on hover, the WPF head's tool buttons.</summary>
     public const string FlatButtonClass = "gumFlatButton";
-
-    /// <summary>The WPF default <c>Button</c> style: bold text on a Primary fill (dialog buttons, Close).</summary>
-    public const string PrimaryButtonClass = "gumPrimaryButton";
 
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
@@ -166,36 +163,10 @@ public static class GumChromeStyles
         ButtonPart<ToggleButton>(ToggleButtonOptionDisplay.OptionClass, new[] { ":checked" }, Brushes.Transparent, Resource("Frb.Brushes.Primary")),
         ButtonPart<ToggleButton>(ToggleButtonOptionDisplay.OptionClass, new[] { ":checked", ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Primary")),
 
-        new Style(selector => selector.OfType<Button>().Class(IconButtonClass))
-        {
-            Setters =
-            {
-                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
-                new Setter(TemplatedControl.BorderBrushProperty, Resource("Frb.Brushes.Border.Secondary")),
-                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
-                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
-                new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 2, 4, 3)),
-            },
-        },
-        ButtonPart<Button>(IconButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Border.Secondary")),
-        ButtonPart<Button>(IconButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Primary")),
-
-        new Style(selector => selector.OfType<Button>().Class(FlatButtonClass))
-        {
-            Setters =
-            {
-                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
-                new Setter(TemplatedControl.BorderBrushProperty, Brushes.Transparent),
-                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
-                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
-            },
-        },
-        ButtonPart<Button>(FlatButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
-        ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
-
         // The WPF default Button (Frb.Styles.Defaults.xaml): a bold Primary fill, lighter when hovered,
-        // darker when pressed, dimmed when disabled.
-        new Style(selector => selector.OfType<Button>().Class(PrimaryButtonClass))
+        // darker when pressed, dimmed when disabled. Declared before the flat and icon classes, which
+        // override it.
+        new Style(selector => selector.OfType<Button>())
         {
             Setters =
             {
@@ -207,13 +178,44 @@ public static class GumChromeStyles
                 new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 2, 4, 3)),
             },
         },
-        ButtonPart<Button>(PrimaryButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary.Light"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
-        ButtonPart<Button>(PrimaryButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Primary.Dark"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
-        ButtonPart<Button>(PrimaryButtonClass, new[] { ":disabled" }, Resource("Frb.Brushes.Primary"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
-        new Style(selector => selector.OfType<Button>().Class(PrimaryButtonClass).Class(":disabled"))
+        ButtonPart<Button>(null, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary.Light"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        ButtonPart<Button>(null, new[] { ":pressed" }, Resource("Frb.Brushes.Primary.Dark"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        ButtonPart<Button>(null, new[] { ":disabled" }, Resource("Frb.Brushes.Primary"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        new Style(selector => selector.OfType<Button>().Class(":disabled"))
         {
             Setters = { new Setter(Visual.OpacityProperty, 0.75) },
         },
+
+        new Style(selector => selector.OfType<Button>().Class(IconButtonClass))
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderBrushProperty, Resource("Frb.Brushes.Border.Secondary")),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.FontWeightProperty, FontWeight.Normal),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 2, 4, 3)),
+            },
+        },
+        ButtonPart<Button>(IconButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Border.Secondary")),
+        ButtonPart<Button>(IconButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Primary")),
+        ButtonPart<Button>(IconButtonClass, new[] { ":disabled" }, Brushes.Transparent, Resource("Frb.Brushes.Border.Secondary"), Resource("Frb.Brushes.Foreground.Disabled")),
+
+        new Style(selector => selector.OfType<Button>().Class(FlatButtonClass))
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderBrushProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.FontWeightProperty, FontWeight.Normal),
+            },
+        },
+        ButtonPart<Button>(FlatButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
+        ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
+        ButtonPart<Button>(FlatButtonClass, new[] { ":disabled" }, Brushes.Transparent, Brushes.Transparent, Resource("Frb.Brushes.Foreground.Disabled")),
 
         // The main panel's tab content sits flush with its region, as in the WPF MainPanelControl.
         new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass))
@@ -283,6 +285,12 @@ public static class GumChromeStyles
 
         // Scroll bars (Frb.Styles.Defaults.xaml ScrollBar): 8px wide, always shown, no line buttons,
         // a rounded thumb.
+        // The viewer's own setting decides whether content is laid out under the bar; the bar's
+        // only decides whether it collapses. Both off: rows end beside the bar, as in WPF.
+        new Style(selector => selector.OfType<ScrollViewer>())
+        {
+            Setters = { new Setter(ScrollViewer.AllowAutoHideProperty, false) },
+        },
         new Style(selector => selector.OfType<ScrollBar>())
         {
             Setters = { new Setter(ScrollBar.AllowAutoHideProperty, false) },

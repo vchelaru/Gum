@@ -76,6 +76,7 @@ public sealed class AvaloniaStateTreeView : DockPanel
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Left,
             Background = Brushes.Transparent,
+            Classes = { GumChromeStyles.FlatButtonClass },
             [!Button.CommandProperty] = new Binding(nameof(StateTreeViewModel.AddCategoryCommand)),
         }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
         SetDock(addCategory, global::Avalonia.Controls.Dock.Bottom);
@@ -118,6 +119,7 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 Padding = new Thickness(4, 0),
                 Margin = new Thickness(4, 0, 0, 0),
                 Background = Brushes.Transparent,
+                Classes = { GumChromeStyles.FlatButtonClass },
                 [!Button.CommandProperty] = new Binding(nameof(CategoryViewModel.AddStateCommand)),
             }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
             ToolTip.SetTip(addState, $"Add state to {item.Title}");

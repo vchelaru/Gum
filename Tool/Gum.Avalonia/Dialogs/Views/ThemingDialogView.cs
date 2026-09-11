@@ -5,6 +5,7 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Gum.Avalonia.Converters;
 using Gum.Dialogs;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Dialogs.Views;
 
@@ -62,7 +63,7 @@ public sealed class ThemingDialogView : Grid
         SetColumn(picker, 1);
         Children.Add(picker);
 
-        Button reset = new Button { Content = "↺", Margin = new Thickness(8, 0, 0, 0), CommandParameter = colorProperty, VerticalAlignment = VerticalAlignment.Center };
+        Button reset = new Button { Classes = { GumChromeStyles.FlatButtonClass }, Content = "↺", Margin = new Thickness(8, 0, 0, 0), CommandParameter = colorProperty, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(reset, "Reset to Default");
         reset.Bind(Button.CommandProperty, new Binding(nameof(ThemingDialogViewModel.ResetCommand)));
         reset.Bind(IsVisibleProperty, new Binding(hasExplicitProperty));

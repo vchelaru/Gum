@@ -6,6 +6,7 @@ using Avalonia.Styling;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Dialogs;
 using Gum.Settings;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Services;
 
@@ -156,6 +157,17 @@ public class AvaloniaThemingService : IThemingService, IEffectiveThemeSettings
         Application.Current.Resources["Frb.Colors.Primary"] = accent;
         Application.Current.Resources["Frb.Brushes.Primary"] = new SolidColorBrush(accent);
         Application.Current.Resources["Frb.Brushes.Primary.Transparent"] = new SolidColorBrush(accent) { Opacity = 0.15 };
+        // The tints the WPF ThemingService derives: hover and pressed fills, and the text that reads
+        // on the darker one (the default button's foreground).
+        Color light = AccentPalette.Lighten(accent);
+        Color dark = AccentPalette.Darken(accent);
+        Color contrast = AccentPalette.ContrastingForeground(dark);
+        Application.Current.Resources["Frb.Colors.Primary.Light"] = light;
+        Application.Current.Resources["Frb.Colors.Primary.Dark"] = dark;
+        Application.Current.Resources["Frb.Colors.Primary.Contrast"] = contrast;
+        Application.Current.Resources["Frb.Brushes.Primary.Light"] = new SolidColorBrush(light);
+        Application.Current.Resources["Frb.Brushes.Primary.Dark"] = new SolidColorBrush(dark);
+        Application.Current.Resources["Frb.Brushes.Primary.Contrast"] = new SolidColorBrush(contrast);
         // The Fluent control resources that draw from the Primary brushes hold the old ones until re-pointed.
         Themes.FrbThemeResources.ApplyControlAliases(Application.Current.Resources);
     }

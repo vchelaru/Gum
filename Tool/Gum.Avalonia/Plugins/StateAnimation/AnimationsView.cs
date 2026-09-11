@@ -13,6 +13,7 @@ using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using StateAnimationPlugin;
 using StateAnimationPlugin.ViewModels;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.StateAnimation;
 
@@ -319,7 +320,8 @@ public sealed class AnimationsView : Grid
 
     private Button CreateButton(string content, string tip, Action<ElementAnimationsViewModel> action)
     {
-        Button button = new Button { Content = content, Padding = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center };
+        // The WPF window's speed and add-animation buttons use the IconButton style.
+        Button button = new Button { Content = content, Padding = new Thickness(6, 0), VerticalAlignment = VerticalAlignment.Center, Classes = { GumChromeStyles.IconButtonClass } };
         ToolTip.SetTip(button, tip);
         button.Click += (_, _) =>
         {
