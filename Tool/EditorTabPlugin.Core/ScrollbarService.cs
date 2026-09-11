@@ -1,4 +1,4 @@
-﻿using Gum.Controls;
+using Gum.Controls;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
@@ -8,14 +8,16 @@ using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Windows.Controls;
-using WpfScrollBar = System.Windows.Controls.Primitives.ScrollBar;
 
 namespace Gum.Plugins.ScrollBarPlugin;
 
+/// <summary>
+/// Keeps the wireframe canvas's scroll bars sized to the selected element and in step with the
+/// camera. The bars themselves come from the head as <see cref="IScrollBar"/>s.
+/// </summary>
 public class ScrollbarService
 {
-    ScrollBarControlLogic scrollBarControlLogic;
+    ScrollBarControlLogic? scrollBarControlLogic;
     private readonly ISelectedState _selectedState;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IProjectManager _projectManager;
@@ -29,12 +31,10 @@ public class ScrollbarService
         _wireframeObjectManager = wireframeObjectManager;
         _projectManager = projectManager;
     }
-    
+
     public void HandleElementSelected(ElementSave obj)
     {
-
         GraphicalUiElement? ipso = null;
-
         if(obj != null)
         {
             ipso = _wireframeObjectManager.GetRepresentation(obj);
@@ -42,15 +42,12 @@ public class ScrollbarService
 
         float minX = -_projectManager.GumProjectSave.DefaultCanvasWidth/2;
         float maxX = _projectManager.GumProjectSave.DefaultCanvasWidth;
-
         float minY = -_projectManager.GumProjectSave.DefaultCanvasHeight / 2;
         float maxY = _projectManager.GumProjectSave.DefaultCanvasHeight;
-
 
         if(ipso != null)
         {
             var asGue = ipso;
-
             List<IRenderableIpso> toLoop = new List<IRenderableIpso>();
 
             if(_selectedState.SelectedScreen != null)
@@ -68,15 +65,13 @@ public class ScrollbarService
             }
         }
 
-        scrollBarControlLogic.SetDisplayedArea((int)maxX, (int)maxY);
-
+        scrollBarControlLogic?.SetDisplayedArea((int)maxX, (int)maxY);
     }
 
     private void UpdateMinMaxRecursively(IRenderableIpso item, ref float minX, ref float maxX, ref float minY, ref float maxY)
     {
         minX = Math.Min(minX, item.GetAbsoluteLeft());
         maxX = Math.Max(maxX, item.GetAbsoluteRight());
-
         minY = Math.Min(minY, item.GetAbsoluteTop());
         maxY = Math.Max(maxY, item.GetAbsoluteBottom());
 
@@ -91,47 +86,32 @@ public class ScrollbarService
     }
 
     /// <summary>
-    /// The vertical scroll bar for the wireframe canvas. Null until
-    /// <see cref="HandleWireframeInitialized"/> runs; the caller is responsible for placing it in
-    /// the editor's visual tree.
+    /// Creates the logic driving the head's scroll bars over <paramref name="scrollSurface"/>.
     /// </summary>
-    public WpfScrollBar? VerticalScrollBar { get; private set; }
-
-    /// <summary>
-    /// The horizontal scroll bar for the wireframe canvas. See <see cref="VerticalScrollBar"/>.
-    /// </summary>
-    public WpfScrollBar? HorizontalScrollBar { get; private set; }
-
-    /// <summary>
-    /// Creates the wireframe canvas's scroll bars and the logic driving them, over
-    /// <paramref name="scrollSurface"/>.
-    /// </summary>
-    public void HandleWireframeInitialized(IScrollSurface scrollSurface)
+    public void HandleWireframeInitialized(IScrollBar horizontalScrollBar, IScrollBar verticalScrollBar, IScrollSurface scrollSurface)
     {
-        VerticalScrollBar = new WpfScrollBar { Orientation = Orientation.Vertical };
-        HorizontalScrollBar = new WpfScrollBar { Orientation = Orientation.Horizontal };
-
-        scrollBarControlLogic = new ScrollBarControlLogic(
-            new WpfScrollBarAdapter(HorizontalScrollBar),
-            new WpfScrollBarAdapter(VerticalScrollBar),
-            scrollSurface);
+        scrollBarControlLogic = new ScrollBarControlLogic(horizontalScrollBar, verticalScrollBar, scrollSurface);
         scrollBarControlLogic.SetDisplayedArea(800, 600);
     }
 
     public void HandleCameraChanged()
     {
-        scrollBarControlLogic.UpdateScrollBars();
-        scrollBarControlLogic.UpdateScrollBarsToCameraPosition();
+        scrollBarControlLogic?.UpdateScrollBars();
+        scrollBarControlLogic?.UpdateScrollBarsToCameraPosition();
     }
 
     public void HandleXnaInitialized()
     {
+        if (scrollBarControlLogic == null)
+        {
+            return;
+        }
         scrollBarControlLogic.Camera = global::RenderingLibrary.SystemManagers.Default.Renderer.Camera;
         scrollBarControlLogic.UpdateScrollBars();
     }
 
     public void HandleWireframeResized()
     {
-        scrollBarControlLogic.UpdateScrollBars();
+        scrollBarControlLogic?.UpdateScrollBars();
     }
 }

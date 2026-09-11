@@ -116,7 +116,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         _modifierKeyState.Current = e.KeyModifiers;
         GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
         // Ctrl+= / Ctrl+- zoom the whole app unless a canvas that owns them has focus (phase 50).
-        _hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: true);
+        // A render canvas that owns Ctrl+=/Ctrl+- for its own camera opts out of the app-wide zoom.
+        _hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: CameraZoomScope.IsEntireAppZoomEnabledFor(e.Source));
         e.Handled = keyArgs.Handled;
     }
 

@@ -30,9 +30,6 @@
 		<CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
 		<LangVersion>12.0</LangVersion>
 	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Include="..\..\Gum\Wireframe\FallbackRenderableFactory.cs" Link="Services\FallbackRenderableFactory.cs" />
-	</ItemGroup>
 
 
 	<ItemGroup>
@@ -52,6 +49,7 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj" />
 		<ProjectReference Include="..\..\Gum\Gum.csproj" />
+		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
 		<!--
 			KniGumShapes brings the Apos.Shapes-backed Circle / RoundedRectangle / Arc / Line renderables
@@ -73,6 +71,7 @@
 	    <PluginOutputFiles Include="$(TargetPath)" />
 	    <PluginOutputFiles Include="$(TargetDir)$(TargetName).pdb" />
 	    <PluginOutputFiles Include="$(TargetDir)XnaAndWinforms.dll" />
+	    <PluginOutputFiles Include="$(TargetDir)EditorTabPlugin.Core.dll" />
 	    <PluginOutputFiles Include="$(TargetDir)KniGum.dll" />
 	    <PluginOutputFiles Include="$(TargetDir)KniGumShapes.dll" />
 	    <PluginOutputFiles Include="$(TargetDir)Apos.Shapes.KNI.dll" />

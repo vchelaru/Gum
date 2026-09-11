@@ -40,7 +40,7 @@ public sealed class MainPanelView : Grid
                 new RowDefinition(new GridLength(2, GridUnitType.Star)),
             },
         };
-        centerGrid.Children.Add(CreateRegion(tabs.CenterTop, "Editor (phase 50)", 0, 0));
+        centerGrid.Children.Add(CreateRegion(tabs.CenterTop, "States (phase 60)", 0, 0));
         centerGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
         centerGrid.Children.Add(CreateRegion(tabs.CenterBottom, "Variables (phase 70)", 2, 0));
 
@@ -53,7 +53,7 @@ public sealed class MainPanelView : Grid
                 new RowDefinition(new GridLength(tabs.BottomRightHeight, GridUnitType.Pixel)),
             },
         };
-        rightGrid.Children.Add(CreateRegion(tabs.RightTop, "States (phase 60)", 0, 0));
+        rightGrid.Children.Add(CreateRegion(tabs.RightTop, "Editor (phase 50)", 0, 0));
         rightGrid.Children.Add(CreateSplitter(GridResizeDirection.Rows, 1, 0));
         rightGrid.Children.Add(CreateRegion(tabs.RightBottom, "Output (phase 40)", 2, 0));
 

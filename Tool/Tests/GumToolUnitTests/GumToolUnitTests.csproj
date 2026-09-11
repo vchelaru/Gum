@@ -40,6 +40,7 @@
     <ProjectReference Include="..\..\..\Gum\SvgPlugin\SkiaPlugin.csproj" />
     <ProjectReference Include="..\..\..\Gum\TextureCoordinateSelectionPlugin\TextureCoordinateSelectionPlugin.csproj" />
     <ProjectReference Include="..\..\EditorTabPlugin_XNA\EditorTabPlugin_XNA.csproj" />
+    <ProjectReference Include="..\..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

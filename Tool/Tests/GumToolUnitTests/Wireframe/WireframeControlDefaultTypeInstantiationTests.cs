@@ -8,7 +8,7 @@ using Xunit;
 namespace GumToolUnitTests.Wireframe;
 
 /// <summary>
-/// Pins the Gum tool's own type-instantiation registration (WireframeControl.InitializeDefaultTypeInstantiation),
+/// Pins the Gum tool's own type-instantiation registration (WireframeCanvasCore.InitializeDefaultTypeInstantiation),
 /// which is separate from - and must be kept in sync with - the runtime's own registration
 /// (RenderingLibrary.SystemManagers.RegisterComponentRuntimeInstantiations). A standard type
 /// missing here falls back to a plain GraphicalUiElement wrapping a raw renderable at design time;
@@ -35,7 +35,7 @@ public class WireframeControlDefaultTypeInstantiationTests
     public void InitializeDefaultTypeInstantiation_ShouldRegisterEveryStandardType_SoInstancesConstructAsTheTypedRuntime(
         string standardElementName, System.Type expectedRuntimeType)
     {
-        WireframeControl.InitializeDefaultTypeInstantiation();
+        WireframeCanvasCore.InitializeDefaultTypeInstantiation();
 
         StandardElementSave elementSave = new() { Name = standardElementName };
         var gue = ElementSaveExtensions.CreateGueForElement(elementSave);
@@ -54,7 +54,7 @@ public class WireframeControlDefaultTypeInstantiationTests
     [Fact]
     public void InitializeDefaultTypeInstantiation_ShouldLeaveContainerUnregistered_SoShowOutlinesCanBackItWithADottedLineRectangle()
     {
-        WireframeControl.InitializeDefaultTypeInstantiation();
+        WireframeCanvasCore.InitializeDefaultTypeInstantiation();
 
         StandardElementSave containerElement = new() { Name = "Container" };
         var gue = ElementSaveExtensions.CreateGueForElement(containerElement);

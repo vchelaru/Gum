@@ -1,24 +1,21 @@
-﻿using Gum.Converters;
 using Gum.DataTypes;
-using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
-using Gum.PropertyGridHelpers;
-using Gum.RenderingLibrary;
 using Gum.Services;
 using Gum.ToolCommands;
 using Gum.ToolStates;
-using GumRuntime;
-using InputLibrary;
-using RenderingLibrary;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Gum.Wireframe;
 
-public partial class EditingManager : IEditingManager, IContextMenuState
+/// <summary>
+/// The canvas-side editing state the selection manager consults, plus the right-click menu's
+/// items (see the partial in <c>EditingManager.RightClick.cs</c>). Framework-neutral: the head
+/// renders the items and reports whether its menu is open.
+/// </summary>
+public partial class EditingManager : IContextMenuState
 {
     private readonly ISelectedState _selectedState;
     private readonly IReorderLogic _reorderLogic;
@@ -49,17 +46,19 @@ public partial class EditingManager : IEditingManager, IContextMenuState
         _favoriteComponentManager = favoriteComponentManager;
     }
 
-    public void Initialize(System.Windows.Controls.ContextMenu contextMenu)
+    /// <summary>
+    /// Wires the right-click menu. <paramref name="isContextMenuOpen"/> reports whether the head's
+    /// menu is showing, which the selection manager uses to ignore clicks that close it.
+    /// </summary>
+    public void Initialize(Func<bool> isContextMenuOpen)
     {
-        RightClickInitialize(contextMenu);
+        RightClickInitialize(isContextMenuOpen);
     }
-
 
     public void RefreshPositionsAndScalesForInstance(InstanceSave instance, List<ElementWithState> elementStack)
     {
         GraphicalUiElement? ipso = _wireframeObjectManager.GetRepresentation(instance, elementStack);
+
         ipso?.UpdateLayout();
     }
-
-
 }

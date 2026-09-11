@@ -61,6 +61,20 @@
 		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
 		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
+		<!-- The editor tab's neutral core (canvas, editors, rulers); this head adds the Avalonia canvas control and layout. -->
+		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The editor's default bitmap font and the missing-texture placeholder, shared with the WPF head. -->
+		<None Include="..\..\Gum\Content\TestFont.fnt" Link="Content\TestFont.fnt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\TestFont_0.png" Link="Content\TestFont_0.png" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\InvalidTexture.png" Link="Content\InvalidTexture.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The default font character set copied into new projects (FileCommands.CreateDefaultFontCharacterFile). -->
+		<None Include="..\..\Gum\Content\.gumfcs" Link="Content\.gumfcs" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
+		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1.fnt" Link="Content\Fonts\Font18Arial_o1.fnt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1_0.png" Link="Content\Fonts\Font18Arial_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
