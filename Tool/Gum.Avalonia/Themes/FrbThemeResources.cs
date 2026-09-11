@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -93,8 +93,17 @@ public static class FrbThemeResources
     /// Sets the font size the Fluent theme gives its controls (menus, combo boxes, tabs), which
     /// otherwise stays at Fluent's 14 whatever the window's font size is.
     /// </summary>
-    public static void SetBaseFontSize(IResourceDictionary resources, double size) =>
+    public static void SetBaseFontSize(IResourceDictionary resources, double size)
+    {
         resources["ControlContentThemeFontSize"] = size;
+        // The WPF AppScale's Caption size: dialog validation text and other fine print.
+        resources[CaptionFontSizeKey] = size * CaptionScale;
+    }
+
+    /// <summary>Resource key of the caption font size, 0.85 of the base size as in the WPF AppScale.</summary>
+    public const string CaptionFontSizeKey = "Frb.FontSize.Caption";
+
+    private const double CaptionScale = 0.85;
 
     // Sizes from the WPF control styles: body-sized text, compact fields, rows and menus, 2px
     // corners, 1px borders.

@@ -18,9 +18,11 @@
 
     <!--
         Keyed rather than implicit: WPF looks for a type-keyed template in the theme of the assembly
-        that defines the type, and the member types live in DataUi.Core, which has no theme.
+        that defines the type, and the member types live in DataUi.Core, which has no theme. The
+        component resource key lets consumers that re-template the categories reach it too. No
+        DataType here: the compiled theme would key the template by that type and drop this key.
     -->
-    <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type dataTypes:InstanceMember}">
+    <DataTemplate x:Key="{x:Static local:Keys.InstanceMemberTemplateKey}">
         <Border x:Name="Container">
             <local:SingleDataUiContainer DataContext="{Binding}" />
         </Border>
@@ -43,7 +45,7 @@
             Visibility="{Binding IsVisible, Converter={StaticResource DataUi.BooleanToVisibility}}">
             <ItemsControl
                 AlternationCount="2"
-                ItemTemplate="{StaticResource DataUi.InstanceMemberTemplate}"
+                ItemTemplate="{DynamicResource {x:Static local:Keys.InstanceMemberTemplateKey}}"
                 ItemsSource="{Binding Members}" />
         </Expander>
     </DataTemplate>

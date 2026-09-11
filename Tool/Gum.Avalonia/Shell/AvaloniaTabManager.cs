@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -118,15 +118,14 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
         BottomRightHeight = Math.Max(BottomRightHeight, minWidth);
     }
 
+    /// <summary>
+    /// Raised when a tab becomes selected, by the user or by a plugin setting
+    /// <see cref="IPluginTab.IsSelected"/>; the view brings it to the front of its region.
+    /// </summary>
+    public event Action<AvaloniaPluginTab>? TabSelected;
+
     /// <summary>Marks <paramref name="tab"/> selected and every other tab in its location unselected.</summary>
-    public void Select(AvaloniaPluginTab tab)
-    {
-        foreach (AvaloniaPluginTab other in _tabs.Where(t => t.Location == tab.Location && t != tab))
-        {
-            other.IsSelected = false;
-        }
-        tab.IsSelected = true;
-    }
+    public void Select(AvaloniaPluginTab tab) => tab.IsSelected = true;
 
     void IRecipient<ApplicationTeardownMessage>.Receive(ApplicationTeardownMessage message)
     {
@@ -143,6 +142,15 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
         if (e.PropertyName is nameof(AvaloniaPluginTab.Location) or nameof(AvaloniaPluginTab.IsVisible))
         {
             Refilter();
+        }
+        else if (e.PropertyName == nameof(AvaloniaPluginTab.IsSelected) && sender is AvaloniaPluginTab { IsSelected: true } tab)
+        {
+            // One selected tab per region, as the WPF PluginTab's TabSelectedMessage enforces.
+            foreach (AvaloniaPluginTab other in _tabs.Where(t => t.Location == tab.Location && t != tab))
+            {
+                other.IsSelected = false;
+            }
+            TabSelected?.Invoke(tab);
         }
     }
 

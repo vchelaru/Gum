@@ -101,6 +101,14 @@ public sealed class MainPanelView : Grid
                 _tabs.Select(selected);
             }
         };
+        // A plugin selecting its tab (Edit > Properties, say) brings it to the front here.
+        _tabs.TabSelected += tab =>
+        {
+            if (source.Contains(tab) && tabControl.SelectedItem != tab)
+            {
+                tabControl.SelectedItem = tab;
+            }
+        };
 
         Grid host = new Grid().WithThemeResource(Panel.BackgroundProperty, "Frb.Surface01");
         host.Children.Add(tabControl);

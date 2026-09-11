@@ -29,6 +29,7 @@ namespace Gum.Avalonia.Themes;
 /// Primary outline rather than a fill.</item>
 /// <item>Check boxes: the WPF template, a small outlined box instead of Fluent's 20px box on a 32px row.</item>
 /// <item><see cref="FlatButtonClass"/>: the WPF head's borderless tool buttons.</item>
+/// <item><see cref="PrimaryButtonClass"/>: the WPF head's default button, a bold Primary fill.</item>
 /// <item><see cref="IconButtonClass"/>: the WPF <c>IconButton</c>, a flat outlined button.</item>
 /// <item>Menus, separators, scroll bars and combo box rows: the WPF metrics and colors on Fluent's
 /// templates.</item>
@@ -44,6 +45,9 @@ public static class GumChromeStyles
 
     /// <summary>The class for a borderless button that shows a fill only on hover, the WPF head's tool buttons.</summary>
     public const string FlatButtonClass = "gumFlatButton";
+
+    /// <summary>The WPF default <c>Button</c> style: bold text on a Primary fill (dialog buttons, Close).</summary>
+    public const string PrimaryButtonClass = "gumPrimaryButton";
 
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
@@ -189,6 +193,28 @@ public static class GumChromeStyles
         ButtonPart<Button>(FlatButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
         ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
 
+        // The WPF default Button (Frb.Styles.Defaults.xaml): a bold Primary fill, lighter when hovered,
+        // darker when pressed, dimmed when disabled.
+        new Style(selector => selector.OfType<Button>().Class(PrimaryButtonClass))
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.BackgroundProperty, Resource("Frb.Brushes.Primary")),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Primary.Contrast")),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
+                new Setter(TemplatedControl.CornerRadiusProperty, new CornerRadius(2)),
+                new Setter(TemplatedControl.FontWeightProperty, FontWeight.Bold),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 2, 4, 3)),
+            },
+        },
+        ButtonPart<Button>(PrimaryButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary.Light"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        ButtonPart<Button>(PrimaryButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Primary.Dark"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        ButtonPart<Button>(PrimaryButtonClass, new[] { ":disabled" }, Resource("Frb.Brushes.Primary"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
+        new Style(selector => selector.OfType<Button>().Class(PrimaryButtonClass).Class(":disabled"))
+        {
+            Setters = { new Setter(Visual.OpacityProperty, 0.75) },
+        },
+
         // The main panel's tab content sits flush with its region, as in the WPF MainPanelControl.
         new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass))
         {
@@ -333,7 +359,7 @@ public static class GumChromeStyles
 
     // A button's presenter colors in the given states. The Fluent theme colors the same template
     // part in its own state styles, which these outrank.
-    private static Style ButtonPart<TButton>(string? buttonClass, string[] states, object background, object borderBrush)
+    private static Style ButtonPart<TButton>(string? buttonClass, string[] states, object background, object borderBrush, object? foreground = null)
         where TButton : Control =>
         new Style(selector =>
         {
@@ -349,7 +375,7 @@ public static class GumChromeStyles
             {
                 new Setter(ContentPresenter.BackgroundProperty, background),
                 new Setter(ContentPresenter.BorderBrushProperty, borderBrush),
-                new Setter(ContentPresenter.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(ContentPresenter.ForegroundProperty, foreground ?? Resource("Frb.Brushes.Foreground")),
             },
         };
 

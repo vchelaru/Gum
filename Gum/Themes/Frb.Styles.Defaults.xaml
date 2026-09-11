@@ -1729,7 +1729,11 @@
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
                         IsExpanded="{Binding IsExpanded}"
                         Visibility="{Binding IsVisible, Converter={StaticResource DataUi.CategoryVisibilityConverter}}">
-                        <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
+                        <!--  The library's row template; an implicit one is not found for types outside WpfDataUi.  -->
+                        <ItemsControl
+                            AlternationCount="2"
+                            ItemTemplate="{DynamicResource {x:Static wpfdataui:Keys.InstanceMemberTemplateKey}}"
+                            ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>
             </Setter.Value>

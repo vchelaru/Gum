@@ -20,8 +20,8 @@ public sealed class DeleteOptionsDialogView : StackPanel
     /// <summary>Builds the view.</summary>
     public DeleteOptionsDialogView()
     {
+        // Sized by the message, as the WPF window is.
         Spacing = 8;
-        MinWidth = 360;
         MaxWidth = 600;
 
         TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };

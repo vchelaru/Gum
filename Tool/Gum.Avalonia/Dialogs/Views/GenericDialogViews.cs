@@ -6,6 +6,7 @@ using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Avalonia.Converters;
+using Gum.Avalonia.Themes;
 using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Dialogs.Views;
@@ -30,29 +31,32 @@ public sealed class GetUserStringDialogView : StackPanel
     /// <summary>Builds the view.</summary>
     public GetUserStringDialogView()
     {
-        Spacing = 8;
-        MinWidth = 360;
+        // The WPF view's width; the text box takes whatever the prefix leaves.
+        Width = 450;
 
         TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };
         message.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Message)));
         Children.Add(message);
 
-        StackPanel row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        TextBlock prefix = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(0, 8, 0, 0) };
+        TextBlock prefix = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
         prefix.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Prefix)));
         prefix.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Prefix)) { Converter = NotNullConverter.Instance });
-        TextBox textBox = new TextBox { MinWidth = 300 };
+        TextBox textBox = new TextBox();
+        Grid.SetColumn(textBox, 1);
         textBox.Bind(TextBox.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Value)) { Mode = BindingMode.TwoWay });
         row.Children.Add(prefix);
         row.Children.Add(textBox);
         Children.Add(row);
 
-        TextBlock error = new TextBlock { Foreground = Brushes.OrangeRed, TextWrapping = TextWrapping.Wrap };
+        TextBlock error = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0) }
+            .WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Error")
+            .WithThemeResource(TextBlock.FontSizeProperty, FrbThemeResources.CaptionFontSizeKey);
         error.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Error)));
         error.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Error)) { Converter = NotNullConverter.Instance });
         Children.Add(error);
 
-        CheckBox checkBox = new CheckBox();
+        CheckBox checkBox = new CheckBox { Margin = new Thickness(0, 8, 0, 0) };
         checkBox.Bind(ContentControl.ContentProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.CheckboxText)));
         checkBox.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.IsCheckboxChecked)) { Mode = BindingMode.TwoWay });
         checkBox.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.CheckboxText)) { Converter = NotNullConverter.Instance });
@@ -60,9 +64,14 @@ public sealed class GetUserStringDialogView : StackPanel
 
         DialogWindow.FocusWhenOpened(textBox, () =>
         {
-            if (DataContext is GetUserStringDialogBaseViewModel { PreSelect: true })
+            if (DataContext is GetUserStringDialogBaseViewModel viewModel)
             {
-                textBox.SelectAll();
+                if (viewModel.PreSelect)
+                {
+                    textBox.SelectAll();
+                }
+                // As the WPF view does on load: the error and the disabled OK show before any typing.
+                viewModel.Validate();
             }
         });
     }
