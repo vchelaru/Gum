@@ -143,3 +143,11 @@ Work is on the phase-70 branch, one commit per part.
   the WPF Variables tab's "is edited" row icon (`OverridesIsDefaultStyling`) is not reproduced, a
   theming decision left to phase 90. Rows are not pooled (Avalonia editors are cheap to build);
   re-binding a displayer resets its per-member state, as the WPF pooling fix (#4664) requires.
+- **Part 4: the composite and file editors.** `AvaloniaDataUi` gains the angle (dial plus
+  text), toggle-button option, string list, list box, file selection, multi-file, and inline
+  channels editors, completing the standard registry. The logic that lived only in WPF
+  code-behind was extracted first and the WPF editors now use it: `AngleSelectorLogic` (unit
+  conversion, typed text and arithmetic, and dial winding past 180 degrees),
+  `StringListLogic`, `ListBoxDisplayLogic`, and `MultiFileDisplayLogic`; `ToggleButtonOption`
+  is the neutral option record. The dial drag uses pointer capture. The list box's bad-input
+  message shows inline under the list instead of a WPF message box.

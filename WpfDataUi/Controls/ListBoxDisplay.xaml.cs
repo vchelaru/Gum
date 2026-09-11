@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -65,6 +65,8 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         }
     }
 
+    readonly ListBoxDisplayLogic _listLogic = new ListBoxDisplayLogic();
+
     public ListBoxDisplay()
     {
         InitializeComponent();
@@ -117,150 +119,20 @@ public partial class ListBoxDisplay : UserControl, IDataUi
 
     public ApplyValueResult TryGetValueOnUi(out object? result)
     {
-        // todo - need to make this more flexible, but for now let's just support strings:
-        var propertyType = InstanceMember?.PropertyType;
-        if(propertyType == typeof(List<string>))
+        if (_listLogic.TryReadList(ListBox.Items, InstanceMember?.PropertyType, out object? list))
         {
-            var value = new List<string>();
-
-            foreach(var item in ListBox.Items)
-            {
-                var asString = item?.ToString();
-                if (asString != null)
-                {
-                    value.Add(asString);
-                }
-            }
-
-            result = value;
-
-            return ApplyValueResult.Success;
-
-        }
-        else if(propertyType == typeof(List<int>))
-        {
-            var value = new List<int>();
-
-            foreach(var item in ListBox.Items)
-            {
-                if(int.TryParse(item?.ToString(), out int intResult))
-                {
-                    value.Add(intResult);
-                }
-            }
-
-            result = value;
-
+            result = list;
             return ApplyValueResult.Success;
         }
-        // do the same as above, but this time for List<float>
-        else if(propertyType == typeof(List<float>))
-        {
-            var value = new List<float>();
-            foreach(var item in ListBox.Items)
-            {
-                if(float.TryParse(item?.ToString(), out float floatResult))
-                {
-                    value.Add(floatResult);
-                }
-            }
-            result = value;
-            return ApplyValueResult.Success;
-        }
-        else if (propertyType == typeof(List<Vector2>))
-        {
-            var value = new List<Vector2>();
-            foreach (var item in ListBox.Items)
-            {
-                if (TryParse(item?.ToString(), out Vector2? vectorResult))
-                {
-                    value.Add(vectorResult!.Value);
-                }
-            }
-            result = value;
-            return ApplyValueResult.Success;
-        }
-        else
-        {
-            result = null;
-            return ApplyValueResult.NotSupported;
-        }
+
+        result = null;
+        return ApplyValueResult.NotSupported;
     }
 
     public ApplyValueResult TrySetValueOnUi(object value)
     {
-        if(value is List<string> valueAsList)
-        {
-            var newList = new List<string>();
-            newList.AddRange(valueAsList);
-            ListBox.ItemsSource = newList;
-        }
-        else if(InstanceMember?.PropertyType == typeof(List<string>))
-        {
-            var newList = new List<string>();
-            ListBox.ItemsSource = newList;
-        }
-        else if(value is List<int> valueAsIntList)
-        {
-            var newList = new List<int>();
-            newList.AddRange(valueAsIntList);
-            ListBox.ItemsSource = newList;
-        }
-        else if(InstanceMember?.PropertyType == typeof(List<int>))
-        {
-            var newList = new List<int>();
-            ListBox.ItemsSource = newList;
-        }
-        else if(value is List<float> valueAsFloatList)
-        {
-            var newList = new List<float>();
-            newList.AddRange(valueAsFloatList);
-            ListBox.ItemsSource = newList;
-        }
-        else if (InstanceMember?.PropertyType == typeof(List<float>))
-        {
-            var newList = new List<float>();
-            ListBox.ItemsSource = newList;
-        }
-        else if(value is List<Vector2> valueAsVectorList)
-        {
-            var newList = new List<Vector2>();
-            newList.AddRange(valueAsVectorList);
-            ListBox.ItemsSource = newList;
-        }
-        else if (InstanceMember?.PropertyType == typeof(List<Vector2>))
-        {
-            var newList = new List<Vector2>();
-            ListBox.ItemsSource = newList;
-        }
-        else if(value is IList valueAsGenericList)
-        {
-            var newList = Activator.CreateInstance(value.GetType()) as IList;
-
-            if (newList != null)
-            {
-                foreach (var item in valueAsGenericList)
-                {
-                    newList.Add(item);
-                }
-                ListBox.ItemsSource = newList;
-            }
-        }
-        else
-        {
-            // what do we do here?
-            if(InstanceMember?.PropertyType != null)
-            {
-                var newList = Activator.CreateInstance(InstanceMember.PropertyType) as IList;
-                ListBox.ItemsSource = newList;
-            }
-            else
-            {
-                throw new InvalidOperationException(
-                    "Could not set UI value on ListBoxDisplay in TrySetValueOnUi because the value is null and the InstanceMember does not specify a property type");
-            }
-
-        }
+        // Edit a copy so nothing reaches the member until it is committed.
+        ListBox.ItemsSource = _listLogic.CreateEditableCopy(value, InstanceMember?.PropertyType);
         return ApplyValueResult.Success;
     }
 
@@ -343,62 +215,10 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         var listToAddTo = ListBox.ItemsSource as IList;
         if (listToAddTo != null)
         {
-            if(listToAddTo is List<string> stringList)
+            string? error = _listLogic.AddOrReplace(listToAddTo, IndexEditing, text);
+            if (error != null)
             {
-                if (IndexEditing == null)
-                {
-                    stringList.Add(text);
-                }
-                else
-                {
-                    stringList[IndexEditing.Value] = text;
-                }
-            }
-            else if (listToAddTo is List<int> intList)
-            {
-                if (int.TryParse(text, out int intResult))
-                {
-                    if(IndexEditing == null)
-                    {
-                        intList.Add(intResult);
-                    }
-                    else
-                    {
-                        intList[IndexEditing.Value] = intResult;
-                    }
-                }
-            }
-            else if (listToAddTo is List<float> floatList)
-            {
-                if (float.TryParse(text, out float floatResult))
-                {
-                    if (IndexEditing == null)
-                    {
-                        floatList.Add(floatResult);
-                    }
-                    else
-                    {
-                        floatList[IndexEditing.Value] = floatResult;
-                    }
-                }
-            }
-            else if(listToAddTo is List<System.Numerics.Vector2> vector2List)
-            {
-                if(TryParse(text, out var toAdd))
-                {
-                    if (IndexEditing == null)
-                    {
-                        vector2List.Add(toAdd!.Value);
-                    }
-                    else
-                    {
-                        vector2List[IndexEditing.Value] = toAdd!.Value;
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Could not parse the values. Value must be two numbers separated by a comma, such as \"10,20\"");
-                }
+                MessageBox.Show(error);
             }
         }
         NewTextBox.Text = null;
@@ -414,36 +234,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         TryDoManualRefresh();
     }
 
-    private static bool TryParse(string? text, out Vector2? parsedValue)
-    {
-        parsedValue = null;
 
-        if(text?.StartsWith("<") == true)
-        {
-            text = text.Substring(1);
-        }
-        if(text?.EndsWith(">") == true)
-        {
-            text = text.Substring(0, text.Length - 1);
-        }
-
-        if (text?.Contains(",") == true)
-        {
-            var splitValues = text.Split(',');
-
-            if (splitValues.Length == 2)
-            {
-                if (float.TryParse(splitValues[0], out float firstValue) &&
-                    float.TryParse(splitValues[1], out float secondValue))
-                {
-                    parsedValue = new Vector2(firstValue, secondValue);
-                }
-            }
-        }
-        var succeeded = parsedValue != null;
-
-        return succeeded;
-    }
 
     private void TryDoManualRefresh()
     {
@@ -508,18 +299,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         {
             ShowTextBoxUi();
 
-            var textToAssign = ListBox.SelectedItem?.ToString();
-
-            if (textToAssign?.StartsWith("<") == true)
-            {
-                textToAssign = textToAssign.Substring(1);
-            }
-            if (textToAssign?.EndsWith(">") == true)
-            {
-                textToAssign = textToAssign.Substring(0, textToAssign.Length - 1);
-            }
-
-            this.NewTextBox.Text = textToAssign;
+            this.NewTextBox.Text = ListBoxDisplayLogic.StripAngleBrackets(ListBox.SelectedItem?.ToString());
         }
     }
 }

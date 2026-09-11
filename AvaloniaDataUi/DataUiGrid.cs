@@ -99,8 +99,14 @@ public class DataUiGrid : UserControl, IDataUiGrid
         registry.Register(typeof(StandardDisplayers.NullableBool), typeof(NullableBoolDisplay));
         registry.Register(typeof(StandardDisplayers.ComboBox), typeof(ComboBoxDisplay));
         registry.Register(typeof(StandardDisplayers.EditableComboBox), typeof(EditableComboBoxDisplay));
+        registry.Register(typeof(StandardDisplayers.ListBox), typeof(ListBoxDisplay));
         registry.Register(typeof(StandardDisplayers.Slider), typeof(SliderDisplay));
         registry.Register(typeof(StandardDisplayers.PlusMinus), typeof(PlusMinusTextBox));
+        registry.Register(typeof(StandardDisplayers.AngleSelector), typeof(AngleSelectorDisplay));
+        registry.Register(typeof(StandardDisplayers.FileSelection), typeof(FileSelectionDisplay));
+        registry.Register(typeof(StandardDisplayers.MultiFile), typeof(MultiFileDisplay));
+        registry.Register(typeof(StandardDisplayers.StringList), typeof(StringListTextBoxDisplay));
+        registry.Register(typeof(StandardDisplayers.InlineChannels), typeof(InlineChannelsDisplay));
         return registry;
     }
 
