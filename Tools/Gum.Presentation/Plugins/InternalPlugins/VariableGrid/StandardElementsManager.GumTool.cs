@@ -1,4 +1,3 @@
-﻿using Gum.Controls;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -13,9 +12,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WpfDataUi.Controls;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
+/// <summary>
+/// Tool-only setup of the standard elements' default states: which displayer each variable uses (as
+/// neutral keys), the type converters behind drop-downs, and plugin modifications.
+/// </summary>
 public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 {
     private readonly IPluginManager _pluginManager;
@@ -62,58 +66,58 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
             }
             else if (variable.Type == nameof(TextOverflowVerticalMode))
             {
-                variable.PreferredDisplayer = typeof(TextOverflowVerticalModeControl);
+                variable.PreferredDisplayer = typeof(GumDisplayers.TextOverflowVerticalMode);
             }
             else if (variable.Type == nameof(TextOverflowHorizontalMode))
             {
-                variable.PreferredDisplayer = typeof(TextOverflowHorizontalModeControl);
+                variable.PreferredDisplayer = typeof(GumDisplayers.TextOverflowHorizontalMode);
             }
             else if (variable.Type == nameof(ChildrenLayout))
             {
-                variable.PreferredDisplayer = typeof(ChildrenLayoutControl);
+                variable.PreferredDisplayer = typeof(GumDisplayers.ChildrenLayout);
             }
             else if (variable.Type == nameof(DimensionUnitType))
             {
                 if (variable.Name == "WidthUnits")
                 {
-                    variable.PreferredDisplayer = typeof(WidthUnitsControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.WidthUnits);
                 }
                 else if (variable.Name == "HeightUnits")
                 {
-                    variable.PreferredDisplayer = typeof(HeightUnitsControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.HeightUnits);
                 }
             }
             else if (variable.Type == nameof(PositionUnitType))
             {
                 if (variable.Name == "XUnits" || variable.Name == "GradientX1Units" || variable.Name == "GradientX2Units")
                 {
-                    variable.PreferredDisplayer = typeof(XUnitsControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.XUnits);
                 }
                 else if (variable.Name == "YUnits" || variable.Name == "GradientY1Units" || variable.Name == "GradientY2Units")
                 {
-                    variable.PreferredDisplayer = typeof(YUnitsControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.YUnits);
                 }
             }
             else if (variable.Type == nameof(VerticalAlignment))
             {
                 if (variable.Name == "VerticalAlignment")
                 {
-                    variable.PreferredDisplayer = typeof(TextVerticalAlignmentControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.TextVerticalAlignment);
                 }
                 else if (variable.Name == "YOrigin")
                 {
-                    variable.PreferredDisplayer = typeof(YOriginControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.YOrigin);
                 }
             }
             else if (variable.Type == nameof(HorizontalAlignment))
             {
                 if (variable.Name == "HorizontalAlignment")
                 {
-                    variable.PreferredDisplayer = typeof(TextHorizontalAlignmentControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.TextHorizontalAlignment);
                 }
                 else if (variable.Name == "XOrigin")
                 {
-                    variable.PreferredDisplayer = typeof(XOriginControl);
+                    variable.PreferredDisplayer = typeof(GumDisplayers.XOrigin);
                 }
             }
             else if (variable.Type == "string" && variable.Name == "Parent")
@@ -150,7 +154,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
             {
                 variable.PropertiesToSetOnDisplayer["MinValue"] = 0.0;
                 variable.PropertiesToSetOnDisplayer["MaxValue"] = 255.0;
-                variable.PreferredDisplayer = typeof(SliderDisplay);
+                variable.PreferredDisplayer = typeof(StandardDisplayers.Slider);
             }
             else if (variable.Name == "StrokeWidth" || variable.Name == "DropshadowBlur")
             {
@@ -164,7 +168,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
         {
             if (variableList.Name == "VariableReferences")
             {
-                variableList.PreferredDisplayer = typeof(StringListTextBoxDisplay);
+                variableList.PreferredDisplayer = typeof(StandardDisplayers.StringList);
             }
         }
     }
@@ -196,18 +200,16 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 
     public static void MakeDegreesAngle(VariableSave variableSave)
     {
-        variableSave.PreferredDisplayer = typeof(AngleSelectorDisplay);
-        variableSave.PropertiesToSetOnDisplayer[nameof(AngleSelectorDisplay.TypeToPushToInstance)] = AngleType.Degrees;
+        variableSave.PreferredDisplayer = typeof(StandardDisplayers.AngleSelector);
+        variableSave.PropertiesToSetOnDisplayer["TypeToPushToInstance"] = AngleType.Degrees;
     }
 
     public void RefreshStateVariablesThroughPlugins()
     {
-#if GUM
         foreach (var kvp in StandardElementsManager.Self.DefaultStates)
         {
             _pluginManager.ModifyDefaultStandardState(kvp.Key, kvp.Value);
         }
-#endif
     }
 
 

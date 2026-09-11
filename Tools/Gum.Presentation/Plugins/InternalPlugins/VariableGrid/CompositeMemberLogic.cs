@@ -21,15 +21,6 @@ namespace Gum.Plugins.InternalPlugins.VariableGrid;
 /// registered descriptor. Invoked from <c>PropertyGridManager.CustomizeVariables</c> after the categories
 /// have been built (and after exclusion has already removed irrelevant channels).
 /// </summary>
-/// <remarks>
-/// This class stays tool-side (ADR-0005): <see cref="Apply"/> and its helpers are typed on
-/// <c>WpfDataUi.DataTypes.MemberCategory</c>/<c>InstanceMember</c>/<c>CompositeInstanceMember</c>, which
-/// are owned by <c>WpfDataUi.csproj</c> (a <c>net8.0-windows</c>, WPF-only library) - not something the
-/// usual "swap a WinForms call for an interface" split can fix, since the WPF-typed method is the
-/// primary API, not an auxiliary one. Its own constructor dependencies (<see cref="ICompositeMemberRegistry"/>,
-/// <see cref="IClipboardService"/>, etc.) are kept headless-clean anyway so a future redesign of the grid's
-/// data model doesn't also need to redo this class's DI surface.
-/// </remarks>
 public class CompositeMemberLogic
 {
     private readonly ISelectedState _selectedState;
@@ -199,8 +190,8 @@ public class CompositeMemberLogic
             composite.DetailText = string.Join("\n", detailSegments);
         }
 
-        // Single undo for the whole composite write. The undo lock must live here (Gum-side) because the
-        // WpfDataUi substrate has no access to the undo manager.
+        // Single undo for the whole composite write. The undo lock must live here because the grid's
+        // member model (DataUi.Core) has no access to the undo manager.
         IDisposable? undoLock = null;
         composite.BeforeComposite += (args) =>
         {

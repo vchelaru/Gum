@@ -17,10 +17,9 @@ using Shouldly;
 using System;
 using System.ComponentModel;
 using ToolsUtilities;
-using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class StateReferencingInstanceMemberTests
 {
@@ -171,7 +170,7 @@ public class StateReferencingInstanceMemberTests
             "testVariableName",
             componentSave);
 
-        sut.PreferredDisplayer.ShouldBe(typeof(ComboBoxDisplay));
+        sut.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.ComboBox));
     }
 
     [Fact]
@@ -185,9 +184,9 @@ public class StateReferencingInstanceMemberTests
 
         // SliderDisplay isn't one of VariableDisplayerKind's known mapped types, so an explicit
         // override must pass through unchanged rather than collapse to Default:
-        sut.PreferredDisplayer = typeof(SliderDisplay);
+        sut.PreferredDisplayer = typeof(StandardDisplayers.Slider);
 
-        sut.PreferredDisplayer.ShouldBe(typeof(SliderDisplay));
+        sut.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.Slider));
     }
 
     [Fact]
@@ -216,7 +215,7 @@ public class StateReferencingInstanceMemberTests
         lockedMember.SetValue(false, SetPropertyCommitType.Full);
 
         setVariableLogic.Verify(x => x.PropertyValueChanged(
-            It.IsAny<string>(), It.IsAny<object?>(), null, stateSave, true, true, true, true), Times.Once);
+            It.IsAny<string>(), It.IsAny<object?>(), null!, stateSave, true, true, true, true), Times.Once);
     }
 
     [Fact]
@@ -239,7 +238,7 @@ public class StateReferencingInstanceMemberTests
         sut.SetValue(1, SetPropertyCommitType.Full);
 
         setVariableLogic.Verify(x => x.PropertyValueChanged(
-            "testVariableName", It.IsAny<object?>(), null, stateSave, true, true, true, true), Times.Once);
+            "testVariableName", It.IsAny<object?>(), null!, stateSave, true, true, true, true), Times.Once);
     }
 
     [Fact]
@@ -262,7 +261,7 @@ public class StateReferencingInstanceMemberTests
         sut.SetValue(1, SetPropertyCommitType.Intermediate);
 
         setVariableLogic.Verify(x => x.PropertyValueChanged(
-            "testVariableName", It.IsAny<object?>(), null, stateSave, true, false, false, false), Times.Once);
+            "testVariableName", It.IsAny<object?>(), null!, stateSave, true, false, false, false), Times.Once);
     }
 
     [Fact]

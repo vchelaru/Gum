@@ -40,16 +40,17 @@ The **Variables tab** displays and edits properties of the selected element, ins
 | WPF DataUiGrid control (renders the model) | `WpfDataUi/DataUiGrid.cs` |
 | DataUiGrid XAML template | `WpfDataUi/Themes/Generic.xaml` |
 | MemberCategory / InstanceMember models | `DataUi.Core/DataTypes/` |
-| Gum-specific member subclass | `Gum/Plugins/InternalPlugins/VariableGrid/StateReferencingInstanceMember.cs` |
-| Plugin wiring selection events | `Gum/Plugins/InternalPlugins/VariableGrid/MainVariableGridPlugin.cs` |
-| Category population manager | `Gum/Plugins/InternalPlugins/VariableGrid/PropertyGridManager.cs` |
-| Category factory | `Gum/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` |
-| Behavior categories | `Gum/Plugins/InternalPlugins/VariableGrid/BehaviorShowingLogic.cs` |
-| Host UserControl | `Gum/Plugins/InternalPlugins/VariableGrid/MainPropertyGrid.xaml(.cs)` |
+| Gum-specific member subclass | `Tools/Gum.Presentation/PropertyGridHelpers/StateReferencingInstanceMember.cs` |
+| Plugin wiring selection events | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/VariableGridPluginBase.cs` (each head exports a `MainVariableGridPlugin` subclass) |
+| Category population manager | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/PropertyGridManager.cs` |
+| Category factory | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/ElementSaveDisplayer.cs` |
+| Behavior categories | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/BehaviorShowingLogic.cs` |
+| What a head supplies (tab view, Gum displayer controls) | `IVariableGridHead` / `IVariablesTabView`; `Gum/.../VariableGrid/WpfVariableGridHead.cs` and `Tool/Gum.Avalonia/Plugins/VariableGrid/` |
+| WPF host UserControl | `Gum/Plugins/InternalPlugins/VariableGrid/MainPropertyGrid.xaml(.cs)` |
 | Composite member model | `DataUi.Core/DataTypes/CompositeInstanceMember.cs` |
-| Composite descriptor registry | `Gum/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
+| Composite descriptor registry | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/CompositeMemberRegistry.cs`, `CompositeMemberDescriptor.cs`, `CompositeMemberLogic.cs` |
 
-Landmine: `PropertyGridManager.cs` (under `Gum/`) and `ElementSaveDisplayer.cs`/`ShapeVariableVersionGate.cs` (under `Tools/Gum.Presentation/`) compile into **separate assemblies** (`Gum.csproj` references `Gum.Presentation.csproj`) — an `internal` pure-logic class added in `Gum.Presentation` for `PropertyGridManager` to call must be `public`; `Gum.Presentation`'s `InternalsVisibleTo` only covers its own test projects, not `Gum`.
+The controller, the row adapter, the composites, and the standard-element displayer setup are all headless in `Gum.Presentation`; the heads only render. `PropertyGridManager` talks to the grid through `IDataUiGrid` and to the view through `IVariablesTabView`, which it gets from the head's `IVariableGridHead`. Gum-specific editors are named by `GumDisplayers` keys (units, alignment, origin toggles, color, corner radius, remove button); each head registers its controls for them in `CreateVariablesTabView`.
 
 Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitType.Intermediate` and only the mouse-up as `.Full` (`SetVariableLogic.ReactToPropertyValueChanged`'s `isFullCommit` param) — an expensive per-set side effect (e.g. font regeneration) must gate on `Full`, not fire per-tick; see `GraphicalUiElement.SuppressFontRegeneration`.
 
@@ -57,7 +58,7 @@ Numeric drag-scrub reports every intermediate tick as `VariablePropertyCommitTyp
 
 ## Deleting a Custom Variable
 
-`DeleteVariableService` (`Gum/Plugins/InternalPlugins/VariableGrid/DeleteVariableService.cs`) handles the right-click delete. It still blocks when the variable is referenced through a `VariableReferences` binding, or through an inheriting element's own exposed-name entry — those aren't a simple "restore this value" case. A plain instance-level value override elsewhere in the project (the common case) is instead cascaded: removed from that instance too, and recorded via `IUndoManager.AttachCrossElementVariableRemovals` so undo restores it there as well. See ADR 0016 and the `gum-tool-undo` skill's cross-element exception.
+`DeleteVariableService` (`Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/DeleteVariableService.cs`) handles the right-click delete. It still blocks when the variable is referenced through a `VariableReferences` binding, or through an inheriting element's own exposed-name entry — those aren't a simple "restore this value" case. A plain instance-level value override elsewhere in the project (the common case) is instead cascaded: removed from that instance too, and recorded via `IUndoManager.AttachCrossElementVariableRemovals` so undo restores it there as well. See ADR 0016 and the `gum-tool-undo` skill's cross-element exception.
 
 ---
 
@@ -103,11 +104,11 @@ Most variables render with a default control inferred from their type. A variabl
 - **`PropertiesToSetOnDisplayer`** (a `Dictionary<string, object>`) — after the control exists, the container *reflectively* sets each named property on it. A slider's `MinValue`/`MaxValue` (the "range") are just two such pushes onto a control already chosen by `PreferredDisplayer` — they do **not** create the slider on their own.
 - **`UiCreated` event** — for config that must be computed per-instance instead of a constant (see `MakeDegreesAngle`, and the WpfDataUi sample's per-character `MaxValue`).
 
-Gum's built-in variables are wired in `StandardElementsManager.GumTool.cs` (slider for color channels, angle dial, alignment, origin, parent dropdown). That file is where to look or add.
+Gum's built-in variables are wired in `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/StandardElementsManager.GumTool.cs` (slider for color channels, angle dial, alignment, origin, parent dropdown), as neutral `StandardDisplayers`/`GumDisplayers` keys. That file is where to look or add.
 
 > Naming trap: `MinWidth`/`MaxWidth`/`MinHeight`/`MaxHeight` in `StandardElementsManager.cs` are real runtime layout clamps — unrelated to a displayer's slider `MinValue`/`MaxValue`.
 
-The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md).
+The icon-based displayers (origin/alignment/dock toggles) get their glyphs from the `GumIcon` pipeline — see [gum-icons](../gum-icons/SKILL.md). The Font drop-down lists installed families through `IInstalledFontProvider` (SkiaSharp on every OS).
 
 **Landmine: a new custom `IDataUi` displayer must wire its own right-click menu and default-value highlighting — nothing does either for you.** `SingleDataUiContainer`/`DataUiGrid` never touch `ContextMenu` or background color. Every existing displayer (`ColorDisplay`, `SliderDisplay`, `TextBoxDisplay`, ...) attaches a WPF `ContextMenu` to its root element in XAML and calls `this.RefreshContextMenu(yourRoot.ContextMenu)` from `Refresh()` — skip it and `InstanceMember.ContextMenuEvents` (Make Default, Copy Qualified Variable Name, expose/un-expose) silently never reach an actual menu; right-click does nothing. Default-value background tinting (driven by `InstanceMember.ValueState`; the WPF brushes are `DataUiBrushes.DefaultValueBackground` / `IndeterminateValueBackground`) is likewise opt-in per displayer — copy the pattern from `WpfDataUiTextBox.ApplyValueState`, don't assume a new control gets it for free. Both gaps compile fine and only show up as "this row behaves differently from every other row" in manual testing.
 
@@ -117,7 +118,7 @@ Same opt-in-per-displayer trap for click-drag-over-label-to-scrub a numeric valu
 
 ## Composite Members (several variables, one row)
 
-A separate mechanism from `PreferredDisplayer` above: `CompositeMemberLogic.Apply` runs after categories are built and collapses a fixed set of sibling "channel" `InstanceMember`s into a single `CompositeInstanceMember` row, driven by an `IDataUi` control bound to one composed value (not a raw variable). Today's only registered descriptor is color (`Red`/`Green`/`Blue` → one swatch row via `Gum/Controls/DataUi/ColorDisplay.xaml.cs`, registered in `CompositeMemberRegistry`); use that descriptor + displayer as the template for a new one.
+A separate mechanism from `PreferredDisplayer` above: `CompositeMemberLogic.Apply` runs after categories are built and collapses a fixed set of sibling "channel" `InstanceMember`s into a single `CompositeInstanceMember` row, driven by an `IDataUi` control bound to one composed value (not a raw variable). The registered descriptors are color (`Red`/`Green`/`Blue` → one swatch row, key `GumDisplayers.Color`) and corner radius (`GumDisplayers.CornerRadius`), both in `CompositeMemberRegistry`; use those as the template for a new one, and register a control for the new key in each head.
 
 Landmine: `CompositeMemberLogic.GroupTriples` matches channels by finding the **first channel's root name as a literal substring** inside a candidate member's root name, splitting off the prefix/suffix, then requiring every other `ChannelRootNames` entry to exist verbatim at that same prefix/suffix. **All channels must be present as real, non-excluded `VariableSave`s in the same category** (mind `MinimumGumxVersion` gating in `ShapeVariableVersionGate.cs`) — if even one is missing, no composite forms and the rest render as ordinary individual rows, silently, with no error.
 
@@ -127,11 +128,11 @@ Landmine: `CompositeInstanceMember.HandleCustomSet` writes **every** channel on 
 
 ## Category Copy/Paste (whole-group values)
 
-Right-clicking a category header offers Copy Values / Paste Values (#4455). The gather/apply logic is headless: `VariableCategoryCopyPasteService` in `Tools/Gum.Presentation/.../VariableGrid/`, fed by `IVariableCategoryRow` rows that `VariableCategoryRowAdapter` (in `Gum/.../VariableGrid/`) wraps around the live WPF `InstanceMember`s. Paste only applies to the category the values were copied from, records as one undo (single `RequestLock` across all writes), and skips rather than fails: absent variables, read-only/reference-assigned rows, type mismatches (numeric mismatches convert), and state names the target doesn't declare.
+Right-clicking a category header offers Copy Values / Paste Values (#4455). The gather/apply logic is headless: `VariableCategoryCopyPasteService` in `Tools/Gum.Presentation/.../VariableGrid/`, fed by `IVariableCategoryRow` rows that `VariableCategoryRowAdapter` wraps around the grid's `InstanceMember`s (both headless in `Tools/Gum.Presentation/.../VariableGrid/`). Paste only applies to the category the values were copied from, records as one undo (single `RequestLock` across all writes), and skips rather than fails: absent variables, read-only/reference-assigned rows, type mismatches (numeric mismatches convert), and state names the target doesn't declare.
 
 Category-header menus are `MemberCategory.ContextMenuItems` (`MemberCategoryContextMenuItem` is its own `ICommand`), rendered by the header template in `Frb.Styles.Defaults.xaml`. Landmines:
 
-- **`DataUiGrid.SetMultipleCategoryLists` copies only `Name` and `HeaderColor`** onto the fresh `MemberCategory` objects it creates for multi-select — any other category-level state (`ContextMenuItems`, `HideHeader`, `Width`) is silently dropped. `PropertyGridManager.RefreshCategoryContextMenus` re-populates after every refresh (guarded to only fill empty categories) for exactly this reason.
+- **`DataUiGridModel.SetMultipleCategoryLists` copies only `Name` and `HeaderColor`** onto the fresh `MemberCategory` objects it creates for multi-select — any other category-level state (`ContextMenuItems`, `HideHeader`, `Width`) is silently dropped. `PropertyGridManager.RefreshCategoryContextMenus` re-populates after every refresh (guarded to only fill empty categories) for exactly this reason.
 - **A `ContextMenu` on a shared template reaches every grid.** The header template serves all `DataUiGrid`s (Code tab, project properties, behaviors), and even a visually-collapsed empty menu still opens and takes mouse capture, eating the next click. Suppress with `ContextMenuService.IsEnabled=False` (via DataTrigger on item count), not `Visibility`.
 - **`Type.IsInstanceOfType` is always false against `Nullable<T>`** for a boxed value — variables declared `int?`/`float?` (`MaxLettersToShow`, `MinWidth`, ...) need `Nullable.GetUnderlyingType` before any reflection type gate.
 - **A state name is just a string** — any automated write to a state row (`State`, `<Category>State`) must validate against the row's `CustomOptions`/available states or it saves a dangling state name that renders as a blank combo.

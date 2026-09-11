@@ -51,7 +51,7 @@ Each internal plugin lives in `Gum/Plugins/InternalPlugins/[FeatureName]/` with 
 | Feature | Plugin Folder |
 |---------|--------------|
 | Element tree view | `TreeView/` |
-| Variables/Properties tab | `VariableGrid/` |
+| Variables/Properties tab | `VariableGrid/` (logic in `Gum.Presentation`'s `VariableGridPluginBase`; each head exports a thin `MainVariableGridPlugin`) |
 | State panel | `StatePlugin/` |
 | Behaviors panel | `Behaviors/` |
 | Output panel | `Output/` |

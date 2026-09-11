@@ -3,7 +3,7 @@ using Gum.Managers;
 using Shouldly;
 using WpfDataUi.DataTypes;
 
-namespace GumToolUnitTests.PropertyGridHelpers;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class PropertyGridManagerRefreshFlagsTests : BaseTestClass
 {

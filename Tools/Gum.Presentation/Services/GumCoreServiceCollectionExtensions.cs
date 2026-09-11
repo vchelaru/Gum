@@ -59,17 +59,13 @@ public static class GumCoreServiceCollectionExtensions
         typeof(ITabManager),
         typeof(IModifierKeyState),
         typeof(IRecycleBinService),
-        typeof(IFilePickingFolderProvider),
-        typeof(IVariableTypeConverterProvider),
-        typeof(ICompositeMemberRegistry),
         typeof(IGuiCommands),
         typeof(IPluginManager),
         typeof(IUndoPluginNotifier),
         typeof(IDeletePluginNotifier),
         typeof(ICopyPastePluginNotifier),
         typeof(IRenamePluginNotifier),
-        typeof(IStandardElementsManagerGumTool),
-        typeof(IBehaviorVariablePropertyGridSink),
+        typeof(IVariableGridHead),
     };
 
     /// <summary>Adds the headless service graph. See the class summary for what the head must add.</summary>
@@ -200,6 +196,17 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IFileSystemRevealService, FileSystemRevealService>();
         // The property grid's file pickers, through the head's dialog service (phase 70).
         services.AddSingleton<WpfDataUi.Controls.IDataUiFilePicker, DialogServiceFilePicker>();
+        // The Variables tab (phase 70): its controller and the grid-coupled services the core consumes.
+        // The head supplies IVariableGridHead: the tab's view and its controls for the displayer keys.
+        services.AddSingleton<StandardElementsManagerGumTool>();
+        services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
+        services.AddSingleton<IFilePickingFolderProvider, FilePickingFolderProvider>();
+        services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
+        services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
+        services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
+        services.AddSingleton<PropertyGridManager>();
+        // IBehaviorVariablePropertyGridSink: narrow port (#3875) resolving to the same PropertyGridManager.
+        services.AddSingleton<IBehaviorVariablePropertyGridSink>(provider => provider.GetRequiredService<PropertyGridManager>());
         services.AddSingleton<IElementCommands, ElementCommands>();
         services.AddSingleton<IFileCommands, FileCommands>();
         services.AddSingleton<FileChangeReactionLogic>();

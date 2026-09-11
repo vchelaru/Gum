@@ -7,10 +7,10 @@ using Gum.ToolStates;
 using Moq;
 using Shouldly;
 using System.Linq;
-using WpfDataUi.Controls;
+using WpfDataUi.DataTypes;
 using Xunit;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class StandardElementsManagerTests : BaseTestClass
 {
@@ -32,7 +32,7 @@ public class StandardElementsManagerTests : BaseTestClass
         CreateSut().SetPreferredDisplayers(state);
 
         var variable = state.Variables.First();
-        variable.PreferredDisplayer.ShouldBe(typeof(SliderDisplay));
+        variable.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.Slider));
         variable.PropertiesToSetOnDisplayer["MinValue"].ShouldBe(0.0);
         variable.PropertiesToSetOnDisplayer["MaxValue"].ShouldBe(255.0);
     }

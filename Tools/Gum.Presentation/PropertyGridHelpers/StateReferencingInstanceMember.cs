@@ -14,20 +14,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using ToolsUtilities;
-using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
 namespace Gum.PropertyGridHelpers;
 
 /// <summary>
-/// Thin WPF adapter over <see cref="VariableGridEntry"/> - the headless heir holding this class's
-/// former decision logic (see ADR-0005 and the "ui-decoupling-plan.md" known-gotchas list). This
-/// class still derives from WpfDataUi's <see cref="InstanceMember"/> (required so the live
-/// Variables tab grid can render it) and owns the WPF-only glue that has no headless equivalent -
-/// the go-to-definition <c>KeyDown</c> wiring and <see cref="HandleUiCreated"/> - while every other
-/// member forwards to <see cref="_entry"/>, translating only at the WPF boundary
-/// (<see cref="VariableDisplayerKind"/> &lt;-&gt; <see cref="Type"/>,
-/// <see cref="VariablePropertyCommitType"/> &lt;-&gt; <see cref="SetPropertyCommitType"/>,
+/// The Variables tab's row: an <see cref="InstanceMember"/> (the grid's neutral member model) over a
+/// <see cref="VariableGridEntry"/>, which holds the decision logic. Every member forwards to the
+/// entry, translating only at the model boundary (<see cref="VariableDisplayerKind"/> -&gt; a
+/// displayer key, <see cref="VariablePropertyCommitType"/> &lt;-&gt; <see cref="SetPropertyCommitType"/>,
 /// <see cref="VariableContextMenuAction"/> -&gt; <see cref="InstanceMember.ContextMenuEvents"/>).
 /// </summary>
 public class StateReferencingInstanceMember : InstanceMember
@@ -168,9 +163,9 @@ public class StateReferencingInstanceMember : InstanceMember
 
     /// <summary>
     /// Translates <see cref="VariableGridEntry.PreferredDisplayerKind"/>/<see cref="VariableGridEntry.PreferredDisplayerOverride"/>
-    /// back to the WPF control <see cref="Type"/> the live grid needs. An explicit override is
-    /// passed through unchanged (it's already the concrete WPF control type); only the "no explicit
-    /// override" case needs mapping from the neutral <see cref="VariableDisplayerKind"/>.
+    /// to the displayer the grid shows. An explicit override (a displayer key or a head control) is
+    /// passed through unchanged; otherwise the neutral <see cref="VariableDisplayerKind"/> maps to a
+    /// <see cref="StandardDisplayers"/> key that each head resolves to its own control.
     /// </summary>
     public override Type PreferredDisplayer
     {
@@ -183,10 +178,10 @@ public class StateReferencingInstanceMember : InstanceMember
 
             return _entry.PreferredDisplayerKind switch
             {
-                VariableDisplayerKind.ComboBox => typeof(ComboBoxDisplay),
-                VariableDisplayerKind.FileSelection => typeof(FileSelectionDisplay),
-                VariableDisplayerKind.ListBox => typeof(ListBoxDisplay),
-                VariableDisplayerKind.MultiLineTextBox => typeof(MultiLineTextBoxDisplay),
+                VariableDisplayerKind.ComboBox => typeof(StandardDisplayers.ComboBox),
+                VariableDisplayerKind.FileSelection => typeof(StandardDisplayers.FileSelection),
+                VariableDisplayerKind.ListBox => typeof(StandardDisplayers.ListBox),
+                VariableDisplayerKind.MultiLineTextBox => typeof(StandardDisplayers.MultiLineTextBox),
                 _ => null,
             };
         }
@@ -283,8 +278,6 @@ public class StateReferencingInstanceMember : InstanceMember
         this.CustomGetEvent += HandleCustomGet;
         this.CustomGetTypeEvent += HandleCustomGetType;
 
-        this.UiCreated += HandleUiCreated;
-
         this.Instance = _entry.Instance;
         this.DisplayName = _entry.DisplayName;
         this.DetailText = _entry.DetailText;
@@ -314,16 +307,13 @@ public class StateReferencingInstanceMember : InstanceMember
         PopulateContextMenu();
     }
 
-    private void HandleUiCreated(object obj)
-    {
-        if (RootVariableName == "VariableReferences" && obj is StringListTextBoxDisplay asTextBox)
-        {
-            asTextBox.KeyDown += (s, e) =>
-            {
-                _entry.HandleReferenceTextEditKeyDown(e.ToGumKeyEventArgs(), asTextBox.GetCurrentLineText());
-            };
-        }
-    }
+    /// <summary>
+    /// A key press in this row's variable-reference editor, with the text of the line under the
+    /// caret. Forwards to the current entry (rows are retargeted), which navigates on the
+    /// go-to-definition hotkey and ignores every variable but VariableReferences.
+    /// </summary>
+    public void HandleReferenceTextEditKeyDown(GumKeyEventArgs e, string currentLineText) =>
+        _entry.HandleReferenceTextEditKeyDown(e, currentLineText);
 
     #endregion
 

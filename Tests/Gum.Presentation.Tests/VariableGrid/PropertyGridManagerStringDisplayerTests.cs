@@ -1,9 +1,8 @@
 using Gum.Managers;
 using Shouldly;
-using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 
-namespace GumToolUnitTests.PropertyGridHelpers;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class PropertyGridManagerStringDisplayerTests : BaseTestClass
 {
@@ -17,7 +16,7 @@ public class PropertyGridManagerStringDisplayerTests : BaseTestClass
             hasLocalizationDatabase: false,
             sortedKeys: Array.Empty<string>());
 
-        member.PreferredDisplayer.ShouldBe(typeof(MultiLineTextBoxDisplay));
+        member.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.MultiLineTextBox));
         member.CustomOptions.ShouldBeNull();
     }
 
@@ -32,8 +31,8 @@ public class PropertyGridManagerStringDisplayerTests : BaseTestClass
             hasLocalizationDatabase: true,
             sortedKeys: keys);
 
-        member.PreferredDisplayer.ShouldBe(typeof(ComboBoxDisplay));
-        member.PropertiesToSetOnDisplayer[nameof(ComboBoxDisplay.IsEditable)].ShouldBe(true);
+        member.PreferredDisplayer.ShouldBe(typeof(StandardDisplayers.ComboBox));
+        member.PropertiesToSetOnDisplayer["IsEditable"].ShouldBe(true);
         // Method itself does not sort — caller hands sorted keys; verify pass-through.
         member.CustomOptions.ShouldBe(keys);
     }

@@ -89,19 +89,12 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<IRenamePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
 
-        // Property-grid-coupled: these name WpfDataUi editor types (phase 70 replaces that with neutral keys).
-        services.AddSingleton<StandardElementsManagerGumTool>();
-        services.AddSingleton<IStandardElementsManagerGumTool>(provider => provider.GetRequiredService<StandardElementsManagerGumTool>());
-        services.AddSingleton<IFilePickingFolderProvider, FilePickingFolderProvider>();
-        services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
-        services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
+        // The Variables tab's WPF view and editor controls; PropertyGridManager itself is in AddGumCore.
+        services.AddSingleton<IVariableGridHead, WpfVariableGridHead>();
 
         // ElementTreeViewManager / PropertyGridManager: concrete singletons needed for the Initialize()
         // calls in WpfHeadStartup (two-stage initialization); both are WPF view managers.
         services.AddSingleton<ElementTreeViewManager>();
-        services.AddSingleton<PropertyGridManager>();
-        // IBehaviorVariablePropertyGridSink: narrow headless port (#3875) resolving to the same PropertyGridManager.
-        services.AddSingleton<IBehaviorVariablePropertyGridSink>(provider => provider.GetRequiredService<PropertyGridManager>());
 
         // OS / framework seams.
         services.AddSingleton<IModifierKeyState, WinFormsModifierKeyState>();

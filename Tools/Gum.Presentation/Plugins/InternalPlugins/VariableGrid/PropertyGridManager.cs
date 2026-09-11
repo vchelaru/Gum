@@ -9,8 +9,7 @@ using WpfDataUi.DataTypes;
 using System.Collections.ObjectModel;
 using Gum.Plugins.VariableGrid;
 using Gum.DataTypes.Behaviors;
-using Gum.Controls;
-using System.Drawing;
+using System.ComponentModel;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Fonts;
@@ -25,9 +24,15 @@ using Gum.Localization;
 using Gum.Reflection;
 using Gum.Plugins;
 using Gum.Diagnostics;
+using WpfDataUi;
 
 namespace Gum.Managers;
 
+/// <summary>
+/// The Variables tab's controller: builds the categories for the selected element, instance, state,
+/// or behavior, keeps the grid in sync with selection and edits, and owns the tab's view model. The
+/// view and its editor controls come from the head through <see cref="IVariableGridHead"/>.
+/// </summary>
 public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 {
     #region Fields
@@ -54,9 +59,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IVariableSaveLogic _variableSaveLogic;
     private readonly IClipboardService _clipboardService;
     private readonly IStateEditingIndicatorService _stateEditingIndicatorService;
+    private readonly IVariableGridHead _variableGridHead;
+    private readonly IVariableFilterService _variableFilterService;
 
-    WpfDataUi.DataUiGrid mVariablesDataGrid;
-    MainPropertyGrid mainControl;
+    IDataUiGrid mVariablesDataGrid;
+    IVariablesTabView mainControl;
     private IPluginTab? _variablesTab;
 
     ElementSaveDisplayer mPropertyGridDisplayer;
@@ -131,7 +138,8 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         IHotkeyManager hotkeyManager,
         IVariableSaveLogic variableSaveLogic,
         IClipboardService clipboardService,
-        IStateEditingIndicatorService stateEditingIndicatorService)
+        IStateEditingIndicatorService stateEditingIndicatorService,
+        IVariableGridHead variableGridHead)
     {
         _selectedState = selectedState;
         _exposeVariableService = exposeVariableService;
@@ -155,6 +163,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _variableSaveLogic = variableSaveLogic;
         _clipboardService = clipboardService;
         _stateEditingIndicatorService = stateEditingIndicatorService;
+        _variableGridHead = variableGridHead;
+        // Plugin-scoped and dependency-free, so it is created here rather than registered app-wide.
+        _variableFilterService = new VariableFilterService();
+        // Created here, not in InitializeEarly, so SelectedBehaviorVariable works before the view exists.
+        VariableViewModel = new MainControlViewModel(_deleteVariableService, _editVariableService);
+        VariableViewModel.IsAddVariableButtonVisible = false;
         _stateSaveCategoryDisplayer = new StateSaveCategoryDisplayer(variableInCategoryPropagationLogic);
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
@@ -193,18 +207,42 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _clipboardService,
             _projectState);
 
-        // Plugin-scoped and dependency-free, so it is created here rather than registered app-wide.
-        mainControl = new Gum.MainPropertyGrid(new VariableFilterService());
+        mainControl = _variableGridHead.CreateVariablesTabView(VariableViewModel);
 
-        _variablesTab = _tabManager.AddControl(mainControl, "Variables", TabLocation.CenterBottom);
+        _variablesTab = _tabManager.AddControl(mainControl.Control, "Variables", TabLocation.CenterBottom);
 
-        mVariablesDataGrid = mainControl.DataGrid;
+        mVariablesDataGrid = mainControl.VariablesGrid;
 
-        VariableViewModel = new Plugins.VariableGrid.MainControlViewModel(_deleteVariableService, _editVariableService);
-        VariableViewModel.IsAddVariableButtonVisible = false;
-        mainControl.DataContext = VariableViewModel;
         mainControl.SelectedBehaviorVariableChanged += HandleBehaviorVariableSelected;
         mainControl.AddVariableClicked += HandleAddVariable;
+        VariableViewModel.PropertyChanged += HandleVariableViewModelPropertyChanged;
+        RefreshVariableFilter();
+    }
+
+    private void HandleVariableViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainControlViewModel.VariableFilterText))
+        {
+            RefreshVariableFilter();
+        }
+    }
+
+    /// <summary>
+    /// Turns what the user typed in the filter box into a row predicate on the variables grid; an
+    /// empty box clears the filter.
+    /// </summary>
+    private void RefreshVariableFilter()
+    {
+        string? filterText = VariableViewModel.VariableFilterText;
+
+        if (!_variableFilterService.HasFilter(filterText))
+        {
+            mVariablesDataGrid.ApplyMemberFilter(null);
+            return;
+        }
+
+        mVariablesDataGrid.ApplyMemberFilter(member =>
+            _variableFilterService.IsMatch(filterText, member.Name ?? "", member.DisplayName));
     }
 
     /// <summary>
@@ -272,8 +310,6 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         //}
         //else
         {
-            mainControl.Visibility = System.Windows.Visibility.Visible;
-
             //mPropertyGrid.SelectedObject = mPropertyGridDisplayer;
             //mPropertyGrid.Refresh();
 
@@ -700,25 +736,25 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         if(isShown)
         {
-            mainControl.BehaviorDataGrid.Instance = behaviorSave;
-            mainControl.BehaviorDataGrid.Categories.Clear();
-            mainControl.BehaviorDataGrid.Categories.AddRange(
+            mainControl.BehaviorGrid.Instance = behaviorSave;
+            mainControl.BehaviorGrid.Categories.Clear();
+            mainControl.BehaviorGrid.Categories.AddRange(
                 ToWpfSynthetic(_behaviorShowingLogic.GetCategoriesFor(behaviorSave)));
 
             if(category != null &&
                 // For now let's require explicitly selecting the catgory:
                 state == null)
             {
-                mainControl.BehaviorDataGrid.Categories.AddRange(
+                mainControl.BehaviorGrid.Categories.AddRange(
                     ToWpfSynthetic(StateSaveCategoryDisplayer.GetCategoriesFor(behaviorSave, category)));
             }
 
 
-            mainControl.BehaviorDataGrid.InsertSpacesInCamelCaseMemberNames();
+            mainControl.BehaviorGrid.InsertSpacesInCamelCaseMemberNames();
         }
         else
         {
-            mainControl.BehaviorDataGrid.Categories.Clear();
+            mainControl.BehaviorGrid.Categories.Clear();
         }
 
     }
@@ -993,7 +1029,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
             foreach (var entry in descriptor.Members)
             {
-                category.Members.Add(new StateReferencingInstanceMember(entry));
+                StateReferencingInstanceMember member = new StateReferencingInstanceMember(entry);
+                // Go-to-definition in the VariableReferences editor; the head only attaches to its
+                // string-list editor, and the entry ignores every other variable.
+                member.UiCreated += displayer =>
+                    _variableGridHead.AttachReferenceTextEditor(displayer, member.HandleReferenceTextEditKeyDown);
+                category.Members.Add(member);
             }
 
             categories.Add(category);
@@ -1036,7 +1077,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 }
                 if (row.PreferredDisplayerKindOverride == VariableDisplayerKind.RemoveButton)
                 {
-                    instanceMember.PreferredDisplayer = typeof(VariableRemoveButton);
+                    instanceMember.PreferredDisplayer = typeof(GumDisplayers.RemoveButton);
                 }
 
                 category.Members.Add(instanceMember);
@@ -1157,7 +1198,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         // If currently in TTF mode, swap the Font row to FileSelectionDisplay
         if (isTtfMode)
         {
-            fontMember.PreferredDisplayer = typeof(WpfDataUi.Controls.FileSelectionDisplay);
+            fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
             fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
 
             // Warn if project uses bmfont.exe, which can't handle .ttf file fonts
@@ -1170,7 +1211,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
         // Create the toggle member
         var toggleMember = new InstanceMember("Font Source", stateSave);
-        toggleMember.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
+        toggleMember.PreferredDisplayer = typeof(StandardDisplayers.ComboBox);
         toggleMember.CustomOptions = new List<object> { "System Font", "From File" };
         toggleMember.CustomGetTypeEvent += (_) => typeof(string);
         toggleMember.CustomGetEvent += (_) => isTtfMode ? "From File" : "System Font";
@@ -1181,7 +1222,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             {
                 isTtfMode = true;
                 // Swap Font row to FileSelectionDisplay
-                fontMember.PreferredDisplayer = typeof(WpfDataUi.Controls.FileSelectionDisplay);
+                fontMember.PreferredDisplayer = typeof(StandardDisplayers.FileSelection);
                 fontMember.PropertiesToSetOnDisplayer["Filter"] = "TrueType Font|*.ttf";
 
                 // Warn if project uses bmfont.exe
@@ -1281,15 +1322,15 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     {
         if (hasLocalizationDatabase)
         {
-            member.PreferredDisplayer = typeof(WpfDataUi.Controls.ComboBoxDisplay);
-            member.PropertiesToSetOnDisplayer[nameof(WpfDataUi.Controls.ComboBoxDisplay.IsEditable)] = true;
+            member.PreferredDisplayer = typeof(StandardDisplayers.ComboBox);
+            member.PropertiesToSetOnDisplayer["IsEditable"] = true;
             // string[] -> IList<object> via array covariance (matches the prior
             // _localizationService.Keys.OrderBy(...).ToArray() assignment).
             member.CustomOptions = sortedKeys.ToArray();
         }
         else
         {
-            member.PreferredDisplayer = typeof(WpfDataUi.Controls.MultiLineTextBoxDisplay);
+            member.PreferredDisplayer = typeof(StandardDisplayers.MultiLineTextBox);
         }
     }
 

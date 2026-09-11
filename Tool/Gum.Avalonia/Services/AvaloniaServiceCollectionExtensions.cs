@@ -47,12 +47,8 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<ICopyPastePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
         services.AddSingleton<IRenamePluginNotifier>(provider => provider.GetRequiredService<PluginManager>());
 
-        // Property-grid-coupled contracts: placeholders until phase 70 re-authors the grid.
-        services.AddSingleton<IStandardElementsManagerGumTool, NullStandardElementsManagerGumTool>();
-        services.AddSingleton<IBehaviorVariablePropertyGridSink, NullBehaviorVariablePropertyGridSink>();
-        services.AddSingleton<IFilePickingFolderProvider, NullFilePickingFolderProvider>();
-        services.AddSingleton<IVariableTypeConverterProvider, DefaultVariableTypeConverterProvider>();
-        services.AddSingleton<ICompositeMemberRegistry, EmptyCompositeMemberRegistry>();
+        // The Variables tab's view and editor controls (the grid logic itself is in AddGumCore).
+        services.AddSingleton<IVariableGridHead, Plugins.VariableGrid.AvaloniaVariableGridHead>();
 
         // Shell.
         services.AddSingleton<AvaloniaTabManager>();

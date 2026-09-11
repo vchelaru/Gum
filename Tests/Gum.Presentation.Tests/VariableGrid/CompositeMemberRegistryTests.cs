@@ -5,7 +5,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class CompositeMemberRegistryTests
 {
@@ -54,7 +54,7 @@ public class CompositeMemberRegistryTests
     [Fact]
     public void ColorDescriptor_ShouldUseColorDisplayAndColorType()
     {
-        ColorDescriptor.Displayer.ShouldBe(typeof(Gum.Controls.DataUi.ColorDisplay));
+        ColorDescriptor.Displayer.ShouldBe(typeof(GumDisplayers.Color));
         ColorDescriptor.CompositeType.ShouldBe(typeof(Color));
         ColorDescriptor.CompositeNameFormat.ShouldBe("{prefix}Color{suffix}");
     }
@@ -102,7 +102,7 @@ public class CompositeMemberRegistryTests
     [Fact]
     public void CornerRadiusDescriptor_ShouldUseCornerRadiusDisplayAndCompositeType()
     {
-        CornerRadiusDescriptor.Displayer.ShouldBe(typeof(Gum.Controls.DataUi.CornerRadiusDisplay));
+        CornerRadiusDescriptor.Displayer.ShouldBe(typeof(GumDisplayers.CornerRadius));
         CornerRadiusDescriptor.CompositeType.ShouldBe(typeof(CornerRadiusComposite));
         CornerRadiusDescriptor.CompositeNameFormat.ShouldBe("{prefix}CornerRadius{suffix}");
     }

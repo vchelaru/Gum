@@ -48,7 +48,7 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | Reference | Referenced by | Used for | Removed by | Guard |
 |---|---|---|---|---|
 | `nkast.Kni.Platform.WinForms.DX11` | `Gum.csproj`, `EditorTabPlugin_XNA` | the only graphics backend; `FL10_0` device against an HWND | 10 (backend choice), 50 | TFM |
-| `System.Drawing.Common` | `Gum.csproj`, **`Gum.Presentation`** | `ImageHeader` `new Bitmap(path)` fallback; `FontFamily.Families`; `ThemedScrollbar` GDI | 25 (drop from `Gum.Presentation`), 70/80 (font list), 120 (`ThemedScrollbar` deleted) | **Analyzer** |
+| `System.Drawing.Common` | `Gum.csproj`, **`Gum.Presentation`** | `ImageHeader` `new Bitmap(path)` fallback; `FontFamily.Families`; `ThemedScrollbar` GDI | 25 (drop from `Gum.Presentation`), 70 (font list, **done**), 120 (`ThemedScrollbar` deleted) | **Analyzer** |
 | `MaterialDesignThemes` | `Gum.csproj` | style base | 90 | TFM |
 | `ControlzEx` | `Gum.csproj` | window chrome | 90 | TFM |
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
@@ -68,7 +68,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | Site | What | Removed by |
 |---|---|---|
 | `Tools/Gum.Presentation/Graphics/ImageHeader.cs:58` | `new Bitmap(path)` fallback when header parsing fails | 25 — decode via SkiaSharp (`Gum.ImageDiff` already depends on it) |
-| `Gum/PropertyGridHelpers/Converters/FontTypeConverter.cs:35` | `FontFamily.Families` to list installed fonts | 70/80 — `SKFontManager.Default.FontFamilies` behind a seam |
+| `FontTypeConverter` (now `Tools/Gum.Presentation/PropertyGridHelpers/Converters/`) | `FontFamily.Families` to list installed fonts | **done** (70): `IInstalledFontProvider` over `SKFontManager.Default.FontFamilies`, shared by both heads |
 | `Gum/Controls/ThemedScrollbar.cs:278` | WinForms owner-draw | 120 — deleted with the WPF head |
 | `RenderingLibrary/Content/ContentLoader.cs` (TGA/BMP) | behind `RENDERING_LIB_SUPPORTS_TGA` / `HAS_SYSTEM_DRAWING_IMAGE`, **not defined** in the tool (`GUM; MONOGAME`) | none needed; note in 25 that the defines must stay off |
 

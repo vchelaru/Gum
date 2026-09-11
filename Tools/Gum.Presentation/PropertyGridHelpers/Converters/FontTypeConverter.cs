@@ -1,13 +1,19 @@
-﻿using Gum.Wireframe;
+using Gum.Services.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 
 namespace Gum.PropertyGridHelpers.Converters;
 
+/// <summary>The Font variable's drop-down: the installed font families, re-read at most every 10 seconds.</summary>
 class FontTypeConverter : TypeConverter
 {
+    private readonly IInstalledFontProvider _fontProvider;
+
+    public FontTypeConverter(IInstalledFontProvider fontProvider)
+    {
+        _fontProvider = fontProvider;
+    }
 
     public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
     {
@@ -32,13 +38,7 @@ class FontTypeConverter : TypeConverter
         if(cachedCollection == null || (DateTime.Now - lastFontGet) > TimeSpan.FromSeconds(10))
         {
             lastFontGet = DateTime.Now;
-            var fontFamilies = System.Drawing.FontFamily.Families;
-            var familyNames = new List<string>();
-
-            foreach (FontFamily font in fontFamilies)
-            {
-                familyNames.Add(font.Name);
-            }
+            List<string> familyNames = new List<string>(_fontProvider.GetInstalledFontFamilyNames());
 
             cachedCollection = new StandardValuesCollection(familyNames);
         }

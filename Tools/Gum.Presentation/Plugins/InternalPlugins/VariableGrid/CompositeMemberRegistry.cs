@@ -30,7 +30,7 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
         return new CompositeMemberDescriptor(
             ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("Color")!,
             CompositeNameFormat: "{prefix}Color{suffix}",
-            Displayer: typeof(Gum.Controls.DataUi.ColorDisplay),
+            Displayer: typeof(GumDisplayers.Color),
             CompositeType: typeof(Color),
             Compose: ComposeColor,
             Decompose: DecomposeColor);
@@ -63,7 +63,7 @@ public class CompositeMemberRegistry : ICompositeMemberRegistry
         return new CompositeMemberDescriptor(
             ChannelRootNames: ElementSaveExtensions.GetCompositeChannelRootNames("CornerRadius")!,
             CompositeNameFormat: "{prefix}CornerRadius{suffix}",
-            Displayer: typeof(Gum.Controls.DataUi.CornerRadiusDisplay),
+            Displayer: typeof(GumDisplayers.CornerRadius),
             CompositeType: typeof(CornerRadiusComposite),
             Compose: ComposeCornerRadius,
             Decompose: DecomposeCornerRadius);

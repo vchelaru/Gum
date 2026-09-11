@@ -1,5 +1,6 @@
 using Gum.Extensions;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using WpfDataUi;
 using Gum.Plugins.VariableGrid;
 using System;
 using System.Collections.Specialized;
@@ -12,42 +13,42 @@ using System.Windows.Threading;
 namespace Gum
 {
     /// <summary>
-    /// Interaction logic for TestWpfControl.xaml
+    /// The WPF Variables tab view: the filter box, the variables and behavior grids, and the
+    /// behavior-variable list. <see cref="Gum.Managers.PropertyGridManager"/> drives it through
+    /// <see cref="IVariablesTabView"/>.
     /// </summary>
-    public partial class MainPropertyGrid : UserControl
+    public partial class MainPropertyGrid : UserControl, IVariablesTabView
     {
-        public event EventHandler AddVariableClicked;
+        public event EventHandler? AddVariableClicked;
 
-        public event EventHandler SelectedBehaviorVariableChanged;
-
-        private readonly IVariableFilterService _variableFilterService;
+        public event EventHandler? SelectedBehaviorVariableChanged;
 
         private MainControlViewModel? _subscribedViewModel;
 
-        public object? Instance
+        public MainPropertyGrid()
         {
-            get { return DataGrid.Instance; }
-            set { DataGrid.Instance = value; }
-        }
-
-
-        public MainPropertyGrid(IVariableFilterService variableFilterService)
-        {
-            _variableFilterService = variableFilterService;
-
             InitializeComponent();
 
             DataContextChanged += HandleDataContextChanged;
         }
 
+        /// <inheritdoc/>
+        object IVariablesTabView.Control => this;
+
+        /// <inheritdoc/>
+        IDataUiGrid IVariablesTabView.VariablesGrid => DataGrid;
+
+        /// <inheritdoc/>
+        IDataUiGrid IVariablesTabView.BehaviorGrid => BehaviorDataGrid;
+
         private void HandleAddVariableClicked(object? sender, RoutedEventArgs e)
         {
-            AddVariableClicked?.Invoke(this, null);
+            AddVariableClicked?.Invoke(this, EventArgs.Empty);
         }
 
         private void ListBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
         {
-            SelectedBehaviorVariableChanged?.Invoke(this, null);
+            SelectedBehaviorVariableChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -61,7 +62,6 @@ namespace Gum
             if (_subscribedViewModel != null)
             {
                 _subscribedViewModel.BehaviorVariablesContextMenuItems.CollectionChanged -= HandleBehaviorVariablesContextMenuItemsChanged;
-                _subscribedViewModel.PropertyChanged -= HandleViewModelPropertyChanged;
             }
 
             _subscribedViewModel = e.NewValue as MainControlViewModel;
@@ -69,25 +69,15 @@ namespace Gum
             if (_subscribedViewModel != null)
             {
                 _subscribedViewModel.BehaviorVariablesContextMenuItems.CollectionChanged += HandleBehaviorVariablesContextMenuItemsChanged;
-                _subscribedViewModel.PropertyChanged += HandleViewModelPropertyChanged;
             }
 
             RebuildBehaviorVariablesContextMenu();
-            RefreshVariableFilter();
-        }
-
-        private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(MainControlViewModel.VariableFilterText))
-            {
-                RefreshVariableFilter();
-            }
         }
 
         /// <summary>
         /// Puts the caret in the filter box with any existing filter selected, so typing replaces it.
-        /// Called by <see cref="Gum.Plugins.InternalPlugins.VariableGrid.PropertyGridManager"/> in
-        /// response to the focus-filter hotkey.
+        /// Called by <see cref="Gum.Managers.PropertyGridManager"/> in response to the focus-filter
+        /// hotkey.
         /// </summary>
         public void FocusVariableFilter()
         {
@@ -127,25 +117,6 @@ namespace Gum
 
             DataGrid.Focus();
             e.Handled = true;
-        }
-
-        /// <summary>
-        /// Turns what the user typed into a row predicate. The predicate lives here rather than on the
-        /// ViewModel because rows are WPF <see cref="WpfDataUi.DataTypes.InstanceMember"/>s, which the
-        /// headless assembly holding the ViewModel cannot reference.
-        /// </summary>
-        private void RefreshVariableFilter()
-        {
-            string? filterText = _subscribedViewModel?.VariableFilterText;
-
-            if (!_variableFilterService.HasFilter(filterText))
-            {
-                DataGrid.ApplyMemberFilter(null);
-                return;
-            }
-
-            DataGrid.ApplyMemberFilter(member =>
-                _variableFilterService.IsMatch(filterText, member.Name ?? "", member.DisplayName));
         }
 
         private void HandleBehaviorVariablesContextMenuItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) =>

@@ -1,9 +1,10 @@
-﻿using Gum.DataTypes.Variables;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.PropertyGridHelpers.Converters;
 using Gum.Services;
 using Gum.ToolStates;
 using Gum.Reflection;
+using Gum.Services.Fonts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -59,7 +60,7 @@ namespace Gum.DataTypes
 
                     if (values.Count > 0)
                     {
-                        return values.FirstOrDefault().GetType();
+                        return values.Cast<object>().First().GetType();
                     }
                     else
                     {
@@ -111,7 +112,7 @@ namespace Gum.DataTypes
             }
             else if (variableSave.IsFont)
             {
-                return new FontTypeConverter();
+                return new FontTypeConverter(Locator.GetRequiredService<IInstalledFontProvider>());
             }
             else if (variableSave.Name == "Guide")
             {

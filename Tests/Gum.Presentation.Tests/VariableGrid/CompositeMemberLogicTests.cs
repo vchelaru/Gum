@@ -8,7 +8,7 @@ using Shouldly;
 using WpfDataUi.DataTypes;
 using Xunit;
 
-namespace GumToolUnitTests.VariableGrid;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class CompositeMemberLogicTests : BaseTestClass
 {

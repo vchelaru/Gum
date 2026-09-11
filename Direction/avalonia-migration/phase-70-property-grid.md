@@ -120,3 +120,12 @@ Work is on the phase-70 branch, one commit per part.
   `CommandManager.RequerySuggested`). `WpfDataUi` keeps only the views over the model. File
   pickers now go through `IDialogService` in both heads (`DialogServiceFilePicker`); the unused
   folder mode and the never-called `SetCursorPos` import are deleted.
+- **Part 2: the Variables tab's logic is shared.** `PropertyGridManager`, `StateReferencingInstanceMember`,
+  the composite logic and registry, the category row adapter, `StandardElementsManagerGumTool`, the
+  drop-down type converters, `VariableTypeConverterProvider`, and `FilePickingFolderProvider` moved
+  to `Gum.Presentation` and register in `AddGumCore`; five head-provided placeholders are gone. The
+  plugin logic is `VariableGridPluginBase`/`ExclusionsPluginBase`, each head exporting a thin
+  subclass. A head supplies one contract, `IVariableGridHead`: the tab view (`IVariablesTabView`)
+  and its controls for the Gum-specific `GumDisplayers` keys. The filter box's predicate moved from
+  the WPF view into `PropertyGridManager`. The installed-font list goes through
+  `IInstalledFontProvider` (SkiaSharp).
