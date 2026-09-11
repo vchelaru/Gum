@@ -10,7 +10,7 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
   xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
-  xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=WpfDataUi"
+  xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=DataUi.Core"
   d:DataContext="{d:DesignInstance d:Type={x:Type variableGrid:MainControlViewModel},
                                    IsDesignTimeCreatable=False}"
   d:DesignHeight="200"

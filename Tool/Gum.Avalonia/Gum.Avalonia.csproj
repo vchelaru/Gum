@@ -36,6 +36,11 @@
 		<!-- The Theming dialog's color pickers (phase 80). Its Fluent style is included in App. -->
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+		<!-- Runtime dependencies of the Skia plugin (SVG and Lottie), matching what Gum.csproj ships for
+		     the WPF head: a plugin's NuGet dependencies load from the application folder. -->
+		<PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="Svg.Skia" Version="0.5.18" />
 		<!--
 			The editor canvases draw with KNI. The framework packages are the reference assemblies
 			the neutral canvas projects compile against; the SDL2/GL platform is the one concrete
@@ -75,6 +80,7 @@
 		<ProjectReference Include="..\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
 		<!-- The Animations tab's neutral core; this head adds the Avalonia view (Plugins/StateAnimation). -->
 		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
+		<ProjectReference Include="..\..\AvaloniaDataUi\AvaloniaDataUi.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -89,6 +95,8 @@
 		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1.fnt" Link="Content\Fonts\Font18Arial_o1.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1_0.png" Link="Content\Fonts\Font18Arial_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The Variables tab's text-alignment toggle images, shared with the WPF head. -->
+		<None Include="..\..\Gum\Content\Icons\Alignment\*.png" Link="Content\Icons\Alignment\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>

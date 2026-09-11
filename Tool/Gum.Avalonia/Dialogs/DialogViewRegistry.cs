@@ -45,6 +45,12 @@ public class DialogViewRegistry
         Register<AddStateKeyframeDialog>(() => new AddStateKeyframeDialogView());
         Register<SubAnimationSelectionDialogViewModel>(() => new SubAnimationSelectionDialogView());
         Register<DeleteOptionsDialogViewModel>(() => new DeleteOptionsDialogView());
+        // The Variables tab's dialogs (phase 70).
+        Register<Gum.Plugins.InternalPlugins.VariableGrid.ViewModels.AddVariableViewModel>(() => new Plugins.VariableGrid.AddVariableView());
+        // Plugin dialogs whose view models live in Gum.Presentation (phase 70).
+        Register<global::GumFormsPlugin.ViewModels.AddFormsViewModel>(() => new Plugins.PluginDialogs.AddFormsView());
+        Register<global::ImportFromGumxPlugin.ViewModels.ImportFromGumxViewModel>(() => new Plugins.PluginDialogs.ImportFromGumxView());
+        Register<global::ImportFromGumxPlugin.ViewModels.StandardDiffDetailsViewModel>(() => new Plugins.PluginDialogs.StandardDiffDetailsView());
     }
 
     /// <summary>The view-model types with a registered view (subclasses resolve through these).</summary>

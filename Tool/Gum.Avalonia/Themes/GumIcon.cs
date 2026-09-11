@@ -89,6 +89,15 @@ public sealed class GumIcon : Control
         AffectsMeasure<GumIcon>(IconProperty);
     }
 
+    /// <summary>
+    /// An icon for <paramref name="key"/>, <paramref name="size"/> units square, or null when there is
+    /// no geometry by that name.
+    /// </summary>
+    public static GumIcon? Create(string key, double size = 20) =>
+        GumIconGeometries.Get(key) != null
+            ? new GumIcon { Icon = key, Width = size, Height = size, IsHitTestVisible = false }
+            : null;
+
     /// <summary>The icon's key, the SVG file name it was generated from (e.g. "AnchorTopLeft").</summary>
     public string? Icon
     {

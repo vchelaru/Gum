@@ -67,6 +67,9 @@
 		     No WPF/WinForms dependency; pin matches Gum.csproj and the plugin csprojs' version so a
 		     single bump propagates predictably. -->
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+		<!-- SkiaInstalledFontProvider lists installed fonts on every OS (GDI+'s FontFamily.Families is
+		     Windows-only). Same version as Gum.ImageDiff and the heads resolve. -->
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -81,6 +84,7 @@
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+		<ProjectReference Include="..\..\DataUi.Core\DataUi.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -1,0 +1,123 @@
+using Avalonia.Controls;
+using Avalonia.Headless.XUnit;
+using AvaloniaDataUi;
+using AvaloniaDataUi.Controls;
+using Shouldly;
+using WpfDataUi.DataTypes;
+
+namespace Gum.Avalonia.Tests.DataUi;
+
+/// <summary>
+/// The Avalonia grid over the neutral model: rows get the editor the registry picks, the filter and
+/// empty-category hiding flow through to the view, and a refresh re-reads every row.
+/// </summary>
+public class DataUiGridTests
+{
+    private static (DataUiGrid Grid, Window Window) ShowGrid(params MemberCategory[] categories)
+    {
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(categories.ToList());
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+        return (grid, window);
+    }
+
+    private static MemberCategory Category(string name, EditorFixture fixture, params string[] propertyNames)
+    {
+        MemberCategory category = new MemberCategory(name);
+        foreach (string propertyName in propertyNames)
+        {
+            category.Members.Add(fixture.Member(propertyName));
+        }
+        return category;
+    }
+
+    [AvaloniaFact]
+    public void Rows_GetTheEditorForTheirType()
+    {
+        EditorFixture fixture = new EditorFixture();
+        (DataUiGrid grid, Window window) = ShowGrid(Category("GridEditors", fixture,
+            nameof(EditorFixture.Text), nameof(EditorFixture.Flag), nameof(EditorFixture.Maybe), nameof(EditorFixture.Choice)));
+
+        Dictionary<string, Type> editorByMember = grid.LiveContainers
+            .ToDictionary(container => container.Member!.Name, container => container.Displayer!.GetType());
+
+        editorByMember[nameof(EditorFixture.Text)].ShouldBe(typeof(TextBoxDisplay));
+        editorByMember[nameof(EditorFixture.Flag)].ShouldBe(typeof(CheckBoxDisplay));
+        editorByMember[nameof(EditorFixture.Maybe)].ShouldBe(typeof(NullableBoolDisplay));
+        editorByMember[nameof(EditorFixture.Choice)].ShouldBe(typeof(ComboBoxDisplay));
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void PreferredDisplayerKey_ResolvesThroughTheGridsRegistry_AndAppliesDisplayerProperties()
+    {
+        EditorFixture fixture = new EditorFixture();
+        InstanceMember member = fixture.Member(nameof(EditorFixture.Number));
+        member.PreferredDisplayer = typeof(StandardDisplayers.Slider);
+        member.PropertiesToSetOnDisplayer["MaxValue"] = 5.0;
+        MemberCategory category = new MemberCategory("GridPreferred");
+        category.Members.Add(member);
+
+        (DataUiGrid grid, Window window) = ShowGrid(category);
+
+        SliderDisplay slider = grid.LiveContainers.Single().Displayer.ShouldBeOfType<SliderDisplay>();
+        slider.MaxValue.ShouldBe(5.0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Filter_RemovesRows_AndAnEmptyCategoryHidesItsHeader()
+    {
+        EditorFixture fixture = new EditorFixture();
+        MemberCategory kept = Category("GridFilterKept", fixture, nameof(EditorFixture.Text), nameof(EditorFixture.Number));
+        MemberCategory emptied = Category("GridFilterEmptied", fixture, nameof(EditorFixture.Flag));
+        (DataUiGrid grid, Window window) = ShowGrid(kept, emptied);
+
+        grid.ApplyMemberFilter(member => member.Name == nameof(EditorFixture.Text));
+        window.UpdateLayout();
+
+        grid.LiveContainers.Select(container => container.Member!.Name).ShouldBe(new[] { nameof(EditorFixture.Text) });
+        emptied.IsVisible.ShouldBeFalse();
+        window.GetVisualDescendantsOfType<Expander>().Count(expander => expander.IsVisible).ShouldBe(1);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Refresh_RereadsEveryRow()
+    {
+        EditorFixture fixture = new EditorFixture { Text = "before" };
+        (DataUiGrid grid, Window window) = ShowGrid(Category("GridRefresh", fixture, nameof(EditorFixture.Text)));
+        TextBoxDisplay display = grid.LiveContainers.Single().Displayer.ShouldBeOfType<TextBoxDisplay>();
+
+        fixture.Text = "after";
+        grid.Refresh();
+
+        display.TextBox.Text.ShouldBe("after");
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void SettingAValueThroughARow_RaisesPropertyChangeWithTheOldValue()
+    {
+        EditorFixture fixture = new EditorFixture { Count = 3 };
+        (DataUiGrid grid, Window window) = ShowGrid(Category("GridPropertyChange", fixture, nameof(EditorFixture.Count)));
+        TextBoxDisplay display = grid.LiveContainers.Single().Displayer.ShouldBeOfType<TextBoxDisplay>();
+        object? oldValue = null;
+        grid.PropertyChange += (_, args) => oldValue = args.OldValue;
+
+        display.TextBox.Text = "9";
+        WpfDataUi.IDataUiExtensionMethods.TrySetValueOnInstance(display);
+
+        fixture.Count.ShouldBe(9);
+        oldValue.ShouldBe(3);
+        window.Close();
+    }
+}
+
+internal static class VisualTreeTestExtensions
+{
+    public static IEnumerable<T> GetVisualDescendantsOfType<T>(this global::Avalonia.Visual root) where T : global::Avalonia.Visual =>
+        global::Avalonia.VisualTree.VisualExtensions.GetVisualDescendants(root).OfType<T>();
+}

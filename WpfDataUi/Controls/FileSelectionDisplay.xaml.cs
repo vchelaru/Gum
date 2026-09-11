@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using WpfDataUi.DataTypes;
@@ -55,18 +55,12 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
     public bool SuppressSettingProperty { get; set; }
 
     /// <summary>
-    /// Sets the filter used by the OpenFileDialog. Example: "Bitmap Font Generator Font|*.fnt"
+    /// Sets the filter used by the file picker. Example: "Bitmap Font Generator Font|*.fnt"
     /// </summary>
     public string Filter
     {
         get => _filePickingLogic.Filter;
         set => _filePickingLogic.Filter = value;
-    }
-
-    public bool IsFolderDialog
-    {
-        get => _filePickingLogic.IsFolderDialog;
-        set => _filePickingLogic.IsFolderDialog = value;
     }
 
     #endregion
@@ -79,7 +73,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
         InitializeComponent();
 
-        _textBoxLogic = new TextBoxDisplayLogic(this, TextBox);
+        _textBoxLogic = WpfDataUiTextBox.CreateLogic(this, TextBox);
 
         RefreshAllContextMenus();
     }

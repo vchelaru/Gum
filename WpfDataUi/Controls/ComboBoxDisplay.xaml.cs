@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -14,13 +14,10 @@ namespace WpfDataUi.Controls;
 
 public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
 {
-    /// <summary>
-    /// Sentinel string used as the "no value" entry for nullable-enum combo boxes.
-    /// Matches the pre-existing convention recognised by
-    /// StateReferencingInstanceMember.HandleCustomSet, which translates this string
-    /// back to null when committing to the underlying variable.
-    /// </summary>
-    public const string NullSentinel = "<None>";
+    /// <inheritdoc cref="ComboBoxDisplayLogic.NullSentinel"/>
+    public const string NullSentinel = ComboBoxDisplayLogic.NullSentinel;
+
+    private readonly ComboBoxDisplayLogic _logic = new ComboBoxDisplayLogic();
 
     #region Fields
 
@@ -314,23 +311,11 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
     public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
     {
         this.SuppressSettingProperty = true;
-        // For nullable-enum pickers a stored null maps to the "<None>" sentinel
-        // entry — selecting it visually round-trips through HandleCustomSet which
-        // turns "<None>" back into null on write. Without this mapping a null
-        // value would deselect the combo entirely (WPF's default for SelectedItem
-        // = null), losing the cue that the variable currently has no value.
-        bool isNullableEnum = mInstancePropertyType != null
-            && Nullable.GetUnderlyingType(mInstancePropertyType)?.IsEnum == true;
-        if (valueOnInstance == null && isNullableEnum)
-        {
-            this.ComboBox.SelectedItem = NullSentinel;
-            this.ComboBox.Text = NullSentinel;
-        }
-        else
-        {
-            this.ComboBox.SelectedItem = valueOnInstance;
-            this.ComboBox.Text = valueOnInstance?.ToString();
-        }
+        // A null nullable-enum value selects the "<None>" entry, so the combo still shows that the
+        // variable has no value rather than deselecting.
+        object? itemToSelect = _logic.GetItemToSelect(valueOnInstance, mInstancePropertyType);
+        this.ComboBox.SelectedItem = itemToSelect;
+        this.ComboBox.Text = itemToSelect?.ToString();
         this.SuppressSettingProperty = false;
 
         SyncBackgroundWithState();
@@ -338,56 +323,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         return ApplyValueResult.Success;
     }
 
-    protected virtual IEnumerable<object> CustomOptions
-    {
-        get
-        {
-            // We want to check the CustomOptions first
-            // because we may have an enum that has been
-            // reduced by the converter.  In that case we
-            // want to show the reduced set instead of the
-            // entire enum
-            if (InstanceMember?.CustomOptions != null)
-            {
-                foreach(var item in InstanceMember.CustomOptions)
-                {
-                    yield return item;
-                }
-            }
-            // Multi-select could result in a null type, so let's do a null check:
-            else if (mInstancePropertyType?.IsEnum == true)
-            {
-                var values = Enum.GetValues(mInstancePropertyType);
-                foreach(var item in values)
-                {
-                    yield return item;
-                }
-            }
-            else if (mInstancePropertyType != null
-                && Nullable.GetUnderlyingType(mInstancePropertyType) is Type underlyingEnumType
-                && underlyingEnumType.IsEnum)
-            {
-                // Nullable enum (e.g., ResizeBehavior?): yield the "<None>" string
-                // sentinel first to represent the no-value option, then the underlying
-                // enum's values. The sentinel matches a pre-existing convention that
-                // StateReferencingInstanceMember.HandleCustomSet already recognises —
-                // it converts "<None>" back to null on write, so the variable round-
-                // trips cleanly. WPF ComboBox does not handle a literal null
-                // SelectedItem cleanly (selecting it deselects rather than picking the
-                // null item), which is why a string sentinel is used.
-                yield return NullSentinel;
-                var values = Enum.GetValues(underlyingEnumType);
-                foreach (var item in values)
-                {
-                    yield return item;
-                }
-            }
-            else
-            {
-                yield break;
-            }
-        }
-    }
+    protected virtual IEnumerable<object> CustomOptions => _logic.GetOptions(InstanceMember, mInstancePropertyType);
 
     private void PopulateItems()
     {
@@ -543,7 +479,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             // Green background for a default value, matching TextBoxDisplayLogic (FlatRedBall#1755).
             if (InstanceMember?.IsDefault == true)
             {
-                ComboBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                ComboBox.Background = DataUiBrushes.DefaultValueBackground;
             }
             else if (ComboBox.TryFindResource("Frb.Brushes.Field.Background") != null)
             {

@@ -11,8 +11,7 @@ namespace Gum.Avalonia.Services;
 
 /// <summary>
 /// This head's framework-specific startup steps. Settings migration is the same as the WPF head's
-/// and plugins load through the shared host; the property-grid step is a placeholder until phase
-/// 70 brings the grid across.
+/// and plugins load through the shared host.
 /// </summary>
 public class AvaloniaHeadStartup : IHeadStartup
 {
@@ -47,7 +46,8 @@ public class AvaloniaHeadStartup : IHeadStartup
         _services.GetRequiredService<ElementTreeViewManager>().Initialize();
 
     /// <inheritdoc/>
-    public void InitializePropertyGrid() { }
+    public void InitializePropertyGrid() =>
+        _services.GetRequiredService<PropertyGridManager>().InitializeEarly();
 
     /// <inheritdoc/>
     public void InitializePlugins()

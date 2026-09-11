@@ -24,6 +24,9 @@ public class PluginHostTests
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
         typeof(global::PerformanceMeasurementPlugin.MainPlugin).Assembly,
+        typeof(global::GumFormsPlugin.MainGumFormsPlugin).Assembly,
+        typeof(global::ImportFromGumxPlugin.MainImportFromGumxPlugin).Assembly,
+        typeof(global::SkiaPlugin.MainSkiaPlugin).Assembly,
     };
 
     [Fact]
@@ -71,7 +74,7 @@ public class PluginHostTests
         PluginBase[] plugins = container.GetExportedValues<PluginBase>().ToArray();
 
         plugins.Select(plugin => plugin.GetType().Name)
-            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin", "MainPlugin" }, ignoreOrder: true);
+            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin", "MainPlugin", "MainGumFormsPlugin", "MainImportFromGumxPlugin", "MainSkiaPlugin" }, ignoreOrder: true);
         plugins.ShouldAllBe(plugin => plugin.Menu != null);
     }
 

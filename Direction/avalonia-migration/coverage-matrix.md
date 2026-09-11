@@ -21,19 +21,19 @@
 | Project | Flags | Real coupling | Removed by | Guard |
 |---|---|---|---|---|
 | `Gum/Gum.csproj` | WPF + WinForms | the WPF head itself | 120 (retired or reduced to the entry point) | TFM |
-| `WpfDataUi` | WPF + WinForms | property grid views | 70 (model split), 120 (delete) | TFM |
+| `WpfDataUi` | WPF + WinForms | property grid views only; the model, grid logic, and editor logic moved to `DataUi.Core` (net10.0, **done** in 70) | 120 (delete) | TFM |
 | `XnaAndWinforms` | **done** (net10.0, 2026-09-10) | neutral device host + frame loop; WPF pieces in `XnaAndWinforms.Wpf` (net10.0-windows, WPF head only) | 50 | TFM |
 | `InputLibrary` | **done** (net10.0, 2026-09-10) | `Cursor` polls `IInputHostControl`; the WPF adapter moved to `XnaAndWinforms.Wpf` | 50 | TFM |
 | `FlatRedBall.SpecializedXnaControls` | **done** (net10.0, 2026-09-10) | `ImageRegionSelectionCore` over `ICanvasHost` | 50 | TFM |
 | `Tool/EditorTabPlugin_XNA` | WPF + WinForms | thin WPF head over `Tool/EditorTabPlugin.Core` (net10.0); the Avalonia head has its own | 50 (split done), 120 (delete) | TFM |
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | thin WPF head over `Tool/TextureCoordinatePlugin.Core` (net10.0) | 50 (split done), 120 (delete) | TFM |
 | `Gum/StateAnimationPlugin` | WPF + WinForms (win10 SDK pin **removed**, phase 80) | the WPF head only: views over `Tool/StateAnimationPlugin.Core` (net10.0), whose Avalonia twin is in `Tool/Gum.Avalonia/Plugins/StateAnimation` | 120 (WPF head deleted) | TFM |
-| `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
+| `Gum/CodeOutputPlugin` | the WPF head's Code view and delete-dialog option only (phase 70) | the plugin body is `CodeOutputPluginBase` and the settings rows `CodeOutputSettingsMembers`, both in `Gum.Presentation`; the Avalonia head exports its own subclass and Code view (`Tool/Gum.Avalonia/Plugins/CodeOutput/`); the delete dialog's "delete custom code" option stays WPF-only until the Avalonia delete dialog takes plugin options | 70, 80 (delete option) | TFM |
+| `Gum/GumFormsPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog view in each head (WPF `Gum/PluginViews/`, Avalonia `Plugins/PluginDialogs/`); Forms themes staged to both heads | 70 | TFM |
+| `Gum/ImportFromGumxPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog through `IDialogService`, views in each head as above | 70 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | **done** (net10.0, phase 80) | no views: its tab is `PerformanceViewModel`; the WPF view moved into the WPF head, the Avalonia view is `Tool/Gum.Avalonia/Panels/PerformanceView.cs` | 80 | TFM |
 | `Tool/TreeViewPlugin.Core` | **new** (net10.0, 2026-09-10) | element tree model, manager, selection, plugin; the WPF view stays in `Gum/` | 60 | TFM |
-| `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
+| `Gum/SvgPlugin` (SkiaPlugin) | **done** (net10.0, phase 70) | over `Gum.Presentation` and KniGum; its CPU texture upload works on either KNI backend; the Avalonia head references its Skia runtime packages as `Gum.csproj` does | 70 | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
@@ -49,11 +49,11 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | Reference | Referenced by | Used for | Removed by | Guard |
 |---|---|---|---|---|
 | `nkast.Kni.Platform.WinForms.DX11` | `Gum.csproj`, `EditorTabPlugin_XNA` | the only graphics backend; `FL10_0` device against an HWND | 10 (backend choice), 50 | TFM |
-| `System.Drawing.Common` | `Gum.csproj`, **`Gum.Presentation`** | `ImageHeader` `new Bitmap(path)` fallback; `FontFamily.Families`; `ThemedScrollbar` GDI | 25 (drop from `Gum.Presentation`), 70/80 (font list), 120 (`ThemedScrollbar` deleted) | **Analyzer** |
+| `System.Drawing.Common` | `Gum.csproj`, **`Gum.Presentation`** | `ImageHeader` `new Bitmap(path)` fallback; `FontFamily.Families`; `ThemedScrollbar` GDI | 25 (drop from `Gum.Presentation`), 70 (font list, **done**), 120 (`ThemedScrollbar` deleted) | **Analyzer** |
 | `MaterialDesignThemes` | `Gum.csproj` | style base | 90 | TFM |
 | `ControlzEx` | `Gum.csproj` | window chrome | 90 | TFM |
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
-| `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 | TFM |
+| `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 (the Avalonia Variables tab's `ColorDisplay` does not use it: swatch, hex, and R/G/B sliders, phase 70) | TFM |
 | `SharpVectors` | `Gum.csproj` | SVG in WPF views | 90 | TFM |
 | `SkiaSharp.Views.WPF` | **done** (phase 80) | the only user was the dead `TimedStateMarkerDisplay`; deleted with the package | 80 | TFM |
 | `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | **done** (removed 2026-09-10) | the one helper `Dialog.cs` used is now a local visual-tree search | 90 | TFM |
@@ -69,7 +69,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | Site | What | Removed by |
 |---|---|---|
 | `Tools/Gum.Presentation/Graphics/ImageHeader.cs:58` | `new Bitmap(path)` fallback when header parsing fails | 25 — decode via SkiaSharp (`Gum.ImageDiff` already depends on it) |
-| `Gum/PropertyGridHelpers/Converters/FontTypeConverter.cs:35` | `FontFamily.Families` to list installed fonts | 70/80 — `SKFontManager.Default.FontFamilies` behind a seam |
+| `FontTypeConverter` (now `Tools/Gum.Presentation/PropertyGridHelpers/Converters/`) | `FontFamily.Families` to list installed fonts | **done** (70): `IInstalledFontProvider` over `SKFontManager.Default.FontFamilies`, shared by both heads |
 | `Gum/Controls/ThemedScrollbar.cs:278` | WinForms owner-draw | 120 — deleted with the WPF head |
 | `RenderingLibrary/Content/ContentLoader.cs` (TGA/BMP) | behind `RENDERING_LIB_SUPPORTS_TGA` / `HAS_SYSTEM_DRAWING_IMAGE`, **not defined** in the tool (`GUM; MONOGAME`) | none needed; note in 25 that the defines must stay off |
 
@@ -80,9 +80,9 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `Gum/Commands/GuiCommands.cs` | `user32`/`kernel32` `SetForegroundWindow`+`AttachThreadInput`, `WindowInteropHelper` | force the tool to the foreground after font generation | 30 — head-side window activation seam; `GuiCommands` stays in `AddGumWpf()` until then (phase 20 list) |
 | `Gum/ViewModels/MainWindowViewModel.cs` | `Shcore GetDpiForMonitor`, `user32 MonitorFromRect/GetMonitorInfo` | restore window placement per monitor DPI | 30 — Avalonia `Screens`; this is why the VM is still in `Gum/` |
 | `Gum/Behaviors/TitleBarClickPassthrough.cs` | `user32 GetCursorPos` | custom chrome hit-testing | 90 (chrome) / 120 (delete) |
-| `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | warps the mouse during drag-to-change-value | 70 — redesign with pointer capture; no cross-platform cursor warp |
+| `WpfDataUi/Controls/TextBoxDisplay.xaml.cs` | `User32 SetCursorPos` | **done** (70): the import was never called and is deleted; label scrubbing is `LabelDragScrubLogic` fed relative deltas | 70 |
 | `Gum/Dialogs/ThemingService.cs` | `Microsoft.Win32.Registry` `AppsUseLightTheme` | detect OS dark mode | 90 — **Avalonia side done** (`AvaloniaThemingService` reads `IPlatformSettings.GetColorValues()`); the WPF file goes at 120 |
-| `Gum/Services/Dialogs/DialogService.cs`, `WpfDataUi/Controls/FilePickingLogic.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl), 70 |
+| `Gum/Services/Dialogs/DialogService.cs` | `Microsoft.Win32` file dialogs | open/save pickers | 30 (Avalonia `StorageProvider` impl). `FilePickingLogic` now goes through `IDataUiFilePicker` over `IDialogService` (**done** in 70) |
 | `Tool/EditorTabPlugin_XNA/Services/ScreenshotService.cs` | **done** (phase 40/50): saves through `IDialogService.SaveFile` | export canvas as image | 50 |
 | `XnaAndWinforms.Wpf/WpfGraphicsDeviceControl.cs` | `HwndSource`, `WindowInteropHelper` | device window handle, WPF head only | 50 (moved out of the neutral core; the Avalonia head uses a hidden SDL2/GL window), 120 (delete) |
 

@@ -14,7 +14,8 @@
     xmlns:variableGrid="clr-namespace:Gum.Plugins.VariableGrid"
     xmlns:wpf="clr-namespace:FluentIcons.Wpf;assembly=FluentIcons.Wpf"
     xmlns:wpfdataui="clr-namespace:WpfDataUi;assembly=WpfDataUi"
-    xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=WpfDataUi">
+    xmlns:wpfdatauiConverters="clr-namespace:WpfDataUi.Converters;assembly=WpfDataUi"
+    xmlns:wpfdatauiTypes="clr-namespace:WpfDataUi.DataTypes;assembly=DataUi.Core">
     <ResourceDictionary.MergedDictionaries>
 
         <ResourceDictionary Source="Frb.Theming.xaml" />
@@ -1677,6 +1678,10 @@
 
     </DataTemplate>
 
+    <BooleanToVisibilityConverter x:Key="DataUi.CategoryVisibilityConverter" />
+    <wpfdatauiConverters:DrawingColorToBrushConverter x:Key="DataUi.HeaderColorConverter" />
+    <wpfdatauiConverters:RequerySuggestedCommandConverter x:Key="DataUi.RequerySuggestedCommandConverter" />
+
     <DataTemplate x:Key="DataUi.CategoryHeaderTemplate" DataType="{x:Type wpfdatauiTypes:MemberCategory}">
         <!--  Transparent border so the header area, not just the text glyphs, is a right-click target.  -->
         <Border HorizontalAlignment="Stretch" Background="Transparent">
@@ -1697,8 +1702,8 @@
                     <ContextMenu.ItemContainerStyle>
                         <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="{x:Type MenuItem}">
                             <Setter Property="Header" Value="{Binding Header}" />
-                            <!--  MemberCategoryContextMenuItem is its own ICommand.  -->
-                            <Setter Property="Command" Value="{Binding}" />
+                            <!--  MemberCategoryContextMenuItem is its own ICommand; the converter re-queries it on WPF input.  -->
+                            <Setter Property="Command" Value="{Binding Converter={StaticResource DataUi.RequerySuggestedCommandConverter}}" />
                         </Style>
                     </ContextMenu.ItemContainerStyle>
                 </ContextMenu>
@@ -1723,7 +1728,7 @@
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
                         IsExpanded="{Binding IsExpanded}"
-                        Visibility="{Binding Visibility}">
+                        Visibility="{Binding IsVisible, Converter={StaticResource DataUi.CategoryVisibilityConverter}}">
                         <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
                     </Expander>
                 </DataTemplate>
@@ -1742,11 +1747,11 @@
             <Setter.Value>
                 <DataTemplate DataType="{x:Type wpfdatauiTypes:MemberCategory}">
                     <Expander
-                        md:ExpanderAssist.HeaderBackground="{Binding HeaderColor}"
+                        md:ExpanderAssist.HeaderBackground="{Binding HeaderColor, Converter={StaticResource DataUi.HeaderColorConverter}}"
                         Header="{Binding}"
                         HeaderTemplate="{StaticResource DataUi.CategoryHeaderTemplate}"
                         IsExpanded="{Binding IsExpanded}"
-                        Visibility="{Binding Visibility}">
+                        Visibility="{Binding IsVisible, Converter={StaticResource DataUi.CategoryVisibilityConverter}}">
 
                         <ItemsControl
                             AlternationCount="2"

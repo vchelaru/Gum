@@ -895,6 +895,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // IVariableReferenceLogic), MainErrorsPlugin (IErrorChecker, IMessenger, IClipboardService),
         // MainFileWatchPlugin (FileWatchLogic, PeriodicUiTimer). PeriodicUiTimer is
         // transient; this bridges the single instance MainFileWatchPlugin consumes.
+        batch.AddExportedValue<PropertyGridManager>(Locator.GetRequiredService<PropertyGridManager>());
         batch.AddExportedValue<IVariableReferenceLogic>(Locator.GetRequiredService<IVariableReferenceLogic>());
         batch.AddExportedValue<IErrorChecker>(Locator.GetRequiredService<IErrorChecker>());
         batch.AddExportedValue<IClipboardService>(Locator.GetRequiredService<IClipboardService>());

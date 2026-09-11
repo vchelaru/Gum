@@ -17,10 +17,30 @@ public class VariableCategoryDescriptor
 
     /// <summary>
     /// The category header color as a hex string (e.g. <c>"#204300FF"</c>), or null for the
-    /// default/no color. Kept as a hex string rather than a WPF <c>Brush</c> so this class stays
-    /// headless; the WPF mapper converts it via <c>BrushConverter</c>.
+    /// default/no color. See <see cref="GetHeaderColor"/>.
     /// </summary>
     public string? HeaderColorHex { get; set; }
+
+    /// <summary>
+    /// <see cref="HeaderColorHex"/> as a color: "#AARRGGBB" or "#RRGGBB" (opaque). Null when unset or
+    /// not valid hex.
+    /// </summary>
+    public System.Drawing.Color? GetHeaderColor()
+    {
+        string? hex = HeaderColorHex?.TrimStart('#');
+        if (string.IsNullOrEmpty(hex) || (hex.Length != 6 && hex.Length != 8) ||
+            !uint.TryParse(hex, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out uint value))
+        {
+            return null;
+        }
+
+        if (hex.Length == 6)
+        {
+            value |= 0xFF000000;
+        }
+
+        return System.Drawing.Color.FromArgb(unchecked((int)value));
+    }
 
     public VariableCategoryDescriptor(string name)
     {

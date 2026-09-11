@@ -114,7 +114,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinatePlugin.Core", "Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj", "{C534269B-BDDA-4B73-9DA6-F9920DA8639D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TreeViewPlugin.Core", "Tool\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj", "{12673C3D-9911-49C6-9F33-893BE7D36BB3}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateAnimationPlugin.Core", "Tool\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj", "{02FB8698-3713-4637-8007-289D74A88376}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataUi.Core", "DataUi.Core\DataUi.Core.csproj", "{1F5B56BC-7F27-48BB-847A-91FD85A20569}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AvaloniaDataUi", "AvaloniaDataUi\AvaloniaDataUi.csproj", "{0B1A600F-35C3-4D61-898C-816C2065BFB5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -714,6 +719,30 @@ Global
 		{02FB8698-3713-4637-8007-289D74A88376}.Release|x64.Build.0 = Release|Any CPU
 		{02FB8698-3713-4637-8007-289D74A88376}.Release|x86.ActiveCfg = Release|Any CPU
 		{02FB8698-3713-4637-8007-289D74A88376}.Release|x86.Build.0 = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|x64.Build.0 = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Debug|x86.Build.0 = Debug|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|x64.ActiveCfg = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|x64.Build.0 = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|x86.ActiveCfg = Release|Any CPU
+		{1F5B56BC-7F27-48BB-847A-91FD85A20569}.Release|x86.Build.0 = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Debug|x86.Build.0 = Debug|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|x64.Build.0 = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|x86.ActiveCfg = Release|Any CPU
+		{0B1A600F-35C3-4D61-898C-816C2065BFB5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

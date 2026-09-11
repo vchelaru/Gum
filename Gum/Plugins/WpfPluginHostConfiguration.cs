@@ -40,7 +40,6 @@ public class WpfPluginHostConfiguration : IPluginHostConfiguration
         batch.AddExportedValue<MenuStripManager>(Locator.GetRequiredService<MenuStripManager>());
         batch.AddExportedValue<MainPanelViewModel>(Locator.GetRequiredService<MainPanelViewModel>());
         batch.AddExportedValue<IToolsVisibility>(Locator.GetRequiredService<MainPanelViewModel>());
-        batch.AddExportedValue<PropertyGridManager>(Locator.GetRequiredService<PropertyGridManager>());
         batch.AddExportedValue<ElementTreeViewManager>(Locator.GetRequiredService<ElementTreeViewManager>());
         batch.AddExportedValue<MainWindowViewModel>(Locator.GetRequiredService<MainWindowViewModel>());
     }

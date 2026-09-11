@@ -22,6 +22,8 @@ public class AvaloniaGuiCommands : IGuiCommands
     private readonly IOutputManager _outputManager;
     private readonly IPluginManager _pluginManager;
     private readonly ISpinnerFactory _spinnerFactory;
+    // Lazy because PropertyGridManager depends on IGuiCommands.
+    private readonly Lazy<PropertyGridManager> _lazyPropertyGridManager;
 
     /// <summary>Creates the commands; selected state is lazy to break a construction cycle.</summary>
     public AvaloniaGuiCommands(
@@ -29,13 +31,15 @@ public class AvaloniaGuiCommands : IGuiCommands
         IDispatcher dispatcher,
         IOutputManager outputManager,
         IPluginManager pluginManager,
-        ISpinnerFactory spinnerFactory)
+        ISpinnerFactory spinnerFactory,
+        Lazy<PropertyGridManager> lazyPropertyGridManager)
     {
         _lazySelectedState = lazySelectedState;
         _dispatcher = dispatcher;
         _outputManager = outputManager;
         _pluginManager = pluginManager;
         _spinnerFactory = spinnerFactory;
+        _lazyPropertyGridManager = lazyPropertyGridManager;
     }
 
     /// <inheritdoc/>
@@ -48,12 +52,7 @@ public class AvaloniaGuiCommands : IGuiCommands
     public void RefreshVariables(bool force = false) => _pluginManager.RefreshVariableView(force);
 
     /// <inheritdoc/>
-    public void RefreshVariableValues()
-    {
-        // The WPF head refreshes its property grid's values in place here; this head has no grid
-        // until phase 70, and a full refresh is the closest equivalent.
-        _pluginManager.RefreshVariableView(false);
-    }
+    public void RefreshVariableValues() => _lazyPropertyGridManager.Value.RefreshVariablesDataGridValues();
 
     /// <inheritdoc/>
     public void RefreshElementTreeView() => _pluginManager.RefreshElementTreeView();

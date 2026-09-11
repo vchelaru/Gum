@@ -12,6 +12,9 @@ public class StandardDiffDetailsViewModel : DialogViewModel
     /// <summary>Name of the Standard whose diff is being shown (used as the dialog title).</summary>
     public string StandardName { get; }
 
+    /// <summary>The dialog's title.</summary>
+    public string Title => $"{StandardName} — differences";
+
     /// <summary>Flattened diff rows for display.</summary>
     public IReadOnlyList<StandardDiffRowViewModel> Rows { get; }
 

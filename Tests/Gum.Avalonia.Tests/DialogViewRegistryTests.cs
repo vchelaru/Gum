@@ -22,13 +22,7 @@ public class DialogViewRegistryTests
     /// Dialogs whose Avalonia view another phase of the migration owns, with the reason. Keep this
     /// list short and named: a dialog missing from both the registry and this list fails the build.
     /// </summary>
-    private static readonly Dictionary<string, string> OwnedElsewhere = new()
-    {
-        ["AddVariableViewModel"] = "Variables tab (VariableGrid) dialog, phase 70",
-        ["AddFormsViewModel"] = "GumFormsPlugin, a property-grid consumer owned by phase 70",
-        ["ImportFromGumxViewModel"] = "ImportFromGumxPlugin, a property-grid consumer owned by phase 70",
-        ["StandardDiffDetailsViewModel"] = "ImportFromGumxPlugin, a property-grid consumer owned by phase 70",
-    };
+    private static readonly Dictionary<string, string> OwnedElsewhere = new();
 
     private static DialogViewRegistry Registry => TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>();
 

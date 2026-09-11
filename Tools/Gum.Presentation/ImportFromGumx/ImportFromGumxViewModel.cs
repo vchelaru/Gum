@@ -47,6 +47,9 @@ public class ImportFromGumxViewModel : DialogViewModel
     private ImportTreeNodeViewModel? _standardsGroupNode;
     private bool _recomputeQueued = false;
 
+    /// <summary>The dialog's title.</summary>
+    public string Title => "Import from .gumx";
+
     public string SourcePath
     {
         get => Get<string>() ?? string.Empty;

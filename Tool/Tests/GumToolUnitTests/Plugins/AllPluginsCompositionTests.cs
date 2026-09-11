@@ -40,9 +40,7 @@ public class AllPluginsCompositionTests : BaseTestClass
     /// <see cref="AssemblyCatalog"/> sees every plugin.
     /// </summary>
     // global:: qualifiers are required because this test's own GumToolUnitTests.Plugins.* sub-namespaces
-    // (other plugin test folders) otherwise shadow the plugins' root namespaces. FormsFileService anchors
-    // GumFormsPlugin because its MainGumFormsPlugin entry type is internal and the assembly does not expose
-    // internals to this test project.
+    // (other plugin test folders) otherwise shadow the plugins' root namespaces.
     private static readonly Assembly[] PluginAssemblies =
     {
         typeof(Gum.MainWindow).Assembly,
@@ -51,7 +49,7 @@ public class AllPluginsCompositionTests : BaseTestClass
         typeof(global::CodeOutputPlugin.MainCodeOutputPlugin).Assembly,
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
-        typeof(global::GumFormsPlugin.Services.FormsFileService).Assembly,
+        typeof(global::GumFormsPlugin.MainGumFormsPlugin).Assembly,
         typeof(global::ImportFromGumxPlugin.MainImportFromGumxPlugin).Assembly,
         typeof(global::PerformanceMeasurementPlugin.MainPlugin).Assembly,
         typeof(global::SkiaPlugin.MainSkiaPlugin).Assembly,

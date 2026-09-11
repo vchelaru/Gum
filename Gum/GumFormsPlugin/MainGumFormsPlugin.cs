@@ -11,7 +11,7 @@ namespace GumFormsPlugin;
 // GumFormsLogic (Gum.Presentation) so they can be unit tested headlessly. This plugin keeps only
 // the menu-presence wiring (through the shared menu model) and the dialog-show call.
 [Export(typeof(PluginBase))]
-internal class MainGumFormsPlugin : PluginBase
+public class MainGumFormsPlugin : PluginBase
 {
     #region Fields/Properties
 

@@ -1,10 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-	  <TargetFramework>net10.0-windows</TargetFramework>
+	  <TargetFramework>net10.0</TargetFramework>
     <OutputType>Library</OutputType>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 	  <LangVersion>12.0</LangVersion>
 	  <Nullable>enable</Nullable>
 
@@ -30,9 +28,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
-    <ProjectReference Include="..\Gum.csproj" />
+    <ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
-    <ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,14 +50,27 @@
       <Version>0.5.18</Version>
     </PackageReference>
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Cross-platform purity guard: no Windows-only APIs in a plugin the Avalonia head hosts. -->
+    <AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
   </ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <!-- Built outside a solution (a test project on its own, CI on macOS/Linux) the repo root is two levels up. -->
+    <PropertyGroup>
+      <SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
+    </PropertyGroup>
     <ItemGroup>
       <PluginOutputFiles Include="$(TargetPath)" />
       <PluginOutputFiles Include="$(TargetDir)$(TargetName).pdb" />
       <PluginOutputFiles Include="$(TargetDir)SkiaPlugin.dll.config" />
     </ItemGroup>
     <Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
+    <Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/Plugins/$(TargetName)" />
 </Target>
 	
 	

@@ -52,6 +52,9 @@ public class GumStartupSequence
         _services.GetRequiredService<ITypeManager>().Initialize();
         StartupTiming.Mark("TypeManager.Initialize");
 
+        // Grid file-picking editors are created by the grid, not the container, so they share one picker.
+        WpfDataUi.Controls.FilePickingLogic.FilePicker = _services.GetRequiredService<WpfDataUi.Controls.IDataUiFilePicker>();
+
         _head.InitializeElementTreeView();
         StartupTiming.Mark("ElementTreeViewManager.Initialize");
 

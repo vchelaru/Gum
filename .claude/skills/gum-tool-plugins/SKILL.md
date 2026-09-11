@@ -51,15 +51,15 @@ Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[Feature
 
 | Feature | Plugin Folder | Where |
 |---------|--------------|-------|
-| Element tree view | `TreeView/` | WPF (phase 60) |
-| Variables/Properties tab | `VariableGrid/` | WPF (phase 70) |
-| State panel | `StatePlugin/` | WPF (phase 60) |
+| Element tree view | `TreeView/` | shared (`Tool/TreeViewPlugin.Core`, `MainTreeViewPlugin`); each head supplies an `IElementTreeView` |
+| Variables/Properties tab | `VariableGrid/` | shared (`Gum.Presentation`'s `VariableGridPluginBase`); each head exports a thin `MainVariableGridPlugin` |
+| State panel | `StatePlugin/` | shared (`StateTreePluginBase`); each head builds its tree view |
 | Behaviors panel | `Behaviors/` | shared |
 | Output panel | `Output/` | shared |
 | Alignment controls | `AlignmentButtons/` | shared |
-| Menu strip | `MenuStripPlugin/` | WPF renderer |
+| Menu strip | `MenuStripPlugin/` | shared model, WPF renderer |
 | Undo/History | `Undos/` | shared |
-| Delete options | `Delete/` | shared |
+| Delete dialog | `Delete/` | shared |
 | Errors, Hotkeys, File Watch, Load Recent, Project Properties | per feature | shared |
 
 ## Common Events
@@ -115,7 +115,7 @@ added to a canvas goes in the core, never in one head's plugin.
 
 ## Composition is guarded by a headless test
 
-`AllPluginsCompositionTests` (`Tool/Tests/GumToolUnitTests/Plugins/`) composes **every** WPF-head plugin through MEF exactly as `PluginManager.LoadPlugins` does — the automated replacement for manually launching Gum to confirm plugins load. A missing/typo'd bridge or a bad `[ImportingConstructor]` signature fails it as a red `CompositionException`. `Tests/Gum.Avalonia.Tests/PluginHostTests` does the same for the Avalonia head: its built-in plugins through the real `PluginManager`, and the neutral external plugins (`ConvertToJsonPlugin`, `EventOutputPlugin`) against `AddCoreExports` + the head's `AddHeadExports`.
+`AllPluginsCompositionTests` (`Tool/Tests/GumToolUnitTests/Plugins/`) composes **every** WPF-head plugin through MEF exactly as `PluginManager.LoadPlugins` does — the automated replacement for manually launching Gum to confirm plugins load. A missing/typo'd bridge or a bad `[ImportingConstructor]` signature fails it as a red `CompositionException`. `Tests/Gum.Avalonia.Tests/PluginHostTests` does the same for the Avalonia head: its built-in plugins through the real `PluginManager`, and the neutral external plugins (`ConvertToJsonPlugin`, `EventOutputPlugin`, `GumFormsPlugin`, `ImportFromGumxPlugin`, `SkiaPlugin`) against `AddCoreExports` + the head's `AddHeadExports`.
 
 **When draining a plugin to `[ImportingConstructor]`:** if the drain adds a *new* core service to `PluginManager.AddCoreExports`, mirror that type into `PluginBridgedServiceTypes.All` (same test folder) — it is a hand-maintained duplicate of that list and the test goes red otherwise. A service only one head has (`MenuStripManager`, `MainPanelViewModel`, `ShellViewModel`, …) is exported from that head's `IPluginHostConfiguration.AddHeadExports`, and a plugin that imports it is by definition head-specific. Reusing services already bridged needs no test change. (`ServiceProviderCompositionSpikeTests` resolves the same set from the real `Builder.cs` container, catching DI cycles / missing registrations.)
 
@@ -125,7 +125,7 @@ Three places need a matching entry per plugin:
 
 1. **`Gum.csproj`** — `<Compile Remove="<PluginName>\**" />` plus matching `EmbeddedResource`/`None`/`Page` removes. Without this, Gum.csproj's own default SDK glob also compiles the plugin's sources directly into Gum.exe. Since `Gum.exe`'s executing assembly is itself in `PluginManager`'s MEF catalog, the `[Export(typeof(PluginBase))]` class then composes twice as two distinct `Type` objects (one from Gum.exe, one from the plugin's own .dll) - `StartUp()` fires twice, and anything non-idempotent it does (e.g. `AddMenuItem` for the same path) crashes.
 2. **`GumToolUnitTests.csproj`** — a `ProjectReference` to the plugin's `.csproj`.
-3. **`AllPluginsCompositionTests.PluginAssemblies`** — an anchor `typeof(...).Assembly` entry (use `[InternalsVisibleTo("GumToolUnitTests")]` on the plugin's assembly instead if its entry type is `internal`, matching `GumFormsPlugin`'s `FormsFileService` workaround).
+3. **`AllPluginsCompositionTests.PluginAssemblies`** — an anchor `typeof(...).Assembly` entry (anchor on the plugin's own entry type and make it `public`; anchoring on a type from another assembly, as the Forms plugin once did with `FormsFileService` after it moved to `Gum.Presentation`, silently leaves the plugin uncomposed).
 
 Missing (2)/(3) doesn't fail the build or the test - it just means the plugin's real composition, including a case like (1), is never actually exercised by this test.
 
@@ -152,3 +152,9 @@ members (Project Properties' `DataUiGrid`) must hide any view-only member you ad
 ## Writing a plugin that runs under both heads
 
 Target plain `net10.0`, reference `Tools/Gum.Presentation/Gum.Presentation.csproj` (not `Gum.csproj`), inherit `PluginBase`, use `AddMenuEntry` and `IDialogService`, and add the `Microsoft.CodeAnalysis.BannedApiAnalyzers` package with `BannedSymbols.CrossPlatform.txt` as an `AdditionalFiles` item so Windows-only calls fail the build. `Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj` is the template; its post-build copies the DLL into both `Gum/bin/<Config>/Plugins/` and `Tool/Gum.Avalonia/bin/<Config>/net10.0/Plugins/`, with a `$(SolutionDir)` fallback so building the test project alone (CI on macOS/Linux) works. Reference the plugin from `Tests/Gum.Avalonia.Tests` and add its assembly to `PluginHostTests.NeutralPluginAssemblies`.
+
+**Dialogs in such a plugin.** Put the `DialogViewModel` in `Gum.Presentation` and show it with `IDialogService.Show`; never build a window in the plugin. The WPF view goes in the WPF head under `Gum/PluginViews/<Plugin>/` with `[Dialog(typeof(TheViewModel))]`, and the Avalonia view is registered in `Tool/Gum.Avalonia/Dialogs/DialogViewRegistry.cs` (`GumFormsPlugin` and `ImportFromGumxPlugin` are the examples). Give the view model a `Title`: the Avalonia dialog window binds it, and the WPF view binds `Dialog.DialogTitle` to it. Content a plugin stages at build time (the Forms themes) must be copied into both heads' output folders.
+
+**NuGet dependencies.** The plugin host only resolves other plugin assemblies; a plugin's package dependencies load from the application folder. A plugin that needs packages the heads don't already carry (SkiaPlugin's `Svg.Skia`, `SkiaSharp.Skottie`, `SkiaSharp.Extended`) needs them referenced by both `Gum.csproj` and `Tool/Gum.Avalonia/Gum.Avalonia.csproj`, or it composes in tests but fails when it first touches the type.
+
+**A plugin whose view differs per head.** When a plugin owns a panel (a tab, not just dialogs), put its whole body in an abstract base in `Gum.Presentation` and let each head export a thin subclass that only builds the view: `CodeOutputPluginBase` (subclasses `MainCodeOutputPlugin` in the WPF plugin assembly and in `Tool/Gum.Avalonia/Plugins/CodeOutput/`) and `VariableGridPluginBase` are the examples. Rows a panel shows through a DataUi grid belong in `Gum.Presentation` as neutral members (`CodeOutputSettingsMembers`), not in a view's code-behind. A WPF-only hook such as the delete dialog's options goes on the WPF subclass, implementing `IDeleteOptionsDialogPlugin` directly rather than through `WpfPluginBase`.
