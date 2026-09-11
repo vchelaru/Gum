@@ -51,6 +51,9 @@ public class DialogViewRegistry
         Register<global::GumFormsPlugin.ViewModels.AddFormsViewModel>(() => new Plugins.PluginDialogs.AddFormsView());
         Register<global::ImportFromGumxPlugin.ViewModels.ImportFromGumxViewModel>(() => new Plugins.PluginDialogs.ImportFromGumxView());
         Register<global::ImportFromGumxPlugin.ViewModels.StandardDiffDetailsViewModel>(() => new Plugins.PluginDialogs.StandardDiffDetailsView());
+        // Content > Import > HTML (the shared HtmlToGum plugin).
+        Register<global::HtmlToGumPlugin.ImportHtmlOptionsViewModel>(() => new Plugins.PluginDialogs.ImportHtmlOptionsView());
+        Register<global::HtmlToGumPlugin.ImportHtmlResultViewModel>(() => new Plugins.PluginDialogs.ImportHtmlResultView());
     }
 
     /// <summary>The view-model types with a registered view (subclasses resolve through these).</summary>

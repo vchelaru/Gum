@@ -3,7 +3,7 @@ using Shouldly;
 using System.IO;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.HtmlToGumPlugin;
+namespace Gum.Presentation.Tests.HtmlToGum;
 
 public class MainHtmlToGumPluginConverterDirTests
 {
@@ -33,5 +33,15 @@ public class MainHtmlToGumPluginConverterDirTests
         string expected = Path.GetFullPath(
             Path.Combine(@"C:\", "repo", ".claude", "worktrees", "some-branch", "Tool", "HtmlToGum", "converter"));
         candidates[0].ShouldBe(expected);
+    }
+
+    [Fact]
+    public void GetConverterDirCandidates_SecondCandidate_ResolvesFromTheAvaloniaHeadsOutput()
+    {
+        // The Avalonia head runs from Tool/Gum.Avalonia/bin/<Config>/<tfm>/, four levels under Tool/.
+        string baseDir = Path.Combine(@"C:\", "repo", "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0") + Path.DirectorySeparatorChar;
+        string[] candidates = MainHtmlToGumPlugin.GetConverterDirCandidates(baseDir);
+        string expected = Path.GetFullPath(Path.Combine(@"C:\", "repo", "Tool", "HtmlToGum", "converter"));
+        candidates[1].ShouldBe(expected);
     }
 }

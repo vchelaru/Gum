@@ -1,0 +1,80 @@
+<UserControl
+    x:Class="Gum.PluginViews.HtmlToGum.ImportHtmlOptionsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    dialogs:Dialog.DialogTitle="{Binding Title}"
+    dialogs:Dialog.ScrollContent="False"
+    Width="460"
+    mc:Ignorable="d">
+
+    <!-- The Import HTML options: source (file or URL), selector, screen name, viewport, responsive
+         flag, destination subfolder. Bound to HtmlToGumPlugin.ImportHtmlOptionsViewModel. -->
+    <StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+            <RadioButton Content="Local file" IsChecked="{Binding IsLocalFile}" Margin="0,0,12,0" />
+            <RadioButton Content="URL" IsChecked="{Binding IsUrl}" />
+        </StackPanel>
+
+        <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox
+                Grid.Column="0"
+                Margin="0,0,4,0"
+                Text="{Binding HtmlPath, UpdateSourceTrigger=PropertyChanged}"
+                VerticalContentAlignment="Center" />
+            <Button
+                Grid.Column="1"
+                Content="Browse…"
+                Padding="8,2"
+                Command="{Binding BrowseCommand}" />
+        </Grid>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="148" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="CSS root selector" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="1" Margin="0,0,0,8" Text="{Binding Selector, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Screen name" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" Margin="0,0,0,8" Text="{Binding ScreenName, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Viewport W×H" VerticalAlignment="Center" />
+            <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                <TextBox Width="80" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Width="80" Margin="10,0,0,0" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
+            </StackPanel>
+
+            <CheckBox
+                Grid.Row="3"
+                Grid.Column="1"
+                Margin="0,0,0,8"
+                Content="Disable responsive units (--no-responsive)"
+                IsChecked="{Binding NoResponsive}" />
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Destination subfolder" VerticalAlignment="Center" />
+            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding DestinationSubfolder, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <TextBlock
+            Margin="0,6,0,0"
+            Foreground="{DynamicResource Frb.Brushes.Foreground.Subtle}"
+            Text="{Binding SubfolderHint}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

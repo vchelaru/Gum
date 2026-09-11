@@ -8,7 +8,6 @@ Chromium is **not** bundled with Gum. The plugin runs `npm install` (downloading
 
 ```text
 Tool/HtmlToGum/
-  HtmlToGumPlugin.csproj     # MEF plugin
   MainHtmlToGumPlugin.cs
   converter/                 # Node convert pipeline (required for Import HTML)
   fidelity/                  # Site/bookmark pixel-gate harness (dev only)
@@ -24,13 +23,8 @@ Tool/HtmlToGum/
 
 ## Setup
 
-1. Build Gum Tool, then this plugin:
-
-```powershell
-dotnet build Tool/HtmlToGum/HtmlToGumPlugin.csproj -c Release
-```
-
-Post-build copies `HtmlToGumPlugin.dll` to `Gum/bin/{Config}/Plugins/HtmlToGumPlugin/`.
+1. Build the Gum tool. The plugin code lives in `Tools/Gum.Presentation/HtmlToGumPlugin/` and loads
+   in both the WPF and the Avalonia head; this folder holds the converter.
 
 2. Install Node.js LTS. Converter dependencies (`npm install`, including Playwright's Chromium download) run automatically on first import — or run them yourself ahead of time:
 
