@@ -1,5 +1,23 @@
 # Phase 110 — Packaging and distribution
 
+> **Status 2026-09-10:** packaging is in place on `avalonia-migration-work`; nothing has been
+> released. `build-and-release.yml` gains a `publish-avalonia-preview` job: a self-contained
+> publish of `Tool/Gum.Avalonia` for `win-x64`, `linux-x64` (both on Ubuntu), `osx-x64` and
+> `osx-arm64` (on macOS, so the SDK signs the app host, then an ad-hoc signature over `Gum.app`),
+> with the neutral plugins copied into `Plugins/`, a `Gum.app` bundle from
+> `Tool/Gum.Avalonia/Packaging/macOS/Info.plist`, tarballs with executable bits for macOS and
+> Linux, a zip for Windows, and a `.sha256` per package. The release job attaches them beside
+> `Gum.zip` and runs even when the preview job fails, so the WPF release is never blocked. A local
+> self-contained publish is 140 to 145 MB, carries SDL2, SkiaSharp and HarfBuzz natives, contains no
+> WPF or WinForms assembly (`WindowsBase.dll` is the runtime pack's 16 KB compatibility facade and
+> is never loaded), and ran unattended on a fixture project. The head carries the Gum icon. Artifact
+> formats decided: Windows zip, macOS `Gum.app` in a `.tar.gz`, Linux `.tar.gz`. Install page:
+> `docs/gum-tool/setup/native-preview.md`, with the known issues.
+>
+> **Open (owner):** Apple Developer ID certificate and notarization secrets; Windows Authenticode;
+> a signing key for the Linux checksums; a macOS `.icns` icon; bundling `gumcli` per runtime;
+> clean-VM launches on macOS and Linux (never run from this Windows machine).
+
 ## Purpose
 
 Turn the Avalonia head into installable artifacts for Windows, macOS, and Linux, and ship it as a

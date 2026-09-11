@@ -20,6 +20,12 @@
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
 		<NoWarn>1591</NoWarn>
+		<ApplicationIcon>..\..\Gum\GumIcon.ico</ApplicationIcon>
+		<!--
+			Published self-contained per runtime by the release workflow (phase 110). Trimming stays off:
+			the service registration, view-model factories and MEF plugin host are reflection-driven.
+		-->
+		<PublishTrimmed>false</PublishTrimmed>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -80,6 +86,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- The window icon, shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\GumIcon.ico" Link="GumIcon.ico" />
 		<!-- Tree icon artwork (TreeIconCatalog), shared with the WPF head. -->
 		<AvaloniaResource Include="..\..\Gum\Content\Icons\*.png" Link="Content\Icons\%(Filename)%(Extension)" />
 		<AvaloniaResource Include="..\..\Gum\Content\Icons\UpdatedTreeViewIcons\*.png" Link="Content\Icons\UpdatedTreeViewIcons\%(Filename)%(Extension)" />

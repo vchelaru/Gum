@@ -50,6 +50,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         messenger.RegisterAll(this);
 
         Title = shell.Title;
+        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Gum.Avalonia/GumIcon.ico")));
         Width = WindowSettings.DefaultWidth;
         Height = WindowSettings.DefaultHeight;
         MinWidth = 640;

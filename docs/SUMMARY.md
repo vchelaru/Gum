@@ -6,6 +6,7 @@
   * [For Figma Users](gum-tool/readme/for-figma-users.md)
 * [Setup](gum-tool/setup/README.md)
   * [Running from Source](gum-tool/setup/running-from-source.md)
+  * [Native Preview (Windows, macOS, Linux)](gum-tool/setup/native-preview.md)
 * [Showcase](gum-tool/showcase.md)
 * [Tutorials and Examples](gum-tool/tutorials-and-examples/README.md)
   * [Intro Tutorials](gum-tool/tutorials-and-examples/intro-tutorials/README.md)

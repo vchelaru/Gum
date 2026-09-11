@@ -17,7 +17,85 @@ permissions:
 
 # Define the jobs to run
 jobs:
+  # The Avalonia head (Direction/avalonia-migration/phase-110): self-contained preview builds for
+  # Windows, macOS and Linux, attached to the same release as the WPF zip until cutover. macOS builds
+  # run on a Mac so the SDK signs the app host (Apple Silicon refuses unsigned native code); the
+  # bundle is then signed ad hoc. Developer ID signing and notarization need an Apple account and CI
+  # secrets that do not exist yet, so the preview is unsigned beyond that.
+  publish-avalonia-preview:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: ubuntu-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: osx-x64
+            os: macos-latest
+          - rid: osx-arm64
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      # These plugins copy themselves into the head's build output (post-build), which
+      # dotnet publish does not run; the package step copies that folder in.
+      - name: Build the plugins that run in the Avalonia head
+        run: |
+          dotnet build Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj -c Release
+          dotnet build Gum/EventOutputPlugin/EventOutputPlugin.csproj -c Release
+
+      - name: Publish and package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rid="${{ matrix.rid }}"
+          version=$(date +%Y.%m.%d)
+          out="publish/$rid"
+          dotnet publish Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out"
+          mkdir -p "$out/Plugins"
+          cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Plugins/. "$out/Plugins/"
+          mkdir -p dist
+          case "$rid" in
+            win-*)
+              (cd "$out" && zip -qr "../../dist/Gum-Avalonia-preview-$rid.zip" .)
+              ;;
+            osx-*)
+              app="publish/app/Gum.app"
+              mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+              cp -R "$out/." "$app/Contents/MacOS/"
+              sed "s/__VERSION__/$version/g" Tool/Gum.Avalonia/Packaging/macOS/Info.plist > "$app/Contents/Info.plist"
+              chmod +x "$app/Contents/MacOS/Gum.Avalonia"
+              codesign --force --deep --sign - "$app"
+              tar -czf "dist/Gum-Avalonia-preview-$rid.tar.gz" -C publish/app Gum.app
+              ;;
+            linux-*)
+              chmod +x "$out/Gum.Avalonia"
+              tar -czf "dist/Gum-Avalonia-preview-$rid.tar.gz" -C "$out" .
+              ;;
+          esac
+          (cd dist && shasum -a 256 Gum-Avalonia-preview-* > "Gum-Avalonia-preview-$rid.sha256")
+
+      - name: Upload preview package
+        uses: actions/upload-artifact@v4
+        with:
+          name: avalonia-preview-${{ matrix.rid }}
+          path: dist/
+
   build:
+    # Waits for the Avalonia preview packages but still runs if they failed, so a preview problem
+    # never blocks the WPF release.
+    needs: publish-avalonia-preview
+    if: ${{ !cancelled() }}
     # Which OS to run on
     runs-on: windows-latest
 
@@ -122,6 +200,15 @@ jobs:
           $zip = "dist/Gum.zip"
           if (Test-Path $zip) { Remove-Item $zip -Force }
           Compress-Archive -Path "dist/publish/*" -DestinationPath $zip
+
+      # 1b) Collect the Avalonia preview packages built by publish-avalonia-preview.
+      - name: Download Avalonia preview packages
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: avalonia-preview-*
+          path: dist/avalonia
+          merge-multiple: true
 
       # 2) Compute tag + title depending on the kind of release
       - name: Compute tag + title
@@ -230,3 +317,4 @@ jobs:
           draft:      ${{ steps.meta.outputs.draft }}
           files: |
             dist/Gum.zip
+            dist/avalonia/*
