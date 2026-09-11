@@ -74,6 +74,46 @@ public class FormsTemplateCreatorTests : IDisposable
     }
 
     [Fact]
+    public void Create_ShouldWriteDefaultFontFiles()
+    {
+        // The Text standard's Font default, and every Forms control's own Font override, point at
+        // this bundled file instead of a system font name (e.g. "Arial"), which BlazorGL/WASM has
+        // no OS font store to resolve (#4276).
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        string fontsDir = Path.Combine(_tempDirectory, "Fonts");
+        File.Exists(Path.Combine(fontsDir, "LiberationSans-Regular.ttf")).ShouldBeTrue();
+        File.Exists(Path.Combine(fontsDir, "LiberationSans-LICENSE.txt")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Create_ShouldNotReferenceASystemFontNameAnywhere()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        IEnumerable<ElementSave> allElements = result.Project!.StandardElements
+            .Cast<ElementSave>()
+            .Concat(result.Project.Components)
+            .Concat(result.Project.Screens);
+
+        List<string> systemFontReferences = allElements
+            .SelectMany(e => e.DefaultState.Variables, (e, v) => (Element: e, Variable: v))
+            .Where(x => x.Variable.IsFont && x.Variable.Value is string font
+                && !font.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
+            .Select(x => $"{x.Element.Name}.{x.Variable.Name} = {x.Variable.Value}")
+            .ToList();
+
+        systemFontReferences.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Create_ShouldCreateUISpriteSheet()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");

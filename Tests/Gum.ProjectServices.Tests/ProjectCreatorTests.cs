@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Shouldly;
 
@@ -106,6 +107,37 @@ public class ProjectCreatorTests : IDisposable
         _sut.Create(filePath);
 
         File.Exists(Path.Combine(_tempDirectory, "ExampleSpriteFrame.png")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Create_ShouldWriteDefaultFontFiles()
+    {
+        // The Text standard's Font default points at this bundled file instead of a system font
+        // name (e.g. "Arial"), which BlazorGL/WASM has no OS font store to resolve (#4276).
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        string fontsDir = Path.Combine(_tempDirectory, "Fonts");
+        File.Exists(Path.Combine(fontsDir, "LiberationSans-Regular.ttf")).ShouldBeTrue();
+        File.Exists(Path.Combine(fontsDir, "LiberationSans-LICENSE.txt")).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Create_TextStandardFontDefault_ShouldNotBeASystemFontName()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+
+        StandardElementSave textStandard = result.Project!.StandardElements.First(s => s.Name == "Text");
+        VariableSave? font = textStandard.DefaultState.Variables.FirstOrDefault(v => v.Name == "Font");
+
+        font.ShouldNotBeNull();
+        font!.Value.ShouldBe("Fonts/LiberationSans-Regular.ttf");
     }
 
     [Fact]

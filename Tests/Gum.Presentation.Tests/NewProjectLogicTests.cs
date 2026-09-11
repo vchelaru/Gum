@@ -8,6 +8,7 @@ using Gum.Managers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
+using Gum.ProjectServices;
 using GumFormsPlugin.Services;
 using GumFormsPlugin.ViewModels;
 using Moq;
@@ -29,6 +30,7 @@ public class NewProjectLogicTests
     private readonly Mock<IFormsThemeImporter> _themeImporter = new();
     private readonly Mock<ICopyPasteProjectCommands> _projectCommands = new();
     private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly Mock<IDefaultFontBundler> _defaultFontBundler = new();
     private readonly NewProjectLogic _logic;
 
     public NewProjectLogicTests()
@@ -38,6 +40,7 @@ public class NewProjectLogicTests
         _formsFileService.Setup(x => x.GetThemeDirectory(It.IsAny<string>())).Returns("C:/nonexistent-theme/");
         _projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+        _projectManager.Setup(x => x.GumProjectSave).Returns(new GumProjectSave { FullFileName = "C:/nonexistent-project/Project.gumx" });
 
         _logic = new NewProjectLogic(
             _projectManager.Object,
@@ -45,7 +48,8 @@ public class NewProjectLogicTests
             _fileCommands.Object,
             _themeImporter.Object,
             _projectCommands.Object,
-            _selectedState.Object);
+            _selectedState.Object,
+            _defaultFontBundler.Object);
     }
 
     private ThemeSelectionViewModel CreateThemeSelection() => new(_formsFileService.Object, _projectState.Object);
@@ -204,5 +208,31 @@ public class NewProjectLogicTests
 
         _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
         _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
+    }
+
+    [Fact]
+    public void CreateNewProject_BundlesTheDefaultFont_AfterTheFirstSave()
+    {
+        // StandardElementsManager's Text standard points its Font default at this bundled file
+        // instead of a system font name (#4276), so every new project needs it on disk -- even
+        // when Forms controls (which bring their own theme fonts) are declined.
+        SetUpDialog(accepted: true, isIncludeFormsControls: false);
+        SetUpSaveLocationPrompt(accepted: true);
+
+        _logic.CreateNewProject();
+
+        _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
+    public void CreateNewProject_DoesNotBundleTheDefaultFont_WhenTheInitialSaveFails()
+    {
+        SetUpDialog(accepted: true);
+        SetUpSaveLocationPrompt(accepted: true);
+        _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
+
+        _logic.CreateNewProject();
+
+        _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Never);
     }
 }

@@ -14,6 +14,7 @@ public class ProjectCreator : IProjectCreator
         "Components",
         "Standards",
         "Behaviors",
+        "Fonts",
         // Created up front (rather than lazily on first font generation) so the file watcher
         // never has to watch a directory that doesn't exist yet on a freshly-created project (#4259).
         "FontCache"
@@ -47,6 +48,7 @@ public class ProjectCreator : IProjectCreator
 
         ExtractStandardElements(directory);
         ExtractExampleSpriteFrame(directory);
+        new DefaultFontBundler().CopyTo(directory);
 
         var project = new GumProjectSave
         {

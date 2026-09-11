@@ -205,7 +205,12 @@ public class StandardElementsManager
             // font:
             stateSave.Variables.Add(new VariableSave { SetsValue = true, Type = "bool", Value = false, Name = "UseCustomFont", Category = "Font" });
 
-            var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Arial", Name = "Font", IsFont = true, Category = "Font" };
+            // A bundled Fonts/*.ttf path instead of a system font name (e.g. "Arial") so a fresh
+            // project's Text default renders identically on every platform, including BlazorGL/
+            // WASM, which has no OS font store for KernSmith to resolve a system font name
+            // against (#4276). Kept in sync with ProjectCreator's/NewProjectLogic's bundled font
+            // (DefaultFontBundler) -- Create_ShouldNotDriftFromDefaultStandards pins the two together.
+            var fontVariable = new VariableSave { SetsValue = true, Type = "string", Value = "Fonts/LiberationSans-Regular.ttf", Name = "Font", IsFont = true, Category = "Font" };
             fontVariable.PropertiesToSetOnDisplayer["IsEditable"] = true;
             stateSave.Variables.Add(fontVariable);
 
