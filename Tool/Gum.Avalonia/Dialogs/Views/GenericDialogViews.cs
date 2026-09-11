@@ -5,6 +5,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Gum.Avalonia.Converters;
 using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Dialogs.Views;
@@ -117,19 +118,4 @@ public sealed class PluginsDialogView : StackPanel
         copy.Bind(Button.CommandProperty, new Binding(nameof(PluginsDialogViewModel.CopyDiagnosticsCommand)));
         Children.Add(copy);
     }
-}
-
-/// <summary>True when the bound value is not null or empty; used to hide optional rows.</summary>
-public sealed class NotNullConverter : global::Avalonia.Data.Converters.IValueConverter
-{
-    /// <summary>Shared instance.</summary>
-    public static readonly NotNullConverter Instance = new NotNullConverter();
-
-    /// <inheritdoc/>
-    public object Convert(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
-        value is string text ? !string.IsNullOrEmpty(text) : value != null;
-
-    /// <inheritdoc/>
-    public object ConvertBack(object? value, System.Type targetType, object? parameter, System.Globalization.CultureInfo culture) =>
-        throw new System.NotSupportedException();
 }

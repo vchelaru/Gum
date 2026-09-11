@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Gum.Avalonia.Dialogs.Views;
+using Gum.Dialogs;
 using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Dialogs;
@@ -12,37 +13,46 @@ namespace Gum.Avalonia.Dialogs;
 /// Maps a <see cref="DialogViewModel"/> type to the Avalonia control that presents it. Views
 /// register by view-model type; a view model with no registered view (and none for any of its
 /// base types) gets a placeholder that names the missing view, so the gap is visible instead of
-/// silent. Later phases register their views here as they port dialogs.
+/// silent. This is the Avalonia head's counterpart of the WPF <c>DialogViewResolver</c>; the
+/// explicit list replaces its assembly scan.
 /// </summary>
 public class DialogViewRegistry
 {
     private readonly Dictionary<Type, Func<Control>> _factories;
 
-    /// <summary>Creates the registry with the generic dialogs the shell needs registered.</summary>
+    /// <summary>Creates the registry with every dialog view this head has registered.</summary>
     public DialogViewRegistry()
     {
         _factories = new Dictionary<Type, Func<Control>>();
+
+        // Generic dialogs (phase 30).
         Register<MessageDialogViewModel>(() => new MessageDialogView());
         Register<GetUserStringDialogBaseViewModel>(() => new GetUserStringDialogView());
         Register<ChoiceDialogViewModel>(() => new ChoiceDialogView());
         Register<PluginsDialogViewModel>(() => new PluginsDialogView());
+
+        // Phase 80.
+        Register<NewProjectDialogViewModel>(() => new NewProjectDialogView());
     }
+
+    /// <summary>The view-model types with a registered view (subclasses resolve through these).</summary>
+    public IReadOnlyCollection<Type> RegisteredViewModelTypes => _factories.Keys;
 
     /// <summary>Registers (or replaces) the view for <typeparamref name="TViewModel"/> and its subclasses.</summary>
     public void Register<TViewModel>(Func<Control> factory) where TViewModel : DialogViewModel =>
         _factories[typeof(TViewModel)] = factory;
 
+    /// <summary>True when <paramref name="viewModelType"/> or one of its base types has a registered view.</summary>
+    public bool HasView(Type viewModelType) => FindFactory(viewModelType) != null;
+
     /// <summary>Creates the view for <paramref name="viewModel"/>, with its DataContext set.</summary>
     public Control CreateView(DialogViewModel viewModel)
     {
-        for (Type? type = viewModel.GetType(); type != null; type = type.BaseType)
+        if (FindFactory(viewModel.GetType()) is { } factory)
         {
-            if (_factories.TryGetValue(type, out Func<Control>? factory))
-            {
-                Control view = factory();
-                view.DataContext = viewModel;
-                return view;
-            }
+            Control view = factory();
+            view.DataContext = viewModel;
+            return view;
         }
 
         return new TextBlock
@@ -52,5 +62,20 @@ public class DialogViewRegistry
             Margin = new Thickness(16),
             DataContext = viewModel,
         };
+    }
+
+    /// <summary>Creates the registered view for <paramref name="viewModelType"/> with no DataContext, for tests.</summary>
+    internal Control? CreateViewWithoutContext(Type viewModelType) => FindFactory(viewModelType)?.Invoke();
+
+    private Func<Control>? FindFactory(Type viewModelType)
+    {
+        for (Type? type = viewModelType; type != null; type = type.BaseType)
+        {
+            if (_factories.TryGetValue(type, out Func<Control>? factory))
+            {
+                return factory;
+            }
+        }
+        return null;
     }
 }

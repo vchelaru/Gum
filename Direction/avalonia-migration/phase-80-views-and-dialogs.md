@@ -1,5 +1,17 @@
 # Phase 80 — Views and dialogs
 
+## Status (2026-09-10, in progress on branch `phase-80-views-and-dialogs`)
+
+The Avalonia head builds its views in C#, not AXAML (the phase 30 convention); "AXAML twin"
+below means a C# Avalonia view bound to the same VM. Progress, in the order the work landed:
+
+- **Dialog infrastructure.** `DialogWindow` gained the `DialogTitle` and `AuxiliaryActions`
+  attached properties (twins of WPF's `Dialog.DialogTitle` / `Dialog.AuxiliaryActions`).
+  `DialogViewRegistry` can be introspected, and `DialogViewRegistryTests` fails when any concrete
+  `DialogViewModel` in `Gum.Presentation` has neither a registered view nor a named owner in its
+  `OwnedElsewhere` list. Shared converters live in `Tool/Gum.Avalonia/Converters/`.
+- **New Project** (`NewProjectDialogView` + `ThemeSelectionView`), the first dialog users hit.
+
 ## Purpose
 
 Re-author every remaining WPF view as Avalonia AXAML bound to the existing ViewModels: the

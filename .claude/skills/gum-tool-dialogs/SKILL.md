@@ -53,6 +53,19 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 | `Gum/Services/Dialogs/DeleteDialogService.cs` | Standalone | Creates and shows DeleteOptionsWindow; calls the concrete `PluginManager` |
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Standalone | Orchestrates the delete flow via `IDeleteDialogService` |
 
+## Avalonia head
+
+The Avalonia head (`Tool/Gum.Avalonia`) has its own synchronous `IDialogService`
+(`Dialogs/AvaloniaDialogService.cs`, a nested dispatcher loop per dialog). It does not scan
+assemblies: `Dialogs/DialogViewRegistry.cs` maps each `DialogViewModel` type to a C# view factory
+(`Register<TViewModel>(() => new SomeView())`; a registration covers subclasses, so every
+`GetUserStringDialogBaseViewModel` shares one view). `DialogWindow` supplies the OK/Cancel row from
+the VM; a view sets `DialogWindow.SetDialogTitle(this, "...")` and
+`DialogWindow.SetAuxiliaryActions(this, control)` where the WPF view used `Dialog.DialogTitle` and
+`Dialog.AuxiliaryActions`. `Tests/Gum.Avalonia.Tests/DialogViewRegistryTests` fails when a concrete
+`DialogViewModel` in `Gum.Presentation` has no registered view and no named owner in its
+`OwnedElsewhere` list, so **adding a dialog VM means registering its Avalonia view in the same PR**.
+
 ## Common Pitfalls
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.
