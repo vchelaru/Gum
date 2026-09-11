@@ -28,6 +28,22 @@
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+		<!--
+			The editor canvases draw with KNI. The framework packages are the reference assemblies
+			the neutral canvas projects compile against; the SDL2/GL platform is the one concrete
+			backend this head loads, on every OS (phase 10 of the Avalonia plan chose it).
+		-->
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="4.2.9001.1" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -43,6 +59,8 @@
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<ProjectReference Include="..\..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
 		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
