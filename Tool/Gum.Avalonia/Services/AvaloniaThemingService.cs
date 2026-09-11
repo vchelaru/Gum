@@ -156,5 +156,7 @@ public class AvaloniaThemingService : IThemingService, IEffectiveThemeSettings
         Application.Current.Resources["Frb.Colors.Primary"] = accent;
         Application.Current.Resources["Frb.Brushes.Primary"] = new SolidColorBrush(accent);
         Application.Current.Resources["Frb.Brushes.Primary.Transparent"] = new SolidColorBrush(accent) { Opacity = 0.15 };
+        // The Fluent control resources that draw from the Primary brushes hold the old ones until re-pointed.
+        Themes.FrbThemeResources.ApplyControlAliases(Application.Current.Resources);
     }
 }

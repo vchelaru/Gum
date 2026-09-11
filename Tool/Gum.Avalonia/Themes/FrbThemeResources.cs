@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Styling;
@@ -48,6 +49,145 @@ public static class FrbThemeResources
 
         resources.ThemeDictionaries[ThemeVariant.Light] = LoadVariant("Frb.Brushes.Light.xaml", palette);
         resources.ThemeDictionaries[ThemeVariant.Dark] = LoadVariant("Frb.Brushes.Dark.xaml", palette);
+
+        AddControlMetrics(resources);
+        ApplyControlAliases(resources);
+    }
+
+    /// <summary>
+    /// Points the Fluent theme's control resources at the palette brushes, so text boxes, check
+    /// boxes, combo boxes and tree items take the WPF head's colors (<c>Frb.Styles.Defaults.xaml</c>).
+    /// Each alias shares the palette's brush: root-level brushes (the Primary ones, which the accent
+    /// replaces) go in the root, and per-theme brushes into each theme dictionary. Call again after
+    /// replacing a root brush.
+    /// </summary>
+    public static void ApplyControlAliases(IResourceDictionary resources)
+    {
+        foreach ((string alias, string source) in ControlBrushAliases())
+        {
+            if (source == TransparentSource)
+            {
+                resources[alias] = Brushes.Transparent;
+            }
+            else if (resources.TryGetValue(source, out object? rootBrush))
+            {
+                resources[alias] = rootBrush;
+            }
+            else
+            {
+                foreach (IThemeVariantProvider variant in resources.ThemeDictionaries.Values)
+                {
+                    if (variant is IResourceDictionary dictionary && dictionary.TryGetValue(source, out object? brush))
+                    {
+                        dictionary[alias] = brush;
+                    }
+                }
+            }
+        }
+    }
+
+    // Sizes from the WPF control styles: compact fields and tree rows, 2px corners, 1px borders.
+    private static void AddControlMetrics(IResourceDictionary resources)
+    {
+        resources["ControlCornerRadius"] = new CornerRadius(2);
+        resources["TextControlThemeMinHeight"] = 22d;
+        resources["TextControlThemePadding"] = new Thickness(4, 1, 4, 1);
+        resources["TextControlBorderThemeThickness"] = new Thickness(1);
+        resources["TextControlBorderThemeThicknessFocused"] = new Thickness(1);
+        resources["ComboBoxMinHeight"] = 22d;
+        resources["ComboBoxPadding"] = new Thickness(4, 1, 0, 1);
+        resources["TreeViewItemMinHeight"] = 20d;
+        resources["TreeViewItemBorderThemeThickness"] = new Thickness(1);
+    }
+
+    private const string TransparentSource = "#Transparent";
+
+    private static IEnumerable<(string Alias, string Source)> ControlBrushAliases()
+    {
+        // TextBox (SimpleTextBox): the field background with a secondary border that turns Primary on
+        // hover and focus; the background darkens while focused.
+        foreach (string state in new[] { "", "PointerOver", "Focused" })
+        {
+            yield return ("TextControlForeground" + state, "Frb.Brushes.Foreground");
+        }
+        yield return ("TextControlForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        foreach (string state in new[] { "", "PointerOver", "Disabled" })
+        {
+            yield return ("TextControlBackground" + state, "Frb.Brushes.Field.Background");
+        }
+        yield return ("TextControlBackgroundFocused", "Frb.Brushes.Background");
+        yield return ("TextControlBorderBrush", "Frb.Brushes.Border.Secondary");
+        yield return ("TextControlBorderBrushDisabled", "Frb.Brushes.Border.Secondary");
+        yield return ("TextControlBorderBrushPointerOver", "Frb.Brushes.Primary");
+        yield return ("TextControlBorderBrushFocused", "Frb.Brushes.Primary");
+        foreach (string state in new[] { "", "PointerOver", "Focused", "Disabled" })
+        {
+            yield return ("TextControlPlaceholderForeground" + state, "Frb.Brushes.Foreground.Subtle");
+        }
+
+        // CheckBox: the box and check mark drawn in the text color on no fill; Primary on hover.
+        foreach (string value in new[] { "Unchecked", "Checked", "Indeterminate" })
+        {
+            foreach (string state in new[] { "", "PointerOver", "Pressed", "Disabled" })
+            {
+                bool hot = state is "PointerOver" or "Pressed";
+                string text = state == "Disabled" ? "Frb.Brushes.Foreground.Disabled" : "Frb.Brushes.Foreground";
+                yield return ($"CheckBoxForeground{value}{state}", text);
+                yield return ($"CheckBoxBackground{value}{state}", TransparentSource);
+                yield return ($"CheckBoxBorderBrush{value}{state}", TransparentSource);
+                yield return ($"CheckBoxCheckBackgroundFill{value}{state}", hot ? "Frb.Brushes.Primary.Transparent" : TransparentSource);
+                yield return ($"CheckBoxCheckBackgroundStroke{value}{state}", hot ? "Frb.Brushes.Primary" : text);
+                yield return ($"CheckBoxCheckGlyphForeground{value}{state}", text);
+            }
+        }
+
+        // ComboBox: like the text box, with the drop-down on Surface01.
+        foreach (string key in new[] { "ComboBoxBackground", "ComboBoxBackgroundPointerOver", "ComboBoxBackgroundPressed", "ComboBoxBackgroundDisabled", "ComboBoxBackgroundUnfocused" })
+        {
+            yield return (key, "Frb.Brushes.Field.Background");
+        }
+        foreach (string key in new[] { "ComboBoxBorderBrush", "ComboBoxBorderBrushDisabled", "ComboBoxBackgroundBorderBrushUnfocused" })
+        {
+            yield return (key, "Frb.Brushes.Border.Secondary");
+        }
+        foreach (string key in new[] { "ComboBoxBorderBrushPointerOver", "ComboBoxBorderBrushPressed", "ComboBoxBackgroundBorderBrushFocused" })
+        {
+            yield return (key, "Frb.Brushes.Primary");
+        }
+        foreach (string key in new[] { "ComboBoxForeground", "ComboBoxForegroundFocused", "ComboBoxForegroundFocusedPressed", "ComboBoxDropDownGlyphForeground", "ComboBoxDropDownGlyphForegroundFocused", "ComboBoxDropDownGlyphForegroundFocusedPressed" })
+        {
+            yield return (key, "Frb.Brushes.Foreground");
+        }
+        yield return ("ComboBoxForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("ComboBoxDropDownGlyphForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("ComboBoxPlaceHolderForeground", "Frb.Brushes.Foreground.Subtle");
+        yield return ("ComboBoxPlaceHolderForegroundFocusedPressed", "Frb.Brushes.Foreground.Subtle");
+        yield return ("ComboBoxDropDownBackground", "Frb.Surface01");
+        yield return ("ComboBoxDropDownBorderBrush", "Frb.Brushes.Border");
+
+        // TreeViewItem: Surface.Fill on hover, and the selection as a Primary outline, not a fill.
+        foreach (string state in new[] { "", "PointerOver", "Pressed", "Selected", "SelectedPointerOver", "SelectedPressed" })
+        {
+            yield return ("TreeViewItemForeground" + state, "Frb.Brushes.Foreground");
+        }
+        yield return ("TreeViewItemForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("TreeViewItemForegroundSelectedDisabled", "Frb.Brushes.Foreground.Disabled");
+        foreach (string state in new[] { "", "Disabled", "Selected", "SelectedDisabled" })
+        {
+            yield return ("TreeViewItemBackground" + state, TransparentSource);
+        }
+        foreach (string state in new[] { "PointerOver", "Pressed", "SelectedPointerOver", "SelectedPressed" })
+        {
+            yield return ("TreeViewItemBackground" + state, "Frb.Brushes.Surface.Fill");
+        }
+        foreach (string state in new[] { "", "PointerOver", "Pressed", "Disabled" })
+        {
+            yield return ("TreeViewItemBorderBrush" + state, TransparentSource);
+        }
+        foreach (string state in new[] { "Selected", "SelectedPointerOver", "SelectedPressed", "SelectedDisabled" })
+        {
+            yield return ("TreeViewItemBorderBrush" + state, "Frb.Brushes.Primary");
+        }
     }
 
     /// <summary>Builds the resource dictionary for one variant file, resolving colors against it first, then <paramref name="shared"/>.</summary>

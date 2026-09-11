@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.ViewModels;
+using FluentIcons.Avalonia;
 
 namespace Gum.Avalonia.Shell;
 
@@ -61,8 +62,7 @@ public static class AvaloniaContextMenus
         }
         if (item.IconKey != null)
         {
-            // Tree icon file names; the States tree's category/state glyphs have no Avalonia art yet.
-            menuItem.Icon = AvaloniaTreeIcons.CreateIcon(item.IconKey, iconSize);
+            menuItem.Icon = CreateIcon(item.IconKey, iconSize);
         }
         if (item.Action != null)
         {
@@ -74,6 +74,15 @@ public static class AvaloniaContextMenus
         }
         return menuItem;
     }
+
+    // The States tree's category and state glyphs are Fluent System Icons, as in the WPF head; every
+    // other key is a tree icon file name.
+    private static object? CreateIcon(string key, double size) => key switch
+    {
+        ContextMenuIconKeys.Category => new FluentIcon { Icon = FluentIcons.Common.Icon.DatabaseMultiple, FontSize = size },
+        ContextMenuIconKeys.State => new FluentIcon { Icon = FluentIcons.Common.Icon.Database, FontSize = size },
+        _ => AvaloniaTreeIcons.CreateIcon(key, size),
+    };
 
     private static KeyGesture? TryParseGesture(string shortcut)
     {

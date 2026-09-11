@@ -23,6 +23,8 @@ using Gum.Plugins.VariableGrid;
 using Gum.ToolStates;
 using Gum.ViewModels;
 using WpfDataUi;
+using FluentIcons.Avalonia;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -77,7 +79,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         shortcutHint.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)));
         Button clearFilter = new Button
         {
-            Content = "✕",
+            Content = new FluentIcon { Icon = FluentIcons.Common.Icon.Dismiss, FontSize = 12 },
             Padding = new Thickness(4, 0),
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
@@ -91,13 +93,45 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
             // Focus stays in the box so a different filter can be typed straight away.
             _filterTextBox.Focus();
         };
-        Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4) };
-        filterRow.Children.Add(_filterTextBox);
-        filterRow.Children.Add(shortcutHint);
-        filterRow.Children.Add(clearFilter);
+        // As in the WPF tab: a search icon, then the box with its hint and clear button in one cell.
+        Grid filterBox = new Grid();
+        filterBox.Children.Add(_filterTextBox);
+        filterBox.Children.Add(shortcutHint);
+        filterBox.Children.Add(clearFilter);
+        Grid.SetColumn(filterBox, 1);
+        Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4), ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        filterRow.Children.Add(new FluentIcon
+        {
+            Icon = FluentIcons.Common.Icon.Search,
+            FontSize = 16,
+            Margin = new Thickness(2, 0, 4, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        filterRow.Children.Add(filterBox);
         filterRow.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.ShowVariableGrid)));
 
-        Button addVariable = new Button { Content = "+ Add Variable", HorizontalAlignment = HorizontalAlignment.Stretch, Margin = new Thickness(0, 2, 0, 0) };
+        // The WPF tab's full-width icon button, its text larger than the body text.
+        Binding largeText = new Binding(nameof(Window.FontSize))
+        {
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
+            Converter = GumChromeStyles.ScaleFontSize(1.5),
+        };
+        FluentIcon addIcon = new FluentIcon { Icon = FluentIcons.Common.Icon.Add, VerticalAlignment = VerticalAlignment.Center };
+        addIcon.Bind(FluentIcon.FontSizeProperty, largeText);
+        TextBlock addText = new TextBlock { Text = "Add Variable", VerticalAlignment = VerticalAlignment.Center };
+        addText.Bind(TextBlock.FontSizeProperty, largeText);
+        StackPanel addContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };
+        addContent.Children.Add(addIcon);
+        addContent.Children.Add(addText);
+        Button addVariable = new Button
+        {
+            Content = addContent,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 2, 0, 0),
+        };
+        addVariable.Classes.Add(GumChromeStyles.IconButtonClass);
+        AddVariableButton = addVariable;
         addVariable.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsAddVariableButtonVisible)));
         addVariable.Click += (_, _) => AddVariableClicked?.Invoke(this, EventArgs.Empty);
 
@@ -152,6 +186,9 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
 
     /// <summary>The filter box, for tests.</summary>
     internal TextBox FilterTextBox => _filterTextBox;
+
+    /// <summary>The Add Variable button, for tests.</summary>
+    internal Button AddVariableButton { get; }
 
     /// <inheritdoc/>
     public void FocusVariableFilter()

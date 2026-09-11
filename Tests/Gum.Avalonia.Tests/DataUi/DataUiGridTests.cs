@@ -27,6 +27,17 @@ public class DataUiGridTests
         return (grid, window);
     }
 
+    private static (DataUiGrid Grid, Window Window) ShowGridWithDefaultStyling(MemberCategory category, bool overridesIsDefaultStyling)
+    {
+        DataUiGrid grid = new DataUiGrid();
+        DataUiGrid.SetOverridesIsDefaultStyling(grid, overridesIsDefaultStyling);
+        grid.SetCategories(new List<MemberCategory> { category });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+        return (grid, window);
+    }
+
     private static MemberCategory Category(string name, EditorFixture fixture, params string[] propertyNames)
     {
         MemberCategory category = new MemberCategory(name);
@@ -167,6 +178,40 @@ public class DataUiGridTests
         coloredView.Background.ShouldBeNull();
         coloredView.Rows.Background.ShouldBeNull();
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void OverridesIsDefaultStyling_LeavesDefaultValuedFieldsUntinted()
+    {
+        EditorFixture fixture = new EditorFixture();
+        MemberCategory tinted = new MemberCategory("GridDefaultTinted");
+        tinted.Members.Add(new DefaultValuedMember(nameof(EditorFixture.Text), fixture));
+        MemberCategory untinted = new MemberCategory("GridDefaultUntinted");
+        untinted.Members.Add(new DefaultValuedMember(nameof(EditorFixture.Text), fixture));
+        // Set on both grids: the head's styles turn it on for every grid in the app.
+        (DataUiGrid tintingGrid, Window tintingWindow) = ShowGridWithDefaultStyling(tinted, overridesIsDefaultStyling: false);
+        (DataUiGrid overridingGrid, Window overridingWindow) = ShowGridWithDefaultStyling(untinted, overridesIsDefaultStyling: true);
+
+        TextBox tintedBox = tintingGrid.LiveContainers.Single().Displayer.ShouldBeOfType<TextBoxDisplay>().TextBox;
+        TextBox untintedBox = overridingGrid.LiveContainers.Single().Displayer.ShouldBeOfType<TextBoxDisplay>().TextBox;
+
+        tintedBox.Background.ShouldBe(DataUiValueStateBrushes.DefaultValueBackground);
+        untintedBox.Background.ShouldNotBe(DataUiValueStateBrushes.DefaultValueBackground);
+        tintingWindow.Close();
+        overridingWindow.Close();
+    }
+
+    private sealed class DefaultValuedMember : InstanceMember
+    {
+        public DefaultValuedMember(string name, object instance) : base(name, instance)
+        {
+        }
+
+        public override bool IsDefault
+        {
+            get => true;
+            set { }
+        }
     }
 }
 

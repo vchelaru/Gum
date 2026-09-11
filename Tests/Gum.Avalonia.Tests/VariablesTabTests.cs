@@ -106,7 +106,7 @@ public class VariablesTabTests
         view.FilterTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape });
         viewModel.VariableFilterText.ShouldBe(string.Empty);
 
-        Button addVariable = window.GetVisualDescendants().OfType<Button>().First(button => Equals(button.Content, "+ Add Variable"));
+        Button addVariable = view.AddVariableButton;
         addVariable.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         addClicks.ShouldBe(1);
         window.Close();

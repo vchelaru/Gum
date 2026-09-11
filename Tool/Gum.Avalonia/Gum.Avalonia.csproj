@@ -35,6 +35,9 @@
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
 		<!-- The Theming dialog's color pickers (phase 80). Its Fluent style is included in App. -->
 		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
+		<!-- The Fluent System Icons the WPF head uses through FluentIcons.Wpf (same version), for the Variables
+		     tab's filter and add buttons and the States tree. -->
+		<PackageReference Include="FluentIcons.Avalonia" Version="1.1.308" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<!-- Runtime dependencies of the Skia plugin (SVG and Lottie), matching what Gum.csproj ships for
 		     the WPF head: a plugin's NuGet dependencies load from the application folder. -->

@@ -170,9 +170,25 @@ public static class DataUiValueStateBrushes
     /// <summary>Background of a field whose multi-selection disagrees.</summary>
     public static readonly IBrush IndeterminateValueBackground = new SolidColorBrush(Colors.LightGray);
 
-    /// <summary>Sets <paramref name="target"/>'s background for <paramref name="state"/>; a custom value uses the theme's.</summary>
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Control, System.Action> PendingUntilInTree = new();
+
+    /// <summary>
+    /// Sets <paramref name="target"/>'s background for <paramref name="state"/>; a custom value uses the
+    /// theme's, and so does every value under a grid with <see cref="DataUiGrid.OverridesIsDefaultStylingProperty"/> set.
+    /// </summary>
     public static void ApplyBackground(TemplatedControl target, DataUiValueState state)
     {
+        // The grid's OverridesIsDefaultStyling is inherited, so it can only be read once the field is in the tree.
+        if (DeferUntilInTree(target, () => ApplyBackground(target, state)))
+        {
+            return;
+        }
+        if (DataUiGrid.GetOverridesIsDefaultStyling(target))
+        {
+            target.ClearValue(TemplatedControl.BackgroundProperty);
+            return;
+        }
+
         switch (state)
         {
             case DataUiValueState.Default:
@@ -184,6 +200,37 @@ public static class DataUiValueStateBrushes
             default:
                 target.ClearValue(TemplatedControl.BackgroundProperty);
                 break;
+        }
+    }
+
+    /// <summary>
+    /// When <paramref name="control"/> is not in the visual tree yet, runs <paramref name="apply"/> once
+    /// it is (the latest one, if called again before then) and returns true; otherwise returns false.
+    /// </summary>
+    internal static bool DeferUntilInTree(Control control, System.Action apply)
+    {
+        if (Avalonia.VisualTree.VisualExtensions.GetVisualRoot(control) != null)
+        {
+            return false;
+        }
+
+        bool waiting = PendingUntilInTree.TryGetValue(control, out _);
+        PendingUntilInTree.AddOrUpdate(control, apply);
+        if (!waiting)
+        {
+            control.AttachedToVisualTree += HandleAttachedToVisualTree;
+        }
+        return true;
+    }
+
+    private static void HandleAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
+    {
+        Control control = (Control)sender!;
+        control.AttachedToVisualTree -= HandleAttachedToVisualTree;
+        if (PendingUntilInTree.TryGetValue(control, out System.Action? apply))
+        {
+            PendingUntilInTree.Remove(control);
+            apply();
         }
     }
 }

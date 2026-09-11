@@ -84,6 +84,20 @@ public class DataUiGrid : UserControl, IDataUiGrid
         set => SetValue(CategoryHeaderForegroundProperty, value);
     }
 
+    /// <summary>
+    /// Defines the inherited OverridesIsDefaultStyling attached property. When true, fields keep the
+    /// theme's look whatever their value state, with no default or indeterminate tint: the WPF grid's
+    /// property of the same name, which the Gum tool's grids set.
+    /// </summary>
+    public static readonly AttachedProperty<bool> OverridesIsDefaultStylingProperty =
+        AvaloniaProperty.RegisterAttached<DataUiGrid, Control, bool>("OverridesIsDefaultStyling", inherits: true);
+
+    /// <summary>Gets whether default-value tinting is turned off where <paramref name="element"/> sits.</summary>
+    public static bool GetOverridesIsDefaultStyling(Control element) => element.GetValue(OverridesIsDefaultStylingProperty);
+
+    /// <summary>Turns default-value tinting off (or back on) for <paramref name="element"/> and its descendants.</summary>
+    public static void SetOverridesIsDefaultStyling(Control element, bool value) => element.SetValue(OverridesIsDefaultStylingProperty, value);
+
     private static Style RowStripe(int offset, double opacity) =>
         new Style(selector => selector.OfType<ItemsControl>().Class(DataUiCategoryView.RowsClass)
             .Child().OfType<ContentPresenter>().NthChild(2, offset))

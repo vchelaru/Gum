@@ -98,6 +98,17 @@ public class CheckBoxDisplay : DataUiDisplayBase
 
     private void RefreshForeground()
     {
+        // The grid's OverridesIsDefaultStyling is inherited, so it can only be read once the box is in the tree.
+        if (DataUiValueStateBrushes.DeferUntilInTree(_checkBox, RefreshForeground))
+        {
+            return;
+        }
+        if (DataUiGrid.GetOverridesIsDefaultStyling(_checkBox))
+        {
+            _checkBox.ClearValue(ForegroundProperty);
+            return;
+        }
+
         switch (InstanceMember?.ValueState)
         {
             case DataUiValueState.Default:

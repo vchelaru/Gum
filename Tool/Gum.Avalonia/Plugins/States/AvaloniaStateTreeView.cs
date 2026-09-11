@@ -15,6 +15,9 @@ using Gum.Avalonia.Shell;
 using Gum.Avalonia.Themes;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
+using FluentIcons.Avalonia;
+using Avalonia.Data.Converters;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 
 namespace Gum.Avalonia.Plugins.States;
 
@@ -80,27 +83,31 @@ public sealed class AvaloniaStateTreeView : DockPanel
         Children.Add(_tree);
     }
 
+    // The WPF tree's "BiggerIcon" size: 1.25 times the row's text.
+    private static readonly IValueConverter IconSize = GumChromeStyles.ScaleFontSize(1.25);
+
+    // As the WPF States tree: the category or state icon, the title, the required-by-behavior and
+    // edits-the-selected-instance markers, and a category's add-state button.
     private static Control BuildRow(StateTreeViewItem? item)
     {
-        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
+        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto") };
 
         TextBlock title = new TextBlock
         {
             VerticalAlignment = VerticalAlignment.Center,
             [!TextBlock.TextProperty] = new Binding(nameof(StateTreeViewItem.Title)),
         };
+        Grid.SetColumn(title, 1);
+
+        row.Children.Add(CreateIcon(title,
+            item is CategoryViewModel ? FluentIcons.Common.Icon.DatabaseMultiple : FluentIcons.Common.Icon.Database,
+            new Thickness(0, 0, 4, 0), column: 0));
         row.Children.Add(title);
 
-        TextBlock requiredByBehavior = new TextBlock
-        {
-            Text = "behavior",
-            FontSize = 10,
-            Margin = new Thickness(6, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            [!Visual.IsVisibleProperty] = new Binding(nameof(StateTreeViewItem.IsRequiredBySelectedBehavior)),
-        }.WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Icon.Manilla");
+        FluentIcon requiredByBehavior = CreateIcon(title, FluentIcons.Common.Icon.PuzzlePiece, new Thickness(4, 0, 0, 0), column: 2);
+        requiredByBehavior.Bind(FluentIcon.ForegroundProperty, new DynamicResourceExtension("Frb.Brushes.Icon.Manilla"));
+        requiredByBehavior.Bind(Visual.IsVisibleProperty, new Binding(nameof(StateTreeViewItem.IsRequiredBySelectedBehavior)));
         ToolTip.SetTip(requiredByBehavior, "Required by the selected behavior");
-        Grid.SetColumn(requiredByBehavior, 1);
         row.Children.Add(requiredByBehavior);
 
         if (item is CategoryViewModel)
@@ -114,23 +121,25 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 [!Button.CommandProperty] = new Binding(nameof(CategoryViewModel.AddStateCommand)),
             }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
             ToolTip.SetTip(addState, $"Add state to {item.Title}");
-            Grid.SetColumn(addState, 2);
+            Grid.SetColumn(addState, 3);
             row.Children.Add(addState);
         }
         else if (item is StateViewModel)
         {
-            TextBlock edited = new TextBlock
-            {
-                Text = "✎",
-                Margin = new Thickness(4, 0, 0, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                [!Visual.IsVisibleProperty] = new Binding(nameof(StateViewModel.IncludesVariablesForSelectedInstance)),
-            };
+            FluentIcon edited = CreateIcon(title, FluentIcons.Common.Icon.BoxEdit, new Thickness(4, 0, 0, 0), column: 3);
+            edited.Bind(Visual.IsVisibleProperty, new Binding(nameof(StateViewModel.IncludesVariablesForSelectedInstance)));
             ToolTip.SetTip(edited, "Sets variables on the selected instance");
-            Grid.SetColumn(edited, 2);
             row.Children.Add(edited);
         }
 
         return row;
+    }
+
+    private static FluentIcon CreateIcon(TextBlock title, FluentIcons.Common.Icon icon, Thickness margin, int column)
+    {
+        FluentIcon result = new FluentIcon { Icon = icon, Margin = margin, VerticalAlignment = VerticalAlignment.Center };
+        result.Bind(FluentIcon.FontSizeProperty, new Binding(nameof(TextBlock.FontSize)) { Source = title, Converter = IconSize });
+        Grid.SetColumn(result, column);
+        return result;
     }
 }

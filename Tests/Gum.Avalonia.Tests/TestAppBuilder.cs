@@ -17,5 +17,8 @@ public static class TestAppBuilder
     /// <summary>Called by the Avalonia xunit integration.</summary>
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure(() => new App(Services, new HeadOptions(null, null)))
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = true });
+            // Real Skia text rendering rather than the headless stub, which cannot load the icon
+            // font (FluentIcons) the Variables tab and States tree use.
+            .UseSkia()
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
 }

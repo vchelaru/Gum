@@ -315,6 +315,12 @@ public class AngleSelectorDisplay : DataUiDisplayBase
 /// </summary>
 public class ToggleButtonOptionDisplay : DataUiDisplayBase
 {
+    /// <summary>The class on the border around the buttons, for a theme to style.</summary>
+    public const string OptionGroupClass = "dataUiOptionGroup";
+
+    /// <summary>The class on each option button, for a theme to style.</summary>
+    public const string OptionClass = "dataUiOption";
+
     private readonly List<ToggleButton> _buttons;
     private readonly Grid _grid;
     private readonly TextBlock _label;
@@ -342,11 +348,18 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
             RowDefinitions = new RowDefinitions("Auto,Auto"),
             Margin = new Thickness(0, 4),
         };
-        Grid.SetColumn(_buttonPanel, 1);
+        Border buttonGroup = new Border
+        {
+            Child = _buttonPanel,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        buttonGroup.Classes.Add(OptionGroupClass);
+        Grid.SetColumn(buttonGroup, 1);
         Grid.SetRow(_hint, 1);
         Grid.SetColumnSpan(_hint, 2);
         _grid.Children.Add(_label);
-        _grid.Children.Add(_buttonPanel);
+        _grid.Children.Add(buttonGroup);
         _grid.Children.Add(_hint);
         Content = _grid;
 
@@ -383,6 +396,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
                 Padding = new Thickness(2),
             };
             ToolTip.SetTip(button, option.Name);
+            button.Classes.Add(OptionClass);
             button.Click += HandleToggleClick;
             _buttons.Add(button);
             _buttonPanel.Children.Add(button);

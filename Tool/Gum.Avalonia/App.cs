@@ -44,7 +44,8 @@ public sealed class App : Application
     /// <inheritdoc/>
     public override void Initialize()
     {
-        Styles.Add(new FluentTheme());
+        // Compact density: the WPF head's fields and rows are tighter than Fluent's defaults.
+        Styles.Add(new FluentTheme { DensityStyle = DensityStyle.Compact });
         FrbThemeResources.Install(Resources);
         // ColorPicker ships its templates separately from the Fluent theme.
         Styles.Add(new StyleInclude(new Uri("avares://Gum.Avalonia/"))
