@@ -34,6 +34,14 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         TestProjectBuilder.AddTextInstanceWithFontCache(screen, "Label", fontFilePath, 18);
 
         StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        // CollectFontCacheReferences (GumProjectDependencyWalker) always calls
+        // StandardElementsManager.Self.Initialize() before walking, so a bare Text standard with
+        // no Font of its own inherits the tool's real canonical default - which is now a bundled
+        // .ttf path (#4674), not the harmless system name "Arial" it used to be. Give this test's
+        // stub standard its own non-file Font so the walker's baseline (no-instance) scan of the
+        // Text standard itself doesn't spuriously report the *canonical* font file as missing;
+        // the two other tests in this file already do this for the same reason.
+        textStandard.DefaultState.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial" });
         GumProjectSave project = TestProjectBuilder.BuildProject(
             screens: new[] { screen },
             standards: new[] { textStandard });
