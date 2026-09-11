@@ -170,7 +170,7 @@ public static class HtmlImportTimingLog
     /// <summary>Log the plugin appends one entry to per import, next to its import-prefs.json.</summary>
     public static string LogPath =>
         Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
             "HtmlToGumPlugin", "import-timings.log");
 
     /// <summary>Reads the converter's timings.json out of its staging folder; null if it wasn't written.</summary>

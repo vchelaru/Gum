@@ -51,10 +51,12 @@ public class FileWatchLogicTests
         // lost by narrowing what the dependency walk enumerates. A custom font is the subtle case:
         // it is a font, but it is classified as an external file rather than a font-cache file, so
         // it must survive a walk that excludes font-cache enumeration.
-        const string outOfProjectTexture = "C:/Elsewhere/Art/bg.png";
-        const string outOfProjectFont = "C:/OutsideFonts/Fancy.ttf";
+        // Rooted on this OS, so the paths stay absolute on Linux as well as Windows.
+        string root = OperatingSystem.IsWindows() ? "C:/" : "/";
+        string outOfProjectTexture = root + "Elsewhere/Art/bg.png";
+        string outOfProjectFont = root + "OutsideFonts/Fancy.ttf";
 
-        GumProjectSave project = new GumProjectSave { FullFileName = "C:/FakeGumProject/MyProject.gumx" };
+        GumProjectSave project = new GumProjectSave { FullFileName = root + "FakeGumProject/MyProject.gumx" };
         ScreenSave screen = new ScreenSave { Name = "MainMenu" };
         screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
         InstanceSave sprite = new InstanceSave { Name = "Sprite1", BaseType = "Sprite", ParentContainer = screen };
@@ -97,9 +99,9 @@ public class FileWatchLogicTests
         _fileWatchLogic.RefreshRootDirectory();
 
         watched.ShouldNotBeNull();
-        watched.ShouldContain(new FilePath("C:/FakeGumProject/"));
-        watched.ShouldContain(new FilePath("C:/Elsewhere/Art/"));
-        watched.ShouldContain(new FilePath("C:/OutsideFonts/"));
+        watched.ShouldContain(new FilePath(root + "FakeGumProject/"));
+        watched.ShouldContain(new FilePath(root + "Elsewhere/Art/"));
+        watched.ShouldContain(new FilePath(root + "OutsideFonts/"));
     }
 
     [Fact]

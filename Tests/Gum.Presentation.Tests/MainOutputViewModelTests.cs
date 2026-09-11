@@ -12,6 +12,28 @@ namespace Gum.Presentation.Tests;
 public class MainOutputViewModelTests
 {
     [Fact]
+    public void DefaultConstructor_EchoesToStandardError_WhenTheEnvironmentVariableIsSet()
+    {
+        string? original = System.Environment.GetEnvironmentVariable(MainOutputViewModel.EchoEnvironmentVariable);
+        System.IO.TextWriter originalError = System.Console.Error;
+        System.IO.StringWriter captured = new();
+        try
+        {
+            System.Environment.SetEnvironmentVariable(MainOutputViewModel.EchoEnvironmentVariable, "1");
+            MainOutputViewModel viewModel = new();
+            System.Console.SetError(captured);
+            viewModel.AddOutput("hello from the tool");
+        }
+        finally
+        {
+            System.Console.SetError(originalError);
+            System.Environment.SetEnvironmentVariable(MainOutputViewModel.EchoEnvironmentVariable, original);
+        }
+
+        captured.ToString().ShouldContain("hello from the tool");
+    }
+
+    [Fact]
     public void AddError_PrefixesValueWithError()
     {
         MainOutputViewModel viewModel = new();

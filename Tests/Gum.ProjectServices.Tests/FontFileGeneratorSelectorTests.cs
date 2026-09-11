@@ -16,7 +16,7 @@ public class FontFileGeneratorSelectorTests
         RecordingFontFileGenerator bmFont = new RecordingFontFileGenerator();
         RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator();
         FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
-            bmFont, kernSmith, () => FontGeneratorType.BmFont);
+            bmFont, kernSmith, () => FontGeneratorType.BmFont, isBmFontSupported: () => true);
 
         BmfcSave bmfcSave = new BmfcSave();
         await selector.GenerateFont(bmfcSave, "/tmp/test.fnt", createTask: false);
@@ -62,7 +62,7 @@ public class FontFileGeneratorSelectorTests
         RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator();
         FontGeneratorType currentType = FontGeneratorType.BmFont;
         FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
-            bmFont, kernSmith, () => currentType);
+            bmFont, kernSmith, () => currentType, isBmFontSupported: () => true);
 
         BmfcSave bmfcSave = new BmfcSave();
 
@@ -85,7 +85,7 @@ public class FontFileGeneratorSelectorTests
         RecordingFontFileGenerator kernSmith = new RecordingFontFileGenerator { RequiresSizeEstimation = false };
         FontGeneratorType currentType = FontGeneratorType.BmFont;
         FontFileGeneratorSelector selector = new FontFileGeneratorSelector(
-            bmFont, kernSmith, () => currentType);
+            bmFont, kernSmith, () => currentType, isBmFontSupported: () => true);
 
         selector.RequiresSizeEstimation.ShouldBeTrue();
 

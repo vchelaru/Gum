@@ -50,7 +50,7 @@ public static class Program
     /// </summary>
     public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Gum");
+        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
         Directory.CreateDirectory(appDir);
         string settingsPath = Path.Combine(appDir, "appsettings.json");
 

@@ -598,7 +598,10 @@ public class GumProjectDependencyWalker
 
     private static string NormalizeRelative(string path)
     {
-        string normalized = path.Replace('\\', '/').TrimStart('/');
-        return normalized;
+        string normalized = path.Replace('\\', '/');
+        // A rooted Unix path keeps its leading separator, as a drive-rooted Windows path keeps its
+        // drive; only a stray leading separator on a relative path is dropped.
+        bool rootedUnixPath = Path.DirectorySeparatorChar == '/' && Path.IsPathRooted(path);
+        return rootedUnixPath ? normalized : normalized.TrimStart('/');
     }
 }

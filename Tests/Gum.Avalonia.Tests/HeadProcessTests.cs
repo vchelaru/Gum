@@ -11,21 +11,23 @@ namespace Gum.Avalonia.Tests;
 /// </summary>
 /// <remarks>
 /// Needs a display and a GL driver for the canvas, so it is skipped on headless machines and on CI
-/// runners (which have no GPU; the CI job would need Mesa's software GL, as the raylib job has).
+/// runners unless <c>GUM_RUN_HEAD_PROCESS_TEST=1</c> opts in (the Linux CI job does, under Xvfb with
+/// Mesa's software GL).
 /// </remarks>
 public class HeadProcessTests
 {
     private static bool CanRunTheHead =>
-        string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")) &&
-        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
-         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
-         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
-         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")));
+        Environment.GetEnvironmentVariable("GUM_RUN_HEAD_PROCESS_TEST") == "1" ||
+        (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")) &&
+         (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
+          RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
+          !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
+          !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"))));
 
     [SkippableFact]
     public async Task UnattendedRun_LoadsAProject_AndExitsCleanly()
     {
-        Skip.IfNot(CanRunTheHead, "needs a display and a GL driver, and is not run on CI");
+        Skip.IfNot(CanRunTheHead, "needs a display and a GL driver; set GUM_RUN_HEAD_PROCESS_TEST=1 to run it on CI");
 
         string repositoryRoot = FindRepositoryRoot();
         string configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).Parent!.Name;

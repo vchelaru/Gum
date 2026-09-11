@@ -58,7 +58,13 @@
 		</PropertyGroup>
 		<!-- Gum.FormsStaging isn't guaranteed to build before this project in a solution build,
 		     so build it explicitly before shelling out to it below (#4070). -->
-		<Exec Command="dotnet build &quot;$(SolutionDir)Tools/Gum.FormsStaging/Gum.FormsStaging.csproj&quot; -c $(ConfigurationName) --nologo" />
+		<PropertyGroup>
+			<!-- The dotnet host running this build, so the nested build uses the same SDK (a user-local SDK
+			     is not on PATH); Visual Studio's MSBuild does not set it, so fall back to PATH there. -->
+			<DotNetHost>dotnet</DotNetHost>
+			<DotNetHost Condition="'$(DOTNET_HOST_PATH)' != ''">&quot;$(DOTNET_HOST_PATH)&quot;</DotNetHost>
+		</PropertyGroup>
+		<Exec Command="$(DotNetHost) build &quot;$(SolutionDir)Tools/Gum.FormsStaging/Gum.FormsStaging.csproj&quot; -c $(ConfigurationName) --nologo" />
 
 		<ItemGroup>
 			<PluginOutputFiles Include="$(TargetPath)" />

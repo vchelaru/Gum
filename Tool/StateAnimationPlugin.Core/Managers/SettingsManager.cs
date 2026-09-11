@@ -1,3 +1,4 @@
+using System.IO;
 using Newtonsoft.Json;
 using StateAnimationPlugin.Models;
 using System;
@@ -26,9 +27,9 @@ namespace StateAnimationPlugin.Managers
         public SettingsManager(FilePath? globalSettingsFilePath = null)
         {
             GlobalSettings = new AnimationPluginSettings();
-            _globalSettingsFilePath = globalSettingsFilePath ?? new FilePath(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
-                    @"\Gum\AnimationPlugin\GlobalAnimationSettings.json");
+            _globalSettingsFilePath = globalSettingsFilePath ?? new FilePath(Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
+                "Gum", "AnimationPlugin", "GlobalAnimationSettings.json"));
         }
 
         /// <inheritdoc/>

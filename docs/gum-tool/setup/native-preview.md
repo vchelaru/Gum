@@ -50,16 +50,15 @@ The preview is not signed, so Windows shows the "Windows protected your PC" popu
     ~/gum/Gum.Avalonia
     ```
 
-Gum needs a desktop session (X11 or Wayland) and a graphics driver with OpenGL 3.0 or newer.
+Gum needs a desktop session (X11 or Wayland), a graphics driver with OpenGL 3.0 or newer, and the fontconfig library (`libfontconfig1` on Debian and Ubuntu), which desktop installs normally include.
 {% endtab %}
 {% endtabs %}
 
 ## Known issues in the preview
 
-* Some panels and dialogs still show a placeholder while they are being brought over from the Windows tool.
 * The preview keeps its own settings, so recent projects and layout from the Windows tool do not carry over.
 * Plugins built only for the Windows tool do not load. The **Plugins** dialog lists them as not supported.
-* The command-line tool (`gumcli`) is not included in the preview downloads yet.
+* The command-line tool (`gumcli`) is included in the `GumCli` folder beside the tool, but only the tool's own **Export as SVG** uses it so far.
 * The macOS app has no icon yet.
 * The preview is not signed on Windows or notarized on macOS, which is why the steps above are needed.
 

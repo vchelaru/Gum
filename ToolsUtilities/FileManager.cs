@@ -998,8 +998,13 @@ namespace ToolsUtilities
 
     public static partial class FileManager
     {
+        /// <summary>
+        /// The per-user application data folder with a trailing separator. The folder is created if
+        /// it does not exist yet (a fresh Linux account has no ~/.config), since GetFolderPath returns
+        /// an empty string for a missing folder.
+        /// </summary>
         public static string UserApplicationData =>
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + Path.DirectorySeparatorChar;
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create) + Path.DirectorySeparatorChar;
 
         public static void CopyFilesRecursively(string source, string target)
         {
@@ -1466,7 +1471,7 @@ namespace ToolsUtilities
 
                 applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
 
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), applicationDataName) + Path.DirectorySeparatorChar;
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), applicationDataName) + Path.DirectorySeparatorChar;
             }
         }
 

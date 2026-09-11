@@ -17,7 +17,7 @@ public sealed class ImportPrefs
 
     private static string PrefsPath =>
         Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
             "HtmlToGumPlugin", "import-prefs.json");
 
     public static ImportPrefs Load()

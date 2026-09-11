@@ -177,8 +177,11 @@ public class UserProjectSettingsManagerTests : BaseTestClass
     [Fact]
     public void Save_ShouldHandleError_WhenFilePathIsInvalid()
     {
-        // Arrange
-        var invalidPath = "Z:\\InvalidPath\\DoesNotExist\\Project.gumx";
+        // Arrange: a path under an existing file cannot be written to on any OS (a drive letter
+        // that does not exist is a valid relative file name on Linux).
+        string blockingFile = Path.Combine(_testDirectory, "blocker");
+        File.WriteAllText(blockingFile, string.Empty);
+        string invalidPath = Path.Combine(blockingFile, "DoesNotExist", "Project.gumx");
         _manager.LoadForProject(invalidPath);
         _manager.CurrentSettings!.TreeViewState = new TreeViewState();
 
