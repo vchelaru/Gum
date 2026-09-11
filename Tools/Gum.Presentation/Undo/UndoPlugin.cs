@@ -8,8 +8,13 @@ using Gum.ToolStates;
 
 namespace Gum.Undo;
 
+/// <summary>
+/// Records undo states as the selection and the project change and broadcasts history changes to
+/// the History tab. Shared by both heads: it touches nothing but the plugin events and the undo
+/// manager.
+/// </summary>
 [Export(typeof(Gum.Plugins.BaseClasses.PluginBase))]
-public class UndoPlugin : PriorityPlugin
+public class UndoPlugin : CorePriorityPlugin
 {
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
