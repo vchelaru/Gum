@@ -1,22 +1,16 @@
-﻿using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
-using Gum.Services;
 using System.Windows.Controls;
 
 namespace Gum.Plugins.AlignmentButtons
 {
     /// <summary>
-    /// Interaction logic for AlignmentPluginControl.xaml
+    /// The Alignment tab. Its DataContext is the AlignmentViewModel the shared plugin hands to the tab
+    /// manager (TabViewRegistry sets it).
     /// </summary>
     public partial class AlignmentPluginControl : UserControl
     {
-        public AlignmentViewModel ViewModel { get; }
-
         public AlignmentPluginControl()
         {
             InitializeComponent();
-
-            ViewModel = Locator.GetRequiredService<AlignmentViewModel>();
-            this.DataContext = ViewModel;
         }
     }
 }

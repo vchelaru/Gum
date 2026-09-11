@@ -38,6 +38,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.PropertyGridHelpers;
 
 namespace Gum.Plugins;
@@ -291,6 +292,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     public void DeleteConfirmed(object window, Array objectsToDelete) =>
         CallMethodOnPlugin(plugin => (plugin as IDeleteOptionsDialogPlugin)?.CallDeleteConfirmed(window, objectsToDelete));
+
+    /// <inheritdoc/>
+    public void ShowDeleteOptions(DeleteOptionsDialogViewModel dialog, Array objectsToDelete) =>
+        CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsShow(dialog, objectsToDelete));
+
+    /// <inheritdoc/>
+    public void ConfirmDeleteOptions(DeleteOptionsDialogViewModel dialog, Array deletedObjects) =>
+        CallMethodOnPlugin(plugin => plugin.CallDeleteOptionsConfirmed(dialog, deletedObjects));
 
     public void ElementRename(ElementSave elementSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallElementRename(elementSave, oldName));
@@ -901,6 +910,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // plugin's tab consumes. MainOutputViewModel is the IOutputManager singleton.
         batch.AddExportedValue<IDeleteLogic>(Locator.GetRequiredService<IDeleteLogic>());
         batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
+        batch.AddExportedValue<AlignmentViewModel>(Locator.GetRequiredService<AlignmentViewModel>());
         batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
 
         // Heavy-tier ctor drain: MainPropertiesWindowPlugin (IDispatcher, IWireframeObjectManager;

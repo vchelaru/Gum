@@ -9,11 +9,12 @@ namespace Gum.Plugins.BaseClasses;
 
 /// <summary>
 /// <see cref="PluginBase"/> plus the one member set that is still WPF-coupled: the
-/// delete-confirmation dialog events (<c>Gum.Gui.Windows.DeleteOptionsWindow</c> is a real WPF
-/// <see cref="System.Windows.Window"/>; phase 80 of the Avalonia migration replaces it), plus an
-/// obsolete <see cref="AddMenuItem(string[])"/> shim for external plugins. Menus go through
-/// <see cref="PluginBase.AddMenuEntry(Action?, string[])"/> on the shared menu model. Plugins that
-/// don't touch the delete dialog inherit <see cref="PluginBase"/> directly.
+/// delete-confirmation dialog events that hand plugins the WPF
+/// <c>Gum.Gui.Windows.DeleteOptionsWindow</c> to add controls to, plus an obsolete
+/// <see cref="AddMenuItem(string[])"/> shim for external plugins. New code uses the neutral
+/// <see cref="PluginBase.DeleteOptionsShow"/> / <see cref="PluginBase.DeleteOptionsConfirmed"/> pair,
+/// which both heads render; CodeOutputPlugin is the last in-repo user of the WPF pair. Menus go
+/// through <see cref="PluginBase.AddMenuEntry(Action?, string[])"/> on the shared menu model.
 /// </summary>
 public abstract class WpfPluginBase : PluginBase, IDeleteOptionsDialogPlugin
 {

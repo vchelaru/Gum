@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -12,6 +12,7 @@ namespace Gum.Plugins.Errors;
 public partial class AllErrorsViewModel : ViewModel
 {
     private readonly IClipboardService _clipboardService;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
 
     public ObservableCollection<ErrorViewModel> Errors { get; } = [];
 
@@ -34,9 +35,10 @@ public partial class AllErrorsViewModel : ViewModel
         _ => $"{Errors.Count} Errors"
     };
 
-    public AllErrorsViewModel(IClipboardService clipboardService)
+    public AllErrorsViewModel(IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService)
     {
         _clipboardService = clipboardService;
+        _fileSystemRevealService = fileSystemRevealService;
         Errors.CollectionChanged += ErrorsOnCollectionChanged;
     }
 
@@ -55,6 +57,16 @@ public partial class AllErrorsViewModel : ViewModel
         if (SelectedItem != null)
         {
             _clipboardService.SetText(SelectedItem.ClipboardText);
+        }
+    }
+
+    /// <summary>Opens <paramref name="error"/>'s help page (the link on its error code).</summary>
+    [RelayCommand]
+    private void OpenHelp(ErrorViewModel? error)
+    {
+        if (error?.HelpUrl is { Length: > 0 } helpUrl)
+        {
+            _fileSystemRevealService.OpenUrl(helpUrl);
         }
     }
 

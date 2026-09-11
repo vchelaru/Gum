@@ -16,8 +16,9 @@ namespace Gum.Presentation.Tests;
 public class AllErrorsViewModelTests
 {
     private readonly Mock<IClipboardService> _clipboardService = new();
+    private readonly Mock<IFileSystemRevealService> _fileSystemRevealService = new();
 
-    private AllErrorsViewModel CreateViewModel() => new(_clipboardService.Object);
+    private AllErrorsViewModel CreateViewModel() => new(_clipboardService.Object, _fileSystemRevealService.Object);
 
     [Fact]
     public void CountDescription_PluralizesForMultipleErrors()
@@ -58,6 +59,26 @@ public class AllErrorsViewModelTests
         viewModel.Errors.Add(new ErrorViewModel { Message = "boom" });
 
         changedProperties.ShouldContain(nameof(AllErrorsViewModel.CountDescription));
+    }
+
+    [Fact]
+    public void OpenHelpCommand_DoesNothing_WhenTheErrorHasNoHelpUrl()
+    {
+        AllErrorsViewModel viewModel = CreateViewModel();
+
+        viewModel.OpenHelpCommand.Execute(new ErrorViewModel { Message = "no link" });
+
+        _fileSystemRevealService.Verify(x => x.OpenUrl(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void OpenHelpCommand_OpensTheErrorsHelpUrl()
+    {
+        AllErrorsViewModel viewModel = CreateViewModel();
+
+        viewModel.OpenHelpCommand.Execute(new ErrorViewModel { Message = "linked", HelpUrl = "https://docs.flatredball.com/gum/errors" });
+
+        _fileSystemRevealService.Verify(x => x.OpenUrl("https://docs.flatredball.com/gum/errors"), Times.Once);
     }
 
     [Fact]

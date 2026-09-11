@@ -3,6 +3,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.Reflection;
 using Gum.Avalonia.Plugins;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Shell;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ public class PluginHostTests
     {
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
+        typeof(global::PerformanceMeasurementPlugin.MainPlugin).Assembly,
     };
 
     [Fact]
@@ -69,8 +71,16 @@ public class PluginHostTests
         PluginBase[] plugins = container.GetExportedValues<PluginBase>().ToArray();
 
         plugins.Select(plugin => plugin.GetType().Name)
-            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin" }, ignoreOrder: true);
+            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin", "MainPlugin" }, ignoreOrder: true);
         plugins.ShouldAllBe(plugin => plugin.Menu != null);
+    }
+
+    [Fact]
+    public void TabViewRegistry_HasAViewForEveryNeutralPluginsTab()
+    {
+        TabViewRegistry registry = TestAppBuilder.Services.GetRequiredService<TabViewRegistry>();
+
+        registry.HasView(typeof(global::PerformanceMeasurementPlugin.ViewModels.PerformanceViewModel)).ShouldBeTrue();
     }
 
     [AvaloniaFact]
@@ -85,7 +95,32 @@ public class PluginHostTests
         Type[] loaded = pluginManager.Plugins.Select(plugin => plugin.GetType()).ToArray();
 
         loaded.ShouldContain(typeof(ShellTitlePlugin));
-        loaded.ShouldContain(typeof(OutputPlugin));
+        // Built-in plugins shared with the WPF head live in Gum.Presentation and are internal there.
+        string[] names = loaded.Select(type => type.Name).ToArray();
+        names.ShouldContain("MainOutputPlugin");
+        names.ShouldContain("MainHotkeyPlugin");
+        names.ShouldContain("MainFileWatchPlugin");
+        names.ShouldContain("MainRecentFilesPlugin");
+        names.ShouldContain("MainInheritancePlugin");
+    }
+
+    [AvaloniaFact]
+    public void EveryTabASharedPluginAdds_ResolvesToAnAvaloniaView()
+    {
+        PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
+        if (!pluginManager.IsInitialized)
+        {
+            pluginManager.Initialize();
+        }
+        AvaloniaTabManager tabs = TestAppBuilder.Services.GetRequiredService<AvaloniaTabManager>();
+
+        string[] unresolved = tabs.AllTabs
+            .Where(tab => tab.Content is not global::Avalonia.Controls.Control)
+            .Select(tab => $"{tab.Title} ({tab.Content.GetType().Name})")
+            .ToArray();
+
+        unresolved.ShouldBeEmpty("Register an Avalonia view in TabViewRegistry for: " + string.Join(", ", unresolved));
+        tabs.AllTabs.Select(tab => tab.Title).ShouldContain("Output");
     }
 
     /// <summary>A stand-in assembly whose only referenced assembly is WPF's PresentationFramework.</summary>

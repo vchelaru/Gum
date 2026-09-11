@@ -1,13 +1,9 @@
-﻿using Gum.Commands;
-using Gum.Localization;
-using Gum.Managers;
-using Gum.Plugins.PropertiesWindowPlugin;
-using Gum.Services;
 using Gum.DataTypes;
+using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Services.Fonts;
 using RenderingLibrary.Graphics.Fonts;
-using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,40 +13,71 @@ using WpfDataUi.DataTypes;
 namespace Gum.Gui.Controls;
 
 /// <summary>
-/// Interaction logic for ProjectPropertiesControl.xaml
+/// The WPF Project Properties tab: a property grid over the <see cref="ProjectPropertiesViewModel"/>
+/// the shared plugin hands to the tab manager (TabViewRegistry makes it this control's DataContext).
+/// The grid builds its rows from the view model's members, so it rebuilds on
+/// <see cref="ProjectPropertiesViewModel.Reloaded"/> and hides the view-only members.
 /// </summary>
 public partial class ProjectPropertiesControl : UserControl
 {
-    public event EventHandler CloseClicked;
-
-    public ProjectPropertiesViewModel ViewModel
-    {
-        get
-        {
-            return (ProjectPropertiesViewModel)DataGrid.Instance;
-        }
-        internal set
-        {
-            if(value != DataGrid.Instance)
-            {
-                DataGrid.Instance = value;
-
-                UpdateToInstance();
-            }
-        }
-    }
+    private ProjectPropertiesViewModel? _viewModel;
 
     public ProjectPropertiesControl()
     {
         InitializeComponent();
+        DataContextChanged += (_, e) => Bind(e.NewValue as ProjectPropertiesViewModel);
+    }
+
+    private void Bind(ProjectPropertiesViewModel? viewModel)
+    {
+        if (_viewModel != null)
+        {
+            _viewModel.Reloaded -= Rebuild;
+            _viewModel.PropertyChanged -= HandleViewModelPropertyChanged;
+        }
+        _viewModel = viewModel;
+        if (_viewModel != null)
+        {
+            _viewModel.Reloaded += Rebuild;
+            _viewModel.PropertyChanged += HandleViewModelPropertyChanged;
+        }
+        Rebuild();
+    }
+
+    private void Rebuild()
+    {
+        // Clearing first makes the grid rebuild its rows even when the view model is the same object.
+        DataGrid.Instance = null;
+        if (_viewModel != null)
+        {
+            DataGrid.Instance = _viewModel;
+            UpdateToInstance(_viewModel);
+        }
+    }
+
+    private void HandleViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly) or nameof(ProjectPropertiesViewModel.FontRanges))
+        {
+            RefreshFontRangeEditability();
+        }
+    }
+
+    private void RefreshFontRangeEditability()
+    {
+        if (_viewModel != null && DataGrid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontRanges)) is { } member)
+        {
+            member.IsReadOnly = _viewModel.IsFontRangesReadOnly;
+        }
+        DataGrid.Refresh();
     }
 
     private void CancelButtonClicked(object? sender, RoutedEventArgs e)
     {
-        CloseClicked?.Invoke(this, null);
+        _viewModel?.RequestClose();
     }
 
-    private void UpdateToInstance()
+    private void UpdateToInstance(ProjectPropertiesViewModel viewModel)
     {
         // Move all colors into their own category:
         var allMembers = DataGrid.Categories.SelectMany(item => item.Members).ToArray();
@@ -60,31 +87,30 @@ public partial class ProjectPropertiesControl : UserControl
             member.SupportsMakeDefault = false;
         }
 
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowOutlines), "Guides");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCanvasOutline), "Guides");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.ShowCheckerBackground), "Guides");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.ShowOutlines), "Guides");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.ShowCanvasOutline), "Guides");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.ShowCheckerBackground), "Guides");
 
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureFile), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureTop), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureRight), "Single Pixel Texture");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
 
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureFile), "Single Pixel Texture");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureLeft), "Single Pixel Texture");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureTop), "Single Pixel Texture");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureRight), "Single Pixel Texture");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.SinglePixelTextureBottom), "Single Pixel Texture");
-
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontRanges), "Font Generation");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.UseFontCharacterFile), "Font Generation");
-        var useFontCharacterFileMember = DataGrid.GetInstanceMember(nameof(ViewModel.UseFontCharacterFile));
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontRanges), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.UseFontCharacterFile), "Font Generation");
+        var useFontCharacterFileMember = DataGrid.GetInstanceMember(nameof(ProjectPropertiesViewModel.UseFontCharacterFile));
         if (useFontCharacterFileMember != null)
         {
             useFontCharacterFileMember.DisplayName = useFontCharacterFileMember.DisplayName + " (.gumfcs)";
         }
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingHorizontal), "Font Generation");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontSpacingVertical), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontSpacingHorizontal), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontSpacingVertical), "Font Generation");
 
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.AutoSizeFontOutputs), "Font Generation");
-        DataGrid.MoveMemberToCategory(nameof(ViewModel.FontGenerator), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs), "Font Generation");
+        DataGrid.MoveMemberToCategory(nameof(ProjectPropertiesViewModel.FontGenerator), "Font Generation");
 
-        var fontGeneratorMember = DataGrid.GetInstanceMember(nameof(ViewModel.FontGenerator));
+        var fontGeneratorMember = DataGrid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontGenerator));
         if (fontGeneratorMember != null)
         {
             fontGeneratorMember.CustomOptions = new List<object>()
@@ -94,15 +120,14 @@ public partial class ProjectPropertiesControl : UserControl
             };
         }
 
-        var autoSizeMember = DataGrid.GetInstanceMember(nameof(ViewModel.AutoSizeFontOutputs));
+        var autoSizeMember = DataGrid.GetInstanceMember(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs));
         if(autoSizeMember != null)
         {
             autoSizeMember.DisplayName = "Auto-Size Font Outputs";
             autoSizeMember.DetailText = "Fewer PNGs, but font generation can be much slower";
-            
         }
 
-        var textureFilterMember = DataGrid.GetInstanceMember(nameof(ViewModel.TextureFilter));
+        var textureFilterMember = DataGrid.GetInstanceMember(nameof(ProjectPropertiesViewModel.TextureFilter));
         if(textureFilterMember != null)
         {
             textureFilterMember.CustomOptions = new List<object>()
@@ -112,6 +137,7 @@ public partial class ProjectPropertiesControl : UserControl
             };
         }
 
+        IReadOnlyList<string> languages = viewModel.AvailableLanguages;
         foreach (var category in DataGrid.Categories)
         {
             foreach (var member in category.Members)
@@ -120,51 +146,50 @@ public partial class ProjectPropertiesControl : UserControl
                         ToolsUtilities.StringFunctions.InsertSpacesInCamelCaseString(member.DisplayName);
 
                 if(IsColor(member))
-                { 
+                {
                     member.PreferredDisplayer = typeof(Gum.Controls.DataUi.ColorDisplay);
                 }
 
-                if(member.Name == nameof(ViewModel.LocalizationFiles))
+                if(member.Name == nameof(ProjectPropertiesViewModel.LocalizationFiles))
                 {
                     member.PreferredDisplayer = typeof(MultiFileDisplay);
                     member.PropertiesToSetOnDisplayer["Filter"] = "Localization Files|*.csv;*.resx|All Files|*.*";
                 }
-                else if(member.Name == nameof(ViewModel.LanguageName))
+                else if(member.Name == nameof(ProjectPropertiesViewModel.LanguageName))
                 {
                     member.DisplayName = "Language";
-                    var localizationService = Locator.GetRequiredService<LocalizationService>();
-                    if(localizationService.Languages.Count > 0)
-                        member.CustomOptions = localizationService.Languages.Cast<object>().ToList();
+                    if(languages.Count > 0)
+                        member.CustomOptions = languages.Cast<object>().ToList();
                 }
-                else if(member.Name == nameof(ViewModel.SinglePixelTextureFile))
+                else if(member.Name == nameof(ProjectPropertiesViewModel.SinglePixelTextureFile))
                 {
                     member.PreferredDisplayer = typeof(FileSelectionDisplay);
                 }
             }
 
-            var isUpdatingMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.IsUpdatingFromModel));
-            if(isUpdatingMember != null)
-            {
-                category.Members.Remove(isUpdatingMember);
-            }
+            // Members that are view state or bookkeeping, not settings, get no row.
+            RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.IsUpdatingFromModel));
+            RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.LanguageIndex));
+            RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly));
+            RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.AvailableLanguages));
 
-            var languageIndexMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.LanguageIndex));
-            if(languageIndexMember != null)
+            if(languages.Count == 0)
             {
-                category.Members.Remove(languageIndexMember);
-            }
-
-            var locService = Locator.GetRequiredService<LocalizationService>();
-            if(locService.Languages.Count == 0)
-            {
-                var languageNameMember = category.Members.FirstOrDefault(item => item.Name == nameof(ViewModel.LanguageName));
-                if(languageNameMember != null)
-                {
-                    category.Members.Remove(languageNameMember);
-                }
+                RemoveMember(category.Members, nameof(ProjectPropertiesViewModel.LanguageName));
             }
         }
 
+        RefreshFontRangeEditability();
+
         bool IsColor(InstanceMember member) => member.PropertyType.Name == "Microsoft.Xna.Framework.Color" || member.PropertyType.Name == "Color";
+    }
+
+    private static void RemoveMember(ICollection<InstanceMember> members, string name)
+    {
+        InstanceMember? member = members.FirstOrDefault(item => item.Name == name);
+        if (member != null)
+        {
+            members.Remove(member);
+        }
     }
 }

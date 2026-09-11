@@ -1,5 +1,6 @@
 using System;
 using FlatRedBall.Glue.StateInterpolation;
+using StateAnimationPlugin.Timeline;
 using StateAnimationPlugin.ViewModels;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -138,63 +139,23 @@ public class InterpolationTrackControl : Canvas
             return;
         }
 
-        // only states, by time
-        var stateItems = items.Where(k => !string.IsNullOrEmpty(k.StateName))
-                              .OrderBy(k => k.Time)
-                              .ToList();
-        if (stateItems.Count < 2)
-        {
-            return;
-        }
-
-        const int samples = 32;
         Pen pen = new(LineBrush, 1.0);
         Brush fillBrush = FillBrush ?? DeriveDefaultFillBrush(LineBrush);
 
-        for (int i = 0; i < stateItems.Count - 1; i++)
+        // The curve's sampling is shared with the Avalonia head's timeline (InterpolationCurve).
+        foreach (InterpolationSegment segment in InterpolationCurve.Segments(items, AnimationLength, ActualWidth, ActualHeight, ClampInterpolationVisuals))
         {
-            AnimatedKeyframeViewModel current = stateItems[i];
-            AnimatedKeyframeViewModel next = stateItems[i + 1];
-            double startX = (current.Time / AnimationLength) * ActualWidth;
-            double endX = (next.Time / AnimationLength) * ActualWidth;
-            if (endX <= startX)
-            {
-                continue;
-            }
-
-            TweeningFunction tween = Tweener.GetInterpolationFunction(current.InterpolationType, current.Easing);
-
             StreamGeometry fillGeo = new();
-            using(StreamGeometryContext fillContext = fillGeo.Open())
+            using (StreamGeometryContext fillContext = fillGeo.Open())
             {
-                double firstProcessed = tween(0f, 0f, 1f, 1f);
-                if (ClampInterpolationVisuals)
+                fillContext.BeginFigure(new Point(segment.Points[0].X, segment.Points[0].Y), true, true);
+                for (int i = 1; i < segment.Points.Count; i++)
                 {
-                    firstProcessed = Math.Clamp(firstProcessed, 0, 1);
+                    fillContext.LineTo(new Point(segment.Points[i].X, segment.Points[i].Y), true, false);
                 }
-
-                double firstY = (1 - firstProcessed) * ActualHeight;
-                fillContext.BeginFigure(new Point(startX, firstY), true, true);
-
-                for(int s=1; s<=samples; s++)
-                {
-                    float t = (float)s / samples;
-                    double processed = tween(t, 0f, 1f, 1f);
-
-                    if (ClampInterpolationVisuals)
-                    {
-                        processed = Math.Clamp(processed, 0, 1);
-                    }
-
-                    double x = startX + (endX - startX) * t;
-                    double y = (1 - processed) * ActualHeight;
-                    fillContext.LineTo(new Point(x, y), true, false);
-                }
-
-                // bottom right
-                fillContext.LineTo(new Point(endX, ActualHeight), true, false);
-                // bottom left
-                fillContext.LineTo(new Point(startX, ActualHeight), true, false);
+                // bottom right, then bottom left
+                fillContext.LineTo(new Point(segment.EndX, ActualHeight), true, false);
+                fillContext.LineTo(new Point(segment.StartX, ActualHeight), true, false);
             }
             fillGeo.Freeze();
             dc.DrawGeometry(fillBrush, null, fillGeo);
@@ -203,27 +164,10 @@ public class InterpolationTrackControl : Canvas
             StreamGeometry strokeGeo = new();
             using (StreamGeometryContext strokeContext = strokeGeo.Open())
             {
-                for(int s = 0; s <= samples; s++)
+                strokeContext.BeginFigure(new Point(segment.Points[0].X, segment.Points[0].Y), false, false);
+                for (int i = 1; i < segment.Points.Count; i++)
                 {
-                    float t = (float)s / samples;
-                    double processed = tween(t, 0f, 1f, 1f);
-
-                    if (ClampInterpolationVisuals)
-                    {
-                        processed = Math.Clamp(processed, 0, 1);
-                    }
-
-                    double x = startX + (endX - startX) * t;
-                    double y = (1 - processed) * ActualHeight;
-
-                    if (s == 0)
-                    {
-                        strokeContext.BeginFigure(new Point(x, y), false, false);
-                    }
-                    else
-                    {
-                        strokeContext.LineTo(new Point(x, y), true, false);
-                    }
+                    strokeContext.LineTo(new Point(segment.Points[i].X, segment.Points[i].Y), true, false);
                 }
             }
             strokeGeo.Freeze();

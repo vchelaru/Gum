@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.InternalPlugins.Undos;
@@ -37,9 +37,18 @@ namespace Gum.Plugins.Undos
             }
         }
 
-        public int GetIndexOfCurrent() => _historyItems.LastOrDefault(x => x.UndoOrRedo is UndoOrRedo.Undo) is { } current
+        public int GetIndexOfCurrent() => CurrentItem is { } current
             ? _historyItems.IndexOf(current)
             : -1;
+
+        /// <summary>The most recent action that can be undone, which the History list highlights; null when there is none.</summary>
+        public UndoItemViewModel? CurrentItem => _historyItems.LastOrDefault(x => x.UndoOrRedo is UndoOrRedo.Undo);
+
+        /// <summary>Raised by <see cref="FocusCurrentItem"/> so the view can select and scroll to <see cref="CurrentItem"/>.</summary>
+        public event Action? FocusCurrentItemRequested;
+
+        /// <summary>Asks the view to bring <see cref="CurrentItem"/> into view. The History plugin calls this when its tab gets focus.</summary>
+        public void FocusCurrentItem() => FocusCurrentItemRequested?.Invoke();
 
         void RefreshHistoryItems()
         {

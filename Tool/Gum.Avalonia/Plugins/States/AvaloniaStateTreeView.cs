@@ -29,7 +29,6 @@ public sealed class AvaloniaStateTreeView : DockPanel
     private readonly IStateTreeViewRightClickService _rightClickService;
     private readonly StateTreeKeyboardHandler _keyboardHandler;
     private readonly global::Avalonia.Controls.TreeView _tree;
-    private readonly ContextMenu _contextMenu;
 
     /// <summary>Builds the view over the shared view model, menu and hotkeys.</summary>
     public AvaloniaStateTreeView(StateTreeViewModel viewModel,
@@ -65,14 +64,8 @@ public sealed class AvaloniaStateTreeView : DockPanel
             }
         }, RoutingStrategies.Tunnel);
 
-        _contextMenu = new ContextMenu();
-        _contextMenu.Opening += (_, e) =>
-        {
-            AvaloniaContextMenus.Populate(_contextMenu, _rightClickService.MenuItems);
-            // Nothing applies to the selection: suppress rather than open an empty popup.
-            e.Cancel = _contextMenu.Items.Count == 0;
-        };
-        _tree.ContextMenu = _contextMenu;
+        // Nothing applies to the selection: the menu stays closed rather than opening empty.
+        _tree.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(() => _rightClickService.MenuItems);
 
         Button addCategory = new Button
         {

@@ -61,8 +61,10 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<ElementTreeViewManager>();
 
         // Shell.
+        services.AddSingleton<TabViewRegistry>();
         services.AddSingleton<AvaloniaTabManager>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<AvaloniaTabManager>());
+        services.AddSingleton<Gum.Plugins.InternalPlugins.HideShowTools.IToolsVisibility>(provider => provider.GetRequiredService<AvaloniaTabManager>());
         services.AddSingleton<ShellViewModel>();
         services.AddSingleton<MainWindow>();
         services.AddSingleton<AvaloniaHeadStartup>();

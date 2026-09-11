@@ -33,6 +33,8 @@
 		<PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
+		<!-- The Theming dialog's color pickers (phase 80). Its Fluent style is included in App. -->
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<!--
 			The editor canvases draw with KNI. The framework packages are the reference assemblies
@@ -71,6 +73,8 @@
 		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
 		<ProjectReference Include="..\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
+		<!-- The Animations tab's neutral core; this head adds the Avalonia view (Plugins/StateAnimation). -->
+		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -78,6 +82,8 @@
 		<None Include="..\..\Gum\Content\TestFont.fnt" Link="Content\TestFont.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\TestFont_0.png" Link="Content\TestFont_0.png" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\InvalidTexture.png" Link="Content\InvalidTexture.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- Copied into a project's folder by the shared NineSlice plugin when a project location is set. -->
+		<None Include="..\..\Gum\Content\ExampleSpriteFrame.png" Link="Content\ExampleSpriteFrame.png" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The default font character set copied into new projects (FileCommands.CreateDefaultFontCharacterFile). -->
 		<None Include="..\..\Gum\Content\.gumfcs" Link="Content\.gumfcs" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->

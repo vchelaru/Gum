@@ -27,6 +27,25 @@ public static class AvaloniaContextMenus
         }
     }
 
+    /// <summary>
+    /// A context menu that rebuilds its items from <paramref name="items"/> each time it opens (so it
+    /// always shows the view model's current entries) and stays closed when there are none.
+    /// </summary>
+    public static ContextMenu CreateRebuildingMenu(Func<IEnumerable<ContextMenuItemViewModel>?> items, double iconSize = DefaultIconSize)
+    {
+        ContextMenu menu = new ContextMenu();
+        menu.Opening += (_, e) =>
+        {
+            menu.Items.Clear();
+            foreach (ContextMenuItemViewModel item in items() ?? Array.Empty<ContextMenuItemViewModel>())
+            {
+                menu.Items.Add(ToMenuItem(item, iconSize));
+            }
+            e.Cancel = menu.Items.Count == 0;
+        };
+        return menu;
+    }
+
     /// <summary>Converts one item and its children.</summary>
     public static Control ToMenuItem(ContextMenuItemViewModel item, double iconSize = DefaultIconSize)
     {

@@ -81,8 +81,12 @@ public sealed class MainPanelView : Grid
         TabControl tabControl = new TabControl
         {
             ItemsSource = source,
-            ItemTemplate = new FuncDataTemplate<AvaloniaPluginTab>((_, _) =>
+            ItemTemplate = new FuncDataTemplate<AvaloniaPluginTab>((tab, _) =>
             {
+                if (tab?.HeaderContent is { } custom)
+                {
+                    return custom;
+                }
                 TextBlock header = new TextBlock();
                 header.Bind(TextBlock.TextProperty, new Binding(nameof(AvaloniaPluginTab.Title)));
                 return header;

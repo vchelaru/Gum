@@ -35,7 +35,12 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 
 **A checkbox label only wraps with an explicit `MaxWidth` on its own `TextBlock`.** The themed `CheckBox` template (`Themes/Frb.Styles.Defaults.xaml`) measures its `ContentPresenter` in an `Auto` column, which supplies no width to wrap against, so `TextWrapping` alone is a no-op that widens the window instead. This applies to every checkbox in the tool, not just this dialog.
 
-**Flow**: `DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) calls the WPF-shell `IDeleteDialogService`, whose implementation `DeleteDialogService` creates the `DeleteOptionsWindow`, sets `Message`/`Title`, calls the concrete `PluginManager.ShowDeleteDialog()` (which lets plugins add controls to `MainStackPanel`), then calls `ShowDialog()`. `DeleteDialogService` depends on the concrete `PluginManager`, not `IPluginManager` — that interface dropped `ShowDeleteDialog`/`DeleteConfirmed` entirely when it moved into headless `Gum.Presentation` (#3754); those two WPF-typed calls live only on the concrete class now.
+**Flow**: `DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) calls the head's `IDeleteDialogService`. Plugins contribute options in one of two ways:
+
+- **Neutral (use this):** handle `PluginBase.DeleteOptionsShow(DeleteOptionsDialogViewModel, Array)` and add a `DeleteOptionCheckboxViewModel` to `dialog.CheckBoxes` or a pick-one `DeleteOptionChoiceViewModel` to `dialog.Choices`; read the user's choice back in `DeleteOptionsConfirmed`. Dispatch goes through `IDeletePluginNotifier.ShowDeleteOptions`/`ConfirmDeleteOptions`. `DeleteObjectPlugin` and the State Animation plugin use this.
+- **WPF-only (legacy):** `WpfPluginBase.DeleteOptionsWindowShow`/`DeleteConfirmed` hand the plugin the `DeleteOptionsWindow` to add controls to `MainStackPanel`. Only CodeOutputPlugin still does this.
+
+The WPF `DeleteDialogService` creates the `DeleteOptionsWindow`, fires the WPF event (concrete `PluginManager.ShowDeleteDialog()`), then the neutral one, renders the neutral options into `MainStackPanel` (`DeleteOptionCheckboxExtensions.ToCheckBox`/`ToGroupBox`, bound two-way), and calls `ShowDialog()`. The Avalonia head's `AvaloniaDeleteDialogService` shows the `DeleteOptionsDialogViewModel` through `IDialogService` (`DeleteOptionsDialogView`), so under Avalonia this dialog **is** part of the MVVM system. `DeleteDialogService` depends on the concrete `PluginManager` for the WPF-typed pair, which lives only on the concrete class.
 
 **Not managed by DialogService** — no view model, no template selection, no attached property binding. Changes to `DialogWindow.xaml` or `Dialog.cs` have **zero effect** on this window.
 
@@ -52,6 +57,19 @@ Used by: delete confirmation only (`DeleteLogic.ShowDeleteDialog`).
 | `Gum/Gui/Windows/DeleteOptionsWindow.xaml.cs` | Standalone | Code-behind with plugin-accessible StackPanel |
 | `Gum/Services/Dialogs/DeleteDialogService.cs` | Standalone | Creates and shows DeleteOptionsWindow; calls the concrete `PluginManager` |
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Standalone | Orchestrates the delete flow via `IDeleteDialogService` |
+
+## Avalonia head
+
+The Avalonia head (`Tool/Gum.Avalonia`) has its own synchronous `IDialogService`
+(`Dialogs/AvaloniaDialogService.cs`, a nested dispatcher loop per dialog). It does not scan
+assemblies: `Dialogs/DialogViewRegistry.cs` maps each `DialogViewModel` type to a C# view factory
+(`Register<TViewModel>(() => new SomeView())`; a registration covers subclasses, so every
+`GetUserStringDialogBaseViewModel` shares one view). `DialogWindow` supplies the OK/Cancel row from
+the VM; a view sets `DialogWindow.SetDialogTitle(this, "...")` and
+`DialogWindow.SetAuxiliaryActions(this, control)` where the WPF view used `Dialog.DialogTitle` and
+`Dialog.AuxiliaryActions`. `Tests/Gum.Avalonia.Tests/DialogViewRegistryTests` fails when a concrete
+`DialogViewModel` in `Gum.Presentation` has no registered view and no named owner in its
+`OwnedElsewhere` list, so **adding a dialog VM means registering its Avalonia view in the same PR**.
 
 ## Common Pitfalls
 

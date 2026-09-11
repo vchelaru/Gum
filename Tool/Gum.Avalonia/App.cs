@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media.Imaging;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
@@ -45,6 +46,11 @@ public sealed class App : Application
     {
         Styles.Add(new FluentTheme());
         FrbThemeResources.Install(Resources);
+        // ColorPicker ships its templates separately from the Fluent theme.
+        Styles.Add(new StyleInclude(new Uri("avares://Gum.Avalonia/"))
+        {
+            Source = new Uri("avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"),
+        });
     }
 
     /// <inheritdoc/>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -15,6 +15,29 @@ namespace Gum.Plugins.Undos
         public UndoDisplay()
         {
             InitializeComponent();
+            DataContextChanged += HandleDataContextChanged;
+        }
+
+        private void HandleDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.OldValue is UndosViewModel oldViewModel)
+            {
+                oldViewModel.FocusCurrentItemRequested -= FocusCurrentItem;
+            }
+            if (e.NewValue is UndosViewModel newViewModel)
+            {
+                newViewModel.FocusCurrentItemRequested += FocusCurrentItem;
+            }
+        }
+
+        // The tab got focus: select the current history entry and scroll it into view.
+        private void FocusCurrentItem()
+        {
+            if (DataContext is UndosViewModel viewModel && viewModel.CurrentItem is { } current)
+            {
+                ListBoxInstance.SelectedItem = current;
+                ListBoxInstance.ScrollIntoView(current);
+            }
         }
 
         private void ListBox_PreviewMouseDown(object? sender, System.Windows.Input.MouseButtonEventArgs e)

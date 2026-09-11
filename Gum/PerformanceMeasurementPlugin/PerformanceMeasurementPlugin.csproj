@@ -1,40 +1,44 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-	  <TargetFramework>net10.0-windows</TargetFramework>
-    <OutputType>Library</OutputType>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <UseWindowsForms>true</UseWindowsForms>
-    <UseWPF>true</UseWPF>
-    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\x86\Debug2\</OutputPath>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Gum.csproj" />
-    <!-- The tool's KNI runtime defines the concrete RenderingLibrary.Graphics.Renderer and
-         SystemManagers used by the editor. Referenced for compile-time access to
-         Renderer.SpriteRenderer / RenderStateChangeStatistics; at runtime the assembly is
-         already loaded by EditorTabPlugin_XNA, so the post-build copies only this plugin's dll. -->
-    <ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Update="Views\PerformanceView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
-  </ItemGroup>
+<Project Sdk="Microsoft.NET.Sdk">
+	<!--
+		The Performance tab. Plain net10.0, so it loads under both heads (ADR-0018): the tab content
+		is PerformanceViewModel (Gum.Presentation) and each head supplies the view (TabViewRegistry).
+	-->
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+		<!-- The tool's KNI runtime defines the concrete RenderingLibrary.Graphics.Renderer and
+		     SystemManagers used by the editor. Referenced for compile-time access to
+		     Renderer.SpriteRenderer / RenderStateChangeStatistics; at runtime the assembly is
+		     already loaded by the editor tab, so the post-build copies only this plugin's dll. -->
+		<ProjectReference Include="..\..\MonoGameGum\KniGum\KniGum.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+		<!-- Cross-platform purity guard: no Windows-only APIs in a plugin the Avalonia head hosts. -->
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<!-- Built outside a solution (a test project on its own, CI on macOS/Linux) the repo root is two levels up. -->
+		<PropertyGroup>
+			<SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
+		</PropertyGroup>
 		<ItemGroup>
 			<PluginOutputFiles Include="$(TargetPath)" />
 			<PluginOutputFiles Include="$(TargetDir)$(TargetName).pdb" />
 		</ItemGroup>
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
+		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/Plugins/$(TargetName)" />
 	</Target>
 </Project>

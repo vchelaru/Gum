@@ -27,17 +27,17 @@
 | `FlatRedBall.SpecializedXnaControls` | **done** (net10.0, 2026-09-10) | `ImageRegionSelectionCore` over `ICanvasHost` | 50 | TFM |
 | `Tool/EditorTabPlugin_XNA` | WPF + WinForms | thin WPF head over `Tool/EditorTabPlugin.Core` (net10.0); the Avalonia head has its own | 50 (split done), 120 (delete) | TFM |
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | thin WPF head over `Tool/TextureCoordinatePlugin.Core` (net10.0) | 50 (split done), 120 (delete) | TFM |
-| `Gum/StateAnimationPlugin` | WPF + WinForms, win10 SDK for `SkiaSharp.Views.WPF` | 7 views + Skia-in-WPF preview | 80 | TFM |
+| `Gum/StateAnimationPlugin` | WPF + WinForms (win10 SDK pin **removed**, phase 80) | the WPF head only: views over `Tool/StateAnimationPlugin.Core` (net10.0), whose Avalonia twin is in `Tool/Gum.Avalonia/Plugins/StateAnimation` | 120 (WPF head deleted) | TFM |
 | `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
+| `Gum/PerformanceMeasurementPlugin` | **done** (net10.0, phase 80) | no views: its tab is `PerformanceViewModel`; the WPF view moved into the WPF head, the Avalonia view is `Tool/Gum.Avalonia/Panels/PerformanceView.cs` | 80 | TFM |
 | `Tool/TreeViewPlugin.Core` | **new** (net10.0, 2026-09-10) | element tree model, manager, selection, plugin; the WPF view stays in `Gum/` | 60 | TFM |
 | `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
-| `Tool/HtmlToGum` | WPF + WinForms | menu is `AddMenuEntry` (done); references `Gum.csproj` + WinForms | 80 (TFM flip once it references `Gum.Presentation`) | TFM |
+| `Tool/HtmlToGum` | WPF + WinForms | menu is `AddMenuEntry` (done); references `Gum.csproj` + WinForms; its import options are two WinForms forms | 80, **deferred** (2026-09-10): the forms need a dialog view model plus a view per head before the TFM can flip; see phase-80 doc | TFM |
 | `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | mixes view tests and logic tests | 100 (split), 120 (delete view tests) | TFM |
 
 Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
@@ -55,7 +55,7 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
 | `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 | TFM |
 | `SharpVectors` | `Gum.csproj` | SVG in WPF views | 90 | TFM |
-| `SkiaSharp.Views.WPF` | `StateAnimationPlugin` | Skia surface inside WPF (the reason for the win10 SDK TFM) | 80 | TFM |
+| `SkiaSharp.Views.WPF` | **done** (phase 80) | the only user was the dead `TimedStateMarkerDisplay`; deleted with the package | 80 | TFM |
 | `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | **done** (removed 2026-09-10) | the one helper `Dialog.cs` used is now a local visual-tree search | 90 | TFM |
 | `System.Management` | **done** (removed 2026-09-10) | had no usage | 90 | TFM |
 | `Microsoft.AppCenter.Analytics/.Crashes` | `Gum.csproj` | telemetry + crash reporting; service retired upstream | 90 (owner decision) | TFM |

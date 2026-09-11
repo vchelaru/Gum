@@ -25,6 +25,9 @@ public class AvaloniaPluginTab : ViewModel, IPluginTab, ITabDockingCandidate, IT
     /// <summary>The tab's content, a control or a ViewModel.</summary>
     public object Content { get; }
 
+    /// <summary>A custom header shown in place of <see cref="Title"/>, or null for the plain title.</summary>
+    public global::Avalonia.Controls.Control? HeaderContent { get; init; }
+
     /// <inheritdoc/>
     public event Action? TabShown;
 

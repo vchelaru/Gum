@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Media;
+using StateAnimationPlugin.Timeline;
 
 namespace StateAnimationPlugin.Views;
 
@@ -122,30 +123,16 @@ public class TimelineOverlay : FrameworkElement
         var majorPen = new Pen(MajorTickBrush, MajorTickThickness);
         var nowPen = new Pen(CurrentTimeBrush, CurrentTimeThickness);
 
-        // minor ticks
-        if (MinorTickInterval > 0 && MinorTickInterval < Length)
+        // Tick positions are shared with the Avalonia head's timeline (TimelineLayout).
+        foreach (double x in TimelineLayout.TickPositions(Length, MinorTickInterval, w))
         {
-            double t = 0.0;
-            // avoid cumulative floating-point error by stepping with integer counter
-            int count = (int)Math.Floor(Length / MinorTickInterval);
-            for (int i = 0; i <= count; i++)
-            {
-                t = i * MinorTickInterval;
-                double x = t * pxPerSec;
-                DrawVLine(x, minorPen);
-            }
+            DrawVLine(x, minorPen);
         }
 
         // major ticks on top of minors
-        if (MajorTickInterval > 0 && MajorTickInterval < Length)
+        foreach (double x in TimelineLayout.TickPositions(Length, MajorTickInterval, w))
         {
-            int count = (int)Math.Floor(Length / MajorTickInterval);
-            for (int i = 0; i <= count; i++)
-            {
-                double t = i * MajorTickInterval;
-                double x = t * pxPerSec;
-                DrawVLine(x, majorPen);
-            }
+            DrawVLine(x, majorPen);
         }
 
         // current time line (behind items — this element lives under them in the visual tree)

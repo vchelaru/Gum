@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -201,6 +201,19 @@ public abstract class PluginBase : IPlugin
     public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceDelete;
 
     /// <summary>
+    /// Raised before the delete confirmation is shown, so the plugin can add check boxes or pick-one
+    /// groups to it. Works under both heads; the WPF-only <c>DeleteOptionsWindowShow</c> on
+    /// <c>WpfPluginBase</c> is kept for plugins that still add WPF controls.
+    /// </summary>
+    public event Action<DeleteOptionsDialogViewModel, Array>? DeleteOptionsShow;
+
+    /// <summary>
+    /// Raised when the user confirms a delete, with the options as the user left them. Pairs with
+    /// <see cref="DeleteOptionsShow"/>.
+    /// </summary>
+    public event Action<DeleteOptionsDialogViewModel, Array>? DeleteOptionsConfirmed;
+
+    /// <summary>
     /// Event raised whenever an instance in a behavior's RequiredInstances list is renamed.
     /// </summary>
     public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceRename;
@@ -292,6 +305,12 @@ public abstract class PluginBase : IPlugin
     #endregion
 
     #region Event calling
+
+    public void CallDeleteOptionsShow(DeleteOptionsDialogViewModel dialog, Array objectsToDelete) =>
+        DeleteOptionsShow?.Invoke(dialog, objectsToDelete);
+
+    public void CallDeleteOptionsConfirmed(DeleteOptionsDialogViewModel dialog, Array deletedObjects) =>
+        DeleteOptionsConfirmed?.Invoke(dialog, deletedObjects);
 
     public void CallProjectLoad(GumProjectSave newlyLoadedProject) =>
         ProjectLoad?.Invoke(newlyLoadedProject);

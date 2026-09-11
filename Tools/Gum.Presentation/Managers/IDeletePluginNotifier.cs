@@ -1,3 +1,5 @@
+using System;
+using Gum.Services.Dialogs;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -32,4 +34,10 @@ public interface IDeletePluginNotifier
     void InstancesDelete(ElementSave elementSave, InstanceSave[] instances);
 
     void BehaviorInstanceDelete(BehaviorSave behavior, BehaviorInstanceSave instance);
+
+    /// <summary>Lets every plugin add its options to the delete confirmation before it is shown.</summary>
+    void ShowDeleteOptions(DeleteOptionsDialogViewModel dialog, Array objectsToDelete);
+
+    /// <summary>Tells every plugin the delete was confirmed, with the options as the user left them.</summary>
+    void ConfirmDeleteOptions(DeleteOptionsDialogViewModel dialog, Array deletedObjects);
 }
