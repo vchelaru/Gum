@@ -1,7 +1,7 @@
 // Same grayscale effect as Grayscale.fx, authored in Slang's own idiom instead of raw HLSL: a
-// [shader("fragment")] attribute marks the entry point, and there's no technique/pass block for
-// ShadowDusk to synthesize one from (issue #4677). Compare against Grayscale.fx to see how much
-// per-shader-model boilerplate Slang input removes.
+// shader-stage attribute marks the entry point below, and there's no technique/pass block to
+// write since ShadowDusk synthesizes one (issue #4677). Compare against Grayscale.fx to see how
+// much per-shader-model boilerplate Slang input removes.
 Texture2D SpriteTexture;
 SamplerState SpriteTextureSampler;
 
