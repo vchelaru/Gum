@@ -16,8 +16,12 @@
 > and per-OS line endings come from the checkout. Head-side tests cover the tree control, theme
 > resources and icons. The manual checklist is `parity-checklist.md` (per-OS columns, not yet run).
 >
-> **Open:** the case-mismatch corpus project (phase 25's error) and generated-code parity are not in
-> the corpus yet; the `GumToolUnitTests` split (logic tests out of the Windows-only project) is
+> Generated-code parity is already enforced: CI's "Codegen Drift Check" regenerates every
+> `Tests/CodeGen_*` fixture with `gumcli` and fails on any change, and both heads generate through the
+> same `Gum.ProjectServices` code. That check runs on Windows only.
+>
+> **Open:** the case-mismatch corpus project (phase 25's error) is not in the corpus yet, and
+> generated-code parity is not checked on macOS/Linux; the `GumToolUnitTests` split (logic tests out of the Windows-only project) is
 > deferred until phases 70 and 80 land, since both are moving the code those tests cover.
 
 ## Purpose
