@@ -2,7 +2,7 @@ using Gum.Services.Dialogs;
 using ImportFromGumxPlugin.ViewModels;
 using System.Windows.Controls;
 
-namespace ImportFromGumxPlugin.Views;
+namespace Gum.PluginViews.ImportFromGumx;
 
 /// <summary>
 /// Read-only modal showing per-variable / per-category diff rows for one Standard (#2779).

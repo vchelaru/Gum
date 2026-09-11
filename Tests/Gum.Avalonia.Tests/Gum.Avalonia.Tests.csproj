@@ -24,9 +24,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Tool\Gum.Avalonia\Gum.Avalonia.csproj" />
-    <!-- The two plugin projects that already build without WPF; the host test composes them. -->
+    <!-- The plugin projects that build without WPF; the host tests compose them. -->
     <ProjectReference Include="..\..\Gum\ConvertToJsonPlugin\ConvertToJsonPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

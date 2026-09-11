@@ -143,7 +143,7 @@ public class VariableGridToggleOptions
     /// </summary>
     public ToggleButtonOption[] Exclude(ToggleButtonOption[] options, string variableName, string? rootElementName)
     {
-        StateSave? state = StandardElementsManager.Self.GetDefaultStateFor(rootElementName);
+        StateSave? state = rootElementName == null ? null : StandardElementsManager.Self.GetDefaultStateFor(rootElementName);
         VariableSave? variable = state?.Variables.FirstOrDefault(item => item.Name == variableName);
 
         if (variable?.ExcludedValuesForEnum?.Any() != true)

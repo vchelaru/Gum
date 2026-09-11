@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 		<LangVersion>12.0</LangVersion>
 		<AnalysisLevel>none</AnalysisLevel>
 		<Nullable>enable</Nullable>
-
-		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <DebugSymbols>true</DebugSymbols>
@@ -29,34 +27,18 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Reference Include="System.ComponentModel.Composition" />
+		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="MainGumFormsPlugin.cs" />
 		<Compile Include="Properties\AssemblyInfo.cs" />
-		<Compile Include="Views\AddFormsWindow.xaml.cs" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\FlatRedBall.SpecializedXnaControls\FlatRedBall.SpecializedXnaControls.csproj">
-			<Project>{8c80ba7b-1cba-4579-9382-d9dc6c365070}</Project>
-			<Name>FlatRedBall.SpecializedXnaControls</Name>
-		</ProjectReference>
-		<ProjectReference Include="..\Gum.csproj">
-			<Project>{121ac5a5-8f6a-42b2-8863-debc45b052bc}</Project>
-			<Name>Gum</Name>
-		</ProjectReference>
-		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj">
-			<Project>{938d9a00-8529-4ce8-9077-e0a3994a73ea}</Project>
-			<Name>InputLibrary</Name>
-		</ProjectReference>
-		<ProjectReference Include="..\..\WpfDataUi\WpfDataUi.csproj">
-			<Project>{47241002-7eb5-433b-b931-a530bb6b84ee}</Project>
-			<Name>WpfDataUi</Name>
-		</ProjectReference>
-		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj">
-			<Project>{c39a973c-66d6-4a6c-82b5-ae0042f210f8}</Project>
-			<Name>XnaAndWinforms</Name>
-		</ProjectReference>
+		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 		<!-- Not linked into this assembly - only referenced so MSBuild builds Gum.FormsStaging before
 		     this project's postbuild step, which shells out to it to stage shared Forms behaviors
 		     (#4070). Deliberately Gum.FormsStaging, not Gum.Cli: Gum.Cli references the MonoGame/
@@ -64,7 +46,16 @@
 		     mobile-workload-gated targets into every build of this project (#4236). -->
 		<ProjectReference Include="..\..\Tools\Gum.FormsStaging\Gum.FormsStaging.csproj" ReferenceOutputAssembly="false" />
 	</ItemGroup>
+	<ItemGroup>
+		<!-- Cross-platform purity guard: no Windows-only APIs in a plugin the Avalonia head hosts. -->
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<!-- Built outside a solution (a test project on its own, CI on macOS/Linux) the repo root is two levels up. -->
+		<PropertyGroup>
+			<SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
+			<AvaloniaHeadDir>$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/</AvaloniaHeadDir>
+		</PropertyGroup>
 		<!-- Gum.FormsStaging isn't guaranteed to build before this project in a solution build,
 		     so build it explicitly before shelling out to it below (#4070). -->
 		<Exec Command="dotnet build &quot;$(SolutionDir)Tools/Gum.FormsStaging/Gum.FormsStaging.csproj&quot; -c $(ConfigurationName) --nologo" />
@@ -74,6 +65,7 @@
 			<PluginOutputFiles Include="$(TargetDir)$(TargetName).pdb" />
 		</ItemGroup>
 		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Plugins/$(TargetName)" />
+		<Copy SourceFiles="@(PluginOutputFiles)" DestinationFolder="$(AvaloniaHeadDir)Plugins/$(TargetName)" />
 
 		<!-- Stage each Forms theme's template content, then run Gum.FormsStaging to layer in the
 		     shared behaviors (SourcePath links in the templates can't be plain-copied - #4070). -->
@@ -119,5 +111,12 @@
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow')" />
 		<Copy SourceFiles="@(MeadowThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/%(RecursiveDir)" />
 		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Meadow/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/Behaviors&quot;" />
+
+		<!-- The Avalonia head reads the same staged themes from its own Content folder. -->
+		<ItemGroup>
+			<StagedFormsThemeFiles Include="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/**/*.*" />
+		</ItemGroup>
+		<RemoveDir Directories="$(AvaloniaHeadDir)Content/FormsThemes" Condition="Exists('$(AvaloniaHeadDir)Content/FormsThemes')" />
+		<Copy SourceFiles="@(StagedFormsThemeFiles)" DestinationFolder="$(AvaloniaHeadDir)Content/FormsThemes/%(RecursiveDir)" />
 	</Target>
 </Project>

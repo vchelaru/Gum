@@ -29,8 +29,8 @@
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | second canvas view | 50 | TFM |
 | `Gum/StateAnimationPlugin` | WPF + WinForms, win10 SDK for `SkiaSharp.Views.WPF` | 7 views + Skia-in-WPF preview | 80 | TFM |
 | `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
+| `Gum/GumFormsPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog view in each head (WPF `Gum/PluginViews/`, Avalonia `Plugins/PluginDialogs/`); Forms themes staged to both heads | 70 | TFM |
+| `Gum/ImportFromGumxPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog through `IDialogService`, views in each head as above | 70 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
 | `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |

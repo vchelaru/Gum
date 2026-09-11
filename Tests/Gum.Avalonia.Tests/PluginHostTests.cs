@@ -22,6 +22,8 @@ public class PluginHostTests
     {
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
+        typeof(global::GumFormsPlugin.MainGumFormsPlugin).Assembly,
+        typeof(global::ImportFromGumxPlugin.MainImportFromGumxPlugin).Assembly,
     };
 
     [Fact]
@@ -69,7 +71,7 @@ public class PluginHostTests
         PluginBase[] plugins = container.GetExportedValues<PluginBase>().ToArray();
 
         plugins.Select(plugin => plugin.GetType().Name)
-            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin" }, ignoreOrder: true);
+            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin", "MainGumFormsPlugin", "MainImportFromGumxPlugin" }, ignoreOrder: true);
         plugins.ShouldAllBe(plugin => plugin.Menu != null);
     }
 

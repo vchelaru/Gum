@@ -5,16 +5,18 @@ using Gum.Plugins.ImportPlugin.Manager;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using ImportFromGumxPlugin.ViewModels;
 using System.ComponentModel.Composition;
-using System.Windows;
 
 namespace ImportFromGumxPlugin;
 
-// As of ADR-0005 Phase 3, the "needs to save" guard + view-model wiring live in ImportFromGumxLogic
-// (Gum.Presentation) so they can be unit tested headlessly. This plugin keeps only the WPF dialog
-// window plumbing.
+/// <summary>
+/// Adds Content > Import > .gumx. The "needs to save" guard and the view-model wiring live in
+/// <see cref="ImportFromGumxLogic"/> (Gum.Presentation); each head registers the dialog's view, so
+/// this plugin loads under both heads.
+/// </summary>
 [Export(typeof(PluginBase))]
-internal class MainImportFromGumxPlugin : WpfPluginBase
+public class MainImportFromGumxPlugin : PluginBase
 {
     public override string FriendlyName => "Import from .gumx Plugin";
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
@@ -46,18 +48,7 @@ internal class MainImportFromGumxPlugin : WpfPluginBase
             return;
         }
 
-        var viewModel = _importFromGumxLogic.CreateImportViewModel();
-
-        var window = new Gum.Services.Dialogs.DialogWindow
-        {
-            DataContext = viewModel,
-            Owner = Application.Current.MainWindow,
-            UseExplicitSize = true,
-            Width = 600,
-            Height = 650,
-            SizeToContent = SizeToContent.Manual
-        };
-        viewModel.RequestClose += (_, _) => window.Close();
-        window.ShowDialog();
+        ImportFromGumxViewModel viewModel = _importFromGumxLogic.CreateImportViewModel();
+        _dialogService.Show(viewModel);
     }
 }

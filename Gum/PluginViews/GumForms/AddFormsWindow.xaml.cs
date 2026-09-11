@@ -2,7 +2,7 @@ using System.Windows.Controls;
 using Gum.Services.Dialogs;
 using GumFormsPlugin.ViewModels;
 
-namespace GumFormsPlugin.Views
+namespace Gum.PluginViews.GumForms
 {
     /// <summary>
     /// Interaction logic for AddFormsWindow.xaml

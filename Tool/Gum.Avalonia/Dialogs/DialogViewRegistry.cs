@@ -29,6 +29,10 @@ public class DialogViewRegistry
         // The Variables tab's dialogs (phase 70).
         Register<Gum.Plugins.InternalPlugins.VariableGrid.ViewModels.AddVariableViewModel>(() => new Plugins.VariableGrid.AddVariableView());
         Register<Gum.Dialogs.ExposeColorDialogViewModel>(() => new Plugins.VariableGrid.ExposeColorView());
+        // Plugin dialogs whose view models live in Gum.Presentation (phase 70).
+        Register<global::GumFormsPlugin.ViewModels.AddFormsViewModel>(() => new Plugins.PluginDialogs.AddFormsView());
+        Register<global::ImportFromGumxPlugin.ViewModels.ImportFromGumxViewModel>(() => new Plugins.PluginDialogs.ImportFromGumxView());
+        Register<global::ImportFromGumxPlugin.ViewModels.StandardDiffDetailsViewModel>(() => new Plugins.PluginDialogs.StandardDiffDetailsView());
     }
 
     /// <summary>Registers (or replaces) the view for <typeparamref name="TViewModel"/> and its subclasses.</summary>

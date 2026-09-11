@@ -1,13 +1,15 @@
 <UserControl
-    x:Class="ImportFromGumxPlugin.Views.ImportFromGumxView"
+    x:Class="Gum.PluginViews.ImportFromGumx.ImportFromGumxView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs;assembly=Gum"
+    xmlns:dialogs="clr-namespace:Gum.Services.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    dialogs:Dialog.DialogTitle="Import from .gumx"
+    dialogs:Dialog.DialogTitle="{Binding Title}"
     dialogs:Dialog.ScrollContent="False"
     MinWidth="500"
+    Width="600"
+    Height="560"
     mc:Ignorable="d">
 
     <!-- ImportFromGumxViewModel/ImportTreeNodeViewModel expose neutral bools (ADR-0004); the view

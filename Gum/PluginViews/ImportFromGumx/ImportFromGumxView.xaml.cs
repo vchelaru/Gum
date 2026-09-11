@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace ImportFromGumxPlugin.Views;
+namespace Gum.PluginViews.ImportFromGumx;
 
 /// <summary>
 /// Interaction logic for ImportFromGumxView.xaml
@@ -39,15 +39,14 @@ public partial class ImportFromGumxView : UserControl
 
     /// <summary>
     /// Drives all VM updates from user clicks. The IsChecked binding is Mode=OneWay, so WPF
-    /// never writes back through the binding. With IsThreeState=false (the default), WPF's
-    /// built-in toggle is !IsChecked.GetValueOrDefault(), which naturally maps:
-    ///   unchecked (false) → true,  checked (true) → false,  indeterminate (null) → true.
+    /// never writes back through the binding; the click goes through the view model's Toggle,
+    /// the same mapping the Avalonia view uses.
     /// </summary>
     private void OnCheckBoxClick(object sender, RoutedEventArgs e)
     {
-        if (sender is CheckBox checkBox && checkBox.DataContext is ImportTreeNodeViewModel vm)
+        if (sender is CheckBox { DataContext: ImportTreeNodeViewModel vm })
         {
-            vm.IsChecked = checkBox.IsChecked;
+            vm.Toggle();
         }
     }
 }

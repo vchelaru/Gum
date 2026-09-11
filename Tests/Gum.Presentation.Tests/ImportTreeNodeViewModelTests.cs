@@ -99,4 +99,36 @@ public class ImportTreeNodeViewModelTests
         parent.IsChecked.ShouldBe(true);
         grandparent.IsChecked.ShouldBe(true);
     }
+
+    [Fact]
+    public void Toggle_ExcludedLeaf_BecomesIncluded()
+    {
+        ImportTreeNodeViewModel leaf = new ImportTreeNodeViewModel("A", "A", ElementItemType.Component);
+
+        leaf.Toggle();
+
+        leaf.IsChecked.ShouldBe(true);
+    }
+
+    [Fact]
+    public void Toggle_IncludedLeaf_BecomesExcluded()
+    {
+        ImportTreeNodeViewModel leaf = new ImportTreeNodeViewModel("A", "A", ElementItemType.Component) { IsChecked = true };
+
+        leaf.Toggle();
+
+        leaf.IsChecked.ShouldBe(false);
+    }
+
+    [Fact]
+    public void Toggle_PartlyIncludedFolder_IncludesEveryChild()
+    {
+        ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel("Components", "Components");
+        folder.Children.Add(new ImportTreeNodeViewModel("A", "A", ElementItemType.Component) { IsChecked = true });
+        folder.Children.Add(new ImportTreeNodeViewModel("B", "B", ElementItemType.Component));
+
+        folder.Toggle();
+
+        folder.Children.ShouldAllBe(child => child.IsChecked == true);
+    }
 }

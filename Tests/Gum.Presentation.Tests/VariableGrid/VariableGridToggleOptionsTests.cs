@@ -15,9 +15,10 @@ public class VariableGridToggleOptionsTests : BaseTestClass
     public void Exclude_DropsTheValuesAStandardElementExcludes()
     {
         VariableGridToggleOptions sut = new VariableGridToggleOptions(Mock.Of<ISelectedState>());
-        (string elementName, VariableSave widthUnits) = StandardElementsManager.Self.DefaultStates
+        (string elementName, VariableSave? widthUnits) = StandardElementsManager.Self.DefaultStates
             .Select(kvp => (kvp.Key, kvp.Value.Variables.FirstOrDefault(v => v.Name == "WidthUnits")))
-            .First(pair => pair.Item2?.ExcludedValuesForEnum.Count > 0)!;
+            .First(pair => pair.Item2?.ExcludedValuesForEnum.Count > 0);
+        widthUnits.ShouldNotBeNull();
 
         ToggleButtonOption[] allowed = sut.Exclude(sut.AllWidthUnits, "WidthUnits", elementName);
 

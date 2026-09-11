@@ -7,7 +7,6 @@ using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 using Gum.Plugins.VariableGrid;
 using Gum.Services.Dialogs;
 using ImportFromGumxPlugin.ViewModels;
-using ImportFromGumxPlugin.Views;
 using Microsoft.Extensions.Logging.Abstractions;
 using Shouldly;
 using Xunit;
@@ -18,7 +17,7 @@ namespace GumToolUnitTests.Dialogs;
 /// <see cref="DialogViewResolver"/> pairs a <see cref="DialogViewModel"/> with its WPF View. Most
 /// of these view models were relocated into the headless Gum.Presentation assembly (ADR-0005,
 /// #3754); their Views necessarily stayed behind in a WPF-capable assembly (the Gum tool itself,
-/// or a dynamically-loaded plugin like ImportFromGumxPlugin). These tests pin that cross-assembly
+/// or a dynamically-loaded plugin assembly). These tests pin that cross-assembly
 /// resolution alongside the original same-assembly naming-convention path. ThemingDialogViewModel
 /// was the last production example of the same-assembly, no-[Dialog]-attribute naming-convention
 /// pairing before it too relocated (#3754), so that path is now pinned with a synthetic VM/View
@@ -80,15 +79,20 @@ public class DialogViewResolverTests
     [Fact]
     public void GetDialogViewType_FallsBackToCandidateAssemblies_WhenViewLivesInAThirdPluginAssembly()
     {
-        // StandardDiffDetailsViewModel also lives in Gum.Presentation, but its View lives in the
-        // dynamically-loaded ImportFromGumxPlugin assembly - a third assembly distinct from both
+        // StandardDiffDetailsViewModel lives in Gum.Presentation; ThirdAssemblyStandardDiffView stands in
+        // for a view shipped by a dynamically-loaded plugin assembly, a third assembly distinct from both
         // the view model's own assembly and the main Gum tool assembly.
-        StubAssemblyProvider assemblyProvider = new(typeof(StandardDiffDetailsView).Assembly);
+        StubAssemblyProvider assemblyProvider = new(typeof(ThirdAssemblyStandardDiffView).Assembly);
         DialogViewResolver resolver = new(NullLogger<DialogViewResolver>.Instance, assemblyProvider);
 
         Type? viewType = resolver.GetDialogViewType(typeof(StandardDiffDetailsViewModel));
 
-        viewType.ShouldBe(typeof(StandardDiffDetailsView));
+        viewType.ShouldBe(typeof(ThirdAssemblyStandardDiffView));
+    }
+
+    [Dialog(typeof(StandardDiffDetailsViewModel))]
+    private sealed class ThirdAssemblyStandardDiffView : UserControl
+    {
     }
 
     [Fact]

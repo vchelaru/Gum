@@ -166,3 +166,14 @@ Work is on the phase-70 branch, one commit per part.
   exclusions plugins, and the Add/Edit Variable and Expose Color dialogs have Avalonia views.
   The Avalonia color editor is a swatch, hex field, and R/G/B slider flyout rather than a
   third-party picker; matching the WPF picker is left to phase 90.
+- **Part 6: the Gum Forms and Import from .gumx plugins.** Both plugin projects are net10.0 over
+  `Gum.Presentation` (banned-API analyzer on) and load in both heads; their logic and view models
+  were already shared. The import plugin shows its dialog through `IDialogService` instead of
+  building a WPF window. The WPF dialog views moved into the WPF head (`Gum/PluginViews/`, still
+  found through `[Dialog]`), and the Avalonia head has twins registered in `DialogViewRegistry`
+  (`Plugins/PluginDialogs/`), including a reusable `ThemeSelectionView`. Dialog titles come from
+  the view models' `Title` in both heads, and a click on an import-tree check box is
+  `ImportTreeNodeViewModel.Toggle` in both. The Forms themes are staged into the Avalonia head's
+  `Content/FormsThemes` as well. The import dialog's fixed size moved from the plugin's
+  hand-built window onto the view (600 by 560 in both heads), since `IDialogService` has no size
+  option; a reversible choice.
