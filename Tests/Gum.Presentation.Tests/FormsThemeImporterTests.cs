@@ -97,4 +97,39 @@ public class FormsThemeImporterTests
             System.IO.File.Delete(existingFile);
         }
     }
+
+    [Fact]
+    public void ImportTheme_ProceedsWithoutBlocking_WhenExistingFileIsByteIdenticalToSource()
+    {
+        // #4674/#4675 regression: the plain "File > New Project" font bundler and a theme's own
+        // bundled Fonts/*.ttf can both write the identical file at the identical destination path
+        // (e.g. Fonts/LiberationSans-Regular.ttf). Overwriting an already-identical file is a
+        // no-op, not a real conflict, so it must not block the import the way a genuine content
+        // difference does.
+        string sourceFile = System.IO.Path.GetTempFileName();
+        string destinationFile = System.IO.Path.GetTempFileName();
+        try
+        {
+            byte[] bytes = { 1, 2, 3, 4, 5 };
+            System.IO.File.WriteAllBytes(sourceFile, bytes);
+            System.IO.File.WriteAllBytes(destinationFile, bytes);
+
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { [sourceFile] = destinationFile });
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+
+            result.ShouldBeTrue();
+            _dialogService.Verify(
+                x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+                Times.Never);
+            _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
+        }
+        finally
+        {
+            System.IO.File.Delete(sourceFile);
+            System.IO.File.Delete(destinationFile);
+        }
+    }
 }
