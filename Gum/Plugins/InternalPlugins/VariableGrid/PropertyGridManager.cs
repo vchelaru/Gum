@@ -1125,17 +1125,27 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             foreach (var member in category.Members)
             {
                 var rootVariableName = (member as StateReferencingInstanceMember)?.RootVariableName;
-                if(rootVariableName == "CustomFontFile")
+                var filter = GetFileFilterForRootVariableName(rootVariableName);
+                if (filter != null)
                 {
-                    member.PropertiesToSetOnDisplayer["Filter"] = "Bitmap Font Generator Font|*.fnt";
-                }
-                else if(rootVariableName == "SourceShaderFile")
-                {
-                    member.PropertiesToSetOnDisplayer["Filter"] = "Effect File (*.fx)|*.fx";
+                    member.PropertiesToSetOnDisplayer["Filter"] = filter;
                 }
             }
         }
     }
+
+    /// <summary>
+    /// The file-picker <c>Filter</c> string for a variable's root name, or null if that variable
+    /// has no file-browser filter to apply. <c>SourceShaderFile</c> accepts both ShadowDusk input
+    /// formats (issues #4677/#4679): raw HLSL <c>.fx</c> and the lower-boilerplate <c>.slang</c>.
+    /// </summary>
+    internal static string? GetFileFilterForRootVariableName(string? rootVariableName) =>
+        rootVariableName switch
+        {
+            "CustomFontFile" => "Bitmap Font Generator Font|*.fnt",
+            "SourceShaderFile" => "Effect File (*.fx;*.slang)|*.fx;*.slang",
+            _ => null
+        };
 
     private void AdjustFontSourceToggle(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instance)
     {
