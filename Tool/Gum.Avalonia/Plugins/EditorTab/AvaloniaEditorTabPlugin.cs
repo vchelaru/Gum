@@ -11,6 +11,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
+using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
@@ -228,7 +229,9 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     };
 
     /// <inheritdoc/>
-    protected override Func<string, object?>? CreateRenderTargetShaderResolver() => null;
+    // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target.
+    protected override Func<string, object?>? CreateRenderTargetShaderResolver() =>
+        RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.OpenGL);
 
     /// <inheritdoc/>
     protected override bool IsContextMenuOpen => _contextMenu.IsOpen;

@@ -165,7 +165,9 @@ internal class MainEditorTabPlugin : EditorTabPluginBase
     }
 
     /// <inheritdoc/>
-    protected override Func<string, object?>? CreateRenderTargetShaderResolver() => RenderTargetShaderResolver.Resolve;
+    // The tool renders through KNI's DirectX 11 backend (nkast.Kni.Platform.WinForms.DX11), so the
+    // shader is compiled to DXBC, not the OpenGL target a DesktopGL game would use.
+    protected override Func<string, object?>? CreateRenderTargetShaderResolver() => RenderTargetShaderResolver.For(ShadowDusk.Core.PlatformTarget.DirectX);
 
     /// <inheritdoc/>
     protected override bool IsContextMenuOpen => _wireframeContextMenu.IsOpen;

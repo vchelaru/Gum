@@ -26,6 +26,11 @@
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+		<!--
+			Compiles a render-target Container's SourceShaderFile (.fx) at runtime for the preview; each
+			head picks the bytecode target its device accepts (RenderTargetShaderResolver).
+		-->
+		<PackageReference Include="ShadowDusk.Compiler" Version="0.17.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
