@@ -12,6 +12,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.ViewModels;
+using Gum.Avalonia.Services;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Localization;
@@ -281,8 +282,8 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
 
     private static WireframeDropPayload ReadPayload(DragEventArgs e)
     {
-        string? standardElementTypeName = e.Data.Get(DragDropManager.StandardElementNameDataFormat) as string;
-        string[]? files = e.Data.GetFiles()?
+        string? standardElementTypeName = e.DataTransfer.TryGetValue(AvaloniaDragFormats.StandardElementName);
+        string[]? files = e.DataTransfer.TryGetFiles()?
             .Select(item => item.TryGetLocalPath())
             .Where(path => path != null)
             .Select(path => path!)

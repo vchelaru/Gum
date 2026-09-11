@@ -14,7 +14,7 @@ namespace Gum.Avalonia.Tests;
 public class HeadCompositionTests
 {
     [Fact]
-    public void AddGumAvalonia_ProvidesEveryHeadContract()
+    public async Task AddGumAvalonia_ProvidesEveryHeadContract()
     {
         IServiceProvider services = TestAppBuilder.Services;
 
@@ -24,11 +24,12 @@ public class HeadCompositionTests
             // Resolve on a worker with a deadline so a construction that blocks names itself
             // instead of hanging the whole run.
             Task<object?> resolve = Task.Run(() => services.GetService(contract));
-            if (!resolve.Wait(TimeSpan.FromSeconds(20)))
+            Task finished = await Task.WhenAny(resolve, Task.Delay(TimeSpan.FromSeconds(20)));
+            if (finished != resolve)
             {
                 missing.Add($"{contract.Name}: did not resolve within 20 s");
             }
-            else if (resolve.Result == null)
+            else if (await resolve == null)
             {
                 missing.Add($"{contract.Name}: resolved to null");
             }
