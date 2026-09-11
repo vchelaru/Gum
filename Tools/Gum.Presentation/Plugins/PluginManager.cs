@@ -171,12 +171,13 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
-            if (this.PluginContainers.ContainsKey(plugin) == false)
+            // No container means the plugin hasn't started yet: a broadcast can arrive while an earlier
+            // plugin's StartUp pumps the UI message loop (the Avalonia canvas creates its graphics
+            // device there, and a pointer move over the tree raises hover). It has nothing to handle.
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
             {
-                throw new KeyNotFoundException("Could not find a plugin container for the plugin " + plugin);
+                continue;
             }
-
-            PluginContainer container = this.PluginContainers[plugin];
 
             if (container.IsEnabled)
             {
@@ -259,7 +260,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
-            PluginContainer container = this.PluginContainers[plugin];
+            // Not started yet; see CallMethodOnPlugin.
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            {
+                continue;
+            }
 
             if (container.IsEnabled)
             {
@@ -535,7 +540,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
-            PluginContainer container = this.PluginContainers[plugin];
+            // Not started yet; see CallMethodOnPlugin.
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            {
+                continue;
+            }
 
             if (container.IsEnabled && plugin.GetDeleteStateResponse != null)
             {
@@ -571,7 +580,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
-            PluginContainer container = this.PluginContainers[plugin];
+            // Not started yet; see CallMethodOnPlugin.
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            {
+                continue;
+            }
 
             if (container.IsEnabled && plugin.GetDeleteStateCategoryResponse != null)
             {
@@ -721,7 +734,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
     {
         bool shouldExclude = false;
-        foreach (var plugin in this.Plugins.Where(item=>this.PluginContainers[item].IsEnabled))
+        foreach (var plugin in this.Plugins.Where(item => this.PluginContainers.TryGetValue(item, out PluginContainer c) && c.IsEnabled))
         {
             PluginContainer container = this.PluginContainers[plugin];
 
