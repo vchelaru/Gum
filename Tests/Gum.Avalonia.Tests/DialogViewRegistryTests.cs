@@ -4,6 +4,7 @@ using Avalonia.LogicalTree;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Dialogs.Views;
 using Gum.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -27,18 +28,6 @@ public class DialogViewRegistryTests
         ["AddFormsViewModel"] = "GumFormsPlugin, a property-grid consumer owned by phase 70",
         ["ImportFromGumxViewModel"] = "ImportFromGumxPlugin, a property-grid consumer owned by phase 70",
         ["StandardDiffDetailsViewModel"] = "ImportFromGumxPlugin, a property-grid consumer owned by phase 70",
-
-        // Phase 80 work in progress; each entry leaves this list as its view lands.
-        ["ExposeColorDialogViewModel"] = "phase 80, not ported yet",
-        ["DisplayReferencesDialog"] = "phase 80, not ported yet",
-        ["ThemingDialogViewModel"] = "phase 80, not ported yet",
-        ["LoadRecentViewModel"] = "phase 80, not ported yet",
-        ["ImportBehaviorDialog"] = "phase 80, not ported yet",
-        ["ImportComponentDialog"] = "phase 80, not ported yet",
-        ["ImportScreenDialog"] = "phase 80, not ported yet",
-        ["AddAnimationDialogViewModel"] = "phase 80, not ported yet",
-        ["AddStateKeyframeDialog"] = "phase 80, not ported yet",
-        ["SubAnimationSelectionDialogViewModel"] = "phase 80, not ported yet",
     };
 
     private static DialogViewRegistry Registry => TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>();
@@ -70,6 +59,26 @@ public class DialogViewRegistryTests
     }
 
     [AvaloniaFact]
+    public void ImportDialog_ListSelectionFillsSelectedFiles()
+    {
+        // The real import dialogs read the loaded project in their constructors; the view only needs the base.
+        TestImportDialog viewModel = new TestImportDialog(TestAppBuilder.Services.GetRequiredService<IDialogService>());
+        viewModel.UnfilteredFiles.Add("Components/Button.gucx");
+        viewModel.UnfilteredFiles.Add("Components/Label.gucx");
+        Control view = Registry.CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+        window.Show();
+        ListBox files = view.GetLogicalDescendants().OfType<ListBox>().Single();
+
+        files.SelectAll();
+
+        viewModel.SelectedFiles.ShouldBe(new[] { "Components/Button.gucx", "Components/Label.gucx" }, ignoreOrder: true);
+        viewModel.AffirmativeCommand.CanExecute(null).ShouldBeTrue();
+        window.Title.ShouldBe(viewModel.Title);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void NewProjectDialog_ShowsItsOptionsInATitledWindow()
     {
         NewProjectDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<NewProjectDialogViewModel>();
@@ -92,6 +101,23 @@ public class DialogViewRegistryTests
     }
 
     [AvaloniaFact]
+    public void ThemingDialog_OpeningDoesNotMarkColorsExplicit()
+    {
+        ThemingDialogViewModel viewModel = TestAppBuilder.Services.GetRequiredService<ThemingDialogViewModel>();
+        bool[] before = ExplicitFlags(viewModel);
+        Control view = Registry.CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+
+        window.Show();
+
+        ExplicitFlags(viewModel).ShouldBe(before);
+        view.GetLogicalDescendants().OfType<ColorPicker>().Count().ShouldBe(6);
+        // Closing without Cancel: nothing changed, and Cancel re-applies the theme, which the shared
+        // test container's canvas plugins cannot react to without a device.
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void RegisteredViews_ConstructWithoutAViewModel()
     {
         foreach (Type viewModelType in Registry.RegisteredViewModelTypes)
@@ -101,4 +127,23 @@ public class DialogViewRegistryTests
             view.ShouldNotBeNull(viewModelType.Name);
         }
     }
+
+    private sealed class TestImportDialog : ImportBaseDialogViewModel
+    {
+        public TestImportDialog(IDialogService dialogService) : base(dialogService) { }
+
+        public override string Title => "Import Test Files";
+
+        public override string BrowseFileFilter => "All Files (*.*)|*.*";
+    }
+
+    private static bool[] ExplicitFlags(ThemingDialogViewModel viewModel) => new[]
+    {
+        viewModel.HasExplicitAccentColor,
+        viewModel.HasExplicitCheckerAColor,
+        viewModel.HasExplicitCheckerBColor,
+        viewModel.HasExplicitOutlineColor,
+        viewModel.HasExplicitGuideLineColor,
+        viewModel.HasExplicitGuideTextColor,
+    };
 }

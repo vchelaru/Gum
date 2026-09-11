@@ -27,6 +27,8 @@
 		<PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
 		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
 		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
+		<!-- The Theming dialog's color pickers (phase 80). Its Fluent style is included in App. -->
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
 		<!--
 			The editor canvases draw with KNI. The framework packages are the reference assemblies

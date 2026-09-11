@@ -11,6 +11,12 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   `DialogViewModel` in `Gum.Presentation` has neither a registered view nor a named owner in its
   `OwnedElsewhere` list. Shared converters live in `Tool/Gum.Avalonia/Converters/`.
 - **New Project** (`NewProjectDialogView` + `ThemeSelectionView`), the first dialog users hit.
+- **Every other dialog whose VM is headless**: Expose Color, Display References, Theming (Avalonia's
+  own `ColorPicker` replaces PixiEditor's; package `Avalonia.Controls.ColorPicker`), Load Recent,
+  the three Import dialogs (one view over `ImportBaseDialogViewModel`), and State Animation's
+  New Animation, Add State Keyframe and Add Sub-Animation. The Add/Rename string dialogs were
+  already covered by the phase 30 `GetUserStringDialogBaseViewModel` view. `OwnedElsewhere` now
+  holds only phase 70's four (Add Variable, Add Forms, Import from .gumx and its diff details).
 
 ## Purpose
 

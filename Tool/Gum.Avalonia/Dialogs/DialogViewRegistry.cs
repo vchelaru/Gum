@@ -5,7 +5,10 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Gum.Avalonia.Dialogs.Views;
 using Gum.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
+using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Services.Dialogs;
+using StateAnimationPlugin.ViewModels;
 
 namespace Gum.Avalonia.Dialogs;
 
@@ -33,6 +36,14 @@ public class DialogViewRegistry
 
         // Phase 80.
         Register<NewProjectDialogViewModel>(() => new NewProjectDialogView());
+        Register<ExposeColorDialogViewModel>(() => new ExposeColorDialogView());
+        Register<DisplayReferencesDialog>(() => new DisplayReferencesDialogView());
+        Register<ThemingDialogViewModel>(() => new ThemingDialogView());
+        Register<LoadRecentViewModel>(() => new LoadRecentDialogView());
+        Register<ImportBaseDialogViewModel>(() => new ImportFileDialogView());
+        Register<AddAnimationDialogViewModel>(() => new AddAnimationDialogView());
+        Register<AddStateKeyframeDialog>(() => new AddStateKeyframeDialogView());
+        Register<SubAnimationSelectionDialogViewModel>(() => new SubAnimationSelectionDialogView());
     }
 
     /// <summary>The view-model types with a registered view (subclasses resolve through these).</summary>
