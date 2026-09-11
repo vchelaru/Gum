@@ -2,7 +2,7 @@ using Gum.Controls;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Controls.TreeSelection;
+namespace Gum.Presentation.Tests;
 
 public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
 {

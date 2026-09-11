@@ -5,7 +5,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+namespace Gum.Presentation.Tests;
 
 public class ElementTreeViewManagerProcessDropTests : BaseTestClass
 {

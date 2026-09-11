@@ -3,7 +3,7 @@ using Gum.Managers;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Controls.TreeSelection;
+namespace Gum.Presentation.Tests;
 
 public class TreeNodeKeyNavigationLogicTests : BaseTestClass
 {

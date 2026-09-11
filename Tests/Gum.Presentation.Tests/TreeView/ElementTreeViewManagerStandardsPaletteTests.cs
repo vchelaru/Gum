@@ -3,7 +3,7 @@ using Shouldly;
 using System.Collections.Generic;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+namespace Gum.Presentation.Tests;
 
 public class ElementTreeViewManagerStandardsPaletteTests : BaseTestClass
 {

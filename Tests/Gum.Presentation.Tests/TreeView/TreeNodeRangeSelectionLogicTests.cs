@@ -4,7 +4,7 @@ using Shouldly;
 using System.Collections.Generic;
 using Xunit;
 
-namespace GumToolUnitTests.Controls.TreeSelection;
+namespace Gum.Presentation.Tests;
 
 public class TreeNodeRangeSelectionLogicTests : BaseTestClass
 {

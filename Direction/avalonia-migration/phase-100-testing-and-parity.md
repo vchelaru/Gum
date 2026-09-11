@@ -21,8 +21,10 @@
 > same `Gum.ProjectServices` code. That check runs on Windows only.
 >
 > **Open:** the case-mismatch corpus project (phase 25's error) is not in the corpus yet, and
-> generated-code parity is not checked on macOS/Linux; the `GumToolUnitTests` split (logic tests out of the Windows-only project) is
-> deferred until phases 70 and 80 land, since both are moving the code those tests cover.
+> generated-code parity is not checked on macOS/Linux. The `GumToolUnitTests` split has started: the
+> 114 element-tree tests (selection logic, collapse/expansion state, the manager's static helpers)
+> moved to `Gum.Presentation.Tests` with the phase 60 core; the rest waits for phase 70, which is
+> moving the code the variable-grid tests cover.
 
 ## Purpose
 

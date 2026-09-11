@@ -3,7 +3,7 @@ using Gum.Managers;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+namespace Gum.Presentation.Tests;
 
 public class ElementTreeViewManagerAddChildMenuTests : BaseTestClass
 {

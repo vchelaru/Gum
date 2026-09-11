@@ -1,4 +1,4 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Settings;
 using Moq;
@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+namespace Gum.Presentation.Tests;
 
 public class TreeViewStateServiceTests : BaseTestClass
 {

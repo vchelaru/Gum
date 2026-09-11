@@ -3,7 +3,7 @@ using Gum.Managers;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Managers;
+namespace Gum.Presentation.Tests;
 
 // Pins ElementTreeViewManager's ITreeNodeMutable-based reorder/sort/removal helpers (MoveToIndex,
 // SortByName, RemoveRecursivelyIfStale), which used to operate directly on WinForms

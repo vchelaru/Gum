@@ -4,7 +4,7 @@ using Gum.Managers;
 using Shouldly;
 using Xunit;
 
-namespace GumToolUnitTests.Plugins.InternalPlugins.TreeView;
+namespace Gum.Presentation.Tests;
 
 // Characterization (pinning) tests for the icon-index decision logic extracted from
 // ElementTreeViewManager (now Gum.Presentation's TreeNodeImageLogic). They assert against the
