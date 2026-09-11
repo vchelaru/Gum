@@ -41,4 +41,15 @@
 
 Record anything that behaves differently on one OS here, with the issue number.
 
-- (none recorded yet)
+- **Linux, 2026-09-11 (WSL Ubuntu, WSLg):** the head crashed at startup on an account with no
+  `~/.config` (`GetFolderPath` returned an empty path; fixed, the folder is created on first use).
+  Building `GumFormsPlugin` with an SDK that is not on `PATH` failed in its nested build (fixed,
+  `$(DOTNET_HOST_PATH)`). The head then failed to start because it carried SkiaSharp's 2.88 Linux
+  native beside the 3.119 managed assembly (fixed: `SkiaSharp.NativeAssets.Linux` pinned to the
+  managed version in `Gum.ImageDiff`). External file changes were never reloaded because the
+  watcher checked the lowercased path (fixed: `FilePath.FullPath`). Tests that assumed Windows
+  (drive-letter paths, an installed Arial, `BmFont` being supported) were made OS-neutral. With the
+  Output tab echoed to stderr (`GUM_ECHO_OUTPUT=1`), the run showed the orphan code file plugin
+  dying on an unreadable folder under the code root (fixed: skipped) and Arial failing to generate
+  (fixed: the platform's substitute face is used, with an Output line). No issue numbers: fixed on
+  the branch before any release.

@@ -28,7 +28,7 @@
 | `Tool/EditorTabPlugin_XNA` | WPF + WinForms | thin WPF head over `Tool/EditorTabPlugin.Core` (net10.0); the Avalonia head has its own | 50 (split done), 120 (delete) | TFM |
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | thin WPF head over `Tool/TextureCoordinatePlugin.Core` (net10.0) | 50 (split done), 120 (delete) | TFM |
 | `Gum/StateAnimationPlugin` | WPF + WinForms (win10 SDK pin **removed**, phase 80) | the WPF head only: views over `Tool/StateAnimationPlugin.Core` (net10.0), whose Avalonia twin is in `Tool/Gum.Avalonia/Plugins/StateAnimation` | 120 (WPF head deleted) | TFM |
-| `Gum/CodeOutputPlugin` | the WPF head's Code view and delete-dialog option only (phase 70) | the plugin body is `CodeOutputPluginBase` and the settings rows `CodeOutputSettingsMembers`, both in `Gum.Presentation`; the Avalonia head exports its own subclass and Code view (`Tool/Gum.Avalonia/Plugins/CodeOutput/`); the delete dialog's "delete custom code" option stays WPF-only until the Avalonia delete dialog takes plugin options | 70, 80 (delete option) | TFM |
+| `Gum/CodeOutputPlugin` | the WPF head's Code view and delete-dialog option only (phase 70) | the plugin body is `CodeOutputPluginBase` and the settings rows `CodeOutputSettingsMembers`, both in `Gum.Presentation`; the Avalonia head exports its own subclass and Code view (`Tool/Gum.Avalonia/Plugins/CodeOutput/`); the delete dialog's "delete custom code" option reaches both heads through the neutral delete-dialog events (2026-09-11) | 70, 80 | TFM |
 | `Gum/GumFormsPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog view in each head (WPF `Gum/PluginViews/`, Avalonia `Plugins/PluginDialogs/`); Forms themes staged to both heads | 70 | TFM |
 | `Gum/ImportFromGumxPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog through `IDialogService`, views in each head as above | 70 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | **done** (net10.0, phase 80) | no views: its tab is `PerformanceViewModel`; the WPF view moved into the WPF head, the Avalonia view is `Tool/Gum.Avalonia/Panels/PerformanceView.cs` | 80 | TFM |
@@ -49,7 +49,7 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | Reference | Referenced by | Used for | Removed by | Guard |
 |---|---|---|---|---|
 | `nkast.Kni.Platform.WinForms.DX11` | `Gum.csproj`, `EditorTabPlugin_XNA` | the only graphics backend; `FL10_0` device against an HWND | 10 (backend choice), 50 | TFM |
-| `System.Drawing.Common` | `Gum.csproj`, **`Gum.Presentation`** | `ImageHeader` `new Bitmap(path)` fallback; `FontFamily.Families`; `ThemedScrollbar` GDI | 25 (drop from `Gum.Presentation`), 70 (font list, **done**), 120 (`ThemedScrollbar` deleted) | **Analyzer** |
+| `System.Drawing.Common` | `Gum.csproj` only (**dropped from `Gum.Presentation`** in 25) | `ImageHeader` decodes through SkiaSharp (**done**, 25); `FontFamily.Families` (**done**, 70); `ThemedScrollbar` GDI | 120 (`ThemedScrollbar` deleted with the WPF head) | **Analyzer** |
 | `MaterialDesignThemes` | `Gum.csproj` | style base | 90 | TFM |
 | `ControlzEx` | `Gum.csproj` | window chrome | 90 | TFM |
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
@@ -96,16 +96,21 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `SvgExportCommand.cs:76` | looks for `GumCli/gumcli.exe` | 25 (name per OS) + 110 (bundle layout) |
 | `Tools/Gum.Presentation/HtmlToGumPlugin/MainHtmlToGumPlugin.cs` | `cmd.exe /c npm install` | 25 — `/bin/sh -c` off Windows through `ShellCommand`; Node lookup already PATH-based |
 | `Gum/Libraries/bmfont.exe`, `Tools/Gum.ProjectServices/Templates/FormsTemplate/Libraries/bmfont.exe` | Windows-only font generator; `GumProjectSave.FontGenerator` **defaults to `BmFont`**; `HeadlessFontGenerationService` throws `PlatformNotSupportedException` off Windows | 25 — KernSmith default off Windows + migration prompt; keep bmfont for Windows back-compat until cutover decides |
-| `Tools/Gum.Presentation/Plugins/PluginManager.cs` (`LoadReferenceLists`) | reference list contains `Gum.exe` for compiling plugins | 110/120 — main assembly is `Gum.dll` in a self-contained publish; use the assembly location, not a name |
+| `Tools/Gum.Presentation/Plugins/PluginManager.cs` (`LoadReferenceLists`) | **done** (2026-09-11): the plugin-source compile path was never ported off .NET Framework; the reference lists (`Gum.exe`, `System.Windows.Forms.dll`) and the external-assembly list they fed were dead code and are removed | 100 |
+| SkiaSharp's Linux native (`libSkiaSharp.so`) | **done** (2026-09-11): the `SkiaSharp` package carries only the Windows and macOS natives; the shared libraries had no Linux native at all and the Avalonia head resolved Avalonia's 2.88 native beside its 3.119 managed assembly, so the head threw at startup on Linux. `Gum.ImageDiff` (the lowest SkiaSharp consumer) references `SkiaSharp.NativeAssets.Linux` at the managed version, which every project above it inherits | 100 (Runtime) |
+| `FileWatchManager` existence checks | **done** (2026-09-11): the watcher tested and opened changed files through `FilePath.Standardized`, which is lowercased and so misses on a case-sensitive file system (no reload on Linux); it uses the case-preserving `FullPath`. The sweep found no other file-system call on a `Standardized` path | 100 (Runtime) |
+| `OrphanCodeFileScanService` directory walk | **done** (2026-09-11): the recursive walk under the code root threw on the first directory the process could not read (a root-owned temp folder on Linux), which disabled the plugin for the session; unreadable directories are skipped (tested through an injectable enumerator) | 100 (Runtime) |
+| `KernSmithFileGenerator` system fonts | **done** (2026-09-11): a project authored on Windows names fonts Linux does not have (Arial), and generation failed outright; the generator now rasterizes the platform's substitute family (fontconfig's on Linux, the default face elsewhere) and says so in the Output tab | 100 (Runtime) |
+| `Gum/GumFormsPlugin/GumFormsPlugin.csproj` post-build | **done** (2026-09-11): the nested `Gum.FormsStaging` build ran a bare `dotnet`, which is not the building SDK when it is not on PATH (a user-local SDK on Linux); it now uses `$(DOTNET_HOST_PATH)` when set | 100 |
 
 ## 6. Path and file-system assumptions (netstandard `ToolsUtilities` and shared core)
 
 | Site | What | Removed by |
 |---|---|---|
 | `ToolsUtilities/FileManager.cs:1002,1359,1469` | appends `@"\"` to special folders | 25 — `Path.Combine` / `DirectorySeparatorChar` |
-| `ToolsUtilities/FilePath.cs:80–81` | paths compared `ToLowerInvariant()` (Windows semantics) | **100** (moved from 25 on 2026-09-10, needs the Linux corpus) — per-OS policy + a "case mismatch" project error (GUM code) so Windows-authored projects fail loudly on Linux, not silently |
+| `ToolsUtilities/FilePath.cs:80–81` | paths compared `ToLowerInvariant()` (Windows semantics) | **done** (2026-09-11): the comparison stays case-insensitive on every OS by decision (phase 25); `HeadlessErrorChecker` reports GUM0008 when a referenced element file, texture or font exists on disk only under a different case, on every OS, so Windows-authored projects fail loudly on Linux and are fixed where they are authored |
 | `FileManager.cs:203,899` | already special-cases macOS | keep; extend to Linux in 25 |
-| `Gum/Services/Builder.cs:50`, `StateAnimationPlugin/Managers/SettingsManager.cs:30`, `HtmlToGum` | settings under `SpecialFolder.ApplicationData` | fine on Unix (`~/.config`); verify in 25 |
+| `Gum/Services/Builder.cs:50`, `StateAnimationPlugin/Managers/SettingsManager.cs:30`, `HtmlToGum` | settings under `SpecialFolder.ApplicationData` | **done** (2026-09-11): `~/.config` is right on Unix but `GetFolderPath` returns "" when the folder does not exist yet (a fresh account), which made the Avalonia head's settings path relative and crashed startup; the shared and head lookups now pass `SpecialFolderOption.Create`, and the animation settings path no longer uses a literal backslash |
 | ~180 backslash literals in `.cs` under the tool graph | mostly `\n` in messages; a few real separators | 25 — audit the real ones, leave messages |
 
 ## 7. Things that looked like gaps and are not

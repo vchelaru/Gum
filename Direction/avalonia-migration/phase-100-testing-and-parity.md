@@ -20,11 +20,20 @@
 > `Tests/CodeGen_*` fixture with `gumcli` and fails on any change, and both heads generate through the
 > same `Gum.ProjectServices` code. That check runs on Windows only.
 >
-> **Open:** the case-mismatch corpus project (phase 25's error) is not in the corpus yet, and
-> generated-code parity is not checked on macOS/Linux. The `GumToolUnitTests` split has started: the
-> 114 element-tree tests (selection logic, collapse/expansion state, the manager's static helpers)
-> moved to `Gum.Presentation.Tests` with the phase 60 core; the rest waits for phase 70, which is
-> moving the code the variable-grid tests cover.
+> **Update 2026-09-11:** the `GumToolUnitTests` split is done: every test that compiles without WPF
+> (about 2000) lives in `Tests/Gum.Presentation.Tests`, which the three-OS CI job now runs beside
+> `Gum.Avalonia.Tests` and `Gum.ProjectServices.Tests`, so the shared logic is proven on macOS and
+> Linux, not only Windows. The full-startup layer (`HeadProcessTests`) runs on the Linux CI leg
+> under Xvfb with Mesa's software GL (`GUM_RUN_HEAD_PROCESS_TEST=1`); Windows and macOS still run
+> it locally. Both CI changes are unverified until the branch's PR runs the workflow. The test
+> sets `GUM_ECHO_OUTPUT=1` for the process it starts, which makes the Output tab's lines land
+> in stderr, so a failed unattended run's log says what the tool saw (any run can set it). The
+> case-mismatch error is GUM0008 (phase 25), tested with real files on both file-system kinds
+> rather than a corpus project. Locally, the head and the three headless suites were also run on
+> Linux in WSL (Ubuntu, WSLg display); that run found the two startup bugs phase 25 records.
+>
+> **Open:** generated-code parity is not checked on macOS/Linux; the manual checklist has not been
+> run on any OS.
 
 ## Purpose
 
@@ -133,5 +142,5 @@ and **phase 120** (zero unresolved rows).
 ## Done when
 
 - [ ] All three automated layers green on Windows, macOS, Linux in CI.
-- [ ] Test projects split; no logic test lives in a `net8.0-windows` project.
+- [x] Test projects split; no logic test lives in a `net8.0-windows` project (2026-09-11).
 - [ ] Manual checklist checked in with a dated, all-OS pass before phase 110.

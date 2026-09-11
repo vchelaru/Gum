@@ -48,11 +48,17 @@ jobs:
           dotnet-version: '10.0.x'
 
       # These plugins copy themselves into the head's build output (post-build), which
-      # dotnet publish does not run; the package step copies that folder in.
+      # dotnet publish does not run; the package step copies that folder in. The list is every
+      # plain net10.0 plugin project (coverage-matrix.md section 1); the Forms plugin also stages
+      # the Forms themes into the head's Content folder.
       - name: Build the plugins that run in the Avalonia head
         run: |
           dotnet build Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj -c Release
           dotnet build Gum/EventOutputPlugin/EventOutputPlugin.csproj -c Release
+          dotnet build Gum/GumFormsPlugin/GumFormsPlugin.csproj -c Release
+          dotnet build Gum/ImportFromGumxPlugin/ImportFromGumxPlugin.csproj -c Release
+          dotnet build Gum/PerformanceMeasurementPlugin/PerformanceMeasurementPlugin.csproj -c Release
+          dotnet build Gum/SvgPlugin/SkiaPlugin.csproj -c Release
 
       - name: Publish and package
         shell: bash
@@ -64,6 +70,14 @@ jobs:
           dotnet publish Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out"
           mkdir -p "$out/Plugins"
           cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Plugins/. "$out/Plugins/"
+          if [ -d Tool/Gum.Avalonia/bin/Release/net10.0/Content ]; then
+            mkdir -p "$out/Content"
+            cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Content/. "$out/Content/"
+          fi
+          # gumcli beside the head (SvgExportCommand looks in GumCli/ for gumcli[.exe], else gumcli.dll
+          # run through dotnet); framework-dependent, since the head's own runtime is self-contained
+          # and the CLI's is not shared, the .dll form is what a self-contained head can run.
+          dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/GumCli"
           mkdir -p dist
           case "$rid" in
             win-*)

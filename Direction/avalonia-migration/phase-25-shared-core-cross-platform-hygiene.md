@@ -5,8 +5,15 @@
 > `IFileSystemRevealService` + `ShellCommand` with all seven call sites migrated; `gumcli` located
 > by OS name and run via `dotnet` for a `.dll`; `FileManager` separators;
 > `BannedSymbols.CrossPlatform.txt` enforced on `Gum.Presentation` and `Gum.ProjectServices`.
-> Task 6, the case-mismatch project error, is deferred to phase 100 where the Linux parity corpus
-> can exercise it; `coverage-matrix.md` §6 notes this.
+> Task 6 landed 2026-09-11 as the GUM0008 check in `HeadlessErrorChecker` (`FileNameCaseChecker`):
+> a referenced element file, texture or font that exists on disk only under a different case is
+> reported on every OS, a warning where the file still loads and an error where it does not, in
+> place of the GUM0004/GUM0006 "missing" message. Decision change: `FilePath` keeps comparing
+> case-insensitively on every OS; per-OS equality would make one project behave differently per
+> platform, and the loud error is what closes the gap. Also 2026-09-11, found by the first Linux
+> run of the head: the per-user settings folder is now created on first use (`GetFolderPath`
+> returns an empty path for a missing `~/.config`, which crashed startup), and the animation
+> plugin's settings path no longer uses a literal backslash separator.
 
 ## Purpose
 
@@ -101,8 +108,8 @@ executable naming and font defaults.
 
 ## Done when
 
-- [ ] `Gum.Presentation` has no `System.Drawing.Common` reference and builds.
-- [ ] Font generation works on macOS/Linux with a `BmFont`-default project, with the prompt.
-- [ ] No `Process.Start` outside the reveal seam and the shell helper in the tool graph.
-- [ ] `FileManager` has no literal backslash separators; case-mismatch error has a test.
-- [ ] Banned-API list exists and passes on the headless projects.
+- [x] `Gum.Presentation` has no `System.Drawing.Common` reference and builds.
+- [ ] Font generation works on macOS/Linux with a `BmFont`-default project, with the prompt. (The resolver and prompt landed; the macOS/Linux run is the owner's step.)
+- [x] No `Process.Start` outside the reveal seam and the shell helper in the tool graph.
+- [x] `FileManager` has no literal backslash separators; case-mismatch error has a test (GUM0008, 2026-09-11).
+- [x] Banned-API list exists and passes on the headless projects.

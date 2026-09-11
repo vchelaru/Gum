@@ -79,6 +79,22 @@ jobs:
         run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
       - name: Gum.Avalonia.Tests (headless)
         run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      # The full-startup layer (phase 100): the real head executable on a fixture project. Only Linux
+      # has a cheap virtual display plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is
+      # the one OS where CI proves the startup sequence; the other two run it locally.
+      - name: Gum.Avalonia head, unattended run under Xvfb (Linux)
+        if: runner.os == 'Linux'
+        env:
+          GUM_RUN_HEAD_PROCESS_TEST: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests" --logger "trx;LogFileName=head-process.trx" --results-directory "TestResults"
+      # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
+      # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
+      - name: Gum.Presentation.Tests (shared logic on every OS)
+        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
       # Save byte-parity (ProjectSaveParityTests) must hold on every OS, not only on the Windows
       # runner that runs this suite in the main test job; the other tests here are headless too.
       - name: Gum.ProjectServices.Tests (save parity on every OS)

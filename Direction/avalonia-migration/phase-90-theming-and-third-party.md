@@ -18,6 +18,20 @@
 > the Xceed assemblies (their one remaining use was a visual-tree helper in `Dialog.cs`) and the
 > unused `System.Management` package are removed. Standard window chrome ships.
 >
+> **Update 2026-09-11:** the controls render in the OS default font (`ContentControlThemeFontFamily`
+> = `$Default`, Inter as the fallback) instead of Fluent's Inter, which was about 7% wider than the
+> WPF head's Segoe UI and the one visible difference in every tree and grid screenshot. Menu bar
+> headers and drop-down rows are told apart by structure (`Menu > MenuItem` versus a `MenuItem` or
+> `ContextMenu` descendant) because Avalonia has no `:toplevel` pseudo-class; the styles keyed on
+> it had never applied. Resting text and combo box borders take the field color, since Avalonia
+> strokes a translucent border over the fill where WPF draws it outside, and Fluent's empty
+> shortcut column is hidden, so drop-downs are the WPF width. Gotcha for template-part styles: a
+> value the Fluent template sets on a part (`IsVisible="False"` on the icon presenter) outranks a
+> plain type/name style, which applies at Style priority below Template; only a style whose
+> selector carries a condition (a pseudo-class, `:not`, a property match) applies at StyleTrigger
+> priority and wins. `AvaloniaObject.GetDiagnostic(property).Priority` in a headless test shows
+> which value is in effect.
+>
 > **Open:** AppCenter is an owner decision (it is not in the Avalonia head; the WPF head keeps it
 > until cutover). The theming dialog's view belongs to phase 80. The dark/light pass on macOS and
 > Linux is the owner's step.

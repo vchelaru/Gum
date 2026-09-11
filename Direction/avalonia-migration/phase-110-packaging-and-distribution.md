@@ -14,9 +14,15 @@
 > formats decided: Windows zip, macOS `Gum.app` in a `.tar.gz`, Linux `.tar.gz`. Install page:
 > `docs/gum-tool/setup/native-preview.md`, with the known issues.
 >
+> **Update 2026-09-11:** the preview job builds every plain `net10.0` plugin the head loads
+> (GumForms, ImportFromGumx, PerformanceMeasurement and Skia joined ConvertToJson and EventOutput;
+> the first two were missing from the package), copies the head's `Content/` folder (the staged
+> Forms themes), and publishes `gumcli` self-contained per runtime into `GumCli/` beside the head,
+> where `SvgExportCommand` looks for it. Unverified until a release runs the workflow.
+>
 > **Open (owner):** Apple Developer ID certificate and notarization secrets; Windows Authenticode;
-> a signing key for the Linux checksums; a macOS `.icns` icon; bundling `gumcli` per runtime;
-> clean-VM launches on macOS and Linux (never run from this Windows machine).
+> a signing key for the Linux checksums; a macOS `.icns` icon; clean-VM launches on macOS and
+> Linux (never run from this Windows machine).
 
 ## Purpose
 

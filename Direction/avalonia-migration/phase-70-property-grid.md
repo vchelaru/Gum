@@ -108,7 +108,7 @@ the four plugin panels.
 - [ ] Variables tab and the four plugin panels function on all three OSes with undo.
   Done in code and green in the headless suites (which run on every OS in CI), and the head
   starts with all four plugins loaded (`--exit-after` smoke run on Windows). Not yet run by hand
-  on macOS or Linux, and the Avalonia delete dialog lacks Code Output's custom-code option.
+  on macOS or Linux; the delete dialog's custom-code option landed 2026-09-11.
 
 ## Status (2026-09-10)
 
@@ -198,6 +198,6 @@ Merged into `avalonia-migration-work` as `1cc2d2e8e` (one commit per part on `ph
   stays in the plugin assembly and keeps the delete dialog's "delete custom code" check box
   (implementing `IDeleteOptionsDialogPlugin` directly), and the Avalonia one is
   `Tool/Gum.Avalonia/Plugins/CodeOutput/`. `AvaloniaPluginTab` now implements
-  `ITabSelectionState`, which the shared tab controller needs. Not done: the Avalonia delete
-  dialog does not take plugin options yet, so deleting an element in that head keeps its
-  hand-written code file (the safe side); generated files are still removed.
+  `ITabSelectionState`, which the shared tab controller needs. Since 2026-09-11 the plugin body
+  handles the neutral delete-dialog events, so the "delete custom code" option appears in the
+  Avalonia delete dialog as well.
