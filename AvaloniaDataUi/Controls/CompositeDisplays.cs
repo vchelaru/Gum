@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -390,9 +390,9 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
             {
                 Tag = option,
                 Content = (object?)OptionContentFactory?.Invoke(option) ?? option.Name,
+                // The WPF option button: 2px padding and a 1px border around the icon, no margin.
                 MinWidth = 30,
                 MinHeight = 30,
-                Margin = new Thickness(1),
                 Padding = new Thickness(2),
             };
             ToolTip.SetTip(button, option.Name);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -86,10 +86,27 @@ public static class FrbThemeResources
         }
     }
 
-    // Sizes from the WPF control styles: compact fields and tree rows, 2px corners, 1px borders.
+    /// <summary>The WPF tool's default base font size (AppScale).</summary>
+    public const double DefaultBaseFontSize = 12;
+
+    /// <summary>
+    /// Sets the font size the Fluent theme gives its controls (menus, combo boxes, tabs), which
+    /// otherwise stays at Fluent's 14 whatever the window's font size is.
+    /// </summary>
+    public static void SetBaseFontSize(IResourceDictionary resources, double size) =>
+        resources["ControlContentThemeFontSize"] = size;
+
+    // Sizes from the WPF control styles: body-sized text, compact fields, rows and menus, 2px
+    // corners, 1px borders.
     private static void AddControlMetrics(IResourceDictionary resources)
     {
+        SetBaseFontSize(resources, DefaultBaseFontSize);
         resources["ControlCornerRadius"] = new CornerRadius(2);
+        resources["OverlayCornerRadius"] = new CornerRadius(2);
+        resources["MenuFlyoutPresenterBorderThemeThickness"] = new Thickness(1);
+        resources["MenuFlyoutPresenterThemePadding"] = new Thickness(0);
+        resources["MenuFlyoutThemeMinHeight"] = 0d;
+        resources["ComboBoxDropdownBorderPadding"] = new Thickness(4);
         resources["TextControlThemeMinHeight"] = 22d;
         resources["TextControlThemePadding"] = new Thickness(4, 1, 4, 1);
         resources["TextControlBorderThemeThickness"] = new Thickness(1);
@@ -163,7 +180,28 @@ public static class FrbThemeResources
         yield return ("ComboBoxPlaceHolderForeground", "Frb.Brushes.Foreground.Subtle");
         yield return ("ComboBoxPlaceHolderForegroundFocusedPressed", "Frb.Brushes.Foreground.Subtle");
         yield return ("ComboBoxDropDownBackground", "Frb.Surface01");
-        yield return ("ComboBoxDropDownBorderBrush", "Frb.Brushes.Border");
+        yield return ("ComboBoxDropDownBorderBrush", "Frb.Brushes.Contrast03");
+
+        // Menus: drop-downs on Surface01 in a Primary outline, rows washed with Primary on hover,
+        // Primary separators, and every text and glyph in the foreground color.
+        yield return ("MenuFlyoutPresenterBackground", "Frb.Surface01");
+        yield return ("MenuFlyoutPresenterBorderBrush", "Frb.Brushes.Primary");
+        yield return ("MenuFlyoutSeparatorBackground", "Frb.Brushes.Primary");
+        foreach (string state in new[] { "", "PointerOver", "Pressed" })
+        {
+            yield return ("MenuFlyoutItemForeground" + state, "Frb.Brushes.Foreground");
+            yield return ("MenuFlyoutItemKeyboardAcceleratorTextForeground" + state, "Frb.Brushes.Foreground");
+            yield return ("MenuFlyoutSubItemChevron" + state, "Frb.Brushes.Foreground");
+            yield return ("MenuFlyoutSubItemForeground" + state, "Frb.Brushes.Foreground");
+        }
+        yield return ("MenuFlyoutItemForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("MenuFlyoutItemKeyboardAcceleratorTextForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("MenuFlyoutSubItemChevronDisabled", "Frb.Brushes.Foreground.Disabled");
+        yield return ("MenuFlyoutSubItemForegroundDisabled", "Frb.Brushes.Foreground.Disabled");
+        foreach (string key in new[] { "MenuFlyoutItemBackgroundPointerOver", "MenuFlyoutItemBackgroundPressed", "MenuFlyoutSubItemBackgroundPointerOver", "MenuFlyoutSubItemBackgroundPressed", "MenuFlyoutSubItemBackgroundSubMenuOpened" })
+        {
+            yield return (key, "Frb.Brushes.Primary.Transparent");
+        }
 
         // TreeViewItem: Surface.Fill on hover, and the selection as a Primary outline, not a fill.
         foreach (string state in new[] { "", "PointerOver", "Pressed", "Selected", "SelectedPointerOver", "SelectedPressed" })

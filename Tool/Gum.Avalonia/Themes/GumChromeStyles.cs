@@ -30,6 +30,8 @@ namespace Gum.Avalonia.Themes;
 /// <item>Check boxes: the WPF template, a small outlined box instead of Fluent's 20px box on a 32px row.</item>
 /// <item><see cref="FlatButtonClass"/>: the WPF head's borderless tool buttons.</item>
 /// <item><see cref="IconButtonClass"/>: the WPF <c>IconButton</c>, a flat outlined button.</item>
+/// <item>Menus, separators, scroll bars and combo box rows: the WPF metrics and colors on Fluent's
+/// templates.</item>
 /// </list>
 /// </summary>
 public static class GumChromeStyles
@@ -186,7 +188,144 @@ public static class GumChromeStyles
         },
         ButtonPart<Button>(FlatButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
         ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
+
+        // The main panel's tab content sits flush with its region, as in the WPF MainPanelControl.
+        new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass))
+        {
+            Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(0)) },
+        },
+
+        // Menus (Frb.Styles.Defaults.xaml Menu, MenuItem, ContextMenu, Separator): compact rows in
+        // the body font; a hovered row washed with Primary; the open top-level item joined to its
+        // drop-down by a Primary outline. The drop-down surfaces themselves come from the
+        // MenuFlyout* resources in FrbThemeResources.
+        new Style(selector => selector.OfType<Menu>())
+        {
+            Setters =
+            {
+                new Setter(Layoutable.HeightProperty, double.NaN),
+                new Setter(Layoutable.MinHeightProperty, 0d),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(0)),
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+            },
+        },
+        new Style(selector => selector.OfType<MenuItem>())
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 2)),
+                new Setter(Layoutable.MinHeightProperty, 0d),
+            },
+        },
+        new Style(selector => selector.OfType<MenuItem>().Class(":disabled"))
+        {
+            Setters = { new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground.Disabled")) },
+        },
+        new Style(selector => selector.OfType<MenuItem>().Class(":toplevel"))
+        {
+            Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 3)) },
+        },
+        MenuItemRoot(new[] { ":selected" }, Resource("Frb.Brushes.Primary.Transparent"), Brushes.Transparent, new Thickness(0)),
+        MenuItemRoot(new[] { ":toplevel", ":selected" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent, new Thickness(0)),
+        MenuItemRoot(new[] { ":toplevel", ":open" }, Resource("Frb.Surface01"), Resource("Frb.Brushes.Primary"), new Thickness(1, 1, 1, 0)),
+        new Style(selector => selector.OfType<ContextMenu>())
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.BackgroundProperty, Resource("Frb.Surface01")),
+                new Setter(TemplatedControl.BorderBrushProperty, Resource("Frb.Brushes.Primary")),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
+                new Setter(TemplatedControl.CornerRadiusProperty, new CornerRadius(2)),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(4)),
+            },
+        },
+        new Style(selector => selector.OfType<Separator>())
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.TemplateProperty, new FuncControlTemplate<Separator>((separator, _) =>
+                    new Border { [!Border.BackgroundProperty] = separator[!TemplatedControl.BackgroundProperty] })),
+                new Setter(TemplatedControl.BackgroundProperty, Resource("Frb.Brushes.Primary")),
+                new Setter(Layoutable.HeightProperty, 1d),
+                new Setter(Layoutable.MinHeightProperty, 0d),
+                new Setter(Layoutable.MarginProperty, new Thickness(4, 2)),
+            },
+        },
+
+        // Scroll bars (Frb.Styles.Defaults.xaml ScrollBar): 8px wide, always shown, no line buttons,
+        // a rounded thumb.
+        new Style(selector => selector.OfType<ScrollBar>())
+        {
+            Setters = { new Setter(ScrollBar.AllowAutoHideProperty, false) },
+        },
+        new Style(selector => selector.OfType<ScrollBar>().Class(":vertical"))
+        {
+            Setters = { new Setter(Layoutable.WidthProperty, 8d), new Setter(Layoutable.MinWidthProperty, 0d) },
+        },
+        new Style(selector => selector.OfType<ScrollBar>().Class(":horizontal"))
+        {
+            Setters = { new Setter(Layoutable.HeightProperty, 8d), new Setter(Layoutable.MinHeightProperty, 0d) },
+        },
+        ScrollBarPart("PART_LineUpButton"),
+        ScrollBarPart("PART_LineDownButton"),
+        ScrollBarPart("PART_LineLeftButton"),
+        ScrollBarPart("PART_LineRightButton"),
+        new Style(selector => selector.OfType<ScrollBar>().Template().OfType<Thumb>())
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.TemplateProperty, new FuncControlTemplate<Thumb>((thumb, _) =>
+                    new Border { CornerRadius = new CornerRadius(4), [!Border.BackgroundProperty] = thumb[!TemplatedControl.BackgroundProperty] })),
+            },
+        },
+
+        // Combo box drop-down rows (Frb.Styles.Defaults.xaml ComboBoxItem): tight padding, filled
+        // with Primary on hover, the chosen row outlined in Primary.
+        new Style(selector => selector.OfType<ComboBoxItem>())
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(3, 2)),
+                new Setter(Layoutable.MinHeightProperty, 0d),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(1)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+            },
+        },
+        ButtonPart<ComboBoxItem>(null, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary"), Resource("Frb.Brushes.Primary")),
+        ButtonPart<ComboBoxItem>(null, new[] { ":selected" }, Brushes.Transparent, Resource("Frb.Brushes.Primary")),
+        ButtonPart<ComboBoxItem>(null, new[] { ":selected", ":pointerover" }, Resource("Frb.Brushes.Primary"), Resource("Frb.Brushes.Primary")),
     };
+
+    // A menu item's row background and outline in the given states (the Fluent template's
+    // PART_LayoutRoot, which Fluent's own state styles color).
+    private static Style MenuItemRoot(string[] states, object background, object borderBrush, Thickness borderThickness) =>
+        new Style(selector =>
+        {
+            Selector item = selector.OfType<MenuItem>();
+            foreach (string state in states)
+            {
+                item = item.Class(state);
+            }
+            return item.Template().OfType<Border>().Name("PART_LayoutRoot");
+        })
+        {
+            Setters =
+            {
+                new Setter(Border.BackgroundProperty, background),
+                new Setter(Border.BorderBrushProperty, borderBrush),
+                new Setter(Border.BorderThicknessProperty, borderThickness),
+            },
+        };
+
+    // Hides one of the Fluent scroll bar's line buttons.
+    private static Style ScrollBarPart(string name) =>
+        new Style(selector => selector.OfType<ScrollBar>().Template().OfType<RepeatButton>().Name(name))
+        {
+            Setters = { new Setter(Visual.IsVisibleProperty, false) },
+        };
 
     // The tab control's own items only, so a plugin view's nested tab control keeps its look.
     private static Selector MainTabItem(Selector? selector) =>
@@ -194,11 +333,11 @@ public static class GumChromeStyles
 
     // A button's presenter colors in the given states. The Fluent theme colors the same template
     // part in its own state styles, which these outrank.
-    private static Style ButtonPart<TButton>(string buttonClass, string[] states, object background, object borderBrush)
+    private static Style ButtonPart<TButton>(string? buttonClass, string[] states, object background, object borderBrush)
         where TButton : Control =>
         new Style(selector =>
         {
-            Selector button = selector.OfType<TButton>().Class(buttonClass);
+            Selector button = buttonClass == null ? selector.OfType<TButton>() : selector.OfType<TButton>().Class(buttonClass);
             foreach (string state in states)
             {
                 button = button.Class(state);

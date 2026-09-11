@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Avalonia.Themes;
@@ -87,9 +88,7 @@ public sealed class MainPanelView : Grid
                 {
                     return custom;
                 }
-                TextBlock header = new TextBlock();
-                header.Bind(TextBlock.TextProperty, new Binding(nameof(AvaloniaPluginTab.Title)));
-                return header;
+                return CreateHeader(tab);
             }),
             ContentTemplate = new FuncDataTemplate<AvaloniaPluginTab>((tab, _) =>
                 tab?.Content is Control control ? control : new ContentControl { Content = tab?.Content }),
@@ -108,6 +107,48 @@ public sealed class MainPanelView : Grid
         SetRow(host, row);
         SetColumn(host, column);
         return host;
+    }
+
+    /// <summary>The name of the close button in a tab's header.</summary>
+    public const string CloseButtonName = "PART_CloseTab";
+
+    // The WPF tab header: the title, then a small flat close button for a closable tab. A middle
+    // click on the header closes it too.
+    private static Control CreateHeader(AvaloniaPluginTab? tab)
+    {
+        TextBlock title = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
+        title.Bind(TextBlock.TextProperty, new Binding(nameof(AvaloniaPluginTab.Title)));
+
+        Button close = new Button
+        {
+            Name = CloseButtonName,
+            Width = 14,
+            Height = 14,
+            Padding = new Thickness(0),
+            Margin = new Thickness(6, 0, -1, 0),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 10),
+        }.WithThemeResource(TemplatedControl.ForegroundProperty, "Frb.Brushes.Foreground.Subtle");
+        close.Classes.Add(GumChromeStyles.FlatButtonClass);
+        close.Bind(IsVisibleProperty, new Binding(nameof(AvaloniaPluginTab.CanClose)));
+        close.Click += (_, e) =>
+        {
+            tab?.Hide();
+            e.Handled = true;
+        };
+
+        StackPanel header = new StackPanel { Orientation = Orientation.Horizontal };
+        header.Children.Add(title);
+        header.Children.Add(close);
+        header.PointerReleased += (_, e) =>
+        {
+            if (tab is { CanClose: true } && e.InitialPressMouseButton == MouseButton.Middle)
+            {
+                tab.Hide();
+            }
+        };
+        return header;
     }
 
     private static GridSplitter CreateSplitter(GridResizeDirection direction, int row, int column)

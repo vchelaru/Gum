@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using Avalonia;
 using Avalonia.Controls;
@@ -65,12 +65,12 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Height = WindowSettings.DefaultHeight;
         MinWidth = 640;
         MinHeight = 400;
-        FontSize = appScaleProvider.BaseFontSize;
+        ApplyBaseFontSize(appScaleProvider.BaseFontSize);
         this.WithThemeResource(BackgroundProperty, "Frb.Brushes.Background");
         this.WithThemeResource(ForegroundProperty, "Frb.Brushes.Foreground");
         if (appScaleProvider is AvaloniaAppScaleProvider scale)
         {
-            scale.BaseFontSizeChanged += () => FontSize = scale.BaseFontSize;
+            scale.BaseFontSizeChanged += () => ApplyBaseFontSize(scale.BaseFontSize);
         }
         this.Bind(TitleProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
 
@@ -170,6 +170,14 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         row.Children.Add(menu);
         row.Children.Add(fileName);
         return row;
+    }
+
+    // The base font size reaches plain text by inheritance from this window, and the Fluent-styled
+    // controls (menus, combo boxes, tabs) through the theme's font size resource.
+    private void ApplyBaseFontSize(double size)
+    {
+        FontSize = size;
+        Themes.FrbThemeResources.SetBaseFontSize(global::Avalonia.Application.Current!.Resources, size);
     }
 
     // The shared light/dark logo choice (MainWindowIconLogic), loaded from this head's resources.

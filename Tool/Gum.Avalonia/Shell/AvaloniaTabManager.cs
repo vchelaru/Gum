@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -155,9 +155,21 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
         Sync(RightBottom, TabLocation.RightBottom);
     }
 
+    // The WPF head shows its bottom-right tabs in the order its plugins happen to load (the plugin
+    // DLLs by file name, then the built-in ones). The same plugins load in another order here, so
+    // the tabs are ranked by title instead; any other tab keeps its order of arrival after these.
+    private static readonly string[] KnownTabOrder = { "Code", "Performance", "Texture Coordinates", "History", "Output", "Errors" };
+
+    private static int Rank(AvaloniaPluginTab tab)
+    {
+        int index = Array.IndexOf(KnownTabOrder, tab.Title);
+        return index < 0 ? int.MaxValue : index;
+    }
+
     private void Sync(ObservableCollection<AvaloniaPluginTab> target, TabLocation location)
     {
-        AvaloniaPluginTab[] wanted = _tabs.Where(t => TabDockingLogic.ShouldAppearInLocation(t, location)).ToArray();
+        // OrderBy is stable, so tabs of the same rank keep their order of arrival.
+        AvaloniaPluginTab[] wanted = _tabs.Where(t => TabDockingLogic.ShouldAppearInLocation(t, location)).OrderBy(Rank).ToArray();
         if (wanted.SequenceEqual(target))
         {
             return;

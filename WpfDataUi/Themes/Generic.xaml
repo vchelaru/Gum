@@ -16,7 +16,11 @@
         Opacity="0.05"
         Color="Black" />
 
-    <DataTemplate DataType="{x:Type dataTypes:InstanceMember}">
+    <!--
+        Keyed rather than implicit: WPF looks for a type-keyed template in the theme of the assembly
+        that defines the type, and the member types live in DataUi.Core, which has no theme.
+    -->
+    <DataTemplate x:Key="DataUi.InstanceMemberTemplate" DataType="{x:Type dataTypes:InstanceMember}">
         <Border x:Name="Container">
             <local:SingleDataUiContainer DataContext="{Binding}" />
         </Border>
@@ -37,7 +41,10 @@
             Header="{Binding Name}"
             IsExpanded="{Binding IsExpanded}"
             Visibility="{Binding IsVisible, Converter={StaticResource DataUi.BooleanToVisibility}}">
-            <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
+            <ItemsControl
+                AlternationCount="2"
+                ItemTemplate="{StaticResource DataUi.InstanceMemberTemplate}"
+                ItemsSource="{Binding Members}" />
         </Expander>
     </DataTemplate>
 
