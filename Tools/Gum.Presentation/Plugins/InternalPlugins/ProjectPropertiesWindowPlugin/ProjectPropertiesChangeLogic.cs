@@ -87,7 +87,9 @@ public class ProjectPropertiesChangeLogic
     /// </summary>
     public async Task<ProjectPropertyChangeResult> HandlePropertyChanged(ProjectPropertiesViewModel viewModel, string? propertyName)
     {
-        if (viewModel.IsUpdatingFromModel)
+        // View-only state (the language list, the derived read-only flag) is not project data.
+        if (viewModel.IsUpdatingFromModel
+            || propertyName is nameof(ProjectPropertiesViewModel.AvailableLanguages) or nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly))
         {
             return new ProjectPropertyChangeResult();
         }

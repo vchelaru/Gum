@@ -15,13 +15,13 @@ The plugin system uses MEF (Managed Extensibility Framework) for discovery. All 
 - `PluginBase` (`Gum.Presentation`, framework-neutral) — concrete base with all event declarations and pre-injected helper services (`_guiCommands`, `_fileCommands`, `_tabManager`, `_dialogService`, plus the `Menu` model). Menus: `AddMenuEntry(Action click, params string[] path)` returns a `MenuItemModel` whose `Header`/`IsEnabled`/`IsChecked` drive the rendered item under both heads. Tabs: `CreateTab(object content, …)` takes a control the head can show or a ViewModel.
 - `IPriorityPlugin` — marker interface for plugins that should receive events before others (checked by `PluginManager`, no framework type involved).
 - `WpfPluginBase` (WPF tool only) — adds the `DeleteOptionsWindow` event pair and an `[Obsolete]` `AddMenuItem` shim over the model for external WPF plugins (ADR-0018). Nothing in the repo should call the shim.
-- `PriorityPlugin` (WPF tool) — `WpfPluginBase` + `IPriorityPlugin`; provides default `ShutDown()` returning `false` and auto-generates `FriendlyName`. The Avalonia head's built-in plugins implement `IPriorityPlugin` on `PluginBase` directly.
+- `PriorityPlugin` (WPF tool) — `WpfPluginBase` + `IPriorityPlugin`; provides default `ShutDown()` returning `false` and auto-generates `FriendlyName`. Built-in plugins shared by both heads derive `CorePriorityPlugin` (Gum.Presentation) instead, which has the same defaults without the WPF base; the Avalonia head's own plugins implement `IPriorityPlugin` on `PluginBase` directly.
 
 ### Origin vs. Priority
 
 **Origin** (where the plugin's code lives) is independent of **priority** (whether it receives events early):
 
-- **First-party plugins** live in `Gum/Plugins/InternalPlugins/` and are compiled into Gum.exe (WPF head), or in `Tool/Gum.Avalonia/Plugins/` and compile into the Avalonia head. Each head lists its assembly in `IPluginHostConfiguration.InternalPluginAssemblies`.
+- **First-party plugins** live in `Tools/Gum.Presentation/Plugins/InternalPlugins/` when both heads share them, in `Gum/Plugins/InternalPlugins/` when only the WPF head has them (compiled into Gum.exe), or in `Tool/Gum.Avalonia/Plugins/` when only the Avalonia head has them. Each head lists its own assembly and Gum.Presentation in `IPluginHostConfiguration.InternalPluginAssemblies`.
 - **External plugins** are separate .dlls loaded from `<app base directory>/Plugins/<PluginName>/` at runtime (`PluginManager.PluginFolder`, OS-neutral). They usually inherit from `PluginBase` directly, but may implement `IPriorityPlugin` if they need early event dispatch (e.g. `EditorTabPlugin_XNA`, which ships as an external DLL but needs priority for wireframe events). The Avalonia head refuses an external assembly that references WPF/WinForms (`AvaloniaPluginHostConfiguration.CanHostExternalAssembly`) and reports it as `PluginFileOutcome.NotHostable`.
 
 The type check `is IPriorityPlugin` is used at runtime — priority plugins receive events before non-priority ones, regardless of origin.
@@ -37,7 +37,8 @@ The type check `is IPriorityPlugin` is used at runtime — priority plugins rece
 | `Gum/Plugins/WpfPluginHostConfiguration.cs`, `Tool/Gum.Avalonia/Services/AvaloniaPluginHostConfiguration.cs` | The two heads' host configurations |
 | `Gum/Plugins/BaseClasses/WpfPluginBase.cs`, `PriorityPlugin.cs` | WPF-only bases (delete dialog events, obsolete menu shim) |
 | `Gum/Plugins/InternalPlugins/` | WPF head built-in plugin subfolders |
-| `Tool/Gum.Avalonia/Plugins/` | Avalonia head built-in plugins (`OutputPlugin`, `ShellTitlePlugin`, …) |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/` | Built-in plugins shared by both heads (`CorePriorityPlugin`s) |
+| `Tool/Gum.Avalonia/Plugins/` | Avalonia head plugins (`ShellTitlePlugin`, and the head subclasses of the editor tab, texture-coordinate and State Animation plugins) |
 | `Tools/Gum.Presentation/Menus/` | `MenuModel`, `MenuItemModel`, `StandardMenuModelBuilder`; rendered by `MenuStripManager` (WPF) and `AvaloniaMenuBuilder` |
 
 ## Plugin Lifecycle
@@ -46,19 +47,20 @@ The type check `is IPriorityPlugin` is used at runtime — priority plugins rece
 
 ## Internal Plugin Map
 
-Each internal plugin lives in `Gum/Plugins/InternalPlugins/[FeatureName]/` with a `Main[FeatureName]Plugin.cs` entry point.
+Each internal plugin has a `Main[FeatureName]Plugin.cs` entry point in `[FeatureName]/` under `Tools/Gum.Presentation/Plugins/InternalPlugins/` (shared) or `Gum/Plugins/InternalPlugins/` (WPF-only).
 
-| Feature | Plugin Folder |
-|---------|--------------|
-| Element tree view | `TreeView/` |
-| Variables/Properties tab | `VariableGrid/` |
-| State panel | `StatePlugin/` |
-| Behaviors panel | `Behaviors/` |
-| Output panel | `Output/` |
-| Alignment controls | `AlignmentButtons/` |
-| Menu strip | `MenuStripPlugin/` |
-| Undo/History | `Undos/` |
-| Delete dialog | `Delete/` |
+| Feature | Plugin Folder | Where |
+|---------|--------------|-------|
+| Element tree view | `TreeView/` | WPF (phase 60) |
+| Variables/Properties tab | `VariableGrid/` | WPF (phase 70) |
+| State panel | `StatePlugin/` | WPF (phase 60) |
+| Behaviors panel | `Behaviors/` | shared |
+| Output panel | `Output/` | shared |
+| Alignment controls | `AlignmentButtons/` | shared |
+| Menu strip | `MenuStripPlugin/` | WPF renderer |
+| Undo/History | `Undos/` | shared |
+| Delete options | `Delete/` | shared |
+| Errors, Hotkeys, File Watch, Load Recent, Project Properties | per feature | shared |
 
 ## Common Events
 
@@ -128,8 +130,8 @@ new shared tab means one registration in **each** registry. View code-behind mus
 it to the VM (with a test in `Gum.Presentation.Tests`) and bind.
 
 Still WPF-only in `Gum/Plugins/InternalPlugins/`: the tree view and state tree (phase 60), the Variables
-tab (phase 70), the menu strip renderer, Delete (until the neutral delete-options flow), and Project
-Properties (its view is a `DataUiGrid`).
+tab (phase 70), and the menu strip renderer. A WPF view that builds its rows from the view model's
+members (Project Properties' `DataUiGrid`) must hide any view-only member you add to that view model.
 
 ## Writing a plugin that runs under both heads
 

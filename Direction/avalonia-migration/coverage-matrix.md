@@ -36,7 +36,7 @@
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
-| `Tool/HtmlToGum` | WPF + WinForms | menu is `AddMenuEntry` (done); references `Gum.csproj` + WinForms | 80 (TFM flip once it references `Gum.Presentation`) | TFM |
+| `Tool/HtmlToGum` | WPF + WinForms | menu is `AddMenuEntry` (done); references `Gum.csproj` + WinForms; its import options are two WinForms forms | 80, **deferred** (2026-09-10): the forms need a dialog view model plus a view per head before the TFM can flip; see phase-80 doc | TFM |
 | `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | mixes view tests and logic tests | 100 (split), 120 (delete view tests) | TFM |
 
 Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,

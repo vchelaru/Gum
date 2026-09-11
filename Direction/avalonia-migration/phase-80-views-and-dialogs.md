@@ -53,6 +53,64 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   `PerformanceViewModel`, and each head registers a view. Its timer is a `PeriodicUiTimer` over the
   bridged `IDispatcher` (now an `IUiTimer`), owned by the plugin so its interval is its own. The dead
   `Gum/Controls/ColorPickerSwatch` (no consumers since #1467) is deleted.
+- **Project Properties is shared.** The plugin moved to Gum.Presentation; what it used to do to the
+  WPF grid is now view-model state with tests (`IsFontRangesReadOnly`, `AvailableLanguages`,
+  `Reloaded`, `CloseRequested`), which `ProjectPropertiesChangeLogic` ignores as non-project data.
+  The WPF `ProjectPropertiesControl` keeps its `DataUiGrid` and reacts to those; the Avalonia head
+  has a hand-built form (`ProjectPropertiesView`). **Gap, reversible:** in Avalonia the localization
+  file list is read-only and the single-pixel texture is a plain path box; adding/removing files and
+  a Browse button wait for phase 70's file editors rather than copying WpfDataUi's picker logic.
+
+### Inventory: every XAML in scope and its Avalonia twin (2026-09-10)
+
+Paths under `Tool/Gum.Avalonia/` unless noted. "Phase N" means another phase owns it.
+
+| XAML | Avalonia twin, or why there is none |
+|---|---|
+| `Gum/Controls/ColorDisplay` | phase 70: a property-grid displayer (`CompositeMemberRegistry`) |
+| `Gum/Controls/ColorPickerSwatch` | deleted: no consumers since #1467 |
+| `Gum/Controls/CornerRadiusDisplay` | phase 70: a property-grid displayer |
+| `Gum/Controls/GridSnapWarningBar` | phase 50: the warning banner in `Plugins/EditorTab/AvaloniaEditorTabPlugin` |
+| `Gum/Controls/MainPanelControl` | phase 30: `Shell/MainPanelView` |
+| `Gum/Controls/Spinner` | phase 30: `Services/AvaloniaSpinnerFactory` |
+| `Gum/Controls/StateEditingIndicatorBar` | `Controls/StateEditingIndicatorBar` |
+| `Gum/Controls/ThemeSelectionControl` | `Controls/ThemeSelectionView` |
+| `Gum/Controls/TitleFilePathDisplay` | none: the WPF custom title bar; Avalonia keeps the OS title bar showing the path (`Plugins/ShellTitlePlugin`); custom chrome is phase 90 |
+| `Gum/Services/Dialogs/DialogWindow` | phase 30: `Dialogs/DialogWindow` (gained title and auxiliary actions here) |
+| `Gum/Services/Dialogs/{Message,GetUserString,Choice,Plugins}DialogView` | phase 30: `Dialogs/Views/GenericDialogViews` |
+| `Gum/Dialogs/NewProjectDialogView` | `Dialogs/Views/NewProjectDialogView` |
+| `Gum/Dialogs/ExposeColorDialogView` | `Dialogs/Views/ProjectDialogViews` (`ExposeColorDialogView`) |
+| `Gum/Dialogs/ThemingDialogView` | `Dialogs/Views/ThemingDialogView` |
+| `Gum/Views/DisplayReferencesDialogView` | `Dialogs/Views/ProjectDialogViews` (`DisplayReferencesDialogView`) |
+| `Gum/Gui/Windows/DeleteOptionsWindow` | `Dialogs/Views/DeleteOptionsDialogView` over `DeleteOptionsDialogViewModel`; the WPF window stays for CodeOutputPlugin's WPF options (phase 70's area) |
+| `InternalPlugins/AlignmentButtons/{AlignmentPluginControl,AnchorControl,DockControl}` | `Panels/InternalPanelViews` (`AlignmentView`) |
+| `InternalPlugins/Behaviors/BehaviorsControl` | `Panels/InternalPanelViews` (`BehaviorsView`) |
+| `InternalPlugins/Errors/{ErrorDisplay,ErrorListEntry}`, `Errors/Views/ErrorTabHeader` | `Panels/InternalPanelViews` (`ErrorsView` with its row, `ErrorTabHeaderView`) |
+| `InternalPlugins/FileWatchPlugin/FileWatchControl` | `Panels/ToolPanelViews` (`FileWatchView`) |
+| `InternalPlugins/Hotkey/Views/HotkeyView` | `Panels/ToolPanelViews` (`HotkeyView`) |
+| `InternalPlugins/LoadRecentFilesPlugin/Views/{LoadRecentWindow,RecentFileItem}` | `Dialogs/Views/ProjectDialogViews` (`LoadRecentDialogView` with its row) |
+| `InternalPlugins/Output/MainOutputPluginView` | `Panels/ToolPanelViews` (`OutputView`) |
+| `InternalPlugins/ProjectPropertiesWindowPlugin/ProjectPropertiesControl` | `Panels/ProjectPropertiesView` (a form; the WPF view is a `DataUiGrid`) |
+| `InternalPlugins/Undos/UndoDisplay` | `Panels/InternalPanelViews` (`UndosView`) |
+| `InternalPlugins/StatePlugin/Views/StateTreeView`, `TreeView/FlatSearchListBox` | phase 60 |
+| `InternalPlugins/VariableGrid/{MainPropertyGrid,VariableRemoveButton,AddVariableWindow}` | phase 70 |
+| `Gum/Plugins/ImportPlugin/Views/ImportFileView` | `Dialogs/Views/ProjectDialogViews` (`ImportFileDialogView`, all three import dialogs) |
+| `StateAnimationPlugin/Views/MainWindow` | `Plugins/StateAnimation/AnimationsView` |
+| `StateAnimationPlugin/Views/Timeline` (+ code-only `TimelineOverlay`, `InterpolationTrackControl`) | `Plugins/StateAnimation/TimelineView` (`TimelineView`, `TimelineTrack`) |
+| `StateAnimationPlugin/Views/StateView` | `Plugins/StateAnimation/KeyframeDetailView` |
+| `StateAnimationPlugin/Views/{AddAnimationDialogView,AddStateKeyFrameDialogView,SubAnimationSelectionWindow}` | `Dialogs/Views/StateAnimationDialogViews` |
+| `StateAnimationPlugin/Views/TimedStateMarkerDisplay` | deleted: dead code (the Skia surface) |
+| `PerformanceMeasurementPlugin/Views/PerformanceView` | `Panels/PerformanceView`; the WPF view moved into the WPF head (`Gum/Plugins/InternalPlugins/Performance/`) |
+| `ImportFromGumxPlugin/Views/{ImportFromGumxView,StandardDiffDetailsView}`, `CodeOutputPlugin/Views/CodeWindow`, `GumFormsPlugin/Views/AddFormsWindow` | phase 70: property-grid consumers (their VMs are headless; `DialogViewRegistryTests.OwnedElsewhere` names the three dialogs) |
+| `TextureCoordinateSelectionPlugin/Views/MainControl`, `EditorTabPlugin_XNA/Views/EditorControls` | phase 50 (done there) |
+| `Gum/MainWindow`, `Gum/App` | phase 30: `Shell/MainWindow`, `App` |
+
+**Not done in this phase, with reasons:** `Tool/HtmlToGum` stays `net10.0-windows` (its import options
+are two WinForms forms that need a dialog view model and a view per head first; see
+`coverage-matrix.md`). The Avalonia Project Properties form cannot yet add or remove localization
+files or browse for the single-pixel texture (phase 70's file editors). Icons are text glyphs until
+phase 90. The WPF `DeleteOptionsWindow` remains a `Window` until CodeOutputPlugin moves to the
+neutral delete options.
 
 ## Purpose
 
@@ -143,6 +201,6 @@ Blocks phase 100's per-panel parity checklist.
 
 ## Done when
 
-- [ ] Every XAML in the table has an AXAML twin bound to the same VM, or a documented reason it does not exist.
-- [ ] Converters folder has no bridge-only converters left.
-- [ ] Every plugin project that has no canvas is `net10.0`.
+- [x] Every XAML in the table has an AXAML twin bound to the same VM, or a documented reason it does not exist. (See the inventory above; the twins are C# views, per the phase 30 convention.)
+- [x] Converters folder has no bridge-only converters left. (`Tool/Gum.Avalonia/Converters/` holds only type adapters and themed-look converters; the WPF visibility, inverse-bool, null and count converters have no Avalonia twin because `IsVisible` is a bool and `BoolConverters`/`ObjectConverters` cover the rest.)
+- [ ] Every plugin project that has no canvas is `net10.0`. Done: ConvertToJson, EventOutput (phase 40), PerformanceMeasurement (here); State Animation is a net10.0 core plus a WPF head that retires at cutover. Open: CodeOutput, GumForms, ImportFromGumx, SvgPlugin (phase 70's property-grid consumers) and HtmlToGum (deferred, above).

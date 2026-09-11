@@ -7,6 +7,7 @@ using Gum.Plugins.Behaviors;
 using Gum.Plugins.Errors;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.InternalPlugins.Errors.Views;
+using Gum.Plugins.PropertiesWindowPlugin;
 using Gum.Plugins.Undos;
 using PerformanceMeasurementPlugin.ViewModels;
 using PerformanceMeasurementPlugin.Views;
@@ -42,6 +43,7 @@ public class TabViewRegistry
         Register<UndosViewModel>(() => new UndoDisplay());
         Register<AlignmentViewModel>(() => new AlignmentPluginControl());
         Register<BehaviorsViewModel>(() => new BehaviorsControl());
+        Register<ProjectPropertiesViewModel>(() => new Gum.Gui.Controls.ProjectPropertiesControl());
 
         // Plugins in their own projects that ship no views.
         Register<PerformanceViewModel>(() => new PerformanceView());
