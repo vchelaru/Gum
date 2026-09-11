@@ -112,7 +112,7 @@ the four plugin panels.
 
 ## Status (2026-09-10)
 
-Work is on the phase-70 branch, one commit per part.
+Merged into `avalonia-migration-work` as `1cc2d2e8e` (one commit per part on `phase-70-property-grid`).
 
 - **Part 1: neutral model project.** `DataUi.Core` (net10.0, banned-API analyzer) now holds
   `InstanceMember`, `MemberCategory`, the composite and multi-select members, `DataUiGridModel`
