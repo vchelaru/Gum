@@ -1,5 +1,5 @@
 using System;
-using System.Drawing;
+using Microsoft.Xna.Framework.Input;
 using WpfFrameworkElement = System.Windows.FrameworkElement;
 using WpfPoint = System.Windows.Point;
 
@@ -8,8 +8,9 @@ namespace InputLibrary
     /// <summary>
     /// Adapts a WPF <see cref="WpfFrameworkElement"/> to <see cref="IInputHostControl"/>, so
     /// <see cref="Cursor"/> and <see cref="Keyboard"/> can be initialized against a WPF-native
-    /// rendering surface (e.g. a host built on <c>XnaAndWinforms.WpfRenderSurfaceHost</c>) without
-    /// depending on a concrete WPF element type.
+    /// rendering surface (a host built on <c>XnaAndWinforms.WpfGraphicsDeviceControl</c>) without
+    /// depending on a concrete WPF element type. Pointer and key state come from the KNI DX11
+    /// platform's polled input, converted into the element's own device-independent units.
     /// </summary>
     public class WpfInputHostAdapter : IInputHostControl
     {
@@ -44,11 +45,18 @@ namespace InputLibrary
 
         // Requires _element to be connected to a live PresentationSource - see the Focused remark
         // above; same manual-check-only caveat applies here.
-        public Point PointToClient(Point point)
+        public HostPointerState GetPointerState()
         {
-            WpfPoint screenPoint = new WpfPoint(point.X, point.Y);
-            WpfPoint clientPoint = _element.PointFromScreen(screenPoint);
-            return new Point((int)clientPoint.X, (int)clientPoint.Y);
+            MouseState mouseState = Mouse.GetState();
+            WpfPoint clientPoint = _element.PointFromScreen(new WpfPoint(mouseState.X, mouseState.Y));
+            return new HostPointerState(
+                (int)clientPoint.X,
+                (int)clientPoint.Y,
+                mouseState.LeftButton == ButtonState.Pressed,
+                mouseState.RightButton == ButtonState.Pressed,
+                mouseState.MiddleButton == ButtonState.Pressed);
         }
+
+        public KeyboardState GetKeyboardState() => Microsoft.Xna.Framework.Input.Keyboard.GetState();
     }
 }

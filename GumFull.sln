@@ -101,6 +101,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Avalonia", "Tool\Gum.Av
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gum.Avalonia.Tests", "Tests\Gum.Avalonia.Tests\Gum.Avalonia.Tests.csproj", "{035AB83D-9C00-4E3F-8100-18FD31ECEC5B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XnaAndWinforms.Wpf", "XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj", "{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -627,6 +629,18 @@ Global
 		{035AB83D-9C00-4E3F-8100-18FD31ECEC5B}.Release|x64.Build.0 = Release|Any CPU
 		{035AB83D-9C00-4E3F-8100-18FD31ECEC5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{035AB83D-9C00-4E3F-8100-18FD31ECEC5B}.Release|x86.Build.0 = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|x64.Build.0 = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Debug|x86.Build.0 = Debug|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|x64.ActiveCfg = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|x64.Build.0 = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D11DD16-BDA2-4DCE-BFAC-1C14A63633ED}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

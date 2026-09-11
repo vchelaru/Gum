@@ -62,6 +62,7 @@
 		-->
 		<ProjectReference Include="..\..\Runtimes\GumShapes\KniGumShapes.csproj" />
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
 
 		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
 		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />

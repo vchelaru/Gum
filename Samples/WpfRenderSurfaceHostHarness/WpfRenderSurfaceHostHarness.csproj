@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

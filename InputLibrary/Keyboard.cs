@@ -1,16 +1,20 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework.Input;
 
 namespace InputLibrary
 {
+    /// <summary>
+    /// Polled keyboard state for an editor canvas, sampled from the host once per frame through
+    /// <see cref="IInputHostControl.GetKeyboardState"/>. Keys only count while the host has focus.
+    /// </summary>
     public class Keyboard
     {
-        static Keyboard mSelf;
+        static Keyboard? mSelf;
 
         KeyboardState mKeyboardState;
         KeyboardState mLastKeyboardState = new KeyboardState();
 
-        IInputHostControl mControl;
+        IInputHostControl? mControl;
 
         public static Keyboard Self
         {
@@ -26,15 +30,10 @@ namespace InputLibrary
 
         public void Activity()
         {
-
             mLastKeyboardState = mKeyboardState;
-
-            mKeyboardState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
-
+            mKeyboardState = mControl?.GetKeyboardState() ?? new KeyboardState();
         }
 
-
-        
         public void Initialize(IInputHostControl control)
         {
             if (control == null)
@@ -42,12 +41,11 @@ namespace InputLibrary
                 throw new ArgumentException("Control must not be null", "control");
             }
             mControl = control;
-
         }
 
-        public bool KeyPushed(Microsoft.Xna.Framework.Input.Keys key)
+        public bool KeyPushed(Keys key)
         {
-            if (mControl.Focused)
+            if (mControl != null && mControl.Focused)
             {
                 return mKeyboardState.IsKeyDown(key) && !mLastKeyboardState.IsKeyDown(key);
             }
@@ -57,12 +55,13 @@ namespace InputLibrary
             }
         }
 
-        public bool KeyDown(Microsoft.Xna.Framework.Input.Keys key)
+        public bool KeyDown(Keys key)
         {
             if (mControl == null)
             {
                 throw new Exception("The Keyboard must be initialized before calling KeyDown");
             }
+
             if (mControl.Focused)
             {
                 return mKeyboardState.IsKeyDown(key);
@@ -73,5 +72,4 @@ namespace InputLibrary
             }
         }
     }
-
 }

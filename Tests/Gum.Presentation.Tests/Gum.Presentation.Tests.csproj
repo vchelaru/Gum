@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+    <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

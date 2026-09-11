@@ -1,17 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
-		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
-		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<!--
-			WpfInputHostAdapter is the only IInputHostControl implementation, so this project needs WPF
-			but not WinForms.
+			Framework-neutral polled input for the editor canvases: Cursor and Keyboard read the
+			host's pointer and key state through IInputHostControl once per frame. The WPF
+			implementation of that contract lives in XnaAndWinforms.Wpf; the Avalonia one in the
+			Avalonia head.
 		-->
-		<UseWPF>true</UseWPF>
-		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
 
 	</PropertyGroup>
 	<ItemGroup>
@@ -20,13 +19,16 @@
 		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
 	</ItemGroup>
 	<ItemGroup>
 		<!--
 			Cursor implements IGumCursorState so the headless wireframe-editing family (Gum.Presentation,
-			part of #3846) can poll live cursor state without referencing this project directly — a
-			net10.0 project can't reference this net10.0-windows one (NU1201), but the reverse (this
-			net10.0-windows project referencing a plain net10.0 one) is the normal, allowed direction.
+			part of #3846) can poll live cursor state without referencing this project directly.
 		-->
 		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 	</ItemGroup>

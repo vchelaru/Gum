@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	  <TargetFramework>net10.0-windows</TargetFramework>
 
@@ -37,6 +37,7 @@
     <ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\MonoGameGum\KniGum\KniGum.csproj" />
     <ProjectReference Include="..\XnaAndWinforms\XnaAndWinforms.csproj" />
+    <ProjectReference Include="..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

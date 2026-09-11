@@ -1,18 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net10.0-windows</TargetFramework>
-		<!-- This is always complaining even if we put a min version of 7.0, so let's suppress it:-->
-		<NoWarn>$(NoWarn);CA1416</NoWarn>
+		<TargetFramework>net10.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<!--
-			WpfGraphicsDeviceControl / WpfRenderSurfaceHost / WriteableBitmapPixelBufferWriter are the
-			WPF-native render surface every editor canvas (WireframeControl,
-			ImageRegionSelectionControl) draws through. This project hosts XNA/KNI rendering in WPF
-			only - it has no WinForms dependency.
+			The framework-neutral half of the editor canvas host: the shared graphics device and
+			render target (ISharedRenderDeviceHost), the per-frame draw/readback loop
+			(RenderTargetFrameLoop), the reset policy, the frame throttle, and the pixel-copy
+			primitives. Compiles against the KNI framework reference assemblies only, so it runs
+			on whichever platform assembly the executable loads (DX11 under the WPF tool, SDL2/GL
+			under the Avalonia tool). The WPF Image/WriteableBitmap host lives in XnaAndWinforms.Wpf.
 		-->
-		<UseWPF>true</UseWPF>
-		<ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
 		<CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
 		<LangVersion>12.0</LangVersion>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
@@ -30,5 +28,10 @@
 		<EmbeddedResource Include="Content\Font18Arial_0.png" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
 	</ItemGroup>
 </Project>

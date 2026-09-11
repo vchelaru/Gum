@@ -1,13 +1,14 @@
-using System.Drawing;
+using Microsoft.Xna.Framework.Input;
 
 namespace InputLibrary
 {
     /// <summary>
     /// The subset of a rendering host's control surface that <see cref="Cursor"/> and
-    /// <see cref="Keyboard"/> need in order to translate mouse/keyboard state into window-relative
+    /// <see cref="Keyboard"/> need in order to poll pointer and key state in window-relative
     /// coordinates and focus. Lets those classes be initialized against any host - a live WPF
-    /// element (via <see cref="WpfInputHostAdapter"/>) or a test double - rather than one concrete
-    /// UI-framework control type.
+    /// element, an Avalonia control, or a test double - rather than one concrete UI-framework
+    /// control type. Each host samples its own framework's input and reports it in the host's
+    /// client space, so the polling classes never touch a platform input API themselves.
     /// </summary>
     public interface IInputHostControl
     {
@@ -17,12 +18,12 @@ namespace InputLibrary
         bool Focused { get; }
 
         /// <summary>
-        /// The host control's width, in pixels.
+        /// The host control's width, in its own units (device-independent units for WPF and Avalonia).
         /// </summary>
         int Width { get; }
 
         /// <summary>
-        /// The host control's height, in pixels.
+        /// The host control's height, in the same units as <see cref="Width"/>.
         /// </summary>
         int Height { get; }
 
@@ -32,8 +33,14 @@ namespace InputLibrary
         CursorKind Cursor { get; set; }
 
         /// <summary>
-        /// Converts a point in screen coordinates to client (window-relative) coordinates.
+        /// Samples the pointer: its position relative to the host's top-left corner, in the same
+        /// units as <see cref="Width"/>, and the buttons currently held.
         /// </summary>
-        Point PointToClient(Point point);
+        HostPointerState GetPointerState();
+
+        /// <summary>
+        /// Samples the keys currently held, as the host sees them.
+        /// </summary>
+        KeyboardState GetKeyboardState();
     }
 }

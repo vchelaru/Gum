@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
 	  <TargetFramework>net10.0-windows</TargetFramework>
     <OutputType>Library</OutputType>
@@ -30,6 +30,7 @@
     <ProjectReference Include="..\Gum.csproj" />
     <ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
     <ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+    <ProjectReference Include="..\..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
