@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Gum.Avalonia.Canvas;
@@ -24,6 +25,12 @@ public class CanvasHostTests
         RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
+
+    // The shared KNI GL device belongs to the thread that created it, and the head creates it on
+    // the Avalonia UI thread, so device tests run there too instead of on an xunit worker.
+    private static void OnUiThread(Action action) =>
+        HeadlessUnitTestSession.GetOrStartForAssembly(typeof(CanvasHostTests).Assembly)
+            .Dispatch(action, CancellationToken.None).GetAwaiter().GetResult();
 
     private sealed class ClearingClient : IRenderTargetFrameClient
     {
@@ -56,21 +63,24 @@ public class CanvasHostTests
     {
         Skip.IfNot(HasDisplay, "needs a display and a GL driver");
 
-        using GameRenderDeviceHost host = new GameRenderDeviceHost();
-        RenderTargetFrameLoop loop = new RenderTargetFrameLoop(host, new FrameRateThrottle()) { DesiredFramesPerSecond = 0 };
-        ClearingClient client = new ClearingClient(host.GraphicsDevice);
+        OnUiThread(() =>
+        {
+            using GameRenderDeviceHost host = new GameRenderDeviceHost();
+            RenderTargetFrameLoop loop = new RenderTargetFrameLoop(host, new FrameRateThrottle()) { DesiredFramesPerSecond = 0 };
+            ClearingClient client = new ClearingClient(host.GraphicsDevice);
 
-        bool rendered = loop.TryRenderFrame(64, 48, client);
+            bool rendered = loop.TryRenderFrame(64, 48, client);
 
-        rendered.ShouldBeTrue(client.LastError);
-        client.Width.ShouldBe(64);
-        client.Height.ShouldBe(48);
-        client.Pixels.ShouldNotBeNull();
-        // SurfaceFormat.Color reads back as RGBA.
-        client.Pixels[0].ShouldBe((byte)200);
-        client.Pixels[1].ShouldBe((byte)30);
-        client.Pixels[2].ShouldBe((byte)10);
-        client.Pixels[3].ShouldBe((byte)255);
+            rendered.ShouldBeTrue(client.LastError);
+            client.Width.ShouldBe(64);
+            client.Height.ShouldBe(48);
+            client.Pixels.ShouldNotBeNull();
+            // SurfaceFormat.Color reads back as RGBA.
+            client.Pixels[0].ShouldBe((byte)200);
+            client.Pixels[1].ShouldBe((byte)30);
+            client.Pixels[2].ShouldBe((byte)10);
+            client.Pixels[3].ShouldBe((byte)255);
+        });
     }
 
     [SkippableFact]
@@ -78,14 +88,18 @@ public class CanvasHostTests
     {
         Skip.IfNot(HasDisplay, "needs a display and a GL driver");
 
-        using GameRenderDeviceHost first = new GameRenderDeviceHost();
-        using GameRenderDeviceHost second = new GameRenderDeviceHost();
+        OnUiThread(() =>
+        {
+            using GameRenderDeviceHost first = new GameRenderDeviceHost();
+            using GameRenderDeviceHost second = new GameRenderDeviceHost();
 
-        ReferenceEquals(first.GraphicsDevice, second.GraphicsDevice).ShouldBeTrue();
-        first.Services.GetService(typeof(IGraphicsDeviceService)).ShouldNotBeNull();
+            ReferenceEquals(first.GraphicsDevice, second.GraphicsDevice).ShouldBeTrue();
+            first.Services.GetService(typeof(IGraphicsDeviceService)).ShouldNotBeNull();
+        });
     }
 
-    [Fact]
+    // The bitmap needs the Avalonia platform, which the UI thread session provides.
+    [AvaloniaFact]
     public void RenderSurface_CopiesRgbaIntoTheBitmap()
     {
         using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
