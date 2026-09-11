@@ -1,6 +1,9 @@
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Managers;
 using Gum.Wireframe;
 using Gum.GueDeriving;
+using GumRuntime;
 using Microsoft.Xna.Framework.Graphics;
 using Moq;
 using RenderingLibrary.Content;
@@ -934,6 +937,216 @@ public class FontServiceTests : BaseTestClass
 
         capturedCalls.ShouldNotBeEmpty();
         capturedCalls.ShouldAllBe(bmfc => bmfc.FontSize == 24);
+    }
+
+    #endregion
+
+    #region SetGraphicalUiElement / ElementSave Construction (issue #4665)
+
+    // Builds a ScreenSave that stacks `childCount` Container children top-to-bottom, sized to
+    // fit its children - the classic shape where adding each child forces the parent (and thus
+    // every already-placed sibling's stacked position) to re-layout, per the gum-layout skill's
+    // "avoid O(n^2) recalculations" note. Mirrors HotReloadStructuralDiffTests' EnsureStandard/
+    // AddInstance helpers.
+    private static GraphicalUiElement BuildStackedScreen(int childCount)
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+        project.StandardElements.Add(containerStandard);
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Name = "ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            Type = "ChildrenLayout",
+            SetsValue = true
+        });
+        screen.States.Add(screenDefault);
+        project.Screens.Add(screen);
+
+        for (int i = 0; i < childCount; i++)
+        {
+            string name = $"Child{i}";
+            InstanceSave instance = new InstanceSave { Name = name, BaseType = "Container", ParentContainer = screen };
+            screen.Instances.Add(instance);
+
+            screenDefault.Variables.Add(new VariableSave { Name = $"{name}.Width", Value = 50f, Type = "float", SetsValue = true });
+            screenDefault.Variables.Add(new VariableSave { Name = $"{name}.Height", Value = 50f, Type = "float", SetsValue = true });
+        }
+
+        return screen.ToGraphicalUiElement();
+    }
+
+    [Fact]
+    public void ToGraphicalUiElement_ShouldNotScaleLayoutCallsWithChildCount()
+    {
+        // Issue #4665: SetGraphicalUiElement (the runtime path every non-codegen game/Forms
+        // VisualTemplate uses to inflate a component/screen from an ElementSave) adds and sets
+        // up each child one at a time with layout never suspended, so a stacking parent
+        // re-computes its stacked layout - touching every already-placed sibling - once per
+        // child added. That is the O(n^2)-shaped waste GraphicalUiElement.IsAllLayoutSuspended
+        // exists to avoid (see the "Layout Suspension" notes in the gum-layout skill and
+        // Tools/Gum.Presentation/Wireframe/WireframeObjectManager.cs's RefreshAll, which already
+        // wraps its own equivalent tree-build this way). SetGraphicalUiElement should do the same
+        // internally so per-child cost stays flat regardless of how many children are inflated.
+        int before3 = GraphicalUiElement.UpdateLayoutCallCount;
+        BuildStackedScreen(3);
+        int callsFor3 = GraphicalUiElement.UpdateLayoutCallCount - before3;
+
+        int before15 = GraphicalUiElement.UpdateLayoutCallCount;
+        BuildStackedScreen(15);
+        int callsFor15 = GraphicalUiElement.UpdateLayoutCallCount - before15;
+
+        double perChildFor3 = callsFor3 / 3.0;
+        double perChildFor15 = callsFor15 / 15.0;
+
+        // With the whole tree-build batched into a single suspend/resume, per-child cost should
+        // not grow with the number of children (allow some slack for the fixed setup overhead).
+        perChildFor15.ShouldBeLessThanOrEqualTo(perChildFor3 * 1.5,
+            $"per-child layout calls should stay roughly flat as child count grows (3 children: {callsFor3} calls, {perChildFor3:F1}/child; 15 children: {callsFor15} calls, {perChildFor15:F1}/child)");
+    }
+
+    #endregion
+
+    #region Lazy Shadow-Sibling Probe (issue #4665)
+
+    [Fact]
+    public void FontResolution_ShouldNotProbeForShadow_WhenHasDropshadowIsFalse()
+    {
+        // Issue #4665: BitmapFont's shadow-sibling probe used to run unconditionally on every font
+        // load, even for fonts nobody ever configured with a dropshadow. Font resolution should now
+        // only check for a shadow when the resolving Text actually wants one.
+        TextRuntime textRuntime = new();
+
+        int shadowProbeCount = 0;
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbeCount++;
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            // "Arial"/18 is TextRuntime's own default, resolved via the embedded resource (or the
+            // cache LoaderManager already seeded from it) - no disk I/O for the primary font, so any
+            // probe counted here can only be the shadow-sibling check.
+            textRuntime.Font = "Arial";
+            textRuntime.FontSize = 18;
+
+            shadowProbeCount.ShouldBe(0, "no dropshadow was requested, so the shadow-sibling probe should never fire");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    [Fact]
+    public void FontResolution_ShouldProbeForShadow_WhenHasDropshadowIsTrue()
+    {
+        // Companion to the above: resolving a font that isn't the embedded default goes through
+        // CustomSetPropertyOnRenderable.GetOrCreateBakedFont's disk-load path, which now decides
+        // whether to check for a "-shadow.fnt" sibling based on TextRuntime.HasDropshadow. A
+        // zero-page .fnt keeps this test out of MonoGame texture loading (no real GraphicsDevice is
+        // set up by GumService.InitializeForTesting).
+        TextRuntime textRuntime = new();
+        textRuntime.HasDropshadow = true;
+
+        const string zeroPageFntContent =
+            "info face=\"GumFontResolutionTest4665\" size=-14 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=16 base=12 scaleW=1 scaleH=1 pages=0 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "chars count=0\n";
+
+        int shadowProbeCount = 0;
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbeCount++;
+                    throw new System.IO.FileNotFoundException();
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(zeroPageFntContent));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            // A single property change - unsuspended, each font-affecting property change triggers
+            // its own resolution (see the "Layout Suspension / Font Batching" region above), so
+            // setting only one keeps this test's probe count meaningful.
+            textRuntime.Font = "GumFontResolutionTest4665";
+
+            shadowProbeCount.ShouldBe(1, "HasDropshadow is true, so the shadow-sibling probe should fire once");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    [Fact]
+    public void FontResolution_ShouldAttachShadowFont_WhenHasDropshadowIsTrueAndSiblingExists()
+    {
+        // Positive companion to the above: not just "was it checked" but "does asking for a
+        // dropshadow actually still work end-to-end" - a genuinely-present "-shadow.fnt" sibling
+        // must end up attached to the Text this TextRuntime wraps.
+        TextRuntime textRuntime = new();
+        textRuntime.HasDropshadow = true;
+
+        const string zeroPageFntContent =
+            "info face=\"GumFontResolutionTest4665Positive\" size=-14 bold=0 italic=0 charset=\"\" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0\n" +
+            "common lineHeight=16 base=12 scaleW=1 scaleH=1 pages=0 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4\n" +
+            "chars count=0\n";
+
+        var previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // As in BitmapFontTests: the shadow font's own constructor also probes for ITS OWN
+                // "-shadow.fnt" sibling. Reject only that doubly-nested case so the fixture doesn't
+                // recurse forever, while every real (single) request - primary or shadow - succeeds.
+                if (path.EndsWith("-shadow-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new System.IO.FileNotFoundException();
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(zeroPageFntContent));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            textRuntime.Font = "GumFontResolutionTest4665Positive";
+
+            Text underlyingText = (Text)textRuntime.RenderableComponent;
+            underlyingText.BitmapFont.ShouldNotBeNull();
+            underlyingText.BitmapFont.ShadowFont.ShouldNotBeNull(
+                "HasDropshadow was true and a real shadow sibling existed - it should be attached");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
     }
 
     #endregion

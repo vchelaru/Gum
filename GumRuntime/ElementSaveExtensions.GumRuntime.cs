@@ -1419,6 +1419,21 @@ namespace GumRuntime
                 throw new ArgumentException($"The element {elementSave} must have a DefaultState set.");
             }
 #endif
+            // Issue #4665: this method recurses into itself for every child instance (via
+            // CreateChildrenRecursively below), and building a tree of any size sets every
+            // variable on every element - including font properties, and anything a stacking/
+            // auto-sized parent must re-layout for - one at a time, fully unsuspended. Wrap the
+            // whole build in the same suspend/resume WireframeObjectManager.RefreshAll already
+            // uses when the tool builds a GraphicalUiElement tree, so a whole tree's worth of
+            // font realization and layout recalculation batches into a single pass instead of
+            // once per property/child. Only the outermost call (not already suspended) toggles
+            // the flag and flushes, matching ApplyState's own reentrancy-safety.
+            bool wasSuspended = GraphicalUiElement.IsAllLayoutSuspended;
+            if (!wasSuspended)
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = true;
+            }
+
             // We need to set categories and states first since those are used below;
             toReturn.AddStatesAndCategoriesRecursivelyToGue(elementSave);
 
@@ -1458,6 +1473,13 @@ namespace GumRuntime
             // inside AfterFullCreation, but a parent's SetInitialState can override that category
             // state afterward. Walk the subtree so Forms controls can re-assert their state.
             NotifyFormsControlsOfInitialStateApplied(toReturn);
+
+            if (!wasSuspended)
+            {
+                GraphicalUiElement.IsAllLayoutSuspended = false;
+                toReturn.UpdateFontRecursive();
+                toReturn.UpdateLayout();
+            }
         }
 
         /// <summary>

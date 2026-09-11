@@ -21,6 +21,12 @@ The general shape of the tradeoff is what matters; the actual file sizes depend 
 
 The reasoning is that **bandwidth dominates page-load perception**. A small `.ttf` download followed by a short generation step feels faster than a much larger atlas download, even when the total CPU+IO time is similar. The player sees something on screen sooner.
 
+## Loose Projects and Per-File Round Trips
+
+On a streaming-only platform (Blazor WASM, and Android and iOS), a loose `.gumx`/`.gumj` project turns every file check into a network round trip instead of a local disk read, regardless of which font strategy you use. This includes each `.fnt`/`.png` load, plus the sibling `-shadow.fnt` load Gum makes for a font configured with a drop shadow. A slow or failing round trip stalls the frame it happens on, so a screen that creates several new font sizes at once can visibly hitch even when the files involved are small.
+
+Pack the project into a `.gumpkg` bundle for these platforms. Gum downloads the bundle once and serves every element, texture, and font from an in-memory index afterward, so file checks no longer touch the network. The bundle is also smaller to download than the same files loose, since packing compresses it. What you give up is [hot reload](../debugging/hot-reload.md), which needs loose files, so bundling belongs in your release build rather than day-to-day development. See [Loading from a `.gumpkg` Bundle](file-loading.md#loading-from-a-gumpkg-bundle) and the [pack](../../cli/pack.md) command reference.
+
 ## What Doesn't Exist Yet
 
 * **Web disk cache.** Phase 4 of the font roadmap ([#2696](https://github.com/vchelaru/Gum/issues/2696)) adds on-disk caching for generated atlases on desktop and mobile. Web is explicitly **deferred** in v1 — every browser session re-downloads the `.ttf` and re-generates atlases. Browser HTTP caching of the `.ttf` does help across sessions, but the atlas regeneration cost happens every time.

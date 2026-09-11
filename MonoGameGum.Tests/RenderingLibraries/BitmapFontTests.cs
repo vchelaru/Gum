@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToolsUtilities;
 using Xunit;
 
 namespace MonoGameGum.Tests.RenderingLibraries;
@@ -141,6 +142,100 @@ char id=37   x=161   y=0     width=22    height=20    xoffset=1     yoffset=6   
     public void GetShadowSiblingFntPath_ReturnsNull_ForNonFntPath(string fontFile)
     {
         BitmapFont.GetShadowSiblingFntPath(fontFile).ShouldBeNull();
+    }
+
+    // A minimal .fnt with zero pages, so the constructor's ReloadTextures step has nothing to load -
+    // these tests exercise only the shadow-sibling probe, not MonoGame texture loading (which needs
+    // a real GraphicsDevice this test project doesn't set up - see GumService.InitializeForTesting).
+    const string noPagesBMFontFileData =
+@"info face=""Test"" size=-14 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=16 base=12 scaleW=1 scaleH=1 pages=0 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+chars count=0
+";
+
+    [Fact]
+    public void Constructor_ShouldNotProbeForShadowSibling_WhenCheckForShadowSiblingIsFalse()
+    {
+        // Issue #4665: the shadow-sibling probe used to run unconditionally in the constructor, on
+        // every font load. checkForShadowSibling makes it opt-in - a caller that already knows the
+        // font was never configured with a dropshadow (e.g. CustomSetPropertyOnRenderable, from
+        // TextRuntime.HasDropshadow) can skip the probe entirely.
+        bool shadowProbed = false;
+        Func<string, System.IO.Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbed = true;
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(Encoding.UTF8.GetBytes(noPagesBMFontFileData));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            BitmapFont font = new BitmapFont("NoShadowCheck.fnt", checkForShadowSibling: false);
+
+            shadowProbed.ShouldBeFalse();
+            font.ShadowFont.ShouldBeNull();
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
+    }
+
+    [Fact]
+    public void Constructor_ShouldAttachShadowFont_WhenCheckForShadowSiblingIsTrueAndSiblingExists()
+    {
+        // Companion to the above: when a caller DOES want the check (the default, and what every
+        // other existing caller of the single-argument constructor still gets), it must still run -
+        // and pins the actual positive outcome (issue #4665's "can you still ask for a shadow font"
+        // question): a genuinely-present "-shadow.fnt" sibling must end up attached as ShadowFont,
+        // not just probed-for.
+        bool shadowProbed = false;
+        Func<string, System.IO.Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+        try
+        {
+            FileManager.CustomGetStreamFromFile = path =>
+            {
+                // The resolved shadow font's own constructor also checks for a "-shadow.fnt" sibling
+                // of ITS OWN path (GetShadowSiblingFntPath doesn't special-case this - in practice no
+                // such doubly-nested file is ever generated, so FileExists naturally returns false on
+                // a real disk). Simulate that here so the fixture doesn't recurse forever.
+                if (path.EndsWith("-shadow-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new System.IO.FileNotFoundException();
+                }
+                // EndsWith (not Contains) - the absolute path is rooted under this test run's working
+                // directory, which can itself legitimately contain the substring "-shadow" (e.g. a
+                // worktree folder name), so only the actual "-shadow.fnt" suffix counts as a probe.
+                if (path.EndsWith("-shadow.fnt", StringComparison.OrdinalIgnoreCase))
+                {
+                    shadowProbed = true;
+                }
+                if (path.EndsWith(".fnt"))
+                {
+                    return new System.IO.MemoryStream(Encoding.UTF8.GetBytes(noPagesBMFontFileData));
+                }
+                throw new System.IO.FileNotFoundException();
+            };
+
+            BitmapFont font = new BitmapFont("ShouldCheckShadow.fnt");
+
+            shadowProbed.ShouldBeTrue();
+            font.ShadowFont.ShouldNotBeNull("a real '-shadow.fnt' sibling was present and should have been attached");
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+        }
     }
 
     [Fact]

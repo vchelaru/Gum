@@ -2335,6 +2335,20 @@ public partial class CustomSetPropertyOnRenderable
             return null;
         }
 
+        // Issue #4665: BitmapFont's "-shadow.fnt" sibling probe is opt-in (see
+        // BitmapFont.EnsureShadowChecked doc / the checkForShadowSibling constructor parameter) so it
+        // never runs for a font nobody configured with a dropshadow. Safe to key purely off
+        // HasDropshadow here (rather than deferring): GetFontCacheFileName already bakes dropshadow
+        // into fullFileName (a "_ds{blur}" suffix), so a dropshadow and non-dropshadow request for the
+        // same base font are never the same cache entry/BitmapFont instance to begin with.
+#if FRB
+        // FRB doesn't compile TextRuntime (GueDeriving), so there is no HasDropshadow to read here --
+        // textRuntime is the bare GraphicalUiElement param above.
+        bool wantsDropshadow = false;
+#else
+        bool wantsDropshadow = textRuntime.HasDropshadow;
+#endif
+
         font = loaderManager.GetDisposable(fullFileName) as BitmapFont;
 
         // Attempt to load from Embedded Resource
@@ -2392,7 +2406,7 @@ public partial class CustomSetPropertyOnRenderable
                 try
                 {
                     // this could be running in browser where we don't have File.Exists, so JUST DO IT
-                    font = new BitmapFont(fullFileName);
+                    font = new BitmapFont(fullFileName, checkForShadowSibling: wantsDropshadow);
 
                     loaderManager.AddDisposable(fullFileName, font);
                 }
@@ -2413,7 +2427,7 @@ public partial class CustomSetPropertyOnRenderable
 
                 try
                 {
-                    font = new BitmapFont(fullFileName);
+                    font = new BitmapFont(fullFileName, checkForShadowSibling: wantsDropshadow);
                     loaderManager.AddDisposable(fullFileName, font);
                 }
                 catch (System.Text.DecoderFallbackException exception)
