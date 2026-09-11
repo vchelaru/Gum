@@ -66,6 +66,8 @@
 		<!-- The editor tab's neutral core (canvas, editors, rulers); this head adds the Avalonia canvas control and layout. -->
 		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
+		<!-- The Animations tab's neutral core; this head adds the Avalonia view (Plugins/StateAnimation). -->
+		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

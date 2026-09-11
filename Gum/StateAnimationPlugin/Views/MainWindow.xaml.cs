@@ -1,4 +1,5 @@
 using Gum;
+using Gum.Input;
 using Gum.Extensions;
 using Gum.Managers;
 using Gum.ViewModels;
@@ -40,7 +41,7 @@ namespace StateAnimationPlugin.Views
 
         #endregion
 
-        private readonly IHotkeyManager _hotkeyManager;
+        private readonly AnimationTabKeyHandler _keyHandler;
         private ElementAnimationsViewModel? _subscribedViewModel;
 
         public event EventHandler? AddStateKeyframeClicked;
@@ -48,12 +49,12 @@ namespace StateAnimationPlugin.Views
 
         public event Action? AnimationColumnsResized;
 
-        public MainWindow()
+        public MainWindow(AnimationTabKeyHandler keyHandler)
         {
             InitializeComponent();
             InitializeTimer();
 
-            _hotkeyManager = Locator.GetRequiredService<IHotkeyManager>();
+            _keyHandler = keyHandler;
 
             DataContextChanged += HandleDataContextChanged;
         }
@@ -152,60 +153,17 @@ namespace StateAnimationPlugin.Views
 
         private void HandleAnimationListKeyPressed(object? sender, KeyEventArgs e)
         {
-            if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderUp.IsPressed(e))
-            {
-                if (ViewModel.MoveSelectedAnimationUp())
-                {
-                    e.Handled = true;
-                }
-            }
-            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.ReorderDown.IsPressed(e))
-            {
-                if (ViewModel.MoveSelectedAnimationDown())
-                {
-                    e.Handled = true;
-                }
-            }
-            else if (ViewModel.SelectedAnimation != null && _hotkeyManager.Delete.IsPressed(e))
+            if (ViewModel != null && _keyHandler.HandleAnimationListKey(e.ToGumKeyEventArgs(), ViewModel))
             {
                 e.Handled = true;
-                ViewModel.DeleteSelectedAnimation();
-            }
-            else if (_hotkeyManager.Copy.IsPressed(e))
-            {
-                var objectToCopy = ViewModel.SelectedAnimation;
-                if (objectToCopy != null)
-                {
-                    AnimationCopyPasteManager.Copy(objectToCopy);
-                }
-            }
-            else if (_hotkeyManager.Paste.IsPressed(e))
-            {
-                AnimationCopyPasteManager.Paste(ViewModel);
             }
         }
 
-
         private void HandleAnimationKeyframeListBoxKey(object? sender, KeyEventArgs e)
         {
-            if (this.ViewModel.SelectedAnimation != null && this.ViewModel.SelectedAnimation.SelectedKeyframe != null)
+            if (ViewModel != null && _keyHandler.HandleKeyframeListKey(e.ToGumKeyEventArgs(), ViewModel) is { } pasted)
             {
-                if (_hotkeyManager.Delete.IsPressed(e))
-                {
-                    ViewModel.DeleteSelectedKeyframe();
-                }
-                else if (_hotkeyManager.Copy.IsPressed(e))
-                {
-                    ViewModel.CopySelectedKeyframe();
-                }
-                else if (_hotkeyManager.Paste.IsPressed(e))
-                {
-                    var source = ViewModel.PasteKeyframe();
-                    if (source != null)
-                    {
-                        AnimationKeyframeAdded?.Invoke(source);
-                    }
-                }
+                AnimationKeyframeAdded?.Invoke(pasted);
             }
         }
 

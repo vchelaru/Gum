@@ -1,4 +1,5 @@
 using System;
+using Gum.Avalonia.Shell;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -236,44 +237,11 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         _contextMenu.Items.Clear();
         foreach (ContextMenuItemViewModel item in items)
         {
-            _contextMenu.Items.Add(ToMenuItem(item));
+            _contextMenu.Items.Add(ContextMenuFactory.ToMenuItem(item));
         }
         _contextMenu.Open(_canvasControl);
     }
 
-    private static Control ToMenuItem(ContextMenuItemViewModel item)
-    {
-        if (item.IsSeparator)
-        {
-            return new Separator();
-        }
-        MenuItem menuItem = new MenuItem { Header = item.Text, IsEnabled = item.IsEnabled };
-        if (item.Shortcut != null)
-        {
-            menuItem.InputGesture = TryParseGesture(item.Shortcut);
-        }
-        if (item.Action != null)
-        {
-            menuItem.Click += (_, _) => item.Action();
-        }
-        foreach (ContextMenuItemViewModel child in item.Children)
-        {
-            menuItem.Items.Add(ToMenuItem(child));
-        }
-        return menuItem;
-    }
-
-    private static KeyGesture? TryParseGesture(string shortcut)
-    {
-        try
-        {
-            return KeyGesture.Parse(shortcut);
-        }
-        catch (ArgumentException)
-        {
-            return null;
-        }
-    }
 
     // Drag and drop glue: files from the OS, and a Standards-palette chip by its data format. Tree
     // node drags arrive with the Avalonia tree in phase 60.

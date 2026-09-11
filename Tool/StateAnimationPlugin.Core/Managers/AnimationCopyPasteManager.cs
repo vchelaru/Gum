@@ -1,4 +1,4 @@
-﻿using Gum.Mvvm;
+using Gum.Mvvm;
 using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -26,7 +26,7 @@ namespace StateAnimationPlugin.Managers
 
         }
 
-        internal static void Paste(ElementAnimationsViewModel mainViewModel)
+        internal static void Paste(ElementAnimationsViewModel mainViewModel, IDialogService dialogService)
         {
             if(CopiedData.CopiedAnimation != null)
             {
@@ -34,7 +34,7 @@ namespace StateAnimationPlugin.Managers
 
                 if(!string.IsNullOrEmpty(whyCantPaste))
                 {
-                    Locator.GetRequiredService<IDialogService>().ShowMessage(whyCantPaste);
+                    dialogService.ShowMessage(whyCantPaste);
                 }
                 else
                 {

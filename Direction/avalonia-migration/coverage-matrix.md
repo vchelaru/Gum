@@ -27,7 +27,7 @@
 | `FlatRedBall.SpecializedXnaControls` | WPF | `ImageRegionSelectionControl`, the second canvas | 50 | TFM |
 | `Tool/EditorTabPlugin_XNA` | WPF + WinForms | wireframe canvas view + `nkast.Kni.Platform.WinForms.DX11` | 10 (backend), 50 (view) | TFM |
 | `Gum/TextureCoordinateSelectionPlugin` | WPF + WinForms | second canvas view | 50 | TFM |
-| `Gum/StateAnimationPlugin` | WPF + WinForms, win10 SDK for `SkiaSharp.Views.WPF` | 7 views + Skia-in-WPF preview | 80 | TFM |
+| `Gum/StateAnimationPlugin` | WPF + WinForms (win10 SDK pin **removed**, phase 80) | the WPF head only: views over `Tool/StateAnimationPlugin.Core` (net10.0), whose Avalonia twin is in `Tool/Gum.Avalonia/Plugins/StateAnimation` | 120 (WPF head deleted) | TFM |
 | `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
@@ -54,7 +54,7 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
 | `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 | TFM |
 | `SharpVectors` | `Gum.csproj` | SVG in WPF views | 90 | TFM |
-| `SkiaSharp.Views.WPF` | `StateAnimationPlugin` | Skia surface inside WPF (the reason for the win10 SDK TFM) | 80 | TFM |
+| `SkiaSharp.Views.WPF` | **done** (phase 80) | the only user was the dead `TimedStateMarkerDisplay`; deleted with the package | 80 | TFM |
 | `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | `Gum.csproj` | vestigial utility types in `Dialog.cs` | 90 (delete) | TFM |
 | `System.Management` | `Gum.csproj` | **no usage found** — dead reference | 90 (delete, boyscout) | TFM |
 | `Microsoft.AppCenter.Analytics/.Crashes` | `Gum.csproj` | telemetry + crash reporting; service retired upstream | 90 (owner decision) | TFM |

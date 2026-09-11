@@ -9,10 +9,17 @@ State-based animation authoring in the **editor**: timeline animations that inte
 between named **States** over time. NOT the same as runtime AnimationChains (see Landmines).
 
 ## Where it lives
-- Whole feature is a MEF plugin under `Gum/StateAnimationPlugin/`; entry
-  `MainStateAnimationPlugin.cs`. Tab is hidden until View ▸ View Animations.
-- View `Views/MainWindow.xaml(.cs)`; VMs `ElementAnimationsViewModel` →
-  `AnimationViewModel` → `AnimatedKeyframeViewModel`.
+- Split like the editor tab (phase 80 of the Avalonia migration): the neutral
+  `Tool/StateAnimationPlugin.Core` (net10.0) holds `StateAnimationPluginBase` (all event wiring,
+  menu, tab, undo, delete option), the load/save and settings managers, the shared list hotkeys
+  (`AnimationTabKeyHandler`), and the timeline math (`Timeline/TimelineLayout`,
+  `InterpolationCurve`). Each head derives the exported plugin: WPF `MainStateAnimationPlugin`
+  (`Gum/StateAnimationPlugin/`, views `Views/MainWindow.xaml`, `Timeline.xaml`, `StateView.xaml`)
+  and Avalonia `AvaloniaStateAnimationPlugin` (`Tool/Gum.Avalonia/Plugins/StateAnimation/`, whose
+  `TimelineView` draws natively in `Render`). A behavior change to the tab belongs in the core, not
+  in either view. Tab is hidden until View ▸ View Animations.
+- VMs (in Gum.Presentation): `ElementAnimationsViewModel` → `AnimationViewModel` →
+  `AnimatedKeyframeViewModel`; the business logic is `AnimationTabController`.
 
 ## Data model & serialization
 - Persisted as a **per-element `.ganx` sidecar**: `<ElementName>Animations.ganx` next to

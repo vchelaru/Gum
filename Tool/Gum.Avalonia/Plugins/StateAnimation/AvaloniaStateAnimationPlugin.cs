@@ -1,5 +1,7 @@
+using System.ComponentModel.Composition;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
+using Gum.Avalonia.Services;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
@@ -8,25 +10,25 @@ using Gum.Services;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
+using StateAnimationPlugin;
 using StateAnimationPlugin.Models;
 using StateAnimationPlugin.ViewModels;
-using System.ComponentModel.Composition;
-using System.Windows;
 
-namespace StateAnimationPlugin;
+namespace Gum.Avalonia.Plugins.StateAnimation;
 
 /// <summary>
-/// The WPF head's Animations tab: <see cref="StateAnimationPluginBase"/> (all of the tab's logic) with
-/// the WPF view (<see cref="Views.MainWindow"/>) and a WPF dispatcher timer. The Avalonia head's twin
-/// is <c>AvaloniaStateAnimationPlugin</c>.
+/// The Avalonia head's Animations tab: <see cref="StateAnimationPluginBase"/> (all of the tab's logic)
+/// with <see cref="AnimationsView"/> and a dispatcher timer. Twin of the WPF head's
+/// <c>MainStateAnimationPlugin</c>.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainStateAnimationPlugin : StateAnimationPluginBase
+public class AvaloniaStateAnimationPlugin : StateAnimationPluginBase
 {
-    private Views.MainWindow? _mainWindow;
+    private AnimationsView? _view;
 
+    /// <summary>Creates the plugin over the services the host bridges.</summary>
     [ImportingConstructor]
-    public MainStateAnimationPlugin(
+    public AvaloniaStateAnimationPlugin(
         ISelectedState selectedState,
         INameVerifier nameVerifier,
         IMessenger messenger,
@@ -47,27 +49,23 @@ public class MainStateAnimationPlugin : StateAnimationPluginBase
     /// <inheritdoc/>
     protected override object CreateAnimationTabContent(AnimationPluginSettings settings)
     {
-        Views.MainWindow mainWindow = new Views.MainWindow(KeyHandler)
-        {
-            FirstRowWidth = new GridLength((double)settings.FirstToSecondColumnRatio, GridUnitType.Star),
-            SecondRowWidth = new GridLength(1, GridUnitType.Star),
-        };
-        mainWindow.AddStateKeyframeClicked += (_, _) => AddStateKeyframe();
-        mainWindow.AnimationKeyframeAdded += AddPastedKeyframe;
-        mainWindow.AnimationColumnsResized += () => SaveColumnRatio(mainWindow.FirstRowWidth.Value, mainWindow.SecondRowWidth.Value);
-        _mainWindow = mainWindow;
-        return mainWindow;
+        AnimationsView view = new AnimationsView(KeyHandler, (double)settings.FirstToSecondColumnRatio);
+        view.AddStateKeyframeRequested += AddStateKeyframe;
+        view.KeyframePasted += AddPastedKeyframe;
+        view.ColumnsResized += SaveColumnRatio;
+        _view = view;
+        return view;
     }
 
     /// <inheritdoc/>
     protected override void ShowViewModel(ElementAnimationsViewModel? viewModel)
     {
-        if (_mainWindow != null)
+        if (_view != null)
         {
-            _mainWindow.DataContext = viewModel;
+            _view.DataContext = viewModel;
         }
     }
 
     /// <inheritdoc/>
-    protected override IUiTimer CreateUiTimer() => new DispatcherUiTimer();
+    protected override IUiTimer CreateUiTimer() => new AvaloniaUiTimer();
 }

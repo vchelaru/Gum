@@ -37,6 +37,18 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   still adds WPF controls through `WpfPluginBase`'s pair. `DeleteObjectPlugin` moved to
   Gum.Presentation on the neutral events; State Animation switched too and no longer needs
   `WpfPluginBase`.
+- **State Animation is a neutral core plus two heads**, like the editor tab.
+  `Tool/StateAnimationPlugin.Core` (net10.0) holds `StateAnimationPluginBase`, the managers, the
+  list hotkeys (`AnimationTabKeyHandler`, extracted from the WPF code-behind) and the timeline math
+  (`TimelineLayout`, `InterpolationCurve`, extracted from the WPF timeline's code-behind and
+  converters). The WPF plugin keeps its views and derives `MainStateAnimationPlugin`; the Avalonia
+  head adds `AvaloniaStateAnimationPlugin` with `AnimationsView`, `TimelineView` and
+  `KeyframeDetailView`. **The Skia-in-WPF surface was dead code** (`TimedStateMarkerDisplay`, only
+  referenced from a commented-out line), so it is deleted with `SkiaSharp.Views.WPF` and the win10
+  SDK TFM. The "native Avalonia draw" is a plain `Render` override over the shared geometry, not an
+  `ICustomDrawOperation` Skia lease: nothing here needs raw Skia. Also fixed: the plugin built
+  `DuplicateService` and `ElementDeleteService` in its constructor with `_dialogService`, which MEF
+  only sets after construction.
 
 ## Purpose
 

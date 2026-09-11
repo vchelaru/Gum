@@ -113,6 +113,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KniGumShapes", "Runtimes\Gu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextureCoordinatePlugin.Core", "Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj", "{C534269B-BDDA-4B73-9DA6-F9920DA8639D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StateAnimationPlugin.Core", "Tool\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj", "{02FB8698-3713-4637-8007-289D74A88376}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -687,6 +689,18 @@ Global
 		{C534269B-BDDA-4B73-9DA6-F9920DA8639D}.Release|x64.Build.0 = Release|Any CPU
 		{C534269B-BDDA-4B73-9DA6-F9920DA8639D}.Release|x86.ActiveCfg = Release|Any CPU
 		{C534269B-BDDA-4B73-9DA6-F9920DA8639D}.Release|x86.Build.0 = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|x64.Build.0 = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Debug|x86.Build.0 = Debug|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|x64.ActiveCfg = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|x64.Build.0 = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|x86.ActiveCfg = Release|Any CPU
+		{02FB8698-3713-4637-8007-289D74A88376}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -738,6 +752,7 @@ Global
 		{F8995C77-B444-4EA1-AD31-CB5D8A377B41} = {BB4FD3E1-BF37-801A-7591-DC4DC6E3BB2D}
 		{2385A2A5-DC2D-41B6-A1D4-1B29E6DC14BC} = {F8995C77-B444-4EA1-AD31-CB5D8A377B41}
 		{C534269B-BDDA-4B73-9DA6-F9920DA8639D} = {C2B7AC55-755F-98EC-7131-AA75D4EC5C29}
+		{02FB8698-3713-4637-8007-289D74A88376} = {C2B7AC55-755F-98EC-7131-AA75D4EC5C29}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {791B2E2F-58CB-4FD2-8480-695E8DE0CCE2}
