@@ -64,7 +64,8 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         _collapseAllButton = ToolButton(FluentIcons.Common.Icon.ArrowCollapseAll, "Collapse all nodes in the tree", () => CollapseAllRequested?.Invoke());
         _collapseToElementButton = ToolButton(FluentIcons.Common.Icon.TextBulletListTree, "Collapse to element level (preserves folder expansion state)",
             () => CollapseToElementLevelRequested?.Invoke());
-        StackPanel buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 0, 0, 4) };
+        // The WPF panel's rows: 24px buttons under a 4px gap, 6px above the search box.
+        StackPanel buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 4, 0, 6) };
         buttons.Children.Add(_collapseAllButton);
         buttons.Children.Add(_collapseToElementButton);
 
@@ -419,6 +420,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         {
             Content = GumFluentIcons.Create(icon, 16),
             Padding = new Thickness(4, 2),
+            Height = 24,
         };
         button.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(button, toolTip);

@@ -115,6 +115,10 @@ public static class FrbThemeResources
         resources["MenuFlyoutPresenterBorderThemeThickness"] = new Thickness(1);
         resources["MenuFlyoutPresenterThemePadding"] = new Thickness(0);
         resources["MenuFlyoutThemeMinHeight"] = 0d;
+        // The WPF SubmenuItemTemplate: a 16px icon column with 6px margins, and the shortcut text
+        // 5px after the header and 10px before the edge (Fluent puts 24px before the shortcut).
+        resources["MenuIconPresenterMargin"] = new Thickness(6, 0, 6, 0);
+        resources["MenuInputGestureTextMargin"] = new Thickness(5, 0, 10, 0);
         resources["ComboBoxDropdownBorderPadding"] = new Thickness(4);
         resources["TextControlThemeMinHeight"] = 22d;
         resources["TextControlThemePadding"] = new Thickness(4, 1, 4, 1);

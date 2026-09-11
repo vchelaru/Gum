@@ -1,7 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
@@ -21,7 +23,7 @@ public class ChromeStylesTests
     [AvaloniaFact]
     public void MenuItems_UseTheBaseFont_OnCompactRows_InsideAPrimaryOutline()
     {
-        MenuItem child = new MenuItem { Header = "Child" };
+        MenuItem child = new MenuItem { Header = "Child", InputGesture = new KeyGesture(Key.S, KeyModifiers.Control) };
         MenuItem top = new MenuItem { Header = "File" };
         top.Items.Add(child);
         Menu menu = new Menu();
@@ -39,6 +41,12 @@ public class ChromeStylesTests
         Border frame = (Border)popup.Child!;
         frame.BorderThickness.ShouldBe(new Thickness(1));
         frame.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
+        // The WPF SubmenuItemTemplate: headers 28px in behind a reserved icon column, shortcuts
+        // 5px after the header and 10px before the edge.
+        ContentPresenter header = child.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter");
+        header.Bounds.X.ShouldBe(28);
+        TextBlock gesture = child.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText");
+        gesture.Margin.ShouldBe(new Thickness(5, 0, 10, 0));
         window.Close();
     }
 

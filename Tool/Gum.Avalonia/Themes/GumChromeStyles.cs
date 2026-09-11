@@ -255,6 +255,17 @@ public static class GumChromeStyles
         {
             Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 3)) },
         },
+        // WPF's SubmenuItemTemplate keeps its 16px icon column whether or not the item has an icon,
+        // so every header starts 28px in; Fluent collapses the presenter when there is no icon.
+        new Style(selector => selector.OfType<MenuItem>().Not(item => item.Class(":toplevel")).Template().Is<Control>().Name("PART_IconPresenter"))
+        {
+            Setters =
+            {
+                new Setter(Visual.IsVisibleProperty, true),
+                new Setter(Layoutable.WidthProperty, 16d),
+                new Setter(Layoutable.HeightProperty, 16d),
+            },
+        },
         MenuItemRoot(new[] { ":selected" }, Resource("Frb.Brushes.Primary.Transparent"), Brushes.Transparent, new Thickness(0)),
         MenuItemRoot(new[] { ":toplevel", ":selected" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent, new Thickness(0)),
         MenuItemRoot(new[] { ":toplevel", ":open" }, Resource("Frb.Surface01"), Resource("Frb.Brushes.Primary"), new Thickness(1, 1, 1, 0)),
