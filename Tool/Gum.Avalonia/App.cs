@@ -12,8 +12,11 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.CommandLine;
+using Gum.DataTypes;
 using Gum.Diagnostics;
+using Gum.Managers;
 using Gum.Startup;
+using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Avalonia;
@@ -80,6 +83,7 @@ public sealed class App : Application
         {
             await new GumStartupSequence(_services, _services.GetRequiredService<AvaloniaHeadStartup>()).RunAsync();
             StartupTiming.Mark("InitializeGum complete");
+            ApplyStartupSelection();
             if (_services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
                 desktop.Shutdown();
@@ -88,6 +92,28 @@ public sealed class App : Application
         catch (Exception exception)
         {
             window.ShowStartupFailure(exception);
+        }
+    }
+
+    // An unattended run can start with an element, and optionally one of its instances, selected.
+    private void ApplyStartupSelection()
+    {
+        if (_options.SelectPath is not { } path)
+        {
+            return;
+        }
+
+        string[] parts = path.Split('#', 2);
+        if (ObjectFinder.Self.GetElementSave(parts[0]) is not { } element)
+        {
+            return;
+        }
+
+        ISelectedState selectedState = _services.GetRequiredService<ISelectedState>();
+        selectedState.SelectedElement = element;
+        if (parts.Length > 1 && element.Instances.Find(instance => instance.Name == parts[1]) is { } selectedInstance)
+        {
+            selectedState.SelectedInstance = selectedInstance;
         }
     }
 

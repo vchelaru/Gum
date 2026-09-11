@@ -15,9 +15,9 @@ using ToolsUtilities;
 namespace Gum.Managers;
 
 /// <summary>
-/// Headless decision logic behind <see cref="StateTreeViewRightClickService.PopulateContextMenu"/>
+/// Headless decision logic behind <see cref="StateTreeRightClickService.PopulateContextMenu"/>
 /// (ADR-0005): which items to show for the current selection, their header text, and the actions
-/// they perform. <see cref="StateTreeViewRightClickService"/> stays responsible only for converting
+/// they perform. <see cref="StateTreeRightClickService"/> hands the returned
 /// the returned <see cref="ContextMenuItemViewModel"/> tree into real WPF <c>ContextMenu</c> items,
 /// and for the one WPF-only side effect ("Move Up"/"Move Down" re-populating the live context menu
 /// so its enabled state is fresh for the next right-click).
@@ -54,7 +54,7 @@ public class StateTreeRightClickViewModel
     /// Builds the right-click menu items for the currently selected state/category.
     /// </summary>
     /// <param name="moveUpClick">
-    /// Overrides the "^ Move Up" item's action, used by <see cref="StateTreeViewRightClickService"/>
+    /// Overrides the "^ Move Up" item's action, used by <see cref="StateTreeRightClickService"/>
     /// to re-populate the live WPF context menu after a successful move. Defaults to a move with no
     /// further side effect, which is sufficient for headless callers/tests.
     /// </param>

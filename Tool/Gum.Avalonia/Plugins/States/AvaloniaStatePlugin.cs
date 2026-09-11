@@ -1,27 +1,27 @@
+using System.ComponentModel.Composition;
 using Gum.Commands;
 using Gum.Logic;
 using Gum.Managers;
+using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.StatePlugin;
 using Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
-using Gum.Plugins.InternalPlugins.StatePlugin.Views;
 using Gum.PropertyGridHelpers;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
-using System.ComponentModel.Composition;
 
-namespace Gum.Plugins.StatePlugin;
+namespace Gum.Avalonia.Plugins.States;
 
 /// <summary>
-/// The WPF States tab: <see cref="StateTreePluginBase"/> completed with the WPF
-/// <see cref="StateTreeView"/>.
+/// The Avalonia States tab: <see cref="StateTreePluginBase"/> completed with
+/// <see cref="AvaloniaStateTreeView"/>.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainStatePlugin : StateTreePluginBase
+public class AvaloniaStatePlugin : StateTreePluginBase
 {
     [ImportingConstructor]
-    public MainStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
+    public AvaloniaStatePlugin(ISelectedState selectedState, IGuiCommands guiCommands, IFileCommands fileCommands,
         IElementCommands elementCommands, IEditCommands editCommands, IDialogService dialogService,
         IHotkeyManager hotkeyManager, IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         ICopyPasteLogic copyPasteLogic)
@@ -32,5 +32,5 @@ public class MainStatePlugin : StateTreePluginBase
 
     /// <inheritdoc/>
     protected override object CreateView(StateTreeViewModel viewModel) =>
-        new StateTreeView(viewModel, RightClickService, KeyboardHandler);
+        new AvaloniaStateTreeView(viewModel, RightClickService, KeyboardHandler);
 }

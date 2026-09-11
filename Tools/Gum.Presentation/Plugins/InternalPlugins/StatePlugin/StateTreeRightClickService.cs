@@ -1,20 +1,26 @@
+using System;
+using System.Collections.Generic;
 using Gum.Commands;
-using Gum.Extensions;
 using Gum.Logic;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
-using System.Windows;
+using Gum.ViewModels;
 
 namespace Gum.Managers;
 
-public class StateTreeViewRightClickService : IStateTreeViewRightClickService
+/// <summary>
+/// Keeps the states tree's right-click menu current for the selection, as neutral menu items, and
+/// runs the commands behind it. Each head renders <see cref="MenuItems"/> into its own context menu
+/// and re-renders on <see cref="MenuItemsChanged"/>; which items to show is decided by
+/// <see cref="StateTreeRightClickViewModel"/>.
+/// </summary>
+public class StateTreeRightClickService : IStateTreeViewRightClickService
 {
     private readonly StateTreeRightClickViewModel _viewModel;
 
-    System.Windows.Controls.ContextMenu _contextMenu;
-
-    public StateTreeViewRightClickService(ISelectedState selectedState,
+    /// <summary>Creates the service over the commands its menu items run.</summary>
+    public StateTreeRightClickService(ISelectedState selectedState,
         IElementCommands elementCommands,
         IEditCommands editCommands,
         IDialogService dialogService,
@@ -30,46 +36,27 @@ public class StateTreeViewRightClickService : IStateTreeViewRightClickService
             guiCommands,
             fileCommands,
             copyPasteLogic);
+        MenuItems = Array.Empty<ContextMenuItemViewModel>();
     }
 
-    public void SetContextMenu(System.Windows.Controls.ContextMenu contextMenu, FrameworkElement contextMenuOwner)
-    {
-        contextMenuOwner.ContextMenuOpening += (_, args) =>
-        {
-            if (_contextMenu.Items.Count == 0)
-            {
-                args.Handled = true;
-            }
-        };
+    /// <inheritdoc/>
+    public IReadOnlyList<ContextMenuItemViewModel> MenuItems { get; private set; }
 
-        _contextMenu = contextMenu;
-        _contextMenu.ContextMenuOpening += (s, e) =>
-        {
-            if (_contextMenu.Items.Count == 0)
-            {
-                e.Handled = true; // Prevent the menu from opening
-            }
-        };
-    }
+    /// <inheritdoc/>
+    public event Action? MenuItemsChanged;
 
     /// <inheritdoc/>
     public void PopulateContextMenu()
     {
-        _contextMenu.Items.Clear();
-
-        // "Move Up"/"Move Down" need to re-populate this live context menu after a successful
-        // move so their own enabled state is fresh for the next right-click - the one WPF-only
-        // side effect the headless view model has no seam for.
-        var menuItems = _viewModel.GetMenuItems(
+        // "Move Up"/"Move Down" rebuild the menu after a successful move, so their own enabled
+        // state is fresh for the next right-click.
+        MenuItems = _viewModel.GetMenuItems(
             moveUpClick: () => MoveStateInDirection(-1),
             moveDownClick: () => MoveStateInDirection(1));
-
-        foreach (var item in menuItems)
-        {
-            _contextMenu.Items.Add(item.ToMenuItem());
-        }
+        MenuItemsChanged?.Invoke();
     }
 
+    /// <inheritdoc/>
     public void MoveStateInDirection(int direction)
     {
         if (_viewModel.MoveStateInDirection(direction))
@@ -78,11 +65,15 @@ public class StateTreeViewRightClickService : IStateTreeViewRightClickService
         }
     }
 
+    /// <inheritdoc/>
     public void DeleteCategoryClick() => _viewModel.DeleteCategoryClick();
 
+    /// <inheritdoc/>
     public void DeleteStateClick() => _viewModel.DeleteStateClick();
 
+    /// <inheritdoc/>
     public void RenameStateClick() => _viewModel.RenameStateClick();
 
+    /// <inheritdoc/>
     public void RenameCategoryClick() => _viewModel.RenameCategoryClick();
 }

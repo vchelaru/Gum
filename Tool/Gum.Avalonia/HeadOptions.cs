@@ -6,17 +6,18 @@ using System.IO;
 namespace Gum.Avalonia;
 
 /// <summary>
-/// Options the Avalonia head reads from its own command line: <c>--exit-after seconds</c> and
-/// <c>--screenshot path.png</c> for unattended verification runs. Everything else is left for
+/// Options the Avalonia head reads from its own command line for unattended verification runs:
+/// <c>--exit-after seconds</c>, <c>--screenshot path.png</c>, and <c>--select Element[#Instance]</c>. Everything else is left for
 /// <see cref="Gum.CommandLine.CommandLineManager"/>, which reads the process command line itself.
 /// </summary>
 public sealed class HeadOptions
 {
     /// <summary>Creates the options.</summary>
-    public HeadOptions(double? exitAfterSeconds, string? screenshotPath)
+    public HeadOptions(double? exitAfterSeconds, string? screenshotPath, string? selectPath = null)
     {
         ExitAfterSeconds = exitAfterSeconds;
         ScreenshotPath = screenshotPath;
+        SelectPath = selectPath;
     }
 
     /// <summary>When set, the app closes itself this many seconds after the main window opens.</summary>
@@ -25,11 +26,18 @@ public sealed class HeadOptions
     /// <summary>When set, the main window is rendered to this PNG just before exiting.</summary>
     public string? ScreenshotPath { get; }
 
-    /// <summary>Parses the two head-owned flags and ignores everything else.</summary>
+    /// <summary>
+    /// When set, the element (and optionally the instance, after a <c>#</c>) selected once the
+    /// project has loaded, so a run can show the panels that follow the selection.
+    /// </summary>
+    public string? SelectPath { get; }
+
+    /// <summary>Parses the head-owned flags and ignores everything else.</summary>
     public static HeadOptions Parse(IReadOnlyList<string> args)
     {
         double? exitAfter = null;
         string? screenshot = null;
+        string? select = null;
         for (int i = 0; i < args.Count; i++)
         {
             if (args[i] == "--exit-after" && i + 1 < args.Count)
@@ -40,7 +48,11 @@ public sealed class HeadOptions
             {
                 screenshot = Path.GetFullPath(args[++i]);
             }
+            else if (args[i] == "--select" && i + 1 < args.Count)
+            {
+                select = args[++i];
+            }
         }
-        return new HeadOptions(exitAfter, screenshot);
+        return new HeadOptions(exitAfter, screenshot, select);
     }
 }
