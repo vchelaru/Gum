@@ -24,7 +24,7 @@ using ToolsUtilities;
 namespace SkiaPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainSkiaPlugin : WpfPluginBase
+    public class MainSkiaPlugin : PluginBase
     {
         #region Fields/Properties
 

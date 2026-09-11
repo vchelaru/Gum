@@ -32,7 +32,7 @@
 | `Gum/GumFormsPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog view in each head (WPF `Gum/PluginViews/`, Avalonia `Plugins/PluginDialogs/`); Forms themes staged to both heads | 70 | TFM |
 | `Gum/ImportFromGumxPlugin` | **done** (net10.0, phase 70) | over `Gum.Presentation`; dialog through `IDialogService`, views in each head as above | 70 | TFM |
 | `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
-| `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
+| `Gum/SvgPlugin` (SkiaPlugin) | **done** (net10.0, phase 70) | over `Gum.Presentation` and KniGum; its CPU texture upload works on either KNI backend; the Avalonia head references its Skia runtime packages as `Gum.csproj` does | 70 | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |

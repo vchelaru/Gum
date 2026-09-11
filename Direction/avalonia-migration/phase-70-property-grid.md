@@ -177,3 +177,10 @@ Work is on the phase-70 branch, one commit per part.
   `Content/FormsThemes` as well. The import dialog's fixed size moved from the plugin's
   hand-built window onto the view (600 by 560 in both heads), since `IDialogService` has no size
   option; a reversible choice.
+- **Part 7: the Skia plugin.** `SkiaPlugin` is net10.0 over `Gum.Presentation` and KniGum, based
+  on `PluginBase`, with the banned-API analyzer on, and loads in both heads. Its property redirect
+  hooks KniGum's `CustomSetPropertyOnRenderable`, the copy both heads' canvases dispatch through
+  (`Gum.csproj` removes its own). The Skia shapes, SVG, and Lottie renderables upload through the
+  CPU path (`FAST_GL_SKIA_RENDERING` stays off), so they need nothing from the graphics backend.
+  Plugins load their NuGet dependencies from the application folder, so the Avalonia head now
+  references `SkiaSharp.Extended`, `SkiaSharp.Skottie`, and `Svg.Skia` as `Gum.csproj` does.

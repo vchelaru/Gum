@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\SvgPlugin\SkiaPlugin.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
