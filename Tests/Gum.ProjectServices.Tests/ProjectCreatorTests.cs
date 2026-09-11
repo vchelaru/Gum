@@ -113,7 +113,7 @@ public class ProjectCreatorTests : IDisposable
     public void Create_ShouldWriteDefaultFontFiles()
     {
         // The Text standard's Font default points at this bundled file instead of a system font
-        // name (e.g. "Arial"), which BlazorGL/WASM has no OS font store to resolve (#4276).
+        // name (e.g. "Arial"), which BlazorGL/WASM has no OS font store to resolve (#4674).
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
 
         _sut.Create(filePath);

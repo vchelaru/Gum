@@ -214,7 +214,7 @@ public class NewProjectLogicTests
     public void CreateNewProject_BundlesTheDefaultFont_AfterTheFirstSave()
     {
         // StandardElementsManager's Text standard points its Font default at this bundled file
-        // instead of a system font name (#4276), so every new project needs it on disk -- even
+        // instead of a system font name (#4674), so every new project needs it on disk -- even
         // when Forms controls (which bring their own theme fonts) are declined.
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
         SetUpSaveLocationPrompt(accepted: true);

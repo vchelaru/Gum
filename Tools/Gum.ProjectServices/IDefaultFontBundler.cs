@@ -6,7 +6,7 @@ namespace Gum.ProjectServices;
 /// the Gum tool's File → New) needs this: <see cref="Managers.StandardElementsManager"/>'s Text
 /// standard points its Font default at this bundled file instead of a system font name (e.g.
 /// "Arial"), because BlazorGL/WASM has no OS font store for KernSmith to resolve a system font
-/// name against (#4276). Liberation Sans is metrically compatible with Arial and free to
+/// name against (#4674). Liberation Sans is metrically compatible with Arial and free to
 /// redistribute, so the license file travels alongside it.
 /// </summary>
 public interface IDefaultFontBundler

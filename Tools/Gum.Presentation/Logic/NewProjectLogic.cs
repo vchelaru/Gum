@@ -77,7 +77,7 @@ public class NewProjectLogic : INewProjectLogic
 
         // The Text standard's Font default (StandardElementsManager) points at this bundled
         // file rather than a system font name, so every new project needs it on disk regardless
-        // of whether a Forms theme (which brings its own fonts) is also imported below (#4276).
+        // of whether a Forms theme (which brings its own fonts) is also imported below (#4674).
         _defaultFontBundler.CopyTo(FileManager.GetDirectory(_projectManager.GumProjectSave!.FullFileName));
 
         if (viewModel.IsIncludeFormsControls)

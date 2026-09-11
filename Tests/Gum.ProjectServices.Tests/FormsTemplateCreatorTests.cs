@@ -78,7 +78,7 @@ public class FormsTemplateCreatorTests : IDisposable
     {
         // The Text standard's Font default, and every Forms control's own Font override, point at
         // this bundled file instead of a system font name (e.g. "Arial"), which BlazorGL/WASM has
-        // no OS font store to resolve (#4276).
+        // no OS font store to resolve (#4674).
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
 
         _sut.Create(filePath);
