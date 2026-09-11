@@ -103,6 +103,18 @@
 		<None Update="Content\TestFont.fnt">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<!-- Example post-process shaders (issue #4679) staged alongside the tool so a user pointing
+		     SourceShaderFile's file-picker somewhere for the first time lands on working starting
+		     points, not an empty folder. -->
+		<None Update="Content\Shaders\Grayscale.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\Shaders\Blur.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\Shaders\Sepia.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="CommonFormsAndControls\CommonFormsAndControls.csproj" />
