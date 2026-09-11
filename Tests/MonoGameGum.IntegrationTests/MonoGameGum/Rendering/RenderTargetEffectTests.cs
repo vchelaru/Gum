@@ -9,6 +9,7 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
 using ShadowDusk.Compiler;
+using ShadowDusk.Compiler.Slang;
 using ShadowDusk.Core;
 using Shouldly;
 using Xunit;
@@ -321,6 +322,58 @@ technique SpriteDrawing
                     string.Join("\n", compileResult.Error.Select(e => e.Message))
                 : "");
         compileResult.Value.Data.Length.ShouldBeGreaterThan(0);
+    }
+
+    // Issue #4677: Gum's two SourceShaderFile resolvers (the tool's RenderTargetShaderResolver and
+    // Samples/MonoGameGumInCode's RenderTargetShaderScreen) both convert a .slang file to .fx text
+    // via ShadowDusk's Slang frontend before compiling, since Slang has no technique/pass concept
+    // and can't go through EffectCompiler.Compile directly. Same grayscale effect as GrayscaleFx
+    // above, authored in Slang's own idiom (a [shader("fragment")] attribute, no technique block).
+    private const string GrayscaleSlang = @"
+Texture2D SpriteTexture;
+SamplerState SpriteTextureSampler;
+
+struct VertexShaderOutput
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR0;
+    float2 TextureCoordinates : TEXCOORD0;
+};
+
+[shader(""fragment"")]
+float4 MainPS(VertexShaderOutput input) : COLOR0
+{
+    float4 color = SpriteTexture.Sample(SpriteTextureSampler, input.TextureCoordinates) * input.Color;
+    float gray = dot(color.rgb, float3(0.299, 0.587, 0.114));
+    return float4(gray, gray, gray, color.a);
+}
+";
+
+    [Fact]
+    public void SlangGrayscaleShader_ConvertsAndCompiles_ForBothResolverTargets()
+    {
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            GrayscaleSlang, new SlangConvertOptions { SourceName = "Grayscale.slang" });
+
+        conversion.IsSuccess.ShouldBeTrue(
+            conversion.IsFailure
+                ? "ShadowDusk's Slang frontend could not convert the grayscale shader:\n" +
+                    string.Join("\n", conversion.Error.Select(e => e.Message))
+                : "");
+
+        EffectCompiler compiler = new();
+
+        // OpenGL — the target Samples/MonoGameGumInCode's game-side resolver compiles for.
+        Result<CompiledShader, ShaderError[]> openGlResult = compiler.Compile(
+            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL });
+        openGlResult.IsSuccess.ShouldBeTrue(
+            openGlResult.IsFailure ? string.Join("\n", openGlResult.Error.Select(e => e.Message)) : "");
+
+        // DirectX — the target the Gum tool's RenderTargetShaderResolver compiles for (issue #3210).
+        Result<CompiledShader, ShaderError[]> directXResult = compiler.Compile(
+            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.DirectX });
+        directXResult.IsSuccess.ShouldBeTrue(
+            directXResult.IsFailure ? string.Join("\n", directXResult.Error.Select(e => e.Message)) : "");
     }
 
     [Fact]
