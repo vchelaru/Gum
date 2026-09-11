@@ -8,6 +8,7 @@ using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi.DataTypes;
+using Avalonia.Controls.Presenters;
 
 namespace Gum.Avalonia.Tests.DataUi;
 
@@ -199,6 +200,30 @@ public class DataUiGridTests
         untintedBox.Background.ShouldNotBe(DataUiValueStateBrushes.DefaultValueBackground);
         tintingWindow.Close();
         overridingWindow.Close();
+    }
+
+    [AvaloniaFact]
+    public void RowDecorator_FramesEachRow_AndTheStripesCanBeTurnedOff()
+    {
+        EditorFixture fixture = new EditorFixture();
+        DataUiGrid grid = new DataUiGrid
+        {
+            RowDecorator = editor => new Border { Tag = "frame", Child = editor },
+            AlternatesRowBackgrounds = false,
+        };
+        grid.SetCategories(new List<MemberCategory> { Category("GridFramed", fixture, nameof(EditorFixture.Text), nameof(EditorFixture.Flag)) });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+
+        grid.LiveContainers.Count.ShouldBe(2);
+        foreach (SingleDataUiContainer container in grid.LiveContainers)
+        {
+            container.Parent.ShouldBeOfType<Border>().Tag.ShouldBe("frame");
+        }
+        DataUiCategoryView view = window.GetVisualDescendantsOfType<DataUiCategoryView>().Single();
+        view.Rows.ContainerFromIndex(0).ShouldBeOfType<ContentPresenter>().Background.ShouldBeNull();
+        window.Close();
     }
 
     private sealed class DefaultValuedMember : InstanceMember

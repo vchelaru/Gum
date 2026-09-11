@@ -58,8 +58,8 @@ public sealed class DataUiCategoryView : StackPanel
         {
             Data = ChevronGeometry,
             StrokeThickness = 1.5,
-            Width = 8,
-            Height = 8,
+            Width = 9,
+            Height = 9,
             Stretch = Stretch.Uniform,
             Margin = new Thickness(6, 0, 8, 0),
             VerticalAlignment = VerticalAlignment.Center,
@@ -72,7 +72,7 @@ public sealed class DataUiCategoryView : StackPanel
         Grid.SetColumn(name, 1);
         headerRow.Children.Add(name);
 
-        Header = new Border { Child = headerRow };
+        Header = new Border { Child = headerRow, Padding = new Thickness(0, 3) };
         if (category.HeaderColor is System.Drawing.Color headerColor)
         {
             Header.Background = new SolidColorBrush(Color.FromArgb(headerColor.A, headerColor.R, headerColor.G, headerColor.B));
@@ -96,7 +96,11 @@ public sealed class DataUiCategoryView : StackPanel
 
         Rows = new ItemsControl
         {
-            ItemTemplate = new FuncDataTemplate<InstanceMember>((_, _) => new SingleDataUiContainer(grid)),
+            ItemTemplate = new FuncDataTemplate<InstanceMember>((_, _) =>
+            {
+                SingleDataUiContainer editor = new SingleDataUiContainer(grid);
+                return grid.RowDecorator?.Invoke(editor) ?? editor;
+            }),
         };
         Rows.Classes.Add(RowsClass);
         Rows.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(MemberCategory.Members)));

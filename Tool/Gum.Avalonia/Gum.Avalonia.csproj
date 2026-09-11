@@ -107,6 +107,9 @@
 	<ItemGroup>
 		<!-- The window icon, shared with the WPF head. -->
 		<AvaloniaResource Include="..\..\Gum\GumIcon.ico" Link="GumIcon.ico" />
+		<!-- The title bar logo, dark and light (MainWindowIconLogic), shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\GumLogo64.png" Link="GumLogo64.png" />
+		<AvaloniaResource Include="..\..\Gum\GumLogo64Light.png" Link="GumLogo64Light.png" />
 		<!-- Tree icon artwork (TreeIconCatalog), shared with the WPF head. -->
 		<AvaloniaResource Include="..\..\Gum\Content\Icons\*.png" Link="Content\Icons\%(Filename)%(Extension)" />
 		<AvaloniaResource Include="..\..\Gum\Content\Icons\UpdatedTreeViewIcons\*.png" Link="Content\Icons\UpdatedTreeViewIcons\%(Filename)%(Extension)" />

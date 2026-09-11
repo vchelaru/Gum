@@ -16,6 +16,9 @@ using Gum.Services;
 using Gum.Settings;
 using Gum.ViewModels;
 using AvaloniaBinding = Avalonia.Data.Binding;
+using Avalonia.Data.Converters;
+using Avalonia.Styling;
+using Gum.Dialogs;
 
 namespace Gum.Avalonia.Shell;
 
@@ -30,6 +33,13 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     private readonly AvaloniaModifierKeyState _modifierKeyState;
     private readonly IWritableOptions<LayoutSettings> _layoutSettings;
     private readonly TextBlock _statusText;
+    private global::Avalonia.Controls.Image _logo = null!;
+
+    // The WPF head's caption height (its caption buttons are 48 by 32).
+    private const double TitleBarHeight = 32;
+
+    private static readonly IValueConverter FileNameOnly =
+        new FuncValueConverter<string?, string?>(title => string.IsNullOrEmpty(title) ? title : System.IO.Path.GetFileNameWithoutExtension(title));
 
     /// <summary>Builds the window; nothing here touches the project until the startup sequence runs.</summary>
     public MainWindow(
@@ -65,7 +75,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         this.Bind(TitleProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
 
         Menu menu = AvaloniaMenuBuilder.Build(menuBuilder.Build());
-        DockPanel.SetDock(menu, Dock.Top);
+        Control titleRow = CreateTitleRow(menu);
+        DockPanel.SetDock(titleRow, Dock.Top);
 
         _statusText = new TextBlock { Margin = new Thickness(8, 2), VerticalAlignment = VerticalAlignment.Center };
         _statusText.Bind(TextBlock.TextProperty, new AvaloniaBinding(nameof(ShellViewModel.ProgressText)));
@@ -78,7 +89,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         DockPanel.SetDock(statusBar, Dock.Bottom);
 
         DockPanel root = new DockPanel();
-        root.Children.Add(menu);
+        root.Children.Add(titleRow);
         root.Children.Add(statusBar);
         root.Children.Add(new MainPanelView(tabs));
         Content = root;
@@ -92,6 +103,12 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             {
                 _shell.WindowState = WindowState == WindowState.Maximized ? GumWindowState.Maximized : GumWindowState.Normal;
             }
+            else if (e.Property == OffScreenMarginProperty)
+            {
+                // A maximized window's frame hangs past the screen edges; with the content drawn into
+                // the title bar, keep it inside the visible area.
+                root.Margin = OffScreenMargin;
+            }
         };
 
         AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
@@ -99,6 +116,70 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     }
 
     /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>
+    // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
+    // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
+    // bar (Linux), the system title bar stays and this row sits under it.
+    private Control CreateTitleRow(Menu menu)
+    {
+        bool drawsInTitleBar = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
+        if (drawsInTitleBar)
+        {
+            ExtendClientAreaToDecorationsHint = true;
+            ExtendClientAreaChromeHints = ExtendClientAreaChromeHints.PreferSystemChrome;
+            ExtendClientAreaTitleBarHeightHint = TitleBarHeight;
+        }
+
+        _logo = new global::Avalonia.Controls.Image
+        {
+            Height = 16,
+            Margin = new Thickness(8, 0, 4, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            Stretch = global::Avalonia.Media.Stretch.Uniform,
+        };
+        RefreshLogo();
+        ActualThemeVariantChanged += (_, _) => RefreshLogo();
+
+        menu.VerticalAlignment = VerticalAlignment.Center;
+        menu.Background = global::Avalonia.Media.Brushes.Transparent;
+        Grid.SetColumn(menu, 1);
+
+        TextBlock fileName = new TextBlock
+        {
+            Margin = new Thickness(6, 4),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextTrimming = global::Avalonia.Media.TextTrimming.CharacterEllipsis,
+        };
+        fileName.Bind(TextBlock.TextProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)) { Converter = FileNameOnly });
+        fileName.Bind(ToolTip.TipProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
+        Grid.SetColumn(fileName, 2);
+
+        Grid row = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,Auto,*"),
+            // Room for the caption buttons: on the right on Windows, the traffic lights on the left on macOS.
+            Margin = !drawsInTitleBar ? new Thickness(0)
+                : OperatingSystem.IsMacOS() ? new Thickness(72, 0, 0, 0)
+                : new Thickness(0, 0, 140, 0),
+        };
+        if (drawsInTitleBar)
+        {
+            row.Height = TitleBarHeight;
+        }
+        row.Children.Add(_logo);
+        row.Children.Add(menu);
+        row.Children.Add(fileName);
+        return row;
+    }
+
+    // The shared light/dark logo choice (MainWindowIconLogic), loaded from this head's resources.
+    private void RefreshLogo()
+    {
+        ThemeMode mode = ActualThemeVariant == ThemeVariant.Light ? ThemeMode.Light : ThemeMode.Dark;
+        string logoFile = MainWindowIconLogic.GetIconSource(mode).Split('/')[^1];
+        _logo.Source = new global::Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri("avares://Gum.Avalonia/" + logoFile)));
+    }
+
     public void ShowStartupFailure(Exception exception)
     {
         Content = new ScrollViewer

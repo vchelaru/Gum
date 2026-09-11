@@ -19,6 +19,7 @@ using Gum.Controls;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
+using FluentIcons.Avalonia;
 
 namespace Gum.Avalonia.Plugins.TreeView;
 
@@ -674,7 +675,8 @@ internal sealed class TreeRowView : Border
 
     private readonly AvaloniaGumTreeView _owner;
     private readonly Border _indent;
-    private readonly TextBlock _expander;
+    private readonly Border _expander;
+    private readonly FluentIcon _expanderIcon;
     private readonly ContentControl _iconHost;
     private readonly TextBlock _text;
     private GumTreeNode? _node;
@@ -690,12 +692,16 @@ internal sealed class TreeRowView : Border
         Padding = new Thickness(1, 0);
 
         _indent = new Border();
-        _expander = new TextBlock
+        // The WPF tree's chevrons, right when collapsed and down when expanded.
+        _expanderIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.ChevronRight, 12);
+        _expanderIcon.HorizontalAlignment = HorizontalAlignment.Center;
+        _expanderIcon.VerticalAlignment = VerticalAlignment.Center;
+        _expander = new Border
         {
             Width = 14,
-            TextAlignment = TextAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Stretch,
             Background = Brushes.Transparent,
+            Child = _expanderIcon,
         };
         _expander.PointerPressed += (_, e) =>
         {
@@ -785,7 +791,8 @@ internal sealed class TreeRowView : Border
         }
 
         _indent.Width = Row.Level * Indent;
-        _expander.Text = _node.HasChildren ? (_node.IsExpanded ? "▾" : "▸") : string.Empty;
+        _expanderIcon.IsVisible = _node.HasChildren;
+        _expanderIcon.Icon = _node.IsExpanded ? FluentIcons.Common.Icon.ChevronDown : FluentIcons.Common.Icon.ChevronRight;
         _text.Text = _node.Text;
         // Hovered and selected rows share the primary wash; a selected row adds the primary border.
         Background = _node.IsSelected || _node.IsHot

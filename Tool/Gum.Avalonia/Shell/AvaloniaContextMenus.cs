@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.ViewModels;
 using FluentIcons.Avalonia;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Shell;
 
@@ -79,8 +80,8 @@ public static class AvaloniaContextMenus
     // other key is a tree icon file name.
     private static object? CreateIcon(string key, double size) => key switch
     {
-        ContextMenuIconKeys.Category => new FluentIcon { Icon = FluentIcons.Common.Icon.DatabaseMultiple, FontSize = size },
-        ContextMenuIconKeys.State => new FluentIcon { Icon = FluentIcons.Common.Icon.Database, FontSize = size },
+        ContextMenuIconKeys.Category => GumFluentIcons.Create(FluentIcons.Common.Icon.DatabaseMultiple, size),
+        ContextMenuIconKeys.State => GumFluentIcons.Create(FluentIcons.Common.Icon.Database, size),
         _ => AvaloniaTreeIcons.CreateIcon(key, size),
     };
 

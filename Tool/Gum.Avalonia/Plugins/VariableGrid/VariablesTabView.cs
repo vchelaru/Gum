@@ -47,6 +47,9 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
     {
         _variablesGrid = new DataUiGrid(displayers);
         _behaviorGrid = new DataUiGrid(displayers);
+        // The WPF Variables grid's rows: separators and the set-value marker, no stripes.
+        _variablesGrid.RowDecorator = VariableGridRows.Frame;
+        _variablesGrid.AlternatesRowBackgrounds = false;
 
         Border stateBanner = new Border { Padding = new Thickness(6, 3) };
         stateBanner.Bind(Border.BackgroundProperty, new Binding(nameof(MainControlViewModel.StateBackground)) { Converter = DrawingColorToBrushConverter.Instance });
@@ -79,7 +82,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         shortcutHint.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.IsFilterWatermarkVisible)));
         Button clearFilter = new Button
         {
-            Content = new FluentIcon { Icon = FluentIcons.Common.Icon.Dismiss, FontSize = 12 },
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 12),
             Padding = new Thickness(4, 0),
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Center,
@@ -100,13 +103,10 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
         filterBox.Children.Add(clearFilter);
         Grid.SetColumn(filterBox, 1);
         Grid filterRow = new Grid { Margin = new Thickness(2, 2, 2, 4), ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        filterRow.Children.Add(new FluentIcon
-        {
-            Icon = FluentIcons.Common.Icon.Search,
-            FontSize = 16,
-            Margin = new Thickness(2, 0, 4, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-        });
+        FluentIcon searchIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.Search, 16);
+        searchIcon.Margin = new Thickness(2, 0, 4, 0);
+        searchIcon.VerticalAlignment = VerticalAlignment.Center;
+        filterRow.Children.Add(searchIcon);
         filterRow.Children.Add(filterBox);
         filterRow.Bind(IsVisibleProperty, new Binding(nameof(MainControlViewModel.ShowVariableGrid)));
 
@@ -116,8 +116,8 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
             RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
             Converter = GumChromeStyles.ScaleFontSize(1.5),
         };
-        FluentIcon addIcon = new FluentIcon { Icon = FluentIcons.Common.Icon.Add, VerticalAlignment = VerticalAlignment.Center };
-        addIcon.Bind(FluentIcon.FontSizeProperty, largeText);
+        FluentIcon addIcon = GumFluentIcons.Create(FluentIcons.Common.Icon.Add, largeText);
+        addIcon.VerticalAlignment = VerticalAlignment.Center;
         TextBlock addText = new TextBlock { Text = "Add Variable", VerticalAlignment = VerticalAlignment.Center };
         addText.Bind(TextBlock.FontSizeProperty, largeText);
         StackPanel addContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 2 };

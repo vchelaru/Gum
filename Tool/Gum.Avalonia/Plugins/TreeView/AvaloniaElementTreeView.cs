@@ -19,6 +19,8 @@ using Gum.Managers;
 using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.TreeView.ViewModels;
 using Gum.ViewModels;
+using FluentIcons.Avalonia;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.TreeView;
 
@@ -59,8 +61,8 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         _contextMenu = new ContextMenu();
         _resultItems = new ObservableCollection<SearchItemViewModel>();
 
-        _collapseAllButton = ToolButton("Collapse all", "Collapse all nodes in the tree", () => CollapseAllRequested?.Invoke());
-        _collapseToElementButton = ToolButton("Collapse to elements", "Collapse to element level (preserves folder expansion state)",
+        _collapseAllButton = ToolButton(FluentIcons.Common.Icon.ArrowCollapseAll, "Collapse all nodes in the tree", () => CollapseAllRequested?.Invoke());
+        _collapseToElementButton = ToolButton(FluentIcons.Common.Icon.TextBulletListTree, "Collapse to element level (preserves folder expansion state)",
             () => CollapseToElementLevelRequested?.Invoke());
         StackPanel buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 0, 0, 4) };
         buttons.Children.Add(_collapseAllButton);
@@ -410,14 +412,15 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         _ => TreeNodeImageIndices.TransparentImageIndex,
     };
 
-    private static Button ToolButton(string text, string toolTip, Action onClick)
+    // As the WPF panel's tool buttons (UnfoldLessHorizontal and FileTree there): flat icon buttons.
+    private static Button ToolButton(FluentIcons.Common.Icon icon, string toolTip, Action onClick)
     {
         Button button = new Button
         {
-            Content = text,
-            Padding = new Thickness(6, 2),
-            FontSize = 11,
+            Content = GumFluentIcons.Create(icon, 16),
+            Padding = new Thickness(4, 2),
         };
+        button.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(button, toolTip);
         button.Click += (_, _) => onClick();
         return button;

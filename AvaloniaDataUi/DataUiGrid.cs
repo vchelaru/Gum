@@ -28,6 +28,8 @@ public class DataUiGrid : UserControl, IDataUiGrid
 {
     private readonly DataUiGridModel _model;
     private readonly HashSet<SingleDataUiContainer> _liveContainers;
+    private readonly Style[] _rowStripes;
+    private bool _alternatesRowBackgrounds = true;
 
     /// <summary>Creates a grid that uses the standard editors.</summary>
     public DataUiGrid() : this(CreateStandardRegistry())
@@ -55,8 +57,8 @@ public class DataUiGrid : UserControl, IDataUiGrid
         };
 
         // Rows alternate a faint dark stripe, as in the WPF grid: 10% black, then 5%.
-        Styles.Add(RowStripe(offset: 1, opacity: 0.10));
-        Styles.Add(RowStripe(offset: 0, opacity: 0.05));
+        _rowStripes = new[] { RowStripe(offset: 1, opacity: 0.10), RowStripe(offset: 0, opacity: 0.05) };
+        Styles.AddRange(_rowStripes);
     }
 
     /// <summary>Defines the <see cref="CategoryHeaderBackground"/> property.</summary>
@@ -97,6 +99,37 @@ public class DataUiGrid : UserControl, IDataUiGrid
 
     /// <summary>Turns default-value tinting off (or back on) for <paramref name="element"/> and its descendants.</summary>
     public static void SetOverridesIsDefaultStyling(Control element, bool value) => element.SetValue(OverridesIsDefaultStylingProperty, value);
+
+    /// <summary>
+    /// Wraps each row's editor host before it is shown, for a grid that frames its rows (the Gum
+    /// Variables tab adds separators and a set-value marker). Null shows the host as it is.
+    /// </summary>
+    public Func<Control, Control>? RowDecorator { get; set; }
+
+    /// <summary>Whether rows alternate a faint dark stripe; on by default, as in the WPF grid.</summary>
+    public bool AlternatesRowBackgrounds
+    {
+        get => _alternatesRowBackgrounds;
+        set
+        {
+            if (_alternatesRowBackgrounds == value)
+            {
+                return;
+            }
+            _alternatesRowBackgrounds = value;
+            foreach (Style stripe in _rowStripes)
+            {
+                if (value)
+                {
+                    Styles.Add(stripe);
+                }
+                else
+                {
+                    Styles.Remove(stripe);
+                }
+            }
+        }
+    }
 
     private static Style RowStripe(int offset, double opacity) =>
         new Style(selector => selector.OfType<ItemsControl>().Class(DataUiCategoryView.RowsClass)

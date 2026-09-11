@@ -11,6 +11,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
+using Avalonia.Controls.Shapes;
 
 namespace Gum.Avalonia.Themes;
 
@@ -26,7 +27,8 @@ namespace Gum.Avalonia.Themes;
 /// with no header color, and the name in ThemeContrast.</item>
 /// <item>The property grid's option buttons: a field-colored group whose chosen button has a
 /// Primary outline rather than a fill.</item>
-/// <item>Check boxes: a small outlined box instead of Fluent's 20px box on a 32px row.</item>
+/// <item>Check boxes: the WPF template, a small outlined box instead of Fluent's 20px box on a 32px row.</item>
+/// <item><see cref="FlatButtonClass"/>: the WPF head's borderless tool buttons.</item>
 /// <item><see cref="IconButtonClass"/>: the WPF <c>IconButton</c>, a flat outlined button.</item>
 /// </list>
 /// </summary>
@@ -37,6 +39,9 @@ public static class GumChromeStyles
 
     /// <summary>The class for a flat, outlined button, the WPF head's <c>IconButton</c> style.</summary>
     public const string IconButtonClass = "gumIconButton";
+
+    /// <summary>The class for a borderless button that shows a fill only on hover, the WPF head's tool buttons.</summary>
+    public const string FlatButtonClass = "gumFlatButton";
 
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
@@ -92,31 +97,42 @@ public static class GumChromeStyles
             },
         },
 
+        // Check boxes use the WPF head's own template (Frb.Styles.Defaults.xaml); Fluent's writes a 20px
+        // box on a 32px row into the template itself, beyond the reach of a style.
         new Style(selector => selector.OfType<CheckBox>())
         {
             Setters =
             {
+                new Setter(TemplatedControl.TemplateProperty, new FuncControlTemplate<CheckBox>(BuildCheckBox)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(0)),
                 new Setter(Layoutable.MinHeightProperty, 0d),
-                new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 0, 0, 0)),
             },
         },
-        // The box is outlined in the text color in every state, as in WPF, rather than filled when checked.
-        new Style(selector => selector.OfType<CheckBox>().Template().Name("NormalRectangle"))
+        new Style(selector => selector.OfType<CheckBox>().Class(":disabled"))
+        {
+            Setters = { new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground.Disabled")) },
+        },
+        new Style(selector => selector.OfType<CheckBox>().Template().OfType<Border>().Name("PART_Box"))
         {
             Setters =
             {
-                new Setter(Layoutable.WidthProperty, 13d),
-                new Setter(Layoutable.HeightProperty, 13d),
                 new Setter(Border.BackgroundProperty, Brushes.Transparent),
-                new Setter(Border.BorderBrushProperty, Resource("Frb.Brushes.Foreground")),
-                new Setter(Border.BorderThicknessProperty, new Thickness(1)),
+                new Setter(Border.BorderBrushProperty, new Binding(nameof(TemplatedControl.Foreground))
+                {
+                    RelativeSource = new RelativeSource(RelativeSourceMode.TemplatedParent),
+                }),
             },
         },
-        // The theme restyles the box per check state, so each state needs its own outline here too.
-        CheckBoxBox(":checked", Brushes.Transparent, Resource("Frb.Brushes.Foreground")),
-        CheckBoxBox(":indeterminate", Brushes.Transparent, Resource("Frb.Brushes.Foreground")),
-        CheckBoxBox(":pointerover", Resource("Frb.Brushes.Primary.Transparent"), Resource("Frb.Brushes.Primary")),
-        CheckBoxBox(":checked:pointerover", Resource("Frb.Brushes.Primary.Transparent"), Resource("Frb.Brushes.Primary")),
+        new Style(selector => selector.OfType<CheckBox>().Class(":pointerover").Template().OfType<Border>().Name("PART_Box"))
+        {
+            Setters =
+            {
+                new Setter(Border.BackgroundProperty, Resource("Frb.Brushes.Primary.Transparent")),
+                new Setter(Border.BorderBrushProperty, Resource("Frb.Brushes.Primary")),
+            },
+        },
 
         new Style(selector => selector.OfType<Border>().Class(ToggleButtonOptionDisplay.OptionGroupClass))
         {
@@ -157,27 +173,20 @@ public static class GumChromeStyles
         },
         ButtonPart<Button>(IconButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Border.Secondary")),
         ButtonPart<Button>(IconButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Resource("Frb.Brushes.Primary")),
-    };
 
-    // The check box's box in the given states ("a:b" for both).
-    private static Style CheckBoxBox(string states, object background, object borderBrush) =>
-        new Style(selector =>
-        {
-            Selector checkBox = selector.OfType<CheckBox>();
-            foreach (string state in states.Split(':', System.StringSplitOptions.RemoveEmptyEntries))
-            {
-                checkBox = checkBox.Class(":" + state);
-            }
-            return checkBox.Template().Name("NormalRectangle");
-        })
+        new Style(selector => selector.OfType<Button>().Class(FlatButtonClass))
         {
             Setters =
             {
-                new Setter(Border.BackgroundProperty, background),
-                new Setter(Border.BorderBrushProperty, borderBrush),
-                new Setter(Border.BorderThicknessProperty, new Thickness(1)),
+                new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderBrushProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
             },
-        };
+        },
+        ButtonPart<Button>(FlatButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
+        ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
+    };
 
     // The tab control's own items only, so a plugin view's nested tab control keeps its look.
     private static Selector MainTabItem(Selector? selector) =>
@@ -225,6 +234,68 @@ public static class GumChromeStyles
             [!Decorator.PaddingProperty] = item[!TemplatedControl.PaddingProperty],
             Child = header,
         };
+    }
+
+    private static readonly Geometry CheckMark = Geometry.Parse("M 1 4 L 3 7 L 8 1");
+    private static readonly IValueConverter IsTrue = new FuncValueConverter<bool?, bool>(value => value == true);
+    private static readonly IValueConverter IsNull = new FuncValueConverter<bool?, bool>(value => value == null);
+
+    // A box the size of the text, outlined in the text color, with a stroked check mark (or a small
+    // square when mixed), and the content to its right.
+    private static Control BuildCheckBox(CheckBox checkBox, INameScope scope)
+    {
+        Border box = new Border
+        {
+            Name = "PART_Box",
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(1),
+            VerticalAlignment = VerticalAlignment.Center,
+            [!Layoutable.WidthProperty] = checkBox[!TemplatedControl.FontSizeProperty],
+            [!Layoutable.HeightProperty] = checkBox[!TemplatedControl.FontSizeProperty],
+        };
+        box.RegisterInNameScope(scope);
+
+        Path check = new Path
+        {
+            Data = CheckMark,
+            StrokeThickness = 2,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!Shape.StrokeProperty] = checkBox[!TemplatedControl.ForegroundProperty],
+        };
+        check.Bind(Visual.IsVisibleProperty, new Binding(nameof(CheckBox.IsChecked)) { Source = checkBox, Converter = IsTrue });
+
+        Border mixed = new Border
+        {
+            Width = 6,
+            Height = 6,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!Border.BackgroundProperty] = checkBox[!TemplatedControl.ForegroundProperty],
+        };
+        mixed.Bind(Visual.IsVisibleProperty, new Binding(nameof(CheckBox.IsChecked)) { Source = checkBox, Converter = IsNull });
+
+        ContentPresenter content = new ContentPresenter
+        {
+            Name = "PART_ContentPresenter",
+            Margin = new Thickness(4, 0, 0, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+            [!ContentPresenter.ContentProperty] = checkBox[!ContentControl.ContentProperty],
+            [!ContentPresenter.ContentTemplateProperty] = checkBox[!ContentControl.ContentTemplateProperty],
+        };
+        content.RegisterInNameScope(scope);
+        Grid.SetColumn(content, 1);
+
+        Grid root = new Grid
+        {
+            ColumnDefinitions = new ColumnDefinitions("Auto,*"),
+            [!Panel.BackgroundProperty] = checkBox[!TemplatedControl.BackgroundProperty],
+        };
+        root.Children.Add(box);
+        root.Children.Add(check);
+        root.Children.Add(mixed);
+        root.Children.Add(content);
+        return root;
     }
 
     private static IBinding Resource(string key) => new DynamicResourceExtension(key);

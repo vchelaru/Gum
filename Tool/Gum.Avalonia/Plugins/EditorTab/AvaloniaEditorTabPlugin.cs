@@ -34,6 +34,7 @@ using Gum.Undo;
 using Gum.ViewModels;
 using Gum.Wireframe;
 using Gum.DataTypes;
+using Gum.Avalonia.Themes;
 
 namespace Gum.Avalonia.Plugins.EditorTab;
 
@@ -211,6 +212,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
 
     private static Button SmallButton(string content, string commandPath) => new Button
     {
+        Classes = { GumChromeStyles.FlatButtonClass },
         Content = content,
         Width = 24,
         Padding = new Thickness(0),

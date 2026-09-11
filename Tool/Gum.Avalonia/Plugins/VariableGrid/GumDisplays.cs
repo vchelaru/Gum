@@ -18,6 +18,8 @@ using WpfDataUi;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
 using DrawingColor = System.Drawing.Color;
+using Avalonia.Data;
+using Avalonia.Data.Converters;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -53,6 +55,21 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
         base.Refresh(forceRefreshEvenIfFocused);
     }
 
+    // The WPF ToggleDisplayIcon size: 2.333 times the base font, 28px at the default 12.
+    private static readonly IValueConverter OptionIconSize = GumChromeStyles.ScaleFontSize(7.0 / 3.0);
+
+    private static Control SizeAsOptionIcon(Control icon)
+    {
+        Binding size = new Binding(nameof(Window.FontSize))
+        {
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
+            Converter = OptionIconSize,
+        };
+        icon.Bind(Layoutable.WidthProperty, size);
+        icon.Bind(Layoutable.HeightProperty, size);
+        return icon;
+    }
+
     private static Control? CreateOptionContent(ToggleButtonOption option)
     {
         if (option.GumIconName != null)
@@ -60,7 +77,7 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
             Control? icon = GumIcon.Create(option.GumIconName);
             if (icon != null)
             {
-                return icon;
+                return SizeAsOptionIcon(icon);
             }
         }
 
@@ -69,7 +86,7 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
             string path = System.IO.Path.Combine(AppContext.BaseDirectory, option.ImagePath);
             if (File.Exists(path))
             {
-                return new Image { Source = new Bitmap(path), Width = 20, Height = 20 };
+                return SizeAsOptionIcon(new Image { Source = new Bitmap(path) });
             }
         }
 

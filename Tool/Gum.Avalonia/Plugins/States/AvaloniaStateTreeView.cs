@@ -137,8 +137,9 @@ public sealed class AvaloniaStateTreeView : DockPanel
 
     private static FluentIcon CreateIcon(TextBlock title, FluentIcons.Common.Icon icon, Thickness margin, int column)
     {
-        FluentIcon result = new FluentIcon { Icon = icon, Margin = margin, VerticalAlignment = VerticalAlignment.Center };
-        result.Bind(FluentIcon.FontSizeProperty, new Binding(nameof(TextBlock.FontSize)) { Source = title, Converter = IconSize });
+        FluentIcon result = GumFluentIcons.Create(icon, new Binding(nameof(TextBlock.FontSize)) { Source = title, Converter = IconSize });
+        result.Margin = margin;
+        result.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(result, column);
         return result;
     }
