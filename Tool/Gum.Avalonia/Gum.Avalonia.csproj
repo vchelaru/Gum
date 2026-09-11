@@ -64,6 +64,7 @@
 		<!-- The editor tab's neutral core (canvas, editors, rulers); this head adds the Avalonia canvas control and layout. -->
 		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
 		<ProjectReference Include="..\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
+		<ProjectReference Include="..\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -76,6 +77,12 @@
 		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1.fnt" Link="Content\Fonts\Font18Arial_o1.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1_0.png" Link="Content\Fonts\Font18Arial_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Tree icon artwork (TreeIconCatalog), shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\Content\Icons\*.png" Link="Content\Icons\%(Filename)%(Extension)" />
+		<AvaloniaResource Include="..\..\Gum\Content\Icons\UpdatedTreeViewIcons\*.png" Link="Content\Icons\UpdatedTreeViewIcons\%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>

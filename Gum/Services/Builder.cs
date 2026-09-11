@@ -99,6 +99,7 @@ file static class ServiceCollectionExtensions
         // ElementTreeViewManager / PropertyGridManager: concrete singletons needed for the Initialize()
         // calls in WpfHeadStartup (two-stage initialization); both are WPF view managers.
         services.AddSingleton<ElementTreeViewManager>();
+        services.AddSingleton<Gum.Plugins.InternalPlugins.TreeView.IElementTreeViewFactory, WpfElementTreeViewFactory>();
         services.AddSingleton<PropertyGridManager>();
         // IBehaviorVariablePropertyGridSink: narrow headless port (#3875) resolving to the same PropertyGridManager.
         services.AddSingleton<IBehaviorVariablePropertyGridSink>(provider => provider.GetRequiredService<PropertyGridManager>());

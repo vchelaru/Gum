@@ -1,10 +1,12 @@
 using Gum.Avalonia.Dialogs;
+using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Shell;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -53,6 +55,10 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<IFilePickingFolderProvider, NullFilePickingFolderProvider>();
         services.AddSingleton<IVariableTypeConverterProvider, DefaultVariableTypeConverterProvider>();
         services.AddSingleton<ICompositeMemberRegistry, EmptyCompositeMemberRegistry>();
+
+        // Element tree: the shared manager over this head's Project panel.
+        services.AddSingleton<IElementTreeViewFactory, AvaloniaElementTreeViewFactory>();
+        services.AddSingleton<ElementTreeViewManager>();
 
         // Shell.
         services.AddSingleton<AvaloniaTabManager>();

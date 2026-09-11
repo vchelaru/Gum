@@ -1,6 +1,5 @@
 using Gum.Controls;
 using Shouldly;
-using System.Windows.Input;
 using Xunit;
 
 namespace GumToolUnitTests.Controls.TreeSelection;
@@ -19,7 +18,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
     {
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: false, hasExistingSelection: true, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.None, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.None, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.DeselectAll);
     }
@@ -31,7 +30,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
         // empty selection, so nothing should happen.
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: false, hasExistingSelection: true, alwaysHaveOneNodeSelected: true,
-            ModifierKeys.None, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.None, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.None);
     }
@@ -42,7 +41,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
         // With nothing currently selected, even a plain click toggles the clicked node on.
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: true, hasExistingSelection: false, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.None, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.None, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.ToggleSelection);
     }
@@ -52,7 +51,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
     {
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: true, hasExistingSelection: true, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.Control, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.Control, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.ToggleSelection);
     }
@@ -63,7 +62,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
         // MultiSelectBehavior.RegularClick always toggles, even without a modifier.
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: true, hasExistingSelection: true, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.None, MultiSelectBehavior.RegularClick);
+            TreeModifierKeys.None, MultiSelectBehavior.RegularClick);
 
         reaction.ShouldBe(TreeNodeClickReaction.ToggleSelection);
     }
@@ -73,7 +72,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
     {
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: true, hasExistingSelection: true, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.Shift, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.Shift, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.RangeSelect);
     }
@@ -83,7 +82,7 @@ public class TreeNodeClickDispatchLogicTests : BaseTestClass
     {
         TreeNodeClickReaction reaction = _logic.GetReaction(
             hasClickedNode: true, hasExistingSelection: true, alwaysHaveOneNodeSelected: false,
-            ModifierKeys.None, MultiSelectBehavior.CtrlDown);
+            TreeModifierKeys.None, MultiSelectBehavior.CtrlDown);
 
         reaction.ShouldBe(TreeNodeClickReaction.SingleSelect);
     }

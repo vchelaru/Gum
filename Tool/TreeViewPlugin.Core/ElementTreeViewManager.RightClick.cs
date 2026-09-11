@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.ToolCommands;
 using Gum.DataTypes;
 using Gum.ToolStates;
-using System.Windows.Controls;
 using System.Diagnostics;
 using System.IO;
 using ToolsUtilities;
@@ -18,6 +17,7 @@ using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ViewModels;
 
 namespace Gum.Managers;
 
@@ -49,19 +49,13 @@ public partial class ElementTreeViewManager
         return SortStandardTypeNamesForPalette(typeNames);
     }
 
-    private void AddMenuItem(string text, Action clickAction)
-    {
-        var menuItem = new MenuItem { Header = text };
-        menuItem.Click += (_, _) => clickAction();
-        _contextMenu.Items.Add(menuItem);
-    }
+    // The menu being built by BuildContextMenuItems.
+    private List<ContextMenuItemViewModel> _contextMenuItems;
 
-    private const double MenuIconSize = 16;
+    private void AddMenuItem(string text, Action clickAction) =>
+        _contextMenuItems.Add(new ContextMenuItemViewModel { Text = text, Action = clickAction });
 
-    private System.Windows.FrameworkElement? CreateIconImageForKey(string key) =>
-        Gum.Controls.TreeIconRegistry.CreateIcon(key, MenuIconSize);
-
-    private void AddSeparator() => _contextMenu.Items.Add(new Separator());
+    private void AddSeparator() => _contextMenuItems.Add(new ContextMenuItemViewModel { IsSeparator = true });
 
     private void AddFolderMenuItems()
     {
@@ -124,10 +118,10 @@ public partial class ElementTreeViewManager
         {
             return;
         }
-        string fullPath = element.GetFullPathXmlFile().FullPath;
+        string fullPath = _fileCommands.GetFullPathXmlFile(element, element.Name)!.FullPath;
         try
         {
-            System.Windows.Clipboard.SetText(fullPath);
+            _clipboardService.SetText(fullPath);
         }
         catch
         {
@@ -153,7 +147,7 @@ public partial class ElementTreeViewManager
             string fullFile;
             if (treeNode.Tag is ElementSave elementSave)
             {
-                fullFile = elementSave.GetFullPathXmlFile().FullPath;
+                fullFile = _fileCommands.GetFullPathXmlFile(elementSave, elementSave.Name)!.FullPath;
             }
             else if (treeNode.Tag is BehaviorSave behaviorSave)
             {
@@ -208,9 +202,10 @@ public partial class ElementTreeViewManager
     #endregion
 
 
-    public void PopulateContextMenu()
+    /// <summary>The right-click menu for the current selection; empty when nothing applies.</summary>
+    internal IReadOnlyList<ContextMenuItemViewModel> BuildContextMenuItems()
     {
-        _contextMenu.Items.Clear();
+        _contextMenuItems = new List<ContextMenuItemViewModel>();
 
         if (SelectedNode != null)
         {
@@ -444,12 +439,14 @@ public partial class ElementTreeViewManager
 
             #endregion
         }
+
+        return _contextMenuItems;
     }
 
     private void AddCreateInstanceMenuItems(string itemText)
     {
-        var parentMenuItem = new MenuItem { Header = itemText };
-        _contextMenu.Items.Add(parentMenuItem);
+        var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
+        _contextMenuItems.Add(parentMenuItem);
 
         // Add favorited components first
         var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
@@ -459,15 +456,15 @@ public partial class ElementTreeViewManager
         {
             foreach (var component in favoritedComponents)
             {
-                var menuItem = new MenuItem
+                var menuItem = new ContextMenuItemViewModel
                 {
-                    Header = component.Name,
-                    Icon = CreateIconImageForKey("Component.png"),
+                    Text = component.Name,
+                    IconKey = "Component.png",
                 };
-                parentMenuItem.Items.Add(menuItem);
+                parentMenuItem.Children.Add(menuItem);
 
                 var componentName = component.Name;
-                menuItem.Click += (_, _) =>
+                menuItem.Action = () =>
                 {
                     var selectedElement = _selectedState.SelectedElement;
                     if (selectedElement != null)
@@ -488,19 +485,19 @@ public partial class ElementTreeViewManager
             }
 
             // Add separator after favorited components
-            parentMenuItem.Items.Add(new Separator());
+            parentMenuItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
         }
 
         foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
         {
-            var menuItem = new MenuItem
+            var menuItem = new ContextMenuItemViewModel
             {
-                Header = type,
-                Icon = CreateIconImageForKey($"{type}_Instance.png"),
+                Text = type,
+                IconKey = $"{type}_Instance.png",
             };
-            parentMenuItem.Items.Add(menuItem);
+            parentMenuItem.Children.Add(menuItem);
 
-            menuItem.Click += (_, _) =>
+            menuItem.Action = () =>
             {
                 var selectedElement = _selectedState.SelectedElement;
                 if (selectedElement != null)
@@ -523,19 +520,19 @@ public partial class ElementTreeViewManager
 
     private void AddCreateBehaviorInstanceMenuItems(string itemText)
     {
-        var parentMenuItem = new MenuItem { Header = itemText };
-        _contextMenu.Items.Add(parentMenuItem);
+        var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
+        _contextMenuItems.Add(parentMenuItem);
 
         foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
         {
-            var menuItem = new MenuItem
+            var menuItem = new ContextMenuItemViewModel
             {
-                Header = type,
-                Icon = CreateIconImageForKey($"{type}_Instance.png"),
+                Text = type,
+                IconKey = $"{type}_Instance.png",
             };
-            parentMenuItem.Items.Add(menuItem);
+            parentMenuItem.Children.Add(menuItem);
 
-            menuItem.Click += (_, _) =>
+            menuItem.Action = () =>
             {
                 var selectedBehavior = _selectedState.SelectedBehavior;
                 if (selectedBehavior != null)

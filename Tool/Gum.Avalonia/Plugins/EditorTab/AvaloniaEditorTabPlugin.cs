@@ -13,6 +13,7 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.ViewModels;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Shell;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Localization;
@@ -233,50 +234,12 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     /// <inheritdoc/>
     protected override void ShowContextMenu(IReadOnlyList<ContextMenuItemViewModel> items)
     {
-        _contextMenu.Items.Clear();
-        foreach (ContextMenuItemViewModel item in items)
-        {
-            _contextMenu.Items.Add(ToMenuItem(item));
-        }
+        AvaloniaContextMenus.Populate(_contextMenu, items);
         _contextMenu.Open(_canvasControl);
     }
 
-    private static Control ToMenuItem(ContextMenuItemViewModel item)
-    {
-        if (item.IsSeparator)
-        {
-            return new Separator();
-        }
-        MenuItem menuItem = new MenuItem { Header = item.Text, IsEnabled = item.IsEnabled };
-        if (item.Shortcut != null)
-        {
-            menuItem.InputGesture = TryParseGesture(item.Shortcut);
-        }
-        if (item.Action != null)
-        {
-            menuItem.Click += (_, _) => item.Action();
-        }
-        foreach (ContextMenuItemViewModel child in item.Children)
-        {
-            menuItem.Items.Add(ToMenuItem(child));
-        }
-        return menuItem;
-    }
-
-    private static KeyGesture? TryParseGesture(string shortcut)
-    {
-        try
-        {
-            return KeyGesture.Parse(shortcut);
-        }
-        catch (ArgumentException)
-        {
-            return null;
-        }
-    }
-
-    // Drag and drop glue: files from the OS, and a Standards-palette chip by its data format. Tree
-    // node drags arrive with the Avalonia tree in phase 60.
+    // Drag and drop glue: files from the OS, a Standards-palette chip by its data format, and nodes
+    // or search results dragged out of the element tree (their tags travel in TreeDragPayload).
     private DragDropEffects DecideDropEffects(DragEventArgs e, bool reportBlockedReason) =>
         DecideWireframeDropAccepted(ReadPayload(e), reportBlockedReason) ? DragDropEffects.Copy : DragDropEffects.None;
 
@@ -288,6 +251,10 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
             .Where(path => path != null)
             .Select(path => path!)
             .ToArray();
-        return new WireframeDropPayload(standardElementTypeName, null, files is { Length: > 0 } ? files : null);
+        // A folder row's tag is null; it is kept so the drag still reads as a node drag that drops nothing.
+        List<object>? nodeTags = e.DataTransfer.Contains(AvaloniaDragFormats.TreeNodes) && TreeDragPayload.Tags is { } tags
+            ? tags.Select(tag => tag!).ToList()
+            : null;
+        return new WireframeDropPayload(standardElementTypeName, nodeTags, files is { Length: > 0 } ? files : null);
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Gum.Avalonia.Shell;
 using Gum.Input;
+using Gum.Managers;
 using Gum.Menus;
 using Gum.Plugins;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,7 +37,12 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
     }
 
     /// <inheritdoc/>
-    public IEnumerable<Assembly> InternalPluginAssemblies => new[] { typeof(AvaloniaPluginHostConfiguration).Assembly };
+    /// <remarks>This head's assembly, plus the neutral element-tree assembly whose plugin both heads share.</remarks>
+    public IEnumerable<Assembly> InternalPluginAssemblies => new[]
+    {
+        typeof(AvaloniaPluginHostConfiguration).Assembly,
+        typeof(ElementTreeViewManager).Assembly,
+    };
 
     /// <inheritdoc/>
     public void AddHeadExports(CompositionBatch batch)
@@ -44,6 +50,7 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
         batch.AddExportedValue<MenuModel>(_services.GetRequiredService<MenuModel>());
         batch.AddExportedValue<ShellViewModel>(_services.GetRequiredService<ShellViewModel>());
         batch.AddExportedValue<AvaloniaTabManager>(_services.GetRequiredService<AvaloniaTabManager>());
+        batch.AddExportedValue<ElementTreeViewManager>(_services.GetRequiredService<ElementTreeViewManager>());
     }
 
     /// <inheritdoc/>

@@ -20,7 +20,12 @@ namespace Gum.Plugins;
 public class WpfPluginHostConfiguration : IPluginHostConfiguration
 {
     /// <inheritdoc/>
-    public IEnumerable<Assembly> InternalPluginAssemblies => new[] { typeof(WpfPluginHostConfiguration).Assembly };
+    /// <remarks>The tool assembly, plus the neutral element-tree assembly whose plugin both heads share.</remarks>
+    public IEnumerable<Assembly> InternalPluginAssemblies => new[]
+    {
+        typeof(WpfPluginHostConfiguration).Assembly,
+        typeof(ElementTreeViewManager).Assembly,
+    };
 
     /// <inheritdoc/>
     public void AddHeadExports(CompositionBatch batch)

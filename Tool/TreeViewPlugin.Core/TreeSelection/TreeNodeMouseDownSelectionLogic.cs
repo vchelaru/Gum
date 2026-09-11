@@ -1,5 +1,3 @@
-using System.Windows.Input;
-
 namespace Gum.Controls;
 
 /// <summary>
@@ -20,23 +18,23 @@ public class TreeNodeMouseDownSelectionLogic
     /// </summary>
     public bool ShouldReactToClick(
         bool isNodeInMultiSelection,
-        MouseButton button,
-        ModifierKeys effectiveModifiers,
+        TreePointerButton button,
+        TreeModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior,
         bool isSelectingOnPush)
     {
-        if (isNodeInMultiSelection && button == MouseButton.Right && effectiveModifiers != ModifierKeys.None)
+        if (isNodeInMultiSelection && button == TreePointerButton.Right && effectiveModifiers != TreeModifierKeys.None)
         {
             return false;
         }
 
-        if (effectiveModifiers == ModifierKeys.None && multiSelectBehavior != MultiSelectBehavior.RegularClick &&
+        if (effectiveModifiers == TreeModifierKeys.None && multiSelectBehavior != MultiSelectBehavior.RegularClick &&
             isNodeInMultiSelection)
         {
             return false;
         }
 
-        return isSelectingOnPush || effectiveModifiers == ModifierKeys.Shift ||
-               effectiveModifiers == ModifierKeys.Control || button == MouseButton.Right;
+        return isSelectingOnPush || effectiveModifiers == TreeModifierKeys.Shift ||
+               effectiveModifiers == TreeModifierKeys.Control || button == TreePointerButton.Right;
     }
 }

@@ -42,6 +42,7 @@
     <ProjectReference Include="..\..\..\Tool\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
     <ProjectReference Include="..\..\EditorTabPlugin_XNA\EditorTabPlugin_XNA.csproj" />
     <ProjectReference Include="..\..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
+    <ProjectReference Include="..\..\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -14,7 +14,12 @@ public static class ContextMenuItemViewModelExtensions
 {
     private const double MenuIconSize = 14;
 
-    public static Control ToMenuItem(this ContextMenuItemViewModel item)
+    public static Control ToMenuItem(this ContextMenuItemViewModel item) => item.ToMenuItem(MenuIconSize);
+
+    /// <summary>
+    /// Converts <paramref name="item"/> and its children, drawing icons at <paramref name="iconSize"/>.
+    /// </summary>
+    public static Control ToMenuItem(this ContextMenuItemViewModel item, double iconSize)
     {
         if (item.IsSeparator)
         {
@@ -30,7 +35,7 @@ public static class ContextMenuItemViewModelExtensions
 
         if (item.IconKey != null)
         {
-            menuItem.Icon = CreateIcon(item.IconKey);
+            menuItem.Icon = CreateIcon(item.IconKey, iconSize);
         }
 
         if (item.Action != null)
@@ -40,21 +45,22 @@ public static class ContextMenuItemViewModelExtensions
 
         foreach (var child in item.Children)
         {
-            menuItem.Items.Add(child.ToMenuItem());
+            menuItem.Items.Add(child.ToMenuItem(iconSize));
         }
 
         return menuItem;
     }
 
     /// <summary>
-    /// Matches the icons the States tree itself uses for category/state rows
-    /// (<c>StateTreeView.xaml</c>'s "DatabaseMultiple"/"Database" FluentIcons), so an "Add
-    /// State"/"Add Category" menu item reads as the same concept as the row it will create.
+    /// Category and State match the icons the States tree uses for its rows (<c>StateTreeView.xaml</c>'s
+    /// "DatabaseMultiple"/"Database" FluentIcons), so an "Add State"/"Add Category" item reads as the
+    /// concept it creates. Any other key is a tree icon file name, such as "Sprite_Instance.png" in the
+    /// element tree's add menus.
     /// </summary>
-    private static FluentIcon? CreateIcon(string iconKey) => iconKey switch
+    private static object? CreateIcon(string iconKey, double size) => iconKey switch
     {
-        ContextMenuIconKeys.Category => new FluentIcon { Icon = FluentIcons.Common.Icon.DatabaseMultiple, FontSize = MenuIconSize },
-        ContextMenuIconKeys.State => new FluentIcon { Icon = FluentIcons.Common.Icon.Database, FontSize = MenuIconSize },
-        _ => null
+        ContextMenuIconKeys.Category => new FluentIcon { Icon = FluentIcons.Common.Icon.DatabaseMultiple, FontSize = size },
+        ContextMenuIconKeys.State => new FluentIcon { Icon = FluentIcons.Common.Icon.Database, FontSize = size },
+        _ => Gum.Controls.TreeIconRegistry.CreateIcon(iconKey, size)
     };
 }

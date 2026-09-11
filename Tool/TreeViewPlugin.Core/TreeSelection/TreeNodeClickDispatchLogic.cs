@@ -1,5 +1,3 @@
-using System.Windows.Input;
-
 namespace Gum.Controls;
 
 /// <summary>
@@ -45,7 +43,7 @@ public class TreeNodeClickDispatchLogic
         bool hasClickedNode,
         bool hasExistingSelection,
         bool alwaysHaveOneNodeSelected,
-        ModifierKeys effectiveModifiers,
+        TreeModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior)
     {
         if (!hasClickedNode)
@@ -54,13 +52,13 @@ public class TreeNodeClickDispatchLogic
         }
 
         if (!hasExistingSelection ||
-            effectiveModifiers == ModifierKeys.Control ||
+            effectiveModifiers == TreeModifierKeys.Control ||
             multiSelectBehavior == MultiSelectBehavior.RegularClick)
         {
             return TreeNodeClickReaction.ToggleSelection;
         }
 
-        if (effectiveModifiers == ModifierKeys.Shift)
+        if (effectiveModifiers == TreeModifierKeys.Shift)
         {
             return TreeNodeClickReaction.RangeSelect;
         }

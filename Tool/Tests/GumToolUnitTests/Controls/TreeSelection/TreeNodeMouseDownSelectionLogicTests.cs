@@ -1,6 +1,5 @@
 using Gum.Controls;
 using Shouldly;
-using System.Windows.Input;
 using Xunit;
 
 namespace GumToolUnitTests.Controls.TreeSelection;
@@ -20,7 +19,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
         // Neither IsSelectingOnPush nor a Shift/Control/right-click reason to react on press;
         // OnMouseUp handles this case instead.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Left, ModifierKeys.None,
+            isNodeInMultiSelection: false, TreePointerButton.Left, TreeModifierKeys.None,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeFalse();
@@ -30,7 +29,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     public void ShouldReactToClick_LeftButtonNoModifierSelectingOnPush_ReturnsTrue()
     {
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Left, ModifierKeys.None,
+            isNodeInMultiSelection: false, TreePointerButton.Left, TreeModifierKeys.None,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: true);
 
         shouldReact.ShouldBeTrue();
@@ -41,7 +40,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     {
         // Potential drag operation - defer the actual (re)select to mouse-up.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: true, MouseButton.Left, ModifierKeys.None,
+            isNodeInMultiSelection: true, TreePointerButton.Left, TreeModifierKeys.None,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: true);
 
         shouldReact.ShouldBeFalse();
@@ -52,7 +51,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     {
         // MultiSelectBehavior.RegularClick means a click always (re)selects - no drag deferral.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: true, MouseButton.Left, ModifierKeys.None,
+            isNodeInMultiSelection: true, TreePointerButton.Left, TreeModifierKeys.None,
             MultiSelectBehavior.RegularClick, isSelectingOnPush: true);
 
         shouldReact.ShouldBeTrue();
@@ -62,7 +61,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     public void ShouldReactToClick_ShiftHeld_ReturnsTrue()
     {
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Left, ModifierKeys.Shift,
+            isNodeInMultiSelection: false, TreePointerButton.Left, TreeModifierKeys.Shift,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeTrue();
@@ -72,7 +71,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     public void ShouldReactToClick_ControlHeld_ReturnsTrue()
     {
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Left, ModifierKeys.Control,
+            isNodeInMultiSelection: false, TreePointerButton.Left, TreeModifierKeys.Control,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeTrue();
@@ -83,7 +82,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
     {
         // Right-click selects before the context menu shows, even without IsSelectingOnPush.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Right, ModifierKeys.None,
+            isNodeInMultiSelection: false, TreePointerButton.Right, TreeModifierKeys.None,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeTrue();
@@ -95,7 +94,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
         // Right-click with a modifier held on an already-multi-selected node opens a context menu
         // without changing selection.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: true, MouseButton.Right, ModifierKeys.Control,
+            isNodeInMultiSelection: true, TreePointerButton.Right, TreeModifierKeys.Control,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeFalse();
@@ -107,7 +106,7 @@ public class TreeNodeMouseDownSelectionLogicTests : BaseTestClass
         // The right-click-with-modifier deferral only applies when the node is already part of a
         // multi-selection; otherwise the right-click-selects-before-menu rule still applies.
         bool shouldReact = _logic.ShouldReactToClick(
-            isNodeInMultiSelection: false, MouseButton.Right, ModifierKeys.Control,
+            isNodeInMultiSelection: false, TreePointerButton.Right, TreeModifierKeys.Control,
             MultiSelectBehavior.CtrlDown, isSelectingOnPush: false);
 
         shouldReact.ShouldBeTrue();

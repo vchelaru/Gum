@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Controls;
@@ -20,21 +20,14 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using static Gum.Managers.TreeNodeImageIndices;
-using MaterialDesignThemes.Wpf;
+using Gum.ViewModels;
 using RenderingLibrary;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Threading;
 using ToolsUtilities;
-using Application = System.Windows.Application;
-using Binding = System.Windows.Data.Binding;
-using Grid = System.Windows.Controls.Grid;
-using WpfInput = System.Windows.Input;
 
 namespace Gum.Managers;
 
@@ -54,29 +47,29 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly ISelectionHistory _selectionHistory;
-    private readonly ElementTreeViewCreator _viewCreator;
+    private readonly IElementTreeViewFactory _viewFactory;
+    private readonly IClipboardService _clipboardService;
+    private IElementTreeView? _view;
 
     // The *ImageIndex constants and the node icon-decision logic live on
     // TreeNodeImageIndices/TreeNodeImageLogic (Gum.Presentation, accessed via _treeNodeImageLogic
     // and the using static below) so they can be unit-tested without a tree and referenced from
     // headless code.
 
-    // Forwarding properties for UI controls owned by _viewCreator
-    internal GumTreeView ObjectTreeView => _viewCreator.ObjectTreeView;
-    private System.Windows.Controls.ContextMenu _contextMenu => _viewCreator.ContextMenu;
-    private FlatSearchListBox FlatList => _viewCreator.FlatList;
-    private System.Windows.Controls.TextBox searchTextBox => _viewCreator.SearchTextBox;
-    private System.Windows.Controls.CheckBox deepSearchCheckBox => _viewCreator.DeepSearchCheckBox;
+    // The head's Project panel, created in Initialize.
+    private IElementTreeView View => _view
+        ?? throw new InvalidOperationException($"{nameof(Initialize)} must run before the tree view is used.");
 
-    internal void UpdateCollapseButtonSizes(double baseFontSize) =>
-        _viewCreator.UpdateCollapseButtonSizes(baseFontSize);
+    private TreeSelectionModel Selection => View.Selection;
+
+    internal void UpdateCollapseButtonSizes(double baseFontSize) => _view?.UpdateCollapseButtonSizes(baseFontSize);
 
     /// <summary>
     /// The tree's top-level nodes. This is the tree's real root collection rather than the four
     /// m*GumTreeNode fields, because Standard Elements is conditionally absent from the tree while its
     /// field stays populated.
     /// </summary>
-    internal IReadOnlyList<ITreeNode> RootTreeNodes => ObjectTreeView.Nodes.ToList<ITreeNode>();
+    internal IReadOnlyList<ITreeNode> RootTreeNodes => View.Nodes.ToList<ITreeNode>();
 
     ITreeNodeMutable mScreensTreeNode;
     ITreeNodeMutable mComponentsTreeNode;
@@ -85,7 +78,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     GumTreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
 
-    private WpfInput.Cursor AddCursor { get; }
 
 
     /// <summary>
@@ -115,31 +107,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public ITreeNode? SelectedNode
     {
-        get
-        {
-            // This could be called before the tree is created:
-            if (ObjectTreeView?.SelectedNode == null)
-            {
-                return null;
-            }
-            else
-            {
-                return  ObjectTreeView.SelectedNode;
-            }
-        }
-        set
-        {
-            ObjectTreeView.SelectedNode = value as GumTreeNode;
-        }
+        // This could be called before the tree is created.
+        get => _view?.Selection.SelectedNode;
+        set => Selection.SelectedNode = value as GumTreeNode;
     }
 
-    public List<ITreeNode> SelectedNodes
-    {
-        get
-        {
-            return ObjectTreeView.SelectedNodes.Select(item => item).ToList<ITreeNode>();
-        }
-    }
+    public List<ITreeNode> SelectedNodes => Selection.SelectedNodes.ToList<ITreeNode>();
 
     string filterText;
     public string FilterText
@@ -160,7 +133,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private void SelectFirstElement()
     {
         GumTreeNode treeNode = 
-            ObjectTreeView.Nodes.FirstOrDefault() as GumTreeNode;
+            View.Nodes.FirstOrDefault() as GumTreeNode;
 
         while(treeNode != null)
         {
@@ -204,20 +177,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
     private readonly TreeNodeImageLogic _treeNodeImageLogic;
-    private readonly StandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IPluginManager _pluginManager;
     private readonly IDispatcher _dispatcher;
     private readonly IFileSystemRevealService _fileSystemRevealService;
 
-    public bool HasMouseOver
-    {
-        get
-        {
-            System.Windows.Point position = WpfInput.Mouse.GetPosition(ObjectTreeView);
-            return position.X >= 0 && position.Y >= 0 &&
-                position.X <= ObjectTreeView.ActualWidth && position.Y <= ObjectTreeView.ActualHeight;
-        }
-    }
+    public bool HasMouseOver => _view?.IsPointerOver == true;
 
     #endregion
 
@@ -242,11 +206,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFavoriteComponentManager favoriteComponentManager,
         ISelectionHistory selectionHistory,
         IProjectState projectState,
-        StandardElementsManagerGumTool standardElementsManagerGumTool,
         IDragDropManager dragDropManager,
         IPluginManager pluginManager,
         IDispatcher dispatcher,
-        IFileSystemRevealService fileSystemRevealService)
+        IFileSystemRevealService fileSystemRevealService,
+        IClipboardService clipboardService,
+        IElementTreeViewFactory viewFactory)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -270,31 +235,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _favoriteComponentManager = favoriteComponentManager;
         _selectionHistory = selectionHistory;
         _projectState = projectState;
-        _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _pluginManager = pluginManager;
         _dispatcher = dispatcher;
         _collapseToggleService = new CollapseToggleService();
         _treeNodeImageLogic = new TreeNodeImageLogic();
         _recordedSelectedInstances = new List<InstanceSave>();
-        AddCursor = GetAddCursor();
         _dragDropManager = dragDropManager;
-        _viewCreator = new ElementTreeViewCreator();
-
-        WpfInput.Cursor GetAddCursor()
-        {
-            try
-            {
-                using System.IO.Stream? stream = typeof(Gum.Program).Assembly
-                    .GetManifestResourceStream("Gum.Content.Cursors.AddCursor.cur");
-
-                return stream != null ? new WpfInput.Cursor(stream) : WpfInput.Cursors.Arrow;
-            }
-            catch
-            {
-                // This has crashed on at least one machine. It is only a cursor, so tolerate it.
-                return WpfInput.Cursors.Arrow;
-            }
-        }
+        _clipboardService = clipboardService;
+        _viewFactory = viewFactory;
+        _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
     #region Methods
@@ -343,33 +292,21 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             absoluteDirectory,
             FileManager.GetDirectory(_projectState.GumProjectSave.FullFileName));
 
-    public ITreeNode? GetTreeNodeOver()
-    {
-        var nodeAtPoint = ObjectTreeView.GetNodeAt(WpfInput.Mouse.GetPosition(ObjectTreeView));
-
-        if(nodeAtPoint == null)
-        {
-            return null;
-        }
-        else
-        {
-            return nodeAtPoint;
-        }
-    }
+    public ITreeNode? GetTreeNodeOver() => _view?.NodeUnderPointer;
 
     #endregion
     
 
     public void Initialize()
     {
-        var grid = _viewCreator.CreateView(
-            onFilterTextChanged: text => FilterText = text,
-            onSearchNodeSelected: HandleSelectedSearchNode,
-            onCollapseAll: () => _collapseToggleService.HandleCollapseAll(RootTreeNodes, () => _viewCreator.CollapseAll()),
-            onCollapseToElementLevel: () => _collapseToggleService.HandleCollapseToElementLevel(RootTreeNodes, () => _viewCreator.CollapseToElementLevel()),
-            onDeepSearchChecked: () => ReactToFilterTextChanged());
+        _view = _viewFactory.Create();
+        _view.SearchTextChanged += text => FilterText = text;
+        _view.SearchResultChosen += HandleSelectedSearchNode;
+        _view.CollapseAllRequested += () => _collapseToggleService.HandleCollapseAll(RootTreeNodes, CollapseAll);
+        _view.CollapseToElementLevelRequested += () => _collapseToggleService.HandleCollapseToElementLevel(RootTreeNodes, CollapseToElementLevel);
+        _view.DeepSearchChecked += ReactToFilterTextChanged;
 
-        _tabManager.AddControl(grid, "Project", TabLocation.Left);
+        _tabManager.AddControl(_view.Content, "Project", TabLocation.Left);
 
         WireTreeViewEvents();
 
@@ -380,67 +317,50 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void WireTreeViewEvents()
     {
-        ObjectTreeView.AfterClickSelect += ObjectTreeView_AfterClickSelect;
-        ObjectTreeView.AfterSelect += ObjectTreeView_AfterSelect;
-        ObjectTreeView.KeyDown += ObjectTreeView_KeyDown;
-        ObjectTreeView.ContextMenuOpening += ObjectTreeView_ContextMenuOpening;
-        ObjectTreeView.ContextMenu = _contextMenu;
-        ObjectTreeView.NodeExpansionChangedByUser += (_, _) => _collapseToggleService.OnNodeManuallyChanged();
-        ObjectTreeView.UnhandledException += ex => _dialogService.ShowMessage(ex.Message);
-        ObjectTreeView.MouseMove += (_, e) =>
-        {
-            System.Windows.Point position = e.GetPosition(ObjectTreeView);
-            HandleMouseOver((int)position.X, (int)position.Y);
-        };
+        Selection.AfterClickSelect += ObjectTreeView_AfterClickSelect;
+        Selection.AfterSelect += ObjectTreeView_AfterSelect;
+        View.UnhandledException += ex => _dialogService.ShowMessage(ex.Message);
+        View.KeyDown += HandleKeyDown;
+        View.ContextMenuProvider = BuildContextMenu;
+        View.NodeExpansionChangedByUser += () => _collapseToggleService.OnNodeManuallyChanged();
+        View.PointerMoved += HandleMouseOver;
 
-        ObjectTreeView.DragOver += HandleTreeDragOver;
-        ObjectTreeView.Drop += HandleTreeDrop;
-        ObjectTreeView.ValidateSortingDrop += HandleValidateSortingDrop;
-        ObjectTreeView.NodeSortingDropped += HandleNodeSortingDropped;
-        ObjectTreeView.GiveFeedback += HandleTreeGiveFeedback;
-        ObjectTreeView.QueryContinueDrag += (_, e) =>
-        {
-            if (e.Action != System.Windows.DragAction.Continue)
-            {
-                _dispatcher.Post(() => OnSelect(ObjectTreeView.SelectedNode));
-            }
-        };
+        View.ExternalDragOver += HandleTreeDragOver;
+        View.ExternalDrop += HandleTreeDrop;
+        View.ValidateSortingDrop += HandleValidateSortingDrop;
+        View.NodeSortingDropped += HandleNodeSortingDropped;
+        View.DragEnded += () => _dispatcher.Post(() => OnSelect(Selection.SelectedNode));
     }
 
     /// <summary>
-    /// Handles payloads that did not come from the tree - files from Explorer and Standards-palette
-    /// chips. Node reordering is the control's own concern and arrives via
-    /// <see cref="HandleValidateSortingDrop"/>.
+    /// Handles payloads that did not come from the tree - files from the file manager and
+    /// Standards-palette chips. Node reordering arrives via <see cref="HandleValidateSortingDrop"/>.
     /// </summary>
-    private void HandleTreeDragOver(object sender, System.Windows.DragEventArgs e)
+    private void HandleTreeDragOver(object? sender, TreeExternalDragEventArgs e)
     {
-        if (e.Data?.GetDataPresent(System.Windows.DataFormats.FileDrop) == true)
+        if (e.Files != null)
         {
-            e.Effects = System.Windows.DragDropEffects.Copy;
-            e.Handled = true;
+            e.Accepted = true;
         }
-        else if (e.Data?.GetDataPresent(DragDropManager.StandardElementNameDataFormat) == true)
+        else if (e.StandardElementTypeName != null)
         {
-            e.Effects = GetChipDropTargetNode(e) != null
-                ? System.Windows.DragDropEffects.Copy
-                : System.Windows.DragDropEffects.None;
-            e.Handled = true;
+            e.Accepted = GetChipDropTargetNode(e.TargetNode) != null;
         }
 
-        if (ObjectTreeView.GetNodeAt(e.GetPosition(ObjectTreeView)) is { } hovered)
+        if (e.TargetNode is { } hovered)
         {
             DelayExpandHoveredNode(hovered);
         }
     }
 
-    private void HandleTreeDrop(object sender, System.Windows.DragEventArgs e)
+    private void HandleTreeDrop(object? sender, TreeExternalDragEventArgs e)
     {
-        if (e.Data?.GetData(System.Windows.DataFormats.FileDrop) is string[] files)
+        if (e.Files != null)
         {
-            _dragDropManager.OnFilesDroppedInTreeView(files);
+            _dragDropManager.OnFilesDroppedInTreeView(e.Files);
         }
-        else if (e.Data?.GetData(DragDropManager.StandardElementNameDataFormat) is string standardTypeName
-            && GetChipDropTargetNode(e) is { } targetNode
+        else if (e.StandardElementTypeName is { } standardTypeName
+            && GetChipDropTargetNode(e.TargetNode) is { } targetNode
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
             _dragDropManager.HandleDroppedStandardElementOnTreeNode(standardElement, targetNode);
@@ -465,28 +385,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    private void HandleTreeGiveFeedback(object sender, System.Windows.GiveFeedbackEventArgs e)
-    {
-        if (InputLibrary.Cursor.Self.IsInWindow)
-        {
-            e.UseDefaultCursors = false;
-            System.Windows.Input.Mouse.SetCursor(AddCursor);
-            e.Handled = true;
-        }
-    }
-
     private void ConfigureStandardsPalette()
     {
-        var palette = _viewCreator.StandardsPalette;
-
-        palette.CurrentElementNameProvider = () =>
+        View.CurrentElementNameProvider = () =>
             _selectedState.SelectedElement is { } element && element is not StandardElementSave
                 ? element.Name
                 : null;
 
-        palette.AddToCurrentRequested = AddStandardInstanceToCurrentElement;
+        View.AddStandardToCurrentRequested += AddStandardInstanceToCurrentElement;
 
-        palette.EditDefaultsRequested = typeName =>
+        View.EditStandardDefaultsRequested += typeName =>
         {
             if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
             {
@@ -508,30 +416,29 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if (mStandardElementsTreeNode != null)
         {
-            // ObjectTreeView.Nodes holds concrete nodes, so the ITreeNodeMutable root fields need a
+            // View.Nodes holds concrete nodes, so the ITreeNodeMutable root fields need a
             // cast here. Always safe - every node this class constructs is a GumTreeNode.
             GumTreeNode standardElementsTreeNode = (GumTreeNode)mStandardElementsTreeNode;
-            bool isInTree = ObjectTreeView.Nodes.Contains(standardElementsTreeNode);
+            bool isInTree = View.Nodes.Contains(standardElementsTreeNode);
             if (usePalette && isInTree)
             {
-                ObjectTreeView.Nodes.Remove(standardElementsTreeNode);
+                View.Nodes.Remove(standardElementsTreeNode);
             }
             else if (!usePalette && !isInTree)
             {
                 // Restore in canonical order: after Components, before Behaviors.
                 int insertIndex = mBehaviorsTreeNode != null
-                    ? ObjectTreeView.Nodes.IndexOf((GumTreeNode)mBehaviorsTreeNode)
-                    : ObjectTreeView.Nodes.Count;
+                    ? View.Nodes.IndexOf((GumTreeNode)mBehaviorsTreeNode)
+                    : View.Nodes.Count;
                 if (insertIndex < 0)
                 {
-                    insertIndex = ObjectTreeView.Nodes.Count;
+                    insertIndex = View.Nodes.Count;
                 }
-                ObjectTreeView.Nodes.Insert(insertIndex, standardElementsTreeNode);
+                View.Nodes.Insert(insertIndex, standardElementsTreeNode);
             }
         }
 
-        var palette = _viewCreator.StandardsPalette;
-        palette.Visibility = usePalette ? Visibility.Visible : Visibility.Collapsed;
+        View.SetStandardsPaletteVisible(usePalette);
         if (usePalette)
         {
             RefreshStandardsPaletteChips();
@@ -545,14 +452,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public void HighlightStandardInPalette(ElementSave? selectedElement)
     {
         string? typeName = selectedElement is StandardElementSave ? selectedElement.Name : null;
-        _viewCreator.StandardsPalette.SetSelectedStandardType(typeName);
+        _view?.SetSelectedStandardType(typeName);
     }
 
     private void RefreshStandardsPaletteChips()
     {
         var typeNames = GetAvailableStandardInstanceTypes(_projectState.GumProjectSave);
 
-        _viewCreator.StandardsPalette.RefreshChips(typeNames);
+        View.RefreshStandardsPaletteChips(typeNames);
     }
 
     /// <summary>
@@ -588,9 +495,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// Returns the tree node under the drag cursor if it is a valid Standards-chip drop target
     /// (a Screen/Component element, or an instance within one); otherwise null.
     /// </summary>
-    private GumTreeNode? GetChipDropTargetNode(System.Windows.DragEventArgs e)
+    private static GumTreeNode? GetChipDropTargetNode(GumTreeNode? node)
     {
-        GumTreeNode? node = ObjectTreeView.GetNodeAt(e.GetPosition(ObjectTreeView));
         if (node == null)
         {
             return null;
@@ -669,14 +575,45 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
 
+    private void CollapseAll()
+    {
+        foreach (GumTreeNode node in View.Nodes.SelectMany(root => root.SelfAndDescendants()))
+        {
+            node.IsExpanded = false;
+        }
+    }
+
+    private void CollapseToElementLevel() => CollapseElementNodesRecursively(View.Nodes);
+
+    /// <summary>
+    /// Collapses element nodes while leaving folder nodes as the user left them.
+    /// </summary>
+    private static void CollapseElementNodesRecursively(GumTreeNodeCollection nodes)
+    {
+        foreach (GumTreeNode node in nodes)
+        {
+            // A node with a Tag is an element (Screen, Component, Behavior, Instance).
+            if (node.Tag != null)
+            {
+                node.Collapse();
+            }
+            else if (node.IsTopElementContainerTreeNode() ||
+                     node.IsScreensFolderTreeNode() ||
+                     node.IsComponentsFolderTreeNode())
+            {
+                CollapseElementNodesRecursively(node.Nodes);
+            }
+        }
+    }
+
     internal void FocusSearch()
     {
-        searchTextBox.Focus();
+        View.FocusSearch();
     }
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
-        _viewCreator.ApplyThemeColors();
+        _view?.ApplyThemeColors();
     }
 
     private void DelayExpandHoveredNode(GumTreeNode hoveredNode)
@@ -691,7 +628,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             mLastHoveredNode = hoveredNode;
 
             // If partially off the screen, make it visible
-            ObjectTreeView.EnsureVisible(hoveredNode);
+            View.EnsureVisible(hoveredNode);
         }
         else
         {
@@ -1052,16 +989,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (mScreensTreeNode == null)
         {
-            // ObjectTreeView.Nodes holds concrete nodes, so each root is built as a GumTreeNode local
+            // View.Nodes holds concrete nodes, so each root is built as a GumTreeNode local
             // and then assigned to its ITreeNodeMutable field.
             GumTreeNode screensTreeNode = new GumTreeNode("Screens");
             screensTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(screensTreeNode);
+            View.Nodes.Add(screensTreeNode);
             mScreensTreeNode = screensTreeNode;
 
             GumTreeNode componentsTreeNode = new GumTreeNode("Components");
             componentsTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(componentsTreeNode);
+            View.Nodes.Add(componentsTreeNode);
             mComponentsTreeNode = componentsTreeNode;
 
             GumTreeNode standardElementsTreeNode = new GumTreeNode("Standard");
@@ -1071,13 +1008,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             // populated) so toggling the setting at runtime can restore it without a full rebuild.
             if (!_projectState.EffectiveUseStandardsPalette)
             {
-                ObjectTreeView.Nodes.Add(standardElementsTreeNode);
+                View.Nodes.Add(standardElementsTreeNode);
             }
             mStandardElementsTreeNode = standardElementsTreeNode;
 
             GumTreeNode behaviorsTreeNode = new GumTreeNode("Behaviors");
             behaviorsTreeNode.ImageIndex = FolderImageIndex;
-            ObjectTreeView.Nodes.Add(behaviorsTreeNode);
+            View.Nodes.Add(behaviorsTreeNode);
             mBehaviorsTreeNode = behaviorsTreeNode;
         }
     }
@@ -1315,11 +1252,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         if (elementSave == null)
         {
-            if (ObjectTreeView.SelectedNode != null && ObjectTreeView.SelectedNode.Tag != null && ObjectTreeView.SelectedNode.Tag is ElementSave)
+            if (Selection.SelectedNode != null && Selection.SelectedNode.Tag != null && Selection.SelectedNode.Tag is ElementSave)
             {
                 // why do we explicitly set this here rather than calling Select? If we set it to null without calling that, we don't get the benefit of the 
                 // plugins being notified of a null selection:
-                //ObjectTreeView.SelectedNode = null;
+                //Selection.SelectedNode = null;
                 Select((GumTreeNode?)null);
 
             }
@@ -1328,9 +1265,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         {
             var treeNode = GetTreeNodeFor(elementSave);
 
-            if(treeNode == null && !string.IsNullOrEmpty(searchTextBox.Text))
+            if(treeNode == null && !string.IsNullOrEmpty(filterText))
             {
-                searchTextBox.Text = null;
+                View.ClearSearchText();
                 treeNode = GetTreeNodeFor(elementSave);
             }
 
@@ -1342,22 +1279,22 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (IsInUiInitiatedSelection) return;
 
-        treeNode = ResolveNodeToSelect(treeNode, ObjectTreeView.Nodes);
+        treeNode = ResolveNodeToSelect(treeNode, View.Nodes);
 
-        if (ObjectTreeView.SelectedNode != treeNode)
+        if (Selection.SelectedNode != treeNode)
         {
             // See comment above about why we have to manually raise the AfterClick
 
-            ObjectTreeView.SelectedNode = treeNode;
+            Selection.SelectedNode = treeNode;
 
             if (treeNode != null)
             {
-                ObjectTreeView.EnsureVisible(treeNode);
+                View.EnsureVisible(treeNode);
             }
 
             if (!SuppressCallAfterClickSelect)
             {
-                ObjectTreeView.CallAfterClickSelect(treeNode);
+                Selection.CallAfterClickSelect(treeNode);
             }
         }
     }
@@ -1393,15 +1330,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (IsInUiInitiatedSelection) return;
 
-        ObjectTreeView.SelectedNodes = treeNodes;
+        Selection.SelectedNodes = treeNodes;
 
         if (treeNodes.Count != 0)
         {
-            ObjectTreeView.EnsureVisible(treeNodes[0]);
+            View.EnsureVisible(treeNodes[0]);
 
             if (!SuppressCallAfterClickSelect)
             {
-                ObjectTreeView.CallAfterClickSelect(treeNodes[0]);
+                Selection.CallAfterClickSelect(treeNodes[0]);
             }
         }
     }
@@ -1825,7 +1762,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     internal bool SuppressCallAfterClickSelect;
     internal void OnSelect(ITreeNode? selectedTreeNode)
     {
-        GumTreeNode? treeNode = ObjectTreeView.SelectedNode;
+        GumTreeNode? treeNode = Selection.SelectedNode;
 
         object? selectedObject = null;
 
@@ -1893,31 +1830,28 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    internal void HandleKeyDown(WpfInput.KeyEventArgs e)
+    internal void HandleKeyDown(GumKeyEventArgs keyArgs)
     {
-        var didTreeViewHaveFocus = ObjectTreeView.IsKeyboardFocusWithin;
+        bool didTreeViewHaveFocus = View.IsKeyboardFocusWithin;
 
-        if (e.Key == WpfInput.Key.Up || e.Key == WpfInput.Key.Down)
+        if (keyArgs.Key is GumKey.Up or GumKey.Down)
         {
             // The tree moves the selection in its own handler, so scroll to wherever it landed.
-            if (ObjectTreeView.SelectedNode is { } selected)
+            if (Selection.SelectedNode is { } selected)
             {
-                ObjectTreeView.EnsureVisible(selected);
+                View.EnsureVisible(selected);
             }
-            OnSelect(ObjectTreeView.SelectedNode);
+            OnSelect(Selection.SelectedNode);
         }
 
-        GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
         _hotkeyManager.HandleKeyDownElementTreeView(keyArgs);
-        e.Handled = keyArgs.Handled;
 
         if (didTreeViewHaveFocus)
         {
             // On a delete, the popup appears, which steals focus from the treeview.
             // If we had focus before, let's get it now.
-            ObjectTreeView.Focus();
+            View.FocusTree();
         }
-
     }
 
     private void ObjectTreeView_AfterSelect(GumTreeNode? node)
@@ -1926,33 +1860,23 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         // we don't get notified when the user selects nothing.
         // Update - we only want to do this if it's null:
         // Otherwise we can't drag drop
-        if (ObjectTreeView.SelectedNode == null)
+        if (Selection.SelectedNode == null)
         {
-            OnSelect((ITreeNode?)ObjectTreeView.SelectedNode);
+            OnSelect((ITreeNode?)Selection.SelectedNode);
         }
     }
 
     private void ObjectTreeView_AfterClickSelect(GumTreeNode? node)
     {
-        OnSelect(ObjectTreeView.SelectedNode);
+        OnSelect(Selection.SelectedNode);
     }
 
-    private void ObjectTreeView_ContextMenuOpening(object sender, System.Windows.Controls.ContextMenuEventArgs e)
+    private IReadOnlyList<ContextMenuItemViewModel> BuildContextMenu()
     {
-        OnSelect(ObjectTreeView.SelectedNode);
+        OnSelect(Selection.SelectedNode);
 
-        PopulateContextMenu();
-
-        if (_contextMenu.Items.Count == 0)
-        {
-            // Nothing applies to this selection; suppress rather than open an empty popup.
-            e.Handled = true;
-        }
-    }
-
-    private void ObjectTreeView_KeyDown(object? sender, WpfInput.KeyEventArgs e)
-    {
-        HandleKeyDown(e);
+        // An empty list tells the view to suppress the menu rather than open an empty popup.
+        return BuildContextMenuItems();
     }
 
 
@@ -1964,97 +1888,76 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void ReactToFilterTextChanged()
     {
-        var shouldExpand = false;
-
-        if (!string.IsNullOrEmpty(filterText))
+        if (string.IsNullOrEmpty(filterText))
         {
-            shouldExpand = true;
+            View.ShowSearchResults(null);
+            return;
         }
 
-        FlatList.Visibility = shouldExpand.ToVisibility();
-        ObjectTreeView.Visibility = (!shouldExpand).ToVisibility();
+        List<SearchItemViewModel> results = new List<SearchItemViewModel>();
+        string filterTextLower = filterText.ToLower();
+        bool includeVariables = View.IsDeepSearchChecked;
+        var project = _projectState.GumProjectSave;
 
-        //RefreshUi();
-
-        if (!string.IsNullOrEmpty(filterText) && SelectedNode?.Tag == null)
+        foreach (var screen in project.Screens)
         {
-            //SelectFirstElement();
-        }
-
-
-        if (shouldExpand)
-        {
-
-            FlatList.FlatList.Items.Clear();
-
-            if(filterText != null)
+            if (screen.Name.ToLower().Contains(filterTextLower))
             {
-                var filterTextLower = filterText.ToLower();
-                var project = _projectState.GumProjectSave;
-                foreach (var screen in project.Screens)
+                AddToFlatList(results, screen);
+            }
+
+            if (includeVariables)
+            {
+                SearchInstanceVariables(results, screen, filterTextLower);
+            }
+        }
+        foreach (var component in project.Components)
+        {
+            if (component.Name.ToLower().Contains(filterTextLower))
+            {
+                AddToFlatList(results, component);
+            }
+
+            foreach (var instance in component.Instances)
+            {
+                if (instance.Name.ToLower().Contains(filterTextLower))
                 {
-                    if (screen.Name.ToLower().Contains(filterTextLower))
-                    {
-                        AddToFlatList(screen);
-                    }
-
-                    if (deepSearchCheckBox.IsChecked is true)
-                    {
-                        SearchInstanceVariables(screen, filterTextLower);
-                    }
-                }
-                foreach (var component in project.Components)
-                {
-                    if (component.Name.ToLower().Contains(filterTextLower))
-                    {
-                        AddToFlatList(component);
-                    }
-
-                    foreach (var instance in component.Instances)
-                    {
-                        if (instance.Name.ToLower().Contains(filterTextLower))
-                        {
-                            AddToFlatList(instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
-                        }
-                    }
-
-                    if (deepSearchCheckBox.IsChecked is true)
-                    {
-                        SearchInstanceVariables(component, filterTextLower);
-                    }
-                }
-                foreach (var standard in project.StandardElements)
-                {
-                    if (standard.Name.ToLower().Contains(filterTextLower))
-                    {
-                        AddToFlatList(standard);
-                    }
-
-                    if (deepSearchCheckBox.IsChecked is true)
-                    {
-                        SearchInstanceVariables(standard, filterTextLower);
-                    }
-                }
-
-                foreach(var behavior in project.Behaviors)
-                {
-                    // Feb 5, 2025 - at some point a behavior with an empty name
-                    // snuck into a FRB project. We shouldn't crash here because of it...
-                    if(behavior.Name?.ToLower().Contains(filterTextLower) == true)
-                    {
-                        AddToFlatList(behavior);
-                    }
+                    AddToFlatList(results, instance, $"{component.Name}/{instance.Name} ({instance.BaseType})");
                 }
             }
 
-            if(FlatList.FlatList.Items.Count > 0)
+            if (includeVariables)
             {
-                FlatList.FlatList.SelectedIndex = 0;
+                SearchInstanceVariables(results, component, filterTextLower);
             }
         }
+        foreach (var standard in project.StandardElements)
+        {
+            if (standard.Name.ToLower().Contains(filterTextLower))
+            {
+                AddToFlatList(results, standard);
+            }
+
+            if (includeVariables)
+            {
+                SearchInstanceVariables(results, standard, filterTextLower);
+            }
+        }
+
+        foreach (var behavior in project.Behaviors)
+        {
+            // Feb 5, 2025 - at some point a behavior with an empty name
+            // snuck into a FRB project. We shouldn't crash here because of it...
+            if (behavior.Name?.ToLower().Contains(filterTextLower) == true)
+            {
+                AddToFlatList(results, behavior);
+            }
+        }
+
+        View.ShowSearchResults(results);
     }
 
-    private void SearchInstanceVariables(ElementSave element, string filterTextLower )
+    private static void SearchInstanceVariables(List<SearchItemViewModel> results, ElementSave element, string filterTextLower)
     {
         foreach (var state in element.AllStates)
         {
@@ -2068,20 +1971,20 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 if (variable.Value != null && (variable.Value is string str) && str.ToLower().Contains(filterTextLower))
                 {
                     var instance = element.Instances.FirstOrDefault(item => item.Name == variable.SourceObject);
-                    if(instance != null)
+                    if (instance != null)
                     {
-                        AddToFlatList(instance, $"{variable.Name}={variable.Value} on {element.Name}/{variable.SourceObject}");
+                        AddToFlatList(results, instance, $"{variable.Name}={variable.Value} on {element.Name}/{variable.SourceObject}");
                     }
                     else
                     {
-                        AddToFlatList(element, $"{variable.Name}={variable.Value} on {element.Name}");
+                        AddToFlatList(results, element, $"{variable.Name}={variable.Value} on {element.Name}");
                     }
                 }
             }
         }
     }
 
-    private void AddToFlatList(object element, string customName = "")
+    private static void AddToFlatList(List<SearchItemViewModel> results, object element, string customName = "")
     {
         if (element == null)
         {
@@ -2090,7 +1993,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         var vm = new SearchItemViewModel();
         vm.BackingObject = element;
         vm.CustomText = customName;
-        FlatList.FlatList.Items.Add(vm);
+        results.Add(vm);
     }
 
     private void HandleSelectedSearchNode(SearchItemViewModel? vm)
@@ -2111,7 +2014,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             else if(backingObject is BehaviorSave asBehavior)
                 _selectedState.SelectedBehavior = asBehavior;
 
-            searchTextBox.Text = null;
+            View.ClearSearchText();
             FilterText = string.Empty;
         }
     }
@@ -2120,9 +2023,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     #endregion
 
 
-    internal void HandleMouseOver(int x, int y)
+    internal void HandleMouseOver(GumTreeNode? objectOver)
     {
-        var objectOver = this.ObjectTreeView.GetNodeAt(new System.Windows.Point(x, y));
 
         ElementSave? element = null;
         InstanceSave? instance = null;
@@ -2158,9 +2060,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     internal void HighlightTreeNodeForIpso(IPositionedSizedObject? ipso)
     {
+        if (_view == null)
+        {
+            return;
+        }
+
         if (ipso == null)
         {
-            ObjectTreeView.SetExternalHotNode(null);
+            Selection.SetExternalHotNode(null);
             return;
         }
 
@@ -2191,11 +2098,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             treeNode = GetTreeNodeFor(element);
         }
 
-        ObjectTreeView.SetExternalHotNode(treeNode);
+        Selection.SetExternalHotNode(treeNode);
     }
 
     void IRecipient<ApplicationStartupMessage>.Receive(ApplicationStartupMessage message)
     {
-        _viewCreator.ApplyThemeColors();
+        _view?.ApplyThemeColors();
     }
 }

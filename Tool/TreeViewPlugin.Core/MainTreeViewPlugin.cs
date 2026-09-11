@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Managers;
@@ -6,7 +6,6 @@ using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
 using Gum.Wireframe;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -21,7 +20,7 @@ using RenderingLibrary;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
+internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -67,6 +66,13 @@ internal class MainTreeViewPlugin : PriorityPlugin, IRecipient<ApplicationTeardo
         _messenger.RegisterAll(this);
     }
     
+    // Named after the class, like every internal priority plugin, in the Manage Plugins dialog.
+    public override string FriendlyName => GetType().Name;
+
+    public override Version Version => new Version();
+
+    public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
+
     public override void StartUp()
     {
         AssignEvents();

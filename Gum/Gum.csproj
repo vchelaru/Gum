@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0-windows</TargetFramework>
 		<OutputType>WinExe</OutputType>
@@ -111,6 +111,7 @@
 		<ProjectReference Include="..\Runtimes\GumExpressions\GumExpressions.csproj" />
 		<ProjectReference Include="..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
 		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+		<ProjectReference Include="..\Tool\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>

@@ -24,7 +24,7 @@ namespace Gum.Managers;
 /// pattern-match on a widget type just to find them.
 /// </para>
 /// </remarks>
-internal static class TreeDragPayload
+public static class TreeDragPayload
 {
     /// <summary>
     /// The marker format put on the drag data object. Presence of this format means "look here".

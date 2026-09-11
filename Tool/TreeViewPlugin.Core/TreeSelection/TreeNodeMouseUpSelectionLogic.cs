@@ -1,5 +1,3 @@
-using System.Windows.Input;
-
 namespace Gum.Controls;
 
 /// <summary>
@@ -18,14 +16,14 @@ public class TreeNodeMouseUpSelectionLogic
     /// click rather than push (<paramref name="isSelectingOnPush"/> is false).
     /// </summary>
     public bool ShouldSelect(
-        ModifierKeys effectiveModifiers,
+        TreeModifierKeys effectiveModifiers,
         MultiSelectBehavior multiSelectBehavior,
         bool isNodeInMultiSelection,
         bool isSelectingOnPush,
-        MouseButton button)
+        TreePointerButton button)
     {
-        return button == MouseButton.Left &&
-               effectiveModifiers == ModifierKeys.None &&
+        return button == TreePointerButton.Left &&
+               effectiveModifiers == TreeModifierKeys.None &&
                multiSelectBehavior != MultiSelectBehavior.RegularClick &&
                (isNodeInMultiSelection || !isSelectingOnPush);
     }
