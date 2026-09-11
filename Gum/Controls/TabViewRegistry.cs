@@ -8,6 +8,8 @@ using Gum.Plugins.Errors;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.InternalPlugins.Errors.Views;
 using Gum.Plugins.Undos;
+using PerformanceMeasurementPlugin.ViewModels;
+using PerformanceMeasurementPlugin.Views;
 using Gum.Plugins.FileWatchPlugin;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 using Gum.Plugins.InternalPlugins.Hotkey.Views;
@@ -40,6 +42,9 @@ public class TabViewRegistry
         Register<UndosViewModel>(() => new UndoDisplay());
         Register<AlignmentViewModel>(() => new AlignmentPluginControl());
         Register<BehaviorsViewModel>(() => new BehaviorsControl());
+
+        // Plugins in their own projects that ship no views.
+        Register<PerformanceViewModel>(() => new PerformanceView());
     }
 
     /// <summary>The ViewModel types with a registered view.</summary>

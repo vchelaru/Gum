@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
 namespace Gum.Services;
 
-public class PeriodicUiTimer : IDisposable
+public class PeriodicUiTimer : IUiTimer, IDisposable
 {
     private IDispatcher Dispatcher { get; }
     private ILogger Logger { get; }

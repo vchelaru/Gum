@@ -115,13 +115,13 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         _settingsManager = new SettingsManager();
 
         // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
-        // (when invoked, after both are assigned just below), which breaks the
+        // (when invoked, after both are assigned just below, hence the !), which breaks the
         // ACVMM -> ElementAnimationsViewModel -> RenameManager construction cycle without a Lazy<T>.
         // Each call gets a fresh timer: ElementAnimationsViewModel is recreated per selected-element
         // switch (see AnimationCollectionViewModelManager.GetAnimationCollectionViewModel), and a
         // shared timer would let two live view models fight over the same Tick subscription.
         _animationVmFactory = () => new ElementAnimationsViewModel(
-            _nameVerifier, _dialogService, _animationCollectionViewModelManager, _renameManager,
+            _nameVerifier, _dialogService, _animationCollectionViewModelManager!, _renameManager!,
             _selectedState, _wireframeObjectManager, _outputManager, _animationFilePathService,
             CreateUiTimer());
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(

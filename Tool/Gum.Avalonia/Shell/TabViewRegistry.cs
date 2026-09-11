@@ -8,6 +8,7 @@ using Gum.Plugins.Errors;
 using Gum.Plugins.FileWatchPlugin;
 using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.Plugins.Undos;
+using PerformanceMeasurementPlugin.ViewModels;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 
 namespace Gum.Avalonia.Shell;
@@ -36,6 +37,9 @@ public class TabViewRegistry
         Register<UndosViewModel>(() => new UndosView());
         Register<AlignmentViewModel>(() => new AlignmentView());
         Register<BehaviorsViewModel>(() => new BehaviorsView());
+
+        // Plugins in their own projects that ship no views.
+        Register<PerformanceViewModel>(() => new PerformanceView());
     }
 
     /// <summary>The ViewModel types with a registered view.</summary>

@@ -23,6 +23,7 @@ public class PluginHostTests
     {
         typeof(global::ConvertToJsonPlugin.MainConvertToJsonPlugin).Assembly,
         typeof(global::EventOutputPlugin.MainEventOutputPlugin).Assembly,
+        typeof(global::PerformanceMeasurementPlugin.MainPlugin).Assembly,
     };
 
     [Fact]
@@ -70,8 +71,16 @@ public class PluginHostTests
         PluginBase[] plugins = container.GetExportedValues<PluginBase>().ToArray();
 
         plugins.Select(plugin => plugin.GetType().Name)
-            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin" }, ignoreOrder: true);
+            .ShouldBe(new[] { "MainConvertToJsonPlugin", "MainEventOutputPlugin", "MainPlugin" }, ignoreOrder: true);
         plugins.ShouldAllBe(plugin => plugin.Menu != null);
+    }
+
+    [Fact]
+    public void TabViewRegistry_HasAViewForEveryNeutralPluginsTab()
+    {
+        TabViewRegistry registry = TestAppBuilder.Services.GetRequiredService<TabViewRegistry>();
+
+        registry.HasView(typeof(global::PerformanceMeasurementPlugin.ViewModels.PerformanceViewModel)).ShouldBeTrue();
     }
 
     [AvaloniaFact]

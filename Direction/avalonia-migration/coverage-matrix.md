@@ -31,7 +31,7 @@
 | `Gum/CodeOutputPlugin` | WPF + WinForms | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/GumFormsPlugin` | WPF | 1 view, `WpfDataUi` | 70, 80 | TFM |
 | `Gum/ImportFromGumxPlugin` | WPF | 2 views, `WpfDataUi` | 70, 80 | TFM |
-| `Gum/PerformanceMeasurementPlugin` | WPF + WinForms | 1 view | 80 | TFM |
+| `Gum/PerformanceMeasurementPlugin` | **done** (net10.0, phase 80) | no views: its tab is `PerformanceViewModel`; the WPF view moved into the WPF head, the Avalonia view is `Tool/Gum.Avalonia/Panels/PerformanceView.cs` | 80 | TFM |
 | `Gum/SvgPlugin` (SkiaPlugin) | WinForms flag only | zero `System.Windows` files; references `WpfDataUi` | 40 (TFM flip after 70's model split) | TFM |
 | `Gum/ConvertToJsonPlugin` | **done** (net10.0, 2026-09-10) | over `Gum.Presentation`; loads in the Avalonia head | 40 | TFM |
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |

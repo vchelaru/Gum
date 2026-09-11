@@ -49,6 +49,10 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   `ICustomDrawOperation` Skia lease: nothing here needs raw Skia. Also fixed: the plugin built
   `DuplicateService` and `ElementDeleteService` in its constructor with `_dialogService`, which MEF
   only sets after construction.
+- **Performance Measurement is net10.0** and loads in both heads: it ships no views, its tab is
+  `PerformanceViewModel`, and each head registers a view. Its timer is a `PeriodicUiTimer` over the
+  bridged `IDispatcher` (now an `IUiTimer`), owned by the plugin so its interval is its own. The dead
+  `Gum/Controls/ColorPickerSwatch` (no consumers since #1467) is deleted.
 
 ## Purpose
 
