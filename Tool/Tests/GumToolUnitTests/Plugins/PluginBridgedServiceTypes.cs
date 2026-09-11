@@ -71,6 +71,7 @@ internal static class PluginBridgedServiceTypes
         typeof(IFavoriteComponentManager),
 
         typeof(MainPanelViewModel),
+        typeof(Gum.Plugins.InternalPlugins.HideShowTools.IToolsVisibility),
         typeof(PropertyGridManager),
         typeof(IVariableReferenceLogic),
         typeof(IErrorChecker),
@@ -82,6 +83,7 @@ internal static class PluginBridgedServiceTypes
 
         typeof(IDeleteLogic),
         typeof(HotkeyViewModel),
+        typeof(Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels.AlignmentViewModel),
         typeof(MainOutputViewModel),
 
         typeof(IDispatcher),

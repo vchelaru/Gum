@@ -12,7 +12,7 @@ namespace Gum.Plugins.InternalPlugins.SelectionHistory;
 /// SelectionHistoryService, which is independently unit tested.
 /// </summary>
 [Export(typeof(PluginBase))]
-internal class MainSelectionHistoryPlugin : PriorityPlugin
+internal class MainSelectionHistoryPlugin : CorePriorityPlugin
 {
     private readonly ISelectionHistory _selectionHistory;
 

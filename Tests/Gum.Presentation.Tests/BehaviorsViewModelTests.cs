@@ -33,6 +33,47 @@ public class BehaviorsViewModelTests
     }
 
     [Fact]
+    public void CancelEditCommand_LeavesEditModeWithoutApplying()
+    {
+        bool applied = false;
+        _viewModel.ApplyChangedValues += (_, _) => applied = true;
+        _viewModel.IsEditing = true;
+
+        _viewModel.CancelEditCommand.Execute(null);
+
+        _viewModel.IsEditing.ShouldBeFalse();
+        applied.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ConfirmEditCommand_AppliesAndLeavesEditMode()
+    {
+        bool applied = false;
+        _viewModel.ApplyChangedValues += (_, _) => applied = true;
+        _viewModel.IsEditing = true;
+
+        _viewModel.ConfirmEditCommand.Execute(null);
+
+        _viewModel.IsEditing.ShouldBeFalse();
+        applied.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void EditCommand_LoadsTheSelectedComponentAndEntersEditMode()
+    {
+        _project.Behaviors.Add(new BehaviorSave { Name = "ProjectBehavior" });
+        ComponentSave component = new ComponentSave { Name = "Component1" };
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ProjectBehavior" });
+        _selectedState.SetupGet(x => x.SelectedComponent).Returns(component);
+
+        _viewModel.EditCommand.Execute(null);
+
+        _viewModel.IsEditing.ShouldBeTrue();
+        _viewModel.AddedBehaviors.Select(x => x.Name).ShouldBe(new[] { "ProjectBehavior" });
+        _viewModel.AllBehaviors.Single(x => x.Name == "ProjectBehavior").IsChecked.ShouldBeTrue();
+    }
+
+    [Fact]
     public void IsEditing_DefaultsToFalse()
     {
         _viewModel.IsEditing.ShouldBeFalse();

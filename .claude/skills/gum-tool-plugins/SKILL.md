@@ -111,6 +111,26 @@ Three places need a matching entry per plugin:
 
 Missing (2)/(3) doesn't fail the build or the test - it just means the plugin's real composition, including a case like (1), is never actually exercised by this test.
 
+## Built-in plugins shared by both heads (Gum.Presentation)
+
+Most first-party internal plugins now live in `Tools/Gum.Presentation/Plugins/InternalPlugins/<Feature>/`
+(and `FileWatchPlugin/`), derive from `CorePriorityPlugin` (neutral: `PluginBase` + `IPriorityPlugin`
+with `PriorityPlugin`'s defaults), and load in both heads because each head lists Gum.Presentation in
+`InternalPluginAssemblies`. Keep their class names and namespaces when moving one: the Manage Plugins
+dialog and the plugin-enablement store key on them.
+
+**A shared plugin's tab is a ViewModel.** Pass the VM to `AddControl`/`CreateTab`; each head resolves it
+through its own `TabViewRegistry` (`Gum/Controls/TabViewRegistry.cs` for WPF,
+`Tool/Gum.Avalonia/Shell/TabViewRegistry.cs` for Avalonia), which also supplies an optional custom tab
+header (the Errors count). The WPF head throws when a VM has no registered view;
+`PluginHostTests.EveryTabASharedPluginAdds_ResolvesToAnAvaloniaView` fails for the Avalonia head. So a
+new shared tab means one registration in **each** registry. View code-behind must not hold logic: move
+it to the VM (with a test in `Gum.Presentation.Tests`) and bind.
+
+Still WPF-only in `Gum/Plugins/InternalPlugins/`: the tree view and state tree (phase 60), the Variables
+tab (phase 70), the menu strip renderer, Delete (until the neutral delete-options flow), and Project
+Properties (its view is a `DataUiGrid`).
+
 ## Writing a plugin that runs under both heads
 
 Target plain `net10.0`, reference `Tools/Gum.Presentation/Gum.Presentation.csproj` (not `Gum.csproj`), inherit `PluginBase`, use `AddMenuEntry` and `IDialogService`, and add the `Microsoft.CodeAnalysis.BannedApiAnalyzers` package with `BannedSymbols.CrossPlatform.txt` as an `AdditionalFiles` item so Windows-only calls fail the build. `Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj` is the template; its post-build copies the DLL into both `Gum/bin/<Config>/Plugins/` and `Tool/Gum.Avalonia/bin/<Config>/net10.0/Plugins/`, with a `$(SolutionDir)` fallback so building the test project alone (CI on macOS/Linux) works. Reference the plugin from `Tests/Gum.Avalonia.Tests` and add its assembly to `PluginHostTests.NeutralPluginAssemblies`.

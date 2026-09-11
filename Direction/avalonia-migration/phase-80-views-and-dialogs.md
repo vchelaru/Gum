@@ -17,6 +17,19 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   New Animation, Add State Keyframe and Add Sub-Animation. The Add/Rename string dialogs were
   already covered by the phase 30 `GetUserStringDialogBaseViewModel` view. `OwnedElsewhere` now
   holds only phase 70's four (Add Variable, Add Forms, Import from .gumx and its diff details).
+- **Tab content is a ViewModel, resolved per head** (the phase 40 decision, now implemented). Each
+  head has a `TabViewRegistry` (`Gum/Controls/TabViewRegistry.cs`,
+  `Tool/Gum.Avalonia/Shell/TabViewRegistry.cs`) mapping a tab VM to its view and an optional custom
+  header; `MainPanelViewModel` / `AvaloniaTabManager` consult it when `AddControl` gets a non-control.
+- **Built-in plugins shared by both heads live in Gum.Presentation** as `CorePriorityPlugin`s, and
+  both heads list Gum.Presentation in `InternalPluginAssemblies`. Moved, class names and namespaces
+  unchanged (so plugin enablement settings carry over): Errors, History (Undos), Alignment, Hotkeys,
+  File Watch, Behaviors, Output, Load Recent, and the view-less Inheritance, Parent, Nine Slice,
+  Selection History, Favorite Component, Duplicate Variable, Orphan Code File, Hide/Show Tools and
+  SVG Export. The Avalonia `OutputPlugin` twin is deleted. Code-behind logic moved to VMs with tests
+  first: Behaviors' Edit/OK/Cancel (`BehaviorsViewModel` commands), the Errors help link
+  (`AllErrorsViewModel.OpenHelpCommand`), and History's focus-on-tab (`UndosViewModel.FocusCurrentItem`).
+  `AlignmentViewModel` and `IToolsVisibility` are now bridged to plugins.
 
 ## Purpose
 

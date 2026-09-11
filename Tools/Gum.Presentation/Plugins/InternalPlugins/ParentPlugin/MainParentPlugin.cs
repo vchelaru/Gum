@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.ToolStates;
@@ -8,7 +8,7 @@ using System.Linq;
 namespace Gum.Plugins.ParentPlugin
 {
     [Export(typeof(PluginBase))]
-    public class MainParentPlugin : PriorityPlugin
+    public class MainParentPlugin : CorePriorityPlugin
     {
         private readonly ISelectedState _selectedState;
 
@@ -23,7 +23,7 @@ namespace Gum.Plugins.ParentPlugin
             this.VariableSet += HandleVariableSet;
         }
 
-        private void HandleVariableSet(ElementSave container, InstanceSave instance, string variableName, object oldValue)
+        private void HandleVariableSet(ElementSave container, InstanceSave? instance, string variableName, object? oldValue)
         {
             ///////////////////////Early Out//////////////////
             if (variableName != "Parent" || instance == null)
@@ -36,7 +36,7 @@ namespace Gum.Plugins.ParentPlugin
                 // This can happen if the user drag+drops one item on another without anything selected:
                 container.DefaultState;
             var newParentName = currentState.GetValueOrDefault<string>($"{instance.Name}.Parent");
-            InstanceSave newParent = null;
+            InstanceSave? newParent = null;
             if (!string.IsNullOrEmpty(newParentName))
             {
                 newParent = container.GetInstance(newParentName);

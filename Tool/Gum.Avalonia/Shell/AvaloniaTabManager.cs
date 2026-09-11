@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Managers;
 using Gum.Mvvm;
@@ -21,11 +22,13 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
 {
     private readonly IWritableOptions<LayoutSettings> _layoutSettings;
     private readonly ObservableCollection<AvaloniaPluginTab> _tabs;
+    private readonly TabViewRegistry _tabViewRegistry;
 
     /// <summary>Creates the manager and restores the saved column widths.</summary>
-    public AvaloniaTabManager(IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
+    public AvaloniaTabManager(IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings, TabViewRegistry tabViewRegistry)
     {
         _layoutSettings = layoutSettings;
+        _tabViewRegistry = tabViewRegistry;
         _tabs = new ObservableCollection<AvaloniaPluginTab>();
         Left = new ObservableCollection<AvaloniaPluginTab>();
         CenterTop = new ObservableCollection<AvaloniaPluginTab>();
@@ -75,10 +78,20 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
     /// <inheritdoc/>
     public IPluginTab AddControl(object element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
-        AvaloniaPluginTab tab = new AvaloniaPluginTab(element)
+        // A plugin in Gum.Presentation hands over a ViewModel; this head resolves it to its view (phase 40).
+        object content = element;
+        Control? header = null;
+        if (element is not Control && _tabViewRegistry.CreateView(element) is { } view)
+        {
+            content = view;
+            header = _tabViewRegistry.CreateHeader(element);
+        }
+
+        AvaloniaPluginTab tab = new AvaloniaPluginTab(content)
         {
             Title = tabTitle,
             Location = tabLocation,
+            HeaderContent = header,
         };
         tab.PropertyChanged += OnTabPropertyChanged;
         _tabs.Add(tab);

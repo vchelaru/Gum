@@ -6,7 +6,7 @@ using System.ComponentModel.Composition;
 namespace Gum.Plugins.FavoriteComponentPlugin;
 
 [Export(typeof(PluginBase))]
-public class MainFavoriteComponentPlugin : PriorityPlugin
+public class MainFavoriteComponentPlugin : CorePriorityPlugin
 {
     private readonly IFavoriteComponentManager _favoriteComponentManager;
 

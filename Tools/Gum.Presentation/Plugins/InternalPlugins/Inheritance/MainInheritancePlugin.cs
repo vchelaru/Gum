@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
@@ -7,7 +7,7 @@ using System.ComponentModel.Composition;
 namespace Gum.Plugins.Inheritance;
 
 [Export(typeof(PluginBase))]
-public class MainInheritancePlugin : PriorityPlugin
+public class MainInheritancePlugin : CorePriorityPlugin
 {
     private readonly InheritanceLogic _inheritanceLogic;
 

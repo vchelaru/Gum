@@ -1,15 +1,11 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Controls;
-using Gum.Plugins.InternalPlugins.Output;
 
 namespace Gum.Plugins.Output
 {
     [Export(typeof(PluginBase))]
-    class MainOutputPlugin : PriorityPlugin
+    class MainOutputPlugin : CorePriorityPlugin
     {
         private readonly MainOutputViewModel _mainOutputViewModel;
 
@@ -21,8 +17,8 @@ namespace Gum.Plugins.Output
 
         public override void StartUp()
         {
-            MainOutputPluginView view = new() { DataContext = _mainOutputViewModel, Margin = new(4)};
-            IPluginTab tab = _tabManager.AddControl(view, "Output", TabLocation.RightBottom);
+            // Each head resolves the view model to its own view (TabViewRegistry).
+            IPluginTab tab = _tabManager.AddControl(_mainOutputViewModel, "Output", TabLocation.RightBottom);
 
             // Errors written to Output are silent otherwise, so bring the tab forward rather than
             // interrupting with a dialog. Selecting a hidden tab deselects the visible one in this

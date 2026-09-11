@@ -11,23 +11,24 @@ using ToolsUtilities;
 namespace Gum.Plugins.FileWatchPlugin;
 
 /// <summary>
-/// WPF-hosted plugin entry point for the File Watch debug panel. All of the WPF-free business logic
+/// Plugin entry point for the File Watch debug panel, shared by both heads. All of the WPF-free business logic
 /// (project/variable-change reactions, the debug panel's display-refresh data) lives in
-/// <see cref="FileWatchPluginController"/> (issue #3931) - this class owns only the real platform
-/// glue: the WPF control/tab/menu-item wiring and the timer subscription.
+/// <see cref="FileWatchPluginController"/> (issue #3931) - this class owns only the
+/// tab/menu-item wiring and the timer subscription; each head supplies the view for
+/// <see cref="FileWatchViewModel"/>.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class MainFileWatchPlugin : PriorityPlugin
+public class MainFileWatchPlugin : CorePriorityPlugin
 {
     #region Fields/Properties
 
     private readonly PeriodicUiTimer refreshDisplayTimer;
     private readonly FileWatchPluginController _controller;
 
-    FileWatchViewModel viewModel;
+    FileWatchViewModel viewModel = null!;
 
-    IPluginTab pluginTab;
-    MenuItemModel showFileWatchMenuItem;
+    IPluginTab pluginTab = null!;
+    MenuItemModel showFileWatchMenuItem = null!;
 
     #endregion
 
@@ -40,14 +41,12 @@ public class MainFileWatchPlugin : PriorityPlugin
 
     public override void StartUp()
     {
-        var control = new FileWatchControl();
-
         viewModel = new FileWatchViewModel();
-        control.DataContext = viewModel;
 
         viewModel.PropertyChanged += HandleViewModelPropertyChanged;
 
-        pluginTab = _tabManager.AddControl(control, "File Watch", TabLocation.RightBottom);
+        // Each head resolves the view model to its own view (TabViewRegistry).
+        pluginTab = _tabManager.AddControl(viewModel, "File Watch", TabLocation.RightBottom);
         pluginTab.Hide();
 
         pluginTab.TabHidden += HandleTabHidden;
@@ -73,7 +72,7 @@ public class MainFileWatchPlugin : PriorityPlugin
         this.VariableSet += HandleVariableSet;
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue) =>
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue) =>
         _controller.HandleVariableSet(element, instance, variableName, oldValue);
 
     private void HandleProjectLocationSet(FilePath path) =>

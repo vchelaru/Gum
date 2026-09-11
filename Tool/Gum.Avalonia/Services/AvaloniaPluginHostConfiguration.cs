@@ -8,12 +8,15 @@ using Gum.Avalonia.Shell;
 using Gum.Input;
 using Gum.Menus;
 using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.HideShowTools;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Gum.Avalonia.Services;
 
 /// <summary>
-/// The Avalonia head's contribution to the plugin host: its own built-in plugins, its shell
+/// The Avalonia head's contribution to the plugin host: its own built-in plugins plus the ones it
+/// shares with the WPF head in Gum.Presentation, its shell
 /// services and menu model as exports, and a filter that keeps WPF/WinForms plugin assemblies out
 /// since they cannot run here.
 /// </summary>
@@ -36,7 +39,7 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
     }
 
     /// <inheritdoc/>
-    public IEnumerable<Assembly> InternalPluginAssemblies => new[] { typeof(AvaloniaPluginHostConfiguration).Assembly };
+    public IEnumerable<Assembly> InternalPluginAssemblies => new[] { typeof(AvaloniaPluginHostConfiguration).Assembly, typeof(CorePriorityPlugin).Assembly };
 
     /// <inheritdoc/>
     public void AddHeadExports(CompositionBatch batch)
@@ -44,6 +47,7 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
         batch.AddExportedValue<MenuModel>(_services.GetRequiredService<MenuModel>());
         batch.AddExportedValue<ShellViewModel>(_services.GetRequiredService<ShellViewModel>());
         batch.AddExportedValue<AvaloniaTabManager>(_services.GetRequiredService<AvaloniaTabManager>());
+        batch.AddExportedValue<IToolsVisibility>(_services.GetRequiredService<AvaloniaTabManager>());
     }
 
     /// <inheritdoc/>

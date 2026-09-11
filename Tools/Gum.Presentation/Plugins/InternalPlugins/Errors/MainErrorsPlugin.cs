@@ -1,11 +1,10 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.InternalPlugins.Errors.Views;
 using Gum.Reflection;
 using Gum.Services;
 using Gum.ToolStates;
@@ -15,41 +14,47 @@ using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.Errors;
 
+/// <summary>
+/// The Errors tab, shared by both heads: keeps <see cref="AllErrorsViewModel"/> in step with the
+/// selected element. Each head supplies the tab's view and its error-count header (TabViewRegistry).
+/// </summary>
 [Export(typeof(PluginBase))]
-public class MainErrorsPlugin : PriorityPlugin
+public class MainErrorsPlugin : CorePriorityPlugin
 {
     #region Fields/Properties
 
-    AllErrorsViewModel viewModel;
-    private readonly IErrorChecker errorChecker;
+    private readonly IErrorChecker _errorChecker;
     private readonly IMessenger _messenger;
-    ErrorDisplay control;
-    PluginTab tabPage;
-    private ErrorTabHeader _tabPageHeader;
     private readonly ISelectedState _selectedState;
     private readonly IClipboardService _clipboardService;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
+    private readonly IProjectState _projectState;
+    private AllErrorsViewModel _viewModel = null!;
 
     #endregion
 
     [ImportingConstructor]
     public MainErrorsPlugin(IErrorChecker errorChecker, IMessenger messenger, ISelectedState selectedState,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService, IFileSystemRevealService fileSystemRevealService, IProjectState projectState)
     {
-        this.errorChecker = errorChecker;
+        _errorChecker = errorChecker;
         _messenger = messenger;
         _selectedState = selectedState;
         _clipboardService = clipboardService;
+        _fileSystemRevealService = fileSystemRevealService;
+        _projectState = projectState;
     }
 
     public override void StartUp()
     {
-        viewModel = new AllErrorsViewModel(_clipboardService);
+        _viewModel = new AllErrorsViewModel(_clipboardService, _fileSystemRevealService);
 
         _messenger.Register<RequestErrorRefreshMessage>(
             this,
             (_, message) => HandleErrorRefreshRequest(message));
 
-        CreateViews();
+        // Each head resolves the view model to its own view and count header (TabViewRegistry).
+        _tabManager.AddControl(_viewModel, "Errors", TabLocation.RightBottom);
 
         AssignEvents();
     }
@@ -67,28 +72,16 @@ public class MainErrorsPlugin : PriorityPlugin
 
         if (message.RequestingPlugin != null)
         {
-            viewModel.Errors.RemoveAll(item => item.OwnerPlugin == message.RequestingPlugin);
+            _viewModel.Errors.RemoveAll(item => item.OwnerPlugin == message.RequestingPlugin);
 
-            var errors = errorChecker.GetErrorsFor(element, message.RequestingPlugin);
+            var errors = _errorChecker.GetErrorsFor(element, message.RequestingPlugin);
 
-            viewModel.Errors.AddRange(errors);
+            _viewModel.Errors.AddRange(errors);
         }
         else
         {
             UpdateErrorsForElement(element);
         }
-    }
-
-    private void CreateViews()
-    {
-        control = new ErrorDisplay();
-        control.DataContext = viewModel;
-        // CustomHeaderContent is FrameworkElement-typed (WPF), so it stays off IPluginTab; cast back
-        // to the concrete PluginTab here rather than widening the headless interface for one caller.
-        tabPage = (PluginTab)_tabManager.AddControl(control, "Errors", TabLocation.RightBottom);
-
-        _tabPageHeader = new ErrorTabHeader { DataContext = viewModel };
-        tabPage.CustomHeaderContent = _tabPageHeader;
     }
 
     private void AssignEvents()
@@ -155,12 +148,19 @@ public class MainErrorsPlugin : PriorityPlugin
 
     private void UpdateErrorsForElement(ElementSave? element)
     {
-        var errors = errorChecker.GetErrorsFor(element, Locator.GetRequiredService<IProjectState>().GumProjectSave);
+        _viewModel.Errors.Clear();
 
-        viewModel.Errors.Clear();
+        // Nothing to check before a project is loaded.
+        if (_projectState.GumProjectSave is not { } project)
+        {
+            return;
+        }
+
+        var errors = _errorChecker.GetErrorsFor(element, project);
+
         foreach (var item in errors)
         {
-            viewModel.Errors.Add(item);
+            _viewModel.Errors.Add(item);
         }
     }
 }

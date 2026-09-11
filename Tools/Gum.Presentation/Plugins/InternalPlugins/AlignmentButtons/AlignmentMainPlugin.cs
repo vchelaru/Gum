@@ -1,31 +1,38 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
+using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.ToolStates;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.AlignmentButtons
 {
+    /// <summary>
+    /// The Alignment tab, shared by both heads: shows or hides the tab as the selection changes and
+    /// keeps the state banner current. Each head supplies the view for <see cref="AlignmentViewModel"/>
+    /// (TabViewRegistry).
+    /// </summary>
     [Export(typeof(PluginBase))]
-    public class AlignmentMainPlugin : PriorityPlugin
+    public class AlignmentMainPlugin : CorePriorityPlugin
     {
         private readonly ISelectedState _selectedState;
+        private readonly AlignmentViewModel _viewModel;
 
-        private AlignmentTabVisibilityCoordinator _coordinator;
-        private AlignmentPluginControl _control;
+        private AlignmentTabVisibilityCoordinator _coordinator = null!;
 
         [ImportingConstructor]
-        public AlignmentMainPlugin(ISelectedState selectedState)
+        public AlignmentMainPlugin(ISelectedState selectedState, AlignmentViewModel viewModel)
         {
             _selectedState = selectedState;
+            _viewModel = viewModel;
         }
 
         public override void StartUp()
         {
             AssignEvents();
-            _control = new Gum.Plugins.AlignmentButtons.AlignmentPluginControl();
-            var tab = _tabManager.AddControl(_control, "Alignment");
+            // Each head resolves the view model to its own view (TabViewRegistry).
+            IPluginTab tab = _tabManager.AddControl(_viewModel, "Alignment");
             _coordinator = new AlignmentTabVisibilityCoordinator(_selectedState, tab);
             Refresh();
         }
@@ -41,7 +48,7 @@ namespace Gum.Plugins.AlignmentButtons
         private void Refresh()
         {
             _coordinator.Refresh();
-            _control.ViewModel.RefreshStateLabel();
+            _viewModel.RefreshStateLabel();
         }
 
         private void HandleStateSaveSelected(StateSave? state)

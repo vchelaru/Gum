@@ -38,6 +38,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
+using Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels;
 using Gum.PropertyGridHelpers;
 
 namespace Gum.Plugins;
@@ -901,6 +902,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // plugin's tab consumes. MainOutputViewModel is the IOutputManager singleton.
         batch.AddExportedValue<IDeleteLogic>(Locator.GetRequiredService<IDeleteLogic>());
         batch.AddExportedValue<HotkeyViewModel>(Locator.GetRequiredService<HotkeyViewModel>());
+        batch.AddExportedValue<AlignmentViewModel>(Locator.GetRequiredService<AlignmentViewModel>());
         batch.AddExportedValue<MainOutputViewModel>(Locator.GetRequiredService<MainOutputViewModel>());
 
         // Heavy-tier ctor drain: MainPropertiesWindowPlugin (IDispatcher, IWireframeObjectManager;

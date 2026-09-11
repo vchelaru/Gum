@@ -14,7 +14,7 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
     // RecentFilesLogic (Gum.Presentation) so it can be unit tested headlessly. This plugin builds only
     // the menu entries (through the shared menu model) and forwards clicks into that logic.
     [Export(typeof(PluginBase))]
-    internal class MainRecentFilesPlugin : PriorityPlugin
+    internal class MainRecentFilesPlugin : CorePriorityPlugin
     {
         private MenuItemModel _recentFilesMenuItem = null!;
         private readonly RecentFilesLogic _recentFilesLogic;

@@ -114,8 +114,10 @@ file static class ServiceCollectionExtensions
         services.AddSingleton<IGuiCommands, GuiCommands>();
         services.AddSingleton<MenuStripManager>();
 
+        services.AddSingleton<TabViewRegistry>();
         services.AddSingleton<MainPanelViewModel>();
         services.AddSingleton<ITabManager>(provider => provider.GetRequiredService<MainPanelViewModel>());
+        services.AddSingleton<Gum.Plugins.InternalPlugins.HideShowTools.IToolsVisibility>(provider => provider.GetRequiredService<MainPanelViewModel>());
         services.AddSingleton<MainWindow>();
         services.AddSingleton<MainWindowViewModel>();
 

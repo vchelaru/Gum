@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using System;
@@ -14,7 +14,7 @@ using ToolsUtilities;
 namespace Gum.Plugins.InternalPlugins.NineSlicePlugin;
 
 [Export(typeof(PluginBase))]
-internal class MainNineSlicePlugin : PriorityPlugin
+internal class MainNineSlicePlugin : CorePriorityPlugin
 {
     public override void StartUp()
     {
@@ -29,14 +29,22 @@ internal class MainNineSlicePlugin : PriorityPlugin
     private void HandleProjectLocationSet(FilePath path)
     {
         var gumProject = ObjectFinder.Self.GumProjectSave;
+        if (gumProject == null)
+        {
+            return;
+        }
 
-        var sourceFile = Path.Combine(GetExecutingDirectory(), "Content\\ExampleSpriteFrame.png");
+        var sourceFile = Path.Combine(GetExecutingDirectory(), "Content", "ExampleSpriteFrame.png");
         var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + "ExampleSpriteFrame.png";
         try
         {
             System.IO.File.Copy(sourceFile, destinationFile);
 
             var nineSliceStandard = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
+            if (nineSliceStandard == null)
+            {
+                return;
+            }
             nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
 
             _fileCommands.TryAutoSaveElement(nineSliceStandard);    

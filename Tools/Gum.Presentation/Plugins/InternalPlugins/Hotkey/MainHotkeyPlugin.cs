@@ -1,6 +1,5 @@
 using Gum.Menus;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.InternalPlugins.Hotkey.Views;
 using System;
 using System.ComponentModel.Composition;
 using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
@@ -8,10 +7,9 @@ using Gum.Plugins.InternalPlugins.Hotkey.ViewModels;
 namespace Gum.Plugins.InternalPlugins.Hotkey
 {
     [Export(typeof(PluginBase))]
-    public class MainHotkeyPlugin : PriorityPlugin
+    public class MainHotkeyPlugin : CorePriorityPlugin
     {
-        IPluginTab pluginTab;
-        HotkeyView hotkeyView;
+        IPluginTab pluginTab = null!;
         MenuItemModel menuItem = null!;
         private readonly HotkeyViewModel _hotkeyViewModel;
 
@@ -24,11 +22,8 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
         public override void StartUp()
         {
             menuItem = AddMenuEntry(HandleToggleTabVisibility, "View", "View Hotkeys");
-            hotkeyView = new Views.HotkeyView()
-            {
-                DataContext = _hotkeyViewModel
-            };
-            pluginTab = base.CreateTab(hotkeyView, "Hotkeys", TabLocation.CenterBottom);
+            // Each head resolves the view model to its own view (TabViewRegistry).
+            pluginTab = base.CreateTab(_hotkeyViewModel, "Hotkeys", TabLocation.CenterBottom);
             pluginTab.TabShown += HandleTabShown;
             pluginTab.TabHidden += HandleTabHidden;
             pluginTab.CanClose = true;

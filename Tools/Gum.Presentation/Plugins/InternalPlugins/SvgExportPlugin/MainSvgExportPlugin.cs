@@ -12,7 +12,7 @@ namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 // (Gum.Presentation) so they can be unit tested headlessly. This plugin builds the WPF menu item
 // and forwards clicks; the actual gumcli invocation stays in SvgExportCommand.
 [Export(typeof(PluginBase))]
-internal class MainSvgExportPlugin : PriorityPlugin
+internal class MainSvgExportPlugin : CorePriorityPlugin
 {
     private MenuItemModel _exportSvgMenuItem = null!;
     private readonly ISvgExportCommand _svgExportCommand;

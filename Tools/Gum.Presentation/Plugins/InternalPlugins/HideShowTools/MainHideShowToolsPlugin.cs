@@ -1,23 +1,22 @@
 using Gum.Menus;
-using Gum.Controls;
 using Gum.Plugins.BaseClasses;
 using System.ComponentModel.Composition;
 
 namespace Gum.Plugins.InternalPlugins.HideShowTools;
 
 // As of ADR-0005 Phase 3, the toggle decision lives in HideShowToolsLogic (Gum.Presentation) so it
-// can be unit tested headlessly. MainPanelViewModel itself is WPF-typed, so it's narrowed to
-// IToolsVisibility for that logic.
+// can be unit tested headlessly. Each head exports its tab host as IToolsVisibility
+// (MainPanelViewModel in WPF, AvaloniaTabManager in Avalonia).
 [Export(typeof(PluginBase))]
-internal class MainHideShowToolsPlugin : PriorityPlugin
+internal class MainHideShowToolsPlugin : CorePriorityPlugin
 {
     private MenuItemModel _hideShowMenuItem = null!;
     private readonly HideShowToolsLogic _hideShowToolsLogic;
 
     [ImportingConstructor]
-    public MainHideShowToolsPlugin(MainPanelViewModel mainPanelViewModel)
+    public MainHideShowToolsPlugin(IToolsVisibility toolsVisibility)
     {
-        _hideShowToolsLogic = new HideShowToolsLogic(mainPanelViewModel);
+        _hideShowToolsLogic = new HideShowToolsLogic(toolsVisibility);
     }
 
     public override void StartUp()

@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Plugins.BaseClasses;
 using System.Collections.Generic;
@@ -9,22 +9,14 @@ using Gum.Services.Dialogs;
 namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
 {
     [Export(typeof(PluginBase))]
-    internal class MainDuplicateVariablePlugin : PriorityPlugin
+    internal class MainDuplicateVariablePlugin : CorePriorityPlugin
     {
-        private readonly IDialogService _dialogService;
-        
-        [ImportingConstructor]
-        public MainDuplicateVariablePlugin(IDialogService dialogService)
-        {
-            _dialogService = dialogService;
-        }
-        
         public override void StartUp()
         {
             this.ElementSelected += HandleElementSelected;
         }
 
-        private void HandleElementSelected(ElementSave element)
+        private void HandleElementSelected(ElementSave? element)
         {
             //////////////Early Out/////////////////////
             if(element == null)

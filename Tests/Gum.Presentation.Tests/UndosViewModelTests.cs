@@ -40,6 +40,17 @@ public class UndosViewModelTests : BaseTestClass
     }
 
     [Fact]
+    public void FocusCurrentItem_RaisesFocusCurrentItemRequested()
+    {
+        int raised = 0;
+        _viewModel.FocusCurrentItemRequested += () => raised++;
+
+        _viewModel.FocusCurrentItem();
+
+        raised.ShouldBe(1);
+    }
+
+    [Fact]
     public void UndoIndex_ShouldReflectInjectedUndoManagersCurrentElementHistory()
     {
         _selectedState.Setup(s => s.SelectedBehavior).Returns((Gum.DataTypes.Behaviors.BehaviorSave?)null);

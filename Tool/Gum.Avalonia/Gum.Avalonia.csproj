@@ -73,6 +73,8 @@
 		<None Include="..\..\Gum\Content\TestFont.fnt" Link="Content\TestFont.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\TestFont_0.png" Link="Content\TestFont_0.png" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\InvalidTexture.png" Link="Content\InvalidTexture.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- Copied into a project's folder by the shared NineSlice plugin when a project location is set. -->
+		<None Include="..\..\Gum\Content\ExampleSpriteFrame.png" Link="Content\ExampleSpriteFrame.png" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The default font character set copied into new projects (FileCommands.CreateDefaultFontCharacterFile). -->
 		<None Include="..\..\Gum\Content\.gumfcs" Link="Content\.gumfcs" CopyToOutputDirectory="PreserveNewest" />
 		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
