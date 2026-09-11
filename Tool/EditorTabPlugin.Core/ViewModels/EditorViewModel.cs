@@ -371,8 +371,12 @@ public partial class EditorViewModel : ViewModel, IZoomController
 
         this.SelectedCustomCanvasSize = this.CustomCanvasSizes[0];
 
+        // Set without the setters so the values are not written back into the project, then notify
+        // so a toolbar bound before the load (the Avalonia head builds its tab at startup) updates.
         SetWithoutNotifying(save.SnapToGrid, nameof(SnapToGrid));
         SetWithoutNotifying(save.GridSize, nameof(GridSize));
+        NotifyPropertyChanged(nameof(SnapToGrid));
+        NotifyPropertyChanged(nameof(GridSize));
     }
 }
 

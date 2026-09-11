@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -243,7 +244,6 @@ public static class GumChromeStyles
             {
                 new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
                 new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
-                new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 2)),
                 new Setter(Layoutable.MinHeightProperty, 0d),
             },
         },
@@ -251,24 +251,15 @@ public static class GumChromeStyles
         {
             Setters = { new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground.Disabled")) },
         },
-        new Style(selector => selector.OfType<MenuItem>().Class(":toplevel"))
+        // Menu bar headers: 6px beside the text, as the WPF top-level items.
+        new Style(MenuBarItem)
         {
             Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 3)) },
         },
-        // WPF's SubmenuItemTemplate keeps its 16px icon column whether or not the item has an icon,
-        // so every header starts 28px in; Fluent collapses the presenter when there is no icon.
-        new Style(selector => selector.OfType<MenuItem>().Not(item => item.Class(":toplevel")).Template().Is<Control>().Name("PART_IconPresenter"))
-        {
-            Setters =
-            {
-                new Setter(Visual.IsVisibleProperty, true),
-                new Setter(Layoutable.WidthProperty, 16d),
-                new Setter(Layoutable.HeightProperty, 16d),
-            },
-        },
-        MenuItemRoot(new[] { ":selected" }, Resource("Frb.Brushes.Primary.Transparent"), Brushes.Transparent, new Thickness(0)),
-        MenuItemRoot(new[] { ":toplevel", ":selected" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent, new Thickness(0)),
-        MenuItemRoot(new[] { ":toplevel", ":open" }, Resource("Frb.Surface01"), Resource("Frb.Brushes.Primary"), new Thickness(1, 1, 1, 0)),
+        DropDownItemStyles(MenuDropDownItem),
+        DropDownItemStyles(ContextMenuItem),
+        MenuItemRoot(MenuBarItem, new[] { ":selected" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent, new Thickness(0)),
+        MenuItemRoot(MenuBarItem, new[] { ":open" }, Resource("Frb.Surface01"), Resource("Frb.Brushes.Primary"), new Thickness(1, 1, 1, 0)),
         new Style(selector => selector.OfType<ContextMenu>())
         {
             Setters =
@@ -346,10 +337,50 @@ public static class GumChromeStyles
 
     // A menu item's row background and outline in the given states (the Fluent template's
     // PART_LayoutRoot, which Fluent's own state styles color).
-    private static Style MenuItemRoot(string[] states, object background, object borderBrush, Thickness borderThickness) =>
+    // Avalonia has no :toplevel pseudo-class (MenuItem.IsTopLevel is "Parent is Menu"), so the two
+    // kinds of item are told apart by structure: a Menu's child is a bar header, a MenuItem's or a
+    // ContextMenu's descendant is a drop-down row.
+    private static Selector MenuBarItem(Selector? selector) => selector.OfType<Menu>().Child().OfType<MenuItem>();
+
+    private static Selector MenuDropDownItem(Selector? selector) => selector.OfType<MenuItem>().Descendant().OfType<MenuItem>();
+
+    private static Selector ContextMenuItem(Selector? selector) => selector.OfType<ContextMenu>().Descendant().OfType<MenuItem>();
+
+    // The WPF drop-down row (SubmenuItemTemplate) for one structural kind of item. An Or selector
+    // does not reach into template parts, so the styles are built once per kind.
+    private static Styles DropDownItemStyles(Func<Selector?, Selector> kind) => new Styles
+    {
+        // Rows have no padding of their own in WPF: the icon column is the gutter.
+        new Style(selector => kind(selector))
+        {
+            Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(0, 2)) },
+        },
+        // Fluent keeps the shortcut column's margins for an item without a shortcut, widening every
+        // drop-down; WPF gives an empty shortcut no room.
+        new Style(selector => kind(selector).PropertyEquals(MenuItem.InputGestureProperty, null).Template().OfType<TextBlock>().Name("PART_InputGestureText"))
+        {
+            Setters = { new Setter(Visual.IsVisibleProperty, false) },
+        },
+        // WPF's SubmenuItemTemplate keeps its 16px icon column whether or not the item has an icon,
+        // so every header starts 28px in; Fluent collapses the presenter when there is no icon.
+        // The template sets IsVisible itself, which outranks a plain style; the :not(:icon)
+        // condition makes this a triggered style, which outranks the template.
+        new Style(selector => kind(selector).Not(item => item.Class(":icon")).Template().Is<Control>().Name("PART_IconPresenter"))
+        {
+            Setters =
+            {
+                new Setter(Visual.IsVisibleProperty, true),
+                new Setter(Layoutable.WidthProperty, 16d),
+                new Setter(Layoutable.HeightProperty, 16d),
+            },
+        },
+        MenuItemRoot(kind, new[] { ":selected" }, Resource("Frb.Brushes.Primary.Transparent"), Brushes.Transparent, new Thickness(0)),
+    };
+
+    private static Style MenuItemRoot(Func<Selector?, Selector> kind, string[] states, object background, object borderBrush, Thickness borderThickness) =>
         new Style(selector =>
         {
-            Selector item = selector.OfType<MenuItem>();
+            Selector item = kind(selector);
             foreach (string state in states)
             {
                 item = item.Class(state);

@@ -134,6 +134,7 @@ internal static class PluginBridgedServiceTypes
         // MainEditorTabPlugin/MainBehaviorsPlugin/MainPropertiesWindowPlugin — all three now take the
         // interface after widening it with the six methods that used to be concrete-only.
         typeof(IPluginManager),
+        typeof(Gum.Menus.StandardMenuModelBuilder),
         // Phase 40 of the Avalonia migration: the WPF head exports the framework-neutral menu model
         // (WpfPluginHostConfiguration.AddHeadExports) so plugins can add entries without WPF types.
         typeof(MenuModel),

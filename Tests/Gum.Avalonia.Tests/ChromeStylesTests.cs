@@ -24,8 +24,10 @@ public class ChromeStylesTests
     public void MenuItems_UseTheBaseFont_OnCompactRows_InsideAPrimaryOutline()
     {
         MenuItem child = new MenuItem { Header = "Child", InputGesture = new KeyGesture(Key.S, KeyModifiers.Control) };
+        MenuItem plain = new MenuItem { Header = "No shortcut" };
         MenuItem top = new MenuItem { Header = "File" };
         top.Items.Add(child);
+        top.Items.Add(plain);
         Menu menu = new Menu();
         menu.Items.Add(top);
         Window window = new Window { Content = menu, Width = 300, Height = 200 };
@@ -35,6 +37,13 @@ public class ChromeStylesTests
         top.Open();
         window.UpdateLayout();
 
+        // The WPF menu bar: 6px beside each header; the open header outlined in Primary on the
+        // drop-down's surface. Drop-down rows have no padding of their own (the icon column is the gutter).
+        top.Padding.ShouldBe(new Thickness(6, 3));
+        Border topRoot = top.GetVisualDescendants().OfType<Border>().First(border => border.Name == "PART_LayoutRoot");
+        topRoot.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
+        child.Padding.ShouldBe(new Thickness(0, 2));
+
         child.FontSize.ShouldBe(FrbThemeResources.DefaultBaseFontSize);
         child.Bounds.Height.ShouldBeLessThanOrEqualTo(22);
         Popup popup = top.GetVisualDescendants().OfType<Popup>().Single();
@@ -42,11 +51,13 @@ public class ChromeStylesTests
         frame.BorderThickness.ShouldBe(new Thickness(1));
         frame.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
         // The WPF SubmenuItemTemplate: headers 28px in behind a reserved icon column, shortcuts
-        // 5px after the header and 10px before the edge.
+        // 5px after the header and 10px before the edge, and no shortcut column for a row without one.
         ContentPresenter header = child.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter");
         header.Bounds.X.ShouldBe(28);
         TextBlock gesture = child.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText");
         gesture.Margin.ShouldBe(new Thickness(5, 0, 10, 0));
+        gesture.IsVisible.ShouldBeTrue();
+        plain.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText").IsVisible.ShouldBeFalse();
         global::Avalonia.Controls.Shapes.Path chevron = child.GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().First(path => path.Name == "PART_ChevronPath");
         chevron.Margin.ShouldBe(new Thickness(8, 0, 4, 0));
         window.Close();

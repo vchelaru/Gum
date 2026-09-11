@@ -51,7 +51,8 @@ internal static class VariableGridRows
 
         return new Border
         {
-            Padding = new Thickness(0, 2),
+            // A pixel above and below the 22px field: the WPF row height.
+            Padding = new Thickness(0, 1),
             BorderThickness = new Thickness(0, 0, 0, 1),
             Child = columns,
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Contrast.Subtle");

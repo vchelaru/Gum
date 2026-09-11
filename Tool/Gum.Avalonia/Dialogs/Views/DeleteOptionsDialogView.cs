@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
+using Avalonia.Data.Converters;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Services.Dialogs;
@@ -33,6 +34,9 @@ public sealed class DeleteOptionsDialogView : StackPanel
             ItemTemplate = new FuncDataTemplate<DeleteOptionCheckboxViewModel>((_, _) => CreateOption(groupName: null)),
         };
         checkBoxes.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(DeleteOptionsDialogViewModel.CheckBoxes)));
+        // Hidden when empty, so the stack's spacing is not spent on it (the WPF window gives an
+        // empty option list no room).
+        checkBoxes.Bind(IsVisibleProperty, new Binding($"{nameof(DeleteOptionsDialogViewModel.CheckBoxes)}.Count") { Converter = HasItems });
         Children.Add(checkBoxes);
 
         ItemsControl choices = new ItemsControl
@@ -40,8 +44,11 @@ public sealed class DeleteOptionsDialogView : StackPanel
             ItemTemplate = new FuncDataTemplate<DeleteOptionChoiceViewModel>((_, _) => CreateChoiceGroup()),
         };
         choices.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(DeleteOptionsDialogViewModel.Choices)));
+        choices.Bind(IsVisibleProperty, new Binding($"{nameof(DeleteOptionsDialogViewModel.Choices)}.Count") { Converter = HasItems });
         Children.Add(choices);
     }
+
+    private static readonly IValueConverter HasItems = new FuncValueConverter<int, bool>(count => count > 0);
 
     private static Control CreateChoiceGroup()
     {

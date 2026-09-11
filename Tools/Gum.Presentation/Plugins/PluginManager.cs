@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using Gum.Wireframe;
 using Gum.ToolStates;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Services;
 using Gum.Reflection;
 using Gum.ToolCommands;
@@ -61,14 +62,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     private readonly IPluginEnablementStore _pluginEnablementStore;
     private readonly IPluginHostConfiguration _hostConfiguration;
 
-    private List<Assembly> mExternalAssemblies = new List<Assembly>();
-    private List<string> mReferenceListInternal = new List<string>();
-    private List<string> mReferenceListLoaded = new List<string>();
-    private List<string> mReferenceListExternal = new List<string>();
-
     private Dictionary<IPlugin, PluginContainer> mPluginContainers = new Dictionary<IPlugin, PluginContainer>();
 
-    private const String ReferenceFileName = "References.txt";
     private const String CompatibilityFileName = "Compatibility.txt";
     
     static PluginManager mGlobalInstance;
@@ -800,67 +795,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         _pluginEnablementStore.Save();
     }
 
-    private void LoadReferenceLists()
-    {
-        // We use absolute paths for some of the .dlls and .exes
-        // because if we don't, then Glue looks for them in the Startup
-        // path, which could depend on whether Glue is launched from a shortcut
-        // or not - this is really common for released versions.
-        string executablePath = AppContext.BaseDirectory;
-
-        //Load Internal List
-        mReferenceListInternal.Add(executablePath + "Ionic.Zip.dll");
-        mReferenceListExternal.Add(executablePath + "CsvLibrary.dll");
-        mReferenceListExternal.Add(executablePath + "RenderingLibrary.dll");
-
-        mReferenceListExternal.Add(executablePath + "ToolsUtilities.dll");
-        mReferenceListExternal.Add(executablePath + "Gum.exe");
-
-        mReferenceListInternal.Add("Microsoft.CSharp.dll");
-        mReferenceListInternal.Add("System.dll");
-        mReferenceListInternal.Add("System.ComponentModel.Composition.dll");
-        mReferenceListInternal.Add("System.Core.dll");
-        mReferenceListInternal.Add("System.Data.dll");
-        mReferenceListInternal.Add("System.Data.DataSetExtensions.dll");
-        mReferenceListInternal.Add("System.Drawing.dll");
-        mReferenceListInternal.Add("System.Windows.Forms.dll");
-        mReferenceListInternal.Add("System.Xml.dll");
-        mReferenceListInternal.Add("System.Xml.Linq.dll");
-    }
-
-    private void LoadExternalReferenceList(string filePath)
-    {
-        string ReferenceFilePath = filePath + "\\" + ReferenceFileName;
-        mReferenceListExternal = new List<string>();
-
-        if (File.Exists(ReferenceFilePath))
-        {
-            using (StreamReader file = new StreamReader(ReferenceFilePath))
-            {
-                string line;
-
-                while ((line = file.ReadLine()) != null)
-                {
-                    if (!String.IsNullOrEmpty(line) &&
-                       !String.IsNullOrEmpty(line.Trim()))
-                    {
-                        if (FileManager.FileExists(line.Trim()))
-                        {
-                            string absolute = FileManager.MakeAbsolute(line.Trim());
-
-                            if (!mReferenceListInternal.Contains(absolute))
-                            {
-                                mReferenceListExternal.Add(absolute);
-                                mExternalAssemblies.Add(Assembly.LoadFrom(absolute));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
     /// <summary>
     /// Bridges the core services plugins import (property imports on <see cref="PluginBase"/> and
     /// per-plugin <c>[ImportingConstructor]</c> parameters) into <paramref name="batch"/>. The
@@ -1010,6 +944,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // BehaviorReferencesChanged) were widened onto the interface, so the concrete PluginManager bridge
         // is no longer needed here.
         batch.AddExportedValue<IPluginManager>(this);
+        // The shared menu-refresh plugin syncs the standard menus' selection-dependent state.
+        batch.AddExportedValue<StandardMenuModelBuilder>(Locator.GetRequiredService<StandardMenuModelBuilder>());
     }
 
     private void LoadPlugins(PluginManager instance)
@@ -1122,17 +1058,8 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 
 
-    private Assembly currentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
+    private Assembly? currentDomain_AssemblyResolve(object? sender, ResolveEventArgs args)
     {
-        foreach (Assembly item in mExternalAssemblies)
-        {
-            if (item.FullName == args.Name)
-            {
-                return item;
-            }
-        }
-
-        //MessageBox.Show("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
         if(args.RequestingAssembly != null)
         {
             _guiCommands.PrintOutput("Couldn't find assembly: " + args.Name + " for " + args.RequestingAssembly);
@@ -1203,9 +1130,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     private AggregateCatalog CreateCatalog()
     {
-        mExternalAssemblies.Clear();
-        LoadReferenceLists();
-
         var returnValue = new AggregateCatalog();
 
         var pluginDirectories = new List<string>();
@@ -1257,23 +1181,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         return returnValue;
     }
-
-    // Eventually we may add support for this but not on the first pass
-    //private CompilerResults CompilePlugin(string filepath)
-    //{
-    //    using (new ZipFile()) { }
-
-    //    texture.ToString();// We do this to eliminate "is never used" warnings
-
-    //    if (IsCompatible(filepath))
-    //    {
-    //        LoadExternalReferenceList(filepath);
-
-    //        return PluginCompiler.Compiler.CompilePlugin(filepath, mReferenceListInternal, mReferenceListLoaded, mReferenceListExternal);
-    //    }
-
-    //    return null;
-    //}
 
     private static bool IsCompatible(string filepath)
     {

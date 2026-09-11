@@ -16,6 +16,7 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="GumToolUnitTests" />
+		<InternalsVisibleTo Include="Gum.Presentation.Tests" />
 		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
 		<InternalsVisibleTo Include="EditorTabPlugin_XNA" />
 		<InternalsVisibleTo Include="Gum.Avalonia" />

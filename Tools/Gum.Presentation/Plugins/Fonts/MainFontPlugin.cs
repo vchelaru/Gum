@@ -11,15 +11,15 @@ using Gum.Services.Fonts;
 
 namespace Gum.Plugins.Fonts;
 
-// As of ADR-0005 Phase 3, the font-cache logic lives in FontCacheLogic (Gum.Presentation) so it can
-// be unit tested headlessly. This plugin keeps only menu wiring; HandleClearFontCache stays here
-// unchanged since its catch block reads the handler's own RoutedEventArgs parameter, not the caught
-// exception - extracting it would either leak a WPF type into Gum.Presentation or change behavior.
+/// <summary>
+/// The Content menu's font cache entries (clear, re-create missing, force re-create, view) and the
+/// missing-font creation scheduled after a project loads. Shared by both heads; the logic is
+/// <see cref="FontCacheLogic"/>.
+/// </summary>
 [Export(typeof(PluginBase))]
-public class MainFontPlugin : PriorityPlugin
+public class MainFontPlugin : CorePriorityPlugin
 {
     private readonly IFontManager _fontManager;
-    private readonly IDialogService _dialogService;
     private readonly FontCacheLogic _fontCacheLogic;
     private readonly IFileSystemRevealService _fileSystemRevealService;
 
@@ -33,7 +33,6 @@ public class MainFontPlugin : PriorityPlugin
         IFileSystemRevealService fileSystemRevealService)
     {
         _fontManager = fontManager;
-        _dialogService = dialogService;
         _fileSystemRevealService = fileSystemRevealService;
         _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState, dispatcher);
     }
@@ -41,8 +40,8 @@ public class MainFontPlugin : PriorityPlugin
     public override void StartUp()
     {
         AddMenuEntry(HandleClearFontCache, "Content", "Clear Font Cache");
-        AddMenuEntry(() => HandleRefreshFontCache(forceRecreate: false), "Content", "Re-create missing font files");
-        AddMenuEntry(() => HandleRefreshFontCache(forceRecreate: true), "Content", "Force re-create all font files");
+        AddMenuEntry(async () => await HandleRefreshFontCache(forceRecreate: false), "Content", "Re-create missing font files");
+        AddMenuEntry(async () => await HandleRefreshFontCache(forceRecreate: true), "Content", "Force re-create all font files");
         AddMenuEntry(HandleViewFontCache, "Content", "View Font Cache");
 
 

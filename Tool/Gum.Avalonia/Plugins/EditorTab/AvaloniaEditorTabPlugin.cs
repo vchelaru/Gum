@@ -162,7 +162,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     /// <summary>The zoom, canvas size, font scale, and grid-snap controls the WPF toolbar shows.</summary>
     private static Control BuildToolbar()
     {
-        StackPanel panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(4, 2) };
+        StackPanel panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Margin = new Thickness(4, 2) };
 
         panel.Children.Add(SmallButton("-", nameof(EditorViewModel.ZoomOutCommand)));
         panel.Children.Add(new ComboBox
@@ -215,7 +215,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     {
         Classes = { GumChromeStyles.FlatButtonClass },
         Content = content,
-        Width = 24,
+        Width = 20,
         Padding = new Thickness(0),
         HorizontalContentAlignment = HorizontalAlignment.Center,
         [!Button.CommandProperty] = new Binding(commandPath),

@@ -19,6 +19,27 @@ public class GridRowLayoutTests
         public int? MaxHeight { get; set; }
     }
 
+    private class TextSettings
+    {
+        public string Name { get; set; } = "";
+        public int X { get; set; }
+    }
+
+    [AvaloniaFact]
+    public void TextRow_IsAsTallAsTheWpfRow()
+    {
+        DataUiGrid grid = new DataUiGrid { Instance = new TextSettings() };
+        Window window = new Window { Content = grid, Width = 400, Height = 300 };
+        window.Show();
+        window.UpdateLayout();
+
+        // The WPF grid's text rows are 24px: a 22px field with a pixel above and below.
+        List<double> rowHeights = grid.GetVisualDescendants().OfType<SingleDataUiContainer>().Select(row => row.Bounds.Height).ToList();
+        rowHeights.Count.ShouldBe(2);
+        rowHeights.ShouldAllBe(height => height <= 24, string.Join(", ", rowHeights));
+        window.Close();
+    }
+
     [AvaloniaFact]
     public void NullableRow_KeepsItsIsNullCheckBox_InsideThePanel_BesideTheScrollBar()
     {

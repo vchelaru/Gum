@@ -90,6 +90,12 @@ public static class FrbThemeResources
     public const double DefaultBaseFontSize = 12;
 
     /// <summary>
+    /// The font the controls render in: the OS default, as the WPF head (Segoe UI on Windows), with
+    /// Fluent's Inter as the fallback for a machine without a usable default.
+    /// </summary>
+    public static readonly FontFamily ContentFontFamily = new FontFamily("$Default, fonts:Inter#Inter");
+
+    /// <summary>
     /// Sets the font size the Fluent theme gives its controls (menus, combo boxes, tabs), which
     /// otherwise stays at Fluent's 14 whatever the window's font size is.
     /// </summary>
@@ -110,6 +116,7 @@ public static class FrbThemeResources
     private static void AddControlMetrics(IResourceDictionary resources)
     {
         SetBaseFontSize(resources, DefaultBaseFontSize);
+        resources["ContentControlThemeFontFamily"] = ContentFontFamily;
         resources["ControlCornerRadius"] = new CornerRadius(2);
         resources["OverlayCornerRadius"] = new CornerRadius(2);
         resources["MenuFlyoutPresenterBorderThemeThickness"] = new Thickness(1);
@@ -149,8 +156,10 @@ public static class FrbThemeResources
             yield return ("TextControlBackground" + state, "Frb.Brushes.Field.Background");
         }
         yield return ("TextControlBackgroundFocused", "Frb.Brushes.Background");
-        yield return ("TextControlBorderBrush", "Frb.Brushes.Border.Secondary");
-        yield return ("TextControlBorderBrushDisabled", "Frb.Brushes.Border.Secondary");
+        // WPF's translucent Border.Secondary sits outside the fill, a shade off the surface; Avalonia
+        // strokes it over the fill, where it reads as an outline. The resting border takes the fill color.
+        yield return ("TextControlBorderBrush", "Frb.Brushes.Field.Background");
+        yield return ("TextControlBorderBrushDisabled", "Frb.Brushes.Field.Background");
         yield return ("TextControlBorderBrushPointerOver", "Frb.Brushes.Primary");
         yield return ("TextControlBorderBrushFocused", "Frb.Brushes.Primary");
         foreach (string state in new[] { "", "PointerOver", "Focused", "Disabled" })
@@ -174,14 +183,14 @@ public static class FrbThemeResources
             }
         }
 
-        // ComboBox: like the text box, with the drop-down on Surface01.
+        // ComboBox: like the text box (flat at rest, Primary outline on hover and focus), with the drop-down on Surface01.
         foreach (string key in new[] { "ComboBoxBackground", "ComboBoxBackgroundPointerOver", "ComboBoxBackgroundPressed", "ComboBoxBackgroundDisabled", "ComboBoxBackgroundUnfocused" })
         {
             yield return (key, "Frb.Brushes.Field.Background");
         }
         foreach (string key in new[] { "ComboBoxBorderBrush", "ComboBoxBorderBrushDisabled", "ComboBoxBackgroundBorderBrushUnfocused" })
         {
-            yield return (key, "Frb.Brushes.Border.Secondary");
+            yield return (key, "Frb.Brushes.Field.Background");
         }
         foreach (string key in new[] { "ComboBoxBorderBrushPointerOver", "ComboBoxBorderBrushPressed", "ComboBoxBackgroundBorderBrushFocused" })
         {
