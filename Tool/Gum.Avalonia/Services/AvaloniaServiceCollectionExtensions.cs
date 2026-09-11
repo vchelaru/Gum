@@ -49,6 +49,7 @@ public static class AvaloniaServiceCollectionExtensions
 
         // The Variables tab's view and editor controls (the grid logic itself is in AddGumCore).
         services.AddSingleton<IVariableGridHead, Plugins.VariableGrid.AvaloniaVariableGridHead>();
+        services.AddSingleton<Plugins.VariableGrid.GumIconRegistry>();
 
         // Shell.
         services.AddSingleton<AvaloniaTabManager>();

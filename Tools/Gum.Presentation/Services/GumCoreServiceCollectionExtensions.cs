@@ -204,6 +204,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IVariableTypeConverterProvider, VariableTypeConverterProvider>();
         services.AddSingleton<ICompositeMemberRegistry, CompositeMemberRegistry>();
         services.AddSingleton<IInstalledFontProvider, SkiaInstalledFontProvider>();
+        services.AddSingleton<VariableGridToggleOptions>();
         services.AddSingleton<PropertyGridManager>();
         // IBehaviorVariablePropertyGridSink: narrow port (#3875) resolving to the same PropertyGridManager.
         services.AddSingleton<IBehaviorVariablePropertyGridSink>(provider => provider.GetRequiredService<PropertyGridManager>());

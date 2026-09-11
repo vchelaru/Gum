@@ -52,7 +52,7 @@ Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prere
 | `MaterialDesignThemes` | `Gum.csproj` | style base | 90 | TFM |
 | `ControlzEx` | `Gum.csproj` | window chrome | 90 | TFM |
 | `FluentIcons.Wpf` | `Gum.csproj` | icons | 90 | TFM |
-| `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 | TFM |
+| `PixiEditor.ColorPicker` | `Gum.csproj` | color picker | 90 (the Avalonia Variables tab's `ColorDisplay` does not use it: swatch, hex, and R/G/B sliders, phase 70) | TFM |
 | `SharpVectors` | `Gum.csproj` | SVG in WPF views | 90 | TFM |
 | `SkiaSharp.Views.WPF` | `StateAnimationPlugin` | Skia surface inside WPF (the reason for the win10 SDK TFM) | 80 | TFM |
 | `Xceed.Wpf.AvalonDock*`, `Xceed.Wpf.Toolkit`, `Xceed.Wpf.DataGrid` (DLL refs) | `Gum.csproj` | vestigial utility types in `Dialog.cs` | 90 (delete) | TFM |

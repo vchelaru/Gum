@@ -26,6 +26,9 @@ public class DialogViewRegistry
         Register<GetUserStringDialogBaseViewModel>(() => new GetUserStringDialogView());
         Register<ChoiceDialogViewModel>(() => new ChoiceDialogView());
         Register<PluginsDialogViewModel>(() => new PluginsDialogView());
+        // The Variables tab's dialogs (phase 70).
+        Register<Gum.Plugins.InternalPlugins.VariableGrid.ViewModels.AddVariableViewModel>(() => new Plugins.VariableGrid.AddVariableView());
+        Register<Gum.Dialogs.ExposeColorDialogViewModel>(() => new Plugins.VariableGrid.ExposeColorView());
     }
 
     /// <summary>Registers (or replaces) the view for <typeparamref name="TViewModel"/> and its subclasses.</summary>

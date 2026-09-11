@@ -1,7 +1,7 @@
 using Gum.Controls.DataUi;
 using Shouldly;
 
-namespace GumToolUnitTests.Controls;
+namespace Gum.Presentation.Tests.VariableGrid;
 
 public class HexColorParserTests
 {

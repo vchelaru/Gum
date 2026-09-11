@@ -1,12 +1,10 @@
-﻿using Gum.DataTypes;
-using Gum.Managers;
-using Gum.Services;
-using Gum.ToolStates;
 using System;
-using System.IO;
-using System.Reflection;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.Services;
 using WpfDataUi;
 using WpfDataUi.Controls;
 using WpfDataUi.DataTypes;
@@ -15,27 +13,24 @@ using static WpfDataUi.Controls.ToggleButtonOptionDisplay;
 namespace Gum.Controls
 {
     /// <summary>
-    /// A container for ToggleButtonOptionDisplay, which can be extended
-    /// to create custom toggle button option views. See remarks for details on why
-    /// this exists.
+    /// Hosts a <see cref="ToggleButtonOptionDisplay"/> over one of the shared
+    /// <see cref="VariableGridToggleOptions"/> sets; subclasses pick the set. The WPF display cannot be
+    /// inherited from (its XAML is loaded by class name), so it is composed instead.
     /// </summary>
-    /// <remarks>
-    /// The WpfDataUi project contains the core implementation class
-    /// ToggleButtonOptionDisplay. This class handles most of the implementation
-    /// of the IDataUi interface. Originally I wrote it with the intent of inheriting
-    /// from it. However, it seems like that's not easy to do with the way WPF works according
-    /// to this StackOverflow post:
-    /// https://stackoverflow.com/questions/7646331/the-component-does-not-have-a-resource-identified-by-the-uri
-    /// One of the answers suggested has-a instead of inheritance, so that's what I decided to do.
-    /// Therefore, this class contains an instance of the ToggleButtonOptionDisplay, but it exists in 
-    /// the Gum project. It can be inherited from to do specific implementations
-    /// </remarks>
     public abstract class ToggleButtonOptionContainer : UserControl, IDataUi
     {
         #region Fields/Properties
+
+        // One WPF option per shared option, so repeated lookups hand the display the same instances
+        // and it keeps its buttons instead of rebuilding them.
+        static readonly Dictionary<ToggleButtonOption, Option> _wpfOptions = new();
+
         ToggleButtonOptionDisplay internalDisplay;
 
-        protected abstract Option[] GetOptions();
+        /// <summary>The shared option sets.</summary>
+        protected static VariableGridToggleOptions ToggleOptions => Locator.GetRequiredService<VariableGridToggleOptions>();
+
+        protected abstract ToggleButtonOption[] GetToggleOptions();
 
         public bool RefreshButtonsOnSelection
         {
@@ -107,32 +102,30 @@ namespace Gum.Controls
             return internalDisplay.TrySetValueOnUi(value);
         }
 
-        protected static StandardElementSave GetRootElement()
+        private Option[] GetOptions() => GetToggleOptions().Select(ToWpfOption).ToArray();
+
+        private static Option ToWpfOption(ToggleButtonOption option)
         {
-            ISelectedState selectedState = Locator.GetRequiredService<ISelectedState>();
-            
-            StandardElementSave rootElement = null;
-
-            if (selectedState.SelectedInstance != null)
+            if (!_wpfOptions.TryGetValue(option, out Option? wpfOption))
             {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedInstance);
+                wpfOption = new Option
+                {
+                    Name = option.Name,
+                    Value = option.Value,
+                    GumIconName = option.GumIconName,
+                    IconName = option.IconName,
+                    Image = option.ImagePath != null ? CreateBitmapFromFile(option.ImagePath) : null!,
+                };
+                _wpfOptions[option] = wpfOption;
             }
-            else if (selectedState.SelectedElement != null)
-            {
-                rootElement =
-                    ObjectFinder.Self.GetRootStandardElementSave(selectedState.SelectedElement);
-            }
-
-            return rootElement;
+            return wpfOption;
         }
 
         protected static BitmapImage CreateBitmapFromFile(string resourceName)
         {
-            // make it absolute so the app doesn't look for the files in the current directory, 
-            // which could be outside the Gum.exe location.
-            // Assembly.GetExecutingAssembly().Location returns empty string in single-file published apps;
-            // AppContext.BaseDirectory already includes a trailing separator.
+            // Absolute, so the app doesn't look in the current directory, which could be outside the
+            // Gum.exe location. AppContext.BaseDirectory already ends with a separator (and is correct
+            // in single-file published apps, where Assembly.Location is empty).
             var relativeDirectory = AppContext.BaseDirectory.ToLower();
 
             resourceName = relativeDirectory + resourceName;
@@ -145,5 +138,70 @@ namespace Gum.Controls
             var throwaway = bitmap.Width;
             return bitmap;
         }
+    }
+
+    class XUnitsControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.XUnits;
+    }
+
+    class YUnitsControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.YUnits;
+    }
+
+    class XOriginControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.XOrigin;
+    }
+
+    class YOriginControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GetYOrigins();
+    }
+
+    class WidthUnitsControl : ToggleButtonOptionContainer
+    {
+        public WidthUnitsControl()
+        {
+            this.RefreshButtonsOnSelection = true;
+        }
+
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GetWidthUnits();
+    }
+
+    class HeightUnitsControl : ToggleButtonOptionContainer
+    {
+        public HeightUnitsControl()
+        {
+            this.RefreshButtonsOnSelection = true;
+        }
+
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.GetHeightUnits();
+    }
+
+    public class TextHorizontalAlignmentControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextHorizontalAlignment;
+    }
+
+    class TextVerticalAlignmentControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextVerticalAlignment;
+    }
+
+    class ChildrenLayoutControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.ChildrenLayout;
+    }
+
+    class TextOverflowHorizontalModeControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextOverflowHorizontalMode;
+    }
+
+    class TextOverflowVerticalModeControl : ToggleButtonOptionContainer
+    {
+        protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextOverflowVerticalMode;
     }
 }

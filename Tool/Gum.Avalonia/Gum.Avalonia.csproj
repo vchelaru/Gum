@@ -77,6 +77,13 @@
 		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1.fnt" Link="Content\Fonts\Font18Arial_o1.fnt" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1_0.png" Link="Content\Fonts\Font18Arial_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The Variables tab's text-alignment toggle images, shared with the WPF head. -->
+		<None Include="..\..\Gum\Content\Icons\Alignment\*.png" Link="Content\Icons\Alignment\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The tool's GumIcon geometries, read by GumIconRegistry for the Variables tab's toggles. -->
+		<EmbeddedResource Include="..\..\Gum\Themes\GumIcons.xaml" Link="Themes\GumIcons.xaml" LogicalName="Gum.Avalonia.GumIcons.xaml" />
 	</ItemGroup>
 
 	<ItemGroup>

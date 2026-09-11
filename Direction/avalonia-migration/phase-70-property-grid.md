@@ -151,3 +151,18 @@ Work is on the phase-70 branch, one commit per part.
   `StringListLogic`, `ListBoxDisplayLogic`, and `MultiFileDisplayLogic`; `ToggleButtonOption`
   is the neutral option record. The dial drag uses pointer capture. The list box's bad-input
   message shows inline under the list instead of a WPF message box.
+- **Part 5: the Avalonia Variables tab.** `AvaloniaVariableGridHead` builds `VariablesTabView`
+  over the shared `MainControlViewModel` (state banner, errors, category notice, the filter box
+  with its Ctrl+E hint, clear button, and Escape to clear, the variables and behavior grids, the
+  behavior-variable list with its context menu, and Add Variable) and registers this head's
+  editors for every `GumDisplayers` key: the eleven unit, origin, alignment, overflow, and layout
+  toggles, `ColorDisplay`, `CornerRadiusDisplay`, and `VariableRemoveButton`. Their option sets
+  moved to `VariableGridToggleOptions` and the corner-radius parsing and composing to
+  `CornerRadiusDisplayLogic` (both in `Gum.Presentation`, tested); the WPF toggles and corner
+  radius editor now use them, and `HexColorParser` moved to `Gum.Presentation`. The toggles show
+  the tool's `GumIcon` geometries, read from `Gum/Themes/GumIcons.xaml` (embedded, not copied) by
+  `GumIconRegistry`. The head's startup calls `PropertyGridManager.InitializeEarly`, its
+  `RefreshVariableValues` refreshes the grid in place, it exports the shared variable-grid and
+  exclusions plugins, and the Add/Edit Variable and Expose Color dialogs have Avalonia views.
+  The Avalonia color editor is a swatch, hex field, and R/G/B slider flyout rather than a
+  third-party picker; matching the WPF picker is left to phase 90.
