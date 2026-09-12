@@ -1,3 +1,4 @@
+using Gum.Avalonia.Shell;
 using System;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -235,7 +236,7 @@ public sealed class VariablesTabView : DockPanel, IVariablesTabView
                 {
                     MenuItem menuItem = new MenuItem { Header = item.Text };
                     ContextMenuItemViewModel captured = item;
-                    menuItem.Click += (_, _) => captured.Action?.Invoke();
+                    menuItem.Click += (_, _) => MenuItemActions.InvokeAfterClose(() => captured.Action?.Invoke());
                     menu.Items.Add(menuItem);
                 }
             }

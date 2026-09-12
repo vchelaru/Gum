@@ -59,10 +59,10 @@ public static class AvaloniaMenuBuilder
 
         menuItem.Click += (_, e) =>
         {
-            // A submenu header's click just opens it; only leaves invoke.
+            // A submenu header's click just opens it; only leaves invoke, once the menu has closed.
             if (model.Items.Count == 0)
             {
-                model.Invoke();
+                MenuItemActions.InvokeAfterClose(model.Invoke);
                 e.Handled = true;
             }
         };

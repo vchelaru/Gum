@@ -71,6 +71,13 @@ the VM; a view sets `DialogWindow.SetDialogTitle(this, "...")` and
 `DialogViewModel` in `Gum.Presentation` has no registered view and no named owner in its
 `OwnedElsewhere` list, so **adding a dialog VM means registering its Avalonia view in the same PR**.
 
+**Menu actions run after the menu closes.** Every Avalonia menu item (main menu, context menus,
+the Variables tab, the Animations tab, the Standards palette) invokes its action through
+`MenuItemActions.InvokeAfterClose` (`Tool/Gum.Avalonia/Shell/MenuItemActions.cs`). The dialog
+service is synchronous (a nested dispatcher loop), so an action invoked inside the click handler
+opened its dialog while the menu was still open, and the menu's light-dismiss swallowed the first
+click into the dialog. A new menu site must use the same helper; `MenuBuilderTests` pins it.
+
 ## Common Pitfalls
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.

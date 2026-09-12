@@ -336,7 +336,7 @@ public sealed class AnimationsView : Grid
     private static MenuItem CreateMenuItem(string header, Action action)
     {
         MenuItem item = new MenuItem { Header = header };
-        item.Click += (_, _) => action();
+        item.Click += (_, _) => MenuItemActions.InvokeAfterClose(action);
         return item;
     }
 }

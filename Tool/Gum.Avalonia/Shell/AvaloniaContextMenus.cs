@@ -67,7 +67,7 @@ public static class AvaloniaContextMenus
         }
         if (item.Action != null)
         {
-            menuItem.Click += (_, _) => item.Action();
+            menuItem.Click += (_, _) => MenuItemActions.InvokeAfterClose(item.Action);
         }
         foreach (ContextMenuItemViewModel child in item.Children)
         {

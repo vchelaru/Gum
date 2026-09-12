@@ -1,3 +1,4 @@
+using Gum.Avalonia.Shell;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -209,9 +210,9 @@ public sealed class AvaloniaStandardsPalette : Border
     private ContextMenu CreateChipContextMenu(string typeName)
     {
         MenuItem addToCurrent = new MenuItem();
-        addToCurrent.Click += (_, _) => AddToCurrentRequested?.Invoke(typeName);
+        addToCurrent.Click += (_, _) => MenuItemActions.InvokeAfterClose(() => AddToCurrentRequested?.Invoke(typeName));
         MenuItem editDefaults = new MenuItem { Header = "Edit defaults..." };
-        editDefaults.Click += (_, _) => EditDefaultsRequested?.Invoke(typeName);
+        editDefaults.Click += (_, _) => MenuItemActions.InvokeAfterClose(() => EditDefaultsRequested?.Invoke(typeName));
 
         ContextMenu menu = new ContextMenu();
         // The open element changes over the palette's lifetime, so resolve the label on each open.
