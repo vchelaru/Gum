@@ -15,9 +15,8 @@ public class DiffStandardsCommandTests : IDisposable
     [Fact]
     public void DiffStandards_FreshEmptyProject_ShouldReturnExitCode0()
     {
-        // `gumcli new --template empty` extracts the bundled
-        // Templates/Default/Standards/*.gutx, which (post-regeneration) match
-        // StandardElementsManager exactly. So a fresh empty project must be drift-free.
+        // `gumcli new --template empty` builds Standards/*.gutx live from
+        // StandardElementsManager (#4676), so a fresh empty project is always drift-free.
         string filePath = CreateTestProject("FreshEmpty");
 
         CliTestHelper result = CliTestHelper.Run("diff-standards", filePath);
@@ -29,10 +28,8 @@ public class DiffStandardsCommandTests : IDisposable
     [Fact]
     public void DiffStandards_ProjectWithDriftedFont_ShouldReturnExitCode1AndNameTheStandard()
     {
-        // We don't assume any specific project produces a clean baseline (the bundled
-        // Templates/Default/Standards/*.gutx files have known drift from
-        // StandardElementsManager). Instead we force a specific drift and verify it
-        // shows up in the output, regardless of any baseline drift that may also exist.
+        // A fresh project is drift-free by construction (#4676), so we force a specific
+        // drift here and verify it shows up in the output.
         string filePath = CreateTestProject("DriftedFont");
 
         string textPath = Path.Combine(Path.GetDirectoryName(filePath)!, "Standards", "Text.gutx");
