@@ -62,6 +62,9 @@
 	<PropertyGroup>
 		<ApplicationIcon>GumIcon.ico</ApplicationIcon>
 		<BaseOutputPath></BaseOutputPath>
+		<!-- #4681: without this, the process is DPI-Unaware and Windows bitmap-stretches the
+		     entire rendered window instead of reporting real per-monitor DPI - see app.manifest. -->
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
