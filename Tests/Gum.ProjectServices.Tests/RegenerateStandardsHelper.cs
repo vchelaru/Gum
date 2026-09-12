@@ -6,16 +6,19 @@ using Shouldly;
 namespace Gum.ProjectServices.Tests;
 
 /// <summary>
-/// One-off helper to regenerate the bundled Templates/FormsThemes/Bubblegum/Standards/*.gutx
-/// files from <see cref="StandardElementsManager"/>'s programmatic defaults. Marked Skip by
-/// default — unskip and run to overwrite the on-disk Standards in the worktree,
-/// then re-skip before committing. NOT a real test.
+/// One-off helper to regenerate the bundled Templates/FormsThemes/Bubblegum/Standards/*.gutx and
+/// Templates/Default/Standards/*.gutx files from <see cref="StandardElementsManager"/>'s
+/// programmatic defaults. Marked Skip by default — unskip and run to overwrite the on-disk
+/// Standards in the worktree, then re-skip before committing. NOT a real test.
 /// </summary>
 /// <remarks>
-/// Templates/Default/Standards/*.gutx (ProjectCreator's plain "gumcli new" scaffold) no longer
-/// exists as a baked file tree — ProjectCreator builds it directly from
-/// <see cref="StandardElementsManager"/> at runtime instead (#4676), so there's nothing to
-/// regenerate there anymore.
+/// Templates/Default/Standards/*.gutx is no longer read by <c>ProjectCreator</c> (it builds
+/// <see cref="StandardElementsManager"/> straight into "gumcli new"'s output at runtime instead,
+/// #4676) — these files now exist only as the sibling data
+/// <c>Templates/Default/CliTemplate.gumx</c> needs to load, a fixture used by
+/// <c>MonoGameGum.Tests.DataTypes.Json.GumJsonFixtureDifferentialTests</c>. Regenerate them here
+/// (rather than hand-editing) so they stay a snapshot of the one real source, never a second
+/// hand-maintained copy.
 /// </remarks>
 public class RegenerateStandardsHelper
 {
@@ -39,14 +42,18 @@ public class RegenerateStandardsHelper
         }
 
         string repoRoot = FindRepoRoot();
+        string defaultDir = Path.Combine(repoRoot,
+            "Tools", "Gum.ProjectServices", "Templates", "Default", "Standards");
         string bubblegumDir = Path.Combine(repoRoot,
             "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum", "Standards");
 
+        Directory.Exists(defaultDir).ShouldBeTrue($"missing {defaultDir}");
         Directory.Exists(bubblegumDir).ShouldBeTrue($"missing {bubblegumDir}");
 
         foreach (StandardElementSave standard in project.StandardElements)
         {
             string fileName = standard.Name + "." + GumProjectSave.StandardExtension;
+            standard.Save(Path.Combine(defaultDir, fileName), useCompactFormat: true);
             standard.Save(Path.Combine(bubblegumDir, fileName), useCompactFormat: true);
         }
     }
