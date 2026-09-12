@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Windows.Media;
 using WpfFrameworkElement = System.Windows.FrameworkElement;
 using WpfPoint = System.Windows.Point;
 
@@ -11,6 +12,15 @@ namespace InputLibrary
     /// rendering surface (e.g. a host built on <c>XnaAndWinforms.WpfRenderSurfaceHost</c>) without
     /// depending on a concrete WPF element type.
     /// </summary>
+    /// <remarks>
+    /// <see cref="IInputHostControl"/>'s contract is physical pixels, matching every other backend's
+    /// window/control (their client area has no separate DIU layer, so it's already physical). WPF
+    /// reports everything in device-independent units (DIU), so this adapter converts by the current
+    /// display's DPI scale - otherwise <see cref="Cursor"/>/<c>SelectionManager</c>/the drag handlers
+    /// would read hit-testing coordinates in DIU while the render target they're compared against
+    /// (<c>XnaAndWinforms.WpfGraphicsDeviceControl</c>'s) is sized in physical pixels, making dragging
+    /// track at the display's DPI scale factor instead of 1:1 with the cursor (#4681).
+    /// </remarks>
     public class WpfInputHostAdapter : IInputHostControl
     {
         private readonly WpfFrameworkElement _element;
@@ -24,6 +34,18 @@ namespace InputLibrary
             _element = element;
         }
 
+        private double DpiScale => VisualTreeHelper.GetDpi(_element).DpiScaleX;
+
+        /// <summary>
+        /// Converts a device-independent (DIU) value to its physical-pixel equivalent for the given
+        /// DPI scale, rounding to the nearest pixel. No clamping - unlike a render target's size, a
+        /// window dimension or point coordinate can legitimately be zero or negative (e.g. the cursor
+        /// outside the control, to the left of or above its origin). Pure/static so it's unit-testable
+        /// without a live WPF visual tree.
+        /// </summary>
+        public static int ToPhysicalPixels(double diuValue, double dpiScale) =>
+            (int)Math.Round(diuValue * dpiScale);
+
         // IsKeyboardFocused (not IsFocused) is required here: IsFocused reflects WPF's logical
         // focus-scope state, which does not clear when the containing window loses OS activation,
         // so clicks would keep registering while another window sits on top. IsKeyboardFocused
@@ -32,9 +54,9 @@ namespace InputLibrary
         // up a real WPF window, so this is exercised by the manual/runtime check instead.
         public bool Focused => _element.IsKeyboardFocused;
 
-        public int Width => (int)_element.ActualWidth;
+        public int Width => ToPhysicalPixels(_element.ActualWidth, DpiScale);
 
-        public int Height => (int)_element.ActualHeight;
+        public int Height => ToPhysicalPixels(_element.ActualHeight, DpiScale);
 
         public CursorKind Cursor
         {
@@ -48,7 +70,10 @@ namespace InputLibrary
         {
             WpfPoint screenPoint = new WpfPoint(point.X, point.Y);
             WpfPoint clientPoint = _element.PointFromScreen(screenPoint);
-            return new Point((int)clientPoint.X, (int)clientPoint.Y);
+            double dpiScale = DpiScale;
+            return new Point(
+                ToPhysicalPixels(clientPoint.X, dpiScale),
+                ToPhysicalPixels(clientPoint.Y, dpiScale));
         }
     }
 }

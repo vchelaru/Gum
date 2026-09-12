@@ -17,10 +17,10 @@ public class WpfRenderSurfaceHostTests
         Mock<IWriteableBitmapRenderSurface> surface = new Mock<IWriteableBitmapRenderSurface>();
         WriteableBitmap? bitmap = null;
         byte[] rawImageBuffer = new byte[0];
-        surface.Setup(s => s.Resize(It.IsAny<int>(), It.IsAny<int>()))
-            .Callback<int, int>((width, height) =>
+        surface.Setup(s => s.Resize(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<double>()))
+            .Callback<int, int, double>((width, height, dpiScale) =>
             {
-                bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);
+                bitmap = new WriteableBitmap(width, height, 96 * dpiScale, 96 * dpiScale, PixelFormats.Pbgra32, null);
                 rawImageBuffer = new byte[width * height * 4];
             });
         surface.Setup(s => s.Bitmap).Returns(() => bitmap);
@@ -33,7 +33,7 @@ public class WpfRenderSurfaceHostTests
     {
         Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
         WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
-        host.Initialize(width: 4, height: 4);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
 
         host.Dispose();
 
@@ -46,7 +46,7 @@ public class WpfRenderSurfaceHostTests
         Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
         WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
 
-        host.Initialize(width: 4, height: 4);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
 
         host.IsRunning.ShouldBeTrue();
     }
@@ -57,7 +57,7 @@ public class WpfRenderSurfaceHostTests
         Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
         WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
 
-        host.Initialize(width: 4, height: 4);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
 
         host.ImageElement.Source.ShouldBeSameAs(surface.Object.Bitmap);
     }
@@ -67,7 +67,7 @@ public class WpfRenderSurfaceHostTests
     {
         Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
         WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
-        host.Initialize(width: 4, height: 4);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
 
         host.PushFrame(SurfaceFormat.Color);
 
@@ -79,11 +79,23 @@ public class WpfRenderSurfaceHostTests
     {
         Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
         WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
-        host.Initialize(width: 4, height: 4);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
 
-        host.Resize(width: 8, height: 8);
+        host.Resize(width: 8, height: 8, dpiScale: 1.0);
 
         host.ImageElement.Source.ShouldBeSameAs(surface.Object.Bitmap);
         ((WriteableBitmap)host.ImageElement.Source).PixelWidth.ShouldBe(8);
+    }
+
+    [StaFact]
+    public void Resize_PassesDpiScaleToSurface()
+    {
+        Mock<IWriteableBitmapRenderSurface> surface = CreateSurfaceMock();
+        WpfRenderSurfaceHost host = new WpfRenderSurfaceHost(surface.Object);
+        host.Initialize(width: 4, height: 4, dpiScale: 1.0);
+
+        host.Resize(width: 8, height: 8, dpiScale: 2.0);
+
+        surface.Verify(s => s.Resize(8, 8, 2.0), Times.Once);
     }
 }

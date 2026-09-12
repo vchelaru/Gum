@@ -17,10 +17,15 @@ namespace XnaAndWinforms;
 /// Derived classes override <see cref="PreDrawUpdate"/> and <see cref="Draw"/>.
 /// </summary>
 /// <remarks>
-/// Sizes its surface from <see cref="FrameworkElement.ActualWidth"/>/<see cref="FrameworkElement.ActualHeight"/>,
-/// which are device-independent units. Cursor coordinates arrive through the same units (see
-/// <c>InputLibrary.WpfInputHostAdapter</c>), so the two stay consistent; the cost is that on a
-/// scaled display the canvas renders at fewer pixels than the monitor has and WPF scales the bitmap up.
+/// Cursor coordinates (see <c>InputLibrary.WpfInputHostAdapter</c>) and <see cref="ActualWidth"/>/
+/// <see cref="ActualHeight"/> are both device-independent units (DIU). The render target and backing
+/// bitmap are sized in physical pixels (DIU * <see cref="DpiScale"/>) and the bitmap's DPI is stamped
+/// to match, so one render-target pixel maps to exactly one physical screen pixel - the canvas is
+/// crisp on a scaled display instead of being stretched by WPF's own DPI compositing, and a world unit
+/// still draws to exactly that many physical pixels regardless of display scale. A derived class that
+/// draws through a world-space camera must NOT also scale its own zoom by <see cref="DpiScale"/> -
+/// that would draw each world unit at that many render-target (= physical) pixels again, doubling
+/// apparent size and desyncing hit-testing (which stays DIU-based) from what's drawn.
 /// </remarks>
 public class WpfGraphicsDeviceControl : Grid, IDisposable
 {
@@ -60,6 +65,14 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
     /// ContentManager which look the device up through it.
     /// </summary>
     public IServiceProvider Services => _deviceHost!.Services;
+
+    /// <summary>
+    /// The current display's DPI scale (1.0 at 100%). Read fresh via <see cref="VisualTreeHelper.GetDpi"/>
+    /// rather than cached, so it stays correct if the control moves to a monitor with a different
+    /// scale factor. A derived class that draws through a world-space camera needs to multiply its
+    /// zoom by this for the duration of its draw call - see the class remarks.
+    /// </summary>
+    protected double DpiScale => VisualTreeHelper.GetDpi(this).DpiScaleX;
 
     #endregion
 
@@ -127,15 +140,24 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
 
     private void InitializeDevice()
     {
-        int width = Math.Max(1, (int)ActualWidth);
-        int height = Math.Max(1, (int)ActualHeight);
+        double dpiScale = DpiScale;
+        int width = ToPhysicalPixelSize(ActualWidth, dpiScale);
+        int height = ToPhysicalPixelSize(ActualHeight, dpiScale);
 
         _deviceHost = new SharedRenderDeviceHost(GetWindowHandle(), width, height);
         _deviceHost.RenderTargetRecreated += HandleRenderTargetRecreated;
 
-        _surfaceHost.Initialize(width, height);
+        _surfaceHost.Initialize(width, height, dpiScale);
         _surfaceHost.RenderFrame += HandleRenderFrame;
     }
+
+    /// <summary>
+    /// Converts a device-independent (DIU) size to a physical pixel count for the given DPI scale,
+    /// rounding to the nearest pixel and clamping to a minimum of 1 (a render target/bitmap cannot
+    /// be zero-sized). Pure/static so it's unit-testable without a live WPF visual tree.
+    /// </summary>
+    public static int ToPhysicalPixelSize(double diuSize, double dpiScale) =>
+        Math.Max(1, (int)Math.Round(diuSize * dpiScale));
 
     /// <summary>
     /// The window handle the graphics device presents against. This control is normally constructed
@@ -154,7 +176,7 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
 
     // The bitmap the frame is pushed into and the raw readback buffer are both sized to the render
     // target, so the host recreating it is what drives resizing them.
-    private void HandleRenderTargetRecreated(int width, int height) => _surfaceHost.Resize(width, height);
+    private void HandleRenderTargetRecreated(int width, int height) => _surfaceHost.Resize(width, height, DpiScale);
 
     #endregion
 
@@ -167,9 +189,9 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable
             return;
         }
 
-        int width = (int)ActualWidth;
-        int height = (int)ActualHeight;
-        if (width < 1 || height < 1)
+        int width = ToPhysicalPixelSize(ActualWidth, DpiScale);
+        int height = ToPhysicalPixelSize(ActualHeight, DpiScale);
+        if (ActualWidth < 1 || ActualHeight < 1)
         {
             return;
         }
