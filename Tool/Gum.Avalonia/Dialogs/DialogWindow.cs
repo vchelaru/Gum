@@ -180,7 +180,8 @@ public sealed class DialogWindow : Window
         };
         KeyDown += (_, e) =>
         {
-            if (e.Key == Key.Escape && _viewModel.NegativeText != null && _viewModel.NegativeCommand.CanExecute(null))
+            // As the WPF window: Escape is the negative answer whether or not a Cancel button is shown.
+            if (e.Key == Key.Escape && _viewModel.NegativeCommand.CanExecute(null))
             {
                 _viewModel.NegativeCommand.Execute(null);
                 e.Handled = true;

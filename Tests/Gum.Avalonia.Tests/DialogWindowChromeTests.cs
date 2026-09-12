@@ -18,6 +18,25 @@ namespace Gum.Avalonia.Tests;
 public class DialogWindowChromeTests
 {
     [AvaloniaFact]
+    public void Escape_ClosesAnOkOnlyDialog_AsTheWpfWindowDoes()
+    {
+        // The WPF window runs the negative command on Escape whether or not a Cancel button is shown.
+        MessageDialogViewModel viewModel = new MessageDialogViewModel { Title = "About", Message = "Gum" };
+        viewModel.AffirmativeText = "OK";
+        viewModel.NegativeText = null;
+        Control view = TestAppBuilder.Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        window.RaiseEvent(new global::Avalonia.Input.KeyEventArgs { RoutedEvent = global::Avalonia.Input.InputElement.KeyDownEvent, Key = global::Avalonia.Input.Key.Escape, Source = window });
+        Dispatcher.UIThread.RunJobs();
+
+        window.Result.ShouldBe(false);
+        window.IsVisible.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
     public void DialogWindow_DrawsTheWpfChrome_WithCaptionAndPrimaryButtons()
     {
         MessageDialogViewModel viewModel = new MessageDialogViewModel { Title = "Delete Instance?", Message = "Are you sure?" };
