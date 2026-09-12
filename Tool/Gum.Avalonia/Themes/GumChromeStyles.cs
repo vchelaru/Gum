@@ -177,6 +177,10 @@ public static class GumChromeStyles
                 new Setter(TemplatedControl.CornerRadiusProperty, new CornerRadius(2)),
                 new Setter(TemplatedControl.FontWeightProperty, FontWeight.Bold),
                 new Setter(TemplatedControl.PaddingProperty, new Thickness(4, 2, 4, 3)),
+                // WPF centers a button's content; Fluent stretches it, which left-aligns a short
+                // label in a button wider than its text (a dialog's OK beside Cancel).
+                new Setter(ContentControl.HorizontalContentAlignmentProperty, HorizontalAlignment.Center),
+                new Setter(ContentControl.VerticalContentAlignmentProperty, VerticalAlignment.Center),
             },
         },
         ButtonPart<Button>(null, new[] { ":pointerover" }, Resource("Frb.Brushes.Primary.Light"), Brushes.Transparent, Resource("Frb.Brushes.Primary.Contrast")),
@@ -346,6 +350,38 @@ public static class GumChromeStyles
 
     private static Selector ContextMenuItem(Selector? selector) => selector.OfType<ContextMenu>().Descendant().OfType<MenuItem>();
 
+    // The WPF SubmenuItemTemplate's check: a 13px box in the text color, crossed when checked.
+    private static Control CheckGlyph(bool checkedMark)
+    {
+        IBinding foreground = new Binding(nameof(MenuItem.Foreground))
+        {
+            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(MenuItem) },
+        };
+        Border box = new Border
+        {
+            Width = 13,
+            Height = 13,
+            BorderThickness = new Thickness(1),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!Border.BorderBrushProperty] = foreground,
+        };
+        if (checkedMark)
+        {
+            box.Child = new global::Avalonia.Controls.Shapes.Path
+            {
+                Width = 7,
+                Height = 7,
+                Data = Geometry.Parse("M 0 0 L 7 7 M 0 7 L 7 0"),
+                StrokeThickness = 2,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                [!global::Avalonia.Controls.Shapes.Shape.StrokeProperty] = foreground,
+            };
+        }
+        return box;
+    }
+
     // The WPF drop-down row (SubmenuItemTemplate) for one structural kind of item. An Or selector
     // does not reach into template parts, so the styles are built once per kind.
     private static Styles DropDownItemStyles(Func<Selector?, Selector> kind) => new Styles
@@ -355,11 +391,20 @@ public static class GumChromeStyles
         {
             Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(0, 2)) },
         },
-        // Fluent keeps the shortcut column's margins for an item without a shortcut, widening every
-        // drop-down; WPF gives an empty shortcut no room.
-        new Style(selector => kind(selector).PropertyEquals(MenuItem.InputGestureProperty, null).Template().OfType<TextBlock>().Name("PART_InputGestureText"))
+        // WPF draws a checkable item's box in the icon column; Fluent adds a second shared column
+        // that appears once any item is checked and pushes every row right. Hide Fluent's and put
+        // the WPF box (an X when checked) in the icon column instead.
+        new Style(selector => kind(selector).Class(":toggle").Template().Is<Control>().Name("PART_ToggleIconPresenter"))
         {
             Setters = { new Setter(Visual.IsVisibleProperty, false) },
+        },
+        new Style(selector => kind(selector).Class(":toggle").Template().Is<ContentControl>().Name("PART_IconPresenter"))
+        {
+            Setters = { new Setter(ContentControl.ContentProperty, new FuncTemplate<Control>(() => CheckGlyph(checkedMark: false))) },
+        },
+        new Style(selector => kind(selector).Class(":toggle").Class(":checked").Template().Is<ContentControl>().Name("PART_IconPresenter"))
+        {
+            Setters = { new Setter(ContentControl.ContentProperty, new FuncTemplate<Control>(() => CheckGlyph(checkedMark: true))) },
         },
         // WPF's SubmenuItemTemplate keeps its 16px icon column whether or not the item has an icon,
         // so every header starts 28px in; Fluent collapses the presenter when there is no icon.

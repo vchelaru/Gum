@@ -25,9 +25,11 @@ public class ChromeStylesTests
     {
         MenuItem child = new MenuItem { Header = "Child", InputGesture = new KeyGesture(Key.S, KeyModifiers.Control) };
         MenuItem plain = new MenuItem { Header = "No shortcut" };
+        MenuItem checkable = new MenuItem { Header = "Checkable", ToggleType = MenuItemToggleType.CheckBox, IsChecked = true };
         MenuItem top = new MenuItem { Header = "File" };
         top.Items.Add(child);
         top.Items.Add(plain);
+        top.Items.Add(checkable);
         Menu menu = new Menu();
         menu.Items.Add(top);
         Window window = new Window { Content = menu, Width = 300, Height = 200 };
@@ -51,15 +53,38 @@ public class ChromeStylesTests
         frame.BorderThickness.ShouldBe(new Thickness(1));
         frame.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
         // The WPF SubmenuItemTemplate: headers 28px in behind a reserved icon column, shortcuts
-        // 5px after the header and 10px before the edge, and no shortcut column for a row without one.
+        // 5px after the header and 10px before the edge (an empty shortcut keeps those margins as
+        // the row's right spacing), and a checkable row's box in the icon column, not a column of its own.
         ContentPresenter header = child.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter");
         header.Bounds.X.ShouldBe(28);
         TextBlock gesture = child.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText");
         gesture.Margin.ShouldBe(new Thickness(5, 0, 10, 0));
         gesture.IsVisible.ShouldBeTrue();
-        plain.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText").IsVisible.ShouldBeFalse();
+        plain.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText").IsVisible.ShouldBeTrue();
+        checkable.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter").Bounds.X.ShouldBe(28);
+        checkable.GetVisualDescendants().OfType<Control>().First(control => control.Name == "PART_ToggleIconPresenter").IsVisible.ShouldBeFalse();
+        checkable.GetVisualDescendants().OfType<Control>().First(control => control.Name == "PART_IconPresenter")
+            .GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().Count().ShouldBe(1);
         global::Avalonia.Controls.Shapes.Path chevron = child.GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().First(path => path.Name == "PART_ChevronPath");
-        chevron.Margin.ShouldBe(new Thickness(8, 0, 4, 0));
+        chevron.Margin.ShouldBe(new Thickness(4, 0, 4, 0));
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Button_CentersAShortLabel_InAWiderButton()
+    {
+        // A dialog's OK beside Cancel: both 64 wide at least, the short label centered as in WPF.
+        Button button = new Button { Content = "OK", MinWidth = 64, Padding = new Thickness(16, 4) };
+        Window window = new Window { Content = new StackPanel { Children = { button } }, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        TextBlock text = button.GetVisualDescendants().OfType<TextBlock>().First();
+        double slack = button.Bounds.Width - text.Bounds.Width;
+        double textCenter = text.Bounds.X + text.Bounds.Width / 2;
+        // The text's midpoint sits at the button's midpoint (within a pixel), so there is slack on both sides.
+        slack.ShouldBeGreaterThan(32);
+        textCenter.ShouldBe(button.Bounds.Width / 2, 1.0);
         window.Close();
     }
 
