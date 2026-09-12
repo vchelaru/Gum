@@ -26,6 +26,12 @@
 			the service registration, view-model factories and MEF plugin host are reflection-driven.
 		-->
 		<PublishTrimmed>false</PublishTrimmed>
+		<!--
+			The version the About dialog shows (ToolVersion): the release job publishes with -p:Version=<date>,
+			as the WPF head's BuildVersion stamp is rewritten; a local build says so instead of 1.0.0.
+		-->
+		<Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

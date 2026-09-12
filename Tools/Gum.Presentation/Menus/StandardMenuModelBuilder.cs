@@ -131,10 +131,7 @@ public class StandardMenuModelBuilder
         MenuItemModel help = new MenuItemModel("Help");
         help.Items.Add(new MenuItemModel("About...", () =>
         {
-            string version = Assembly.GetEntryAssembly()
-                ?.GetCustomAttributes<AssemblyMetadataAttribute>()
-                .FirstOrDefault(a => a.Key == "BuildVersion")?.Value ?? "unknown";
-            _dialogService.ShowMessage("Gum version " + version, "About");
+            _dialogService.ShowMessage("Gum version " + ToolVersion.Describe(Assembly.GetEntryAssembly()), "About");
         }));
         const string thirdPartyNoticesUrl = "https://github.com/vchelaru/Gum/blob/main/THIRD-PARTY-NOTICES.txt";
         help.Items.Add(new MenuItemModel("Third-Party Licenses...", () =>
