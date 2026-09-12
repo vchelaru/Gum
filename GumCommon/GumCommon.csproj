@@ -217,10 +217,6 @@
 			<Link>RenderingLibrary\Camera.cs</Link>
 		</Compile>
 
-		<Compile Include="..\RenderingLibrary\CameraDpiCompensationExtensions.cs">
-			<Link>RenderingLibrary\CameraDpiCompensationExtensions.cs</Link>
-		</Compile>
-
 		<Compile Include="..\RenderingLibrary\Graphics\IAspectRatio.cs">
 			<Link>Graphics\IAspectRatio.cs</Link>
 		</Compile>

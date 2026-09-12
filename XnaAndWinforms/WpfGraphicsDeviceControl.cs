@@ -18,12 +18,14 @@ namespace XnaAndWinforms;
 /// </summary>
 /// <remarks>
 /// Cursor coordinates (see <c>InputLibrary.WpfInputHostAdapter</c>) and <see cref="ActualWidth"/>/
-/// <see cref="ActualHeight"/> are both device-independent units (DIU), so hit-testing stays DIU-based.
-/// The render target and backing bitmap, however, are sized in physical pixels (DIU * <see cref="DpiScale"/>)
-/// so the canvas is crisp on a scaled display instead of being stretched by WPF's own DPI compositing
-/// (#4681) - a derived class that draws through a world-space camera (e.g. <c>RenderingLibrary.Camera</c>)
-/// needs to multiply its zoom by <see cref="DpiScale"/> for the duration of its draw call to match
-/// (see <c>RenderingLibrary.CameraDpiCompensationExtensions.BeginDpiCompensatedRender</c>).
+/// <see cref="ActualHeight"/> are both device-independent units (DIU). The render target and backing
+/// bitmap are sized in physical pixels (DIU * <see cref="DpiScale"/>) and the bitmap's DPI is stamped
+/// to match, so one render-target pixel maps to exactly one physical screen pixel - the canvas is
+/// crisp on a scaled display instead of being stretched by WPF's own DPI compositing, and a world unit
+/// still draws to exactly that many physical pixels regardless of display scale. A derived class that
+/// draws through a world-space camera must NOT also scale its own zoom by <see cref="DpiScale"/> -
+/// that would draw each world unit at that many render-target (= physical) pixels again, doubling
+/// apparent size and desyncing hit-testing (which stays DIU-based) from what's drawn.
 /// </remarks>
 public class WpfGraphicsDeviceControl : Grid, IDisposable
 {
