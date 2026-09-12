@@ -87,3 +87,6 @@ Tool/HtmlToGum/fidelity/seeds.json
 # Sokol.NET is no longer a submodule (see Runtimes/SokolGum/README.md). Developers who
 # want to build the Sokol runtime clone it into this folder themselves.
 Sokol.NET/
+
+# Parity screenshot output (Tools/ParityShots/README.md)
+Tools/ParityShots/out/

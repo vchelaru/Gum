@@ -32,6 +32,11 @@
 > rather than a corpus project. Locally, the head and the three headless suites were also run on
 > Linux in WSL (Ubuntu, WSLg display); that run found the two startup bugs phase 25 records.
 >
+> **Tooling (2026-09-11):** everything used to compare the heads lives in `Tools/ParityShots/`:
+> the screenshot driver that walks both running heads through the same states and stitches
+> side-by-side pairs, the one-off capture and UI Automation probes, the scratch-project helper,
+> the Linux clone sync script, and a README with the build, run, compare and Linux (WSL) recipes.
+>
 > **Open:** generated-code parity is not checked on macOS/Linux; the manual checklist has not been
 > run on any OS.
 
