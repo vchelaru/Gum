@@ -13,7 +13,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Templates\Default\Standards\*.gutx" />
+		<!-- Templates\Default\Standards\*.gutx was removed (#4676) — ProjectCreator now builds the
+		     "Standards" folder straight from StandardElementsManager (the same source the editor's
+		     File > New Project uses) instead of extracting a hand-maintained duplicate. -->
 		<EmbeddedResource Include="Templates\Default\ExampleSpriteFrame.png" />
 		<EmbeddedResource Include="Templates\Default\Fonts\*" />
 		<EmbeddedResource Include="Templates\FormsTemplate\**\*" Exclude="Templates\FormsTemplate\FontCache\**\*;Templates\FormsTemplate\Libraries\**\*" />

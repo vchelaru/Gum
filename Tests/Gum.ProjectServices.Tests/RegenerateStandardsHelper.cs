@@ -6,12 +6,17 @@ using Shouldly;
 namespace Gum.ProjectServices.Tests;
 
 /// <summary>
-/// One-off helper to regenerate the bundled Templates/Default/Standards/*.gutx and
-/// Templates/FormsThemes/Bubblegum/Standards/*.gutx files from
-/// <see cref="StandardElementsManager"/>'s programmatic defaults. Marked Skip by
+/// One-off helper to regenerate the bundled Templates/FormsThemes/Bubblegum/Standards/*.gutx
+/// files from <see cref="StandardElementsManager"/>'s programmatic defaults. Marked Skip by
 /// default — unskip and run to overwrite the on-disk Standards in the worktree,
 /// then re-skip before committing. NOT a real test.
 /// </summary>
+/// <remarks>
+/// Templates/Default/Standards/*.gutx (ProjectCreator's plain "gumcli new" scaffold) no longer
+/// exists as a baked file tree — ProjectCreator builds it directly from
+/// <see cref="StandardElementsManager"/> at runtime instead (#4676), so there's nothing to
+/// regenerate there anymore.
+/// </remarks>
 public class RegenerateStandardsHelper
 {
     [Fact(Skip = "Manual regeneration helper. Set Skip = null to run.")]
@@ -34,18 +39,14 @@ public class RegenerateStandardsHelper
         }
 
         string repoRoot = FindRepoRoot();
-        string defaultDir = Path.Combine(repoRoot,
-            "Tools", "Gum.ProjectServices", "Templates", "Default", "Standards");
         string bubblegumDir = Path.Combine(repoRoot,
             "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum", "Standards");
 
-        Directory.Exists(defaultDir).ShouldBeTrue($"missing {defaultDir}");
         Directory.Exists(bubblegumDir).ShouldBeTrue($"missing {bubblegumDir}");
 
         foreach (StandardElementSave standard in project.StandardElements)
         {
             string fileName = standard.Name + "." + GumProjectSave.StandardExtension;
-            standard.Save(Path.Combine(defaultDir, fileName), useCompactFormat: true);
             standard.Save(Path.Combine(bubblegumDir, fileName), useCompactFormat: true);
         }
     }

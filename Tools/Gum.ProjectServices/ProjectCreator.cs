@@ -1,6 +1,8 @@
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Gum.DataTypes;
+using Gum.Managers;
 using ToolsUtilities;
 
 namespace Gum.ProjectServices;
@@ -46,7 +48,7 @@ public class ProjectCreator : IProjectCreator
             Directory.CreateDirectory(subfolderPath);
         }
 
-        ExtractStandardElements(directory);
+        WriteStandardElements(directory);
         ExtractExampleSpriteFrame(directory);
         new DefaultFontBundler().CopyTo(directory);
 
@@ -73,28 +75,28 @@ public class ProjectCreator : IProjectCreator
         return project;
     }
 
-    private static void ExtractStandardElements(string directory)
+    // Builds standards from StandardElementsManager -- the same source the editor's File > New
+    // Project uses (ProjectManager.CreateNewProject) -- instead of a hand-maintained duplicate,
+    // so the two paths can't drift the way #4674 did (#4676).
+    private static void WriteStandardElements(string directory)
     {
         var standardsDir = Path.Combine(directory, "Standards");
-        var assembly = Assembly.GetExecutingAssembly();
+
+        StandardElementsManager.Self.Initialize();
+
+        var referenceProject = new GumProjectSave();
+        StandardElementsManager.Self.PopulateProjectWithDefaultStandards(referenceProject);
 
         foreach (var name in StandardElementNames)
         {
-            var resourceName = $"Gum.ProjectServices.Templates.Default.Standards.{name}.gutx";
-
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            var standard = referenceProject.StandardElements.FirstOrDefault(s => s.Name == name);
+            if (standard == null)
             {
-                if (stream == null)
-                {
-                    continue;
-                }
-
-                var outputPath = Path.Combine(standardsDir, $"{name}.gutx");
-                using (var fileStream = File.Create(outputPath))
-                {
-                    stream.CopyTo(fileStream);
-                }
+                continue;
             }
+
+            var outputPath = Path.Combine(standardsDir, $"{name}.gutx");
+            standard.Save(outputPath, useCompactFormat: true);
         }
     }
 
