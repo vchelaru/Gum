@@ -47,9 +47,9 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     }
 
     /// <inheritdoc/>
-    public void Initialize(int width, int height)
+    public void Initialize(int width, int height, double dpiScale)
     {
-        Resize(width, height);
+        Resize(width, height, dpiScale);
 
         CompositionTarget.Rendering += OnRendering;
         _isRunning = true;
@@ -58,9 +58,9 @@ public class WpfRenderSurfaceHost : IWpfRenderSurfaceHost
     private void OnRendering(object? sender, EventArgs e) => RenderFrame?.Invoke();
 
     /// <inheritdoc/>
-    public void Resize(int width, int height)
+    public void Resize(int width, int height, double dpiScale)
     {
-        _surface.Resize(width, height);
+        _surface.Resize(width, height, dpiScale);
         ImageElement.Source = _surface.Bitmap;
     }
 

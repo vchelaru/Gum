@@ -499,14 +499,19 @@ public class WireframeControl : WpfGraphicsDeviceControl
     {
         if (mHasInitialized)
         {
-            GraphicsDevice.Clear(BackgroundColor);
+            // #4681: draw at physical-pixel resolution (DpiScale from the base class) so the canvas
+            // is crisp on a scaled display, without changing what's visible - see
+            // CameraDpiCompensationExtensions.BeginDpiCompensatedRender.
+            using (Camera.BeginDpiCompensatedRender(DpiScale))
+            {
+                GraphicsDevice.Clear(BackgroundColor);
 
-            _pluginManager.BeforeRender();
+                _pluginManager.BeforeRender();
 
-            Renderer.Self.Draw((SystemManagers)null);
+                Renderer.Self.Draw((SystemManagers)null);
 
-            _pluginManager.AfterRender();
-
+                _pluginManager.AfterRender();
+            }
         }
     }
 

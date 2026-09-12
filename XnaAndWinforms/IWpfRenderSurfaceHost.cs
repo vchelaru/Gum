@@ -38,10 +38,15 @@ public interface IWpfRenderSurfaceHost : IDisposable
     /// Sizes the backing bitmap and starts the render loop. Safe to call only once; use
     /// <see cref="Resize"/> for subsequent size changes.
     /// </summary>
-    void Initialize(int width, int height);
+    /// <param name="dpiScale">
+    /// The current display's DPI scale (1.0 at 100%), stamped onto the backing bitmap so WPF
+    /// displays physical-pixel-sized content without an extra compositor stretch (#4681).
+    /// </param>
+    void Initialize(int width, int height, double dpiScale);
 
     /// <summary>(Re)sizes the backing bitmap and <see cref="RawImageBuffer"/> to match.</summary>
-    void Resize(int width, int height);
+    /// <param name="dpiScale">See <see cref="Initialize"/>.</param>
+    void Resize(int width, int height, double dpiScale);
 
     /// <summary>
     /// Converts <see cref="RawImageBuffer"/> (already filled by the caller) into the backing

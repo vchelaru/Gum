@@ -610,8 +610,14 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
         var isDisposed = this.CurrentTexture?.IsDisposed;
         if(isDisposed == false)
         {
-            base.Draw();
-            mManagers.Renderer.Draw(mManagers);
+            // #4681: draw at physical-pixel resolution (DpiScale from the base class) so the canvas
+            // is crisp on a scaled display, without changing what's visible - see
+            // CameraDpiCompensationExtensions.BeginDpiCompensatedRender.
+            using (Camera.BeginDpiCompensatedRender(DpiScale))
+            {
+                base.Draw();
+                mManagers.Renderer.Draw(mManagers);
+            }
         }
     }
 
