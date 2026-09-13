@@ -12,6 +12,13 @@ public interface ICopyPasteLogic
     void OnCopy(CopyType copyType);
     void OnCut(CopyType copyType);
     void OnPaste(CopyType copyType, TopOrRecursive topOrRecursive = TopOrRecursive.Recursive);
+
+    /// <summary>
+    /// Copies the current selection and immediately pastes it back in place - a single "Duplicate"
+    /// action equivalent to Copy followed by Paste. Overwrites <see cref="CopiedData"/> the same way
+    /// <see cref="OnCopy"/> does.
+    /// </summary>
+    void OnDuplicate(CopyType copyType);
     List<InstanceSave> PasteInstanceSaves(List<InstanceSave> instancesToCopy,
         List<StateSave> copiedStates,
         ElementSave targetElement,

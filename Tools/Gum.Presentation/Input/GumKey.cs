@@ -21,6 +21,7 @@ public enum GumKey
     Down = 0x28,
 
     C = 0x43,
+    D = 0x44,
     E = 0x45,
     F = 0x46,
     V = 0x56,

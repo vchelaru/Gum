@@ -22,6 +22,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.Copy, "Copy");
             Add(_hotkeyManager.Paste, "Paste");
             Add(_hotkeyManager.Cut, "Cut");
+            Add(_hotkeyManager.Duplicate, "Duplicate");
             Add(_hotkeyManager.Undo, "Undo");
             Add(_hotkeyManager.Redo, "Redo");
             Add(_hotkeyManager.RedoAlt, "Redo (Alternative)");
