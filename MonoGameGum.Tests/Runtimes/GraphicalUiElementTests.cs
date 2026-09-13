@@ -2104,6 +2104,25 @@ public class GraphicalUiElementTests : BaseTestClass
         leaf.MoveToLayer(targetLayer);
 
         targetLayer.Renderables.ShouldContain(leaf.RenderableComponent);
+        leaf.Layer.ShouldBe(targetLayer);
+    }
+
+    [Fact]
+    public void MoveToLayer_ElementAlreadyOnALayer_ShouldRemoveFromPreviousLayer()
+    {
+        // Regression: MoveToLayer moved the contained ipso but never updated the tracked Layer
+        // property, so a second MoveToLayer call couldn't find the previous layer to remove from -
+        // the element stayed registered on both layers' Renderables at once.
+        ContainerRuntime leaf = new();
+        Layer oldLayer = new();
+        Layer newLayer = new();
+
+        leaf.MoveToLayer(oldLayer);
+        leaf.MoveToLayer(newLayer);
+
+        oldLayer.Renderables.ShouldNotContain(leaf.RenderableComponent);
+        newLayer.Renderables.ShouldContain(leaf.RenderableComponent);
+        leaf.Layer.ShouldBe(newLayer);
     }
 
     [Fact]
