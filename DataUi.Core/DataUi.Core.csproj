@@ -7,11 +7,12 @@
 		logic classes (TextBoxDisplayLogic, FilePickingLogic, InlineChannelsDisplayLogic). The WPF
 		grid (WpfDataUi) and the Avalonia grid (AvaloniaDataUi) are two views over this model.
 
-		The namespaces stay WpfDataUi.* so existing consumers compile unchanged. Plain net10.0 with
-		no UI framework; the banned-symbol list keeps Windows-only APIs out.
+		The namespaces stay WpfDataUi.* so existing consumers compile unchanged. Multi-targets
+		net8.0/net10.0 (WpfDataUi does the same) so FlatRedBall's Glue, still on net8.0-windows,
+		keeps building; no UI framework, and the banned-symbol list keeps Windows-only APIs out.
 	-->
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<Nullable>enable</Nullable>
