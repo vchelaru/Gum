@@ -613,10 +613,38 @@ public class GumProjectSave
         string projectRootDirectory = FileManager.GetDirectory(fileName);
 
         gps.PopulateElementSavesFromReferences(projectRootDirectory, linkLoadingPreference, result, isJsonFormat);
-        gps.FullFileName = fileName.Replace('\\', '/');
+        gps.FullFileName = ResolveOnDiskCasing(fileName.Replace('\\', '/'), projectRootDirectory);
 
 
         return gps;
+    }
+
+    /// <summary>
+    /// Case-insensitive filesystems (Windows/macOS) let <paramref name="fileName"/>'s casing drift
+    /// from the file actually on disk - e.g. a stale recent-projects entry recorded before the file
+    /// was renamed externally. <see cref="Save"/> writes to <see cref="FullFileName"/> verbatim, so
+    /// keeping the caller-supplied casing here would silently rename the file back on the next save
+    /// and break case-sensitive consumers like `gumcli pack` (#4687). Resolve it to the real on-disk
+    /// name at load time; if that can't be determined (title-container platforms, an ambiguous or
+    /// missing match), fall back to the requested casing unchanged.
+    /// </summary>
+    private static string ResolveOnDiskCasing(string fileName, string directory)
+    {
+        try
+        {
+            if (Directory.Exists(directory))
+            {
+                string[] matches = Directory.GetFiles(directory, Path.GetFileName(fileName));
+                if (matches.Length == 1)
+                {
+                    return matches[0].Replace('\\', '/');
+                }
+            }
+        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
+
+        return fileName;
     }
 
     // todo - need to figure out how to get this to work with sub-elements each having their own streams
