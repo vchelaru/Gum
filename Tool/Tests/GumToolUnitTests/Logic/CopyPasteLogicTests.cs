@@ -142,6 +142,43 @@ public class CopyPasteLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void OnDuplicate_Instance_ShouldCreateSiblingCopyAndSelectIt()
+    {
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave original = screen.Instances[0];
+
+        SelectInstances(original);
+
+        _copyPasteLogic.OnDuplicate(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(2);
+        screen.Instances[1].Name.ShouldBe("Instance2");
+        _currentSelectedInstances.ShouldContain(screen.Instances[1]);
+        _currentSelectedInstances.ShouldNotContain(original);
+    }
+
+    [Fact]
+    public void OnDuplicate_InstanceWithChild_ShouldDuplicateChildAndPreserveParenting()
+    {
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave parent = screen.Instances[0];
+        InstanceSave child = AddChild("Child1", parent.Name, screen);
+
+        SelectInstances(parent);
+
+        _copyPasteLogic.OnDuplicate(CopyType.InstanceOrElement);
+
+        screen.Instances.Count.ShouldBe(4, "the original parent+child plus the duplicated parent+child");
+        List<InstanceSave> newInstances = screen.Instances.Where(i => i != parent && i != child).ToList();
+        newInstances.Count.ShouldBe(2);
+        InstanceSave duplicatedChild = newInstances.Single(
+            i => screen.DefaultState.GetValueRecursive($"{i.Name}.Parent") != null);
+        InstanceSave duplicatedParent = newInstances.Single(i => i != duplicatedChild);
+        screen.DefaultState.GetValueRecursive($"{duplicatedChild.Name}.Parent").ShouldBe(duplicatedParent.Name);
+        _currentSelectedInstances.ShouldContain(duplicatedParent);
+    }
+
+    [Fact]
     public void OnPaste_Instance_ShouldCreateOneUndo_ForMultiplePastedObjects()
     {
         Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();

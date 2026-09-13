@@ -10,6 +10,7 @@ public interface IHotkeyManager
     KeyCombination Copy { get; }
     KeyCombination Paste { get; }
     KeyCombination Cut { get; }
+    KeyCombination Duplicate { get; }
     KeyCombination Undo { get; }
     KeyCombination Redo { get; }
     KeyCombination RedoAlt { get; }

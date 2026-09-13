@@ -83,10 +83,10 @@ Do not call `CopyPasteLogic` methods directly from outside these entry points.
 
 | File | Purpose |
 |------|---------|
-| `Gum/Logic/CopyPasteLogic.cs` | All copy/paste orchestration; `CopiedData` nested class defined here |
-| `Gum/Logic/ICopyPasteLogic.cs` | Interface |
-| `Gum/Commands/EditCommands.cs` | Thin wrappers that delegate to `ICopyPasteLogic` |
-| `Gum/Managers/HotkeyManager.cs` | Keyboard entry point |
+| `Tools/Gum.Presentation/Logic/CopyPasteLogic.cs` | All copy/paste orchestration; `CopiedData` nested class defined here |
+| `Tools/Gum.Presentation/Logic/ICopyPasteLogic.cs` | Interface |
+| `Tools/Gum.Presentation/Commands/EditCommands.cs` | Thin wrappers that delegate to `ICopyPasteLogic` |
+| `Tools/Gum.Presentation/Managers/HotkeyManager.cs` | Keyboard entry point |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Context menu entry point |
 | `Gum/StateAnimationPlugin/Managers/AnimationCopyPasteManager.cs` | Separate animation copy/paste |
 | `Tool/Tests/GumToolUnitTests/Logic/CopyPasteLogicTests.cs` | Unit tests |
