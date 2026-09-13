@@ -6224,6 +6224,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 layerToRemoveFrom.Remove(mContainedObjectAsIpso!);
             }
             layerToAddTo.Add(mContainedObjectAsIpso!);
+            mLayer = layerToAddTo;
         }
         else
         {
