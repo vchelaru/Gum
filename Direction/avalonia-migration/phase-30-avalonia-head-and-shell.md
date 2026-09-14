@@ -1,7 +1,7 @@
 # Phase 30 — The Avalonia head and shell
 
 > **Status 2026-09-10:** landed on `avalonia-migration-work`. `Tool/Gum.Avalonia` (plain `net10.0`,
-> code-only Avalonia 11.3, in `Gum.sln` and `GumFull.sln`) composes `AddGumCore()` +
+> code-only Avalonia 11.3, in `Gum.slnx`, `Gum.Wpf.sln` and `GumFull.sln`) composes `AddGumCore()` +
 > `AddGumAvalonia()`, opens the five-region shell with the standard menus, runs the shared
 > `GumStartupSequence`, and captures itself with `--exit-after`/`--screenshot`. Seam
 > implementations: dispatcher, clipboard, app scale, theming (Fluent variant + accent resources,
@@ -60,7 +60,7 @@ Avalonia head exists on `main` and every later phase lands into it.
   and `Screens` cover them. Until then they stay in `AddGumWpf()` per phase 20's list.
 - **CI builds the head on `windows-latest`, `macos-latest`, `ubuntu-latest` from the first PR**, and
   runs the phase-100 headless smoke test on each. A red head build blocks merge like any other.
-- **Location:** `Tool/Gum.Avalonia/` beside `Tool/EditorTabPlugin_XNA/`, in `Gum.sln` and
+- **Location:** `Tool/Gum.Avalonia/` beside `Tool/EditorTabPlugin_XNA/`, in `Gum.slnx`, `Gum.Wpf.sln` and
   `GumFull.sln`. Solution-level post-build for `Gum.Cli` bundling is mirrored, not duplicated.
 
 ## Scope
@@ -93,7 +93,7 @@ packaging (110).
 - `Gum/Program.cs`, `Gum/App.xaml`, `Gum/MainWindow.xaml`, `Gum/Controls/MainPanelControl.xaml`, `MainPanelViewModel` (wherever it now lives)
 - `Gum/Plugins/InternalPlugins/MenuStripPlugin/MenuStripManager.cs`
 - `Gum/Services/Dialogs/*` (WPF impls to mirror), `Tools/Gum.Presentation/Dialogs/*` (contracts)
-- `.github/workflows/build-and-test.yaml`, `Gum.sln`, `GumFull.sln`
+- `.github/workflows/build-and-test.yaml`, `Gum.slnx`, `Gum.Wpf.sln`, `GumFull.sln`
 
 ## Dependencies
 

@@ -159,6 +159,6 @@ public record PluginScanReport(
 
         If you are running a downloaded release, extract the whole .zip before running Gum.exe; the
         Plugins folder has to sit next to it. If you built from source, build GumFull.sln - building
-        Gum.csproj or Gum.sln on its own skips the step that copies plugins into this folder.
+        Gum.csproj or Gum.Wpf.sln on its own skips the step that copies plugins into this folder.
         """;
 }

@@ -55,7 +55,7 @@ packaging.
   mixes view-coupled tests (`WpfRenderSurfaceHostTests`, `WpfPluginBaseTests`, `GumTreeNodeTests`)
   with logic tests that could move.
 - `AllPluginsCompositionTests` proves MEF composition headlessly (#3330).
-- CI (`build-and-test.yaml`) builds `Gum.sln` on Windows and runs `GumToolUnitTests`; runtime
+- CI (`build-and-test.yaml`) builds `Gum.Wpf.sln` on Windows and runs `GumToolUnitTests`; runtime
   suites already run on macOS for Skia/raylib.
 - The CLI (`Gum.Cli`) can load, save, screenshot, and generate code headlessly; `Gum.ImageDiff`
   exists for image comparison.

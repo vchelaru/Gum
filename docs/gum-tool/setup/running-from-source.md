@@ -18,10 +18,10 @@ Gum is an open source project so you can run it from source instead of running t
 
 ## Running the code
 
-1. Locate the Gum.sln file
+1. Locate the Gum.slnx file (Gum.Wpf.sln is the older Windows-only WPF tool)
    1. If you downloaded the .zip, it is in the root folder of the zip
    2. If you cloned the repository, it is at the root of the Gum folder
-2. Double-click it to open Visual Studio, or open Visual Studio and load the .sln
+2. Double-click it to open Visual Studio, or open Visual Studio and load the .slnx
 3. Be sure to build solution rather than pressing F5 (which only builds the current project). This guarantees that all plugins are built and copied correctly. For more information see below.
 
 Once the project has been built, you can run (with or without a debugger attached).
