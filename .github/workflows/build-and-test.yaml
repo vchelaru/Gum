@@ -10,12 +10,16 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 # guards every expensive step so the job still runs and reports green, it just
 # does no work. Required contexts must always report.
 # push is safe to filter: pushes to main are not gated on required checks.
+#
+# pull_request has no branches filter on purpose: a long-lived integration
+# branch (e.g. avalonia-migration-work) collects PRs targeting itself, and a
+# filter of [main] would leave every one of them unchecked until the whole
+# branch lands on main (#4695).
 on:
   push:
     branches: [main]
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
-    branches: [master, main]
   workflow_dispatch:
 
 jobs:
@@ -486,6 +490,8 @@ jobs:
       #   - Gum.AssemblyNameGuard.Tests    (MSBuild buildTransitive collision guard;
       #                                     shells out to `dotnet build` against temp
       #                                     projects, no window/GPU. #4311)
+      #   - Gum.RepoHygiene.Tests          (checked-in .sln files reference only
+      #                                     projects that exist; pure IO. #4695)
       #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
       #                                     raylib-backend screenshot test, and the
       #                                     diff-screenshots test (which renders via
@@ -596,6 +602,10 @@ jobs:
       - name: Gum.AssemblyNameGuard.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.RepoHygiene.Tests
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        run: dotnet test "Tests/Gum.RepoHygiene.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
