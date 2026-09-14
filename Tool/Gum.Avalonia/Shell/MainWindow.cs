@@ -93,6 +93,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             Height = 24,
             BorderThickness = new Thickness(0, 1, 0, 0),
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Border");
+        // The bar carries only the spinner's progress, so it takes no height while there is none.
+        statusBar.Bind(IsVisibleProperty, new AvaloniaBinding(nameof(ShellViewModel.ProgressText)) { Converter = StringConverters.IsNotNullOrEmpty });
         DockPanel.SetDock(statusBar, Dock.Bottom);
 
         MainPanelView panel = new MainPanelView(tabs);

@@ -86,6 +86,24 @@ public class HeadCompositionTests
         panel.Margin.Right.ShouldBe(expectedMargin);
     }
 
+    [AvaloniaFact]
+    public void MainWindow_ShowsTheStatusBar_OnlyWhileThereIsProgressText()
+    {
+        // The bar carries nothing but the spinner's progress, so an empty one is wasted height.
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        ShellViewModel shell = (ShellViewModel)window.DataContext!;
+        Control statusBar = ((DockPanel)window.Content!).Children.Single(child => DockPanel.GetDock(child) == Dock.Bottom);
+
+        shell.ProgressText = "";
+        statusBar.IsVisible.ShouldBeFalse();
+
+        shell.ProgressText = "Working... 1/3";
+        statusBar.IsVisible.ShouldBeTrue();
+
+        shell.ProgressText = "";
+        statusBar.IsVisible.ShouldBeFalse();
+    }
+
     [Fact]
     public void ParseFilter_TurnsWpfFilterIntoPickerTypes()
     {
