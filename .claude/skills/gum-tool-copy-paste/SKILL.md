@@ -57,7 +57,7 @@ Variables and lists on the source's **own** selected state are never filtered �
 
 ## Undo Integration
 
-Only paste acquires an undo lock (`_undoManager.RequestLock()`). The entire paste — all instances, state variable copies, parent assignments — records as a single undo action. Cut's deletion goes through `IDeleteLogic.RemoveInstance()` which handles its own undo internally.
+Paste and cut each acquire an undo lock (`_undoManager.RequestLock()`) for their whole operation. The entire paste — all instances, state variable copies, parent assignments — records as a single undo action; a cut records the removal of every cut instance as one action. `IDeleteLogic.RemoveInstance()` does **not** take a lock of its own, so any caller that removes through it must hold one (#4691).
 
 ## State Paste Validation
 

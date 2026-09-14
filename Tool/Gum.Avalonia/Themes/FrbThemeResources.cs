@@ -156,6 +156,9 @@ public static class FrbThemeResources
             yield return ("TextControlBackground" + state, "Frb.Brushes.Field.Background");
         }
         yield return ("TextControlBackgroundFocused", "Frb.Brushes.Background");
+        // The WPF scroll bar draws only its thumb; Fluent's filled track reads as noise (#4694).
+        yield return ("ScrollBarTrackFill", TransparentSource);
+        yield return ("ScrollBarTrackFillPointerOver", TransparentSource);
         // WPF's translucent Border.Secondary sits outside the fill, a shade off the surface; Avalonia
         // strokes it over the fill, where it reads as an outline. The resting border takes the fill color.
         yield return ("TextControlBorderBrush", "Frb.Brushes.Field.Background");

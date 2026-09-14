@@ -126,7 +126,7 @@ public class VariablesTabTests
     }
 
     [AvaloniaFact]
-    public void ColorDisplay_HexAndSlidersWriteTheColor_KeepingAlpha()
+    public void ColorDisplay_HexAndPickerWriteTheColor_KeepingAlpha()
     {
         GumEditorFixture fixture = new GumEditorFixture();
         ColorDisplay display = new ColorDisplay { InstanceMember = fixture.Member(nameof(GumEditorFixture.Color)) };
@@ -136,7 +136,7 @@ public class VariablesTabTests
         display.CommitHexText();
         fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 255, 128, 0));
 
-        display.HandleSliderMoved(2, 64);
+        display.HandleColorPicked(global::Avalonia.Media.Color.FromRgb(255, 128, 64));
         display.CommitPendingFull();
         fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 255, 128, 64));
         display.HexTextBox.Text.ShouldBe("FF8040");
@@ -180,6 +180,35 @@ public class VariablesTabTests
     }
 
     [AvaloniaFact]
+    public void ColorDisplay_OpensARealColorPicker_ThatWritesThrough()
+    {
+        // A spectrum with per-channel entry rather than three bare sliders (#4694); alpha is kept.
+        GumEditorFixture fixture = new GumEditorFixture();
+        ColorDisplay display = new ColorDisplay { InstanceMember = fixture.Member(nameof(GumEditorFixture.Color)) };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        window.UpdateLayout();
+
+        display.ColorView.Color.ShouldBe(global::Avalonia.Media.Color.FromRgb(10, 20, 30));
+        display.ColorView.IsAlphaEnabled.ShouldBeFalse();
+
+        display.ColorView.Color = global::Avalonia.Media.Color.FromRgb(200, 100, 50);
+
+        fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 200, 100, 50));
+        display.HexTextBox.Text.ShouldBe("C86432");
+
+        display.CommitPendingFull();
+
+        // The picker echoing its current color (as it does while its parts bind) writes nothing.
+        int writes = 0;
+        display.InstanceMember!.CustomSetPropertyEvent += (_, _) => writes++;
+        display.HandleColorPicked(global::Avalonia.Media.Color.FromRgb(200, 100, 50));
+        display.CommitPendingFull();
+        writes.ShouldBe(0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void PropertyGridManager_FillsTheHeadsGridWithGumEditors_AndFiltersIt()
     {
         // Startup order: plugins first, since the tool's standard-state refresh goes through them.
@@ -220,9 +249,21 @@ public class VariablesTabTests
             editorByMember["WidthUnits"].ShouldBe(typeof(WidthUnitsDisplay));
             editorByMember["ChildrenLayout"].ShouldBe(typeof(ChildrenLayoutDisplay));
 
+            // The first character typed already narrows the grid (#4690), not only the second.
+            view.FilterTextBox.Text = "X";
+            List<string> shownForOneCharacter = ShownMemberNames(grid);
+            shownForOneCharacter.ShouldContain("XUnits");
+            shownForOneCharacter.ShouldNotContain("Height");
+            shownForOneCharacter.ShouldAllBe(name => name.Contains("X", StringComparison.OrdinalIgnoreCase));
+
+            view.FilterTextBox.Text = "XU";
+            List<string> shownForTwoCharacters = ShownMemberNames(grid);
+            shownForTwoCharacters.ShouldContain("XUnits");
+            shownForTwoCharacters.ShouldAllBe(name => name.Contains("XU", StringComparison.OrdinalIgnoreCase));
+
             sut.VariableViewModel.VariableFilterText = "Units";
             // The filter narrows each category's members to the matches.
-            List<string> shown = grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
+            List<string> shown = ShownMemberNames(grid);
             shown.ShouldContain("XUnits");
             shown.ShouldAllBe(name => name.Contains("Units"));
         }
@@ -234,4 +275,7 @@ public class VariablesTabTests
             tabManager.RemoveTab(tab);
         }
     }
+
+    private static List<string> ShownMemberNames(DataUiGrid grid) =>
+        grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
 }

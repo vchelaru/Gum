@@ -132,6 +132,32 @@ public class CanvasHostTests
     }
 
     [AvaloniaFact]
+    public void InputAdapter_ForgetsThePointerPosition_WhenThePointerLeavesTheControl()
+    {
+        // The canvas polls the position to decide whether the cursor is over it. A last in-bounds
+        // position lingering after the pointer left read as "still over the canvas" and cleared the
+        // tree's hover highlight every frame (#4694).
+        global::Avalonia.Controls.Border control = new global::Avalonia.Controls.Border { Width = 100, Height = 80, Background = global::Avalonia.Media.Brushes.Red };
+        global::Avalonia.Controls.Window window = new global::Avalonia.Controls.Window
+        {
+            Width = 300,
+            Height = 300,
+            Content = new global::Avalonia.Controls.Canvas { Children = { control } },
+        };
+        window.Show();
+        window.UpdateLayout();
+        AvaloniaInputHostAdapter adapter = new AvaloniaInputHostAdapter(control);
+
+        window.MouseMove(new global::Avalonia.Point(10, 10));
+        adapter.GetPointerState().X.ShouldBe(10);
+
+        window.MouseMove(new global::Avalonia.Point(200, 200));
+        adapter.GetPointerState().X.ShouldBe(-1);
+        adapter.GetPointerState().Y.ShouldBe(-1);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void InputAdapter_ReportsPointerAndCursorOnTheControl()
     {
         global::Avalonia.Controls.Border control = new global::Avalonia.Controls.Border { Width = 100, Height = 80 };

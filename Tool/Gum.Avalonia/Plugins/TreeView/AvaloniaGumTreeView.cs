@@ -52,6 +52,7 @@ public sealed class AvaloniaGumTreeView : UserControl
 
     private KeyModifiers _modifiers;
     private bool _rebuildPending;
+    private bool _isReleaseFromExpander;
     private Point _pressPoint;
     private GumTreeNode? _dragCandidate;
     private bool _isDragging;
@@ -80,6 +81,15 @@ public sealed class AvaloniaGumTreeView : UserControl
             Content = _itemsControl,
             HorizontalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = global::Avalonia.Controls.Primitives.ScrollBarVisibility.Auto,
+        };
+        // Rows span the viewport, so a click or right click past a short name still lands on the row
+        // (#4694); a name wider than the viewport still scrolls.
+        _scrollViewer.PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ScrollViewer.ViewportProperty)
+            {
+                _itemsControl.MinWidth = _scrollViewer.Viewport.Width;
+            }
         };
         _dropIndicator = new Border
         {
@@ -318,12 +328,23 @@ public sealed class AvaloniaGumTreeView : UserControl
         e.Handled = true;
     }
 
+    /// <summary>
+    /// Called by a row when its expander takes a press: the matching release changes no selection
+    /// and opens no menu, so the chevron only expands or collapses (#4694).
+    /// </summary>
+    internal void NotifyExpanderPressed() => _isReleaseFromExpander = true;
+
     /// <inheritdoc/>
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
         _dragCandidate = null;
         _modifiers = e.KeyModifiers;
+        if (_isReleaseFromExpander)
+        {
+            _isReleaseFromExpander = false;
+            return;
+        }
         GumTreeNode? node = NodeAt(e.GetPosition(this));
         TreePointerButton button = ToButton(e.GetCurrentPoint(this).Properties.PointerUpdateKind);
 
@@ -333,6 +354,15 @@ public sealed class AvaloniaGumTreeView : UserControl
         {
             ContextMenuRequested?.Invoke();
         }
+    }
+
+    /// <inheritdoc/>
+    protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+    {
+        base.OnPointerCaptureLost(e);
+        // No release follows a lost capture; the next click must not be swallowed.
+        _isReleaseFromExpander = false;
+        _dragCandidate = null;
     }
 
     /// <inheritdoc/>
@@ -663,18 +693,21 @@ public sealed class AvaloniaGumTreeView : UserControl
 internal sealed record TreeRow(GumTreeNode Node, int Level);
 
 /// <summary>
-/// Draws one row of <see cref="AvaloniaGumTreeView"/>: indentation, an expander, the node's icon and
-/// text, and the selected/hovered background. Follows its node's property changes while attached.
+/// Draws one row of <see cref="AvaloniaGumTreeView"/>: indentation, then a highlight box holding the
+/// expander, the node's icon and text, which shows the selected/hovered background from the indent
+/// to the row's edge as the WPF row does. Follows its node's property changes while attached.
 /// </summary>
 internal sealed class TreeRowView : Border
 {
-    private const double Indent = 16;
+    /// <summary>Horizontal space per tree level.</summary>
+    internal const double Indent = 16;
 
     private static readonly IBrush FallbackFill = new SolidColorBrush(Color.FromArgb(0x26, 0x3e, 0x9e, 0xce));
     private static readonly IBrush FallbackBorder = new SolidColorBrush(Color.Parse("#3e9ece"));
 
     private readonly AvaloniaGumTreeView _owner;
     private readonly Border _indent;
+    private readonly Border _highlight;
     private readonly Border _expander;
     private readonly FluentIcon _expanderIcon;
     private readonly ContentControl _iconHost;
@@ -686,10 +719,8 @@ internal sealed class TreeRowView : Border
     {
         _owner = owner;
         _iconIndex = -1;
+        // Transparent rather than unset, so the whole row takes the pointer.
         Background = Brushes.Transparent;
-        BorderThickness = new Thickness(1);
-        BorderBrush = Brushes.Transparent;
-        Padding = new Thickness(1, 0);
 
         _indent = new Border();
         // The WPF tree's chevrons, right when collapsed and down when expanded.
@@ -705,21 +736,40 @@ internal sealed class TreeRowView : Border
         };
         _expander.PointerPressed += (_, e) =>
         {
+            // Only the left button toggles; a right click on the chevron is a click on the row.
+            if (!e.GetCurrentPoint(_expander).Properties.IsLeftButtonPressed)
+            {
+                return;
+            }
             if (_node is { HasChildren: true } node)
             {
                 node.IsExpanded = !node.IsExpanded;
             }
+            _owner.NotifyExpanderPressed();
             e.Handled = true;
         };
         _iconHost = new ContentControl { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
         _text = new TextBlock { VerticalAlignment = VerticalAlignment.Center };
 
         StackPanel content = new StackPanel { Orientation = Orientation.Horizontal };
-        content.Children.Add(_indent);
         content.Children.Add(_expander);
         content.Children.Add(_iconHost);
         content.Children.Add(_text);
-        Child = content;
+        _highlight = new Border
+        {
+            Background = Brushes.Transparent,
+            BorderBrush = Brushes.Transparent,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(2),
+            Padding = new Thickness(1, 0),
+            Child = content,
+        };
+        Grid.SetColumn(_highlight, 1);
+
+        Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        row.Children.Add(_indent);
+        row.Children.Add(_highlight);
+        Child = row;
 
         DoubleTapped += (_, _) =>
         {
@@ -731,6 +781,12 @@ internal sealed class TreeRowView : Border
     }
 
     public TreeRow? Row => DataContext as TreeRow;
+
+    /// <summary>The box that shows the hovered and selected state, for tests.</summary>
+    internal Border Highlight => _highlight;
+
+    /// <summary>The expander area, for tests.</summary>
+    internal Control Expander => _expander;
 
     /// <inheritdoc/>
     protected override void OnDataContextChanged(EventArgs e)
@@ -795,10 +851,10 @@ internal sealed class TreeRowView : Border
         _expanderIcon.Icon = _node.IsExpanded ? FluentIcons.Common.Icon.ChevronDown : FluentIcons.Common.Icon.ChevronRight;
         _text.Text = _node.Text;
         // Hovered and selected rows share the primary wash; a selected row adds the primary border.
-        Background = _node.IsSelected || _node.IsHot
+        _highlight.Background = _node.IsSelected || _node.IsHot
             ? ThemeBrushes.Get(this, "Frb.Brushes.Primary.Transparent", FallbackFill)
             : Brushes.Transparent;
-        BorderBrush = _node.IsSelected ? ThemeBrushes.Get(this, "Frb.Brushes.Primary", FallbackBorder) : Brushes.Transparent;
+        _highlight.BorderBrush = _node.IsSelected ? ThemeBrushes.Get(this, "Frb.Brushes.Primary", FallbackBorder) : Brushes.Transparent;
 
         if (_iconIndex != _node.ImageIndex)
         {

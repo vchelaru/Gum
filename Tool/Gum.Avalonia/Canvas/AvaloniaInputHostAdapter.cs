@@ -39,7 +39,8 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         control.AddHandler(InputElement.PointerMovedEvent, HandlePointer, routes, handledEventsToo: true);
         control.AddHandler(InputElement.PointerPressedEvent, HandlePointer, routes, handledEventsToo: true);
         control.AddHandler(InputElement.PointerReleasedEvent, HandlePointer, routes, handledEventsToo: true);
-        control.AddHandler(InputElement.PointerExitedEvent, HandlePointer, routes, handledEventsToo: true);
+        // Exited is routed directly to the control, not tunneled or bubbled.
+        control.AddHandler(InputElement.PointerExitedEvent, HandlePointerExited, RoutingStrategies.Direct, handledEventsToo: true);
         control.AddHandler(InputElement.PointerCaptureLostEvent, HandleCaptureLost, routes, handledEventsToo: true);
         control.AddHandler(InputElement.KeyDownEvent, HandleKeyDown, routes, handledEventsToo: true);
         control.AddHandler(InputElement.KeyUpEvent, HandleKeyUp, routes, handledEventsToo: true);
@@ -118,6 +119,15 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         _isLeftDown = properties.IsLeftButtonPressed;
         _isRightDown = properties.IsRightButtonPressed;
         _isMiddleDown = properties.IsMiddleButtonPressed;
+    }
+
+    // The last in-bounds position must not outlive the pointer's visit: Cursor.IsInWindow reads any
+    // position inside the bounds as "over the canvas", and the canvas then clears a highlight the tree
+    // set while the pointer is over the tree (#4694). A captured pointer raises no exit, so a drag
+    // that leaves the canvas keeps its position.
+    private void HandlePointerExited(object? sender, PointerEventArgs e)
+    {
+        _pointerPosition = new Point(-1, -1);
     }
 
     private void HandleCaptureLost(object? sender, PointerCaptureLostEventArgs e)

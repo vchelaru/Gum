@@ -20,6 +20,14 @@ public interface IUndoManager
 
     UndoLock RequestLock();
 
+    /// <summary>
+    /// As <see cref="RequestLock()"/>, for a change made to <paramref name="element"/> while it is
+    /// not necessarily the selected element (a tree drop into another element, say). The change
+    /// records in that element's own history when the lock is released. Must be requested before
+    /// the element is changed. For the selected element this is the same as a plain lock.
+    /// </summary>
+    UndoLock RequestLock(ElementSave element);
+
     void ClearAll();
 
     void RecordState();

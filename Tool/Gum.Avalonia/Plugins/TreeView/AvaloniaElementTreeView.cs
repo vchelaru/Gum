@@ -43,6 +43,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     private readonly AvaloniaStandardsPalette _palette;
     private readonly Button _collapseAllButton;
     private readonly Button _collapseToElementButton;
+    private readonly Grid _searchRow;
     private readonly ContextMenu _contextMenu;
 
     private Point _resultPressPoint;
@@ -64,12 +65,17 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         _collapseAllButton = ToolButton(FluentIcons.Common.Icon.ArrowCollapseAll, "Collapse all nodes in the tree", () => CollapseAllRequested?.Invoke());
         _collapseToElementButton = ToolButton(FluentIcons.Common.Icon.TextBulletListTree, "Collapse to element level (preserves folder expansion state)",
             () => CollapseToElementLevelRequested?.Invoke());
-        // The WPF panel's rows: 24px buttons under a 4px gap, 6px above the search box.
-        StackPanel buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, Margin = new Thickness(0, 4, 0, 6) };
-        buttons.Children.Add(_collapseAllButton);
-        buttons.Children.Add(_collapseToElementButton);
-
-        _searchBox = new TextBox { Watermark = "Search..." };
+        // One row at the top of the panel: the search box, shrinking to make room for the two
+        // 24px tool buttons at its right (#4694).
+        _searchBox = new TextBox { Watermark = "Search...", VerticalAlignment = VerticalAlignment.Center };
+        _collapseAllButton.Margin = new Thickness(4, 0, 0, 0);
+        _collapseToElementButton.Margin = new Thickness(4, 0, 0, 0);
+        Grid.SetColumn(_collapseAllButton, 1);
+        Grid.SetColumn(_collapseToElementButton, 2);
+        _searchRow = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,Auto") };
+        _searchRow.Children.Add(_searchBox);
+        _searchRow.Children.Add(_collapseAllButton);
+        _searchRow.Children.Add(_collapseToElementButton);
         _deepSearch = new CheckBox
         {
             Content = "Include Variables",
@@ -91,12 +97,10 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         treeHost.Children.Add(_results);
 
         _content = new DockPanel { Margin = new Thickness(4) };
-        DockPanel.SetDock(buttons, global::Avalonia.Controls.Dock.Top);
-        DockPanel.SetDock(_searchBox, global::Avalonia.Controls.Dock.Top);
+        DockPanel.SetDock(_searchRow, global::Avalonia.Controls.Dock.Top);
         DockPanel.SetDock(_deepSearch, global::Avalonia.Controls.Dock.Top);
         DockPanel.SetDock(_palette, global::Avalonia.Controls.Dock.Bottom);
-        _content.Children.Add(buttons);
-        _content.Children.Add(_searchBox);
+        _content.Children.Add(_searchRow);
         _content.Children.Add(_deepSearch);
         _content.Children.Add(_palette);
         _content.Children.Add(treeHost);
@@ -111,6 +115,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 
     /// <inheritdoc/>
     public object Content => _content;
+
+    /// <summary>The row holding the search box and the collapse buttons, for tests.</summary>
+    internal Grid SearchRow => _searchRow;
 
     /// <inheritdoc/>
     public GumTreeNodeCollection Nodes => _tree.Nodes;

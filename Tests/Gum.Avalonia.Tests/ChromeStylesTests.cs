@@ -71,6 +71,34 @@ public class ChromeStylesTests
     }
 
     [AvaloniaFact]
+    public void ScrollBar_TrackIsTransparent()
+    {
+        // The WPF scroll bar draws only its thumb; a filled track is visual noise (#4694).
+        Window window = new Window();
+        window.Show();
+
+        window.FindResource("ScrollBarTrackFill").ShouldBeSameAs(Brushes.Transparent);
+        window.FindResource("ScrollBarTrackFillPointerOver").ShouldBeSameAs(Brushes.Transparent);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void TreeViewRootRow_StartsNearTheLeftEdge_AsInWpf()
+    {
+        // Fluent reserves 36px for the chevron; the WPF states tree's "Default" row sits at 19px (#4694).
+        TreeViewItem item = new TreeViewItem { Header = "Default" };
+        TreeView tree = new TreeView { Items = { item } };
+        tree.Classes.Add(GumChromeStyles.CompactTreeClass);
+        Window window = new Window { Content = tree, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        ContentPresenter header = item.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter");
+        header.TranslatePoint(new Point(0, 0), tree)!.Value.X.ShouldBeLessThanOrEqualTo(20);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void Button_CentersAShortLabel_InAWiderButton()
     {
         // A dialog's OK beside Cancel: both 64 wide at least, the short label centered as in WPF.

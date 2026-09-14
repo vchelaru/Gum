@@ -94,9 +94,14 @@ public sealed class MainPanelView : Grid
                 tab?.Content is Control control ? control : new ContentControl { Content = tab?.Content }),
         };
         tabControl.Classes.Add(GumChromeStyles.MainTabsClass);
+        // The strip shows the window background and the content sits on Surface01, as the WPF
+        // MainTabControl.Style (the content host is styled in GumChromeStyles).
+        tabControl.WithThemeResource(TemplatedControl.BackgroundProperty, "Frb.Brushes.Background");
         tabControl.SelectionChanged += (_, _) =>
         {
-            if (tabControl.SelectedItem is AvaloniaPluginTab selected)
+            // While the manager reorders the list the tab control picks neighbors on its own; the
+            // manager settles the selection itself once the list is in order.
+            if (!_tabs.IsSyncing && tabControl.SelectedItem is AvaloniaPluginTab selected)
             {
                 _tabs.Select(selected);
             }
@@ -110,7 +115,7 @@ public sealed class MainPanelView : Grid
             }
         };
 
-        Grid host = new Grid().WithThemeResource(Panel.BackgroundProperty, "Frb.Surface01");
+        Grid host = new Grid().WithThemeResource(Panel.BackgroundProperty, "Frb.Brushes.Background");
         host.Children.Add(tabControl);
         SetRow(host, row);
         SetColumn(host, column);
@@ -159,21 +164,37 @@ public sealed class MainPanelView : Grid
         return header;
     }
 
+    // As the WPF splitters: an invisible grab area with a 1px line in the Border color through it,
+    // so the regions read as separated by thin lines rather than bars (#4694).
     private static GridSplitter CreateSplitter(GridResizeDirection direction, int row, int column)
     {
+        bool isColumn = direction == GridResizeDirection.Columns;
         GridSplitter splitter = new GridSplitter
         {
             ResizeDirection = direction,
-        }.WithThemeResource(TemplatedControl.BackgroundProperty, "Frb.Brushes.Border");
-        if (direction == GridResizeDirection.Columns)
+            Background = Brushes.Transparent,
+            Template = new FuncControlTemplate<GridSplitter>((_, _) => new Border
+            {
+                // Transparent rather than unset, so the whole grab area takes the pointer.
+                Background = Brushes.Transparent,
+                Child = new Border
+                {
+                    Width = isColumn ? 1 : double.NaN,
+                    Height = isColumn ? double.NaN : 1,
+                    HorizontalAlignment = isColumn ? HorizontalAlignment.Center : HorizontalAlignment.Stretch,
+                    VerticalAlignment = isColumn ? VerticalAlignment.Stretch : VerticalAlignment.Center,
+                }.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Border"),
+            }),
+        };
+        if (isColumn)
         {
-            splitter.Width = 4;
+            splitter.Width = 5;
             splitter.HorizontalAlignment = HorizontalAlignment.Center;
             splitter.VerticalAlignment = VerticalAlignment.Stretch;
         }
         else
         {
-            splitter.Height = 4;
+            splitter.Height = 5;
             splitter.HorizontalAlignment = HorizontalAlignment.Stretch;
             splitter.VerticalAlignment = VerticalAlignment.Center;
         }

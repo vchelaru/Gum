@@ -588,6 +588,10 @@ public class DragDropManager : IDragDropManager
 
     private void HandleDroppingInstanceOnTarget(InstanceSave dragDroppedInstance, ITreeNode? targetTreeNode, DropTarget dropTarget)
     {
+        // Taken before the reorder below and for the element being changed, which need not be the
+        // selected one (#4692); a lock for the selected element is the plain lock.
+        using var undoLock = _undoManager.RequestLock(dropTarget.ParentElement);
+
         if (dragDroppedInstance.DefinedByBase)
         {
             object describedTarget = (object?)dropTarget.ParentInstance ?? dropTarget.ParentElement;
@@ -655,9 +659,6 @@ public class DragDropManager : IDragDropManager
         // Since the Parent property can only be set in the default state, we will
         // set the Parent variable on that instead of the _selectedState.SelectedStateSave
         var stateToAssignOn = targetElementSave.DefaultState;
-
-        // todo - this needs to request the lock for the particular element
-        using var undoLock = _undoManager.RequestLock();
 
         var oldValue = stateToAssignOn.GetValue(variableName) as string;
         stateToAssignOn.SetValue(variableName, parentName, "string");
@@ -935,13 +936,26 @@ public class DragDropManager : IDragDropManager
             : orderedByTag.ThenByDescending(InstanceSourceIndex))
             .ToList();
 
-        using var undoLock = _undoManager.RequestLock();
+        // The drop changes the element it lands in, which need not be the selected one (#4692), so
+        // the lock targets that element; a drop onto a folder or behavior changes no element.
+        ElementSave? changedElement = dropTarget?.ParentElement ?? GetElementOf(targetNode);
+        using var undoLock = changedElement != null
+            ? _undoManager.RequestLock(changedElement)
+            : _undoManager.RequestLock();
 
         foreach (var node in sortedNodes)
         {
             HandleDroppedItemOnTreeView(node, targetNode, dropTarget);
         }
     }
+
+    /// <summary>The element <paramref name="node"/> stands for or belongs to, or null for a folder or behavior node.</summary>
+    private static ElementSave? GetElementOf(ITreeNode node) => node.Tag switch
+    {
+        ElementSave element => element,
+        InstanceSave instance => instance.ParentContainer,
+        _ => null,
+    };
 
     private static int InstanceSourceIndex(ITreeNode node) =>
         node.Tag is InstanceSave instance

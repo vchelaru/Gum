@@ -142,9 +142,9 @@ public class TextOverflowHorizontalModeDisplay : GumToggleOptionDisplay { protec
 public class TextOverflowVerticalModeDisplay : GumToggleOptionDisplay { protected override ToggleButtonOption[] GetToggleOptions() => ToggleOptions.TextOverflowVerticalMode; }
 
 /// <summary>
-/// The color composite's editor: a swatch that opens red, green, and blue sliders (intermediate
-/// writes while dragging, a full write on release), and a hex field (RRGGBB or RRGGBBAA; alpha is
-/// ignored and kept).
+/// The color composite's editor: a swatch that opens a color picker (a spectrum, red, green and
+/// blue sliders and fields; intermediate writes while it changes, a full write on release or when
+/// it closes), and a hex field (RRGGBB or RRGGBBAA; alpha is ignored and kept).
 /// </summary>
 public class ColorDisplay : DataUiDisplayBase
 {
@@ -153,7 +153,7 @@ public class ColorDisplay : DataUiDisplayBase
     private readonly TextBlock _label;
     private readonly Border _swatch;
     private readonly TextBox _hexTextBox;
-    private readonly Slider[] _channelSliders;
+    private readonly ColorView _colorView;
     private readonly TextBlock _hint;
     private DrawingColor _current;
     private Type? _propertyType;
@@ -167,29 +167,30 @@ public class ColorDisplay : DataUiDisplayBase
         _label = new TextBlock { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0) };
         _swatch = new Border { Height = 18, MinWidth = 60, CornerRadius = new CornerRadius(2), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) };
 
-        StackPanel sliders = new StackPanel { Spacing = 4, Width = 220 };
-        _channelSliders = new Slider[3];
-        string[] names = { "R", "G", "B" };
-        for (int i = 0; i < 3; i++)
+        // Avalonia's picker without its alpha and palette parts: the hex field beside the swatch
+        // already covers hex entry. Alpha is a separate Gum variable.
+        _colorView = new ColorView
         {
-            Slider slider = new Slider { Minimum = 0, Maximum = 255, SmallChange = 1, LargeChange = 16 };
-            int channel = i;
-            slider.PropertyChanged += (_, e) =>
+            ColorModel = ColorModel.Rgba,
+            IsAlphaEnabled = false,
+            IsAlphaVisible = false,
+            IsColorPaletteVisible = false,
+            IsColorSpectrumVisible = true,
+            IsComponentSliderVisible = true,
+            IsComponentTextInputVisible = true,
+            IsHexInputVisible = false,
+            IsColorPreviewVisible = true,
+        };
+        _colorView.ColorChanged += (_, e) =>
+        {
+            if (!_isSyncing)
             {
-                if (e.Property == RangeBase.ValueProperty && !_isSyncing)
-                {
-                    HandleSliderMoved(channel, slider.Value);
-                }
-            };
-            slider.AddHandler(PointerReleasedEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Bubble, handledEventsToo: true);
-            _channelSliders[i] = slider;
-
-            Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("16,*") };
-            Grid.SetColumn(slider, 1);
-            row.Children.Add(new TextBlock { Text = names[i], VerticalAlignment = VerticalAlignment.Center });
-            row.Children.Add(slider);
-            sliders.Children.Add(row);
-        }
+                HandleColorPicked(e.NewColor);
+            }
+        };
+        _colorView.AddHandler(PointerReleasedEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Bubble, handledEventsToo: true);
+        Flyout flyout = new Flyout { Content = _colorView };
+        flyout.Closed += (_, _) => CommitPendingFull();
 
         Button swatchButton = new Button
         {
@@ -197,7 +198,7 @@ public class ColorDisplay : DataUiDisplayBase
             Padding = new Thickness(1),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Flyout = new Flyout { Content = sliders },
+            Flyout = flyout,
         };
 
         _hexTextBox = new TextBox { Width = 76, VerticalAlignment = VerticalAlignment.Center };
@@ -236,8 +237,8 @@ public class ColorDisplay : DataUiDisplayBase
     /// <summary>The hex field, for tests.</summary>
     internal TextBox HexTextBox => _hexTextBox;
 
-    /// <summary>The red, green, and blue sliders, for tests.</summary>
-    internal IReadOnlyList<Slider> ChannelSliders => _channelSliders;
+    /// <summary>The picker in the swatch's flyout, for tests.</summary>
+    internal ColorView ColorView => _colorView;
 
     /// <inheritdoc/>
     public override void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -293,15 +294,17 @@ public class ColorDisplay : DataUiDisplayBase
         return ApplyValueResult.Success;
     }
 
-    /// <summary>Sets one channel from its slider as an intermediate write, as dragging does.</summary>
-    internal void HandleSliderMoved(int channel, double value)
+    /// <summary>Takes the picker's color, keeping alpha, as an intermediate write, as dragging does.</summary>
+    internal void HandleColorPicked(Color picked)
     {
-        byte channelValue = (byte)Math.Clamp((int)Math.Round(value), 0, 255);
-        _current = DrawingColor.FromArgb(_current.A,
-            channel == 0 ? channelValue : _current.R,
-            channel == 1 ? channelValue : _current.G,
-            channel == 2 ? channelValue : _current.B);
-        SyncUiFromCurrent(updateHex: true, updateSliders: false);
+        // The picker re-raises its color as its parts bind (opening the flyout, say); only a change
+        // is a write, or the value would be written and an undo recorded for nothing.
+        if (picked.R == _current.R && picked.G == _current.G && picked.B == _current.B)
+        {
+            return;
+        }
+        _current = DrawingColor.FromArgb(_current.A, picked.R, picked.G, picked.B);
+        SyncUiFromCurrent(updateHex: true, updatePicker: false);
         Commit(SetPropertyCommitType.Intermediate);
         _needsFullCommit = true;
     }
@@ -349,15 +352,13 @@ public class ColorDisplay : DataUiDisplayBase
         _isSetting = false;
     }
 
-    private void SyncUiFromCurrent(bool updateHex, bool updateSliders = true)
+    private void SyncUiFromCurrent(bool updateHex, bool updatePicker = true)
     {
         _swatch.Background = new SolidColorBrush(Color.FromRgb(_current.R, _current.G, _current.B));
-        if (updateSliders)
+        if (updatePicker)
         {
             _isSyncing = true;
-            _channelSliders[0].Value = _current.R;
-            _channelSliders[1].Value = _current.G;
-            _channelSliders[2].Value = _current.B;
+            _colorView.Color = Color.FromRgb(_current.R, _current.G, _current.B);
             _isSyncing = false;
         }
         if (updateHex)

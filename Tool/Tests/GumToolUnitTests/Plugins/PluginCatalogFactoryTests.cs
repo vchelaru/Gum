@@ -16,6 +16,93 @@ namespace GumToolUnitTests.Plugins;
 public class PluginCatalogFactoryTests
 {
     [Fact]
+    public void FindMismatchedDuplicates_FlagsOnlySameNamedFilesWhoseContentDiffers()
+    {
+        // A dependency each plugin ships in its own folder is the same bytes twice: expected. A stale
+        // copy elsewhere with the same name but other bytes is the case that ends in a
+        // TypeLoadException deep in an unrelated plugin (#4693).
+        Mock<IOutputManager> outputManager = new();
+        PluginCatalogFactory factory = new(outputManager.Object);
+        (string Path, string ContentHash)[] files =
+        {
+            (@"C:\Plugins\Only.dll", "aaa"),
+            (@"C:\Plugins\A\Shared.dll", "bbb"),
+            (@"C:\Plugins\B\Shared.dll", "bbb"),
+            (@"C:\Plugins\Stale.dll", "ccc"),
+            (@"C:\Plugins\A\stale.DLL", "ddd"),
+            // Per-platform native libraries share a name by design.
+            (@"C:\Plugins\A\runtimes\win-x64\native\Native.dll", "eee"),
+            (@"C:\Plugins\A\runtimes\win-x86\native\Native.dll", "fff"),
+        };
+
+        IReadOnlyList<PluginFileDuplicates> mismatched = factory.FindMismatchedDuplicates(files);
+
+        PluginFileDuplicates single = mismatched.ShouldHaveSingleItem();
+        single.FileName.ShouldBe("Stale.dll");
+        single.Paths.ShouldBe(new[] { @"C:\Plugins\Stale.dll", @"C:\Plugins\A\stale.DLL" });
+    }
+
+    [Fact]
+    public void ReportMismatchedDuplicates_NamesBothCopies_AndTheOneThatLoads()
+    {
+        string folder = CreateTempPluginFolder();
+        try
+        {
+            string rootCopy = Path.Combine(folder, "Dependency.dll");
+            string pluginCopy = Path.Combine(folder, "MyPlugin", "Dependency.dll");
+            File.WriteAllBytes(rootCopy, new byte[] { 1, 2, 3 });
+            File.WriteAllBytes(pluginCopy, new byte[] { 4, 5, 6 });
+            string reported = "";
+            Mock<IOutputManager> outputManager = new();
+            outputManager.Setup(m => m.AddError(It.IsAny<string>())).Callback<string>(v => reported = v);
+            PluginCatalogFactory factory = new(outputManager.Object);
+
+            factory.ReportMismatchedDuplicates(new[] { rootCopy, pluginCopy });
+
+            outputManager.Verify(m => m.AddError(It.IsAny<string>()), Times.Once);
+            reported.ShouldContain("Dependency.dll");
+            reported.ShouldContain(rootCopy);
+            reported.ShouldContain(pluginCopy);
+            reported.IndexOf(rootCopy, StringComparison.Ordinal).ShouldBeLessThan(reported.IndexOf(pluginCopy, StringComparison.Ordinal), "the first copy found is the one that loads");
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ReportMismatchedDuplicates_StaysQuiet_ForIdenticalCopies()
+    {
+        string folder = CreateTempPluginFolder();
+        try
+        {
+            string firstCopy = Path.Combine(folder, "MyPlugin", "Dependency.dll");
+            string secondCopy = Path.Combine(folder, "OtherPlugin", "Dependency.dll");
+            Directory.CreateDirectory(Path.GetDirectoryName(secondCopy)!);
+            File.WriteAllBytes(firstCopy, new byte[] { 1, 2, 3 });
+            File.WriteAllBytes(secondCopy, new byte[] { 1, 2, 3 });
+            Mock<IOutputManager> outputManager = new();
+            PluginCatalogFactory factory = new(outputManager.Object);
+
+            factory.ReportMismatchedDuplicates(new[] { firstCopy, secondCopy });
+
+            outputManager.Verify(m => m.AddError(It.IsAny<string>()), Times.Never);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    private static string CreateTempPluginFolder()
+    {
+        string folder = Path.Combine(Path.GetTempPath(), "GumPluginScan_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(folder, "MyPlugin"));
+        return folder;
+    }
+
+    [Fact]
     public void CreateCatalogForLoadableTypes_ReportsSkippedTypesAndDistinctLoaderErrors()
     {
         string reported = "";
