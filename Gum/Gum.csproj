@@ -104,6 +104,7 @@
 		<ProjectReference Include="..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
 		<ProjectReference Include="..\Tool\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
 		<ProjectReference Include="..\InputLibrary\InputLibrary.csproj" />
+		<ProjectReference Include="..\XnaAndWinforms.Wpf\XnaAndWinforms.Wpf.csproj" />
 		<ProjectReference Include="..\WpfDataUi\WpfDataUi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
