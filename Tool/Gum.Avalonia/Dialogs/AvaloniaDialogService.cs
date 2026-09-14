@@ -117,6 +117,25 @@ public class AvaloniaDialogService : IDialogService
         return file?.Path.LocalPath;
     }
 
+    /// <inheritdoc/>
+    public string? OpenFolder(OpenFolderDialogOptions? options = null)
+    {
+        options ??= new OpenFolderDialogOptions();
+        Window? owner = MainWindow;
+        if (owner == null)
+        {
+            return null;
+        }
+
+        IReadOnlyList<IStorageFolder> folders = RunOnUiThread(() => owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = options.Title,
+            SuggestedStartLocation = StartLocation(owner, options.InitialDirectory),
+        }));
+
+        return folders.Select(f => f.Path.LocalPath).FirstOrDefault(p => !string.IsNullOrEmpty(p));
+    }
+
     /// <summary>
     /// Turns a WPF-style filter ("PNG Files (*.png)|*.png|All Files (*.*)|*.*") into picker types.
     /// Pure, so it is unit-testable.

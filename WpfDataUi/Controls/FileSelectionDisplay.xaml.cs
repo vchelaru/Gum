@@ -63,6 +63,12 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         set => _filePickingLogic.Filter = value;
     }
 
+    public bool IsFolderDialog
+    {
+        get => _filePickingLogic.IsFolderDialog;
+        set => _filePickingLogic.IsFolderDialog = value;
+    }
+
     #endregion
 
     #region Methods

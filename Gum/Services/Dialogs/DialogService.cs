@@ -165,4 +165,17 @@ internal class DialogService : IDialogService
         return saveFileDialog.ShowDialog() is true ? saveFileDialog.FileName : null;
     }
 
+    public string? OpenFolder(OpenFolderDialogOptions? options = null)
+    {
+        options ??= new OpenFolderDialogOptions();
+
+        OpenFolderDialog openFolderDialog = new()
+        {
+            Title = options.Title ?? "Select Folder",
+            InitialDirectory = options.InitialDirectory ?? string.Empty,
+        };
+
+        return openFolderDialog.ShowDialog() is true ? openFolderDialog.FolderName : null;
+    }
+
 }

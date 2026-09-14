@@ -33,5 +33,8 @@ public class DialogServiceFilePicker : IDataUiFilePicker
     }
 
     /// <inheritdoc/>
+    public string? PickFolder() => _dialogService.OpenFolder();
+
+    /// <inheritdoc/>
     public void RevealFile(string filePath) => _revealService.RevealFile(filePath);
 }

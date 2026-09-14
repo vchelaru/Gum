@@ -868,6 +868,13 @@ public class FileSelectionDisplay : DataUiDisplayBase
         set => _filePickingLogic.Filter = value;
     }
 
+    /// <summary>When true, the picker button shows a folder-browse dialog instead of an open-file dialog.</summary>
+    public bool IsFolderDialog
+    {
+        get => _filePickingLogic.IsFolderDialog;
+        set => _filePickingLogic.IsFolderDialog = value;
+    }
+
     /// <summary>The path field, for tests.</summary>
     internal TextBox TextBox => _textBox;
 

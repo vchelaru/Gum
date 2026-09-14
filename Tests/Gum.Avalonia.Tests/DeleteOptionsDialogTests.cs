@@ -78,6 +78,8 @@ public class DeleteOptionsDialogTests
         public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
 
         public string? SaveFile(SaveFileDialogOptions? options = null) => null;
+
+        public string? OpenFolder(OpenFolderDialogOptions? options = null) => null;
     }
 
     private sealed class RecordingDeletePluginNotifier : IDeletePluginNotifier

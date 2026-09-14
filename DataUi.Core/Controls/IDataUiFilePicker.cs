@@ -12,6 +12,9 @@ public interface IDataUiFilePicker
     /// </summary>
     string? PickFile(string filter);
 
+    /// <summary>Shows a folder-browse dialog and returns the chosen path, or null if cancelled.</summary>
+    string? PickFolder();
+
     /// <summary>Opens the OS file manager with <paramref name="filePath"/> selected.</summary>
     void RevealFile(string filePath);
 }

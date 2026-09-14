@@ -454,6 +454,7 @@ public class ImportFromGumxViewModelTests
             return OpenFileStub?.Invoke(options);
         }
         public string? SaveFile(SaveFileDialogOptions? options = null) => null;
+        public string? OpenFolder(OpenFolderDialogOptions? options = null) => null;
     }
 
     private class FakeImportLogic : IImportLogic

@@ -48,6 +48,38 @@ public class FilePickingTests : IDisposable
     }
 
     [Fact]
+    public void DialogServiceFilePicker_PickFolder_PassesThroughToOpenFolder()
+    {
+        Mock<IDialogService> dialogService = new Mock<IDialogService>();
+        dialogService.Setup(d => d.OpenFolder(It.IsAny<OpenFolderDialogOptions>())).Returns("/a/folder");
+        DialogServiceFilePicker picker = new DialogServiceFilePicker(dialogService.Object, Mock.Of<IFileSystemRevealService>());
+
+        picker.PickFolder().ShouldBe("/a/folder");
+    }
+
+    [Fact]
+    public void DialogServiceFilePicker_PickFolder_ReturnsNull_WhenCancelled()
+    {
+        Mock<IDialogService> dialogService = new Mock<IDialogService>();
+        dialogService.Setup(d => d.OpenFolder(It.IsAny<OpenFolderDialogOptions>())).Returns((string?)null);
+        DialogServiceFilePicker picker = new DialogServiceFilePicker(dialogService.Object, Mock.Of<IFileSystemRevealService>());
+
+        picker.PickFolder().ShouldBeNull();
+    }
+
+    [Fact]
+    public void ShowOpenDialog_UsesPickFolder_WhenIsFolderDialog()
+    {
+        Mock<IDataUiFilePicker> picker = new Mock<IDataUiFilePicker>();
+        picker.Setup(p => p.PickFolder()).Returns("/projects/mygame");
+        FilePickingLogic.FilePicker = picker.Object;
+        FilePickingLogic logic = new FilePickingLogic { IsFolderDialog = true };
+
+        logic.ShowOpenDialog().ShouldBe("/projects/mygame");
+        picker.Verify(p => p.PickFile(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void ShowInExplorer_ResolvesAgainstFolderRelativeTo_AndRevealsOnlyExistingFiles()
     {
         string folder = Path.Combine(Path.GetTempPath(), "GumFilePickingTests", Guid.NewGuid().ToString("N")) + "/";

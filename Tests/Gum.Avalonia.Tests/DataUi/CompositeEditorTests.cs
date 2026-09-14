@@ -36,6 +36,8 @@ public class CompositeEditorTests : IDisposable
             return NextFile;
         }
 
+        public string? PickFolder() => NextFile;
+
         public void RevealFile(string filePath)
         {
         }

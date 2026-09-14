@@ -726,6 +726,8 @@ public class SetVariableLogicTests : BaseTestClass
         public List<string>? OpenFile(OpenFileDialogOptions? options = null) => null;
 
         public string? SaveFile(SaveFileDialogOptions? options = null) => null;
+
+        public string? OpenFolder(OpenFolderDialogOptions? options = null) => null;
     }
 
     [Fact]

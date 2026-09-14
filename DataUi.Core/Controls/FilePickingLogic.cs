@@ -16,6 +16,12 @@ public class FilePickingLogic
     public string Filter { get; set; } = string.Empty;
 
     /// <summary>
+    /// When true, <see cref="ShowOpenDialog"/> shows a folder-browse dialog instead of an
+    /// open-file dialog.
+    /// </summary>
+    public bool IsFolderDialog { get; set; }
+
+    /// <summary>
     /// Optional base directory used when resolving relative paths for
     /// <see cref="ShowInExplorer"/>. Static so all pickers in the process share it.
     /// </summary>
@@ -28,11 +34,12 @@ public class FilePickingLogic
     public static IDataUiFilePicker? FilePicker { get; set; }
 
     /// <summary>
-    /// Shows the open-file dialog and returns the selected path, or null if the user cancelled.
+    /// Shows the open-file (or folder-browse, if <see cref="IsFolderDialog"/>) dialog and returns
+    /// the selected path, or null if the user cancelled.
     /// </summary>
     public string? ShowOpenDialog()
     {
-        return FilePicker?.PickFile(Filter);
+        return IsFolderDialog ? FilePicker?.PickFolder() : FilePicker?.PickFile(Filter);
     }
 
     /// <summary>
