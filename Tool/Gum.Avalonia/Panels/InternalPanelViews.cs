@@ -11,6 +11,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Controls;
+using Gum.Avalonia.Themes;
+using FluentIcons.Avalonia;
 using Gum.Avalonia.Converters;
 using Gum.Managers;
 using Gum.Plugins.Behaviors;
@@ -193,8 +195,9 @@ public sealed class UndosView : ListBox
 
 /// <summary>
 /// The Alignment tab: the state banner, a margin, the anchor buttons, and the dock buttons, each
-/// forwarding to <see cref="AlignmentViewModel"/>. Icons are glyphs until phase 90 ports the icon
-/// set. Twin of the WPF <c>AlignmentPluginControl</c>, <c>AnchorControl</c> and <c>DockControl</c>.
+/// forwarding to <see cref="AlignmentViewModel"/>, drawn with the WPF head's <see cref="GumIcon"/>s
+/// on its <c>AlignmentIconButton</c> tiles. Twin of the WPF <c>AlignmentPluginControl</c>,
+/// <c>AnchorControl</c> and <c>DockControl</c>.
 /// </summary>
 public sealed class AlignmentView : Grid
 {
@@ -249,19 +252,19 @@ public sealed class AlignmentView : Grid
     private Control CreateAnchorButtons()
     {
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto"), Margin = new Thickness(0, 0, 8, 0) };
-        AddAt(grid, 0, 0, "↖", "Anchor Top Left", vm => vm.TopLeftButton_Click());
-        AddAt(grid, 0, 1, "↑", "Anchor Top", vm => vm.TopButton_Click());
-        AddAt(grid, 0, 2, "↗", "Anchor Top Right", vm => vm.TopRightButton_Click());
-        AddAt(grid, 1, 0, "←", "Anchor Left", vm => vm.MiddleLeftButton_Click());
-        AddAt(grid, 1, 1, "•", "Anchor Center", vm => vm.MiddleMiddleButton_Click());
-        AddAt(grid, 1, 2, "→", "Anchor Right", vm => vm.MiddleRightButton_Click());
-        AddAt(grid, 2, 0, "↙", "Anchor Bottom Left", vm => vm.BottomLeftButton_Click());
-        AddAt(grid, 2, 1, "↓", "Anchor Bottom", vm => vm.BottomMiddleButton_Click());
-        AddAt(grid, 2, 2, "↘", "Anchor Bottom Right", vm => vm.BottomRightButton_Click());
+        AddAt(grid, 0, 0, "AnchorTopLeft", "Anchor Top Left", vm => vm.TopLeftButton_Click());
+        AddAt(grid, 0, 1, "AnchorTopCenter", "Anchor Top", vm => vm.TopButton_Click());
+        AddAt(grid, 0, 2, "AnchorTopRight", "Anchor Top Right", vm => vm.TopRightButton_Click());
+        AddAt(grid, 1, 0, "AnchorCenterLeft", "Anchor Left", vm => vm.MiddleLeftButton_Click());
+        AddAt(grid, 1, 1, "AnchorCenter", "Anchor Center", vm => vm.MiddleMiddleButton_Click());
+        AddAt(grid, 1, 2, "AnchorCenterRight", "Anchor Right", vm => vm.MiddleRightButton_Click());
+        AddAt(grid, 2, 0, "AnchorBottomLeft", "Anchor Bottom Left", vm => vm.BottomLeftButton_Click());
+        AddAt(grid, 2, 1, "AnchorBottomCenter", "Anchor Bottom", vm => vm.BottomMiddleButton_Click());
+        AddAt(grid, 2, 2, "AnchorBottomRight", "Anchor Bottom Right", vm => vm.BottomRightButton_Click());
 
         StackPanel extra = new StackPanel();
-        extra.Children.Add(CreateButton("↔", "Anchor Center Horizontally", vm => vm.AnchorCenterHorizontally_Click()));
-        extra.Children.Add(CreateButton("↕", "Anchor Center Vertically", vm => vm.AnchorCenterVertically_Click()));
+        extra.Children.Add(CreateButton(Icon("AnchorCenterHorizontal"), "Anchor Center Horizontally", vm => vm.AnchorCenterHorizontally_Click()));
+        extra.Children.Add(CreateButton(Icon("AnchorCenterVertical"), "Anchor Center Vertically", vm => vm.AnchorCenterVertically_Click()));
 
         return Row(grid, extra);
     }
@@ -270,16 +273,17 @@ public sealed class AlignmentView : Grid
     {
         // Five buttons in a plus shape; the corners stay empty.
         Grid grid = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto"), RowDefinitions = new RowDefinitions("Auto,Auto,Auto"), Margin = new Thickness(0, 0, 8, 0) };
-        AddAt(grid, 1, 0, "⇤", "Dock Left", vm => vm.DockLeftButton_Click());
-        AddAt(grid, 0, 1, "⤒", "Dock Top", vm => vm.DockTopButton_Click());
-        AddAt(grid, 1, 2, "⇥", "Dock Right", vm => vm.DockRightButton_Click());
-        AddAt(grid, 2, 1, "⤓", "Dock Bottom", vm => vm.DockBottomButton_Click());
-        AddAt(grid, 1, 1, "▣", "Fill", vm => vm.DockFillButton_Click());
+        AddAt(grid, 1, 0, "DockLeft", "Dock Left", vm => vm.DockLeftButton_Click());
+        AddAt(grid, 0, 1, "DockTop", "Dock Top", vm => vm.DockTopButton_Click());
+        AddAt(grid, 1, 2, "DockRight", "Dock Right", vm => vm.DockRightButton_Click());
+        AddAt(grid, 2, 1, "DockBottom", "Dock Bottom", vm => vm.DockBottomButton_Click());
+        AddAt(grid, 1, 1, "DockFill", "Fill", vm => vm.DockFillButton_Click());
 
         StackPanel extra = new StackPanel();
-        extra.Children.Add(CreateButton("⬌", "Fill Horizontally", vm => vm.DockFillHorizontallyButton_Click()));
-        extra.Children.Add(CreateButton("⬍", "Fill Vertically", vm => vm.DockFillVerticallyButton_Click()));
-        extra.Children.Add(CreateButton("⤡", "Size to Children", vm => vm.SizeToChildren_Click()));
+        extra.Children.Add(CreateButton(Icon("DockLeftRight"), "Fill Horizontally", vm => vm.DockFillHorizontallyButton_Click()));
+        extra.Children.Add(CreateButton(Icon("DockTopBottom"), "Fill Vertically", vm => vm.DockFillVerticallyButton_Click()));
+        // The WPF DockControl's one Fluent icon.
+        extra.Children.Add(CreateButton(GumFluentIcons.Create(FluentIcons.Common.Icon.ArrowMoveInward, IconSize), "Size to Children", vm => vm.SizeToChildren_Click()));
 
         return Row(grid, extra);
     }
@@ -292,17 +296,23 @@ public sealed class AlignmentView : Grid
         return row;
     }
 
-    private void AddAt(Grid grid, int row, int column, string glyph, string tip, Action<AlignmentViewModel> action)
+    private const double IconSize = 20;
+
+    private static Control Icon(string key) =>
+        GumIcon.Create(key, IconSize) ?? throw new InvalidOperationException($"The chrome icon '{key}' is missing from GumIcons.xaml.");
+
+    private void AddAt(Grid grid, int row, int column, string iconKey, string tip, Action<AlignmentViewModel> action)
     {
-        Button button = CreateButton(glyph, tip, action);
+        Button button = CreateButton(Icon(iconKey), tip, action);
         SetRow(button, row);
         SetColumn(button, column);
         grid.Children.Add(button);
     }
 
-    private Button CreateButton(string glyph, string tip, Action<AlignmentViewModel> action)
+    private Button CreateButton(Control icon, string tip, Action<AlignmentViewModel> action)
     {
-        Button button = new Button { Content = glyph, Width = 30, Height = 30, Padding = new Thickness(0), HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center, Margin = new Thickness(1) };
+        Button button = new Button { Content = icon, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalContentAlignment = VerticalAlignment.Center };
+        button.Classes.Add(GumChromeStyles.AlignmentButtonClass);
         ToolTip.SetTip(button, tip);
         button.Click += (_, _) =>
         {

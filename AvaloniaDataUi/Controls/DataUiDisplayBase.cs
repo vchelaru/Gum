@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;
+using Avalonia.Styling;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
 
@@ -17,6 +18,17 @@ namespace AvaloniaDataUi.Controls;
 public abstract class DataUiDisplayBase : UserControl, IDataUi
 {
     private InstanceMember? _instanceMember;
+
+    protected DataUiDisplayBase()
+    {
+        // The menu belongs to the whole row, as in the WPF grid. Transparent rather than unset, so a
+        // right click on the row's empty space reaches it too: a panel or label without a background
+        // hit-tests only where something is drawn. Text boxes give up their own edit flyout, which
+        // would otherwise open in the row menu's place.
+        Background = Brushes.Transparent;
+        DataUiContextMenus.Attach(this, this);
+        Styles.Add(new Style(x => x.OfType<TextBox>()) { Setters = { new Setter(ContextFlyoutProperty, null) } });
+    }
 
     /// <inheritdoc/>
     public InstanceMember? InstanceMember
@@ -101,11 +113,6 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         hint.IsVisible = !string.IsNullOrEmpty(detailText);
     }
 
-    /// <summary>Gives <paramref name="target"/> this displayer's right-click menu, rebuilt each time it opens.</summary>
-    protected void AttachContextMenu(Control target)
-    {
-        DataUiContextMenus.Attach(target, this);
-    }
 }
 
 /// <summary>Builds the displayers' and category headers' right-click menus.</summary>
@@ -113,8 +120,7 @@ public static class DataUiContextMenus
 {
     /// <summary>
     /// Gives <paramref name="target"/> a menu of <paramref name="dataUi"/>'s entries, rebuilt when it
-    /// opens so it always reflects the current member. Replaces a text box's own edit flyout, as the
-    /// WPF grid does.
+    /// opens so it always reflects the current member.
     /// </summary>
     public static void Attach(Control target, IDataUi dataUi)
     {
@@ -131,7 +137,6 @@ public static class DataUiContextMenus
             }
             e.Cancel = entries.Count == 0;
         };
-        target.ContextFlyout = null;
         target.ContextMenu = menu;
     }
 

@@ -1,3 +1,4 @@
+﻿using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Shell;
@@ -62,6 +63,45 @@ public class HeadCompositionTests
         window.IsVisible.ShouldBeTrue();
         window.Title.ShouldNotBeNullOrEmpty();
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void MainWindow_KeepsThePanelOffTheInnerResizeBorder_UntilMaximized()
+    {
+        // Drawing into the title bar puts the resize border inside the client area, over a scroll
+        // bar at the right edge (#4694); a maximized window has no resize border. Where the system
+        // title bar stays (Linux), there is no inner border at all.
+        // Not shown: the container's one MainWindow may already have been shown and closed by
+        // another test, and the margin follows the window state whether or not it is on screen.
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        double expectedMargin = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? 8 : 0;
+        MainPanelView panel = ((DockPanel)window.Content!).Children.OfType<MainPanelView>().Single();
+
+        panel.Margin.Right.ShouldBe(expectedMargin);
+
+        window.WindowState = WindowState.Maximized;
+        panel.Margin.Right.ShouldBe(0);
+
+        window.WindowState = WindowState.Normal;
+        panel.Margin.Right.ShouldBe(expectedMargin);
+    }
+
+    [AvaloniaFact]
+    public void MainWindow_ShowsTheStatusBar_OnlyWhileThereIsProgressText()
+    {
+        // The bar carries nothing but the spinner's progress, so an empty one is wasted height.
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        ShellViewModel shell = (ShellViewModel)window.DataContext!;
+        Control statusBar = ((DockPanel)window.Content!).Children.Single(child => DockPanel.GetDock(child) == Dock.Bottom);
+
+        shell.ProgressText = "";
+        statusBar.IsVisible.ShouldBeFalse();
+
+        shell.ProgressText = "Working... 1/3";
+        statusBar.IsVisible.ShouldBeTrue();
+
+        shell.ProgressText = "";
+        statusBar.IsVisible.ShouldBeFalse();
     }
 
     [Fact]

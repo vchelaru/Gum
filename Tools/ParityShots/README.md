@@ -35,7 +35,8 @@ dotnet run --project Tool\Gum.Avalonia --no-build -- "<path>\avalonia\GameUiSamp
 
 Avalonia head options: no path starts empty; `--select "Controls/DialogBox#NineSliceInstance"`
 selects an element (and instance) once loaded; `--theme light|dark` shows a variant without saving
-it; `--exit-after 8 --screenshot out.png` runs unattended and writes a screenshot of the window.
+it; `--exit-after 8 --screenshot out.png` runs unattended and writes a screenshot of the window, and
+`--user-data <folder>` keeps that run's settings (last project, recent list) out of the user's own.
 `GUM_ECHO_OUTPUT=1` in the environment also writes every Output tab line to stderr, which is how an
 unattended run's log shows what the tool saw (plugin failures, font generation, and so on).
 
@@ -84,6 +85,29 @@ One-off tools (each takes `-ProcessName Gum` for WPF or `Gum.Avalonia` for the A
 When a menu path is passed from a shell other than PowerShell, quote it as one argument per item
 or call through `powershell -Command "& .\menu-capture.ps1 -Path Edit,Add,Screen"`; a single
 `"Edit,Add,Screen"` string is not split.
+
+## 4b. Timings
+
+`timings.ps1` launches each head by itself on its scratch project and measures the same scripted
+actions in both: launch to window and to project loaded (the title carries the project name), the
+idle CPU rate and working set, twelve element selections through the tree search, typing in the
+search box, the File and Edit menus, the tree context menu, the Code tab (code generation), the
+delete dialog with its confirm, undo and redo, and shutdown. It writes `out	imings.md`.
+
+There are no fixed pauses. After each action it waits until the process's CPU rate is back at the
+idle rate it measured after loading (both heads render their canvas continuously, so idle is about
+one core), sampled every 100 ms and held for 300 ms; that wait is the "settle" column, and the CPU
+column is the processor time above idle during it. Menus and dialogs are also timed to the moment
+UI Automation finds them ("appear"). Build both heads `-c Release` first (`-Configuration Debug`
+for a Debug run). Like `capture.ps1` it drives the keyboard, so nothing else may be in the
+foreground.
+
+```powershell
+dotnet build GumFull.sln -c Release
+.
+ew-scratch-projects.ps1
+.	imings.ps1            # -Heads avalonia,wpf  -Elements ...  -MaxSettleMs 10000
+```
 
 ## 5. How the driver works, and its gotchas
 

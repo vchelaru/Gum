@@ -79,6 +79,7 @@ public class UndoManager : IUndoManager
             // Mirror the original `RecordUndo(); RecordBehaviorUndo();` — each strategy self-guards on
             // whether it has a captured baseline, so calling both is safe regardless of selection.
             _elementStrategy.TryRecord();
+            _elementStrategy.TryRecordTargeted();
             _behaviorStrategy.TryRecord();
         }
     }
@@ -118,6 +119,13 @@ public class UndoManager : IUndoManager
         UndoLocks.Add(undoLock);
 
         return undoLock;
+    }
+
+    /// <inheritdoc cref="IUndoManager.RequestLock(ElementSave)"/>
+    public UndoLock RequestLock(ElementSave element)
+    {
+        _elementStrategy.CaptureBaseline(element);
+        return RequestLock();
     }
 
     public bool CanUndo() => ActiveStrategy.CanUndo();

@@ -1542,6 +1542,22 @@ public class CopyPasteLogicTests : BaseTestClass
     #region Cut + Paste Tests
 
     [Fact]
+    public void OnCut_ShouldRequestUndoLock_SoTheCutIsRecorded()
+    {
+        // Ctrl+X removes the instance; without a lock nothing records the removal and Ctrl+Z
+        // cannot bring it back (#4691). Delete and Paste both take the lock.
+        ScreenSave screen = CreateDefaultScreen();
+        InstanceSave child = AddChild("Child", "Instance1", screen);
+        SetupDeleteLogicMock();
+        SelectInstances(child);
+        Mock<IUndoManager> undoManager = _mocker.GetMock<IUndoManager>();
+
+        _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+
+        undoManager.Verify(x => x.RequestLock(), Times.Once);
+    }
+
+    [Fact]
     public void OnCut_ThenPaste_InstanceWithChild_ShouldPreserveHierarchy()
     {
         /*

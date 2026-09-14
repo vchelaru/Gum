@@ -88,3 +88,9 @@ produces one refresh instead of N.
   off-screen nodes.
 - **`GumTreeView.EnsureVisible` defers to a `Loaded` dispatcher callback**, since a newly-expanded
   ancestor's child has no container until layout runs.
+- **The Avalonia row (`TreeRowView`) is an indent column plus a highlight `Border`** holding the
+  expander, icon and text, stretched to the row's right edge, and the rows themselves span the
+  viewport (`ItemsControl.MinWidth` follows `ScrollViewer.Viewport`), matching the WPF `RowBorder`.
+  Hover/selection colors go on the highlight, never on the row. A press on the expander calls
+  `AvaloniaGumTreeView.NotifyExpanderPressed()` so the matching release neither selects nor opens
+  the context menu (#4694); keep that if the expander is reworked.

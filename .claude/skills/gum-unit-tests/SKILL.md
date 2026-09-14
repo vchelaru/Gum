@@ -35,6 +35,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   - If the assertion compares against `ToolsUtilities.FilePath.FullPath`, a bare leading-slash literal still isn't safe: route the literal through `new FilePath(...).FullPath` on both sides of the comparison instead. See the `gum-file-paths` skill for why, and for the other `FilePath` comparison traps.
 - `MessageDialogStyle.YesNo` is a static property returning a **new instance per get**, so a Moq setup matching it by value never matches. The unmatched call returns the default `MessageDialogResult` (0, negative), so the code under test takes the user-declined branch and the test fails somewhere unrelated. Match on the dialog title or `It.IsAny<MessageDialogStyle?>()`.
 - Use named parameters for boolean literals.
+- Run the whole test project before pushing, not only the new test filtered by name. Shared singletons make tests order-dependent, and a filtered run hides that.
 - Don't name a test namespace after an existing Gum type (e.g. `MonoGameGum.Tests.Binding` collides with `Gum.Forms.Data.Binding`) — an unrelated file elsewhere in the same test project that references the type unqualified can suddenly fail to compile (`CS0118: '...' is a namespace but is used like a type`).
 
 ## Avalonia head tests (Gum.Avalonia.Tests)
@@ -48,6 +49,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - Tests that compose plugins need the container registered with `Locator` (see
   `HeadTestServices`). A hung test host blocks the next run until it is killed; run with
   `--blame-hang --blame-hang-timeout 120s`.
+- `MainWindow` is a container singleton that `HeadCompositionTests` shows and closes. A test that needs it must not `Show()` it again (a closed window cannot be re-shown) and must not build a second one through `ActivatorUtilities` (it re-parents the singleton plugin tab controls and breaks unrelated tests). Read its state through `window.Content` without showing it.
 - `HeadProcessTests` launches the built head (`Tool/Gum.Avalonia/bin/<Config>/net10.0`) on a copied
   fixture; it skips without a display and on CI.
 

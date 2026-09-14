@@ -49,6 +49,7 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 item => item is CategoryViewModel category ? category.States : (IEnumerable)Array.Empty<StateViewModel>()),
             [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(StateTreeViewModel.Items)),
         };
+        _tree.Classes.Add(GumChromeStyles.CompactTreeClass);
         // Expansion and selection live on the item view models, which push selection into the tool.
         _tree.Styles.Add(new Style(x => x.OfType<TreeViewItem>())
         {

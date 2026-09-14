@@ -350,6 +350,10 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     public void OnCut(CopyType copyType)
     {
+        // The removal below is what Ctrl+Z must bring back, so the whole cut records as one action
+        // the way Delete and Paste do (#4691).
+        using var undoLock = _undoManager.RequestLock();
+
         StoreCopiedObject(copyType, _selectedState);
 
         _hasChangedSelectionSinceCopy = false;

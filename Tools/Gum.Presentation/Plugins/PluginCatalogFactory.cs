@@ -8,9 +8,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.PortableExecutable;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Gum.Plugins;
+
+/// <summary>
+/// One file name found more than once under the plugin folder with differing contents, and every
+/// path it was found at, in scan order (the first is the copy that loads).
+/// </summary>
+public sealed record PluginFileDuplicates(string FileName, IReadOnlyList<string> Paths);
 
 /// <summary>
 /// Turns the files in the plugin folder into MEF catalogs. The folder holds more than plugins —
@@ -84,6 +91,74 @@ internal class PluginCatalogFactory
         _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.Loaded, CouldContainPlugins(assembly), null));
 
         return CreateResilientCatalog(assembly);
+    }
+
+    /// <summary>
+    /// Reports every file name that appears more than once among <paramref name="dllPaths"/> with
+    /// differing contents, naming the copy that loads: the first the scan meets, since the runtime
+    /// hands later loads of the same assembly identity that first copy. A stale copy left at the root
+    /// of the plugin folder otherwise shows up only as a TypeLoadException deep inside an unrelated
+    /// plugin (#4693). Same-named copies with the same content, a dependency each plugin ships in its
+    /// own folder, are expected and stay quiet. Call before loading, so the report precedes the failure.
+    /// </summary>
+    public void ReportMismatchedDuplicates(IEnumerable<string> dllPaths)
+    {
+        List<(string Path, string ContentHash)> hashed = new();
+        foreach (string path in dllPaths)
+        {
+            if (TryHashFile(path, out string hash))
+            {
+                hashed.Add((path, hash));
+            }
+        }
+
+        foreach (PluginFileDuplicates duplicates in FindMismatchedDuplicates(hashed))
+        {
+            StringBuilder report = new();
+            report.AppendLine($"'{duplicates.FileName}' appears {duplicates.Paths.Count} times in the plugin folder with differing contents. " +
+                "Gum loads only the first copy, so a plugin built against another may fail to load. " +
+                "Delete a stale copy, or ship the same build of the file with every plugin that needs it:");
+            foreach (string path in duplicates.Paths)
+            {
+                report.AppendLine("    " + path);
+            }
+            _outputManager.AddError(report.ToString());
+        }
+    }
+
+    /// <summary>
+    /// The groups of same-named files (name compared without case) among <paramref name="files"/>
+    /// whose contents differ, each with its paths in the order given. Same-named files with the same
+    /// hash are one copy for this purpose and are not returned, and neither is anything under a
+    /// <c>runtimes</c> folder: a plugin's per-platform native libraries share a name by design.
+    /// </summary>
+    internal IReadOnlyList<PluginFileDuplicates> FindMismatchedDuplicates(IEnumerable<(string Path, string ContentHash)> files)
+    {
+        return files
+            .Where(file => !IsUnderRuntimesFolder(file.Path))
+            .GroupBy(file => Path.GetFileName(file.Path), StringComparer.OrdinalIgnoreCase)
+            .Where(group => group.Select(file => file.ContentHash).Distinct(StringComparer.Ordinal).Count() > 1)
+            .Select(group => new PluginFileDuplicates(Path.GetFileName(group.First().Path), group.Select(file => file.Path).ToList()))
+            .ToList();
+    }
+
+    private static bool IsUnderRuntimesFolder(string path) =>
+        path.Split('\\', '/').Any(segment => string.Equals(segment, "runtimes", StringComparison.OrdinalIgnoreCase));
+
+    private static bool TryHashFile(string path, out string hash)
+    {
+        try
+        {
+            using FileStream stream = File.OpenRead(path);
+            hash = Convert.ToHexString(SHA256.HashData(stream));
+            return true;
+        }
+        catch (Exception)
+        {
+            // An unreadable file cannot be compared; the load step reports it in its own terms.
+            hash = "";
+            return false;
+        }
     }
 
     /// <summary>

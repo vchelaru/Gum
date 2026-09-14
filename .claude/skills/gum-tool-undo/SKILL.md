@@ -76,6 +76,8 @@ using var undoLock = _undoManager.RequestLock();
 
 **Why not `RecordState()` manually?** `RecordState()` is a no-op when any locks are held, and calling it outside of that flow risks overwriting the correct baseline snapshot.
 
+**Changing an element that is not the selected one** (a tree drop that reorders or reparents inside another open element, #4692): request the lock for that element instead, `_undoManager.RequestLock(targetElement)`, **before** anything mutates it and at the outermost point of the operation. `ElementUndoStrategy.CaptureBaseline(element)` snapshots that element at that moment (bypassing the lock guard, since the caller holds the lock) and `TryRecordTargeted()` diffs it when the last lock releases, appending to *that element's* history. For the selected element the overload is the plain lock, so it is safe to call unconditionally. A lock taken after the mutation records nothing: the baseline already contains the change.
+
 ## Snapshots Are Deep Copies
 
 Both element and behavior snapshots use `CloneElement`/`CloneBehavior`, so every saved snapshot contains **new object instances** with different references than the live data. When undo is applied, the restored instances replace the live ones — meaning any code holding a reference to the pre-undo instance now has a **stale reference** that no longer exists in the element or behavior.
@@ -101,7 +103,7 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 
 | Limitation | Details |
 |------------|---------|
-| No general cross-element undo | Undo stacks are per-element; the only cross-element case handled is instance-level variable removal attached via `AttachCrossElementVariableRemovals` (see above) — everything else stays ungrouped |
+| No general cross-element undo | Undo stacks are per-element; a change to a non-selected element records into that element's own history through `RequestLock(element)` (undo it after selecting that element), and the only action spanning two histories is instance-level variable removal attached via `AttachCrossElementVariableRemovals` (see above) — everything else stays ungrouped |
 | No selection restore | Selection state is not captured or restored on undo/redo |
 | No persistence | History is cleared on project load or app close |
 | No element-deletion undo | Deleting an element removes its history permanently |

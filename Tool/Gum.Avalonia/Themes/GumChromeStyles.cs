@@ -47,6 +47,12 @@ public static class GumChromeStyles
     /// <summary>The class for a borderless button that shows a fill only on hover, the WPF head's tool buttons.</summary>
     public const string FlatButtonClass = "gumFlatButton";
 
+    /// <summary>The class for the Alignment tab's icon buttons, the WPF head's <c>AlignmentIconButton</c> style.</summary>
+    public const string AlignmentButtonClass = "gumAlignmentButton";
+
+    /// <summary>The class for a tree view whose rows keep the WPF 19px expander column rather than Fluent's 36px.</summary>
+    public const string CompactTreeClass = "gumCompactTree";
+
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
 
@@ -222,10 +228,48 @@ public static class GumChromeStyles
         ButtonPart<Button>(FlatButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Surface.Fill"), Brushes.Transparent),
         ButtonPart<Button>(FlatButtonClass, new[] { ":disabled" }, Brushes.Transparent, Brushes.Transparent, Resource("Frb.Brushes.Foreground.Disabled")),
 
-        // The main panel's tab content sits flush with its region, as in the WPF MainPanelControl.
+        // The Alignment tab's buttons (Frb.Buttons.xaml AlignmentIconButton): a rounded Contrast.Subtle
+        // tile that fills with Contrast01 under the pointer; the icon takes the text color.
+        new Style(selector => selector.OfType<Button>().Class(AlignmentButtonClass))
+        {
+            Setters =
+            {
+                new Setter(TemplatedControl.BackgroundProperty, Resource("Frb.Brushes.Contrast.Subtle")),
+                new Setter(TemplatedControl.BorderBrushProperty, Brushes.Transparent),
+                new Setter(TemplatedControl.BorderThicknessProperty, new Thickness(0)),
+                new Setter(TemplatedControl.CornerRadiusProperty, new CornerRadius(4)),
+                new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground")),
+                new Setter(TemplatedControl.FontWeightProperty, FontWeight.Normal),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(4)),
+                new Setter(Layoutable.MarginProperty, new Thickness(2)),
+            },
+        },
+        ButtonPart<Button>(AlignmentButtonClass, new[] { ":pointerover" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent),
+        ButtonPart<Button>(AlignmentButtonClass, new[] { ":pressed" }, Resource("Frb.Brushes.Contrast01"), Brushes.Transparent),
+
+        // The WPF TreeViewItem's 19px expander column (Fluent pads its 12px chevron to 36px, so a
+        // root row such as the states tree's "Default" sits far from the edge; #4694). The template
+        // sets the margin from a StaticResource, so only a triggered style (the class) outranks it.
+        new Style(selector => selector.OfType<TreeView>().Class(CompactTreeClass).Descendant().OfType<TreeViewItem>()
+            .Template().OfType<Panel>().Name("PART_ExpandCollapseChevronContainer"))
+        {
+            Setters = { new Setter(Layoutable.MarginProperty, new Thickness(2, 0, 4, 0)) },
+        },
+
+        // The main panel's tab content sits flush with its region, as in the WPF MainPanelControl,
+        // on Surface01 while the strip around the headers shows the window background.
         new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass))
         {
             Setters = { new Setter(TemplatedControl.PaddingProperty, new Thickness(0)) },
+        },
+        new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass).Template().OfType<ContentPresenter>().Name("PART_SelectedContentHost"))
+        {
+            Setters = { new Setter(ContentPresenter.BackgroundProperty, Resource("Frb.Surface01")) },
+        },
+        // Fluent's template leaves 2px under the headers, which the strip shows through.
+        new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass).Template().OfType<ItemsPresenter>().Name("PART_ItemsPresenter"))
+        {
+            Setters = { new Setter(Layoutable.MarginProperty, new Thickness(0)) },
         },
 
         // Menus (Frb.Styles.Defaults.xaml Menu, MenuItem, ContextMenu, Separator): compact rows in

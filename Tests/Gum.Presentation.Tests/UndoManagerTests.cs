@@ -412,6 +412,84 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void RequestLock_ForAnElementOtherThanTheSelectedOne_RecordsInThatElementsHistory()
+    {
+        // A tree drag/drop that reorders inside B while A stays selected (#4692): the change
+        // must land in B's history, where it undoes once B is selected.
+        ComponentSave other = CreateComponentWithTwoInstances("Other", out InstanceSave first, out InstanceSave second);
+        _undoManager.RecordState();
+
+        using (_undoManager.RequestLock(other))
+        {
+            other.Instances.RemoveAt(1);
+            other.Instances.Insert(0, second);
+        }
+
+        _undoManager.CanUndo().ShouldBeFalse("the selected element did not change");
+        Select(other);
+        _undoManager.CanUndo().ShouldBeTrue();
+        _undoManager.PerformUndo();
+        // Undo restores cloned instances, so compare by name rather than reference.
+        other.Instances.Select(instance => instance.Name).ShouldBe(new[] { first.Name, second.Name });
+    }
+
+    [Fact]
+    public void RequestLock_ForAnotherElement_ThatBecomesSelectedUnderTheLock_RecordsOnlyItsOwnChange()
+    {
+        // A drop selects the element it lands in while the lock is still held: the previously
+        // selected element's baseline must not be diffed against the new selection.
+        ComponentSave previous = _selectedState.Object.SelectedComponent!;
+        previous.Name = "Previous";
+        ComponentSave other = CreateComponentWithTwoInstances("Other", out InstanceSave first, out InstanceSave second);
+        _undoManager.RecordState();
+
+        using (_undoManager.RequestLock(other))
+        {
+            other.Instances.RemoveAt(1);
+            other.Instances.Insert(0, second);
+            Select(other);
+        }
+
+        _undoManager.CurrentElementHistory.Actions.Count.ShouldBe(1);
+        _undoManager.PerformUndo();
+        other.Name.ShouldBe("Other");
+        other.Instances.Select(instance => instance.Name).ShouldBe(new[] { first.Name, second.Name });
+        _undoManager.CanUndo().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void RequestLock_ForTheSelectedElement_RecordsOnceLikeAPlainLock()
+    {
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        _undoManager.RecordState();
+
+        using (_undoManager.RequestLock(component))
+        {
+            component.DefaultState.SetValue("X", 5f);
+        }
+
+        _undoManager.CurrentElementHistory.Actions.Count.ShouldBe(1);
+    }
+
+    private static ComponentSave CreateComponentWithTwoInstances(string name, out InstanceSave first, out InstanceSave second)
+    {
+        ComponentSave component = new ComponentSave { Name = name };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        first = new InstanceSave { Name = "First", BaseType = "Sprite", ParentContainer = component };
+        second = new InstanceSave { Name = "Second", BaseType = "Sprite", ParentContainer = component };
+        component.Instances.Add(first);
+        component.Instances.Add(second);
+        return component;
+    }
+
+    private void Select(ComponentSave component)
+    {
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _selectedState.Setup(x => x.SelectedComponent).Returns(component);
+        _selectedState.Setup(x => x.SelectedStateSave).Returns(component.DefaultState);
+    }
+
+    [Fact]
     public void RecordUndo_ShouldNotCrash_WithDifferentSelectedElement()
     {
         var component1 = new ComponentSave();

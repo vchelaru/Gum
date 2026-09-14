@@ -115,8 +115,6 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         grid.Children.Add(_hint);
         Content = grid;
 
-        AttachContextMenu(grid);
-        AttachContextMenu(_textBox);
     }
 
     /// <summary>The unit written to the member; the display is always degrees.</summary>
@@ -363,7 +361,6 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
         _grid.Children.Add(_hint);
         Content = _grid;
 
-        AttachContextMenu(_grid);
         SetOptions(options);
     }
 
@@ -530,7 +527,6 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
         panel.Children.Add(_hint);
         Content = panel;
 
-        AttachContextMenu(_textBox);
     }
 
     /// <summary>The text editor; the tool listens to its keys for go-to-definition.</summary>
@@ -637,7 +633,6 @@ public class ListBoxDisplay : DataUiDisplayBase
         panel.Children.Add(_hint);
         Content = panel;
 
-        AttachContextMenu(_listBox);
     }
 
     /// <summary>The entries shown, for tests.</summary>
@@ -857,8 +852,6 @@ public class FileSelectionDisplay : DataUiDisplayBase
         Content = _grid;
 
         _textLogic = AvaloniaDataUiTextBox.CreateLogic(this, _textBox);
-        AttachContextMenu(_label);
-        AttachContextMenu(_textBox);
     }
 
     /// <summary>The picker's filter, e.g. "Bitmap Font Generator Font|*.fnt".</summary>
@@ -995,7 +988,6 @@ public class MultiFileDisplay : DataUiDisplayBase
         panel.Children.Add(buttons);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(_listBox);
     }
 
     /// <summary>The picker's filter.</summary>
@@ -1124,7 +1116,6 @@ public class InlineChannelsDisplay : DataUiDisplayBase
         panel.Children.Add(grid);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(grid);
     }
 
     /// <summary>The per-channel fields, for tests.</summary>

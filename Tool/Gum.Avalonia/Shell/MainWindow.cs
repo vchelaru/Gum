@@ -38,6 +38,13 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     // The WPF head's caption height (its caption buttons are 48 by 32).
     private const double TitleBarHeight = 32;
 
+    // A window drawn into its title bar gets its resize border inside the client area, where it
+    // covers a scroll bar at the right edge; the panel stops short of it (#4694). A maximized window
+    // has no resize border.
+    private const double ResizeBorderThickness = 8;
+
+    private bool _drawsInTitleBar;
+
     private static readonly IValueConverter FileNameOnly =
         new FuncValueConverter<string?, string?>(title => string.IsNullOrEmpty(title) ? title : System.IO.Path.GetFileNameWithoutExtension(title));
 
@@ -86,13 +93,17 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             Height = 24,
             BorderThickness = new Thickness(0, 1, 0, 0),
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Border");
+        // The bar carries only the spinner's progress, so it takes no height while there is none.
+        statusBar.Bind(IsVisibleProperty, new AvaloniaBinding(nameof(ShellViewModel.ProgressText)) { Converter = StringConverters.IsNotNullOrEmpty });
         DockPanel.SetDock(statusBar, Dock.Bottom);
 
+        MainPanelView panel = new MainPanelView(tabs);
         DockPanel root = new DockPanel();
         root.Children.Add(titleRow);
         root.Children.Add(statusBar);
-        root.Children.Add(new MainPanelView(tabs));
+        root.Children.Add(panel);
         Content = root;
+        ApplyResizeBorderMargin(panel);
 
         Opened += (_, _) => RestorePlacement();
         PositionChanged += (_, _) => { if (WindowState == WindowState.Normal) { _shell.Left = Position.X; _shell.Top = Position.Y; } };
@@ -102,6 +113,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             if (e.Property == WindowStateProperty)
             {
                 _shell.WindowState = WindowState == WindowState.Maximized ? GumWindowState.Maximized : GumWindowState.Normal;
+                ApplyResizeBorderMargin(panel);
             }
             else if (e.Property == OffScreenMarginProperty)
             {
@@ -119,9 +131,16 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
     // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
     // bar (Linux), the system title bar stays and this row sits under it.
+    private void ApplyResizeBorderMargin(Control panel)
+    {
+        bool hasInnerResizeBorder = _drawsInTitleBar && WindowState == WindowState.Normal;
+        panel.Margin = hasInnerResizeBorder ? new Thickness(0, 0, ResizeBorderThickness, 0) : new Thickness(0);
+    }
+
     private Control CreateTitleRow(Menu menu)
     {
         bool drawsInTitleBar = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
+        _drawsInTitleBar = drawsInTitleBar;
         if (drawsInTitleBar)
         {
             ExtendClientAreaToDecorationsHint = true;

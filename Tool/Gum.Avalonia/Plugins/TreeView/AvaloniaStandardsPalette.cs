@@ -22,6 +22,9 @@ namespace Gum.Avalonia.Plugins.TreeView;
 public sealed class AvaloniaStandardsPalette : Border
 {
     private const double TwoColumnMinWidth = 160;
+
+    /// <summary>Below this chip width the name is hidden and only the icon shows.</summary>
+    public const double IconOnlyBelowWidth = 64;
     private const double ChipIconSize = 14;
     private const double DragThreshold = 4;
 
@@ -123,18 +126,23 @@ public sealed class AvaloniaStandardsPalette : Border
 
     private Border CreateChip(string typeName)
     {
-        StackPanel content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        // The name takes what is left beside the icon, trimmed rather than drawn past the chip's edge
+        // (#4694), and goes altogether once the chip is too narrow to show more than the icon.
+        Grid content = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         if (AvaloniaTreeIcons.CreateIcon(typeName + ".png", ChipIconSize) is { } icon)
         {
+            icon.Margin = new Thickness(0, 0, 6, 0);
             content.Children.Add(icon);
         }
-        content.Children.Add(new TextBlock
+        TextBlock name = new TextBlock
         {
             Text = typeName,
             FontSize = 12,
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
-        });
+        };
+        Grid.SetColumn(name, 1);
+        content.Children.Add(name);
 
         Border chip = new Border
         {
@@ -144,8 +152,10 @@ public sealed class AvaloniaStandardsPalette : Border
             Margin = new Thickness(2),
             Background = Brushes.Transparent,
             BorderBrush = ChipBorderBrush,
+            ClipToBounds = true,
             Child = content,
         };
+        chip.SizeChanged += (_, e) => name.IsVisible = e.NewSize.Width >= IconOnlyBelowWidth;
         ToolTip.SetTip(chip, $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nRight-click for more options.");
         chip.PointerEntered += (_, _) => chip.BorderBrush = PrimaryBrush;
         chip.PointerExited += (_, _) => ApplySelectionVisual(chip, _selectedTypeName == typeName);

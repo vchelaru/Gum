@@ -1,7 +1,10 @@
+﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
@@ -30,6 +33,7 @@ public class GumEditorFixture
     public DrawingColor Color { get; set; } = DrawingColor.FromArgb(128, 10, 20, 30);
     public CornerRadiusComposite CornerRadius { get; set; } = new CornerRadiusComposite(4, null, null, null, null);
     public HorizontalAlignment Alignment { get; set; } = HorizontalAlignment.Left;
+    public float Number { get; set; } = 1;
 
     public InstanceMember Member(string propertyName) => new InstanceMember(propertyName, this);
 }
@@ -125,8 +129,52 @@ public class VariablesTabTests
         fixture.Alignment.ShouldBe(HorizontalAlignment.Right);
     }
 
+    [AvaloniaTheory]
+    [InlineData(typeof(TextBoxDisplay), nameof(GumEditorFixture.Number), false)]
+    [InlineData(typeof(TextHorizontalAlignmentDisplay), nameof(GumEditorFixture.Alignment), true)]
+    public void RightClick_AnywhereOnAnEditorRow_OpensItsMenu(Type displayType, string memberName, bool rowExtendsPastValue)
+    {
+        // As the WPF grid: the label, the value control and the row's empty space all open the
+        // member's menu. A text box fills its row, so only the toggle row has empty space to probe.
+        GumEditorFixture fixture = new GumEditorFixture();
+        DataUiDisplayBase display = (DataUiDisplayBase)Activator.CreateInstance(displayType)!;
+        display.InstanceMember = fixture.Member(memberName);
+        Window window = new Window { Content = display, Width = 500, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        Control label = display.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == memberName);
+        Control value = display.GetVisualDescendants().OfType<Control>().First(control => control is TextBox or Button);
+        List<Point> points = new List<Point>
+        {
+            label.TranslatePoint(new Point(label.Bounds.Width / 2, label.Bounds.Height / 2), window)!.Value,
+            value.TranslatePoint(new Point(value.Bounds.Width / 2, value.Bounds.Height / 2), window)!.Value,
+        };
+        if (rowExtendsPastValue)
+        {
+            Point emptySpace = display.TranslatePoint(new Point(display.Bounds.Width - 4, label.Bounds.Height / 2), window)!.Value;
+            emptySpace.X.ShouldBeGreaterThan(value.TranslatePoint(new Point(value.Bounds.Width, 0), window)!.Value.X, "the row must extend past the value control");
+            points.Add(emptySpace);
+        }
+
+        foreach (Point point in points)
+        {
+            window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
+            window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
+            Dispatcher.UIThread.RunJobs();
+
+            OpenMenu(display).ShouldNotBeNull($"right-clicking at {point}");
+            OpenMenu(display)!.Items.OfType<MenuItem>().Select(item => item.Header).ShouldContain("Make Default");
+            OpenMenu(display)!.Close();
+        }
+        window.Close();
+    }
+
+    private static ContextMenu? OpenMenu(Control root) =>
+        root.GetSelfAndVisualDescendants().OfType<Control>().Select(control => control.ContextMenu).FirstOrDefault(menu => menu?.IsOpen == true);
+
     [AvaloniaFact]
-    public void ColorDisplay_HexAndSlidersWriteTheColor_KeepingAlpha()
+    public void ColorDisplay_HexAndPickerWriteTheColor_KeepingAlpha()
     {
         GumEditorFixture fixture = new GumEditorFixture();
         ColorDisplay display = new ColorDisplay { InstanceMember = fixture.Member(nameof(GumEditorFixture.Color)) };
@@ -136,7 +184,7 @@ public class VariablesTabTests
         display.CommitHexText();
         fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 255, 128, 0));
 
-        display.HandleSliderMoved(2, 64);
+        display.HandleColorPicked(global::Avalonia.Media.Color.FromRgb(255, 128, 64));
         display.CommitPendingFull();
         fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 255, 128, 64));
         display.HexTextBox.Text.ShouldBe("FF8040");
@@ -180,6 +228,35 @@ public class VariablesTabTests
     }
 
     [AvaloniaFact]
+    public void ColorDisplay_OpensARealColorPicker_ThatWritesThrough()
+    {
+        // A spectrum with per-channel entry rather than three bare sliders (#4694); alpha is kept.
+        GumEditorFixture fixture = new GumEditorFixture();
+        ColorDisplay display = new ColorDisplay { InstanceMember = fixture.Member(nameof(GumEditorFixture.Color)) };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        window.UpdateLayout();
+
+        display.ColorView.Color.ShouldBe(global::Avalonia.Media.Color.FromRgb(10, 20, 30));
+        display.ColorView.IsAlphaEnabled.ShouldBeFalse();
+
+        display.ColorView.Color = global::Avalonia.Media.Color.FromRgb(200, 100, 50);
+
+        fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 200, 100, 50));
+        display.HexTextBox.Text.ShouldBe("C86432");
+
+        display.CommitPendingFull();
+
+        // The picker echoing its current color (as it does while its parts bind) writes nothing.
+        int writes = 0;
+        display.InstanceMember!.CustomSetPropertyEvent += (_, _) => writes++;
+        display.HandleColorPicked(global::Avalonia.Media.Color.FromRgb(200, 100, 50));
+        display.CommitPendingFull();
+        writes.ShouldBe(0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void PropertyGridManager_FillsTheHeadsGridWithGumEditors_AndFiltersIt()
     {
         // Startup order: plugins first, since the tool's standard-state refresh goes through them.
@@ -220,9 +297,21 @@ public class VariablesTabTests
             editorByMember["WidthUnits"].ShouldBe(typeof(WidthUnitsDisplay));
             editorByMember["ChildrenLayout"].ShouldBe(typeof(ChildrenLayoutDisplay));
 
+            // The first character typed already narrows the grid (#4690), not only the second.
+            view.FilterTextBox.Text = "X";
+            List<string> shownForOneCharacter = ShownMemberNames(grid);
+            shownForOneCharacter.ShouldContain("XUnits");
+            shownForOneCharacter.ShouldNotContain("Height");
+            shownForOneCharacter.ShouldAllBe(name => name.Contains("X", StringComparison.OrdinalIgnoreCase));
+
+            view.FilterTextBox.Text = "XU";
+            List<string> shownForTwoCharacters = ShownMemberNames(grid);
+            shownForTwoCharacters.ShouldContain("XUnits");
+            shownForTwoCharacters.ShouldAllBe(name => name.Contains("XU", StringComparison.OrdinalIgnoreCase));
+
             sut.VariableViewModel.VariableFilterText = "Units";
             // The filter narrows each category's members to the matches.
-            List<string> shown = grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
+            List<string> shown = ShownMemberNames(grid);
             shown.ShouldContain("XUnits");
             shown.ShouldAllBe(name => name.Contains("Units"));
         }
@@ -234,4 +323,7 @@ public class VariablesTabTests
             tabManager.RemoveTab(tab);
         }
     }
+
+    private static List<string> ShownMemberNames(DataUiGrid grid) =>
+        grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
 }

@@ -113,6 +113,8 @@ added to a canvas goes in the core, never in one head's plugin.
 
 **Finding which plugin owns a feature**: Search `StartUp()` methods for the event subscription. E.g., to find what handles `VariableSet`, grep for `VariableSet +=` in `InternalPlugins/`. The subscribing plugin is the owner.
 
+**A stale same-named DLL in `Plugins/` surfaces as a `TypeLoadException` in an unrelated plugin** (#4693): `Assembly.LoadFrom` returns the first copy of an assembly identity it loaded, so a leftover at the root of the folder wins over the fresh copy beside the plugin that needs it. `PluginCatalogFactory.ReportMismatchedDuplicates` hashes the scanned files before loading and writes an Output-tab error naming every path of a name whose copies differ (identical per-plugin copies of a shared dependency are normal and stay quiet). If a plugin fails with "does not have an implementation" for a method that exists in source, read the Output tab first, then delete the stale copy.
+
 ## Composition is guarded by a headless test
 
 `AllPluginsCompositionTests` (`Tool/Tests/GumToolUnitTests/Plugins/`) composes **every** WPF-head plugin through MEF exactly as `PluginManager.LoadPlugins` does — the automated replacement for manually launching Gum to confirm plugins load. A missing/typo'd bridge or a bad `[ImportingConstructor]` signature fails it as a red `CompositionException`. `Tests/Gum.Avalonia.Tests/PluginHostTests` does the same for the Avalonia head: its built-in plugins through the real `PluginManager`, and the neutral external plugins (`ConvertToJsonPlugin`, `EventOutputPlugin`, `GumFormsPlugin`, `ImportFromGumxPlugin`, `SkiaPlugin`) against `AddCoreExports` + the head's `AddHeadExports`.

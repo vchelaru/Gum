@@ -1146,7 +1146,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 continue;
             }
 
-            foreach (string dll in FindDllFiles(directory, outputManager))
+            List<string> dllFiles = FindDllFiles(directory, outputManager).ToList();
+            // Before loading: a stale same-named copy fails later, several frames from its cause.
+            catalogFactory.ReportMismatchedDuplicates(dllFiles);
+
+            foreach (string dll in dllFiles)
             {
                 ComposablePartCatalog? catalog = catalogFactory.CreateCatalogForFile(dll, _hostConfiguration);
                 if (catalog != null)

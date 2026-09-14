@@ -1063,6 +1063,71 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void OnNodeSortingDropped_IntoAnotherElement_LocksThatElementsUndoHistory_BeforeChangingIt()
+    {
+        // Issue #4692: the drop changes the element it lands in, which need not be the selected
+        // one, so the undo lock names that element and is taken before the reorder.
+        ComponentSave parentOfDragged = new ComponentSave { Name = "ParentOfDragged" };
+        parentOfDragged.States.Add(new());
+        InstanceSave draggedInstance = new InstanceSave { Name = "DraggedInstance", ParentContainer = parentOfDragged };
+
+        ComponentSave destinationComponent = new ComponentSave { Name = "Destination" };
+        destinationComponent.States.Add(new());
+        destinationComponent.Instances.Add(new InstanceSave { Name = "Instance1" });
+
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns(draggedInstance);
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(destinationComponent);
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        bool lockRequested = false;
+        bool lockHeldDuringPaste = false;
+        _mocker.GetMock<IUndoManager>()
+            .Setup(x => x.RequestLock(destinationComponent))
+            .Callback(() => lockRequested = true)
+            .Returns((UndoLock)null!);
+        _copyPasteLogic
+            .Setup(x => x.PasteInstanceSaves(
+                It.IsAny<List<InstanceSave>>(),
+                It.IsAny<List<StateSave>>(),
+                It.IsAny<ElementSave>(),
+                It.IsAny<InstanceSave?>(),
+                It.IsAny<ISelectedState?>(),
+                It.IsAny<List<StateSave>?>(),
+                It.IsAny<HashSet<string>?>(),
+                It.IsAny<List<InstanceSave>?>()))
+            .Callback(() => lockHeldDuringPaste = lockRequested)
+            .Returns(new List<InstanceSave> { draggedInstance });
+
+        DropTarget dropTarget = new DropTarget(destinationComponent, null, new DropPosition.InsertAt(1));
+
+        _dragDropManager.OnNodeSortingDropped(new List<ITreeNode> { draggedNode.Object }, targetNode.Object, dropTarget);
+
+        lockHeldDuringPaste.ShouldBeTrue("the targeted lock must be taken before the drop changes the element");
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RequestLock(destinationComponent), Times.Once);
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RequestLock(), Times.Never);
+    }
+
+    [Fact]
+    public void OnNodeSortingDropped_OntoAFolder_TakesThePlainUndoLock()
+    {
+        // A folder changes no element, so there is no element history to target.
+        Mock<ITreeNode> draggedNode = new Mock<ITreeNode>();
+        draggedNode.Setup(x => x.Tag).Returns((object?)null);
+        Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
+        folderNode.Setup(x => x.Tag).Returns((object?)null);
+
+        _dragDropManager.OnNodeSortingDropped(new List<ITreeNode> { draggedNode.Object }, folderNode.Object, dropTarget: null);
+
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RequestLock(), Times.Once);
+        _mocker.GetMock<IUndoManager>().Verify(x => x.RequestLock(It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_OnlyFolderNodes_DoesNotThrow()
     {
         // Arrange - only folder nodes (Tag=null), no tagged nodes

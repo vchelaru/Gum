@@ -38,6 +38,15 @@ public class ElementUndoStrategy : IUndoStrategy
 
     UndoSnapshot? recordedSnapshot;
 
+    // The element recordedSnapshot was taken from. The selection can change while a lock is held
+    // (a tree drop selects the element it lands in), and a baseline of one element must never be
+    // diffed against another.
+    private ElementSave? _baselineElement;
+
+    // Baselines of elements changed under a lock while another element is selected (#4692),
+    // keyed by the element; recorded into that element's history when the last lock is released.
+    private readonly Dictionary<ElementSave, UndoSnapshot> _targetedBaselines = new Dictionary<ElementSave, UndoSnapshot>();
+
     public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
 
     public ElementHistory CurrentElementHistory
@@ -91,38 +100,119 @@ public class ElementUndoStrategy : IUndoStrategy
             return;
         }
         recordedSnapshot = null;
+        _baselineElement = _selectedState.SelectedElement;
 
-
-        if (_selectedState.SelectedElement != null)
+        if (_baselineElement != null)
         {
-            if (mUndos.ContainsKey(_selectedState.SelectedElement) == false)
-            {
+            EnsureHistory(_baselineElement);
+            recordedSnapshot = BuildSnapshot(_baselineElement,
+                _selectedState.SelectedStateSave?.Name, _selectedState.SelectedStateCategorySave?.Name);
+        }
+    }
 
-                var history = new ElementHistory();
+    private void EnsureHistory(ElementSave element)
+    {
+        if (!mUndos.ContainsKey(element))
+        {
+            mUndos.Add(element, new ElementHistory());
+        }
+    }
 
-                mUndos.Add(_selectedState.SelectedElement, history);
-            }
+    // A baseline of element: a clone with its enumerations fixed, the state names the diff compares,
+    // and the element's animations (the live tab when loaded, else the .ganx, else null; a freshly
+    // produced object, so safe to hold as-is).
+    private UndoSnapshot BuildSnapshot(ElementSave element, string? stateName, string? categoryName)
+    {
+        return new UndoSnapshot
+        {
+            Element = CloneWithFixedEnumerations(element),
+            StateName = stateName,
+            CategoryName = categoryName,
+            Animations = _animationUndoProvider.GetCurrentAnimations(element),
+        };
+    }
 
-            recordedSnapshot = new UndoSnapshot();
-            recordedSnapshot.Element = CloneWithFixedEnumerations(_selectedState.SelectedElement);
+    /// <summary>
+    /// Captures a baseline of <paramref name="element"/> ahead of a change made to it while another
+    /// element is selected, so <see cref="TryRecordTargeted"/> can record the change in its own
+    /// history. Ignores the selected element (its baseline is the plain <see cref="CaptureBaseline()"/>)
+    /// and an element already captured for the current lock. Unlike the plain capture this runs
+    /// while locks are held: the caller holds the lock that brackets the change.
+    /// </summary>
+    public void CaptureBaseline(ElementSave element)
+    {
+        if (element == _selectedState.SelectedElement || _targetedBaselines.ContainsKey(element))
+        {
+            return;
         }
 
-        if (recordedSnapshot != null)
-        {
-            foreach (var item in recordedSnapshot.Element.AllStates)
-            {
-                item.FixEnumerations();
-            }
-            recordedSnapshot.StateName = _selectedState.SelectedStateSave?.Name;
-            recordedSnapshot.CategoryName = _selectedState.SelectedStateCategorySave?.Name;
+        EnsureHistory(element);
+        // The element is not being edited through the states panel, so its default state stands
+        // in for the "selected" state the diff compares.
+        _targetedBaselines[element] = BuildSnapshot(element, element.DefaultState?.Name, null);
+    }
 
-            // Capture the element's animations as part of the same baseline. GetCurrentAnimations
-            // returns the live tab contents when loaded, else the .ganx, else null when the element
-            // has no animations. This is a freshly-produced object, so it is safe to hold as-is.
-            recordedSnapshot.Animations = _animationUndoProvider.GetCurrentAnimations(_selectedState.SelectedElement);
+    /// <summary>
+    /// Records, for every element captured by <see cref="CaptureBaseline(ElementSave)"/>, an action
+    /// in that element's history if it changed. A no-op while locks are held.
+    /// </summary>
+    public void TryRecordTargeted()
+    {
+        if (_targetedBaselines.Count == 0 || _areUndoLocksActive())
+        {
+            return;
         }
 
-        //PrintStatus("RecordState");
+        foreach (KeyValuePair<ElementSave, UndoSnapshot> pair in _targetedBaselines)
+        {
+            if (isRecordingUndos)
+            {
+                RecordTargeted(pair.Key, pair.Value);
+            }
+        }
+        _targetedBaselines.Clear();
+    }
+
+    private void RecordTargeted(ElementSave element, UndoSnapshot baseline)
+    {
+        StateSave? newState = element.DefaultState;
+        StateSave? oldState = baseline.Element.DefaultState;
+        ElementAnimationsSave? baselineAnimations = baseline.Animations;
+        ElementAnimationsSave? currentAnimations = _animationUndoProvider.GetCurrentAnimations(element);
+
+        UndoSnapshot? undoSnapshot = TryGetUndoSnapshotToAdd(newState, element, oldState, baseline.Element,
+            baseline.CategoryName, baseline.StateName, baselineAnimations, currentAnimations);
+        if (undoSnapshot == null || !mUndos.TryGetValue(element, out ElementHistory? history))
+        {
+            return;
+        }
+
+        UndoSnapshot? redoSnapshot = TryGetUndoSnapshotToAdd(oldState, baseline.Element, newState, element,
+            baseline.CategoryName, baseline.StateName, currentAnimations, baselineAnimations);
+        AppendAction(history, undoSnapshot, redoSnapshot);
+
+        // The History tab and the Undo menu follow the selected element's history only.
+        if (element == _selectedState.SelectedElement)
+        {
+            _raiseUndosChanged(UndoOperation.HistoryAppended);
+        }
+    }
+
+    // Appends an action after the current position, dropping any redo tail past it.
+    private static void AppendAction(ElementHistory history, UndoSnapshot undoSnapshot, UndoSnapshot? redoSnapshot)
+    {
+        while (history.Actions.Count > history.UndoIndex + 1)
+        {
+            history.Actions.RemoveAt(history.Actions.Count - 1);
+        }
+
+        HistoryAction action = new HistoryAction { UndoState = undoSnapshot };
+        if (redoSnapshot != null)
+        {
+            action.RedoState = redoSnapshot;
+        }
+        history.Actions.Add(action);
+        history.UndoIndex = history.Actions.Count - 1;
     }
 
     /// <summary>
@@ -145,6 +235,14 @@ public class ElementUndoStrategy : IUndoStrategy
             return;
         }
         /////////////////////////////////////End Early Out////////////////////////////////////
+
+        if (_baselineElement != _selectedState.SelectedElement)
+        {
+            // The selection moved while a lock was held: the baseline describes another element, so
+            // there is nothing to diff; start the new element's baseline instead.
+            CaptureBaseline();
+            return;
+        }
 
         StateSave newStateSave = _selectedState.SelectedStateSave;
         var currentCategory = _selectedState.SelectedStateCategorySave;
@@ -181,29 +279,10 @@ public class ElementUndoStrategy : IUndoStrategy
             {
                 var history = mUndos[_selectedState.SelectedElement];
 
-                var isAtEndOfStack = history.UndoIndex == history.Actions.Count - 1;
-                if (!isAtEndOfStack)
-                {
-                    // If we're not at the end of the stack, then we need to remove all the items after the current index
-                    while (history.Actions.Count > history.UndoIndex + 1)
-                    {
-                        history.Actions.RemoveAt(history.Actions.Count - 1);
-                    }
-                }
-
-                var action = new HistoryAction { UndoState = undoSnapshot };
-
-                history.Actions.Add(action);
-                history.UndoIndex = history.Actions.Count - 1;
-
                 var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName,
                     currentAnimations, baselineAnimations);
 
-                if(redoSnapshot != null)
-                {
-                    action.RedoState = redoSnapshot;
-                }
-
+                AppendAction(history, undoSnapshot, redoSnapshot);
 
                 CaptureBaseline();
 
@@ -934,5 +1013,7 @@ public class ElementUndoStrategy : IUndoStrategy
     {
         mUndos.Clear();
         recordedSnapshot = null;
+        _baselineElement = null;
+        _targetedBaselines.Clear();
     }
 }
