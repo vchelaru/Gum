@@ -22,23 +22,28 @@ public class SolutionProjectReferenceTests
     [Fact]
     public void EveryCheckedInSolution_ReferencesOnlyProjectsThatExist()
     {
-        // Submodules are not initialized in every checkout (CI skips fna), so a project
-        // inside one is only checked when the submodule is actually present.
-        List<string> submoduleRoots = ReadSubmoduleRoots(RepoPaths.RepoRoot)
-            .Where(root => !Directory.EnumerateFileSystemEntries(root).Any())
+        // Submodules are third-party trees: their own .sln files are not ours to police
+        // (fna's reference sibling repos that are never checked out here), and they are not
+        // initialized in every checkout, so a Gum .sln pointing into one is only checked
+        // when the submodule is present.
+        List<string> submoduleRoots = ReadSubmoduleRoots(RepoPaths.RepoRoot).ToList();
+        List<string> uninitializedSubmoduleRoots = submoduleRoots
+            .Where(root => !Directory.Exists(root) || !Directory.EnumerateFileSystemEntries(root).Any())
             .ToList();
         List<string> missing = new();
 
         foreach (string sln in EnumerateSolutions(RepoPaths.RepoRoot))
         {
+            if (IsUnder(sln, submoduleRoots))
+            {
+                continue;
+            }
             string slnDir = Path.GetDirectoryName(sln)!;
             foreach (Match match in ProjectLine.Matches(File.ReadAllText(sln)))
             {
                 string relative = match.Groups["path"].Value.Replace('\\', Path.DirectorySeparatorChar);
                 string full = Path.GetFullPath(Path.Combine(slnDir, relative));
-                bool inUninitializedSubmodule = submoduleRoots.Any(root =>
-                    full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
-                if (!inUninitializedSubmodule && !File.Exists(full))
+                if (!IsUnder(full, uninitializedSubmoduleRoots) && !File.Exists(full))
                 {
                     missing.Add($"{Path.GetRelativePath(RepoPaths.RepoRoot, sln)} -> {relative}");
                 }
@@ -46,6 +51,12 @@ public class SolutionProjectReferenceTests
         }
 
         missing.ShouldBeEmpty();
+    }
+
+    private static bool IsUnder(string fullPath, IEnumerable<string> roots)
+    {
+        return roots.Any(root =>
+            fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
