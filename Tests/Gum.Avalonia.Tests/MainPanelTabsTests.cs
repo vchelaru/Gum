@@ -75,4 +75,30 @@ public class MainPanelTabsTests
         variables.IsSelected.ShouldBeFalse();
         window.Close();
     }
+
+    [AvaloniaFact]
+    public void SelectingATab_ThatHidesItselfOnFocus_DoesNotCrashTheHostingTabControl()
+    {
+        // CodeOutputPlugin does exactly this: its GotFocus handler hides its own tab when there is
+        // nothing to display. That runs synchronously inside the hosting TabControl's own
+        // SelectionChanged, so the tab's IsVisible flip must not synchronously clear/rebuild the
+        // ObservableCollection that IS that TabControl's ItemsSource, or Avalonia's selection
+        // bookkeeping throws ArgumentOutOfRangeException.
+        AvaloniaTabManager tabs = CreateTabManager();
+        MainPanelView view = new MainPanelView(tabs);
+        Window window = new Window { Content = view, Width = 1000, Height = 700 };
+        window.Show();
+        IPluginTab other = tabs.AddControl(new TextBlock(), "Other", TabLocation.RightBottom);
+        AvaloniaPluginTab selfHiding = (AvaloniaPluginTab)tabs.AddControl(new TextBlock(), "Self-Hiding", TabLocation.RightBottom);
+        selfHiding.GotFocus += selfHiding.Hide;
+        Dispatcher.UIThread.RunJobs();
+        TabControl region = view.GetVisualDescendants().OfType<TabControl>().First(tabControl => tabControl.ItemsSource == tabs.RightBottom);
+
+        region.SelectedItem = selfHiding;
+        Dispatcher.UIThread.RunJobs();
+
+        selfHiding.IsVisible.ShouldBeFalse();
+        tabs.RightBottom.ShouldNotContain(selfHiding);
+        window.Close();
+    }
 }

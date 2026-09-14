@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Managers;
 using Gum.Mvvm;
@@ -141,7 +142,14 @@ public class AvaloniaTabManager : ViewModel, ITabManager, IToolsVisibility, IRec
     {
         if (e.PropertyName is nameof(AvaloniaPluginTab.Location) or nameof(AvaloniaPluginTab.IsVisible))
         {
-            Refilter();
+            // A plugin can show/hide a tab from inside that same tab's own GotFocus/IsSelected
+            // handler (CodeOutputPlugin hides itself when there's nothing to display), which runs
+            // synchronously inside the hosting TabControl's own SelectionChanged. Clearing/rebuilding
+            // the ObservableCollection that IS that TabControl's ItemsSource while it is still
+            // resolving its own selection change corrupts its internal selected-index bookkeeping
+            // (ArgumentOutOfRangeException). Deferring to the next dispatcher cycle lets the current
+            // selection change finish first.
+            Dispatcher.UIThread.Post(Refilter);
         }
         else if (e.PropertyName == nameof(AvaloniaPluginTab.IsSelected) && sender is AvaloniaPluginTab { IsSelected: true } tab)
         {
