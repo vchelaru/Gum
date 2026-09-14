@@ -177,7 +177,9 @@ foreach ($head in $Heads) {
 
     # Startup.
     $clock = [System.Diagnostics.Stopwatch]::StartNew()
-    $proc = Start-Process -FilePath $exe -ArgumentList @("`"$gumx`"") -PassThru
+    # The Avalonia head keeps this run's settings apart from the user's (the WPF head has no such flag).
+    $args = if ($head -eq "wpf") { @("`"$gumx`"") } else { @("`"$gumx`"", "--user-data", "`"$(Join-Path (Split-Path $gumx) 'UserData')`"") }
+    $proc = Start-Process -FilePath $exe -ArgumentList $args -PassThru
     while ($proc.MainWindowHandle -eq 0 -and $clock.Elapsed.TotalSeconds -lt $LoadTimeoutSec) { Start-Sleep -Milliseconds 20; $proc.Refresh() }
     $windowMs = [int]$clock.ElapsedMilliseconds
     while ($proc.MainWindowTitle -notlike "*$projectName*" -and $clock.Elapsed.TotalSeconds -lt $LoadTimeoutSec) { Start-Sleep -Milliseconds 20; $proc.Refresh() }

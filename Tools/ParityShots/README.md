@@ -35,7 +35,8 @@ dotnet run --project Tool\Gum.Avalonia --no-build -- "<path>\avalonia\GameUiSamp
 
 Avalonia head options: no path starts empty; `--select "Controls/DialogBox#NineSliceInstance"`
 selects an element (and instance) once loaded; `--theme light|dark` shows a variant without saving
-it; `--exit-after 8 --screenshot out.png` runs unattended and writes a screenshot of the window.
+it; `--exit-after 8 --screenshot out.png` runs unattended and writes a screenshot of the window, and
+`--user-data <folder>` keeps that run's settings (last project, recent list) out of the user's own.
 `GUM_ECHO_OUTPUT=1` in the environment also writes every Output tab line to stderr, which is how an
 unattended run's log shows what the tool saw (plugin failures, font generation, and so on).
 

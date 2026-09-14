@@ -9,6 +9,8 @@ using Gum.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ToolsUtilities;
+
 
 namespace Gum.Avalonia;
 
@@ -26,6 +28,8 @@ public static class Program
             Console.Error.WriteLine("Unobserved task exception: " + e.Exception);
 
         HeadOptions options = HeadOptions.Parse(args);
+        // Before anything reads or writes a per-user file.
+        FileManager.UserApplicationDataFolderOverride = options.UserDataFolder;
         using IHost host = CreateHostBuilder(args).Build();
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
@@ -50,7 +54,8 @@ public static class Program
     /// </summary>
     public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        string appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
+        string appDir = FileManager.UserApplicationDataFolderOverride
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
         Directory.CreateDirectory(appDir);
         string settingsPath = Path.Combine(appDir, "appsettings.json");
 

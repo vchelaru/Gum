@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Shouldly;
 
@@ -38,6 +38,9 @@ public class HeadProcessTests
         CopyDirectory(Path.Combine(repositoryRoot, "Tests", "CodeGen_Skia_ByReference", "Content", "GumProject"), workingDirectory);
         string project = Directory.GetFiles(workingDirectory, "*.gumx").Single();
         string screenshot = Path.Combine(workingDirectory, "run.png");
+        // The run's own settings folder: loading the project records it as the last project, which
+        // must not land in the user's settings once this folder is deleted.
+        string userData = Path.Combine(workingDirectory, "UserData");
 
         try
         {
@@ -47,7 +50,7 @@ public class HeadProcessTests
                 RedirectStandardError = true,
                 UseShellExecute = false,
             };
-            foreach (string argument in new[] { head, project, "--exit-after", "10", "--screenshot", screenshot })
+            foreach (string argument in new[] { head, project, "--exit-after", "10", "--screenshot", screenshot, "--user-data", userData })
             {
                 startInfo.ArgumentList.Add(argument);
             }
@@ -71,6 +74,7 @@ public class HeadProcessTests
             process.ExitCode.ShouldBe(0, errorText);
             errorText.ShouldNotContain("Startup failed");
             File.Exists(screenshot).ShouldBeTrue();
+            File.Exists(Path.Combine(userData, "GeneralSettings.xml")).ShouldBeTrue("the run's settings must be written under its own folder");
         }
         finally
         {

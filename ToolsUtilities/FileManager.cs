@@ -1463,10 +1463,21 @@ namespace ToolsUtilities
         /// <example>
         /// System.IO.File.SaveText("File Contents", FlatRedBall.UserApplicationDataForThisApplication + "File.txt");
         /// </example>
+        /// <summary>
+        /// When set, <see cref="UserApplicationDataForThisApplication"/> returns this folder instead of the
+        /// per-user application data folder, so an unattended run keeps its settings apart from the user's.
+        /// </summary>
+        public static string? UserApplicationDataFolderOverride { get; set; }
+
         public static string UserApplicationDataForThisApplication
         {
             get
             {
+                if (!string.IsNullOrEmpty(UserApplicationDataFolderOverride))
+                {
+                    return UserApplicationDataFolderOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                }
+
                 string applicationDataName = Assembly.GetEntryAssembly().FullName;
 
                 applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
