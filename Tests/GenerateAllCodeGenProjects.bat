@@ -5,7 +5,7 @@ rem regeneration and CI verification can never diverge. Commit the resulting
 rem diff; CI fails if checked-in generated code is stale.
 
 dotnet build "%~dp0..\Tools\Gum.Cli\Gum.Cli.csproj" --configuration Release || exit /b 1
-set CLI=%~dp0..\Tools\Gum.Cli\bin\Release\net8.0\GumCli.exe
+set CLI=%~dp0..\Tools\Gum.Cli\bin\Release\net10.0\GumCli.exe
 
 echo 0/100 Starting to generate...
 "%CLI%" codegen %~dp0CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx

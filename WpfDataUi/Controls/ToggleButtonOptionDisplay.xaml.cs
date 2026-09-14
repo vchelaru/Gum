@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -288,7 +288,7 @@ namespace WpfDataUi.Controls
 
             if (propertyName != null)
             {
-                propertyName = InsertSpacesInCamelCaseString(propertyName);
+                propertyName = DataUiText.InsertSpacesInCamelCase(propertyName);
             }
             Label.Text = propertyName;
             TrySetValueOnUi(InstanceMember.Value);
@@ -423,22 +423,5 @@ namespace WpfDataUi.Controls
 
         }
 
-        static string InsertSpacesInCamelCaseString(string originalString)
-        {
-            // Normally in reverse loops you go til i > -1, but 
-            // we don't want the character at index 0 to be tested.
-            for (int i = originalString.Length - 1; i > 0; i--)
-            {
-                if (char.IsUpper(originalString[i]) && i != 0
-                    // make sure there's not already a space there
-                    && originalString[i - 1] != ' '
-                    )
-                {
-                    originalString = originalString.Insert(i, " ");
-                }
-            }
-
-            return originalString;
-        }
     }
 }

@@ -23,7 +23,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     readonly FilePickingLogic _filePickingLogic;
     InstanceMember? _instanceMember;
-    List<string> _entries;
+    readonly MultiFileDisplayLogic _fileListLogic;
 
     // NOTE: static dictionary is process-global. If two MultiFileDisplay controls ever bind
     // to different InstanceMembers with the same Name simultaneously (e.g. a secondary
@@ -87,7 +87,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
     public MultiFileDisplay()
     {
         _filePickingLogic = new FilePickingLogic();
-        _entries = new List<string>();
+        _fileListLogic = new MultiFileDisplayLogic();
 
         InitializeComponent();
     }
@@ -130,18 +130,14 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     public ApplyValueResult TrySetValueOnUi(object value)
     {
-        _entries.Clear();
-        if (value is List<string> incoming)
-        {
-            _entries.AddRange(incoming);
-        }
+        _fileListLogic.SetEntries(value);
         RebindListBox();
         return ApplyValueResult.Success;
     }
 
     public ApplyValueResult TryGetValueOnUi(out object? result)
     {
-        result = new List<string>(_entries);
+        result = _fileListLogic.GetValue();
         return ApplyValueResult.Success;
     }
 
@@ -166,7 +162,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
             return;
         }
 
-        _entries.Add(selected);
+        _fileListLogic.Entries.Add(selected);
         Commit();
     }
 
@@ -219,29 +215,18 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     private void RemoveSelected()
     {
-        int index = ListBox.SelectedIndex;
-        if (index < 0 || index >= _entries.Count)
+        if (_fileListLogic.RemoveAt(ListBox.SelectedIndex))
         {
-            return;
+            Commit();
         }
-
-        _entries.RemoveAt(index);
-        Commit();
     }
 
     private void MoveSelected(int direction)
     {
-        int index = ListBox.SelectedIndex;
-        int newIndex = index + direction;
-        if (index < 0 || newIndex < 0 || newIndex >= _entries.Count)
+        if (_fileListLogic.Move(ListBox.SelectedIndex, direction, out int newIndex))
         {
-            return;
+            Commit(newIndex);
         }
-
-        string value = _entries[index];
-        _entries.RemoveAt(index);
-        _entries.Insert(newIndex, value);
-        Commit(newIndex);
     }
 
     private void Commit(int? selectIndex = null)
@@ -266,8 +251,8 @@ public partial class MultiFileDisplay : UserControl, IDataUi
     {
         int? pending = TryPeekPendingSelect();
         ListBox.ItemsSource = null;
-        ListBox.ItemsSource = _entries;
-        if (pending is int p && p >= 0 && p < _entries.Count)
+        ListBox.ItemsSource = _fileListLogic.Entries;
+        if (pending is int p && p >= 0 && p < _fileListLogic.Entries.Count)
         {
             ListBox.SelectedIndex = p;
         }
@@ -281,11 +266,10 @@ public partial class MultiFileDisplay : UserControl, IDataUi
 
     private void RefreshButtonVisibility()
     {
-        bool hasSelection = ListBox.SelectedIndex >= 0;
-        bool hasMultiple = _entries.Count > 1;
-        RemoveButton.Visibility = hasSelection ? Visibility.Visible : Visibility.Collapsed;
-        MoveUpButton.Visibility = hasSelection && hasMultiple ? Visibility.Visible : Visibility.Collapsed;
-        MoveDownButton.Visibility = hasSelection && hasMultiple ? Visibility.Visible : Visibility.Collapsed;
+        int selectedIndex = ListBox.SelectedIndex;
+        RemoveButton.Visibility = _fileListLogic.IsRemoveVisible(selectedIndex) ? Visibility.Visible : Visibility.Collapsed;
+        MoveUpButton.Visibility = _fileListLogic.IsMoveVisible(selectedIndex) ? Visibility.Visible : Visibility.Collapsed;
+        MoveDownButton.Visibility = _fileListLogic.IsMoveVisible(selectedIndex) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private int? TryPeekPendingSelect()

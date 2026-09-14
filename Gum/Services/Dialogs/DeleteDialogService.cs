@@ -1,3 +1,4 @@
+using Gum.Extensions;
 using Gum.Gui.Windows;
 using Gum.Plugins;
 using System;
@@ -31,18 +32,35 @@ internal class DeleteDialogService : IDeleteDialogService
         };
 
         // Let plugins inject their checkboxes/options (e.g. "Delete XML file?") before the
-        // dialog is shown — this fires the DeleteOptionsWindowShow plugin event.
+        // dialog is shown. Plugins that still add WPF controls use the DeleteOptionsWindowShow event;
+        // the rest add neutral options, which are rendered into the same panel.
         _pluginManager.ShowDeleteDialog(window, objectsToDelete);
+
+        DeleteOptionsDialogViewModel options = new()
+        {
+            Title = title,
+            Message = message,
+        };
+        _pluginManager.ShowDeleteOptions(options, objectsToDelete);
+        foreach (DeleteOptionChoiceViewModel choice in options.Choices)
+        {
+            window.MainStackPanel.Children.Add(choice.ToGroupBox());
+        }
+        foreach (DeleteOptionCheckboxViewModel checkBox in options.CheckBoxes)
+        {
+            window.MainStackPanel.Children.Add(checkBox.ToCheckBox());
+        }
 
         bool? result = window.ShowDialog();
 
-        return new DeleteDialogResult(window, result);
+        return new DeleteDialogResult(window, options, result);
     }
 
     public void NotifyConfirmed(IDeleteDialogResult result, Array objectsToDelete)
     {
-        DeleteOptionsWindow window = ((DeleteDialogResult)result).Window;
-        _pluginManager.DeleteConfirmed(window, objectsToDelete);
+        DeleteDialogResult typed = (DeleteDialogResult)result;
+        _pluginManager.DeleteConfirmed(typed.Window, objectsToDelete);
+        _pluginManager.ConfirmDeleteOptions(typed.Options, objectsToDelete);
     }
 
     /// <summary>
@@ -52,13 +70,16 @@ internal class DeleteDialogService : IDeleteDialogService
     /// </summary>
     private sealed class DeleteDialogResult : IDeleteDialogResult
     {
-        public DeleteDialogResult(DeleteOptionsWindow window, bool? result)
+        public DeleteDialogResult(DeleteOptionsWindow window, DeleteOptionsDialogViewModel options, bool? result)
         {
             Window = window;
+            Options = options;
             Result = result;
         }
 
         public DeleteOptionsWindow Window { get; }
+
+        public DeleteOptionsDialogViewModel Options { get; }
 
         public bool? Result { get; }
     }

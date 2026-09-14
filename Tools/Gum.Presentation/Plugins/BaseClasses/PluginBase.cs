@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -36,6 +36,17 @@ public abstract class PluginBase : IPlugin
     [Import] public IFileCommands FileCommands { get => _fileCommands; set => _fileCommands = value; }
     [Import] public ITabManager TabManager { get => _tabManager; set => _tabManager = value; }
     [Import] public IDialogService DialogService { get => _dialogService; set => _dialogService = value; }
+
+    private Gum.Menus.MenuModel? _menu;
+    /// <summary>The head's menu model. Optional so heads that still render menus themselves compose.</summary>
+    [Import(AllowDefault = true)] public Gum.Menus.MenuModel? Menu { get => _menu; set => _menu = value; }
+
+    /// <summary>Adds a menu item at the given path (top menu, submenus, item) and returns its model.</summary>
+    public Gum.Menus.MenuItemModel AddMenuEntry(IEnumerable<string> menuAndSubmenus, Action? click = null) =>
+        (_menu ?? throw new InvalidOperationException("This head does not export a MenuModel for plugins.")).AddMenuItem(menuAndSubmenus, click);
+
+    /// <summary>Adds a menu item at the given path and returns its model.</summary>
+    public Gum.Menus.MenuItemModel AddMenuEntry(Action? click, params string[] menuAndSubmenus) => AddMenuEntry(menuAndSubmenus, click);
 
     #region Events
 
@@ -190,6 +201,19 @@ public abstract class PluginBase : IPlugin
     public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceDelete;
 
     /// <summary>
+    /// Raised before the delete confirmation is shown, so the plugin can add check boxes or pick-one
+    /// groups to it. Works under both heads; the WPF-only <c>DeleteOptionsWindowShow</c> on
+    /// <c>WpfPluginBase</c> is kept for plugins that still add WPF controls.
+    /// </summary>
+    public event Action<DeleteOptionsDialogViewModel, Array>? DeleteOptionsShow;
+
+    /// <summary>
+    /// Raised when the user confirms a delete, with the options as the user left them. Pairs with
+    /// <see cref="DeleteOptionsShow"/>.
+    /// </summary>
+    public event Action<DeleteOptionsDialogViewModel, Array>? DeleteOptionsConfirmed;
+
+    /// <summary>
     /// Event raised whenever an instance in a behavior's RequiredInstances list is renamed.
     /// </summary>
     public event Action<BehaviorSave, BehaviorInstanceSave>? BehaviorInstanceRename;
@@ -281,6 +305,12 @@ public abstract class PluginBase : IPlugin
     #endregion
 
     #region Event calling
+
+    public void CallDeleteOptionsShow(DeleteOptionsDialogViewModel dialog, Array objectsToDelete) =>
+        DeleteOptionsShow?.Invoke(dialog, objectsToDelete);
+
+    public void CallDeleteOptionsConfirmed(DeleteOptionsDialogViewModel dialog, Array deletedObjects) =>
+        DeleteOptionsConfirmed?.Invoke(dialog, deletedObjects);
 
     public void CallProjectLoad(GumProjectSave newlyLoadedProject) =>
         ProjectLoad?.Invoke(newlyLoadedProject);

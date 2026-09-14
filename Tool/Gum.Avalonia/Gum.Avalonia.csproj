@@ -1,0 +1,138 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Gum.Avalonia: the cross-platform (Windows / macOS / Linux) head of the Gum tool. See
+		Direction/avalonia-migration/README.md. It composes the same headless service graph as the
+		WPF head (Gum.Presentation's AddGumCore) and supplies Avalonia implementations of every
+		contract in GumCoreServiceCollectionExtensions.HeadProvidedContracts.
+
+		This project targets plain net10.0 and must never reference WPF, WinForms, or any
+		net10.0-windows project. The banned-symbol list turns the runtime-only Windows APIs into
+		build errors as well.
+	-->
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<AssemblyName>Gum.Avalonia</AssemblyName>
+		<RootNamespace>Gum.Avalonia</RootNamespace>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		<AvaloniaUseCompiledBindingsByDefault>false</AvaloniaUseCompiledBindingsByDefault>
+		<NoWarn>1591</NoWarn>
+		<ApplicationIcon>..\..\Gum\GumIcon.ico</ApplicationIcon>
+		<!--
+			Published self-contained per runtime by the release workflow (phase 110). Trimming stays off:
+			the service registration, view-model factories and MEF plugin host are reflection-driven.
+		-->
+		<PublishTrimmed>false</PublishTrimmed>
+		<!--
+			The version the About dialog shows (ToolVersion): the release job publishes with -p:Version=<date>,
+			as the WPF head's BuildVersion stamp is rewritten; a local build says so instead of 1.0.0.
+		-->
+		<Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Avalonia" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Desktop" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.17" />
+		<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.17" />
+		<!-- The Theming dialog's color pickers (phase 80). Its Fluent style is included in App. -->
+		<PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.17" />
+		<!-- The Fluent System Icons the WPF head uses through FluentIcons.Wpf (same version), for the Variables
+		     tab's filter and add buttons and the States tree. -->
+		<PackageReference Include="FluentIcons.Avalonia" Version="1.1.308" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+		<!-- Runtime dependencies of the Skia plugin (SVG and Lottie), matching what Gum.csproj ships for
+		     the WPF head: a plugin's NuGet dependencies load from the application folder. -->
+		<PackageReference Include="SkiaSharp.Extended" Version="1.60.0" />
+		<PackageReference Include="SkiaSharp.Skottie" Version="3.119.1" />
+		<PackageReference Include="Svg.Skia" Version="0.5.18" />
+		<!--
+			The editor canvases draw with KNI. The framework packages are the reference assemblies
+			the neutral canvas projects compile against; the SDL2/GL platform is the one concrete
+			backend this head loads, on every OS (phase 10 of the Avalonia plan chose it).
+		-->
+		<PackageReference Include="nkast.Xna.Framework" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Content" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Graphics" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Audio" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Media" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Input" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Game" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Devices" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.Storage" Version="4.2.9001" />
+		<PackageReference Include="nkast.Xna.Framework.XR" Version="4.2.9001" />
+		<PackageReference Include="nkast.Kni.Platform.SDL2.GL" Version="4.2.9001.1" />
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+		<ProjectReference Include="..\..\Tools\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+		<ProjectReference Include="..\..\XnaAndWinforms\XnaAndWinforms.csproj" />
+		<ProjectReference Include="..\..\InputLibrary\InputLibrary.csproj" />
+		<!-- The editor tab's neutral core (canvas, editors, rulers); this head adds the Avalonia canvas control and layout. -->
+		<ProjectReference Include="..\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
+		<ProjectReference Include="..\TextureCoordinatePlugin.Core\TextureCoordinatePlugin.Core.csproj" />
+		<ProjectReference Include="..\TreeViewPlugin.Core\TreeViewPlugin.Core.csproj" />
+		<!-- The Animations tab's neutral core; this head adds the Avalonia view (Plugins/StateAnimation). -->
+		<ProjectReference Include="..\StateAnimationPlugin.Core\StateAnimationPlugin.Core.csproj" />
+		<ProjectReference Include="..\..\AvaloniaDataUi\AvaloniaDataUi.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The editor's default bitmap font and the missing-texture placeholder, shared with the WPF head. -->
+		<None Include="..\..\Gum\Content\TestFont.fnt" Link="Content\TestFont.fnt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\TestFont_0.png" Link="Content\TestFont_0.png" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\InvalidTexture.png" Link="Content\InvalidTexture.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The polygon editor's add-point handle (AddPointSpriteVisual). -->
+		<None Include="..\..\Gum\Content\AddPoint.png" Link="Content\AddPoint.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- Copied into a project's folder by the shared NineSlice plugin when a project location is set. -->
+		<None Include="..\..\Gum\Content\ExampleSpriteFrame.png" Link="Content\ExampleSpriteFrame.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The default font character set copied into new projects (FileCommands.CreateDefaultFontCharacterFile). -->
+		<None Include="..\..\Gum\Content\.gumfcs" Link="Content\.gumfcs" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The tool font the rulers and dimension displays draw with (ToolFontService). -->
+		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1.fnt" Link="Content\Fonts\Font18Arial_o1.fnt" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\..\Gum\Content\Fonts\Font18Arial_o1_0.png" Link="Content\Fonts\Font18Arial_o1_0.png" CopyToOutputDirectory="PreserveNewest" />
+		<!-- The Variables tab's text-alignment toggle images, shared with the WPF head. -->
+		<None Include="..\..\Gum\Content\Icons\Alignment\*.png" Link="Content\Icons\Alignment\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The window icon, shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\GumIcon.ico" Link="GumIcon.ico" />
+		<!-- The title bar logo, dark and light (MainWindowIconLogic), shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\GumLogo64.png" Link="GumLogo64.png" />
+		<AvaloniaResource Include="..\..\Gum\GumLogo64Light.png" Link="GumLogo64Light.png" />
+		<!-- Tree icon artwork (TreeIconCatalog), shared with the WPF head. -->
+		<AvaloniaResource Include="..\..\Gum\Content\Icons\*.png" Link="Content\Icons\%(Filename)%(Extension)" />
+		<AvaloniaResource Include="..\..\Gum\Content\Icons\UpdatedTreeViewIcons\*.png" Link="Content\Icons\UpdatedTreeViewIcons\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- The FRB palette and chrome icons, read from the WPF tool's own dictionaries (FrbThemeResources, GumIconGeometries). -->
+		<EmbeddedResource Include="..\..\Gum\Themes\Palette.xaml" LogicalName="Gum.Avalonia.Themes.Palette.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Accents.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Accents.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.Light.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.Light.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\Frb.Brushes.Dark.xaml" LogicalName="Gum.Avalonia.Themes.Frb.Brushes.Dark.xaml" />
+		<EmbeddedResource Include="..\..\Gum\Themes\GumIcons.xaml" LogicalName="Gum.Avalonia.Themes.GumIcons.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
+	</ItemGroup>
+
+</Project>

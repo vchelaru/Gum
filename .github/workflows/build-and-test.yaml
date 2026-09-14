@@ -57,6 +57,57 @@ jobs:
           reporter: dotnet-trx
           fail-on-error: true
 
+  # The Avalonia head (Direction/avalonia-migration/phase-30) must build and its headless tests must
+  # pass on all three desktop OSes from the first PR that adds it. Plain net10.0, no submodules, no
+  # workloads; the matrix is what proves the purity guard (a WPF/WinForms leak fails on macOS/Linux).
+  Build-Avalonia-Head:
+    if: github.event_name != 'push'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Build Gum.Avalonia
+        run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
+      - name: Gum.Avalonia.Tests (headless)
+        run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      # The full-startup layer (phase 100): the real head executable on a fixture project. Only Linux
+      # has a cheap virtual display plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is
+      # the one OS where CI proves the startup sequence; the other two run it locally.
+      - name: Gum.Avalonia head, unattended run under Xvfb (Linux)
+        if: runner.os == 'Linux'
+        env:
+          GUM_RUN_HEAD_PROCESS_TEST: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests" --logger "trx;LogFileName=head-process.trx" --results-directory "TestResults"
+      # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
+      # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
+      - name: Gum.Presentation.Tests (shared logic on every OS)
+        run: dotnet test Tests/Gum.Presentation.Tests/Gum.Presentation.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      # Save byte-parity (ProjectSaveParityTests) must hold on every OS, not only on the Windows
+      # runner that runs this suite in the main test job; the other tests here are headless too.
+      - name: Gum.ProjectServices.Tests (save parity on every OS)
+        run: dotnet test Tests/Gum.ProjectServices.Tests/Gum.ProjectServices.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+      - name: Publish Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Tests Avalonia head (${{ matrix.os }})
+          path: "TestResults/*.trx"
+          reporter: dotnet-trx
+          fail-on-error: true
+
   # End-to-end Native AOT smoke test for issue #4105: RegisterRuntimeTypesThroughReflection walked
   # every loaded assembly via unguarded reflection, which crashed GumService.Initialize under
   # Native AOT when it hit trimmed framework metadata - a failure mode only a real `dotnet publish
@@ -193,7 +244,7 @@ jobs:
       - name: Codegen Drift Check
         run: |
           dotnet build "Tools/Gum.Cli/Gum.Cli.csproj" --configuration Release --verbosity quiet -p:WarningLevel=0
-          $cli = "Tools/Gum.Cli/bin/Release/net8.0/GumCli.exe"
+          $cli = "Tools/Gum.Cli/bin/Release/net10.0/GumCli.exe"
           $gumxProjects = @(
             "Tests/CodeGen_Maui_FullCodegen/Content/GumProject/CodeGenTestProject.gumx",
             "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx",
@@ -616,11 +667,11 @@ jobs:
           if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
           $dests = @(
             "Tests/RaylibGum.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net8.0",
-            "Tests/Gum.Cli.Tests/bin/Release/net8.0",
+            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0",
+            "Tests/Gum.Cli.Tests/bin/Release/net10.0",
             "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0",
             "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net8.0"
+            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0"
           )
           foreach ($dest in $dests) {
             Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force

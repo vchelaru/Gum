@@ -75,7 +75,7 @@ public class KernSmithFileGenerator : IFontFileGenerator
             var stopwatch = Stopwatch.StartNew();
 
             BmFontResult result = string.IsNullOrEmpty(bmfcSave.FontFile)
-                ? BmFont.GenerateFromSystem(bmfcSave.FontName, options)
+                ? GenerateFromSystemFont(bmfcSave.FontName, options)
                 : BmFont.Generate(bmfcSave.FontFile, options);
 
             // ToFile expects a base path WITHOUT the .fnt extension.
@@ -104,6 +104,34 @@ public class KernSmithFileGenerator : IFontFileGenerator
         }
 
         return response;
+    }
+
+    /// <summary>
+    /// Rasterizes an installed font by family name. A project authored on another OS may name a
+    /// font this machine does not have (Linux has no Arial); then the platform's substitute for
+    /// that family (fontconfig's on Linux, the default family elsewhere) is rasterized instead, and
+    /// the output says so, rather than the project losing its text.
+    /// </summary>
+    private BmFontResult GenerateFromSystemFont(string fontName, FontGeneratorOptions options)
+    {
+        try
+        {
+            return BmFont.GenerateFromSystem(fontName, options);
+        }
+        catch (FontParsingException) when (FindSubstituteFamily(fontName) is { } substitute)
+        {
+            _callbacks.OnOutput($"KernSmith: the font \"{fontName}\" is not installed on this machine; generating with \"{substitute}\" instead.");
+            return BmFont.GenerateFromSystem(substitute, options);
+        }
+    }
+
+    private static string? FindSubstituteFamily(string fontName)
+    {
+        // fontconfig (Linux) answers with its substitute for the family; other platforms answer
+        // null for an unknown family, so the platform's default face stands in there.
+        using SkiaSharp.SKTypeface? match = SkiaSharp.SKFontManager.Default.MatchFamily(fontName) ?? SkiaSharp.SKTypeface.Default;
+        string? family = match?.FamilyName;
+        return string.IsNullOrEmpty(family) || string.Equals(family, fontName, StringComparison.OrdinalIgnoreCase) ? null : family;
     }
 
     /// <summary>

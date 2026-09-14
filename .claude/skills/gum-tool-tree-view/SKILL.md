@@ -6,22 +6,30 @@ description: Gum's element tree (Screens/Components/Standard/Behaviors panel). T
 # Gum Tool Tree View Reference
 
 The left-hand panel listing Screens, Components, Standard Elements, Behaviors, and the instances
-inside an open element. A native WPF `TreeView`.
+inside an open element. The model and logic are framework-neutral in `Tool/TreeViewPlugin.Core`
+(net10.0, shared by both heads); each head supplies only the panel, through `IElementTreeView`.
 
 ## File map
 
 | File | Purpose |
 |---|---|
-| `Gum/Controls/GumTreeView.cs` (+ `.DragDrop.cs`) | The control: multi-select, keyboard nav, drag/drop, drop adornment |
-| `Gum/Controls/TreeSelection/` | Framework-free click/range/key decision logic the control calls into |
-| `Gum/Plugins/InternalPlugins/TreeView/GumTreeNode.cs` (+ `GumTreeNodeCollection.cs`) | The node model the tree binds to; implements `ITreeNodeMutable` |
-| `Gum/Themes/Frb.TreeView.xaml` | Row template, expander, selection/hover triggers |
-| `Gum/Controls/TreeIconRegistry.cs`, `TreeNodeIcon.cs` | Icon index → artwork + theme tint |
-| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewCreator.cs` | Builds the panel (tree, search box, collapse buttons, chip palette) |
-| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | Builds, refreshes and selects nodes |
-| `MainTreeViewPlugin.cs` | Wires plugin events to `RefreshUi(...)` and error-indicator updates |
-| `TreeViewStateService.cs`, `CollapseToggleService.cs` | Expansion state: persisted across sessions, and the collapse-button toggle |
+| `Tool/TreeViewPlugin.Core/GumTreeNode.cs` (+ `GumTreeNodeCollection.cs`) | The node model both trees bind to; implements `ITreeNodeMutable` |
+| `Tool/TreeViewPlugin.Core/ElementTreeViewManager.cs` (+ `.RightClick.cs`) | Builds, refreshes, searches and selects nodes; builds the right-click menu as `ContextMenuItemViewModel`s |
+| `Tool/TreeViewPlugin.Core/IElementTreeView.cs` | The panel contract the manager talks to, its factory, and the external-drop event args |
+| `Tool/TreeViewPlugin.Core/TreeSelection/TreeSelectionModel.cs` | Selection state and rules (click, range, toggle, keyboard nav, drag start, pruning) both controls feed |
+| `Tool/TreeViewPlugin.Core/TreeSelection/` (other files) | Click/range/key decision classes on neutral enums; `TreeDropKind` and `TreeDropLogic` |
+| `Tool/TreeViewPlugin.Core/TreeIconCatalog.cs` | Icon index → artwork path + theme color key, shared by both heads' registries |
+| `Tool/TreeViewPlugin.Core/MainTreeViewPlugin.cs` | Wires plugin events to `RefreshUi(...)` and error-indicator updates; loaded by both hosts |
+| `Tool/TreeViewPlugin.Core/TreeViewStateService.cs`, `CollapseToggleService.cs` | Expansion state: persisted across sessions, and the collapse-button toggle |
+| `Gum/Plugins/InternalPlugins/TreeView/WpfElementTreeView.cs` | WPF panel: `GumTreeView`, search box, flat results, collapse buttons, chip palette; WPF drag/cursor glue |
+| `Gum/Controls/GumTreeView.cs` (+ `.DragDrop.cs`) | WPF control: hit testing, expander clicks, drag start, drop adornment; delegates selection to `TreeSelectionModel` |
+| `Gum/Themes/Frb.TreeView.xaml`, `Gum/Controls/TreeIconRegistry.cs`, `TreeNodeIcon.cs` | WPF row template and icon drawing |
+| `Tool/Gum.Avalonia/Plugins/TreeView/` | Avalonia panel (`AvaloniaElementTreeView`), row-list control (`AvaloniaGumTreeView`), palette, icons |
 | `Tools/Gum.Presentation/Services/RefreshCoalescer.cs` | Collapses N `RequestRefresh()` calls in one synchronous burst into a single `IDispatcher`-posted refresh |
+
+The states tree (center-top "States" tab) shares `StateTreePluginBase`, `StateTreeRightClickService`
+and `StateTreeKeyboardHandler` in `Tools/Gum.Presentation/Plugins/InternalPlugins/StatePlugin/`;
+`MainStatePlugin` (WPF) and `AvaloniaStatePlugin` only build their tree control.
 
 `ElementTreeViewManager` and its `RightClick` partial speak `ITreeNode`/`ITreeNodeMutable`, delegating
 to headless twins in `Tools/Gum.Presentation/Managers/` (`TreeNodeImageLogic`, the `TreeNode*Extensions`
@@ -30,10 +38,12 @@ families, `TreeNodeExpansionPaths`). Prefer adding logic there over growing the 
 ## Selection is on the model, not the container
 
 `TreeView` enforces a single selected item and clears the previous one on every change, so
-`TreeViewItem.IsSelected` is deliberately never set. `GumTreeView` tracks the selection itself and the
-row template binds its selected visual to `GumTreeNode.IsSelected`. Consequences:
+`TreeViewItem.IsSelected` is deliberately never set. `TreeSelectionModel` tracks the selection and the
+row visuals bind to `GumTreeNode.IsSelected`. The Avalonia tree goes further and is a flat,
+virtualized row list rather than a `TreeView`. Consequences:
 
-- Keyboard navigation is handled in `GumTreeView.OnKeyDown`, not inherited.
+- Keyboard navigation is `TreeSelectionModel.HandleKeyDown`, called from each control's key handler.
+- A change to selection behavior goes in `TreeSelectionModel` (with a test), never in one head's control.
 - `IsExpanded` is ordinary two-way bound state, so expansion survives a rebuild without being
   captured and replayed.
 
@@ -65,9 +75,10 @@ produces one refresh instead of N.
 - **Reordering within one collection must be remove-then-insert.** `GumTreeNodeCollection` throws if a
   node is inserted into the collection it already belongs to, because detaching first would shift the
   index the caller computed. Reparenting *across* collections is a plain add.
-- **Drag payloads travel in `TreeDragPayload`, not on the `DataObject`.** Gum's `*Save` types aren't
-  `[Serializable]`, so anything put on the data object comes back null; the data object carries only a
-  marker format. `WpfWireframeDropPayloadReader` and `FlatSearchListBox` read the same static.
+- **Drag payloads travel in `TreeDragPayload`, not on the drag data.** Gum's `*Save` types aren't
+  `[Serializable]`, so anything put on a WPF data object comes back null; the data carries only a
+  marker format (`TreeDragPayload.DataFormat` in WPF, `AvaloniaDragFormats.TreeNodes` in Avalonia).
+  Both heads' canvas drop readers and search-result lists use the same static.
 - **`ITreeNode.FullPath` is backslash-separated.** `CopyPasteLogic` slices a `"Components\\"` prefix
   off it.
 - **Persisted expansion state is forward-slash-joined node `Text` paths** (`TreeNodeExpansionPaths`).

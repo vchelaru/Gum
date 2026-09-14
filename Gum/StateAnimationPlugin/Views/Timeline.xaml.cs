@@ -1,4 +1,5 @@
-﻿using StateAnimationPlugin.ViewModels;
+using StateAnimationPlugin.Timeline;
+using StateAnimationPlugin.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,8 +15,6 @@ namespace StateAnimationPlugin.Controls;
 
 public partial class TimelineControl : UserControl
 {
-    const string DefaultCategoryName = "Default";
-
     public TimelineControl()
     {
         InitializeComponent();
@@ -69,11 +68,11 @@ public partial class TimelineControl : UserControl
             })
         {
             FrameworkElement? row = null;
-            if (SubRows.FirstOrDefault(r => r.Name == RowName(frame)) is { } subRow)
+            if (SubRows.FirstOrDefault(r => r.Name == TimelineLayout.RowName(frame)) is { } subRow)
             {
                 row = SubAnimationsItemsControl.ItemContainerGenerator.ContainerFromItem(subRow) as FrameworkElement;
             }
-            else if (StateEventRows.FirstOrDefault(r => r.Name == RowName(frame)) is { } kfRow)
+            else if (StateEventRows.FirstOrDefault(r => r.Name == TimelineLayout.RowName(frame)) is { } kfRow)
             {
                 row = StateEventItemsControl.ItemContainerGenerator.ContainerFromItem(kfRow) as FrameworkElement;
             }
@@ -92,63 +91,22 @@ public partial class TimelineControl : UserControl
     }
     #endregion
 
-    public ObservableCollection<SubRow> SubRows { get; } = new();
+    public ObservableCollection<TimelineRow> SubRows { get; } = new();
 
-    public ObservableCollection<KeyframeGroupRow> StateEventRows { get; } = new();
+    public ObservableCollection<TimelineRow> StateEventRows { get; } = new();
 
-    private void RebuildSubRows()
+    // The grouping is shared with the Avalonia head's timeline (TimelineLayout).
+    private void RebuildSubRows() => Replace(SubRows, TimelineLayout.SubAnimationRows(Animation?.Keyframes));
+
+    private void RebuildStateEventRows() => Replace(StateEventRows, TimelineLayout.StateAndEventRows(Animation?.Keyframes));
+
+    private static void Replace(ObservableCollection<TimelineRow> target, IEnumerable<TimelineRow> rows)
     {
-        SubRows.Clear();
-
-        var frames = Animation?.Keyframes;
-        if (frames is null) return;
-
-        foreach (var k in frames.Where(k => !string.IsNullOrEmpty(k.AnimationName))
-                     .OrderBy(k => k.Time))
+        target.Clear();
+        foreach (TimelineRow row in rows)
         {
-            SubRows.Add(new SubRow(k.AnimationName!, [k]));
+            target.Add(row);
         }
-    }
-
-    private void RebuildStateEventRows()
-    {
-        StateEventRows.Clear();
-
-        if (Animation?.Keyframes is not { } frames)
-        {
-            return;
-        }
-
-        
-
-        // Only state + event keyframes
-        var stateEventFrames = frames
-            .Where(k => !string.IsNullOrEmpty(k.StateName) ||
-                        !string.IsNullOrEmpty(k.EventName));
-
-        var grouped = stateEventFrames
-            .GroupBy(RowName)
-            .OrderBy(g => g.Key == DefaultCategoryName ? 0 : 1)
-            .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var group in grouped)
-        {
-            var ordered = group.OrderBy(k => k.Time).ToList();
-            StateEventRows.Add(new KeyframeGroupRow(group.Key, ordered));
-        }
-
-        
-    }
-
-    static string RowName(AnimatedKeyframeViewModel kf)
-    {
-        if (kf is { AnimationName.Length: > 0 })
-        {
-            return kf.AnimationName;
-        }
-        return kf.DisplayName.IndexOf('/') is var i and > 0
-            ? kf.DisplayName.Substring(0, i)
-            : DefaultCategoryName;
     }
 
     private void WireKeyframeTracking()
@@ -204,29 +162,6 @@ public partial class TimelineControl : UserControl
 
     private ObservableCollection<AnimatedKeyframeViewModel>? _currentHooked;
 
-
-    public class SubRow
-    {
-        public string Name { get; }
-        public IReadOnlyList<AnimatedKeyframeViewModel> Items { get; }
-        public SubRow(string name, IReadOnlyList<AnimatedKeyframeViewModel> items)
-        {
-            Name = name;
-            Items = items;
-        }
-    }
-
-    public class KeyframeGroupRow
-    {
-        public string Name { get; }
-        public IReadOnlyList<AnimatedKeyframeViewModel> Items { get; }
-
-        public KeyframeGroupRow(string name, IReadOnlyList<AnimatedKeyframeViewModel> items)
-        {
-            Name = name;
-            Items = items;
-        }
-    }
 
     private void Keyframe_MouseDown(object? sender, MouseButtonEventArgs e)
     {

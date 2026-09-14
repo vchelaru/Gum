@@ -110,6 +110,12 @@ public class ImportTreeNodeViewModel : ViewModel
     }
 
     // Folder constructor
+    /// <summary>
+    /// Applies a click on the row's check box: excluded and partly included rows become included,
+    /// included rows become excluded.
+    /// </summary>
+    public void Toggle() => IsChecked = IsChecked != true;
+
     public ImportTreeNodeViewModel(string displayName, string fullName)
     {
         DisplayName = displayName;

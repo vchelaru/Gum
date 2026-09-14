@@ -36,7 +36,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Button Grid.Row="1" Click="HandleEditClick">Edit</Button>
+            <Button Grid.Row="1" Command="{Binding EditCommand}">Edit</Button>
 
         </Grid>
 
@@ -62,11 +62,11 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <Button Grid.Row="1" Click="OkClick">OK</Button>
+            <Button Grid.Row="1" Command="{Binding ConfirmEditCommand}">OK</Button>
             <Button
                 Grid.Row="1"
                 Grid.Column="1"
-                Click="CancelClick">
+                Command="{Binding CancelEditCommand}">
                 Cancel
             </Button>
         </Grid>

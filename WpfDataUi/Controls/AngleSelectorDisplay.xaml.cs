@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
@@ -8,16 +8,6 @@ using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
 {
-    #region enums
-
-    public enum AngleType
-    {
-        Degrees,
-        Radians
-    }
-
-    #endregion
-
     /// <summary>
     /// Interaction logic for AngleSelectorDisplay.xaml
     /// </summary>
@@ -28,15 +18,10 @@ namespace WpfDataUi.Controls
 
         TextBoxDisplayLogic mTextBoxLogic;
 
+        readonly AngleSelectorLogic _angleLogic = new AngleSelectorLogic();
+
         decimal? mAngle;
         private bool needsToPushFullCommitOnMouseUp;
-
-        // Tracks unbounded angle accumulation during a dial drag. atan2 only
-        // returns (-180, 180]; the dial must keep winding past those bounds,
-        // so we accumulate deltas (unwrapped at the ±180 seam) onto the
-        // current value instead of assigning atan2 directly.
-        private double? _previousDialAtan2Degrees;
-        private decimal _unsnappedDialAngle;
         #endregion
 
         #region Properties
@@ -181,7 +166,7 @@ namespace WpfDataUi.Controls
 
             Line.DataContext = this;
 
-            mTextBoxLogic = new TextBoxDisplayLogic(this, this.TextBox);
+            mTextBoxLogic = WpfDataUiTextBox.CreateLogic(this, this.TextBox);
 
             this.RefreshContextMenu(TopRowGrid.ContextMenu);
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -222,27 +207,9 @@ namespace WpfDataUi.Controls
 
         private void ApplyTextBoxText()
         {
-            float value;
-            var text = this.TextBox.Text;
-            if(string.IsNullOrEmpty(text))
+            if (_angleLogic.TryParseAngleText(this.TextBox.Text, InstanceMember!.PropertyType, out float? parsed))
             {
-                Angle = null;
-            }
-            else if (float.TryParse(this.TextBox.Text, out value))
-            {
-                Angle = value;
-            }
-            else
-            {
-                // couldn't parse it, so let's try to math operation it?
-                try
-                {
-                    Angle = TextBoxDisplayLogic.TryHandleMathOperation(text, InstanceMember!.PropertyType) as float?;
-                }
-                catch
-                {
-                    // do nothing...
-                }
+                Angle = parsed;
             }
             // This also applies to instance, but it stores
             // the value in the text box logic so ESC works properly
@@ -293,15 +260,15 @@ namespace WpfDataUi.Controls
                 {
                     if (InstanceMember?.IsDefault == true)
                     {
-                        TextBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                        TextBox.Background = DataUiBrushes.DefaultValueBackground;
                     }
                     else if (InstanceMember?.IsIndeterminate == true)
                     {
-                        TextBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+                        TextBox.Background = DataUiBrushes.IndeterminateValueBackground;
                     }
                     else
                     {
-                        TextBox.Background = TextBoxDisplayLogic.CustomValueBackground;
+                        TextBox.Background = DataUiBrushes.CustomValueBackground;
                     }
                 }
             });
@@ -328,72 +295,22 @@ namespace WpfDataUi.Controls
 
         public ApplyValueResult TryGetValueOnUi(out object? result)
         {
-            if (TypeToPushToInstance == AngleType.Radians)
-            {
-                if(mAngle != null)
-                {
-                    result = (float)(System.Math.PI * (double)mAngle / 180.0f);
-                }
-                else
-                {
-                    result = null;
-                }
-
-            }
-            else
-            {
-                if(mAngle != null)
-                {
-                    result = (float)mAngle;
-                }
-                else
-                {
-                    result = null;
-                }
-
-            }
+            result = _angleLogic.ToInstanceValue(mAngle, TypeToPushToInstance);
             return ApplyValueResult.Success;
         }
 
         public ApplyValueResult TrySetValueOnUi(object value)
         {
             ApplyValueResult toReturn = ApplyValueResult.NotSupported;
-            if (value is float asFloat)
+            if (value is float || value is int)
             {
-                var isBeingDragged = Mouse.Captured == EllipseInstance;
-                if (!isBeingDragged)
+                // Don't fight the user's drag with the value it is producing.
+                bool isBeingDragged = value is float
+                    ? Mouse.Captured == EllipseInstance
+                    : this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
+                if (!isBeingDragged && _angleLogic.TryGetDisplayedDegrees(value, TypeToPushToInstance, out float? degrees))
                 {
-                    if (TypeToPushToInstance == AngleType.Radians)
-                    {
-                        this.Angle = 180 * (float)(asFloat / Math.PI);
-
-                    }
-                    else
-                    {
-                        this.Angle = asFloat;
-                    }
-
-
-                }
-
-                toReturn = ApplyValueResult.Success;
-            }
-            else if(value is int asInt)
-            {
-                var isOver = this.IsMouseOver && Mouse.LeftButton == MouseButtonState.Pressed;
-                if (!isOver)
-                {
-                    if (TypeToPushToInstance == AngleType.Radians)
-                    {
-                        this.Angle = 180 * (float)(asInt / Math.PI);
-
-                    }
-                    else
-                    {
-                        this.Angle = asInt;
-                    }
-
-
+                    this.Angle = degrees;
                 }
 
                 toReturn = ApplyValueResult.Success;
@@ -420,10 +337,8 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf)
-        {
-            return ((int)(System.Math.Sign(valueToRound) * .5m + valueToRound / multipleOf)) * multipleOf;
-        }
+        public static decimal RoundDecimal(decimal valueToRound, decimal multipleOf) =>
+            AngleSelectorLogic.RoundDecimal(valueToRound, multipleOf);
 
         #region Event Handlers
         private void TextBox_PreviewKeyDown_1(object? sender, KeyEventArgs e)
@@ -456,57 +371,15 @@ namespace WpfDataUi.Controls
             if (Mouse.LeftButton == MouseButtonState.Pressed)
             {
                 var point = Mouse.GetPosition(CenterPoint);
+                bool isShiftDown = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
 
-                if (point.X != 0 || point.Y != 0)
+                if (_angleLogic.TryDragTo(point.X, point.Y, isShiftDown, SnappingInterval, out decimal newAngle) &&
+                    mAngle != newAngle)
                 {
-                    point.Y *= -1;
-
-                    var currentAtan2Degrees = 180.0 * (Math.Atan2(point.Y, point.X) / Math.PI);
-
-                    if (_previousDialAtan2Degrees == null)
-                    {
-                        // First sample of this drag: anchor to the clicked
-                        // position so a plain click still sets the absolute
-                        // angle the user clicked on.
-                        _unsnappedDialAngle = (decimal)currentAtan2Degrees;
-                    }
-                    else
-                    {
-                        var delta = currentAtan2Degrees - _previousDialAtan2Degrees.Value;
-                        // Unwrap the ±180 atan2 seam so a continuous drag
-                        // accumulates monotonically instead of snapping.
-                        if (delta > 180) delta -= 360;
-                        else if (delta < -180) delta += 360;
-                        _unsnappedDialAngle += (decimal)delta;
-                    }
-                    _previousDialAtan2Degrees = currentAtan2Degrees;
-
-                    var effectiveSnappingInterval = SnappingInterval;
-
-                    if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
-                    {
-                        // this will snap to 15 pixels:
-                        if (effectiveSnappingInterval == null || effectiveSnappingInterval < 15)
-                        {
-                            effectiveSnappingInterval = 15;
-                        }
-                    }
-
-                    decimal newAngle = _unsnappedDialAngle;
-                    if (effectiveSnappingInterval != null)
-                    {
-                        newAngle = RoundDecimal(_unsnappedDialAngle, effectiveSnappingInterval.Value);
-                    }
-
-                    if (mAngle != newAngle)
-                    {
-                        // don't set the float property, this causes a cast to float and loses precision, resulting
-                        // in the text box displaying things like 1.00001 instead of 1
-                        //Angle = angleAsInt;
-                        mAngle = newAngle;
-                        ReactToAngleSetThroughProperty(SetPropertyCommitType.Intermediate);
-                        needsToPushFullCommitOnMouseUp = true;
-                    }
+                    // Set the decimal, not the float property, so the text box shows 1 rather than 1.00001.
+                    mAngle = newAngle;
+                    ReactToAngleSetThroughProperty(SetPropertyCommitType.Intermediate);
+                    needsToPushFullCommitOnMouseUp = true;
                 }
             }
         }
@@ -529,8 +402,7 @@ namespace WpfDataUi.Controls
         {
             System.Windows.Input.Mouse.Capture(EllipseInstance);
 
-            _previousDialAtan2Degrees = null;
-            _unsnappedDialAngle = mAngle ?? 0;
+            _angleLogic.BeginDialDrag(mAngle);
         }
 
         private void Ellipse_MouseUp(object? sender, MouseButtonEventArgs e)

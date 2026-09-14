@@ -452,6 +452,12 @@ now done, and no `WindowsFormsHost` remains in the tool.**
 effort, then decide the reach-vs-cost question (see `open-questions.md` and the roadmap **Later**
 item) with data instead of a guess.
 
+> **Decided (2026-09-09).** The bet is taken: ADR-0017 commits to a full Avalonia cutover. The
+> measured prototype is now phase 10 of `avalonia-migration/README.md`, and every phase there
+> assumes the groundwork above as its foundation (`avalonia-migration/foundation.md`). This doc
+> stays as the record of Phases 0–4b; new decoupling gaps found during the migration are filed as
+> issues against the migration phase that surfaced them.
+
 ## Phase 2 — working notes (transient scaffolding)
 
 > **Why this section exists, and the rule that governs it.** Phase 2 is a many-pass grind — a

@@ -13,7 +13,7 @@ There are **three independent icon pipelines** in Gum. Pick the right one before
 | Where | Format on disk | Runtime form | Theming | Detail skill |
 |---|---|---|---|---|
 | **Tool WPF chrome** (variable grid, dock/anchor/alignment, toggle-button option displays) | SVG in `Gum/Content/Svg/` | `PathGeometry` resources in `Gum/Themes/GumIcons.xaml`, consumed via `<controls:GumIcon Icon="…"/>` | `Fill` follows the control's `Foreground` (theme brush) | this file |
-| **Tool tree view** (Screens/Components/Behaviors panel, '!' overlay, sizing/origin badges) | PNG in `Gum/Content/Icons/UpdatedTreeViewIcons/` | `Image` cached in `ElementTreeViewCreator._originalImages`, indexed by `ImageIndex` constants | White-on-transparent source, multiplicatively tinted from `Frb.Colors.Icon.*` per a key→color map | [gum-tool-tree-view](../gum-tool-tree-view/SKILL.md) |
+| **Tool tree view** (Screens/Components/Behaviors panel, '!' overlay, sizing/origin badges) | PNG in `Gum/Content/Icons/UpdatedTreeViewIcons/` | `TreeIconCatalog` (index to artwork + color key), drawn by `TreeIconRegistry` (WPF) and `AvaloniaTreeIcons` (Avalonia) | White-on-transparent source, multiplicatively tinted from `Frb.Colors.Icon.*` per a key→color map | [gum-tool-tree-view](../gum-tool-tree-view/SKILL.md) |
 | **Forms runtime default visuals** (in-game UI on the user's MonoGame/Skia/etc. surface — not the tool itself) | Sprite sheet (PNG atlas) shipped with `Styling.ActiveStyle` | Sprite coords from `Icons` table, drawn through the runtime sprite system | Style-driven (V2/V3 styling); no DynamicResource concept | [gum-forms-default-visuals](../gum-forms-default-visuals/SKILL.md) |
 
 Don't mix them. A tree-view PNG is not a `GumIcon`. A `GumIcon` `PathGeometry` cannot be drawn into the MonoGame viewport. The Forms sprite sheet has nothing to do with the tool's WPF chrome.
@@ -30,6 +30,11 @@ These icons live *inside* WPF displayer controls (e.g. the variable grid's origi
 - `Gum/Themes/GumIcons.xaml` — generated `ResourceDictionary` of `PathGeometry` keyed by SVG filename. Merged in `Frb.Styles.Defaults.xaml`, so it's globally available.
 - `Gum/Themes/GumIconKind.g.cs` — generated enum + `GumIconKindMap.GetResourceKey`, plus a `TypeConverter` that accepts `Icon="folder-star"` or `Icon="FolderStar"` in XAML.
 - `Gum/Controls/GumIcon.cs` + style/template in `Frb.Styles.Defaults.xaml` — templated `Control` with `PART_Path`/`PART_PathSecondary`/`PART_Image`/`PART_Box`. Both paths fill from `{TemplateBinding Foreground}`, so the icon inherits theme tint from its parent button/style. `SecondaryOpacity` defaults to 0.32.
+
+**Avalonia head.** `Tool/Gum.Avalonia/Themes/GumIcon.cs` reads the same `GumIcons.xaml`, embedded
+unchanged, at runtime: `new GumIcon { Icon = "AnchorTopLeft" }` draws in the inherited
+`TextElement.Foreground` with the secondary tone at 0.32. Running the ripper updates both heads;
+there is no Avalonia-specific generated file.
 
 **Adding a new icon:**
 
@@ -57,11 +62,11 @@ These icons live *inside* WPF displayer controls (e.g. the variable grid's origi
 
 ## Pipeline 2 — Tool tree view (PNG `ImageList`)
 
-Used by the main element tree (`MultiSelectTreeView`) and the flat search list. Uses `WinForms`-era PNGs because the tree view itself is a WinForms-derived control. White/grayscale PNGs are runtime-tinted from theme colors.
+Used by the element tree, its search results, the Standards palette, and tree context menus, in both heads. White-on-transparent PNGs are tinted at draw time with a theme color (`Frb.Colors.Icon.*`); the index-to-artwork-and-color table is `Tool/TreeViewPlugin.Core/TreeIconCatalog.cs`, shared by the WPF `TreeIconRegistry` and the Avalonia `AvaloniaTreeIcons` (which links the same PNGs as `AvaloniaResource`s).
 
-**To add a tree-view icon, see [gum-tool-tree-view](../gum-tool-tree-view/SKILL.md).** The short version: drop a white-on-transparent PNG into `Gum/Content/Icons/UpdatedTreeViewIcons/`, append a `TryInjectIcon` call in `InjectDynamicIcons()` matching the next `ImageIndex` constant, and add a color-map entry in `GetCurrentColorMap()` if the icon should pick up a theme color other than `Frb.Colors.Primary`.
+**To add a tree-view icon, see [gum-tool-tree-view](../gum-tool-tree-view/SKILL.md).** The short version: drop a white-on-transparent PNG into `Gum/Content/Icons/UpdatedTreeViewIcons/`, add a constant to `TreeNodeImageIndices`, and add an entry (key, artwork path, theme color key) to `TreeIconCatalog`. Both heads pick it up; `ElementTreeViewTests.EveryCatalogIcon_ResolvesToLinkedArtwork` fails if the Avalonia head cannot find the PNG.
 
-Do not migrate tree-view icons to `GumIcon` — the tree view's `MultiSelectTreeView`/`ImageList` model expects `Image` instances, not WPF `Control`s, and the index-based lookup is wired through `ElementTreeViewManager`.
+Do not migrate tree-view icons to `GumIcon`: tree nodes carry an `ImageIndex` that `TreeNodeImageLogic` computes headlessly, and the catalog maps that index to tinted artwork in both heads.
 
 ## Pipeline 3 — Forms runtime default visuals
 

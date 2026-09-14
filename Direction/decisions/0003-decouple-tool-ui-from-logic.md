@@ -1,6 +1,8 @@
 # 0003. Decouple the Gum tool's UI from its application logic
 
-- **Status:** Accepted
+- **Status:** Accepted. The *deferral* of the Avalonia swap is superseded by
+  [0017](0017-commit-to-avalonia-full-cutover.md) (2026-09-09); the decoupling decision itself
+  stands and is the foundation 0017 builds on.
 - **Date:** 2026-06-20
 - **Deciders:** Victor Chelaru, Claude
 

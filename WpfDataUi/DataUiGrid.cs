@@ -1,12 +1,7 @@
-﻿
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
-using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -16,21 +11,15 @@ using WpfDataUi.EventArguments;
 namespace WpfDataUi;
 
 /// <summary>
-/// Interaction logic for DataUiGrid.xaml
+/// The WPF view of a <see cref="DataUiGridModel"/>: an <see cref="ItemsControl"/> of categories
+/// whose rows are <see cref="SingleDataUiContainer"/>s. All category, filter, and multi-select
+/// logic lives in the model.
 /// </summary>
-public class DataUiGrid : ItemsControl, INotifyPropertyChanged
+public class DataUiGrid : ItemsControl, INotifyPropertyChanged, IDataUiGrid
 {
     #region Fields
 
-    // Some members are optinally visible based off of a delegate.  We need to store
-    // these off so that the delegate can be re-evaluated every time a member changes,
-    // as the member may be based off of the current state of the instance.
-    private readonly Dictionary<InstanceMember, Func<InstanceMember, bool>> _membersWithOptionalVisibility
-        = new();
-
-    private readonly MemberCategoryFilter _memberFilter = new();
-
-    private Func<InstanceMember, bool>? _memberFilterPredicate;
+    private readonly DataUiGridModel _model;
 
     #endregion
 
@@ -43,38 +32,20 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
             typeof(DataUiGrid),
             new PropertyMetadata(null, HandleInstanceChanged));
 
-    public bool IsAutoPopulateCategoriesEnabled { get; set; } = true;
+    public bool IsAutoPopulateCategoriesEnabled
+    {
+        get => _model.IsAutoPopulateCategoriesEnabled;
+        set => _model.IsAutoPopulateCategoriesEnabled = value;
+    }
 
     private static void HandleInstanceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var grid = (DataUiGrid)d;
-
-        if (e.OldValue is INotifyPropertyChanged oldNpc)
-            oldNpc.PropertyChanged -= grid.HandleInstancePropertyChanged;
-
-        grid._membersWithOptionalVisibility.Clear();
-
-        if(grid.IsAutoPopulateCategoriesEnabled)
-        {
-            grid.PopulateCategories();
-        }
-
-
-        if (grid.Instance is INotifyPropertyChanged newNpc)
-            newNpc.PropertyChanged += grid.HandleInstancePropertyChanged;
+        grid._model.Instance = e.NewValue;
     }
 
-    private void HandleInstancePropertyChanged(object? sender, PropertyChangedEventArgs e) =>
-        RefreshDelegateBasedElementVisibility();
-
-    /// <summary>
-    /// Sets the displayed instance.  Setting this property
-    /// refreshes the Categories object, which means that any
-    /// changes made directly to Categories, or applied through 
-    /// the Apply function will only persist until the next time
-    /// this property is set
-    /// </summary>
-    public object Instance
+    /// <inheritdoc cref="DataUiGridModel.Instance"/>
+    public object? Instance
     {
         get => GetValue(InstanceProperty);
         set => SetValue(InstanceProperty, value);
@@ -104,7 +75,7 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
         return (bool)element.GetValue(OverridesIsDefaultStylingProperty);
     }
 
-    // Using a DependencyProperty as the backing store for OverridesIsDefaultStyling.  This enables animation, styling, binding, etc...
+    // When set, rows show the per-row "is edited" icon instead of displayer-painted default backgrounds.
     public static readonly DependencyProperty OverridesIsDefaultStylingProperty =
         DependencyProperty.RegisterAttached("OverridesIsDefaultStyling", typeof(bool), typeof(DataUiGrid), new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.Inherits));
 
@@ -121,22 +92,35 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     #region Properties
 
-    public ObservableCollection<Type> TypesToIgnore { get; } = [];
-    public ObservableCollection<string> MembersToIgnore { get; } = [];
-    public BulkObservableCollection<MemberCategory> Categories { get; } = new();
+    /// <summary>The model this grid renders.</summary>
+    public DataUiGridModel Model => _model;
+
+    public ObservableCollection<Type> TypesToIgnore => _model.TypesToIgnore;
+    public ObservableCollection<string> MembersToIgnore => _model.MembersToIgnore;
+    public BulkObservableCollection<MemberCategory> Categories => _model.Categories;
 
     #endregion
 
     #region Events
 
-    public event Action<string, BeforePropertyChangedArgs> BeforePropertyChange;
+    public event Action<string, BeforePropertyChangedArgs>? BeforePropertyChange
+    {
+        add => _model.BeforePropertyChange += value;
+        remove => _model.BeforePropertyChange -= value;
+    }
 
     /// <summary>
     /// Raised whenever an instance member is set by the UI, such as the user typing a value in a text box.
     /// </summary>
-    public event Action<string, PropertyChangedArgs> PropertyChange;
+    public event Action<string, PropertyChangedArgs>? PropertyChange
+    {
+        add => _model.PropertyChange += value;
+        remove => _model.PropertyChange -= value;
+    }
 
+#pragma warning disable CS0067 // Required by INotifyPropertyChanged; reserved for derived classes.
     public event PropertyChangedEventHandler? PropertyChanged;
+#pragma warning restore CS0067
 
     #endregion
 
@@ -151,467 +135,39 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
 
     public DataUiGrid()
     {
-        ItemsSource = Categories;
-
-        Categories.CollectionChanged += HandleCategoriesChanged;
-        TypesToIgnore.CollectionChanged += (_, __) => PopulateCategories();
-        MembersToIgnore.CollectionChanged += HandleMembersToIgnoreChanged;
-    }
-
-    private void HandleCategoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            // Every path that replaces the collection wholesale lands here, both SetCategories and
-            // PopulateCategories, so this is where the filter's remembered rows stop describing
-            // anything on screen. Invalidating per caller instead would leave the snapshot pinning
-            // discarded categories whenever a new caller forgot to do it.
-            _memberFilter.Invalidate();
-            return; // subscriptions are managed manually by SetCategories when Reset is fired
-        }
-
-        Subscribe(e.NewItems);
-        Unsubscribe(e.OldItems);
-
-        // Categories are also swapped in one at a time rather than wholesale (a selection change
-        // reconciles them in place), and a category arriving that way brings its full member list.
-        _memberFilter.Apply(Categories, _memberFilterPredicate);
-    }
-
-    private void Subscribe(IList newItems)
-    {
-        if (newItems == null) return;
-        foreach (MemberCategory category in newItems)
-        {
-            category.MemberValueChangedByUi += HandleCategoryMemberChanged;
-        }
-    }
-
-    private void Unsubscribe(IList oldItems)
-    {
-        if (oldItems == null) return;
-        foreach (MemberCategory category in oldItems)
-        {
-            category.MemberValueChangedByUi -= HandleCategoryMemberChanged;
-        }
-    }
-
-    static Dictionary<string, bool> _expansionStates = new();
-    /// <summary>
-    /// Replaces all categories at once, firing a single Reset notification instead of one
-    /// notification per category This is faster than calling Categories.Clear() followed
-    /// by individual Categories.Add() calls when rebuilding the grid.
-    /// </summary>
-    public void SetCategories(IList<MemberCategory> newCategories)
-    {
-        // Runs before the replacement below, whose Reset drops the filter snapshot this reads from.
-        StoreExpandedStates();
-
-        foreach (MemberCategory category in newCategories)
-        {
-            if (_expansionStates.TryGetValue(category.Name, out bool expanded))
-            {
-                category.IsExpanded = expanded;
-            }
-        }
-        Unsubscribe(Categories);
-        Categories.ReplaceAll(newCategories);
-        Subscribe((IList)newCategories);
-
-        // Selecting a different object rebuilds the grid, which would otherwise silently drop a filter
-        // the box still shows as active.
-        _memberFilter.Apply(Categories, _memberFilterPredicate);
-    }
-
-    /// <summary>
-    /// Shows only the members <paramref name="isMatch"/> accepts, expanding whichever categories hold
-    /// them. Passing null clears the filter and restores every category's members, their order, and the
-    /// expansion state the user had chosen. The predicate is remembered and re-applied whenever the grid
-    /// rebuilds its categories.
-    /// </summary>
-    public void ApplyMemberFilter(Func<InstanceMember, bool>? isMatch)
-    {
-        _memberFilterPredicate = isMatch;
-        _memberFilter.Apply(Categories, isMatch);
-    }
-
-    private void StoreExpandedStates()
-    {
-        foreach (var item in Categories)
-        {
-            // A filter force-expands the categories holding its matches. Persisting that would let a
-            // search the user has already dismissed reorganize the grid for every later selection.
-            _expansionStates[item.Name] = _memberFilter.GetPreFilterIsExpanded(item);
-        }
-    }
-
-    private void HandleCategoryMemberChanged(InstanceMember member)
-    {
-        HandleInstanceMemberSetByUi(member, null);
+        _model = new DataUiGridModel();
+        ItemsSource = _model.Categories;
     }
 
     #endregion
 
     #region Methods
 
-    public void Apply(TypeMemberDisplayProperties properties)
-    {
-        foreach (var property in properties.DisplayProperties)
-        {
-            // does this member exist?
-            InstanceMember member;
-            MemberCategory category;
+    /// <inheritdoc cref="DataUiGridModel.SetCategories"/>
+    public void SetCategories(IList<MemberCategory> newCategories) => _model.SetCategories(newCategories);
 
-            bool found = TryGetInstanceMember(property.Name, out member, out category);
+    /// <inheritdoc cref="DataUiGridModel.ApplyMemberFilter"/>
+    public void ApplyMemberFilter(Func<InstanceMember, bool>? isMatch) => _model.ApplyMemberFilter(isMatch);
 
-            if (member != null)
-            {
-                ApplyDisplayPropertyToInstanceMember(property, member, category);
+    public void Apply(TypeMemberDisplayProperties properties) => _model.Apply(properties);
 
-            }
-        }
+    public void IgnoreAllMembers() => _model.IgnoreAllMembers();
 
-        RefreshDelegateBasedElementVisibility();
-    }
+    public bool TryGetInstanceMember(string name, out InstanceMember? member, out MemberCategory? category) =>
+        _model.TryGetInstanceMember(name, out member, out category);
 
-    public void IgnoreAllMembers()
-    {
-        if (this.Instance == null)
-        {
-            throw new InvalidOperationException("The Instance must be set before calling this");
-        }
-        else
-        {
-            Type type = Instance.GetType();
+    public InstanceMember? GetInstanceMember(string memberName) => _model.GetInstanceMember(memberName);
 
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-            {
-                MemberInfo memberInfo = field as MemberInfo;
-                MembersToIgnore.Add(memberInfo.Name);
-            }
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                MemberInfo memberInfo = property as MemberInfo;
-                MembersToIgnore.Add(memberInfo.Name);
-            }
+    public void MoveMemberToCategory(string memberName, string categoryName) =>
+        _model.MoveMemberToCategory(memberName, categoryName);
 
-        }
-    }
+    public void InsertSpacesInCamelCaseMemberNames() => _model.InsertSpacesInCamelCaseMemberNames();
 
-    private void RefreshDelegateBasedElementVisibility()
-    {
-        foreach (var kvp in _membersWithOptionalVisibility.ToList())
-        {
-            var member = kvp.Key;
-            var category = member.Category;
-            bool shouldBeVisible = !kvp.Value(member);
-            bool isVisible = category.Members.Contains(member);
-
-            if (isVisible && !shouldBeVisible)
-                category.Members.Remove(member);
-            else if (!isVisible && shouldBeVisible)
-                category.Members.Add(member);
-        }
-    }
-
-    private void ApplyDisplayPropertyToInstanceMember(InstanceMemberDisplayProperties displayProperties, InstanceMember member, MemberCategory category)
-    {
-        if (displayProperties.IsHiddenDelegate != null && _membersWithOptionalVisibility.ContainsKey(member) == false)
-        {
-            _membersWithOptionalVisibility.Add(member, displayProperties.IsHiddenDelegate);
-        }
-
-        //if (displayProperties.GetEffectiveIsHidden(member.Instance))
-        // let's instead just use the hidden property - we will apply functions after
-        if (displayProperties.IsHidden)
-        {
-            category.Members.Remove(member);
-        }
-        else
-        {
-            // Put an if-statement for debugging
-            if (member.PreferredDisplayer != displayProperties.PreferredDisplayer)
-            {
-                member.PreferredDisplayer = displayProperties.PreferredDisplayer;
-            }
-            member.DisplayName = displayProperties.DisplayName;
-            if (!string.IsNullOrEmpty(displayProperties.Category) && category.Name != displayProperties.Category)
-            {
-                category.Members.Remove(member);
-
-                MemberCategory newCategory = GetOrInstantiateAndAddMemberCategory(displayProperties.Category);
-                member.Category = newCategory;
-                newCategory.Members.Add(member);
-            }
-
-        }
-    }
-
-    public bool TryGetInstanceMember(string name, out InstanceMember member, out MemberCategory category)
-    {
-        member = null;
-        category = null;
-
-        foreach (var possibleCategory in this.Categories)
-        {
-            if (member != null)
-            {
-                break;
-            }
-            foreach (var possibleMember in possibleCategory.Members)
-            {
-                if (possibleMember.Name == name)
-                {
-                    member = possibleMember;
-                    category = possibleCategory;
-                    break;
-                }
-            }
-        }
-        return member != null;
-    }
-
-    public InstanceMember GetInstanceMember(string memberName)
-    {
-        if (TryGetInstanceMember(memberName, out InstanceMember member, out MemberCategory _))
-        {
-            return member;
-        }
-        return null;
-    }
-
-    private void HandleMembersToIgnoreChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        // If we do this, we completely wipe all custom categories. No good!
-        switch (e.Action)
-        {
-            case NotifyCollectionChangedAction.Add:
-
-                List<string> newItems = [];
-                foreach (var item in e.NewItems)
-                {
-                    newItems.Add(item as string);
-                }
-
-                foreach (var category in this.Categories)
-                {
-                    // ignore was added, so try to remove it:
-                    for (int i = category.Members.Count - 1; i > -1; i--)
-                    {
-                        if (newItems.Contains(category.Members[i].Name))
-                        {
-                            category.Members.RemoveAt(i);
-                        }
-                    }
-
-                }
-                break;
-            case NotifyCollectionChangedAction.Remove:
-
-                List<string> oldItems = [];
-                foreach (var item in e.OldItems)
-                {
-                    oldItems.Add(item as string);
-                }
-
-                if (Instance != null)
-                {
-                    Type type = Instance.GetType();
-
-                    foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-                    {
-                        MemberInfo memberInfo = field as MemberInfo;
-                        if (oldItems.Contains(field.Name))
-                        {
-                            TryCreateCategoryAndInstanceFor(memberInfo);
-                        }
-                    }
-                    foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                    {
-                        if (oldItems.Contains(property.Name))
-                        {
-                            MemberInfo memberInfo = property as MemberInfo;
-                            TryCreateCategoryAndInstanceFor(memberInfo);
-                        }
-                    }
-                }
-                break;
-            default:
-                // This is a destructive action, it removes previously-added custom members.
-                // This is how things used to work, but Vic would like to get rid of it completely.
-                // However, there may be cases that haven't been handled so we're keeping this as a fallback.
-                PopulateCategories();
-                break;
-        }
-    }
-
-    private void HandleTypesToIgnoreChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        PopulateCategories();
-    }
-
-    private void PopulateCategories()
-    {
-        StoreExpandedStates();
-
-        this.Categories.Clear();
-
-        if (Instance != null)
-        {
-            Type type = Instance.GetType();
-
-            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
-            {
-                MemberInfo memberInfo = field as MemberInfo;
-                TryCreateCategoryAndInstanceFor(memberInfo);
-            }
-            foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
-            {
-                MemberInfo memberInfo = property as MemberInfo;
-                TryCreateCategoryAndInstanceFor(memberInfo);
-            }
-        }
-
-    }
-
-    public void MoveMemberToCategory(string memberName, string categoryName)
-    {
-        var member = Categories.SelectMany(item => item.Members).FirstOrDefault(item => item.Name == memberName);
-        var desiredCategory = Categories.FirstOrDefault(item => item.Name == categoryName);
-
-        if (desiredCategory == null)
-        {
-            desiredCategory = new MemberCategory(categoryName);
-            Categories.Add(desiredCategory);
-        }
-
-        if (member != null && member.Category != desiredCategory)
-        {
-            member.Category.Members.Remove(member);
-            desiredCategory.Members.Add(member);
-        }
-    }
-
-    private void TryCreateCategoryAndInstanceFor(MemberInfo memberInfo)
-    {
-        if (ShouldCreateUiFor(memberInfo.GetMemberType(), memberInfo.Name))
-        {
-
-            string categoryName = GetCategoryAttributeFor(memberInfo);
-
-            MemberCategory memberCategory = GetOrInstantiateAndAddMemberCategory(categoryName);
-
-            InstanceMember newMember = new InstanceMember(memberInfo.Name, Instance);
-            AssignInstanceMemberEvents(newMember);
-            newMember.Category = memberCategory;
-            memberCategory.Members.Add(newMember);
-        }
-    }
-
-    private void AssignInstanceMemberEvents(InstanceMember newMember)
-    {
-        // don't do this here, because this can get called before custom properties are added.
-        // We're going to rely on the Memberategory to raise MemberValueChangedByUi
-        //newMember.AfterSetByUi += HandleInstanceMemberSetByUi;
-        newMember.BeforeSetByUi += HandleInstanceMemberBeforeSetByUi;
-    }
-
-    private void HandleInstanceMemberBeforeSetByUi(object? sender, EventArgs e)
-    {
-        if (BeforePropertyChange != null)
-        {
-            BeforePropertyChangedArgs args = (BeforePropertyChangedArgs)e;
-            args.Owner = this.Instance;
-            args.OldValue = ((InstanceMember)sender).Value;
-            args.PropertyName = ((InstanceMember)sender).Name;
-
-            BeforePropertyChange(((InstanceMember)sender).Name, args);
-
-        }
-
-    }
-
-    private void HandleInstanceMemberSetByUi(object? sender, EventArgs e)
-    {
-        if (PropertyChange != null && sender is InstanceMember senderInstanceMember)
-        {
-            PropertyChangedArgs args = new PropertyChangedArgs();
-            args.Owner = this.Instance;
-
-            // This assumes reflection, which is bad...
-            //args.NewValue = LateBinder.GetValueStatic(this.Instance, ((InstanceMember)sender).Name);
-
-            args.OldValue = senderInstanceMember.OldValue;
-            args.NewValue = senderInstanceMember.Value;
-            args.PropertyName = senderInstanceMember.Name;
-
-            PropertyChange(senderInstanceMember.Name, args);
-        }
-        foreach (var item in Items)
-        {
-            MemberCategory memberCategory = (MemberCategory)item;
-
-            foreach (var instanceMember in memberCategory.Members)
-            {
-                if (sender is InstanceMember senderInstanceMemberInner && instanceMember.Name != senderInstanceMemberInner.Name)
-                {
-                    instanceMember.SimulateValueChanged();
-                }
-            }
-        }
-
-        RefreshDelegateBasedElementVisibility();
-    }
-
-    private MemberCategory GetOrInstantiateAndAddMemberCategory(string categoryName)
-    {
-        MemberCategory memberCategory = Categories.FirstOrDefault(item => item.Name == categoryName);
-        if (memberCategory == null)
-        {
-            memberCategory = new MemberCategory(categoryName);
-            Categories.Add(memberCategory);
-        }
-        return memberCategory;
-    }
-
-    private bool ShouldCreateUiFor(Type type, string memberName)
-    {
-        if (TypesToIgnore.Contains(type))
-        {
-            return false;
-        }
-
-        if (MembersToIgnore.Contains(memberName))
-        {
-            return false;
-        }
-
-        if (typeof(Delegate).IsAssignableFrom(type))
-        {
-            return false;
-        }
-
-        return true;
-    }
-
-    private static string GetCategoryAttributeFor(MemberInfo memberInfo)
-    {
-        var attributes = memberInfo.GetCustomAttributes(typeof(CategoryAttribute), true);
-
-        string category = "Uncategorized";
-
-        if (attributes != null && attributes.Length != 0)
-        {
-            CategoryAttribute attribute = attributes.FirstOrDefault() as CategoryAttribute;
-            category = attribute.Category;
-        }
-        return category;
-    }
+    public void SetMultipleCategoryLists(List<List<MemberCategory>> listOfCategoryLists) =>
+        _model.SetMultipleCategoryLists(listOfCategoryLists);
 
     public void Refresh()
     {
-
-        // might this be faster?
         for (int i = 0; i < Items.Count; i++)
         {
             var uiElement =
@@ -639,209 +195,15 @@ public class DataUiGrid : ItemsControl, INotifyPropertyChanged
                 }
             }
 
-            if (!handledByRefresh)
+            if (!handledByRefresh && Items[i] is MemberCategory memberCategory)
             {
-                MemberCategory memberCategory = Items[i] as MemberCategory;
-
                 foreach (var instanceMember in memberCategory.Members)
                 {
                     instanceMember.SimulateValueChanged();
-
-                }
-            }
-
-        }
-
-        //foreach (var item in InternalControl.Items)
-        //{
-        //    MemberCategory memberCategory = item as MemberCategory;
-
-        //    foreach (var instanceMember in memberCategory.Members)
-        //    {
-        //        instanceMember.SimulateValueChanged();
-
-        //    }
-        //}
-
-    }
-
-    public void InsertSpacesInCamelCaseMemberNames()
-    {
-        foreach (var category in Categories)
-        {
-            foreach (var member in category.Members)
-            {
-                if (string.IsNullOrEmpty(member.DisplayName))
-                {
-                    throw new Exception("This member does not have a display name, so it cannot have camel cases inserted");
-                }
-                member.DisplayName = InsertSpacesInCamelCaseString(member.DisplayName);
-            }
-        }
-    }
-
-    static string InsertSpacesInCamelCaseString(string originalString)
-    {
-        // Normally in reverse loops you go til i > -1, but 
-        // we don't want the character at index 0 to be tested.
-        for (int i = originalString.Length - 1; i > 0; i--)
-        {
-            if (char.IsUpper(originalString[i]) && i != 0
-                // make sure there's not already a space there
-                && originalString[i - 1] != ' '
-                )
-            {
-                originalString = originalString.Insert(i, " ");
-            }
-        }
-
-        return originalString;
-    }
-
-    public void SetMultipleCategoryLists(List<List<MemberCategory>> listOfCategoryLists)
-    {
-        Dictionary<string, InstanceMember> alreadyAddedMembers = [];
-
-        List<MemberCategory> effectiveCategory = [];
-
-        foreach (var instance in listOfCategoryLists)
-        {
-            foreach (var category in instance)
-            {
-                var currentCategory = effectiveCategory.FirstOrDefault(existing => existing.Name == category.Name);
-                if(currentCategory == null)
-                {
-                    currentCategory = new MemberCategory();
-                    currentCategory.Name = category.Name;
-                    currentCategory.HeaderColor = category.HeaderColor;
-                    effectiveCategory.Add(currentCategory);
-                }
-
-                foreach (var member in category.Members)
-                {
-                    var isExisting = alreadyAddedMembers.TryGetValue(member.DisplayName, out var foundMember);
-                    if (!isExisting)
-                    {
-                        alreadyAddedMembers.Add(member.DisplayName, member);
-
-                        var multiSelectInstanceMember = TryCreateMultiGroup(listOfCategoryLists, member);
-                        if (multiSelectInstanceMember != null)
-                        {
-                            currentCategory.Members.Add(multiSelectInstanceMember);
-                        }
-                    }
                 }
             }
         }
-
-        SetCategories(effectiveCategory);
-    }
-
-    private MultiSelectInstanceMember TryCreateMultiGroup(List<List<MemberCategory>> source, InstanceMember templateMember)
-    {
-        List<InstanceMember> membersToAdd = [];
-        foreach (var categoryList in source)
-        {
-            foreach (var category in categoryList)
-            {
-                membersToAdd.AddRange(category.Members.Where(item => item.DisplayName == templateMember.DisplayName));
-            }
-        }
-
-        var shouldExclude = GetIfShouldExclude(membersToAdd);
-
-        if (!shouldExclude)
-        {
-            var multiSelectInstanceMember = new MultiSelectInstanceMember();
-            multiSelectInstanceMember.Name = templateMember.Name;
-            multiSelectInstanceMember.DisplayName = templateMember.DisplayName;
-            multiSelectInstanceMember.PreferredDisplayer = templateMember.PreferredDisplayer;
-            multiSelectInstanceMember.InstanceMembers = membersToAdd;
-            multiSelectInstanceMember.IsReadOnly = membersToAdd.Any(item => item.IsReadOnly);
-            return multiSelectInstanceMember;
-        }
-        else
-        {
-            return null;
-        }
-
-
-    }
-
-    private bool GetIfShouldExclude(List<InstanceMember> membersToAdd)
-    {
-        var shouldExcludeFromCustomOptions = false;
-        // They're all null
-        if (membersToAdd.All(item => item.CustomOptions == null))
-        {
-            shouldExcludeFromCustomOptions = false;
-        }
-        // They all have 
-        else if (membersToAdd.All(item => item.CustomOptions?.Count == 0))
-        {
-            shouldExcludeFromCustomOptions = false;
-        }
-        else if (membersToAdd.Any(item => item.CustomOptions == null || item.CustomOptions.Count == 0))
-        {
-            shouldExcludeFromCustomOptions = true;
-        }
-        else
-        {
-            // none are null or have 0 items, 
-            var firstCustomOptions = membersToAdd.First().CustomOptions;
-            foreach (var item in membersToAdd.Skip(1))
-            {
-                if (Differ(firstCustomOptions, item.CustomOptions))
-                {
-                    shouldExcludeFromCustomOptions = true;
-                    break;
-                }
-            }
-        }
-
-        return shouldExcludeFromCustomOptions;
-
-    }
-
-
-    private bool Differ(IList<object> first, IList<object> second)
-    {
-        if (first.Count != second.Count)
-        {
-            return true;
-        }
-        {
-            for (int i = 0; i < first.Count; i++)
-            {
-                if (!object.Equals(first[i], second[i]))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     #endregion
-}
-
-/// <summary>
-/// An ObservableCollection that supports replacing all items with a single Reset notification,
-/// avoiding the per-item CollectionChanged notifications that ObservableCollection fires by default.
-/// </summary>
-public class BulkObservableCollection<T> : ObservableCollection<T>
-{
-    /// <summary>
-    /// Clears all items and adds the new items, firing a single Reset CollectionChanged notification
-    /// instead of individual Add/Remove notifications per item.
-    /// </summary>
-    public void ReplaceAll(IEnumerable<T> newItems)
-    {
-        Items.Clear();
-        foreach (var item in newItems)
-            Items.Add(item);
-        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Count"));
-        OnPropertyChanged(new System.ComponentModel.PropertyChangedEventArgs("Item[]"));
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-    }
 }

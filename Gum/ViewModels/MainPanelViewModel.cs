@@ -40,6 +40,7 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
     }
 
     private readonly Func<FrameworkElement, PluginTab> _pluginTabFactory;
+    private readonly TabViewRegistry _tabViewRegistry;
     private ObservableCollection<PluginTab> PluginTabs { get; } = [];
 
     public ICollectionView CenterView { get; }
@@ -55,9 +56,10 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
         set => Set(value);
     }
 
-    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
+    public MainPanelViewModel(Func<FrameworkElement, PluginTab> pluginTabFactory, TabViewRegistry tabViewRegistry, IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
     {
         _layoutSettings = layoutSettings;
+        _tabViewRegistry = tabViewRegistry;
         _pluginTabFactory = pluginTabFactory;
         messenger.RegisterAll(this);
 
@@ -98,11 +100,18 @@ public class MainPanelViewModel : ViewModel, ITabManager, IRecipient<Application
 
     public IPluginTab AddControl(object element, string tabTitle, TabLocation tabLocation = TabLocation.CenterBottom)
     {
-        FrameworkElement frameworkElement = (FrameworkElement)element;
+        // A plugin in Gum.Presentation hands over a ViewModel; this head resolves it to its view (phase 40).
+        FrameworkElement frameworkElement = element as FrameworkElement
+            ?? _tabViewRegistry.CreateView(element)
+            ?? throw new InvalidOperationException($"No WPF tab view is registered for {element.GetType().Name}; add one to {nameof(TabViewRegistry)}.");
 
         PluginTab newPluginTab = _pluginTabFactory(frameworkElement);
         newPluginTab.Title = tabTitle;
         newPluginTab.Location = tabLocation;
+        if (element is not FrameworkElement)
+        {
+            newPluginTab.CustomHeaderContent = _tabViewRegistry.CreateHeader(element);
+        }
 
         PluginTabs.Add(newPluginTab);
         return newPluginTab;

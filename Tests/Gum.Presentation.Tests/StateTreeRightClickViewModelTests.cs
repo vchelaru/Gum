@@ -14,7 +14,7 @@ namespace Gum.Presentation.Tests;
 
 /// <summary>
 /// Characterization (pinning) tests for StateTreeRightClickViewModel, extracted out of
-/// <c>StateTreeViewRightClickService.PopulateContextMenu</c> into the headless Gum.Presentation
+/// <c>StateTreeRightClickService.PopulateContextMenu</c> into the headless Gum.Presentation
 /// assembly (ADR-0005): which right-click items are shown, their header text, and the state-move
 /// logic behind "Move Up"/"Move Down".
 /// </summary>

@@ -11,6 +11,9 @@ public class AddFormsViewModel : DialogViewModel
 
     public ThemeSelectionViewModel ThemeSelection { get; }
 
+    /// <summary>The dialog's title.</summary>
+    public string Title => "Add Forms";
+
     public bool IsIncludeDemoScreenGum
     {
         get => Get<bool>();

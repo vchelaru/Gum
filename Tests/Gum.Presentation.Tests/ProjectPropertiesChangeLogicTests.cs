@@ -51,6 +51,19 @@ public class ProjectPropertiesChangeLogicTests
             _localizationService.Object);
     }
 
+    [Theory]
+    [InlineData(nameof(ProjectPropertiesViewModel.AvailableLanguages))]
+    [InlineData(nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly))]
+    public async Task HandlePropertyChanged_DoesNothing_ForViewOnlyProperties(string propertyName)
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+
+        await _logic.HandlePropertyChanged(viewModel, propertyName);
+
+        _fileCommands.Verify(f => f.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
+        _wireframeCommands.Verify(w => w.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+    }
+
     [Fact]
     public async Task HandlePropertyChanged_DoesNothing_WhenViewModelIsUpdatingFromModel()
     {

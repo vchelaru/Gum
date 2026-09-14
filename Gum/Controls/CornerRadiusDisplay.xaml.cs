@@ -31,7 +31,8 @@ namespace Gum.Controls.DataUi
         TextBox? _draggingTextBox;
         double? _dragCurrentX;
         double? _dragPressedX;
-        double _dragUnroundedValue;
+        readonly LabelDragScrubLogic _scrub = new LabelDragScrubLogic();
+        readonly CornerRadiusDisplayLogic _logic = new CornerRadiusDisplayLogic();
 
         public InstanceMember? InstanceMember
         {
@@ -144,11 +145,11 @@ namespace Gum.Controls.DataUi
 
             if (member.IsDefault)
             {
-                textBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                textBox.Background = DataUiBrushes.DefaultValueBackground;
             }
             else if (member.IsIndeterminate)
             {
-                textBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+                textBox.Background = DataUiBrushes.IndeterminateValueBackground;
             }
             else if (textBox.TryFindResource("Frb.Brushes.Field.Background") is Brush themed)
             {
@@ -171,11 +172,11 @@ namespace Gum.Controls.DataUi
             try
             {
                 _current = composite;
-                UniformTextBox.Text = FormatFloat(composite.Uniform);
-                TopLeftTextBox.Text = FormatNullableFloat(composite.TopLeft);
-                TopRightTextBox.Text = FormatNullableFloat(composite.TopRight);
-                BottomLeftTextBox.Text = FormatNullableFloat(composite.BottomLeft);
-                BottomRightTextBox.Text = FormatNullableFloat(composite.BottomRight);
+                UniformTextBox.Text = _logic.FormatFloat(composite.Uniform);
+                TopLeftTextBox.Text = _logic.FormatNullableFloat(composite.TopLeft);
+                TopRightTextBox.Text = _logic.FormatNullableFloat(composite.TopRight);
+                BottomLeftTextBox.Text = _logic.FormatNullableFloat(composite.BottomLeft);
+                BottomRightTextBox.Text = _logic.FormatNullableFloat(composite.BottomRight);
                 SetLinkedState(composite.IsLinked);
             }
             finally
@@ -188,16 +189,8 @@ namespace Gum.Controls.DataUi
 
         public ApplyValueResult TryGetValueOnUi(out object? value)
         {
-            float uniform = ParseFloat(UniformTextBox.Text) ?? _current.Uniform;
-
-            value = _isLinked
-                ? new CornerRadiusComposite(uniform, null, null, null, null)
-                : new CornerRadiusComposite(
-                    uniform,
-                    ParseFloat(TopLeftTextBox.Text),
-                    ParseFloat(TopRightTextBox.Text),
-                    ParseFloat(BottomLeftTextBox.Text),
-                    ParseFloat(BottomRightTextBox.Text));
+            value = _logic.Compose(_isLinked, UniformTextBox.Text, TopLeftTextBox.Text, TopRightTextBox.Text,
+                BottomLeftTextBox.Text, BottomRightTextBox.Text, _current);
 
             return ApplyValueResult.Success;
         }
@@ -289,7 +282,7 @@ namespace Gum.Controls.DataUi
 
             Mouse.Capture(label);
 
-            _dragUnroundedValue = ParseFloat(target.Text) ?? _current.Uniform;
+            _scrub.Begin(_logic.ParseFloat(target.Text) ?? _current.Uniform);
         }
 
         private void Label_MouseMove(object sender, MouseEventArgs e)
@@ -307,15 +300,11 @@ namespace Gum.Controls.DataUi
 
                 if (difference != 0)
                 {
-                    _dragUnroundedValue += difference;
-                    double rounded = TextBoxDisplayLogic.SnapDraggedValue(_dragUnroundedValue, rounding: 1);
+                    // Sticks at the 0 floor while scrubbing rather than showing a negative value that
+                    // only snaps back once the commit round-trips through Decompose's clamp.
+                    double rounded = _scrub.ApplyDelta(difference, changeMultiplier: 1m, rounding: 1m, min: 0m, max: null);
 
-                    // Stick visibly at the 0 floor while scrubbing (matching TextBoxDisplay's
-                    // min/max handling) instead of showing a negative value that only snaps back
-                    // to 0 once the commit round-trips through Decompose's clamp.
-                    rounded = (double)TextBoxDisplayLogic.ClampToRange(rounded, min: 0m, max: null);
-
-                    _draggingTextBox.Text = FormatFloat((float)rounded);
+                    _draggingTextBox.Text = _logic.FormatFloat((float)rounded);
                     CommitValue(SetPropertyCommitType.Intermediate);
                 }
             }
@@ -340,14 +329,6 @@ namespace Gum.Controls.DataUi
         }
 
         #endregion
-
-        private static string FormatFloat(float value) => value.ToString("0.####", CultureInfo.InvariantCulture);
-
-        private static string FormatNullableFloat(float? value) =>
-            value == null ? string.Empty : FormatFloat(value.Value);
-
-        private static float? ParseFloat(string text) =>
-            float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsed) ? parsed : null;
 
         private void HandlePropertyChange(object? sender, PropertyChangedEventArgs e)
         {

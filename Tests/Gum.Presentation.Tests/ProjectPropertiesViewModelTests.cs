@@ -28,6 +28,27 @@ public class ProjectPropertiesViewModelTests
     }
 
     [Fact]
+    public void AvailableLanguages_IsEmpty_UntilThePluginFillsIt()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+
+        viewModel.AvailableLanguages.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void IsFontRangesReadOnly_FollowsUseFontCharacterFile()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        List<string?> changed = new();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        viewModel.UseFontCharacterFile = true;
+
+        viewModel.IsFontRangesReadOnly.ShouldBeTrue();
+        changed.ShouldContain(nameof(ProjectPropertiesViewModel.IsFontRangesReadOnly));
+    }
+
+    [Fact]
     public void LocalizationFiles_ShouldReturnSameListInstance_WhenReadRepeatedly()
     {
         // Regression: getter used to `?? new List<string>()` which returned a fresh,
@@ -41,6 +62,30 @@ public class ProjectPropertiesViewModelTests
 
         second.ShouldBeSameAs(first);
         second.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void NotifyReloaded_RaisesReloaded()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        int raised = 0;
+        viewModel.Reloaded += () => raised++;
+
+        viewModel.NotifyReloaded();
+
+        raised.ShouldBe(1);
+    }
+
+    [Fact]
+    public void RequestClose_RaisesCloseRequested()
+    {
+        ProjectPropertiesViewModel viewModel = new();
+        int raised = 0;
+        viewModel.CloseRequested += () => raised++;
+
+        viewModel.RequestClose();
+
+        raised.ShouldBe(1);
     }
 
     [Fact]

@@ -183,6 +183,20 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void PreferredDisplayerKind_ShouldClassifyNeutralDisplayerKeys()
+    {
+        // StandardElementsManagerGumTool assigns neutral keys, not head controls, to variables.
+        ComponentSave component = CreateComponent("MyComponent");
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+
+        sut.PreferredDisplayerOverride = typeof(WpfDataUi.DataTypes.StandardDisplayers.FileSelection);
+        sut.PreferredDisplayerKind.ShouldBe(VariableDisplayerKind.FileSelection);
+
+        sut.PreferredDisplayerOverride = typeof(WpfDataUi.DataTypes.StandardDisplayers.MultiLineTextBox);
+        sut.PreferredDisplayerKind.ShouldBe(VariableDisplayerKind.MultiLineTextBox);
+    }
+
+    [Fact]
     public void RecomputeDetailTextOnValueChanged_ShouldUpdateDetailText_WhenInvoked()
     {
         // Mirrors the WPF adapter's usage: a headless caller (ElementSaveDisplayer's XUnits/YUnits

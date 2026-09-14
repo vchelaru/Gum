@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IO.Packaging;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -21,6 +20,8 @@ namespace WpfDataUi.Controls
         #region Fields/Properties
 
         TextBoxDisplayLogic mTextBoxLogic;
+
+        readonly LabelDragScrubLogic _scrubLogic;
 
         InstanceMember? _instanceMember;
 
@@ -181,7 +182,8 @@ namespace WpfDataUi.Controls
             var xamlLocation = $"/{assemblyName};component/controls/textboxdisplay.xaml";
             //InitializeComponent();
             LoadViewFromUri(this, xamlLocation);
-            mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
+            mTextBoxLogic = WpfDataUiTextBox.CreateLogic(this, TextBox);
+            _scrubLogic = new LabelDragScrubLogic();
 
             this.RefreshAllContextMenus();
             this.ContextMenu = TextBox.ContextMenu;
@@ -432,10 +434,6 @@ namespace WpfDataUi.Controls
         #region Label Dragging
         double? currentDownX;
         double? pressedX;
-        private double unroundedValue;
-
-        [DllImport("User32.dll")]
-        private static extern bool SetCursorPos(int X, int Y);
 
 
         private void Label_MouseDown(object? sender, MouseButtonEventArgs e)
@@ -451,15 +449,7 @@ namespace WpfDataUi.Controls
 
                 if (getValueStatus == ApplyValueResult.Success)
                 {
-                    var converter = TypeDescriptor.GetConverter(mTextBoxLogic.InstancePropertyType);
-
-                    if(valueOnInstance == null)
-                    {
-                        // If increasing from null, we should just treat it as if it's 0
-                        valueOnInstance = 0;
-                    }
-
-                    unroundedValue = (double)converter.ConvertTo(valueOnInstance, typeof(double));
+                    _scrubLogic.Begin(valueOnInstance, mTextBoxLogic.InstancePropertyType);
                 }
             }
         }
@@ -476,19 +466,8 @@ namespace WpfDataUi.Controls
 
                     if(difference != 0)
                     {
-                        unroundedValue += difference * (double)LabelDragChangeMultiplier;
-
-                        // Apply the snapped accumulator directly. This previously re-added
-                        // difference * multiplier on top of the rounded value (via GetValueInDirection),
-                        // which put the raw, DPI-scaled fractional mouse delta back into the result - so a
-                        // 1px-rounded variable still landed on values like 12.8 on a scaled display
-                        // (issue #3191). unroundedValue already includes this tick's movement.
-                        var rounded = TextBoxDisplayLogic.SnapDraggedValue(unroundedValue, LabelDragValueRounding);
-
-                        // Respect a min/max floor while scrubbing so the field visibly sticks at the
-                        // bound (e.g. StrokeWidth can't be dragged below 0) instead of applying a
-                        // clamped value while the text keeps counting past the limit.
-                        rounded = (double)TextBoxDisplayLogic.ClampToRange(rounded, mTextBoxLogic.MinValue, mTextBoxLogic.MaxValue);
+                        var rounded = _scrubLogic.ApplyDelta(difference, LabelDragChangeMultiplier,
+                            LabelDragValueRounding, mTextBoxLogic.MinValue, mTextBoxLogic.MaxValue);
 
                         var getValueStatus = TryGetValueOnUi(out _);
 

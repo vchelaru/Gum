@@ -6,8 +6,8 @@ using System.ComponentModel;
 using System.Linq;
 using ToolsUtilities;
 
-// Kept in the same namespace as FileWatchViewModel (Gum.Plugins.FileWatchPlugin) so the tool-side
-// MainFileWatchPlugin needs no new `using` to consume this class.
+// Kept in the same namespace as FileWatchViewModel (Gum.Plugins.FileWatchPlugin), which is also
+// MainFileWatchPlugin's namespace.
 namespace Gum.Plugins.FileWatchPlugin;
 
 /// <summary>
@@ -16,8 +16,8 @@ namespace Gum.Plugins.FileWatchPlugin;
 /// touches a WPF type, but every method used to read the plugin's own private fields rather than take
 /// its dependencies as constructor parameters, which is what blocked the extraction until now.
 ///
-/// The plugin still owns the real platform glue this class deliberately has no seam for: creating the
-/// WPF <c>FileWatchControl</c>/tab/menu item, and the timer/event wiring itself.
+/// The plugin (shared by both heads) owns the tab, the menu item and the timer/event wiring; each head
+/// supplies the view for <see cref="FileWatchViewModel"/>.
 /// </summary>
 public class FileWatchPluginController
 {
@@ -38,7 +38,7 @@ public class FileWatchPluginController
         }
     }
 
-    public void HandleVariableSet(ElementSave element, InstanceSave instance, string variableName, object oldValue)
+    public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue)
     {
         if (element == null)
         {

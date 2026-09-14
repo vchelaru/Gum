@@ -25,6 +25,7 @@ using Gum.Plugins.InternalPlugins.TreeView;
 using Gum.PropertyGridHelpers;
 using Gum.ViewModels;
 using Gum.Plugins;
+using Gum.Menus;
 using GumFormsPlugin;
 
 namespace GumToolUnitTests.Plugins;
@@ -70,16 +71,19 @@ internal static class PluginBridgedServiceTypes
         typeof(IFavoriteComponentManager),
 
         typeof(MainPanelViewModel),
+        typeof(Gum.Plugins.InternalPlugins.HideShowTools.IToolsVisibility),
         typeof(PropertyGridManager),
         typeof(IVariableReferenceLogic),
         typeof(IErrorChecker),
         typeof(IClipboardService),
+        typeof(IFileSystemRevealService),
         typeof(IMessenger),
         typeof(FileWatchLogic),
         typeof(PeriodicUiTimer),
 
         typeof(IDeleteLogic),
         typeof(HotkeyViewModel),
+        typeof(Gum.Plugins.InternalPlugins.AlignmentButtons.ViewModels.AlignmentViewModel),
         typeof(MainOutputViewModel),
 
         typeof(IDispatcher),
@@ -130,5 +134,9 @@ internal static class PluginBridgedServiceTypes
         // MainEditorTabPlugin/MainBehaviorsPlugin/MainPropertiesWindowPlugin — all three now take the
         // interface after widening it with the six methods that used to be concrete-only.
         typeof(IPluginManager),
+        typeof(Gum.Menus.StandardMenuModelBuilder),
+        // Phase 40 of the Avalonia migration: the WPF head exports the framework-neutral menu model
+        // (WpfPluginHostConfiguration.AddHeadExports) so plugins can add entries without WPF types.
+        typeof(MenuModel),
     };
 }

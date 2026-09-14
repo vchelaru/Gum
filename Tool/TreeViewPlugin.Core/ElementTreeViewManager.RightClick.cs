@@ -1,0 +1,695 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Gum.ToolCommands;
+using Gum.DataTypes;
+using Gum.ToolStates;
+using System.Diagnostics;
+using System.IO;
+using ToolsUtilities;
+using Gum.Logic;
+using Gum.DataTypes.Behaviors;
+using Gum.PropertyGridHelpers;
+using Gum.Controls;
+using Gum.Commands;
+using Gum.Dialogs;
+using Gum.Services;
+using Gum.Services.Dialogs;
+using Gum.Plugins.ImportPlugin.ViewModel;
+using Gum.Plugins.InternalPlugins.VariableGrid;
+using Gum.ViewModels;
+
+namespace Gum.Managers;
+
+public partial class ElementTreeViewManager
+{
+
+    #region Menu helpers
+
+    /// <summary>
+    /// The standard element type names that can be added as a child/sibling instance for
+    /// <paramref name="gumProject"/>. Reads the project's actual <see cref="GumProjectSave.StandardElements"/>
+    /// instead of a hardcoded list, so a type that isn't seeded into this project (e.g. the deprecated
+    /// "ColoredRectangle", excluded from new projects since #2965 phase 2) never appears as a choice that
+    /// would crash when instantiated (#4499). "Component" is excluded because it's a StandardElementSave
+    /// used internally for default-value lookups, not a type meant to be instantiated directly.
+    /// </summary>
+    internal static List<string> GetAvailableStandardInstanceTypes(GumProjectSave? gumProject)
+    {
+        if (gumProject == null)
+        {
+            return new List<string>();
+        }
+
+        var typeNames = gumProject.StandardElements
+            .Where(standard => standard.Name != "Component")
+            .Select(standard => standard.Name)
+            .ToList();
+
+        return SortStandardTypeNamesForPalette(typeNames);
+    }
+
+    // The menu being built by BuildContextMenuItems.
+    private List<ContextMenuItemViewModel> _contextMenuItems;
+
+    private void AddMenuItem(string text, Action clickAction) =>
+        _contextMenuItems.Add(new ContextMenuItemViewModel { Text = text, Action = clickAction });
+
+    private void AddSeparator() => _contextMenuItems.Add(new ContextMenuItemViewModel { IsSeparator = true });
+
+    private void AddFolderMenuItems()
+    {
+        var folderCount = _selectedState.SelectedTreeNodes
+            .Count(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode());
+        var deleteText = folderCount > 1 ? $"Delete {folderCount} Folders" : "Delete Folder";
+        AddMenuItem(deleteText, HandleDeleteFolder);
+        if (folderCount == 1)
+        {
+            AddMenuItem("Rename Folder", HandleRenameFolder);
+        }
+    }
+
+    #endregion
+
+    #region Event handlers
+
+    void HandleDeleteObject()
+    {
+        _editCommands.DeleteSelection();
+    }
+
+    void HandleDuplicateElement()
+    {
+        if (_selectedState.SelectedScreen != null ||
+            _selectedState.SelectedComponent != null)
+        {
+            _editCommands.DuplicateSelectedElement();
+        }
+    }
+
+    void HandleDuplicateInstance()
+    {
+        _copyPasteLogic.OnDuplicate(CopyType.InstanceOrElement);
+    }
+
+    void HandleGoToDefinition()
+    {
+        if (_selectedState.SelectedInstance != null)
+        {
+            ElementSave element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
+
+            _selectedState.SelectedElement = element;
+        }
+    }
+
+    void HandleCreateComponent()
+    {
+        if (_selectedState.SelectedScreen != null ||
+            _selectedState.SelectedComponent != null)
+        {
+            _editCommands.ShowCreateComponentFromInstancesDialog();
+        }
+    }
+
+    void HandleForceSaveObject()
+    {
+        _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
+    }
+
+    void HandleCopyFullPath()
+    {
+        ElementSave? element = _selectedState.SelectedElement;
+        if (element == null)
+        {
+            return;
+        }
+        string fullPath = _fileCommands.GetFullPathXmlFile(element, element.Name)!.FullPath;
+        try
+        {
+            _clipboardService.SetText(fullPath);
+        }
+        catch
+        {
+            // Clipboard access can throw if another process holds it; ignore.
+        }
+    }
+
+    void HandleAddFolder()
+    {
+        if (SelectedNode != null)
+        {
+            _dialogService.Show<AddFolderDialogViewModel>();
+        }
+    }
+
+
+    void HandleViewInExplorer()
+    {
+        var treeNode = _selectedState.SelectedTreeNode;
+
+        if (treeNode != null)
+        {
+            string fullFile;
+            if (treeNode.Tag is ElementSave elementSave)
+            {
+                fullFile = _fileCommands.GetFullPathXmlFile(elementSave, elementSave.Name)!.FullPath;
+            }
+            else if (treeNode.Tag is BehaviorSave behaviorSave)
+            {
+                fullFile =
+                    _fileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
+            }
+            else
+            {
+                fullFile = treeNode.GetFullFilePath().FullPath;
+            }
+            bool isFolder = fullFile.EndsWith("\\") || fullFile.EndsWith("/");
+
+            try
+            {
+                if (isFolder)
+                {
+                    if (!System.IO.Directory.Exists(fullFile))
+                    {
+                        // The folder doesn't exist, but if it's a standard folder we can make one:
+                        if (treeNode.IsTopComponentContainerTreeNode() ||
+                            treeNode.IsTopScreenContainerTreeNode())
+                        {
+                            System.IO.Directory.CreateDirectory(fullFile);
+                        }
+                    }
+                    _fileSystemRevealService.OpenFolder(fullFile);
+                }
+                else
+                {
+                    _fileSystemRevealService.RevealFile(fullFile);
+                }
+            }
+            catch (Exception exc)
+            {
+                _dialogService.ShowMessage("Could not open location:\n\n" + exc.ToString());
+            }
+        }
+    }
+
+    void HandleDeleteFolder()
+    {
+        var folderNodes = _selectedState.SelectedTreeNodes
+            .Where(n => n.IsScreensFolderTreeNode() || n.IsComponentsFolderTreeNode())
+            .ToList();
+
+        if (folderNodes.Count > 0)
+        {
+            _deleteLogic.DeleteFolders(folderNodes);
+        }
+    }
+
+    #endregion
+
+
+    /// <summary>The right-click menu for the current selection; empty when nothing applies.</summary>
+    internal IReadOnlyList<ContextMenuItemViewModel> BuildContextMenuItems()
+    {
+        _contextMenuItems = new List<ContextMenuItemViewModel>();
+
+        if (SelectedNode != null)
+        {
+            // Check for mixed-type selections by reading directly from tree view
+            var allSelectedTags = _selectedState.SelectedTreeNodes
+                .Select(n => n.Tag)
+                .Where(t => t != null)
+                .ToList();
+
+            var elementsFromTree = allSelectedTags.OfType<ElementSave>()
+                .Where(e => e is not StandardElementSave).ToList();
+            var behaviorsFromTree = allSelectedTags.OfType<BehaviorSave>().ToList();
+            var instancesFromTree = allSelectedTags.OfType<InstanceSave>().ToList();
+
+            int typesPresent = (elementsFromTree.Count > 0 ? 1 : 0)
+                + (behaviorsFromTree.Count > 0 ? 1 : 0)
+                + (instancesFromTree.Count > 0 ? 1 : 0);
+
+            if (typesPresent > 1)
+            {
+                int totalCount = elementsFromTree.Count + behaviorsFromTree.Count + instancesFromTree.Count;
+                AddMenuItem($"Delete {totalCount} items", HandleDeleteObject);
+            }
+
+            #region InstanceSave
+            // InstanceSave selected
+            else if (_selectedState.SelectedInstance != null)
+            {
+                var containerElement = _selectedState.SelectedElement;
+                AddMenuItem("Go to definition", HandleGoToDefinition);
+
+                // "Create Component" promotes a single instance into a new component (the instance's
+                // children become the component's children). Multi-instance promotion isn't supported
+                // yet, so only offer it when exactly one instance is selected.
+                if (containerElement != null && _selectedState.SelectedInstances.Count() == 1)
+                {
+                    AddSeparator();
+
+                    AddMenuItem("Create Component", HandleCreateComponent);
+                }
+
+                AddSeparator();
+
+                var instances = _selectedState.SelectedInstances.ToList();
+                var allLocked = instances.All(i => i.Locked);
+                var lockText = instances.Count > 1
+                    ? (allLocked ? $"Unlock {instances.Count} instances" : $"Lock {instances.Count} instances")
+                    : (allLocked ? $"Unlock {_selectedState.SelectedInstance.Name}" : $"Lock {_selectedState.SelectedInstance.Name}");
+                AddMenuItem(lockText, HandleToggleLock);
+
+                var duplicateText = instances.Count > 1
+                    ? $"Duplicate {instances.Count} instances"
+                    : $"Duplicate {_selectedState.SelectedInstance.Name}";
+                AddMenuItem(duplicateText, HandleDuplicateInstance);
+
+                var deleteText = instances.Count > 1
+                    ? $"Delete {instances.Count} instances"
+                    : $"Delete {_selectedState.SelectedInstance.Name}";
+                AddMenuItem(deleteText, () => _editCommands.DeleteSelection());
+
+                if (containerElement != null)
+                {
+                    AddSeparator();
+
+                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'");
+
+                    AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
+                        () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
+
+                    if (!string.IsNullOrEmpty(containerElement?.BaseType))
+                    {
+                        var containerBase = ObjectFinder.Self.GetElementSave(containerElement.BaseType);
+
+                        if (containerBase is ScreenSave || containerBase is ComponentSave)
+                        {
+                            AddMenuItem($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
+                                () => HandleMoveToBase(_selectedState.SelectedInstances, _selectedState.SelectedElement, containerBase));
+                        }
+                    }
+
+                }
+                AddCopyMenuItems();
+                AddCutMenuItems();
+                AddPasteMenuItems();
+            }
+
+            #endregion
+
+            #region Screen or Component
+            // ScreenSave or ComponentSave
+            else if (_selectedState.SelectedScreen != null || _selectedState.SelectedComponent != null)
+            {
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+
+                AddMenuItem("View References", HandleViewReferences);
+
+                AddMenuItem("Copy Full Path", HandleCopyFullPath);
+
+                AddSeparator();
+
+                AddCreateInstanceMenuItems("Add object to " + _selectedState.SelectedElement!.Name);
+
+                var duplicateText = _selectedState.SelectedScreen != null
+                    ? $"Duplicate {_selectedState.SelectedScreen.Name}"
+                    : $"Duplicate {_selectedState.SelectedComponent!.Name}";
+                AddMenuItem(duplicateText, HandleDuplicateElement);
+
+                AddSeparator();
+
+                var selectedElements = _selectedState.SelectedElements.ToList();
+                string elementDeleteText;
+                if (selectedElements.Count > 1)
+                {
+                    bool allScreens = selectedElements.All(e => e is ScreenSave);
+                    bool allComponents = selectedElements.All(e => e is ComponentSave);
+                    if (allScreens)
+                        elementDeleteText = $"Delete {selectedElements.Count} Screens";
+                    else if (allComponents)
+                        elementDeleteText = $"Delete {selectedElements.Count} Components";
+                    else
+                        elementDeleteText = $"Delete {selectedElements.Count} elements";
+                }
+                else
+                {
+                    elementDeleteText = "Delete " + _selectedState.SelectedElement.ToString();
+                }
+                AddMenuItem(elementDeleteText, HandleDeleteObject);
+
+                AddSeparator();
+
+                AddCopyMenuItems();
+                AddCutMenuItems();
+                AddPasteMenuItems();
+
+                AddSeparator();
+
+                AddMenuItem("Force Save Object", HandleForceSaveObject);
+
+                // Add favorite toggle for components only
+                if (_selectedState.SelectedComponent != null)
+                {
+                    var isFavorite = _favoriteComponentManager.IsFavorite(_selectedState.SelectedComponent);
+                    var favoriteText = isFavorite ? "Remove from Favorites" : "Add to Favorites";
+                    AddMenuItem(favoriteText, HandleToggleFavorite);
+                }
+
+            }
+            #endregion
+
+            #region Behavior
+
+            else if (_selectedState.SelectedBehavior != null)
+            {
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+                var selectedBehaviors = _selectedState.SelectedBehaviors.ToList();
+                if (selectedBehaviors.Count == 1)
+                {
+                    AddMenuItem("Rename", () => _editCommands.AskToRenameBehavior(_selectedState.SelectedBehavior));
+                    AddSeparator();
+                    AddCreateBehaviorInstanceMenuItems("Add object to " + _selectedState.SelectedBehavior.Name);
+                }
+                AddSeparator();
+                var behaviorDeleteText = selectedBehaviors.Count > 1
+                    ? $"Delete {selectedBehaviors.Count} Behaviors"
+                    : "Delete " + _selectedState.SelectedBehavior.ToString();
+                AddMenuItem(behaviorDeleteText, HandleDeleteObject);
+            }
+
+            #endregion
+
+            #region Standard Element
+
+            else if (_selectedState.SelectedStandardElement != null)
+            {
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+
+                AddSeparator();
+
+                AddMenuItem("Force Save Object", HandleForceSaveObject);
+            }
+
+            #endregion
+
+            #region Screens Folder (top or contained)
+
+            else if (SelectedNode.IsTopScreenContainerTreeNode() || SelectedNode.IsScreensFolderTreeNode())
+            {
+                AddMenuItem("Add Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
+                AddMenuItem("Import Screen", HandleImportScreen);
+                AddMenuItem("Add Folder", HandleAddFolder);
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+
+                if (SelectedNode.IsScreensFolderTreeNode())
+                {
+                    AddFolderMenuItems();
+                }
+            }
+
+            #endregion
+
+            #region Component Folder (top or contained)
+
+            else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
+            {
+                AddMenuItem("Add Component", () => _dialogService.Show<AddComponentDialogViewModel>());
+                AddMenuItem("Import Components", HandleImportComponents);
+                AddMenuItem("Add Folder", HandleAddFolder);
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+
+                if (SelectedNode.IsComponentsFolderTreeNode())
+                {
+                    AddFolderMenuItems();
+                }
+            }
+
+            #endregion
+
+            #region Standard Elements Folder (top)
+
+            else if (SelectedNode.IsTopStandardElementTreeNode())
+            {
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+            }
+
+            #endregion
+
+            #region Behavior Folder (top)
+
+            else if (SelectedNode.IsTopBehaviorTreeNode())
+            {
+                AddMenuItem("Add Behavior", HandleAddBehavior);
+                AddMenuItem("Import Behavior", HandleImportBehavior);
+                AddMenuItem("View in explorer", HandleViewInExplorer);
+
+            }
+
+            #endregion
+        }
+
+        return _contextMenuItems;
+    }
+
+    private void AddCreateInstanceMenuItems(string itemText)
+    {
+        var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
+        _contextMenuItems.Add(parentMenuItem);
+
+        // Add favorited components first
+        var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
+            _selectedState.SelectedElement,
+            _circularReferenceManager);
+        if (favoritedComponents.Count > 0)
+        {
+            foreach (var component in favoritedComponents)
+            {
+                var menuItem = new ContextMenuItemViewModel
+                {
+                    Text = component.Name,
+                    IconKey = "Component.png",
+                };
+                parentMenuItem.Children.Add(menuItem);
+
+                var componentName = component.Name;
+                menuItem.Action = () =>
+                {
+                    var selectedElement = _selectedState.SelectedElement;
+                    if (selectedElement != null)
+                    {
+                        var newInstanceElementType = ObjectFinder.Self.GetElementSave(componentName)!;
+                        var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
+
+                        var viewModel = new AddInstanceDialogViewModel(
+                            _selectedState,
+                            _nameVerifier,
+                            _elementCommands,
+                            _setVariableLogic);
+                        viewModel.TypeToCreate = componentName;
+                        viewModel.Value = name;
+                        viewModel.OnAffirmative();
+                    }
+                };
+            }
+
+            // Add separator after favorited components
+            parentMenuItem.Children.Add(new ContextMenuItemViewModel { IsSeparator = true });
+        }
+
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        {
+            var menuItem = new ContextMenuItemViewModel
+            {
+                Text = type,
+                IconKey = $"{type}_Instance.png",
+            };
+            parentMenuItem.Children.Add(menuItem);
+
+            menuItem.Action = () =>
+            {
+                var selectedElement = _selectedState.SelectedElement;
+                if (selectedElement != null)
+                {
+                    var newInstanceElementType = ObjectFinder.Self.GetElementSave(type)!;
+                    var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
+
+                    var viewModel = new AddInstanceDialogViewModel(
+                        _selectedState,
+                        _nameVerifier,
+                        _elementCommands,
+                        _setVariableLogic);
+                    viewModel.TypeToCreate = type;
+                    viewModel.Value = name;
+                    viewModel.OnAffirmative();
+                }
+            };
+        }
+    }
+
+    private void AddCreateBehaviorInstanceMenuItems(string itemText)
+    {
+        var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
+        _contextMenuItems.Add(parentMenuItem);
+
+        foreach (var type in GetAvailableStandardInstanceTypes(_projectState.GumProjectSave))
+        {
+            var menuItem = new ContextMenuItemViewModel
+            {
+                Text = type,
+                IconKey = $"{type}_Instance.png",
+            };
+            parentMenuItem.Children.Add(menuItem);
+
+            menuItem.Action = () =>
+            {
+                var selectedBehavior = _selectedState.SelectedBehavior;
+                if (selectedBehavior != null)
+                {
+                    var typeElement = ObjectFinder.Self.GetElementSave(type)!;
+                    var name = _elementCommands.GetUniqueNameForNewInstance(typeElement, selectedBehavior);
+                    _undoManager.RecordBehaviorState(selectedBehavior);
+                    _elementCommands.AddInstance(selectedBehavior, name, type);
+                }
+            };
+        }
+    }
+
+    private void AddCopyMenuItems()
+    {
+        AddMenuItem("Copy", () => _copyPasteLogic.OnCopy(CopyType.InstanceOrElement));
+    }
+
+    private void AddCutMenuItems()
+    {
+        AddMenuItem("Cut", () => _copyPasteLogic.OnCut(CopyType.InstanceOrElement));
+    }
+
+    private void AddPasteMenuItems()
+    {
+        if (_copyPasteLogic.CopiedData.CopiedInstancesRecursive.Count > 0)
+        {
+            AddMenuItem("Paste", () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Recursive));
+        }
+        if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count > 0)
+        {
+            string text;
+            if (_copyPasteLogic.CopiedData.CopiedInstancesSelected.Count == 1)
+                text = "Paste Top Level Instance";
+            else
+                text = "Paste Top Level Instances";
+
+            AddMenuItem(text, () => _copyPasteLogic.OnPaste(CopyType.InstanceOrElement, TopOrRecursive.Top));
+        }
+    }
+
+    private void HandleMoveToBase(IEnumerable<InstanceSave> instances, ElementSave derivedElement, ElementSave baseElement)
+    {
+        foreach (var instance in instances)
+        {
+            instance.DefinedByBase = true;
+        }
+
+
+        _copyPasteLogic.PasteInstanceSaves(
+            instances.ToList(),
+            new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
+            baseElement,
+            null);
+    }
+
+    private void HandleToggleLock()
+    {
+        var instances = _selectedState.SelectedInstances.ToList();
+        var element = _selectedState.SelectedElement;
+        if (element == null || instances.Count == 0) return;
+
+        var shouldLock = instances.Any(i => !i.Locked);
+
+        using var undoLock = _undoManager.RequestLock();
+
+        for (int i = 0; i < instances.Count; i++)
+        {
+            var instance = instances[i];
+            if (instance.Locked != shouldLock)
+            {
+                var oldValue = instance.Locked;
+                instance.Locked = shouldLock;
+                var isLast = i == instances.Count - 1;
+                _setVariableLogic.PropertyValueChanged("Locked", oldValue, instance, element.DefaultState,
+                    refresh: isLast, trySave: isLast);
+            }
+        }
+    }
+
+    private void HandleToggleFavorite()
+    {
+        var component = _selectedState.SelectedComponent;
+        if (component == null) return;
+
+        var isFavorite = _favoriteComponentManager.IsFavorite(component);
+        if (isFavorite)
+        {
+            _favoriteComponentManager.RemoveFromFavorites(component);
+        }
+        else
+        {
+            _favoriteComponentManager.AddToFavorites(component);
+        }
+    }
+
+    private void HandleViewReferences()
+    {
+        _dialogService.Show<DisplayReferencesDialog>(vm => vm.ElementSave = _selectedState.SelectedElement);
+    }
+
+    private void HandleRenameFolder()
+    {
+        _dialogService.Show<RenameFolderDialogViewModel>(vm =>
+        {
+            vm.FolderNode = SelectedNode;
+        });
+    }
+
+    private void HandleAddBehavior()
+    {
+        _editCommands.AddBehavior();
+    }
+
+    private void HandleImportBehavior()
+    {
+        if (GuardProjectSaved("before importing behaviors"))
+        {
+            _dialogService.Show<ImportBehaviorDialog>();
+        }
+    }
+
+    private void HandleImportScreen()
+    {
+        if (GuardProjectSaved("before importing screens"))
+        {
+            _dialogService.Show<ImportScreenDialog>();
+        }
+    }
+
+    private void HandleImportComponents()
+    {
+        if (GuardProjectSaved("before importing components"))
+        {
+            _dialogService.Show<ImportComponentDialog>();
+        }
+    }
+
+    private bool GuardProjectSaved(string? reason = null)
+    {
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectState.GumProjectSave.FullFileName))
+        {
+            _dialogService.ShowMessage("You must first save the project");
+            return false;
+        }
+
+        return true;
+    }
+
+}

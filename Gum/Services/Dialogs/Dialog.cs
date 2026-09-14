@@ -8,8 +8,6 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-using Xceed.Wpf.AvalonDock.Controls;
-using Xceed.Wpf.Toolkit.Core.Utilities;
 
 namespace Gum.Services.Dialogs;
 
@@ -95,7 +93,7 @@ public class Dialog : ContentControl
                 });
             }
 
-            if (VisualTreeHelperEx.FindAncestorByType<DialogWindow>(this) is { } window)
+            if (this.FindAncestor<DialogWindow>() is { } window)
             {
                 window.SizeToContent = SizeToContent.Manual;
                 userControl.Width = double.NaN;
@@ -138,6 +136,18 @@ public class Dialog : ContentControl
 
 file static class VisualTreeHelpers
 {
+    public static T? FindAncestor<T>(this DependencyObject start) where T : DependencyObject
+    {
+        for (DependencyObject? current = VisualTreeHelper.GetParent(start); current != null; current = VisualTreeHelper.GetParent(current))
+        {
+            if (current is T match)
+            {
+                return match;
+            }
+        }
+        return null;
+    }
+
     public static IEnumerable<DependencyObject> VisitDescendentsBfs(this DependencyObject root, bool includeRoot = false)
     {
         if (includeRoot)

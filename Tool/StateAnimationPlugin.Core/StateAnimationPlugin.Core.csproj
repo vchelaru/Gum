@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<LangVersion>12.0</LangVersion>
+		<Nullable>enable</Nullable>
+		<RootNamespace>StateAnimationPlugin</RootNamespace>
+		<!--
+			The framework-neutral Animations tab: the abstract plugin (StateAnimationPluginBase) with all
+			of its event wiring, the load/save and settings managers, the shared list hotkeys, and the
+			timeline's row and geometry math. Each head derives an exported plugin that supplies the tab's
+			view: the WPF head in Gum/StateAnimationPlugin, the Avalonia head in
+			Tool/Gum.Avalonia/Plugins/StateAnimation.
+		-->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="GumToolUnitTests" />
+		<InternalsVisibleTo Include="Gum.Avalonia.Tests" />
+		<InternalsVisibleTo Include="StateAnimationPlugin" />
+		<InternalsVisibleTo Include="Gum.Avalonia" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Tools\Gum.Presentation\Gum.Presentation.csproj" />
+	</ItemGroup>
+</Project>

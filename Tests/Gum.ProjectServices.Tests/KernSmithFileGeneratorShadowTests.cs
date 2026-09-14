@@ -75,7 +75,7 @@ public class KernSmithFileGeneratorShadowTests
         bmfcSave.DropshadowAlpha = 255;
 
         FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
-        BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+        BmFontResult result = BmFont.Generate(RepoPaths.TestFontFile, options);
 
         result.VariantModels.ContainsKey("shadow").ShouldBeTrue();
         result.VariantModels["shadow"].Characters.Select(c => c.Id).ShouldContain('A');

@@ -203,7 +203,21 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
     /// subtrees during traversal rather than enumerating into them and filtering afterward - build
     /// output can hold thousands of directory entries that are never going to match.
     /// </summary>
-    private static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(string root)
+    private static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(string root) =>
+        EnumerateGeneratedFilesPruningBuildOutput(
+            root,
+            directory => Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix),
+            Directory.EnumerateDirectories);
+
+    /// <summary>
+    /// The walk over injectable enumerators. A directory the process may not read (a root-owned
+    /// folder under a Linux or macOS code root, say) is skipped rather than ending the scan, since
+    /// one such folder would otherwise disable the plugin for the session.
+    /// </summary>
+    internal static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(
+        string root,
+        Func<string, IEnumerable<string>> enumerateGeneratedFiles,
+        Func<string, IEnumerable<string>> enumerateDirectories)
     {
         Queue<string> directories = new Queue<string>();
         directories.Enqueue(root);
@@ -212,12 +226,24 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         {
             string directory = directories.Dequeue();
 
-            foreach (string file in Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix))
+            List<string> files;
+            List<string> subdirectories;
+            try
+            {
+                files = enumerateGeneratedFiles(directory).ToList();
+                subdirectories = enumerateDirectories(directory).ToList();
+            }
+            catch (Exception exception) when (exception is UnauthorizedAccessException || exception is IOException)
+            {
+                continue;
+            }
+
+            foreach (string file in files)
             {
                 yield return file;
             }
 
-            foreach (string subdirectory in Directory.EnumerateDirectories(directory))
+            foreach (string subdirectory in subdirectories)
             {
                 string name = Path.GetFileName(subdirectory);
                 if (!string.Equals(name, "bin", StringComparison.OrdinalIgnoreCase)

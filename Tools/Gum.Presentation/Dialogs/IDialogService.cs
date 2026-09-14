@@ -11,4 +11,5 @@ public interface IDialogService
     string? GetUserString(string message, string? title = null, GetUserStringOptions? options = null);
     List<string>? OpenFile(OpenFileDialogOptions? options = null);
     string? SaveFile(SaveFileDialogOptions? options = null);
+    string? OpenFolder(OpenFolderDialogOptions? options = null);
 }

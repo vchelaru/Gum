@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Plugins.BaseClasses;
 using Gum.Services.Dialogs;
 using Moq.AutoMock;
@@ -25,8 +26,8 @@ public class PluginBaseCompositionTests : BaseTestClass
         plugin.GuiCommands.ShouldBeSameAs(services.GuiCommands);
         plugin.FileCommands.ShouldBeSameAs(services.FileCommands);
         plugin.TabManager.ShouldBeSameAs(services.TabManager);
-        // MenuStripManager lives on WpfPluginBase (not PluginBase itself) - PropertyInjectedTestPlugin
-        // reaches it transitively via PriorityPlugin : WpfPluginBase.
+        plugin.Menu.ShouldBeSameAs(services.Menu);
+        // The obsolete AddMenuItem shim on WpfPluginBase still imports the WPF renderer.
         ((WpfPluginBase)plugin).MenuStripManager.ShouldBeSameAs(services.MenuStripManager);
         plugin.DialogService.ShouldBeSameAs(services.DialogService);
     }
@@ -55,6 +56,7 @@ public class PluginBaseCompositionTests : BaseTestClass
         batch.AddExportedValue(services.GuiCommands);
         batch.AddExportedValue(services.FileCommands);
         batch.AddExportedValue(services.TabManager);
+        batch.AddExportedValue(services.Menu);
         batch.AddExportedValue(services.MenuStripManager);
         batch.AddExportedValue(services.DialogService);
         container.Compose(batch);
@@ -71,6 +73,7 @@ public class PluginBaseCompositionTests : BaseTestClass
         public IFileCommands FileCommands => _mocker.GetMock<IFileCommands>().Object;
         public ITabManager TabManager => _mocker.GetMock<ITabManager>().Object;
         public IDialogService DialogService => _mocker.GetMock<IDialogService>().Object;
+        public MenuModel Menu { get; } = new MenuModel();
         public MenuStripManager MenuStripManager { get; }
 
         public BridgedServices()

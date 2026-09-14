@@ -4,7 +4,6 @@ using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using System.Drawing;
 
 namespace GumToolUnitTests.RegionSelection;
 
@@ -22,12 +21,12 @@ public class RectangleSelectorCursorTests
     private static RectangleSelector CreateSelector() =>
         new RectangleSelector(new SystemManagers { Renderer = new Renderer() });
 
-    // A host the Cursor reports as "in window" - IsInWindow maps the (0,0) default mouse state
-    // through PointToClient and checks it against Width/Height.
+    // A host the Cursor reports as "in window" - IsInWindow checks the sampled pointer position
+    // against Width/Height.
     private static Mock<IInputHostControl> CreateHostInWindow()
     {
         Mock<IInputHostControl> host = new Mock<IInputHostControl>();
-        host.Setup(h => h.PointToClient(It.IsAny<Point>())).Returns(new Point(10, 10));
+        host.Setup(h => h.GetPointerState()).Returns(new HostPointerState(10, 10, false, false, false));
         host.SetupGet(h => h.Width).Returns(100);
         host.SetupGet(h => h.Height).Returns(100);
         host.SetupProperty(h => h.Cursor, CursorKind.Arrow);
@@ -38,6 +37,7 @@ public class RectangleSelectorCursorTests
     {
         Cursor cursor = new Cursor();
         cursor.Initialize(host);
+        cursor.Activity(0);
         return cursor;
     }
 

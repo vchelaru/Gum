@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.Mvvm;
 using Gum.Wireframe;
 using System;
@@ -193,6 +193,38 @@ public class ProjectPropertiesViewModel : ViewModel
         set => Set(value);
     }
 
+
+    /// <summary>
+    /// True while the font ranges come from the project's .gumfcs file, so they cannot be typed in.
+    /// View state, not a project setting: <see cref="ProjectPropertiesChangeLogic"/> ignores it.
+    /// </summary>
+    [DependsOn(nameof(UseFontCharacterFile))]
+    public bool IsFontRangesReadOnly => UseFontCharacterFile;
+
+    /// <summary>
+    /// The languages the loaded localization files define, for the Language choice; empty without
+    /// localization. Set by the plugin; view state, not a project setting.
+    /// </summary>
+    public IReadOnlyList<string> AvailableLanguages
+    {
+        get => Get<IReadOnlyList<string>>() ?? Array.Empty<string>();
+        set => Set(value);
+    }
+
+    /// <summary>
+    /// Raised by <see cref="NotifyReloaded"/> after this view model is refilled from the project, so
+    /// a view that builds its fields from the members (the WPF property grid) can rebuild them.
+    /// </summary>
+    public event Action? Reloaded;
+
+    /// <summary>Raised when the user closes the Project Properties tab from its own Close button.</summary>
+    public event Action? CloseRequested;
+
+    /// <summary>Tells views the view model was refilled from the project. Called by the plugin.</summary>
+    public void NotifyReloaded() => Reloaded?.Invoke();
+
+    /// <summary>Asks the plugin to close the tab.</summary>
+    public void RequestClose() => CloseRequested?.Invoke();
 
     public bool IsUpdatingFromModel { get; private set; }
 

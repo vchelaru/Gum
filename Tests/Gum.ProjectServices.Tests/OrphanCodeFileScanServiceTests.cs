@@ -27,6 +27,29 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void EnumerateGeneratedFiles_SkipsADirectoryItCannotRead_AndKeepsWalkingTheRest()
+    {
+        // A root-owned folder under the code root (Linux, macOS) must not end the scan.
+        Dictionary<string, string[]> files = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/A.Generated.cs" },
+            ["root/ok"] = new[] { "root/ok/B.Generated.cs" },
+        };
+        Dictionary<string, string[]> subdirectories = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/locked", "root/ok" },
+            ["root/ok"] = Array.Empty<string>(),
+        };
+        Func<string, IEnumerable<string>> enumerateFiles = directory =>
+            directory == "root/locked" ? throw new UnauthorizedAccessException(directory) : files[directory];
+        Func<string, IEnumerable<string>> enumerateDirectories = directory => subdirectories[directory];
+
+        List<string> found = OrphanCodeFileScanService.EnumerateGeneratedFilesPruningBuildOutput("root", enumerateFiles, enumerateDirectories).ToList();
+
+        found.ShouldBe(new[] { "root/A.Generated.cs", "root/ok/B.Generated.cs" });
+    }
+
+    [Fact]
     public void Scan_ShouldFlagCustomCodeFile_WhenItsGeneratedSiblingIsOrphaned()
     {
         GumProjectSave project = Project;

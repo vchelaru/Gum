@@ -14,7 +14,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:Gum.Controls"
-    xmlns:managers="clr-namespace:Gum.Managers">
+    xmlns:managers="clr-namespace:Gum.Managers;assembly=TreeViewPlugin.Core">
 
     <ResourceDictionary.MergedDictionaries>
         <!-- BoolToVisibilityHiddenConverter, used by the row's expander, is resolved at parse time. -->

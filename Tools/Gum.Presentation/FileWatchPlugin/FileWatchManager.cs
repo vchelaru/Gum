@@ -221,7 +221,7 @@ public class FileWatchManager : IFileWatchManager
         // that — file events (which dominate by far) skip the syscall.
         if(!wasIgnored
             && string.IsNullOrEmpty(fileName.Extension)
-            && Directory.Exists(fileName.Standardized))
+            && Directory.Exists(fileName.FullPath))
         {
             wasIgnored = true;
             skipReason = "path is a directory";
@@ -282,7 +282,8 @@ public class FileWatchManager : IFileWatchManager
     /// </remarks>
     private FileReadiness GetFileReadiness(FilePath file)
     {
-        var path = file.Standardized;
+        // FullPath keeps the file's case; Standardized is lowercased and misses on a case-sensitive file system.
+        var path = file.FullPath;
         if (Directory.Exists(path) || !File.Exists(path))
         {
             return FileReadiness.Drop;

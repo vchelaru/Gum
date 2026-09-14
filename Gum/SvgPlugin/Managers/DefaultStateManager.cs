@@ -1,4 +1,4 @@
-﻿using Gum;
+using Gum;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 #if GUM
 using Gum.Commands;
 using Gum.Services;
-using WpfDataUi.Controls;
 #endif
 namespace SkiaPlugin.Managers;
 

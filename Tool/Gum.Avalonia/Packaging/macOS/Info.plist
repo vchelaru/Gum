@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  The Gum.app bundle manifest for the Avalonia head's macOS preview builds. The release workflow
+  (publish-avalonia-preview) fills in __VERSION__ and places this at Gum.app/Contents/Info.plist,
+  with the self-contained publish output in Gum.app/Contents/MacOS.
+-->
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Gum</string>
+  <key>CFBundleDisplayName</key>
+  <string>Gum</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.flatredball.gum</string>
+  <key>CFBundleExecutable</key>
+  <string>Gum.Avalonia</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>__VERSION__</string>
+  <key>CFBundleVersion</key>
+  <string>__VERSION__</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>11.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Gum Project</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleTypeExtensions</key>
+      <array>
+        <string>gumx</string>
+        <string>gumj</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

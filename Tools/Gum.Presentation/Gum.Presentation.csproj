@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<!--
-		Gum.Presentation — headless (net8.0) home for tool ViewModels and the
+		Gum.Presentation — headless (net10.0) home for tool ViewModels and the
 		framework-neutral presentation logic they depend on. See ADR-0005.
 
 		This assembly must NEVER reference WPF or WinForms. The project-reference
@@ -11,7 +11,7 @@
 		(which transitively pulls in GumCommon) plus the .NET BCL.
 	-->
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<LangVersion>12.0</LangVersion>
 		<NoWarn>1591</NoWarn>
@@ -48,22 +48,43 @@
 		     has no WPF/WinForms dependency; pin matches Gum.csproj's Microsoft.Extensions.Hosting version
 		     (which pulls Options in transitively there) so a single bump propagates predictably. -->
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.0" />
-		<!-- ImageHeader's malformed-file fallback path constructs a System.Drawing.Bitmap. This has
-		     no WPF/WinForms dependency (Gum.csproj already references it for the same class); pin
-		     matches Gum.csproj's version so a single bump propagates predictably. -->
-		<PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+		<!-- AddGumCore() (phase 20) registers the headless service graph from here; PeriodicUiTimer logs
+		     through ILogger. Both are abstractions-only packages with no framework dependency. -->
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+		<!-- WritableOptions<T> binds a configuration section and writes it back; ConfigurationExtensions
+		     supplies services.Configure<T>(IConfiguration) and pulls Configuration.Abstractions in. -->
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+		<!-- Cross-platform purity guard (Direction/avalonia-migration/coverage-matrix.md section 8):
+		     System.Drawing.Common's GDI+ types, the registry, and P/Invoke compile on any TFM but
+		     fail at runtime off Windows, so the compiler alone cannot keep this assembly portable.
+		     The banned-symbol list at the repo root turns each into a build error. -->
+		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 		<!-- PluginBase's [Import] property injections (MEF) need System.ComponentModel.Composition.
 		     No WPF/WinForms dependency; pin matches Gum.csproj and the plugin csprojs' version so a
 		     single bump propagates predictably. -->
 		<PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
+		<!-- SkiaInstalledFontProvider lists installed fonts on every OS (GDI+'s FontFamily.Families is
+		     Windows-only). Same version as Gum.ImageDiff and the heads resolve. -->
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="..\..\BannedSymbols.CrossPlatform.txt" Link="BannedSymbols.txt" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Gum.ProjectServices\Gum.ProjectServices.csproj" />
+		<!-- LocalizationServiceExtensions loads localization databases from CSV. CsvLibrary is plain net10.0. -->
+		<ProjectReference Include="..\..\Gum\CsvLibrary\CsvLibrary.csproj" />
 		<!-- VariableReferenceLogic parses VariableReferences lines with Roslyn (GetAssignmentSyntax)
 		     and evaluates them via EvaluatedSyntax. GumExpressions has no WPF/WinForms dependency
 		     and already pulls in Microsoft.CodeAnalysis.CSharp transitively. -->
 		<ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
+		<ProjectReference Include="..\..\DataUi.Core\DataUi.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

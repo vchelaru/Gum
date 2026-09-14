@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Services.Dialogs;
 using Moq;
 using Xunit;
 
@@ -14,6 +15,7 @@ public class ScreenshotServiceTests : BaseTestClass
     // ~14-argument graph just to verify a guard).
     private readonly Mock<IWireframeCommands> _wireframeCommands = new();
     private readonly Mock<IGuiCommands> _guiCommands = new();
+    private readonly Mock<IDialogService> _dialogService = new();
     private readonly ScreenshotService _screenshotService;
 
     public ScreenshotServiceTests()
@@ -21,7 +23,8 @@ public class ScreenshotServiceTests : BaseTestClass
         _screenshotService = new ScreenshotService(
             selectionManager: null!,
             _wireframeCommands.Object,
-            _guiCommands.Object);
+            _guiCommands.Object,
+            _dialogService.Object);
     }
 
     [Fact]

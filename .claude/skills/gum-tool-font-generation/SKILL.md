@@ -102,3 +102,7 @@ Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, 
 | `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model, .bmfc serialization, cache file naming, range utilities |
 | `Gum/Content/BmfcTemplate.bmfc` | Template with placeholders for bmfont.exe config |
 | `GumProjectFontGenerator/Program.cs` | Standalone CLI for batch font generation |
+
+## Off Windows: BmFont requests resolve to KernSmith
+
+`bmfont.exe` only runs on Windows, but `GumProjectSave.FontGenerator` defaults to `BmFont` for back-compat. `FontGeneratorResolver` (Gum.ProjectServices) maps the *requested* type to the *effective* one: `BmFont` on macOS/Linux becomes `KernSmith`; everything else passes through. `FontFileGeneratorSelector` and the CLI `fonts` command both go through it, and the selector takes an optional `isBmFontSupported` delegate so tests can exercise the substitution on any OS. KernSmith output differs slightly from bmfont output, so a project generated on Windows and then on macOS will have different `.fnt`/`.png` bytes unless it already uses KernSmith.

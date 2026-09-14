@@ -1,0 +1,32 @@
+<Solution>
+  <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" />
+  <Project Path="Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj" />
+  <Folder Name="/Plugins/">
+    <Project Path="Tool/EditorTabPlugin.Core/EditorTabPlugin.Core.csproj" />
+    <Project Path="Tool/StateAnimationPlugin.Core/StateAnimationPlugin.Core.csproj" />
+    <Project Path="Tool/TextureCoordinatePlugin.Core/TextureCoordinatePlugin.Core.csproj" />
+    <Project Path="Tool/TreeViewPlugin.Core/TreeViewPlugin.Core.csproj" />
+    <Project Path="Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj" />
+    <Project Path="Gum/EventOutputPlugin/EventOutputPlugin.csproj" />
+    <Project Path="Gum/GumFormsPlugin/GumFormsPlugin.csproj" />
+    <Project Path="Gum/ImportFromGumxPlugin/ImportFromGumxPlugin.csproj" />
+    <Project Path="Gum/PerformanceMeasurementPlugin/PerformanceMeasurementPlugin.csproj" />
+    <Project Path="Gum/SvgPlugin/SkiaPlugin.csproj" />
+  </Folder>
+  <Folder Name="/Dependencies/">
+    <Project Path="AvaloniaDataUi/AvaloniaDataUi.csproj" />
+    <Project Path="DataUi.Core/DataUi.Core.csproj" />
+    <Project Path="FlatRedBall.SpecializedXnaControls/FlatRedBall.SpecializedXnaControls.csproj" />
+    <Project Path="Gum/CsvLibrary/CsvLibrary.csproj" />
+    <Project Path="GumCommon/GumCommon.csproj" />
+    <Project Path="InputLibrary/InputLibrary.csproj" />
+    <Project Path="MonoGameGum/KniGum/KniGum.csproj" />
+    <Project Path="Runtimes/GumExpressions/GumExpressions.csproj" />
+    <Project Path="Runtimes/GumShapes/KniGumShapes.csproj" />
+    <Project Path="Tools/Gum.FormsStaging/Gum.FormsStaging.csproj" />
+    <Project Path="Tools/Gum.ImageDiff/Gum.ImageDiff.csproj" />
+    <Project Path="Tools/Gum.Presentation/Gum.Presentation.csproj" />
+    <Project Path="Tools/Gum.ProjectServices/Gum.ProjectServices.csproj" />
+    <Project Path="XnaAndWinforms/XnaAndWinforms.csproj" />
+  </Folder>
+</Solution>

@@ -31,7 +31,7 @@
             VerticalAlignment="Center"
             FontFamily="Consolas"
             Visibility="{Binding HasHelpUrl, Converter={StaticResource BoolToVisibility}}">
-            <Hyperlink NavigateUri="{Binding HelpUrl}" RequestNavigate="Hyperlink_RequestNavigate">
+            <Hyperlink Command="{Binding DataContext.OpenHelpCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding}" ToolTip="{Binding HelpUrl}">
                 <Run Text="{Binding Code}" />
             </Hyperlink>
         </TextBlock>

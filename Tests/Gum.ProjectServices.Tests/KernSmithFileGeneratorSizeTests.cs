@@ -55,7 +55,7 @@ public class KernSmithFileGeneratorSizeTests
         };
 
         FontGeneratorOptions options = KernSmithFileGenerator.BuildOptions(bmfcSave);
-        BmFontResult result = BmFont.GenerateFromSystem(bmfcSave.FontName, options);
+        BmFontResult result = BmFont.Generate(RepoPaths.TestFontFile, options);
 
         result.Pages.Count.ShouldBe(1);
     }

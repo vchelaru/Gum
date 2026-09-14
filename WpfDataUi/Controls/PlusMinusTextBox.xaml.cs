@@ -1,4 +1,4 @@
-﻿
+
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -61,7 +61,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
     {
         InitializeComponent();
 
-        mTextBoxLogic = new TextBoxDisplayLogic(this, TextBox);
+        mTextBoxLogic = WpfDataUiTextBox.CreateLogic(this, TextBox);
 
 
         this.ContextMenu = TextBox.ContextMenu;

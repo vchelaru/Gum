@@ -163,11 +163,11 @@ namespace WpfDataUi.Controls
 
                 if (state.IsDefault)
                 {
-                    textBox.Background = TextBoxDisplayLogic.DefaultValueBackground;
+                    textBox.Background = DataUiBrushes.DefaultValueBackground;
                 }
                 else if (state.IsIndeterminate)
                 {
-                    textBox.Background = TextBoxDisplayLogic.IndeterminateValueBackground;
+                    textBox.Background = DataUiBrushes.IndeterminateValueBackground;
                 }
                 else if (textBox.TryFindResource("Frb.Brushes.Field.Background") is Brush themed)
                 {

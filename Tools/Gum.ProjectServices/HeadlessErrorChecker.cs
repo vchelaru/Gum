@@ -8,6 +8,7 @@ using GumRuntime;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ToolsUtilities;
 
@@ -533,10 +534,18 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     {
         var errors = new List<ErrorResult>();
 
+        var expectedRelativePath = $"{element.Subfolder}/{element.Name}." +
+            element.GetFileExtension(GumProjectSave.IsJsonFormat(project?.FullFileName ?? ""));
+
+        // A file that exists under a different case is GUM0008, whether or not this file system found it.
+        if (TryGetCaseMismatchError(element, project, element.Name, expectedRelativePath, new FileNameCaseChecker(), out var caseMismatch))
+        {
+            errors.Add(caseMismatch);
+            return errors;
+        }
+
         if (element.IsSourceFileMissing)
         {
-            var expectedRelativePath = $"{element.Subfolder}/{element.Name}." +
-                element.GetFileExtension(GumProjectSave.IsJsonFormat(project?.FullFileName ?? ""));
             errors.Add(new ErrorResult
             {
                 ElementName = element.Name,
@@ -579,9 +588,22 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
         var walker = new GumProjectDependencyWalker();
         var result = walker.Walk(project, projectRootDirectory, GumBundleInclusion.ExternalFiles, element);
+        var caseChecker = new FileNameCaseChecker();
+        // A case-sensitive file system lists a mismatched file as missing and may also include it;
+        // one GUM0008 per path, attributed to the instance when the walker names one.
+        var caseMismatchPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var warning in result.MissingFiles)
         {
+            if (TryGetCaseMismatchError(element, project, warning.ReferencedFromElementName, warning.ReferencedPath, caseChecker, out var caseMismatch))
+            {
+                if (caseMismatchPaths.Add(warning.ReferencedPath))
+                {
+                    errors.Add(caseMismatch);
+                }
+                continue;
+            }
+
             errors.Add(new ErrorResult
             {
                 ElementName = element.Name,
@@ -592,7 +614,61 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             });
         }
 
+        // Files this file system found may still be spelled differently on disk (GUM0008).
+        foreach (var includedFile in result.ExternalFiles.Concat(result.FontCacheFiles))
+        {
+            if (!caseMismatchPaths.Contains(includedFile)
+                && TryGetCaseMismatchError(element, project, element.Name, includedFile, caseChecker, out var caseMismatch))
+            {
+                caseMismatchPaths.Add(includedFile);
+                errors.Add(caseMismatch);
+            }
+        }
+
         return errors;
+    }
+
+    #endregion
+
+    #region GUM0008 — Referenced file name differs from the file on disk only by case
+
+    /// <summary>
+    /// A reference that resolves on Windows but not on a case-sensitive file system (Linux). Reported
+    /// on every OS so the project is fixed where it was authored: a Warning where the file still
+    /// loads, an Error where it does not. Replaces GUM0004/GUM0006 for that file, since "missing"
+    /// would send the user looking for a file that is there.
+    /// </summary>
+    private static bool TryGetCaseMismatchError(
+        ElementSave element,
+        GumProjectSave? project,
+        string referencedFrom,
+        string relativePath,
+        IFileNameCaseChecker caseChecker,
+        out ErrorResult error)
+    {
+        error = null!;
+        if (string.IsNullOrEmpty(project?.FullFileName))
+        {
+            return false;
+        }
+
+        var projectRootDirectory = FileManager.GetDirectory(project!.FullFileName);
+        var onDiskPath = caseChecker.FindCaseMismatch(projectRootDirectory, relativePath);
+        if (onDiskPath == null)
+        {
+            return false;
+        }
+
+        bool loadsHere = File.Exists(Path.Combine(projectRootDirectory, relativePath));
+        error = new ErrorResult
+        {
+            ElementName = element.Name,
+            Code = "GUM0008",
+            Severity = loadsHere ? ErrorSeverity.Warning : ErrorSeverity.Error,
+            Message = $"{referencedFrom} references \"{relativePath}\", but the file on disk is named " +
+                $"\"{onDiskPath}\". The names must match exactly on case-sensitive file systems."
+        };
+        return true;
     }
 
     #endregion

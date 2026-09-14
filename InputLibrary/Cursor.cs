@@ -1,25 +1,29 @@
-﻿using System;
+using System;
 using Gum.Input;
-using Microsoft.Xna.Framework.Input;
 
 namespace InputLibrary
 {
+    /// <summary>
+    /// Polled pointer state for an editor canvas, sampled from the host once per frame through
+    /// <see cref="IInputHostControl.GetPointerState"/>. Positions are in the host's client space;
+    /// pushes and clicks only count while the pointer is over the host and the host has focus.
+    /// </summary>
     public class Cursor : IGumCursorState
     {
         #region Fields
 
-        static Cursor mSelf;
+        static Cursor? mSelf;
 
+        HostPointerState mPointerState;
+        HostPointerState mLastFramePointerState;
 
-        MouseState mMouseState = new MouseState();
-        MouseState mLastFrameMouseState = new MouseState();
-        IInputHostControl mControl;
+        IInputHostControl? mControl;
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
-        double mLastClickTime;
+        // Negative infinity so the first click after startup can never read as a double click.
+        double mLastClickTime = double.NegativeInfinity;
 
         bool mHasBeenSet = false;
-
         CursorKind mSetCursor = CursorKind.Arrow;
 
         #endregion
@@ -43,57 +47,26 @@ namespace InputLibrary
                 {
                     throw new NullReferenceException("The Cursor's Control is null.  You must call Initialize before using the Cursor");
                 }
-                System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
-                return point.X >= 0 && point.Y >= 0 && point.X < mControl.Width && point.Y < mControl.Height;
+                return mPointerState.X >= 0 && mPointerState.Y >= 0 &&
+                    mPointerState.X < mControl.Width && mPointerState.Y < mControl.Height;
             }
         }
 
         /// <summary>
-        /// Returns the pixel X on the window - this is in window space, not world space.
+        /// Returns the X on the window - this is in window space, not world space.
         /// </summary>
-        public float X
-        {
-            get
-            {
-                if(mControl != null)
-                {
-                    System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
-                    return point.X;
-                }
-                else
-                {
-                    return mMouseState.X;
-                }
-                //return mMouseState.X;
-            }
-        }
+        public float X => mPointerState.X;
 
         /// <summary>
-        /// Returns the pixel Y on the window - this is in window space, not world space.
+        /// Returns the Y on the window - this is in window space, not world space.
         /// </summary>
-        public float Y
-        {
-            get
-            {
-                if (mControl != null)
-                {
-
-                    System.Drawing.Point point = mControl.PointToClient(new System.Drawing.Point(mMouseState.X, mMouseState.Y));
-                    return point.Y;
-                }
-                else
-                {
-                    return mMouseState.Y;
-                }
-                //return mMouseState.Y;
-            }
-        }
+        public float Y => mPointerState.Y;
 
         public bool MiddleDown
         {
             get
             {
-                return mControl.Focused && mMouseState.MiddleButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return IsFocused && mPointerState.IsMiddleDown;
             }
         }
 
@@ -101,8 +74,7 @@ namespace InputLibrary
         {
             get
             {
-                return IsInWindow && mControl.Focused && this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed &&
-                    this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released;
+                return IsInWindow && IsFocused && mLastFramePointerState.IsLeftDown && !mPointerState.IsLeftDown;
             }
         }
 
@@ -110,7 +82,7 @@ namespace InputLibrary
         {
             get
             {
-                return IsInWindow && mControl.Focused && this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return IsInWindow && IsFocused && mPointerState.IsLeftDown;
             }
         }
 
@@ -118,17 +90,15 @@ namespace InputLibrary
         {
             get
             {
-                return this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return mPointerState.IsLeftDown;
             }
-
         }
 
         public bool PrimaryPush
         {
             get
             {
-                return IsInWindow && mControl.Focused && this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return IsInWindow && IsFocused && !mLastFramePointerState.IsLeftDown && mPointerState.IsLeftDown;
             }
         }
 
@@ -145,31 +115,29 @@ namespace InputLibrary
         {
             get
             {
-                return IsInWindow && mControl.Focused && this.mLastFrameMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-                    this.mMouseState.RightButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed;
+                return IsInWindow && IsFocused && !mLastFramePointerState.IsRightDown && mPointerState.IsRightDown;
             }
         }
 
-
         /// <summary>
-        /// Returns the screen space (in pixels) change on the X axis since the last frame.
+        /// Returns the window space change on the X axis since the last frame.
         /// </summary>
         public float XChange
         {
             get
             {
-                return mMouseState.X - mLastFrameMouseState.X;
+                return mPointerState.X - mLastFramePointerState.X;
             }
         }
 
         /// <summary>
-        /// Returns the screen space (in pixel) change on the Y axis since the last frame.
+        /// Returns the window space change on the Y axis since the last frame.
         /// </summary>
         public float YChange
         {
             get
             {
-                return mMouseState.Y - mLastFrameMouseState.Y;
+                return mPointerState.Y - mLastFramePointerState.Y;
             }
         }
 
@@ -193,32 +161,16 @@ namespace InputLibrary
             }
         }
 
+        private bool IsFocused => mControl != null && mControl.Focused;
+
         #endregion
 
         public void Activity(double currentTime)
         {
-            mLastFrameMouseState = mMouseState;
+            mLastFramePointerState = mPointerState;
             PrimaryDoubleClick = false;
 
-            mMouseState = Microsoft.Xna.Framework.Input.Mouse.GetState();
-
-            // We want to keep track of whether
-            // the user pushed in the window or not
-            // to prevent the user from pushing outside
-            // of the window and dragging "inward" (which 
-            // happens if the user is moving the resize bar).
-            // To do this we need to track if the user pushed in
-            // the window or not.  We can't use PrimaryPush because
-            // that checks IsInWindow, so we will manually do the MouseState
-            // checks here.
-            // Update, maybe we don't need this now that the wireframe window
-            // can receive focus.
-            //if(this.mLastFrameMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Released &&
-            //        this.mMouseState.LeftButton == Microsoft.Xna.Framework.Input.ButtonState.Pressed)
-            //{
-            //    mPushedInWindow = IsInWindow;
-            //}
-            
+            mPointerState = mControl?.GetPointerState() ?? default;
 
             if (PrimaryClick)
             {
@@ -229,6 +181,7 @@ namespace InputLibrary
                 {
                     PrimaryDoubleClick = true;
                 }
+
                 mLastClickTime = currentTime;
             }
         }
@@ -236,10 +189,6 @@ namespace InputLibrary
         public void Initialize(IInputHostControl control)
         {
             mControl = control;
-
-            // This was supposed to make the scroll wheel work, but instead
-            // it made everything else not work
-            //Microsoft.Xna.Framework.Input.Mouse.WindowHandle = control.Handle;
         }
 
         /// <summary>
@@ -284,13 +233,15 @@ namespace InputLibrary
             _ => CursorKind.Arrow
         };
 
-
-        // Only the host control's own cursor is assigned - the editor canvases are WPF elements, so
-        // the process-wide WinForms Cursor.Current this used to also set had no effect on them.
+        // Only the host control's own cursor is assigned - the editor canvases are framework
+        // elements, so a process-wide cursor would have no effect on them.
         public void EndCursorSettingFrameStart()
         {
+            if (mControl == null)
+            {
+                return;
+            }
             CursorKind kindToShow = mHasBeenSet ? mSetCursor : CursorKind.Arrow;
-
             if (mControl.Cursor != kindToShow)
             {
                 mControl.Cursor = kindToShow;

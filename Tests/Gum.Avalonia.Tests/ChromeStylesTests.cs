@@ -1,0 +1,185 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
+using Avalonia.Controls.Primitives;
+using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Media;
+using Avalonia.VisualTree;
+using AvaloniaDataUi.Controls;
+using Gum.Avalonia.Themes;
+using Shouldly;
+using WpfDataUi.Controls;
+
+namespace Gum.Avalonia.Tests;
+
+/// <summary>
+/// The WPF tool's chrome metrics on the head's Fluent controls: body-sized text everywhere, compact
+/// menus in a Primary outline, thin scroll bars without buttons, and option buttons at the WPF size.
+/// </summary>
+public class ChromeStylesTests
+{
+    [AvaloniaFact]
+    public void MenuItems_UseTheBaseFont_OnCompactRows_InsideAPrimaryOutline()
+    {
+        MenuItem child = new MenuItem { Header = "Child", InputGesture = new KeyGesture(Key.S, KeyModifiers.Control) };
+        MenuItem plain = new MenuItem { Header = "No shortcut" };
+        MenuItem checkable = new MenuItem { Header = "Checkable", ToggleType = MenuItemToggleType.CheckBox, IsChecked = true };
+        MenuItem top = new MenuItem { Header = "File" };
+        top.Items.Add(child);
+        top.Items.Add(plain);
+        top.Items.Add(checkable);
+        Menu menu = new Menu();
+        menu.Items.Add(top);
+        Window window = new Window { Content = menu, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        top.Open();
+        window.UpdateLayout();
+
+        // The WPF menu bar: 6px beside each header; the open header outlined in Primary on the
+        // drop-down's surface. Drop-down rows have no padding of their own (the icon column is the gutter).
+        top.Padding.ShouldBe(new Thickness(6, 3));
+        Border topRoot = top.GetVisualDescendants().OfType<Border>().First(border => border.Name == "PART_LayoutRoot");
+        topRoot.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
+        child.Padding.ShouldBe(new Thickness(0, 2));
+
+        child.FontSize.ShouldBe(FrbThemeResources.DefaultBaseFontSize);
+        child.Bounds.Height.ShouldBeLessThanOrEqualTo(22);
+        Popup popup = top.GetVisualDescendants().OfType<Popup>().Single();
+        Border frame = (Border)popup.Child!;
+        frame.BorderThickness.ShouldBe(new Thickness(1));
+        frame.BorderBrush.ShouldBeSameAs(window.FindResource("Frb.Brushes.Primary"));
+        // The WPF SubmenuItemTemplate: headers 28px in behind a reserved icon column, shortcuts
+        // 5px after the header and 10px before the edge (an empty shortcut keeps those margins as
+        // the row's right spacing), and a checkable row's box in the icon column, not a column of its own.
+        ContentPresenter header = child.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter");
+        header.Bounds.X.ShouldBe(28);
+        TextBlock gesture = child.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText");
+        gesture.Margin.ShouldBe(new Thickness(5, 0, 10, 0));
+        gesture.IsVisible.ShouldBeTrue();
+        plain.GetVisualDescendants().OfType<TextBlock>().First(text => text.Name == "PART_InputGestureText").IsVisible.ShouldBeTrue();
+        checkable.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_HeaderPresenter").Bounds.X.ShouldBe(28);
+        checkable.GetVisualDescendants().OfType<Control>().First(control => control.Name == "PART_ToggleIconPresenter").IsVisible.ShouldBeFalse();
+        checkable.GetVisualDescendants().OfType<Control>().First(control => control.Name == "PART_IconPresenter")
+            .GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().Count().ShouldBe(1);
+        global::Avalonia.Controls.Shapes.Path chevron = child.GetVisualDescendants().OfType<global::Avalonia.Controls.Shapes.Path>().First(path => path.Name == "PART_ChevronPath");
+        chevron.Margin.ShouldBe(new Thickness(4, 0, 4, 0));
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Button_CentersAShortLabel_InAWiderButton()
+    {
+        // A dialog's OK beside Cancel: both 64 wide at least, the short label centered as in WPF.
+        Button button = new Button { Content = "OK", MinWidth = 64, Padding = new Thickness(16, 4) };
+        Window window = new Window { Content = new StackPanel { Children = { button } }, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        TextBlock text = button.GetVisualDescendants().OfType<TextBlock>().First();
+        double slack = button.Bounds.Width - text.Bounds.Width;
+        double textCenter = text.Bounds.X + text.Bounds.Width / 2;
+        // The text's midpoint sits at the button's midpoint (within a pixel), so there is slack on both sides.
+        slack.ShouldBeGreaterThan(32);
+        textCenter.ShouldBe(button.Bounds.Width / 2, 1.0);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void ScrollBars_AreEightWide_WithoutLineButtons()
+    {
+        StackPanel tall = new StackPanel();
+        for (int i = 0; i < 100; i++)
+        {
+            tall.Children.Add(new TextBlock { Text = "row " + i });
+        }
+        ScrollViewer scroll = new ScrollViewer { Content = tall };
+        Window window = new Window { Content = scroll, Width = 300, Height = 100 };
+        window.Show();
+        window.UpdateLayout();
+
+        ScrollBar bar = scroll.GetVisualDescendants().OfType<ScrollBar>().Single(b => b.Orientation == Orientation.Vertical);
+        bar.Bounds.Width.ShouldBe(8);
+        RepeatButton[] lineButtons = bar.GetVisualDescendants().OfType<RepeatButton>()
+            .Where(b => b.Name is "PART_LineUpButton" or "PART_LineDownButton").ToArray();
+        lineButtons.Length.ShouldBe(2);
+        lineButtons.ShouldAllBe(b => !b.IsVisible);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void FluentControls_FollowTheBaseFontSize()
+    {
+        IResourceDictionary resources = Application.Current!.Resources;
+        ComboBox comboBox = new ComboBox { ItemsSource = new[] { "one" }, SelectedIndex = 0 };
+        Window window = new Window { Content = comboBox, Width = 300, Height = 100 };
+        window.Show();
+        window.UpdateLayout();
+        try
+        {
+            comboBox.FontSize.ShouldBe(FrbThemeResources.DefaultBaseFontSize);
+
+            FrbThemeResources.SetBaseFontSize(resources, 16);
+            window.UpdateLayout();
+
+            comboBox.FontSize.ShouldBe(16);
+        }
+        finally
+        {
+            FrbThemeResources.SetBaseFontSize(resources, FrbThemeResources.DefaultBaseFontSize);
+            window.Close();
+        }
+    }
+
+    [AvaloniaFact]
+    public void OptionButtons_AreTheWpfSize_SoLongRowsDoNotWrap()
+    {
+        ToggleButtonOption[] options = Enumerable.Range(0, 9).Select(i => new ToggleButtonOption("option " + i, i)).ToArray();
+        ToggleButtonOptionDisplay display = new ToggleButtonOptionDisplay
+        {
+            OptionContentFactory = _ => new Border { Width = 28, Height = 28 },
+        };
+        display.SetOptions(options);
+        Window window = new Window { Content = display, Width = 600, Height = 100 };
+        window.Show();
+        window.UpdateLayout();
+
+        ToggleButton[] buttons = display.GetVisualDescendants().OfType<ToggleButton>().ToArray();
+        buttons.Length.ShouldBe(9);
+        // 28px icon, 2px padding and a 1px border on each side, no margin: the WPF ToggleButton.
+        buttons.ShouldAllBe(b => b.Bounds.Width == 34);
+        buttons.Select(b => b.Bounds.Top).Distinct().Count().ShouldBe(1);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Buttons_DefaultToTheWpfPrimaryLook_AndTheToolClassesOptOut()
+    {
+        Button plain = new Button { Content = "OK" };
+        Button flat = new Button { Content = "x", Classes = { GumChromeStyles.FlatButtonClass } };
+        Button icon = new Button { Content = "+", Classes = { GumChromeStyles.IconButtonClass } };
+        StackPanel panel = new StackPanel { Children = { plain, flat, icon } };
+        Window window = new Window { Content = panel, Width = 300, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        try
+        {
+            plain.Background.ShouldBeSameAs(Application.Current!.Resources["Frb.Brushes.Primary"]);
+            plain.Foreground.ShouldBeSameAs(Application.Current.Resources["Frb.Brushes.Primary.Contrast"]);
+            plain.FontWeight.ShouldBe(FontWeight.Bold);
+            plain.Padding.ShouldBe(new Thickness(4, 2, 4, 3));
+
+            flat.Background.ShouldBe(Brushes.Transparent);
+            flat.FontWeight.ShouldBe(FontWeight.Normal);
+            icon.Background.ShouldBe(Brushes.Transparent);
+            icon.FontWeight.ShouldBe(FontWeight.Normal);
+        }
+        finally
+        {
+            window.Close();
+        }
+    }
+}

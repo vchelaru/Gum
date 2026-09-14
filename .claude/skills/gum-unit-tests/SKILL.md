@@ -10,7 +10,9 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 | Project | Location | What it tests |
 |---------|----------|---------------|
 | **`MonoGameGum.Tests`** | `MonoGameGum.Tests/` | **Default project for new tests.** MonoGame runtime, Forms controls, rendering, localization, data types — anything not specific to V3 visuals or integration |
-| `Gum.ProjectServices.Tests` | `Tests/Gum.ProjectServices.Tests/` | Headless services: error checking, codegen, font generation, project loading |
+| `Gum.ProjectServices.Tests` | `Tests/Gum.ProjectServices.Tests/` | Headless services: error checking, codegen, font generation, project loading, save byte-parity (`ProjectSaveParityTests` over `ParityCorpus/`) |
+| `Gum.Presentation.Tests` | `Tests/Gum.Presentation.Tests/` | The tool's headless logic in `Tools/Gum.Presentation` (commands, view models, managers, plugin host) |
+| `Gum.Avalonia.Tests` | `Tests/Gum.Avalonia.Tests/` | The Avalonia tool head: composition, shell, plugin host, canvas host, tree control, theme resources, and an unattended run of the real executable |
 | `Gum.Cli.Tests` | `Tests/Gum.Cli.Tests/` | CLI command exit codes and output |
 | `MonoGameGum.Tests.V3` | `Tests/MonoGameGum.Tests.V3/` | Tests specific to V3 default visuals |
 | `MonoGameGum.IntegrationTests` | `Tests/MonoGameGum.IntegrationTests/` | Requires a real `GraphicsDevice`: content loading, renderer teardown, full `GumService` lifecycle |
@@ -34,6 +36,26 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - `MessageDialogStyle.YesNo` is a static property returning a **new instance per get**, so a Moq setup matching it by value never matches. The unmatched call returns the default `MessageDialogResult` (0, negative), so the code under test takes the user-declined branch and the test fails somewhere unrelated. Match on the dialog title or `It.IsAny<MessageDialogStyle?>()`.
 - Use named parameters for boolean literals.
 - Don't name a test namespace after an existing Gum type (e.g. `MonoGameGum.Tests.Binding` collides with `Gum.Forms.Data.Binding`) — an unrelated file elsewhere in the same test project that references the type unqualified can suddenly fail to compile (`CS0118: '...' is a namespace but is used like a type`).
+
+## Avalonia head tests (Gum.Avalonia.Tests)
+
+- Anything that creates an Avalonia object (controls, `ResourceDictionary`, geometry) must be
+  `[AvaloniaFact]`, which runs on the headless UI thread; a plain `[Fact]` throws "Call from invalid
+  thread".
+- Drive input with the `Avalonia.Headless` window helpers (`MouseDown`/`MouseUp`/`KeyPress` with a
+  `PhysicalKey`) and call `Dispatcher.UIThread.RunJobs()` before asserting on anything the control
+  updates on a later dispatcher pass.
+- Tests that compose plugins need the container registered with `Locator` (see
+  `HeadTestServices`). A hung test host blocks the next run until it is killed; run with
+  `--blame-hang --blame-hang-timeout 120s`.
+- `HeadProcessTests` launches the built head (`Tool/Gum.Avalonia/bin/<Config>/net10.0`) on a copied
+  fixture; it skips without a display and on CI.
+
+## Save parity corpus
+
+`ParityCorpus/` holds whole project folders that must re-save byte for byte in every culture and on
+every OS. A red parity test is a regression; only an intended format change regenerates the
+baselines (`GUM_UPDATE_PARITY_BASELINES=1`, then review the diff). See `ParityCorpus/README.md`.
 
 ## Test at production defaults
 

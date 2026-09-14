@@ -1,8 +1,10 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:dataTypes="clr-namespace:WpfDataUi.DataTypes"
+    xmlns:dataTypes="clr-namespace:WpfDataUi.DataTypes;assembly=DataUi.Core"
     xmlns:local="clr-namespace:WpfDataUi">
+
+    <BooleanToVisibilityConverter x:Key="DataUi.BooleanToVisibility" />
 
     <!--  Brushes for consumers to override  -->
     <SolidColorBrush
@@ -14,7 +16,13 @@
         Opacity="0.05"
         Color="Black" />
 
-    <DataTemplate DataType="{x:Type dataTypes:InstanceMember}">
+    <!--
+        Keyed rather than implicit: WPF looks for a type-keyed template in the theme of the assembly
+        that defines the type, and the member types live in DataUi.Core, which has no theme. The
+        component resource key lets consumers that re-template the categories reach it too. No
+        DataType here: the compiled theme would key the template by that type and drop this key.
+    -->
+    <DataTemplate x:Key="{x:Static local:Keys.InstanceMemberTemplateKey}">
         <Border x:Name="Container">
             <local:SingleDataUiContainer DataContext="{Binding}" />
         </Border>
@@ -34,8 +42,11 @@
         <Expander
             Header="{Binding Name}"
             IsExpanded="{Binding IsExpanded}"
-            Visibility="{Binding Visibility}">
-            <ItemsControl AlternationCount="2" ItemsSource="{Binding Members}" />
+            Visibility="{Binding IsVisible, Converter={StaticResource DataUi.BooleanToVisibility}}">
+            <ItemsControl
+                AlternationCount="2"
+                ItemTemplate="{DynamicResource {x:Static local:Keys.InstanceMemberTemplateKey}}"
+                ItemsSource="{Binding Members}" />
         </Expander>
     </DataTemplate>
 

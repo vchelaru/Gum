@@ -250,7 +250,7 @@ public class FileCommands : IFileCommands
         if (gumProject == null)
             return;
 
-        var sourceFile = System.IO.Path.Combine(GetExecutingDirectory(), "Content\\.gumfcs");
+        var sourceFile = System.IO.Path.Combine(GetExecutingDirectory(), "Content", ".gumfcs");
         var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + ".gumfcs";
 
         // Exit early if the destination file already exists and we are not forcing an overwrite

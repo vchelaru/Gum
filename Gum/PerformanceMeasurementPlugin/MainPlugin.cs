@@ -1,22 +1,28 @@
-﻿using Gum;
+using Gum;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 using PerformanceMeasurementPlugin.Services;
 using PerformanceMeasurementPlugin.ViewModels;
-using PerformanceMeasurementPlugin.Views;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PerformanceMeasurementPlugin
 {
+    /// <summary>
+    /// The Performance tab, under both heads: a <see cref="PerformanceViewModel"/> polling the active
+    /// renderer. Each head supplies the view (TabViewRegistry).
+    /// </summary>
     [Export(typeof(PluginBase))]
     public class MainPlugin : PluginBase
     {
-        PerformanceView view;
+        private readonly IDispatcher _dispatcher;
+
+        [ImportingConstructor]
+        public MainPlugin(IDispatcher dispatcher)
+        {
+            _dispatcher = dispatcher;
+        }
 
         public override string FriendlyName
         {
@@ -30,15 +36,15 @@ namespace PerformanceMeasurementPlugin
 
         public override void StartUp()
         {
-            view = new PerformanceView();
-            view.DataContext = new PerformanceViewModel(new DispatcherUiTimer(), new RenderDiagnosticsService());
+            // The plugin owns its timer (not the shared bridged one), so its interval is its own.
+            PeriodicUiTimer timer = new PeriodicUiTimer(_dispatcher, NullLogger<PeriodicUiTimer>.Instance);
+            PerformanceViewModel viewModel = new PerformanceViewModel(timer, new RenderDiagnosticsService());
 
-            AddControl(view, "Performance", Gum.TabLocation.RightBottom);
+            AddControl(viewModel, "Performance", Gum.TabLocation.RightBottom);
         }
 
         public override bool ShutDown(Gum.Plugins.PluginShutDownReason shutDownReason)
         {
-            //_tabManager.HideTabForControl(view);
             return true;
         }
     }

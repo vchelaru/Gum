@@ -127,7 +127,8 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
 
     private static void SetField(object instance, string fieldName, object value)
     {
-        FieldInfo field = typeof(MainEditorTabPlugin).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!;
+        // The drag-drop state lives on the neutral base.
+        FieldInfo field = typeof(EditorTabPluginBase).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)!;
         field.SetValue(instance, value);
     }
 }

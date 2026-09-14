@@ -1,4 +1,5 @@
-﻿using StateAnimationPlugin.ViewModels;
+using StateAnimationPlugin.Timeline;
+using StateAnimationPlugin.ViewModels;
 using System;
 using System.Globalization;
 using System.Windows;
@@ -34,7 +35,7 @@ internal sealed class TimeToXConverter : IMultiValueConverter
             !Try.Double(values[2], out var width) || total <= 0.0)
             return 0.0;
 
-        return Math.Max(0, (time / total) * Math.Max(0, width));
+        return TimelineLayout.TimeToX(time, total, width);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
@@ -52,8 +53,7 @@ internal sealed class LengthToWidthConverter : IMultiValueConverter
             !Try.Double(values[2], out var width) || total <= 0.0)
             return 0.0;
 
-        var w = (len / total) * Math.Max(0, width);
-        return Math.Max(2, w); // tiny minimum so very short segments are visible
+        return TimelineLayout.LengthToWidth(len, total, width);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
@@ -71,13 +71,8 @@ internal sealed class TimeToCenteredLeftConverter : IMultiValueConverter
             !Try.Double(values[2], out var trackWidth))
             return 0d;
 
-        var x = (time / length) * Math.Max(0, trackWidth);
-
-        // itemWidth may be 0 on first measure; if so, don't shift.
-        if (Try.Double(values[3], out var itemWidth) && itemWidth > 0)
-            x -= itemWidth / 2.0;
-
-        return x;
+        double itemWidth = Try.Double(values[3], out double measured) ? measured : 0;
+        return TimelineLayout.CenteredLeft(time, length, trackWidth, itemWidth);
     }
 
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

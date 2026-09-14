@@ -46,6 +46,26 @@ public class GumProjectDependencyWalkerTests : IDisposable
     }
 
     [Fact]
+    public void Walk_keeps_a_rooted_path_outside_the_project_rooted()
+    {
+        // Rooted on this OS: a drive on Windows, a leading separator elsewhere. Dropping the
+        // separator would make the reference project-relative.
+        string outsideTexture = OperatingSystem.IsWindows() ? "C:/Elsewhere/Art/bg.png" : "/Elsewhere/Art/bg.png";
+        ComponentSave component = TestProjectBuilder.BuildComponent("Comp");
+        TestProjectBuilder.AddSpriteInstance(component, "Sprite", outsideTexture);
+        GumProjectSave project = TestProjectBuilder.BuildProject(components: new[] { component });
+        string root = CreateProjectRoot(new[]
+        {
+            ("Components/Comp.gucx", EmptyContent),
+        });
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(project, root, GumBundleInclusion.Core | GumBundleInclusion.ExternalFiles);
+
+        DependencyWarning missing = result.MissingFiles.ShouldHaveSingleItem();
+        missing.ReferencedPath.ShouldBe(outsideTexture);
+    }
+
+    [Fact]
     public void Walk_does_not_duplicate_files_referenced_by_multiple_components()
     {
         const string sharedTexture = "Textures/shared.png";

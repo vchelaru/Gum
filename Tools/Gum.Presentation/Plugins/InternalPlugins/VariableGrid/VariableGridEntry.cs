@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using ToolsUtilities;
+using WpfDataUi.DataTypes;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 
@@ -455,6 +456,24 @@ public class VariableGridEntry
             return VariableDisplayerKind.Default;
         }
 
+        if (type == typeof(StandardDisplayers.ComboBox) || type == typeof(StandardDisplayers.EditableComboBox))
+        {
+            return VariableDisplayerKind.ComboBox;
+        }
+        if (type == typeof(StandardDisplayers.FileSelection))
+        {
+            return VariableDisplayerKind.FileSelection;
+        }
+        if (type == typeof(StandardDisplayers.ListBox))
+        {
+            return VariableDisplayerKind.ListBox;
+        }
+        if (type == typeof(StandardDisplayers.MultiLineTextBox))
+        {
+            return VariableDisplayerKind.MultiLineTextBox;
+        }
+
+        // A head control assigned directly (e.g. by a WPF plugin) is recognized by name.
         return type.FullName switch
         {
             "WpfDataUi.Controls.ComboBoxDisplay" => VariableDisplayerKind.ComboBox,

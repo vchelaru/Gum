@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -42,6 +42,8 @@ namespace WpfDataUi.Controls
             }
         }
 
+
+        readonly StringListLogic _listLogic = new StringListLogic();
 
         public StringListTextBoxDisplay()
         {
@@ -87,45 +89,16 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public string GetCurrentLineText()
-        {
-            // Get the current cursor position
-            int currentPosition = TextBox.SelectionStart;
-
-            // Get the line index of the current position
-            int currentLineIndex = TextBox.GetLineIndexFromCharacterIndex(currentPosition);
-
-            // Get the text of the current line
-            string currentLineText = TextBox.GetLineText(currentLineIndex);
-
-            return currentLineText;
-        }
+        public string GetCurrentLineText() => _listLogic.GetLineAt(TextBox.Text, TextBox.SelectionStart);
 
 
         public ApplyValueResult TryGetValueOnUi(out object? result)
         {
-            // todo - need to make this more flexible, but for now let's just support strings:
+            // Only string lists for now.
             if (InstanceMember?.PropertyType == typeof(List<string>))
             {
-                var value = new List<string>();
-                
-                // newlines could be \r\n or just \n, so we need to split on both
-                if (TextBox.Text.Contains("\r\n"))
-                {
-                    value = TextBox.Text.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => s.Trim())
-                        .ToList();
-                }
-                else // if(TextBox.Text.Contains("\n")) this also captures there being no newlines
-                {
-                    value = TextBox.Text.Split(new string[] { "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => s.Trim())
-                        .ToList();
-                }
-                result = value;
-
+                result = _listLogic.ParseLines(TextBox.Text);
                 return ApplyValueResult.Success;
-
             }
             else
             {
@@ -138,15 +111,7 @@ namespace WpfDataUi.Controls
         {
             if (value is List<string> valueAsList)
             {
-                var newList = new List<string>();
-                newList.AddRange(valueAsList);
-                TextBox.Text = String.Join(System.Environment.NewLine, valueAsList.ToArray());
-            }
-            else
-            {
-                // nothing?
-                // todo - we may want to clone the list here too to prevent unintentional editing of the underlying list
-                //ListBox.ItemsSource = value as IEnumerable;
+                TextBox.Text = _listLogic.JoinLines(valueAsList);
             }
             return ApplyValueResult.Success;
         }

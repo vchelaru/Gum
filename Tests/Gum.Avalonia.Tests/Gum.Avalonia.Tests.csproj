@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Tests for the Avalonia head. Runs headless on every OS (no GPU, no window server): the
+    composition test proves the head supplies every contract the core consumes, and the headless
+    Avalonia tests prove the shell's views construct.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>12.0</LangVersion>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia.Headless.XUnit" Version="11.3.17" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Shouldly" Version="4.3.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Tool\Gum.Avalonia\Gum.Avalonia.csproj" />
+    <!-- The plugin projects that build without WPF; the host tests compose them. -->
+    <ProjectReference Include="..\..\Gum\ConvertToJsonPlugin\ConvertToJsonPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\PerformanceMeasurementPlugin\PerformanceMeasurementPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\SvgPlugin\SkiaPlugin.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

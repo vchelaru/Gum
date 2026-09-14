@@ -9,6 +9,10 @@ Release history (including older releases):\
 Gum Source Code:\
 [https://www.github.com/vchelaru/Gum](https://www.github.com/vchelaru/Gum)
 
+{% hint style="info" %}
+A native build of Gum for macOS and Linux (and Windows) is on the way, with no WINE setup needed. See [Native Preview](native-preview.md).
+{% endhint %}
+
 {% tabs %}
 {% tab title="Windows" %}
 Download and unzip the .zip file and run the Gum.exe file.

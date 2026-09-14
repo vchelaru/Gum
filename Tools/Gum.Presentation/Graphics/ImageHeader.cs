@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SkiaSharp;
 
 namespace Gum.Graphics;
 /// <summary>
@@ -53,11 +54,16 @@ public static class ImageHeader
             }
             catch (ArgumentException)
             {
-                //do it the old fashioned way
-
-                using (Bitmap b = new Bitmap(path))
+                // Header parsing failed: let a real decoder read the dimensions. SkiaSharp runs on
+                // every OS the tool targets; System.Drawing.Bitmap does not.
+                using (SKCodec? codec = SKCodec.Create(path))
                 {
-                    return b.Size;
+                    if (codec == null)
+                    {
+                        throw;
+                    }
+
+                    return new Size(codec.Info.Width, codec.Info.Height);
                 }
             }
         }

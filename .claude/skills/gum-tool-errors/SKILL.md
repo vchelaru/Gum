@@ -54,6 +54,8 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 | `GetMissingBaseTypeErrorsFor` | Instance's base type points to a nonexistent element |
 | `GetParentErrorsFor` | Parent variable references a nonexistent instance |
 | `GetInvalidVariableTypeErrorsFor` | Custom variable uses an unknown or misnamed type (State suffix issues) |
+| `GetMissingSourceFileErrorsFor` | GUM0004: element file missing on disk; GUM0008 when it exists under a different case |
+| `GetMissingExternalFileErrorsFor` | GUM0006: referenced texture/font file missing (via `GumProjectDependencyWalker`); GUM0008 for a case-only difference |
 
 ## Key Files
 

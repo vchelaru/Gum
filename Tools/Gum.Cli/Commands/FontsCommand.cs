@@ -92,7 +92,8 @@ public static class FontsCommand
     /// </summary>
     private static IFontFileGenerator CreateFontFileGenerator(GumProjectSave project, IFontGenerationCallbacks callbacks)
     {
-        return project.FontGenerator switch
+        // bmfont.exe is Windows-only; off Windows a BmFont project is served by KernSmith.
+        return FontGeneratorResolver.Resolve(project.FontGenerator) switch
         {
             FontGeneratorType.KernSmith => new KernSmithFileGenerator(callbacks),
             _ => new BmFontExeFileGenerator(callbacks)

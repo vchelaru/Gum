@@ -10,75 +10,12 @@ using Gum.Managers;
 
 namespace Gum.Controls;
 
-/// <summary>
-/// Where a drop lands relative to the row it is over.
-/// </summary>
-public enum TreeDropKind
-{
-    None,
-
-    /// <summary>Insert above the target, as a sibling.</summary>
-    Before,
-
-    /// <summary>Drop onto the target, appending to its children.</summary>
-    Into,
-
-    /// <summary>Drop onto the target as its first child. Used when it is expanded.</summary>
-    IntoFirst,
-
-    /// <summary>Insert below the target, as a sibling.</summary>
-    After,
-}
-
-/// <summary>
-/// Asks whether a drop should be allowed, before it happens.
-/// </summary>
-public sealed class TreeDropValidationEventArgs : EventArgs
-{
-    internal TreeDropValidationEventArgs(IReadOnlyList<GumTreeNode> draggedNodes, GumTreeNode? targetNode, TreeDropKind kind)
-    {
-        DraggedNodes = draggedNodes;
-        TargetNode = targetNode;
-        Kind = kind;
-    }
-
-    public IReadOnlyList<GumTreeNode> DraggedNodes { get; }
-    public GumTreeNode? TargetNode { get; set; }
-    public TreeDropKind Kind { get; set; }
-
-    /// <summary>Set true to permit the drop. Defaults to false.</summary>
-    public bool Allow { get; set; }
-}
-
-/// <summary>
-/// Reports a drop that has been accepted.
-/// </summary>
-public sealed class TreeDropEventArgs : EventArgs
-{
-    internal TreeDropEventArgs(IReadOnlyList<GumTreeNode> draggedNodes, GumTreeNode? targetNode, TreeDropKind kind)
-    {
-        DraggedNodes = draggedNodes;
-        TargetNode = targetNode;
-        Kind = kind;
-    }
-
-    public IReadOnlyList<GumTreeNode> DraggedNodes { get; }
-    public GumTreeNode? TargetNode { get; set; }
-    public TreeDropKind Kind { get; set; }
-}
-
 public partial class GumTreeView
 {
     private Point _mouseDownPoint;
     private GumTreeNode? _dragCandidateNode;
     private bool _isDragging;
     private DropAdorner? _dropAdorner;
-
-    /// <summary>
-    /// Fraction of a row's height at its top and bottom that means "insert beside" rather than
-    /// "drop onto".
-    /// </summary>
-    private const double EdgeBandFraction = 0.25;
 
     /// <summary>
     /// Distance from the top or bottom of the viewport within which a drag scrolls the tree.
@@ -140,17 +77,7 @@ public partial class GumTreeView
 
     private void StartDrag(GumTreeNode node)
     {
-        // Dragging a row that is not part of the selection drags just that row, and takes the
-        // selection with it.
-        if (!_selectedNodes.Contains(node))
-        {
-            SelectSingleNode(node);
-            OnAfterSelect(node);
-        }
-
-        List<GumTreeNode> dragged = _selectedNodes.Count > 0
-            ? new List<GumTreeNode>(_selectedNodes)
-            : new List<GumTreeNode> { node };
+        IReadOnlyList<GumTreeNode> dragged = Selection.BeginDrag(node);
 
         _isDragging = true;
         _dragCandidateNode = null;
@@ -256,7 +183,7 @@ public partial class GumTreeView
             return (null, TreeDropKind.None);
         }
 
-        if (IsNodeOrDescendantOfAny(target, dragged))
+        if (TreeDropLogic.IsNodeOrDescendantOfAny(target, dragged))
         {
             return (null, TreeDropKind.None);
         }
@@ -274,34 +201,7 @@ public partial class GumTreeView
         Point inContainer = TranslatePoint(point, container);
         double fraction = rowHeight > 0 ? inContainer.Y / rowHeight : 0.5;
 
-        if (fraction <= EdgeBandFraction)
-        {
-            return (target, TreeDropKind.Before);
-        }
-
-        if (fraction >= 1 - EdgeBandFraction)
-        {
-            // Dropping just below an expanded row means "first child", not "next sibling" - the row
-            // immediately underneath is its child.
-            return (target, target.IsExpanded && target.ChildCount > 0
-                ? TreeDropKind.IntoFirst
-                : TreeDropKind.After);
-        }
-
-        return (target, TreeDropKind.Into);
-    }
-
-    private static bool IsNodeOrDescendantOfAny(GumTreeNode node, IReadOnlyList<GumTreeNode> candidates)
-    {
-        for (GumTreeNode? current = node; current != null; current = current.Parent)
-        {
-            if (candidates.Contains(current))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return (target, TreeDropLogic.GetKind(target, fraction));
     }
 
     private void AutoScrollWhileDragging(Point point)

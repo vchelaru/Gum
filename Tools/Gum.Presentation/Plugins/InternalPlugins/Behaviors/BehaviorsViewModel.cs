@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Mvvm;
@@ -46,11 +47,40 @@ namespace Gum.Plugins.Behaviors
             set { Set(value); }
         }
 
+        /// <summary>Switches to the edit checklist for the selected component.</summary>
+        public RelayCommand EditCommand { get; }
+
+        /// <summary>Applies the checklist (raises <see cref="ApplyChangedValues"/>) and leaves edit mode.</summary>
+        public RelayCommand ConfirmEditCommand { get; }
+
+        /// <summary>Leaves edit mode without applying the checklist.</summary>
+        public RelayCommand CancelEditCommand { get; }
+
         public BehaviorsViewModel(ISelectedState selectedState, IProjectManager projectManager)
         {
             _selectedState = selectedState;
             _projectManager = projectManager;
+            EditCommand = new RelayCommand(StartEditing);
+            ConfirmEditCommand = new RelayCommand(ConfirmEdit);
+            CancelEditCommand = new RelayCommand(CancelEdit);
         }
+
+        private void StartEditing()
+        {
+            if (_selectedState.SelectedComponent is { } component)
+            {
+                UpdateTo(component);
+            }
+            IsEditing = true;
+        }
+
+        private void ConfirmEdit()
+        {
+            HandleOkEditClick();
+            IsEditing = false;
+        }
+
+        private void CancelEdit() => IsEditing = false;
 
         public void HandleOkEditClick()
         {
