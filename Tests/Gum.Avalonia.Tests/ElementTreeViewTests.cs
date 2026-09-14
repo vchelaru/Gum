@@ -1,8 +1,9 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Platform;
 using Avalonia.Threading;
@@ -117,6 +118,28 @@ public class ElementTreeViewTests
 
         screens.IsExpanded.ShouldBeTrue();
         tree.Selection.SelectedNode.ShouldBeNull();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void LosingCaptureAfterAnExpanderPress_DoesNotSwallowTheNextClick()
+    {
+        // No release follows a lost capture (the window deactivates mid-press, say), so the
+        // "this release came from the expander" note must not survive to the next click.
+        (Window window, AvaloniaGumTreeView tree, GumTreeNode screens, GumTreeNode first, _) = CreateTree();
+        IPointer? pointer = null;
+        window.AddHandler(InputElement.PointerPressedEvent, (_, e) => pointer = e.Pointer, RoutingStrategies.Tunnel);
+        TreeRowView row = RowFor(tree, screens);
+        Point point = row.Expander.TranslatePoint(new Point(row.Expander.Bounds.Width / 2, row.Expander.Bounds.Height / 2), window)!.Value;
+        window.MouseDown(point, MouseButton.Left, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+        screens.IsExpanded.ShouldBeTrue();
+
+        // Releasing the capture raises PointerCaptureLost on the expander and every ancestor, the tree included.
+        pointer!.Capture(null);
+        Click(window, tree, first, RawInputModifiers.None);
+
+        tree.Selection.SelectedNode.ShouldBe(first);
         window.Close();
     }
 
