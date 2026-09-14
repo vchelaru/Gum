@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
@@ -190,6 +191,12 @@ public class MainPanelTabsTests
         region.Background.ShouldBeSameAs(ThemeBrushes.Get(window, "Frb.Brushes.Background", Brushes.Red));
         ContentPresenter content = region.GetVisualDescendants().OfType<ContentPresenter>().First(presenter => presenter.Name == "PART_SelectedContentHost");
         content.Background.ShouldBeSameAs(ThemeBrushes.Get(window, "Frb.Surface01", Brushes.Red));
+
+        // The selected header sits flush on the content: any spacing shows the strip through it.
+        TabItem selectedHeader = region.GetVisualDescendants().OfType<TabItem>().Single(item => item.IsSelected);
+        double headerBottom = selectedHeader.TranslatePoint(new Point(0, selectedHeader.Bounds.Height), window)!.Value.Y;
+        double contentTop = content.TranslatePoint(new Point(0, 0), window)!.Value.Y;
+        contentTop.ShouldBe(headerBottom);
 
         GridSplitter[] splitters = view.GetVisualDescendants().OfType<GridSplitter>().ToArray();
         splitters.Length.ShouldBe(4);

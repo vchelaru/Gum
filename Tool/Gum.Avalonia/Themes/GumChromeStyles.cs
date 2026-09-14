@@ -266,6 +266,11 @@ public static class GumChromeStyles
         {
             Setters = { new Setter(ContentPresenter.BackgroundProperty, Resource("Frb.Surface01")) },
         },
+        // Fluent's template leaves 2px under the headers, which the strip shows through.
+        new Style(selector => selector.OfType<TabControl>().Class(MainTabsClass).Template().OfType<ItemsPresenter>().Name("PART_ItemsPresenter"))
+        {
+            Setters = { new Setter(Layoutable.MarginProperty, new Thickness(0)) },
+        },
 
         // Menus (Frb.Styles.Defaults.xaml Menu, MenuItem, ContextMenu, Separator): compact rows in
         // the body font; a hovered row washed with Primary; the open top-level item joined to its
