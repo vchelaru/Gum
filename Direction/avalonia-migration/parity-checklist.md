@@ -53,3 +53,19 @@ Record anything that behaves differently on one OS here, with the issue number.
   dying on an unreadable folder under the code root (fixed: skipped) and Arial failing to generate
   (fixed: the platform's substitute face is used, with an Output line). No issue numbers: fixed on
   the branch before any release.
+
+## Timings (Windows, Release, 2026-09-14)
+
+Measured with `Tools/ParityShots/timings.ps1` on the GameUiSamples project, two samples each,
+the same ten tree-search selections 1.5 s apart in both heads (the wall clock is the scripted
+pauses; CPU is the comparable column). Both heads render their canvas continuously, so CPU
+includes the frame loop.
+
+| Head | Launch to window | Launch to project loaded | Idle working set | CPU for 10 selections (over 35 s) | Working set after | Shutdown |
+|---|---|---|---|---|---|---|
+| Avalonia | 1.2 s | 2.9-3.5 s | 311-315 MB | 15.5-15.9 s | 492-495 MB | 0.7 s |
+| WPF | 10.8-15.3 s | same as window | 329-331 MB | 33.7 s | 431 MB | 0.6 s |
+
+The WPF head shows its window only once the project is loaded, so its two launch columns
+coincide. The Avalonia head grows more during selections (about 180 MB against 100 MB); not
+investigated yet.

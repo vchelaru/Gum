@@ -85,6 +85,23 @@ When a menu path is passed from a shell other than PowerShell, quote it as one a
 or call through `powershell -Command "& .\menu-capture.ps1 -Path Edit,Add,Screen"`; a single
 `"Edit,Add,Screen"` string is not split.
 
+## 4b. Timings
+
+`timings.ps1` launches each head by itself on its scratch project and measures the same things
+for both: launch to window, launch to project loaded (the title carries the project name), idle
+working set and private bytes, then wall clock, CPU time and working-set growth for ten element
+selections through the tree search, and shutdown. It writes `out	imings.md`. Build both heads
+`-c Release` first (it looks in the Release output folders; `-Configuration Debug` for a Debug
+run). Like `capture.ps1` it drives the keyboard, so nothing else may be in the foreground.
+
+```powershell
+dotnet build GumFull.sln -c Release
+.	imings.ps1            # -Heads avalonia,wpf  -Elements ...  -SettleMs 1500
+```
+
+The wall clock includes the scripted pauses (the printout says how much); the CPU column is the
+comparable number.
+
 ## 5. How the driver works, and its gotchas
 
 - Menus are found by name through UI Automation in both heads; the Avalonia tree exposes its rows
