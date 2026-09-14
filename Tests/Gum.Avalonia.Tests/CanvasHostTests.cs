@@ -98,6 +98,17 @@ public class CanvasHostTests
         });
     }
 
+    // Plugin StartUp builds the canvas control long before anything renders, and a machine
+    // without GL cannot even attempt device creation safely (see the class remarks), so the
+    // control must stay device-free until it first draws or is asked for the device.
+    [AvaloniaFact]
+    public void Control_DoesNotCreateTheDevice_UntilItIsUsed()
+    {
+        using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl();
+
+        GameRenderDeviceHost.IsSharedDeviceCreated.ShouldBeFalse();
+    }
+
     // The bitmap needs the Avalonia platform, which the UI thread session provides.
     [AvaloniaFact]
     public void RenderSurface_CopiesRgbaIntoTheBitmap()
