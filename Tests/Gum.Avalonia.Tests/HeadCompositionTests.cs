@@ -1,6 +1,5 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
-using Avalonia.VisualTree;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Shell;
 using Gum.Services;
@@ -72,10 +71,11 @@ public class HeadCompositionTests
         // Drawing into the title bar puts the resize border inside the client area, over a scroll
         // bar at the right edge (#4694); a maximized window has no resize border. Where the system
         // title bar stays (Linux), there is no inner border at all.
+        // Not shown: the container's one MainWindow may already have been shown and closed by
+        // another test, and the margin follows the window state whether or not it is on screen.
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
-        window.Show();
         double expectedMargin = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? 8 : 0;
-        MainPanelView panel = window.GetVisualDescendants().OfType<MainPanelView>().Single();
+        MainPanelView panel = ((DockPanel)window.Content!).Children.OfType<MainPanelView>().Single();
 
         panel.Margin.Right.ShouldBe(expectedMargin);
 
@@ -84,7 +84,6 @@ public class HeadCompositionTests
 
         window.WindowState = WindowState.Normal;
         panel.Margin.Right.ShouldBe(expectedMargin);
-        window.Close();
     }
 
     [Fact]
