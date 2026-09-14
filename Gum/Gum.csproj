@@ -508,7 +508,7 @@
 	</ItemGroup>
 	<!-- When built from GumFull.sln (which includes Gum.Cli), copy CLI output into GumCli subfolder.
 	     This target does NOT build Gum.Cli itself — the solution handles that. When building from
-	     Gum.sln (which does not include Gum.Cli), the condition is false and this is skipped. -->
+	     Gum.Wpf.sln (which does not include Gum.Cli), the condition is false and this is skipped. -->
 	<Target Name="CopyGumCli" AfterTargets="Build"
 			Condition="Exists('..\Tools\Gum.Cli\bin\$(Configuration)\net10.0\gumcli.exe') OR Exists('..\Tools\Gum.Cli\bin\$(Configuration)\net10.0\gumcli.dll')">
 		<ItemGroup>

@@ -4,7 +4,7 @@ using Shouldly;
 namespace Gum.RepoHygiene.Tests;
 
 /// <summary>
-/// Every project a checked-in .sln references must exist on disk. A deleted csproj whose
+/// Every project a checked-in .sln or .slnx references must exist on disk. A deleted csproj whose
 /// solution entry survives fails restore for the whole solution (MSB3202), and not every
 /// root solution is built by CI, so this pins it instead. See issue #4695.
 /// </summary>
@@ -14,6 +14,10 @@ public class SolutionProjectReferenceTests
     private static readonly Regex ProjectLine = new(
         @"^Project\(""\{[^}]+\}""\)\s*=\s*""[^""]*"",\s*""(?<path>[^""]+\.[a-z]+proj)""",
         RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+    // <Project Path="relative/path.csproj" />   (.slnx)
+    private static readonly Regex SlnxProjectElement = new(
+        @"<Project\s+Path\s*=\s*""(?<path>[^""]+\.[a-z]+proj)""", RegexOptions.IgnoreCase);
 
     // path = fna   (inside a [submodule "..."] section of .gitmodules)
     private static readonly Regex SubmodulePathLine = new(
@@ -39,7 +43,8 @@ public class SolutionProjectReferenceTests
                 continue;
             }
             string slnDir = Path.GetDirectoryName(sln)!;
-            foreach (Match match in ProjectLine.Matches(File.ReadAllText(sln)))
+            Regex projectReference = sln.EndsWith(".slnx", StringComparison.OrdinalIgnoreCase) ? SlnxProjectElement : ProjectLine;
+            foreach (Match match in projectReference.Matches(File.ReadAllText(sln)))
             {
                 string relative = match.Groups["path"].Value.Replace('\\', Path.DirectorySeparatorChar);
                 string full = Path.GetFullPath(Path.Combine(slnDir, relative));
@@ -80,6 +85,17 @@ public class SolutionProjectReferenceTests
         match.Groups["path"].Value.ShouldBe(@"Gum\Gum.csproj");
     }
 
+    [Fact]
+    public void SlnxProjectElement_MatchesProjectElementsWithForwardSlashPaths()
+    {
+        string element = @"  <Project Path=""Tool/Gum.Avalonia/Gum.Avalonia.csproj"" />";
+
+        Match match = SlnxProjectElement.Match(element);
+
+        match.Success.ShouldBeTrue();
+        match.Groups["path"].Value.ShouldBe("Tool/Gum.Avalonia/Gum.Avalonia.csproj");
+    }
+
     private static IEnumerable<string> ReadSubmoduleRoots(string repoRoot)
     {
         string gitmodules = Path.Combine(repoRoot, ".gitmodules");
@@ -93,8 +109,10 @@ public class SolutionProjectReferenceTests
 
     private static IEnumerable<string> EnumerateSolutions(string root)
     {
+        // Sokol.NET is a hand-cloned, gitignored tree (Runtimes/SokolGum/README.md), not ours.
         return Directory.EnumerateFiles(root, "*.sln", SearchOption.AllDirectories)
+            .Concat(Directory.EnumerateFiles(root, "*.slnx", SearchOption.AllDirectories))
             .Where(path => !path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                .Any(segment => segment is "bin" or "obj" or "node_modules" or ".git"));
+                .Any(segment => segment is "bin" or "obj" or "node_modules" or ".git" or "Sokol.NET"));
     }
 }

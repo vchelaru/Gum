@@ -17,12 +17,12 @@ permissions:
 
 # Define the jobs to run
 jobs:
-  # The Avalonia head (Direction/avalonia-migration/phase-110): self-contained preview builds for
-  # Windows, macOS and Linux, attached to the same release as the WPF zip until cutover. macOS builds
-  # run on a Mac so the SDK signs the app host (Apple Silicon refuses unsigned native code); the
-  # bundle is then signed ad hoc. Developer ID signing and notarization need an Apple account and CI
-  # secrets that do not exist yet, so the preview is unsigned beyond that.
-  publish-avalonia-preview:
+  # The Avalonia head (Direction/avalonia-migration/phase-110): self-contained builds for Windows,
+  # macOS and Linux, the release's packages (the WPF tool no longer ships; Gum.Wpf.sln stays buildable). macOS
+  # builds run on a Mac so the SDK signs the app host (Apple Silicon refuses unsigned native code);
+  # the bundle is then signed ad hoc. Developer ID signing and notarization need an Apple account and
+  # CI secrets that do not exist yet, so the packages are unsigned beyond that.
+  publish-avalonia:
     strategy:
       fail-fast: false
       matrix:
@@ -81,7 +81,7 @@ jobs:
           mkdir -p dist
           case "$rid" in
             win-*)
-              (cd "$out" && zip -qr "../../dist/Gum-Avalonia-preview-$rid.zip" .)
+              (cd "$out" && zip -qr "../../dist/Gum-$rid.zip" .)
               ;;
             osx-*)
               app="publish/app/Gum.app"
@@ -90,37 +90,31 @@ jobs:
               sed "s/__VERSION__/$version/g" Tool/Gum.Avalonia/Packaging/macOS/Info.plist > "$app/Contents/Info.plist"
               chmod +x "$app/Contents/MacOS/Gum.Avalonia"
               codesign --force --deep --sign - "$app"
-              tar -czf "dist/Gum-Avalonia-preview-$rid.tar.gz" -C publish/app Gum.app
+              tar -czf "dist/Gum-$rid.tar.gz" -C publish/app Gum.app
               ;;
             linux-*)
               chmod +x "$out/Gum.Avalonia"
-              tar -czf "dist/Gum-Avalonia-preview-$rid.tar.gz" -C "$out" .
+              tar -czf "dist/Gum-$rid.tar.gz" -C "$out" .
               ;;
           esac
-          (cd dist && shasum -a 256 Gum-Avalonia-preview-* > "Gum-Avalonia-preview-$rid.sha256")
+          (cd dist && shasum -a 256 Gum-$rid.* > "Gum-$rid.sha256")
 
-      - name: Upload preview package
+      - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: avalonia-preview-${{ matrix.rid }}
+          name: avalonia-${{ matrix.rid }}
           path: dist/
 
   build:
-    # Waits for the Avalonia preview packages but still runs if they failed, so a preview problem
-    # never blocks the WPF release.
-    needs: publish-avalonia-preview
-    if: ${{ !cancelled() }}
+    # The Avalonia packages are the release, so a failed one fails the release.
+    needs: publish-avalonia
     # Which OS to run on
     runs-on: windows-latest
 
     # A list of "named" steps
     steps:
 
-      # Pull down the source code
-      #
-      # No submodule init: this job only builds GumFull.sln, which contains no
-      # FNA projects (the sole remaining submodule). Skipping it saves the
-      # multi-minute non-shallow clone the runtime lanes pay for.
+      # Pull down the source code (no submodule init: nothing is built here).
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -129,19 +123,6 @@ jobs:
           submodules: false
           # Supposedly needed for tags
           fetch-depth: 0
-
-      # Install .net dependency
-      - name: Install .NET SDK
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: '10.0.x'
-
-      # Restore NuGet packages once. MonoGameGum/KniGum default to desktop-only
-      # (mobile TFMs are opt-in via IncludeIOS/IncludeAndroid), so this runner
-      # never needs the mobile workloads installed.
-      # Uses GumFull.sln so the CLI is built and copied into the Gum tool output
-      - name: Restore
-        run: dotnet restore GumFull.sln
 
       # Update AssemblyInfo.cs version dynamically to current date. The build version lives
       # in an AssemblyMetadata("BuildVersion", ...) attribute rather than
@@ -162,65 +143,11 @@ jobs:
 
           Write-Host "Updated AssemblyInfo.cs to version $version"
 
-      # Build GUM TOOL (GumFull.sln includes Gum.Cli, which gets copied into the tool output;
-      # plugins use $(SolutionDir) in their post-build events so they must be built via the solution)
-      - name: Build Gum Tool
-        run: dotnet build GumFull.sln -c Release --no-restore
-
-      # Publish Gum as a framework-dependent single-file bundle.
-      # All managed assemblies are bundled into Gum.exe; the .NET runtime is still required.
-      # -r win-x64 is required for PublishSingleFile even when not self-contained.
-      - name: Publish Gum (single-file)
-        run: dotnet publish Gum/Gum.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o dist/publish
-
-      # Some content files are deposited into bin/Release/Content/ by plugin post-build events.
-      # dotnet publish has no knowledge of files placed there outside of project items, so we
-      # merge the full build-output Content/ folder into the publish output.
-      - name: Copy content to publish output
-        shell: pwsh
-        run: |
-          if (Test-Path "Gum/bin/Release/Content") {
-            New-Item -ItemType Directory -Force -Path "dist/publish/Content" | Out-Null
-            Copy-Item -Path "Gum/bin/Release/Content/*" -Destination "dist/publish/Content" -Recurse -Force
-          }
-
-      # Plugins are built by GumFull.sln and copied to bin/Release/Plugins via their own
-      # post-build events (which use $(SolutionDir) and don't run during dotnet publish).
-      # Use wildcard source so Copy-Item copies the *contents* into the destination folder
-      # rather than nesting the folder inside it (which happens when the destination already exists).
-      # dotnet publish creates dist/publish/Plugins/ for Plugins/readme.txt, so -Destination
-      # "dist/publish/Plugins" already exists and a non-wildcard copy would produce Plugins/Plugins/.
-      - name: Copy plugins to publish output
-        shell: pwsh
-        run: |
-          if (Test-Path "Gum/bin/Release/Plugins") {
-            New-Item -ItemType Directory -Force -Path "dist/publish/Plugins" | Out-Null
-            Copy-Item -Path "Gum/bin/Release/Plugins/*" -Destination "dist/publish/Plugins" -Recurse -Force
-          }
-
-      - name: Copy GumCli to publish output
-        shell: pwsh
-        run: |
-          if (Test-Path "Gum/bin/Release/GumCli") {
-            New-Item -ItemType Directory -Force -Path "dist/publish/GumCli" | Out-Null
-            Copy-Item -Path "Gum/bin/Release/GumCli/*" -Destination "dist/publish/GumCli" -Recurse -Force
-          }
-
-      # 1) Package the publish output
-      - name: Package release
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $zip = "dist/Gum.zip"
-          if (Test-Path $zip) { Remove-Item $zip -Force }
-          Compress-Archive -Path "dist/publish/*" -DestinationPath $zip
-
-      # 1b) Collect the Avalonia preview packages built by publish-avalonia-preview.
-      - name: Download Avalonia preview packages
-        continue-on-error: true
+      # 1) Collect the Avalonia packages built by publish-avalonia.
+      - name: Download Avalonia packages
         uses: actions/download-artifact@v4
         with:
-          pattern: avalonia-preview-*
+          pattern: avalonia-*
           path: dist/avalonia
           merge-multiple: true
 
@@ -316,7 +243,7 @@ jobs:
           Write-Host "Pushing tag..."
           git push origin "${{ steps.meta.outputs.tag }}"
 
-      # 4) Create GitHub Release and attach the zip
+      # 4) Create GitHub Release and attach the packages
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -330,5 +257,4 @@ jobs:
           prerelease: ${{ steps.meta.outputs.prerelease }}
           draft:      ${{ steps.meta.outputs.draft }}
           files: |
-            dist/Gum.zip
             dist/avalonia/*

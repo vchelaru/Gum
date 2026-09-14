@@ -9,7 +9,7 @@ This page discusses how to write plugins for Gum. Plugins are a useful way to mo
 To begin writing a plugin:
 
 1. Obtain the Gum source code. You can download the .zip or get the source through a version control client
-2. Create a copy of Gum.sln. You will want to work with your own .sln file so that the project containing your plugin can be debugged easily. For example, you might want to call your solution GumWithPlugins.sln
+2. Create a copy of Gum.Wpf.sln. You will want to work with your own .sln file so that the project containing your plugin can be debugged easily. For example, you might want to call your solution GumWithPlugins.sln
 3. Open your new .sln file in Visual Studio
 
 Now that you have created a .sln which will contain your plugin project, you can add this project:

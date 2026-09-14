@@ -31,7 +31,7 @@ the WPF/WinForms projects and files that back nothing else; confirm the tool gra
   Decide in the PR, record here.
 - **Release workflow becomes Avalonia-only** with the same version scheme, still via `GumFull.sln`
   for the CLI bundle; the WPF zip stops. PR CI builds the tool on all three OSes; the Windows-only
-  `Gum.sln` job goes.
+  `Gum.Wpf.sln` job goes.
 - **Repo guidance is rewritten in the same PR:** `CLAUDE.md` Building and Testing (no
   `$(SolutionDir)` post-build trick, no `net8.0-windows` tool projects, new test project names),
   `code-style.md` if it names WPF patterns, and every skill that references WPF-only files
@@ -41,7 +41,7 @@ the WPF/WinForms projects and files that back nothing else; confirm the tool gra
 
 ## Scope
 
-**In:** solution edits (`Gum.sln`, `GumFull.sln`), workflow edits, project deletions and TFM flips,
+**In:** solution edits (`Gum.Wpf.sln`, `GumFull.sln`), workflow edits, project deletions and TFM flips,
 plugin csproj cleanup (`UseWPF`/`UseWindowsForms` removed), docs and skills rewrite, a clean-checkout
 verification on all three OSes, release notes announcing the change and the plugin break.
 
@@ -66,7 +66,7 @@ verification on all three OSes, release notes announcing the change and the plug
 
 ## Key files
 
-- `Gum.sln`, `GumFull.sln`, `.github/workflows/*.yaml|yml`
+- `Gum.Wpf.sln`, `GumFull.sln`, `.github/workflows/*.yaml|yml`
 - `Gum/**`, `WpfDataUi/**`, `XnaAndWinforms/**`, `InputLibrary/**`, `Tool/Tests/GumToolUnitTests/**`
 - `CLAUDE.md`, `.claude/code-style.md`, `.claude/skills/**`, `docs/gum-tool/setup/**`
 

@@ -23,7 +23,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  # The Gum tool (Gum.sln) builds with neither submodules nor .NET mobile
+  # The WPF Gum tool (Gum.Wpf.sln) builds with neither submodules nor .NET mobile
   # workloads: it contains no FNA projects and no mobile-TFM projects
   # (MonoGameGum/RaylibGum are not in it; the in-solution KniGum defaults to
   # net8.0). Isolating the tool build + its WPF unit tests onto their own
@@ -48,8 +48,8 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build Gum (tool)
         run: |
-          dotnet restore "Gum.sln" --verbosity quiet
-          dotnet build "Gum.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
+          dotnet restore "Gum.Wpf.sln" --verbosity quiet
+          dotnet build "Gum.Wpf.sln" --configuration Release --no-restore --verbosity quiet -p:WarningLevel=0
       - name: GumToolUnitTests
         run: dotnet test "Tool/Tests/GumToolUnitTests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
       - name: Publish Test Results
@@ -79,8 +79,8 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - name: Build Gum.Avalonia
-        run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
+      - name: Build Gum (Gum.slnx, the Avalonia tool and its plugins)
+        run: dotnet build Gum.slnx --configuration Release --verbosity quiet -p:WarningLevel=0
       # The runners have no GPU, so the KNI device tests (CanvasHostTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
       - name: Gum.Avalonia.Tests (headless)
