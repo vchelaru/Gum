@@ -341,6 +341,13 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     #endregion
 
+    /// <inheritdoc/>
+    public void OnDuplicate(CopyType copyType)
+    {
+        OnCopy(copyType);
+        OnPaste(copyType, TopOrRecursive.Recursive);
+    }
+
     public void OnCut(CopyType copyType)
     {
         StoreCopiedObject(copyType, _selectedState);

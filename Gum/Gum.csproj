@@ -62,6 +62,9 @@
 	<PropertyGroup>
 		<ApplicationIcon>GumIcon.ico</ApplicationIcon>
 		<BaseOutputPath></BaseOutputPath>
+		<!-- #4681: without this, the process is DPI-Unaware and Windows bitmap-stretches the
+		     entire rendered window instead of reporting real per-monitor DPI - see app.manifest. -->
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 	<ItemGroup>
 		<Reference Include="TargaImage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -77,6 +80,18 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="Content\TestFont.fnt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<!-- Example post-process shaders (issue #4679) staged alongside the tool so a user pointing
+		     SourceShaderFile's file-picker somewhere for the first time lands on working starting
+		     points, not an empty folder. -->
+		<None Update="Content\Shaders\Grayscale.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\Shaders\Blur.slang">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Content\Shaders\Sepia.slang">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>

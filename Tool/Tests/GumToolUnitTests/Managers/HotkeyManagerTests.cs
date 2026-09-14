@@ -349,6 +349,28 @@ public class HotkeyManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleKeyDownElementTreeView_CtrlD_InvokesOnDuplicateAndSuppressesKeyPress()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.D, IsCtrlDown = true };
+
+        _hotkeyManager.HandleKeyDownElementTreeView(e);
+
+        _copyPasteLogic.Verify(c => c.OnDuplicate(CopyType.InstanceOrElement), Times.Once);
+        e.Handled.ShouldBeTrue();
+        e.SuppressKeyPress.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void HandleEditorKeyDown_CtrlD_InvokesOnDuplicate()
+    {
+        GumKeyEventArgs e = new() { Key = GumKey.D, IsCtrlDown = true };
+
+        _hotkeyManager.HandleEditorKeyDown(e);
+
+        _copyPasteLogic.Verify(c => c.OnDuplicate(CopyType.InstanceOrElement), Times.Once);
+    }
+
+    [Fact]
     public void HandleEditorKeyDown_Delete_InvokesDeleteSelection()
     {
         GumKeyEventArgs e = new() { Key = GumKey.Delete };

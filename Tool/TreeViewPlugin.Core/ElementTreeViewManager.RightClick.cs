@@ -87,6 +87,11 @@ public partial class ElementTreeViewManager
         }
     }
 
+    void HandleDuplicateInstance()
+    {
+        _copyPasteLogic.OnDuplicate(CopyType.InstanceOrElement);
+    }
+
     void HandleGoToDefinition()
     {
         if (_selectedState.SelectedInstance != null)
@@ -255,6 +260,11 @@ public partial class ElementTreeViewManager
                     ? (allLocked ? $"Unlock {instances.Count} instances" : $"Lock {instances.Count} instances")
                     : (allLocked ? $"Unlock {_selectedState.SelectedInstance.Name}" : $"Lock {_selectedState.SelectedInstance.Name}");
                 AddMenuItem(lockText, HandleToggleLock);
+
+                var duplicateText = instances.Count > 1
+                    ? $"Duplicate {instances.Count} instances"
+                    : $"Duplicate {_selectedState.SelectedInstance.Name}";
+                AddMenuItem(duplicateText, HandleDuplicateInstance);
 
                 var deleteText = instances.Count > 1
                     ? $"Delete {instances.Count} instances"

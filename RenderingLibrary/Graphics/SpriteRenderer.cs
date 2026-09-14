@@ -434,13 +434,30 @@ public class SpriteRenderer
             // layers not work in MonoGame.
             //zoom = Renderer.UsingEffect ? 1 : zoom;
 
-            matrix = Camera.GetTransformationMatrix(
-                x, 
-                y, 
-                zoom, 
-                camera.ClientWidth, 
-                camera.ClientHeight, 
-                forRendering:true).ToXNA();
+            if (!layerCameraSettings.IsInScreenSpace && camera.CameraCenterOnScreen == CameraCenterOnScreen.TopLeft)
+            {
+                // The 5-arg static overload below always adds a ClientWidth/2, ClientHeight/2 center
+                // offset, regardless of camera.CameraCenterOnScreen - which disagrees with the
+                // null-LayerCameraSettings branch below (uses the mode-aware instance overload, no
+                // offset in TopLeft mode) and with GraphicalUiElement's own AbsoluteLeft/Top bookkeeping
+                // (which assumes top-left/canvas-relative coordinates). That mismatch makes a
+                // world-space layer with its own LayerCameraSettings report Absolute bounds that look
+                // off-canvas even when the element would render in the correct place. Only correcting
+                // this for world-space (IsInScreenSpace == false) layers in TopLeft mode - IsInScreenSpace
+                // layers keep the existing offset behavior since existing content may already be
+                // positioned assuming it.
+                matrix = (Matrix.CreateTranslation(-x, -y, 0) * Matrix.CreateScale(zoom, zoom, 1)).ToXNA();
+            }
+            else
+            {
+                matrix = Camera.GetTransformationMatrix(
+                    x,
+                    y,
+                    zoom,
+                    camera.ClientWidth,
+                    camera.ClientHeight,
+                    forRendering:true).ToXNA();
+            }
         }
         else
         {

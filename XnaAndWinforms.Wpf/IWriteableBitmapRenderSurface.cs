@@ -31,9 +31,11 @@ public interface IWriteableBitmapRenderSurface
 
     /// <summary>
     /// (Re)creates <see cref="Bitmap"/> and <see cref="RawImageBuffer"/> for the given pixel
-    /// dimensions. A no-op if the dimensions already match the current <see cref="Bitmap"/>.
+    /// dimensions, stamping the bitmap's DPI as <c>96 * dpiScale</c> so a WPF <c>Image</c> element
+    /// displays it without an extra compositor-level stretch on a scaled display (#4681). A no-op
+    /// if the dimensions and dpiScale already match the current <see cref="Bitmap"/>.
     /// </summary>
-    void Resize(int width, int height);
+    void Resize(int width, int height, double dpiScale);
 
     /// <summary>
     /// Converts <see cref="RawImageBuffer"/> (already filled by the caller, e.g. via

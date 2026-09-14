@@ -86,7 +86,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 
 `CodeGenerationAutoSetupService` has two `Run` overloads: `Run(gumxFilePath)` for auto-detection, and `Run(gumxFilePath, explicitCsprojPath)` for when the caller already knows the `.csproj` path. The explicit overload validates the file exists and skips directory walking entirely; all namespace/OutputLibrary derivation logic is shared via the private `BuildResultFromCsprojDirectory` helper.
 
-`DiffStandardsService` compares the loaded project against a fresh reference built by `StandardElementsManager.Self.PopulateProjectWithDefaultStandards(...)` — the same path the tool's File → New uses. The CLI matches the tool's import-dialog drift detection by construction. Note: the on-disk `Templates/Default/Standards/*.gutx` files (extracted by `gumcli new --template empty`) are a separate snapshot of the defaults and have known drift from `StandardElementsManager`; that drift is a distinct issue from theme-vs-Default drift.
+`DiffStandardsService` compares the loaded project against a fresh reference built by `StandardElementsManager.Self.PopulateProjectWithDefaultStandards(...)` — the same path the tool's File → New uses. The CLI matches the tool's import-dialog drift detection by construction. `gumcli new --template empty`'s `Standards/*.gutx` files are generated from that same call at creation time (#4676) rather than extracted from a baked resource, so a fresh empty project is drift-free by construction, not by convention.
 
 Font files are named like `Font18Arial.fnt` and `Font18Arial_0.png` (size+name convention, zero-indexed). Always use `gumcli fonts <project.gumx>` to generate missing bitmap fonts — never create `.fnt` files manually.
 

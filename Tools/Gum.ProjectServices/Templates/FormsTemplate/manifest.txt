@@ -86,6 +86,8 @@ Components/Elements/PercentBar.gucx
 Components/Elements/PercentBarIcon.gucx
 Components/Elements/VerticalLines.gucx
 Components/Styles.gucx
+Fonts/LiberationSans-LICENSE.txt
+Fonts/LiberationSans-Regular.ttf
 GumProject.gumx
 Screens/DemoScreenGum.gusx
 Screens/DemoScreenGumAnimations.ganx

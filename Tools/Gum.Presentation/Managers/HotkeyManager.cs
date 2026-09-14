@@ -23,6 +23,7 @@ public class HotkeyManager : IHotkeyManager
     public KeyCombination Copy { get; private set; } = KeyCombination.Ctrl(GumKey.C);
     public KeyCombination Paste { get; private set; } = KeyCombination.Ctrl(GumKey.V);
     public KeyCombination Cut { get; private set; } = KeyCombination.Ctrl(GumKey.X);
+    public KeyCombination Duplicate { get; private set; } = KeyCombination.Ctrl(GumKey.D);
     public KeyCombination Undo { get; private set; } = KeyCombination.Ctrl(GumKey.Z);
     public KeyCombination Redo { get; private set; } = KeyCombination.Ctrl(GumKey.Y);
 
@@ -318,6 +319,12 @@ public class HotkeyManager : IHotkeyManager
         if(Cut.IsPressed(e))
         {
             _copyPasteLogic.OnCut(CopyType.InstanceOrElement);
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+        }
+        if(Duplicate.IsPressed(e))
+        {
+            _copyPasteLogic.OnDuplicate(CopyType.InstanceOrElement);
             e.Handled = true;
             e.SuppressKeyPress = true;
         }

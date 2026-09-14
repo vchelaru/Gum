@@ -17,6 +17,7 @@ using EffectType = SkiaSharp.SKRuntimeEffect;
 using System.Linq;
 using RenderingLibrary;
 using ShadowDusk.Compiler;
+using ShadowDusk.Compiler.Slang;
 using ShadowDusk.Core;
 using Color = Microsoft.Xna.Framework.Color;
 using EffectType = Microsoft.Xna.Framework.Graphics.Effect;
@@ -44,12 +45,17 @@ namespace MonoGameGumInCode.Screens;
 /// app-registered <c>RenderTargetEffectResolver</c> (wired in each sample's entry point); Gum core
 /// itself neither compiles nor loads the shader.</item>
 /// </list>
-/// All three cells share the same grayscale logic, authored per-platform in the shading language
-/// each backend needs: MonoGame compiles HLSL at runtime via ShadowDusk (no content pipeline,
+/// All cells share the same grayscale logic, authored per-platform in the shading language each
+/// backend needs: MonoGame compiles HLSL at runtime via ShadowDusk (no content pipeline,
 /// <c>Content/Grayscale.fx</c>); raylib loads GLSL directly (no compiler dependency,
 /// <c>resources/Grayscale.fs</c>); Skia compiles hand-authored SkSL via
 /// <c>SKRuntimeEffect.CreateShader</c> (<c>resources/Grayscale.sksl</c>). Left is the unmodified
-/// bear for comparison.
+/// bear for comparison. A fourth, MonoGame-only cell (<c>Content/Grayscale.slang</c>) repeats the
+/// SourceShaderFile wiring style for Slang input instead of raw HLSL (issue #4677) — ShadowDusk's
+/// Slang frontend converts it to <c>.fx</c> text before compiling. A second, MonoGame-only row
+/// (issue #4679) adds two more single-pass Slang examples the same way: <c>Content/Blur.slang</c>
+/// (fixed radius — Gum's render-target-effect blit sets no shader parameters, so the blur amount
+/// is a compile-time constant, not host-adjustable) and <c>Content/Sepia.slang</c>.
 /// </summary>
 internal class RenderTargetShaderScreen : FrameworkElement
 {
@@ -63,6 +69,16 @@ internal class RenderTargetShaderScreen : FrameworkElement
 #else
     // Relative to FileManager.RelativeDirectory (set to "Content/" by GumService.Initialize).
     private const string ShaderFileName = "Grayscale.fx";
+    // Same effect authored in Slang instead of raw HLSL (issue #4677) — no per-shader-model
+    // boilerplate, no technique/pass block. ShadowDusk's Slang frontend converts it to .fx text
+    // before compiling; see RenderTargetShaderResolver.ResolveFxSource for the tool-side twin.
+    private const string SlangShaderFileName = "Grayscale.slang";
+    // Two more single-pass, parameterless Slang examples (issue #4679). Blur's radius is a
+    // constant baked into the shader itself, sized for this demo's 128x128 cells — Gum's
+    // render-target-effect blit sets no shader parameters and runs a single pass, so an
+    // adjustable blur isn't possible without new engine work.
+    private const string BlurSlangShaderFileName = "Blur.slang";
+    private const string SepiaSlangShaderFileName = "Sepia.slang";
 #endif
 
     public RenderTargetShaderScreen() : base(new ContainerRuntime())
@@ -119,7 +135,38 @@ internal class RenderTargetShaderScreen : FrameworkElement
         row.AddChild(BuildCell("SourceShaderFile (shader file reference)",
             effect: null,
             sourceShaderFile: inCodeEffect != null ? ShaderFileName : null));
+
+#if !RAYLIB && !SKIA
+        // Fourth cell, XNA-like only: the same effect authored in Slang (Content/Grayscale.slang)
+        // instead of raw HLSL, referenced the same way via SourceShaderFile — proves the Slang
+        // frontend wiring (issue #4677) end to end, not just that .fx still works.
+        row.AddChild(BuildSlangSourceShaderFileCell("SourceShaderFile (.slang)", SlangShaderFileName));
+
+        // Second row, XNA-like only: two more example shaders (issue #4679), same wiring style.
+        var effectsRow = new ContainerRuntime();
+        effectsRow.ChildrenLayout = ChildrenLayout.LeftToRightStack;
+        effectsRow.StackSpacing = 48;
+        effectsRow.WidthUnits = DimensionUnitType.RelativeToChildren;
+        effectsRow.HeightUnits = DimensionUnitType.RelativeToChildren;
+        effectsRow.Width = 0;
+        effectsRow.Height = 0;
+        root.AddChild(effectsRow);
+
+        effectsRow.AddChild(BuildSlangSourceShaderFileCell("Blur (.slang, fixed radius)", BlurSlangShaderFileName));
+        effectsRow.AddChild(BuildSlangSourceShaderFileCell("Sepia (.slang)", SepiaSlangShaderFileName));
+#endif
     }
+
+#if !RAYLIB && !SKIA
+    // Compiles a .slang shader (relative to FileManager.RelativeDirectory) and wires it up via
+    // SourceShaderFile, gating on a known-good compile the same way the .fx cell above does.
+    private static ContainerRuntime BuildSlangSourceShaderFileCell(string caption, string slangFileName)
+    {
+        string effectPath = ToolsUtilities.FileManager.RelativeDirectory + slangFileName;
+        EffectType? effect = CompileEffectFromFile(effectPath, out _);
+        return BuildCell(caption, effect: null, sourceShaderFile: effect != null ? slangFileName : null);
+    }
+#endif
 
     // Portable color construction across the three backends' Color aliases (XNA / Raylib_cs /
     // SKColor all expose a (byte,byte,byte,byte) form), matching RenderTargetScreen's Rgba helper.
@@ -218,9 +265,11 @@ internal class RenderTargetShaderScreen : FrameworkElement
 
         try
         {
+            string fxSource = ResolveFxSource(path);
+
             var compiler = new EffectCompiler();
             Result<CompiledShader, ShaderError[]> result =
-                compiler.Compile(File.ReadAllText(path), new CompilerOptions { Target = PlatformTarget.OpenGL });
+                compiler.Compile(fxSource, new CompilerOptions { Target = PlatformTarget.OpenGL });
 
             if (result.IsSuccess)
             {
@@ -233,13 +282,44 @@ internal class RenderTargetShaderScreen : FrameworkElement
         }
         catch (System.Exception e)
         {
-            // A thrown error here is typically a missing/unloadable native compiler asset rather
-            // than a shader-syntax problem; surface it instead of taking down the screen.
+            // A thrown error here is typically a missing/unloadable native compiler asset, or a
+            // Slang→.fx conversion failure (see ResolveFxSource), rather than a shader-syntax
+            // problem; surface it instead of taking down the screen.
             status = "SHADER COMPILE THREW: " + e.GetType().Name + ": " + e.Message;
             return null;
         }
 #endif
     }
+
+#if !RAYLIB && !SKIA
+    /// <summary>
+    /// Returns ordinary <c>.fx</c> effect text for <paramref name="path"/>. A <c>.slang</c> file is
+    /// converted first via ShadowDusk's Slang frontend (Slang has no technique/pass concept, so it
+    /// can't go through <see cref="EffectCompiler.Compile"/> directly); every other extension is
+    /// assumed to already be <c>.fx</c> source and passed through unchanged.
+    /// </summary>
+    private static string ResolveFxSource(string path)
+    {
+        string sourceText = File.ReadAllText(path);
+        if (!string.Equals(System.IO.Path.GetExtension(path), SlangFrontend.Extension, System.StringComparison.OrdinalIgnoreCase))
+        {
+            return sourceText;
+        }
+
+        Result<SlangFxConversion, ShaderError[]> conversion = SlangFrontend.ConvertToFx(
+            sourceText,
+            new SlangConvertOptions { SourceName = path });
+
+        if (conversion.IsFailure)
+        {
+            throw new System.InvalidOperationException(
+                "ShadowDusk could not convert the Slang render-target shader '" + path + "':\n" +
+                string.Join("\n", conversion.Error.Select(e => e.Message)));
+        }
+
+        return conversion.Value.FxText;
+    }
+#endif
 
     private static void AddLabel(ContainerRuntime container, string text)
     {

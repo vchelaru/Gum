@@ -16,7 +16,7 @@
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
     <Variable IsFont="true" Type="string" Name="Font" Category="Font" SetsValue="true">
-      <Value xsi:type="xsd:string">Arial</Value>
+      <Value xsi:type="xsd:string">Fonts/Quicksand-Medium.ttf</Value>
     </Variable>
     <Variable Type="float" Name="FontScale" Category="Font" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="1.0.0.0" name="Gum"/>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">
+    <security>
+      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">
+        <requestedExecutionLevel  level="asInvoker" uiAccess="false" />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows Vista -->
+      <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}" />
+      <!-- Windows 7 -->
+      <supportedOS Id="{35138b9a-5d96-4fbd-8e2d-a2440225f93a}" />
+      <!-- Windows 8 -->
+      <supportedOS Id="{4a2f28e3-53b9-4441-ba9c-d69d4a4a6e38}" />
+      <!-- Windows 8.1 -->
+      <supportedOS Id="{1f676c76-80e1-4239-95bb-83d0f6d0da78}" />
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
+    </application>
+  </compatibility>
+
+  <!-- #4681: without this, Windows has no idea the process handles its own DPI scaling, so it
+       falls back to DPI-Unaware compatibility mode - bitmap-stretching the entire rendered window
+       (including WPF's own vector chrome) to fill the real physical resolution, and lying to WPF
+       about the window's actual DIU size for a given on-screen footprint. That's what made the
+       wireframe canvas both blurry AND framed wrong (its "Gum Screen Bounds" rectangle drawing
+       larger than the viewport) on a scaled display - a resolution-only fix inside the render
+       surface can't compensate for the OS never telling the app it's allowed to see real DPI.
+       Declaring Per-Monitor-V2 (falling back to Per-Monitor) here is what makes VisualTreeHelper.GetDpi
+       report the true scale, and ActualWidth/ActualHeight the true DIU size, that
+       XnaAndWinforms.WpfGraphicsDeviceControl.DpiScale and the WPF layout system rely on. -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">permonitorv2,permonitor</dpiAwareness>
+    </windowsSettings>
+  </application>
+
+</assembly>

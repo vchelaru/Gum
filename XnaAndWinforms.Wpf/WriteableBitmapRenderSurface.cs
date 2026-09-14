@@ -27,13 +27,15 @@ public class WriteableBitmapRenderSurface : IWriteableBitmapRenderSurface
     /// <inheritdoc/>
     public int Height { get; private set; }
 
+    private double _dpiScale = 1.0;
+
     public WriteableBitmapRenderSurface(IWriteableBitmapPixelBufferWriter pixelBufferWriter)
     {
         _pixelBufferWriter = pixelBufferWriter;
     }
 
     /// <inheritdoc/>
-    public void Resize(int width, int height)
+    public void Resize(int width, int height, double dpiScale)
     {
         if (width <= 0 || height <= 0)
         {
@@ -41,15 +43,16 @@ public class WriteableBitmapRenderSurface : IWriteableBitmapRenderSurface
                 nameof(width), $"{nameof(width)} and {nameof(height)} must both be positive, but were {width}x{height}.");
         }
 
-        if (Bitmap != null && Width == width && Height == height)
+        if (Bitmap != null && Width == width && Height == height && _dpiScale == dpiScale)
         {
-            // Already the right size - avoid churning a new bitmap/buffer every frame.
+            // Already the right size and DPI - avoid churning a new bitmap/buffer every frame.
             return;
         }
 
         Width = width;
         Height = height;
-        Bitmap = new WriteableBitmap(width, height, dpiX: 96, dpiY: 96, PixelFormats.Pbgra32, palette: null);
+        _dpiScale = dpiScale;
+        Bitmap = new WriteableBitmap(width, height, dpiX: 96 * dpiScale, dpiY: 96 * dpiScale, PixelFormats.Pbgra32, palette: null);
         RawImageBuffer = new byte[width * height * 4];
     }
 

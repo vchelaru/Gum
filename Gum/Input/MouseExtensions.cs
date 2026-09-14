@@ -1,5 +1,7 @@
+using InputLibrary;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using WinForms = System.Windows.Forms;
 using WpfPoint = System.Windows.Point;
 
@@ -46,16 +48,21 @@ public static class MouseExtensions
 
     /// <summary>
     /// Builds a framework-neutral <see cref="GumMouseEventArgs"/> from a WPF mouse event, with the
-    /// position expressed in <paramref name="relativeTo"/>'s coordinates.
+    /// position expressed in <paramref name="relativeTo"/>'s coordinates and converted from WPF's
+    /// device-independent units (DIU) to physical pixels - matching the render target
+    /// (<c>XnaAndWinforms.WpfGraphicsDeviceControl</c>'s) and the rest of the framework-neutral input
+    /// pipeline (<see cref="InputLibrary.IInputHostControl"/>'s contract), so camera panning/zoom
+    /// stay in sync with what's actually drawn on a scaled display (#4681).
     /// </summary>
     public static GumMouseEventArgs ToGumMouseEventArgs(this MouseEventArgs e, IInputElement relativeTo)
     {
         WpfPoint position = e.GetPosition(relativeTo);
+        double dpiScale = relativeTo is Visual visual ? VisualTreeHelper.GetDpi(visual).DpiScaleX : 1.0;
 
         return new GumMouseEventArgs
         {
-            X = (int)position.X,
-            Y = (int)position.Y,
+            X = WpfInputHostAdapter.ToPhysicalPixels(position.X, dpiScale),
+            Y = WpfInputHostAdapter.ToPhysicalPixels(position.Y, dpiScale),
             Button = GetButton(e),
             Delta = e is MouseWheelEventArgs wheelArgs ? wheelArgs.Delta : 0,
             Handled = e.Handled,

@@ -106,6 +106,7 @@ public static class GumCoreServiceCollectionExtensions
         // imports the default theme without going through the plugin's Add Forms dialog.
         services.AddSingleton<IFormsFileService, FormsFileService>();
         services.AddSingleton<IFormsThemeImporter, FormsThemeImporter>();
+        services.AddSingleton<IDefaultFontBundler, DefaultFontBundler>();
         services.AddSingleton<GumFormsLogic>();
         services.AddSingleton<INewProjectLogic, NewProjectLogic>();
         services.AddSingleton<FileLocations>();

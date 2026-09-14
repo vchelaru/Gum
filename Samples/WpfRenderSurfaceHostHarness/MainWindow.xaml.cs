@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using XnaAndWinforms;
 using Color = Microsoft.Xna.Framework.Color;
 
@@ -36,6 +37,11 @@ public partial class MainWindow : Window
     private int _surfaceWidth = InitialSurfaceWidth;
     private int _surfaceHeight = InitialSurfaceHeight;
 
+    // Same DPI-scale pattern as WpfGraphicsDeviceControl.DpiScale (#4681) - the render target and
+    // backing bitmap are sized in physical pixels (DIU * DpiScale) so the canvas isn't blurred by
+    // WPF's own DPI compositing on a scaled display.
+    private double DpiScale => VisualTreeHelper.GetDpi(this).DpiScaleX;
+
     // Actual measured throughput, not a guess - counts real DrawFrame calls against wall-clock
     // time, updated roughly twice a second so the number is legible.
     private readonly Stopwatch _fpsWindow = new Stopwatch();
@@ -68,7 +74,7 @@ public partial class MainWindow : Window
         // Insert below the XAML-declared FpsText so the overlay stays on top.
         RootGrid.Children.Insert(0, _host.ImageElement);
         _host.RenderFrame += DrawFrame;
-        _host.Initialize(_surfaceWidth, _surfaceHeight);
+        _host.Initialize(_surfaceWidth, _surfaceHeight, DpiScale);
 
         _clock.Start();
         _fpsWindow.Start();
@@ -134,7 +140,7 @@ public partial class MainWindow : Window
             _graphicsDevice!, _surfaceWidth, _surfaceHeight, mipMap: false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8,
             preferredMultiSampleCount: 1, RenderTargetUsage.PreserveContents);
 
-        _host.Resize(_surfaceWidth, _surfaceHeight);
+        _host.Resize(_surfaceWidth, _surfaceHeight, DpiScale);
     }
 
     private void DisposeResources()
