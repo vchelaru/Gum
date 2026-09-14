@@ -16,13 +16,7 @@ namespace Gum.Avalonia.Tests;
 /// </remarks>
 public class HeadProcessTests
 {
-    private static bool CanRunTheHead =>
-        Environment.GetEnvironmentVariable("GUM_RUN_HEAD_PROCESS_TEST") == "1" ||
-        (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")) &&
-         (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
-          RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
-          !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
-          !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"))));
+    private static bool CanRunTheHead => TestEnvironment.CanUseDisplay("GUM_RUN_HEAD_PROCESS_TEST");
 
     [SkippableFact]
     public async Task UnattendedRun_LoadsAProject_AndExitsCleanly()

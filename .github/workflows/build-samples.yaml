@@ -8,7 +8,7 @@ on:
     branches: [main]
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
-    branches: [master, main]
+    # No branches filter: PRs into integration branches need checks too (#4695).
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   workflow_dispatch:
 

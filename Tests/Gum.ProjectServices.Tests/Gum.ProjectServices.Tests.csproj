@@ -16,6 +16,7 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Xunit.SkippableFact" />
     <!-- ScreenshotDiffServiceTests writes tiny synthetic PNGs from mocked IScreenshotService
          backends; SkiaSharp is already a transitive dependency via Gum.ProjectServices ->
          Gum.ImageDiff, referenced directly here only to encode those fixtures. -->

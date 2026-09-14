@@ -10,12 +10,16 @@ name: Build and Test Runtimes, Unit Tests, Generated Code Projects
 # guards every expensive step so the job still runs and reports green, it just
 # does no work. Required contexts must always report.
 # push is safe to filter: pushes to main are not gated on required checks.
+#
+# pull_request has no branches filter on purpose: a long-lived integration
+# branch (e.g. avalonia-migration-work) collects PRs targeting itself, and a
+# filter of [main] would leave every one of them unchecked until the whole
+# branch lands on main (#4695).
 on:
   push:
     branches: [main]
     paths-ignore: ['docs/**', '**/*.md', '.gitbook/**']
   pull_request:
-    branches: [master, main]
   workflow_dispatch:
 
 jobs:
@@ -77,20 +81,24 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build Gum.Avalonia
         run: dotnet build Tool/Gum.Avalonia/Gum.Avalonia.csproj --configuration Release --verbosity quiet -p:WarningLevel=0
+      # The runners have no GPU, so the KNI device tests (CanvasHostTests) skip themselves here
+      # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
       - name: Gum.Avalonia.Tests (headless)
         run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
-      # The full-startup layer (phase 100): the real head executable on a fixture project. Only Linux
-      # has a cheap virtual display plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is
-      # the one OS where CI proves the startup sequence; the other two run it locally.
-      - name: Gum.Avalonia head, unattended run under Xvfb (Linux)
+      # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
+      # KNI device tests. Only Linux has a cheap virtual display plus software GL on the runner
+      # (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves the startup sequence and the
+      # device path; the other two run them locally.
+      - name: Gum.Avalonia head and device tests under Xvfb (Linux)
         if: runner.os == 'Linux'
         env:
           GUM_RUN_HEAD_PROCESS_TEST: "1"
+          GUM_RUN_CANVAS_DEVICE_TESTS: "1"
           LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
-          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests" --logger "trx;LogFileName=head-process.trx" --results-directory "TestResults"
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests" --logger "trx;LogFileName=head-process.trx" --results-directory "TestResults"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       - name: Gum.Presentation.Tests (shared logic on every OS)
@@ -486,6 +494,8 @@ jobs:
       #   - Gum.AssemblyNameGuard.Tests    (MSBuild buildTransitive collision guard;
       #                                     shells out to `dotnet build` against temp
       #                                     projects, no window/GPU. #4311)
+      #   - Gum.RepoHygiene.Tests          (checked-in .sln files reference only
+      #                                     projects that exist; pure IO. #4695)
       #   - Gum.Cli.Tests                  (CLI subcommand smoke tests; fonts, the
       #                                     raylib-backend screenshot test, and the
       #                                     diff-screenshots test (which renders via
@@ -596,6 +606,10 @@ jobs:
       - name: Gum.AssemblyNameGuard.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
         run: dotnet test "Tests/Gum.AssemblyNameGuard.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
+
+      - name: Gum.RepoHygiene.Tests
+        if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
+        run: dotnet test "Tests/Gum.RepoHygiene.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       - name: Gum.Analyzers.Tests
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
