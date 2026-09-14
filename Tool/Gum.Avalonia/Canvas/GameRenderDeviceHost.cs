@@ -21,6 +21,18 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
     private HeadlessDeviceGame? _game;
     private RenderTarget2D? _renderTarget;
 
+    /// <summary>Whether any host currently holds the shared device. For tests.</summary>
+    internal static bool IsSharedDeviceCreated
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _sharedGame != null;
+            }
+        }
+    }
+
     /// <summary>Takes a reference on the shared device, creating it on first use.</summary>
     public GameRenderDeviceHost()
     {

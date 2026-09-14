@@ -39,7 +39,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     private AvaloniaInputHostAdapter? _inputHost;
     private float _desiredFramesPerSecondBeforeInit = 30;
 
-    /// <summary>Creates the control and, outside the designer, the shared device.</summary>
+    /// <summary>Creates the control. The shared device is taken on first use, not here.</summary>
     public AvaloniaGraphicsDeviceControl()
     {
         _surface = new AvaloniaRenderSurface();
@@ -78,11 +78,6 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
             Interval = TimeSpan.FromMilliseconds(1000.0 / FrameTimerHertz),
         };
         _frameTimer.Tick += (_, _) => HandleRenderFrame();
-
-        if (!Design.IsDesignMode)
-        {
-            InitializeDevice();
-        }
     }
 
     /// <summary>
@@ -103,13 +98,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     }
 
     /// <summary>The shared device this control draws with.</summary>
-    public GraphicsDevice GraphicsDevice => _deviceHost!.GraphicsDevice;
+    public GraphicsDevice GraphicsDevice => DeviceHost.GraphicsDevice;
 
     /// <summary>This control's share of the process-wide device, as the render-host contract.</summary>
-    public IRenderDeviceHost RenderDeviceHost => _deviceHost!;
+    public IRenderDeviceHost RenderDeviceHost => DeviceHost;
 
     /// <summary>A provider holding the device service, for content managers.</summary>
-    public IServiceProvider Services => _deviceHost!.Services;
+    public IServiceProvider Services => DeviceHost.Services;
 
     /// <inheritdoc/>
     public IInputHostControl InputHost => _inputHost ??= new AvaloniaInputHostAdapter(this);
@@ -123,8 +118,26 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// <summary>Raised when a frame throws. The failure is also shown on the canvas.</summary>
     public event Action<Exception>? ErrorOccurred;
 
-    private void InitializeDevice()
+    // Plugin StartUp builds this control long before the head draws anything, and creating the
+    // KNI device is not something to do speculatively: on a machine without a usable GL driver
+    // the attempt fails, and KNI's half-built device then crashes the process from its
+    // finalizer. So the device is taken on first use, the first frame or the first caller
+    // asking for it, never in the constructor.
+    private ISharedRenderDeviceHost DeviceHost
     {
+        get
+        {
+            EnsureDevice();
+            return _deviceHost!;
+        }
+    }
+
+    private void EnsureDevice()
+    {
+        if (_deviceHost != null)
+        {
+            return;
+        }
         _deviceHost = new GameRenderDeviceHost();
         _deviceHost.RenderTargetRecreated += HandleRenderTargetRecreated;
         _frameLoop = new RenderTargetFrameLoop(_deviceHost, new FrameRateThrottle())
@@ -167,11 +180,12 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
     private void HandleRenderFrame()
     {
-        if (_frameLoop == null || !IsVisible || !IsEffectivelyVisible)
+        if (!IsVisible || !IsEffectivelyVisible || Design.IsDesignMode)
         {
             return;
         }
-        _frameLoop.TryRenderFrame((int)Bounds.Width, (int)Bounds.Height, this);
+        EnsureDevice();
+        _frameLoop!.TryRenderFrame((int)Bounds.Width, (int)Bounds.Height, this);
     }
 
     void IRenderTargetFrameClient.PreDrawUpdate() => PreDrawUpdate();

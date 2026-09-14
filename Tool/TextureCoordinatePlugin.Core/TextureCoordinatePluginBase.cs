@@ -110,6 +110,14 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
 
     public override void StartUp()
     {
+        // The view's canvas initializes against the head's graphics device as soon as it is built,
+        // so it waits for the head to say the render surface is ready (the same point the editor
+        // tab wires up its canvas) rather than being created here at plugin start-up.
+        XnaInitialized += HandleXnaInitialized;
+    }
+
+    private void HandleXnaInitialized()
+    {
         textureCoordinatePluginTab = _displayController.CreateControl(CreateView(), _viewModel, out var availableZoomLevels);
         _viewModel.AvailableZoomLevels = availableZoomLevels;
         textureCoordinatePluginTab.Hide();

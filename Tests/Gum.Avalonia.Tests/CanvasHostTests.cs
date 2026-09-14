@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -16,15 +15,16 @@ namespace Gum.Avalonia.Tests;
 /// The Avalonia canvas host: the shared device comes up without a window, the neutral frame
 /// loop draws into its render target and reads it back, and the input adapter maps Avalonia
 /// input to the polled contract. Device tests need a display and a GL driver, so they are
-/// skipped on a headless runner.
+/// skipped on a headless machine and on CI runners unless <c>GUM_RUN_CANVAS_DEVICE_TESTS=1</c>
+/// opts in (the Linux CI job does, under Xvfb with Mesa's software GL). A GPU-less runner is not
+/// merely slow: KNI's device creation fails there and the half-built device's finalizer crashes
+/// the whole test host.
 /// </summary>
 public class CanvasHostTests
 {
-    private static bool HasDisplay =>
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ||
-        RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ||
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
+    private const string SkipReason = "needs a display and a GL driver; set GUM_RUN_CANVAS_DEVICE_TESTS=1 to run on CI";
+
+    private static bool HasDisplay => TestEnvironment.CanUseDisplay("GUM_RUN_CANVAS_DEVICE_TESTS");
 
     // The shared KNI GL device belongs to the thread that created it, and the head creates it on
     // the Avalonia UI thread, so device tests run there too instead of on an xunit worker.
@@ -61,7 +61,7 @@ public class CanvasHostTests
     [SkippableFact]
     public void FrameLoop_DrawsIntoTheSharedDevice_AndReadsBack()
     {
-        Skip.IfNot(HasDisplay, "needs a display and a GL driver");
+        Skip.IfNot(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -86,7 +86,7 @@ public class CanvasHostTests
     [SkippableFact]
     public void TwoHosts_ShareOneDevice()
     {
-        Skip.IfNot(HasDisplay, "needs a display and a GL driver");
+        Skip.IfNot(HasDisplay, SkipReason);
 
         OnUiThread(() =>
         {
@@ -96,6 +96,17 @@ public class CanvasHostTests
             ReferenceEquals(first.GraphicsDevice, second.GraphicsDevice).ShouldBeTrue();
             first.Services.GetService(typeof(IGraphicsDeviceService)).ShouldNotBeNull();
         });
+    }
+
+    // Plugin StartUp builds the canvas control long before anything renders, and a machine
+    // without GL cannot even attempt device creation safely (see the class remarks), so the
+    // control must stay device-free until it first draws or is asked for the device.
+    [AvaloniaFact]
+    public void Control_DoesNotCreateTheDevice_UntilItIsUsed()
+    {
+        using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl();
+
+        GameRenderDeviceHost.IsSharedDeviceCreated.ShouldBeFalse();
     }
 
     // The bitmap needs the Avalonia platform, which the UI thread session provides.
