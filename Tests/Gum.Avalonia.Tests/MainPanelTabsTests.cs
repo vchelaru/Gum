@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Headless.XUnit;
 using Avalonia.Media;
@@ -174,10 +174,11 @@ public class MainPanelTabsTests
     }
 
     [AvaloniaFact]
-    public void Regions_HaveADarkTabStrip_AndSplittersDrawOnlyAThinLine()
+    public void Regions_HaveADarkTabStrip_AndSplittersAreInvisible()
     {
         // The WPF main panel: the tab strip shows the window background, the content sits on
-        // Surface01, and a splitter is an invisible grab area with a 1px line through it (#4694).
+        // Surface01, and a splitter is an invisible grab area; the gap between regions is the
+        // only separator (#4694).
         AvaloniaTabManager tabs = CreateTabManager();
         MainPanelView view = new MainPanelView(tabs);
         Window window = new Window { Content = view, Width = 1000, Height = 700 };
@@ -194,9 +195,10 @@ public class MainPanelTabsTests
         splitters.Length.ShouldBe(4);
         foreach (GridSplitter splitter in splitters)
         {
+            Math.Min(splitter.Bounds.Width, splitter.Bounds.Height).ShouldBe(MainPanelView.SplitterThickness);
             splitter.Background.ShouldBeSameAs(Brushes.Transparent);
-            Border line = splitter.GetVisualDescendants().OfType<Border>().Single(border => Math.Min(border.Bounds.Width, border.Bounds.Height) == 1);
-            line.Background.ShouldBeSameAs(ThemeBrushes.Get(window, "Frb.Brushes.Border", Brushes.Red));
+            splitter.GetVisualDescendants().OfType<Border>()
+                .ShouldAllBe(border => border.Background == Brushes.Transparent && border.BorderThickness == default);
         }
         window.Close();
     }

@@ -164,8 +164,11 @@ public sealed class MainPanelView : Grid
         return header;
     }
 
-    // As the WPF splitters: an invisible grab area with a 1px line in the Border color through it,
-    // so the regions read as separated by thin lines rather than bars (#4694).
+    /// <summary>The gap between regions; the splitter's grab area is the gap itself.</summary>
+    internal const double SplitterThickness = 4;
+
+    // As the WPF splitters: an invisible grab area, so the gap between regions is the only
+    // separator (#4694).
     private static GridSplitter CreateSplitter(GridResizeDirection direction, int row, int column)
     {
         bool isColumn = direction == GridResizeDirection.Columns;
@@ -173,28 +176,21 @@ public sealed class MainPanelView : Grid
         {
             ResizeDirection = direction,
             Background = Brushes.Transparent,
-            Template = new FuncControlTemplate<GridSplitter>((_, _) => new Border
-            {
-                // Transparent rather than unset, so the whole grab area takes the pointer.
-                Background = Brushes.Transparent,
-                Child = new Border
-                {
-                    Width = isColumn ? 1 : double.NaN,
-                    Height = isColumn ? double.NaN : 1,
-                    HorizontalAlignment = isColumn ? HorizontalAlignment.Center : HorizontalAlignment.Stretch,
-                    VerticalAlignment = isColumn ? VerticalAlignment.Stretch : VerticalAlignment.Center,
-                }.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Border"),
-            }),
+            // Transparent rather than unset, so the whole grab area takes the pointer.
+            Template = new FuncControlTemplate<GridSplitter>((_, _) => new Border { Background = Brushes.Transparent }),
         };
         if (isColumn)
         {
-            splitter.Width = 5;
+            // The theme's MinWidth is wider than the gap.
+            splitter.MinWidth = SplitterThickness;
+            splitter.Width = SplitterThickness;
             splitter.HorizontalAlignment = HorizontalAlignment.Center;
             splitter.VerticalAlignment = VerticalAlignment.Stretch;
         }
         else
         {
-            splitter.Height = 5;
+            splitter.MinHeight = SplitterThickness;
+            splitter.Height = SplitterThickness;
             splitter.HorizontalAlignment = HorizontalAlignment.Stretch;
             splitter.VerticalAlignment = VerticalAlignment.Center;
         }

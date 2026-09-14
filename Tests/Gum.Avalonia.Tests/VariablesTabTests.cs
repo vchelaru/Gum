@@ -1,7 +1,10 @@
+﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
 using AvaloniaDataUi.Controls;
@@ -30,6 +33,7 @@ public class GumEditorFixture
     public DrawingColor Color { get; set; } = DrawingColor.FromArgb(128, 10, 20, 30);
     public CornerRadiusComposite CornerRadius { get; set; } = new CornerRadiusComposite(4, null, null, null, null);
     public HorizontalAlignment Alignment { get; set; } = HorizontalAlignment.Left;
+    public float Number { get; set; } = 1;
 
     public InstanceMember Member(string propertyName) => new InstanceMember(propertyName, this);
 }
@@ -124,6 +128,50 @@ public class VariablesTabTests
 
         fixture.Alignment.ShouldBe(HorizontalAlignment.Right);
     }
+
+    [AvaloniaTheory]
+    [InlineData(typeof(TextBoxDisplay), nameof(GumEditorFixture.Number), false)]
+    [InlineData(typeof(TextHorizontalAlignmentDisplay), nameof(GumEditorFixture.Alignment), true)]
+    public void RightClick_AnywhereOnAnEditorRow_OpensItsMenu(Type displayType, string memberName, bool rowExtendsPastValue)
+    {
+        // As the WPF grid: the label, the value control and the row's empty space all open the
+        // member's menu. A text box fills its row, so only the toggle row has empty space to probe.
+        GumEditorFixture fixture = new GumEditorFixture();
+        DataUiDisplayBase display = (DataUiDisplayBase)Activator.CreateInstance(displayType)!;
+        display.InstanceMember = fixture.Member(memberName);
+        Window window = new Window { Content = display, Width = 500, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+
+        Control label = display.GetVisualDescendants().OfType<TextBlock>().First(text => text.Text == memberName);
+        Control value = display.GetVisualDescendants().OfType<Control>().First(control => control is TextBox or Button);
+        List<Point> points = new List<Point>
+        {
+            label.TranslatePoint(new Point(label.Bounds.Width / 2, label.Bounds.Height / 2), window)!.Value,
+            value.TranslatePoint(new Point(value.Bounds.Width / 2, value.Bounds.Height / 2), window)!.Value,
+        };
+        if (rowExtendsPastValue)
+        {
+            Point emptySpace = display.TranslatePoint(new Point(display.Bounds.Width - 4, label.Bounds.Height / 2), window)!.Value;
+            emptySpace.X.ShouldBeGreaterThan(value.TranslatePoint(new Point(value.Bounds.Width, 0), window)!.Value.X, "the row must extend past the value control");
+            points.Add(emptySpace);
+        }
+
+        foreach (Point point in points)
+        {
+            window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
+            window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
+            Dispatcher.UIThread.RunJobs();
+
+            OpenMenu(display).ShouldNotBeNull($"right-clicking at {point}");
+            OpenMenu(display)!.Items.OfType<MenuItem>().Select(item => item.Header).ShouldContain("Make Default");
+            OpenMenu(display)!.Close();
+        }
+        window.Close();
+    }
+
+    private static ContextMenu? OpenMenu(Control root) =>
+        root.GetSelfAndVisualDescendants().OfType<Control>().Select(control => control.ContextMenu).FirstOrDefault(menu => menu?.IsOpen == true);
 
     [AvaloniaFact]
     public void ColorDisplay_HexAndPickerWriteTheColor_KeepingAlpha()

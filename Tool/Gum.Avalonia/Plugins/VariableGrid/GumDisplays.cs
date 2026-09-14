@@ -231,7 +231,6 @@ public class ColorDisplay : DataUiDisplayBase
         panel.Children.Add(grid);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(grid);
     }
 
     /// <summary>The hex field, for tests.</summary>
@@ -480,7 +479,6 @@ public class CornerRadiusDisplay : DataUiDisplayBase
         panel.Children.Add(grid);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(grid);
         SetLinkedState(true);
     }
 

@@ -31,7 +31,6 @@ public class CheckBoxDisplay : DataUiDisplayBase
         panel.Children.Add(_checkBox);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(_checkBox);
     }
 
     /// <summary>The check box, for tests.</summary>
@@ -154,7 +153,6 @@ public class NullableBoolDisplay : DataUiDisplayBase
         panel.Children.Add(_nullButton);
         panel.Children.Add(_hint);
         Content = panel;
-        AttachContextMenu(panel);
     }
 
     /// <summary>The text of the true option.</summary>
@@ -265,8 +263,6 @@ public class ComboBoxDisplay : DataUiDisplayBase
         _grid.Children.Add(_hint);
         Content = _grid;
 
-        AttachContextMenu(_label);
-        AttachContextMenu(_comboBox);
     }
 
     /// <summary>Whether the user can type a value that is not in the list.</summary>
@@ -490,9 +486,6 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         MaxValue = 100;
         MinValue = 0;
 
-        AttachContextMenu(_label);
-        AttachContextMenu(_slider);
-        AttachContextMenu(_textBox);
     }
 
     /// <summary>The largest value the slider reaches (before <see cref="DisplayedValueMultiplier"/>).</summary>
@@ -711,8 +704,6 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
         Content = _grid;
 
         _logic = AvaloniaDataUiTextBox.CreateLogic(this, _textBox);
-        AttachContextMenu(_textBox);
-        AttachContextMenu(_grid);
     }
 
     /// <summary>The text field, for tests.</summary>

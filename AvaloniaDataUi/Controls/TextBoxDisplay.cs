@@ -80,8 +80,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         LabelDragChangeMultiplier = 1;
         EnableLabelDragValueChange = true;
 
-        AttachContextMenu(_grid);
-        AttachContextMenu(_textBox);
     }
 
     /// <summary>The resolution a label drag snaps to; null does not snap.</summary>
