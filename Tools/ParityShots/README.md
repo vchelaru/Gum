@@ -87,20 +87,26 @@ or call through `powershell -Command "& .\menu-capture.ps1 -Path Edit,Add,Screen
 
 ## 4b. Timings
 
-`timings.ps1` launches each head by itself on its scratch project and measures the same things
-for both: launch to window, launch to project loaded (the title carries the project name), idle
-working set and private bytes, then wall clock, CPU time and working-set growth for ten element
-selections through the tree search, and shutdown. It writes `out	imings.md`. Build both heads
-`-c Release` first (it looks in the Release output folders; `-Configuration Debug` for a Debug
-run). Like `capture.ps1` it drives the keyboard, so nothing else may be in the foreground.
+`timings.ps1` launches each head by itself on its scratch project and measures the same scripted
+actions in both: launch to window and to project loaded (the title carries the project name), the
+idle CPU rate and working set, twelve element selections through the tree search, typing in the
+search box, the File and Edit menus, the tree context menu, the Code tab (code generation), the
+delete dialog with its confirm, undo and redo, and shutdown. It writes `out	imings.md`.
+
+There are no fixed pauses. After each action it waits until the process's CPU rate is back at the
+idle rate it measured after loading (both heads render their canvas continuously, so idle is about
+one core), sampled every 100 ms and held for 300 ms; that wait is the "settle" column, and the CPU
+column is the processor time above idle during it. Menus and dialogs are also timed to the moment
+UI Automation finds them ("appear"). Build both heads `-c Release` first (`-Configuration Debug`
+for a Debug run). Like `capture.ps1` it drives the keyboard, so nothing else may be in the
+foreground.
 
 ```powershell
 dotnet build GumFull.sln -c Release
-.	imings.ps1            # -Heads avalonia,wpf  -Elements ...  -SettleMs 1500
+.
+ew-scratch-projects.ps1
+.	imings.ps1            # -Heads avalonia,wpf  -Elements ...  -MaxSettleMs 10000
 ```
-
-The wall clock includes the scripted pauses (the printout says how much); the CPU column is the
-comparable number.
 
 ## 5. How the driver works, and its gotchas
 

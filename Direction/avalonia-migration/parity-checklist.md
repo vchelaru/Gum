@@ -56,16 +56,30 @@ Record anything that behaves differently on one OS here, with the issue number.
 
 ## Timings (Windows, Release, 2026-09-14)
 
-Measured with `Tools/ParityShots/timings.ps1` on the GameUiSamples project, two samples each,
-the same ten tree-search selections 1.5 s apart in both heads (the wall clock is the scripted
-pauses; CPU is the comparable column). Both heads render their canvas continuously, so CPU
-includes the frame loop.
+Measured with `Tools/ParityShots/timings.ps1` on the GameUiSamples project: the same scripted
+actions in both heads, each timed until the process's CPU rate returned to its idle rate (100 ms
+resolution), menus and dialogs also timed to when UI Automation finds them. Both heads render their
+canvas continuously and sit at about one core when idle (Avalonia 98%, WPF 106%), which is a
+finding in itself: neither renders only when something changed.
 
-| Head | Launch to window | Launch to project loaded | Idle working set | CPU for 10 selections (over 35 s) | Working set after | Shutdown |
-|---|---|---|---|---|---|---|
-| Avalonia | 1.2 s | 2.9-3.5 s | 311-315 MB | 15.5-15.9 s | 492-495 MB | 0.7 s |
-| WPF | 10.8-15.3 s | same as window | 329-331 MB | 33.7 s | 431 MB | 0.6 s |
+| | Avalonia | WPF |
+|---|---|---|
+| Launch to window | 1.2 s | 11.6 s (the window shows once the project is loaded) |
+| Launch to project loaded | 3.2 s (3.1 s CPU) | 11.6 s (13.2 s CPU) |
+| Idle working set | 309 MB | 335 MB |
+| Select a screen or component, median settle | 28 ms | 357 ms |
+| Select StardewInventoryScreen / HyTaleInventoryScreen (heaviest) | 23 ms / 20 ms | 1.9 s / 1.8 s |
+| Select DialogBox | 0.9 s | 1.0 s |
+| Search box: type "Button" | 15 ms | 131 ms |
+| File / Edit menu appear | 55 / 6 ms | 51 / 4 ms |
+| Tree context menu appear | 83 ms | 53 ms |
+| Delete dialog appear | 34 ms | 119 ms |
+| Delete confirm (delete + save) settle | 27 ms | 0.9 s |
+| Undo the delete / redo / undo again | 0.8 s / 0.25 s / 0.13 s | 0.46 s / 18 ms / 13 ms |
+| Whole scripted run, wall / CPU | 28.0 s / 22.1 s | 46.7 s / 46.3 s |
+| Working set after the run | 539 MB | 478 MB |
+| Shutdown | 0.7 s | 0.6 s |
 
-The WPF head shows its window only once the project is loaded, so its two launch columns
-coincide. The Avalonia head grows more during selections (about 180 MB against 100 MB); not
-investigated yet.
+Open points from the numbers: the idle render loop in both heads; the Avalonia head's undo of an
+instance delete (0.8 s against 0.46 s) and its larger working-set growth over the run (+230 MB
+against +143 MB), neither investigated yet.
