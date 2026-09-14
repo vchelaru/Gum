@@ -61,7 +61,7 @@ public class GumProjectSaveTests
         }
     }
 
-    [Fact]
+    [SkippableFact]
     public void Load_ShouldResolveFullFileNameToOnDiskCasing_WhenRequestedPathCasingDiffers()
     {
         // Repro #4687: on a case-insensitive filesystem (Windows/macOS), a project can be requested
@@ -78,6 +78,9 @@ public class GumProjectSaveTests
             new GumProjectSave().Save(onDiskPath, saveElements: false);
 
             string requestedPath = Path.Combine(tempDir, "gumproject.gumx");
+            // On a case-sensitive filesystem (Linux) the differently-cased path is simply a different,
+            // absent file, so the drift this guards against cannot happen there.
+            Skip.IfNot(File.Exists(requestedPath), "case-sensitive filesystem");
             GumProjectSave loaded = GumProjectSave.Load(requestedPath);
 
             Path.GetFileName(loaded.FullFileName).ShouldBe("GumProject.gumx");
