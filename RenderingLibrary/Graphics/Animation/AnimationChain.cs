@@ -81,6 +81,14 @@ namespace Gum.Graphics.Animation
             set { mName = value; }
         }
 
+        /// <summary>
+        /// Whether this chain loops by default, authored via <see cref="AnimationChainSave.Loop"/>.
+        /// <see cref="RenderingLibrary.Graphics.Animation.AnimationChainLogic"/> seeds its own
+        /// <c>IsAnimationChainLooping</c> from this value when this chain becomes active, but that
+        /// flag stays overridable per-instance afterward.
+        /// </summary>
+        public bool Loop { get; set; } = true;
+
         private string mParentAchxFileName;
         public string ParentAchxFileName
         {
@@ -259,6 +267,7 @@ namespace Gum.Graphics.Animation
                     new Gum.Graphics.Animation.AnimationChain();
 
                 animationChain.Name = animationChainSave.Name;
+                animationChain.Loop = animationChainSave.Loop;
 
                 float divisor = 1;
 

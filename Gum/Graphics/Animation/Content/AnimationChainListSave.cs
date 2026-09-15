@@ -224,7 +224,8 @@ namespace Gum.Content.AnimationChain
                     JsonObject chainObj = chainNode!.AsObject();
                     AnimationChainSave chain = new AnimationChainSave
                     {
-                        Name = chainObj["name"]?.GetValue<string>() ?? string.Empty
+                        Name = chainObj["name"]?.GetValue<string>() ?? string.Empty,
+                        Loop = BoolProperty(chainObj, "loop", defaultValue: true)
                     };
 
                     if (chainObj["frames"] is JsonArray framesArray)

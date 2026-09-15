@@ -19,7 +19,7 @@ Both `Sprite` and `NineSlice` compose an `AnimationChainLogic` instance (XNA, So
 
 State lives entirely on `AnimationChainLogic`:
 
-- `_currentChainIndex` defaults to 0 so assigning `AnimationChains` + `Animate = true` works without setting `CurrentChainName`. `CurrentChainName` setter sets `_currentChainIndex = -1` and resolves the desired name lazily once chains are populated (`RefreshCurrentChainToDesiredName`).
+- `_currentChainIndex` defaults to 0 so assigning `AnimationChains` + `Animate = true` works without setting `CurrentChainName`. `CurrentChainName` setter sets `_currentChainIndex = -1` and resolves the desired name lazily once chains are populated (`RefreshCurrentChainToDesiredName`), then seeds `_isLooping` from the newly-resolved chain's `AnimationChain.Loop` (itself threaded from `AnimationChainSave.Loop`, default `true`) — still freely overridable per-instance afterward via `IsAnimationChainLooping`. The implicit index-0-without-`CurrentChainName` path does **not** reseed; `_isLooping` stays at its own `true` default there.
 - `AnimateSelf(secondDifference)` advances `_timeIntoAnimation`, loops or clamps based on `IsAnimationChainLooping`, fires `AnimationChainCycled`, picks a new frame via `UpdateFrameBasedOffOfTimeIntoAnimation`, and — only if the frame index changed — calls `UpdateToCurrentAnimationFrame()`.
 - `UpdateToCurrentAnimationFrame()` invokes the `ApplyFrame` delegate the host wired up. **It does not directly mutate the renderable.**
 

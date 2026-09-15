@@ -180,6 +180,78 @@ public class AnimationChainListSaveAchjTests
     }
 
     [Fact]
+    public void FromFile_AchxExtension_ChainOmitsLoop_DefaultsToTrue()
+    {
+        // Issue #4708: an .achx written before Loop existed must keep looping by default.
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Walk</Name>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].Loop.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_ChainLoopFalse_Parses()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Attack</Name>
+            <Loop>false</Loop>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].Loop.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_ChainOmitsLoop_DefaultsToTrue()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Walk", "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].Loop.ShouldBeTrue();
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_ChainLoopFalse_Parses()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Attack", "loop": false, "frames": [] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationChainListSave save = AnimationChainListSave.FromFile(path);
+
+            save.AnimationChains[0].Loop.ShouldBeFalse();
+        });
+    }
+
+    [Fact]
     public void FromFile_AchxExtension_StillParsesAsXml()
     {
         // Extension-based dialect selection must not regress the existing XML path.
