@@ -49,7 +49,7 @@ public class PreviewExecutableLocatorTests : IDisposable
     public void Resolve_FallsBackToDevBuildOutput_WhenPublishedCopyMissing()
     {
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
-        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
+        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net10.0");
         Directory.CreateDirectory(headBaseDirectory);
         Directory.CreateDirectory(devBinDirectory);
         string exePath = Path.Combine(devBinDirectory, ExeName);
@@ -65,7 +65,7 @@ public class PreviewExecutableLocatorTests : IDisposable
     {
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
         string previewFolder = Path.Combine(headBaseDirectory, "Preview");
-        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
+        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net10.0");
         Directory.CreateDirectory(previewFolder);
         Directory.CreateDirectory(devBinDirectory);
         string publishedExePath = Path.Combine(previewFolder, ExeName);
@@ -83,8 +83,8 @@ public class PreviewExecutableLocatorTests : IDisposable
         // A local dev build should default to the faster Release output when both configurations
         // are present, so Preview reflects real (non-Debug-JIT) performance without extra setup.
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
-        string debugBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
-        string releaseBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Release", "net8.0");
+        string debugBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net10.0");
+        string releaseBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Release", "net10.0");
         Directory.CreateDirectory(headBaseDirectory);
         Directory.CreateDirectory(debugBinDirectory);
         Directory.CreateDirectory(releaseBinDirectory);

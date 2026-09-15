@@ -21,7 +21,7 @@ public static class PreviewExecutableLocator
     // Release first: a local dev build should default to real (non-Debug-JIT) performance when both
     // configurations are present, rather than silently always picking up a stale Debug build.
     private static readonly string[] DevBuildConfigurations = { "Release", "Debug" };
-    private static readonly string[] DevBuildTargetFrameworks = { "net8.0" };
+    private static readonly string[] DevBuildTargetFrameworks = { "net10.0" };
 
     /// <summary>
     /// Returns the full path to the preview executable, or null if none of the candidate locations
