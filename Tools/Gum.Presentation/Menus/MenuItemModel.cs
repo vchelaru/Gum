@@ -1,12 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
+using Gum.Managers;
 using Gum.Mvvm;
 
 namespace Gum.Menus;
 
 /// <summary>
 /// One entry in the tool's main menu, described without any UI framework: a header, an enabled
-/// flag, an optional check state, a display-only gesture, and children. Each head renders the
+/// flag, an optional check state, an optional shortcut, and children. Each head renders the
 /// model with its own menu control and calls <see cref="Invoke"/> when the user picks the item.
 /// </summary>
 public class MenuItemModel : ViewModel
@@ -38,8 +39,12 @@ public class MenuItemModel : ViewModel
     /// <summary>The current check state, meaningful only when <see cref="IsCheckable"/>.</summary>
     public bool IsChecked { get => Get<bool>(); set => Set(value); }
 
-    /// <summary>Display-only shortcut text such as "Ctrl+Z"; the hotkey manager owns the real binding.</summary>
-    public string? InputGestureText { get => Get<string?>(); set => Set(value); }
+    /// <summary>
+    /// The shortcut shown beside the item, as the hotkey manager's binding so the two never
+    /// disagree. In-window menus only display it; the macOS menu bar binds it, since AppKit
+    /// matches a menu key equivalent before the window sees the key.
+    /// </summary>
+    public KeyCombination? Gesture { get => Get<KeyCombination?>(); set => Set(value); }
 
     /// <summary>Optional hover text.</summary>
     public string? ToolTip { get => Get<string?>(); set => Set(value); }

@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using AvaloniaDataUi;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Controls;
@@ -351,7 +352,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
                 e.Handled = true;
                 _tree.Focus();
                 break;
-            case Key.Back when e.KeyModifiers.HasFlag(KeyModifiers.Control):
+            case Key.Back when e.KeyModifiers.HasCommand():
                 _searchBox.Text = string.Empty;
                 e.Handled = true;
                 break;

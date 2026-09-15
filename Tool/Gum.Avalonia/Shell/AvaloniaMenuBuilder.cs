@@ -1,8 +1,9 @@
-using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Input;
+using AvaloniaDataUi;
+using Gum.Avalonia.Services;
 using Gum.Menus;
 
 namespace Gum.Avalonia.Shell;
@@ -10,29 +11,33 @@ namespace Gum.Avalonia.Shell;
 /// <summary>
 /// Renders a <see cref="MenuModel"/> into an Avalonia <see cref="Menu"/> and keeps it in sync:
 /// header, enabled, and check state follow the model's property changes, and an item's children
-/// are rebuilt when its collection changes.
+/// are rebuilt when its collection changes. A model's <see cref="MenuItemModel.Gesture"/> is shown
+/// beside the item but not bound; the hotkey manager owns the binding.
 /// </summary>
 public static class AvaloniaMenuBuilder
 {
-    /// <summary>Builds the menu control for <paramref name="model"/>.</summary>
-    public static Menu Build(MenuModel model)
+    /// <summary>Builds the menu control for <paramref name="model"/>, showing gestures with the running platform's command modifier.</summary>
+    public static Menu Build(MenuModel model) => Build(model, PlatformKeyModifiers.Command);
+
+    /// <summary>Builds the menu control for <paramref name="model"/>, showing gestures with <paramref name="commandModifiers"/> as the neutral Ctrl.</summary>
+    public static Menu Build(MenuModel model, KeyModifiers commandModifiers)
     {
         Menu menu = new Menu();
-        Populate(menu.Items, model.TopLevelItems);
-        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems);
+        Populate(menu.Items, model.TopLevelItems, commandModifiers);
+        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, commandModifiers);
         return menu;
     }
 
-    private static void Populate(ItemCollection target, ObservableCollection<MenuItemModel> items)
+    private static void Populate(ItemCollection target, ObservableCollection<MenuItemModel> items, KeyModifiers commandModifiers)
     {
         target.Clear();
         foreach (MenuItemModel item in items)
         {
-            target.Add(item.IsSeparator ? new Separator() : Create(item));
+            target.Add(item.IsSeparator ? new Separator() : Create(item, commandModifiers));
         }
     }
 
-    private static MenuItem Create(MenuItemModel model)
+    private static MenuItem Create(MenuItemModel model, KeyModifiers commandModifiers)
     {
         MenuItem menuItem = new MenuItem
         {
@@ -40,18 +45,8 @@ public static class AvaloniaMenuBuilder
             IsEnabled = model.IsEnabled,
             ToggleType = model.IsCheckable ? MenuItemToggleType.CheckBox : MenuItemToggleType.None,
             IsChecked = model.IsChecked,
+            InputGesture = model.Gesture?.ToKeyGesture(commandModifiers),
         };
-        if (model.InputGestureText != null)
-        {
-            try
-            {
-                menuItem.InputGesture = KeyGesture.Parse(model.InputGestureText);
-            }
-            catch (ArgumentException)
-            {
-                // Display-only text that is not a gesture; the hotkey manager owns real bindings.
-            }
-        }
         if (model.ToolTip != null)
         {
             ToolTip.SetTip(menuItem, model.ToolTip);
@@ -68,8 +63,8 @@ public static class AvaloniaMenuBuilder
         };
 
         model.PropertyChanged += (_, e) => Apply(menuItem, model, e);
-        Populate(menuItem.Items, model.Items);
-        model.Items.CollectionChanged += (_, _) => Populate(menuItem.Items, model.Items);
+        Populate(menuItem.Items, model.Items, commandModifiers);
+        model.Items.CollectionChanged += (_, _) => Populate(menuItem.Items, model.Items, commandModifiers);
         return menuItem;
     }
 

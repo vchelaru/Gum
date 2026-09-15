@@ -55,7 +55,8 @@ public class MenuStripManagerTests : BaseTestClass
             _projectManager.Object,
             _messenger.Object,
             _fileSystemRevealService.Object,
-            _dispatcher.Object));
+            _dispatcher.Object,
+            Mock.Of<IHotkeyManager>()));
 
     [StaFact]
     public void PopulateMenu_ShouldCreateSixTopLevelMenuItems()

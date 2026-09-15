@@ -13,6 +13,7 @@ using Avalonia.Media;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using AvaloniaDataUi;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Themes;
 using Gum.Controls;
@@ -420,14 +421,22 @@ public sealed class AvaloniaGumTreeView : UserControl
         _ => TreePointerButton.Left,
     };
 
-    private static TreeModifierKeys ToTreeModifiers(KeyModifiers modifiers)
+    private static TreeModifierKeys ToTreeModifiers(KeyModifiers modifiers) =>
+        ToTreeModifiers(modifiers, PlatformKeyModifiers.Command);
+
+    /// <summary>
+    /// Maps Avalonia modifiers to the tree's, with <paramref name="commandModifiers"/> as
+    /// <see cref="TreeModifierKeys.Control"/> - the selection logic compares against Control
+    /// exactly, so on macOS Cmd must come through as Control alone, not Control plus Windows.
+    /// </summary>
+    internal static TreeModifierKeys ToTreeModifiers(KeyModifiers modifiers, KeyModifiers commandModifiers)
     {
         TreeModifierKeys result = TreeModifierKeys.None;
         if (modifiers.HasFlag(KeyModifiers.Alt))
         {
             result |= TreeModifierKeys.Alt;
         }
-        if (modifiers.HasFlag(KeyModifiers.Control))
+        if (modifiers.HasFlag(commandModifiers))
         {
             result |= TreeModifierKeys.Control;
         }
@@ -435,7 +444,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         {
             result |= TreeModifierKeys.Shift;
         }
-        if (modifiers.HasFlag(KeyModifiers.Meta))
+        if (modifiers.HasFlag(KeyModifiers.Meta) && commandModifiers != KeyModifiers.Meta)
         {
             result |= TreeModifierKeys.Windows;
         }

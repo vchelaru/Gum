@@ -86,7 +86,7 @@ namespace Gum.Managers
                 // The model toggles its own check state in Invoke; WPF must not toggle it as well.
                 IsCheckable = false,
                 IsChecked = model.IsChecked,
-                InputGestureText = model.InputGestureText,
+                InputGestureText = model.Gesture?.ToString(),
                 ToolTip = model.ToolTip,
             };
 
@@ -121,8 +121,8 @@ namespace Gum.Managers
                 case nameof(MenuItemModel.IsChecked):
                     menuItem.IsChecked = model.IsChecked;
                     break;
-                case nameof(MenuItemModel.InputGestureText):
-                    menuItem.InputGestureText = model.InputGestureText;
+                case nameof(MenuItemModel.Gesture):
+                    menuItem.InputGestureText = model.Gesture?.ToString();
                     break;
                 case nameof(MenuItemModel.ToolTip):
                     menuItem.ToolTip = model.ToolTip;

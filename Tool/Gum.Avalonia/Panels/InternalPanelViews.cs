@@ -10,6 +10,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using AvaloniaDataUi;
 using Gum.Avalonia.Controls;
 using Gum.Avalonia.Themes;
 using FluentIcons.Avalonia;
@@ -41,9 +42,9 @@ public sealed class ErrorsView : ListBox
         this.Bind(SelectedItemProperty, new Binding(nameof(AllErrorsViewModel.SelectedItem)) { Mode = BindingMode.TwoWay });
         ItemTemplate = new FuncDataTemplate<ErrorViewModel>((_, _) => CreateRow());
 
-        MenuItem copy = new MenuItem { Header = "_Copy", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control) };
+        MenuItem copy = new MenuItem { Header = "_Copy", InputGesture = new KeyGesture(Key.C, PlatformKeyModifiers.Command) };
         copy.Bind(MenuItem.CommandProperty, new Binding(nameof(AllErrorsViewModel.CopySelectedErrorCommand)));
-        MenuItem copyAll = new MenuItem { Header = "Copy _All Errors", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control | KeyModifiers.Shift) };
+        MenuItem copyAll = new MenuItem { Header = "Copy _All Errors", InputGesture = new KeyGesture(Key.C, PlatformKeyModifiers.Command | KeyModifiers.Shift) };
         copyAll.Bind(MenuItem.CommandProperty, new Binding(nameof(AllErrorsViewModel.CopyAllErrorsCommand)));
         ContextMenu menu = new ContextMenu();
         menu.Items.Add(copy);
@@ -55,7 +56,7 @@ public sealed class ErrorsView : ListBox
 
     private void HandleKeyDown(object? sender, KeyEventArgs e)
     {
-        if (DataContext is not AllErrorsViewModel viewModel || e.Key != Key.C || !e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        if (DataContext is not AllErrorsViewModel viewModel || e.Key != Key.C || !e.KeyModifiers.HasCommand())
         {
             return;
         }

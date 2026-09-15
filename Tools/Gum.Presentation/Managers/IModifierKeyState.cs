@@ -8,7 +8,7 @@ namespace Gum.Managers;
 /// </summary>
 public interface IModifierKeyState
 {
-    /// <summary>Whether a Ctrl key is currently held.</summary>
+    /// <summary>Whether the platform's primary shortcut modifier is currently held: Ctrl on Windows and Linux, Cmd on macOS.</summary>
     bool IsCtrlDown { get; }
 
     /// <summary>Whether a Shift key is currently held.</summary>

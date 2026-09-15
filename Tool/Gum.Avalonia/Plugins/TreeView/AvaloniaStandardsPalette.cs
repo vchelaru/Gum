@@ -8,6 +8,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using AvaloniaDataUi;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Themes;
 
@@ -175,8 +176,8 @@ public sealed class AvaloniaStandardsPalette : Border
             {
                 return;
             }
-            // Ctrl+click adds an instance of this standard to the open Screen/Component without dragging.
-            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            // Ctrl+click (Cmd+click on macOS) adds an instance of this standard to the open Screen/Component without dragging.
+            if (e.KeyModifiers.HasCommand())
             {
                 AddToCurrentRequested?.Invoke(typeName);
                 e.Handled = true;

@@ -29,7 +29,7 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<IClipboardService, AvaloniaClipboardService>();
         services.AddSingleton<IAppScaleProvider, AvaloniaAppScaleProvider>();
         services.AddSingleton<IThemingService, AvaloniaThemingService>();
-        services.AddSingleton<AvaloniaModifierKeyState>();
+        services.AddSingleton(_ => new AvaloniaModifierKeyState());
         services.AddSingleton<IModifierKeyState>(provider => provider.GetRequiredService<AvaloniaModifierKeyState>());
         services.AddSingleton<IRecycleBinService, AvaloniaRecycleBinService>();
         services.AddSingleton<ISpinnerFactory, AvaloniaSpinnerFactory>();

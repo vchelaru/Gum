@@ -18,7 +18,7 @@ public class GumKeyEventArgs
     /// <summary>Whether a Shift key is held.</summary>
     public bool IsShiftDown { get; set; }
 
-    /// <summary>Whether a Ctrl key is held.</summary>
+    /// <summary>Whether the platform's primary shortcut modifier is held: Ctrl on Windows and Linux, Cmd on macOS.</summary>
     public bool IsCtrlDown { get; set; }
 
     /// <summary>Whether an Alt key is held.</summary>
