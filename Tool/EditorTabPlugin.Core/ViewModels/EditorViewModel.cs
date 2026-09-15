@@ -30,6 +30,7 @@ public partial class EditorViewModel : ViewModel, IZoomController
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IGridSnapWarningService _gridSnapWarningService;
     private readonly IProjectManager _projectManager;
+    private readonly IPreviewLauncher _previewLauncher;
 
     public bool HasGridSnapWarning
     {
@@ -289,13 +290,15 @@ public partial class EditorViewModel : ViewModel, IZoomController
         IFileCommands fileCommands,
         IWireframeObjectManager wireframeObjectManager,
         IGridSnapWarningService gridSnapWarningService,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        IPreviewLauncher previewLauncher)
     {
         _pluginManager = pluginManager;
         _fileCommands = fileCommands;
         _wireframeObjectManager = wireframeObjectManager;
         _gridSnapWarningService = gridSnapWarningService;
         _projectManager = projectManager;
+        _previewLauncher = previewLauncher;
         PercentZoomLevel = ZoomLevels.First(item => item.Value == 100);
 
         CustomCanvasSizes = DefaultCanvasSizes;
@@ -352,6 +355,9 @@ public partial class EditorViewModel : ViewModel, IZoomController
             CurrentZoomIndex = index;
         }
     }
+
+    [RelayCommand]
+    public void Preview() => _previewLauncher.Launch();
 
     internal void HandleProjectLoad(GumProjectSave save)
     {

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<!--
+			The runtime host the Gum tool's Preview button (issue #4697) launches: loads a project's
+			.gumx directly (no codegen, no recompile) and shows the screen/component selected in the
+			tool. Built alongside the tool and shipped next to the head executable in a Preview/ folder
+			(see PreviewExecutableLocator in Tool/EditorTabPlugin.Core), not resolved from PATH.
+		-->
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<RollForward>Major</RollForward>
+		<Nullable>enable</Nullable>
+		<AssemblyName>GumPreview</AssemblyName>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+	</ItemGroup>
+</Project>

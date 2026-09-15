@@ -159,7 +159,10 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         _tabManager.AddControl(tab, "Editor", TabLocation.RightTop);
     }
 
-    /// <summary>The zoom, canvas size, font scale, and grid-snap controls the WPF toolbar shows.</summary>
+    /// <summary>
+    /// The zoom, canvas size, font scale, and grid-snap controls, plus the icon-only Preview button
+    /// anchored at the far right (issue #4697) so it reads as a run control, not a view setting.
+    /// </summary>
     private static Control BuildToolbar()
     {
         StackPanel panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Margin = new Thickness(4, 2) };
@@ -183,7 +186,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
             [!SelectingItemsControl.SelectedItemProperty] = new Binding(nameof(EditorViewModel.SelectedCustomCanvasSize)) { Mode = BindingMode.TwoWay },
         });
 
-        panel.Children.Add(Label("Font Scale:", 20));
+        panel.Children.Add(GlyphLabel("Aa", "Font Scale", 20));
         panel.Children.Add(SmallButton("-", nameof(EditorViewModel.FontScaleDecreaseCommand)));
         panel.Children.Add(new TextBlock
         {
@@ -201,14 +204,32 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
             VerticalAlignment = VerticalAlignment.Center,
             [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.SnapToGrid)) { Mode = BindingMode.TwoWay },
         });
-        panel.Children.Add(Label("Grid Size:", 10));
+        panel.Children.Add(GlyphLabel("▦", "Grid Size", 10));
         panel.Children.Add(new TextBox
         {
             Width = 40,
             VerticalAlignment = VerticalAlignment.Center,
             [!TextBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
         });
-        return panel;
+
+        Button previewButton = new Button
+        {
+            Classes = { GumChromeStyles.FlatButtonClass },
+            Content = "▶",
+            Width = 26,
+            Margin = new Thickness(16, 0, 4, 0),
+            Padding = new Thickness(0),
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
+            [ToolTip.TipProperty] = "Preview in runtime",
+        };
+        DockPanel.SetDock(previewButton, global::Avalonia.Controls.Dock.Right);
+
+        DockPanel toolbarDock = new DockPanel { LastChildFill = true };
+        toolbarDock.Children.Add(previewButton);
+        toolbarDock.Children.Add(panel);
+        return toolbarDock;
     }
 
     private static Button SmallButton(string content, string commandPath) => new Button
@@ -221,11 +242,12 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         [!Button.CommandProperty] = new Binding(commandPath),
     };
 
-    private static TextBlock Label(string text, double leftMargin) => new TextBlock
+    private static TextBlock GlyphLabel(string glyph, string tooltip, double leftMargin) => new TextBlock
     {
-        Text = text,
+        Text = glyph,
         Margin = new Thickness(leftMargin, 0, 4, 0),
         VerticalAlignment = VerticalAlignment.Center,
+        [ToolTip.TipProperty] = tooltip,
     };
 
     /// <inheritdoc/>

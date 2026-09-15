@@ -152,6 +152,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IToolLayerService _toolLayerService;
     private readonly IPluginManager _pluginManager;
     private IWireframeEditorFactory _wireframeEditorFactory;
+    private readonly IPreviewLauncher _previewLauncher;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -310,12 +311,15 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
+        _previewLauncher = new PreviewLauncher(_selectedState, _projectManager, _outputManager, AppContext.BaseDirectory);
+
         _editorViewModel = new EditorViewModel(
             _pluginManager,
             _fileCommands,
             _wireframeObjectManager,
             _gridSnapWarningService,
-            _projectManager);
+            _projectManager,
+            _previewLauncher);
 
         messenger.RegisterAll(this);
     }
@@ -395,6 +399,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         this.ElementSelected += HandleElementSelected;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
+        this.ElementSelected += _previewLauncher.PushSelection;
         this.ElementDelete += HandleElementDeleted;
 
         this.BehaviorSelected += HandleBehaviorSelected;
