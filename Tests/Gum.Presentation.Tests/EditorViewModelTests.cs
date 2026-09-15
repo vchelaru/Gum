@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Wireframe;
 using Moq;
@@ -26,7 +27,8 @@ public class EditorViewModelTests
             Mock.Of<IFileCommands>(),
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IGridSnapWarningService>(),
-            Mock.Of<IProjectManager>());
+            Mock.Of<IProjectManager>(),
+            Mock.Of<IPreviewLauncher>());
         return (viewModel, pluginManager);
     }
 
