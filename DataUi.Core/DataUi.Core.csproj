@@ -7,12 +7,18 @@
 		logic classes (TextBoxDisplayLogic, FilePickingLogic, InlineChannelsDisplayLogic). The WPF
 		grid (WpfDataUi) and the Avalonia grid (AvaloniaDataUi) are two views over this model.
 
-		The namespaces stay WpfDataUi.* so existing consumers compile unchanged. Multi-targets
-		net8.0/net10.0 (WpfDataUi does the same) so FlatRedBall's Glue, still on net8.0-windows,
-		keeps building; no UI framework, and the banned-symbol list keeps Windows-only APIs out.
+		The namespaces stay WpfDataUi.* so existing consumers compile unchanged. Single-targets
+		net8.0 (WpfDataUi does the same) rather than also multi-targeting net10.0: nothing here
+		needs a net10-only API (no UI framework, and the banned-symbol list keeps Windows-only APIs
+		out too), and net10.0's *presence* in this list - even unused - breaks any consumer building
+		with an SDK that predates net10, since evaluating that TFM at all requires SDK support for
+		it. AvaloniaDataUi (net10.0) and Gum.csproj (net10.0-windows) still reference this fine: a
+		newer-TFM project consuming an older-TFM library is ordinary downward compatibility, no
+		different from any other still-net8.0 NuGet package. FlatRedBall's Glue (net8.0-windows)
+		needed exactly this - not a second net10.0 leg it can't build against anyway.
 	-->
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>12.0</LangVersion>
 		<Nullable>enable</Nullable>
