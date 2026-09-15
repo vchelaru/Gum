@@ -49,6 +49,10 @@ public class AnimationChainLogic
             if (_chains != null && _chains.Count > 0)
             {
                 RefreshCurrentChainToDesiredName();
+                if (CurrentChain != null)
+                {
+                    _isLooping = CurrentChain.Loop;
+                }
                 UpdateToCurrentAnimationFrame();
             }
         }
