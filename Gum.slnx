@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" />
+  <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" DefaultStartup="true" />
   <Project Path="Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj" />
   <Folder Name="/Plugins/">
     <Project Path="Tool/EditorTabPlugin.Core/EditorTabPlugin.Core.csproj" />
