@@ -2273,8 +2273,12 @@ public partial class CustomSetPropertyOnRenderable
             return fontFilePath;
         }
 
+        // A project built in code and never loaded from or saved to disk has no FullFileName, so
+        // there is no project directory to resolve against -- treat it like no project at all.
+        // FileManager.GetDirectory throws on null, and the FontService branch of GetOrCreateBakedFont
+        // swallows that, silently skipping font generation.
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        if (gumProject != null)
+        if (!string.IsNullOrEmpty(gumProject?.FullFileName))
         {
             string projectDir = ToolsUtilities.FileManager.GetDirectory(gumProject.FullFileName);
             return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
