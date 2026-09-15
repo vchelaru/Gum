@@ -47,3 +47,17 @@ Changing the global Font Scale value does the following to Gum elements:
 * Text objects have their Font Scale value multiplied by this value. Note that this does not generate new bitmap fonts
 * Objects which are sized according to the size of Text instances (such as the buttons in the screenshot above) are resized appropriately
 * Objects which use `Width Units` of [Absolute Multiplied by Font Scale](gum-elements/general-properties/width-units.md#absolute-multiplied-by-font-scale) or `Height Units` of [Absolute Multiplied by Font Scale](gum-elements/general-properties/height-units.md#absolute-multiplied-by-font-scale) are resized appropriately.
+
+## Preview
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
+The **Preview** button, the icon-only play triangle at the far right of the Editor tab toolbar, opens your selected screen or component in a separate window running the real runtime. Buttons click, list boxes scroll, and text boxes take input, the same as they would in your shipped game, without wiring up your own game project first.
+
+Preview needs a saved project and a selected screen or component. If either is missing, Gum reports why in the Output tab instead of opening a window.
+
+While Preview is open, selecting a different screen or component in the tool swaps what Preview shows. Saving changes in the tool updates the Preview window automatically, the same way [hot reload](../code/debugging/hot-reload.md) works for a game you run yourself.
+
+Because Preview loads your project the same way a shipped game would, missing texture or font files show up as the same errors a player would see. If a font looks wrong, generate its `FontCache` in the tool first, the same way you would before running your own game. Texture changes need Preview restarted; only font changes are picked up live.
