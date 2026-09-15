@@ -48,6 +48,7 @@
 			"ProgramFiles(x86)" through $(...) syntax.
 		-->
 		<_VsWhereDir>$(MSBuildProgramFiles32)\Microsoft Visual Studio\Installer</_VsWhereDir>
+		<_VsWhereExe>$(_VsWhereDir)\vswhere.exe</_VsWhereExe>
 		<!--
 			Prepended to the AOT publish's own Command below (not the ReadyToRun one - crossgen2 is
 			managed and cross-platform, and never needs vswhere or the MSVC linker). Exec's own
@@ -90,12 +91,33 @@
 		tried first and rejected: it intermittently made the Native AOT publish itself fail for
 		reasons not fully understood, most likely the native link step's own subprocess needing a
 		live console handle.)
+
+		The Native AOT variant is skipped, with a high-importance message, when the MSVC linker is
+		not installed (on Windows: no Visual Studio product with the "Desktop development with C++"
+		tools, probed through vswhere) so building the tool never requires an extra VS workload -
+		the same rule the runtimes follow for the mobile workloads. PreviewExecutableLocator falls
+		back to the ReadyToRun Preview for .gumj projects when Preview-Aot is absent. The release
+		workflow publishes the AOT variant with its own `dotnet publish -p:PublishAot=true` and is
+		unaffected by this probe.
 	-->
 	<Target Name="PublishPreviewVariants" AfterTargets="Build"
 	        Condition="'$(Configuration)' == 'Debug' AND '$(SkipPreviewVariantPublish)' != 'true' AND '$(DesignTimeBuild)' != 'true'">
 		<Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c Release -r $(_PreviewVariantRid) --self-contained true -p:SkipPreviewVariantPublish=true -o &quot;$(_HeadBinDir)Preview&quot;"
 		      IgnoreStandardErrorWarningFormat="true" />
-		<Exec Command="$(_AotExecCommandPrefix)dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c Release -r $(_PreviewVariantRid) --self-contained true -p:PublishAot=true -p:SkipPreviewVariantPublish=true -o &quot;$(_HeadBinDir)Preview-Aot&quot;"
+
+		<Exec Condition="'$(OS)' == 'Windows_NT' AND Exists('$(_VsWhereExe)')"
+		      Command="&quot;$(_VsWhereExe)&quot; -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
+		      ConsoleToMSBuild="true" IgnoreExitCode="true" StandardOutputImportance="low">
+			<Output TaskParameter="ConsoleOutput" PropertyName="_AotLinkerVsInstallation" />
+		</Exec>
+		<PropertyGroup>
+			<_CanPublishAot>true</_CanPublishAot>
+			<_CanPublishAot Condition="'$(OS)' == 'Windows_NT' AND '$(_AotLinkerVsInstallation)' == ''">false</_CanPublishAot>
+		</PropertyGroup>
+		<Message Importance="high" Condition="'$(_CanPublishAot)' != 'true'"
+		         Text="GumPreview: skipping the Native AOT Preview variant - no MSVC linker found (install the Visual Studio 'Desktop development with C++' workload to build it). Preview uses the ReadyToRun build instead." />
+		<Exec Condition="'$(_CanPublishAot)' == 'true'"
+		      Command="$(_AotExecCommandPrefix)dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c Release -r $(_PreviewVariantRid) --self-contained true -p:PublishAot=true -p:SkipPreviewVariantPublish=true -o &quot;$(_HeadBinDir)Preview-Aot&quot;"
 		      IgnoreStandardErrorWarningFormat="true" />
 	</Target>
 
