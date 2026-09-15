@@ -76,4 +76,24 @@ public class PreviewExecutableLocatorTests : IDisposable
 
         result.ShouldBe(publishedExePath);
     }
+
+    [Fact]
+    public void Resolve_PrefersDevReleaseBuild_OverDevDebugBuild()
+    {
+        // A local dev build should default to the faster Release output when both configurations
+        // are present, so Preview reflects real (non-Debug-JIT) performance without extra setup.
+        string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
+        string debugBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Debug", "net8.0");
+        string releaseBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Release", "net8.0");
+        Directory.CreateDirectory(headBaseDirectory);
+        Directory.CreateDirectory(debugBinDirectory);
+        Directory.CreateDirectory(releaseBinDirectory);
+        File.WriteAllText(Path.Combine(debugBinDirectory, ExeName), "");
+        string releaseExePath = Path.Combine(releaseBinDirectory, ExeName);
+        File.WriteAllText(releaseExePath, "");
+
+        string? result = PreviewExecutableLocator.Resolve(headBaseDirectory);
+
+        result.ShouldBe(releaseExePath);
+    }
 }

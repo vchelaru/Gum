@@ -6,11 +6,21 @@
 			tool. Built alongside the tool and shipped next to the head executable in a Preview/ folder
 			(see PreviewExecutableLocator in Tool/EditorTabPlugin.Core), not resolved from PATH.
 		-->
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0</TargetFramework>
 		<RollForward>Major</RollForward>
 		<Nullable>enable</Nullable>
 		<AssemblyName>GumPreview</AssemblyName>
+	</PropertyGroup>
+	<!--
+		ReadyToRun precompiles native code ahead of time to reduce first-call JIT cost, same pattern
+		as Gum.csproj (#4282) - startup latency is the whole point of Preview. Native AOT is not an
+		option: most real projects are still .gumx (XML), whose load path is a plain XmlSerializer,
+		which is not Native-AOT-safe (see IConvertProjectToJsonService); only the opt-in .gumj JSON
+		format is proven safe there. Only meaningful for a RID-specific publish; no effect on `dotnet build`.
+	-->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
@@ -18,5 +28,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+		<!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,
+		     Polygon) - RectangleRuntime and friends render nothing without this (see Game1's
+		     ShapeRenderer.Self.Initialize() call and the gum-samples skill's MonoGame host-init note). -->
+		<ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 	</ItemGroup>
 </Project>

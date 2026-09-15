@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Wireframe;
 using Moq;
@@ -24,6 +25,7 @@ public class EditorViewModelTests
     private readonly Mock<IWireframeObjectManager> _wireframeObjectManager = new();
     private readonly Mock<IGridSnapWarningService> _gridSnapWarningService = new();
     private readonly Mock<IProjectManager> _projectManager = new();
+    private readonly Mock<IPreviewLauncher> _previewLauncher = new();
     private readonly GumProjectSave _gumProject = new();
     private readonly EditorViewModel _sut;
 
@@ -37,7 +39,8 @@ public class EditorViewModelTests
             _fileCommands.Object,
             _wireframeObjectManager.Object,
             _gridSnapWarningService.Object,
-            _projectManager.Object);
+            _projectManager.Object,
+            _previewLauncher.Object);
     }
 
     [Fact]

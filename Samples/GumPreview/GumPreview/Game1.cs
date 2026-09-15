@@ -6,6 +6,7 @@ using Gum.Managers;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGameAndGum.Renderables;
 
 namespace GumPreview;
 
@@ -35,6 +36,10 @@ public class Game1 : Game
         _selectionFilePath = selectionFilePath;
 
         _graphics = new GraphicsDeviceManager(this);
+        // Apos.Shapes (the shape fill/effect renderer behind RectangleRuntime/CircleRuntime/etc.)
+        // uses a Shader Model 4 effect, which requires HiDef - Reach cannot load it and shapes
+        // silently fail to draw.
+        _graphics.GraphicsProfile = GraphicsProfile.HiDef;
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
@@ -45,6 +50,11 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumService.Default.Initialize(this, _gumxPath);
+
+        // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
+        // initialized GumService/GraphicsDevice.
+        ShapeRenderer.Self.Initialize();
+
         GumService.Default.EnableHotReload(_gumxPath);
 
         ApplyCanvasSizeFromProject();

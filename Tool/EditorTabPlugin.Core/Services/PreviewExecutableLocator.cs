@@ -18,7 +18,9 @@ public static class PreviewExecutableLocator
     /// <summary>Repo-relative path to the preview host sample project, used for the dev-build fallback.</summary>
     public const string SampleProjectPath = "Samples/GumPreview/GumPreview";
 
-    private static readonly string[] DevBuildConfigurations = { "Debug", "Release" };
+    // Release first: a local dev build should default to real (non-Debug-JIT) performance when both
+    // configurations are present, rather than silently always picking up a stale Debug build.
+    private static readonly string[] DevBuildConfigurations = { "Release", "Debug" };
     private static readonly string[] DevBuildTargetFrameworks = { "net8.0" };
 
     /// <summary>
