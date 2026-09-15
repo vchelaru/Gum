@@ -285,7 +285,10 @@ public class FormsThemeImporterTests
 
             _projectState.Setup(x => x.GumProjectSave)
                 .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumj" });
-            _projectState.Setup(x => x.ProjectDirectory).Returns("C:/project/");
+            // RelativeTo needs a real, existing directory on this OS - differentGutj already sits
+            // directly under the OS temp directory, so use that rather than a fake Windows-style
+            // path (which broke FilePath's relative-path math on Linux CI - #4712).
+            _projectState.Setup(x => x.ProjectDirectory).Returns(System.IO.Path.GetTempPath());
             _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
                 .Returns(new Dictionary<string, FilePath> { ["source"] = differentGutj });
             // ShowYesNoMessage is an extension over ShowMessage(...); an affirmative result is "Yes".
