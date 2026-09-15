@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.ToolStates;
 using System;
 using System.Collections.Generic;
@@ -55,6 +56,27 @@ public class FormsFileService : IFormsFileService
         Path.Combine(GetThemesRoot(), themeName)
             .Replace('\\', '/') + "/";
 
+    // A theme's own content is always authored as XML. When the destination project is JSON, the
+    // destination path gets the project's own JSON extension instead, so FormsThemeImporter can
+    // convert the content at copy time rather than leaving a dead XML copy behind (#4710).
+    private static readonly Dictionary<string, string> ContentExtensionToJson = new()
+    {
+        [GumProjectSave.ComponentExtension] = GumProjectSave.ComponentJsonExtension,
+        [GumProjectSave.ScreenExtension] = GumProjectSave.ScreenJsonExtension,
+        [GumProjectSave.StandardExtension] = GumProjectSave.StandardJsonExtension,
+        [Gum.DataTypes.Behaviors.BehaviorReference.Extension] = Gum.DataTypes.Behaviors.BehaviorReference.JsonExtension,
+    };
+
+    /// <summary>
+    /// True for either format of a <see cref="GetSourceDestinations"/> Standards destination
+    /// (<c>.gutx</c> for a .gumx project, <c>.gutj</c> for a .gumj one - #4710). Shared so every
+    /// caller that needs to treat Standards as a special case (never proof a theme was imported,
+    /// never blocking on overwrite the way other content does) stays in sync with the extension this
+    /// class actually writes.
+    /// </summary>
+    public static bool IsStandardExtension(string extension) =>
+        extension == GumProjectSave.StandardExtension || extension == GumProjectSave.StandardJsonExtension;
+
     /// <inheritdoc/>
     /// <remarks>
     /// Extensions skipped: .gumx, .gumfcs, .ganx (animation files, deferred), .codsj.
@@ -71,6 +93,8 @@ public class FormsFileService : IFormsFileService
         string themeDir = GetThemeDirectory(themeName);
 
         if (!Directory.Exists(themeDir)) return sourceDestinations;
+
+        bool isDestinationJsonFormat = GumProjectSave.IsJsonFormat(_projectState.GumProjectSave?.FullFileName ?? string.Empty);
 
         var allFiles = Directory.GetFiles(themeDir, "*.*", SearchOption.AllDirectories);
 
@@ -129,6 +153,11 @@ public class FormsFileService : IFormsFileService
                 .Replace('\\', '/')
                 .Substring(themeDir.Length)
                 .TrimStart('/');
+
+            if (isDestinationJsonFormat && ContentExtensionToJson.TryGetValue(extension, out string? jsonExtension))
+            {
+                relativePath = relativePath.Substring(0, relativePath.Length - extension.Length) + jsonExtension;
+            }
 
             string absoluteDestination = destinationFolder + relativePath;
             sourceDestinations.Add(sourceFile, absoluteDestination);

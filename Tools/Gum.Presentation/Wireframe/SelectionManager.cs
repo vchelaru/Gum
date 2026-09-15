@@ -118,6 +118,16 @@ public class SelectionManager : ISelectionManager
         }
         set
         {
+            // The wireframe canvas's highlight visuals aren't wired up until Initialize(...) runs
+            // (see its doc comment - two-stage init). On the Avalonia head the tree view can fire a
+            // hover event - and call in here via PluginManager.SetHighlightedIpso - before that
+            // happens, since it's a sibling control that can attach independently of the canvas.
+            // There's nothing to highlight yet in that window, so no-op instead of NRE.
+            if (highlightManager == null)
+            {
+                return;
+            }
+
             highlightManager.HighlightedIpso = value;
             if (mHighlightedIpso != value)
             {

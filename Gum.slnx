@@ -1,6 +1,9 @@
 <Solution>
   <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" DefaultStartup="true" />
   <Project Path="Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj" />
+  <Folder Name="/Preview/">
+    <Project Path="Samples/GumPreview/GumPreview/GumPreview.csproj" />
+  </Folder>
   <Folder Name="/Plugins/">
     <Project Path="Tool/EditorTabPlugin.Core/EditorTabPlugin.Core.csproj" />
     <Project Path="Tool/StateAnimationPlugin.Core/StateAnimationPlugin.Core.csproj" />

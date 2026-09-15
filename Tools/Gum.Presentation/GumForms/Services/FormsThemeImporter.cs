@@ -1,5 +1,6 @@
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Logic.FileWatch;
@@ -93,17 +94,21 @@ public class FormsThemeImporter : IFormsThemeImporter
         // and Components never depend on Screens, so importing strictly in that order - Behaviors,
         // then Components, then Screens - is always dependency-safe, regardless of the filesystem
         // enumeration order sourceDestinations was built in.
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "behx"))
+        //
+        // Filtered by the SOURCE file's extension, not the destination's: a theme's own content is
+        // always authored as XML, but SaveFilesToDestination converts it to the destination
+        // project's own format (#4710), so the destination extension varies.
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "behx"))
         {
             _importLogic.ImportBehavior(item.Value, saveProject: false);
         }
 
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gucx"))
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "gucx"))
         {
             _importLogic.ImportComponent(item.Value, saveProject: false);
         }
 
-        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => kvp.Value.Extension == "gusx"))
+        foreach (KeyValuePair<string, FilePath> item in sourceDestinations.Where(kvp => FileManager.GetExtension(kvp.Key) == "gusx"))
         {
             _importLogic.ImportScreen(item.Value, saveProject: false);
         }
@@ -129,7 +134,47 @@ public class FormsThemeImporter : IFormsThemeImporter
             _fileWatchManager.IgnoreNextChangeUntil(directory);
             _fileWatchManager.IgnoreNextChangeUntil(destination.FullPath);
             Directory.CreateDirectory(directory);
-            File.Copy(sourcePath, destination.FullPath, overwrite: true);
+
+            string sourceExtension = FileManager.GetExtension(sourcePath);
+            if (sourceExtension == destination.Extension)
+            {
+                File.Copy(sourcePath, destination.FullPath, overwrite: true);
+            }
+            else
+            {
+                // FormsFileService.GetSourceDestinations already rewrote this destination's
+                // extension to the project's own JSON format - a theme's content is always authored
+                // as XML, so convert it here rather than leaving a dead XML copy a .gumj project
+                // never loads (#4710). Standards are the one case with a real correctness gap: a
+                // copied .gutx is never routed through _importLogic below, so the raw byte copy used
+                // to be the entire mechanism that applied a theme's Standards to a .gumx project (the
+                // reload at the end of ImportTheme just re-reads it from disk) - for .gumj that
+                // reload only ever resolves .gutj, so the .gutx copy was silently ignored.
+                SaveConvertedContentFile(sourcePath, sourceExtension, destination.FullPath);
+            }
+        }
+    }
+
+    private static void SaveConvertedContentFile(string sourcePath, string sourceExtension, string destinationPath)
+    {
+        switch (sourceExtension)
+        {
+            case "gucx":
+                ElementReference.DeserializeElement<ComponentSave>(sourcePath, GumProjectSave.NativeVersion)
+                    .Save(destinationPath, useCompactFormat: true);
+                break;
+            case "gusx":
+                ElementReference.DeserializeElement<ScreenSave>(sourcePath, GumProjectSave.NativeVersion)
+                    .Save(destinationPath, useCompactFormat: true);
+                break;
+            case "gutx":
+                ElementReference.DeserializeElement<StandardElementSave>(sourcePath, GumProjectSave.NativeVersion)
+                    .Save(destinationPath, useCompactFormat: true);
+                break;
+            case "behx":
+                BehaviorReference.DeserializeBehavior(sourcePath, GumProjectSave.NativeVersion)
+                    .Save(destinationPath, useCompactFormat: true);
+                break;
         }
     }
 
@@ -144,8 +189,8 @@ public class FormsThemeImporter : IFormsThemeImporter
             .Select(kvp => kvp.Value)
             .ToList();
 
-        bool doStandardsExist = existingFiles.Any(item => item.Extension == "gutx");
-        List<FilePath> nonStandardFiles = existingFiles.Where(item => item.Extension != "gutx").ToList();
+        bool doStandardsExist = existingFiles.Any(item => FormsFileService.IsStandardExtension(item.Extension));
+        List<FilePath> nonStandardFiles = existingFiles.Where(item => !FormsFileService.IsStandardExtension(item.Extension)).ToList();
 
         // don't block on gumx:
         List<FilePath> nonStandardWhichBlockCopying =
@@ -165,7 +210,7 @@ public class FormsThemeImporter : IFormsThemeImporter
                 .Select(item => item.RelativeTo(_projectState.ProjectDirectory!))
                 .ToList();
 
-            List<string> standardFiles = filesWhichWouldGetOverwritten.Where(item => item.EndsWith(".gutx")).ToList();
+            List<string> standardFiles = filesWhichWouldGetOverwritten.Where(IsStandardFile).ToList();
             List<string> otherFiles = filesWhichWouldGetOverwritten.Except(standardFiles)
                 // Be sure to ToList it here to evaluate on the spot
                 .ToList();
@@ -207,6 +252,10 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         return shouldSave;
     }
+
+    private static bool IsStandardFile(string relativePath) =>
+        relativePath.EndsWith("." + GumProjectSave.StandardExtension) ||
+        relativePath.EndsWith("." + GumProjectSave.StandardJsonExtension);
 
     private static bool AreFilesIdentical(string sourcePath, string destinationPath)
     {

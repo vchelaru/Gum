@@ -52,6 +52,29 @@ public class GumFormsLogicTests
     }
 
     [Fact]
+    public void GetIfProjectHasForms_OnlyAGutjStandardExists_ReturnsFalse()
+    {
+        // #4710: FormsFileService now computes a .gutj (not .gutx) Standards destination for a
+        // .gumj project. Every project always has its default Standards on disk, so if that .gutj
+        // were mistaken for real Forms content, this would permanently report true for any .gumj
+        // project and hide the "Add Forms" menu item forever, even before Forms was ever added.
+        string existingFile = Path.GetTempFileName();
+        string existingGutj = existingFile + ".gutj";
+        try
+        {
+            File.Move(existingFile, existingGutj);
+            _formsFileService.Setup(x => x.GetSourceDestinations("Standard", false))
+                .Returns(new Dictionary<string, FilePath> { ["a"] = existingGutj });
+
+            _logic.GetIfProjectHasForms().ShouldBeFalse();
+        }
+        finally
+        {
+            File.Delete(existingGutj);
+        }
+    }
+
+    [Fact]
     public void GetIfProjectHasForms_AMatchingDestinationFileExistsOnDisk_ReturnsTrue()
     {
         string existingFile = Path.GetTempFileName();
