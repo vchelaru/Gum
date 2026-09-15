@@ -6,6 +6,12 @@
 >
 > Point-in-time decisions are captured separately (append-only): **ADR-0003** (the approach) and
 > **ADR-0004** (the ViewModel rule).
+>
+> **Status (2026-09-09): the bet described below as deferred has been taken and shipped** — see
+> the "Decided" note under Phase 5. The "if Avalonia ships" framing throughout this doc reflects
+> the reasoning *before* that decision; it explains why Phases 0–4b were worth doing on their own
+> merits, which is still true. Avalonia is not hypothetical: it is the tool that ships today (see
+> `CLAUDE.md`, Project Direction).
 
 ## Why — and why it's no-regret
 
