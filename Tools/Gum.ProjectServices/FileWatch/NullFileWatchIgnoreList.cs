@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Gum.Logic.FileWatch;
 using ToolsUtilities;
 
-namespace Gum.Cli;
+namespace Gum.Logic.FileWatch;
 
 /// <summary>
-/// No-op file watch ignore list for headless/CLI use. <c>gumcli</c> has no running file watcher to
-/// mute, so every member is a no-op.
+/// No-op <see cref="IFileWatchIgnoreList"/> for headless callers (gumcli, headless project
+/// creation) with no running file watcher to mute. Every member is a no-op.
 /// </summary>
-internal class HeadlessFileWatchIgnoreList : IFileWatchIgnoreList
+public class NullFileWatchIgnoreList : IFileWatchIgnoreList
 {
     /// <inheritdoc/>
     public IReadOnlyDictionary<FilePath, DateTime> TimedChangesToIgnore { get; } =

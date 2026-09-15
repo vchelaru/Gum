@@ -374,6 +374,21 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void AskUserForProjectNameIfNecessary_SuggestsGumjFileName()
+    {
+        // New projects should default to .gumj (JSON, AOT-safe) rather than .gumx (#4705).
+        SetCurrentProject(new GumProjectSave());
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns((string?)null);
+
+        _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        _dialogService.Verify(d => d.SaveFile(It.Is<SaveFileDialogOptions>(o =>
+            o.FileName != null && o.FileName.EndsWith(".gumj", StringComparison.OrdinalIgnoreCase))), Times.Once);
+    }
+
+    [Fact]
     public void RecreateMissingStandardElements_DoesNotCrash_AndInforms_ForMissingPluginStandard()
     {
         // Repro of #3373: clicking "Yes" to recreate a missing Skia standard (Arc) crashed with

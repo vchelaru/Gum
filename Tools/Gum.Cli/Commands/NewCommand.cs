@@ -2,6 +2,7 @@ using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
+using Gum.DataTypes;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -18,9 +19,10 @@ public static class NewCommand
     {
         var pathArgument = new Argument<string?>(
             "path",
-            "Path for the new .gumx project file. If no .gumx extension is provided, " +
-            "a project folder and file are created using the given name. " +
-            "If omitted, a 'GumProject' subdirectory is created in the current directory.")
+            "Path for the new Gum project file. Accepts a .gumj (JSON, AOT-safe) or .gumx (XML) " +
+            "extension explicitly; otherwise a project folder and file are created using the given " +
+            "name, defaulting to .gumj. If omitted, a 'GumProject' subdirectory is created in the " +
+            "current directory.")
         {
             Arity = ArgumentArity.ZeroOrOne
         };
@@ -63,17 +65,17 @@ public static class NewCommand
 
         if (string.IsNullOrEmpty(path))
         {
-            fullPath = Path.GetFullPath(Path.Combine(DefaultProjectName, DefaultProjectName + ".gumx"));
+            fullPath = Path.GetFullPath(Path.Combine(DefaultProjectName, DefaultProjectName + "." + GumProjectSave.ProjectJsonExtension));
         }
-        else if (path.EndsWith(".gumx", StringComparison.OrdinalIgnoreCase))
+        else if (GumProjectSave.IsProjectFile(path))
         {
             fullPath = Path.GetFullPath(path);
         }
         else
         {
-            // Treat as a project name: create <name>/<name>.gumx
+            // Treat as a project name: create <name>/<name>.gumj
             var directoryName = Path.GetFileName(path);
-            fullPath = Path.GetFullPath(Path.Combine(path, directoryName + ".gumx"));
+            fullPath = Path.GetFullPath(Path.Combine(path, directoryName + "." + GumProjectSave.ProjectJsonExtension));
         }
 
         if (File.Exists(fullPath))

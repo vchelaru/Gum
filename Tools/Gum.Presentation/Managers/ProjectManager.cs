@@ -733,6 +733,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 Filter = "Gum Project (*.gumx;*.gumj)|*.gumx;*.gumj",
                 Title = "Where would you like to save the Gum project?",
+                // Suggest .gumj (JSON, AOT-safe) rather than defaulting to .gumx purely because it's
+                // listed first in the combined filter above (#4705). XML stays available - the user
+                // can still type/pick a .gumx name - just no longer the unlabeled default.
+                FileName = "NewProject.gumj",
             });
 
             bool shouldProceed = chosenFileName != null;
