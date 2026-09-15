@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 
 namespace Gum.ProjectServices;
 
@@ -11,21 +14,65 @@ public class FormsTemplateCreator : IFormsTemplateCreator
     private const string ManifestResourceName = ResourcePrefix + "manifest.txt";
     private const string ProjectTemplateRelativePath = "GumProject.gumx";
 
+    // The embedded Forms template is authored (and shipped) entirely as XML. When the caller
+    // wants a JSON project, extract the template as XML as usual, then convert it in place and
+    // remove the XML - reusing ConvertProjectToJsonService rather than hand-authoring a second,
+    // parallel JSON template that would need to be kept in sync with this one forever (#4705).
+    private static readonly string[] ConvertibleXmlExtensions =
+        { "gumx", "gusx", "gucx", "gutx", "behx" };
+
     /// <inheritdoc/>
     public void Create(string filePath)
     {
         var assembly = Assembly.GetExecutingAssembly();
         var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-        var projectFileName = Path.GetFileName(filePath);
+        var isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
+        var xmlProjectFileName = isJsonFormat
+            ? Path.GetFileNameWithoutExtension(filePath) + "." + GumProjectSave.ProjectExtension
+            : Path.GetFileName(filePath);
 
         var manifest = ReadManifest(assembly);
+        var extractedPaths = new List<string>();
 
         foreach (var relativePath in manifest)
         {
             var resourceName = ResourcePrefix + relativePath.Replace('/', '.');
-            var destinationPath = BuildDestinationPath(directory, relativePath, projectFileName);
+            var destinationPath = BuildDestinationPath(directory, relativePath, xmlProjectFileName);
 
             ExtractResource(assembly, resourceName, destinationPath);
+            extractedPaths.Add(destinationPath);
+        }
+
+        if (isJsonFormat)
+        {
+            var xmlProjectPath = Path.Combine(directory, xmlProjectFileName);
+            ConvertExtractedTemplateToJson(xmlProjectPath, extractedPaths);
+        }
+    }
+
+    private static void ConvertExtractedTemplateToJson(string xmlProjectPath, List<string> extractedPaths)
+    {
+        IProjectLoader loader = new ProjectLoader();
+        ProjectLoadResult loadResult = loader.Load(xmlProjectPath);
+        if (!loadResult.Success || loadResult.Project == null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to load the extracted Forms template for JSON conversion: {loadResult.ErrorMessage}");
+        }
+
+        IConvertProjectToJsonService convertService = new ConvertProjectToJsonService(new NullFileWatchIgnoreList());
+        convertService.ConvertToJson(loadResult.Project);
+
+        // The JSON siblings now hold everything the project references; the freshly-extracted XML
+        // is dead weight for a brand-new project (nothing to preserve, unlike the opt-in
+        // gumcli convert-to-json path this reuses, which is non-destructive by design).
+        foreach (var path in extractedPaths)
+        {
+            var extension = Path.GetExtension(path).TrimStart('.').ToLowerInvariant();
+            if (Array.IndexOf(ConvertibleXmlExtensions, extension) >= 0)
+            {
+                File.Delete(path);
+            }
         }
     }
 

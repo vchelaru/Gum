@@ -1,3 +1,4 @@
+using Gum.ProjectServices;
 using Shouldly;
 
 namespace Gum.Cli.Tests;
@@ -33,8 +34,21 @@ public class NewCommandTests : IDisposable
 
         result.ExitCode.ShouldBe(0);
 
-        string expectedGumx = Path.Combine(projectDir, "MyGame.gumx");
-        File.Exists(expectedGumx).ShouldBeTrue();
+        // Defaults to .gumj (JSON, AOT-safe) when no extension is given (#4705).
+        string expectedGumj = Path.Combine(projectDir, "MyGame.gumj");
+        File.Exists(expectedGumj).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void New_WithGumjExtension_ShouldCreateProjectAtExactPath()
+    {
+        string filePath = Path.Combine(_tempDirectory, "MyProject.gumj");
+
+        CliTestHelper result = CliTestHelper.Run("new", filePath);
+
+        result.ExitCode.ShouldBe(0);
+        File.Exists(filePath).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "MyProject.gumx")).ShouldBeFalse();
     }
 
     [Fact]
@@ -117,8 +131,9 @@ public class NewCommandTests : IDisposable
             CliTestHelper result = CliTestHelper.Run("new");
 
             result.ExitCode.ShouldBe(0);
-            string expectedGumx = Path.Combine(_tempDirectory, "GumProject", "GumProject.gumx");
-            File.Exists(expectedGumx).ShouldBeTrue();
+            // Defaults to .gumj (JSON, AOT-safe) when no path is given at all (#4705).
+            string expectedGumj = Path.Combine(_tempDirectory, "GumProject", "GumProject.gumj");
+            File.Exists(expectedGumj).ShouldBeTrue();
             result.StandardOutput.ShouldContain("Created project:");
         }
         finally
@@ -145,6 +160,25 @@ public class NewCommandTests : IDisposable
         {
             Directory.SetCurrentDirectory(originalCurrentDirectory);
         }
+    }
+
+    [Fact]
+    public void New_DefaultTemplateAndExtension_ShouldProduceLoadableJsonProject()
+    {
+        // The default "forms" template is extracted from an XML-only embedded resource (#4705);
+        // this proves the end-to-end gumcli path actually converts it, not just the lower-level
+        // FormsTemplateCreator unit.
+        string projectDir = Path.Combine(_tempDirectory, "MyGame");
+
+        CliTestHelper result = CliTestHelper.Run("new", projectDir);
+
+        result.ExitCode.ShouldBe(0);
+        string gumjPath = Path.Combine(projectDir, "MyGame.gumj");
+        File.Exists(gumjPath).ShouldBeTrue();
+
+        ProjectLoadResult loadResult = new ProjectLoader().Load(gumjPath);
+        loadResult.Success.ShouldBeTrue();
+        loadResult.LoadErrors.ShouldBeEmpty();
     }
 
     public void Dispose()

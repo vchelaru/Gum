@@ -41,6 +41,7 @@ public class ProjectCreator : IProjectCreator
     public GumProjectSave Create(string filePath)
     {
         var directory = FileManager.GetDirectory(filePath);
+        var isJsonFormat = GumProjectSave.IsJsonFormat(filePath);
 
         foreach (var subfolder in StandardSubfolders)
         {
@@ -48,7 +49,7 @@ public class ProjectCreator : IProjectCreator
             Directory.CreateDirectory(subfolderPath);
         }
 
-        WriteStandardElements(directory);
+        WriteStandardElements(directory, isJsonFormat);
         ExtractExampleSpriteFrame(directory);
         new DefaultFontBundler().CopyTo(directory);
 
@@ -78,9 +79,10 @@ public class ProjectCreator : IProjectCreator
     // Builds standards from StandardElementsManager -- the same source the editor's File > New
     // Project uses (ProjectManager.CreateNewProject) -- instead of a hand-maintained duplicate,
     // so the two paths can't drift the way #4674 did (#4676).
-    private static void WriteStandardElements(string directory)
+    private static void WriteStandardElements(string directory, bool isJsonFormat)
     {
         var standardsDir = Path.Combine(directory, "Standards");
+        var extension = isJsonFormat ? GumProjectSave.StandardJsonExtension : GumProjectSave.StandardExtension;
 
         StandardElementsManager.Self.Initialize();
 
@@ -95,7 +97,7 @@ public class ProjectCreator : IProjectCreator
                 continue;
             }
 
-            var outputPath = Path.Combine(standardsDir, $"{name}.gutx");
+            var outputPath = Path.Combine(standardsDir, $"{name}.{extension}");
             standard.Save(outputPath, useCompactFormat: true);
         }
     }

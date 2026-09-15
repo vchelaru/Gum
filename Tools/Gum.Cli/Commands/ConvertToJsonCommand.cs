@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.ProjectServices;
 
 namespace Gum.Cli.Commands;
@@ -53,7 +54,7 @@ public static class ConvertToJsonCommand
         }
 
         GumProjectSave project = loadResult.Project!;
-        IConvertProjectToJsonService convertService = new ConvertProjectToJsonService(new HeadlessFileWatchIgnoreList());
+        IConvertProjectToJsonService convertService = new ConvertProjectToJsonService(new NullFileWatchIgnoreList());
 
         ConvertProjectToJsonResult result;
         try

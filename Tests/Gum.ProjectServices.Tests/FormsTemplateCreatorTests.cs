@@ -421,6 +421,31 @@ public class FormsTemplateCreatorTests : IDisposable
         missing.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void Create_WithGumjExtension_ShouldProduceLoadableJsonProjectWithNoLeftoverXml()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumj");
+
+        _sut.Create(filePath);
+
+        File.Exists(filePath).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "TestProject.gumx")).ShouldBeFalse();
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+        result.LoadErrors.ShouldBeEmpty();
+
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucj")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeFalse();
+        // TreeViewBehavior has no SourcePath (unlike e.g. ButtonBehavior, which links to a shared
+        // ../FormsBehaviors/ file outside the project and is a no-op here either way), so it
+        // resolves conventionally under this project's own Behaviors/ folder.
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "TreeViewBehavior.behj")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "TreeViewBehavior.behx")).ShouldBeFalse();
+        File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutj")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutx")).ShouldBeFalse();
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

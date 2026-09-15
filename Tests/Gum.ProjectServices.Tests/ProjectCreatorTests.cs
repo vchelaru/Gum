@@ -215,6 +215,22 @@ public class ProjectCreatorTests : IDisposable
         result.Project.StandardElements.ShouldContain(e => e.Name == "NineSlice");
     }
 
+    [Fact]
+    public void Create_WithGumjExtension_ShouldWriteJsonStandardElementFiles()
+    {
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumj");
+
+        _sut.Create(filePath);
+
+        string standardsDir = Path.Combine(_tempDirectory, "Standards");
+        File.Exists(Path.Combine(standardsDir, "Text.gutj")).ShouldBeTrue();
+        File.Exists(Path.Combine(standardsDir, "Text.gutx")).ShouldBeFalse();
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+        result.Project!.StandardElements.ShouldContain(e => e.Name == "Text");
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))
