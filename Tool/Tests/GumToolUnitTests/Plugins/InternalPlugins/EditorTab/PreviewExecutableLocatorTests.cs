@@ -46,13 +46,13 @@ public class PreviewExecutableLocatorTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_FallsBackToDevSampleBuildOutput_WhenPublishedCopyMissing()
+    public void Resolve_FallsBackToDevBuildOutput_WhenPublishedCopyMissing()
     {
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
-        string sampleBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Debug", "net8.0");
+        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
         Directory.CreateDirectory(headBaseDirectory);
-        Directory.CreateDirectory(sampleBinDirectory);
-        string exePath = Path.Combine(sampleBinDirectory, ExeName);
+        Directory.CreateDirectory(devBinDirectory);
+        string exePath = Path.Combine(devBinDirectory, ExeName);
         File.WriteAllText(exePath, "");
 
         string? result = PreviewExecutableLocator.Resolve(headBaseDirectory);
@@ -61,16 +61,16 @@ public class PreviewExecutableLocatorTests : IDisposable
     }
 
     [Fact]
-    public void Resolve_PrefersPublishedExecutable_OverDevSampleBuildOutput()
+    public void Resolve_PrefersPublishedExecutable_OverDevBuildOutput()
     {
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
         string previewFolder = Path.Combine(headBaseDirectory, "Preview");
-        string sampleBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Debug", "net8.0");
+        string devBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
         Directory.CreateDirectory(previewFolder);
-        Directory.CreateDirectory(sampleBinDirectory);
+        Directory.CreateDirectory(devBinDirectory);
         string publishedExePath = Path.Combine(previewFolder, ExeName);
         File.WriteAllText(publishedExePath, "");
-        File.WriteAllText(Path.Combine(sampleBinDirectory, ExeName), "");
+        File.WriteAllText(Path.Combine(devBinDirectory, ExeName), "");
 
         string? result = PreviewExecutableLocator.Resolve(headBaseDirectory);
 
@@ -83,8 +83,8 @@ public class PreviewExecutableLocatorTests : IDisposable
         // A local dev build should default to the faster Release output when both configurations
         // are present, so Preview reflects real (non-Debug-JIT) performance without extra setup.
         string headBaseDirectory = Path.Combine(_tempRoot, "Tool", "Gum.Avalonia", "bin", "Debug", "net10.0");
-        string debugBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Debug", "net8.0");
-        string releaseBinDirectory = Path.Combine(_tempRoot, "Samples", "GumPreview", "GumPreview", "bin", "Release", "net8.0");
+        string debugBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Debug", "net8.0");
+        string releaseBinDirectory = Path.Combine(_tempRoot, "Tool", "GumPreview", "bin", "Release", "net8.0");
         Directory.CreateDirectory(headBaseDirectory);
         Directory.CreateDirectory(debugBinDirectory);
         Directory.CreateDirectory(releaseBinDirectory);

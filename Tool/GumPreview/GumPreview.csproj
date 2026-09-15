@@ -26,11 +26,11 @@
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\GumCommon\GumCommon.csproj" />
-		<ProjectReference Include="..\..\..\MonoGameGum\MonoGameGum.csproj" />
+		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,
 		     Polygon) - RectangleRuntime and friends render nothing without this (see Game1's
 		     ShapeRenderer.Self.Initialize() call and the gum-samples skill's MonoGame host-init note). -->
-		<ProjectReference Include="..\..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
+		<ProjectReference Include="..\..\Runtimes\GumShapes\MonoGameGumShapes.csproj" />
 	</ItemGroup>
 </Project>

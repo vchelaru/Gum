@@ -71,7 +71,7 @@ jobs:
           # GumPreview (issue #4697): the runtime host the tool's Preview button launches. Shipped in
           # a Preview/ folder beside the head so PreviewExecutableLocator's published-layout candidate
           # finds it without resolving from PATH.
-          dotnet publish Samples/GumPreview/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/Preview"
+          dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/Preview"
           mkdir -p "$out/Plugins"
           cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Plugins/. "$out/Plugins/"
           if [ -d Tool/Gum.Avalonia/bin/Release/net10.0/Content ]; then
