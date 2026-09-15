@@ -23,7 +23,7 @@ using Gum.Dialogs;
 namespace Gum.Avalonia.Shell;
 
 /// <summary>
-/// The tool's main window: menu on top, the five-region panel in the middle, a status bar at the
+/// The tool's main window: menu on top (in the macOS menu bar), the five-region panel in the middle, a status bar at the
 /// bottom. Routes window-wide key presses into the hotkey manager and restores/persists placement.
 /// </summary>
 public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
@@ -81,7 +81,17 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         }
         this.Bind(TitleProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
 
-        Menu menu = AvaloniaMenuBuilder.Build(menuBuilder.Build());
+        MenuModel menuModel = menuBuilder.Build();
+        // macOS puts an app's menus in the system menu bar; elsewhere they sit in the title row.
+        Menu? menu = null;
+        if (OperatingSystem.IsMacOS())
+        {
+            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel));
+        }
+        else
+        {
+            menu = AvaloniaMenuBuilder.Build(menuModel);
+        }
         Control titleRow = CreateTitleRow(menu);
         DockPanel.SetDock(titleRow, Dock.Top);
 
@@ -127,17 +137,17 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         AddHandler(KeyUpEvent, (_, e) => _modifierKeyState.Current = e.KeyModifiers, RoutingStrategies.Tunnel);
     }
 
-    /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>
-    // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
-    // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
-    // bar (Linux), the system title bar stays and this row sits under it.
     private void ApplyResizeBorderMargin(Control panel)
     {
         bool hasInnerResizeBorder = _drawsInTitleBar && WindowState == WindowState.Normal;
         panel.Margin = hasInnerResizeBorder ? new Thickness(0, 0, ResizeBorderThickness, 0) : new Thickness(0);
     }
 
-    private Control CreateTitleRow(Menu menu)
+    // As the WPF head's window chrome: the Gum logo, the menu, and the project file's name share the
+    // title bar, beside the system's caption buttons. Where the platform cannot draw into the title
+    // bar (Linux), the system title bar stays and this row sits under it. On macOS the menu is in
+    // the system menu bar instead, so the row has no menu column.
+    private Control CreateTitleRow(Menu? menu)
     {
         bool drawsInTitleBar = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
         _drawsInTitleBar = drawsInTitleBar;
@@ -158,9 +168,12 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         RefreshLogo();
         ActualThemeVariantChanged += (_, _) => RefreshLogo();
 
-        menu.VerticalAlignment = VerticalAlignment.Center;
-        menu.Background = global::Avalonia.Media.Brushes.Transparent;
-        Grid.SetColumn(menu, 1);
+        if (menu != null)
+        {
+            menu.VerticalAlignment = VerticalAlignment.Center;
+            menu.Background = global::Avalonia.Media.Brushes.Transparent;
+            Grid.SetColumn(menu, 1);
+        }
 
         TextBlock fileName = new TextBlock
         {
@@ -186,7 +199,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             row.Height = TitleBarHeight;
         }
         row.Children.Add(_logo);
-        row.Children.Add(menu);
+        if (menu != null)
+        {
+            row.Children.Add(menu);
+        }
         row.Children.Add(fileName);
         return row;
     }
@@ -207,6 +223,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         _logo.Source = new global::Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri("avares://Gum.Avalonia/" + logoFile)));
     }
 
+    /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>
     public void ShowStartupFailure(Exception exception)
     {
         Content = new ScrollViewer
