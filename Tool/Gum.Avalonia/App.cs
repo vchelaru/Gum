@@ -39,6 +39,8 @@ public sealed class App : Application
     {
         _services = services;
         _options = options;
+        // macOS names the app menu (its title, "Hide ...") from this, not from the bundle.
+        Name = "Gum";
     }
 
     /// <inheritdoc/>
