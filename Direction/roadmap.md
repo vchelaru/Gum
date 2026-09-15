@@ -21,27 +21,25 @@ Horizons describe *confidence and proximity*, not fixed dates:
     into open-ended web-platform plumbing (WASM perf, web fonts, input quirks). Let platform fixes
     be *pulled* by a real blocker, not pushed speculatively.
 
-- **Decouple UI from logic in the Gum tool.** (Agent-driven, in parallel with the web demos.)
-  Separate the WPF UI layer from application / business logic — continuing the tool's existing
-  move to constructor-injected services. **A no-regret move:** if Gum later goes cross-platform via
-  Avalonia (the Mac/Linux editor bet), this is the key enabler; if it doesn't, it still improves
-  testability (logic becomes unit-testable without the UI), maintainability, and contributor
-  friendliness — valuable under every branch of the editor decision.
+- **Decouple UI from logic in the Gum tool.** Separated the WPF UI layer from application /
+  business logic, continuing the tool's move to constructor-injected services. This was the
+  enabler for the Avalonia cutover below — see the next item for current status.
   - **Plan & decisions:** the phased approach lives in [`ui-decoupling-plan.md`](ui-decoupling-plan.md);
     the architecture calls are recorded in
     [ADR-0003](decisions/0003-decouple-tool-ui-from-logic.md) (the approach) and
     [ADR-0004](decisions/0004-viewmodels-expose-neutral-presentation-state.md) (the ViewModel rule).
-  - **Status (2026-09-09):** Phases 0–4b are landed (see `avalonia-migration/foundation.md`).
-    The bet this enabled is now taken — see the next item. Remaining decoupling gaps are worked as
-    part of the migration, not as a separate track.
+  - **Status (2026-09-09):** Phases 0–4b landed (see `avalonia-migration/foundation.md`). Done;
+    remaining decoupling gaps are worked as part of the migration, not as a separate track.
 
-- **Cross-platform (Mac / Linux / Windows) editor on Avalonia — full cutover.** Promoted from
-  **Later** on 2026-09-09 by [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md). The
-  decoupling groundwork is done, and the macOS Wine route was measured as a dead end, so the
-  highest-ceiling option is now also the one with the clearest path. Ships natively on all three
-  OSes, then retires WPF/WinForms from the tool graph.
+- **Cross-platform (Mac / Linux / Windows) editor on Avalonia — full cutover.** Decided
+  2026-09-09 by [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md). **The Avalonia head
+  is now the shipped tool** — it builds via `Gum.slnx`, and the release workflow packages it
+  natively for all three OSes (WPF no longer ships). WPF (`Gum.Wpf.sln`, `Gum/`) is frozen: no new
+  work there except an explicit fix on the last WPF release. What's left is phase 120 of the
+  migration plan — retiring WPF/WinForms from the tool graph entirely.
   - **Plan:** [`avalonia-migration/README.md`](avalonia-migration/README.md) — twelve phases,
-    highest risk (the canvas backend) first, everything landing on `main` beside the WPF tool.
+    highest risk (the canvas backend) first; everything already landed on `main` except the phase
+    120 cutover PR.
   - **Scope discipline:** parity, not new features. Anything the WPF tool does not do today is
     a separate roadmap item.
 

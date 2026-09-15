@@ -24,4 +24,4 @@ second.Header = "Second (visited)";
 
 ## AddMenuItem (obsolete)
 
-Older plugins called AddMenuItem, which returned a WPF System.Windows.Controls.MenuItem and required subscribing to its Click event. That overload is still available on WpfPluginBase in the WPF tool, marked obsolete, and is removed when the tool ships on Avalonia. Replace it with AddMenuEntry: move the Click handler into the action argument, and change any Header or IsEnabled updates to the returned MenuItemModel.
+Older plugins called AddMenuItem, which returned a WPF System.Windows.Controls.MenuItem and required subscribing to its Click event. That overload is still available on WpfPluginBase in the WPF tool, marked obsolete, and is removed along with WPF itself when the tool retires it. Replace it with AddMenuEntry: move the Click handler into the action argument, and change any Header or IsEnabled updates to the returned MenuItemModel.
