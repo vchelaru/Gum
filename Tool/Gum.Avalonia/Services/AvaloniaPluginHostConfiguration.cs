@@ -76,5 +76,8 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
     }
 
     /// <inheritdoc/>
-    public IGumCursorState? CursorState => null;
+    /// <remarks>Matches WpfPluginHostConfiguration.CursorState: both heads feed the same
+    /// InputLibrary.Cursor.Self singleton through their own IInputHostControl adapter, so this
+    /// resolves the singleton rather than needing a head-specific instance.</remarks>
+    public IGumCursorState? CursorState => InputLibrary.Cursor.Self;
 }

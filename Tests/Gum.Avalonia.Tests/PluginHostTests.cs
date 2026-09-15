@@ -41,6 +41,17 @@ public class PluginHostTests
     }
 
     [Fact]
+    public void Head_ExposesCursorStateAsInputLibraryCursorSelf()
+    {
+        IPluginHostConfiguration host = TestAppBuilder.Services.GetRequiredService<IPluginHostConfiguration>();
+
+        // DragDropManager.OnNodeObjectDroppedInWireframe resolves the drop position through
+        // IPluginHostConfiguration.CursorState; a null CursorState makes every tree-item drop
+        // land at world (0,0) instead of the cursor position (#4704).
+        host.CursorState.ShouldBeSameAs(InputLibrary.Cursor.Self);
+    }
+
+    [Fact]
     public void Head_RejectsAnAssemblyThatReferencesWpf()
     {
         IPluginHostConfiguration host = TestAppBuilder.Services.GetRequiredService<IPluginHostConfiguration>();

@@ -1,6 +1,7 @@
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Gum.Avalonia.Canvas;
 using InputLibrary;
 using Microsoft.Xna.Framework;
@@ -165,6 +166,34 @@ public class CanvasHostTests
         window.MouseMove(new global::Avalonia.Point(200, 200));
         adapter.GetPointerState().X.ShouldBe(-1);
         adapter.GetPointerState().Y.ShouldBe(-1);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void InputAdapter_TracksPointerPosition_DuringNativeDragOver()
+    {
+        // A native OS drag-and-drop (dragging a tree item or a file from Explorer onto the
+        // canvas) does not raise PointerMoved on the control it's hovering. Without tracking
+        // DragOver too, the position stays wherever the pointer was before the drag started,
+        // so a dropped instance lands there instead of at the drop point (#4704).
+        global::Avalonia.Controls.Border control = new global::Avalonia.Controls.Border { Width = 100, Height = 80, Background = global::Avalonia.Media.Brushes.Red };
+        global::Avalonia.Controls.Window window = new global::Avalonia.Controls.Window
+        {
+            Width = 300,
+            Height = 300,
+            Content = new global::Avalonia.Controls.Canvas { Children = { control } },
+        };
+        DragDrop.SetAllowDrop(control, true);
+        window.Show();
+        window.UpdateLayout();
+        AvaloniaInputHostAdapter adapter = new AvaloniaInputHostAdapter(control);
+        DataTransfer data = new DataTransfer();
+
+        window.DragDrop(new global::Avalonia.Point(40, 25), RawDragEventType.DragEnter, data, DragDropEffects.Copy);
+        window.DragDrop(new global::Avalonia.Point(40, 25), RawDragEventType.DragOver, data, DragDropEffects.Copy);
+
+        adapter.GetPointerState().X.ShouldBe(40);
+        adapter.GetPointerState().Y.ShouldBe(25);
         window.Close();
     }
 

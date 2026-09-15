@@ -45,6 +45,14 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         control.AddHandler(InputElement.KeyDownEvent, HandleKeyDown, routes, handledEventsToo: true);
         control.AddHandler(InputElement.KeyUpEvent, HandleKeyUp, routes, handledEventsToo: true);
         control.LostFocus += (_, _) => _keysDown.Clear();
+
+        // A native OS drag-and-drop (dragging a tree item or a file from Explorer onto the
+        // canvas) does not raise PointerMoved on the control it's hovering, so without this the
+        // tracked position freezes at wherever the pointer was before the drag started and a
+        // drop places the new instance there instead of under the cursor (#4704).
+        control.AddHandler(DragDrop.DragEnterEvent, HandleDrag, routes, handledEventsToo: true);
+        control.AddHandler(DragDrop.DragOverEvent, HandleDrag, routes, handledEventsToo: true);
+        control.AddHandler(DragDrop.DropEvent, HandleDrag, routes, handledEventsToo: true);
     }
 
     /// <inheritdoc/>
@@ -119,6 +127,11 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
         _isLeftDown = properties.IsLeftButtonPressed;
         _isRightDown = properties.IsRightButtonPressed;
         _isMiddleDown = properties.IsMiddleButtonPressed;
+    }
+
+    private void HandleDrag(object? sender, DragEventArgs e)
+    {
+        _pointerPosition = e.GetPosition(_control);
     }
 
     // The last in-bounds position must not outlive the pointer's visit: Cursor.IsInWindow reads any
