@@ -26,6 +26,9 @@ public class BaseTestClass : IDisposable
         // before it.
         GraphicalUiElement.IsAllLayoutSuspended = false;
         GraphicalUiElement.SuppressFontRegeneration = false;
+        // Same reasoning: a test outside this hierarchy that builds a GumProjectSave in memory and
+        // never clears it changes how the next test resolves fonts and elements (see Dispose).
+        ObjectFinder.Self.GumProjectSave = null;
 
         GumService.Default.InitializeForTesting();
         CreateMockCursor();
@@ -130,13 +133,10 @@ public class BaseTestClass : IDisposable
         // or it leaks into unrelated tests.
         ObjectFinder.Self.ClearFallbackStandardElements();
 
-        // Same singleton, same hazard: a test that loads a GumProjectSave (even just to construct one
-        // in memory, never "Save"d to disk) leaves GumProjectSave.FullFileName possibly null. A later,
-        // unrelated test resolving a relative TextRuntime.CustomFontFile goes through
-        // CustomSetPropertyOnRenderable.ResolveFontFilePath, which -- when a project is loaded --
-        // resolves relative to FileManager.GetDirectory(gumProject.FullFileName) instead of
-        // FileManager.RelativeDirectory, throwing on a null FullFileName. Reset so only a test that
-        // deliberately sets this up (and is inside its own try/finally) sees a project loaded.
+        // Same singleton, same hazard: a loaded project changes how a later, unrelated test resolves
+        // font file paths (CustomSetPropertyOnRenderable.ResolveFontFilePath resolves against the
+        // project's directory when it has a FullFileName) and looks up elements. Reset so only a test
+        // that deliberately sets this up (and is inside its own try/finally) sees a project loaded.
         ObjectFinder.Self.GumProjectSave = null;
     }
 }

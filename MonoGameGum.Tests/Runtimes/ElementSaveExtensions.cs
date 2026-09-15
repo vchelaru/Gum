@@ -22,6 +22,9 @@ public class ElementSaveExtensionsTests : IDisposable
     public void Dispose()
     {
         ElementSaveExtensions.Reset();
+        // This class doesn't derive from BaseTestClass, so it has to clear the project it registers
+        // itself or the next test class sees it.
+        ObjectFinder.Self.GumProjectSave = null;
     }
 
 

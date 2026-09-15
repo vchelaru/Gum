@@ -176,6 +176,28 @@ public class FontServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void CreateFontIfNecessary_ShouldResolveFontFileAgainstRelativeDirectory_WhenLoadedProjectHasNoFullFileName()
+    {
+        // A GumProjectSave built in code (never loaded from or saved to disk) has a null FullFileName.
+        // Resolving a font-file path against that project's directory used to throw inside the
+        // FontService branch's swallow-all catch, so CreateFontIfNecessary was silently never
+        // called. Such a project must resolve the path the same way "no project" does.
+        CustomSetPropertyOnRenderable.FontService = _mockFontService.Object;
+        List<BmfcSave> capturedCalls = new();
+        _mockFontService.Setup(x => x.CreateFontIfNecessary(It.IsAny<BmfcSave>()))
+            .Callback<BmfcSave>(bmfc => capturedCalls.Add(bmfc));
+        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+        string expectedFontFile = FileManager.Standardize("Fonts/Baloo2-Bold.ttf", preserveCase: true, makeAbsolute: true);
+
+        TextRuntime textRuntime = new();
+        textRuntime.Font = "Fonts/Baloo2-Bold.ttf";
+
+        textRuntime.FontSize = 24;
+
+        capturedCalls.ShouldContain(bmfc => bmfc.FontSize == 24 && bmfc.FontFile == expectedFontFile);
+    }
+
+    [Fact]
     public void CreateFontIfNecessary_ShouldPassBoldAndItalicFromUpdateToFontValues()
     {
         // Arrange — use FontSize 24 to avoid the stubbed Arial-18 embedded resources
