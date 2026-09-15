@@ -162,4 +162,4 @@ PasswordBox uses `TextNoTranslate` for mask characters (e.g., "●●●●") si
 - `MonoGameGum/Forms/Controls/` — Forms control localization pattern
 - `MonoGameGum.Tests/Localization/LocalizationServiceExtensionsTests.cs` — CSV/RESX loader tests
 - `MonoGameGum.Tests/Localization/LocalizationServiceLanguagesTests.cs` — `ILocalizationService.Languages` interface contract tests
-- `Tool/Tests/GumToolUnitTests/Managers/FileChangeReactionLogicTests.cs` — satellite matching tests
+- `Tests/Gum.Presentation.Tests/FileChangeReactionLogicTests.cs` — satellite matching tests

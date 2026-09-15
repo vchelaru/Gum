@@ -7,6 +7,17 @@
 > sweep and update this file at the end of every phase.** A row with no owning phase is a plan
 > defect. Rows are grouped by the kind of guard that catches a regression, because the compiler
 > only catches the first group.
+>
+> **Re-swept 2026-09-14** on `main` (0ad202bf8) over the shipped graph: `Tool/Gum.Avalonia`,
+> `AvaloniaDataUi`, `DataUi.Core`, `Gum.Presentation`, the `Tool/*.Core` projects, the six neutral
+> plugins, `XnaAndWinforms`, `InputLibrary`, `FlatRedBall.SpecializedXnaControls`. One real hit:
+> `ProjectManager.ShowReadOnlyDialog` still started `explorer.exe` directly (fixed the same day
+> through `IFileSystemRevealService`, with a test). The remaining `System.Windows` matches are
+> `System.Windows.Input.ICommand` (in-box BCL, fine everywhere); the literal `"\\"` matches are
+> either normalization *to* `/` or separators that pass through `FilePath` / `FileManager.Standardize`
+> (which rewrites both slash kinds to the OS separator) before they reach the file system. The
+> section 1 rows marked "120" are the frozen WPF projects that are still in the repo; they leave
+> with the WPF deletion PR.
 
 ## Legend for "Guard"
 
@@ -21,7 +32,7 @@
 | Project | Flags | Real coupling | Removed by | Guard |
 |---|---|---|---|---|
 | `Gum/Gum.csproj` | WPF + WinForms | the WPF head itself | 120 (retired or reduced to the entry point) | TFM |
-| `WpfDataUi` | WPF + WinForms | property grid views only; the model, grid logic, and editor logic moved to `DataUi.Core` (net10.0, **done** in 70) | 120 (delete) | TFM |
+| `WpfDataUi` | WPF + WinForms | property grid views only; the model, grid logic, and editor logic moved to `DataUi.Core` (**done** in 70). **Decision change 2026-09-14:** FlatRedBall's Glue references `WpfDataUi` and `DataUi.Core` directly (#4689, #4709), so both stay in the repo as libraries outside the tool graph, and `DataUi.Core` targets `net8.0` for that consumer (the Avalonia graph references it from `net10.0` without issue) | kept (not in the shipped graph) | TFM |
 | `XnaAndWinforms` | **done** (net10.0, 2026-09-10) | neutral device host + frame loop; WPF pieces in `XnaAndWinforms.Wpf` (net10.0-windows, WPF head only) | 50 | TFM |
 | `InputLibrary` | **done** (net10.0, 2026-09-10) | `Cursor` polls `IInputHostControl`; the WPF adapter moved to `XnaAndWinforms.Wpf` | 50 | TFM |
 | `FlatRedBall.SpecializedXnaControls` | **done** (net10.0, 2026-09-10) | `ImageRegionSelectionCore` over `ICanvasHost` | 50 | TFM |
@@ -38,7 +49,7 @@
 | `Gum/EventOutputPlugin` | **done** (net10.0, 2026-09-10) | same | 40 | TFM |
 | `Gum/CsvLibrary` | **done** (net10.0, phase 20) | referenced by `Gum.Presentation` | 20 | TFM |
 | `Tool/HtmlToGum` | **done** (2026-09-11): plugin logic lives in `Tools/Gum.Presentation/HtmlToGumPlugin/` (shared plugin, dialog view models); each head has its views; `Tool/HtmlToGum` keeps only the converter | same | 80 | TFM |
-| `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK | **split 2026-09-11**: every test that compiled without WPF (543 tests: logic, managers, data types, neutral plugin services, dialog view models) moved to `Tests/Gum.Presentation.Tests`, which runs on every OS and covers both heads; 513 WPF-bound tests remain (controls, WPF plugins, WPF editor canvas, input adapters) | 120 (delete view tests) | TFM |
+| `Tool/Tests/GumToolUnitTests` | WPF, win10 SDK (frozen with the WPF head) | **split 2026-09-11**: every test that compiled without WPF (543 tests: logic, managers, data types, neutral plugin services, dialog view models) moved to `Tests/Gum.Presentation.Tests`, which runs on every OS and covers both heads; 513 WPF-bound tests remain (controls, WPF plugins, WPF editor canvas, input adapters) | 120 (delete view tests) | TFM |
 
 Already free of the `-windows` suffix (`net8.0` today, `net10.0` after the prerequisite bump) and in the graph: `GumCommon`, `Gum.Presentation`, `Gum.ProjectServices`,
 `Gum.ProjectServices.MonoGame/SkiaGum`, `Gum.Cli`, `Gum.ImageDiff`, `GumExpressions`,
@@ -95,7 +106,7 @@ ADR-0004 standardized on them deliberately. Only these four sites touch GDI+ pro
 | `MenuStripManager.cs:224–257`, `ErrorListEntry.xaml.cs`, `TitleFilePathDisplay.xaml.cs` | open URL/file via `UseShellExecute` | .NET maps to `open`/`xdg-open` on Unix; **verify in 25**, wrap in the reveal seam for consistency |
 | `SvgExportCommand.cs:76` | looks for `GumCli/gumcli.exe` | 25 (name per OS) + 110 (bundle layout) |
 | `Tools/Gum.Presentation/HtmlToGumPlugin/MainHtmlToGumPlugin.cs` | `cmd.exe /c npm install` | 25 — `/bin/sh -c` off Windows through `ShellCommand`; Node lookup already PATH-based |
-| `Gum/Libraries/bmfont.exe`, `Tools/Gum.ProjectServices/Templates/FormsTemplate/Libraries/bmfont.exe` | Windows-only font generator; `GumProjectSave.FontGenerator` **defaults to `BmFont`**; `HeadlessFontGenerationService` throws `PlatformNotSupportedException` off Windows | 25 — KernSmith default off Windows + migration prompt; keep bmfont for Windows back-compat until cutover decides |
+| `Gum/Libraries/bmfont.exe`, `Tools/Gum.ProjectServices/Templates/FormsTemplate/Libraries/bmfont.exe` | Windows-only font generator; `GumProjectSave.FontGenerator` **defaults to `BmFont`**; `HeadlessFontGenerationService` throws `PlatformNotSupportedException` off Windows | 25 — KernSmith default off Windows + migration prompt. **Cutover decision (2026-09-14): keep.** `bmfont.exe` is an embedded resource of `Gum.ProjectServices` that `BmFontExeFileGenerator` extracts to `Libraries/` beside the executable on first use, so the Avalonia Windows package needs no copy step and Windows projects that pin `BmFont` keep working; `FontGeneratorResolver` routes every other OS to KernSmith |
 | `Tools/Gum.Presentation/Plugins/PluginManager.cs` (`LoadReferenceLists`) | **done** (2026-09-11): the plugin-source compile path was never ported off .NET Framework; the reference lists (`Gum.exe`, `System.Windows.Forms.dll`) and the external-assembly list they fed were dead code and are removed | 100 |
 | SkiaSharp's Linux native (`libSkiaSharp.so`) | **done** (2026-09-11): the `SkiaSharp` package carries only the Windows and macOS natives; the shared libraries had no Linux native at all and the Avalonia head resolved Avalonia's 2.88 native beside its 3.119 managed assembly, so the head threw at startup on Linux. `Gum.ImageDiff` (the lowest SkiaSharp consumer) references `SkiaSharp.NativeAssets.Linux` at the managed version, which every project above it inherits | 100 (Runtime) |
 | `FileWatchManager` existence checks | **done** (2026-09-11): the watcher tested and opened changed files through `FilePath.Standardized`, which is lowercased and so misses on a case-sensitive file system (no reload on Linux); it uses the case-preserving `FullPath`. The sweep found no other file-system call on a `Standardized` path | 100 (Runtime) |

@@ -56,7 +56,7 @@ Returns `null` when there are no rows so the selector falls through to the defau
 
 ## Testing
 
-- `ImportFromGumxViewModelTests` (in `GumToolUnitTests`) uses `InitializeFromProjectForTesting(GumProjectSave)` to bypass the file/URL load and seed the source. The `_projectState` field exposes the destination (a `FakeProjectState` whose `GumProjectSave` is mutable) so tests can stage destination standards/components for diff and conflict scenarios.
+- `ImportFromGumxViewModelTests` (in `Tests/Gum.Presentation.Tests/Plugins/ImportFromGumxPlugin/`) uses `InitializeFromProjectForTesting(GumProjectSave)` to bypass the file/URL load and seed the source. The `_projectState` field exposes the destination (a `FakeProjectState` whose `GumProjectSave` is mutable) so tests can stage destination standards/components for diff and conflict scenarios.
 - `GumxDependencyResolverTests` operate on the resolver directly without going through the VM.
 - `ImportTreeNodeViewModelTests` lives in `Tests/Gum.ProjectServices.Tests` (**net8.0, no WPF stood up**) — it covers the node's `IsChecked` folder/child cascade and the `IsDetailsButtonVisible` flag. That the node VM is testable without WPF is the payoff of moving it into the headless assembly (#3229).
 

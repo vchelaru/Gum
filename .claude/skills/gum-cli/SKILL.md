@@ -7,7 +7,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 
 ## What It Is
 
-**GumCli** (`gumcli`) is a cross-platform .NET 8.0 console app that lets developers create, validate, and generate code for Gum projects without the WPF editor. Primary use cases: CI pipelines, scripting, editor integrations.
+**GumCli** (`gumcli`) is a cross-platform .NET 8.0 console app that lets developers create, validate, and generate code for Gum projects without the editor. Primary use cases: CI pipelines, scripting, editor integrations.
 
 **Location:** `Tools/Gum.Cli/`
 **Depends on:** `Gum.ProjectServices` → `GumCommon`

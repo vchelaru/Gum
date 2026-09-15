@@ -1,8 +1,10 @@
-# Plugin compatibility notice (draft, per ADR-0018)
+# Plugin compatibility notice (per ADR-0018)
 
-Publish this in the release notes of the last WPF release before the Avalonia cutover, on the
-plugin docs landing page (`docs/gum-tool/plugins/README.md`), and on Discord. Fill in the version
-numbers when the cutover release is scheduled.
+**Published 2026-09-14** on the plugin docs landing page (`docs/gum-tool/plugins/README.md`, which
+is now the maintained copy). Still owed: the Breaking Changes entry in the first Avalonia
+release's notes (the `gum-monthly-release` skill carries the reminder) and the Discord post.
+Versions: the cutover release is the first release after September 2, 2026; the last WPF release
+is Release September 2, 2026.
 
 ---
 

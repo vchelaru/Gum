@@ -146,6 +146,6 @@ and **phase 120** (zero unresolved rows).
 
 ## Done when
 
-- [ ] All three automated layers green on Windows, macOS, Linux in CI.
+- [x] All three automated layers green on Windows, macOS, Linux in CI (the three-OS PR job on `main`, 2026-09-14; the full-startup layer runs on the Linux leg only).
 - [x] Test projects split; no logic test lives in a `net8.0-windows` project (2026-09-11).
-- [ ] Manual checklist checked in with a dated, all-OS pass before phase 110.
+- [ ] Manual checklist checked in with a dated, all-OS pass before phase 110. **Not done; the release moved to Avalonia without it (2026-09-14).** Owner step, macOS first.

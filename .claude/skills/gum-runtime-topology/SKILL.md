@@ -15,7 +15,8 @@ Gum has **no single "runtime" assembly**. The same `RenderingLibrary.*` / `GumCo
 |---|---|---|
 | `AllLibraries.sln` | All render backends + `GumCommon` + shapes + themes + CLI + ProjectServices + tests | **Must compile on Mac**, so it EXCLUDES Windows-only projects. The broad verify command — but not complete. |
 | `Runtimes/SkiaGum.Wpf/SkiaGum.Wpf.csproj` | WPF host for the Skia runtime | **NOT in AllLibraries** (WPF can't build on Mac). Build separately on Windows. The single easiest runtime to forget. |
-| `GumFull.sln` | The Gum tool (KNI-based) + plugins | Tool work; `$(SolutionDir)` post-builds require the solution, not a bare csproj. |
+| `Gum.slnx` | The Gum tool (Avalonia head over a KNI SDL2/GL canvas) + its plugins | Tool work. |
+| `Gum.Wpf.sln`, `GumFull.sln` | The frozen WPF tool (GumFull adds the CLI) | Only for an explicit WPF fix; its plugin post-builds need `$(SolutionDir)`, so build the solution, not a bare csproj. |
 | `GumCoreShared.shproj` | Gum-side shared project (imports `GumCoreShared.projitems`) | Source-shares Gum core into FRB. The file lists live in the `.projitems`. |
 | `../FlatRedBall/FRBDK/Glue/GumPlugin/GumPlugin/GumCoreShared.FlatRedBall.shproj` | FRB-side core consumer | FRB multi-targets down to **net6.0** — gate net7+ BCL APIs. |
 | `../FlatRedBall/Engines/Forms/FlatRedBall.Forms/FlatRedBall.Forms.Shared/FlatRedBall.Forms.Shared.shproj` | FRB-side Forms consumer | Picks up `MonoGameGum/Forms/**` files individually; new/renamed Forms files must be registered here. |

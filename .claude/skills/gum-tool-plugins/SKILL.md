@@ -131,6 +131,13 @@ Three places need a matching entry per plugin:
 
 Missing (2)/(3) doesn't fail the build or the test - it just means the plugin's real composition, including a case like (1), is never actually exercised by this test.
 
+And four more for the Avalonia head, which is the tool that ships:
+
+4. **`Gum.slnx`** — add the project under the `Plugins` folder so the tool build and the three-OS CI job build it.
+5. **`Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj`** — a `ProjectReference`, and an entry in `PluginHostTests`'s assembly list, so the head's composition test exercises it.
+6. **`.github/workflows/build-and-release.yml`** — the `publish-avalonia` job builds each neutral plugin by csproj before publishing (`dotnet publish` does not run their post-builds); a plugin missing from that list ships in no package.
+7. **The plugin's csproj post-build** copies into both heads' output folders and falls back to a repo-relative `$(SolutionDir)` when built outside a solution; copy the target from `Gum/ConvertToJsonPlugin/ConvertToJsonPlugin.csproj`. Target plain `net10.0` with the banned-API analyzer, never `net10.0-windows`.
+
 ## Built-in plugins shared by both heads (Gum.Presentation)
 
 Most first-party internal plugins now live in `Tools/Gum.Presentation/Plugins/InternalPlugins/<Feature>/`

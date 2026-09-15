@@ -71,7 +71,7 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 
 ## Testability
 
-`DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) delegates dialog display to the WPF-shell `IDeleteDialogService`, whose implementation `DeleteDialogService` (`Gum/Services/Dialogs/DeleteDialogService.cs`) creates the `DeleteOptionsWindow` and calls `ShowDialog()` — that class cannot be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
+`DeleteLogic` (headless, `Tools/Gum.Presentation/Managers/DeleteLogic.cs`) delegates dialog display to the head-provided `IDeleteDialogService`: the WPF `DeleteDialogService` (`Gum/Services/Dialogs/DeleteDialogService.cs`) creates the `DeleteOptionsWindow` and calls `ShowDialog()`, and `AvaloniaDeleteDialogService` (`Tool/Gum.Avalonia/Dialogs/`) shows the neutral `DeleteOptionsDialogViewModel` through `IDialogService` — neither can be unit-tested directly. The `internal BuildDeleteDialogMessage(Array, List<InstanceSave>?)` method on `DeleteLogic` is the testable seam for asserting dialog message content (`InternalsVisibleTo("GumToolUnitTests")` is already configured).
 
 ## Key Files
 
@@ -81,7 +81,8 @@ Do not call `IDeleteLogic` methods directly from UI code — always go through `
 | `Gum/Commands/EditCommands.cs` | Implementation; AskTo* dialog logic lives here |
 | `Tools/Gum.Presentation/Managers/IDeleteLogic.cs` | Interface for pure data-mutation operations |
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Data mutation + delete-dialog orchestration via `IDeleteDialogService` |
-| `Gum/Services/Dialogs/DeleteDialogService.cs` | WPF shell: creates/shows `DeleteOptionsWindow`, calls the concrete `PluginManager` |
+| `Gum/Services/Dialogs/DeleteDialogService.cs` | WPF shell (frozen): creates/shows `DeleteOptionsWindow`, calls the concrete `PluginManager` |
+| `Tool/Gum.Avalonia/Dialogs/AvaloniaDeleteDialogService.cs` | Avalonia head: shows `DeleteOptionsDialogViewModel` through `IDialogService` |
 | `Tools/Gum.Presentation/Logic/ReferenceTypes.cs` | `ElementReferences` class; `GetDeleteImpactDetails()` and `ExcludeContainersBeingDeleted()` used to build impact warnings in the delete dialog |
 | `Tools/Gum.Presentation/Logic/ReferenceFinder.cs` | `GetReferencesToVariable()` — enumerates every instance-level assignment of a variable project-wide, including through the inheritance chain; used by `DeleteVariableService.GetIfCanDeleteVariable` to block variable deletes today |
 | `Gum/Plugins/InternalPlugins/Delete/DeleteObjectPlugin.cs` | Contributes "Delete XML?" and "Delete children?" to DeleteOptionsWindow |

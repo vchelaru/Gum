@@ -112,7 +112,7 @@ None. Runs in parallel with phase 10. **Blocks phase 30.**
 
 ## Done when
 
-- [ ] `AddGumCore()` lives in `Gum.Presentation`; `AddGumWpf()` in `Gum/`; `GumFull.sln` green; tool identical.
-- [ ] Headless composition test passes on a `net10.0` runner.
-- [ ] `InitializeGum` runs from a headless class; WPF `Program.cs` is a thin caller.
-- [ ] The "not yet movable" list is issues, and its count is in this doc with a date.
+- [x] `AddGumCore()` lives in `Gum.Presentation`; `AddGumWpf()` in `Gum/`; `GumFull.sln` green; tool identical (2026-09-10).
+- [x] Headless composition test passes on a `net10.0` runner (`GumCoreCompositionTests`, on the three-OS CI job).
+- [x] `InitializeGum` runs from a headless class (`GumStartupSequence`); WPF `Program.cs` is a thin caller.
+- [x] The "not yet movable" list is the Status block above (2026-09-10, no issues filed since the work ran on one branch); every entry was consumed by its owning phase.

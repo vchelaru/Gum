@@ -22,6 +22,8 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 
 **When in doubt, put tests in `MonoGameGum.Tests/`.** Only use V2/V3 projects for tests that exercise visual-version-specific behavior.
 
+**Tool logic tests go in `Gum.Presentation.Tests`** and head tests in `Gum.Avalonia.Tests`. `Tool/Tests/GumToolUnitTests` is the frozen WPF head's suite (controls, WPF plugins, the WPF editor canvas): only a test that must construct a WPF control belongs there, and no new tool logic test does.
+
 **`SkiaGum.Tests` runs in CI as a blocking suite** (#3233) — it renders into an in-memory CPU raster `SKSurface`, so it is fully headless despite the name. A red Skia test now fails the job like any other Bucket-A suite.
 
 **`RaylibGum.Tests` runs in CI as a blocking Windows suite** (#3250). raylib's `InitWindow` needs an OpenGL 3.3 context the GPU-less runners lack; the Windows job supplies it via Mesa's `llvmpipe` software GL (dropped in next to the test binaries before the suite runs), so the tests run headless and a red raylib test now fails the job like any other Bucket-A suite. (#3233's earlier macOS probe *hung* at GLFW/Cocoa window creation — Win32 window creation is not main-thread-coupled, which is why Windows works.) A green CI run now **does** cover raylib — including the `#if RAYLIB` branches of a source-shared `GueDeriving/*Runtime.cs` — so the old mandatory local pre-merge run is no longer required; still update any assertion that pins old behavior when you change raylib-covered code. (Issue #3234: #3183 changed the raylib stroke-width PreRender but left the suite asserting the pre-#3183 value; back then CI didn't run raylib, so it shipped red — now it would be caught.)
@@ -75,7 +77,7 @@ Every `StateSave` must have `ParentContainer` set — `GetValueRecursive` traver
 
 `BaseTestClass` installs a Moq mock as `FrameworkElement.MainCursor`, and each proxied member access allocates (~296 B). Any control that reads `MainCursor` (e.g. a `ScrollBar` value setter) then pollutes an `AllocationMeasurer` result with a pure test artifact. Assign a real `MonoGameGum.Input.Cursor(null)` before measuring — production always uses a real cursor. See `ListBoxScrollAllocationTests`.
 
-## WPF-touching tool code (GumToolUnitTests) needs an STA thread
+## WPF-touching tool code (GumToolUnitTests, frozen WPF head) needs an STA thread
 
 xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `ComboBox`, …) throw `InvalidOperationException: The calling thread must be STA` when constructed. If a tool class news up a WPF control — often a ViewModel building right-click `MenuItem`s in its constructor, or a plugin's `StartUp()` — mark the test `[StaFact]` (Xunit.StaFact), which runs it on an `ApartmentState.STA` thread. See `MenuStripManagerTests`.
 
@@ -83,7 +85,7 @@ xUnit's runner is **MTA**, but WPF `FrameworkElement`s (`MenuItem`, `Menu`, `Com
 
 **`[StaFact]` alone isn't enough for a control that pulls `StaticResource`s from an App-level merged `ResourceDictionary`** — those only exist inside the real running `Application`, so construction throws `XamlParseException` ("Cannot find resource named '...'") even under STA. Don't construct the real control to test a plugin's event-driven show/hide logic; extract that logic into a small class taking `ISelectedState`/`IPluginTab` via the constructor (mirrors `VariableGridSelectionCoordinator`) and test it without touching the control.
 
-## Plugin/DI composition tests (GumToolUnitTests)
+## Plugin/DI composition tests (GumToolUnitTests for the WPF head, PluginHostTests for the Avalonia head)
 
 `AllPluginsCompositionTests` composes **every** tool plugin through MEF the way `PluginManager.LoadPlugins` does, and `ServiceProviderCompositionSpikeTests` resolves the bridged services from the real `Builder.cs` container. Two reusable techniques live there:
 

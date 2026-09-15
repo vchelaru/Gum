@@ -14,6 +14,11 @@
 > run of the head: the per-user settings folder is now created on first use (`GetFolderPath`
 > returns an empty path for a missing `~/.config`, which crashed startup), and the animation
 > plugin's settings path no longer uses a literal backslash separator.
+>
+> **Update 2026-09-14:** the coverage-matrix re-sweep found one `Process.Start` outside the reveal
+> seam that the 2026-09-10 pass missed: `ProjectManager.ShowReadOnlyDialog` started `explorer.exe`
+> when the user chose "Open folder containing file" (a throw on macOS/Linux). It now calls
+> `IFileSystemRevealService.RevealFile`, pinned by `ProjectManagerTests`.
 
 ## Purpose
 
