@@ -186,4 +186,126 @@ public class FormsThemeImporterTests
             System.IO.File.Delete(destinationFile);
         }
     }
+
+    [Fact]
+    public void ImportTheme_ConvertsStandardXmlToProjectFormat_WhenDestinationExtensionDiffersFromSource()
+    {
+        // #4710: for a .gumx project the raw byte copy of a theme's Standards IS the entire
+        // mechanism that applies them (the final reload just re-reads the file from disk), but a
+        // .gumj project's reload only ever resolves .gutj - FormsFileService now computes a .gutj
+        // destination for a JSON project, so this pins that FormsThemeImporter actually converts the
+        // content there instead of leaving XML bytes under a .gutj name.
+        string tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "FormsThemeImporterTests_" + System.Guid.NewGuid());
+        string sourceDir = System.IO.Path.Combine(tempRoot, "source");
+        string destDir = System.IO.Path.Combine(tempRoot, "dest");
+        System.IO.Directory.CreateDirectory(sourceDir);
+        try
+        {
+            _projectState.Setup(x => x.GumProjectSave)
+                .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumj" });
+
+            string sourceGutx = System.IO.Path.Combine(sourceDir, "Text.gutx");
+            new StandardElementSave { Name = "Text" }.Save(sourceGutx, useCompactFormat: true);
+
+            string destGutj = System.IO.Path.Combine(destDir, "Text.gutj");
+
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { [sourceGutx] = destGutj });
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+
+            System.IO.File.Exists(destGutj).ShouldBeTrue();
+            StandardElementSave loaded = ElementReference.DeserializeElement<StandardElementSave>(
+                destGutj, GumProjectSave.NativeVersion);
+            loaded.Name.ShouldBe("Text");
+        }
+        finally
+        {
+            System.IO.Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ImportTheme_ConvertsComponentXmlAndStillRoutesThroughImportLogic_WhenDestinationExtensionDiffersFromSource()
+    {
+        string tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "FormsThemeImporterTests_" + System.Guid.NewGuid());
+        string sourceDir = System.IO.Path.Combine(tempRoot, "source");
+        string destDir = System.IO.Path.Combine(tempRoot, "dest");
+        System.IO.Directory.CreateDirectory(sourceDir);
+        try
+        {
+            _projectState.Setup(x => x.GumProjectSave)
+                .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumj" });
+
+            string sourceComponent = System.IO.Path.Combine(sourceDir, "Button.gucx");
+            new ComponentSave { Name = "Button" }.Save(sourceComponent, useCompactFormat: true);
+
+            string destGucj = System.IO.Path.Combine(destDir, "Button.gucj");
+
+            _importLogic.Setup(x => x.ImportComponent(It.IsAny<FilePath>(), null, false))
+                .Returns((ComponentSave?)null);
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { [sourceComponent] = destGucj });
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+
+            System.IO.File.Exists(destGucj).ShouldBeTrue();
+            ComponentSave loaded = ElementReference.DeserializeElement<ComponentSave>(
+                destGucj, GumProjectSave.NativeVersion);
+            loaded.Name.ShouldBe("Button");
+
+            // AddAllElementsToProject filters by the SOURCE file's (always XML) extension now that
+            // the destination extension varies by project format - this proves that still resolves
+            // to the converted .gucj FilePath, not the un-mapped .gucx one.
+            _importLogic.Verify(
+                x => x.ImportComponent(It.Is<FilePath>(fp => fp.FullPath == destGucj), null, false),
+                Times.Once);
+        }
+        finally
+        {
+            System.IO.Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ImportTheme_DoesNotBlockOnExistingStandard_WhenItsExtensionIsTheProjectsJsonFormat()
+    {
+        // GetIfShouldSave used to only recognize ".gutx" as a Standard file - for a .gumj project
+        // the destination is now ".gutj", and treating it as an ordinary (blocking) file instead of
+        // a Standard would make Add Forms refuse to run against any project that already has Forms
+        // controls, since every Standard element reference already exists on disk (#4710).
+        string existingGutj = System.IO.Path.GetTempFileName();
+        string differentGutj = existingGutj + ".gutj";
+        try
+        {
+            System.IO.File.WriteAllText(existingGutj, "existing content");
+            System.IO.File.Move(existingGutj, differentGutj);
+
+            _projectState.Setup(x => x.GumProjectSave)
+                .Returns(new GumProjectSave { FullFileName = "C:/project/Test.gumj" });
+            _projectState.Setup(x => x.ProjectDirectory).Returns("C:/project/");
+            _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
+                .Returns(new Dictionary<string, FilePath> { ["source"] = differentGutj });
+            // ShowYesNoMessage is an extension over ShowMessage(...); an affirmative result is "Yes".
+            _dialogService
+                .Setup(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()))
+                .Returns(MessageDialogResult.Affirmative);
+            _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
+
+            bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+
+            result.ShouldBeTrue();
+            _dialogService.Verify(
+                x => x.ShowMessage(
+                    It.Is<string>(m => m.StartsWith("Cannot add Forms controls")),
+                    It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
+                Times.Never);
+        }
+        finally
+        {
+            System.IO.File.Delete(differentGutj);
+        }
+    }
 }

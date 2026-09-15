@@ -41,7 +41,7 @@ public class GumFormsLogic
         return files.Values
             .Any(item =>
                 item.Extension != "png" &&
-                item.Extension != "gutx" &&
+                !FormsFileService.IsStandardExtension(item.Extension) &&
                 item.Extension != "fnt" &&
                 item.Extension != "bmfc" &&
                 item.Extension != "setj" &&
