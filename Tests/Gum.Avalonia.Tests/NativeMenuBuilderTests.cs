@@ -1,7 +1,10 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Gum.Avalonia.Shell;
+using Gum.Input;
+using Gum.Managers;
 using Gum.Menus;
 using Shouldly;
 
@@ -64,6 +67,26 @@ public class NativeMenuBuilderTests
         invoked.ShouldBe(0);
         Dispatcher.UIThread.RunJobs();
         invoked.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
+    public void Build_BindsTheModelsGesture_WithThePlatformCommandModifier()
+    {
+        // On macOS AppKit matches a menu item's key equivalent before the window's keyDown, so the
+        // native item is the one binding for Cmd+Z and the hotkey manager never sees the key.
+        MenuModel model = new MenuModel();
+        MenuItemModel edit = new MenuItemModel("Edit");
+        edit.Items.Add(new MenuItemModel("Undo") { Gesture = KeyCombination.Ctrl(GumKey.Z) });
+        edit.Items.Add(new MenuItemModel("Add"));
+        model.TopLevelItems.Add(edit);
+
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model, KeyModifiers.Meta);
+
+        NativeMenu editMenu = ((NativeMenuItem)menu.Items[0]).Menu.ShouldNotBeNull();
+        KeyGesture gesture = ((NativeMenuItem)editMenu.Items[0]).Gesture.ShouldNotBeNull();
+        gesture.Key.ShouldBe(Key.Z);
+        gesture.KeyModifiers.ShouldBe(KeyModifiers.Meta);
+        ((NativeMenuItem)editMenu.Items[1]).Gesture.ShouldBeNull();
     }
 
     [AvaloniaFact]

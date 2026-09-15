@@ -1,8 +1,11 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Gum.Avalonia.Shell;
+using Gum.Input;
+using Gum.Managers;
 using Gum.Menus;
 using Shouldly;
 
@@ -34,5 +37,21 @@ public class MenuBuilderTests
         Dispatcher.UIThread.RunJobs();
         invoked.ShouldBe(1);
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void Build_ShowsTheModelsGesture_WithThePlatformCommandModifier()
+    {
+        MenuModel model = new MenuModel();
+        MenuItemModel edit = new MenuItemModel("Edit");
+        edit.Items.Add(new MenuItemModel("Undo") { Gesture = KeyCombination.Ctrl(GumKey.Z) });
+        model.TopLevelItems.Add(edit);
+
+        Menu menu = AvaloniaMenuBuilder.Build(model, KeyModifiers.Control);
+
+        MenuItem undo = (MenuItem)((MenuItem)menu.Items[0]!).Items[0]!;
+        KeyGesture gesture = undo.InputGesture.ShouldNotBeNull();
+        gesture.Key.ShouldBe(Key.Z);
+        gesture.KeyModifiers.ShouldBe(KeyModifiers.Control);
     }
 }

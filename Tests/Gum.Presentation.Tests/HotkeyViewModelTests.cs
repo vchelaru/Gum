@@ -6,12 +6,7 @@ using Shouldly;
 
 namespace Gum.Presentation.Tests;
 
-/// <summary>
-/// Characterization (pinning) test for HotkeyViewModel, relocated out of Gum.csproj into the
-/// headless Gum.Presentation assembly (ADR-0005, #3754) as a clean leaf VM whose single injected
-/// interface (IHotkeyManager) is already headless (Gum.Input.GumKey/GumKeyEventArgs, not
-/// System.Windows.Forms.Keys).
-/// </summary>
+/// <summary>The Hotkeys tab rows, rendered with the platform's modifier names.</summary>
 public class HotkeyViewModelTests
 {
     [Fact]
@@ -21,10 +16,36 @@ public class HotkeyViewModelTests
         hotkeyManager.Setup(x => x.Delete).Returns(KeyCombination.Pressed(GumKey.Delete));
         hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
 
-        HotkeyViewModel viewModel = new(hotkeyManager.Object);
+        HotkeyViewModel viewModel = new(hotkeyManager.Object, new KeyCombinationFormatter(KeyDisplayStyle.Windows));
 
         viewModel.Items.ShouldNotBeEmpty();
         viewModel.Items.ShouldContain(item => item.Display == "Delete: Delete");
         viewModel.Items.ShouldContain(item => item.Display == "Copy: Ctrl+C");
+    }
+
+    [Fact]
+    public void Constructor_OnMacOS_ShowsTheCommandKey()
+    {
+        Mock<IHotkeyManager> hotkeyManager = new();
+        hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
+
+        HotkeyViewModel viewModel = new(hotkeyManager.Object, new KeyCombinationFormatter(KeyDisplayStyle.MacOS));
+
+        viewModel.Items.ShouldContain(item => item.Display == "Copy: ⌘C");
+    }
+
+    [Fact]
+    public void Constructor_ListsEveryBindingTheManagerExposes()
+    {
+        Mock<IHotkeyManager> hotkeyManager = new();
+        hotkeyManager.Setup(x => x.MultiSelect).Returns(KeyCombination.Shift());
+        hotkeyManager.Setup(x => x.ZoomCameraInAlternative).Returns(KeyCombination.Ctrl(GumKey.Oemplus));
+        hotkeyManager.Setup(x => x.Rename).Returns(KeyCombination.Pressed(GumKey.F2));
+
+        HotkeyViewModel viewModel = new(hotkeyManager.Object, new KeyCombinationFormatter(KeyDisplayStyle.Windows));
+
+        viewModel.Items.ShouldContain(item => item.Display == "Multi-select (click): Shift");
+        viewModel.Items.ShouldContain(item => item.Display == "Zoom In (Alternative): Ctrl+=");
+        viewModel.Items.ShouldContain(item => item.Display == "Rename: F2");
     }
 }

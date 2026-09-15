@@ -128,6 +128,7 @@ public static class GumCoreServiceCollectionExtensions
                 provider.GetRequiredService<IFontGenerationCallbacks>()));
         services.AddSingleton<IFontManager, FontManager>();
         services.AddSingleton<IHotkeyManager, HotkeyManager>();
+        services.AddSingleton<IKeyCombinationFormatter>(KeyCombinationFormatter.ForCurrentPlatform());
         // The main menu as a framework-neutral model; each head renders it with its own menu control.
         services.AddSingleton<StandardMenuModelBuilder>();
         services.AddSingleton<MenuModel>(provider => provider.GetRequiredService<StandardMenuModelBuilder>().Model);

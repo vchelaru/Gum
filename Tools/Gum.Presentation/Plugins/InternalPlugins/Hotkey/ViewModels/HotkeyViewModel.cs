@@ -1,22 +1,24 @@
-﻿using Gum.Managers;
+using Gum.Managers;
 using Gum.Mvvm;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 {
+    /// <summary>
+    /// The Hotkeys tab: one row per <see cref="IHotkeyManager"/> binding, rendered in the platform's
+    /// modifier names. Keep the list in step with the manager's bindings.
+    /// </summary>
     public class HotkeyViewModel : ViewModel
     {
-        private IHotkeyManager _hotkeyManager;
+        private readonly IHotkeyManager _hotkeyManager;
+        private readonly IKeyCombinationFormatter _formatter;
 
         public List<HotkeyItemViewModel> Items { get; set; } = new List<HotkeyItemViewModel>();
 
-        public HotkeyViewModel(IHotkeyManager hotkeyManager)
+        public HotkeyViewModel(IHotkeyManager hotkeyManager, IKeyCombinationFormatter formatter)
         {
             _hotkeyManager = hotkeyManager;
+            _formatter = formatter;
 
             Add(_hotkeyManager.Delete, "Delete");
             Add(_hotkeyManager.Copy, "Copy");
@@ -31,7 +33,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.GoToDefinition, "Go to Definition");
             Add(_hotkeyManager.Search, "Search");
             Add(_hotkeyManager.FocusVariableFilter, "Filter Variables");
-            
+
             Add(_hotkeyManager.NudgeUp, "Nudge Up");
             Add(_hotkeyManager.NudgeUp5, "Nudge Up 5");
 
@@ -47,6 +49,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.LockMovementToAxis, "Lock movement to Axis");
             Add(_hotkeyManager.MaintainResizeAspectRatio, "Maintain Aspect Ratio on Resize");
             Add(_hotkeyManager.SnapRotationTo15Degrees, "Snap Rotation to 15 Degrees");
+            Add(_hotkeyManager.MultiSelect, "Multi-select (click)");
             Add(_hotkeyManager.ResizeFromCenter, "Resize from Center");
 
             Add(_hotkeyManager.MoveCameraUp, "Move Camera Up");
@@ -55,20 +58,25 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
             Add(_hotkeyManager.MoveCameraRight, "Move Camera Right");
 
             Add(_hotkeyManager.ZoomCameraIn, "Zoom In");
+            Add(_hotkeyManager.ZoomCameraInAlternative, "Zoom In (Alternative)");
             Add(_hotkeyManager.ZoomCameraOut, "Zoom Out");
+            Add(_hotkeyManager.ZoomCameraOutAlternative, "Zoom Out (Alternative)");
 
-            Add(_hotkeyManager.Rename, "Rename State");
+            Add(_hotkeyManager.Rename, "Rename");
 
             Add(_hotkeyManager.NavigateBack, "Navigate Back");
             Add(_hotkeyManager.NavigateForward, "Navigate Forward");
-
         }
 
-        private void Add(KeyCombination keyCombination, string action)
+        private void Add(KeyCombination? keyCombination, string action)
         {
+            if (keyCombination == null)
+            {
+                return;
+            }
             Items.Add(new HotkeyItemViewModel
             {
-                Display = action + ": " + keyCombination
+                Display = action + ": " + _formatter.Format(keyCombination)
             });
         }
     }
@@ -76,8 +84,6 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
     public class HotkeyItemViewModel
     {
         public string Display { get; set; }
-
-
 
         public override string ToString() => Display;
     }

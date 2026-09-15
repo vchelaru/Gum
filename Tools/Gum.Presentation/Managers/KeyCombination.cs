@@ -6,10 +6,17 @@ namespace Gum.Managers;
 /// A framework-neutral keyboard shortcut binding: a <see cref="GumKey"/> plus modifier flags. Headless
 /// (ADR-0005) — the WinForms/WPF matching (<c>IsPressed</c>) lives in <c>KeyCombinationExtensions</c> in
 /// the tool layer, and the live-modifier query is <see cref="IHotkeyManager.IsPressedInControl"/>.
+/// Display text comes from <see cref="IKeyCombinationFormatter"/>; <see cref="ToString"/> is the
+/// Windows spelling.
 /// </summary>
 public class KeyCombination
 {
     public GumKey? Key { get; set; }
+
+    /// <summary>
+    /// Whether the platform's primary shortcut modifier is part of the combination: Ctrl on Windows
+    /// and Linux, Cmd on macOS. Each head maps its own modifier onto this flag at the window boundary.
+    /// </summary>
     public bool IsCtrlDown { get; set; }
     public bool IsShiftDown { get; set; }
     public bool IsAltDown { get; set; }
@@ -44,40 +51,6 @@ public class KeyCombination
             && IsAltDown == isAltDown;
     }
 
-    public override string ToString()
-    {
-        string toReturn = "";
-
-        if (IsCtrlDown)
-        {
-            toReturn += "Ctrl";
-        }
-        if (IsShiftDown)
-        {
-            if(toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += "Shift";
-        }
-        if (IsAltDown)
-        {
-            if (toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += "Alt";
-        }
-
-        if (Key != null)
-        {
-            if (toReturn.Length != 0)
-            {
-                toReturn += "+";
-            }
-            toReturn += Key.ToString();
-        }
-
-        return toReturn;
-    }
+    /// <inheritdoc/>
+    public override string ToString() => new KeyCombinationFormatter(KeyDisplayStyle.Windows).Format(this);
 }

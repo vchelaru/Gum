@@ -784,7 +784,7 @@ public class ListBoxDisplay : DataUiDisplayBase
             return;
         }
 
-        bool isCtrlDown = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        bool isCtrlDown = e.KeyModifiers.HasCommand();
         global::Avalonia.Input.Platform.IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
 
         if (e.Key == Key.Delete)

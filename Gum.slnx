@@ -24,8 +24,10 @@
     <Project Path="GumCommon/GumCommon.csproj" />
     <Project Path="InputLibrary/InputLibrary.csproj" />
     <Project Path="MonoGameGum/KniGum/KniGum.csproj" />
+    <Project Path="MonoGameGum/MonoGameGum.csproj" />
     <Project Path="Runtimes/GumExpressions/GumExpressions.csproj" />
     <Project Path="Runtimes/GumShapes/KniGumShapes.csproj" />
+    <Project Path="Runtimes/GumShapes/MonoGameGumShapes.csproj" />
     <Project Path="Tools/Gum.FormsStaging/Gum.FormsStaging.csproj" />
     <Project Path="Tools/Gum.ImageDiff/Gum.ImageDiff.csproj" />
     <Project Path="Tools/Gum.Presentation/Gum.Presentation.csproj" />

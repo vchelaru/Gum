@@ -1,4 +1,5 @@
 using Avalonia.Input;
+using AvaloniaDataUi;
 using Gum.Managers;
 
 namespace Gum.Avalonia.Services;
@@ -10,11 +11,24 @@ namespace Gum.Avalonia.Services;
 /// </summary>
 public class AvaloniaModifierKeyState : IModifierKeyState
 {
+    private readonly KeyModifiers _commandModifiers;
+
+    /// <summary>Tracks against the running platform's command modifier.</summary>
+    public AvaloniaModifierKeyState() : this(PlatformKeyModifiers.Command)
+    {
+    }
+
+    /// <summary>Tracks with <paramref name="commandModifiers"/> as the neutral Ctrl.</summary>
+    public AvaloniaModifierKeyState(KeyModifiers commandModifiers)
+    {
+        _commandModifiers = commandModifiers;
+    }
+
     /// <summary>The modifiers as of the last key event the main window saw.</summary>
     public KeyModifiers Current { get; set; }
 
     /// <inheritdoc/>
-    public bool IsCtrlDown => Current.HasFlag(KeyModifiers.Control);
+    public bool IsCtrlDown => Current.HasFlag(_commandModifiers);
 
     /// <inheritdoc/>
     public bool IsShiftDown => Current.HasFlag(KeyModifiers.Shift);

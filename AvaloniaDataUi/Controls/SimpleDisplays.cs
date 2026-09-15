@@ -395,9 +395,9 @@ public class ComboBoxDisplay : DataUiDisplayBase
             HandleChange();
             e.Handled = true;
         }
-        else if (e.Key == Key.Z && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        else if (e.Key == Key.Z && e.KeyModifiers.HasCommand())
         {
-            // The combo's own undo can restore a stale value (Gum #658); the tool's undo owns Ctrl+Z.
+            // The combo's own undo can restore a stale value (Gum #658); the tool's undo owns Ctrl+Z (Cmd+Z on macOS).
             e.Handled = true;
         }
     }
@@ -777,7 +777,7 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
             HorizontalContentAlignment = HorizontalAlignment.Center,
         };
         button.AddHandler(PointerPressedEvent, (_, e) => _lastPressModifiers = e.KeyModifiers, RoutingStrategies.Tunnel);
-        button.Click += (_, _) => Step(direction, _lastPressModifiers.HasFlag(KeyModifiers.Control));
+        button.Click += (_, _) => Step(direction, _lastPressModifiers.HasCommand());
         return button;
     }
 

@@ -30,6 +30,7 @@ public class StandardMenuModelBuilder
     private readonly IMessenger _messenger;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IDispatcher _dispatcher;
+    private readonly IHotkeyManager _hotkeyManager;
     private readonly MenuStripStateLogic _menuStripStateLogic;
 
     private MenuItemModel? _undoMenuItem;
@@ -49,7 +50,8 @@ public class StandardMenuModelBuilder
         IProjectManager projectManager,
         IMessenger messenger,
         IFileSystemRevealService fileSystemRevealService,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        IHotkeyManager hotkeyManager)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -60,6 +62,7 @@ public class StandardMenuModelBuilder
         _messenger = messenger;
         _fileSystemRevealService = fileSystemRevealService;
         _dispatcher = dispatcher;
+        _hotkeyManager = hotkeyManager;
         _menuStripStateLogic = new MenuStripStateLogic(selectedState, projectManager);
     }
 
@@ -81,8 +84,8 @@ public class StandardMenuModelBuilder
         file.Items.Add(new MenuItemModel("Export"));
 
         MenuItemModel edit = new MenuItemModel("Edit");
-        _undoMenuItem = new MenuItemModel("Undo", _undoManager.PerformUndo) { InputGestureText = "Ctrl+Z", IsEnabled = false };
-        _redoMenuItem = new MenuItemModel("Redo", _undoManager.PerformRedo) { InputGestureText = "Ctrl+Y", IsEnabled = false };
+        _undoMenuItem = new MenuItemModel("Undo", _undoManager.PerformUndo) { Gesture = _hotkeyManager.Undo, IsEnabled = false };
+        _redoMenuItem = new MenuItemModel("Redo", _undoManager.PerformRedo) { Gesture = _hotkeyManager.Redo, IsEnabled = false };
         edit.Items.Add(_undoMenuItem);
         edit.Items.Add(_redoMenuItem);
         _undoManager.UndosChanged += (_, _) => _dispatcher.Post(UpdateUndoRedoEnabled);
