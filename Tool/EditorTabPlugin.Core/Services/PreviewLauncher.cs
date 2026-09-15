@@ -63,7 +63,8 @@ public class PreviewLauncher : IPreviewLauncher
             return;
         }
 
-        string? executablePath = PreviewExecutableLocator.Resolve(_headBaseDirectory);
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName);
+        string? executablePath = PreviewExecutableLocator.Resolve(_headBaseDirectory, isJsonFormat);
         if (executablePath == null)
         {
             _outputManager.AddError(

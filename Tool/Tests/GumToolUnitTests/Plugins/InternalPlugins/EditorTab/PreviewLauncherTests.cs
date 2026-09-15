@@ -79,6 +79,20 @@ public class PreviewLauncherTests : IDisposable
     }
 
     [Fact]
+    public void Launch_WithJsonProject_WhenPreviewExecutableIsNotFound_ReportsError()
+    {
+        // Issue #4706: Launch computes GumProjectSave.IsJsonFormat(project.FullFileName) to pick
+        // between the AOT and ReadyToRun builds - this pins that a .gumj project still reaches (and
+        // reports) the same "not found" branch as .gumx, rather than throwing or short-circuiting.
+        _projectManager.SetupGet(p => p.GumProjectSave).Returns(new GumProjectSave { FullFileName = @"C:\MyGame\GumProject.gumj" });
+        _selectedState.SetupGet(s => s.SelectedElement).Returns(new ScreenSave { Name = "MainMenu" });
+
+        CreateLauncher().Launch();
+
+        _outputManager.Verify(o => o.AddError(It.Is<string>(m => m.Contains("Preview executable"))), Times.Once);
+    }
+
+    [Fact]
     public void PushSelection_WhenNoPreviewIsRunning_DoesNothing()
     {
         CreateLauncher().PushSelection(new ScreenSave { Name = "MainMenu" });

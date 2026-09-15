@@ -14,14 +14,26 @@
 	</PropertyGroup>
 	<!--
 		ReadyToRun precompiles native code ahead of time to reduce first-call JIT cost, same pattern
-		as Gum.csproj (#4282) - startup latency is the whole point of Preview. Native AOT is not an
-		option: most real projects are still .gumx (XML), whose load path is a plain XmlSerializer,
-		which is not Native-AOT-safe (see IConvertProjectToJsonService); only the opt-in .gumj JSON
-		format is proven safe there. Only meaningful for a RID-specific publish; no effect on `dotnet build`.
+		as Gum.csproj (#4282) - startup latency is the whole point of Preview. This is the build used
+		for .gumx (XML) projects, whose load path is a plain XmlSerializer that is not
+		Native-AOT-safe (see IConvertProjectToJsonService). Only meaningful for a RID-specific
+		publish; no effect on `dotnet build`. Skipped when publishing the Native AOT variant below
+		(PublishReadyToRun and PublishAot are alternatives, not composable).
 	-->
-	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' AND '$(PublishAot)' != 'true'">
 		<PublishReadyToRun>true</PublishReadyToRun>
 	</PropertyGroup>
+	<!--
+		Native AOT variant (issue #4706), published as a second `dotnet publish -p:PublishAot=true`
+		invocation of this same csproj alongside the default ReadyToRun publish above - not a second
+		project. Starts dramatically faster than ReadyToRun (no CoreCLR bootstrap, no JIT at all), but
+		is only safe for .gumj (JSON) projects; PreviewExecutableLocator/PreviewLauncher pick this
+		build over the ReadyToRun one based on GumProjectSave.IsJsonFormat, and fall back to
+		ReadyToRun for a platform/package that has not published this variant. Proven trim-safe for
+		Forms controls (RegisterFromFileFormRuntimeDefaults + BehaviorFormsPropertyApplier's
+		reflection) by Tests/NativeAotSmoke.Harness.
+	-->
+
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 	</ItemGroup>
