@@ -65,7 +65,6 @@ Releases up to and including [September 2, 2026](https://github.com/vchelaru/Gum
 
 * Plugins built only for the older WPF tool do not load. The **Plugins** dialog lists them as not supported. See [Plugins](../plugins/README.md) for how to migrate one.
 * The command-line tool (`gumcli`) is included in the `GumCli` folder beside the tool, but only the tool's own **Export as SVG** uses it so far.
-* The macOS app has no icon yet.
 * Gum is not signed on Windows or notarized on macOS, which is why the steps above are needed.
 
 Please report anything else you find on the [Gum GitHub issues page](https://github.com/vchelaru/Gum/issues), along with your operating system.

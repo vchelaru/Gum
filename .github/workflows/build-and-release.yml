@@ -150,6 +150,7 @@ jobs:
               mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
               cp -R "$out/." "$app/Contents/MacOS/"
               sed "s/__VERSION__/$version/g" Tool/Gum.Avalonia/Packaging/macOS/Info.plist > "$app/Contents/Info.plist"
+              cp Tool/Gum.Avalonia/Packaging/macOS/Gum.icns "$app/Contents/Resources/"
               chmod +x "$app/Contents/MacOS/Gum.Avalonia"
               codesign --force --deep --sign - "$app"
               tar -czf "dist/Gum-$rid.tar.gz" -C publish/app Gum.app
