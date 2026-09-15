@@ -57,7 +57,9 @@ public class PreviewLauncher : IPreviewLauncher
 
         if (IsRunning)
         {
-            PushSelection(element);
+            // Re-clicking Preview is an explicit ask to bring the window forward, unlike a passive
+            // tree-selection change (issue #4717 follow-up).
+            PushSelection(element, activate: true);
             return;
         }
 
@@ -90,14 +92,23 @@ public class PreviewLauncher : IPreviewLauncher
     }
 
     /// <inheritdoc/>
-    public void PushSelection(ElementSave? element)
+    public void PushSelection(ElementSave? element, bool activate = false)
     {
         if (element == null || _selectionFilePath == null || !IsRunning)
         {
             return;
         }
-        File.WriteAllText(_selectionFilePath, element.Name);
+        File.WriteAllText(_selectionFilePath, BuildSelectionFileContent(element.Name, activate));
     }
+
+    /// <summary>
+    /// The selection file's content: the element name, plus a trailing <see cref="ActivateMarker"/>
+    /// line when GumPreview should also raise its window (see <c>Game1.PollSelectionFile</c>).
+    /// </summary>
+    internal static string BuildSelectionFileContent(string elementName, bool activate) =>
+        activate ? $"{elementName}\n{ActivateMarker}" : elementName;
+
+    internal const string ActivateMarker = "activate";
 
     private void DeleteSelectionFileQuietly()
     {

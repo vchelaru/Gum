@@ -48,4 +48,19 @@ public class EditorViewModelTests
         changed.ShouldContain(nameof(EditorViewModel.SnapToGrid));
         pluginManager.Verify(manager => manager.ProjectPropertySet(It.IsAny<string>()), Times.Never);
     }
+
+    [Fact]
+    public void PreviewCommand_IsDisabled_UntilAnElementIsSelected()
+    {
+        (EditorViewModel viewModel, _) = CreateSut();
+        ComponentSave component = new ComponentSave();
+
+        viewModel.PreviewCommand.CanExecute(null).ShouldBeFalse();
+
+        viewModel.UpdateHasSelectedElement(component);
+        viewModel.PreviewCommand.CanExecute(null).ShouldBeTrue();
+
+        viewModel.UpdateHasSelectedElement(null);
+        viewModel.PreviewCommand.CanExecute(null).ShouldBeFalse();
+    }
 }

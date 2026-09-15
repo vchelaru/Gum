@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Shapes;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
@@ -212,10 +215,40 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
             [!TextBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
         });
 
+        RotateTransform previewSpinnerRotation = new RotateTransform();
+        TextBlock previewIcon = new TextBlock
+        {
+            Text = PreviewIdleGlyph,
+            TextAlignment = TextAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        // A dashed-stroke ring, not a solid circle: rotating a solid circle is a visual no-op, but
+        // the gaps in the dash pattern give the rotation something asymmetric to actually show
+        // (issue #4717). Explicit Center alignment (rather than relying on Panel's default Stretch)
+        // keeps it pinned to the same spot the ▶ glyph occupies, so swapping between the two doesn't
+        // shift position.
+        Ellipse previewSpinner = new Ellipse
+        {
+            Width = 12,
+            Height = 12,
+            StrokeThickness = 2,
+            Stroke = Brushes.White,
+            StrokeDashArray = new AvaloniaList<double> { 2, 1.5 },
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            RenderTransform = previewSpinnerRotation,
+            RenderTransformOrigin = RelativePoint.Center,
+            IsVisible = false,
+        };
+        Panel previewIconHost = new Panel();
+        previewIconHost.Children.Add(previewIcon);
+        previewIconHost.Children.Add(previewSpinner);
+
         Button previewButton = new Button
         {
             Classes = { GumChromeStyles.FlatButtonClass },
-            Content = "▶",
+            Content = previewIconHost,
             Width = 26,
             Margin = new Thickness(16, 0, 4, 0),
             Padding = new Thickness(0),
@@ -224,12 +257,46 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
             [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
             [ToolTip.TipProperty] = "Preview in runtime",
         };
+        previewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
         DockPanel.SetDock(previewButton, global::Avalonia.Controls.Dock.Right);
 
         DockPanel toolbarDock = new DockPanel { LastChildFill = true };
         toolbarDock.Children.Add(previewButton);
         toolbarDock.Children.Add(panel);
         return toolbarDock;
+    }
+
+    private const string PreviewIdleGlyph = "▶";
+
+    /// <summary>
+    /// Hides the Preview button's ▶ icon behind a spinning ring while the GumPreview process
+    /// spawns, then restores the icon. Only the ring rotates - the button itself (its
+    /// border/background/hit area) never moves (issue #4717).
+    /// </summary>
+    private static void ShowPreviewLaunchSpinner(TextBlock icon, Ellipse spinner, RotateTransform rotation)
+    {
+        TimeSpan rotationDuration = TimeSpan.FromMilliseconds(1400);
+        DateTime startUtc = DateTime.UtcNow;
+        icon.IsVisible = false;
+        spinner.IsVisible = true;
+        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
+        timer.Tick += (_, _) =>
+        {
+            double elapsedMs = (DateTime.UtcNow - startUtc).TotalMilliseconds;
+            if (elapsedMs >= rotationDuration.TotalMilliseconds)
+            {
+                timer.Stop();
+                rotation.Angle = 0;
+                spinner.IsVisible = false;
+                icon.IsVisible = true;
+                return;
+            }
+
+            var degreesPerSecond = 360;
+
+            rotation.Angle = degreesPerSecond * elapsedMs / 1000 ;
+        };
+        timer.Start();
     }
 
     private static Button SmallButton(string content, string commandPath) => new Button

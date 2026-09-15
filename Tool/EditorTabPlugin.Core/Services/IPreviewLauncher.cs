@@ -18,7 +18,10 @@ public interface IPreviewLauncher
 
     /// <summary>
     /// Pushes <paramref name="element"/> to the running preview host so it swaps its root element.
-    /// Does nothing if no preview is currently running.
+    /// Does nothing if no preview is currently running. Set <paramref name="activate"/> only for an
+    /// explicit user action (re-clicking Preview) that should also raise the preview window; leave
+    /// it false for passive updates driven by tool selection changes, so picking a different
+    /// screen/component in the tool doesn't yank focus away from it (issue #4717).
     /// </summary>
-    void PushSelection(ElementSave? element);
+    void PushSelection(ElementSave? element, bool activate = false);
 }
