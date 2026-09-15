@@ -111,10 +111,10 @@ public class Game1 : Game
             return;
         }
 
-        string newElementName;
+        string[] lines;
         try
         {
-            newElementName = File.ReadAllText(_selectionFilePath).Trim();
+            lines = File.ReadAllLines(_selectionFilePath);
         }
         catch (IOException)
         {
@@ -124,11 +124,17 @@ public class Game1 : Game
 
         _lastSelectionFileWriteTimeUtc = writeTimeUtc;
 
-        // Every re-click of the tool's Preview button rewrites this file, even for the
-        // already-shown element, so this process - not the tool - is what surfaces the window
-        // (issue #4717); the tool has no cross-platform way to foreground another process's window.
-        ActivateWindow();
+        // A second "activate" line means this write came from an explicit re-click of the tool's
+        // Preview button (see PreviewLauncher.BuildSelectionFileContent), so this process - not the
+        // tool, which has no cross-platform way to foreground another process's window - raises its
+        // own window. A passive selection change while browsing the tool's tree omits that line, so
+        // the preview updates live without stealing focus (issue #4717 follow-up).
+        if (lines.Length > 1 && lines[1].Trim() == "activate")
+        {
+            ActivateWindow();
+        }
 
+        string newElementName = lines.Length > 0 ? lines[0].Trim() : string.Empty;
         if (string.IsNullOrEmpty(newElementName) || newElementName == _elementName)
         {
             return;

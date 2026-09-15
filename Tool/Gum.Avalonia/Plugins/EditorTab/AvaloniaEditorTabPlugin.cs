@@ -275,7 +275,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     /// </summary>
     private static void ShowPreviewLaunchSpinner(TextBlock icon, Ellipse spinner, RotateTransform rotation)
     {
-        TimeSpan duration = TimeSpan.FromMilliseconds(800);
+        TimeSpan rotationDuration = TimeSpan.FromMilliseconds(1400);
         DateTime startUtc = DateTime.UtcNow;
         icon.IsVisible = false;
         spinner.IsVisible = true;
@@ -283,7 +283,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         timer.Tick += (_, _) =>
         {
             double elapsedMs = (DateTime.UtcNow - startUtc).TotalMilliseconds;
-            if (elapsedMs >= duration.TotalMilliseconds)
+            if (elapsedMs >= rotationDuration.TotalMilliseconds)
             {
                 timer.Stop();
                 rotation.Angle = 0;
@@ -291,7 +291,10 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
                 icon.IsVisible = true;
                 return;
             }
-            rotation.Angle = elapsedMs / 200 % 1 * 360;
+
+            var degreesPerSecond = 360;
+
+            rotation.Angle = degreesPerSecond * elapsedMs / 1000 ;
         };
         timer.Start();
     }

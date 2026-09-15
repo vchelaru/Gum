@@ -356,7 +356,25 @@ public partial class EditorViewModel : ViewModel, IZoomController
         }
     }
 
-    [RelayCommand]
+    /// <summary>Whether a screen or component is currently selected, so Preview has something to show.</summary>
+    public bool HasSelectedElement
+    {
+        get => Get<bool>();
+        private set
+        {
+            if (Set(value))
+            {
+                PreviewCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    /// <summary>Call whenever the tool's selected element changes, so Preview enables/disables accordingly.</summary>
+    public void UpdateHasSelectedElement(ElementSave? element) => HasSelectedElement = element != null;
+
+    private bool CanPreview() => HasSelectedElement;
+
+    [RelayCommand(CanExecute = nameof(CanPreview))]
     public void Preview() => _previewLauncher.Launch();
 
     internal void HandleProjectLoad(GumProjectSave save)

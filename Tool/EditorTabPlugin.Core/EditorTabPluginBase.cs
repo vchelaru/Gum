@@ -399,7 +399,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         this.ElementSelected += HandleElementSelected;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
-        this.ElementSelected += _previewLauncher.PushSelection;
+        this.ElementSelected += element => _previewLauncher.PushSelection(element);
         this.ElementDelete += HandleElementDeleted;
 
         this.BehaviorSelected += HandleBehaviorSelected;
@@ -903,7 +903,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         }
 
         _selectionManager.Refresh();
-
+        _editorViewModel.UpdateHasSelectedElement(save);
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
