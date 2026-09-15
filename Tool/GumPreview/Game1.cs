@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using Gum;
 using Gum.DataTypes;
 using Gum.Managers;
@@ -123,6 +124,11 @@ public class Game1 : Game
 
         _lastSelectionFileWriteTimeUtc = writeTimeUtc;
 
+        // Every re-click of the tool's Preview button rewrites this file, even for the
+        // already-shown element, so this process - not the tool - is what surfaces the window
+        // (issue #4717); the tool has no cross-platform way to foreground another process's window.
+        ActivateWindow();
+
         if (string.IsNullOrEmpty(newElementName) || newElementName == _elementName)
         {
             return;
@@ -130,6 +136,21 @@ public class Game1 : Game
 
         _elementName = newElementName;
         ShowElement(_elementName);
+    }
+
+    // SDL_RaiseWindow is the same call MonoGame's own SDL backend uses internally, so it works
+    // uniformly across the Windows/X11/Wayland/macOS backends SDL abstracts.
+    [DllImport("SDL2", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void SDL_RaiseWindow(IntPtr window);
+
+    private void ActivateWindow()
+    {
+        try
+        {
+            SDL_RaiseWindow(Window.Handle);
+        }
+        catch (DllNotFoundException) { }
+        catch (EntryPointNotFoundException) { }
     }
 
     private void ApplyCanvasSizeFromProject()
