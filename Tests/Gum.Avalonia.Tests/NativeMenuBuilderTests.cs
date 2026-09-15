@@ -90,6 +90,57 @@ public class NativeMenuBuilderTests
     }
 
     [AvaloniaFact]
+    public void Build_BindsGestures_OnlyWhileTheOwnerWindowIsActive()
+    {
+        // A key equivalent fires app-wide, so while a dialog is the key window it would take Cmd+Z
+        // from the dialog's text box. Dropping the gestures while the owner is inactive lets the key
+        // reach the dialog like on Windows, where the in-window menu displays the shortcut only.
+        MenuModel model = new MenuModel();
+        MenuItemModel edit = new MenuItemModel("Edit");
+        edit.Items.Add(new MenuItemModel("Undo") { Gesture = KeyCombination.Ctrl(GumKey.Z) });
+        model.TopLevelItems.Add(edit);
+        OwnerActivity isOwnerActive = new OwnerActivity();
+
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model, KeyModifiers.Meta, isOwnerActive);
+        NativeMenu editMenu = ((NativeMenuItem)menu.Items[0]).Menu.ShouldNotBeNull();
+        NativeMenuItem undo = (NativeMenuItem)editMenu.Items[0];
+
+        isOwnerActive.Set(true);
+        undo.Gesture.ShouldNotBeNull().Key.ShouldBe(Key.Z);
+
+        isOwnerActive.Set(false);
+        undo.Gesture.ShouldBeNull();
+        // A collection change rebuilds the submenu's items; the new ones start unbound too.
+        edit.Items.Add(new MenuItemModel("Redo") { Gesture = KeyCombination.Ctrl(GumKey.Y) });
+        undo = (NativeMenuItem)editMenu.Items[0];
+        NativeMenuItem redo = (NativeMenuItem)editMenu.Items[1];
+        undo.Gesture.ShouldBeNull();
+        redo.Gesture.ShouldBeNull();
+
+        isOwnerActive.Set(true);
+        undo.Gesture.ShouldNotBeNull().Key.ShouldBe(Key.Z);
+        redo.Gesture.ShouldNotBeNull().Key.ShouldBe(Key.Y);
+    }
+
+    private sealed class OwnerActivity : IObservable<bool>
+    {
+        private readonly List<IObserver<bool>> _observers = new List<IObserver<bool>>();
+
+        public void Set(bool isActive) => _observers.ForEach(observer => observer.OnNext(isActive));
+
+        public IDisposable Subscribe(IObserver<bool> observer)
+        {
+            _observers.Add(observer);
+            return new Unsubscriber(() => _observers.Remove(observer));
+        }
+
+        private sealed class Unsubscriber(Action unsubscribe) : IDisposable
+        {
+            public void Dispose() => unsubscribe();
+        }
+    }
+
+    [AvaloniaFact]
     public void BuildAppMenu_HasAboutGum_ThatRunsTheAboutAction()
     {
         int invoked = 0;

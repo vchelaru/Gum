@@ -25,14 +25,11 @@ public class HotkeyManager : IHotkeyManager
     public KeyCombination Cut { get; private set; } = KeyCombination.Ctrl(GumKey.X);
     public KeyCombination Duplicate { get; private set; } = KeyCombination.Ctrl(GumKey.D);
     public KeyCombination Undo { get; private set; } = KeyCombination.Ctrl(GumKey.Z);
-    public KeyCombination Redo { get; private set; } = KeyCombination.Ctrl(GumKey.Y);
 
-    public KeyCombination RedoAlt { get; private set; } = new KeyCombination()
-    {
-        IsCtrlDown = true,
-        IsShiftDown = true,
-        Key = GumKey.Z
-    };
+    // Redo is Ctrl+Y with Ctrl+Shift+Z as the alternative, except on macOS where the convention is
+    // the other way round (Shift+Cmd+Z, then Cmd+Y). Both are set in the constructor.
+    public KeyCombination Redo { get; private set; }
+    public KeyCombination RedoAlt { get; private set; }
 
     public KeyCombination ReorderUp { get; private set; } = KeyCombination.Alt(GumKey.Up);
     public KeyCombination ReorderDown { get; private set; } = KeyCombination.Alt(GumKey.Down);
@@ -106,8 +103,14 @@ public class HotkeyManager : IHotkeyManager
         IReorderLogic reorderLogic,
         IPluginManager pluginManager,
         ISelectionHistory selectionHistory,
-        IModifierKeyState modifierKeyState)
+        IModifierKeyState modifierKeyState,
+        IOperatingSystemInfo operatingSystemInfo)
     {
+        KeyCombination ctrlY = KeyCombination.Ctrl(GumKey.Y);
+        KeyCombination ctrlShiftZ = new KeyCombination { IsCtrlDown = true, IsShiftDown = true, Key = GumKey.Z };
+        Redo = operatingSystemInfo.IsMacOS ? ctrlShiftZ : ctrlY;
+        RedoAlt = operatingSystemInfo.IsMacOS ? ctrlY : ctrlShiftZ;
+
         _copyPasteLogic = copyPasteLogic;
         _guiCommands = guiCommands;
         _selectedState = selectedState;

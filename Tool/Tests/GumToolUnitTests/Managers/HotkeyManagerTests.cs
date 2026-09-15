@@ -66,7 +66,8 @@ public class HotkeyManagerTests : BaseTestClass
             _reorderLogic.Object,
             _pluginManager.Object,
             _selectionHistory.Object,
-            _modifierKeyState.Object
+            _modifierKeyState.Object,
+            Mock.Of<IOperatingSystemInfo>()
         );
     }
 
