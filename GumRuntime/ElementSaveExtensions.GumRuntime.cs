@@ -1471,7 +1471,11 @@ namespace GumRuntime
 
             // Forms controls (e.g. RadioButton, CheckBox) apply their default IsChecked visual
             // inside AfterFullCreation, but a parent's SetInitialState can override that category
-            // state afterward. Walk the subtree so Forms controls can re-assert their state.
+            // state afterward. Notify the root and walk its subtree so Forms controls can
+            // re-assert their state. The root is included so a Forms-behavior component built
+            // directly (not as an instance in a parent) still gets its own FormsProperty
+            // defaults applied.
+            InitialStateAppliedNotifier?.Invoke(toReturn);
             NotifyFormsControlsOfInitialStateApplied(toReturn);
 
             if (!wasSuspended)
