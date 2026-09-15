@@ -132,10 +132,7 @@ public class StandardMenuModelBuilder
         plugins.Items.Add(new MenuItemModel("Manage Plugins", () => _dialogService.Show<PluginsDialogViewModel>()));
 
         MenuItemModel help = new MenuItemModel("Help");
-        help.Items.Add(new MenuItemModel("About...", () =>
-        {
-            _dialogService.ShowMessage("Gum version " + ToolVersion.Describe(Assembly.GetEntryAssembly()), "About");
-        }));
+        help.Items.Add(new MenuItemModel("About...", ShowAbout));
         const string thirdPartyNoticesUrl = "https://github.com/vchelaru/Gum/blob/main/THIRD-PARTY-NOTICES.txt";
         help.Items.Add(new MenuItemModel("Third-Party Licenses...", () =>
         {
@@ -171,6 +168,12 @@ public class StandardMenuModelBuilder
 
         RefreshUI();
         return Model;
+    }
+
+    /// <summary>Shows the version message behind Help > About; the macOS app menu's About Gum shows the same.</summary>
+    public void ShowAbout()
+    {
+        _dialogService.ShowMessage("Gum version " + ToolVersion.Describe(Assembly.GetEntryAssembly()), "About");
     }
 
     /// <summary>Syncs the selection-dependent headers, enabled flags, and check marks.</summary>

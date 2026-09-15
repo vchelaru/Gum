@@ -38,6 +38,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - `MessageDialogStyle.YesNo` is a static property returning a **new instance per get**, so a Moq setup matching it by value never matches. The unmatched call returns the default `MessageDialogResult` (0, negative), so the code under test takes the user-declined branch and the test fails somewhere unrelated. Match on the dialog title or `It.IsAny<MessageDialogStyle?>()`.
 - Use named parameters for boolean literals.
 - Run the whole test project before pushing, not only the new test filtered by name. Shared singletons make tests order-dependent, and a filtered run hides that.
+  - xUnit runs test classes in a different order every run, so a static a test leaves set (e.g. `ObjectFinder.Self.GumProjectSave`) breaks a random other class, and only sometimes. `BaseTestClass` resets the known ones on the way in and out; a class that doesn't derive from it must clear every static it sets in its own `Dispose`.
 - Don't name a test namespace after an existing Gum type (e.g. `MonoGameGum.Tests.Binding` collides with `Gum.Forms.Data.Binding`) — an unrelated file elsewhere in the same test project that references the type unqualified can suddenly fail to compile (`CS0118: '...' is a namespace but is used like a type`).
 
 ## Avalonia head tests (Gum.Avalonia.Tests)

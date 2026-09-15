@@ -2127,9 +2127,12 @@ public partial class CustomSetPropertyOnRenderable
 
                             FontService.CreateFontIfNecessary(bmfcSave);
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // do nothing?
+                            // Fall through to the default font, but surface the failure instead of
+                            // swallowing it (#4732).
+                            RaisePropertyAssignmentError(
+                                $"Error generating font '{fontNameStack.Peek()}' via {FontService.GetType().Name}:\n{ex}");
                         }
                     }
 #endif
@@ -2273,8 +2276,12 @@ public partial class CustomSetPropertyOnRenderable
             return fontFilePath;
         }
 
+        // A project built in code and never loaded from or saved to disk has no FullFileName, so
+        // there is no project directory to resolve against -- treat it like no project at all.
+        // FileManager.GetDirectory throws on null, and the FontService branch of GetOrCreateBakedFont
+        // swallows that, silently skipping font generation.
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        if (gumProject != null)
+        if (!string.IsNullOrEmpty(gumProject?.FullFileName))
         {
             string projectDir = ToolsUtilities.FileManager.GetDirectory(gumProject.FullFileName);
             return System.IO.Path.GetFullPath(System.IO.Path.Combine(projectDir, fontFilePath));
@@ -2392,10 +2399,14 @@ public partial class CustomSetPropertyOnRenderable
 
                 FontService.CreateFontIfNecessary(bmfcSave);
             }
-            catch
+            catch (Exception ex)
             {
                 // Font creation can fail for many reasons (invalid font name, missing bmfont.exe, etc.)
-                // Silently fall through to the disk load attempt or default font fallback.
+                // Fall through to the disk load attempt or default font fallback, but surface the
+                // failure -- previously a bare catch { } left only the generic "nothing resolved"
+                // message below, which blames the wrong tier (#4732).
+                RaisePropertyAssignmentError(
+                    $"Error generating font '{fontName}' via {FontService.GetType().Name}:\n{ex}");
             }
         }
 #endif

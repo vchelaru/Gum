@@ -19,6 +19,7 @@ using Gum.DataTypes;
 using Gum.Dialogs;
 using Gum.Diagnostics;
 using Gum.Managers;
+using Gum.Menus;
 using Gum.Startup;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,11 +40,22 @@ public sealed class App : Application
     {
         _services = services;
         _options = options;
+        // macOS names the app menu (its title, "Hide ...") from this, not from the bundle.
+        Name = "Gum";
     }
 
     /// <inheritdoc/>
     public override void Initialize()
     {
+        Name = "Gum";
+        if (OperatingSystem.IsMacOS())
+        {
+            // The app menu must exist before Avalonia's post-setup exporter reads it, or it
+            // supplies its own "About Avalonia" menu instead. The About action resolves on click
+            // so no tool service is built this early.
+            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.BuildAppMenu(
+                () => _services.GetRequiredService<StandardMenuModelBuilder>().ShowAbout()));
+        }
         // Compact density: the WPF head's fields and rows are tighter than Fluent's defaults.
         Styles.Add(new FluentTheme { DensityStyle = DensityStyle.Compact });
         FrbThemeResources.Install(Resources);
