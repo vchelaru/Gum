@@ -34,6 +34,71 @@
 		reflection) by Tests/NativeAotSmoke.Harness.
 	-->
 
+	<PropertyGroup>
+		<_PreviewVariantRid Condition="'$(_PreviewVariantRid)' == ''">$(NETCoreSdkRuntimeIdentifier)</_PreviewVariantRid>
+		<_HeadBinDir>$(MSBuildThisFileDirectory)..\Gum.Avalonia\bin\$(Configuration)\net10.0\</_HeadBinDir>
+		<!--
+			PublishAot's native link step shells out to vswhere.exe to find the MSVC linker, and it is
+			NOT on PATH by default even with Visual Studio installed - the same reason
+			build-and-test.yaml's "Native-AOT-Smoke" job has its own "Add vswhere to PATH" step. That
+			workaround only covers CI; a local Build Solution needs the same fix baked into the nested
+			publish's own environment (below) so it works with no one-time machine setup.
+			$(MSBuildProgramFiles32) is the standard MSBuild property for "Program Files (x86)" -
+			avoids the escaping issues in referencing an environment variable literally named
+			"ProgramFiles(x86)" through $(...) syntax.
+		-->
+		<_VsWhereDir>$(MSBuildProgramFiles32)\Microsoft Visual Studio\Installer</_VsWhereDir>
+		<!--
+			Prepended to the AOT publish's own Command below (not the ReadyToRun one - crossgen2 is
+			managed and cross-platform, and never needs vswhere or the MSVC linker). Exec's own
+			EnvironmentVariables parameter can't express this: it's a semicolon-delimited list of
+			NAME=VALUE entries with no escape for a semicolon *inside* one entry's value, which a PATH
+			value inherently needs. Folding a `set "PATH=...` into the Command string itself (still one
+			cmd.exe invocation, chained with &&) has no such restriction. Empty on non-Windows, where
+			`set` isn't valid shell syntax and the AOT toolchain doesn't need vswhere anyway.
+		-->
+		<_AotExecCommandPrefix Condition="'$(OS)' == 'Windows_NT'">set &quot;PATH=%PATH%;$(_VsWhereDir)&quot; &amp;&amp; </_AotExecCommandPrefix>
+	</PropertyGroup>
+	<!--
+		Local-dev convenience: an ordinary Debug Build Solution also publishes both variants straight
+		into the Avalonia head's own Debug bin output, in the exact Preview/ + Preview-Aot/ layout
+		PreviewExecutableLocator's published-layout candidate already checks first - so a locally-run
+		head's Preview picks the right build for a .gumx vs .gumj project with no special workflow
+		(build-and-release.yml is still what produces the real 4-RID release artifacts; this only
+		publishes for the current machine's RID). The two nested publishes are always -c Release
+		regardless (PublishReadyToRun above is gated to Release - a Debug-config "Preview" build would
+		silently never be ReadyToRun and defeat the point of testing the real variant), so this can
+		only ever trigger for a Debug build, never Release.
+
+		Gated to Configuration == Debug specifically so this never touches CI or a real release build:
+		build-and-test.yaml's `dotnet build Gum.slnx` and every publish in build-and-release.yml both
+		run Release, and that Configuration mismatch is also what stops the nested Release publishes
+		above from recursively re-triggering this same target (also redundantly guarded by
+		SkipPreviewVariantPublish, which they pass too). Also skipped for Visual Studio's design-time
+		builds (IntelliSense) so typing doesn't trigger it.
+
+		IgnoreStandardErrorWarningFormat on both: without it, MSBuild's console logger promotes every
+		canonical `file(line): warning CODE: ...` line the nested publish prints - including the
+		.gumx/XmlSerializer AOT-analysis warnings that are the whole reason the AOT build is
+		.gumj-only, already an accepted, documented tradeoff, not a regression - into the *outer*
+		build's own warning count, and plain verbosity flags do not help (MSBuild always shows
+		warnings/errors regardless of verbosity level). Confirmed clean across repeated from-scratch
+		rebuilds: the outer build's warning count matches a plain build with this target skipped
+		exactly. A genuine failure of the nested publish still fails this target -
+		IgnoreStandardErrorWarningFormat only changes how matching output lines are logged, not the
+		Exec task's own exit-code check. (Redirecting the nested command's output away entirely was
+		tried first and rejected: it intermittently made the Native AOT publish itself fail for
+		reasons not fully understood, most likely the native link step's own subprocess needing a
+		live console handle.)
+	-->
+	<Target Name="PublishPreviewVariants" AfterTargets="Build"
+	        Condition="'$(Configuration)' == 'Debug' AND '$(SkipPreviewVariantPublish)' != 'true' AND '$(DesignTimeBuild)' != 'true'">
+		<Exec Command="dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c Release -r $(_PreviewVariantRid) --self-contained true -p:SkipPreviewVariantPublish=true -o &quot;$(_HeadBinDir)Preview&quot;"
+		      IgnoreStandardErrorWarningFormat="true" />
+		<Exec Command="$(_AotExecCommandPrefix)dotnet publish &quot;$(MSBuildProjectFullPath)&quot; -c Release -r $(_PreviewVariantRid) --self-contained true -p:PublishAot=true -p:SkipPreviewVariantPublish=true -o &quot;$(_HeadBinDir)Preview-Aot&quot;"
+		      IgnoreStandardErrorWarningFormat="true" />
+	</Target>
+
 	<ItemGroup>
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 	</ItemGroup>
