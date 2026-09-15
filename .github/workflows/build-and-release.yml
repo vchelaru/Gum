@@ -130,6 +130,9 @@ jobs:
           if [ "$rid" != "win-x64" ]; then
             dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:PublishAot=true -p:Version="$version" -o "$out/Preview-Aot"
           fi
+          # Native AOT publishes the binary's debug symbols beside it (GumPreview.pdb on Windows,
+          # .dbg on Linux, .dSYM on macOS), 78-86 MB that nothing in the package reads (#4743).
+          find "$out/Preview-Aot" \( -name '*.dSYM' -o -name '*.dbg' -o -name '*.pdb' \) -prune -exec rm -rf {} +
           mkdir -p "$out/Plugins"
           cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Plugins/. "$out/Plugins/"
           if [ -d Tool/Gum.Avalonia/bin/Release/net10.0/Content ]; then
