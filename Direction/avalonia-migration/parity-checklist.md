@@ -4,6 +4,14 @@
 > 110 (preview channel) and again before phase 120 (cutover), on each OS, against a copy of a real
 > project. Mark each cell `pass`, `fail (#issue)`, or `n/a`, and date the column header. The
 > automated layers are in `phase-100-testing-and-parity.md`.
+>
+> **Status 2026-09-14:** no cell below has been filled in by hand on any OS, and the Avalonia
+> packages became the release anyway (#4699). What exists is automated evidence: on Windows the
+> `Tools/ParityShots/` driver and `timings.ps1` walk both heads through open project, tree
+> selection, search, the File/Edit/context menus, the delete dialog and undo/redo, and the
+> screenshot pairs match; on Linux (WSL, WSLg) the head was run unattended and the quirks below
+> were fixed; macOS has never been run. Filling this table in, on a real Mac in particular, is the
+> first open item of phase 120.
 
 | Area | What to check | Windows | macOS | Linux |
 |---|---|---|---|---|

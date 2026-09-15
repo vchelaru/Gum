@@ -3,6 +3,10 @@
 > Working document for issue #4228. Created 2026-08-01. This is the design + progress record for
 > replacing the tool's last `WindowsFormsHost` (the element tree) with a native WPF `TreeView`.
 > Delete or fold into `ui-decoupling-plan.md` once the port lands and stabilizes.
+>
+> **Closed 2026-09-14.** The WPF port landed, and the tree's model and logic then moved to
+> `Tool/TreeViewPlugin.Core` for the Avalonia head (`avalonia-migration/phase-60-tree-views.md`),
+> which is the tool that ships. Kept as history; nothing below is a plan any more.
 
 ## Decision
 

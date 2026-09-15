@@ -7,7 +7,7 @@ description: Gum Variables tab and DataUiGrid. Triggers: Variables tab, DataUiGr
 
 ## Overview
 
-The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. The grid's model is framework-neutral in `DataUi.Core` (net10.0: `InstanceMember`, `MemberCategory`, `DataUiGridModel`, `DisplayerRegistry`, and the editor logic classes, still in the `WpfDataUi.*` namespaces). `WpfDataUi` holds only the WPF views (`DataUiGrid`, an `ItemsControl` over a `DataUiGridModel`, plus the editors). Categories render as collapsible `Expander` sections.
+The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. The grid's model is framework-neutral in `DataUi.Core` (net10.0: `InstanceMember`, `MemberCategory`, `DataUiGridModel`, `DisplayerRegistry`, and the editor logic classes, still in the `WpfDataUi.*` namespaces). `WpfDataUi` holds only the WPF views (`DataUiGrid`, an `ItemsControl` over a `DataUiGridModel`, plus the editors) and `AvaloniaDataUi` the Avalonia ones (`DataUiGrid.cs`, `SingleDataUiContainer.cs`, editors under `Controls/`, all built in C#); the Avalonia head is the shipped tool, the WPF head is frozen. Categories render as collapsible `Expander` sections.
 
 > Icons rendered inside the Variables grid (unit selectors, alignment, dock/anchor, origin/sizing toggle-button option displays) come from the `GumIcon`/`PathGeometry` pipeline. For authoring or replacing them see [gum-icons](../gum-icons/SKILL.md).
 
@@ -18,7 +18,7 @@ The **Variables tab** displays and edits properties of the selected element, ins
 ```
 [User selects object]
         ↓
-[MainVariableGridPlugin] (event subscription)
+[VariableGridPluginBase] (event subscription; each head exports a MainVariableGridPlugin subclass)
         ↓
 [PropertyGridManager.RefreshDataGrid()]
         ↓
@@ -39,6 +39,8 @@ The **Variables tab** displays and edits properties of the selected element, ins
 | Editor choice (preferred displayer, custom options, type, text) | `DataUi.Core/DisplayerRegistry.cs`, keys in `DataUi.Core/DataTypes/StandardDisplayers.cs` |
 | WPF DataUiGrid control (renders the model) | `WpfDataUi/DataUiGrid.cs` |
 | DataUiGrid XAML template | `WpfDataUi/Themes/Generic.xaml` |
+| Avalonia DataUiGrid control and row host | `AvaloniaDataUi/DataUiGrid.cs`, `AvaloniaDataUi/SingleDataUiContainer.cs` |
+| Avalonia editors | `AvaloniaDataUi/Controls/SimpleDisplays.cs`, `CompositeDisplays.cs`, `TextBoxDisplay.cs` over `DataUiDisplayBase` |
 | MemberCategory / InstanceMember models | `DataUi.Core/DataTypes/` |
 | Gum-specific member subclass | `Tools/Gum.Presentation/PropertyGridHelpers/StateReferencingInstanceMember.cs` |
 | Plugin wiring selection events | `Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/VariableGridPluginBase.cs` (each head exports a `MainVariableGridPlugin` subclass) |
@@ -84,7 +86,7 @@ Landmine: `SetCategories` is not the only way the grid's categories change. `Pro
 
 ### Control Recycling (SingleDataUiContainer)
 
-`SingleDataUiContainer` maintains a static `Dictionary<Type, Stack<UserControl>>` pool. When a container is removed from the visual tree (`Unloaded`), its inner displayer control is detached and pushed onto the type-keyed stack. When a new container needs a displayer, `CreateInternalControl` first checks if the existing control already matches the needed type (reuse in-place — preserves focus), then tries the pool via `TryGetFromPool`, and only falls back to `Activator.CreateInstance` if both miss. Pooled controls must clean up stale state when reassigned to a new `InstanceMember` (e.g., `TextBoxDisplay` detaches old event handlers, resets error/multiline state, and calls `Refresh`). `SetCategories` uses `BulkObservableCollection.ReplaceAll` (single `Reset` notification) which triggers WPF to unload old containers (returning controls to the pool) and create new ones (pulling from the pool).
+WPF only. The Avalonia grid does not pool: rows are rebuilt (Avalonia editors are cheap) and a displayer re-bound to a new member resets its per-member state, which is what the pooling fix below requires anyway. In WPF, `SingleDataUiContainer` maintains a static `Dictionary<Type, Stack<UserControl>>` pool. When a container is removed from the visual tree (`Unloaded`), its inner displayer control is detached and pushed onto the type-keyed stack. When a new container needs a displayer, `CreateInternalControl` first checks if the existing control already matches the needed type (reuse in-place — preserves focus), then tries the pool via `TryGetFromPool`, and only falls back to `Activator.CreateInstance` if both miss. Pooled controls must clean up stale state when reassigned to a new `InstanceMember` (e.g., `TextBoxDisplay` detaches old event handlers, resets error/multiline state, and calls `Refresh`). `SetCategories` uses `BulkObservableCollection.ReplaceAll` (single `Reset` notification) which triggers WPF to unload old containers (returning controls to the pool) and create new ones (pulling from the pool).
 
 ### Multi-Select Path
 
@@ -146,7 +148,7 @@ Category-header menus are `MemberCategory.ContextMenuItems` (`MemberCategoryCont
 
 ```
 Selection changed
-  → MainVariableGridPlugin.Handle*Selected()
+  → VariableGridPluginBase.Handle*Selected()
   → PropertyGridManager.RefreshEntireGrid(force: true)
   → RefreshDataGrid(...)
      ├─ Target changed?
@@ -163,12 +165,12 @@ When an instance is selected, two events fire in sequence: the default state is 
 ```
 Selection changed (instance)
   → HandleStateSelected()       (state force-selected first)
-  → RefreshEntireGrid(force: true) + sets _stateJustRefreshedGrid
+  → RefreshEntireGrid(force: true) + the selection coordinator notes the instance
   → HandleInstanceSelected()    (fires second)
-  → _stateJustRefreshedGrid is true → skip redundant refresh
+  → ShouldRefreshOnInstanceSelected is false → skip redundant refresh
 ```
 
-`_stateJustRefreshedGrid` is cleared by `HandleElementSelected` and `HandleTreeNodeSelected` so it does not suppress legitimate refreshes during unrelated selections.
+`VariableGridSelectionCoordinator` (`Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/`, headless and unit-tested) owns that state; `HandleElementSelected` and `HandleTreeNodeSelected` reset it so it does not suppress legitimate refreshes during unrelated selections.
 
 Variable set by UI:
 ```

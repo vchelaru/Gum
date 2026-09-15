@@ -1,5 +1,72 @@
 # Phase 120 — Cutover: retire WPF and WinForms
 
+## Status (2026-09-14)
+
+**The cutover happened out of order.** Vic merged the migration branch into `main` on 2026-09-14
+(#4689, described there as "not the phase-120 cutover"), and the same day #4699 renamed the
+solutions (`Gum.slnx` is the tool, `Gum.Wpf.sln` the frozen WPF head), made the Avalonia packages
+the only release artifacts, and #4702 rewrote the user-facing setup docs. None of the entry gates
+below had been checked: the manual parity checklist has no cell filled in, the head has never been
+launched on macOS, the rewritten release workflow has never run, and the plugin notice was still a
+draft. The WPF projects are still in the repo, frozen.
+
+**Done on 2026-09-14 (this pass), from the task list below:**
+
+- Task 5, the coverage-matrix sweep: re-run over the shipped graph; one real leak found and fixed
+  (`ProjectManager.ShowReadOnlyDialog` started `explorer.exe`; now `IFileSystemRevealService`).
+- Task 6, guidance: `CLAUDE.md` Building and Testing rewritten around `Gum.slnx`,
+  `Gum.Presentation.Tests` and `Gum.Avalonia.Tests`, with the WPF head as a frozen bullet; the
+  skills that named WPF-only files or the old test project (`tdd`, `gum-unit-tests`,
+  `gum-tool-selection`, `gum-tool-dialogs`, `gum-tool-variable-grid`, `gum-tool-tree-view` (already
+  dual), `gum-tool-file-watch`, `gum-tool-codegen`, `gum-tool-undo`, `gum-tool-delete-logic`,
+  `gum-icons`, `gum-runtime-topology`, `gum-tool-plugins`, `gum-tool-errors`,
+  `gum-tool-import-from-gumx`, `gum-tool-save-classes`, `gum-localization`, `gum-cli`,
+  `gum-monthly-release`) now describe the Avalonia head as the tool. `GEMINI.md` is not edited by
+  agents (its header says so) and still describes `GumFull.sln`; it needs an owner edit.
+  `treeview-wpf-port.md` got its closing note; `ui-decoupling-plan.md` already had one.
+- Task 7, docs and notice: the plugin compatibility notice is published in
+  `docs/gum-tool/plugins/README.md` (rewritten for a `net10.0` plugin over `Gum.Presentation`,
+  with the WPF migration guide and a link to the last WPF release); the post-build-events page
+  points at the head's `Plugins` folder; the setup page links the last WPF release and its WINE
+  scripts at that tag; the upgrading page explains the switch; the release-notes reminder is in
+  the `gum-monthly-release` skill. The WINE scripts (`setup_gum_*.sh`, `run_gum_linux.sh`,
+  `remove_gum.sh`) and the TeamCity `ZipGumScript.ps1` are deleted; the historical upgrade notes
+  that linked them now link the September 2, 2026 tag.
+- Every phase doc's status and checkboxes now say what actually landed and what is still owed;
+  the plan README has a status column; `parity-checklist.md` records that it was never run.
+
+**Decisions recorded here, as the doc asked:**
+
+- `WpfDataUi` and `DataUi.Core` are **not deleted**: FlatRedBall's Glue references them directly
+  (#4689, #4709). They stay as libraries outside the tool graph; `DataUi.Core` is `net8.0` for FRB.
+- `Gum.Avalonia` is **not renamed to `Gum` yet**: `Gum` is the WPF assembly's name, so the rename
+  belongs to the deletion PR, where `Gum.csproj` goes away. The shipped executable stays
+  `Gum.Avalonia(.exe)` / `Gum.app` until then, and the docs say so.
+- The Windows `Gum.Wpf.sln` CI job **stays** until the deletion PR, so shared-code changes cannot
+  silently break the frozen head (Vic: "Gum.Wpf.sln stays buildable", #4699).
+- AppCenter is dropped (phase 90); the packages leave with the WPF head.
+
+**What remains, in order:**
+
+1. Owner steps the gates asked for: launch the head on a real Mac (clean machine), fill in
+   `parity-checklist.md` per OS, run `build-and-release.yml` once as `test`, decide signing
+   (phase 110). File the findings as issues.
+2. The first Avalonia release's notes carry the plugin-break and download-name announcement
+   (ADR-0018); Discord post.
+3. **The WPF deletion PR** (tasks 2, 3, 4, 8 below, one revertible PR): delete `Gum/` except what
+   the head still reads (`Gum/Themes/GumIcons.xaml` and the palette dictionaries are embedded by
+   the Avalonia head from those paths, and its csproj links `Gum/Content/**` and `Gum/GumIcon.ico`
+   into its output; move them under `Tool/Gum.Avalonia` first),
+   `Gum/Properties/AssemblyInfo.cs` (then point the release workflow's version-bump step at the
+   head or drop it), `WpfPluginBase`/`PriorityPlugin` and the `AddMenuItem` shim, the four WPF
+   plugin heads (`EditorTabPlugin_XNA`, `TextureCoordinateSelectionPlugin`, `StateAnimationPlugin`,
+   `CodeOutputPlugin`), `XnaAndWinforms.Wpf`, `Tool/Tests/GumToolUnitTests` (its 500-odd
+   WPF-bound tests; move any logic test that is still there), `Gum.Wpf.sln` and the `Build-Tool`
+   CI job, `GumFull.sln` (or re-point it at the head plus the CLI), the AppCenter packages,
+   `FullClean.ps1`'s WPF lines; rename `Gum.Avalonia` to `Gum` if wanted; re-run task 5's sweep
+   and date the matrix all-removed; delete the `GumToolUnitTests` section of `CLAUDE.md` and the
+   "frozen WPF head" mentions in the skills; give `GEMINI.md` to its owner.
+
 ## Purpose
 
 Make the Avalonia head the only Gum tool. Re-point every solution, workflow, and doc at it; delete
@@ -82,7 +149,7 @@ Needs everything. Nothing depends on it except the future.
 
 ## Done when
 
-- [ ] One merged PR; `gum.exe` and its load graph are WPF/WinForms-free.
-- [ ] CI and release workflows build the Avalonia tool on three OSes; WPF zip discontinued.
-- [ ] `CLAUDE.md`, `code-style.md`, skills, and docs describe only the Avalonia tool.
-- [ ] Release notes published; plugin compatibility change announced.
+- [ ] One merged PR; `gum.exe` and its load graph are WPF/WinForms-free. **Half done:** the shipped `Gum.Avalonia` load graph is WPF-free (verified by `HeadCompositionTests` and the publish), but the WPF projects are still in the repo; the deletion PR is open.
+- [x] CI and release workflows build the Avalonia tool on three OSes; WPF zip discontinued (#4699, 2026-09-14; the `Gum.Wpf.sln` build job stays until the deletion PR).
+- [x] `CLAUDE.md`, `code-style.md`, skills, and docs describe the Avalonia tool as *the* tool (2026-09-14); the "frozen WPF head" mentions go with the deletion PR. `GEMINI.md` is owner-edited only and still stale.
+- [ ] Release notes published; plugin compatibility change announced. The docs half is done (plugin page, setup page, upgrading page); the release-notes and Discord halves wait for the first Avalonia release.

@@ -157,12 +157,31 @@ acceptance bar. A no-go with fallback (3) triggered also changes phase 30's Skia
   "interactive dragging feels immediate," measured, not "60 fps."
 - Two canvases on one device, with per-canvas cameras, must not fight over device state.
 
+## Recommendation (written 2026-09-14, after the fact)
+
+The spike was never closed out in this doc; phase 50 went ahead on its Windows results and the
+real head then supplied the off-Windows evidence. Recorded here so the phase has an answer:
+
+- **Backend: KNI `nkast.Kni.Platform.SDL2.GL` (Option A).** Same KNI version the tool already
+  used; the two desktop-GL backends performed the same once `InactiveSleepTime` was zeroed, and
+  KNI keeps the tool on one XNA-family dependency.
+- **Device-creation path:** a hidden 1x1 KNI `Game` behind the reference-counted
+  `GameRenderDeviceHost` (`Tool/Gum.Avalonia`), stepped from the Avalonia UI thread with
+  `IsFixedTimeStep = false`, vsync off and `InactiveSleepTime = TimeSpan.Zero`; each frame is read
+  back into an RGBA `WriteableBitmap`. The handle-less `GraphicsDevice` overload was not pursued.
+- **Evidence per OS:** Windows, the spike numbers above (1.3 ms at 1024x720, 7.3 ms at 4K,
+  readback dominated). Linux, the real head runs under WSLg and the Xvfb CI leg runs
+  `HeadProcessTests` and `CanvasHostTests` with Mesa software GL. macOS: **never run**; no
+  latency numbers exist. Two render targets on one device work in the real head (the wireframe and
+  texture-coordinate canvases share the device host).
+- **Fallback (SkiaGum canvas): not triggered.** It stays the plan if the first Mac run fails.
+
 ## Done when
 
 - [x] A `GraphicsDevice` is created on **Windows** with no WinForms handle on both backends (headless tests, 2026-09-09).
-- [ ] A `GraphicsDevice` is created on macOS and/or Linux with no WinForms handle, and the path is written down.
+- [x] A `GraphicsDevice` is created on Linux with no WinForms handle (the real head under WSLg, 2026-09-11, and the Xvfb CI leg); the path is written down above. macOS: not done.
 - [x] A real Gum screen renders in an Avalonia window on **Windows** on both backends (2026-09-10).
-- [ ] A real Gum screen renders in an Avalonia window on that OS; click selects the right element at 100/150/200%.
-- [ ] Drag latency and frame time are recorded for 1080p and 4K on that OS.
-- [ ] Two render targets on one device work.
-- [ ] Recommendation written into this doc; phase 50 updated; fallback recorded if triggered.
+- [ ] A real Gum screen renders in an Avalonia window on macOS; click selects the right element at 100/150/200%. (Linux: renders and selects under WSLg; DPI variants not measured.)
+- [ ] Drag latency and frame time are recorded for 1080p and 4K on macOS or Linux.
+- [x] Two render targets on one device work (both canvases in the real head, 2026-09-10).
+- [x] Recommendation written into this doc (2026-09-14); phase 50 built on it; fallback not triggered.

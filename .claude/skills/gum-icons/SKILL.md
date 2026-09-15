@@ -1,6 +1,6 @@
 ---
 name: gum-icons
-description: Umbrella for icons in Gum. Triggers: GumIcon, GumIconKind, GumFigmaIconRipper, GumIcons.xaml, FluentIcon usage in the tool, replacing/adding icons in WPF chrome, tree view, or Forms runtime. Read this first before adding an icon anywhere — it routes you to the right pipeline.
+description: Umbrella for icons in Gum. Triggers: GumIcon, GumIconKind, GumFigmaIconRipper, GumIcons.xaml, FluentIcon usage in the tool, replacing/adding icons in the tool's chrome (either head), tree view, or Forms runtime. Read this first before adding an icon anywhere — it routes you to the right pipeline.
 type: skill
 ---
 
@@ -12,17 +12,17 @@ There are **three independent icon pipelines** in Gum. Pick the right one before
 
 | Where | Format on disk | Runtime form | Theming | Detail skill |
 |---|---|---|---|---|
-| **Tool WPF chrome** (variable grid, dock/anchor/alignment, toggle-button option displays) | SVG in `Gum/Content/Svg/` | `PathGeometry` resources in `Gum/Themes/GumIcons.xaml`, consumed via `<controls:GumIcon Icon="…"/>` | `Fill` follows the control's `Foreground` (theme brush) | this file |
+| **Tool chrome, both heads** (variable grid, dock/anchor/alignment, toggle-button option displays) | SVG in `Gum/Content/Svg/` | `PathGeometry` resources in `Gum/Themes/GumIcons.xaml`, consumed via `<controls:GumIcon Icon="…"/>` in WPF and the `GumIcon` control in `Tool/Gum.Avalonia/Themes/GumIcon.cs`, which reads the same XAML embedded (so the ripper updates both heads) | `Fill` follows the control's `Foreground` (theme brush) | this file |
 | **Tool tree view** (Screens/Components/Behaviors panel, '!' overlay, sizing/origin badges) | PNG in `Gum/Content/Icons/UpdatedTreeViewIcons/` | `TreeIconCatalog` (index to artwork + color key), drawn by `TreeIconRegistry` (WPF) and `AvaloniaTreeIcons` (Avalonia) | White-on-transparent source, multiplicatively tinted from `Frb.Colors.Icon.*` per a key→color map | [gum-tool-tree-view](../gum-tool-tree-view/SKILL.md) |
 | **Forms runtime default visuals** (in-game UI on the user's MonoGame/Skia/etc. surface — not the tool itself) | Sprite sheet (PNG atlas) shipped with `Styling.ActiveStyle` | Sprite coords from `Icons` table, drawn through the runtime sprite system | Style-driven (V2/V3 styling); no DynamicResource concept | [gum-forms-default-visuals](../gum-forms-default-visuals/SKILL.md) |
 
-Don't mix them. A tree-view PNG is not a `GumIcon`. A `GumIcon` `PathGeometry` cannot be drawn into the MonoGame viewport. The Forms sprite sheet has nothing to do with the tool's WPF chrome.
+Don't mix them. A tree-view PNG is not a `GumIcon`. A `GumIcon` `PathGeometry` cannot be drawn into the MonoGame viewport. The Forms sprite sheet has nothing to do with the tool's chrome.
 
-## Pipeline 1 — Tool WPF chrome (`GumIcon`)
+## Pipeline 1 — Tool chrome (`GumIcon`, both heads)
 
-The standard for any icon in the WPF tool **outside the tree view**. Replaces ad-hoc `{wpf:FluentIcon …}` usage from the FluentIcons.Wpf NuGet.
+The standard for any icon in the tool **outside the tree view**, in both heads. Replaces ad-hoc `{wpf:FluentIcon …}` usage from the FluentIcons.Wpf NuGet.
 
-These icons live *inside* WPF displayer controls (e.g. the variable grid's origin/alignment/dock toggles). For how such a displayer gets attached to a variable, see [gum-tool-variable-grid](../gum-tool-variable-grid/SKILL.md).
+These icons live *inside* displayer controls (e.g. the variable grid's origin/alignment/dock toggles). For how such a displayer gets attached to a variable, see [gum-tool-variable-grid](../gum-tool-variable-grid/SKILL.md).
 
 **Components:**
 - `Gum/Content/Svg/*.svg` — authored sources.
@@ -76,7 +76,7 @@ In-game UI icons (Forms controls' check marks, arrows, etc.) come from a sprite 
 
 ## Notable existing third-party usage to be aware of
 
-- `wpf:FluentIcon` (FluentIcons.Wpf NuGet) — still used in `StateAnimationPlugin`, `AnchorControl.xaml`, `DockControl.xaml`, and a few ToggleButtonOptionDisplay templates. Treat as legacy: prefer `GumIcon` for any new chrome icon, and migrate existing ones opportunistically.
+- `wpf:FluentIcon` (FluentIcons.Wpf NuGet, frozen WPF head only; the Avalonia head uses `FluentIcons.Avalonia` for its few Fluent glyphs) — still used in `StateAnimationPlugin`, `AnchorControl.xaml`, `DockControl.xaml`, and a few ToggleButtonOptionDisplay templates. Treat as legacy: prefer `GumIcon` for any new chrome icon, and migrate existing ones opportunistically.
 - `MaterialDesignThemes` `PackIcon` — used for tree-view collapse buttons (sized via `UpdateCollapseButtonSizes`). Distinct from the tree's image-list icons; left as-is for now.
 - `gumcli svg <project> <element>` — exports a Gum **project element** to an SVG file (via SkiaGum's `SKSvgCanvas`). Unrelated to icon authoring; do not confuse with this pipeline.
 

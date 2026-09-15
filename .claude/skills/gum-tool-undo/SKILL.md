@@ -90,12 +90,13 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 |------|---------|
 | `Tools/Gum.Presentation/Undo/UndoManager.cs` | Orchestrator; delegates to `ElementUndoStrategy` (per-element history, `Dictionary<ElementSave, ElementHistory>`) and `BehaviorUndoStrategy` |
 | `Tools/Gum.Presentation/Undo/ElementUndoStrategy.cs` | Element undo/redo track: capture/diff/apply, plus cross-element variable removal attach + replay |
-| `Gum/Undo/UndoPlugin.cs` | Event handlers that call `RecordState()` / `RecordUndo()` |
+| `Tools/Gum.Presentation/Undo/UndoPlugin.cs` | Event handlers that call `RecordState()` / `RecordUndo()` (shared by both heads) |
 | `Tools/Gum.Presentation/Undo/UndoSnapshot.cs` | Snapshot structure and diff/comparison logic (`UndoComparison`) |
 | `Tools/Gum.Presentation/Undo/ElementHistory.cs` | `HistoryAction` (undo/redo snapshot pair + optional `CrossElementVariableRemovals`) and `ElementHistory` |
 | `Tools/Gum.Presentation/Undo/CrossElementVariableChange.cs` | One instance-level variable removal on another element, attached to an action for undo/redo replay |
-| `Gum/Plugins/InternalPlugins/Undos/UndosViewModel.cs` | History tab display and description generation |
-| `Gum/Plugins/InternalPlugins/Undos/UndoDisplay.xaml` | WPF ListBox UI for the History tab |
+| `Tools/Gum.Presentation/Undos/UndosViewModel.cs` | History tab display and description generation (shared) |
+| `Tool/Gum.Avalonia/Panels/InternalPanelViews.cs` (`UndosView`) | Avalonia History tab (the shipped tool) |
+| `Gum/Plugins/InternalPlugins/Undos/UndoDisplay.xaml` | WPF ListBox UI for the History tab (frozen head) |
 | `Gum/Plugins/InternalPlugins/Undos/UndoItemViewModel.cs` | Individual history item (display text + undo/redo direction) |
 | `Tests/Gum.Presentation.Tests/UndoManagerTests.cs` | Unit tests for undo behavior |
 

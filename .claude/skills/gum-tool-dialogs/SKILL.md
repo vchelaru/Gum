@@ -9,6 +9,8 @@ description: Gum dialog/popup systems. Triggers: DialogService, DialogWindow, De
 
 Gum has **two independent dialog systems**. Knowing which one is involved is critical before making changes.
 
+Both heads implement the same `IDialogService` contract (`Tools/Gum.Presentation/Dialogs/`), and every dialog view model lives in `Gum.Presentation`. The WPF mechanics in this section describe the frozen WPF head (`Gum/`); the shipped tool is the Avalonia head, whose equivalents are in the "Avalonia head" section below.
+
 ### 1. DialogService System (MVVM, most dialogs)
 
 Used by: message popups, yes/no confirmations, text input, choice selection, plugin management, import dialogs.
@@ -52,11 +54,15 @@ The WPF `DeleteDialogService` creates the `DeleteOptionsWindow`, fires the WPF e
 | `Gum/Services/Dialogs/DialogWindow.xaml` | MVVM | Window chrome, layout template with ScrollViewer + button footer |
 | `Gum/Services/Dialogs/Dialog.cs` | MVVM | ContentControl with attached properties and template selector |
 | `Gum/Services/Dialogs/DialogViewResolver.cs` | MVVM | Maps view model types to view types; falls back to scanning its own (tool) assembly for a relocated VM's `[Dialog]`-attributed View |
-| `Gum/Services/Dialogs/DialogViewModel.cs` | MVVM | Base class with affirm/negative commands and RequestClose event |
+| `Tools/Gum.Presentation/Dialogs/DialogViewModel.cs` | MVVM | Base class with affirm/negative commands and RequestClose event (shared by both heads) |
 | `Gum/Gui/Windows/DeleteOptionsWindow.xaml` | Standalone | Delete confirmation window layout |
 | `Gum/Gui/Windows/DeleteOptionsWindow.xaml.cs` | Standalone | Code-behind with plugin-accessible StackPanel |
 | `Gum/Services/Dialogs/DeleteDialogService.cs` | Standalone | Creates and shows DeleteOptionsWindow; calls the concrete `PluginManager` |
 | `Tools/Gum.Presentation/Managers/DeleteLogic.cs` | Standalone | Orchestrates the delete flow via `IDeleteDialogService` |
+| `Tool/Gum.Avalonia/Dialogs/AvaloniaDialogService.cs` | MVVM (Avalonia) | The Avalonia head's `IDialogService` |
+| `Tool/Gum.Avalonia/Dialogs/DialogWindow.cs` | MVVM (Avalonia) | Window chrome, OK/Cancel row, `DialogTitle` / `AuxiliaryActions` attached properties |
+| `Tool/Gum.Avalonia/Dialogs/DialogViewRegistry.cs` | MVVM (Avalonia) | Maps each view model type to its C# view factory |
+| `Tool/Gum.Avalonia/Dialogs/AvaloniaDeleteDialogService.cs` | Delete (Avalonia) | Shows `DeleteOptionsDialogViewModel` through `IDialogService` |
 
 ## Avalonia head
 
@@ -82,7 +88,7 @@ click into the dialog. A new menu site must use the same helper; `MenuBuilderTes
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.
 
-**File copy prompt**: The "copy or reference?" dialog shown when a SourceFile/Font path outside the project folder is assigned lives in `SetVariableLogic.AskIfShouldCopy` (`Gum/Plugins/InternalPlugins/VariableGrid/SetVariableLogic.cs`), triggered via `ReactIfChangedMemberIsSourceFile` — not in the drag-drop layer.
+**File copy prompt**: The "copy or reference?" dialog shown when a SourceFile/Font path outside the project folder is assigned lives in `SetVariableLogic.AskIfShouldCopy` (`Tools/Gum.Presentation/Plugins/InternalPlugins/VariableGrid/SetVariableLogic.cs`), triggered via `ReactIfChangedMemberIsSourceFile` — not in the drag-drop layer.
 
 **ScrollViewer behavior**: The `Dialog` template wraps content in a ScrollViewer. With `Auto` scrolling, child controls get infinite available height during WPF measure — so internal scroll viewers (like a TreeView) won't scroll. Set `Dialog.ScrollContent="False"` on views that need bounded height for internal scrolling.
 

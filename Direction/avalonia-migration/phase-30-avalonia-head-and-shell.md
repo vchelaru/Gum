@@ -109,7 +109,7 @@ its first build). Does not need phase 10, but nothing canvas-related is added he
 
 ## Done when
 
-- [ ] `Gum.Avalonia` builds and launches to a window with menus on Windows, macOS, Linux.
-- [ ] Opening a `.gumx` runs the full startup chain; the title shows the project path.
-- [ ] CI matrix green including the headless smoke test.
-- [ ] `CLAUDE.md` updated; `GumFull.sln` still builds the WPF tool identically.
+- [x] `Gum.Avalonia` builds on Windows, macOS, Linux (CI) and launches to a window with menus on Windows and Linux (WSLg, 2026-09-11). **macOS launch: not done.**
+- [x] Opening a `.gumx` runs the full startup chain; the title shows the project path (2026-09-10).
+- [x] CI matrix green including the headless smoke test (PR runs on `main`, 2026-09-14).
+- [x] `CLAUDE.md` updated (2026-09-14: Avalonia is the tool, WPF frozen); `Gum.Wpf.sln` still builds.

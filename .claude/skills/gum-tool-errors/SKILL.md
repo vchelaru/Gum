@@ -68,7 +68,7 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 | `Tools/Gum.Presentation/Plugins/InternalPlugins/Errors/AllErrorsViewModel.cs` | ObservableCollection of errors; `CountDescription` for tab header (headless `Gum.Presentation`, ADR-0005) |
 | `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | `UpdateErrorIndicatorsForElement`; `ExclamationIndex = 6` |
 | `Gum/Messages/RequestErrorRefreshMessage.cs` | Message to force Errors tab refresh |
-| `Tool/Tests/GumToolUnitTests/Managers/ErrorCheckerTests.cs` | Unit tests for ErrorChecker |
+| `Tests/Gum.Presentation.Tests/Managers/ErrorCheckerTests.cs` | Unit tests for ErrorChecker |
 
 ## Element Reload and Errors
 

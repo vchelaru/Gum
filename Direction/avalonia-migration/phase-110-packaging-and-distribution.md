@@ -20,6 +20,13 @@
 > Forms themes), and publishes `gumcli` self-contained per runtime into `GumCli/` beside the head,
 > where `SvgExportCommand` looks for it. Unverified until a release runs the workflow.
 >
+> **Update 2026-09-14:** #4699 made these packages *the* release (`Gum-<rid>.zip` / `.tar.gz`,
+> no `-preview` suffix, no WPF `Gum.zip`; a failed package now fails the release) and added the
+> `GumPreview` runtime host beside the head; #4702 replaced the WINE setup docs with the native
+> per-OS steps. The rewritten workflow has **not run yet**; the next release is its first run, so
+> run it as `test` first. The version-bump step still edits the WPF `AssemblyInfo.cs`; the head
+> takes its version from `-p:Version` (`ToolVersion`), so the bump commit is only a record now.
+>
 > **Open (owner):** Apple Developer ID certificate and notarization secrets; Windows Authenticode;
 > a signing key for the Linux checksums; a macOS `.icns` icon; clean-VM launches on macOS and
 > Linux (never run from this Windows machine).

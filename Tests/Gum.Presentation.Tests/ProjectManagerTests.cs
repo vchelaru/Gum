@@ -41,6 +41,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IGumProjectRepairLogic> _gumProjectRepairLogic;
     private readonly Mock<IFilePickingFolderProvider> _filePickingFolderProvider;
     private readonly Mock<INewProjectLogic> _newProjectLogic;
+    private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -60,6 +61,7 @@ public class ProjectManagerTests : BaseTestClass
         _gumProjectRepairLogic = new Mock<IGumProjectRepairLogic>();
         _filePickingFolderProvider = new Mock<IFilePickingFolderProvider>();
         _newProjectLogic = new Mock<INewProjectLogic>();
+        _fileSystemRevealService = new Mock<IFileSystemRevealService>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -76,7 +78,8 @@ public class ProjectManagerTests : BaseTestClass
             new Lazy<IHotkeyManager>(() => _hotkeyManager.Object),
             _gumProjectRepairLogic.Object,
             _filePickingFolderProvider.Object,
-            new Lazy<INewProjectLogic>(() => _newProjectLogic.Object));
+            new Lazy<INewProjectLogic>(() => _newProjectLogic.Object),
+            _fileSystemRevealService.Object);
     }
 
     [Fact]
@@ -531,6 +534,52 @@ public class ProjectManagerTests : BaseTestClass
             Times.Once);
         shownDialog.Message.ShouldContain(fileName);
         shownDialog.Message.ShouldContain("read-only");
+    }
+
+    [Fact]
+    public void ShowReadOnlyDialog_RevealsFileThroughRevealService_WhenUserPicksOpenFolder()
+    {
+        // The "open folder" choice used to start explorer.exe directly, which throws on macOS
+        // and Linux; it goes through IFileSystemRevealService so each OS gets its own command.
+        string fileName = "/projects/ReadOnly.gumx";
+        ChoiceDialogViewModel shownDialog = new ChoiceDialogViewModel();
+
+        _dialogService
+            .Setup(d => d.Show(It.IsAny<Action<ChoiceDialogViewModel>>(), out It.Ref<ChoiceDialogViewModel>.IsAny))
+            .Callback(new ShowChoiceDialogCallback(
+                (Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
+                {
+                    viewModel = shownDialog;
+                    initializer?.Invoke(shownDialog);
+                    shownDialog.SelectedValue = shownDialog.OptionValues
+                        .Single(option => option.Contains("folder", StringComparison.OrdinalIgnoreCase));
+                }))
+            .Returns(true);
+
+        _projectManager.ShowReadOnlyDialog(fileName);
+
+        _fileSystemRevealService.Verify(r => r.RevealFile(fileName), Times.Once);
+    }
+
+    [Fact]
+    public void ShowReadOnlyDialog_DoesNotRevealFile_WhenUserPicksNothing()
+    {
+        string fileName = "/projects/ReadOnly.gumx";
+        ChoiceDialogViewModel shownDialog = new ChoiceDialogViewModel();
+
+        _dialogService
+            .Setup(d => d.Show(It.IsAny<Action<ChoiceDialogViewModel>>(), out It.Ref<ChoiceDialogViewModel>.IsAny))
+            .Callback(new ShowChoiceDialogCallback(
+                (Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
+                {
+                    viewModel = shownDialog;
+                    initializer?.Invoke(shownDialog);
+                }))
+            .Returns(true);
+
+        _projectManager.ShowReadOnlyDialog(fileName);
+
+        _fileSystemRevealService.Verify(r => r.RevealFile(It.IsAny<string>()), Times.Never);
     }
 
     // ProjectManager exposes no setter for its current project (it is assigned only by

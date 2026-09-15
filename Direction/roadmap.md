@@ -35,8 +35,9 @@ Horizons describe *confidence and proximity*, not fixed dates:
   2026-09-09 by [ADR-0017](decisions/0017-commit-to-avalonia-full-cutover.md). **The Avalonia head
   is now the shipped tool** — it builds via `Gum.slnx`, and the release workflow packages it
   natively for all three OSes (WPF no longer ships). WPF (`Gum.Wpf.sln`, `Gum/`) is frozen: no new
-  work there except an explicit fix on the last WPF release. What's left is phase 120 of the
-  migration plan — retiring WPF/WinForms from the tool graph entirely.
+  work there except an explicit fix on the last WPF release. What's left is the tail of phase 120 of the
+  migration plan — the owner steps its gates asked for (a macOS run, the manual parity checklist,
+  signing) and then retiring WPF/WinForms from the repo entirely.
   - **Plan:** [`avalonia-migration/README.md`](avalonia-migration/README.md) — twelve phases,
     highest risk (the canvas backend) first; everything already landed on `main` except the phase
     120 cutover PR.

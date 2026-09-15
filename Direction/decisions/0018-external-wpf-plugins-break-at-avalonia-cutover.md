@@ -1,6 +1,6 @@
 # 0018. External WPF plugins break at the Avalonia cutover, with notice
 
-- **Status:** Accepted
+- **Status:** Accepted; the notice went into `docs/gum-tool/plugins/README.md` on 2026-09-14, the release-notes announcement is owed by the first Avalonia release (see the `gum-monthly-release` skill)
 - **Date:** 2026-09-10
 - **Deciders:** Jeremy Swartwood (charged by Victor Chelaru with the migration), Claude
 

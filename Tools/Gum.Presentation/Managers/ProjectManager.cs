@@ -19,7 +19,6 @@ using Gum.Wireframe;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -39,6 +38,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IElementCommands> _elementCommands;
     private readonly IDialogService _dialogService;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -135,9 +135,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         Lazy<IHotkeyManager> hotkeyManager,
         IGumProjectRepairLogic gumProjectRepairLogic,
         IFilePickingFolderProvider filePickingFolderProvider,
-        Lazy<INewProjectLogic> newProjectLogic)
+        Lazy<INewProjectLogic> newProjectLogic,
+        IFileSystemRevealService fileSystemRevealService)
     {
         _newProjectLogic = newProjectLogic;
+        _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
         _dialogService = dialogService;
@@ -791,10 +793,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         if (result == "open-folder")
         {
-            // Let's select the file instead of just opening the folder
-            //string folder = FileManager.GetDirectory(fileName);
-            //Process.Start(folder);
-            Process.Start("explorer.exe", "/select," + fileName);
+            // Select the file in the file manager rather than only opening its folder; the
+            // reveal service issues the right command per OS.
+            _fileSystemRevealService.RevealFile(fileName);
         }
     }
 

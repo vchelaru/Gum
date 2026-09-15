@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Test-first discipline for Gum. Triggers: behavior changes (bug fix or feature) under GumCommon/, Gum/, MonoGameGum/, RenderingLibrary/, KniGum/, FnaGum/, SkiaGum/, RaylibGum/, Tools/Gum.ProjectServices/. Skip for docs, renames, csproj/projitems plumbing, style-only edits."
+description: "Test-first discipline for Gum. Triggers: behavior changes (bug fix or feature) under GumCommon/, Gum/, Tools/Gum.Presentation/, Tool/ (the Avalonia head and the plugin cores), DataUi.Core/, AvaloniaDataUi/, MonoGameGum/, RenderingLibrary/, KniGum/, FnaGum/, SkiaGum/, RaylibGum/, Tools/Gum.ProjectServices/. Skip for docs, renames, csproj/projitems plumbing, style-only edits."
 ---
 
 # Behavior changes require a failing test first
@@ -12,7 +12,9 @@ Test projects to look in (pick the one that compiles the source you're editing):
 - `Tests/Gum.ProjectServices.Tests/` — for `Tools/Gum.ProjectServices/`
 - `MonoGameGum.Tests/`, `Tests/MonoGameGum.Tests.V3/` — for `MonoGameGum/`, `GumCommon/`, `RenderingLibrary/`
 - `Tests/SkiaGum.Tests/` — for `SkiaGum/`
-- `Tool/Tests/GumToolUnitTests/` — for `Gum/` tool-side code
+- `Tests/Gum.Presentation.Tests/` — for `Tools/Gum.Presentation/`, `DataUi.Core/`, the plugin cores under `Tool/*.Core/`, and the neutral plugins under `Gum/` (the default for tool logic)
+- `Tests/Gum.Avalonia.Tests/` — for `Tool/Gum.Avalonia/` and `AvaloniaDataUi/` (headless Avalonia)
+- `Tool/Tests/GumToolUnitTests/` — only for the frozen WPF head (`Gum/`, `WpfDataUi/`); new tool logic never lands there
 - `Tests/Gum.Cli.Tests/` — for `Gum.Cli/`
 - `Tests/Gum.Themes.Tests/` — for `Themes/`
 

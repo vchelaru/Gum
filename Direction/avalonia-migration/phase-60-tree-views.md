@@ -94,5 +94,5 @@ Needs phases 30, 40; drop-onto-canvas needs phase 50's reader. Blocks phase 100'
 
 ## Done when
 
-- [ ] Every row of the behavior checklist passes on Windows, macOS, Linux.
-- [ ] No model or manager code changed for the Avalonia view (or the change landed WPF-side first with a test).
+- [ ] Every row of the behavior checklist passes on Windows, macOS, Linux. **Never run by hand** (2026-09-14); Windows selection, search and context menus are exercised by the ParityShots driver, the rest is headless-tested only.
+- [x] No model or manager code changed for the Avalonia view (or the change landed WPF-side first with a test): the model and manager moved to `Tool/TreeViewPlugin.Core` and both heads bind to them.

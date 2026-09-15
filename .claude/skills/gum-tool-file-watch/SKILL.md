@@ -13,7 +13,7 @@ Three cooperating classes handle the full pipeline — all three now live in the
 - **`FileWatchLogic`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchLogic.cs`): Determines *which directories* to watch by scanning all project elements for referenced files. Calls `EnableWithDirectories()` on project load/unload/variable change.
 - **`FileChangeReactionLogic`** (`Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs`): Dispatches a queued file to the correct reload handler based on file extension.
 
-`MainFileWatchPlugin` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs`) is the WPF-hosted plugin entry point — it only owns the platform glue (control/tab/menu-item creation, timer subscription). Its event-reaction logic (project load/unload, variable-set, debug-panel display refresh) is extracted into **`FileWatchPluginController`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs`), also headless.
+`MainFileWatchPlugin` (`Tools/Gum.Presentation/FileWatchPlugin/MainFileWatchPlugin.cs`, shared by both heads) is the plugin entry point — it only owns the glue (control/tab/menu-item creation, timer subscription). Its event-reaction logic (project load/unload, variable-set, debug-panel display refresh) is extracted into **`FileWatchPluginController`** (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs`), also headless.
 
 ## Change Pipeline
 
@@ -98,7 +98,7 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 - Countdown to next flush
 - Currently active ignores with their remaining ignore time
 
-`FileWatchViewModel` (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchViewModel.cs`) is the data-bound VM; `FileWatchControl.xaml` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/`) is the WPF view.
+`FileWatchViewModel` (`Tools/Gum.Presentation/FileWatchPlugin/FileWatchViewModel.cs`) is the data-bound VM; `FileWatchControl.xaml` (`Gum/Plugins/InternalPlugins/FileWatchPlugin/`) is the WPF view and `FileWatchView` (`Tool/Gum.Avalonia/Panels/ToolPanelViews.cs`) the Avalonia one.
 
 ## Non-Obvious Behaviors
 
@@ -122,7 +122,7 @@ The File Watch tab (hidden by default, toggled via **View > Show File Watch**) s
 | `Tools/Gum.Presentation/FileWatchPlugin/FileWatchLogic.cs` | Computes watched directories, enables/disables watcher |
 | `Tools/Gum.Presentation/FileWatchPlugin/FileWatchPluginController.cs` | WPF-free reactions (project/variable events, debug-panel display refresh) extracted from the plugin |
 | `Tools/Gum.Presentation/Managers/FileChangeReactionLogic.cs` | Dispatches flushed files to reload handlers |
-| `Gum/Plugins/InternalPlugins/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point; owns WPF control/tab/menu-item wiring only |
+| `Tools/Gum.Presentation/FileWatchPlugin/MainFileWatchPlugin.cs` | Plugin entry point (shared by both heads); owns tab/menu-item wiring only |
 | `Gum/Services/PeriodicUiTimer.cs` | UI-thread-safe periodic timer used for both flush and display |
 | `Gum/Program.cs` (lines ~144–157) | Creates the 2s flush timer and calls `fileWatchManager.Flush()` |
 | `Tools/Gum.Presentation/Commands/FileCommands.cs` | Calls `IgnoreNextChangeUntil` before saving elements |

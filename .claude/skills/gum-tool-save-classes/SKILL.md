@@ -15,7 +15,7 @@ A project can instead be JSON, which is the AOT-safe format. Every extension is 
 
 **Landmine:** the animation sidecar carries two decisions — the file's extension and the serializer — and they must not be made separately. Read and write it through `ElementAnimationsSave.Load` / `.Save`, which dispatch on the file's own extension, and build the file name with `ElementAnimationsSave.GetFileNameSuffix(bool)`. The tool resolves the sidecar by the project's format while the runtime's `GumAnimationLoader` JSON-parses every `*Animations.ganj` it finds, so XML written to a `.ganj` reads fine in the tool and fails in the game.
 
-`ProjectFormatExtensionGuardTests` (in `GumToolUnitTests/Architecture/`) is a source scan that fails when a new bare-extension or raw-serializer site appears; its baselines list every sanctioned exception.
+`ProjectFormatExtensionGuardTests` (in `Tests/Gum.Presentation.Tests/Architecture/`) is a source scan that fails when a new bare-extension or raw-serializer site appears; its baselines list every sanctioned exception.
 
 Import and copy paths need more than a path fix: the source project's format is independent of the destination's, so a file moving between projects has to be deserialized and re-saved rather than byte-copied.
 

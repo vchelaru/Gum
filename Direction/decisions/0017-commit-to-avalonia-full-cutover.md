@@ -1,6 +1,6 @@
 # 0017. Commit to a full Avalonia cutover for the Gum tool
 
-- **Status:** Accepted
+- **Status:** Accepted; implemented in part (the Avalonia head is the shipped tool since 2026-09-14; the WPF projects are frozen in the repo until the phase-120 deletion PR)
 - **Date:** 2026-09-09
 - **Deciders:** Victor Chelaru, Jeremy Swartwood, Claude
 

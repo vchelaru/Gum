@@ -32,9 +32,10 @@
 > priority and wins. `AvaloniaObject.GetDiagnostic(property).Priority` in a headless test shows
 > which value is in effect.
 >
-> **Open:** AppCenter is an owner decision (it is not in the Avalonia head; the WPF head keeps it
-> until cutover). The theming dialog's view belongs to phase 80. The dark/light pass on macOS and
-> Linux is the owner's step.
+> **AppCenter, decided 2026-09-14: dropped.** The Avalonia head ships no telemetry or crash
+> reporting; the packages leave the repo with the WPF head in the phase-120 deletion PR. The
+> theming dialog's view belongs to phase 80. The dark/light pass on macOS is still the owner's step
+> (Linux was checked under WSLg, light theme).
 
 ## Purpose
 
@@ -128,7 +129,7 @@ brush/theme port early and the chrome late.
 
 ## Done when
 
-- [ ] Light and dark themes switch at runtime with the FRB palette on all three OSes.
-- [ ] All icons render from the generated resource; no `FluentIcons.Wpf`, `SharpVectors`,
-      `PixiEditor`, `ControlzEx`, `MaterialDesignThemes`, or AvalonDock in the Avalonia graph.
-- [ ] AppCenter decision recorded and applied.
+- [x] Light and dark themes switch at runtime with the FRB palette on Windows and Linux; **macOS unchecked.**
+- [x] All icons render from the generated resource; no `FluentIcons.Wpf`, `SharpVectors`,
+      `PixiEditor`, `ControlzEx`, `MaterialDesignThemes`, or AvalonDock in the Avalonia graph (re-swept 2026-09-14).
+- [x] AppCenter decision recorded (dropped, 2026-09-14); applied when the WPF head is deleted.

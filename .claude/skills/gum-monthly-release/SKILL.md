@@ -136,11 +136,13 @@ Work from the **combined bullet list the Step 3 subagents returned**, not the ra
 
 **One bullet = one change, one short sentence — never stitch bullets together to save space.** Each Step 3 subagent already returns one bullet per distinct change. When filing them into a section, keep them as separate list items, and keep each to a single short sentence — no semicolons chaining a second fact, no "this only affects you if..." caveats, no parenthetical PR-number lists like "(#4426, #4436, #4498)" tacked onto a combined sentence. A bullet that names more than one PR, or that runs past one sentence, is a compression failure — split it back into separate bullets, even when the changes are thematically related (a shared intro sentence is fine; the fixes below it still get one bullet each). No em dashes — use a period or comma instead. This is the single most common way a draft goes wrong: it's easy to re-merge Step 3's already-good short bullets into a longer "complete" paragraph while filing them, and that's exactly the failure to avoid.
 
+**The first release after September 2, 2026 is the Avalonia cutover release, and its Breaking Changes section must say so** (ADR-0018 requires the announcement): the tool is now the native Avalonia app for Windows, macOS and Linux, downloaded as `Gum-<rid>.zip`/`.tar.gz` instead of `Gum.zip`, with `Gum.Avalonia.exe` / `Gum.app` / `Gum.Avalonia` as the executable; plugins written against the WPF tool no longer load and must be migrated, see `https://docs.flatredball.com/gum/gum-tool/plugins`; the last WPF release (September 2, 2026) stays downloadable. Also add the migration section to that release's upgrading doc. Once that release is out, delete this paragraph.
+
 Sections, in order:
 
 1. **Breaking Changes** — one short sentence per change, naming what was removed/changed and its replacement (e.g. "X removed, replaced by Y"), plus a "See the upgrade guide for who's affected and how to fix it: <migration-doc-url>" line. Who's affected, why, and how to migrate are the doc's job, not the bullet's — do not restate them inline. Omit the section entirely if the user said no breaking changes this month.
 2. **Biggest Changes** — see Step 5.
-3. **Gum Tool** — anything affecting the Gum WPF tool (paths under `Tool/`, `Gum/`, plugins, tool-side projects).
+3. **Gum Tool** — anything affecting the Gum tool (the Avalonia head under `Tool/Gum.Avalonia`, `Tools/Gum.Presentation`, plugins, tool-side projects; `Gum/` is the frozen WPF head and rarely changes).
 4. **Gum Runtimes** — anything affecting shipped runtime libraries (`MonoGameGum`, `KniGum`, `FnaGum`, `SkiaGum`, `RaylibGum`, `GumCommon`'s runtime-facing pieces).
 5. **Tutorials and Templates** — sample/template/tutorial changes. Often empty — **omit if empty**.
 6. **What's Changed** — the complete, verifiable per-PR list (see Step 7.5). This is the "full diff below the highlights" half of the hybrid format.
