@@ -65,4 +65,18 @@ public class NativeMenuBuilderTests
         Dispatcher.UIThread.RunJobs();
         invoked.ShouldBe(1);
     }
+
+    [AvaloniaFact]
+    public void BuildAppMenu_HasAboutGum_ThatRunsTheAboutAction()
+    {
+        int invoked = 0;
+
+        NativeMenu appMenu = AvaloniaNativeMenuBuilder.BuildAppMenu(() => invoked++);
+
+        NativeMenuItem about = appMenu.Items.ShouldHaveSingleItem().ShouldBeOfType<NativeMenuItem>();
+        about.Header.ShouldBe("About Gum");
+        ((INativeMenuItemExporterEventsImplBridge)about).RaiseClicked();
+        Dispatcher.UIThread.RunJobs();
+        invoked.ShouldBe(1);
+    }
 }

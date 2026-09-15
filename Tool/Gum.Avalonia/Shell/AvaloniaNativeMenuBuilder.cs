@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -20,6 +21,18 @@ public static class AvaloniaNativeMenuBuilder
         NativeMenu menu = new NativeMenu();
         Populate(menu.Items, model.TopLevelItems);
         model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems);
+        return menu;
+    }
+
+    /// <summary>
+    /// Builds the application menu (the one named after the app, left of File) with an About Gum
+    /// item that runs <paramref name="showAbout"/>. Avalonia appends the standard Services, Hide
+    /// and Quit items itself.
+    /// </summary>
+    public static NativeMenu BuildAppMenu(Action showAbout)
+    {
+        NativeMenu menu = new NativeMenu();
+        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout)));
         return menu;
     }
 
