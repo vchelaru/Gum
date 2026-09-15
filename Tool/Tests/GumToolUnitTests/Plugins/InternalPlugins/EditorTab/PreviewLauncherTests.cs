@@ -19,7 +19,7 @@ public class PreviewLauncherTests : IDisposable
 
     public PreviewLauncherTests()
     {
-        // No Preview/ folder and no Samples/GumPreview dev build here, so every test in this class
+        // No Preview/ folder and no Tool/GumPreview dev build here, so every test in this class
         // exercises a validation branch that returns before touching the filesystem or a process.
         _headBaseDirectory = Path.Combine(Path.GetTempPath(), "GumPreviewLauncherTests_" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_headBaseDirectory);

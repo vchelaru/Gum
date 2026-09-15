@@ -7,7 +7,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 /// <summary>
 /// Finds the GumPreview runtime host executable (issue #4697). Checked in priority order: the
 /// published layout ships it in a <c>Preview/</c> folder next to the head executable; a dev build
-/// falls back to the sample's own build output under <c>Samples/GumPreview</c>, found by walking up
+/// falls back to the project's own build output under <c>Tool/GumPreview</c>, found by walking up
 /// from the head's base directory.
 /// </summary>
 public static class PreviewExecutableLocator
@@ -15,13 +15,13 @@ public static class PreviewExecutableLocator
     /// <summary>Folder name the release publish step copies the preview host into, next to the head.</summary>
     public const string PreviewFolderName = "Preview";
 
-    /// <summary>Repo-relative path to the preview host sample project, used for the dev-build fallback.</summary>
-    public const string SampleProjectPath = "Samples/GumPreview/GumPreview";
+    /// <summary>Repo-relative path to the preview host project, used for the dev-build fallback.</summary>
+    public const string DevBuildProjectPath = "Tool/GumPreview";
 
     // Release first: a local dev build should default to real (non-Debug-JIT) performance when both
     // configurations are present, rather than silently always picking up a stale Debug build.
     private static readonly string[] DevBuildConfigurations = { "Release", "Debug" };
-    private static readonly string[] DevBuildTargetFrameworks = { "net8.0" };
+    private static readonly string[] DevBuildTargetFrameworks = { "net10.0" };
 
     /// <summary>
     /// Returns the full path to the preview executable, or null if none of the candidate locations
@@ -48,25 +48,25 @@ public static class PreviewExecutableLocator
         string? repoRoot = FindRepoRoot(headBaseDirectory);
         if (repoRoot != null)
         {
-            string sampleBinRoot = Path.Combine(repoRoot, "Samples", "GumPreview", "GumPreview", "bin");
+            string devBinRoot = Path.Combine(repoRoot, "Tool", "GumPreview", "bin");
             foreach (string configuration in DevBuildConfigurations)
             {
                 foreach (string targetFramework in DevBuildTargetFrameworks)
                 {
-                    yield return Path.Combine(sampleBinRoot, configuration, targetFramework, exeName);
+                    yield return Path.Combine(devBinRoot, configuration, targetFramework, exeName);
                 }
             }
         }
     }
 
     // Walks up from the head's base directory looking for the repo root, identified by the presence
-    // of the GumPreview sample project itself.
+    // of the GumPreview project itself.
     private static string? FindRepoRoot(string startDirectory)
     {
         DirectoryInfo? directory = new DirectoryInfo(startDirectory);
         while (directory != null)
         {
-            if (Directory.Exists(Path.Combine(directory.FullName, "Samples", "GumPreview")))
+            if (Directory.Exists(Path.Combine(directory.FullName, "Tool", "GumPreview")))
             {
                 return directory.FullName;
             }

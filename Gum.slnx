@@ -2,7 +2,7 @@
   <Project Path="Tool/Gum.Avalonia/Gum.Avalonia.csproj" DefaultStartup="true" />
   <Project Path="Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj" />
   <Folder Name="/Preview/">
-    <Project Path="Samples/GumPreview/GumPreview/GumPreview.csproj" />
+    <Project Path="Tool/GumPreview/GumPreview.csproj" />
   </Folder>
   <Folder Name="/Plugins/">
     <Project Path="Tool/EditorTabPlugin.Core/EditorTabPlugin.Core.csproj" />

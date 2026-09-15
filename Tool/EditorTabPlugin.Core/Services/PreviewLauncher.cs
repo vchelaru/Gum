@@ -65,7 +65,7 @@ public class PreviewLauncher : IPreviewLauncher
         if (executablePath == null)
         {
             _outputManager.AddError(
-                $"Preview executable not found. Publish {PreviewExecutableLocator.SampleProjectPath} " +
+                $"Preview executable not found. Publish {PreviewExecutableLocator.DevBuildProjectPath} " +
                 $"into the head's {PreviewExecutableLocator.PreviewFolderName}/ folder, or build it locally for development.");
             return;
         }
