@@ -33,6 +33,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     private readonly IHotkeyManager _hotkeyManager;
     private readonly AvaloniaModifierKeyState _modifierKeyState;
     private readonly IWritableOptions<LayoutSettings> _layoutSettings;
+    private readonly IFileSystemRevealService _fileSystemRevealService;
+    private readonly IClipboardService _clipboardService;
     private readonly TextBlock _statusText;
     private global::Avalonia.Controls.Image _logo = null!;
 
@@ -58,12 +60,16 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         AvaloniaModifierKeyState modifierKeyState,
         IMessenger messenger,
         IWritableOptions<LayoutSettings> layoutSettings,
-        IAppScaleProvider appScaleProvider)
+        IAppScaleProvider appScaleProvider,
+        IFileSystemRevealService fileSystemRevealService,
+        IClipboardService clipboardService)
     {
         _shell = shell;
         _hotkeyManager = hotkeyManager;
         _modifierKeyState = modifierKeyState;
         _layoutSettings = layoutSettings;
+        _fileSystemRevealService = fileSystemRevealService;
+        _clipboardService = clipboardService;
         DataContext = shell;
         messenger.RegisterAll(this);
 
@@ -186,6 +192,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         };
         fileName.Bind(TextBlock.TextProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)) { Converter = FileNameOnly });
         fileName.Bind(ToolTip.TipProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
+        fileName.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(
+            () => ProjectTitleContextMenuBuilder.Build(_shell.Title, _fileSystemRevealService, _clipboardService));
         Grid.SetColumn(fileName, 2);
 
         Grid row = new Grid
