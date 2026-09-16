@@ -58,18 +58,22 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
     // The WPF ToggleDisplayIcon size: 2.333 times the base font, 28px at the default 12.
     private static readonly IValueConverter OptionIconSize = GumChromeStyles.ScaleFontSize(7.0 / 3.0);
 
+    private static Binding OptionIconSizeBinding() => new Binding(nameof(Window.FontSize))
+    {
+        RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
+        Converter = OptionIconSize,
+    };
+
     private static Control SizeAsOptionIcon(Control icon)
     {
-        Binding size = new Binding(nameof(Window.FontSize))
-        {
-            RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor) { AncestorType = typeof(Window) },
-            Converter = OptionIconSize,
-        };
+        Binding size = OptionIconSizeBinding();
         icon.Bind(Layoutable.WidthProperty, size);
         icon.Bind(Layoutable.HeightProperty, size);
         return icon;
     }
 
+    // Gum icon, then Fluent icon (the WPF head's ToggleButtonOptionDisplayOptionContentTemplate), then
+    // the legacy PNG; the first two follow the theme foreground, the PNG does not.
     private static Control? CreateOptionContent(ToggleButtonOption option)
     {
         if (option.GumIconName != null)
@@ -79,6 +83,11 @@ public abstract class GumToggleOptionDisplay : ToggleButtonOptionDisplay
             {
                 return SizeAsOptionIcon(icon);
             }
+        }
+
+        if (option.IconName != null && Enum.TryParse(option.IconName, out FluentIcons.Common.Icon fluentIcon))
+        {
+            return GumFluentIcons.Create(fluentIcon, OptionIconSizeBinding());
         }
 
         if (option.ImagePath != null)

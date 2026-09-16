@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -89,6 +90,24 @@ public class VariablesTabTests
             GumIcon.Create(option.GumIconName!).ShouldNotBeNull(option.GumIconName);
         }
         GumIcon.Create("NoSuchIcon").ShouldBeNull();
+    }
+
+    // The text alignment options carry Fluent icon names (and legacy black PNG paths); the buttons
+    // must draw the themed Fluent glyph, never the untinted PNG (#4805).
+    [AvaloniaTheory]
+    [InlineData(typeof(TextHorizontalAlignmentDisplay))]
+    [InlineData(typeof(TextVerticalAlignmentDisplay))]
+    public void TextAlignmentDisplays_DrawThemedFluentIcons(Type displayType)
+    {
+        GumEditorFixture fixture = new GumEditorFixture();
+        ToggleButtonOptionDisplay display = (ToggleButtonOptionDisplay)Activator.CreateInstance(displayType)!;
+        display.InstanceMember = fixture.Member(nameof(GumEditorFixture.Alignment));
+
+        display.Buttons.Count.ShouldBe(3);
+        foreach (ToggleButton button in display.Buttons)
+        {
+            button.Content.ShouldBeOfType<FluentIcons.Avalonia.FluentIcon>();
+        }
     }
 
     [AvaloniaFact]
