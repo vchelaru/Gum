@@ -161,11 +161,15 @@ jobs:
               cp Tool/Gum.Avalonia/Packaging/macOS/Gum.icns "$app/Contents/Resources/"
               chmod +x "$app/Contents/MacOS/Gum.Avalonia"
               codesign --force --deep --sign - "$app"
-              tar -czf "dist/Gum-$rid.tar.gz" -C publish/app Gum.app
+              # xz over gzip (#4753): measured ~28-31% smaller than gzip on a representative
+              # self-contained publish, for ~5s more CI time than gzip (plain default xz level,
+              # not -9e - that only shaved another ~2.5% for 10x the time). macOS Archive Utility
+              # opens .tar.xz natively; Linux's tar/xz-utils are standard on any desktop distro.
+              tar -cJf "dist/Gum-$rid.tar.xz" -C publish/app Gum.app
               ;;
             linux-*)
               chmod +x "$out/Gum.Avalonia"
-              tar -czf "dist/Gum-$rid.tar.gz" -C "$out" .
+              tar -cJf "dist/Gum-$rid.tar.xz" -C "$out" .
               ;;
           esac
           (cd dist && shasum -a 256 Gum-$rid.* > "Gum-$rid.sha256")

@@ -27,6 +27,14 @@
 > run it as `test` first. The version-bump step still edits the WPF `AssemblyInfo.cs`; the head
 > takes its version from `-p:Version` (`ToolVersion`), so the bump commit is only a record now.
 >
+> **Update 2026-09-15:** #4753 measured gzip vs. xz vs. zstd -19 on a representative self-contained
+> publish (osx-arm64/linux-x64) and switched the macOS/Linux packages from `.tar.gz` to `.tar.xz`
+> (plain `tar -cJf`, default xz level): ~28-31% smaller than gzip for only a few extra seconds of
+> CI time. `xz -9e` shaved another ~2.5% off that for ~10x the compression time, not worth it;
+> `zstd -19` landed at ~21-23% smaller than gzip, meaningfully behind xz. macOS Archive Utility
+> opens `.tar.xz` natively; Linux's `tar`/`xz-utils` are standard on any desktop distro. A DMG
+> wasn't needed since the plain compression swap alone hit the bar.
+>
 > **Open (owner):** Apple Developer ID certificate and notarization secrets; Windows Authenticode;
 > a signing key for the Linux checksums; a macOS `.icns` icon; clean-VM launches on macOS and
 > Linux (never run from this Windows machine).

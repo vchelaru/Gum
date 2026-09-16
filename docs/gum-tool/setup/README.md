@@ -16,9 +16,9 @@ Each release lists these files:
 | File | For |
 |---|---|
 | `Gum-win-x64.zip` | Windows (64-bit) |
-| `Gum-osx-arm64.tar.gz` | macOS on Apple Silicon (M1 and later) |
-| `Gum-osx-x64.tar.gz` | macOS on Intel |
-| `Gum-linux-x64.tar.gz` | Linux (64-bit) |
+| `Gum-osx-arm64.tar.xz` | macOS on Apple Silicon (M1 and later) |
+| `Gum-osx-x64.tar.xz` | macOS on Intel |
+| `Gum-linux-x64.tar.xz` | Linux (64-bit) |
 
 Each download includes everything it needs, so you do not need to install .NET first. A matching `.sha256` file lists the checksum of each download.
 
@@ -31,7 +31,7 @@ Gum is not signed, so Windows shows the "Windows protected your PC" popup the fi
 {% endtab %}
 
 {% tab title="macOS" %}
-1. Double-click the `.tar.gz` file for your Mac to extract `Gum.app`.
+1. Double-click the `.tar.xz` file for your Mac to extract `Gum.app`.
 2. Move `Gum.app` into your **Applications** folder.
 3. Open a terminal and allow the app to run. Gum is not notarized by Apple, so macOS blocks it until you do this once:
 
@@ -45,7 +45,7 @@ Gum is not signed, so Windows shows the "Windows protected your PC" popup the fi
 1. Extract the download into a folder of your choice:
 
     ```sh
-    mkdir -p ~/gum && tar -xzf Gum-linux-x64.tar.gz -C ~/gum
+    mkdir -p ~/gum && tar -xJf Gum-linux-x64.tar.xz -C ~/gum
     ```
 2. Run Gum:
 

@@ -141,7 +141,9 @@ risk is the chance the phase changes the plan.
   Windows and Linux (real head under WSLg, Xvfb CI leg). macOS is unverified; if a Mac run fails,
   the fallback (SkiaGum canvas, bitmap-font fidelity task) is still the plan.
 - **Artifact formats per OS** (phase 110): **decided.** Windows `.zip`, macOS `Gum.app` in a
-  `.tar.gz`, Linux `.tar.gz`, each with a `.sha256`.
+  `.tar.xz`, Linux `.tar.xz`, each with a `.sha256`. (Switched from `.tar.gz` to `.tar.xz` per
+  #4753: xz measured ~28-31% smaller on a representative self-contained publish, for a few
+  seconds more CI time.)
 - **Telemetry/crash reporting replacement** (phase 90): **settled 2026-09-14: dropped.** The
   Avalonia head ships no telemetry or crash reporting; the `Microsoft.AppCenter` packages leave
   the repo with the WPF head. A future crash reporter is a separate roadmap item.
