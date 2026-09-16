@@ -98,6 +98,20 @@ public class VariableInCategoryPropagationLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void PropagateVariablesInCategory_NullElement_DoesNotThrow()
+    {
+        StateSaveCategory category = new() { Name = "MyCategory" };
+        StateSave state = new() { Name = "First" };
+        state.Variables.Add(new VariableSave { Name = "X", Type = "float", Value = 1.0f });
+        category.States.Add(state);
+
+        Should.NotThrow(() =>
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory("X", null, category));
+
+        state.GetVariableSave("X")!.Value.ShouldBe(1.0f);
+    }
+
+    [Fact]
     public void PropagateVariablesInCategory_ShouldAssignValue_IfDefaultStateHasVariableWithNull()
     {
         var element = new ComponentSave()

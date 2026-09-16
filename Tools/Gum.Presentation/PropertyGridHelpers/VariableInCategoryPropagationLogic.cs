@@ -33,7 +33,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         _pluginManager = pluginManager;
     }
 
-    public void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate)
+    public void PropagateVariablesInCategory(string memberName, ElementSave? element, StateSaveCategory? categoryToPropagate)
     {
         /////////////////////Early Out//////////////////////////
         if (categoryToPropagate == null)
@@ -45,8 +45,15 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         PropagateVariablesInCategory(memberName, element, categoryToPropagate.States);
     }
 
-    public void PropagateVariablesInCategory(string memberName, ElementSave element, List<StateSave> states)
-    { 
+    public void PropagateVariablesInCategory(string memberName, ElementSave? element, List<StateSave> states)
+    {
+        /////////////////////Early Out//////////////////////////
+        if (element == null)
+        {
+            return;
+        }
+        ///////////////////End Early Out////////////////////////
+
         var defaultState = element.DefaultState;
         var defaultVariable = defaultState.GetVariableSave(memberName);
         if (defaultVariable == null)

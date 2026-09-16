@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
@@ -86,6 +86,25 @@ public class StateTreeControllerTests
         rightClickService.Verify(x => x.PopulateContextMenu(), Times.Once);
         propagationLogic.Verify(x => x.PropagateVariablesInCategory("X", element, category), Times.Once);
         propagationLogic.Verify(x => x.PropagateVariablesInCategory("Y", element, category), Times.Once);
+    }
+
+    [Fact]
+    public void HandleStateSelected_CategoryButNoElement_DoesNotPropagateVariables()
+    {
+        var (controller, _, selectedState, propagationLogic) = CreateSut();
+        StateSaveCategory category = new() { Name = "Category" };
+        StateSave state = new() { Name = "State" };
+        state.Variables.Add(new VariableSave { Name = "X" });
+        category.States.Add(state);
+        selectedState.SetupGet(s => s.SelectedElement).Returns((ElementSave?)null);
+        selectedState.SetupGet(s => s.SelectedStateCategorySave).Returns(category);
+        selectedState.SetupGet(s => s.SelectedStateSave).Returns(state);
+
+        controller.HandleStateSelected(state);
+
+        propagationLogic.Verify(
+            x => x.PropagateVariablesInCategory(It.IsAny<string>(), It.IsAny<ElementSave>(), It.IsAny<StateSaveCategory>()),
+            Times.Never);
     }
 
     [Fact]
