@@ -1,15 +1,15 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Services;
 using Gum.Services.Dialogs;
 
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 
 /// <summary>
-/// Orchestrates exporting an element to SVG: prompts for an output path and shells out to
-/// the gumcli tool. Called by <see cref="MainSvgExportPlugin"/>.
+/// Orchestrates exporting an element to SVG: prompts for an output path and runs gumcli's SVG
+/// export logic in-process. Called by <see cref="MainSvgExportPlugin"/>.
 /// </summary>
 internal interface ISvgExportCommand
 {
@@ -58,91 +58,43 @@ internal class SvgExportCommand : ISvgExportCommand
     }
 
     /// <summary>
-    /// Builds the gumcli argument string for an SVG export, quoting each value so paths
-    /// and element names containing spaces are passed as single arguments.
-    /// </summary>
-    internal string BuildSvgExportArguments(string projectPath, string elementName, string outputPath)
-    {
-        return $"svg \"{projectPath}\" \"{elementName}\" --output \"{outputPath}\"";
-    }
-
-    /// <summary>
-    /// Locates the bundled gumcli, expected in a GumCli subfolder next to the tool: the native
-    /// executable (<c>gumcli.exe</c> on Windows, <c>gumcli</c> elsewhere), else <c>gumcli.dll</c>
-    /// to run through <c>dotnet</c>. Returns null if none exists. Virtual so tests can supply a
-    /// deterministic result.
+    /// Locates the bundled gumcli's managed assembly, expected at <c>GumCli/gumcli.dll</c> next to
+    /// the tool (published framework-dependent - see build-and-release.yml). Returns null if it
+    /// does not exist. Virtual so tests can supply a deterministic result.
     /// </summary>
     protected virtual string? FindGumCliPath()
     {
-        string cliFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GumCli");
-        string executableName = OperatingSystem.IsWindows() ? "gumcli.exe" : "gumcli";
-
-        foreach (string candidate in new[] { executableName, "gumcli.dll" })
-        {
-            string cliPath = Path.Combine(cliFolder, candidate);
-            if (File.Exists(cliPath))
-            {
-                return cliPath;
-            }
-        }
-
-        return null;
+        string cliPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GumCli", "gumcli.dll");
+        return File.Exists(cliPath) ? cliPath : null;
     }
 
     /// <summary>
-    /// The process to start for <paramref name="gumCliPath"/>: the file itself when it is an
-    /// executable, or <c>dotnet</c> with the assembly prepended when it is a <c>.dll</c>.
-    /// </summary>
-    internal static (string fileName, string arguments) BuildProcessInvocation(string gumCliPath, string arguments)
-    {
-        if (gumCliPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-        {
-            return ("dotnet", $"\"{gumCliPath}\" {arguments}");
-        }
-
-        return (gumCliPath, arguments);
-    }
-
-    /// <summary>
-    /// Runs gumcli to perform the SVG export and prints its output. Virtual so tests can
-    /// observe the invocation without spawning a real process.
+    /// Runs gumcli's SVG export in-process and prints the result. Loads <paramref name="gumCliPath"/>
+    /// into an isolated <see cref="IsolatedPluginHost"/> rather than spawning gumcli as a subprocess
+    /// (issue #4723) - this avoids shipping a second self-contained .NET runtime purely to run SVG
+    /// export, while keeping gumcli's static state (ObjectFinder.Self, RenderingLibrary.SystemManagers)
+    /// isolated from the tool's own. Virtual so tests can observe the invocation without loading a
+    /// real gumcli.dll.
     /// </summary>
     protected virtual void RunGumCliSvgExport(
         string gumCliPath, string projectPath, string elementName, string outputPath)
     {
         try
         {
-            (string fileName, string arguments) = BuildProcessInvocation(
-                gumCliPath, BuildSvgExportArguments(projectPath, elementName, outputPath));
-            ProcessStartInfo startInfo = new()
-            {
-                FileName = fileName,
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
+            using IsolatedPluginHost host = new(gumCliPath);
+            object? error = host.InvokeStaticMethod(
+                gumCliPath,
+                "Gum.Cli.Commands.SvgCommand",
+                "ExportSvgInProcess",
+                new object?[] { projectPath, elementName, outputPath });
 
-            using Process? process = Process.Start(startInfo);
-            if (process == null)
+            if (error is string errorMessage)
             {
-                _guiCommands.PrintOutput("Failed to start gumcli process.");
-                return;
-            }
-
-            string standardOutput = process.StandardOutput.ReadToEnd();
-            string standardError = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-
-            if (process.ExitCode == 0)
-            {
-                _guiCommands.PrintOutput(standardOutput.TrimEnd());
+                _guiCommands.PrintOutput($"SVG export failed: {errorMessage}");
             }
             else
             {
-                _guiCommands.PrintOutput(
-                    $"SVG export failed (exit code {process.ExitCode}): {standardError.TrimEnd()}");
+                _guiCommands.PrintOutput($"SVG written to: {outputPath}");
             }
         }
         catch (Exception e)

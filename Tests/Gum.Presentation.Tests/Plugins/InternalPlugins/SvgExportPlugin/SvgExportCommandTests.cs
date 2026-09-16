@@ -20,20 +20,6 @@ public class SvgExportCommandTests : BaseTestClass
     }
 
     [Fact]
-    public void BuildSvgExportArguments_quotes_all_arguments()
-    {
-        SvgExportCommand command = new(_dialogService.Object, _guiCommands.Object);
-
-        string arguments = command.BuildSvgExportArguments(
-            "c:/my projects/Game.gumx",
-            "Main Screen",
-            "c:/out dir/Main Screen.svg");
-
-        arguments.ShouldBe(
-            "svg \"c:/my projects/Game.gumx\" \"Main Screen\" --output \"c:/out dir/Main Screen.svg\"");
-    }
-
-    [Fact]
     public void ExportElementToSvg_does_not_run_gumcli_when_save_cancelled()
     {
         _dialogService
@@ -42,7 +28,7 @@ public class SvgExportCommandTests : BaseTestClass
 
         TestableSvgExportCommand command = new(_dialogService.Object, _guiCommands.Object)
         {
-            GumCliPathToReturn = "c:/gum/GumCli/gumcli.exe",
+            GumCliPathToReturn = "c:/gum/GumCli/gumcli.dll",
         };
 
         command.ExportElementToSvg(new ScreenSave { Name = "MyScreen" }, new GumProjectSave());
@@ -95,7 +81,7 @@ public class SvgExportCommandTests : BaseTestClass
 
         TestableSvgExportCommand command = new(_dialogService.Object, _guiCommands.Object)
         {
-            GumCliPathToReturn = "c:/gum/GumCli/gumcli.exe",
+            GumCliPathToReturn = "c:/gum/GumCli/gumcli.dll",
         };
 
         command.ExportElementToSvg(
@@ -103,7 +89,7 @@ public class SvgExportCommandTests : BaseTestClass
             new GumProjectSave { FullFileName = "c:/proj/Game.gumx" });
 
         command.RunCount.ShouldBe(1);
-        command.LastGumCliPath.ShouldBe("c:/gum/GumCli/gumcli.exe");
+        command.LastGumCliPath.ShouldBe("c:/gum/GumCli/gumcli.dll");
         command.LastProjectPath.ShouldBe("c:/proj/Game.gumx");
         command.LastElementName.ShouldBe("MyScreen");
         command.LastOutputPath.ShouldBe("c:/out/MyScreen.svg");
