@@ -520,7 +520,10 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 PushActivity(cursor);
 
                 DragActivity(cursor);
+            }
 
+            if (mVisible)
+            {
                 ClickActivity(cursor);
             }
         }
@@ -586,7 +589,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         private void ClickActivity(Cursor cursor)
         {
-            if (cursor.PrimaryClick)
+            // PrimaryClick is a one-frame edge that needs the cursor on the canvas, so a release
+            // during a camera pan (the canvas skips this selector while panning) or off the canvas
+            // is never seen as a click. A grabbed side with the button up is that lost release.
+            bool wasReleasedUnseen = mSideGrabbed != ResizeSide.None && !cursor.PrimaryDownIgnoringIsInWindow;
+
+            if (cursor.PrimaryClick || wasReleasedUnseen)
             {
                 var sideGrabbedBeforeRelease = mSideGrabbed;
                 mSideGrabbed = ResizeSide.None;

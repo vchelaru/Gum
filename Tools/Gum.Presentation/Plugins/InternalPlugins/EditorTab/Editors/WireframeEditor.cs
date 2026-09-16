@@ -171,8 +171,13 @@ public abstract class WireframeEditor
             var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
             activeHandler?.HandleDrag();
         }
-        else if (cursor.PrimaryClick)
+        else if (cursor.PrimaryClick || !cursor.PrimaryDownIgnoringIsInWindow)
         {
+            // PrimaryClick is a one-frame edge that needs the cursor on the canvas, so a release
+            // during a camera pan (the canvas skips selection activity while panning) or off the
+            // canvas is never seen as a click. An active handler with the button up is that lost
+            // release; without this it stays active, suppressing marquee selection and dragging
+            // again on the next unrelated left-drag.
             var activeHandler = _inputHandlers.FirstOrDefault(h => h.IsActive);
             activeHandler?.HandleRelease();
         }
