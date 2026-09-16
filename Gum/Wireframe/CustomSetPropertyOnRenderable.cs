@@ -2335,14 +2335,14 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
 #if FRB
     // FRB doesn't yet have a TextRuntime, so we have to do this:
-    private static BitmapFont GetOrCreateBakedFont(GraphicalUiElement textRuntime,
+    private static BitmapFont? GetOrCreateBakedFont(GraphicalUiElement textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
 #else
-    private static BitmapFont GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
+    private static BitmapFont? GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
 #endif
     {
-        BitmapFont font = null;
+        BitmapFont? font = null;
 
         string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
 
@@ -2674,7 +2674,7 @@ public partial class CustomSetPropertyOnRenderable
         textRuntime.ResetAutomaticOversamplingState();
 #endif
 
-        BitmapFont font = null;
+        BitmapFont? font = null;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         var contentLoader = loaderManager.ContentLoader;
