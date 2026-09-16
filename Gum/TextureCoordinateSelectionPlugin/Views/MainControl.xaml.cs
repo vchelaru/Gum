@@ -24,12 +24,15 @@ namespace TextureCoordinateSelectionPlugin.Views
         {
             InitializeComponent();
 
-            // we are going to do our own handling of events
-            InnerControl.Core.DisableHotkeyPanning();
             VerticalScrollBar = new WpfCameraScrollBar(VerticalScrollBarElement);
             HorizontalScrollBar = new WpfCameraScrollBar(HorizontalScrollBarElement);
             InnerControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
             InnerControl.KeyDown += HandleInnerKeyDown;
+            InnerControl.KeyUp += (_, e) => KeyUp?.Invoke(e.ToGumKeyEventArgs());
+            InnerControl.MouseDown += (_, e) => MouseDown?.Invoke(e.ToGumMouseEventArgs(InnerControl));
+            InnerControl.MouseMove += (_, e) => MouseMove?.Invoke(e.ToGumMouseEventArgs(InnerControl));
+            InnerControl.MouseUp += (_, e) => MouseUp?.Invoke(e.ToGumMouseEventArgs(InnerControl));
+            InnerControl.MouseWheel += HandleInnerMouseWheel;
         }
 
         /// <inheritdoc/>
@@ -51,6 +54,21 @@ namespace TextureCoordinateSelectionPlugin.Views
         public new event Action<GumKeyEventArgs>? KeyDown;
 
         /// <inheritdoc/>
+        public new event Action<GumKeyEventArgs>? KeyUp;
+
+        /// <inheritdoc/>
+        public new event Action<GumMouseEventArgs>? MouseDown;
+
+        /// <inheritdoc/>
+        public new event Action<GumMouseEventArgs>? MouseMove;
+
+        /// <inheritdoc/>
+        public new event Action<GumMouseEventArgs>? MouseUp;
+
+        /// <inheritdoc/>
+        public new event Action<GumMouseEventArgs>? MouseWheel;
+
+        /// <inheritdoc/>
         public void InvokeWhenLoaded(Action action) => Dispatcher.BeginInvoke(action, DispatcherPriority.Loaded);
 
         private void HandleInnerKeyDown(object? sender, KeyEventArgs e)
@@ -58,6 +76,14 @@ namespace TextureCoordinateSelectionPlugin.Views
             GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
             KeyDown?.Invoke(keyArgs);
             e.Handled = keyArgs.Handled;
+        }
+
+        private void HandleInnerMouseWheel(object? sender, MouseWheelEventArgs e)
+        {
+            GumMouseEventArgs mouseArgs = e.ToGumMouseEventArgs(InnerControl);
+            MouseWheel?.Invoke(mouseArgs);
+            // Stop a containing scroll viewer from also scrolling on the same wheel tick.
+            e.Handled = mouseArgs.Handled;
         }
 
         private void HandleMinusClicked(object? sender, RoutedEventArgs e)

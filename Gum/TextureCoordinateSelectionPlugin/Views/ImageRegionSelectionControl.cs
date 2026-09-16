@@ -6,7 +6,8 @@ namespace FlatRedBall.SpecializedXnaControls;
 
 /// <summary>
 /// The WPF texture-coordinate canvas: a <see cref="WpfGraphicsDeviceControl"/> that hosts an
-/// <see cref="ImageRegionSelectionCore"/> and translates its WPF wheel and double-click input.
+/// <see cref="ImageRegionSelectionCore"/> and translates its double-click input. The owning
+/// <c>MainControl</c> forwards its mouse and key events.
 /// </summary>
 public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
 {
@@ -16,14 +17,6 @@ public class ImageRegionSelectionControl : WpfGraphicsDeviceControl
     public ImageRegionSelectionControl()
     {
         Core = new ImageRegionSelectionCore(this);
-        MouseWheel += (_, e) =>
-        {
-            if (Core.HandleMouseWheel(e.Delta))
-            {
-                // Stop a containing scroll viewer from also scrolling on the same wheel tick.
-                e.Handled = true;
-            }
-        };
     }
 
     /// <inheritdoc/>

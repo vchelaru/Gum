@@ -46,6 +46,20 @@ public class CameraControllerTests
     }
 
     [Fact]
+    public void Initialize_LeavesTheCameraPositionAlone()
+    {
+        // The controller is shared by the wireframe canvas and the texture-coordinate canvas, which
+        // start their cameras at different positions, so the starting offset is the caller's call.
+        Camera camera = new Camera { ClientWidth = 800, ClientHeight = 600, X = 5, Y = 7 };
+        CameraController controller = new CameraController();
+
+        controller.Initialize(camera, new Mock<IZoomController>().Object, CreateHotkeyManagerMock().Object);
+
+        camera.X.ShouldBe(5);
+        camera.Y.ShouldBe(7);
+    }
+
+    [Fact]
     public void HandleKeyPress_MoveCameraLeft_MovesCameraByStepDividedByZoomAndRaisesCameraChanged()
     {
         var (controller, camera, hotkeyManager, _) = CreateSut();
@@ -146,6 +160,20 @@ public class CameraControllerTests
         camera.X.ShouldBe(xAfterFirstDrag - (510 - 500) / 2f);
         camera.Y.ShouldBe(yAfterFirstDrag - (495 - 500) / 2f);
         raised.ShouldBe(1);
+    }
+
+    [Fact]
+    public void HandleMouseMove_WithNoButtonHeld_WhilePanning_EndsThePan()
+    {
+        // A release outside the canvas never reaches HandleMouseUp on a head without mouse capture
+        // (WPF), so a later move with nothing held is the only signal the drag is over.
+        var (controller, _, _, _) = CreateSut();
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Middle });
+        controller.IsPanning.ShouldBeTrue();
+
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 120, Y = 120, Button = GumMouseButton.None });
+
+        controller.IsPanning.ShouldBeFalse();
     }
 
     [Fact]

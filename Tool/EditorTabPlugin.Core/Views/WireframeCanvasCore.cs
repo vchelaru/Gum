@@ -269,6 +269,9 @@ public sealed class WireframeCanvasCore
             }
 
             _cameraController.Initialize(Camera, editorViewModel, hotkeyManager);
+            // Start with a small margin so the canvas bounds' top-left edge is visible.
+            Camera.X = -30;
+            Camera.Y = -30;
             _cameraController.CameraChanged += () => CameraChanged?.Invoke();
 
             InputLibrary.Cursor.Self.Initialize(_host.InputHost);

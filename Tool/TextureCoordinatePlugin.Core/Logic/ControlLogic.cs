@@ -7,6 +7,7 @@ using Gum.Dialogs;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -51,6 +52,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private readonly ITabManager _tabManager;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly CameraScrollBarBinder _scrollBarLogic;
+    private readonly CameraController _cameraController;
     private readonly BackgroundManager _backgroundManager;
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
@@ -103,6 +105,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _tabManager = tabManager;
         _hotkeyManager = hotkeyManager;
         _scrollBarLogic = scrollBarLogic;
+        _cameraController = new CameraController();
 
         _backgroundManager = new BackgroundManager(messenger, themingService);
         _lineGridManager = new LineGridManager();
@@ -137,6 +140,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
         _view.KeyDown += HandleKeyDown;
+        _view.KeyUp += HandleKeyUp;
+        _view.MouseDown += HandleMouseDown;
+        _view.MouseMove += HandleMouseMove;
+        _view.MouseUp += HandleMouseUp;
+        _view.MouseWheel += _cameraController.HandleMouseWheel;
 
         //_guiCommands.AddWinformsControl(control, "Texture Coordinates", TabLocation.Right);
 
@@ -154,6 +162,9 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         RefreshLineGrid();
 
+        _cameraController.Initialize(SystemManagers.Renderer.Camera, new CanvasZoomController(innerControl), _hotkeyManager);
+        _cameraController.CameraChanged += HandleCameraChanged;
+
         InitializeScrollBarLogic();
 
         return pluginTab;
@@ -167,18 +178,42 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             UpdateScrollBarsToTexture();
         };
-
-        _view.Canvas.MouseWheelZoom += (_, _) =>
-        {
-            UpdateScrollBarsToTexture();
-            ZoomLevelChanged?.Invoke(_view.Canvas.ZoomValue);
-        };
-
-        _view.Canvas.Panning += () =>
-        {
-            UpdateScrollBarsToTexture();
-        };
     }
+
+    private void HandleCameraChanged()
+    {
+        _view.Canvas.ClampCameraToTexture();
+        UpdateScrollBarsToTexture();
+        ZoomLevelChanged?.Invoke(_view.Canvas.ZoomValue);
+    }
+
+    private void HandleMouseDown(GumMouseEventArgs e)
+    {
+        _cameraController.HandleMouseDown(e);
+        SyncCameraPanning();
+    }
+
+    private void HandleMouseMove(GumMouseEventArgs e)
+    {
+        _cameraController.HandleMouseMove(e);
+        SyncCameraPanning();
+    }
+
+    private void HandleMouseUp(GumMouseEventArgs e)
+    {
+        _cameraController.HandleMouseUp(e);
+        SyncCameraPanning();
+    }
+
+    private void HandleKeyUp(GumKeyEventArgs e)
+    {
+        _cameraController.HandleKeyUp(e);
+        SyncCameraPanning();
+    }
+
+    // The canvas polls its own cursor each frame for the region handles, so it has to be told when
+    // a drag belongs to the camera instead.
+    private void SyncCameraPanning() => _view.Canvas.IsCameraPanning = _cameraController.IsPanning;
 
     internal void HandleKeyDown(GumKeyEventArgs keyArgs) =>
         HandleKeyDown(keyArgs, handled => keyArgs.Handled = handled);
@@ -202,34 +237,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
             setHandled(true);
         }
 
-        var camera = _view.Canvas.SystemManagers.Renderer.Camera;
-        if (_hotkeyManager.MoveCameraRight.IsPressed(keyArgs))
-        {
-            camera.X += 10;
-        }
-        if (_hotkeyManager.MoveCameraLeft.IsPressed(keyArgs))
-        {
-            camera.X -= 10;
-        }
-        if (_hotkeyManager.MoveCameraUp.IsPressed(keyArgs))
-        {
-            camera.Y -= 10;
-        }
-        if (_hotkeyManager.MoveCameraDown.IsPressed(keyArgs))
-        {
-            camera.Y += 10;
-        }
-        if (_hotkeyManager.ZoomCameraIn.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraInAlternative.IsPressed(keyArgs))
-        {
-            _view.Canvas.HandleZoom(ZoomDirection.ZoomIn, considerCursor: false);
-        }
-        if (_hotkeyManager.ZoomCameraOut.IsPressed(keyArgs) || _hotkeyManager.ZoomCameraOutAlternative.IsPressed(keyArgs))
-        {
-            _view.Canvas.HandleZoom(ZoomDirection.ZoomOut, considerCursor: false);
-        }
-
-        UpdateScrollBarsToTexture();
-
+        _cameraController.HandleKeyPress(keyArgs);
     }
 
     /// <summary>

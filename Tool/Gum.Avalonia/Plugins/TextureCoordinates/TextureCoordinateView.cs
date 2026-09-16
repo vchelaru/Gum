@@ -31,10 +31,16 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     public TextureCoordinateView()
     {
         _canvasControl = new ImageRegionCanvasControl();
-        // we are going to do our own handling of events
-        _canvasControl.Core.DisableHotkeyPanning();
         _canvasControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
         _canvasControl.AddHandler(KeyDownEvent, HandleCanvasKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        _canvasControl.AddHandler(KeyUpEvent, HandleCanvasKeyUp, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
+        _canvasControl.PointerPressed += (_, e) =>
+            MouseDown?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
+        _canvasControl.PointerMoved += (_, e) =>
+            MouseMove?.Invoke(e.ToGumMouseEventArgs(_canvasControl, PointerUpdateKind.Other));
+        _canvasControl.PointerReleased += (_, e) =>
+            MouseUp?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
+        _canvasControl.PointerWheelChanged += HandleCanvasPointerWheelChanged;
 
         ScrollBar vertical = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
         ScrollBar horizontal = new ScrollBar { Orientation = Orientation.Horizontal, AllowAutoHide = false };
@@ -115,6 +121,21 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     public new event Action<GumKeyEventArgs>? KeyDown;
 
     /// <inheritdoc/>
+    public new event Action<GumKeyEventArgs>? KeyUp;
+
+    /// <inheritdoc/>
+    public event Action<GumMouseEventArgs>? MouseDown;
+
+    /// <inheritdoc/>
+    public event Action<GumMouseEventArgs>? MouseMove;
+
+    /// <inheritdoc/>
+    public event Action<GumMouseEventArgs>? MouseUp;
+
+    /// <inheritdoc/>
+    public event Action<GumMouseEventArgs>? MouseWheel;
+
+    /// <inheritdoc/>
     public void InvokeWhenLoaded(Action action) => Dispatcher.UIThread.Post(action, DispatcherPriority.Loaded);
 
     /// <inheritdoc/>
@@ -136,6 +157,17 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         e.Handled = keyArgs.Handled;
     }
 
+    private void HandleCanvasKeyUp(object? sender, KeyEventArgs e) => KeyUp?.Invoke(e.ToGumKeyEventArgs());
+
+    private void HandleCanvasPointerWheelChanged(object? sender, PointerWheelEventArgs e)
+    {
+        GumMouseEventArgs args = e.ToGumMouseEventArgs(_canvasControl, PointerUpdateKind.Other);
+        // WPF reports 120 per notch; Avalonia reports 1.
+        args.Delta = (int)(e.Delta.Y * 120);
+        MouseWheel?.Invoke(args);
+        e.Handled = args.Handled;
+    }
+
     // The WPF control's +/- use MaterialDesignToolForegroundButton, a flat text button.
     private static Button ToolButton(string content) => new Button
     {
@@ -149,7 +181,8 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
 
 /// <summary>
 /// The Avalonia texture-coordinate canvas: an <see cref="AvaloniaGraphicsDeviceControl"/> that
-/// hosts an <see cref="ImageRegionSelectionCore"/> and translates its wheel and double-click input.
+/// hosts an <see cref="ImageRegionSelectionCore"/> and translates its double-click input. The
+/// owning <see cref="TextureCoordinateView"/> forwards its mouse and key events.
 /// </summary>
 public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
 {
@@ -162,17 +195,6 @@ public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);
         Core = new ImageRegionSelectionCore(this);
-    }
-
-    /// <inheritdoc/>
-    protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
-    {
-        base.OnPointerWheelChanged(e);
-        // WPF reports 120 per notch; Avalonia reports 1.
-        if (Core.HandleMouseWheel((int)(e.Delta.Y * 120)))
-        {
-            e.Handled = true;
-        }
     }
 
     /// <inheritdoc/>
