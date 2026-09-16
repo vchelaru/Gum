@@ -1,6 +1,5 @@
 {
   "Name": "TestScreen",
-  "BaseType": null,
   "States": [
     {
       "Name": "Default",
@@ -12,10 +11,7 @@
   "Instances": [
     {
       "Name": "TextInstance",
-      "BaseType": "Text",
-      "DefinedByBase": false,
-      "Locked": false,
-      "IsSlot": false
+      "BaseType": "Text"
     }
   ],
   "Events": [],
