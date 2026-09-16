@@ -62,6 +62,8 @@ public class ImageRegionSelectionCore
 
     IList<int> mAvailableZoomLevels;
 
+    readonly WheelZoomAccumulator _wheelZoomAccumulator = new();
+
     bool showFullAlpha;
 
     #endregion
@@ -616,26 +618,20 @@ public class ImageRegionSelectionCore
         {
             if (ZoomIndex != -1)
             {
-                float value = delta;
-
                 // Stop a containing scroll viewer from also scrolling on the same wheel tick.
                 handled = true;
 
+                // Throttled to one zoom step per full mouse-notch-equivalent (see
+                // WheelZoomAccumulator), rather than one step per event - otherwise a trackpad's
+                // two-finger scroll, which reports many small-delta events per second, races
+                // through many zoom levels a physical mouse wheel would only reach one click at a
+                // time.
+                int step = _wheelZoomAccumulator.Consume(delta);
 
-                ZoomDirection? zoomDirection = null;
-
-                if (value < 0)
+                if (step != 0)
                 {
-                    zoomDirection = ZoomDirection.ZoomOut;
-                }
-                else if (value > 0)
-                {
-                    zoomDirection = ZoomDirection.ZoomIn;
-                }
-
-                if(zoomDirection != null)
-                {
-                    HandleZoom(zoomDirection.Value, true);
+                    var zoomDirection = step < 0 ? ZoomDirection.ZoomOut : ZoomDirection.ZoomIn;
+                    HandleZoom(zoomDirection, true);
                 }
             }
         }

@@ -252,4 +252,42 @@ public class CameraControllerTests
         zoomController.Verify(z => z.ZoomOut(), Times.Once);
         zoomController.Verify(z => z.ZoomIn(), Times.Never);
     }
+
+    [Fact]
+    public void HandleMouseWheel_WithManySmallTrackpadDeltas_OnlyZoomsOnceTheyReachAFullNotch()
+    {
+        // A trackpad's two-finger scroll reports many small-delta wheel events per second rather
+        // than one 120-unit notch per event (see WheelZoomAccumulator). Without throttling by
+        // magnitude, every one of those events would still fire a full zoom step.
+        var (controller, _, _, zoomController) = CreateSut();
+
+        for (int i = 0; i < 9; i++)
+        {
+            controller.HandleMouseWheel(new GumMouseEventArgs { X = 300, Y = 200, Delta = 12 });
+        }
+        zoomController.Verify(z => z.ZoomIn(), Times.Never);
+
+        controller.HandleMouseWheel(new GumMouseEventArgs { X = 300, Y = 200, Delta = 12 });
+        zoomController.Verify(z => z.ZoomIn(), Times.Once);
+    }
+
+    [Fact]
+    public void HandleMouseWheel_BeforeReachingAFullNotch_StillMarksTheEventHandledButDoesNotRaiseCameraChanged()
+    {
+        var (controller, camera, _, zoomController) = CreateSut();
+        var originalX = camera.X;
+        var originalY = camera.Y;
+        var raised = 0;
+        controller.CameraChanged += () => raised++;
+
+        var mouseArgs = new GumMouseEventArgs { X = 300, Y = 200, Delta = 12 };
+        controller.HandleMouseWheel(mouseArgs);
+
+        zoomController.Verify(z => z.ZoomIn(), Times.Never);
+        zoomController.Verify(z => z.ZoomOut(), Times.Never);
+        camera.X.ShouldBe(originalX);
+        camera.Y.ShouldBe(originalY);
+        raised.ShouldBe(0);
+        mouseArgs.Handled.ShouldBeTrue();
+    }
 }

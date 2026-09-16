@@ -14,6 +14,7 @@ public class CameraController
     }
 
     IZoomController _zoomController;
+    readonly WheelZoomAccumulator _wheelZoomAccumulator = new();
 
     int _lastMouseX;
     int _lastMouseY;
@@ -39,6 +40,14 @@ public class CameraController
 
     public void HandleMouseWheel(GumMouseEventArgs e)
     {
+        e.Handled = true;
+
+        int step = _wheelZoomAccumulator.Consume(e.Delta);
+        if (step == 0)
+        {
+            return;
+        }
+
         float worldX, worldY;
         Camera.ScreenToWorld(e.X, e.Y, out worldX, out worldY);
         float differenceX = Camera.X - worldX;
@@ -46,7 +55,7 @@ public class CameraController
 
         float oldZoom = Camera.Zoom;
 
-        if (e.Delta < 0)
+        if (step < 0)
         {
             _zoomController.ZoomOut();
         }
@@ -62,8 +71,6 @@ public class CameraController
         Camera.Y = worldY + newDifferenceY;
 
         CameraChanged?.Invoke();
-
-        e.Handled = true;
     }
 
     public void HandleMouseDown(GumMouseEventArgs e)
