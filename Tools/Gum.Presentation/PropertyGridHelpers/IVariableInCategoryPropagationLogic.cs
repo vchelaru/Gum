@@ -10,9 +10,9 @@ namespace Gum.PropertyGridHelpers;
 
 public interface IVariableInCategoryPropagationLogic
 {
-    void PropagateVariablesInCategory(string memberName, ElementSave element, StateSaveCategory categoryToPropagate);
+    void PropagateVariablesInCategory(string memberName, ElementSave? element, StateSaveCategory? categoryToPropagate);
 
-    void PropagateVariablesInCategory(string memberName, ElementSave element, List<StateSave> states);
+    void PropagateVariablesInCategory(string memberName, ElementSave? element, List<StateSave> states);
 
     void AskRemoveVariableFromAllStatesInCategory(string variableName, StateSaveCategory stateCategory);
 

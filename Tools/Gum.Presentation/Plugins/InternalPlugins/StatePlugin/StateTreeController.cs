@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -118,16 +118,24 @@ public class StateTreeController
         ViewModel.SetSelectedState(state);
         var currentCategory = _selectedState.SelectedStateCategorySave;
         var currentState = _selectedState.SelectedStateSave;
+        var currentElement = _selectedState.SelectedElement;
 
-        if (currentCategory != null && currentState != null)
+        // Behaviors have categories but no element to propagate into; a category
+        // can also outlive the element during a deselect/reselect.
+        if (currentCategory == null || currentElement == null)
         {
-            PropagateVariableForCategorizedState(currentState);
+            return;
         }
-        else if (currentCategory != null)
+
+        if (currentState != null)
+        {
+            PropagateVariableForCategorizedState(currentState, currentElement, currentCategory);
+        }
+        else
         {
             foreach (var item in currentCategory.States)
             {
-                PropagateVariableForCategorizedState(item);
+                PropagateVariableForCategorizedState(item, currentElement, currentCategory);
             }
         }
     }
@@ -173,12 +181,11 @@ public class StateTreeController
         ViewModel.RefreshTo(elementSave, _selectedState, _objectFinder);
     }
 
-    private void PropagateVariableForCategorizedState(StateSave currentState)
+    private void PropagateVariableForCategorizedState(StateSave currentState, ElementSave element, StateSaveCategory category)
     {
         foreach (var variable in currentState.Variables)
         {
-            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name,
-                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+            _variableInCategoryPropagationLogic.PropagateVariablesInCategory(variable.Name, element, category);
         }
     }
 
