@@ -113,17 +113,17 @@ public class MainControlViewModelTests
 
         _viewModel.ZoomIn();
 
-        _viewModel.SelectedZoomLevel.ShouldBe(200);
+        _viewModel.SelectedZoomLevel.ShouldBe(150);
     }
 
     [Fact]
     public void ZoomOut_AtSmallestAvailableZoomLevel_DoesNotChange()
     {
-        _viewModel.SelectedZoomLevel = 12;
+        _viewModel.SelectedZoomLevel = 10;
 
         _viewModel.ZoomOut();
 
-        _viewModel.SelectedZoomLevel.ShouldBe(12);
+        _viewModel.SelectedZoomLevel.ShouldBe(10);
     }
 
     [Fact]
@@ -133,6 +133,17 @@ public class MainControlViewModelTests
 
         _viewModel.ZoomOut();
 
-        _viewModel.SelectedZoomLevel.ShouldBe(50);
+        _viewModel.SelectedZoomLevel.ShouldBe(75);
+    }
+
+    [Fact]
+    public void AvailableZoomLevels_ContainsEveryLevelTheCanvasWheelZoomLandsOn()
+    {
+        // The combo binds to this list; a wheel zoom that lands on a level missing from it
+        // renders the combo blank (#4793). 150 and 75 are the first wheel steps from 100.
+        _viewModel.AvailableZoomLevels.ShouldBe(new[]
+        {
+            3200, 1600, 1200, 800, 500, 300, 200, 150, 100, 75, 50, 33, 25, 10,
+        });
     }
 }
