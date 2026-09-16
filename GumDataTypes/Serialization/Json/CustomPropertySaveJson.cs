@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Gum.DataTypes.Serialization.Json;
 
 /// <summary>
@@ -6,13 +8,20 @@ namespace Gum.DataTypes.Serialization.Json;
 /// </summary>
 internal sealed class CustomPropertySaveJson
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Name { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ValueAsString { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public float? ValueAsFloat { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? ValueAsInt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long? ValueAsLong { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? ValueAsDouble { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool? ValueAsBool { get; set; }
 }
 

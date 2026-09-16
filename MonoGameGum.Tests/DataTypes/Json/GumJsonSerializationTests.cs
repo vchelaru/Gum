@@ -299,4 +299,128 @@ public class GumJsonSerializationTests
         ((VariableListSave<double>)resultLists.First(v => v.Name == "DoubleList")).Value.ShouldBe(new[] { 3.14159265358979, 2.71828182845905 });
         ((VariableListSave<bool>)resultLists.First(v => v.Name == "BoolList")).Value.ShouldBe(new[] { true, false });
     }
+
+    [Fact]
+    public void SerializeElement_VariableWithOnlyRequiredFieldsSet_OmitsNullAndDefaultFields()
+    {
+        // Issue #4757: a typical variable instance only has Name/Type/SetsValue/one ValueAsX field
+        // populated - the other 12 VariableSaveJson properties are null/default noise that shouldn't
+        // be written per-instance across a project's thousands of variables.
+        StateSave state = new StateSave { Name = "Default" };
+        state.Variables.Add(new VariableSave { Name = "SpriteInstance7.TextureWidth", Type = "int", Value = 17, SetsValue = true });
+        StandardElementSave element = new StandardElementSave { Name = "Container" };
+        element.States.Add(state);
+
+        string json = GumJsonFileSerializer.SerializeElement(element);
+
+        json.ShouldNotContain("\"StandardizedName\"");
+        json.ShouldNotContain("\"Category\"");
+        json.ShouldNotContain("\"ExposedAsName\"");
+        json.ShouldNotContain("\"IsFile\"");
+        json.ShouldNotContain("\"IsFont\"");
+        json.ShouldNotContain("\"IsHiddenInPropertyGrid\"");
+        json.ShouldNotContain("\"IsCustomVariable\"");
+        json.ShouldNotContain("\"Description\"");
+        json.ShouldNotContain("\"ValueAsString\"");
+        json.ShouldNotContain("\"ValueAsFloat\"");
+        json.ShouldNotContain("\"ValueAsLong\"");
+        json.ShouldNotContain("\"ValueAsDouble\"");
+        json.ShouldNotContain("\"ValueAsBool\"");
+        json.ShouldContain("\"ValueAsInt\": 17");
+        json.ShouldContain("\"SetsValue\": true");
+
+        StandardElementSave result = GumJsonFileSerializer.DeserializeElement<StandardElementSave>(json);
+        VariableSave resultVariable = result.States[0].Variables[0];
+        resultVariable.Value.ShouldBe(17);
+        resultVariable.SetsValue.ShouldBeTrue();
+        resultVariable.StandardizedName.ShouldBe("");
+        resultVariable.Category.ShouldBe("");
+    }
+
+    [Fact]
+    public void SerializeElement_InstanceEventAndBehaviorReferenceWithDefaults_OmitNullAndDefaultFields()
+    {
+        ScreenSave original = new ScreenSave { Name = "MainMenu" };
+        original.Instances.Add(new InstanceSave { Name = "Background", BaseType = "Sprite" });
+        original.Events.Add(new EventSave { Name = "Background.Click" });
+        original.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "ButtonBehavior" });
+
+        string json = GumJsonFileSerializer.SerializeElement(original);
+
+        json.ShouldNotContain("\"BaseType\": null");
+        json.ShouldNotContain("\"DefinedByBase\"");
+        json.ShouldNotContain("\"Locked\"");
+        json.ShouldNotContain("\"IsSlot\"");
+        json.ShouldNotContain("\"Enabled\"");
+        json.ShouldNotContain("\"ExposedAsName\"");
+        json.ShouldNotContain("\"ProjectName\"");
+        json.ShouldContain("\"BehaviorName\": \"ButtonBehavior\"");
+
+        ScreenSave result = GumJsonFileSerializer.DeserializeElement<ScreenSave>(json);
+        result.Instances[0].Name.ShouldBe("Background");
+        result.Instances[0].DefinedByBase.ShouldBeFalse();
+        result.Events[0].Enabled.ShouldBeFalse();
+        result.Behaviors[0].BehaviorName.ShouldBe("ButtonBehavior");
+    }
+
+    [Fact]
+    public void SerializeProject_OptionalScalarsAndCustomPropertyWithDefaults_OmitNullFields()
+    {
+        GumProjectSave original = new GumProjectSave { Version = GumProjectSave.NativeVersion };
+        original.ScreenReferences.Add(new ElementReference { Name = "MainMenu", ElementType = ElementType.Screen });
+        original.CustomProperties.Add(new CustomPropertySave { Name = "Author", Value = "Vic" });
+
+        string json = GumJsonFileSerializer.SerializeProject(original);
+
+        json.ShouldNotContain("\"Link\"");
+        json.ShouldNotContain("\"CustomCanvasSizes\"");
+        json.ShouldNotContain("\"SinglePixelTextureTop\"");
+        json.ShouldNotContain("\"SinglePixelTextureLeft\"");
+        json.ShouldNotContain("\"SinglePixelTextureRight\"");
+        json.ShouldNotContain("\"SinglePixelTextureBottom\"");
+        json.ShouldNotContain("\"ValueAsFloat\"");
+        json.ShouldNotContain("\"ValueAsInt\"");
+        json.ShouldNotContain("\"ValueAsLong\"");
+        json.ShouldNotContain("\"ValueAsDouble\"");
+        json.ShouldNotContain("\"ValueAsBool\"");
+        json.ShouldContain("\"ValueAsString\": \"Vic\"");
+
+        GumProjectSave result = GumJsonFileSerializer.DeserializeProject(json);
+        result.CustomProperties[0].Value.ShouldBe("Vic");
+        result.SinglePixelTextureTop.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SerializeElement_VariableListWithOnlyOneTypedValuesPopulated_OmitsOtherTypedLists()
+    {
+        StateSave state = new StateSave { Name = "Default" };
+        VariableListSave<int> intList = new VariableListSave<int> { Name = "IntList", Type = "int" };
+        intList.Value.Add(1);
+        state.VariableLists.Add(intList);
+        StandardElementSave element = new StandardElementSave { Name = "Container" };
+        element.States.Add(state);
+
+        string json = GumJsonFileSerializer.SerializeElement(element);
+
+        json.ShouldNotContain("\"StringValues\"");
+        json.ShouldNotContain("\"FloatValues\"");
+        json.ShouldNotContain("\"LongValues\"");
+        json.ShouldNotContain("\"DoubleValues\"");
+        json.ShouldNotContain("\"BoolValues\"");
+        json.ShouldNotContain("\"Vector2Values\"");
+        json.ShouldContain("\"IntValues\"");
+    }
+
+    [Fact]
+    public void SerializeBehavior_DefaultImplementationAndReferenceFieldsNull_OmitFields()
+    {
+        BehaviorSave original = new BehaviorSave { Name = "ButtonBehavior" };
+
+        string json = GumJsonFileSerializer.SerializeBehavior(original);
+
+        json.ShouldNotContain("\"DefaultImplementation\"");
+
+        BehaviorSave result = GumJsonFileSerializer.DeserializeBehavior(json);
+        result.DefaultImplementation.ShouldBeNull();
+    }
 }

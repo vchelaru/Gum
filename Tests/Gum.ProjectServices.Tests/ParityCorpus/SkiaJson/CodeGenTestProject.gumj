@@ -29,8 +29,7 @@
     {
       "Name": "TestScreen",
       "ElementType": 0,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     }
   ],
   "ComponentReferences": [],
@@ -38,57 +37,45 @@
     {
       "Name": "Circle",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Component",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Container",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "NineSlice",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Polygon",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Rectangle",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Sprite",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     },
     {
       "Name": "Text",
       "ElementType": 2,
-      "LinkType": 0,
-      "Link": null
+      "LinkType": 0
     }
   ],
   "BehaviorReferences": [],
   "SinglePixelTextureFile": "",
-  "SinglePixelTextureTop": null,
-  "SinglePixelTextureLeft": null,
-  "SinglePixelTextureRight": null,
-  "SinglePixelTextureBottom": null,
   "CustomProperties": []
 }

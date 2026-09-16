@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Gum.DataTypes.Behaviors;
 
 namespace Gum.DataTypes.Serialization.Json;
@@ -8,14 +9,18 @@ namespace Gum.DataTypes.Serialization.Json;
 internal sealed class EventSaveJson
 {
     public string Name { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Enabled { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ExposedAsName { get; set; }
 }
 
 /// <summary>JSON-serializable shape of an <see cref="ElementBehaviorReference"/>.</summary>
 internal sealed class ElementBehaviorReferenceJson
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ProjectName { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? BehaviorName { get; set; }
 }
 
@@ -27,6 +32,7 @@ internal sealed class ElementBehaviorReferenceJson
 internal sealed class ElementSaveJson
 {
     public string Name { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? BaseType { get; set; }
     public List<StateSaveJson> States { get; set; } = new List<StateSaveJson>();
     public List<StateSaveCategoryJson> Categories { get; set; } = new List<StateSaveCategoryJson>();
