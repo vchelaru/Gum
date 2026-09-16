@@ -53,6 +53,12 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     private readonly ConcurrentDictionary<string, DateTime> _recentFailures = new();
 
     /// <summary>
+    /// Generations currently running, keyed by the target .fnt path. A second request for a file
+    /// that is already being written joins the running one instead of racing it (#4799).
+    /// </summary>
+    private readonly ConcurrentDictionary<string, Lazy<Task<OptionallyAttemptedGeneralResponse>>> _inFlight = new();
+
+    /// <summary>
     /// Test seam — overridden by a test subclass to advance the clock without a real wait.
     /// </summary>
     internal virtual DateTime UtcNow => DateTime.UtcNow;
@@ -71,9 +77,9 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     }
 
     /// <inheritdoc/>
-    public async Task CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false)
+    public async Task<int> CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false)
     {
-        await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate);
+        return await GenerateMissingFontsFor(project, project.AllElements, projectDirectory, forceRecreate);
     }
 
     /// <summary>
@@ -97,15 +103,22 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
     }
 
     /// <inheritdoc/>
-    public GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs)
+    public FontFileStatus CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs)
     {
         // Run synchronously (createTask: false) — used by property-setting code paths.
-        Task<GeneralResponse> task = TryCreateFontFor(bmfcSave, force: false, showSpinner: false,
+        Task<OptionallyAttemptedGeneralResponse> task = TryCreateFontFor(bmfcSave, force: false, showSpinner: false,
             createTask: false, projectDirectory, autoSizeFontOutputs);
 
         // TryCreateFontFor with createTask: false completes synchronously,
         // so .Result is safe here and will not deadlock.
-        return task.Result;
+        OptionallyAttemptedGeneralResponse response = task.Result;
+
+        if (response.IsInProgress)
+        {
+            return FontFileStatus.Generating;
+        }
+
+        return response.Succeeded ? FontFileStatus.Ready : FontFileStatus.Failed;
     }
 
     /// <inheritdoc/>
@@ -311,7 +324,8 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         }
     }
 
-    private async Task GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
+    /// <returns>How many fonts were actually generated (as opposed to already on disk).</returns>
+    private async Task<int> GenerateMissingFontsFor(GumProjectSave project, IEnumerable<ElementSave> elements,
         string projectDirectory, bool forceRecreate)
     {
         using var totalScope = Gum.Diagnostics.StartupTiming.Time("HeadlessFontGenerationService.GenerateMissingFontsFor (total)");
@@ -388,11 +402,13 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
 
         DateTime end = DateTime.Now;
         TimeSpan time = end - start;
+        int attemptedCount = didAttemptFlags.Count(didAttempt => didAttempt);
         if (bitmapFonts.Count > 0)
         {
-            int attemptedCount = didAttemptFlags.Count(didAttempt => didAttempt);
             _callbacks.OnOutput(BuildFontGenerationSummaryMessage(bitmapFonts.Count, attemptedCount, time));
         }
+
+        return attemptedCount;
     }
 
     /// <summary>
@@ -416,7 +432,44 @@ public class HeadlessFontGenerationService : IHeadlessFontGenerationService
         return $"Created {attemptedCount} font files ({totalFontCount - attemptedCount} already up to date) in {elapsedTime.TotalSeconds:F1} seconds";
     }
 
-    private async Task<GeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
+    private async Task<OptionallyAttemptedGeneralResponse> TryCreateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
+        bool createTask, string projectDirectory, bool iterativelyDetermineSize)
+    {
+        string inFlightKey = GetFilePath(bmfcSave, destinationDirectory: null, projectDirectory).FullPath;
+
+        Lazy<Task<OptionallyAttemptedGeneralResponse>> ownGeneration = new(() =>
+            GenerateFontFor(bmfcSave, force, showSpinner, createTask, projectDirectory, iterativelyDetermineSize));
+        Lazy<Task<OptionallyAttemptedGeneralResponse>> registered = _inFlight.GetOrAdd(inFlightKey, ownGeneration);
+
+        if (!ReferenceEquals(registered, ownGeneration))
+        {
+            if (!createTask)
+            {
+                // A synchronous caller (font resolution on the UI thread) can't block on a task
+                // whose continuations may need that same thread; report that the file is on its way.
+                return new OptionallyAttemptedGeneralResponse
+                {
+                    Succeeded = false,
+                    DidAttempt = false,
+                    IsInProgress = true,
+                    Message = $"Font {bmfcSave.FontName} size {bmfcSave.FontSize} is already being generated."
+                };
+            }
+
+            return await registered.Value;
+        }
+
+        try
+        {
+            return await ownGeneration.Value;
+        }
+        finally
+        {
+            _inFlight.TryRemove(new KeyValuePair<string, Lazy<Task<OptionallyAttemptedGeneralResponse>>>(inFlightKey, ownGeneration));
+        }
+    }
+
+    private async Task<OptionallyAttemptedGeneralResponse> GenerateFontFor(BmfcSave bmfcSave, bool force, bool showSpinner,
         bool createTask, string projectDirectory, bool iterativelyDetermineSize)
     {
         string cacheKey = bmfcSave.FontCacheFileName;

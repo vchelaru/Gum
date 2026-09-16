@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Plugins.BaseClasses;
@@ -30,11 +30,12 @@ public class MainFontPlugin : CorePriorityPlugin
         IDialogService dialogService,
         IProjectState projectState,
         IDispatcher dispatcher,
-        IFileSystemRevealService fileSystemRevealService)
+        IFileSystemRevealService fileSystemRevealService,
+        IWireframeCommands wireframeCommands)
     {
         _fontManager = fontManager;
         _fileSystemRevealService = fileSystemRevealService;
-        _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState, dispatcher);
+        _fontCacheLogic = new FontCacheLogic(fontManager, dialogService, projectState, dispatcher, wireframeCommands);
     }
 
     public override void StartUp()

@@ -993,6 +993,102 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     // Failure cooldown cache (#4254)
     // -------------------------------------------------------------------------
 
+    #region Concurrent generation (#4799)
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldGenerateEachFontOnce_WhenTwoPassesOverlap()
+    {
+        BlockingFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        Task<int> firstPass = service.CreateAllMissingFontFiles(Project, "/tmp/test");
+        await generator.Started.Task;
+        Task<int> secondPass = service.CreateAllMissingFontFiles(Project, "/tmp/test");
+        generator.Release.SetResult();
+        await Task.WhenAll(firstPass, secondPass);
+
+        generator.GeneratedFntPaths.Count(path => path.Contains("Nunito-Regular")).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldReturnNumberOfFontsGenerated()
+    {
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        int generatedCount = await service.CreateAllMissingFontFiles(Project, "/tmp/test");
+
+        generatedCount.ShouldBe(generator.GenerateFontCallCount);
+        generatedCount.ShouldBeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task CreateFontIfNecessary_ShouldGenerateAgain_WhenEarlierGenerationOfTheSameFontHasFinished()
+    {
+        BlockingFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        Task<int> bulkPass = service.CreateAllMissingFontFiles(Project, "/tmp/test");
+        generator.Release.SetResult();
+        await bulkPass;
+
+        // The fake generator writes nothing to disk, so a later request must generate for real
+        // rather than being treated as still in flight.
+        BmfcSave sameFont = new() { FontName = "Nunito-Regular", FontSize = 14 };
+        FontFileStatus status = service.CreateFontIfNecessary(sameFont, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        status.ShouldBe(FontFileStatus.Ready);
+        generator.GeneratedFntPaths.Count(path => path.Contains("Nunito-Regular")).ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task CreateFontIfNecessary_ShouldReportGenerating_WhenBulkPassIsAlreadyGeneratingTheSameFont()
+    {
+        // The wireframe resolves fonts synchronously on the UI thread while the load-time bulk pass
+        // generates on background tasks. The sync request must neither start a second generation
+        // of the same file nor block on the in-flight one (its continuations need the UI thread).
+        BlockingFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Nunito-Regular");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        Task<int> bulkPass = service.CreateAllMissingFontFiles(Project, "/tmp/test");
+        await generator.Started.Task;
+
+        BmfcSave sameFont = new() { FontName = "Nunito-Regular", FontSize = 14 };
+        FontFileStatus status = service.CreateFontIfNecessary(sameFont, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+
+        generator.Release.SetResult();
+        await bulkPass;
+
+        status.ShouldBe(FontFileStatus.Generating);
+        generator.GeneratedFntPaths.Count(path => path.Contains("Nunito-Regular")).ShouldBe(1);
+    }
+
+    #endregion
+
     #region Failure cooldown cache
 
     [Fact]
@@ -1004,10 +1100,10 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         BmfcSave bmfcSave = new() { FontName = "Nunito-Regular", FontSize = 14 };
 
         service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
-        GeneralResponse second = service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
+        FontFileStatus second = service.CreateFontIfNecessary(bmfcSave, projectDirectory: "/tmp/test", autoSizeFontOutputs: false);
 
         generator.GenerateFontCallCount.ShouldBe(1);
-        second.Succeeded.ShouldBeFalse();
+        second.ShouldBe(FontFileStatus.Failed);
     }
 
     [Fact]
@@ -1230,6 +1326,34 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
                 ? GeneralResponse.UnsuccessfulWith("Simulated failure")
                 : GeneralResponse.SuccessfulResponse;
             return Task.FromResult(response);
+        }
+    }
+
+    /// <summary>
+    /// A font file generator that signals when generation starts and holds background
+    /// (<c>createTask: true</c>) calls until released, so a test can act while a generation is in
+    /// flight. Synchronous calls return at once so a regression fails an assertion instead of
+    /// deadlocking the test.
+    /// </summary>
+    private sealed class BlockingFontFileGenerator : IFontFileGenerator
+    {
+        public bool RequiresSizeEstimation => false;
+        public TaskCompletionSource Started { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource Release { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public List<string> GeneratedFntPaths { get; } = new();
+
+        public async Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
+        {
+            lock (GeneratedFntPaths)
+            {
+                GeneratedFntPaths.Add(outputFntPath);
+            }
+            if (createTask)
+            {
+                Started.TrySetResult();
+                await Release.Task;
+            }
+            return GeneralResponse.SuccessfulResponse;
         }
     }
 

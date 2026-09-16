@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics.Fonts;
 using System;
@@ -15,9 +15,9 @@ namespace Gum.ProjectServices.FontGeneration;
 public interface IHeadlessFontGenerationService
 {
     /// <summary>
-    /// Creates all missing font files referenced by the project.
+    /// Creates all missing font files referenced by the project and returns how many were generated.
     /// </summary>
-    Task CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false);
+    Task<int> CreateAllMissingFontFiles(GumProjectSave project, string projectDirectory, bool forceRecreate = false);
 
     /// <summary>
     /// Generates missing font files for all elements that recursively reference the element
@@ -35,9 +35,11 @@ public interface IHeadlessFontGenerationService
 
     /// <summary>
     /// Synchronously creates a single font file if it does not already exist in the project directory.
-    /// Intended for use from synchronous code paths such as property setting.
+    /// Intended for use from synchronous code paths such as property setting. Reports
+    /// <see cref="FontFileStatus.Generating"/> instead of waiting when a bulk pass is already
+    /// producing that file.
     /// </summary>
-    GeneralResponse CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs);
+    FontFileStatus CreateFontIfNecessary(BmfcSave bmfcSave, string projectDirectory, bool autoSizeFontOutputs);
 
     /// <summary>
     /// Determines the smallest texture size that keeps the font on a single page.

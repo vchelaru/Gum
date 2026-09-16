@@ -1,4 +1,4 @@
-using Gum.Commands;
+﻿using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices.FontGeneration;
@@ -43,12 +43,10 @@ public class FontManager : IFontManager
         _fileCommands.ClearDirectoryContents(AbsoluteFontCacheFolder);
     }
 
-    /// <summary>
-    /// Creates all missing font files referenced by the project.
-    /// </summary>
-    public async Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
+    /// <inheritdoc/>
+    public async Task<int> CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false)
     {
-        await _fontGenerationService.CreateAllMissingFontFiles(project, _fileCommands.ProjectDirectory.FullPath, forceRecreate);
+        return await _fontGenerationService.CreateAllMissingFontFiles(project, _fileCommands.ProjectDirectory.FullPath, forceRecreate);
     }
 
     /// <inheritdoc/>
@@ -60,9 +58,9 @@ public class FontManager : IFontManager
     }
 
     /// <inheritdoc/>
-    public void CreateFontIfNecessary(BmfcSave bmfcSave)
+    public FontFileStatus CreateFontIfNecessary(BmfcSave bmfcSave)
     {
-        _fontGenerationService.CreateFontIfNecessary(bmfcSave,
+        return _fontGenerationService.CreateFontIfNecessary(bmfcSave,
             _fileCommands.ProjectDirectory.FullPath,
             _projectState.GumProjectSave?.AutoSizeFontOutputs ?? false);
     }

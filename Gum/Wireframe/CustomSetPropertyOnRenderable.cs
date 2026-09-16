@@ -2080,6 +2080,7 @@ public partial class CustomSetPropertyOnRenderable
                     // this could be a custom font, so let's see if it exists:
 
                     string fileName = String.Empty;
+                    bool isFontBeingGenerated = false;
                     if (ToolsUtilities.FileManager.FileExists(fontFileName))
                     {
                         fileName = fontFileName;
@@ -2125,7 +2126,7 @@ public partial class CustomSetPropertyOnRenderable
                             bmfcSave.SpacingVertical = gumProject?.FontSpacingVertical ?? 1;
 #endif
 
-                            FontService.CreateFontIfNecessary(bmfcSave);
+                            isFontBeingGenerated = FontService.CreateFontIfNecessary(bmfcSave) == FontFileStatus.Generating;
                         }
                         catch (Exception ex)
                         {
@@ -2137,18 +2138,28 @@ public partial class CustomSetPropertyOnRenderable
                     }
 #endif
 
-                    if (ToolsUtilities.FileManager.FileExists(fileName))
+                    if (isFontBeingGenerated)
                     {
-                        font = new BitmapFont(fileName);
+                        // #4799: another request is still writing this font's files. Use the default
+                        // font for now without caching it under this key, so the next resolution
+                        // loads the finished files instead of the placeholder.
+                        font = Text.DefaultBitmapFont;
                     }
                     else
                     {
-                        // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
-                        font = Text.DefaultBitmapFont;
+                        if (ToolsUtilities.FileManager.FileExists(fileName))
+                        {
+                            font = new BitmapFont(fileName);
+                        }
+                        else
+                        {
+                            // This can happen when closing tags are encountered at the end of a font. If no font exists, we can just go to the default
+                            font = Text.DefaultBitmapFont;
+                        }
+                        // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
+                        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                            global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
                     }
-                    // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
-                    global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
-                        global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
                 }
             }
 
@@ -2324,14 +2335,14 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
 #if FRB
     // FRB doesn't yet have a TextRuntime, so we have to do this:
-    private static BitmapFont GetOrCreateBakedFont(GraphicalUiElement textRuntime,
+    private static BitmapFont? GetOrCreateBakedFont(GraphicalUiElement textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
 #else
-    private static BitmapFont GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
+    private static BitmapFont? GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
         global::RenderingLibrary.Content.LoaderManager loaderManager, string? fontFilePath)
 #endif
     {
-        BitmapFont font = null;
+        BitmapFont? font = null;
 
         string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
 
@@ -2397,7 +2408,14 @@ public partial class CustomSetPropertyOnRenderable
             {
                 BmfcSave bmfcSave = BuildFontSyncBmfcSave(textRuntime, fontFilePath);
 
-                FontService.CreateFontIfNecessary(bmfcSave);
+                if (FontService.CreateFontIfNecessary(bmfcSave) == FontFileStatus.Generating)
+                {
+                    // #4799: another request is still writing this font's files. Neither the
+                    // placeholder that would load now nor an "unresolvable" mark may be cached, or
+                    // the text stays wrong after generation finishes; the caller falls back to the
+                    // default font and asks again on its next resolution.
+                    return null;
+                }
             }
             catch (Exception ex)
             {
@@ -2656,7 +2674,7 @@ public partial class CustomSetPropertyOnRenderable
         textRuntime.ResetAutomaticOversamplingState();
 #endif
 
-        BitmapFont font = null;
+        BitmapFont? font = null;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
         var contentLoader = loaderManager.ContentLoader;

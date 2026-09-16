@@ -1,4 +1,4 @@
-using Gum.DataTypes;
+﻿using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using RenderingLibrary.Graphics.Fonts;
 using System;
@@ -20,20 +20,15 @@ namespace Gum.Services.Fonts;
 public interface IFontManager : IRuntimeFontService
 {
     /// <summary>
-    /// The absolute path to the font cache folder for the currently loaded project.
-    /// </summary>
-    string AbsoluteFontCacheFolder { get; }
-
-    /// <summary>
     /// Clears the font cache for the current project. The folder itself is left in place so it
     /// can always be watched (#4259) - only its contents are deleted.
     /// </summary>
     void DeleteFontCacheFolder();
 
     /// <summary>
-    /// Creates all missing font files referenced by the project.
+    /// Creates all missing font files referenced by the project and returns how many were generated.
     /// </summary>
-    Task CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false);
+    Task<int> CreateAllMissingFontFiles(GumProjectSave project, bool forceRecreate = false);
 
     /// <summary>
     /// Generates missing font files for all elements that recursively reference the element
@@ -41,12 +36,6 @@ public interface IFontManager : IRuntimeFontService
     /// </summary>
     void GenerateMissingFontsForReferencingElements(GumProjectSave gumProject,
         StateSave stateSave);
-
-    /// <summary>
-    /// Synchronously creates a single font file if it does not already exist.
-    /// Intended for use from synchronous property-setting code paths.
-    /// </summary>
-    void CreateFontIfNecessary(BmfcSave bmfcSave);
 
     /// <summary>
     /// Builds a <see cref="BmfcSave"/> describing the font for the given instance/state,

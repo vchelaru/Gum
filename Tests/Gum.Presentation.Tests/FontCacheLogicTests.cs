@@ -1,4 +1,5 @@
-﻿using Gum.Services;
+﻿using Gum.Commands;
+using Gum.Services;
 using System.Collections.Generic;
 using System;
 using Gum.DataTypes;
@@ -21,13 +22,40 @@ public class FontCacheLogicTests
     private readonly Mock<IFontManager> _fontManager = new();
     private readonly Mock<IDialogService> _dialogService = new();
     private readonly Mock<IProjectState> _projectState = new();
+    private readonly Mock<IWireframeCommands> _wireframeCommands = new();
     private readonly RecordingDispatcher _dispatcher = new();
     private readonly FontCacheLogic _logic;
 
     public FontCacheLogicTests()
     {
         _logic = new FontCacheLogic(_fontManager.Object, _dialogService.Object, _projectState.Object,
-            _dispatcher);
+            _dispatcher, _wireframeCommands.Object);
+    }
+
+    [Fact]
+    public async Task CreateMissingFontFilesForLoadedProject_DoesNotRefreshWireframe_WhenNothingWasGenerated()
+    {
+        GumProjectSave project = new();
+        _projectState.Setup(x => x.GumProjectSave).Returns(project);
+        _fontManager.Setup(x => x.CreateAllMissingFontFiles(project, false)).ReturnsAsync(0);
+
+        await _logic.CreateMissingFontFilesForLoadedProject();
+
+        _wireframeCommands.Verify(x => x.Refresh(It.IsAny<bool>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateMissingFontFilesForLoadedProject_ReloadsWireframeContent_WhenFontsWereGenerated()
+    {
+        // Text rendered while the load-time pass was still generating its font holds the placeholder
+        // (or default) font; reloading content re-resolves it now that the files exist (#4799).
+        GumProjectSave project = new();
+        _projectState.Setup(x => x.GumProjectSave).Returns(project);
+        _fontManager.Setup(x => x.CreateAllMissingFontFiles(project, false)).ReturnsAsync(2);
+
+        await _logic.CreateMissingFontFilesForLoadedProject();
+
+        _wireframeCommands.Verify(x => x.Refresh(true, true), Times.Once);
     }
 
     [Fact]
@@ -71,9 +99,12 @@ public class FontCacheLogicTests
         GumProjectSave project = new();
         _projectState.Setup(x => x.GumProjectSave).Returns(project);
 
+        _fontManager.Setup(x => x.CreateAllMissingFontFiles(project, true)).ReturnsAsync(1);
+
         await _logic.RefreshFontCache(forceRecreate: true);
 
         _fontManager.Verify(x => x.CreateAllMissingFontFiles(project, true), Times.Once);
+        _wireframeCommands.Verify(x => x.Refresh(true, true), Times.Once);
         _dialogService.Verify(
             x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Never);
     }
@@ -83,6 +114,7 @@ public class FontCacheLogicTests
     {
         // The scan is pre-generation, not a prerequisite - keeping it off the project-load path is
         // the whole point, so posting must not run it inline.
+        _projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
         _logic.ScheduleMissingFontCreationForLoadedProject();
 
         _dispatcher.PostedActions.Count.ShouldBe(1);

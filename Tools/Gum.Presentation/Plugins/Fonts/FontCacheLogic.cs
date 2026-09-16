@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes;
+﻿using Gum.Commands;
+using Gum.DataTypes;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Services.Fonts;
@@ -22,14 +23,16 @@ public class FontCacheLogic
     private readonly IDialogService _dialogService;
     private readonly IProjectState _projectState;
     private readonly IDispatcher _dispatcher;
+    private readonly IWireframeCommands _wireframeCommands;
 
     public FontCacheLogic(IFontManager fontManager, IDialogService dialogService, IProjectState projectState,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher, IWireframeCommands wireframeCommands)
     {
         _fontManager = fontManager;
         _dialogService = dialogService;
         _projectState = projectState;
         _dispatcher = dispatcher;
+        _wireframeCommands = wireframeCommands;
     }
 
     /// <summary>
@@ -52,8 +55,27 @@ public class FontCacheLogic
     /// </summary>
     public async Task CreateMissingFontFilesForLoadedProject()
     {
+        GumProjectSave? gumProjectSave = _projectState.GumProjectSave;
+        if (gumProjectSave == null)
+        {
+            return;
+        }
+
         using var _ = Gum.Diagnostics.StartupTiming.Time("FontCacheLogic.CreateMissingFontFilesForLoadedProject (total)");
-        await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+        int generatedCount = await _fontManager.CreateAllMissingFontFiles(gumProjectSave);
+        ReloadWireframeContentIfFontsChanged(generatedCount);
+    }
+
+    /// <summary>
+    /// Text that resolved its font while that font was still being generated is showing a
+    /// placeholder; reloading content re-resolves every font now that the files are on disk (#4799).
+    /// </summary>
+    private void ReloadWireframeContentIfFontsChanged(int generatedCount)
+    {
+        if (generatedCount > 0)
+        {
+            _wireframeCommands.Refresh(forceLayout: true, forceReloadContent: true);
+        }
     }
 
     /// <summary>
@@ -84,11 +106,12 @@ public class FontCacheLogic
         else
         {
             DateTime before = DateTime.Now;
-            await _fontManager.CreateAllMissingFontFiles(gumProjectSave, forceRecreate: forceRecreate);
+            int generatedCount = await _fontManager.CreateAllMissingFontFiles(gumProjectSave, forceRecreate: forceRecreate);
             DateTime after = DateTime.Now;
 
             TimeSpan difference = after - before;
             Debug.WriteLine($"Total time: {difference.TotalMilliseconds:N0}");
+            ReloadWireframeContentIfFontsChanged(generatedCount);
         }
     }
 }
