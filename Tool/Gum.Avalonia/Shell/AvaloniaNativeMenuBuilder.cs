@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Reactive;
 using AvaloniaDataUi;
 using Gum.Avalonia.Services;
 using Gum.Menus;
@@ -15,19 +17,31 @@ namespace Gum.Avalonia.Shell;
 /// keeps it in sync the same way <see cref="AvaloniaMenuBuilder"/> does for the in-window menu.
 /// A model's <see cref="MenuItemModel.Gesture"/> becomes the item's key equivalent, which is a
 /// real binding: AppKit matches it before the window's keyDown, so the item fires and the hotkey
-/// manager never sees the key. Both call the same action, so nothing runs twice.
+/// manager never sees the key. Both call the same action, so nothing runs twice. The key
+/// equivalent is app-wide, so it is bound only while the owning window is active; otherwise a
+/// dialog's text box would lose Cmd+Z to the tool's undo.
 /// </summary>
 public static class AvaloniaNativeMenuBuilder
 {
     /// <summary>Builds the menu-bar menu for <paramref name="model"/>, binding gestures with the running platform's command modifier.</summary>
     public static NativeMenu Build(MenuModel model) => Build(model, PlatformKeyModifiers.Command);
 
-    /// <summary>Builds the menu-bar menu for <paramref name="model"/>, binding gestures with <paramref name="commandModifiers"/> as the neutral Ctrl.</summary>
-    public static NativeMenu Build(MenuModel model, KeyModifiers commandModifiers)
+    /// <summary>
+    /// Builds the menu-bar menu for <paramref name="model"/>, binding gestures with
+    /// <paramref name="commandModifiers"/> as the neutral Ctrl. Gestures are bound only while
+    /// <paramref name="isOwnerActive"/> is true; with no signal they are always bound.
+    /// </summary>
+    public static NativeMenu Build(MenuModel model, KeyModifiers commandModifiers, IObservable<bool>? isOwnerActive = null)
     {
         NativeMenu menu = new NativeMenu();
-        Populate(menu.Items, model.TopLevelItems, commandModifiers);
-        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, commandModifiers);
+        GestureBinding binding = new GestureBinding(commandModifiers, isBound: isOwnerActive == null);
+        Populate(menu.Items, model.TopLevelItems, binding);
+        model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, binding);
+        isOwnerActive?.Subscribe(new AnonymousObserver<bool>(isActive =>
+        {
+            binding.IsBound = isActive;
+            ApplyGestures(menu, binding);
+        }));
         return menu;
     }
 
@@ -39,20 +53,20 @@ public static class AvaloniaNativeMenuBuilder
     public static NativeMenu BuildAppMenu(Action showAbout)
     {
         NativeMenu menu = new NativeMenu();
-        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), PlatformKeyModifiers.Command));
+        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), new GestureBinding(KeyModifiers.None, isBound: false)));
         return menu;
     }
 
-    private static void Populate(IList<NativeMenuItemBase> target, ObservableCollection<MenuItemModel> items, KeyModifiers commandModifiers)
+    private static void Populate(IList<NativeMenuItemBase> target, ObservableCollection<MenuItemModel> items, GestureBinding binding)
     {
         target.Clear();
         foreach (MenuItemModel item in items)
         {
-            target.Add(item.IsSeparator ? new NativeMenuItemSeparator() : Create(item, commandModifiers));
+            target.Add(item.IsSeparator ? new NativeMenuItemSeparator() : Create(item, binding));
         }
     }
 
-    private static NativeMenuItem Create(MenuItemModel model, KeyModifiers commandModifiers)
+    private static NativeMenuItem Create(MenuItemModel model, GestureBinding binding)
     {
         NativeMenuItem menuItem = new NativeMenuItem
         {
@@ -61,13 +75,17 @@ public static class AvaloniaNativeMenuBuilder
             ToggleType = model.IsCheckable ? NativeMenuItemToggleType.CheckBox : NativeMenuItemToggleType.None,
             IsChecked = model.IsChecked,
             ToolTip = model.ToolTip,
-            Gesture = model.Gesture?.ToKeyGesture(commandModifiers),
         };
+        if (model.Gesture?.ToKeyGesture(binding.CommandModifiers) is { } gesture)
+        {
+            binding.Gestures.Add(menuItem, gesture);
+            menuItem.Gesture = binding.IsBound ? gesture : null;
+        }
 
         if (model.Items.Count > 0)
         {
             NativeMenu submenu = new NativeMenu();
-            Populate(submenu.Items, model.Items, commandModifiers);
+            Populate(submenu.Items, model.Items, binding);
             menuItem.Menu = submenu;
         }
         else
@@ -81,7 +99,7 @@ public static class AvaloniaNativeMenuBuilder
         model.Items.CollectionChanged += (_, _) =>
         {
             menuItem.Menu ??= new NativeMenu();
-            Populate(menuItem.Menu.Items, model.Items, commandModifiers);
+            Populate(menuItem.Menu.Items, model.Items, binding);
         };
         return menuItem;
     }
@@ -99,6 +117,43 @@ public static class AvaloniaNativeMenuBuilder
             case nameof(MenuItemModel.IsChecked):
                 menuItem.IsChecked = model.IsChecked;
                 break;
+        }
+    }
+
+    private static void ApplyGestures(NativeMenu menu, GestureBinding binding)
+    {
+        foreach (NativeMenuItemBase item in menu.Items)
+        {
+            if (item is not NativeMenuItem menuItem)
+            {
+                continue;
+            }
+            if (binding.Gestures.TryGetValue(menuItem, out KeyGesture? gesture))
+            {
+                menuItem.Gesture = binding.IsBound ? gesture : null;
+            }
+            if (menuItem.Menu != null)
+            {
+                ApplyGestures(menuItem.Menu, binding);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether the menu's key equivalents are currently bound, plus each item's full gesture so it
+    /// can be put back. Items are rebuilt when a model collection changes, so the table is weak.
+    /// </summary>
+    private sealed class GestureBinding
+    {
+        public KeyModifiers CommandModifiers { get; }
+        public bool IsBound { get; set; }
+        public ConditionalWeakTable<NativeMenuItem, KeyGesture> Gestures { get; }
+
+        public GestureBinding(KeyModifiers commandModifiers, bool isBound)
+        {
+            CommandModifiers = commandModifiers;
+            IsBound = isBound;
+            Gestures = new ConditionalWeakTable<NativeMenuItem, KeyGesture>();
         }
     }
 }

@@ -18,6 +18,7 @@ using Gum.ViewModels;
 using AvaloniaBinding = Avalonia.Data.Binding;
 using Avalonia.Data.Converters;
 using Avalonia.Styling;
+using AvaloniaDataUi;
 using Gum.Dialogs;
 
 namespace Gum.Avalonia.Shell;
@@ -86,7 +87,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Menu? menu = null;
         if (OperatingSystem.IsMacOS())
         {
-            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel));
+            // The menu-bar key equivalents are live only while this window is active, so a dialog keeps its own Cmd+Z.
+            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel, PlatformKeyModifiers.Command, this.GetObservable(IsActiveProperty)));
         }
         else
         {
