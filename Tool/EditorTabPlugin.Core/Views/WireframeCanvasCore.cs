@@ -164,7 +164,11 @@ public sealed class WireframeCanvasCore
     }
 
     /// <summary>Handles a key release on the canvas.</summary>
-    public void HandleKeyUp() => _hotkeyManager?.HandleKeyUpWireframe();
+    public void HandleKeyUp(GumKeyEventArgs keyArgs)
+    {
+        _hotkeyManager?.HandleKeyUpWireframe();
+        _cameraController?.HandleKeyUp(keyArgs);
+    }
 
     /// <summary>
     /// Gives the hotkey manager first refusal on every key, ahead of the framework's own handling
@@ -413,7 +417,10 @@ public sealed class WireframeCanvasCore
                 // I may have to update this at some point to force deselection if the mouse
                 // has not entered so things don't stay highlighted when exiting the control
                 // Update 2 - yea, we def need to pass in mouseHasEntered == false to force no highlight
-                if (TopRuler.IsCursorOver == false && LeftRuler!.IsCursorOver == false)
+                // A Space+left-button drag pans the camera the same way a middle-button drag does
+                // (issue #4779); while it's in progress, the same left-button-down that drives the
+                // pan must not also be read as a selection/move drag by the selection manager.
+                if (TopRuler.IsCursorOver == false && LeftRuler!.IsCursorOver == false && _cameraController?.IsPanning != true)
                 {
                     var shouldForceNoHighlight = _host.IsPointerOver == false &&
                         _pluginManager.GetIfShouldSuppressRemoveEditorHighlight() == false;

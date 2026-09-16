@@ -166,6 +166,62 @@ public class CameraControllerTests
     }
 
     [Fact]
+    public void HandleKeyPress_Space_ThenHandleMouseDown_ThenHandleMouseMove_WithLeftButton_PansCameraLikeMiddleButton()
+    {
+        var (controller, camera, _, _) = CreateSut();
+        camera.Zoom = 2f;
+        var originalX = camera.X;
+        var originalY = camera.Y;
+        var raised = 0;
+        controller.CameraChanged += () => raised++;
+
+        controller.HandleKeyPress(new GumKeyEventArgs { Key = GumKey.Space });
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 130, Y = 90, Button = GumMouseButton.Left });
+
+        camera.X.ShouldBe(originalX - (130 - 100) / 2f);
+        camera.Y.ShouldBe(originalY - (90 - 100) / 2f);
+        raised.ShouldBe(1);
+    }
+
+    [Fact]
+    public void IsPanning_TracksSpaceInitiatedDragTheSameAsMiddleButtonDrag()
+    {
+        var (controller, _, _, _) = CreateSut();
+
+        controller.IsPanning.ShouldBeFalse();
+
+        controller.HandleKeyPress(new GumKeyEventArgs { Key = GumKey.Space });
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.IsPanning.ShouldBeTrue();
+
+        controller.HandleMouseUp(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.IsPanning.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void HandleKeyUp_Space_WhileSpacePanningInProgress_StopsFurtherPanning()
+    {
+        var (controller, camera, _, _) = CreateSut();
+
+        controller.HandleKeyPress(new GumKeyEventArgs { Key = GumKey.Space });
+        controller.HandleMouseDown(new GumMouseEventArgs { X = 100, Y = 100, Button = GumMouseButton.Left });
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 130, Y = 90, Button = GumMouseButton.Left });
+        controller.HandleKeyUp(new GumKeyEventArgs { Key = GumKey.Space });
+
+        var xAfterRelease = camera.X;
+        var yAfterRelease = camera.Y;
+        var raised = 0;
+        controller.CameraChanged += () => raised++;
+
+        controller.HandleMouseMove(new GumMouseEventArgs { X = 200, Y = 200, Button = GumMouseButton.Left });
+
+        camera.X.ShouldBe(xAfterRelease);
+        camera.Y.ShouldBe(yAfterRelease);
+        raised.ShouldBe(0);
+    }
+
+    [Fact]
     public void HandleMouseWheel_ScrollUp_ZoomsInAndKeepsWorldPointUnderCursorFixed()
     {
         var (controller, camera, _, zoomController) = CreateSut();

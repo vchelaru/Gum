@@ -49,7 +49,7 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
     /// <inheritdoc/>
     protected override void OnKeyUp(KeyEventArgs e)
     {
-        Core.HandleKeyUp();
+        Core.HandleKeyUp(e.ToGumKeyEventArgs());
         base.OnKeyUp(e);
     }
 
