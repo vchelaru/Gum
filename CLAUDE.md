@@ -51,7 +51,7 @@ Edit these files **in the worktree**, never the primary checkout — an edit in 
 
 ## Building and Testing
 
-**Final verification is one command, run in the background while you write the PR:** `pwsh Tools/verify.ps1 -Area tool|runtime|shared` builds and tests the full set for that change class (`shared` for anything under `GumCommon/`, `RenderingLibrary/`, `Gum/Wireframe/`, `ToolsUtilities/`), including `Gum.Wpf.sln` and the FRB canary when the sibling exists, and prints only errors, test summaries, and warnings in files changed on the branch. Use the individual targets below for the tight edit/test loop, not for the final pass.
+**Pre-push verification is `pwsh Tools/verify.ps1`, nothing more.** It runs only the test classes the branch added or changed, builds the changed source projects, and reports errors, test summaries, and warnings on changed lines. Do not run whole test projects, `Gum.Wpf.sln`, every runtime, or the FRB canary locally as a routine pass; CI runs that matrix on every push and is the gate. Build a specific extra target only when the change gives a concrete reason (e.g. a new `#if FRB` member reached from shared code).
 
 Pick the right build target based on what you're working on:
 

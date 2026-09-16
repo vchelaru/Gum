@@ -2,8 +2,9 @@
 .SYNOPSIS
 Focused pre-push check: runs only the test classes this branch added or changed (which also builds
 the projects they depend on), builds any changed source project no changed test covers, and prints
-per-step status, errors, test summaries, and warnings on lines this branch changed. CI runs the full
-matrix; this is the fast loop, not a copy of CI.
+per-step status, errors, test summaries, and warnings on lines this branch changed (only projects
+that actually recompiled report warnings; an up-to-date project is skipped by MSBuild). CI runs the
+full matrix; this is the fast loop, not a copy of CI.
 
 .PARAMETER Base
 Git ref to diff against. Default origin/main.
@@ -120,7 +121,6 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
     Invoke-Step -Name "test $relativeProject ($filter)" -Command @('test', $project, '-nologo', '-v:m', '--filter', $filter)
 }
 
-# A changed source project already rebuilt by a test run above needs no separate build.
 foreach ($project in $sourceProjects | Sort-Object) {
     $relativeProject = $project.Substring($repo.Length + 1)
     Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q')
