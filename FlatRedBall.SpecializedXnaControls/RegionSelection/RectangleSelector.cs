@@ -98,13 +98,13 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 // We used to return the raw value, but I think we want to round it - if it's to use unit coordinates then it should probably always return them.
 
-                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
+                return IsPositionBeingDragged ? RoundForDisplay(mCoordinates.X) : RoundIfNecessary(mCoordinates.X);
             }
             set
             {
                 mCoordinates.X = value;
 
-                mLineRectangle.X = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
+                mLineRectangle.X = IsPositionBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
 
                 UpdateHandles();
             }
@@ -114,12 +114,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             get
             {
-                return IsPositionBeingDragged ? RoundToGridIfNecessary(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
+                return IsPositionBeingDragged ? RoundForDisplay(mCoordinates.Y) : RoundIfNecessary(mCoordinates.Y);
             }
             set
             {
                 mCoordinates.Y = value;
-                mLineRectangle.Y = IsPositionBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
+                mLineRectangle.Y = IsPositionBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
                 UpdateHandles();
 
             }
@@ -186,12 +186,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             get
             {
-                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
+                return IsSizeBeingDragged ? RoundForDisplay(mCoordinates.Width) : RoundIfNecessary(mCoordinates.Width);
             }
             set
             {
                 mCoordinates.Width = value;
-                mLineRectangle.Width = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
+                mLineRectangle.Width = IsSizeBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
@@ -200,12 +200,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         {
             get
             {
-                return IsSizeBeingDragged ? RoundToGridIfNecessary(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
+                return IsSizeBeingDragged ? RoundForDisplay(mCoordinates.Height) : RoundIfNecessary(mCoordinates.Height);
             }
             set
             {
                 mCoordinates.Height = value;
-                mLineRectangle.Height = IsSizeBeingDragged ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
+                mLineRectangle.Height = IsSizeBeingDragged ? RoundForDisplay(value) : RoundIfNecessary(value);
                 UpdateHandles();
             }
         }
@@ -573,6 +573,15 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
                 return value;
             }
         }
+
+        // While dragging, grid snapping (if enabled) takes over the live display - a grid multiple is
+        // already whole-pixel, so no further rounding is needed. Without a grid, RoundToUnitCoordinates
+        // must still apply during the drag, not just at rest: HandleRegionChanged (ControlLogic.cs)
+        // commits a pixel-rounded TextureLeft/Top/Width/Height on every drag tick, and skipping the
+        // rounding here left this selector's own on-screen box disagreeing with the value it had just
+        // committed - the visible "jitter" in issue #4763.
+        private float RoundForDisplay(float value) =>
+            SnappingGridSize != null ? RoundToGridIfNecessary(value) : RoundIfNecessary(value);
 
 
         private void ClickActivity(Cursor cursor)
