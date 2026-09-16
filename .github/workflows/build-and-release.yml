@@ -139,10 +139,11 @@ jobs:
             mkdir -p "$out/Content"
             cp -R Tool/Gum.Avalonia/bin/Release/net10.0/Content/. "$out/Content/"
           fi
-          # gumcli beside the head (SvgExportCommand looks in GumCli/ for gumcli[.exe], else gumcli.dll
-          # run through dotnet); framework-dependent, since the head's own runtime is self-contained
-          # and the CLI's is not shared, the .dll form is what a self-contained head can run.
-          dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/GumCli"
+          # gumcli beside the head, framework-dependent: SvgExportCommand loads GumCli/gumcli.dll
+          # in-process through an isolated AssemblyLoadContext (Gum.Services.IsolatedPluginHost)
+          # instead of spawning it as a subprocess, so it runs on the head's own already-loaded
+          # runtime rather than shipping a second self-contained copy just for SVG export (#4723).
+          dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained false -p:Version="$version" -o "$out/GumCli"
           # XML doc files next to assemblies are pure waste in a packaged release - they exist
           # because GenerateDocumentationFile is on for the runtime libraries so they ship as NuGet
           # packages (#4745). Content/ is excluded since its .xml (if any) is Gum project content,

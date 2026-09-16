@@ -76,18 +76,7 @@ public static class SvgCommand
             return 2;
         }
 
-        ISvgExportService service = new SkiaGumSvgExportService();
-
-        SvgExportRequest request = new SvgExportRequest
-        {
-            ProjectPath = fullProjectPath,
-            ElementName = elementName,
-            OutputPath = outputPath,
-            Width = width,
-            Height = height,
-        };
-
-        SvgExportResult result = service.ExportSvg(request);
+        SvgExportResult result = ExportSvg(fullProjectPath, elementName, outputPath, width, height);
 
         if (!result.Success)
         {
@@ -97,5 +86,37 @@ public static class SvgCommand
 
         Console.WriteLine($"SVG written to: {result.OutputPath}");
         return 0;
+    }
+
+    /// <summary>
+    /// Runs the same export <see cref="Execute"/> uses, exposed as a public static method with a
+    /// primitive-only signature so it can also be invoked by reflection across an
+    /// <c>AssemblyLoadContext</c> boundary (see <c>Gum.Services.IsolatedPluginHost</c> and issue
+    /// #4723) - the Avalonia head's SVG export menu item calls this in-process instead of shelling
+    /// out to gumcli as a subprocess. Returns null on success, or an error message on failure;
+    /// deliberately avoids throwing so a reflection caller never needs to know
+    /// <see cref="SvgExportResult"/>'s type identity.
+    /// </summary>
+    public static string? ExportSvgInProcess(string projectPath, string elementName, string outputPath)
+    {
+        SvgExportResult result = ExportSvg(projectPath, elementName, outputPath, width: null, height: null);
+        return result.Success ? null : result.ErrorMessage;
+    }
+
+    private static SvgExportResult ExportSvg(
+        string projectPath, string elementName, string outputPath, int? width, int? height)
+    {
+        ISvgExportService service = new SkiaGumSvgExportService();
+
+        SvgExportRequest request = new SvgExportRequest
+        {
+            ProjectPath = projectPath,
+            ElementName = elementName,
+            OutputPath = outputPath,
+            Width = width,
+            Height = height,
+        };
+
+        return service.ExportSvg(request);
     }
 }
