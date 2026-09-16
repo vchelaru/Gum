@@ -1,4 +1,4 @@
-name: Build and Test Runtimes, Unit Tests, Generated Code Projects
+name: Test Runtimes
 
 # Do NOT add paths-ignore to the pull_request trigger. This workflow produces
 # `Build-and-Test (macos-15)` and `Build-and-Test (windows-latest)`, both of

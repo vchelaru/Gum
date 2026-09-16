@@ -1,4 +1,4 @@
-name: "Build Samples"
+name: "Samples"
 
 # Push/PR triggers make this the regression test for Samples/SilkNetGum, the
 # proof-of-concept that SkiaGum is drop-in for a Silk.NET host (#2738). Without
