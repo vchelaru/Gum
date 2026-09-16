@@ -108,9 +108,14 @@ jobs:
           mkdir -p dist
           case "$rid" in
             win-*)
-              # `zip` isn't on PATH in the Git-Bash environment `shell: bash` uses on windows-latest
-              # (#4767 moved win-x64 there; #4775), so package with PowerShell's Compress-Archive.
+              # Git Bash on windows-latest (#4767 moved win-x64 there) only carries GNU coreutils,
+              # not specialty tools like `zip`/`shasum` (#4775, #4777) - package and hash with
+              # Windows-native equivalents instead: PowerShell's Compress-Archive, and certutil
+              # (built into Windows, no PowerShell module dependency) formatted to match the
+              # `<hash>  <filename>` convention shasum uses for the other RIDs below.
               powershell -NoProfile -Command "Compress-Archive -Path '$out/*' -DestinationPath 'dist/Gum-$rid.zip' -Force"
+              hash=$(certutil -hashfile "dist/Gum-$rid.zip" SHA256 | sed -n '2p' | tr -d ' \r')
+              echo "$hash  Gum-$rid.zip" > "dist/Gum-$rid.sha256"
               ;;
             osx-*)
               app="publish/app/Gum.app"
@@ -125,13 +130,14 @@ jobs:
               # not -9e - that only shaved another ~2.5% for 10x the time). macOS Archive Utility
               # opens .tar.xz natively; Linux's tar/xz-utils are standard on any desktop distro.
               tar -cJf "dist/Gum-$rid.tar.xz" -C publish/app Gum.app
+              (cd dist && shasum -a 256 "Gum-$rid.tar.xz" > "Gum-$rid.sha256")
               ;;
             linux-*)
               chmod +x "$out/Gum.Avalonia"
               tar -cJf "dist/Gum-$rid.tar.xz" -C "$out" .
+              (cd dist && shasum -a 256 "Gum-$rid.tar.xz" > "Gum-$rid.sha256")
               ;;
           esac
-          (cd dist && shasum -a 256 Gum-$rid.* > "Gum-$rid.sha256")
 
       - name: Upload package
         uses: actions/upload-artifact@v4
