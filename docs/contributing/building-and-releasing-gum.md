@@ -30,7 +30,7 @@ The skill writes a draft to `temp/` and walks through any open questions with yo
 ### 2. Run the release
 
 1. Create screenshots (and GIFs) for the highlighted features.
-2. Run the [Build and Release Gum Tool workflow](https://github.com/vchelaru/Gum/actions/workflows/build-and-release.yml) with full release settings. It builds and attaches the native Avalonia packages for Windows, macOS, and Linux (`Gum-<rid>.zip`/`.tar.gz` with their `.sha256` files, see [Setup](../gum-tool/setup/README.md)); the WPF tool no longer ships, so a failed package build fails the release.
+2. Run the [Build and Release Gum Tool workflow](https://github.com/vchelaru/Gum/actions/workflows/build-and-release.yml) with full release settings. It builds and attaches the native Avalonia packages for Windows, macOS, and Linux (`Gum-<rid>.zip`/`.tar.xz` with their `.sha256` files, see [Setup](../gum-tool/setup/README.md)); the WPF tool no longer ships, so a failed package build fails the release.
 3. Add the generated notes and screenshots to the GitHub release. Fill in the **Full Changelog** compare link once the tag exists.
 4. Create or update the [migration documentation](../gum-tool/upgrading/README.md) if there are breaking changes.
 5. Announce the release across the community channels: FRB Discord, MonoGame Discord, MGE Discord, Kni Discord, Twitter, Bluesky, and the MonoGame community forum.
