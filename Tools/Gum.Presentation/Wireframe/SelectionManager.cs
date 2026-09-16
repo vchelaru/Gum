@@ -939,6 +939,12 @@ public class SelectionManager : ISelectionManager
                 }
             }
         }
+        else
+        {
+            // Idle frame. The only handler work left is ending a drag whose release this manager
+            // never ran for (camera pan, off-canvas release) - see WireframeEditor.ProcessHandleInput.
+            WireframeEditor?.ProcessHandleInput(cursor, worldX, worldY);
+        }
 
         // Handle off-canvas drag/release while a rectangle selection is in progress.
         // cursor.PrimaryDown and PrimaryClick both require IsInWindow, so neither fires
