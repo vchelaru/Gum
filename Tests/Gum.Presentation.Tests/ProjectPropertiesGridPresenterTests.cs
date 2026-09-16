@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.Plugins.PropertiesWindowPlugin;
+using Gum.Services;
+using Moq;
 using Shouldly;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -69,6 +71,25 @@ public class ProjectPropertiesGridPresenterTests
 
         grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontRanges))!.IsReadOnly.ShouldBeTrue();
         grid.RefreshCount.ShouldBeGreaterThan(0);
+    }
+
+    [Theory]
+    [InlineData(true, "Windows", false, null)]
+    [InlineData(false, "macOS", true, "KernSmith is used on macOS")]
+    [InlineData(false, "Linux", true, "KernSmith is used on Linux")]
+    public void FontGenerator_IsReadOnlyAndNamesTheOs_WhereBmFontCannotRun(bool isWindows, string osName, bool expectedReadOnly, string? expectedDetail)
+    {
+        ProjectPropertiesViewModel viewModel = new ProjectPropertiesViewModel();
+        viewModel.SetFrom(autoSave: true, new GumProjectSave());
+        ModelBackedGrid grid = new ModelBackedGrid();
+        IOperatingSystemInfo os = Mock.Of<IOperatingSystemInfo>(o => o.IsWindows == isWindows && o.DisplayName == osName);
+        ProjectPropertiesGridPresenter presenter = new ProjectPropertiesGridPresenter(grid, os);
+
+        presenter.Bind(viewModel);
+
+        InstanceMember member = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.FontGenerator))!;
+        member.IsReadOnly.ShouldBe(expectedReadOnly);
+        member.DetailText.ShouldBe(expectedDetail);
     }
 
     [Fact]
