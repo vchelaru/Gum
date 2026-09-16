@@ -37,4 +37,6 @@ public enum GumKey
 
     Oemplus = 0xBB,
     OemMinus = 0xBD,
+
+    Space = 0x20,
 }

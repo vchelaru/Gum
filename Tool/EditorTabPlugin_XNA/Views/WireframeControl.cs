@@ -27,7 +27,7 @@ public class WireframeControl : WpfGraphicsDeviceControl
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
 
         KeyDown += HandleKeyDown;
-        KeyUp += (_, _) => Core.HandleKeyUp();
+        KeyUp += (_, e) => Core.HandleKeyUp(e.ToGumKeyEventArgs());
         // Focus is taken by WpfGraphicsDeviceControl.OnMouseDown, which runs before these.
         MouseDown += (_, e) => Core.HandleMouseDown(e.ToGumMouseEventArgs(this));
         MouseMove += (_, e) => Core.HandleMouseMove(e.ToGumMouseEventArgs(this));

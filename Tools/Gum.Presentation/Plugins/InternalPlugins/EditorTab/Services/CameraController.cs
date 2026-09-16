@@ -18,9 +18,14 @@ public class CameraController
     int _lastMouseX;
     int _lastMouseY;
     bool _isPanning;
+    bool _isSpaceDown;
+    bool _isSpacePanning;
 
     public event Action? CameraChanged;
     IHotkeyManager _hotkeyManager;
+
+    /// <summary>Whether a middle-button or Space+left-button drag is currently panning the camera.</summary>
+    public bool IsPanning => _isPanning;
 
     public void Initialize(Camera camera, IZoomController zoomController, IHotkeyManager hotkeyManager)
     {
@@ -63,9 +68,10 @@ public class CameraController
 
     public void HandleMouseDown(GumMouseEventArgs e)
     {
-        if (e.Button == GumMouseButton.Middle)
+        if (e.Button == GumMouseButton.Middle || (e.Button == GumMouseButton.Left && _isSpaceDown))
         {
             _isPanning = true;
+            _isSpacePanning = e.Button == GumMouseButton.Left;
             _lastMouseX = e.X;
             _lastMouseY = e.Y;
         }
@@ -73,9 +79,10 @@ public class CameraController
 
     public void HandleMouseUp(GumMouseEventArgs e)
     {
-        if (e.Button == GumMouseButton.Middle)
+        if (e.Button == GumMouseButton.Middle || (e.Button == GumMouseButton.Left && _isSpacePanning))
         {
             _isPanning = false;
+            _isSpacePanning = false;
         }
     }
 
@@ -87,7 +94,8 @@ public class CameraController
         // (e.g. a stray/synchronized move), in which case _lastMouseX/Y would still be the position
         // from the end of a previous, already-released drag, and the whole idle-period distance
         // would get applied as one jump.
-        if (_isPanning && e.Button == GumMouseButton.Middle)
+        bool isPanningButtonHeld = e.Button == GumMouseButton.Middle || (e.Button == GumMouseButton.Left && _isSpacePanning);
+        if (_isPanning && isPanningButtonHeld)
         {
             int xChange = e.X - _lastMouseX;
             int yChange = e.Y - _lastMouseY;
@@ -105,8 +113,27 @@ public class CameraController
         }
     }
 
+    /// <summary>Tracks Space release so a left-button pan that Space started stops, mid-drag if needed.</summary>
+    public void HandleKeyUp(GumKeyEventArgs e)
+    {
+        if (e.Key == GumKey.Space)
+        {
+            _isSpaceDown = false;
+            if (_isSpacePanning)
+            {
+                _isPanning = false;
+                _isSpacePanning = false;
+            }
+        }
+    }
+
     public void HandleKeyPress(GumKeyEventArgs e)
     {
+        if (e.Key == GumKey.Space)
+        {
+            _isSpaceDown = true;
+        }
+
         if (_hotkeyManager.MoveCameraLeft.IsPressed(e))
         {
             Camera.X -= 10 / Camera.Zoom;
