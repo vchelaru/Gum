@@ -1,10 +1,12 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Gum.Avalonia.Themes;
 using Gum.Services.Dialogs;
@@ -140,10 +142,19 @@ public sealed class DialogWindow : Window
         }
         footer.Children.Add(buttons);
 
+        // As the WPF window: the view scrolls vertically when it would not fit, so the buttons stay
+        // reachable under a tall view (a rename prompt listing every affected reference, say).
+        ScrollViewer scroller = new ScrollViewer
+        {
+            Content = content,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
+
         DockPanel body = new DockPanel { Margin = new Thickness(12) };
         DockPanel.SetDock(footer, Dock.Bottom);
         body.Children.Add(footer);
-        body.Children.Add(content);
+        body.Children.Add(scroller);
 
         TextBlock caption = new TextBlock
         {
@@ -187,6 +198,20 @@ public sealed class DialogWindow : Window
                 e.Handled = true;
             }
         };
+    }
+
+    /// <summary>
+    /// Caps the window at the working area of the screen it will open on (the owner's screen, or the
+    /// primary one), so a tall view scrolls instead of pushing the buttons off screen. The WPF window
+    /// capped itself to the owner's height; the screen is the bound that matters for reachability.
+    /// </summary>
+    public void FitHeightToScreen(Window? owner)
+    {
+        Screen? screen = (owner != null ? Screens.ScreenFromWindow(owner) : null) ?? Screens.Primary;
+        if (screen != null)
+        {
+            MaxHeight = screen.WorkingArea.Height / screen.Scaling;
+        }
     }
 
     // The WPF dialog's action buttons: the default (primary) button, 64 wide at least, 16 by 4 padding.

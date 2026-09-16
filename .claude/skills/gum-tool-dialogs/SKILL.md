@@ -77,6 +77,11 @@ the VM; a view sets `DialogWindow.SetDialogTitle(this, "...")` and
 `DialogViewModel` in `Gum.Presentation` has no registered view and no named owner in its
 `OwnedElsewhere` list, so **adding a dialog VM means registering its Avalonia view in the same PR**.
 
+`DialogWindow` wraps the view in a vertical `ScrollViewer` and `FitHeightToScreen` caps the window
+at the screen's working area, so a tall view scrolls and the buttons stay reachable. A list or tree
+inside a view gets unbounded height from that scroller, so it needs its own `MaxHeight` (or the view
+a fixed `Height`) to scroll internally, as WPF's `Dialog.ScrollContent="False"` views did.
+
 **Menu actions run after the menu closes.** Every Avalonia menu item (main menu, context menus,
 the Variables tab, the Animations tab, the Standards palette) invokes its action through
 `MenuItemActions.InvokeAfterClose` (`Tool/Gum.Avalonia/Shell/MenuItemActions.cs`). The dialog

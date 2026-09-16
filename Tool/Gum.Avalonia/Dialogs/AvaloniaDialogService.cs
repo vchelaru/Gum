@@ -166,6 +166,7 @@ public class AvaloniaDialogService : IDialogService
         Control view = _viewRegistry.CreateView(viewModel);
         DialogWindow window = new DialogWindow(viewModel, view);
         Window? owner = MainWindow;
+        window.FitHeightToScreen(owner);
 
         using CancellationTokenSource closed = new CancellationTokenSource();
         window.Closed += (_, _) => closed.Cancel();
