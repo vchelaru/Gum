@@ -1,10 +1,12 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Gum.Avalonia.Themes;
 using Gum.Services.Dialogs;
@@ -33,6 +35,13 @@ public sealed class DialogWindow : Window
     public static readonly AttachedProperty<Control?> AuxiliaryActionsProperty =
         AvaloniaProperty.RegisterAttached<DialogWindow, Control, Control?>("AuxiliaryActions");
 
+    /// <summary>
+    /// Set false on a dialog view to keep the window from wrapping it in a scroller, so the view gets
+    /// the window's bounded height and scrolls a part of itself. Twin of WPF's <c>Dialog.ScrollContent</c>.
+    /// </summary>
+    public static readonly AttachedProperty<bool> ScrollContentProperty =
+        AvaloniaProperty.RegisterAttached<DialogWindow, Control, bool>("ScrollContent", defaultValue: true);
+
     /// <summary>Name of the caption text block that shows the title inside the frame.</summary>
     public const string CaptionName = "PART_Caption";
 
@@ -58,6 +67,12 @@ public sealed class DialogWindow : Window
 
     /// <summary>Places <paramref name="actions"/> at the left of <paramref name="view"/>'s button row.</summary>
     public static void SetAuxiliaryActions(Control view, Control? actions) => view.SetValue(AuxiliaryActionsProperty, actions);
+
+    /// <summary>Gets whether the window scrolls <paramref name="view"/> (the default) or leaves scrolling to it.</summary>
+    public static bool GetScrollContent(Control view) => view.GetValue(ScrollContentProperty);
+
+    /// <summary>Set false to give <paramref name="view"/> the window's bounded height instead of a scroller.</summary>
+    public static void SetScrollContent(Control view, bool scroll) => view.SetValue(ScrollContentProperty, scroll);
 
     /// <summary>
     /// Gives <paramref name="target"/> keyboard focus once its dialog window has opened, then runs
@@ -140,10 +155,21 @@ public sealed class DialogWindow : Window
         }
         footer.Children.Add(buttons);
 
+        // As the WPF window: the view scrolls vertically when it would not fit, so the buttons stay
+        // reachable under a tall view, unless the view opted out to scroll a part of itself.
+        Control viewHost = GetScrollContent(content)
+            ? new ScrollViewer
+            {
+                Content = content,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            }
+            : content;
+
         DockPanel body = new DockPanel { Margin = new Thickness(12) };
         DockPanel.SetDock(footer, Dock.Bottom);
         body.Children.Add(footer);
-        body.Children.Add(content);
+        body.Children.Add(viewHost);
 
         TextBlock caption = new TextBlock
         {
@@ -187,6 +213,20 @@ public sealed class DialogWindow : Window
                 e.Handled = true;
             }
         };
+    }
+
+    /// <summary>
+    /// Caps the window at the working area of the screen it will open on (the owner's screen, or the
+    /// primary one), so a tall view scrolls instead of pushing the buttons off screen. The WPF window
+    /// capped itself to the owner's height; the screen is the bound that matters for reachability.
+    /// </summary>
+    public void FitHeightToScreen(Window? owner)
+    {
+        Screen? screen = (owner != null ? Screens.ScreenFromWindow(owner) : null) ?? Screens.Primary;
+        if (screen != null)
+        {
+            MaxHeight = screen.WorkingArea.Height / screen.Scaling;
+        }
     }
 
     // The WPF dialog's action buttons: the default (primary) button, 64 wide at least, 16 by 4 padding.

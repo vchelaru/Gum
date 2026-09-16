@@ -25,20 +25,32 @@ public sealed class MessageDialogView : StackPanel
     }
 }
 
-/// <summary>Prompts for a string: message, optional prefix, text box, validation error, optional check box.</summary>
-public sealed class GetUserStringDialogView : StackPanel
+/// <summary>
+/// Prompts for a string: message, optional prefix, text box, validation error, optional check box.
+/// Only the message scrolls (a rename prompt can list every affected reference); the text box and
+/// what follows it stay pinned beneath it, next to the window's buttons.
+/// </summary>
+public sealed class GetUserStringDialogView : Grid
 {
     /// <summary>Builds the view.</summary>
     public GetUserStringDialogView()
     {
         // The WPF view's width; the text box takes whatever the prefix leaves.
         Width = 450;
+        RowDefinitions = new RowDefinitions("*,Auto,Auto,Auto");
+        DialogWindow.SetScrollContent(this, false);
 
         TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };
         message.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Message)));
-        Children.Add(message);
+        Children.Add(new ScrollViewer
+        {
+            Content = message,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        });
 
         Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*"), Margin = new Thickness(0, 8, 0, 0) };
+        Grid.SetRow(row, 1);
         TextBlock prefix = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 0) };
         prefix.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Prefix)));
         prefix.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Prefix)) { Converter = NotNullConverter.Instance });
@@ -54,12 +66,14 @@ public sealed class GetUserStringDialogView : StackPanel
             .WithThemeResource(TextBlock.FontSizeProperty, FrbThemeResources.CaptionFontSizeKey);
         error.Bind(TextBlock.TextProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Error)));
         error.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.Error)) { Converter = NotNullConverter.Instance });
+        Grid.SetRow(error, 2);
         Children.Add(error);
 
         CheckBox checkBox = new CheckBox { Margin = new Thickness(0, 8, 0, 0) };
         checkBox.Bind(ContentControl.ContentProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.CheckboxText)));
         checkBox.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.IsCheckboxChecked)) { Mode = BindingMode.TwoWay });
         checkBox.Bind(IsVisibleProperty, new Binding(nameof(GetUserStringDialogBaseViewModel.CheckboxText)) { Converter = NotNullConverter.Instance });
+        Grid.SetRow(checkBox, 3);
         Children.Add(checkBox);
 
         DialogWindow.FocusWhenOpened(textBox, () =>
