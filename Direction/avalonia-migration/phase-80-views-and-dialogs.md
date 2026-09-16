@@ -75,7 +75,7 @@ Paths under `Tool/Gum.Avalonia/` unless noted. "Phase N" means another phase own
 | `Gum/Controls/Spinner` | phase 30: `Services/AvaloniaSpinnerFactory` |
 | `Gum/Controls/StateEditingIndicatorBar` | `Controls/StateEditingIndicatorBar` |
 | `Gum/Controls/ThemeSelectionControl` | `Controls/ThemeSelectionView` |
-| `Gum/Controls/TitleFilePathDisplay` | none: the WPF custom title bar; Avalonia keeps the OS title bar showing the path (`Plugins/ShellTitlePlugin`); custom chrome is phase 90 |
+| `Gum/Controls/TitleFilePathDisplay` | `Shell/MainWindow.CreateTitleRow`'s `fileName` label carries the same "View in explorer" / "Copy full path" context menu (`Menus/ProjectTitleContextMenuBuilder`); no custom chrome needed since that label is a real Avalonia control, not OS-native title-bar text |
 | `Gum/Services/Dialogs/DialogWindow` | phase 30: `Dialogs/DialogWindow` (gained title and auxiliary actions here) |
 | `Gum/Services/Dialogs/{Message,GetUserString,Choice,Plugins}DialogView` | phase 30: `Dialogs/Views/GenericDialogViews` |
 | `Gum/Dialogs/NewProjectDialogView` | `Dialogs/Views/NewProjectDialogView` |
