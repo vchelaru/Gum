@@ -32,7 +32,8 @@ public class StateTreeViewTests
     [AvaloniaFact]
     public void MovingASelectedStateUp_KeepsItSelected()
     {
-        (Window window, _, StateViewModel stateB, ComponentSave component) = CreateTreeWithTwoStates(selected: 1);
+        (Window window, StateViewModel[] states, ComponentSave component) = CreateTreeWithStates(count: 2, selected: 1);
+        StateViewModel stateB = states[1];
 
         TreeViewItem container = FindContainer(window, stateB);
         container.Focus();
@@ -49,7 +50,8 @@ public class StateTreeViewTests
     [AvaloniaFact]
     public void MovingASelectedStateDown_KeepsItSelected()
     {
-        (Window window, StateViewModel stateA, _, ComponentSave component) = CreateTreeWithTwoStates(selected: 0);
+        (Window window, StateViewModel[] states, ComponentSave component) = CreateTreeWithStates(count: 2, selected: 0);
+        StateViewModel stateA = states[0];
 
         TreeViewItem container = FindContainer(window, stateA);
         container.Focus();
@@ -63,19 +65,45 @@ public class StateTreeViewTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public void MovingASelectedStateUpTwice_KeepsKeyboardFocusOnTheTree()
+    {
+        // The exact repro from #4755: with states 1..6, select 3 (index 2), Alt+Up moves it up and
+        // it stays highlighted, but the second Alt+Up doesn't move it further - focus has silently
+        // left the tree for the window's own chrome, so the second press never reaches the tree at all.
+        (Window window, StateViewModel[] states, ComponentSave component) = CreateTreeWithStates(count: 6, selected: 2);
+        StateViewModel moved = states[2];
+
+        TreeViewItem container = FindContainer(window, moved);
+        container.Focus();
+        Dispatcher.UIThread.RunJobs();
+
+        window.KeyPress(Key.Up, RawInputModifiers.Alt, PhysicalKey.ArrowUp, null);
+        Dispatcher.UIThread.RunJobs();
+        window.KeyPress(Key.Up, RawInputModifiers.Alt, PhysicalKey.ArrowUp, null);
+        Dispatcher.UIThread.RunJobs();
+
+        component.Categories[0].States[0].ShouldBe(moved.Data);
+        moved.IsSelected.ShouldBeTrue();
+        window.Close();
+    }
+
     private static TreeViewItem FindContainer(Window window, StateViewModel state) =>
         window.GetVisualDescendants().OfType<TreeViewItem>().Single(item => item.DataContext == state);
 
-    private static (Window Window, StateViewModel StateA, StateViewModel StateB, ComponentSave Component) CreateTreeWithTwoStates(int selected)
+    private static (Window Window, StateViewModel[] States, ComponentSave Component) CreateTreeWithStates(int count, int selected)
     {
         ComponentSave component = new ComponentSave { Name = "Button" };
         StateSaveCategory category = new StateSaveCategory { Name = "ColorCategory" };
-        StateSave stateA = new StateSave { Name = "StateA", ParentContainer = component };
-        StateSave stateB = new StateSave { Name = "StateB", ParentContainer = component };
-        category.States.Add(stateA);
-        category.States.Add(stateB);
+        StateSave[] stateSaves = Enumerable.Range(1, count)
+            .Select(i => new StateSave { Name = $"State{i}", ParentContainer = component })
+            .ToArray();
+        foreach (StateSave state in stateSaves)
+        {
+            category.States.Add(state);
+        }
         component.Categories.Add(category);
-        StateSave selectedData = selected == 0 ? stateA : stateB;
+        StateSave selectedData = stateSaves[selected];
 
         Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
         selectedState.SetupGet(x => x.SelectedStateContainer).Returns(component);
@@ -117,8 +145,9 @@ public class StateTreeViewTests
         window.Show();
         Dispatcher.UIThread.RunJobs();
 
-        StateViewModel stateVmA = controller.ViewModel.Categories[0].States.Single(item => item.Data == stateA);
-        StateViewModel stateVmB = controller.ViewModel.Categories[0].States.Single(item => item.Data == stateB);
-        return (window, stateVmA, stateVmB, component);
+        StateViewModel[] stateVms = stateSaves
+            .Select(state => controller.ViewModel.Categories[0].States.Single(item => item.Data == state))
+            .ToArray();
+        return (window, stateVms, component);
     }
 }

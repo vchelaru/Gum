@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -11,6 +12,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Themes;
@@ -65,11 +67,14 @@ public sealed class AvaloniaStateTreeView : DockPanel
         {
             // Alt+Up/Down moves the selected state within its bound ObservableCollection; the
             // TreeView's own SelectedItem tracking drops it in response, even overwriting the view
-            // model's own IsSelected back to false through the TwoWay binding (#4755). The object
-            // reference itself doesn't change across the move, so it's captured before the handler
-            // runs and re-applied after, rather than trusting IsSelected to still be true. Scoped to
-            // just the reorder keys: unlike a move, Delete/Rename/Paste can legitimately change which
-            // item ends up selected, and blindly restoring the old one would fight that.
+            // model's own IsSelected back to false through the TwoWay binding, AND it drops keyboard
+            // focus off the row entirely (#4755) - the second Alt+Up then never reaches this handler
+            // at all and leaks out to the window's own chrome. The moved item's object reference
+            // doesn't change across the move, so it's captured before the handler runs and both its
+            // selection and its container's focus are reapplied after, rather than trusting either to
+            // still hold. Scoped to just the reorder keys: unlike a move, Delete/Rename/Paste can
+            // legitimately change which item ends up selected, and blindly restoring the old one
+            // would fight that.
             bool isReorderKey = e.KeyModifiers.HasFlag(KeyModifiers.Alt) && e.Key is Key.Up or Key.Down;
             object? previouslySelected = isReorderKey ? _tree.SelectedItem : null;
             if (_keyboardHandler.HandleKeyDown(e.ToGumKeyEventArgs()))
@@ -77,7 +82,12 @@ public sealed class AvaloniaStateTreeView : DockPanel
                 e.Handled = true;
                 if (previouslySelected is StateTreeViewItem item)
                 {
-                    Dispatcher.UIThread.Post(() => _tree.SelectedItem = item, DispatcherPriority.Loaded);
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _tree.SelectedItem = item;
+                        _tree.GetVisualDescendants().OfType<TreeViewItem>()
+                            .FirstOrDefault(row => row.DataContext == item)?.Focus();
+                    }, DispatcherPriority.Loaded);
                 }
             }
         }, RoutingStrategies.Tunnel);
