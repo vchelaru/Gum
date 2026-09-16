@@ -9,12 +9,14 @@ using Gum.Dialogs;
 using Gum.Input;
 using Gum.Localization;
 using Gum.Logic;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.ScrollBarPlugin;
+using Gum.ProjectServices;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
@@ -237,7 +239,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IDragDropManager dragDropManager,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
@@ -311,7 +314,9 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
-        _previewLauncher = new PreviewLauncher(_selectedState, _projectManager, _outputManager, AppContext.BaseDirectory);
+        IPreviewGumxProjectionService previewGumxProjectionService =
+            new PreviewGumxProjectionService(new ConvertProjectToJsonService(fileWatchIgnoreList));
+        _previewLauncher = new PreviewLauncher(_selectedState, _projectManager, _outputManager, previewGumxProjectionService, AppContext.BaseDirectory);
 
         _editorViewModel = new EditorViewModel(
             _pluginManager,
@@ -401,6 +406,13 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementSelected += element => _previewLauncher.PushSelection(element);
         this.ElementDelete += HandleElementDeleted;
+
+        // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
+        // (issue #4748) - the Native AOT preview build can't parse .gumx itself, so its hot-reload
+        // watcher only ever sees the temp copy, not the user's actual edits, unless something
+        // re-converts on every save. No-ops when no such preview is currently running.
+        this.AfterElementSave += _ => _previewLauncher.RefreshIfRunning();
+        this.AfterProjectSave += _ => _previewLauncher.RefreshIfRunning();
 
         this.BehaviorSelected += HandleBehaviorSelected;
 

@@ -184,6 +184,50 @@ public class ConvertProjectToJsonServiceTests : IDisposable
         Should.Throw<InvalidOperationException>(() => _service.ConvertToJson(project));
     }
 
+    [Fact]
+    public void ConvertToJson_WithOutputDirectory_WritesJsonTreeUnderThatDirectoryInsteadOfProjectDirectory()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion, FullFileName = gumxPath.Replace('\\', '/') };
+        project.Screens.Add(new ScreenSave { Name = "MainMenu" });
+        project.Components.Add(new ComponentSave { Name = "Button" });
+        project.Save(gumxPath, saveElements: true);
+
+        string outputDirectory = Path.Combine(_tempDirectory, "PreviewTemp");
+
+        ConvertProjectToJsonResult result = _service.ConvertToJson(project, outputDirectory);
+
+        string gumjPath = Path.Combine(outputDirectory, "Project.gumj");
+        result.ProjectFilePath.ShouldBe(gumjPath.Replace('\\', '/'));
+        File.Exists(gumjPath).ShouldBeTrue();
+        File.Exists(Path.Combine(outputDirectory, "Screens", "MainMenu.gusj")).ShouldBeTrue();
+        File.Exists(Path.Combine(outputDirectory, "Components", "Button.gucj")).ShouldBeTrue();
+
+        // Nothing was written back into the project's own directory.
+        File.Exists(Path.Combine(_tempDirectory, "Project.gumj")).ShouldBeFalse();
+        File.Exists(Path.Combine(_tempDirectory, "Screens", "MainMenu.gusj")).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ConvertToJson_WithOutputDirectory_StillReadsAnimationXmlFromTheProjectsOwnDirectory()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion, FullFileName = gumxPath.Replace('\\', '/') };
+        project.Components.Add(new ComponentSave { Name = "Button" });
+        string animationXmlPath = Path.Combine(_tempDirectory, "Components", "ButtonAnimations.ganx");
+        WriteAnimationXml(animationXmlPath, animationName: "FadeIn");
+
+        string outputDirectory = Path.Combine(_tempDirectory, "PreviewTemp");
+
+        ConvertProjectToJsonResult result = _service.ConvertToJson(project, outputDirectory);
+
+        result.AnimationCount.ShouldBe(1);
+        string animationJsonPath = Path.Combine(outputDirectory, "Components", "ButtonAnimations.ganj");
+        File.Exists(animationJsonPath).ShouldBeTrue();
+        ElementAnimationsSave loadedAnimations = GumAnimationJsonFileSerializer.DeserializeElementAnimations(File.ReadAllText(animationJsonPath));
+        loadedAnimations.Animations.Single().Name.ShouldBe("FadeIn");
+    }
+
     private static void WriteAnimationXml(string path, string animationName)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);

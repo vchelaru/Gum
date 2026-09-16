@@ -4,6 +4,7 @@ using System.IO;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ToolStates;
+using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
@@ -13,20 +14,28 @@ public class PreviewLauncher : IPreviewLauncher
     private readonly ISelectedState _selectedState;
     private readonly IProjectManager _projectManager;
     private readonly IOutputManager _outputManager;
+    private readonly IPreviewGumxProjectionService _previewGumxProjectionService;
     private readonly string _headBaseDirectory;
 
     private Process? _process;
     private string? _selectionFilePath;
+    private bool _isConvertedGumxPreview;
 
     /// <param name="headBaseDirectory">
     /// The running head's own base directory (<c>AppContext.BaseDirectory</c>), used to locate the
     /// preview executable via <see cref="PreviewExecutableLocator"/>.
     /// </param>
-    public PreviewLauncher(ISelectedState selectedState, IProjectManager projectManager, IOutputManager outputManager, string headBaseDirectory)
+    public PreviewLauncher(
+        ISelectedState selectedState,
+        IProjectManager projectManager,
+        IOutputManager outputManager,
+        IPreviewGumxProjectionService previewGumxProjectionService,
+        string headBaseDirectory)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
         _outputManager = outputManager;
+        _previewGumxProjectionService = previewGumxProjectionService;
         _headBaseDirectory = headBaseDirectory;
     }
 
@@ -64,8 +73,8 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         bool isJsonFormat = GumProjectSave.IsJsonFormat(project.FullFileName);
-        string? executablePath = PreviewExecutableLocator.Resolve(_headBaseDirectory, isJsonFormat);
-        if (executablePath == null)
+        ResolvedPreviewExecutable? resolved = PreviewExecutableLocator.Resolve(_headBaseDirectory);
+        if (resolved == null)
         {
             _outputManager.AddError(
                 $"Preview executable not found. Publish {PreviewExecutableLocator.DevBuildProjectPath} " +
@@ -73,10 +82,23 @@ public class PreviewLauncher : IPreviewLauncher
             return;
         }
 
+        string contentRootDirectory = FileManager.GetDirectory(project.FullFileName);
+        string projectPathForLaunch = project.FullFileName;
+
+        // The Native AOT build can't load .gumx directly (XmlSerializer isn't Native-AOT-safe) -
+        // convert to a temporary JSON copy first and launch against that instead (issue #4748).
+        // Content (fonts, textures) still resolves from the original directory: --content-root below.
+        _isConvertedGumxPreview = !isJsonFormat && resolved.Value.IsNativeAot;
+        if (_isConvertedGumxPreview)
+        {
+            projectPathForLaunch = _previewGumxProjectionService.Project(project).ProjectFilePath;
+        }
+
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
         File.WriteAllText(_selectionFilePath, element.Name);
 
-        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(executablePath, project.FullFileName, element.Name, _selectionFilePath);
+        ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
+            resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory);
 
         try
         {
@@ -100,6 +122,23 @@ public class PreviewLauncher : IPreviewLauncher
             return;
         }
         File.WriteAllText(_selectionFilePath, BuildSelectionFileContent(element.Name, activate));
+    }
+
+    /// <inheritdoc/>
+    public void RefreshIfRunning()
+    {
+        if (!IsRunning || !_isConvertedGumxPreview)
+        {
+            return;
+        }
+
+        GumProjectSave? project = _projectManager.GumProjectSave;
+        if (project == null)
+        {
+            return;
+        }
+
+        _previewGumxProjectionService.Project(project);
     }
 
     /// <summary>

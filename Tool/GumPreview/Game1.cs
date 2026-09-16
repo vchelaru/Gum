@@ -8,12 +8,13 @@ using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameAndGum.Renderables;
+using ToolsUtilities;
 
 namespace GumPreview;
 
 /// <summary>
-/// Loads the .gumx passed on the command line and shows the requested screen/component, live and
-/// interactive (issue #4697). No codegen, no recompile - Forms controls work out of the box via
+/// Loads the .gumx/.gumj passed on the command line and shows the requested screen/component, live
+/// and interactive (issue #4697). No codegen, no recompile - Forms controls work out of the box via
 /// <c>GumService.Initialize</c>'s from-file registration (see the gum-forms-behaviors skill).
 /// </summary>
 public class Game1 : Game
@@ -25,16 +26,25 @@ public class Game1 : Game
     private readonly GraphicsDeviceManager _graphics;
     private readonly string _gumxPath;
     private readonly string? _selectionFilePath;
+    private readonly string? _contentRootDirectory;
 
     private string _elementName;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
 
-    public Game1(string gumxPath, string elementName, string? selectionFilePath)
+    /// <param name="contentRootDirectory">
+    /// Overrides where relative content (fonts, textures) resolves from after load (issue #4748).
+    /// Needed when <paramref name="gumxPath"/> is a temporary JSON copy of a .gumx project elsewhere
+    /// (the Native AOT build can't load .gumx directly) - content still lives beside the original
+    /// .gumx, not the temp copy. Null for an ordinary project, where the project's own directory is
+    /// already correct.
+    /// </param>
+    public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null)
     {
         _gumxPath = gumxPath;
         _elementName = elementName;
         _selectionFilePath = selectionFilePath;
+        _contentRootDirectory = contentRootDirectory;
 
         _graphics = new GraphicsDeviceManager(this);
         // Apos.Shapes (the shape fill/effect renderer behind RectangleRuntime/CircleRuntime/etc.)
@@ -51,6 +61,14 @@ public class Game1 : Game
     protected override void Initialize()
     {
         GumService.Default.Initialize(this, _gumxPath);
+
+        // GumService.Initialize just set this to _gumxPath's own directory - override it back to the
+        // original project's directory when _gumxPath is actually a temporary converted copy
+        // elsewhere (issue #4748), so relative content (fonts, textures) still resolves correctly.
+        if (!string.IsNullOrEmpty(_contentRootDirectory))
+        {
+            FileManager.RelativeDirectory = _contentRootDirectory;
+        }
 
         // Must come after GumService.Default.Initialize - ShapeRenderer.Initialize reads the
         // initialized GumService/GraphicsDevice.

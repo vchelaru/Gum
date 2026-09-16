@@ -24,4 +24,13 @@ public interface IPreviewLauncher
     /// screen/component in the tool doesn't yank focus away from it (issue #4717).
     /// </summary>
     void PushSelection(ElementSave? element, bool activate = false);
+
+    /// <summary>
+    /// Refreshes the running preview's JSON projection after a save (issue #4748). Does nothing
+    /// unless a preview is currently running AND it was launched against a temporary JSON copy of a
+    /// .gumx project (the Native AOT build can't load .gumx directly) - re-converts the current
+    /// in-memory project into that same temp copy so the preview's own hot-reload watcher, which is
+    /// watching that directory, picks up the change exactly as it would for a real .gumj project.
+    /// </summary>
+    void RefreshIfRunning();
 }
