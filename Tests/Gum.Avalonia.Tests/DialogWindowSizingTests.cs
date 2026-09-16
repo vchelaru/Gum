@@ -34,13 +34,37 @@ public class DialogWindowSizingTests
         double screenHeight = screen.WorkingArea.Height / screen.Scaling;
         window.Bounds.Height.ShouldBeLessThanOrEqualTo(screenHeight);
 
-        ScrollViewer scroller = window.GetVisualDescendants().OfType<ScrollViewer>().First(s => s.Content == view);
-        scroller.Extent.Height.ShouldBeGreaterThan(scroller.Viewport.Height);
-
-        Button ok = window.GetVisualDescendants().OfType<Button>().First(button => button.Name == DialogWindow.AffirmativeButtonName);
-        Point origin = ok.TranslatePoint(new Point(0, 0), window)!.Value;
-        (origin.Y + ok.Bounds.Height).ShouldBeLessThanOrEqualTo(window.Bounds.Height);
-        ok.Bounds.Height.ShouldBeGreaterThan(0);
+        // Only the message scrolls; the text box and the buttons stay pinned in view beneath it.
+        ScrollViewer scroller = window.GetVisualDescendants().OfType<ScrollViewer>().Single(s => s.Extent.Height > s.Viewport.Height);
+        scroller.GetVisualDescendants().OfType<TextBox>().ShouldBeEmpty();
+        ShouldBeInsideWindow(window.GetVisualDescendants().OfType<TextBox>().First(), window);
+        ShouldBeInsideWindow(window.GetVisualDescendants().OfType<Button>().First(button => button.Name == DialogWindow.AffirmativeButtonName), window);
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void ScrollContentFalse_LeavesTheViewToScrollItself()
+    {
+        // Twin of WPF's Dialog.ScrollContent="False": the view gets the bounded height, not a scroller.
+        MessageDialogViewModel viewModel = new MessageDialogViewModel { Message = "m", AffirmativeText = "Ok" };
+        Border view = new Border { Height = 5000 };
+        DialogWindow.SetScrollContent(view, false);
+        DialogWindow window = new DialogWindow(viewModel, view);
+        window.MaxHeight = 400;
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        window.GetVisualDescendants().OfType<ScrollViewer>().ShouldBeEmpty();
+        window.Bounds.Height.ShouldBeLessThanOrEqualTo(400);
+        window.Close();
+    }
+
+    private static void ShouldBeInsideWindow(Control control, Window window)
+    {
+        Point origin = control.TranslatePoint(new Point(0, 0), window)!.Value;
+        control.Bounds.Height.ShouldBeGreaterThan(0);
+        origin.Y.ShouldBeGreaterThanOrEqualTo(0);
+        (origin.Y + control.Bounds.Height).ShouldBeLessThanOrEqualTo(window.Bounds.Height);
     }
 }
