@@ -35,9 +35,13 @@ public class MainControlViewModel : ViewModel
         4, 8, 12, 16, 24, 32, 48, 64
     };
 
-    public IList<int> AvailableZoomLevels { get; set;} = new int[]
+    /// <summary>
+    /// The one zoom-level list: the combo binds to it, ZoomIn/ZoomOut step through it, and the
+    /// canvas's wheel zoom is given the same list, so every level the wheel lands on has a combo item.
+    /// </summary>
+    public IList<int> AvailableZoomLevels { get; } = new int[]
     {
-        3200, 1600, 800, 400, 200, 100, 50, 25, 12
+        3200, 1600, 1200, 800, 500, 300, 200, 150, 100, 75, 50, 33, 25, 10
     };
 
     public int SelectedZoomLevel

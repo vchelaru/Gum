@@ -118,8 +118,7 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
 
     private void HandleXnaInitialized()
     {
-        textureCoordinatePluginTab = _displayController.CreateControl(CreateView(), _viewModel, out var availableZoomLevels);
-        _viewModel.AvailableZoomLevels = availableZoomLevels;
+        textureCoordinatePluginTab = _displayController.CreateControl(CreateView(), _viewModel, _viewModel.AvailableZoomLevels);
         textureCoordinatePluginTab.Hide();
         textureCoordinatePluginTab.GotFocus += HandleTabShown;
 

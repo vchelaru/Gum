@@ -113,29 +113,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _textureOutlineManager = new TextureOutlineManager();
     }
 
-    public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, out IList<int> availableZoomLevels)
+    public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, IList<int> availableZoomLevels)
     {
         _view = view;
-        //var control = new ImageRegionSelectionControl();
         var innerControl = _view.Canvas;
 
-        innerControl.AvailableZoomLevels = new int[]
-        {
-            3200,
-            1600,
-            1200,
-            800,
-            500,
-            300,
-            200,
-            150,
-            100,
-            75,
-            50,
-            33,
-            25,
-            10,
-        };
+        innerControl.AvailableZoomLevels = availableZoomLevels;
         innerControl.StartRegionChanged += HandleStartRegionChanged;
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
@@ -152,7 +135,6 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         innerControl.DoubleClick += (_, _) =>
             HandleRegionDoubleClicked(innerControl);
 
-        availableZoomLevels = innerControl.AvailableZoomLevels;
         _view.DataContext = dataContext;
 
         _backgroundManager.Initialize(SystemManagers);
