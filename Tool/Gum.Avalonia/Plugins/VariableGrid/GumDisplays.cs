@@ -686,7 +686,16 @@ public class VariableRemoveButton : DataUiDisplayBase
     /// <summary>Builds the row.</summary>
     public VariableRemoveButton()
     {
-        Button remove = new Button { Content = "Remove", Margin = new Thickness(4, 0, 0, 0) };
+        Button remove = new Button
+        {
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Delete, 14),
+            Margin = new Thickness(4, 0, 0, 0),
+            Padding = new Thickness(4, 0),
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Classes = { GumChromeStyles.IconButtonClass },
+        };
+        ToolTip.SetTip(remove, "Remove");
         remove.Click += (_, _) => Remove();
         _name = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0) };
 
