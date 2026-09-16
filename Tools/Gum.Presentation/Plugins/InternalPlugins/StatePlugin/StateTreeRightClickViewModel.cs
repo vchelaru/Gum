@@ -162,6 +162,11 @@ public class StateTreeRightClickViewModel
             });
             items.Add(new ContextMenuItemViewModel
             {
+                Text = "Sort Alphabetically",
+                Action = SortStatesAlphabeticallyClick
+            });
+            items.Add(new ContextMenuItemViewModel
+            {
                 Text = "Copy [" + _selectedState.SelectedStateCategorySave.Name + "]",
                 Action = () => _copyPasteLogic.OnCopy(CopyType.Category)
             });
@@ -355,6 +360,21 @@ public class StateTreeRightClickViewModel
         _editCommands.AskToRenameStateCategory(
             _selectedState.SelectedStateCategorySave,
             _selectedState.SelectedStateContainer);
+    }
+
+    /// <summary>Sorts the selected category's states alphabetically by name.</summary>
+    public void SortStatesAlphabeticallyClick()
+    {
+        var category = _selectedState.SelectedStateCategorySave;
+        if (category == null)
+        {
+            return;
+        }
+
+        category.States.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+
+        _guiCommands.RefreshStateTreeView();
+        _fileCommands.TryAutoSaveCurrentObject();
     }
 
     private void MoveToCategory(string categoryNameToMoveTo)

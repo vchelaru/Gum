@@ -128,6 +128,7 @@ public class StateTreeRightClickViewModelTests
         List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
 
         result.Any(item => item.Text == "Rename Category").ShouldBeTrue();
+        result.Any(item => item.Text == "Sort Alphabetically").ShouldBeTrue();
         result.Any(item => item.Text == "Copy [Visibility]").ShouldBeTrue();
         result.Any(item => item.Text == "Delete [Visibility]").ShouldBeTrue();
     }
@@ -294,6 +295,39 @@ public class StateTreeRightClickViewModelTests
         result.ShouldBeFalse();
         category.States[0].ShouldBe(state1);
         category.States[1].ShouldBe(state2);
+        _guiCommands.Verify(x => x.RefreshStateTreeView(), Times.Never);
+        _fileCommands.Verify(x => x.TryAutoSaveCurrentObject(), Times.Never);
+    }
+
+    [Fact]
+    public void SortStatesAlphabeticallyClick_ShouldSortStatesByName_CaseInsensitive_AndRefresh()
+    {
+        ComponentSave element = new() { Name = "MyComponent" };
+        StateSaveCategory category = new() { Name = "Visibility" };
+        StateSave stateC = new() { Name = "Charlie", ParentContainer = element };
+        StateSave stateA = new() { Name = "alpha", ParentContainer = element };
+        StateSave stateB = new() { Name = "Bravo", ParentContainer = element };
+        category.States.Add(stateC);
+        category.States.Add(stateA);
+        category.States.Add(stateB);
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(category);
+
+        _sut.SortStatesAlphabeticallyClick();
+
+        category.States[0].ShouldBe(stateA);
+        category.States[1].ShouldBe(stateB);
+        category.States[2].ShouldBe(stateC);
+        _guiCommands.Verify(x => x.RefreshStateTreeView(), Times.Once);
+        _fileCommands.Verify(x => x.TryAutoSaveCurrentObject(), Times.Once);
+    }
+
+    [Fact]
+    public void SortStatesAlphabeticallyClick_ShouldDoNothing_WhenNoCategorySelected()
+    {
+        _selectedState.Setup(x => x.SelectedStateCategorySave).Returns((StateSaveCategory?)null);
+
+        _sut.SortStatesAlphabeticallyClick();
+
         _guiCommands.Verify(x => x.RefreshStateTreeView(), Times.Never);
         _fileCommands.Verify(x => x.TryAutoSaveCurrentObject(), Times.Never);
     }
