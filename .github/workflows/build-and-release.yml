@@ -108,7 +108,9 @@ jobs:
           mkdir -p dist
           case "$rid" in
             win-*)
-              (cd "$out" && zip -qr "../../dist/Gum-$rid.zip" .)
+              # `zip` isn't on PATH in the Git-Bash environment `shell: bash` uses on windows-latest
+              # (#4767 moved win-x64 there; #4775), so package with PowerShell's Compress-Archive.
+              powershell -NoProfile -Command "Compress-Archive -Path '$out/*' -DestinationPath 'dist/Gum-$rid.zip' -Force"
               ;;
             osx-*)
               app="publish/app/Gum.app"
