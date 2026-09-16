@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Gum.DataTypes.Serialization.Json;
 
 /// <summary>JSON-serializable shape of an <see cref="ElementReference"/>.</summary>
@@ -6,6 +8,7 @@ internal sealed class ElementReferenceJson
     public string Name { get; set; } = "";
     public ElementType ElementType { get; set; }
     public LinkType LinkType { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Link { get; set; }
 }
 

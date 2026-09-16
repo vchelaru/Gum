@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Gum.DataTypes.Serialization.Json;
 
@@ -23,6 +24,7 @@ internal sealed class GumProjectSaveJson
     public int Version { get; set; }
     public int DefaultCanvasWidth { get; set; }
     public int DefaultCanvasHeight { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<CustomCanvasSize>? CustomCanvasSizes { get; set; }
     public bool ShowOutlines { get; set; }
     public bool ShowCanvasOutline { get; set; }
@@ -45,9 +47,13 @@ internal sealed class GumProjectSaveJson
     public List<ElementReferenceJson> StandardElementReferences { get; set; } = new List<ElementReferenceJson>();
     public List<BehaviorReferenceJson> BehaviorReferences { get; set; } = new List<BehaviorReferenceJson>();
     public string SinglePixelTextureFile { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureTop { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureLeft { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureRight { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? SinglePixelTextureBottom { get; set; }
     public List<CustomPropertySaveJson> CustomProperties { get; set; } = new List<CustomPropertySaveJson>();
 }

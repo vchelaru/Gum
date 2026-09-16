@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Gum.DataTypes.Behaviors;
 
 namespace Gum.DataTypes.Serialization.Json;
@@ -14,6 +15,7 @@ internal sealed class BehaviorSaveJson
     public List<StateSaveCategoryJson> Categories { get; set; } = new List<StateSaveCategoryJson>();
     public List<BehaviorInstanceSaveJson> RequiredInstances { get; set; } = new List<BehaviorInstanceSaveJson>();
     public List<string> RequiredAnimations { get; set; } = new List<string>();
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? DefaultImplementation { get; set; }
 }
 

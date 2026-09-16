@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using Gum.DataTypes.Behaviors;
 
 namespace Gum.DataTypes.Serialization.Json;
@@ -9,8 +10,11 @@ internal class InstanceSaveJson
 {
     public string Name { get; set; } = "";
     public string BaseType { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool DefinedByBase { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Locked { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsSlot { get; set; }
 }
 

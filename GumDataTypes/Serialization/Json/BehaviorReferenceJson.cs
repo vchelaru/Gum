@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Gum.DataTypes.Behaviors;
 
 namespace Gum.DataTypes.Serialization.Json;
@@ -6,7 +7,9 @@ namespace Gum.DataTypes.Serialization.Json;
 internal sealed class BehaviorReferenceJson
 {
     public string Name { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? SourcePath { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? DefaultImplementationOverride { get; set; }
 }
 

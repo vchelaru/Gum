@@ -1,4 +1,5 @@
 using Gum.DataTypes.Variables;
+using System.Text.Json.Serialization;
 
 namespace Gum.DataTypes.Serialization.Json;
 
@@ -7,25 +8,45 @@ namespace Gum.DataTypes.Serialization.Json;
 /// <see cref="VariableSave.Value"/> is represented as a set of typed choice properties instead of a
 /// polymorphic <c>object</c>.
 /// </summary>
+/// <remarks>
+/// Every property below except <see cref="Name"/> and <see cref="Type"/> is null/default for most
+/// variable instances (issue #4757) - <see cref="JsonIgnoreCondition.WhenWritingDefault"/> omits them
+/// rather than writing 12+ null/false fields per instance across a project's thousands of variables.
+/// </remarks>
 internal sealed class VariableSaveJson
 {
     public string Name { get; set; } = "";
     public string Type { get; set; } = "";
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? StandardizedName { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Category { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ExposedAsName { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool SetsValue { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsFile { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsFont { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsHiddenInPropertyGrid { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool IsCustomVariable { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? Description { get; set; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public string? ValueAsString { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public float? ValueAsFloat { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public int? ValueAsInt { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public long? ValueAsLong { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public double? ValueAsDouble { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool? ValueAsBool { get; set; }
 }
 
