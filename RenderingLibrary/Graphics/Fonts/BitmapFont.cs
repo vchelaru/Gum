@@ -274,16 +274,57 @@ public class BitmapFont : IDisposable
             // Don't rely on FileExists because mTextureNames may be aliased.
             // If aliased, the internal loader may redirect. Let it do its job:
             //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
-            mTextures[i] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(mTextureNames[i]);
-
-            // On desktop the loader returns null for a missing file instead of throwing; fall back to
-            // the invalid-texture placeholder so a missing font page doesn't NRE downstream.
-            if (mTextures[i] == null)
-            {
-                // InvalidTexture is initialized at startup, so it is non-null here.
-                mTextures[i] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
-            }
+            mTextures[i] = LoadPageTextureOrPlaceholder(mTextureNames[i]);
         }
+    }
+
+    // #4798: page paths already reported through PropertyAssignmentError. The same font is
+    // re-resolved on every variable assignment, so without this one broken PNG floods the output.
+    private static readonly HashSet<string> _reportedPageLoadFailures = new();
+
+    /// <summary>
+    /// Loads one page texture named by the .fnt. A page that is missing (the desktop loader returns
+    /// null) or undecodable (the loader throws, e.g. a half-written PNG) falls back to
+    /// <see cref="Sprite.InvalidTexture"/> so the font stays usable, and the failure is reported once
+    /// per path through <see cref="Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError"/>.
+    /// Previously the red-X placeholder appeared with no explanation anywhere (#4798).
+    /// </summary>
+    private Texture2D LoadPageTextureOrPlaceholder(string textureName)
+    {
+        Texture2D? texture = null;
+        Exception? loadException = null;
+        try
+        {
+            texture = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureName);
+        }
+        catch (Exception ex)
+        {
+            loadException = ex;
+        }
+
+        if (texture != null)
+        {
+            return texture;
+        }
+
+        bool isFirstReport;
+        lock (_reportedPageLoadFailures)
+        {
+            isFirstReport = _reportedPageLoadFailures.Add(textureName);
+        }
+        if (isFirstReport)
+        {
+            string message = $"Font '{mFontFile}' references texture page '{textureName}' which could not be loaded. " +
+                "Text using this font renders with the invalid-texture placeholder. Regenerate the font or restore the file.";
+            if (loadException != null)
+            {
+                message += "\n" + loadException;
+            }
+            Gum.Wireframe.CustomSetPropertyOnRenderable.RaisePropertyAssignmentError(message);
+        }
+
+        // InvalidTexture is initialized at startup, so it is non-null here.
+        return RenderingLibrary.Graphics.Sprite.InvalidTexture!;
     }
 
     /// <summary>
@@ -298,15 +339,10 @@ public class BitmapFont : IDisposable
 
         mTextureNames = new string[] { textureFile };
 
-        mTextures[0] = global::RenderingLibrary.Content.LoaderManager.Self.LoadContent<Texture2D>(textureFile);
-
-        // On desktop the loader returns null for a missing file instead of throwing; fall back to
-        // the invalid-texture placeholder so the mTextures[0].Name access below doesn't NRE.
-        if (mTextures[0] == null)
-        {
-            // InvalidTexture is initialized at startup, so it is non-null here.
-            mTextures[0] = RenderingLibrary.Graphics.Sprite.InvalidTexture!;
-        }
+        // Set before the page load so a failure report can name the .fnt (SetFontPatternFromFile
+        // below assigns it again, unchanged).
+        mFontFile = fontFile;
+        mTextures[0] = LoadPageTextureOrPlaceholder(textureFile);
 
         mTextureNames[0] = mTextures[0].Name;
 

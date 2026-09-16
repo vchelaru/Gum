@@ -49,7 +49,9 @@ Examples: `FontCache/Font18Arial.fnt`, `FontCache/Font24Times_New_Roman_o1_Bold.
 
 **Key gotcha:** Unless an `IInMemoryFontCreator` or `IRuntimeFontService` is registered, the `.fnt` file must already exist in `FontCache/`. Users often set `FontSize = 24` expecting it to work, but silently get `DefaultBitmapFont` because `Font24Arial.fnt` was never generated. There is no error or warning — the text just renders in the default font.
 
-All platforms (MonoGame/KNI/FNA and Raylib) raise `CustomSetPropertyOnRenderable.PropertyAssignmentError` when a wired `InMemoryFontCreator` or `FontService` throws, or when nothing resolves a usable font. Every raise also goes to `Console.Error`; the event itself has no default subscriber.
+All platforms (MonoGame/KNI/FNA and Raylib) raise `CustomSetPropertyOnRenderable.PropertyAssignmentError` when a wired `InMemoryFontCreator` or `FontService` throws, or when nothing resolves a usable font. Every raise also goes to `Console.Error`; the event itself has no default subscriber (the tool's `EditorTabPluginBase` forwards it to the Output window).
+
+A `.fnt` that loads but names a page PNG that is missing or undecodable is a different failure: `BitmapFont.LoadPageTextureOrPlaceholder` swaps in `Sprite.InvalidTexture` (red X) and raises the same event once per page path. A missing `.fnt` is never reported this way; that is the normal "not generated yet" case above.
 
 ### Path 3: In-Memory Font Creation (IInMemoryFontCreator) — New
 
