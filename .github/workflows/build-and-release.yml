@@ -143,6 +143,11 @@ jobs:
           # run through dotnet); framework-dependent, since the head's own runtime is self-contained
           # and the CLI's is not shared, the .dll form is what a self-contained head can run.
           dotnet publish Tools/Gum.Cli/Gum.Cli.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/GumCli"
+          # XML doc files next to assemblies are pure waste in a packaged release - they exist
+          # because GenerateDocumentationFile is on for the runtime libraries so they ship as NuGet
+          # packages (#4745). Content/ is excluded since its .xml (if any) is Gum project content,
+          # not a doc comment sidecar.
+          find "$out" -name '*.xml' -not -path '*/Content/*' -delete
           mkdir -p dist
           case "$rid" in
             win-*)
