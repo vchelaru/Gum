@@ -15,7 +15,7 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
     private const DepthFormat RenderTargetDepthFormat = DepthFormat.Depth24Stencil8;
 
     private static readonly object _gate = new object();
-    private static HeadlessDeviceGame? _sharedGame;
+    private static readonly RetryingSharedInstance<HeadlessDeviceGame> _shared = new();
     private static int _referenceCount;
 
     private HeadlessDeviceGame? _game;
@@ -28,7 +28,7 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
         {
             lock (_gate)
             {
-                return _sharedGame != null;
+                return _referenceCount > 0;
             }
         }
     }
@@ -38,13 +38,8 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
     {
         lock (_gate)
         {
-            if (_sharedGame == null)
-            {
-                _sharedGame = new HeadlessDeviceGame();
-                _sharedGame.EnsureInitialized();
-            }
+            _game = _shared.GetOrCreate(() => new HeadlessDeviceGame(), g => g.EnsureInitialized());
             _referenceCount++;
-            _game = _sharedGame;
         }
     }
 
@@ -101,14 +96,15 @@ public sealed class GameRenderDeviceHost : ISharedRenderDeviceHost
         {
             return;
         }
+        HeadlessDeviceGame game = _game;
         _game = null;
         lock (_gate)
         {
             _referenceCount--;
-            if (_referenceCount == 0 && _sharedGame != null)
+            if (_referenceCount == 0)
             {
-                _sharedGame.Dispose();
-                _sharedGame = null;
+                game.Dispose();
+                _shared.Clear();
             }
         }
     }
