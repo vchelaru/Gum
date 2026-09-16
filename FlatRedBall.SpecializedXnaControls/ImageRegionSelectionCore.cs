@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using FlatRedBall.SpecializedXnaControls.RegionSelection;
 using RenderingLibrary;
-using FlatRedBall.SpecializedXnaControls.Input;
 using RenderingLibrary.Content;
 using ToolsUtilities;
 using System.Reflection;
@@ -26,9 +25,11 @@ public enum ZoomDirection
 
 /// <summary>
 /// The texture-coordinate editing canvas without a UI framework: a texture with draggable
-/// <see cref="RectangleSelector"/> regions over it, zoom levels, and camera panning. A head's
-/// control (<c>ImageRegionSelectionControl</c> on WPF, the Avalonia canvas control) owns one of
-/// these, forwards its frames and wheel input, and implements <see cref="ICanvasHost"/>.
+/// <see cref="RectangleSelector"/> regions over it and zoom levels. A head's control
+/// (<c>ImageRegionSelectionControl</c> on WPF, the Avalonia canvas control) owns one of these,
+/// forwards its frames, and implements <see cref="ICanvasHost"/>. Camera panning and wheel zoom
+/// are not handled here: the display controller drives the shared <c>CameraController</c> from the
+/// head's mouse and key events and sets <see cref="IsCameraPanning"/> while a drag is in progress.
 /// </summary>
 public class ImageRegionSelectionCore
 {
@@ -43,8 +44,6 @@ public class ImageRegionSelectionCore
 
     bool mRoundRectangleSelectorToUnit = true;
     List<RectangleSelector> mRectangleSelectors = new List<RectangleSelector>();
-
-    CameraPanningLogic mCameraPanningLogic;
 
     InputLibrary.Cursor mCursor;
     InputLibrary.Keyboard mKeyboard;
@@ -61,8 +60,6 @@ public class ImageRegionSelectionCore
     }
 
     IList<int> mAvailableZoomLevels;
-
-    readonly WheelZoomAccumulator _wheelZoomAccumulator = new();
 
     bool showFullAlpha;
 
@@ -380,6 +377,16 @@ public class ImageRegionSelectionCore
         }
     }
 
+    /// <summary>
+    /// Whether the camera is being dragged. While true the rectangle selectors skip their input,
+    /// so a Space+left-drag pans without also dragging a region's handle.
+    /// </summary>
+    public bool IsCameraPanning
+    {
+        get;
+        set;
+    }
+
     public bool ShowFullAlpha
     {
         get
@@ -412,9 +419,6 @@ public class ImageRegionSelectionCore
     public event EventHandler? RegionChanged;
     public event EventHandler? EndRegionChanged;
 
-    public event EventHandler? MouseWheelZoom;
-    public event Action? Panning;
-
     /// <summary>
     /// Raised when the canvas is double-clicked. WPF panels have no built-in double-click event,
     /// so this stands in for the WinForms <c>Control.DoubleClick</c> the control used to expose.
@@ -431,11 +435,6 @@ public class ImageRegionSelectionCore
     {
         _host = host;
         CustomInitialize();
-    }
-
-    public void DisableHotkeyPanning()
-    {
-        mCameraPanningLogic.IsHotkeyPanningEnabled = false;
     }
 
     public void CreateDefaultZoomLevels()
@@ -512,10 +511,8 @@ public class ImageRegionSelectionCore
             mKeyboard = new InputLibrary.Keyboard();
             mKeyboard.Initialize(mInputHost);
 
-            mCameraPanningLogic = new CameraPanningLogic(mManagers, mCursor, mKeyboard);
             var camera = mManagers.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
-            mCameraPanningLogic.Panning += HandlePanning;
             ZoomNumbers = new Zooming.ZoomNumbers();
         }
     }
@@ -543,7 +540,11 @@ public class ImageRegionSelectionCore
         return newSelector;
     }
 
-    private void HandlePanning()
+    /// <summary>
+    /// Keeps the camera within half a screen of the texture's edges. The display controller calls
+    /// this after every camera move so a pan can't scroll the texture out of view.
+    /// </summary>
+    public void ClampCameraToTexture()
     {
         var cameraWidth = this.Camera.ClientWidth / this.Camera.Zoom;
         var cameraHeight = this.Camera.ClientHeight / this.Camera.Zoom;
@@ -555,11 +556,6 @@ public class ImageRegionSelectionCore
         {
             this.Camera.X = Math.Min(Camera.X, CurrentTexture.Width + -cameraWidth / 2f);
             this.Camera.Y = Math.Min(Camera.Y, CurrentTexture.Height + -cameraHeight / 2f);
-        }
-
-        if (Panning != null)
-        {
-            Panning();
         }
     }
 
@@ -586,16 +582,18 @@ public class ImageRegionSelectionCore
         mKeyboard.Activity();
 
 
-        foreach (var item in mRectangleSelectors)
+        if (!IsCameraPanning)
         {
-            item.Activity(mCursor, mKeyboard, mInputHost);
+            foreach (var item in mRectangleSelectors)
+            {
+                item.Activity(mCursor, mKeyboard, mInputHost);
+            }
         }
     }
 
     /// <summary>The host calls this with the render target bound and cleared.</summary>
     public void Draw()
     {
-        mCameraPanningLogic?.Activity();
         this.PerformActivity();
 
         // Plugins should be removing textures if they are null, but a texture may become null and a plugin
@@ -608,97 +606,37 @@ public class ImageRegionSelectionCore
     }
 
     /// <summary>
-    /// Zooms on a wheel tick when zoom levels are configured. Returns true when the tick was
-    /// consumed, so the host can stop a containing scroll viewer from scrolling too.
+    /// Steps to the next zoom level in <paramref name="zoomDirection"/>, keeping the world point at
+    /// the center of the view fixed. Does nothing at the end of the level list.
     /// </summary>
-    public bool HandleMouseWheel(int delta)
+    public void HandleZoom(ZoomDirection zoomDirection)
     {
-        bool handled = false;
-        if (mAvailableZoomLevels != null)
-        {
-            if (ZoomIndex != -1)
-            {
-                // Stop a containing scroll viewer from also scrolling on the same wheel tick.
-                handled = true;
-
-                // Throttled to one zoom step per full mouse-notch-equivalent (see
-                // WheelZoomAccumulator), rather than one step per event - otherwise a trackpad's
-                // two-finger scroll, which reports many small-delta events per second, races
-                // through many zoom levels a physical mouse wheel would only reach one click at a
-                // time.
-                int step = _wheelZoomAccumulator.Consume(delta);
-
-                if (step != 0)
-                {
-                    var zoomDirection = step < 0 ? ZoomDirection.ZoomOut : ZoomDirection.ZoomIn;
-                    HandleZoom(zoomDirection, true);
-                }
-            }
-        }
-        return handled;
-    }
-
-    public void HandleZoom(ZoomDirection zoomDirection, bool considerCursor)
-    {
-        bool didZoom = false;
         float oldZoom = ZoomValue / 100.0f;
         int index = ZoomIndex;
 
-        float worldX = mCursor.GetWorldX(mManagers);
-        float worldY = mCursor.GetWorldY(mManagers);
+        float centerWorldX = Camera.X + Camera.ClientWidth / (2 * Camera.Zoom);
+        float centerWorldY = Camera.Y + Camera.ClientHeight / (2 * Camera.Zoom);
 
-        if (!considerCursor)
-        {
-            worldX = Camera.X + Camera.ClientWidth / (2 * Camera.Zoom);
-            worldY = Camera.Y + Camera.ClientHeight / (2 * Camera.Zoom);
-        }
-
+        bool didZoom = false;
         if (zoomDirection == ZoomDirection.ZoomIn && index > 0)
         {
             ZoomValue = mAvailableZoomLevels[index - 1];
-
             didZoom = true;
         }
-        else if (zoomDirection == ZoomDirection.ZoomOut && index < mAvailableZoomLevels.Count - 1)
+        else if (zoomDirection == ZoomDirection.ZoomOut && index != -1 && index < mAvailableZoomLevels.Count - 1)
         {
             ZoomValue = mAvailableZoomLevels[index + 1];
-
             didZoom = true;
         }
-
 
         if (didZoom)
         {
-            float oldCameraX = Camera.X;
-            float oldCameraY = Camera.Y;
+            float differenceX = Camera.X - centerWorldX;
+            float differenceY = Camera.Y - centerWorldY;
 
-            AdjustCameraPositionAfterZoom(worldX, worldY,
-                oldCameraX, oldCameraY, oldZoom, ZoomValue, Camera);
-
-            if (MouseWheelZoom != null)
-            {
-                MouseWheelZoom(this, null);
-            }
+            Camera.X = centerWorldX + differenceX * oldZoom / Camera.Zoom;
+            Camera.Y = centerWorldY + differenceY * oldZoom / Camera.Zoom;
         }
-    }
-
-    public static void AdjustCameraPositionAfterZoom(float oldCursorWorldX, float oldCursorWorldY, 
-        float oldCameraX, float oldCameraY, float oldZoom, float newZoom, Camera camera)
-    {
-        float differenceX = oldCameraX - oldCursorWorldX;
-        float differenceY = oldCameraY - oldCursorWorldY;
-
-        float zoomAsFloat = newZoom / 100.0f;
-
-        float modifiedDifferenceX = differenceX * oldZoom / zoomAsFloat;
-        float modifiedDifferenceY = differenceY * oldZoom / zoomAsFloat;
-
-        camera.X = oldCursorWorldX + modifiedDifferenceX;
-        camera.Y = oldCursorWorldY + modifiedDifferenceY;
-
-        // This makes the zooming behavior feel weird.  We'll do this when the user selects a new 
-        // AnimationChain, but not when zooming.
-        //BringSpriteInView();
     }
 
     public void BringSpriteInView()

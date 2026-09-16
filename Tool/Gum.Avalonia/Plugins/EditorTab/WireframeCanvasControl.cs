@@ -57,59 +57,33 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
-        Core.HandleMouseDown(ToGumMouseEventArgs(e, e.GetCurrentPoint(this).Properties.PointerUpdateKind));
+        Core.HandleMouseDown(e.ToGumMouseEventArgs(this, e.GetCurrentPoint(this).Properties.PointerUpdateKind));
     }
 
     /// <inheritdoc/>
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        Core.HandleMouseMove(ToGumMouseEventArgs(e, PointerUpdateKind.Other));
+        Core.HandleMouseMove(e.ToGumMouseEventArgs(this, PointerUpdateKind.Other));
     }
 
     /// <inheritdoc/>
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        Core.HandleMouseUp(ToGumMouseEventArgs(e, e.GetCurrentPoint(this).Properties.PointerUpdateKind));
+        Core.HandleMouseUp(e.ToGumMouseEventArgs(this, e.GetCurrentPoint(this).Properties.PointerUpdateKind));
     }
 
     /// <inheritdoc/>
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        GumMouseEventArgs args = ToGumMouseEventArgs(e, PointerUpdateKind.Other);
+        GumMouseEventArgs args = e.ToGumMouseEventArgs(this, PointerUpdateKind.Other);
         // WPF reports 120 per notch; Avalonia reports 1.
         args.Delta = (int)(e.Delta.Y * 120);
         Core.HandleMouseWheel(args);
         e.Handled = args.Handled;
     }
-
-    private GumMouseEventArgs ToGumMouseEventArgs(PointerEventArgs e, PointerUpdateKind updateKind)
-    {
-        Point position = e.GetPosition(this);
-        PointerPointProperties properties = e.GetCurrentPoint(this).Properties;
-        return new GumMouseEventArgs
-        {
-            X = (int)position.X,
-            Y = (int)position.Y,
-            Button = ToGumMouseButton(updateKind, properties),
-            Handled = e.Handled,
-        };
-    }
-
-    // A button event names the button that changed; a move/wheel event doesn't, so report whichever
-    // button is currently held - what a drag needs.
-    private static GumMouseButton ToGumMouseButton(PointerUpdateKind updateKind, PointerPointProperties properties) => updateKind switch
-    {
-        PointerUpdateKind.LeftButtonPressed or PointerUpdateKind.LeftButtonReleased => GumMouseButton.Left,
-        PointerUpdateKind.RightButtonPressed or PointerUpdateKind.RightButtonReleased => GumMouseButton.Right,
-        PointerUpdateKind.MiddleButtonPressed or PointerUpdateKind.MiddleButtonReleased => GumMouseButton.Middle,
-        _ when properties.IsLeftButtonPressed => GumMouseButton.Left,
-        _ when properties.IsRightButtonPressed => GumMouseButton.Right,
-        _ when properties.IsMiddleButtonPressed => GumMouseButton.Middle,
-        _ => GumMouseButton.None,
-    };
 
     /// <inheritdoc/>
     protected override void PreDrawUpdate() => Core.PreDrawUpdate();

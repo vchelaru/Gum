@@ -5,6 +5,13 @@ using Gum.Managers;
 
 namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
+/// <summary>
+/// Camera pan and zoom from mouse and hotkey input, shared by the wireframe canvas and the
+/// texture-coordinate canvas: middle-drag or Space+left-drag pans, the wheel zooms toward the
+/// cursor, and the camera hotkeys step position and zoom. Framework-neutral - each canvas
+/// translates its own input into <see cref="GumMouseEventArgs"/>/<see cref="GumKeyEventArgs"/>
+/// and forwards them here.
+/// </summary>
 public class CameraController
 {
     Camera Camera
@@ -28,14 +35,12 @@ public class CameraController
     /// <summary>Whether a middle-button or Space+left-button drag is currently panning the camera.</summary>
     public bool IsPanning => _isPanning;
 
+    /// <summary>Binds the controller to the camera it moves and the zoom steps it drives.</summary>
     public void Initialize(Camera camera, IZoomController zoomController, IHotkeyManager hotkeyManager)
     {
         _hotkeyManager = hotkeyManager;
         _zoomController = zoomController;
         Camera = camera;
-
-        Camera.X = -30;
-        Camera.Y = -30;
     }
 
     public void HandleMouseWheel(GumMouseEventArgs e)
@@ -117,6 +122,13 @@ public class CameraController
 
             _lastMouseX = e.X;
             _lastMouseY = e.Y;
+        }
+        else if (_isPanning && e.Button == GumMouseButton.None)
+        {
+            // The release happened off the canvas and never reached HandleMouseUp (no mouse
+            // capture on WPF), so a move with nothing held is the only signal the drag is over.
+            _isPanning = false;
+            _isSpacePanning = false;
         }
     }
 

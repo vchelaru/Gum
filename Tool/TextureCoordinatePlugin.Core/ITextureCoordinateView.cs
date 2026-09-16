@@ -35,6 +35,25 @@ public interface ITextureCoordinateView
     /// </summary>
     event Action<GumKeyEventArgs>? KeyDown;
 
+    /// <summary>Raised for a key released over the canvas.</summary>
+    event Action<GumKeyEventArgs>? KeyUp;
+
+    /// <summary>Raised for a mouse button pressed over the canvas, in the canvas's pixel coordinates.</summary>
+    event Action<GumMouseEventArgs>? MouseDown;
+
+    /// <summary>Raised for the mouse moving over the canvas, in the canvas's pixel coordinates.</summary>
+    event Action<GumMouseEventArgs>? MouseMove;
+
+    /// <summary>Raised for a mouse button released over the canvas, in the canvas's pixel coordinates.</summary>
+    event Action<GumMouseEventArgs>? MouseUp;
+
+    /// <summary>
+    /// Raised for a wheel tick over the canvas, with <see cref="GumMouseEventArgs.Delta"/> in WPF
+    /// units (120 per notch). The handler sets <see cref="GumMouseEventArgs.Handled"/> and the head
+    /// copies it back so a containing scroll viewer doesn't also scroll.
+    /// </summary>
+    event Action<GumMouseEventArgs>? MouseWheel;
+
     /// <summary>Runs <paramref name="action"/> once the view has been laid out.</summary>
     void InvokeWhenLoaded(Action action);
 
