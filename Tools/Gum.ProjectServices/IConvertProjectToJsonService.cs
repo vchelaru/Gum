@@ -20,9 +20,22 @@ public interface IConvertProjectToJsonService
     /// Thrown when the project has no file path, or is already in JSON format.
     /// </exception>
     ConvertProjectToJsonResult ConvertToJson(GumProjectSave project);
+
+    /// <summary>
+    /// Converts <paramref name="project"/> to JSON the same way as <see cref="ConvertToJson(GumProjectSave)"/>,
+    /// except every JSON file is written under <paramref name="outputDirectory"/> (mirroring the
+    /// project's own Subfolder layout) instead of beside the source XML — for a throwaway/temporary
+    /// copy, not an in-place migration. Existing external XML this still needs to read (element
+    /// animation files) is read from the project's own directory regardless of
+    /// <paramref name="outputDirectory"/>, since that is where those files actually live.
+    /// </summary>
+    /// <exception cref="System.InvalidOperationException">
+    /// Thrown when the project has no file path, or is already in JSON format.
+    /// </exception>
+    ConvertProjectToJsonResult ConvertToJson(GumProjectSave project, string outputDirectory);
 }
 
-/// <summary>Result of a <see cref="IConvertProjectToJsonService.ConvertToJson"/> run.</summary>
+/// <summary>Result of an <see cref="IConvertProjectToJsonService.ConvertToJson(GumProjectSave)"/> run.</summary>
 public class ConvertProjectToJsonResult
 {
     /// <summary>The <c>.gumj</c> path that was written — a sibling of the source <c>.gumx</c>.</summary>

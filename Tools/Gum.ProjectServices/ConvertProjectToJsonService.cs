@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
@@ -22,6 +23,27 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
     /// <inheritdoc/>
     public ConvertProjectToJsonResult ConvertToJson(GumProjectSave project)
     {
+        string sourceDirectory = ValidateAndGetSourceDirectory(project);
+        return ConvertToJsonCore(project, sourceDirectory, outputDirectory: sourceDirectory);
+    }
+
+    /// <inheritdoc/>
+    public ConvertProjectToJsonResult ConvertToJson(GumProjectSave project, string outputDirectory)
+    {
+        string sourceDirectory = ValidateAndGetSourceDirectory(project);
+        // Every path in this class is built with hardcoded "/" (matching project.FullFileName's own
+        // convention - see the class's other callers), so normalize a caller-supplied directory
+        // (e.g. one built with Path.Combine, which uses the OS separator) the same way.
+        outputDirectory = outputDirectory.Replace('\\', '/');
+        if (!outputDirectory.EndsWith("/"))
+        {
+            outputDirectory += "/";
+        }
+        return ConvertToJsonCore(project, sourceDirectory, outputDirectory);
+    }
+
+    private static string ValidateAndGetSourceDirectory(GumProjectSave project)
+    {
         if (project == null)
         {
             throw new ArgumentNullException(nameof(project));
@@ -36,8 +58,13 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
             throw new InvalidOperationException("The project is already in JSON format.");
         }
 
-        string projectDirectory = FileManager.GetDirectory(project.FullFileName);
-        string jsonProjectPath = FileManager.RemoveExtension(project.FullFileName) + "." + GumProjectSave.ProjectJsonExtension;
+        return FileManager.GetDirectory(project.FullFileName);
+    }
+
+    private ConvertProjectToJsonResult ConvertToJsonCore(GumProjectSave project, string sourceDirectory, string outputDirectory)
+    {
+        string projectFileNameNoExtension = Path.GetFileNameWithoutExtension(project.FullFileName);
+        string jsonProjectPath = outputDirectory + projectFileNameNoExtension + "." + GumProjectSave.ProjectJsonExtension;
 
         // GumProjectSave.Save dispatches XML vs JSON purely off the target path's extension, and
         // cascades to every Screen/Component/StandardElement (skipping IsSourceFileMissing stubs -
@@ -48,7 +75,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         // (issue #4219) - otherwise the file watcher reacts to each write as an external change and
         // triggers a full element reload + tree-view refresh per file, mirroring the pattern already
         // used by FileCommands/ProjectManager when they save.
-        IgnoreUpcomingElementWrites(project, projectDirectory);
+        IgnoreUpcomingElementWrites(project, outputDirectory);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(jsonProjectPath);
         project.Save(jsonProjectPath, saveElements: true);
 
@@ -58,8 +85,8 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
             ScreenCount = project.Screens.Count(s => !s.IsSourceFileMissing),
             ComponentCount = project.Components.Count(c => !c.IsSourceFileMissing),
             StandardElementCount = project.StandardElements.Count(s => !s.IsSourceFileMissing),
-            BehaviorCount = ConvertBehaviors(project, projectDirectory),
-            AnimationCount = ConvertAnimations(project, projectDirectory),
+            BehaviorCount = ConvertBehaviors(project, outputDirectory),
+            AnimationCount = ConvertAnimations(project, sourceDirectory, outputDirectory),
         };
     }
 
@@ -90,7 +117,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         _fileWatchIgnoreList.IgnoreNextChangeUntil(ToJsonSiblingPath(elementXmlPath));
     }
 
-    private int ConvertBehaviors(GumProjectSave project, string projectDirectory)
+    private int ConvertBehaviors(GumProjectSave project, string outputDirectory)
     {
         int count = 0;
 
@@ -108,7 +135,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
                 continue;
             }
 
-            string xmlPath = projectDirectory + reference.GetRelativeFilePath(isJsonFormat: false);
+            string xmlPath = outputDirectory + reference.GetRelativeFilePath(isJsonFormat: false);
             string jsonPath = ToJsonSiblingPath(xmlPath);
             _fileWatchIgnoreList.IgnoreNextChangeUntil(jsonPath);
             behavior.Save(jsonPath);
@@ -118,21 +145,21 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         return count;
     }
 
-    private int ConvertAnimations(GumProjectSave project, string projectDirectory)
+    private int ConvertAnimations(GumProjectSave project, string sourceDirectory, string outputDirectory)
     {
         int count = 0;
 
         foreach (ScreenSave screen in project.Screens)
         {
-            count += ConvertAnimationIfPresent(screen, projectDirectory);
+            count += ConvertAnimationIfPresent(screen, sourceDirectory, outputDirectory);
         }
         foreach (ComponentSave component in project.Components)
         {
-            count += ConvertAnimationIfPresent(component, projectDirectory);
+            count += ConvertAnimationIfPresent(component, sourceDirectory, outputDirectory);
         }
         foreach (StandardElementSave standard in project.StandardElements)
         {
-            count += ConvertAnimationIfPresent(standard, projectDirectory);
+            count += ConvertAnimationIfPresent(standard, sourceDirectory, outputDirectory);
         }
 
         return count;
@@ -141,17 +168,21 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
     /// <summary>
     /// Converts <paramref name="element"/>'s <c>{ElementName}Animations.ganx</c> to
     /// <c>{ElementName}Animations.ganj</c> (see <c>GumService.LoadAnimationsFromProvider</c> for the
-    /// same naming convention) when that file exists. Returns 1 when converted, 0 otherwise.
+    /// same naming convention) when that file exists. The source <c>.ganx</c> is read from
+    /// <paramref name="sourceDirectory"/> — the project's own directory, where that XML actually
+    /// lives — while the <c>.ganj</c> is written under <paramref name="outputDirectory"/>, which
+    /// differs from the source when converting to a throwaway copy elsewhere. Returns 1 when
+    /// converted, 0 otherwise.
     /// </summary>
-    private int ConvertAnimationIfPresent(ElementSave element, string projectDirectory)
+    private int ConvertAnimationIfPresent(ElementSave element, string sourceDirectory, string outputDirectory)
     {
         if (element.IsSourceFileMissing)
         {
             return 0;
         }
 
-        string elementXmlPath = GetElementXmlPath(element, projectDirectory);
-        string animationXmlPath = FileManager.RemoveExtension(elementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: false);
+        string sourceElementXmlPath = GetElementXmlPath(element, sourceDirectory);
+        string animationXmlPath = FileManager.RemoveExtension(sourceElementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: false);
 
         if (!FileManager.FileExists(animationXmlPath))
         {
@@ -159,7 +190,8 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         }
 
         ElementAnimationsSave animations = ElementAnimationsSave.Load(animationXmlPath);
-        string animationJsonPath = FileManager.RemoveExtension(elementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true);
+        string outputElementXmlPath = GetElementXmlPath(element, outputDirectory);
+        string animationJsonPath = FileManager.RemoveExtension(outputElementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(animationJsonPath);
         GumJsonFileSerializer.WriteToFile(animationJsonPath, GumAnimationJsonFileSerializer.SerializeElementAnimations(animations));
 

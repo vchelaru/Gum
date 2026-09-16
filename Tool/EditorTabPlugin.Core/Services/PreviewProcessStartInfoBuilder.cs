@@ -12,18 +12,25 @@ public static class PreviewProcessStartInfoBuilder
     /// Builds the launch command. Arguments go through <see cref="ProcessStartInfo.ArgumentList"/>,
     /// so paths containing spaces need no manual quoting.
     /// </summary>
-    public static ProcessStartInfo Build(string executablePath, string gumxPath, string elementName, string selectionFilePath)
+    /// <param name="contentRootDirectory">
+    /// The directory GumPreview resolves relative content (fonts, textures) from (issue #4748) —
+    /// the original project's own directory, even when <paramref name="projectPath"/> is a temporary
+    /// converted copy elsewhere (a .gumx project served by the Native AOT build).
+    /// </param>
+    public static ProcessStartInfo Build(string executablePath, string projectPath, string elementName, string selectionFilePath, string contentRootDirectory)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo(executablePath)
         {
             UseShellExecute = false,
         };
         startInfo.ArgumentList.Add("--project");
-        startInfo.ArgumentList.Add(gumxPath);
+        startInfo.ArgumentList.Add(projectPath);
         startInfo.ArgumentList.Add("--element");
         startInfo.ArgumentList.Add(elementName);
         startInfo.ArgumentList.Add("--selection-file");
         startInfo.ArgumentList.Add(selectionFilePath);
+        startInfo.ArgumentList.Add("--content-root");
+        startInfo.ArgumentList.Add(contentRootDirectory);
         return startInfo;
     }
 }

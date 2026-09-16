@@ -118,15 +118,17 @@ jobs:
           version=$(date +%Y.%m.%d)
           out="publish/$rid"
           dotnet publish Tool/Gum.Avalonia/Gum.Avalonia.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out"
-          # GumPreview (issue #4697): the runtime host the tool's Preview button launches. Shipped in
-          # a Preview/ folder beside the head so PreviewExecutableLocator's published-layout candidate
-          # finds it without resolving from PATH.
-          dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:Version="$version" -o "$out/Preview"
-          # Native AOT GumPreview variant (issue #4706), used for .gumj projects - additive to the
-          # ReadyToRun build above, not a replacement (PreviewExecutableLocator falls back to
-          # ReadyToRun if this folder is missing). win-x64's was already published on windows-latest
-          # and downloaded into "$out/Preview-Aot" above; the other three RIDs run on their own
-          # native OS here, so Native AOT publishing works without a separate runner.
+          # GumPreview (issue #4697): the runtime host the tool's Preview button launches, shipped in
+          # a Preview-Aot/ folder beside the head so PreviewExecutableLocator's published-layout
+          # candidate finds it without resolving from PATH. Only the Native AOT build ships in the
+          # release - PreviewLauncher converts a .gumx project to a temporary JSON copy before
+          # launching it, since the AOT build can't load .gumx directly (issue #4748). The ReadyToRun
+          # build (PreviewExecutableLocator's Preview/ fallback) still exists for local dev builds
+          # missing the Native AOT toolchain (see GumPreview.csproj's PublishPreviewVariants target),
+          # just not published here - every release RID always has the AOT toolchain available in CI.
+          # win-x64's was already published on windows-latest and downloaded into "$out/Preview-Aot"
+          # above; the other three RIDs run on their own native OS here, so Native AOT publishing
+          # works without a separate runner.
           if [ "$rid" != "win-x64" ]; then
             dotnet publish Tool/GumPreview/GumPreview.csproj -c Release -r "$rid" --self-contained true -p:PublishAot=true -p:Version="$version" -o "$out/Preview-Aot"
           fi

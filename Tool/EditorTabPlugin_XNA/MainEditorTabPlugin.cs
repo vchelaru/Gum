@@ -8,6 +8,7 @@ using Gum.Dialogs;
 using Gum.Extensions;
 using Gum.Localization;
 using Gum.Logic;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.InternalPlugins.EditorTab.Views;
@@ -69,12 +70,13 @@ internal class MainEditorTabPlugin : EditorTabPluginBase
         IDragDropManager dragDropManager,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IFileWatchIgnoreList fileWatchIgnoreList)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             nameVerifier, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
-            favoriteComponentManager, pluginManager)
+            favoriteComponentManager, pluginManager, fileWatchIgnoreList)
     {
     }
 

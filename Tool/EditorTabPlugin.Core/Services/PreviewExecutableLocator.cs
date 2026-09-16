@@ -6,10 +6,12 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 /// <summary>
 /// Finds the GumPreview runtime host executable (issue #4697). Checked in priority order: the
-/// published layout ships it in a <c>Preview/</c> (ReadyToRun, .gumx-safe) or <c>Preview-Aot/</c>
-/// (Native AOT, .gumj-only - issue #4706) folder next to the head executable; a dev build falls
-/// back to the project's own build output under <c>Tool/GumPreview</c>, found by walking up from
-/// the head's base directory.
+/// published layout ships it in a <c>Preview-Aot/</c> (Native AOT) or <c>Preview/</c> (ReadyToRun)
+/// folder next to the head executable; a dev build falls back to the project's own build output
+/// under <c>Tool/GumPreview</c>, found by walking up from the head's base directory. The Native AOT
+/// build is always preferred (faster startup) and now serves every project format, including
+/// .gumx - PreviewLauncher converts a .gumx project to a temporary JSON copy first (issue #4748),
+/// since XmlSerializer itself is not Native-AOT-safe.
 /// </summary>
 public static class PreviewExecutableLocator
 {
@@ -31,19 +33,17 @@ public static class PreviewExecutableLocator
     private static readonly string[] DevBuildTargetFrameworks = { "net10.0" };
 
     /// <summary>
-    /// Returns the full path to the preview executable, or null if none of the candidate locations
-    /// (relative to <paramref name="headBaseDirectory"/>, the running head's <c>AppContext.BaseDirectory</c>) exist.
+    /// Resolves the preview executable to launch, or null if none of the candidate locations
+    /// (relative to <paramref name="headBaseDirectory"/>, the running head's
+    /// <c>AppContext.BaseDirectory</c>) exist. The Native AOT build is preferred whenever present
+    /// (issue #4748: it now serves every project format), falling back to the ReadyToRun build, then
+    /// a local dev build.
     /// </summary>
-    /// <param name="isJsonFormat">
-    /// The project's format (<see cref="Gum.DataTypes.GumProjectSave.IsJsonFormat"/>). Only a .gumj
-    /// project may prefer the Native AOT build - a .gumx project's XmlSerializer load path is not
-    /// Native-AOT-safe (see <c>IConvertProjectToJsonService</c>), so it always uses ReadyToRun.
-    /// </param>
-    public static string? Resolve(string headBaseDirectory, bool isJsonFormat)
+    public static ResolvedPreviewExecutable? Resolve(string headBaseDirectory)
     {
-        foreach (string candidate in Candidates(headBaseDirectory, isJsonFormat))
+        foreach (ResolvedPreviewExecutable candidate in Candidates(headBaseDirectory))
         {
-            if (File.Exists(candidate))
+            if (File.Exists(candidate.ExecutablePath))
             {
                 return candidate;
             }
@@ -51,18 +51,14 @@ public static class PreviewExecutableLocator
         return null;
     }
 
-    internal static IEnumerable<string> Candidates(string headBaseDirectory, bool isJsonFormat)
+    internal static IEnumerable<ResolvedPreviewExecutable> Candidates(string headBaseDirectory)
     {
         string exeName = OperatingSystem.IsWindows() ? "GumPreview.exe" : "GumPreview";
 
-        // The Native AOT build is preferred for .gumj (faster startup), but is additive, not a
-        // replacement - a package/platform that has not published it (or an older published head)
-        // falls back to the ReadyToRun build, which loads .gumj projects fine too.
-        if (isJsonFormat)
-        {
-            yield return Path.Combine(headBaseDirectory, AotPreviewFolderName, exeName);
-        }
-        yield return Path.Combine(headBaseDirectory, PreviewFolderName, exeName);
+        // The Native AOT build is additive, not a replacement - a package/platform that has not
+        // published it (or an older published head) falls back to the ReadyToRun build.
+        yield return new ResolvedPreviewExecutable(Path.Combine(headBaseDirectory, AotPreviewFolderName, exeName), IsNativeAot: true);
+        yield return new ResolvedPreviewExecutable(Path.Combine(headBaseDirectory, PreviewFolderName, exeName), IsNativeAot: false);
 
         string? repoRoot = FindRepoRoot(headBaseDirectory);
         if (repoRoot != null)
@@ -72,7 +68,7 @@ public static class PreviewExecutableLocator
             {
                 foreach (string targetFramework in DevBuildTargetFrameworks)
                 {
-                    yield return Path.Combine(devBinRoot, configuration, targetFramework, exeName);
+                    yield return new ResolvedPreviewExecutable(Path.Combine(devBinRoot, configuration, targetFramework, exeName), IsNativeAot: false);
                 }
             }
         }
@@ -94,3 +90,12 @@ public static class PreviewExecutableLocator
         return null;
     }
 }
+
+/// <summary>A preview executable candidate <see cref="PreviewExecutableLocator.Resolve"/> found on disk.</summary>
+/// <param name="ExecutablePath">Full path to the GumPreview executable.</param>
+/// <param name="IsNativeAot">
+/// Whether this is the Native AOT build (<see cref="PreviewExecutableLocator.AotPreviewFolderName"/>) as
+/// opposed to the ReadyToRun build or a local dev build. A .gumx project launched against the Native
+/// AOT build needs converting to JSON first - see <c>PreviewLauncher</c>.
+/// </param>
+public readonly record struct ResolvedPreviewExecutable(string ExecutablePath, bool IsNativeAot);

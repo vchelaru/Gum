@@ -22,6 +22,7 @@ using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Localization;
 using Gum.Logic;
+using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
@@ -79,12 +80,13 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         IDragDropManager dragDropManager,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        IFileWatchIgnoreList fileWatchIgnoreList)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             nameVerifier, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
-            favoriteComponentManager, pluginManager)
+            favoriteComponentManager, pluginManager, fileWatchIgnoreList)
     {
     }
 
