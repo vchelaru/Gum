@@ -8,6 +8,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Gum.Avalonia.Diagnostics;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -159,6 +160,9 @@ public class AvaloniaDialogService : IDialogService
 
     private bool? ShowModal(DialogViewModel viewModel)
     {
+        string dialogKind = viewModel.GetType().Name;
+        UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): begin");
+
         Control view = _viewRegistry.CreateView(viewModel);
         DialogWindow window = new DialogWindow(viewModel, view);
         Window? owner = MainWindow;
@@ -167,16 +171,20 @@ public class AvaloniaDialogService : IDialogService
         window.Closed += (_, _) => closed.Cancel();
         if (owner is { IsVisible: true })
         {
+            UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): calling ShowDialog(owner)");
             _ = window.ShowDialog(owner);
         }
         else
         {
+            UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): calling Show() (no owner)");
             window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             window.Show();
         }
 
         // The contract is synchronous: pump the dispatcher until the dialog closes.
+        UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): entering nested MainLoop");
         Dispatcher.UIThread.MainLoop(closed.Token);
+        UiFreezeWatchdog.RecordStep($"ShowModal({dialogKind}): MainLoop returned");
         return window.Result;
     }
 
