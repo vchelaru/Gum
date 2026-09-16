@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.ProjectServices.FontGeneration;
+using Gum.Services;
 using ToolsUtilities;
 using WpfDataUi;
 using WpfDataUi.DataTypes;
@@ -12,17 +14,20 @@ namespace Gum.Plugins.PropertiesWindowPlugin;
 /// Drives the Project Properties tab's property grid over a <see cref="ProjectPropertiesViewModel"/>,
 /// for either head: builds the rows from the view model's members, groups and names them the way
 /// the tool always has, rebuilds on <see cref="ProjectPropertiesViewModel.Reloaded"/>, and keeps the
-/// font ranges read-only while a font character file is in use.
+/// font ranges read-only while a font character file is in use. Off Windows the font generator
+/// row is read-only too, since bmfont.exe cannot run there and KernSmith is used regardless.
 /// </summary>
 public sealed class ProjectPropertiesGridPresenter
 {
     private readonly IDataUiGrid _grid;
+    private readonly IOperatingSystemInfo _operatingSystem;
     private ProjectPropertiesViewModel? _viewModel;
 
-    /// <summary>Creates a presenter over <paramref name="grid"/>.</summary>
-    public ProjectPropertiesGridPresenter(IDataUiGrid grid)
+    /// <summary>Creates a presenter over <paramref name="grid"/> for the current OS unless one is given.</summary>
+    public ProjectPropertiesGridPresenter(IDataUiGrid grid, IOperatingSystemInfo? operatingSystem = null)
     {
         _grid = grid;
+        _operatingSystem = operatingSystem ?? new OperatingSystemInfo();
     }
 
     /// <summary>The view model shown, or null.</summary>
@@ -53,7 +58,7 @@ public sealed class ProjectPropertiesGridPresenter
         if (_viewModel != null)
         {
             _grid.Instance = _viewModel;
-            ApplyLayout(_grid.Model, _viewModel);
+            ApplyLayout(_grid.Model, _viewModel, _operatingSystem);
             RefreshFontRangeEditability();
         }
     }
@@ -61,9 +66,10 @@ public sealed class ProjectPropertiesGridPresenter
     /// <summary>
     /// Shapes the auto-populated rows of <paramref name="grid"/>: the guide, single pixel texture
     /// and font generation members in their own categories, spaced display names, the file editors
-    /// and option lists, and no rows for the view model's bookkeeping members.
+    /// and option lists, and no rows for the view model's bookkeeping members. The font generator
+    /// row is read-only where bmfont.exe cannot run, saying which OS makes KernSmith the one used.
     /// </summary>
-    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel)
+    public static void ApplyLayout(DataUiGridModel grid, ProjectPropertiesViewModel viewModel, IOperatingSystemInfo operatingSystem)
     {
         foreach (InstanceMember member in grid.Categories.SelectMany(category => category.Members).ToArray())
         {
@@ -136,6 +142,11 @@ public sealed class ProjectPropertiesGridPresenter
         if (fontGenerator != null)
         {
             fontGenerator.CustomOptions = new List<object> { FontGeneratorType.BmFont, FontGeneratorType.KernSmith };
+            if (FontGeneratorResolver.IsSubstituted(FontGeneratorType.BmFont, operatingSystem.IsWindows))
+            {
+                fontGenerator.IsReadOnly = true;
+                fontGenerator.DetailText = $"KernSmith is used on {operatingSystem.DisplayName}";
+            }
         }
 
         InstanceMember? autoSize = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.AutoSizeFontOutputs));
