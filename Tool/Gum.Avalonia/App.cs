@@ -11,6 +11,7 @@ using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Avalonia.Diagnostics;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Avalonia.Themes;
@@ -95,6 +96,7 @@ public sealed class App : Application
                 {
                     DispatcherTimer.RunOnce(() => CaptureAndExit(window, desktop), TimeSpan.FromSeconds(seconds));
                 }
+                StartFreezeWatchdog();
             };
         }
 
@@ -156,6 +158,17 @@ public sealed class App : Application
             ? ThemeVariant.Light
             : ThemeVariant.Dark;
         _services.GetRequiredService<IMessenger>().Send(new ThemeChangedMessage(_services.GetRequiredService<IThemingService>().EffectiveSettings));
+    }
+
+    // See issue #4781: a permanent, debugger-independent freeze reported between giving a rename/add-state
+    // command and its popup appearing. The heartbeat timer proves the UI thread is still pumping; the
+    // watchdog itself decides (off the timer) whether a missed heartbeat means it has stalled.
+    private static void StartFreezeWatchdog()
+    {
+        UiFreezeWatchdog.Start(Path.Combine(Program.GetAppDataDirectory(), "FreezeDiagnostics"));
+        DispatcherTimer heartbeat = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        heartbeat.Tick += (_, _) => UiFreezeWatchdog.Heartbeat();
+        heartbeat.Start();
     }
 
     private void CaptureAndExit(Window window, IClassicDesktopStyleApplicationLifetime desktop)

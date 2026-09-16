@@ -49,13 +49,21 @@ public static class Program
             .LogToTrace();
 
     /// <summary>
+    /// The per-user Gum settings folder (honors <see cref="FileManager.UserApplicationDataFolderOverride"/>,
+    /// e.g. the <c>--user-data</c> option, so tests and unattended runs don't touch the real one).
+    /// Shared with <see cref="App"/> so freeze diagnostics land next to the rest of a user's Gum data.
+    /// </summary>
+    internal static string GetAppDataDirectory() =>
+        FileManager.UserApplicationDataFolderOverride
+            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
+
+    /// <summary>
     /// The same host shape as the WPF head: settings from the per-user Gum folder, the headless
     /// core, and this head's implementations of the head-provided contracts.
     /// </summary>
     public static IHostBuilder CreateHostBuilder(string[]? args = null)
     {
-        string appDir = FileManager.UserApplicationDataFolderOverride
-            ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create), "Gum");
+        string appDir = GetAppDataDirectory();
         Directory.CreateDirectory(appDir);
         string settingsPath = Path.Combine(appDir, "appsettings.json");
 
