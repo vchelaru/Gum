@@ -41,6 +41,12 @@
 
         public bool DidAttempt { get; set; }
 
+        /// <summary>
+        /// True when the work was neither done nor attempted here because another request is
+        /// already carrying it out.
+        /// </summary>
+        public bool IsInProgress { get; set; }
+
         public new void SetFrom(GeneralResponse generalResponse)
         {
             this.Message = generalResponse.Message;

@@ -89,6 +89,8 @@ All font generation now routes through `HeadlessFontGenerationService`. There ar
 
 Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, `GenerateMissingFontsForReferencingElements`, and the embedded bmfont.exe in RenderingLibrary have been removed.
 
+**The two paths overlap at project load.** The bulk pass runs on background tasks while the wireframe resolves fonts synchronously on the UI thread. `HeadlessFontGenerationService.TryCreateFontFor` keeps one in-flight generation per target `.fnt` (`_inFlight`): an async caller joins it, a sync caller gets `FontFileStatus.Generating` (it cannot block, the in-flight continuations need the UI thread) and `GetOrCreateBakedFont` then returns null without caching or blacklisting. `FontCacheLogic` reloads wireframe content once the bulk pass reports it generated anything, so text that resolved mid-flight picks the files up.
+
 ## Key Files
 
 | File | Purpose |

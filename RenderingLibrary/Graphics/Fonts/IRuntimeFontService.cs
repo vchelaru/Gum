@@ -1,4 +1,4 @@
-namespace RenderingLibrary.Graphics.Fonts;
+﻿namespace RenderingLibrary.Graphics.Fonts;
 
 /// <summary>
 /// Minimal font service interface for runtime font generation.
@@ -14,7 +14,9 @@ public interface IRuntimeFontService
 
     /// <summary>
     /// Synchronously creates a font file described by <paramref name="bmfcSave"/>
-    /// if it does not already exist on disk.
+    /// if it does not already exist on disk. Returns <see cref="FontFileStatus.Generating"/>
+    /// when another request is already producing that file, in which case the caller must not
+    /// load or cache anything for it yet.
     /// </summary>
-    void CreateFontIfNecessary(BmfcSave bmfcSave);
+    FontFileStatus CreateFontIfNecessary(BmfcSave bmfcSave);
 }
