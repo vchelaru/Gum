@@ -166,17 +166,7 @@ public class StateSave
             }
             else
             {
-                string baseType = ParentContainer.BaseType;
-                StandardElementTypes returnValue;
-
-                if (Enum.TryParse<StandardElementTypes>(baseType, out returnValue))
-                {
-                    return returnValue;
-                }
-                else
-                {
-                    return baseType;
-                }
+                return ParentContainer.BaseType!;
             }
         }
 

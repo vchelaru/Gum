@@ -1,4 +1,5 @@
-﻿using Gum.DataTypes.Variables;
+﻿using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Shouldly;
 using System;
 using System.Collections.Generic;
@@ -36,5 +37,17 @@ public class StateSaveTests
         sut.SetValue("TestVariable", 1f);
         sut.RemoveValue("TestVariable");
         sut.Variables.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetValue_BaseType_ReturnsString_EvenWhenNameMatchesStandardElementType()
+    {
+        ElementSave elementSave = new ComponentSave { BaseType = "Sprite" };
+        StateSave sut = new() { ParentContainer = elementSave };
+
+        object result = sut.GetValue("BaseType");
+
+        result.ShouldBe("Sprite");
+        result.ShouldBeOfType<string>();
     }
 }
