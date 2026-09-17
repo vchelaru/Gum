@@ -15,8 +15,11 @@ namespace Gum.Avalonia.Canvas;
 /// Adapts an Avalonia <see cref="Control"/> to <see cref="IInputHostControl"/>. Avalonia has no
 /// polled input, so this records pointer and key events on the control (handled ones included)
 /// and hands the latest state to <see cref="InputLibrary.Cursor"/> and
-/// <see cref="InputLibrary.Keyboard"/> when they sample it each frame. Positions are the
-/// control's own device-independent units, the same units its bounds use.
+/// <see cref="InputLibrary.Keyboard"/> when they sample it each frame. Positions and bounds are
+/// converted from the control's own device-independent units (DIU) to physical pixels, matching
+/// <see cref="IInputHostControl"/>'s contract and the render target's physical-pixel sizing
+/// (#4811, parity with the WPF head's #4681/#4682 fix) - otherwise hit-testing/dragging would
+/// desync from the rendered content by the display's scale factor.
 /// </summary>
 public sealed class AvaloniaInputHostAdapter : IInputHostControl
 {
@@ -68,10 +71,22 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
     }
 
     /// <inheritdoc/>
-    public int Width => (int)_control.Bounds.Width;
+    public int Width => ToPhysicalPixels(_control.Bounds.Width, RenderScaling);
 
     /// <inheritdoc/>
-    public int Height => (int)_control.Bounds.Height;
+    public int Height => ToPhysicalPixels(_control.Bounds.Height, RenderScaling);
+
+    private double RenderScaling => TopLevel.GetTopLevel(_control)?.RenderScaling ?? 1.0;
+
+    /// <summary>
+    /// Converts a device-independent (DIU) value to its physical-pixel equivalent for the given
+    /// render scale, rounding to the nearest pixel. No clamping - unlike a render target's size, a
+    /// control dimension or point coordinate can legitimately be zero or negative (e.g. the cursor
+    /// outside the control, to the left of or above its origin). Pure/static so it's unit-testable
+    /// without a live Avalonia visual tree.
+    /// </summary>
+    public static int ToPhysicalPixels(double diuValue, double dpiScale) =>
+        (int)Math.Round(diuValue * dpiScale);
 
     /// <inheritdoc/>
     public CursorKind Cursor
@@ -122,7 +137,7 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
 
     private void HandlePointer(object? sender, PointerEventArgs e)
     {
-        _pointerPosition = e.GetPosition(_control);
+        _pointerPosition = ToPhysicalPixels(e.GetPosition(_control));
         PointerPointProperties properties = e.GetCurrentPoint(_control).Properties;
         _isLeftDown = properties.IsLeftButtonPressed;
         _isRightDown = properties.IsRightButtonPressed;
@@ -131,7 +146,13 @@ public sealed class AvaloniaInputHostAdapter : IInputHostControl
 
     private void HandleDrag(object? sender, DragEventArgs e)
     {
-        _pointerPosition = e.GetPosition(_control);
+        _pointerPosition = ToPhysicalPixels(e.GetPosition(_control));
+    }
+
+    private Point ToPhysicalPixels(Point diuPosition)
+    {
+        double scale = RenderScaling;
+        return new Point(ToPhysicalPixels(diuPosition.X, scale), ToPhysicalPixels(diuPosition.Y, scale));
     }
 
     // The last in-bounds position must not outlive the pointer's visit: Cursor.IsInWindow reads any

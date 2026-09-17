@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,9 +10,11 @@ namespace Gum.Avalonia.Canvas;
 
 /// <summary>
 /// Owns the <see cref="WriteableBitmap"/> a canvas shows and the raw buffer its render target is
-/// read back into, sized together. The bitmap is RGBA at 96 DPI so a <see cref="SurfaceFormat.Color"/>
-/// target copies straight across and one bitmap pixel covers one device-independent unit, the
-/// same unit system the WPF surface uses.
+/// read back into, sized together. The bitmap is RGBA, always stamped at 96 DPI regardless of
+/// display scale - Avalonia's compositor double-scales a <see cref="Stretch.None"/>-displayed
+/// bitmap stamped at a non-96 DPI (<see href="https://github.com/AvaloniaUI/Avalonia/issues/17235"/>),
+/// so physical-to-DIU sizing is driven entirely by the host control's explicit Width/Height and
+/// <see cref="Stretch.Fill"/> instead (#4811, parity with the WPF surface's #4681/#4682 fix).
 /// </summary>
 public sealed class AvaloniaRenderSurface : IDisposable
 {
@@ -27,7 +30,7 @@ public sealed class AvaloniaRenderSurface : IDisposable
     /// <summary>Current height in pixels.</summary>
     public int Height { get; private set; }
 
-    /// <summary>(Re)creates the bitmap and buffer for the given size; a no-op when unchanged.</summary>
+    /// <summary>(Re)creates the bitmap and buffer for the given physical-pixel size; a no-op when unchanged.</summary>
     public void Resize(int width, int height)
     {
         if (width <= 0 || height <= 0)

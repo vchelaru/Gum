@@ -20,10 +20,17 @@ namespace Gum.Avalonia.Canvas;
 /// WPF control uses. Derived classes override <see cref="PreDrawUpdate"/> and <see cref="Draw"/>.
 /// </summary>
 /// <remarks>
-/// Sizes its surface from <see cref="Visual.Bounds"/>, which are device-independent units, and
-/// the input adapter reports the pointer in the same units, so cursor and camera math agree. On a
-/// scaled display the canvas renders at fewer pixels than the monitor has and Avalonia scales the
-/// bitmap up, matching the WPF head.
+/// <see cref="Visual.Bounds"/> are device-independent units (DIU); the render target and backing
+/// bitmap are sized in physical pixels (DIU * <see cref="RenderScaling"/>), so one render-target
+/// pixel maps to exactly one physical screen pixel - the canvas is crisp on a scaled display
+/// instead of being stretched by Avalonia's own compositing (#4811, parity with the WPF head's
+/// #4681/#4682 fix). The bitmap itself always stays at 96 DPI and is displayed with
+/// <see cref="Stretch.Fill"/> against an explicit DIU-sized <see cref="Image.Width"/>/
+/// <see cref="Image.Height"/> rather than a non-96 DPI stamp - Avalonia's compositor double-scales
+/// a <see cref="Stretch.None"/>-displayed bitmap whose DPI isn't 96
+/// (<see href="https://github.com/AvaloniaUI/Avalonia/issues/17235"/>).
+/// <see cref="AvaloniaInputHostAdapter"/> converts pointer/bounds coordinates to the same
+/// physical-pixel units so hit-testing stays in sync with what's drawn.
 /// </remarks>
 public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient, ICanvasHost
 {
@@ -52,9 +59,11 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
         // Anchored top-left so pixel (0,0) of the bitmap stays at the control's origin while a
         // resize is in flight, matching the coordinate space the cursor and camera math assume.
+        // Stretch.Fill (not None) is what actually applies the physical-pixel-to-DIU scale via
+        // the explicit Width/Height set in HandleRenderTargetRecreated - see the class remarks.
         _image = new Image
         {
-            Stretch = Stretch.None,
+            Stretch = Stretch.Fill,
             HorizontalAlignment = HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top,
             IsHitTestVisible = false,
@@ -103,6 +112,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// <summary>This control's share of the process-wide device, as the render-host contract.</summary>
     public IRenderDeviceHost RenderDeviceHost => DeviceHost;
 
+    /// <summary>
+    /// The current display's render scale (1.0 at 100%). Read fresh via <see cref="TopLevel.GetTopLevel"/>
+    /// rather than cached, so it stays correct if the control moves to a monitor with a different
+    /// scale factor. 1.0 before the control is attached to a window.
+    /// </summary>
+    protected double RenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => DeviceHost.Services;
 
@@ -150,8 +166,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     {
         _surface.Resize(width, height);
         _image.Source = _surface.Bitmap;
-        _image.Width = width;
-        _image.Height = height;
+        // The image's layout size is DIU (matching the control's own Bounds); Stretch.Fill scales
+        // the physical-pixel bitmap down to it, which is what makes one bitmap pixel land on
+        // exactly one physical screen pixel once Avalonia's own compositor scales the DIU box back
+        // up for display (#4811, see the class remarks).
+        double scale = RenderScaling;
+        _image.Width = width / scale;
+        _image.Height = height / scale;
     }
 
     /// <inheritdoc/>
@@ -185,8 +206,23 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
             return;
         }
         EnsureDevice();
-        _frameLoop!.TryRenderFrame((int)Bounds.Width, (int)Bounds.Height, this);
+
+        // Bounds.Width/Height are DIU; the frame loop sizes the render target and viewport
+        // directly from these, so they must be physical pixels here or the canvas renders at the
+        // DIU resolution instead of the display's real one (#4811, parity with #4681).
+        double scale = RenderScaling;
+        int width = ToPhysicalPixelSize(Bounds.Width, scale);
+        int height = ToPhysicalPixelSize(Bounds.Height, scale);
+        _frameLoop!.TryRenderFrame(width, height, this);
     }
+
+    /// <summary>
+    /// Converts a device-independent (DIU) size to a physical pixel count for the given render
+    /// scale, rounding to the nearest pixel and clamping to a minimum of 1 (a render target/bitmap
+    /// cannot be zero-sized). Pure/static so it's unit-testable without a live Avalonia visual tree.
+    /// </summary>
+    public static int ToPhysicalPixelSize(double diuSize, double dpiScale) =>
+        Math.Max(1, (int)Math.Round(diuSize * dpiScale));
 
     void IRenderTargetFrameClient.PreDrawUpdate() => PreDrawUpdate();
 
