@@ -88,6 +88,79 @@ public class StateTreeViewTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public void DeletingTheSelectedState_KeepsKeyboardFocusInTheTree()
+    {
+        // Deleting a state removes its row entirely, so unlike the reorder tests above there is no
+        // longer a specific object to re-select - the tree moves selection on to a sibling itself
+        // (mirroring EditCommands.AskToDeleteState/DeleteLogic.Remove), and focus needs to follow
+        // whatever that turns out to be. ElementTreeViewManager already does this for the element
+        // tree ("On a delete, the popup appears, which steals focus from the treeview. If we had
+        // focus before, let's get it now."); the Avalonia states tree had no equivalent (#4810 follow-up).
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        StateSaveCategory category = new StateSaveCategory { Name = "ColorCategory" };
+        StateSave stateSave = new StateSave { Name = "State1", ParentContainer = component };
+        StateSave sibling = new StateSave { Name = "State2", ParentContainer = component };
+        category.States.Add(stateSave);
+        category.States.Add(sibling);
+        component.Categories.Add(category);
+
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(x => x.SelectedStateContainer).Returns(component);
+        selectedState.SetupProperty(x => x.SelectedStateCategorySave, category);
+        selectedState.SetupProperty(x => x.SelectedStateSave, stateSave);
+
+        Mock<IHotkeyManager> hotkeyManager = new Mock<IHotkeyManager>();
+        hotkeyManager.Setup(x => x.ReorderUp).Returns(KeyCombination.Alt(GumKey.Up));
+        hotkeyManager.Setup(x => x.ReorderDown).Returns(KeyCombination.Alt(GumKey.Down));
+        hotkeyManager.Setup(x => x.Rename).Returns(KeyCombination.Pressed(GumKey.F2));
+        hotkeyManager.Setup(x => x.Delete).Returns(KeyCombination.Pressed(GumKey.Delete));
+        hotkeyManager.Setup(x => x.Copy).Returns(KeyCombination.Ctrl(GumKey.C));
+        hotkeyManager.Setup(x => x.Paste).Returns(KeyCombination.Ctrl(GumKey.V));
+
+        Mock<IStateTreeViewRightClickService> rightClickService = new Mock<IStateTreeViewRightClickService>();
+
+        StateTreeController controller = new StateTreeController(
+            rightClickService.Object, selectedState.Object, ObjectFinder.Self,
+            Mock.Of<IVariableInCategoryPropagationLogic>(), Mock.Of<IDialogService>());
+        controller.HandleRefreshStateTreeView();
+        controller.ViewModel.SetSelectedState(stateSave);
+
+        // Stands in for the real EditCommands.AskToDeleteState -> DeleteLogic.Remove: shows a
+        // (mocked-away) confirmation, then removes the state and selects the sibling left in its place.
+        rightClickService.Setup(x => x.DeleteStateClick()).Callback(() =>
+        {
+            category.States.Remove(stateSave);
+            selectedState.Object.SelectedStateSave = sibling;
+            controller.HandleRefreshStateTreeView();
+            controller.ViewModel.SetSelectedState(sibling);
+        });
+
+        StateTreeKeyboardHandler keyboardHandler = new StateTreeKeyboardHandler(
+            rightClickService.Object, hotkeyManager.Object, selectedState.Object, Mock.Of<ICopyPasteLogic>());
+
+        AvaloniaStateTreeView view = new AvaloniaStateTreeView(controller.ViewModel, rightClickService.Object, keyboardHandler);
+        Window window = new Window { Width = 300, Height = 400, Content = view };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        TreeView tree = window.GetVisualDescendants().OfType<TreeView>().Single();
+        TreeViewItem container = window.GetVisualDescendants().OfType<TreeViewItem>()
+            .Single(item => item.DataContext is StateViewModel state && state.Data == stateSave);
+        container.Focus();
+        Dispatcher.UIThread.RunJobs();
+        container.IsFocused.ShouldBeTrue("container should be focused before Delete is pressed");
+
+        window.KeyPress(Key.Delete, RawInputModifiers.None, PhysicalKey.Delete, null);
+        Dispatcher.UIThread.RunJobs();
+
+        category.States.Single().ShouldBe(sibling, "the delete callback should have run");
+        TreeViewItem siblingRow = window.GetVisualDescendants().OfType<TreeViewItem>()
+            .Single(item => item.DataContext is StateViewModel state && state.Data == sibling);
+        siblingRow.IsFocused.ShouldBeTrue();
+        window.Close();
+    }
+
     private static TreeViewItem FindContainer(Window window, StateViewModel state) =>
         window.GetVisualDescendants().OfType<TreeViewItem>().Single(item => item.DataContext == state);
 
