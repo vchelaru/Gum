@@ -115,7 +115,7 @@ public class CanvasHostTests
     public void RenderSurface_CopiesRgbaIntoTheBitmap()
     {
         using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
-        surface.Resize(2, 1, dpiScale: 1.0);
+        surface.Resize(2, 1);
         surface.RawImageBuffer[0] = 1;
         surface.RawImageBuffer[1] = 2;
         surface.RawImageBuffer[2] = 3;
@@ -128,20 +128,21 @@ public class CanvasHostTests
         Should.Throw<NotSupportedException>(() => surface.Push(SurfaceFormat.Bgra32));
     }
 
-    // #4811 (Avalonia parity with the WPF fix in #4681/#4682): the surface must be sized in
-    // physical pixels with its bitmap's DPI stamped to match, or Avalonia's own compositor
-    // stretches the under-sized bitmap to fill the control's real (larger) physical footprint on a
-    // scaled display, blowing up and blurring the canvas.
+    // #4811 (Avalonia parity with the WPF fix in #4681/#4682): the bitmap must always stay at 96
+    // DPI regardless of display scale - Avalonia's compositor double-scales a Stretch.None-displayed
+    // bitmap stamped at a non-96 DPI (github.com/AvaloniaUI/Avalonia/issues/17235), so the surface
+    // must not vary its DPI stamp; physical-to-DIU scaling is instead the host control's job via
+    // Stretch.Fill and explicit Width/Height (see AvaloniaGraphicsDeviceControl).
     [AvaloniaFact]
-    public void RenderSurface_StampsBitmapDpi_ByDpiScale()
+    public void RenderSurface_AlwaysStamps96Dpi_RegardlessOfSize()
     {
         using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
 
-        surface.Resize(4, 3, dpiScale: 2.0);
+        surface.Resize(4, 3);
 
         surface.Bitmap.ShouldNotBeNull();
-        surface.Bitmap.Dpi.X.ShouldBe(192);
-        surface.Bitmap.Dpi.Y.ShouldBe(192);
+        surface.Bitmap.Dpi.X.ShouldBe(96);
+        surface.Bitmap.Dpi.Y.ShouldBe(96);
     }
 
     [Theory]

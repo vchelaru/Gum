@@ -1,5 +1,6 @@
 using System;
 using Avalonia;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Microsoft.Xna.Framework.Graphics;
@@ -9,10 +10,11 @@ namespace Gum.Avalonia.Canvas;
 
 /// <summary>
 /// Owns the <see cref="WriteableBitmap"/> a canvas shows and the raw buffer its render target is
-/// read back into, sized together. The bitmap is RGBA, sized in physical pixels and stamped with
-/// the DPI that produced them, so a <see cref="SurfaceFormat.Color"/> target copies straight
-/// across and Avalonia displays it 1:1 against the physical display instead of stretching it
-/// (#4811, parity with the WPF surface's #4681/#4682 fix).
+/// read back into, sized together. The bitmap is RGBA, always stamped at 96 DPI regardless of
+/// display scale - Avalonia's compositor double-scales a <see cref="Stretch.None"/>-displayed
+/// bitmap stamped at a non-96 DPI (<see href="https://github.com/AvaloniaUI/Avalonia/issues/17235"/>),
+/// so physical-to-DIU sizing is driven entirely by the host control's explicit Width/Height and
+/// <see cref="Stretch.Fill"/> instead (#4811, parity with the WPF surface's #4681/#4682 fix).
 /// </summary>
 public sealed class AvaloniaRenderSurface : IDisposable
 {
@@ -28,20 +30,15 @@ public sealed class AvaloniaRenderSurface : IDisposable
     /// <summary>Current height in pixels.</summary>
     public int Height { get; private set; }
 
-    private double _dpiScale = 1.0;
-
-    /// <summary>
-    /// (Re)creates the bitmap and buffer for the given physical-pixel size, stamping the bitmap's
-    /// DPI as 96 * <paramref name="dpiScale"/>; a no-op when neither the size nor the scale changed.
-    /// </summary>
-    public void Resize(int width, int height, double dpiScale)
+    /// <summary>(Re)creates the bitmap and buffer for the given physical-pixel size; a no-op when unchanged.</summary>
+    public void Resize(int width, int height)
     {
         if (width <= 0 || height <= 0)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(width), $"{nameof(width)} and {nameof(height)} must both be positive, but were {width}x{height}.");
         }
-        if (Bitmap != null && Width == width && Height == height && _dpiScale == dpiScale)
+        if (Bitmap != null && Width == width && Height == height)
         {
             return;
         }
@@ -49,8 +46,7 @@ public sealed class AvaloniaRenderSurface : IDisposable
         Bitmap?.Dispose();
         Width = width;
         Height = height;
-        _dpiScale = dpiScale;
-        Bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96 * dpiScale, 96 * dpiScale), PixelFormat.Rgba8888, AlphaFormat.Premul);
+        Bitmap = new WriteableBitmap(new PixelSize(width, height), new Vector(96, 96), PixelFormat.Rgba8888, AlphaFormat.Premul);
         RawImageBuffer = new byte[width * height * 4];
     }
 
