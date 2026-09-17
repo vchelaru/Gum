@@ -545,6 +545,15 @@ public class VariableGridEntry
             return asInstanceForBehavior.BaseType;
         }
 
+        // Read the element's own BaseType directly rather than through StateSave.GetValue, which
+        // parses a base type name that also matches a StandardElementTypes enum member (e.g.
+        // "Sprite") into a boxed enum instead of a string - that value then never equals any of the
+        // combo box's string options, so the dropdown appears to not reflect a selection (#4808).
+        if (RootVariableName == "BaseType" && instance is ElementSave asElementSaveForBaseType)
+        {
+            return asElementSaveForBaseType.BaseType;
+        }
+
         if (_isVariable)
         {
             var toReturn = GetValueStrictlyOnSelectedState();

@@ -88,4 +88,27 @@ public class ElementSaveDisplayerBaseTypeChangeTests : BaseTestClass
         sourceFileAfter.ShouldNotBeNull("SourceFile should still be a visible row once the instance is a Sprite");
         sourceFileAfter.GetValue(instance).ShouldBe("image.png");
     }
+
+    /// <summary>
+    /// Repro for issue #4808: reading a component's own BaseType (as opposed to an instance's
+    /// BaseType, covered above) must return the raw string, matching the combo box's string-typed
+    /// options list. When the base type name happens to also be a StandardElementTypes enum member
+    /// (e.g. "Sprite"), <see cref="Gum.DataTypes.Variables.StateSave.GetValue"/> parses it into a
+    /// boxed enum instead - that value never equals any of the combo box's string options, so the
+    /// dropdown appears to not reflect (or accept) a selection.
+    /// </summary>
+    [Fact]
+    public void GetValue_ShouldReturnStringBaseType_ForComponentsOwnBaseType()
+    {
+        var component = new ComponentSave { Name = "MyComponent", BaseType = "Sprite" };
+        var componentDefaultState = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(componentDefaultState);
+        _project.Components.Add(component);
+
+        var categories = _displayer.GetCategories(component, null, componentDefaultState, null);
+        var baseTypeEntry = categories.SelectMany(c => c.Members).FirstOrDefault(m => m.Name == "BaseType");
+
+        baseTypeEntry.ShouldNotBeNull();
+        baseTypeEntry.GetValue(component).ShouldBe("Sprite");
+    }
 }
