@@ -31,6 +31,23 @@ public class DialogFocusTests
     }
 
     [AvaloniaFact]
+    public void MessageDialog_FocusesTheAffirmativeButtonOnceOpen_SoEnterConfirmsWithNoPriorClick()
+    {
+        // A view with no text box or list to claim focus (e.g. a Yes/No confirmation) previously left
+        // the window with no keyboard focus at all, so Enter/the default button never fired (#4810).
+        MessageDialogViewModel viewModel = new MessageDialogViewModel { Title = "Delete?", Message = "Are you sure?", NegativeText = "No" };
+        Control view = Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        Button affirmative = window.GetVisualDescendants().OfType<Button>().First(button => button.Name == DialogWindow.AffirmativeButtonName);
+        affirmative.IsFocused.ShouldBeTrue();
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void TextInputDialog_ValidatesAsItOpens_SoAnEmptyValueShowsTheErrorWithOkDisabled()
     {
         // As the WPF view does on load: the user sees why OK is disabled before typing anything.

@@ -213,6 +213,22 @@ public sealed class DialogWindow : Window
                 e.Handled = true;
             }
         };
+
+        // WPF gives a freshly-opened window keyboard focus to its first focusable control, so the
+        // affirmative button's IsDefault fires on Enter with no click needed. Avalonia does not, so a
+        // view with nothing else to focus (a Yes/No confirmation, the delete dialog) opened with no
+        // keyboard focus at all and Enter/the default button silently did nothing (#4810). Queuing
+        // this in the constructor, before the window is ever shown, means it always reaches the front
+        // of the Opened invocation list, so a view's own FocusWhenOpened call (registered later, once
+        // its control attaches during Show) still wins by running its Focus() second.
+        Opened += (_, _) => Dispatcher.UIThread.Post(() =>
+        {
+            Button fallback = affirmative.IsVisible ? affirmative : negative;
+            if (fallback.IsVisible)
+            {
+                fallback.Focus();
+            }
+        }, DispatcherPriority.Input);
     }
 
     /// <summary>

@@ -77,6 +77,7 @@ public sealed class AvaloniaStateTreeView : DockPanel
             // would fight that.
             bool isReorderKey = e.KeyModifiers.HasFlag(KeyModifiers.Alt) && e.Key is Key.Up or Key.Down;
             object? previouslySelected = isReorderKey ? _tree.SelectedItem : null;
+            bool hadFocus = _tree.IsKeyboardFocusWithin;
             if (_keyboardHandler.HandleKeyDown(e.ToGumKeyEventArgs()))
             {
                 e.Handled = true;
@@ -87,6 +88,20 @@ public sealed class AvaloniaStateTreeView : DockPanel
                         _tree.SelectedItem = item;
                         _tree.GetVisualDescendants().OfType<TreeViewItem>()
                             .FirstOrDefault(row => row.DataContext == item)?.Focus();
+                    }, DispatcherPriority.Loaded);
+                }
+                else if (hadFocus)
+                {
+                    // As ElementTreeViewManager already does for the element tree ("On a delete, the
+                    // popup appears, which steals focus from the treeview. If we had focus before,
+                    // let's get it now."): Delete/Rename/Paste can legitimately change which item ends
+                    // up selected (unlike a reorder), so restore focus to whatever row that turns out to
+                    // be rather than the old, possibly now-gone one. Avalonia never reclaims focus on its
+                    // own once the modal confirmation closes (#4810 follow-up).
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        _tree.GetVisualDescendants().OfType<TreeViewItem>()
+                            .FirstOrDefault(row => row.DataContext == _tree.SelectedItem)?.Focus();
                     }, DispatcherPriority.Loaded);
                 }
             }
