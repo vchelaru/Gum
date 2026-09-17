@@ -20,10 +20,13 @@ namespace Gum.Avalonia.Canvas;
 /// WPF control uses. Derived classes override <see cref="PreDrawUpdate"/> and <see cref="Draw"/>.
 /// </summary>
 /// <remarks>
-/// Sizes its surface from <see cref="Visual.Bounds"/>, which are device-independent units, and
-/// the input adapter reports the pointer in the same units, so cursor and camera math agree. On a
-/// scaled display the canvas renders at fewer pixels than the monitor has and Avalonia scales the
-/// bitmap up, matching the WPF head.
+/// <see cref="Visual.Bounds"/> are device-independent units (DIU); the render target and backing
+/// bitmap are sized in physical pixels (DIU * <see cref="RenderScaling"/>) and the bitmap's DPI is
+/// stamped to match, so one render-target pixel maps to exactly one physical screen pixel - the
+/// canvas is crisp on a scaled display instead of being stretched by Avalonia's own compositing
+/// (#4811, parity with the WPF head's #4681/#4682 fix). <see cref="AvaloniaInputHostAdapter"/>
+/// converts pointer/bounds coordinates to the same physical-pixel units so hit-testing stays in
+/// sync with what's drawn.
 /// </remarks>
 public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameClient, ICanvasHost
 {
@@ -103,6 +106,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// <summary>This control's share of the process-wide device, as the render-host contract.</summary>
     public IRenderDeviceHost RenderDeviceHost => DeviceHost;
 
+    /// <summary>
+    /// The current display's render scale (1.0 at 100%). Read fresh via <see cref="TopLevel.GetTopLevel"/>
+    /// rather than cached, so it stays correct if the control moves to a monitor with a different
+    /// scale factor. 1.0 before the control is attached to a window.
+    /// </summary>
+    protected double RenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
+
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => DeviceHost.Services;
 
@@ -148,10 +158,14 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
     private void HandleRenderTargetRecreated(int width, int height)
     {
-        _surface.Resize(width, height);
+        double scale = RenderScaling;
+        _surface.Resize(width, height, scale);
         _image.Source = _surface.Bitmap;
-        _image.Width = width;
-        _image.Height = height;
+        // The image's layout size is DIU (matching the control's own Bounds), while width/height
+        // are the physical-pixel render target size - divide back out by the same scale used to
+        // size it (#4811).
+        _image.Width = width / scale;
+        _image.Height = height / scale;
     }
 
     /// <inheritdoc/>
@@ -185,8 +199,23 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
             return;
         }
         EnsureDevice();
-        _frameLoop!.TryRenderFrame((int)Bounds.Width, (int)Bounds.Height, this);
+
+        // Bounds.Width/Height are DIU; the frame loop sizes the render target and viewport
+        // directly from these, so they must be physical pixels here or the canvas renders at the
+        // DIU resolution instead of the display's real one (#4811, parity with #4681).
+        double scale = RenderScaling;
+        int width = ToPhysicalPixelSize(Bounds.Width, scale);
+        int height = ToPhysicalPixelSize(Bounds.Height, scale);
+        _frameLoop!.TryRenderFrame(width, height, this);
     }
+
+    /// <summary>
+    /// Converts a device-independent (DIU) size to a physical pixel count for the given render
+    /// scale, rounding to the nearest pixel and clamping to a minimum of 1 (a render target/bitmap
+    /// cannot be zero-sized). Pure/static so it's unit-testable without a live Avalonia visual tree.
+    /// </summary>
+    public static int ToPhysicalPixelSize(double diuSize, double dpiScale) =>
+        Math.Max(1, (int)Math.Round(diuSize * dpiScale));
 
     void IRenderTargetFrameClient.PreDrawUpdate() => PreDrawUpdate();
 

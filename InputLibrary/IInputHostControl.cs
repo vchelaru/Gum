@@ -18,7 +18,8 @@ namespace InputLibrary
         bool Focused { get; }
 
         /// <summary>
-        /// The host control's width, in its own units (device-independent units for WPF and Avalonia).
+        /// The host control's width, in physical pixels. WPF and Avalonia report their own units in
+        /// device-independent units (DIU), so their adapters convert by the display's render scale.
         /// </summary>
         int Width { get; }
 

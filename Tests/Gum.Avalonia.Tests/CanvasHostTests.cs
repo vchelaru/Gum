@@ -115,7 +115,7 @@ public class CanvasHostTests
     public void RenderSurface_CopiesRgbaIntoTheBitmap()
     {
         using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
-        surface.Resize(2, 1);
+        surface.Resize(2, 1, dpiScale: 1.0);
         surface.RawImageBuffer[0] = 1;
         surface.RawImageBuffer[1] = 2;
         surface.RawImageBuffer[2] = 3;
@@ -126,6 +126,22 @@ public class CanvasHostTests
         surface.Bitmap.ShouldNotBeNull();
         surface.Bitmap.PixelSize.Width.ShouldBe(2);
         Should.Throw<NotSupportedException>(() => surface.Push(SurfaceFormat.Bgra32));
+    }
+
+    // #4811 (Avalonia parity with the WPF fix in #4681/#4682): the surface must be sized in
+    // physical pixels with its bitmap's DPI stamped to match, or Avalonia's own compositor
+    // stretches the under-sized bitmap to fill the control's real (larger) physical footprint on a
+    // scaled display, blowing up and blurring the canvas.
+    [AvaloniaFact]
+    public void RenderSurface_StampsBitmapDpi_ByDpiScale()
+    {
+        using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
+
+        surface.Resize(4, 3, dpiScale: 2.0);
+
+        surface.Bitmap.ShouldNotBeNull();
+        surface.Bitmap.Dpi.X.ShouldBe(192);
+        surface.Bitmap.Dpi.Y.ShouldBe(192);
     }
 
     [Theory]
@@ -210,5 +226,34 @@ public class CanvasHostTests
 
         adapter.Cursor.ShouldBe(CursorKind.SizeNS);
         control.Cursor.ShouldNotBeNull();
+    }
+
+    // #4811: the render target/surface are sized in physical pixels (DIU * RenderScaling); this
+    // pins the pure conversion math. The live per-monitor scale can't be driven from a headless
+    // test (Avalonia.Headless has no scaling knob), so the end-to-end wiring is a manual check.
+    [Theory]
+    [InlineData(800.0, 1.0, 800)]
+    [InlineData(800.0, 2.0, 1600)]
+    [InlineData(801.4, 1.0, 801)]
+    [InlineData(0.0, 2.0, 1)]
+    [InlineData(-5.0, 2.0, 1)]
+    public void ToPhysicalPixelSize_ConvertsDiuSizeByDpiScale(double diuSize, double dpiScale, int expected)
+    {
+        AvaloniaGraphicsDeviceControl.ToPhysicalPixelSize(diuSize, dpiScale).ShouldBe(expected);
+    }
+
+    // #4811: IInputHostControl.Width/Height and pointer positions must also convert from Avalonia's
+    // DIU to physical pixels, or hit-testing/dragging desyncs from the (now correctly-sized)
+    // rendered content by the display's scale factor - same defect as the WPF fix's second half
+    // (#4681's "dragging moving objects at 2x the cursor's speed" symptom).
+    [Theory]
+    [InlineData(320.0, 1.0, 320)]
+    [InlineData(320.0, 2.0, 640)]
+    [InlineData(160.6, 1.0, 161)]
+    [InlineData(0.0, 2.0, 0)]
+    [InlineData(-50.0, 2.0, -100)]
+    public void ToPhysicalPixels_ConvertsDiuValueByDpiScale(double diuValue, double dpiScale, int expected)
+    {
+        AvaloniaInputHostAdapter.ToPhysicalPixels(diuValue, dpiScale).ShouldBe(expected);
     }
 }
