@@ -304,12 +304,19 @@
 			surface matches closely enough that iOS compiles successfully against it).
 			Android is different — Mono.Android base types are not in DesktopGL — so the
 			Android TFM swaps to MonoGame.Framework.Android.
+
+			Pinned to the lowest version we compile against, not the latest — the compiled
+			MonoGameGum.dll bakes this exact version into its assembly manifest, and .NET's
+			runtime binder accepts a consumer-supplied MonoGame assembly version that's equal
+			to or higher than this, but rejects anything lower with a FileNotFoundException
+			(#4818). Bumping this pin narrows who can consume Gum; only raise it when a newer
+			MonoGame API is actually needed.
 		-->
-		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" Condition="!$(TargetFramework.Contains('android'))">
+		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.3" Condition="!$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 
-		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" Condition="$(TargetFramework.Contains('android'))">
+		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.3" Condition="$(TargetFramework.Contains('android'))">
 			<PrivateAssets>All</PrivateAssets>
 		</PackageReference>
 
