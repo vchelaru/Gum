@@ -69,6 +69,21 @@ public class FormsUtilities
 
     public static IInputReceiverKeyboard Keyboard => keyboard;
 
+    /// <summary>
+    /// Replaces the keyboard that <c>Update</c> feeds to the focused <see cref="IInputReceiver"/>
+    /// each frame, and keeps <see cref="FrameworkElement.MainKeyboard"/> in sync -- exactly as
+    /// <see cref="SetCursor"/> does for the cursor. Deliberately does not touch
+    /// <see cref="FrameworkElement.KeyboardsForUiControl"/>.
+    /// Note that <c>MonoGameGum.GumService.Keyboard</c> is an <c>as</c> cast to the concrete
+    /// <c>MonoGameGum.Input.Keyboard</c> type, so it returns null while a non-<c>Keyboard</c>
+    /// implementation (e.g. a custom or test keyboard) is installed here.
+    /// </summary>
+    public static void SetKeyboard(IInputReceiverKeyboard keyboard)
+    {
+        FormsUtilities.keyboard = keyboard;
+        FrameworkElement.MainKeyboard = keyboard;
+    }
+
     // Typed explicitly as Gum.Input.GamePad (the platform-neutral holder in GumCommon) rather
     // than relying on the per-platform `using` so MonoGame, Raylib, and Sokol resolve to the
     // same type. Each platform is fed by its own same-named GamePadDriver.Apply(GamePad, int,
