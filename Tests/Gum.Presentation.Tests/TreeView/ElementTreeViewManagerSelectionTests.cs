@@ -114,4 +114,36 @@ public class ElementTreeViewManagerSelectionTests : BaseTestClass
 
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public void PrepareNodeForSelection_NodeReparentedInPlaceWhileAlreadySelected_ExpandsNewAncestors()
+    {
+        // A tree refresh can reparent an already-selected instance's GumTreeNode object under a
+        // new container node without replacing the object (e.g. adding a container's first child
+        // sets the new instance's Parent variable, which moves the same node under the
+        // container). Selection.SelectedNode is unchanged by reference, so ancestor expansion
+        // must not be gated on "the selection changed" or the container never expands (#4831).
+        GumTreeNode container = new GumTreeNode { Tag = new InstanceSave { Name = "Container" } };
+        GumTreeNode child = new GumTreeNode { Tag = new InstanceSave { Name = "Child" } };
+        container.AddChild(child);
+        container.IsExpanded.ShouldBeFalse();
+
+        bool selectionChanged = ElementTreeViewManager.PrepareNodeForSelection(child, currentlySelectedNode: child);
+
+        selectionChanged.ShouldBeFalse();
+        container.IsExpanded.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PrepareNodeForSelection_DifferentNode_ReturnsTrueAndExpandsAncestors()
+    {
+        GumTreeNode container = new GumTreeNode { Tag = new InstanceSave { Name = "Container" } };
+        GumTreeNode child = new GumTreeNode { Tag = new InstanceSave { Name = "Child" } };
+        container.AddChild(child);
+
+        bool selectionChanged = ElementTreeViewManager.PrepareNodeForSelection(child, currentlySelectedNode: null);
+
+        selectionChanged.ShouldBeTrue();
+        container.IsExpanded.ShouldBeTrue();
+    }
 }

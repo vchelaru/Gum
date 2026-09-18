@@ -1281,7 +1281,9 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         treeNode = ResolveNodeToSelect(treeNode, View.Nodes);
 
-        if (Selection.SelectedNode != treeNode)
+        bool selectionChanged = PrepareNodeForSelection(treeNode, Selection.SelectedNode);
+
+        if (selectionChanged)
         {
             // See comment above about why we have to manually raise the AfterClick
 
@@ -1297,6 +1299,22 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 Selection.CallAfterClickSelect(treeNode);
             }
         }
+    }
+
+    /// <summary>
+    /// Expands <paramref name="treeNode"/>'s ancestors unconditionally, even when it's already
+    /// <paramref name="currentlySelectedNode"/> by reference, and reports whether the selection is
+    /// actually changing. A tree refresh can reparent an already-selected instance's GumTreeNode
+    /// object in place - e.g. adding a container's first child sets the new instance's Parent
+    /// variable, which moves the very same node under the container - without ever replacing
+    /// Selection.SelectedNode. Gating expansion on "the selection object changed" left the
+    /// container collapsed after its first child was added (#4831).
+    /// </summary>
+    internal static bool PrepareNodeForSelection(GumTreeNode? treeNode, GumTreeNode? currentlySelectedNode)
+    {
+        treeNode?.EnsureAncestorsExpanded();
+
+        return currentlySelectedNode != treeNode;
     }
 
     /// <summary>
