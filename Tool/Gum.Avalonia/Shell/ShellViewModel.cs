@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.IO;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Mvvm;
 using Gum.Settings;
@@ -18,7 +19,6 @@ public class ShellViewModel : ViewModel, IRecipient<ApplicationTeardownMessage>
     public ShellViewModel(IMessenger messenger, IWritableOptions<LayoutSettings> layoutSettings)
     {
         _layoutSettings = layoutSettings;
-        Title = "Gum";
         ProgressText = "";
         Left = 0;
         Top = 0;
@@ -28,8 +28,15 @@ public class ShellViewModel : ViewModel, IRecipient<ApplicationTeardownMessage>
         messenger.RegisterAll(this);
     }
 
-    /// <summary>The window title; the loaded project's path once one is open.</summary>
-    public string Title { get => Get<string>(); set => Set(value); }
+    /// <summary>The loaded project's full file name; null while no project is open.</summary>
+    public string? ProjectFilePath { get => Get<string?>(); set => Set(value); }
+
+    /// <summary>
+    /// The window title, which the taskbar shows too: the project's name without its path or
+    /// extension, or "Gum" while no project is open.
+    /// </summary>
+    [DependsOn(nameof(ProjectFilePath))]
+    public string Title => string.IsNullOrEmpty(ProjectFilePath) ? "Gum" : Path.GetFileNameWithoutExtension(ProjectFilePath);
 
     /// <summary>Text for the status bar's progress slot; empty when idle.</summary>
     public string ProgressText { get => Get<string>(); set => Set(value); }
