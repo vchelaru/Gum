@@ -909,6 +909,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         // IDialogService, IHotkeyManager, IElementCommands, IFileCommands, ISetVariableLogic, IMessenger) are
         // bridged above. PluginManager stays a body Locator call (host-into-its-own-plugin cycle smell).
         batch.AddExportedValue<IReorderLogic>(Locator.GetRequiredService<IReorderLogic>());
+        batch.AddExportedValue<IAddInstanceLogic>(Locator.GetRequiredService<IAddInstanceLogic>());
         batch.AddExportedValue<FileLocations>(Locator.GetRequiredService<FileLocations>());
         batch.AddExportedValue<IUiSettingsService>(Locator.GetRequiredService<IUiSettingsService>());
         batch.AddExportedValue<IThemingService>(Locator.GetRequiredService<IThemingService>());

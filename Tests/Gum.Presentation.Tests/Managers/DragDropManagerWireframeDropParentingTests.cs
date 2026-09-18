@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services;
@@ -35,6 +36,7 @@ public class DragDropManagerWireframeDropParentingTests : BaseTestClass
     public DragDropManagerWireframeDropParentingTests()
     {
         _mocker = new AutoMocker();
+        _mocker.Use<IAddInstanceLogic>(_mocker.CreateInstance<AddInstanceLogic>());
         _dragDropManager = _mocker.CreateInstance<DragDropManager>();
 
         _mocker.GetMock<ICircularReferenceManager>()

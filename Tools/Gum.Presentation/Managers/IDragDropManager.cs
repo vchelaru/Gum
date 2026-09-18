@@ -34,17 +34,6 @@ public interface IDragDropManager
     void OnNodeObjectDroppedInWireframe(object draggedObject, InstanceSave? instanceUnderCursor = null);
 
     /// <summary>
-    /// Creates an instance of <paramref name="elementToAdd"/> on the Screen/Component represented
-    /// by (or containing) the dropped-on tree node, subject to the same rules a real tree-node drag
-    /// enforces (circular reference, Screens not instantiable, etc. - see
-    /// <c>DragDropManager.GetDropElementErrorMessage</c>). Used by the Standards chip palette so
-    /// dragging a chip onto the tree reuses the same creation path as dragging an element node, and
-    /// by Ctrl+Shift-click on a top-level Component/Screen node so that gesture reuses it too (#4837).
-    /// </summary>
-    /// <param name="elementToAdd">The Component, Screen, or standard type to create an instance of.</param>
-    /// <param name="targetTreeNode">The tree node the element was dropped on (or Ctrl+Shift-clicked with).</param>
-    void HandleDroppedElementOnTreeNode(ElementSave elementToAdd, ITreeNode targetTreeNode);
-    /// <summary>
     /// Handle a drag-drop reorder. <paramref name="dropTarget"/> describes the
     /// destination element and flat-list position; it is null for folder or
     /// behavior drops where flat-list semantics do not apply.

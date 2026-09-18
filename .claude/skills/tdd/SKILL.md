@@ -26,6 +26,10 @@ Exceptions: docs, csproj/projitems plumbing, pure renames, dead-code removal, co
 
 Note: **extracting logic into a new class/service/ViewModel is not a pure rename.** Even when the move preserves behavior, pin the new unit with a characterization test — see [refactoring-direction](../refactoring-direction/SKILL.md). The exemption above is for renames and cosmetics, not for relocating logic into a newly-testable seam.
 
+## A gesture's spec is a table, agreed before the test
+
+For an input gesture (a click, hotkey, drag or menu action), the failing test asserts an outcome table — gesture × state → where the result lands, which the user has confirmed — not the author's guess at the intent. A test that encodes a guess goes green on behavior the user never asked for; the Standards chip's Ctrl+click was specified as "add at the element root" and tested as such three times before the user's actual rule (every add gesture goes to the same add destination) was written down. When gestures are meant to be the same, they share one handler and one test, so a difference cannot exist.
+
 ## Make it testable before you decide it can't
 
 Before implementing, decide how the change will be proven — in this order:
@@ -33,7 +37,8 @@ Before implementing, decide how the change will be proven — in this order:
 1. **Can it be tested as-is?** Then test it: cover the happy path, the **negative cases** (invalid input is rejected / the expected error is raised), and the **edge/boundary cases** (null, empty, `0`, `-1`, first/last index, single-element collection, max).
 2. **If it's not testable as written, restructure until it is — even code you weren't otherwise here to change.** "Can't be tested" is a reason to introduce a seam, not to skip the test. Extract the logic into a class/service that takes its dependencies via the constructor; if a static `.Self` singleton blocks the seam, drain it on the spot (see CLAUDE.md "Static Singletons" + [refactoring-direction](../refactoring-direction/SKILL.md) for breaking the resulting DI cycle with `Lazy<T>`). Plugin classes that call `Locator` directly are the canonical case: pull the logic into a ctor-injected service, test that, and leave only a thin untested plugin wrapper.
 3. **If it's a SkiaGum rendering change with no `Style`/paint-parameter to assert on** (geometric per-glyph transforms, pixel-level draw output), reach for the golden-image pixel-diff harness in `Tests/SkiaGum.Tests/GoldenImages/` before falling back to manual — see `gum-unit-tests`.
-4. **Only if it genuinely can't be unit-tested**, fall back to a manual visual/runtime check — and say so explicitly, with why. (The issue-driven workflow defines that manual step.)
+4. **A tool gesture or wiring change (a click handler, a plugin event reaching a command) is testable end-to-end in `Tests/Gum.Avalonia.Tests`**: `TestAppBuilder.Services` is the head's real service graph, so a test can create a project, select through `ISelectedState`, invoke the control's action and assert on the `ElementSave` — see `StandardsPaletteAddTests`. Drive the control's action property rather than hosting the head's shared tab content in a test window; that content belongs to the main window in other tests.
+5. **Only if it genuinely can't be unit-tested**, fall back to a manual visual/runtime check — and say so explicitly, with why. (The issue-driven workflow defines that manual step.)
 
 Testability is a **gate on the change**, not a property you accept as given. Restructuring a blocker into a testable seam is in-scope work, not a separate task.
 

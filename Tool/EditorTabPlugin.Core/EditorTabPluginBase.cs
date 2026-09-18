@@ -223,7 +223,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IOutputManager outputManager,
         LocalizationService localizationService,
         IReorderLogic reorderLogic,
-        INameVerifier nameVerifier,
+        IAddInstanceLogic addInstanceLogic,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         FileLocations fileLocations,
@@ -269,8 +269,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _editingManager = new EditingManager(
             _wireframeObjectManager,
             reorderLogic,
-            _elementCommands,
-            nameVerifier,
+            addInstanceLogic,
             _setVariableLogic,
             _selectedState,
             _circularReferenceManager,

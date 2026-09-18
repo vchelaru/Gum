@@ -70,6 +70,10 @@ headless `TreeNodeImageLogic`) to a pack URI plus a theme color key; `TreeNodeIc
 calling `RefreshUi()` directly, so importing N elements in one batch (Forms theme, `.gumx` import)
 produces one refresh instead of N.
 
+## Adding instances
+
+Every gesture that creates an instance (Ctrl-click on a Standards chip, with or without Shift; Ctrl+Shift+click on an element node; chip or node drag onto a node or the canvas; the right-click Add menus; the Add Instance dialog) ends in `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`). The click and menu gestures all call `AddInstanceAtDestination`, which adds to the remembered add destination, else the selected instance, else the element root, the same rule Ctrl+V uses; only a drag names its own container. Validation, naming, parenting (default child slot), undo, selection and the destination live there once. Do not add a second `IElementCommands.AddInstance` call site or a gesture-specific target rule.
+
 ## Gotchas
 
 - **Reordering within one collection must be remove-then-insert.** `GumTreeNodeCollection` throws if a

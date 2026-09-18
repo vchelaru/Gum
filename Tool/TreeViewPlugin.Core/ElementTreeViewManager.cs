@@ -165,16 +165,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode;
 
     private IDragDropManager _dragDropManager;
-    private readonly IAddDestinationTracker _addDestinationTracker;
-    private readonly AddAsChildTargetLogic _addAsChildTargetLogic;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IFileLocations _fileLocations;
-    private readonly IElementCommands _elementCommands;
-    private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
@@ -201,8 +198,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IUndoManager undoManager,
         IWireframeObjectManager wireframeObjectManager,
         IFileLocations fileLocations,
-        IElementCommands elementCommands,
-        INameVerifier nameVerifier,
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
@@ -214,7 +209,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
-        IAddDestinationTracker addDestinationTracker)
+        IAddInstanceLogic addInstanceLogic)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -231,8 +226,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _undoManager = undoManager;
         _wireframeObjectManager = wireframeObjectManager;
         _fileLocations = fileLocations;
-        _elementCommands = elementCommands;
-        _nameVerifier = nameVerifier;
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
@@ -246,8 +239,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _dragDropManager = dragDropManager;
         _clipboardService = clipboardService;
         _viewFactory = viewFactory;
-        _addDestinationTracker = addDestinationTracker;
-        _addAsChildTargetLogic = new AddAsChildTargetLogic(addDestinationTracker);
+        _addInstanceLogic = addInstanceLogic;
         _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
@@ -369,7 +361,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             && GetChipDropTargetNode(e.TargetNode) is { } targetNode
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
-            _dragDropManager.HandleDroppedElementOnTreeNode(standardElement, targetNode);
+            _addInstanceLogic.AddInstance(standardElement, targetNode.Tag);
         }
     }
 
@@ -398,8 +390,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ? element.Name
                 : null;
 
-        View.AddStandardToCurrentRequested += AddStandardInstanceToCurrentElement;
-        View.AddStandardAsChildOfSelectionRequested += AddStandardAsChildOfCurrentSelection;
+        View.AddStandardToCurrentRequested += AddStandardAtDestination;
 
         View.EditStandardDefaultsRequested += typeName =>
         {
@@ -480,68 +471,29 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return typeNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private void AddStandardInstanceToCurrentElement(string typeName)
+    /// <summary>
+    /// Handles a Ctrl-click on a Standards palette chip (and the chip's "add to current" menu
+    /// item): adds the standard at the add destination, like every other add gesture.
+    /// </summary>
+    private void AddStandardAtDestination(string typeName)
     {
-        var target = _selectedState.SelectedElement;
-        if (target == null || target is StandardElementSave)
+        if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
         {
-            return;
+            _addInstanceLogic.AddInstanceAtDestination(standardElement);
         }
-
-        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
-        {
-            return;
-        }
-
-        using var undoLock = _undoManager.RequestLock();
-        string name = _elementCommands.GetUniqueNameForNewInstance(standardElement, target);
-        _elementCommands.AddInstance(target, name, typeName);
     }
 
     /// <summary>
-    /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): reuses the same
-    /// creation path a real drag onto the target would use, so circular references, Screens not
-    /// being instantiable, etc. are all enforced identically. Nodes other than a top-level element
-    /// (an instance, a folder) are not addable this way and are ignored.
+    /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): adds it at the add
+    /// destination, like every other add gesture. Nodes other than a top-level element (an
+    /// instance, a folder) are not addable this way and are ignored.
     /// </summary>
-    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode, GumTreeNode selectedNode)
+    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode)
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
-            AddAsChildOfDestination(elementToAdd, selectedNode);
+            _addInstanceLogic.AddInstanceAtDestination(elementToAdd);
         }
-    }
-
-    /// <summary>
-    /// Adds <paramref name="elementToAdd"/> under the remembered add destination, falling back to
-    /// <paramref name="selectedNode"/>, and records that destination so the next add (click or
-    /// paste) lands beside this one rather than under it (#4846).
-    /// </summary>
-    private void AddAsChildOfDestination(ElementSave elementToAdd, GumTreeNode? selectedNode)
-    {
-        if (_addAsChildTargetLogic.GetTarget(this, selectedNode) is not GumTreeNode targetNode)
-        {
-            return;
-        }
-
-        _addDestinationTracker.RunAdd(targetNode.Tag,
-            () => _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode));
-    }
-
-    /// <summary>
-    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): the plain Ctrl+click on a chip
-    /// (<see cref="AddStandardInstanceToCurrentElement"/>) always targets the open Screen/Component's
-    /// root, but Ctrl+Shift adds the standard as a child of whatever is currently selected in the
-    /// tree instead - reusing the same tree-node drop path as dragging the chip.
-    /// </summary>
-    private void AddStandardAsChildOfCurrentSelection(string typeName)
-    {
-        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
-        {
-            return;
-        }
-
-        AddAsChildOfDestination(standardElement, Selection.SelectedNode);
     }
 
     /// <summary>

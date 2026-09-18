@@ -25,8 +25,7 @@ public partial class EditingManager
             _selectedState,
             _reorderLogic,
             ObjectFinder.Self,
-            _elementCommands,
-            _nameVerifier,
+            _addInstanceLogic,
             _setVariableLogic,
             _circularReferenceManager,
             _favoriteComponentManager);

@@ -22,8 +22,7 @@ public class RightClickViewModelTests
     private readonly Mock<ISelectedState> _selectedState;
     private readonly Mock<IReorderLogic> _reorderLogic;
     private readonly Mock<ObjectFinder> _objectFinder;
-    private readonly Mock<IElementCommands> _elementCommands;
-    private readonly Mock<INameVerifier> _nameVerifier;
+    private readonly Mock<IAddInstanceLogic> _addInstanceLogic;
     private readonly Mock<ISetVariableLogic> _setVariableLogic;
     private readonly Mock<ICircularReferenceManager> _circularReferenceManager;
     private readonly Mock<IFavoriteComponentManager> _favoriteComponentManager;
@@ -34,8 +33,7 @@ public class RightClickViewModelTests
         _reorderLogic = new Mock<IReorderLogic>();
         _selectedState = new Mock<ISelectedState>();
         _objectFinder = new Mock<ObjectFinder>();
-        _elementCommands = new Mock<IElementCommands>();
-        _nameVerifier = new Mock<INameVerifier>();
+        _addInstanceLogic = new Mock<IAddInstanceLogic>();
         _setVariableLogic = new Mock<ISetVariableLogic>();
         _circularReferenceManager = new Mock<ICircularReferenceManager>();
         _favoriteComponentManager = new Mock<IFavoriteComponentManager>();
@@ -49,8 +47,7 @@ public class RightClickViewModelTests
             _selectedState.Object,
             _reorderLogic.Object,
             _objectFinder.Object,
-            _elementCommands.Object,
-            _nameVerifier.Object,
+            _addInstanceLogic.Object,
             _setVariableLogic.Object,
             _circularReferenceManager.Object,
             _favoriteComponentManager.Object);
@@ -246,6 +243,25 @@ public class RightClickViewModelTests
         instance.Locked.ShouldBeFalse();
         _setVariableLogic.Verify(x => x.PropertyValueChanged(
             "Locked", true, instance, element.DefaultState, true, true, true, It.IsAny<bool>()), Times.Once);
+    }
+
+    [Fact]
+    public void GetMenuItems_AddChildAction_ShouldAddAtTheAddDestination()
+    {
+        ComponentSave element = CreateElementWithInstances("InstanceA");
+        InstanceSave instance = element.Instances[0];
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+        // ObjectFinder.GetElementSave is not virtual: it reads the finder's own project.
+        _objectFinder.Object.GumProjectSave = new GumProjectSave();
+        _objectFinder.Object.GumProjectSave.StandardElements.Add(text);
+
+        List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
+        ContextMenuItemViewModel addChild = result.First(item => item.Text.StartsWith("Add child object to"));
+        addChild.Children.Single(item => item.Text == "Text").Action!.Invoke();
+
+        _addInstanceLogic.Verify(x => x.AddInstanceAtDestination(text, null), Times.Once);
     }
 
     [Fact]

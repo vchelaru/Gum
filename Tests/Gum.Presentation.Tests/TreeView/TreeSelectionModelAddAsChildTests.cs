@@ -29,8 +29,8 @@ public class TreeSelectionModelAddAsChildTests : BaseTestClass
         model.HandlePointerReleased(nodeA, TreePointerButton.Left);
         model.SelectedNode.ShouldBeSameAs(nodeA);
 
-        (GumTreeNode Clicked, GumTreeNode PreviousSelection)? raised = null;
-        model.AddAsChildOfSelectionRequested += (clicked, previousSelection) => raised = (clicked, previousSelection);
+        GumTreeNode? raised = null;
+        model.AddAsChildOfSelectionRequested += clicked => raised = clicked;
         bool afterClickSelectRaised = false;
         model.AfterClickSelect += _ => afterClickSelectRaised = true;
 
@@ -38,9 +38,7 @@ public class TreeSelectionModelAddAsChildTests : BaseTestClass
         model.HandlePointerPressed(nodeB, TreePointerButton.Left);
         model.HandlePointerReleased(nodeB, TreePointerButton.Left);
 
-        raised.ShouldNotBeNull();
-        raised!.Value.Clicked.ShouldBeSameAs(nodeB);
-        raised!.Value.PreviousSelection.ShouldBeSameAs(nodeA);
+        raised.ShouldBeSameAs(nodeB);
         model.SelectedNode.ShouldBeSameAs(nodeA);
         afterClickSelectRaised.ShouldBeFalse();
     }
@@ -63,7 +61,7 @@ public class TreeSelectionModelAddAsChildTests : BaseTestClass
         model.HandlePointerReleased(nodeA, TreePointerButton.Left);
 
         bool raised = false;
-        model.AddAsChildOfSelectionRequested += (_, _) => raised = true;
+        model.AddAsChildOfSelectionRequested += _ => raised = true;
 
         currentModifiers = TreeModifierKeys.Control | TreeModifierKeys.Shift;
         model.HandlePointerPressed(nodeA, TreePointerButton.Left);

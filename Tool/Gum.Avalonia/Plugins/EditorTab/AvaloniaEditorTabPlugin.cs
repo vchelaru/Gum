@@ -63,7 +63,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         IOutputManager outputManager,
         LocalizationService localizationService,
         IReorderLogic reorderLogic,
-        INameVerifier nameVerifier,
+        IAddInstanceLogic addInstanceLogic,
         IVariableInCategoryPropagationLogic variableInCategoryPropagationLogic,
         IWireframeObjectManager wireframeObjectManager,
         FileLocations fileLocations,
@@ -83,7 +83,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         IPluginManager pluginManager,
         IFileWatchIgnoreList fileWatchIgnoreList)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
-            nameVerifier, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
+            addInstanceLogic, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
             favoriteComponentManager, pluginManager, fileWatchIgnoreList)

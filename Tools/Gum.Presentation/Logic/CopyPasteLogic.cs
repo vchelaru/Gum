@@ -152,7 +152,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     {
         StoreCopiedObject(copyType, _selectedState);
 
-        _addDestinationTracker.Reset();
+        _addDestinationTracker.MarkSelectionUnchanged();
     }
 
 
@@ -353,7 +353,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         StoreCopiedObject(copyType, _selectedState);
 
-        _addDestinationTracker.Reset();
+        _addDestinationTracker.MarkSelectionUnchanged();
 
         ElementSave? sourceElement = _selectedState.SelectedElement;
 
@@ -1025,8 +1025,9 @@ public class CopyPasteLogic : ICopyPasteLogic
             ExpandPastedInstanceNodes(instancesToCopy, newInstances, oldNewNameDictionary, targetElement, expandedInstanceNames);
         }
 
-        _addDestinationTracker.RunAdd(destination,
-            () => selectedState.SelectedInstances = GetInstancesToSelectAfterPaste(newInstances, oldNewNameDictionary, instancesToSelectAfterPaste));
+        selectedState.SelectedInstances = GetInstancesToSelectAfterPaste(newInstances, oldNewNameDictionary, instancesToSelectAfterPaste);
+        // After the selection, so it does not count as the user picking a new paste target.
+        _addDestinationTracker.Anchor(destination);
 
         return newInstances;
     }

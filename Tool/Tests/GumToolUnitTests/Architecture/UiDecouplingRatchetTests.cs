@@ -25,11 +25,6 @@ public class UiDecouplingRatchetTests
         // IDialogService.Show<T>(). Excludes Gum/Services/Dialogs/** itself -- that's the
         // IDialogService implementation; it's the seam everything else should route through, so it's
         // allowed to talk to WPF directly.
-        //
-        // Not counted here: ElementTreeViewManager.RightClick.cs's direct `new AddInstanceDialogViewModel(...)`
-        // + OnAffirmative() calls. Those construct a dialog ViewModel and drive it headlessly as a command
-        // object for the favorited-component quick-add menu -- no WPF window is ever shown, so it isn't an
-        // IDialogService bypass (audited 2026-07, see issue #3225 progress comments).
         const int Baseline = 2;
 
         var pattern = new Regex(@"MessageBox\.Show\(|\bnew\s+\w*Window\s*\(|\.ShowDialog\(");

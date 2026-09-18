@@ -1,5 +1,4 @@
 using Gum.DataTypes;
-using System;
 
 namespace Gum.Logic;
 
@@ -19,18 +18,22 @@ public interface IAddDestinationTracker
 
     /// <summary>
     /// Whether the selection has changed by the user's hand since the last <see cref="Reset"/> or
-    /// <see cref="RunAdd"/>.
+    /// <see cref="Anchor"/> or <see cref="MarkSelectionUnchanged"/>.
     /// </summary>
     bool HasSelectionChangedSinceAnchor { get; }
 
     /// <summary>
-    /// Runs <paramref name="add"/> with selection changes it makes ignored, then remembers
-    /// <paramref name="destination"/> as where the next add should go.
+    /// Remembers <paramref name="destination"/> as where the next add should go and treats the
+    /// selection as unchanged. Call after an add has selected what it created, so that selection
+    /// change does not count as the user picking a new target.
     /// </summary>
-    void RunAdd(object? destination, Action add);
+    void Anchor(object? destination);
 
-    /// <summary>Forgets the destination and treats the selection as unchanged (copy/cut).</summary>
-    void Reset();
+    /// <summary>
+    /// Treats the selection as unchanged, keeping the destination (copy/cut: the paste anchors on
+    /// what was copied, but the container the user last picked still receives the next add).
+    /// </summary>
+    void MarkSelectionUnchanged();
 
     /// <summary>Treats the selection as changed by the user, as a selection message would.</summary>
     void MarkSelectionChanged();

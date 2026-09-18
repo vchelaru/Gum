@@ -108,6 +108,7 @@ internal static class PluginBridgedServiceTypes
         // takes it), distinct from the IWireframeCommands interface bridged above though it resolves to the
         // same singleton.
         typeof(IReorderLogic),
+        typeof(IAddInstanceLogic),
         typeof(FileLocations),
         typeof(IUiSettingsService),
         typeof(IThemingService),

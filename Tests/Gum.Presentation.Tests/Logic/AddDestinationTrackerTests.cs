@@ -18,11 +18,12 @@ public class AddDestinationTrackerTests
     }
 
     [Fact]
-    public void RunAdd_SelectionChangesDuringAdd_KeepsDestinationAndDoesNotCountAsUserSelection()
+    public void Anchor_AfterAnAddsOwnSelectionChange_RemembersDestinationAndClearsChangedFlag()
     {
         InstanceSave container = new InstanceSave { Name = "Container" };
+        _messenger.Send(new SelectionChangedMessage());
 
-        _tracker.RunAdd(container, () => _messenger.Send(new SelectionChangedMessage()));
+        _tracker.Anchor(container);
 
         _tracker.Destination.ShouldBeSameAs(container);
         _tracker.HasSelectionChangedSinceAnchor.ShouldBeFalse();
@@ -32,7 +33,7 @@ public class AddDestinationTrackerTests
     public void SelectionChanged_OutsideAdd_ForgetsDestinationAndMarksUserSelection()
     {
         InstanceSave container = new InstanceSave { Name = "Container" };
-        _tracker.RunAdd(container, () => { });
+        _tracker.Anchor(container);
 
         _messenger.Send(new SelectionChangedMessage());
 
@@ -41,21 +42,28 @@ public class AddDestinationTrackerTests
     }
 
     [Fact]
-    public void Reset_AfterUserSelection_ClearsBothDestinationAndChangedFlag()
+    public void MarkSelectionUnchanged_KeepsDestinationAndClearsChangedFlag()
     {
-        _tracker.RunAdd(new InstanceSave(), () => { });
-        _messenger.Send(new SelectionChangedMessage());
+        // A copy re-anchors on the current selection but is not a click on a node, so the container
+        // the user last picked still receives the next click-add.
+        InstanceSave container = new InstanceSave { Name = "Container" };
+        _tracker.Anchor(container);
 
-        _tracker.Reset();
+        _tracker.MarkSelectionUnchanged();
 
-        _tracker.Destination.ShouldBeNull();
+        _tracker.Destination.ShouldBeSameAs(container);
+        _tracker.HasSelectionChangedSinceAnchor.ShouldBeFalse();
+
+        _tracker.MarkSelectionChanged();
+        _tracker.MarkSelectionUnchanged();
+
         _tracker.HasSelectionChangedSinceAnchor.ShouldBeFalse();
     }
 
     [Fact]
     public void MarkSelectionChanged_ForgetsDestinationAndMarksUserSelection()
     {
-        _tracker.RunAdd(new InstanceSave(), () => { });
+        _tracker.Anchor(new InstanceSave());
 
         _tracker.MarkSelectionChanged();
 

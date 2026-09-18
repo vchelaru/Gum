@@ -29,8 +29,7 @@ public class EditingManagerTests : BaseTestClass
         _editingManager = new EditingManager(
             _wireframeObjectManager.Object,
             Mock.Of<IReorderLogic>(),
-            Mock.Of<IElementCommands>(),
-            Mock.Of<INameVerifier>(),
+            Mock.Of<IAddInstanceLogic>(),
             Mock.Of<ISetVariableLogic>(),
             _selectedState.Object,
             _circularReferenceManager.Object,
