@@ -26,6 +26,7 @@ public class TreeSelectionModel
     private readonly TreeNodeMouseUpSelectionLogic _mouseUpSelectionLogic;
     private readonly TreeNodeKeyNavigationLogic _keyNavigationLogic;
     private readonly TreeNodeRangeSelectionLogic _rangeSelectionLogic;
+    private readonly TreeNodeAddAsChildClickLogic _addAsChildClickLogic;
 
     private GumTreeNode? _selectedNode;
     private GumTreeNode? _hotNode;
@@ -46,6 +47,7 @@ public class TreeSelectionModel
         _mouseUpSelectionLogic = new TreeNodeMouseUpSelectionLogic();
         _keyNavigationLogic = new TreeNodeKeyNavigationLogic();
         _rangeSelectionLogic = new TreeNodeRangeSelectionLogic();
+        _addAsChildClickLogic = new TreeNodeAddAsChildClickLogic();
         IsSelectingOnPush = true;
 
         // A removed node must not linger in the selection.
@@ -128,6 +130,14 @@ public class TreeSelectionModel
 
     /// <summary>Raised whenever the selection changes, however it changed.</summary>
     public event Action<GumTreeNode?>? AfterSelect;
+
+    /// <summary>
+    /// Raised on a Ctrl+Shift-click that lands on a node other than the current selection, instead
+    /// of the ordinary selection reaction (#4837). The first argument is the clicked node, the
+    /// second is the node that was selected before the click. The selection itself is left
+    /// unchanged - the caller decides whether the clicked node can be added and performs the add.
+    /// </summary>
+    public event Action<GumTreeNode, GumTreeNode>? AddAsChildOfSelectionRequested;
 
     /// <summary>
     /// Raised when an exception is caught while reacting to tree input, so the host can report it
@@ -225,6 +235,15 @@ public class TreeSelectionModel
         {
             if (node == null)
             {
+                return;
+            }
+
+            if (_selectedNode is { } currentSelection &&
+                _addAsChildClickLogic.ShouldAddAsChild(
+                    hasClickedNode: true, hasExistingSelection: true, clickedNodeIsSelectedNode: node == currentSelection,
+                    button, _currentModifiers()))
+            {
+                AddAsChildOfSelectionRequested?.Invoke(node, currentSelection);
                 return;
             }
 
