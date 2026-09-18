@@ -73,6 +73,10 @@ When a member gated under `#if` carries `[Obsolete]` (or is otherwise a deprecat
 
 When you need to add a backend to a gate already written as `#if A || B || C`, don't reflexively append `|| D` — that grows an enumeration every new backend has to be found and added to by hand, one PR at a time. First check whether `#if !X` (exclude the backend that genuinely lacks the capability) is equivalent for every current consumer and would auto-include future backends for free. Verify by finding every csproj that compiles the guarded file/type and confirming none define a symbol outside `{A, B, C, X}` — grep each `<Compile Include>` site's `DefineConstants`, don't assume the known-symbol list is exhaustive from memory. Prefer the exclusion form whenever it's equivalent.
 
+## A `#if` Gate Is Only Live Where a Project Defines It
+
+A source-linked file such as `Gum/Wireframe/FallbackRenderableFactory.cs` compiles once per project that links it, under that project's `DefineConstants`. The tool gets it from `KniGum`, which does not define `GUM`, so an `#if GUM` block there is dead code. Editor-only behavior belongs in the editor plugin (`EditorTabPlugin.Core`, e.g. `EditorRenderableFactory`), not behind a tool-only define in a runtime file.
+
 ## Lessons From Past Breakage
 
 - ColoredRectangleRuntime unification first pass promoted MG+Raylib from `GraphicalUiElement` to `InteractiveGue` to match Skia. This would have made every decorative colored rectangle in every consumer project start absorbing clicks. Caught and reverted before merge. The correct resolution was the opposite direction — correct Skia down to `GraphicalUiElement`, since nothing in a decorative rectangle should eat events.

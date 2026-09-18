@@ -156,6 +156,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IPluginManager _pluginManager;
     private IWireframeEditorFactory _wireframeEditorFactory;
     private readonly IPreviewLauncher _previewLauncher;
+    private readonly EditorRenderableFactory _editorRenderableFactory;
 
     // Suppresses the redundant second wireframe rebuild when selecting an element forces its
     // default state (state event rebuilds) and then fires the element event for the same element.
@@ -241,7 +242,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
         IPluginManager pluginManager,
-        IFileWatchIgnoreList fileWatchIgnoreList)
+        IFileWatchIgnoreList fileWatchIgnoreList,
+        IProjectState projectState)
     {
         _selectedState = selectedState;
         _undoManager = undoManager;
@@ -264,6 +266,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
         _pluginManager = pluginManager;
+        _editorRenderableFactory = new EditorRenderableFactory(projectState);
 
         _scrollbarService = new ScrollbarService(_selectedState, _wireframeObjectManager, _projectManager);
         _editingManager = new EditingManager(
@@ -501,7 +504,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private IRenderableIpso? HandleCreateRenderableForType(string type)
     {
-        return FallbackRenderableFactory.TryHandleAsBaseType(type, SystemManagers.Default) as IRenderableIpso;
+        return _editorRenderableFactory.CreateRenderableForType(type, SystemManagers.Default);
     }
 
     private GraphicalUiElement? HandleCreateGraphicalUiElement(ElementSave elementSave)

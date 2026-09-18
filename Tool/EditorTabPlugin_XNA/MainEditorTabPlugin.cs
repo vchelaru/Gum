@@ -71,12 +71,13 @@ internal class MainEditorTabPlugin : EditorTabPluginBase
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
         IPluginManager pluginManager,
-        IFileWatchIgnoreList fileWatchIgnoreList)
+        IFileWatchIgnoreList fileWatchIgnoreList,
+        IProjectState projectState)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             addInstanceLogic, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
-            favoriteComponentManager, pluginManager, fileWatchIgnoreList)
+            favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState)
     {
     }
 

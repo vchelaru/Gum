@@ -329,8 +329,8 @@ public sealed class WireframeCanvasCore
         // Container is deliberately absent (issue #4386). Every registered runtime installs its own
         // renderable in its constructor, so SetGraphicalUiElement sees a non-null RenderableComponent
         // and skips CreateGraphicalComponent - the only path that consults
-        // GraphicalUiElement.ShowLineRectangles and returns FallbackRenderableFactory's dotted
-        // LineRectangle, which is how the editor draws a Container with Show Outlines checked (the
+        // GraphicalUiElement.ShowLineRectangles and returns the LineRectangle that
+        // EditorRenderableFactory dots, which is how the editor draws a Container with Show Outlines checked (the
         // runtime has no such concept, which is why it does register ContainerRuntime). Registering
         // ContainerRuntime here replaced that outline with an InvisibleRenderable, making every
         // Container instance invisible in the editor.
