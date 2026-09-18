@@ -92,7 +92,10 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ICopyPasteProjectProvider _copyPasteProjectProvider;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
-    private readonly IElementTreeRoots _elementTreeRoots;
+    // Lazy: ElementTreeViewManager (the IElementTreeRoots implementation) takes ICopyPasteLogic in its
+    // own constructor, so resolving IElementTreeRoots directly here would cycle back through this class
+    // during DI construction. Deferring resolution to first use breaks the cycle.
+    private readonly Lazy<IElementTreeRoots> _elementTreeRoots;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -123,7 +126,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         IMessenger messenger,
         ICopyPasteProjectProvider copyPasteProjectProvider,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IElementTreeRoots elementTreeRoots
+        Lazy<IElementTreeRoots> elementTreeRoots
         )
     {
         _wireframeObjectManager = wireframeObjectManager;
@@ -304,7 +307,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                 // Capture expansion state from the live originals before cloning - a clone is a new
                 // object the tree has never tagged a node with, so this must happen first.
                 CopiedData.CopiedExpandedInstanceNames.Clear();
-                var elementTreeNode = _elementTreeRoots.GetTreeNodeFor(element);
+                var elementTreeNode = _elementTreeRoots.Value.GetTreeNodeFor(element);
                 if (elementTreeNode != null)
                 {
                     foreach (var instance in recursiveInstances)
@@ -1107,7 +1110,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         ElementSave targetElement,
         HashSet<string> expandedInstanceNames)
     {
-        var targetTreeNode = _elementTreeRoots.GetTreeNodeFor(targetElement);
+        var targetTreeNode = _elementTreeRoots.Value.GetTreeNodeFor(targetElement);
         if (targetTreeNode == null)
         {
             return;

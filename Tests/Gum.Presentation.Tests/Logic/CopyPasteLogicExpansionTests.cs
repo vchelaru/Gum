@@ -7,6 +7,7 @@ using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -50,7 +51,12 @@ public class CopyPasteLogicExpansionTests
         GumTreeNode panelChildNode = (GumTreeNode)panelNode.AddChild("PanelChild");
         panelChildNode.SetTag(_panelChild);
 
-        _mocker.GetMock<IElementTreeRoots>().Setup(x => x.Components).Returns(componentsRoot);
+        Mock<IElementTreeRoots> elementTreeRoots = _mocker.GetMock<IElementTreeRoots>();
+        elementTreeRoots.Setup(x => x.Components).Returns(componentsRoot);
+        // CopyPasteLogic takes this as Lazy<IElementTreeRoots> to break a DI construction cycle
+        // (ElementTreeViewManager, the real IElementTreeRoots, takes ICopyPasteLogic itself) -
+        // AutoMocker doesn't resolve Lazy<T> on its own, so wire it explicitly.
+        _mocker.Use(new Lazy<IElementTreeRoots>(() => elementTreeRoots.Object));
 
         // Simulates the real ElementTreeViewManager.RefreshUi() that RefreshElementTreeView triggers
         // in production: it adds a node (collapsed by default) for any instance that doesn't have one
