@@ -54,16 +54,13 @@ public class AddInstanceLogic : IAddInstanceLogic
     }
 
     /// <inheritdoc/>
-    public InstanceSave? AddInstance(ElementSave elementToAdd, object? container, string? name = null,
-        DropPosition? position = null, bool rememberContainerAsDestination = true)
+    public InstanceSave? AddInstance(ElementSave elementToAdd, object? container, string? name = null, DropPosition? position = null)
     {
         if (GetErrorMessage(elementToAdd, container) is { } errorMessage)
         {
             _dialogService.ShowMessage(errorMessage);
             return null;
         }
-
-        object? destination = rememberContainerAsDestination ? container : _addDestinationTracker.Destination;
 
         InstanceSave? newInstance = container switch
         {
@@ -73,7 +70,7 @@ public class AddInstanceLogic : IAddInstanceLogic
         };
 
         // After the add, so its selection of the new instance does not count as a user pick.
-        _addDestinationTracker.Anchor(destination);
+        _addDestinationTracker.Anchor(container);
 
         return newInstance;
     }

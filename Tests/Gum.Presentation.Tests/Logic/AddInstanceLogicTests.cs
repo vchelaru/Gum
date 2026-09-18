@@ -76,16 +76,6 @@ public class AddInstanceLogicTests : BaseTestClass
     }
 
     [Fact]
-    public void AddInstance_NotRememberingContainer_KeepsThePreviousDestination()
-    {
-        _mocker.GetMock<IAddDestinationTracker>().Setup(x => x.Destination).Returns(_container);
-
-        _sut.AddInstance(_text, _component, rememberContainerAsDestination: false);
-
-        _mocker.GetMock<IAddDestinationTracker>().Verify(x => x.Anchor(_container), Times.Once);
-    }
-
-    [Fact]
     public void AddInstance_IntoStandardElement_ShowsMessageAndAddsNothing()
     {
         StandardElementSave standard = new StandardElementSave { Name = "Sprite" };

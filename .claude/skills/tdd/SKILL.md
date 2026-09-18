@@ -26,6 +26,10 @@ Exceptions: docs, csproj/projitems plumbing, pure renames, dead-code removal, co
 
 Note: **extracting logic into a new class/service/ViewModel is not a pure rename.** Even when the move preserves behavior, pin the new unit with a characterization test — see [refactoring-direction](../refactoring-direction/SKILL.md). The exemption above is for renames and cosmetics, not for relocating logic into a newly-testable seam.
 
+## A gesture's spec is a table, agreed before the test
+
+For an input gesture (a click, hotkey, drag or menu action), the failing test asserts an outcome table — gesture × state → where the result lands, which the user has confirmed — not the author's guess at the intent. A test that encodes a guess goes green on behavior the user never asked for; the Standards chip's Ctrl+click was specified as "add at the element root" and tested as such three times before the user's actual rule (every add gesture goes to the same add destination) was written down. When gestures are meant to be the same, they share one handler and one test, so a difference cannot exist.
+
 ## Make it testable before you decide it can't
 
 Before implementing, decide how the change will be proven — in this order:

@@ -232,9 +232,6 @@ internal class WpfElementTreeView : IElementTreeView
     /// <summary>
     /// Never raised on the frozen WPF head (#4837 only wired up the Avalonia chip palette); declared
     /// to satisfy <see cref="IElementTreeView"/>.
-    /// </summary>
-#pragma warning disable CS0067 // Required by IElementTreeView; never raised on the frozen WPF head.
-    public event Action<string>? AddStandardAsChildOfSelectionRequested;
 #pragma warning restore CS0067
 
     /// <inheritdoc/>

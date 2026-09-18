@@ -390,8 +390,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 ? element.Name
                 : null;
 
-        View.AddStandardToCurrentRequested += AddStandardInstanceToCurrentElement;
-        View.AddStandardAsChildOfSelectionRequested += AddStandardAsChildOfCurrentSelection;
+        View.AddStandardToCurrentRequested += AddStandardAtDestination;
 
         View.EditStandardDefaultsRequested += typeName =>
         {
@@ -473,41 +472,27 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Handles Ctrl+click on a Standards palette chip (and the chip's "add to current" menu item):
-    /// adds the standard at the open Screen/Component's root. A root add is not the user picking a
-    /// container, so the remembered add destination is left alone.
+    /// Handles a Ctrl-click on a Standards palette chip (and the chip's "add to current" menu
+    /// item): adds the standard at the add destination, like every other add gesture.
     /// </summary>
-    private void AddStandardInstanceToCurrentElement(string typeName)
+    private void AddStandardAtDestination(string typeName)
     {
         if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
         {
-            _addInstanceLogic.AddInstance(standardElement, _selectedState.SelectedElement, rememberContainerAsDestination: false);
+            _addInstanceLogic.AddInstanceAtDestination(standardElement);
         }
     }
 
     /// <summary>
     /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): adds it at the add
-    /// destination (the remembered container, else the selection). Nodes other than a top-level
-    /// element (an instance, a folder) are not addable this way and are ignored.
+    /// destination, like every other add gesture. Nodes other than a top-level element (an
+    /// instance, a folder) are not addable this way and are ignored.
     /// </summary>
     private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode)
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
             _addInstanceLogic.AddInstanceAtDestination(elementToAdd);
-        }
-    }
-
-    /// <summary>
-    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): adds the standard at the add
-    /// destination (the remembered container, else the selection) instead of the open element's
-    /// root like <see cref="AddStandardInstanceToCurrentElement"/>.
-    /// </summary>
-    private void AddStandardAsChildOfCurrentSelection(string typeName)
-    {
-        if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
-        {
-            _addInstanceLogic.AddInstanceAtDestination(standardElement);
         }
     }
 

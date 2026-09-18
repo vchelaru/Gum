@@ -17,14 +17,12 @@ public interface IAddInstanceLogic
     /// <see cref="ElementSave"/> (at its root), an <see cref="InstanceSave"/> (as its child, in its
     /// element), or a <see cref="BehaviorSave"/> (as a required instance). Shows a message and
     /// returns null when the add is not allowed (no container, a standard element or Screen target,
-    /// a circular reference). Selects the new instance and, unless
-    /// <paramref name="rememberContainerAsDestination"/> is false, remembers the container as the
+    /// a circular reference). Selects the new instance and remembers the container as the
     /// destination of the next add or paste.
     /// </summary>
     /// <param name="name">The new instance's name; unique-by-type when null.</param>
     /// <param name="position">Where in the element's flat instance list to insert; appended when null.</param>
-    InstanceSave? AddInstance(ElementSave elementToAdd, object? container, string? name = null,
-        DropPosition? position = null, bool rememberContainerAsDestination = true);
+    InstanceSave? AddInstance(ElementSave elementToAdd, object? container, string? name = null, DropPosition? position = null);
 
     /// <summary>
     /// Adds an instance of <paramref name="elementToAdd"/> into the remembered add destination,

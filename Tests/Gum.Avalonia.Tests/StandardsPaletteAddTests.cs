@@ -27,7 +27,7 @@ public class StandardsPaletteAddTests
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     [AvaloniaFact]
-    public void ChipClicks_AddUnderTheDestination_AndCtrlClickAddsAtTheRoot()
+    public void ChipClicks_AllAddAtTheAddDestination()
     {
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
         if (!pluginManager.IsInitialized)
@@ -69,25 +69,17 @@ public class StandardsPaletteAddTests
             selectedState.SelectedInstance = container;
             Dispatcher.UIThread.RunJobs();
 
-            // Ctrl+Shift+click twice: both land under Container, not under the first new child.
-            palette.AddAsChildOfSelectionRequested!("Text");
+            // Every add gesture lands at the add destination: the selected Container first, then the
+            // Container remembered across the adds' own selection of what they created.
+            palette.AddToCurrentRequested!("Text");
             InstanceSave firstText = component.Instances.Single(instance => instance.BaseType == "Text");
             component.DefaultState.GetValue($"{firstText.Name}.Parent").ShouldBe("Container");
             selectedState.SelectedInstance.ShouldBeSameAs(firstText);
 
-            palette.AddAsChildOfSelectionRequested!("Text");
-            InstanceSave secondText = component.Instances.Where(instance => instance.BaseType == "Text").Skip(1).Single();
-            component.DefaultState.GetValue($"{secondText.Name}.Parent").ShouldBe("Container");
-
-            // Ctrl+click adds at the root and does not redirect the next Ctrl+Shift+click.
             palette.AddToCurrentRequested!("Sprite");
             InstanceSave sprite = component.Instances.Single(instance => instance.BaseType == "Sprite");
-            component.DefaultState.GetValue($"{sprite.Name}.Parent").ShouldBeNull();
+            component.DefaultState.GetValue($"{sprite.Name}.Parent").ShouldBe("Container");
             selectedState.SelectedInstance.ShouldBeSameAs(sprite);
-
-            palette.AddAsChildOfSelectionRequested!("Text");
-            InstanceSave thirdText = component.Instances.Where(instance => instance.BaseType == "Text").Skip(2).Single();
-            component.DefaultState.GetValue($"{thirdText.Name}.Parent").ShouldBe("Container");
         }
         finally
         {
