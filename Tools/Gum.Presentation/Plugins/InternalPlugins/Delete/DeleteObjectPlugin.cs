@@ -29,6 +29,10 @@ public class DeleteObjectPlugin : CorePriorityPlugin
     private DeleteOptionChoiceViewModel? _deleteChildrenChoice;
     private DeleteOptionCheckboxViewModel? _deleteXmlOption;
 
+    // Remembers the user's last "Delete children?" pick for this session, so the dialog pre-selects
+    // it next time instead of always defaulting to "Delete only parent(s)".
+    private bool _lastShouldDeleteChildren;
+
     [ImportingConstructor]
     public DeleteObjectPlugin(
         IGuiCommands guiCommands,
@@ -59,8 +63,8 @@ public class DeleteObjectPlugin : CorePriorityPlugin
         {
             _deleteChildrenChoice = new DeleteOptionChoiceViewModel(DeleteChildrenHeader, new[]
             {
-                new DeleteOptionCheckboxViewModel { Label = DeleteOnlyParentsLabel, IsChecked = true },
-                new DeleteOptionCheckboxViewModel { Label = DeleteParentsAndChildrenLabel, IsChecked = false },
+                new DeleteOptionCheckboxViewModel { Label = DeleteOnlyParentsLabel, IsChecked = !_lastShouldDeleteChildren },
+                new DeleteOptionCheckboxViewModel { Label = DeleteParentsAndChildrenLabel, IsChecked = _lastShouldDeleteChildren },
             });
             dialog.Choices.Add(_deleteChildrenChoice);
         }
@@ -82,6 +86,10 @@ public class DeleteObjectPlugin : CorePriorityPlugin
         bool shouldDeleteXml = _deleteXmlOption?.IsChecked == true;
         bool shouldDetachChildren = _deleteChildrenChoice?.Options[0].IsChecked == true;
         bool shouldDeleteChildren = _deleteChildrenChoice?.Options[1].IsChecked == true;
+        if (_deleteChildrenChoice != null)
+        {
+            _lastShouldDeleteChildren = shouldDeleteChildren;
+        }
         _deleteChildrenChoice = null;
         _deleteXmlOption = null;
 
