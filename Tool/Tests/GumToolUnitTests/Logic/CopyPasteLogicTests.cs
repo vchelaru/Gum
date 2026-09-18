@@ -38,6 +38,8 @@ public class CopyPasteLogicTests : BaseTestClass
         // Replace the mocked IMessenger with a real instance
         _messenger = new WeakReferenceMessenger();
         _mocker.Use<IMessenger>(_messenger);
+        // Multi-paste targeting lives in the real tracker, fed by the same messenger.
+        _mocker.Use<IAddDestinationTracker>(new AddDestinationTracker(_messenger));
 
         // ICopyPasteProjectCommands is an interface (ADR-0005 Phase 3 narrow port), so AutoMocker's
         // default resolution would give CopyPasteLogic a no-op mock. Several CreateComponentFromInstance

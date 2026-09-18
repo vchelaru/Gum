@@ -25,13 +25,15 @@ Paste offers two modes: `Recursive` (instances + all descendants) vs `Top` (only
 
 Cut calls `StoreCopiedObject()` (same as copy) then immediately deletes the source instances via `IDeleteLogic.RemoveInstance()`. The deletion happens at cut time, not deferred to paste. This means cutting and then not pasting still destroys the original.
 
-## Multi-Paste Selection Tracking
+## Multi-Paste Targeting Is Shared With Ctrl+Shift-Click Adds
 
-`_hasChangedSelectionSinceCopy` is the key flag for multi-paste behavior. It starts `false` after a copy and flips `true` when `SelectionChangedMessage` fires (unless the selection change was triggered by the paste itself — `isSelectionCausedByPaste` guards against that false-positive).
+Where a repeat paste lands is owned by `IAddDestinationTracker` (`Tools/Gum.Presentation/Logic/AddDestinationTracker.cs`), not by `CopyPasteLogic`. It listens to `SelectionChangedMessage`; any selection change forgets the remembered destination and flags the selection as user-chosen, and `RunAdd(destination, add)` anchors after the add so the add's own selection of what it created does not count. Paste uses it as:
 
-During paste, this flag drives parent assignment:
-- `false` — re-use the parent from `lastPasteOriginalToParentAssociation` (repeat-paste to same location)
-- `true` — attach to current selection (user moved to a new target)
+- `HasSelectionChangedSinceAnchor` true — attach to the current selection, then anchor that container
+- false with a `Destination` — attach to the remembered container (repeat-paste, or a paste after a Ctrl+Shift-click add into that container)
+- false with no `Destination` — keep the original parents (paste straight after copy)
+
+`OnCopy`/`OnCut` call `Reset()`; `ForceSelectionChanged()` (drag-drop's cross-element move) calls `MarkSelectionChanged()`. The tree's Ctrl+Shift-click add (`AddAsChildTargetLogic` in `Tool/TreeViewPlugin.Core/TreeSelection/`) reads the same `Destination`, so clicks and pastes keep adding siblings into one container until the user selects something else.
 
 ## Paste Creates New Instances, Does Not Clone
 

@@ -88,7 +88,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IUndoManager _undoManager;
     private readonly IDeleteLogic _deleteLogic;
     private readonly ICopyPastePluginNotifier _copyPastePluginNotifier;
-    private readonly IMessenger _messenger;
+    private readonly IAddDestinationTracker _addDestinationTracker;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ICopyPasteProjectProvider _copyPasteProjectProvider;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
@@ -100,15 +100,6 @@ public class CopyPasteLogic : ICopyPasteLogic
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
     CopyType _copyType;
-
-    /// <summary>
-    /// Keeps track of whether the user has copied, moved selection, then pasted.
-    /// If this value is false, then a copy/paste occurred and we should use the default
-    /// behavior for pasting. 
-    /// If this is true, then the user has explicitly selected a spot for pasting, so we should
-    /// respect that.
-    /// </summary>
-    bool _hasChangedSelectionSinceCopy;
 
     #endregion
 
@@ -123,7 +114,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         IDeleteLogic deleteLogic,
         ICopyPastePluginNotifier copyPastePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
-        IMessenger messenger,
+        IAddDestinationTracker addDestinationTracker,
         ICopyPasteProjectProvider copyPasteProjectProvider,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         Lazy<IElementTreeRoots> elementTreeRoots
@@ -139,34 +130,13 @@ public class CopyPasteLogic : ICopyPasteLogic
         _undoManager = undoManager;
         _deleteLogic = deleteLogic;
         _copyPastePluginNotifier = copyPastePluginNotifier;
-        _messenger = messenger;
+        _addDestinationTracker = addDestinationTracker;
         _copyPasteProjectProvider = copyPasteProjectProvider;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _elementTreeRoots = elementTreeRoots;
-
-
-        _messenger.Register<SelectionChangedMessage>(
-            this,
-            (_, message) => HandleSelectionChanged());
-
-
     }
 
     #endregion
-
-    private void HandleSelectionChanged()
-    {
-        if(!isSelectionCausedByPaste)
-        {
-            _hasChangedSelectionSinceCopy = true;
-
-            if (lastPasteOriginalToParentAssociation.Count > 0)
-            {
-                lastPasteOriginalToParentAssociation = new Dictionary<InstanceSave, object>();
-            }
-            instancesSinceLastCopyOrSelection.Clear();
-        }
-    }
 
     /// <summary>
     /// Forces the CopyPasteLogic to treat the selection as having changed since the last copy, so that
@@ -174,7 +144,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// </summary>
     public void ForceSelectionChanged()
     {
-        _hasChangedSelectionSinceCopy = true;
+        _addDestinationTracker.MarkSelectionChanged();
     }
 
     #region Copy
@@ -182,12 +152,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     {
         StoreCopiedObject(copyType, _selectedState);
 
-        _hasChangedSelectionSinceCopy = false;
-        if(lastPasteOriginalToParentAssociation.Count > 0)
-        {
-            lastPasteOriginalToParentAssociation = new Dictionary<InstanceSave, object>();
-        }
-        instancesSinceLastCopyOrSelection.Clear();
+        _addDestinationTracker.Reset();
     }
 
 
@@ -388,12 +353,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         StoreCopiedObject(copyType, _selectedState);
 
-        _hasChangedSelectionSinceCopy = false;
-        if(lastPasteOriginalToParentAssociation.Count > 0)
-        {
-            lastPasteOriginalToParentAssociation = new Dictionary<InstanceSave, object>();
-        }
-        instancesSinceLastCopyOrSelection.Clear();
+        _addDestinationTracker.Reset();
 
         ElementSave? sourceElement = _selectedState.SelectedElement;
 
@@ -658,18 +618,6 @@ public class CopyPasteLogic : ICopyPasteLogic
         return toReturn;
     }
 
-    // This keeps track of the parent of the pasted objects, where the key is the original instance
-    // and the value is the parent, which could be an element or an instance.
-    // This is used in situations where the user:
-    // 1. Copies
-    // 2. Selects a new instance
-    // 3. Pastes (which uses the selection)
-    // 4. Pastes again, which should not use the selection, but should also not use the original parents because we did select in step (2)
-    Dictionary<InstanceSave, object> lastPasteOriginalToParentAssociation = new();
-    List<InstanceSave> instancesPastedSinceLastSelection = new List<InstanceSave>();
-    bool isSelectionCausedByPaste = false;
-    List<InstanceSave> instancesSinceLastCopyOrSelection = new();
-
     /// <summary>
     /// Pastes copies of the argument instancesToCopy into the targetElement.
     /// </summary>
@@ -712,7 +660,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         Dictionary<object, int> nextIndexByParent = new();
         Dictionary<InstanceSave, object> newInstanceToParentDictionary = new();
 
-        bool shouldFillLastPasteOriginalToParentAssociation = _hasChangedSelectionSinceCopy;
+        bool hasSelectionChanged = _addDestinationTracker.HasSelectionChangedSinceAnchor;
+        // The container the user picked, kept across pastes/adds that only moved the selection to what
+        // they created, so a repeat paste lands beside the last one instead of under it (#4846).
+        object? destination = hasSelectionChanged
+            ? (object?)selectedState.SelectedInstance ?? selectedState.SelectedElement
+            : _addDestinationTracker.Destination;
 
         // Build parent map from copied states - this is the source of truth for
         // parent relationships that works for both copy and cut operations.
@@ -764,41 +717,21 @@ public class CopyPasteLogic : ICopyPasteLogic
 
                 // The logic for selecting the parent is:
 
-                if(!_hasChangedSelectionSinceCopy)
+                var originalParent = GetParentElementOrInstanceFor(sourceInstance, copiedParentMap, instancesToCopy);
+                // is this attached to any of the copied instances? If so, we need to
+                // keep the pasted instance attached to the copied instance:
+                var shouldAttachToPastedInstance =
+                    originalParent is InstanceSave originalParentInstance && instancesToCopy.Any(item => item.Name == originalParentInstance.Name);
+                if (destination == null || shouldAttachToPastedInstance)
                 {
-                    if(lastPasteOriginalToParentAssociation.ContainsKey(sourceInstance))
-                    {
-                        parent = lastPasteOriginalToParentAssociation[sourceInstance];
-                    }
-                    else
-                    {
-                        parent = GetParentElementOrInstanceFor(sourceInstance, copiedParentMap, instancesToCopy);
-                    }
+                    parent = originalParent;
                 }
                 else
                 {
-                    var originalParent = GetParentElementOrInstanceFor(sourceInstance, copiedParentMap, instancesToCopy);
-                    // is this attached to any of the copied instances? If so, we need to 
-                    // keep the pasted instance attached to the copied instance:
-                    var shouldAttachToPastedInstance =
-                        originalParent is InstanceSave originalParentInstance && instancesToCopy.Any(item => item.Name == originalParentInstance.Name);
-                    if (shouldAttachToPastedInstance)
-                    {
-                        parent = originalParent;
-                    }
-                    else
-                    {
-                        parent = (object?)selectedState.SelectedInstance ??
-                            selectedState.SelectedElement;
-                    }
+                    parent = destination;
                 }
 
                 newInstanceToParentDictionary[newInstance] = parent;
-
-                if(shouldFillLastPasteOriginalToParentAssociation)
-                {
-                    lastPasteOriginalToParentAssociation[sourceInstance] = parent;
-                }
 
                 if (nextIndexByParent.ContainsKey(parent))
                 {
@@ -829,7 +762,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                     }
                     else if (parent is InstanceSave parentInstance)
                     {
-                        if(_hasChangedSelectionSinceCopy)
+                        if(hasSelectionChanged)
                         {
                             // add it to the end:
                             foreach(var item in targetElement.Instances)
@@ -888,7 +821,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                 item.Name == selectedInstance.Name &&
                 item.ParentContainer == selectedInstance.ParentContainer);
 
-            var shouldAttachToSelectedInstance = _hasChangedSelectionSinceCopy && (isPastingInNewElement || !isSelectedInstancePartOfCopied);
+            var shouldAttachToSelectedInstance = hasSelectionChanged && (isPastingInNewElement || !isSelectedInstancePartOfCopied);
 
 
             var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
@@ -1092,12 +1025,8 @@ public class CopyPasteLogic : ICopyPasteLogic
             ExpandPastedInstanceNodes(instancesToCopy, newInstances, oldNewNameDictionary, targetElement, expandedInstanceNames);
         }
 
-        //var hasSelectionChangedStore = _hasChangedSelectionSinceCopy;
-
-        isSelectionCausedByPaste = true;
-        selectedState.SelectedInstances = GetInstancesToSelectAfterPaste(newInstances, oldNewNameDictionary, instancesToSelectAfterPaste);
-        _hasChangedSelectionSinceCopy = false;
-        isSelectionCausedByPaste = false;
+        _addDestinationTracker.RunAdd(destination,
+            () => selectedState.SelectedInstances = GetInstancesToSelectAfterPaste(newInstances, oldNewNameDictionary, instancesToSelectAfterPaste));
 
         return newInstances;
     }
