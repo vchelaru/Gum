@@ -139,6 +139,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private IGridSnapWarningService _gridSnapWarningService;
     private readonly FileLocations _fileLocations;
     private readonly IThemingService _themingService;
+    private readonly IUndoManager _undoManager;
     private IDragDropManager _dragDropManager;
     private WireframeCanvasCore _canvas = null!;
 
@@ -243,6 +244,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _selectedState = selectedState;
+        _undoManager = undoManager;
         _projectManager = projectManager;
         _guiCommands = guiCommands;
         _outputManager = outputManager;
@@ -1053,6 +1055,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
+        // One user drop action (whether it sets a variable on an existing instance/component or
+        // creates one or more new instances) should record as a single undo entry, even though it
+        // may set several related variables (e.g. SourceFile + Animate + CurrentChainName - #4824).
+        using var undoLock = _undoManager.RequestLock();
+
         float worldX, worldY;
         Renderer.Self.Camera.ScreenToWorld(InputLibrary.Cursor.Self.X, InputLibrary.Cursor.Self.Y, out worldX, out worldY);
 
@@ -1233,6 +1240,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             var oldValue = _selectedState.SelectedStateSave.GetValueOrDefault<string>(variableName);
             _selectedState.SelectedStateSave.SetValue(variableName, fileName, instance);
             _setVariableLogic.ReactToPropertyValueChanged("SourceFile", oldValue, element, instance, _selectedState.SelectedStateSave, refresh: false);
+
+            ApplyAnimateDefaultsIfAnimationChainFile(instance, fileName,
+                (memberName, memberOldValue) => _setVariableLogic.ReactToPropertyValueChanged(
+                    memberName, memberOldValue, element, instance, _selectedState.SelectedStateSave, refresh: false));
         }
     }
 
@@ -1314,6 +1325,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                             oldValue,
                             _selectedState.SelectedInstance,
                             _selectedState.SelectedStateSave);
+
+                        ApplyAnimateDefaultsIfAnimationChainFile(null, fileName,
+                            (memberName, memberOldValue) => _setVariableLogic.PropertyValueChanged(
+                                memberName, memberOldValue, _selectedState.SelectedInstance, _selectedState.SelectedStateSave));
 
                         shouldUpdate = true;
                         handled = true;
@@ -1410,6 +1425,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                         oldValue, instance,
                         _selectedState.SelectedStateSave);
 
+                    ApplyAnimateDefaultsIfAnimationChainFile(instance, fileName,
+                        (memberName, memberOldValue) => _setVariableLogic.PropertyValueChanged(
+                            memberName, memberOldValue, instance, _selectedState.SelectedStateSave));
+
                     shouldUpdate = true;
                     handled = true;
                 }
@@ -1420,6 +1439,48 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                 // continue for Add new Sprite
             }
         }
+    }
+
+    /// <summary>
+    /// After a dropped .achx/.achj file has been assigned to a SourceFile variable, also enables
+    /// <c>Animate</c> and selects the first chain, so the sprite doesn't sit on a static first
+    /// frame until the user manually sets both (issue #4824).
+    /// </summary>
+    private void ApplyAnimateDefaultsIfAnimationChainFile(InstanceSave? instance, string fileName,
+        Action<string, object?> notifyPropertyChanged)
+    {
+        string absoluteFilePath = _fileLocations.ProjectFolder + fileName;
+        string? chainName = AnimationChainDropDefaults.GetFirstChainNameOrNull(absoluteFilePath);
+
+        if (chainName == null)
+        {
+            return;
+        }
+
+        var stateSave = _selectedState.SelectedStateSave;
+        string Qualify(string memberName) => instance != null ? instance.Name + "." + memberName : memberName;
+
+        var oldAnimate = stateSave.GetValueOrDefault<bool>(Qualify("Animate"));
+        if (instance != null)
+        {
+            stateSave.SetValue(Qualify("Animate"), true, instance);
+        }
+        else
+        {
+            stateSave.SetValue("Animate", true, "bool");
+        }
+        notifyPropertyChanged("Animate", oldAnimate);
+
+        var oldChainName = stateSave.GetValueOrDefault<string>(Qualify("CurrentChainName"));
+        if (instance != null)
+        {
+            stateSave.SetValue(Qualify("CurrentChainName"), chainName, instance);
+        }
+        else
+        {
+            stateSave.SetValue("CurrentChainName", chainName, "string");
+        }
+        notifyPropertyChanged("CurrentChainName", oldChainName);
     }
 
 
