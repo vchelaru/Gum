@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum;
 using Gum.Plugins.BaseClasses;
 using Gum.Services;
@@ -17,11 +18,13 @@ namespace PerformanceMeasurementPlugin
     public class MainPlugin : PluginBase
     {
         private readonly IDispatcher _dispatcher;
+        private readonly IMessenger _messenger;
 
         [ImportingConstructor]
-        public MainPlugin(IDispatcher dispatcher)
+        public MainPlugin(IDispatcher dispatcher, IMessenger messenger)
         {
             _dispatcher = dispatcher;
+            _messenger = messenger;
         }
 
         public override string FriendlyName
@@ -38,7 +41,7 @@ namespace PerformanceMeasurementPlugin
         {
             // The plugin owns its timer (not the shared bridged one), so its interval is its own.
             PeriodicUiTimer timer = new PeriodicUiTimer(_dispatcher, NullLogger<PeriodicUiTimer>.Instance);
-            PerformanceViewModel viewModel = new PerformanceViewModel(timer, new RenderDiagnosticsService());
+            PerformanceViewModel viewModel = new PerformanceViewModel(timer, new RenderDiagnosticsService(), _messenger);
 
             AddControl(viewModel, "Performance", Gum.TabLocation.RightBottom);
         }

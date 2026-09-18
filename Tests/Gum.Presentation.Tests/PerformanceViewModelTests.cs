@@ -1,8 +1,10 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Gum.Services;
 using Moq;
 using PerformanceMeasurementPlugin.ViewModels;
 using Shouldly;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace Gum.Presentation.Tests;
@@ -23,7 +25,7 @@ public class PerformanceViewModelTests
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
 
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
 
         uiTimer.Verify(t => t.Start(TimeSpan.FromMilliseconds(500)), Times.Once);
     }
@@ -34,7 +36,7 @@ public class PerformanceViewModelTests
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
         renderDiagnostics.SetupGet(r => r.CullOffscreenWhenClipped).Returns(false);
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
         bool raised = false;
         viewModel.PropertyChanged += (_, _) => raised = true;
 
@@ -50,7 +52,7 @@ public class PerformanceViewModelTests
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
         renderDiagnostics.SetupGet(r => r.SortByBatchKey).Returns(true);
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
 
         viewModel.RenderDepthFirst = true;
 
@@ -63,7 +65,7 @@ public class PerformanceViewModelTests
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
         renderDiagnostics.SetupGet(r => r.SortByBatchKey).Returns(false);
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
         bool raised = false;
         viewModel.PropertyChanged += (_, _) => raised = true;
 
@@ -79,7 +81,7 @@ public class PerformanceViewModelTests
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
         renderDiagnostics.SetupGet(r => r.SortByBatchKey).Returns(true);
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
         bool raised = false;
         viewModel.PropertyChanged += (_, _) => raised = true;
 
@@ -90,13 +92,43 @@ public class PerformanceViewModelTests
     }
 
     [Fact]
+    public void SortByBatchKey_SetToDifferentValue_SendsSiblingOrderingChangedMessage()
+    {
+        Mock<IRenderDiagnosticsService> renderDiagnostics = new();
+        renderDiagnostics.SetupProperty(r => r.SortByBatchKey, false);
+        WeakReferenceMessenger messenger = new();
+        List<SiblingOrderingChangedMessage> received = new();
+        messenger.Register<SiblingOrderingChangedMessage>(this, (_, message) => received.Add(message));
+        PerformanceViewModel viewModel = new(Mock.Of<IUiTimer>(), renderDiagnostics.Object, messenger);
+
+        viewModel.SortByBatchKey = true;
+
+        received.ShouldHaveSingleItem().SortByBatchKey.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SortByBatchKey_SetToSameValue_SendsNoMessage()
+    {
+        Mock<IRenderDiagnosticsService> renderDiagnostics = new();
+        renderDiagnostics.SetupProperty(r => r.SortByBatchKey, true);
+        WeakReferenceMessenger messenger = new();
+        List<SiblingOrderingChangedMessage> received = new();
+        messenger.Register<SiblingOrderingChangedMessage>(this, (_, message) => received.Add(message));
+        PerformanceViewModel viewModel = new(Mock.Of<IUiTimer>(), renderDiagnostics.Object, messenger);
+
+        viewModel.SortByBatchKey = true;
+
+        received.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void TotalRenderStateChanges_SumsSpriteAndShapeBatchBeginCounts()
     {
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
         renderDiagnostics.SetupGet(r => r.SpriteBatchBeginCount).Returns(3);
         renderDiagnostics.SetupGet(r => r.ShapeBatchBeginCount).Returns(2);
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
 
         viewModel.TotalRenderStateChanges.ShouldBe(5);
     }
@@ -106,7 +138,7 @@ public class PerformanceViewModelTests
     {
         Mock<IUiTimer> uiTimer = new();
         Mock<IRenderDiagnosticsService> renderDiagnostics = new();
-        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object);
+        PerformanceViewModel viewModel = new(uiTimer.Object, renderDiagnostics.Object, new WeakReferenceMessenger());
         PropertyChangedEventArgs? raisedArgs = null;
         viewModel.PropertyChanged += (_, e) => raisedArgs = e;
 

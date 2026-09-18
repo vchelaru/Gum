@@ -55,7 +55,7 @@ namespace Gum.Plugins.InternalPlugins.EditorTab;
 /// <see cref="HandleWireframeDrop"/>.
 /// </summary>
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - This is never disposed so suppressing this
-public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>
+public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>, IRecipient<SiblingOrderingChangedMessage>
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields/Properties
@@ -1598,6 +1598,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _canvas.SetGuideColors(settings.GuideLine, settings.GuideText);
         static Microsoft.Xna.Framework.Color ToXna(Color color) => new Microsoft.Xna.Framework.Color(color.R, color.G, color.B, color.A);
     }
+
+    // The preview reads the orderer from every selection-file write, so re-sending the current
+    // selection is all it takes to make it follow a Performance-tab toggle (issue #4860).
+    void IRecipient<SiblingOrderingChangedMessage>.Receive(SiblingOrderingChangedMessage message) =>
+        _previewLauncher.PushSelection(_selectedState.SelectedElement);
 
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
