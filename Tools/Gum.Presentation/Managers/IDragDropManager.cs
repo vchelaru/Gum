@@ -24,7 +24,14 @@ public interface IDragDropManager
 
     bool IsValidExtensionForFileDrop(string file);
     void OnFilesDroppedInTreeView(string[] files);
-    void OnNodeObjectDroppedInWireframe(object draggedObject);
+
+    /// <summary>
+    /// Creates an instance of <paramref name="draggedObject"/> (an <see cref="ElementSave"/>) on
+    /// the currently-shown element. <paramref name="instanceUnderCursor"/> is whatever instance the
+    /// drop point hit-tested onto (if any) — when it's also the current selection, the new instance
+    /// is attached as that instance's child instead of the element's top level (#4834).
+    /// </summary>
+    void OnNodeObjectDroppedInWireframe(object draggedObject, InstanceSave? instanceUnderCursor = null);
 
     /// <summary>
     /// Creates an instance of the given standard type on the Screen/Component represented by
@@ -51,7 +58,12 @@ public interface IDragDropManager
     /// <param name="hasNodes">True when the payload contains tree-node data.</param>
     DragAcceptDecision DecideWireframeDragEffect(bool hasFileDrop, bool hasNodes);
 
-    void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance);
+    /// <summary>
+    /// Converts a world-space drop point into <paramref name="instance"/>'s X/Y, relative to
+    /// <paramref name="parentInstance"/>'s bounds when it's being attached as that instance's child
+    /// (#4834), or to the top-level element/component root otherwise.
+    /// </summary>
+    void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance, InstanceSave? parentInstance = null);
     /// <inheritdoc cref="OnNodeSortingDropped"/>
     bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget);
 }

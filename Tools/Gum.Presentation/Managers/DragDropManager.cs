@@ -1096,7 +1096,7 @@ public class DragDropManager : IDragDropManager
         }
     }
 
-    public void OnNodeObjectDroppedInWireframe(object draggedObject)
+    public void OnNodeObjectDroppedInWireframe(object draggedObject, InstanceSave? instanceUnderCursor = null)
     {
         ElementSave? draggedAsElementSave = draggedObject as ElementSave;
         ElementSave? target = _wireframeObjectManager.ElementShowing;
@@ -1111,8 +1111,17 @@ public class DragDropManager : IDragDropManager
             // into whatever edit comes next. (issue #2658)
             using var undoLock = _undoManager.RequestLock();
 
-            DropTarget appendTarget = new DropTarget(target, null, new DropPosition.Append());
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, appendTarget);
+            // Attach the new instance to the current selection only when the drop both hit-tests
+            // onto an instance AND that instance is the current selection (#4834) — landing on a
+            // different, unselected instance (or missing every instance) keeps the old top-level
+            // append behavior even though something happens to be selected.
+            InstanceSave? selectedInstance = _selectedState.SelectedInstance;
+            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance
+                ? selectedInstance
+                : null;
+
+            DropTarget dropTarget = new DropTarget(target, parentInstance, new DropPosition.Append());
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, parentInstance, dropTarget);
 
             float worldX, worldY;
 
@@ -1123,8 +1132,16 @@ public class DragDropManager : IDragDropManager
 
             if(newInstance != null)
             {
+                if (parentInstance != null)
+                {
+                    // Reuse the same onto-instance parenting path a tree-view drop onto an instance
+                    // node takes (resolves a container's default child slot, e.g. a ScrollViewer's
+                    // clip panel) so a canvas drop onto a selected container behaves identically to
+                    // dragging the same element onto its tree node.
+                    HandleDroppingInstanceOnTarget(newInstance, targetTreeNode: null, dropTarget);
+                }
 
-                SetInstanceToPosition(worldX, worldY, newInstance);
+                SetInstanceToPosition(worldX, worldY, newInstance, parentInstance);
 
                 SaveAndRefresh();
             }
@@ -1179,7 +1196,7 @@ public class DragDropManager : IDragDropManager
         _wireframeObjectManager.RefreshAll(true);
     }
 
-    public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
+    public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance, InstanceSave? parentInstance = null)
     {
         var component = _selectedState.SelectedComponent;
 
@@ -1205,6 +1222,24 @@ public class DragDropManager : IDragDropManager
         else
         {
             // leave default
+        }
+
+        if (parentInstance != null)
+        {
+            // The instance is being attached as a child of parentInstance rather than the
+            // top-level element/component root, so its X/Y is relative to parentInstance's own
+            // bounds, not the element's (issue #4834 follow-up: the parent isn't necessarily at
+            // the canvas origin the way the top-level root is). Falls back to the root-relative
+            // container above if the parent's representation can't be found for some reason.
+            var parentRuntime = _wireframeObjectManager.GetRepresentation(parentInstance);
+            if (parentRuntime != null)
+            {
+                containerLeft = parentRuntime.GetAbsoluteLeft();
+                containerTop = parentRuntime.GetAbsoluteTop();
+
+                containerWidth = parentRuntime.Width;
+                containerHeight = parentRuntime.Height;
+            }
         }
 
         var differenceX = worldX - containerLeft;

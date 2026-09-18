@@ -1,5 +1,6 @@
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab;
+using Gum.ToolStates;
 using Moq;
 using Shouldly;
 using System.Reflection;
@@ -114,13 +115,16 @@ public class MainEditorTabPluginDragDropTests : BaseTestClass
     // up a WireframeEditorFactory, SelectionManager, ScreenshotService, etc.) - see the
     // "Plugin/DI composition tests" entry in the gum-unit-tests skill. DecideWireframeDropEffect/
     // HandleWireframeDrop only touch _dragDropManager (and _guiCommands on the rejected-drop path,
-    // which these tests don't exercise), so only that field needs to be wired up.
+    // which these tests don't exercise) plus, since #4834, _selectedState (to hit-test the drop point
+    // against the current selection) - a loose mock with no element selected short-circuits that hit
+    // test to null without needing a real SelectionManager, so only these two fields need wiring up.
     private static MainEditorTabPlugin CreatePlugin(out Mock<IDragDropManager> dragDropManager)
     {
         MainEditorTabPlugin plugin = (MainEditorTabPlugin)RuntimeHelpers.GetUninitializedObject(typeof(MainEditorTabPlugin));
 
         dragDropManager = new Mock<IDragDropManager>();
         SetField(plugin, "_dragDropManager", dragDropManager.Object);
+        SetField(plugin, "_selectedState", Mock.Of<ISelectedState>());
 
         return plugin;
     }
