@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace XnaAndWinforms;
 
@@ -10,6 +9,13 @@ namespace XnaAndWinforms;
 /// matter here - callers pass a raw pointer and stride into whatever backing memory they've already
 /// locked, so this class has no dependency on any UI framework.
 /// </summary>
+/// <remarks>
+/// Both copies run entirely on the calling thread, on purpose. They're called from the UI thread
+/// once per frame, and a <c>Parallel.For</c> there makes the UI thread block on the thread pool:
+/// if the pool is stalled (e.g. its workers are waiting on the UI thread themselves), the loop
+/// never returns even after every row has been copied - a permanent freeze (#4852). A
+/// full-canvas copy is a few megabytes, well under a frame single-threaded.
+/// </remarks>
 public static class RawPixelBufferCopy
 {
     /// <summary>
@@ -20,12 +26,16 @@ public static class RawPixelBufferCopy
     {
         int rowSize = width * 4;
 
-        Parallel.For(0, height, (y) =>
+        if (destinationStride == rowSize)
         {
-            int srcOffset = y * rowSize;
-            int dstOffset = y * destinationStride;
-            Marshal.Copy(source, srcOffset, destination + dstOffset, rowSize);
-        });
+            Marshal.Copy(source, 0, destination, rowSize * height);
+            return;
+        }
+
+        for (int y = 0; y < height; y++)
+        {
+            Marshal.Copy(source, y * rowSize, destination + y * destinationStride, rowSize);
+        }
     }
 
     /// <summary>
@@ -36,25 +46,23 @@ public static class RawPixelBufferCopy
     {
         int rowSize = width * 4;
 
-        fixed (void* pSource = &source[0])
+        fixed (byte* src = source)
         {
-            byte* src = (byte*)pSource;
             byte* dst = (byte*)destination;
 
-            Parallel.For(0, height, (y) =>
+            for (int y = 0; y < height; y++)
             {
-                int srcOffset = y * rowSize;
-                int dstOffset = y * destinationStride;
+                byte* srcRow = src + y * rowSize;
+                byte* dstRow = dst + y * destinationStride;
 
-                for (int x = 0; x < width; x++)
+                for (int i = 0; i < rowSize; i += 4)
                 {
-                    int i = x * 4;
-                    dst[dstOffset + i + 0] = src[srcOffset + i + 2];
-                    dst[dstOffset + i + 1] = src[srcOffset + i + 1];
-                    dst[dstOffset + i + 2] = src[srcOffset + i + 0];
-                    dst[dstOffset + i + 3] = src[srcOffset + i + 3];
+                    dstRow[i + 0] = srcRow[i + 2];
+                    dstRow[i + 1] = srcRow[i + 1];
+                    dstRow[i + 2] = srcRow[i + 0];
+                    dstRow[i + 3] = srcRow[i + 3];
                 }
-            });
+            }
         }
     }
 }
