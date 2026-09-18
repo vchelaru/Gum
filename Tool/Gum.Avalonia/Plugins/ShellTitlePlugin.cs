@@ -4,10 +4,11 @@ using Gum.Avalonia.Shell;
 using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
+using ToolsUtilities;
 
 namespace Gum.Avalonia.Plugins;
 
-/// <summary>Keeps the window title on the loaded project's path. The Avalonia twin of <c>MainWindowPlugin</c>.</summary>
+/// <summary>Keeps the window title on the loaded project's file name. The Avalonia twin of <c>MainWindowPlugin</c>.</summary>
 [Export(typeof(PluginBase))]
 public class ShellTitlePlugin : PluginBase, IPriorityPlugin
 {
@@ -37,5 +38,5 @@ public class ShellTitlePlugin : PluginBase, IPriorityPlugin
     public override bool ShutDown(PluginShutDownReason shutDownReason) => false;
 
     private void UpdateTitle(GumProjectSave? project) =>
-        _shell.Title = project != null && !string.IsNullOrEmpty(project.FullFileName) ? project.FullFileName : "Gum";
+        _shell.Title = project != null && !string.IsNullOrEmpty(project.FullFileName) ? FileManager.RemovePath(project.FullFileName) : "Gum";
 }
