@@ -78,7 +78,7 @@ public class InstanceDeletionHelperTests : BaseTestClass
     }
 
     [Fact]
-    public void DetachChildrenFromInstance_CallsRemoveParentReferences()
+    public void DetachChildrenFromInstance_InstanceHasNoParent_RemovesChildrensParentVariable()
     {
         var screen = CreateScreenWithInstances("Parent");
         var parent = screen.Instances[0];
@@ -86,7 +86,21 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstance(parent);
 
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent, screen), Times.Once);
+        screen.DefaultState.Variables.Any(v => v.Name == "Child.Parent").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DetachChildrenFromInstance_InstanceHasAParent_ReparentsChildrenToIt()
+    {
+        var screen = CreateScreenWithInstances("Grandparent", "Parent");
+        var grandparent = screen.Instances[0];
+        var parent = screen.Instances[1];
+        screen.DefaultState.SetValue($"{parent.Name}.Parent", grandparent.Name, "string");
+        AddChild(screen, "Child", "Parent");
+
+        _helper.DetachChildrenFromInstance(parent);
+
+        screen.DefaultState.Variables.First(v => v.Name == "Child.Parent").Value.ShouldBe("Grandparent");
     }
 
     [Fact]
@@ -113,9 +127,8 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstances(new[] { parent1, parent2, parent3 });
 
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent3, screen), Times.Once);
+        screen.DefaultState.Variables.Any(v => v.Name == "Child1.Parent").ShouldBeFalse();
+        screen.DefaultState.Variables.Any(v => v.Name == "Child3.Parent").ShouldBeFalse();
     }
 
     [Fact]
@@ -129,8 +142,8 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.DetachChildrenFromInstances(new[] { parent1, parent2 });
 
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
+        screen.DefaultState.Variables.Any(v => v.Name == "Child1.Parent").ShouldBeFalse();
+        screen.DefaultState.Variables.Any(v => v.Name == "Child2.Parent").ShouldBeFalse();
     }
 
     [Fact]
@@ -314,8 +327,8 @@ public class InstanceDeletionHelperTests : BaseTestClass
 
         _helper.PerformMultipleInstancesDelete(new[] { parent1, parent2 }, shouldDetachChildren: true, shouldDeleteChildren: false);
 
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent1, screen), Times.Once);
-        _deleteLogic.Verify(x => x.RemoveReferencesToInstance(parent2, screen), Times.Once);
+        screen.DefaultState.Variables.Any(v => v.Name == "Child1.Parent").ShouldBeFalse();
+        screen.DefaultState.Variables.Any(v => v.Name == "Child2.Parent").ShouldBeFalse();
     }
 
     [Fact]

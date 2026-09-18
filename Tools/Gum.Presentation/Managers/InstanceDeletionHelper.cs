@@ -4,6 +4,7 @@ using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using ToolsUtilities;
 
@@ -103,15 +104,53 @@ public class InstanceDeletionHelper
     }
 
     /// <summary>
-    /// Detaches all children from the specified instance by removing parent references,
-    /// but does not delete the children themselves.
+    /// Detaches all children from the specified instance, reparenting them onto the instance's own
+    /// parent (or un-parenting them if the instance itself has no parent), so they move up one level
+    /// in the hierarchy instead of losing their parent entirely. Does not delete the children
+    /// themselves, and does not touch the instance's own variables (those are cleaned up separately
+    /// when the instance itself is removed).
     /// </summary>
     public void DetachChildrenFromInstance(InstanceSave? instance)
     {
         if (instance?.ParentContainer == null)
             return;
 
-        _deleteLogic.RemoveReferencesToInstance(instance, instance.ParentContainer);
+        var container = instance.ParentContainer;
+        var defaultState = container.DefaultState;
+
+        string? grandparentValue = defaultState?.Variables
+            .FirstOrDefault(v => v.SourceObject == instance.Name && v.GetRootName() == "Parent")
+            ?.Value as string;
+
+        foreach (StateSave stateSave in container.AllStates)
+        {
+            for (int i = stateSave.Variables.Count - 1; i > -1; i--)
+            {
+                var variable = stateSave.Variables[i];
+
+                if (variable.GetRootName() != "Parent" || variable.Value is not string valueAsString)
+                    continue;
+
+                if (valueAsString == instance.Name)
+                {
+                    if (grandparentValue == null)
+                    {
+                        stateSave.Variables.RemoveAt(i);
+                    }
+                    else
+                    {
+                        variable.Value = grandparentValue;
+                    }
+                }
+                else if (valueAsString.StartsWith(instance.Name + "."))
+                {
+                    // This references a named child inside the deleted instance's own hierarchy
+                    // (e.g. an anchor point), which won't exist under the grandparent, so there's
+                    // nothing sensible to redirect this to.
+                    stateSave.Variables.RemoveAt(i);
+                }
+            }
+        }
     }
 
     /// <summary>
