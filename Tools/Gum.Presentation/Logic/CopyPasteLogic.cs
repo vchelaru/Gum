@@ -63,6 +63,12 @@ public class CopiedData
     /// See <c>ElementSaveExtensions.GetItemNamesOwnedByReachableCategorizedStates</c>.
     /// </summary>
     public HashSet<string> CopiedNamesOwnedByReachableStates = new HashSet<string>(StringComparer.Ordinal);
+    /// <summary>
+    /// Names of copied instances (top-level or nested) whose tree node was expanded at copy time.
+    /// Paste expands the corresponding new instance's node when its name is in this set, so pasting an
+    /// expanded parent leaves the new copy expanded too instead of defaulting to collapsed.
+    /// </summary>
+    public HashSet<string> CopiedExpandedInstanceNames = new HashSet<string>(StringComparer.Ordinal);
     public ElementSave CopiedElement = null;
     public StateSaveCategory CopiedCategory = null;
 }
@@ -86,6 +92,10 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ICopyPasteProjectProvider _copyPasteProjectProvider;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
+    // Lazy: ElementTreeViewManager (the IElementTreeRoots implementation) takes ICopyPasteLogic in its
+    // own constructor, so resolving IElementTreeRoots directly here would cycle back through this class
+    // during DI construction. Deferring resolution to first use breaks the cycle.
+    private readonly Lazy<IElementTreeRoots> _elementTreeRoots;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -115,7 +125,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         IWireframeObjectManager wireframeObjectManager,
         IMessenger messenger,
         ICopyPasteProjectProvider copyPasteProjectProvider,
-        IStandardElementsManagerGumTool standardElementsManagerGumTool
+        IStandardElementsManagerGumTool standardElementsManagerGumTool,
+        Lazy<IElementTreeRoots> elementTreeRoots
         )
     {
         _wireframeObjectManager = wireframeObjectManager;
@@ -131,6 +142,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         _messenger = messenger;
         _copyPasteProjectProvider = copyPasteProjectProvider;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
+        _elementTreeRoots = elementTreeRoots;
 
 
         _messenger.Register<SelectionChangedMessage>(
@@ -284,18 +296,38 @@ public class CopyPasteLogic : ICopyPasteLogic
             var parentContainer = selected.FirstOrDefault()?.ParentContainer;
             if (parentContainer != null)
             {
-                CopiedData.CopiedInstancesRecursive = GetAllInstancesAndChildrenOf(selected, selected.FirstOrDefault()?.ParentContainer)
+                var recursiveInstances = GetAllInstancesAndChildrenOf(selected, parentContainer)
                             // Sort by index in parent at the end so the children are sorted properly:
                             .OrderBy(item =>
                             {
                                 return element?.Instances.IndexOf(item) ?? 0;
                             })
-                            // clone after doing OrderBy
+                            .ToList();
+
+                // Capture expansion state from the live originals before cloning - a clone is a new
+                // object the tree has never tagged a node with, so this must happen first.
+                CopiedData.CopiedExpandedInstanceNames.Clear();
+                var elementTreeNode = _elementTreeRoots.Value.GetTreeNodeFor(element);
+                if (elementTreeNode != null)
+                {
+                    foreach (var instance in recursiveInstances)
+                    {
+                        var instanceTreeNode = elementTreeNode.GetTreeNodeFor(instance);
+                        if (instanceTreeNode != null && instanceTreeNode.IsExpanded)
+                        {
+                            CopiedData.CopiedExpandedInstanceNames.Add(instance.Name);
+                        }
+                    }
+                }
+
+                CopiedData.CopiedInstancesRecursive = recursiveInstances
+                            // clone after doing OrderBy and capturing expansion state
                             .Select(item => item.Clone())
                             .ToList();
             }
             else
             {
+                CopiedData.CopiedExpandedInstanceNames.Clear();
                 CopiedData.CopiedInstancesRecursive.AddRange(CopiedData.CopiedInstancesSelected);
             }
 
@@ -487,13 +519,15 @@ public class CopyPasteLogic : ICopyPasteLogic
             PasteInstanceSaves(CopiedData.CopiedInstancesRecursive, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance,
                 baseElementDefaultStates: CopiedData.CopiedBaseElementDefaultStates,
                 itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates,
-                instancesToSelectAfterPaste: CopiedData.CopiedInstancesSelected);
+                instancesToSelectAfterPaste: CopiedData.CopiedInstancesSelected,
+                expandedInstanceNames: CopiedData.CopiedExpandedInstanceNames);
         }
         else
         {
             PasteInstanceSaves(CopiedData.CopiedInstancesSelected, CopiedData.CopiedStates, selectedElement, _selectedState.SelectedInstance,
                 baseElementDefaultStates: CopiedData.CopiedBaseElementDefaultStates,
-                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates);
+                itemsOwnedByReachableStates: CopiedData.CopiedNamesOwnedByReachableStates,
+                expandedInstanceNames: CopiedData.CopiedExpandedInstanceNames);
         }
 
         if (selectedElement != null)
@@ -647,6 +681,10 @@ public class CopyPasteLogic : ICopyPasteLogic
     /// selected after the paste. Pass the explicitly-selected (non-recursive) set so that pasting a parent
     /// does not also leave its recursively-dragged children selected. When null, every new instance is
     /// selected (the legacy behavior used by drag-drop and the top-level paste path).</param>
+    /// <param name="expandedInstanceNames">Names of source instances (from <paramref name="instancesToCopy"/>)
+    /// whose tree node should end up expanded, so a pasted copy of an expanded parent starts expanded too
+    /// instead of defaulting to collapsed. Only meaningful for callers pasting from <see cref="CopiedData"/>;
+    /// drag-drop and other direct callers pass null.</param>
     /// <returns>The newly-created instances</returns>
     public List<InstanceSave> PasteInstanceSaves(List<InstanceSave> instancesToCopy,
         List<StateSave> copiedStates,
@@ -655,7 +693,8 @@ public class CopyPasteLogic : ICopyPasteLogic
         ISelectedState? forcedSelectedState = null,
         List<StateSave>? baseElementDefaultStates = null,
         HashSet<string>? itemsOwnedByReachableStates = null,
-        List<InstanceSave>? instancesToSelectAfterPaste = null)
+        List<InstanceSave>? instancesToSelectAfterPaste = null,
+        HashSet<string>? expandedInstanceNames = null)
     {
         /////////////////////////Early Out///////////////////////
         if (targetElement is StandardElementSave)
@@ -1048,6 +1087,11 @@ public class CopyPasteLogic : ICopyPasteLogic
         _guiCommands.RefreshElementTreeView(targetElement);
         _fileCommands.TryAutoSaveElement(targetElement);
 
+        if (expandedInstanceNames != null && expandedInstanceNames.Count > 0)
+        {
+            ExpandPastedInstanceNodes(instancesToCopy, newInstances, oldNewNameDictionary, targetElement, expandedInstanceNames);
+        }
+
         //var hasSelectionChangedStore = _hasChangedSelectionSinceCopy;
 
         isSelectionCausedByPaste = true;
@@ -1056,6 +1100,38 @@ public class CopyPasteLogic : ICopyPasteLogic
         isSelectionCausedByPaste = false;
 
         return newInstances;
+    }
+
+    // Expands the tree node of each newly-pasted instance whose source (by name) was expanded at copy
+    // time. Runs after RefreshElementTreeView so the new instances' nodes already exist.
+    private void ExpandPastedInstanceNodes(List<InstanceSave> instancesToCopy,
+        List<InstanceSave> newInstances,
+        Dictionary<string, string> oldNewNameDictionary,
+        ElementSave targetElement,
+        HashSet<string> expandedInstanceNames)
+    {
+        var targetTreeNode = _elementTreeRoots.Value.GetTreeNodeFor(targetElement);
+        if (targetTreeNode == null)
+        {
+            return;
+        }
+
+        foreach (var sourceInstance in instancesToCopy)
+        {
+            if (!expandedInstanceNames.Contains(sourceInstance.Name) ||
+                !oldNewNameDictionary.TryGetValue(sourceInstance.Name, out var newName))
+            {
+                continue;
+            }
+
+            var newInstance = newInstances.FirstOrDefault(item => item.Name == newName);
+            if (newInstance == null)
+            {
+                continue;
+            }
+
+            targetTreeNode.GetTreeNodeFor(newInstance)?.Expand();
+        }
     }
 
     // Narrows the post-paste selection to mirror what was selected at copy time. Pasting a parent

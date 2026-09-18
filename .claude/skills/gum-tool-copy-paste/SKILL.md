@@ -37,6 +37,15 @@ During paste, this flag drives parent assignment:
 
 `PasteInstanceSaves()` creates fresh `InstanceSave` objects and assigns properties from the copied states. It does **not** simply clone the stored instances. Name uniqueness is enforced via `StringFunctions.MakeStringUnique()`, and an `oldNewNameDictionary` is built to remap parent references throughout the copied hierarchy.
 
+## Expansion State Follows the Source Node
+
+`StoreCopiedInstances` also snapshots which copied instances' tree nodes were expanded (via the
+head-provided `IElementTreeRoots` seam) into `CopiedData.CopiedExpandedInstanceNames`.
+`PasteInstanceSaves` re-expands the matching new instance's node after the tree refresh, so pasting
+an expanded parent leaves the new copy expanded instead of defaulting to collapsed. Direct
+`PasteInstanceSaves` callers outside `CopyPasteLogic` (drag-drop, `HandleMoveToBase`) pass no
+expansion set, so this only applies to copy/paste.
+
 ## Base-Element Capture is Filtered, Not Wholesale
 
 `StoreCopiedInstances` captures the source's own selected state into `CopiedStates` AND the default state of every base element in the source's BaseType chain into a **separate** `CopiedBaseElementDefaultStates` list. The base captures exist so the new instance keeps inherited effective values (e.g. `Text="Click Me"` from a base) even after renaming/relocation, where the regular inheritance walk would no longer reach them.
@@ -87,6 +96,7 @@ Do not call `CopyPasteLogic` methods directly from outside these entry points.
 | `Tools/Gum.Presentation/Logic/ICopyPasteLogic.cs` | Interface |
 | `Tools/Gum.Presentation/Commands/EditCommands.cs` | Thin wrappers that delegate to `ICopyPasteLogic` |
 | `Tools/Gum.Presentation/Managers/HotkeyManager.cs` | Keyboard entry point |
-| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.RightClick.cs` | Context menu entry point |
+| `Tool/TreeViewPlugin.Core/ElementTreeViewManager.RightClick.cs` | Context menu entry point |
 | `Gum/StateAnimationPlugin/Managers/AnimationCopyPasteManager.cs` | Separate animation copy/paste |
-| `Tool/Tests/GumToolUnitTests/Logic/CopyPasteLogicTests.cs` | Unit tests |
+| `Tool/Tests/GumToolUnitTests/Logic/CopyPasteLogicTests.cs` | WPF-head unit tests |
+| `Tests/Gum.Presentation.Tests/Logic/CopyPasteLogicExpansionTests.cs` | Headless unit tests for pasted-node expansion |

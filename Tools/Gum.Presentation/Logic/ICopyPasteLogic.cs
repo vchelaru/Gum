@@ -26,7 +26,8 @@ public interface ICopyPasteLogic
         ISelectedState? forcedSelectedState = null,
         List<StateSave>? baseElementDefaultStates = null,
         HashSet<string>? itemsOwnedByReachableStates = null,
-        List<InstanceSave>? instancesToSelectAfterPaste = null);
+        List<InstanceSave>? instancesToSelectAfterPaste = null,
+        HashSet<string>? expandedInstanceNames = null);
 
     /// <summary>
     /// Promotes a single instance into a brand-new component: the instance's type becomes the

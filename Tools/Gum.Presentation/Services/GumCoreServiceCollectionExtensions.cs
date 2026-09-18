@@ -66,6 +66,7 @@ public static class GumCoreServiceCollectionExtensions
         typeof(ICopyPastePluginNotifier),
         typeof(IRenamePluginNotifier),
         typeof(IVariableGridHead),
+        typeof(IElementTreeRoots),
     };
 
     /// <summary>Adds the headless service graph. See the class summary for what the head must add.</summary>

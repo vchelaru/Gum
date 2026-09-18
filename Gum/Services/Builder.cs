@@ -96,6 +96,7 @@ file static class ServiceCollectionExtensions
         // calls in WpfHeadStartup (two-stage initialization); both are WPF view managers.
         services.AddSingleton<ElementTreeViewManager>();
         services.AddSingleton<Gum.Plugins.InternalPlugins.TreeView.IElementTreeViewFactory, WpfElementTreeViewFactory>();
+        services.AddSingleton<Gum.Managers.IElementTreeRoots>(provider => provider.GetRequiredService<ElementTreeViewManager>());
 
         // OS / framework seams.
         services.AddSingleton<IModifierKeyState, WinFormsModifierKeyState>();
