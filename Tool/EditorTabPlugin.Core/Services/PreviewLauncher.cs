@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.ToolStates;
 using ToolsUtilities;
@@ -16,6 +18,7 @@ public class PreviewLauncher : IPreviewLauncher
     private readonly IOutputManager _outputManager;
     private readonly IPreviewGumxProjectionService _previewGumxProjectionService;
     private readonly string _headBaseDirectory;
+    private readonly Func<bool> _isSortByBatchKey;
 
     private Process? _process;
     private string? _selectionFilePath;
@@ -25,18 +28,24 @@ public class PreviewLauncher : IPreviewLauncher
     /// The running head's own base directory (<c>AppContext.BaseDirectory</c>), used to locate the
     /// preview executable via <see cref="PreviewExecutableLocator"/>.
     /// </param>
+    /// <param name="isSortByBatchKey">
+    /// Whether the tool's canvas currently renders with <c>BatchKeyGroupedOrderer</c> (the
+    /// Performance panel's "Sort by batch" option), so the preview renders the same way.
+    /// </param>
     public PreviewLauncher(
         ISelectedState selectedState,
         IProjectManager projectManager,
         IOutputManager outputManager,
         IPreviewGumxProjectionService previewGumxProjectionService,
-        string headBaseDirectory)
+        string headBaseDirectory,
+        Func<bool> isSortByBatchKey)
     {
         _selectedState = selectedState;
         _projectManager = projectManager;
         _outputManager = outputManager;
         _previewGumxProjectionService = previewGumxProjectionService;
         _headBaseDirectory = headBaseDirectory;
+        _isSortByBatchKey = isSortByBatchKey;
     }
 
     private bool IsRunning => _process is { HasExited: false };
@@ -95,7 +104,7 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
-        File.WriteAllText(_selectionFilePath, element.Name);
+        PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
             resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory);
@@ -121,7 +130,10 @@ public class PreviewLauncher : IPreviewLauncher
         {
             return;
         }
-        File.WriteAllText(_selectionFilePath, BuildSelectionFileContent(element.Name, activate));
+        if (!PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate).Serialize()))
+        {
+            _outputManager.AddError("Could not update the running preview: its selection file is locked.");
+        }
     }
 
     /// <inheritdoc/>
@@ -142,13 +154,25 @@ public class PreviewLauncher : IPreviewLauncher
     }
 
     /// <summary>
-    /// The selection file's content: the element name, plus a trailing <see cref="ActivateMarker"/>
-    /// line when GumPreview should also raise its window (see <c>Game1.PollSelectionFile</c>).
+    /// The message for <paramref name="element"/> in the tool's currently selected state (none when
+    /// the default state is selected), with the tool's current sibling orderer.
     /// </summary>
-    internal static string BuildSelectionFileContent(string elementName, bool activate) =>
-        activate ? $"{elementName}\n{ActivateMarker}" : elementName;
+    internal PreviewSelectionMessage BuildMessage(ElementSave element, bool activate)
+    {
+        PreviewSelectionMessage message = new PreviewSelectionMessage(element.Name)
+        {
+            SortByBatchKey = _isSortByBatchKey(),
+            Activate = activate,
+        };
 
-    internal const string ActivateMarker = "activate";
+        StateSave? state = _selectedState.SelectedStateSave;
+        if (state != null && state != element.DefaultState)
+        {
+            message.StateName = state.Name;
+            message.CategoryName = element.Categories.FirstOrDefault(category => category.States.Contains(state))?.Name;
+        }
+        return message;
+    }
 
     private void DeleteSelectionFileQuietly()
     {

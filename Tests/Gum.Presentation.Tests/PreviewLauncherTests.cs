@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.ToolStates;
@@ -25,6 +26,7 @@ public class PreviewLauncherTests : IDisposable
     private readonly Mock<IOutputManager> _outputManager = new();
     private readonly Mock<IPreviewGumxProjectionService> _previewGumxProjectionService = new();
     private readonly string _headBaseDirectory;
+    private bool _isSortByBatchKey;
 
     public PreviewLauncherTests()
     {
@@ -41,18 +43,70 @@ public class PreviewLauncherTests : IDisposable
     }
 
     private PreviewLauncher CreateLauncher() =>
-        new PreviewLauncher(_selectedState.Object, _projectManager.Object, _outputManager.Object, _previewGumxProjectionService.Object, _headBaseDirectory);
+        new PreviewLauncher(_selectedState.Object, _projectManager.Object, _outputManager.Object, _previewGumxProjectionService.Object, _headBaseDirectory, () => _isSortByBatchKey);
 
     [Fact]
-    public void BuildSelectionFileContent_WhenActivate_AppendsTheActivateMarker()
+    public void BuildMessage_WhenActivate_SetsTheActivateFlag()
     {
-        PreviewLauncher.BuildSelectionFileContent("MainMenu", activate: true).ShouldBe("MainMenu\nactivate");
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns((StateSave?)null);
+
+        PreviewSelectionMessage message = CreateLauncher().BuildMessage(new ScreenSave { Name = "MainMenu" }, activate: true);
+
+        message.ElementName.ShouldBe("MainMenu");
+        message.Activate.ShouldBeTrue();
     }
 
     [Fact]
-    public void BuildSelectionFileContent_WhenNotActivate_IsJustTheElementName()
+    public void BuildMessage_WhenACategorizedStateIsSelected_CarriesCategoryAndState()
     {
-        PreviewLauncher.BuildSelectionFileContent("MainMenu", activate: false).ShouldBe("MainMenu");
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        StateSave highlighted = new StateSave { Name = "Highlighted" };
+        component.Categories.Add(new StateSaveCategory { Name = "ButtonCategory", States = { highlighted } });
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns(highlighted);
+
+        PreviewSelectionMessage message = CreateLauncher().BuildMessage(component, activate: false);
+
+        message.CategoryName.ShouldBe("ButtonCategory");
+        message.StateName.ShouldBe("Highlighted");
+        message.Activate.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void BuildMessage_WhenTheDefaultStateIsSelected_CarriesNoState()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        StateSave defaultState = new StateSave { Name = "Default" };
+        component.States.Add(defaultState);
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns(defaultState);
+
+        PreviewSelectionMessage message = CreateLauncher().BuildMessage(component, activate: false);
+
+        message.CategoryName.ShouldBeNull();
+        message.StateName.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildMessage_WhenAnUncategorizedStateIsSelected_CarriesOnlyTheStateName()
+    {
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        StateSave big = new StateSave { Name = "Big" };
+        component.States.Add(new StateSave { Name = "Default" });
+        component.States.Add(big);
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns(big);
+
+        PreviewSelectionMessage message = CreateLauncher().BuildMessage(component, activate: false);
+
+        message.CategoryName.ShouldBeNull();
+        message.StateName.ShouldBe("Big");
+    }
+
+    [Fact]
+    public void BuildMessage_ReadsTheSortByBatchKeyFlagFromTheTool()
+    {
+        _selectedState.SetupGet(s => s.SelectedStateSave).Returns((StateSave?)null);
+        _isSortByBatchKey = true;
+
+        CreateLauncher().BuildMessage(new ScreenSave { Name = "MainMenu" }, activate: false).SortByBatchKey.ShouldBeTrue();
     }
 
     [Fact]

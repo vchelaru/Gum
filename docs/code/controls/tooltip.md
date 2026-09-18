@@ -43,6 +43,16 @@ button.ToolTip = "A helpful hint";
 Rich, object-based content (for example a `StackPanel` with an icon and formatted text) is planned for a future release to match WPF more completely.
 {% endhint %}
 
+## Using a Tooltip Component from Your Project
+
+Gum creates the `Tooltip` for you when you assign `ToolTip`, so unlike other controls there is no instance in a screen through which you pick its visual. When you load a project from file, Gum uses the component set as the `TooltipBehavior` default implementation as the visual for every tooltip. If the behavior has no default implementation, Gum uses the first component that has the behavior. A `TextInstance` child in that component receives the tooltip's text.
+
+If your code registers its own template for `Tooltip` in `FrameworkElement.DefaultFormsTemplates` before loading the project, Gum keeps your template.
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Tuning Delays with ToolTipService
 
 `ToolTipService` is a static class that controls global hover timing. Its three delays mirror WPF's defaults:

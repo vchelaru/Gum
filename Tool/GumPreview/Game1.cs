@@ -3,11 +3,14 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Gum;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Wireframe;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameAndGum.Renderables;
+using RenderingLibrary.Graphics;
 using ToolsUtilities;
 
 namespace GumPreview;
@@ -28,7 +31,7 @@ public class Game1 : Game
     private readonly string? _selectionFilePath;
     private readonly string? _contentRootDirectory;
 
-    private string _elementName;
+    private PreviewSelectionMessage _selection;
     private DateTime _lastSelectionFileWriteTimeUtc;
     private double _secondsSinceLastSelectionPoll;
 
@@ -42,7 +45,7 @@ public class Game1 : Game
     public Game1(string gumxPath, string elementName, string? selectionFilePath, string? contentRootDirectory = null)
     {
         _gumxPath = gumxPath;
-        _elementName = elementName;
+        _selection = new PreviewSelectionMessage(elementName);
         _selectionFilePath = selectionFilePath;
         _contentRootDirectory = contentRootDirectory;
 
@@ -75,14 +78,24 @@ public class Game1 : Game
         ShapeRenderer.Self.Initialize();
 
         GumService.Default.EnableHotReload(_gumxPath);
+        // A reload re-applies the default state over the whole tree, undoing the selected state.
+        GumService.Default.HotReloadCompleted += ApplySelectedState;
 
         ApplyCanvasSizeFromProject();
-        ShowElement(_elementName);
 
+        // The tool writes the full selection (state, orderer) before launching; --element alone is
+        // the fallback for a launch with no selection file.
         if (_selectionFilePath != null && File.Exists(_selectionFilePath))
         {
             _lastSelectionFileWriteTimeUtc = File.GetLastWriteTimeUtc(_selectionFilePath);
+            PreviewSelectionMessage? initial = TryReadSelectionFile();
+            if (initial != null)
+            {
+                _selection = initial;
+            }
         }
+        ApplySiblingOrdering();
+        ShowElement();
 
         base.Initialize();
     }
@@ -129,12 +142,8 @@ public class Game1 : Game
             return;
         }
 
-        string[] lines;
-        try
-        {
-            lines = File.ReadAllLines(_selectionFilePath);
-        }
-        catch (IOException)
+        PreviewSelectionMessage? message = TryReadSelectionFile();
+        if (message == null)
         {
             // The tool may still be mid-write; try again on the next poll rather than skipping it.
             return;
@@ -142,25 +151,31 @@ public class Game1 : Game
 
         _lastSelectionFileWriteTimeUtc = writeTimeUtc;
 
-        // A second "activate" line means this write came from an explicit re-click of the tool's
-        // Preview button (see PreviewLauncher.BuildSelectionFileContent), so this process - not the
-        // tool, which has no cross-platform way to foreground another process's window - raises its
-        // own window. A passive selection change while browsing the tool's tree omits that line, so
-        // the preview updates live without stealing focus (issue #4717 follow-up).
-        if (lines.Length > 1 && lines[1].Trim() == "activate")
+        // Activate is set only for an explicit re-click of the tool's Preview button, so this
+        // process - not the tool, which has no cross-platform way to foreground another process's
+        // window - raises its own window. A passive selection change while browsing the tool's
+        // tree leaves it unset, so the preview updates live without stealing focus (issue #4717
+        // follow-up).
+        if (message.Activate)
         {
             ActivateWindow();
         }
 
-        string newElementName = lines.Length > 0 ? lines[0].Trim() : string.Empty;
-        if (string.IsNullOrEmpty(newElementName) || newElementName == _elementName)
+        bool selectionChanged = !message.HasSameSelection(_selection);
+        _selection = message;
+        ApplySiblingOrdering();
+        if (selectionChanged)
         {
-            return;
+            ShowElement();
         }
-
-        _elementName = newElementName;
-        ShowElement(_elementName);
     }
+
+    private PreviewSelectionMessage? TryReadSelectionFile() => PreviewSelectionFile.TryRead(_selectionFilePath!);
+
+    // Mirrors the tool's Performance panel "Sort by batch" option so the preview renders in the
+    // same sibling order the tool's canvas does (issue #4856).
+    private void ApplySiblingOrdering() =>
+        Renderer.SiblingOrdering = _selection.SortByBatchKey ? BatchKeyGroupedOrderer.Instance : HierarchicalOrderer.Instance;
 
     // SDL_RaiseWindow is the same call MonoGame's own SDL backend uses internally, so it works
     // uniformly across the Windows/X11/Wayland/macOS backends SDL abstracts.
@@ -197,24 +212,47 @@ public class Game1 : Game
         GraphicalUiElement.CanvasHeight = GraphicsDevice.Viewport.Height;
     }
 
-    private void ShowElement(string elementName)
+    private void ShowElement()
     {
         GumService.Default.Root.Children.Clear();
 
-        ElementSave? element = ObjectFinder.Self.GetElementSave(elementName);
+        ElementSave? element = ObjectFinder.Self.GetElementSave(_selection.ElementName);
         if (element == null)
         {
-            Console.Error.WriteLine($"GumPreview: no screen or component named '{elementName}' in {_gumxPath}.");
+            Console.Error.WriteLine($"GumPreview: no screen or component named '{_selection.ElementName}' in {_gumxPath}.");
             UpdateWindowTitle(missingElement: true);
             return;
         }
 
         element.ToGraphicalUiElement().AddToRoot();
+        ApplySelectedState();
         UpdateWindowTitle();
+    }
+
+    // Puts the shown element in the state selected in the tool, on top of its default state - the
+    // same thing the tool's own canvas shows for a selected categorized state (issue #4856).
+    private void ApplySelectedState()
+    {
+        if (_selection.StateName == null)
+        {
+            return;
+        }
+
+        foreach (GraphicalUiElement root in GumService.Default.Root.Children)
+        {
+            if (root.ElementSave != null && root.ElementSave.Name == _selection.ElementName)
+            {
+                StateSave? state = _selection.FindState(root.ElementSave);
+                if (state != null)
+                {
+                    root.ApplyState(state);
+                }
+            }
+        }
     }
 
     private void UpdateWindowTitle(bool missingElement = false) =>
         Window.Title = missingElement
-            ? $"Gum Preview - element not found: {_elementName}"
-            : $"Gum Preview - {_elementName}";
+            ? $"Gum Preview - element not found: {_selection.ElementName}"
+            : $"Gum Preview - {_selection.ElementName}";
 }

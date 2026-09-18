@@ -19,3 +19,9 @@ public class ApplicationTeardownMessage(List<Action> teardownList)
 
 /// <summary>Sent whenever the effective theme changes, including once at startup.</summary>
 public record ThemeChangedMessage(IEffectiveThemeSettings settings);
+
+/// <summary>
+/// Sent when the Performance tab switches the renderer's sibling ordering between depth-first and
+/// batch-key grouping, so a running preview can follow the tool (issue #4860).
+/// </summary>
+public record SiblingOrderingChangedMessage(bool SortByBatchKey);

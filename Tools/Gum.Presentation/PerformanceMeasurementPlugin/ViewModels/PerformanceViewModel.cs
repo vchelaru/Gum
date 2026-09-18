@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.Messaging;
+using Gum;
 using Gum.Services;
 using System;
 using System.ComponentModel;
@@ -15,6 +17,7 @@ public class PerformanceViewModel : INotifyPropertyChanged
 {
     private readonly IUiTimer _uiTimer;
     private readonly IRenderDiagnosticsService _renderDiagnostics;
+    private readonly IMessenger _messenger;
 
     /// <summary>SpriteBatch begins in the last frame — one per render-state change.</summary>
     public int SpriteBatchBeginCount => _renderDiagnostics.SpriteBatchBeginCount;
@@ -59,6 +62,7 @@ public class PerformanceViewModel : INotifyPropertyChanged
 
             _renderDiagnostics.SortByBatchKey = value;
             RaiseAllChanged();
+            _messenger.Send(new SiblingOrderingChangedMessage(value));
         }
     }
 
@@ -85,10 +89,11 @@ public class PerformanceViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public PerformanceViewModel(IUiTimer uiTimer, IRenderDiagnosticsService renderDiagnostics)
+    public PerformanceViewModel(IUiTimer uiTimer, IRenderDiagnosticsService renderDiagnostics, IMessenger messenger)
     {
         _uiTimer = uiTimer;
         _renderDiagnostics = renderDiagnostics;
+        _messenger = messenger;
         _uiTimer.Tick += HandleTick;
         _uiTimer.Start(TimeSpan.FromMilliseconds(500));
     }
