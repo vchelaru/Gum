@@ -102,9 +102,10 @@ internal class SpriteScreen : FrameworkElement
 
         // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
         // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
-        // mask and fills with the tint, so the bear reads as a flat red silhouette. ColorOperation is
-        // exposed on the renderable only (parity with MonoGame — no SpriteRuntime property), so it is
-        // set through RenderableComponent. Mirrors the MG SpriteScreen's identical row.
+        // mask and fills with the tint, so the bear reads as a flat red silhouette. raylib still
+        // lacks a SpriteRuntime.ColorOperation property, so it's set through RenderableComponent
+        // here; MonoGame's version of that property is demoed directly in the (#if'd out here) row
+        // below (#4792 Gap 1). Mirrors the MG SpriteScreen's identical row.
         AddSectionLabel(page, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
         var colorOpRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
         page.AddChild(colorOpRow);
@@ -118,6 +119,26 @@ internal class SpriteScreen : FrameworkElement
             ((Gum.Renderables.Sprite)s.RenderableComponent).ColorOperation = colorOperation;
             colorOpRow.AddChild(s);
         }
+
+#if !RAYLIB && !SKIA
+        // SpriteRuntime.ColorOperation property (#4792 Gap 1) — same Modulate/ColorTextureAlpha
+        // demo as the row above, but through the new public property instead of casting to
+        // RenderableComponent. MonoGame only for now; raylib/Skia don't expose the property yet,
+        // so this whole row is #if'd out here until they do.
+        AddSectionLabel(page, "ColorOperation via SpriteRuntime.ColorOperation property (MonoGame only):");
+        var colorOpPropertyRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(colorOpPropertyRow);
+        foreach (var colorOperation in new[] { ColorOperation.Modulate, ColorOperation.ColorTextureAlpha })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "resources\\BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = Color.Red;
+            s.ColorOperation = colorOperation;
+            colorOpPropertyRow.AddChild(s);
+        }
+#endif
 
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddSectionLabel(page, "Alpha (64, 128, 192, 255):");

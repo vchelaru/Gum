@@ -108,6 +108,14 @@ namespace Gum
         public static readonly BlendState MinAlpha;
         public static readonly BlendState MinAlphaPremultiplied;
 
+        // #4792 Gap 2: the second pass of the Add color-operation blend trick (see
+        // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay). Color adds onto the
+        // destination (ColorSourceBlend=One, ColorDestinationBlend=One) so the pass brightens
+        // rather than replaces; alpha is left as whatever the first (normal) pass already wrote
+        // (AlphaSourceBlend=Zero, AlphaDestinationBlend=One) so the sprite's silhouette shape isn't
+        // widened or punched by the overlay's own alpha.
+        public static readonly BlendState AddColorPreserveDestinationAlpha;
+
         static BlendState()
         {
             Additive = new BlendState("BlendState.Additive", Blend.SourceAlpha, Blend.One);
@@ -254,6 +262,21 @@ namespace Gum
             NonPremultipliedAddAlpha.AlphaSourceBlend = Blend.SourceAlpha;
             NonPremultipliedAddAlpha.AlphaDestinationBlend = Blend.DestinationAlpha;
             NonPremultipliedAddAlpha.AlphaBlendFunction = BlendFunction.Add;
+
+            AddColorPreserveDestinationAlpha = new BlendState();
+            AddColorPreserveDestinationAlpha.ColorSourceBlend = Blend.One;
+            AddColorPreserveDestinationAlpha.ColorBlendFunction = BlendFunction.Add;
+            AddColorPreserveDestinationAlpha.ColorDestinationBlend = Blend.One;
+
+            AddColorPreserveDestinationAlpha.AlphaSourceBlend = Blend.Zero;
+            AddColorPreserveDestinationAlpha.AlphaBlendFunction = BlendFunction.Add;
+            AddColorPreserveDestinationAlpha.AlphaDestinationBlend = Blend.One;
+
+            AddColorPreserveDestinationAlpha.BlendFactor = Color.White;
+            AddColorPreserveDestinationAlpha.ColorWriteChannels = ColorWriteChannels.All;
+            AddColorPreserveDestinationAlpha.ColorWriteChannels1 = ColorWriteChannels.All;
+            AddColorPreserveDestinationAlpha.ColorWriteChannels2 = ColorWriteChannels.All;
+            AddColorPreserveDestinationAlpha.ColorWriteChannels3 = ColorWriteChannels.All;
         }
 
         public BlendState()

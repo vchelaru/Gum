@@ -86,6 +86,31 @@ internal class SpriteScreen : FrameworkElement
             tintRow.Children.Add(s);
         }
 
+#if !RAYLIB && !SKIA
+        // SpriteRuntime.ColorOperation property (#4792 Gap 1) — Modulate (default) multiplies the
+        // texture by the red tint, so the bear's detail shows through red; ColorTextureAlpha uses
+        // the texture only as an alpha mask and fills with the tint, so the bear reads as a flat
+        // red silhouette. Mirrors the MG/raylib SpriteScreen's identical row (raylib's row still
+        // uses the RenderableComponent cast since it lacks this property). MonoGame only for now;
+        // Skia doesn't expose the property yet, so this whole row is #if'd out here until it does.
+        AddLabel(container, "ColorOperation via SpriteRuntime.ColorOperation property (MonoGame only):");
+        ContainerRuntime colorOpPropertyRow = AddRow(container);
+        foreach (RenderingLibrary.Graphics.ColorOperation colorOperation in new[]
+        {
+            RenderingLibrary.Graphics.ColorOperation.Modulate,
+            RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha,
+        })
+        {
+            SpriteRuntime s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = SKColors.Red;
+            s.ColorOperation = colorOperation;
+            colorOpPropertyRow.Children.Add(s);
+        }
+#endif
+
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddLabel(container, "Alpha (64, 128, 192, 255):");
         ContainerRuntime alphaRow = AddRow(container);

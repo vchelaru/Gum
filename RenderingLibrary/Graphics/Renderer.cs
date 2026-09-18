@@ -105,6 +105,13 @@ public class Renderer : IRenderer
 #endif
     Camera mCamera;
 
+    // Set immediately before every renderable.Render(managers) call (both the legacy recursive
+    // Draw and the layered SubmitDrawRenderable) so Sprite.Render can look up the layer it's being
+    // drawn on for its own mid-render BeginSpriteBatch calls (#4792 Gap 2's additive overlay pass),
+    // without changing the IRenderableIpso.Render(ISystemManagers) interface to carry a Layer.
+    private Layer _currentRenderLayer;
+    internal Layer CurrentRenderLayer => _currentRenderLayer ?? _layers[0];
+
     Texture2D mSinglePixelTexture;
     Texture2D mDottedLineTexture;
 
@@ -1214,6 +1221,7 @@ public class Renderer : IRenderer
             {
                 _batchOrchestrator.OnRenderable(renderable, managers);
 
+                _currentRenderLayer = layer;
                 renderable.Render(managers);
 
 
@@ -1337,6 +1345,38 @@ public class Renderer : IRenderer
         }
     }
 
+    /// <summary>
+    /// Draws an extra additive pass over an already-drawn sprite so an authored
+    /// <see cref="Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame renders as
+    /// "tex.rgb + tint.rgb, tex.a" without a custom shader (#4792 Gap 2) — a ColorTextureAlpha draw
+    /// of the same geometry, blended with <see cref="BlendState.AddColorPreserveDestinationAlpha"/>
+    /// so color adds onto what the normal pass already drew while alpha is left untouched. Mirrors
+    /// <see cref="DrawRenderTargetToScreen"/>'s effect-override blit: flush whatever is pending,
+    /// begin with the override, draw, then begin again with the restored ambient state so sibling
+    /// renderables later in the walk aren't affected.
+    /// </summary>
+    internal void DrawAdditiveColorOverlay(SystemManagers managers, IRenderableIpso ipso, Texture2D texture,
+        Color tintColor, Rectangle? sourceRectangle, bool flipVertical, float rotationInDegrees, bool flipDiagonal)
+    {
+        var layer = CurrentRenderLayer;
+
+        _batchOrchestrator.FlushAndReset(managers);
+
+        var previousBlendState = mRenderStateVariables.BlendState;
+        var previousColorOperation = mRenderStateVariables.ColorOperation;
+
+        mRenderStateVariables.BlendState = BlendState.AddColorPreserveDestinationAlpha;
+        mRenderStateVariables.ColorOperation = ColorOperation.ColorTextureAlpha;
+
+        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, ipso);
+        Sprite.Render(managers, spriteRenderer, ipso, texture, tintColor, sourceRectangle, flipVertical,
+            rotationInDegrees, flipDiagonal: flipDiagonal);
+
+        mRenderStateVariables.BlendState = previousBlendState;
+        mRenderStateVariables.ColorOperation = previousColorOperation;
+        spriteRenderer.BeginSpriteBatch(mRenderStateVariables, layer, BeginType.Begin, mCamera, ipso);
+    }
+
     private void SubmitDrawRenderable(IRenderableIpso renderable, SystemManagers managers, Layer layer)
     {
         // Non-clip state (blend / color / wrap) is reapplied here. Clip-scope handling is
@@ -1360,6 +1400,7 @@ public class Renderer : IRenderer
         else
         {
             _batchOrchestrator.OnRenderable(renderable, managers);
+            _currentRenderLayer = layer;
             renderable.Render(managers);
         }
     }

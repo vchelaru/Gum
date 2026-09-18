@@ -27,7 +27,13 @@ namespace Gum.Content.AnimationChain
         Multiply,
 
         /// <summary>Add the color to the texture (brighten / glow / flash). Black (0) is the identity.
-        /// Not applied to rendering by Gum yet (#4477) — requires a per-backend shader.</summary>
+        /// Applied on MonoGame/KNI/FNA (#4792 Gap 2) as a second additive draw pass rather than a
+        /// custom shader: the normal draw, then the same sprite drawn again with the additive color
+        /// blended on top and destination alpha preserved. Because clamping happens after the
+        /// additive blend instead of in one pass, semi-transparent edges over a mid-tone background
+        /// can come out a bit hotter than a true single-pass Add would — acceptable for silhouettes
+        /// and flashes. raylib, Skia, and NineSlice's equivalent frame-apply path don't implement
+        /// this yet and silently drop it (tracked as a follow-up to #4792).</summary>
         Add
     }
 

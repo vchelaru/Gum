@@ -96,9 +96,11 @@ internal class SpriteScreen : FrameworkElement
 
         // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
         // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
-        // mask and fills with the tint, so the bear reads as a flat red silhouette. ColorOperation is
-        // exposed on the renderable only (no SpriteRuntime property), so it is set through
-        // RenderableComponent. Mirrors the raylib SpriteScreen's identical row.
+        // mask and fills with the tint, so the bear reads as a flat red silhouette. Set through
+        // RenderableComponent here since raylib/Skia (which this row mirrors) still lack a
+        // SpriteRuntime.ColorOperation property; MonoGame's own version of that property is
+        // demoed directly in the row below (#4792 Gap 1). Mirrors the raylib SpriteScreen's
+        // identical row.
         AddLabel(container, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
         var colorOpRow = AddRow(container);
         foreach (var colorOperation in new[]
@@ -115,6 +117,64 @@ internal class SpriteScreen : FrameworkElement
             ((RenderingLibrary.Graphics.Sprite)s.RenderableComponent).ColorOperation = colorOperation;
             colorOpRow.AddChild(s);
         }
+
+#if !RAYLIB && !SKIA
+        // SpriteRuntime.ColorOperation property (#4792 Gap 1) — same Modulate/ColorTextureAlpha
+        // demo as the row above, but through the new public property instead of casting to
+        // RenderableComponent. MonoGame only for now; KNI/FNA/raylib/Skia don't expose the
+        // property yet, so this whole row is #if'd out until they do.
+        AddLabel(container, "ColorOperation via SpriteRuntime.ColorOperation property (MonoGame only):");
+        var colorOpPropertyRow = AddRow(container);
+        foreach (var colorOperation in new[]
+        {
+            RenderingLibrary.Graphics.ColorOperation.Modulate,
+            RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha,
+        })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = Color.Red;
+            s.ColorOperation = colorOperation;
+            colorOpPropertyRow.AddChild(s);
+        }
+
+        // Add color operation (#4792 Gap 2) — an authored AnimationFrameColorOperation.Add frame
+        // with Red/Green/Blue=255 renders as a flat white silhouette (tex.rgb + white saturates to
+        // white wherever the texture has any alpha): the MonsterProjectWeb "un-revealed monster"
+        // use case from the issue. Left sprite plays the chain normally (no color op authored, so
+        // it looks like the plain bear); right sprite's chain frame carries the Add tint.
+        AddLabel(container, "Add color operation (normal bear, white-silhouette Add bear):");
+        var addRow = AddRow(container);
+        var bearTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("BearTexture.png");
+        foreach (var addTint in new Microsoft.Xna.Framework.Color?[] { null, Color.White })
+        {
+            var s = new SpriteRuntime();
+            s.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            s.HeightUnits = Gum.DataTypes.DimensionUnitType.PercentageOfSourceFile;
+            s.Width = 100;
+            s.Height = 100;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = bearTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            s.AnimationChains = chainList;
+            s.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(s);
+        }
+#endif
 
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddLabel(container, "Alpha (64, 128, 192, 255):");
