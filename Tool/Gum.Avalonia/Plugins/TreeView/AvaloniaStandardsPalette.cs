@@ -45,6 +45,9 @@ public sealed class AvaloniaStandardsPalette : Border
     /// <summary>Called with the standard type when "Add to current ..." is chosen on a chip.</summary>
     public Action<string>? AddToCurrentRequested { get; set; }
 
+    /// <summary>Called with the standard type on Ctrl+Shift-click, to add it as a child of the current tree selection (#4837).</summary>
+    public Action<string>? AddAsChildOfSelectionRequested { get; set; }
+
     /// <summary>Called with the standard type when "Edit defaults..." is chosen on a chip.</summary>
     public Action<string>? EditDefaultsRequested { get; set; }
 
@@ -157,7 +160,7 @@ public sealed class AvaloniaStandardsPalette : Border
             Child = content,
         };
         chip.SizeChanged += (_, e) => name.IsVisible = e.NewSize.Width >= IconOnlyBelowWidth;
-        ToolTip.SetTip(chip, $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nRight-click for more options.");
+        ToolTip.SetTip(chip, $"Drag onto a Screen/Component or the canvas to add a {typeName}.\nCtrl+click to add it to the current Screen/Component.\nCtrl+Shift+click to add it as a child of the current selection.\nRight-click for more options.");
         chip.PointerEntered += (_, _) => chip.BorderBrush = PrimaryBrush;
         chip.PointerExited += (_, _) => ApplySelectionVisual(chip, _selectedTypeName == typeName);
         chip.ContextMenu = CreateChipContextMenu(typeName);
@@ -177,6 +180,14 @@ public sealed class AvaloniaStandardsPalette : Border
                 return;
             }
             // Ctrl+click (Cmd+click on macOS) adds an instance of this standard to the open Screen/Component without dragging.
+            // Ctrl+Shift+click instead adds it as a child of whatever is currently selected in the tree (#4837) -
+            // check Shift first since Ctrl+Shift also satisfies HasCommand().
+            if (e.KeyModifiers.HasCommand() && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+            {
+                AddAsChildOfSelectionRequested?.Invoke(typeName);
+                e.Handled = true;
+                return;
+            }
             if (e.KeyModifiers.HasCommand())
             {
                 AddToCurrentRequested?.Invoke(typeName);

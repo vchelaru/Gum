@@ -49,7 +49,7 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleDroppedStandardElementOnTreeNode_OnInstance_ParentsAndRefreshesWireframe()
+    public void HandleDroppedElementOnTreeNode_StandardOnInstance_ParentsAndRefreshesWireframe()
     {
         // Issue #973: dropping a Standards-palette chip onto an instance must parent the new
         // instance to that instance AND refresh the wireframe afterward, exactly like dragging a
@@ -97,7 +97,7 @@ public class DragDropManagerTests : BaseTestClass
         targetNode.Setup(x => x.Tag).Returns(containerInstance);
 
         // Act
-        _dragDropManager.HandleDroppedStandardElementOnTreeNode(circleStandard, targetNode.Object);
+        _dragDropManager.HandleDroppedElementOnTreeNode(circleStandard, targetNode.Object);
 
         // Assert: parented in data ...
         string? parentValue = screen.DefaultState.GetValue("CircleInstance.Parent") as string;
@@ -110,7 +110,7 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void HandleDroppedStandardElementOnTreeNode_OnComponent_AddsInstanceOfStandardType()
+    public void HandleDroppedElementOnTreeNode_StandardOnComponent_AddsInstanceOfStandardType()
     {
         // Arrange: dropping a "Text" chip onto a Component should create a Text instance on it,
         // reusing the same creation path as dragging the Standard element node.
@@ -129,7 +129,7 @@ public class DragDropManagerTests : BaseTestClass
             .Returns(true);
 
         // Act
-        _dragDropManager.HandleDroppedStandardElementOnTreeNode(textStandard, targetNode.Object);
+        _dragDropManager.HandleDroppedElementOnTreeNode(textStandard, targetNode.Object);
 
         // Assert
         _mocker.GetMock<IElementCommands>()

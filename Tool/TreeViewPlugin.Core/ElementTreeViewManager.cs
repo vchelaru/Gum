@@ -319,6 +319,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         Selection.AfterClickSelect += ObjectTreeView_AfterClickSelect;
         Selection.AfterSelect += ObjectTreeView_AfterSelect;
+        Selection.AddAsChildOfSelectionRequested += HandleAddAsChildOfSelectionRequested;
         View.UnhandledException += ex => _dialogService.ShowMessage(ex.Message);
         View.KeyDown += HandleKeyDown;
         View.ContextMenuProvider = BuildContextMenu;
@@ -363,7 +364,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             && GetChipDropTargetNode(e.TargetNode) is { } targetNode
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
-            _dragDropManager.HandleDroppedStandardElementOnTreeNode(standardElement, targetNode);
+            _dragDropManager.HandleDroppedElementOnTreeNode(standardElement, targetNode);
         }
     }
 
@@ -393,6 +394,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 : null;
 
         View.AddStandardToCurrentRequested += AddStandardInstanceToCurrentElement;
+        View.AddStandardAsChildOfSelectionRequested += AddStandardAsChildOfCurrentSelection;
 
         View.EditStandardDefaultsRequested += typeName =>
         {
@@ -489,6 +491,41 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         using var undoLock = _undoManager.RequestLock();
         string name = _elementCommands.GetUniqueNameForNewInstance(standardElement, target);
         _elementCommands.AddInstance(target, name, typeName);
+    }
+
+    /// <summary>
+    /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): reuses the same
+    /// creation path a real drag onto <paramref name="targetNode"/> would use, so circular
+    /// references, Screens not being instantiable, etc. are all enforced identically. Nodes other
+    /// than a top-level element (an instance, a folder) are not addable this way and are ignored.
+    /// </summary>
+    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode, GumTreeNode targetNode)
+    {
+        if (clickedNode.Tag is ElementSave elementToAdd)
+        {
+            _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode);
+        }
+    }
+
+    /// <summary>
+    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): the plain Ctrl+click on a chip
+    /// (<see cref="AddStandardInstanceToCurrentElement"/>) always targets the open Screen/Component's
+    /// root, but Ctrl+Shift adds the standard as a child of whatever is currently selected in the
+    /// tree instead - reusing the same tree-node drop path as dragging the chip.
+    /// </summary>
+    private void AddStandardAsChildOfCurrentSelection(string typeName)
+    {
+        if (Selection.SelectedNode is not { } targetNode)
+        {
+            return;
+        }
+
+        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
+        {
+            return;
+        }
+
+        _dragDropManager.HandleDroppedElementOnTreeNode(standardElement, targetNode);
     }
 
     /// <summary>

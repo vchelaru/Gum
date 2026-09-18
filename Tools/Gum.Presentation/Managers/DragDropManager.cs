@@ -130,9 +130,9 @@ public class DragDropManager : IDragDropManager
     #region Drop Element (like components) on TreeView
 
     /// <inheritdoc/>
-    public void HandleDroppedStandardElementOnTreeNode(StandardElementSave standardElement, ITreeNode targetTreeNode)
+    public void HandleDroppedElementOnTreeNode(ElementSave elementToAdd, ITreeNode targetTreeNode)
     {
-        // Reuse the exact same path as dragging a Standard element node onto a Screen/Component.
+        // Reuse the exact same path as dragging an element node onto a Screen/Component.
         // Build an Append DropTarget describing the drop target: a null DropTarget would skip
         // HandleDroppedElementSave's onto-instance branch (which parents the new instance to the
         // target instance AND refreshes the wireframe afterward). Since AddInstance refreshes the
@@ -146,7 +146,7 @@ public class DragDropManager : IDragDropManager
         };
 
         using var undoLock = _undoManager.RequestLock();
-        HandleDroppedElementSave(standardElement, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget);
+        HandleDroppedElementSave(elementToAdd, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget);
     }
 
     private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)

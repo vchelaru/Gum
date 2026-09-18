@@ -37,6 +37,8 @@ The Gum tool's core responsibility is editing and serializing save classes (the 
 
 `ElementSave` is the abstract base for `ScreenSave`, `ComponentSave`, and `StandardElementSave`. All three are structurally identical — they differ only in subfolder and file extension. Each element owns a list of `StateSave`, `StateSaveCategory`, `InstanceSave`, and `EventSave`.
 
+**A `ScreenSave` can never become an `InstanceSave` inside another element — only `ComponentSave`/`StandardElementSave` can.** Every instance-creation entry point (drag-drop, palette, tree-click add) must reuse `DragDropManager`'s existing rejection rather than re-deriving this rule; see `ValidateDrop`/`GetDropElementErrorMessage` in `Tools/Gum.Presentation/Managers/DragDropManager.cs`.
+
 `StateSave` holds a list of `VariableSave` (and `VariableListSave`). A `VariableSave` stores a name/value pair. Variable names can be qualified with an instance name (e.g. `"MyButton.X"`) or unqualified for element-level values (e.g. `"Width"`).
 
 `BehaviorSave` is independent of `ElementSave` but follows the same save/load pattern.

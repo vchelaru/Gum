@@ -109,6 +109,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
         WireSearch();
         WireTree();
         _palette.AddToCurrentRequested = typeName => AddStandardToCurrentRequested?.Invoke(typeName);
+        _palette.AddAsChildOfSelectionRequested = typeName => AddStandardAsChildOfSelectionRequested?.Invoke(typeName);
         _palette.EditDefaultsRequested = typeName => EditStandardDefaultsRequested?.Invoke(typeName);
     }
 
@@ -243,6 +244,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 
     /// <inheritdoc/>
     public event Action<string>? AddStandardToCurrentRequested;
+
+    /// <inheritdoc/>
+    public event Action<string>? AddStandardAsChildOfSelectionRequested;
 
     /// <inheritdoc/>
     public event Action<string>? EditStandardDefaultsRequested;
