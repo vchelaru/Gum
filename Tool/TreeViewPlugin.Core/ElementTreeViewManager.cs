@@ -165,6 +165,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode;
 
     private IDragDropManager _dragDropManager;
+    private readonly IAddDestinationTracker _addDestinationTracker;
+    private readonly AddAsChildTargetLogic _addAsChildTargetLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly IDeleteLogic _deleteLogic;
@@ -211,7 +213,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IDispatcher dispatcher,
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
-        IElementTreeViewFactory viewFactory)
+        IElementTreeViewFactory viewFactory,
+        IAddDestinationTracker addDestinationTracker)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -243,6 +246,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _dragDropManager = dragDropManager;
         _clipboardService = clipboardService;
         _viewFactory = viewFactory;
+        _addDestinationTracker = addDestinationTracker;
+        _addAsChildTargetLogic = new AddAsChildTargetLogic(addDestinationTracker);
         _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
@@ -495,16 +500,32 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     /// <summary>
     /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): reuses the same
-    /// creation path a real drag onto <paramref name="targetNode"/> would use, so circular
-    /// references, Screens not being instantiable, etc. are all enforced identically. Nodes other
-    /// than a top-level element (an instance, a folder) are not addable this way and are ignored.
+    /// creation path a real drag onto the target would use, so circular references, Screens not
+    /// being instantiable, etc. are all enforced identically. Nodes other than a top-level element
+    /// (an instance, a folder) are not addable this way and are ignored.
     /// </summary>
-    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode, GumTreeNode targetNode)
+    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode, GumTreeNode selectedNode)
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
-            _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode);
+            AddAsChildOfDestination(elementToAdd, selectedNode);
         }
+    }
+
+    /// <summary>
+    /// Adds <paramref name="elementToAdd"/> under the remembered add destination, falling back to
+    /// <paramref name="selectedNode"/>, and records that destination so the next add (click or
+    /// paste) lands beside this one rather than under it (#4846).
+    /// </summary>
+    private void AddAsChildOfDestination(ElementSave elementToAdd, GumTreeNode? selectedNode)
+    {
+        if (_addAsChildTargetLogic.GetTarget(this, selectedNode) is not GumTreeNode targetNode)
+        {
+            return;
+        }
+
+        _addDestinationTracker.RunAdd(targetNode.Tag,
+            () => _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode));
     }
 
     /// <summary>
@@ -515,17 +536,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     private void AddStandardAsChildOfCurrentSelection(string typeName)
     {
-        if (Selection.SelectedNode is not { } targetNode)
-        {
-            return;
-        }
-
         if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
         {
             return;
         }
 
-        _dragDropManager.HandleDroppedElementOnTreeNode(standardElement, targetNode);
+        AddAsChildOfDestination(standardElement, Selection.SelectedNode);
     }
 
     /// <summary>

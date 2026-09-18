@@ -99,6 +99,7 @@ public static class GumCoreServiceCollectionExtensions
         // singletons
         services.AddSingleton<ICircularReferenceManager, CircularReferenceManager>();
         services.AddSingleton<IFavoriteComponentManager, FavoriteComponentManager>();
+        services.AddSingleton<IAddDestinationTracker, AddDestinationTracker>();
         services.AddSingleton<ICopyPasteLogic, CopyPasteLogic>();
         services.AddSingleton<IDeleteLogic, DeleteLogic>();
         services.AddSingleton<IGumProjectRepairLogic, GumProjectRepairLogic>();
