@@ -1,4 +1,4 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
@@ -19,9 +19,18 @@ internal class SpriteScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
-        var page = NewSection(ChildrenLayout.TopToBottomStack, spacing: 4);
+        // Fills the screen and wraps into columns once the stack runs out of height, so the
+        // gallery never scrolls off the bottom. Labels are 20% wide (five columns).
+        var page = new ContainerRuntime();
+        page.WidthUnits = DimensionUnitType.RelativeToParent;
+        page.HeightUnits = DimensionUnitType.RelativeToParent;
         page.X = 4;
         page.Y = 4;
+        page.Width = -8;
+        page.Height = -8;
+        page.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        page.StackSpacing = 4;
+        page.WrapsChildren = true;
         this.AddChild(page);
 
         // Default sprite at native size — PercentageOfSourceFile + Width/Height = 100
@@ -169,6 +178,27 @@ internal class SpriteScreen : FrameworkElement
             flipRow.AddChild(s);
         }
 
+        // Flipping an atlas cell (issue #4854) — a source rect that doesn't start at the texture
+        // origin, so a flip that shifts the sample window shows the neighbouring cell instead.
+        AddSectionLabel(page, "Flipping an atlas cell (none, horizontal, vertical, both):");
+        var flipCellRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(flipCellRow);
+        foreach (var (h, v) in new[] { (false, false), (true, false), (false, true), (true, true) })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "resources\\FrameSheet.png";
+            s.TextureAddress = TextureAddress.Custom;
+            s.TextureLeft = 438;
+            s.TextureTop = 231;
+            s.TextureWidth = 42;
+            s.TextureHeight = 42;
+            s.Width = 64;
+            s.Height = 64;
+            s.FlipHorizontal = h;
+            s.FlipVertical = v;
+            flipCellRow.AddChild(s);
+        }
+
         // Rotation — center-pivot so rotated sprites stay anchored. Matches the MG screen.
         AddSectionLabel(page, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
@@ -301,9 +331,9 @@ internal class SpriteScreen : FrameworkElement
         label.Red = 220;
         label.Green = 220;
         label.Blue = 220;
-        label.WidthUnits = DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = DimensionUnitType.PercentageOfParent;
         label.HeightUnits = DimensionUnitType.RelativeToChildren;
-        label.Width = 0;
+        label.Width = 20;
         label.Height = 0;
         parent.AddChild(label);
     }

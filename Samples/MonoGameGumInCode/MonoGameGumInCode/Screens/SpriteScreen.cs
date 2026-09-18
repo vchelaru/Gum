@@ -1,4 +1,4 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
@@ -21,6 +21,9 @@ internal class SpriteScreen : FrameworkElement
         container.Height = -8;
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
+        // Wraps into columns once the stack runs out of height, so the gallery never scrolls
+        // off the bottom. Labels are 20% wide (five columns).
+        container.WrapsChildren = true;
         this.AddChild(container);
 
         // Default sprite at native size — PercentageOfSourceFile + Width/Height = 100
@@ -236,6 +239,26 @@ internal class SpriteScreen : FrameworkElement
             flipRow.AddChild(s);
         }
 
+        // Flipping an atlas cell (issue #4854) — a source rect that doesn't start at the texture
+        // origin, so a flip that shifts the sample window shows the neighbouring cell instead.
+        AddLabel(container, "Flipping an atlas cell (none, horizontal, vertical, both):");
+        var flipCellRow = AddRow(container);
+        foreach (var (h, v) in new[] { (false, false), (true, false), (false, true), (true, true) })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "FrameSheet.png";
+            s.TextureAddress = Gum.Managers.TextureAddress.Custom;
+            s.TextureLeft = 438;
+            s.TextureTop = 231;
+            s.TextureWidth = 42;
+            s.TextureHeight = 42;
+            s.Width = 64;
+            s.Height = 64;
+            s.FlipHorizontal = h;
+            s.FlipVertical = v;
+            flipCellRow.AddChild(s);
+        }
+
         // Rotation — center-pivot the sprites (YOrigin=Center, Y=row_height/2)
         AddLabel(container, "Rotation (0, 25, 90, 180 degrees):");
         var rotRow = AddRow(container);
@@ -353,9 +376,9 @@ internal class SpriteScreen : FrameworkElement
     {
         var label = new TextRuntime();
         label.Text = text;
-        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        label.Width = 0;
+        label.Width = 20;
         label.Height = 0;
         container.AddChild(label);
     }
