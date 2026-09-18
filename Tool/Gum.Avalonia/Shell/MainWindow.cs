@@ -48,9 +48,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 
     private bool _drawsInTitleBar;
 
-    private static readonly IValueConverter FileNameOnly =
-        new FuncValueConverter<string?, string?>(title => string.IsNullOrEmpty(title) ? title : System.IO.Path.GetFileNameWithoutExtension(title));
-
     /// <summary>Builds the window; nothing here touches the project until the startup sequence runs.</summary>
     public MainWindow(
         ShellViewModel shell,
@@ -190,10 +187,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = global::Avalonia.Media.TextTrimming.CharacterEllipsis,
         };
-        fileName.Bind(TextBlock.TextProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)) { Converter = FileNameOnly });
-        fileName.Bind(ToolTip.TipProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
+        fileName.Bind(TextBlock.TextProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
+        fileName.Bind(ToolTip.TipProperty, new AvaloniaBinding(nameof(ShellViewModel.ProjectFilePath)));
         fileName.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(
-            () => ProjectTitleContextMenuBuilder.Build(_shell.Title, _fileSystemRevealService, _clipboardService));
+            () => ProjectTitleContextMenuBuilder.Build(_shell.ProjectFilePath, _fileSystemRevealService, _clipboardService));
         Grid.SetColumn(fileName, 2);
 
         Grid row = new Grid
