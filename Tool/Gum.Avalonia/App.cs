@@ -21,6 +21,8 @@ using Gum.Dialogs;
 using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Menus;
+using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.Startup;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,12 +37,15 @@ public sealed class App : Application
 {
     private readonly IServiceProvider _services;
     private readonly HeadOptions _options;
+    private readonly IFreezeDiagnosticsInbox _freezeDiagnostics;
+    private bool _previousSessionEndedDirty;
 
     /// <summary>Creates the app over the built service host.</summary>
     public App(IServiceProvider services, HeadOptions options)
     {
         _services = services;
         _options = options;
+        _freezeDiagnostics = new FreezeDiagnosticsInbox(Path.Combine(Program.GetAppDataDirectory(), "FreezeDiagnostics"));
         // macOS names the app menu (its title, "Hide ...") from this, not from the bundle.
         Name = "Gum";
     }
@@ -77,6 +82,7 @@ public sealed class App : Application
             MainWindow window = _services.GetRequiredService<MainWindow>();
             desktop.MainWindow = window;
             StartupTiming.Mark("MainWindow resolved");
+            _previousSessionEndedDirty = _freezeDiagnostics.BeginSession();
 
             desktop.Exit += (_, _) =>
             {
@@ -86,6 +92,7 @@ public sealed class App : Application
                 {
                     action();
                 }
+                _freezeDiagnostics.EndSessionCleanly();
             };
 
             window.Opened += (_, _) =>
@@ -114,6 +121,7 @@ public sealed class App : Application
             if (_services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
                 desktop.Shutdown();
+                return;
             }
         }
         catch (Exception exception)
@@ -121,6 +129,13 @@ public sealed class App : Application
             // Also on stderr, so an unattended run (and HeadProcessTests) can see it.
             Console.Error.WriteLine("Startup failed: " + exception);
             window.ShowStartupFailure(exception);
+            return;
+        }
+
+        // Nobody is there to answer in an unattended run, and the modal would hold up its exit timer.
+        if (_options.ExitAfterSeconds == null)
+        {
+            PromptForUnreportedFreezeDiagnostics();
         }
     }
 
@@ -163,12 +178,23 @@ public sealed class App : Application
     // See issue #4781: a permanent, debugger-independent freeze reported between giving a rename/add-state
     // command and its popup appearing. The heartbeat timer proves the UI thread is still pumping; the
     // watchdog itself decides (off the timer) whether a missed heartbeat means it has stalled.
-    private static void StartFreezeWatchdog()
+    private void StartFreezeWatchdog()
     {
-        UiFreezeWatchdog.Start(Path.Combine(Program.GetAppDataDirectory(), "FreezeDiagnostics"));
+        UiFreezeWatchdog.Start(_freezeDiagnostics.DirectoryPath);
         DispatcherTimer heartbeat = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         heartbeat.Tick += (_, _) => UiFreezeWatchdog.Heartbeat();
         heartbeat.Start();
+    }
+
+    // See issue #4848: a frozen Gum gets killed, so the only moment to tell the user the watchdog
+    // captured something is the next launch, once the main window can own the dialog.
+    private void PromptForUnreportedFreezeDiagnostics()
+    {
+        new FreezeDiagnosticsPromptService(
+                _freezeDiagnostics,
+                _services.GetRequiredService<IDialogService>(),
+                _services.GetRequiredService<IFileSystemRevealService>())
+            .PromptIfNeeded(_previousSessionEndedDirty);
     }
 
     private void CaptureAndExit(Window window, IClassicDesktopStyleApplicationLifetime desktop)
