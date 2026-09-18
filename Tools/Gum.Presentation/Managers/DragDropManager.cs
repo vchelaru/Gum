@@ -924,11 +924,20 @@ public class DragDropManager : IDragDropManager
     {
         // Sort so that folders come first (they restructure the tree), then
         // InstanceSaves by source index. The direction depends on DropPosition:
-        // BeforeSibling places each item *before* the anchor sibling, so the
-        // first item processed ends up earlier in the list — process ascending
-        // to preserve drag-order. Append/AfterSibling/InsertAt stack each item
-        // *at* a fixed position, so processing descending preserves drag-order.
-        bool ascendingForSiblings = dropTarget?.Position is DropPosition.BeforeSibling;
+        // BeforeSibling and Append both need ASCENDING processing; AfterSibling/InsertAt need
+        // DESCENDING. The distinguishing factor is whether the anchor is fixed (outside the
+        // dragged batch) or grows to include already-moved siblings from this same batch:
+        //   - BeforeSibling/AfterSibling/InsertAt anchor on a literal sibling or index that
+        //     doesn't shift as a result of this batch's own inserts, so each subsequent item
+        //     stacks at that same fixed spot — descending order (AfterSibling/InsertAt) or
+        //     ascending order (BeforeSibling) makes that stacking come out in drag-order.
+        //   - Append's anchor (ResolveFlatListPositionForReorder / FindLastSiblingOfParent) is
+        //     recomputed from the CURRENT flat list on every call, so once the first dragged
+        //     instance is attached to the target container it becomes the anchor for the next
+        //     one. Descending order would then stack the highest-source-index item closest to
+        //     the container and reverse drag order (#4825); ascending order attaches each item
+        //     right after the previous one and preserves it.
+        bool ascendingForSiblings = dropTarget?.Position is DropPosition.BeforeSibling or DropPosition.Append;
 
         var orderedByTag = draggedNodes.OrderBy(n => n.Tag == null ? 0 : 1);
         var sortedNodes = (ascendingForSiblings
