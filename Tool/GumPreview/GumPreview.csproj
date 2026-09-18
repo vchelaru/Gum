@@ -128,6 +128,7 @@
 		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
 		     referenced so this host stays free of the tool's plugin assemblies. -->
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
+		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionFile.cs" Link="PreviewSelectionFile.cs" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />

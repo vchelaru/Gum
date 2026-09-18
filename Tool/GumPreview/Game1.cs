@@ -170,17 +170,7 @@ public class Game1 : Game
         }
     }
 
-    private PreviewSelectionMessage? TryReadSelectionFile()
-    {
-        try
-        {
-            return PreviewSelectionMessage.TryParse(File.ReadAllLines(_selectionFilePath!));
-        }
-        catch (IOException)
-        {
-            return null;
-        }
-    }
+    private PreviewSelectionMessage? TryReadSelectionFile() => PreviewSelectionFile.TryRead(_selectionFilePath!);
 
     // Mirrors the tool's Performance panel "Sort by batch" option so the preview renders in the
     // same sibling order the tool's canvas does (issue #4856).

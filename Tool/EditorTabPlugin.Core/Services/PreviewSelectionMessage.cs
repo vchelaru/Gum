@@ -20,6 +20,8 @@ public class PreviewSelectionMessage
     private const string StateKey = "state";
     private const string SortByBatchKeyKey = "sortByBatchKey";
     private const string ActivateKey = "activate";
+    // Last line of every message, so a reader that catches the file mid-write can tell.
+    private const string EndLine = "end=true";
 
     /// <summary>The screen or component to show.</summary>
     public string ElementName { get; }
@@ -62,15 +64,25 @@ public class PreviewSelectionMessage
         {
             builder.Append(ActivateKey).Append("=true\n");
         }
+        builder.Append(EndLine).Append('\n');
         return builder.ToString();
     }
 
-    /// <summary>Parses selection-file lines; null when no element line is present.</summary>
+    /// <summary>
+    /// Parses selection-file lines; null when no element line is present or the end line is
+    /// missing (the file is still being written).
+    /// </summary>
     public static PreviewSelectionMessage? TryParse(IEnumerable<string> lines)
     {
         Dictionary<string, string> values = new Dictionary<string, string>();
+        bool isComplete = false;
         foreach (string line in lines)
         {
+            if (line.Trim() == EndLine)
+            {
+                isComplete = true;
+                break;
+            }
             int separatorIndex = line.IndexOf('=');
             if (separatorIndex > 0)
             {
@@ -78,7 +90,7 @@ public class PreviewSelectionMessage
             }
         }
 
-        if (!values.TryGetValue(ElementKey, out string? elementName) || string.IsNullOrEmpty(elementName))
+        if (!isComplete || !values.TryGetValue(ElementKey, out string? elementName) || string.IsNullOrEmpty(elementName))
         {
             return null;
         }

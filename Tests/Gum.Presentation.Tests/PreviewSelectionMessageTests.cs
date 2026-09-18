@@ -49,7 +49,13 @@ public class PreviewSelectionMessageTests
     [Fact]
     public void TryParse_WithoutAnElementLine_ReturnsNull()
     {
-        PreviewSelectionMessage.TryParse(new[] { "state=Highlighted", "" }).ShouldBeNull();
+        PreviewSelectionMessage.TryParse(new[] { "state=Highlighted", "end=true" }).ShouldBeNull();
+    }
+
+    [Fact]
+    public void TryParse_WithoutTheEndLine_ReturnsNullBecauseTheFileIsStillBeingWritten()
+    {
+        PreviewSelectionMessage.TryParse(new[] { "element=MainMenu", "state=Highl" }).ShouldBeNull();
     }
 
     [Fact]

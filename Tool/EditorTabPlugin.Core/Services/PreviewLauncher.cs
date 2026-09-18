@@ -104,7 +104,7 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         _selectionFilePath = Path.Combine(Path.GetTempPath(), $"GumPreviewSelection_{Guid.NewGuid():N}.txt");
-        File.WriteAllText(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
+        PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate: false).Serialize());
 
         ProcessStartInfo startInfo = PreviewProcessStartInfoBuilder.Build(
             resolved.Value.ExecutablePath, projectPathForLaunch, element.Name, _selectionFilePath, contentRootDirectory);
@@ -130,7 +130,10 @@ public class PreviewLauncher : IPreviewLauncher
         {
             return;
         }
-        File.WriteAllText(_selectionFilePath, BuildMessage(element, activate).Serialize());
+        if (!PreviewSelectionFile.TryWrite(_selectionFilePath, BuildMessage(element, activate).Serialize()))
+        {
+            _outputManager.AddError("Could not update the running preview: its selection file is locked.");
+        }
     }
 
     /// <inheritdoc/>
