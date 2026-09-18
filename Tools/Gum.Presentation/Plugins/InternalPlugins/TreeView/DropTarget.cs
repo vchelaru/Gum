@@ -1,4 +1,5 @@
 using Gum.DataTypes;
+using System;
 
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
@@ -46,4 +47,19 @@ public abstract record DropPosition
 
     /// <summary>Insert immediately after the given existing sibling in the flat list.</summary>
     public sealed record AfterSibling(InstanceSave Sibling) : DropPosition;
+
+    /// <summary>
+    /// The index in <paramref name="element"/>'s flat instance list this position names, or null
+    /// for <see cref="Append"/> so callers can use their append default.
+    /// </summary>
+    public int? ResolveFlatIndex(ElementSave element)
+    {
+        return this switch
+        {
+            InsertAt at => Math.Clamp(at.Index, 0, element.Instances.Count),
+            BeforeSibling before => Math.Max(0, element.Instances.IndexOf(before.Sibling)),
+            AfterSibling after => element.Instances.IndexOf(after.Sibling) + 1,
+            _ => null
+        };
+    }
 }

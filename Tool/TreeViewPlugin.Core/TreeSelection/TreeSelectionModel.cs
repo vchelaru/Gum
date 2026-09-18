@@ -132,12 +132,12 @@ public class TreeSelectionModel
     public event Action<GumTreeNode?>? AfterSelect;
 
     /// <summary>
-    /// Raised on a Ctrl+Shift-click that lands on a node other than the current selection, instead
-    /// of the ordinary selection reaction (#4837). The first argument is the clicked node, the
-    /// second is the node that was selected before the click. The selection itself is left
-    /// unchanged - the caller decides whether the clicked node can be added and performs the add.
+    /// Raised with the clicked node on a Ctrl+Shift-click that lands on a node other than the
+    /// current selection, instead of the ordinary selection reaction (#4837). The selection itself
+    /// is left unchanged - the caller decides whether the clicked node can be added and performs
+    /// the add.
     /// </summary>
-    public event Action<GumTreeNode, GumTreeNode>? AddAsChildOfSelectionRequested;
+    public event Action<GumTreeNode>? AddAsChildOfSelectionRequested;
 
     /// <summary>
     /// Raised when an exception is caught while reacting to tree input, so the host can report it
@@ -243,7 +243,7 @@ public class TreeSelectionModel
                     hasClickedNode: true, hasExistingSelection: true, clickedNodeIsSelectedNode: node == currentSelection,
                     button, _currentModifiers()))
             {
-                AddAsChildOfSelectionRequested?.Invoke(node, currentSelection);
+                AddAsChildOfSelectionRequested?.Invoke(node);
                 return;
             }
 

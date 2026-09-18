@@ -27,13 +27,13 @@ Cut calls `StoreCopiedObject()` (same as copy) then immediately deletes the sour
 
 ## Multi-Paste Targeting Is Shared With Ctrl+Shift-Click Adds
 
-Where a repeat paste lands is owned by `IAddDestinationTracker` (`Tools/Gum.Presentation/Logic/AddDestinationTracker.cs`), not by `CopyPasteLogic`. It listens to `SelectionChangedMessage`; any selection change forgets the remembered destination and flags the selection as user-chosen, and `RunAdd(destination, add)` anchors after the add so the add's own selection of what it created does not count. Paste uses it as:
+Where a repeat paste lands is owned by `IAddDestinationTracker` (`Tools/Gum.Presentation/Logic/AddDestinationTracker.cs`), not by `CopyPasteLogic`. It listens to `SelectionChangedMessage`; any selection change forgets the remembered destination and flags the selection as user-chosen, and `Anchor(destination)` is called after an add has selected what it created, so that selection change does not count. Paste uses it as:
 
 - `HasSelectionChangedSinceAnchor` true — attach to the current selection, then anchor that container
 - false with a `Destination` — attach to the remembered container (repeat-paste, or a paste after a Ctrl+Shift-click add into that container)
 - false with no `Destination` — keep the original parents (paste straight after copy)
 
-`OnCopy`/`OnCut` call `Reset()`; `ForceSelectionChanged()` (drag-drop's cross-element move) calls `MarkSelectionChanged()`. The tree's Ctrl+Shift-click add (`AddAsChildTargetLogic` in `Tool/TreeViewPlugin.Core/TreeSelection/`) reads the same `Destination`, so clicks and pastes keep adding siblings into one container until the user selects something else.
+`OnCopy`/`OnCut` call `Reset()`; `ForceSelectionChanged()` (drag-drop's cross-element move) calls `MarkSelectionChanged()`. Every other way of adding an instance goes through `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`), which anchors the same tracker, so chip clicks, drags, the right-click menus, the Add Instance dialog and pastes keep adding siblings into one container until the user selects something else.
 
 ## Paste Creates New Instances, Does Not Clone
 

@@ -165,16 +165,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     ITreeNode? IElementTreeRoots.Behaviors => mBehaviorsTreeNode;
 
     private IDragDropManager _dragDropManager;
-    private readonly IAddDestinationTracker _addDestinationTracker;
-    private readonly AddAsChildTargetLogic _addAsChildTargetLogic;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ICopyPasteLogic _copyPasteLogic;
     private readonly IMessenger _messenger;
     private readonly IDeleteLogic _deleteLogic;
     private readonly IUndoManager _undoManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IFileLocations _fileLocations;
-    private readonly IElementCommands _elementCommands;
-    private readonly INameVerifier _nameVerifier;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IProjectState _projectState;
     private readonly ICollapseToggleService _collapseToggleService;
@@ -201,8 +198,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IUndoManager undoManager,
         IWireframeObjectManager wireframeObjectManager,
         IFileLocations fileLocations,
-        IElementCommands elementCommands,
-        INameVerifier nameVerifier,
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager,
@@ -214,7 +209,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
         IElementTreeViewFactory viewFactory,
-        IAddDestinationTracker addDestinationTracker)
+        IAddInstanceLogic addInstanceLogic)
     {
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -231,8 +226,6 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _undoManager = undoManager;
         _wireframeObjectManager = wireframeObjectManager;
         _fileLocations = fileLocations;
-        _elementCommands = elementCommands;
-        _nameVerifier = nameVerifier;
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
@@ -246,8 +239,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         _dragDropManager = dragDropManager;
         _clipboardService = clipboardService;
         _viewFactory = viewFactory;
-        _addDestinationTracker = addDestinationTracker;
-        _addAsChildTargetLogic = new AddAsChildTargetLogic(addDestinationTracker);
+        _addInstanceLogic = addInstanceLogic;
         _contextMenuItems = new List<ContextMenuItemViewModel>();
     }
 
@@ -369,7 +361,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             && GetChipDropTargetNode(e.TargetNode) is { } targetNode
             && ObjectFinder.Self.GetStandardElement(standardTypeName) is { } standardElement)
         {
-            _dragDropManager.HandleDroppedElementOnTreeNode(standardElement, targetNode);
+            _addInstanceLogic.AddInstance(standardElement, targetNode.Tag);
         }
     }
 
@@ -482,71 +474,41 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     /// <summary>
     /// Handles Ctrl+click on a Standards palette chip (and the chip's "add to current" menu item):
-    /// adds the standard at the open Screen/Component's root, through the same drop path as
-    /// Ctrl+Shift-click and dragging the chip.
+    /// adds the standard at the open Screen/Component's root. A root add is not the user picking a
+    /// container, so the remembered add destination is left alone.
     /// </summary>
     private void AddStandardInstanceToCurrentElement(string typeName)
     {
-        // A root add is not the user picking a container: whatever destination was remembered stays.
-        AddStandardAsChildOf(typeName, GetTreeNodeFor(_selectedState.SelectedElement), _addDestinationTracker.Destination);
+        if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
+        {
+            _addInstanceLogic.AddInstance(standardElement, _selectedState.SelectedElement, rememberContainerAsDestination: false);
+        }
     }
 
     /// <summary>
-    /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): reuses the same
-    /// creation path a real drag onto the target would use, so circular references, Screens not
-    /// being instantiable, etc. are all enforced identically. Nodes other than a top-level element
-    /// (an instance, a folder) are not addable this way and are ignored.
+    /// Handles Ctrl+Shift-click on a top-level Component/Screen node (#4837): adds it at the add
+    /// destination (the remembered container, else the selection). Nodes other than a top-level
+    /// element (an instance, a folder) are not addable this way and are ignored.
     /// </summary>
-    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode, GumTreeNode selectedNode)
+    private void HandleAddAsChildOfSelectionRequested(GumTreeNode clickedNode)
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
-            GumTreeNode? targetNode = GetAddAsChildTarget(selectedNode);
-            AddAsChildOf(elementToAdd, targetNode, targetNode?.Tag);
+            _addInstanceLogic.AddInstanceAtDestination(elementToAdd);
         }
     }
 
     /// <summary>
-    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): adds the standard under the
-    /// current add destination (the remembered container, else the tree selection) instead of the
-    /// open element's root like <see cref="AddStandardInstanceToCurrentElement"/>.
+    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): adds the standard at the add
+    /// destination (the remembered container, else the selection) instead of the open element's
+    /// root like <see cref="AddStandardInstanceToCurrentElement"/>.
     /// </summary>
     private void AddStandardAsChildOfCurrentSelection(string typeName)
     {
-        GumTreeNode? targetNode = GetAddAsChildTarget(Selection.SelectedNode);
-        AddStandardAsChildOf(typeName, targetNode, targetNode?.Tag);
-    }
-
-    private void AddStandardAsChildOf(string typeName, GumTreeNode? targetNode, object? destinationToRemember)
-    {
         if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
         {
-            AddAsChildOf(standardElement, targetNode, destinationToRemember);
+            _addInstanceLogic.AddInstanceAtDestination(standardElement);
         }
-    }
-
-    /// <summary>
-    /// The remembered add destination's node when there is one, else <paramref name="selectedNode"/>
-    /// (#4846): keeps repeated adds as siblings even though each add selects its new child.
-    /// </summary>
-    private GumTreeNode? GetAddAsChildTarget(GumTreeNode? selectedNode) =>
-        _addAsChildTargetLogic.GetTarget(this, selectedNode) as GumTreeNode;
-
-    /// <summary>
-    /// The one add path behind Ctrl+click, Ctrl+Shift-click and chip drag: adds
-    /// <paramref name="elementToAdd"/> under <paramref name="targetNode"/> through the drop
-    /// logic (so circular references, standard-element targets, etc. are enforced the same way)
-    /// and records <paramref name="destinationToRemember"/> for the next add or paste.
-    /// </summary>
-    private void AddAsChildOf(ElementSave elementToAdd, GumTreeNode? targetNode, object? destinationToRemember)
-    {
-        if (targetNode == null)
-        {
-            return;
-        }
-
-        _addDestinationTracker.RunAdd(destinationToRemember,
-            () => _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode));
     }
 
     /// <summary>

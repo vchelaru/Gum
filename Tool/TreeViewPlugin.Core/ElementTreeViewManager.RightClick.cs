@@ -473,25 +473,7 @@ public partial class ElementTreeViewManager
                 };
                 parentMenuItem.Children.Add(menuItem);
 
-                var componentName = component.Name;
-                menuItem.Action = () =>
-                {
-                    var selectedElement = _selectedState.SelectedElement;
-                    if (selectedElement != null)
-                    {
-                        var newInstanceElementType = ObjectFinder.Self.GetElementSave(componentName)!;
-                        var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
-
-                        var viewModel = new AddInstanceDialogViewModel(
-                            _selectedState,
-                            _nameVerifier,
-                            _elementCommands,
-                            _setVariableLogic);
-                        viewModel.TypeToCreate = componentName;
-                        viewModel.Value = name;
-                        viewModel.OnAffirmative();
-                    }
-                };
+                menuItem.Action = () => _addInstanceLogic.AddInstanceAtDestination(component);
             }
 
             // Add separator after favorited components
@@ -509,20 +491,9 @@ public partial class ElementTreeViewManager
 
             menuItem.Action = () =>
             {
-                var selectedElement = _selectedState.SelectedElement;
-                if (selectedElement != null)
+                if (ObjectFinder.Self.GetStandardElement(type) is { } standardElement)
                 {
-                    var newInstanceElementType = ObjectFinder.Self.GetElementSave(type)!;
-                    var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
-
-                    var viewModel = new AddInstanceDialogViewModel(
-                        _selectedState,
-                        _nameVerifier,
-                        _elementCommands,
-                        _setVariableLogic);
-                    viewModel.TypeToCreate = type;
-                    viewModel.Value = name;
-                    viewModel.OnAffirmative();
+                    _addInstanceLogic.AddInstanceAtDestination(standardElement);
                 }
             };
         }
@@ -544,13 +515,9 @@ public partial class ElementTreeViewManager
 
             menuItem.Action = () =>
             {
-                var selectedBehavior = _selectedState.SelectedBehavior;
-                if (selectedBehavior != null)
+                if (ObjectFinder.Self.GetStandardElement(type) is { } standardElement)
                 {
-                    var typeElement = ObjectFinder.Self.GetElementSave(type)!;
-                    var name = _elementCommands.GetUniqueNameForNewInstance(typeElement, selectedBehavior);
-                    _undoManager.RecordBehaviorState(selectedBehavior);
-                    _elementCommands.AddInstance(selectedBehavior, name, type);
+                    _addInstanceLogic.AddInstance(standardElement, _selectedState.SelectedBehavior);
                 }
             };
         }

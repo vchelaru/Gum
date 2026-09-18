@@ -68,7 +68,8 @@ public class CopyPasteLogicDestinationTests : BaseTestClass
 
         // A Ctrl+Shift-click add under Container: the add selects what it created, which must
         // not count as the user picking a new paste target.
-        _tracker.RunAdd(_container, () => _messenger.Send(new SelectionChangedMessage()));
+        _messenger.Send(new SelectionChangedMessage());
+        _tracker.Anchor(_container);
 
         _copyPasteLogic.OnPaste(CopyType.InstanceOrElement);
 

@@ -130,7 +130,9 @@ foreach ($project in $testFilters.Keys | Sort-Object) {
 
 foreach ($project in $sourceProjects | Sort-Object) {
     $relativeProject = $project.Substring($repo.Length + 1)
-    Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q')
+    # Same $(SolutionDir) post-build copy as above: the frozen WPF head's plugin projects need it
+    # whenever they are built by csproj, not only through the test project.
+    Invoke-Step -Name "build $relativeProject" -Command @('build', $project, '-nologo', '-v:q', "-p:SolutionDir=$repo\")
 }
 
 if ($warningsOnChangedLines.Count -gt 0) {

@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Messages;
-using System;
 
 namespace Gum.Logic;
 
@@ -22,11 +21,8 @@ public class AddDestinationTracker : IAddDestinationTracker
     public bool HasSelectionChangedSinceAnchor => _hasSelectionChangedSinceAnchor;
 
     /// <inheritdoc/>
-    public void RunAdd(object? destination, Action add)
+    public void Anchor(object? destination)
     {
-        // Anchoring after the add is what keeps the add's own selection change from counting.
-        add();
-
         _destination = destination;
         _hasSelectionChangedSinceAnchor = false;
     }

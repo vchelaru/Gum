@@ -20,8 +20,7 @@ public partial class EditingManager : IContextMenuState
     private readonly ISelectedState _selectedState;
     private readonly IReorderLogic _reorderLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
-    private readonly IElementCommands _elementCommands;
-    private readonly INameVerifier _nameVerifier;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
@@ -29,8 +28,7 @@ public partial class EditingManager : IContextMenuState
     public EditingManager(
         IWireframeObjectManager wireframeObjectManager,
         IReorderLogic reorderLogic,
-        IElementCommands elementCommands,
-        INameVerifier nameVerifier,
+        IAddInstanceLogic addInstanceLogic,
         ISetVariableLogic setVariableLogic,
         ISelectedState selectedState,
         ICircularReferenceManager circularReferenceManager,
@@ -39,8 +37,7 @@ public partial class EditingManager : IContextMenuState
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
         _wireframeObjectManager = wireframeObjectManager;
-        _elementCommands = elementCommands;
-        _nameVerifier = nameVerifier;
+        _addInstanceLogic = addInstanceLogic;
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;

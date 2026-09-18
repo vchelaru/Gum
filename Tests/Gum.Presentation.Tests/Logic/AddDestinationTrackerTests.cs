@@ -18,11 +18,12 @@ public class AddDestinationTrackerTests
     }
 
     [Fact]
-    public void RunAdd_SelectionChangesDuringAdd_KeepsDestinationAndDoesNotCountAsUserSelection()
+    public void Anchor_AfterAnAddsOwnSelectionChange_RemembersDestinationAndClearsChangedFlag()
     {
         InstanceSave container = new InstanceSave { Name = "Container" };
+        _messenger.Send(new SelectionChangedMessage());
 
-        _tracker.RunAdd(container, () => _messenger.Send(new SelectionChangedMessage()));
+        _tracker.Anchor(container);
 
         _tracker.Destination.ShouldBeSameAs(container);
         _tracker.HasSelectionChangedSinceAnchor.ShouldBeFalse();
@@ -32,7 +33,7 @@ public class AddDestinationTrackerTests
     public void SelectionChanged_OutsideAdd_ForgetsDestinationAndMarksUserSelection()
     {
         InstanceSave container = new InstanceSave { Name = "Container" };
-        _tracker.RunAdd(container, () => { });
+        _tracker.Anchor(container);
 
         _messenger.Send(new SelectionChangedMessage());
 
@@ -43,7 +44,7 @@ public class AddDestinationTrackerTests
     [Fact]
     public void Reset_AfterUserSelection_ClearsBothDestinationAndChangedFlag()
     {
-        _tracker.RunAdd(new InstanceSave(), () => { });
+        _tracker.Anchor(new InstanceSave());
         _messenger.Send(new SelectionChangedMessage());
 
         _tracker.Reset();
@@ -55,7 +56,7 @@ public class AddDestinationTrackerTests
     [Fact]
     public void MarkSelectionChanged_ForgetsDestinationAndMarksUserSelection()
     {
-        _tracker.RunAdd(new InstanceSave(), () => { });
+        _tracker.Anchor(new InstanceSave());
 
         _tracker.MarkSelectionChanged();
 

@@ -35,6 +35,7 @@ public class DragDropManager : IDragDropManager
 
     #region Fields
 
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly ISelectedState _selectedState;
     private readonly IElementCommands _elementCommands;
@@ -56,7 +57,8 @@ public class DragDropManager : IDragDropManager
 
     #region Constructor
 
-    public DragDropManager(ICircularReferenceManager circularReferenceManager,
+    public DragDropManager(IAddInstanceLogic addInstanceLogic,
+        ICircularReferenceManager circularReferenceManager,
         ISelectedState selectedState,
         IElementCommands elementCommands,
         IRenameLogic renameLogic,
@@ -73,6 +75,7 @@ public class DragDropManager : IDragDropManager
         IProjectManager projectManager,
         IProjectState projectState)
     {
+        _addInstanceLogic = addInstanceLogic;
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -129,63 +132,16 @@ public class DragDropManager : IDragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    /// <inheritdoc/>
-    public void HandleDroppedElementOnTreeNode(ElementSave elementToAdd, ITreeNode targetTreeNode)
-    {
-        // Reuse the exact same path as dragging an element node onto a Screen/Component.
-        // Build an Append DropTarget describing the drop target: a null DropTarget would skip
-        // HandleDroppedElementSave's onto-instance branch (which parents the new instance to the
-        // target instance AND refreshes the wireframe afterward). Since AddInstance refreshes the
-        // wireframe BEFORE writing the Parent variable, skipping that branch leaves a chip dropped
-        // onto an instance visually un-parented until the next refresh (#973).
-        DropTarget? dropTarget = targetTreeNode.Tag switch
-        {
-            InstanceSave targetInstance => new DropTarget(targetInstance.ParentContainer, targetInstance, new DropPosition.Append()),
-            ElementSave targetElement => new DropTarget(targetElement, null, new DropPosition.Append()),
-            _ => null
-        };
-
-        using var undoLock = _undoManager.RequestLock();
-        HandleDroppedElementSave(elementToAdd, targetTreeNode, targetTreeNode.Tag, targetTreeNode, dropTarget);
-    }
-
     private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {
-        ElementSave draggedAsElementSave = draggedComponentOrElement as ElementSave;
+        ElementSave draggedAsElementSave = (ElementSave)draggedComponentOrElement;
 
         // User dragged an element save - so they want to take something like a
         // text object and make an instance in another element like a Screen
 
-        if (targetTag is ElementSave)
+        if (targetTag is ElementSave or InstanceSave)
         {
-            HandleDroppedElementInElement(draggedAsElementSave, targetTag as ElementSave, null, dropTarget);
-        }
-        else if (targetTag is InstanceSave)
-        {
-            // The user dropped it on an instance save, but likely meant to drop
-            // it as an object under the current element.
-
-            InstanceSave targetInstance = targetTag as InstanceSave;
-
-            // When a parent is set, we normally raise an event for that. This is a tricky situation because
-            // we need to set the parent before adding the object.
-
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, targetInstance.ParentContainer, targetInstance, dropTarget);
-
-            if(newInstance != null && dropTarget != null)
-            {
-                // Since the user dropped on another instance, let's try to parent it:
-                HandleDroppingInstanceOnTarget(newInstance, targetTreeNode, dropTarget);
-
-                // HandleDroppingInstanceOnTarget internally calls
-                // _wireframeObjectManager.RefreshAll, but since
-                // the Parent is set in HandleDroppedElementInElement,
-                // then HandleDroppingInstanceOnTarget does not report the
-                // parent as having changed. We need to still force a refresh
-                // to make the parenting apply in the wireframe display.
-                _wireframeObjectManager.RefreshAll(true, forceReloadTextures: false);
-            }
-
+            _addInstanceLogic.AddInstance(draggedAsElementSave, targetTag, position: dropTarget?.Position);
         }
         else if (treeNodeDroppedOn.IsTopComponentContainerTreeNode())
         {
@@ -200,13 +156,9 @@ public class DragDropManager : IDragDropManager
         {
             HandleDroppedElementOnFolder(draggedAsElementSave, treeNodeDroppedOn);
         }
-        else if(draggedAsElementSave is ScreenSave == false && targetTag is BehaviorSave targetBehavior)
+        else if(targetTag is BehaviorSave)
         {
-            HandleDroppedElementOnBehavior(draggedAsElementSave, targetBehavior);
-        }
-        else if(draggedAsElementSave is ScreenSave && targetTag is BehaviorSave)
-        {
-            _dialogService.ShowMessage("Screens cannot be added as required instances in behaviors");
+            _addInstanceLogic.AddInstance(draggedAsElementSave, targetTag);
         }
         else
         {
@@ -254,146 +206,6 @@ public class DragDropManager : IDragDropManager
             draggedAsElementSave.Name = FileManager.RemovePath(name);
             _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
         }
-    }
-
-    private InstanceSave HandleDroppedElementOnBehavior(ElementSave draggedElement, BehaviorSave behavior)
-    {
-        InstanceSave newInstance = null;
-
-        string errorMessage = null;
-
-        //handled = false;
-
-        //errorMessage = GetDropElementErrorMessage(draggedAsElementSave, target, errorMessage);
-
-        if (!string.IsNullOrEmpty(errorMessage))
-        {
-            _dialogService.ShowMessage(errorMessage);
-        }
-        else
-        {
-#if DEBUG
-            if (draggedElement == null)
-            {
-                throw new Exception("draggedElement is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
-            }
-#endif
-
-            string name = _elementCommands.GetUniqueNameForNewInstance(draggedElement, behavior);
-
-            // Capture the pre-change state for undo. We bypass the undo lock here because
-            // OnNodeSortingDropped already holds a lock, which would normally block
-            // RecordBehaviorState(). We need the snapshot before any change occurs.
-            _undoManager.RecordBehaviorState(behavior);
-
-            // First we want to re-select the target so that it is highlighted in the tree view and not
-            // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            _selectedState.SelectedBehavior = behavior;
-
-            newInstance = _elementCommands.AddInstance(behavior, name, draggedElement.Name);
-            //handled = true;
-        }
-
-        return newInstance;
-    }
-
-    private InstanceSave HandleDroppedElementInElement(ElementSave draggedAsElementSave, ElementSave target, InstanceSave parentInstance, DropTarget? dropTarget)
-    {
-        InstanceSave newInstance = null;
-
-        string errorMessage = null;
-
-        errorMessage = GetDropElementErrorMessage(draggedAsElementSave, target, errorMessage);
-
-        if (!string.IsNullOrEmpty(errorMessage))
-        {
-            _dialogService.ShowMessage(errorMessage);
-        }
-        else
-        {
-#if DEBUG
-            if (draggedAsElementSave == null)
-            {
-                throw new Exception("DraggedAsElementSave is null and it shouldn't be.  For vic - try to put this exception earlier to see what's up.");
-            }
-#endif
-
-            string name = _elementCommands.GetUniqueNameForNewInstance(draggedAsElementSave, target);
-
-            // First we want to re-select the target so that it is highlighted in the tree view and not
-            // the object we dragged off.  This is so that plugins can properly use the SelectedElement.
-            _selectedState.SelectedElement = target;
-
-            int? desiredIndex = ResolveDesiredFlatIndex(dropTarget?.Position, target);
-
-            newInstance = _elementCommands.AddInstance(target, name, draggedAsElementSave.Name, parentInstance?.Name, desiredIndex);
-        }
-
-        return newInstance;
-    }
-
-    /// <summary>
-    /// Translate a <see cref="DropPosition"/> into a flat-list index inside
-    /// <paramref name="element"/>.<see cref="ElementSave.Instances"/>. Returns
-    /// null for <see cref="DropPosition.Append"/>, which lets callers like
-    /// <c>AddInstance</c> use their "append to end" default path.
-    /// </summary>
-    private static int? ResolveDesiredFlatIndex(DropPosition? position, ElementSave element)
-    {
-        return position switch
-        {
-            null => null,
-            DropPosition.Append => null,
-            DropPosition.InsertAt at => Math.Clamp(at.Index, 0, element.Instances.Count),
-            DropPosition.BeforeSibling before => Math.Max(0, element.Instances.IndexOf(before.Sibling)),
-            DropPosition.AfterSibling after => element.Instances.IndexOf(after.Sibling) + 1,
-            _ => null
-        };
-    }
-
-    private string? GetDropElementErrorMessage(ElementSave draggedAsElementSave, ElementSave target, string errorMessage)
-    {
-        if (target == null)
-        {
-            errorMessage = "No Screen or Component selected";
-        }
-
-        if (errorMessage == null && target is StandardElementSave)
-        {
-            // do nothing, it's annoying:
-            errorMessage = $"Standard type {target} cannot contain objects instances, so {draggedAsElementSave} cannot be dropped here";
-        }
-
-        if (errorMessage == null && draggedAsElementSave is ScreenSave)
-        {
-            errorMessage = "Screens can't be dropped into other Screens or Components";
-        }
-
-        if (errorMessage == null)
-        {
-            if(!_circularReferenceManager.CanTypeBeAddedToElement(target!, draggedAsElementSave.Name))
-            {
-                errorMessage = $"Cannot add {draggedAsElementSave.Name} to {target!.Name} because it would create a circular reference";
-            }
-        }
-
-
-        if (errorMessage == null && target!.IsSourceFileMissing)
-        {
-            errorMessage = "The source file for " + target.Name + " is missing, so it cannot be edited";
-        }
-
-        if(errorMessage == null && target == _selectedState.SelectedElement)
-        {
-            if(_selectedState.SelectedStateSave != _selectedState.SelectedElement.DefaultState)
-            {
-                errorMessage = $"Cannot add instances to " +
-                    $"{_selectedState.SelectedElement} while the {_selectedState.SelectedStateSave} " +
-                    $"state is selected. Select the Default state first.";
-            }
-        }
-
-        return errorMessage;
     }
 
     /// <summary>
@@ -556,7 +368,7 @@ public class DragDropManager : IDragDropManager
                 // long. The unit test for one case is here:
                 // DragDropManagerTests.OnNodeSortingDropped_DropInstance_ShouldInsertAtIndex_OnDifferentElement
                 var firstInstance = newInstances.FirstOrDefault();
-                int desiredFlatIndex = ResolveDesiredFlatIndex(dropTarget?.Position, targetElementSave)
+                int desiredFlatIndex = dropTarget?.Position.ResolveFlatIndex(targetElementSave)
                     ?? targetElementSave.Instances.Count;
                 if(firstInstance != null && targetElementSave.Instances.IndexOf(firstInstance) != desiredFlatIndex)
                 {
@@ -1120,8 +932,7 @@ public class DragDropManager : IDragDropManager
                 ? selectedInstance
                 : null;
 
-            DropTarget dropTarget = new DropTarget(target, parentInstance, new DropPosition.Append());
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, parentInstance, dropTarget);
+            var newInstance = _addInstanceLogic.AddInstance(draggedAsElementSave, (object?)parentInstance ?? target);
 
             float worldX, worldY;
 
@@ -1132,15 +943,6 @@ public class DragDropManager : IDragDropManager
 
             if(newInstance != null)
             {
-                if (parentInstance != null)
-                {
-                    // Reuse the same onto-instance parenting path a tree-view drop onto an instance
-                    // node takes (resolves a container's default child slot, e.g. a ScrollViewer's
-                    // clip panel) so a canvas drop onto a selected container behaves identically to
-                    // dragging the same element onto its tree node.
-                    HandleDroppingInstanceOnTarget(newInstance, targetTreeNode: null, dropTarget);
-                }
-
                 SetInstanceToPosition(worldX, worldY, newInstance, parentInstance);
 
                 SaveAndRefresh();

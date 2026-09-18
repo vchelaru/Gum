@@ -62,6 +62,10 @@ public class StandardsPaletteAddTests
         try
         {
             treeViewManager.RefreshUi();
+            // Explicit, since the shared SelectedState carries whatever an earlier test left selected
+            // and an add is refused while a non-default state of the target is selected.
+            selectedState.SelectedElement = component;
+            selectedState.SelectedStateSave = component.DefaultState;
             selectedState.SelectedInstance = container;
             Dispatcher.UIThread.RunJobs();
 

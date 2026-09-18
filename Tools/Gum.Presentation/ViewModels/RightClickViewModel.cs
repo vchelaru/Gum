@@ -18,8 +18,7 @@ public class RightClickViewModel
     private readonly ISelectedState _selectedState;
     private readonly IReorderLogic _reorderLogic;
     private readonly ObjectFinder _objectFinder;
-    private readonly IElementCommands _elementCommands;
-    private readonly INameVerifier _nameVerifier;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
@@ -28,8 +27,7 @@ public class RightClickViewModel
         ISelectedState selectedState,
         IReorderLogic reorderLogic,
         ObjectFinder objectFinder,
-        IElementCommands elementCommands,
-        INameVerifier nameVerifier,
+        IAddInstanceLogic addInstanceLogic,
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
         IFavoriteComponentManager favoriteComponentManager)
@@ -37,8 +35,7 @@ public class RightClickViewModel
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
         _objectFinder = objectFinder;
-        _elementCommands = elementCommands;
-        _nameVerifier = nameVerifier;
+        _addInstanceLogic = addInstanceLogic;
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
@@ -131,25 +128,7 @@ public class RightClickViewModel
                 menuItem.Text = component.Name;
                 favoritesParent.Children.Add(menuItem);
 
-                var componentName = component.Name;
-                menuItem.Action = () =>
-                {
-                    var selectedElement = _selectedState.SelectedElement;
-                    if (selectedElement != null)
-                    {
-                        var newInstanceElementType = _objectFinder.GetElementSave(componentName)!;
-                        var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
-
-                        var viewModel = new AddInstanceDialogViewModel(
-                            _selectedState,
-                            _nameVerifier,
-                            _elementCommands,
-                            _setVariableLogic);
-                        viewModel.TypeToCreate = componentName;
-                        viewModel.Value = name;
-                        viewModel.OnAffirmative();
-                    }
-                };
+                menuItem.Action = () => _addInstanceLogic.AddInstanceAtDestination(component);
             }
 
             // Add separator between favorites and standard elements
@@ -178,20 +157,9 @@ public class RightClickViewModel
 
             menuItem.Action = () =>
             {
-                var selectedElement = _selectedState.SelectedElement;
-                if (selectedElement != null)
+                if (_objectFinder.GetElementSave(type) is { } standardElement)
                 {
-                    var newInstanceElementType = _objectFinder.GetElementSave(type)!;
-                    var name = _elementCommands.GetUniqueNameForNewInstance(newInstanceElementType, selectedElement);
-
-                    var viewModel = new AddInstanceDialogViewModel(
-                        _selectedState,
-                        _nameVerifier,
-                        _elementCommands,
-                        _setVariableLogic);
-                    viewModel.TypeToCreate = type;
-                    viewModel.Value = name;
-                    viewModel.OnAffirmative();
+                    _addInstanceLogic.AddInstanceAtDestination(standardElement);
                 }
             };
         }

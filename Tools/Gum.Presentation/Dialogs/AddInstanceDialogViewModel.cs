@@ -5,7 +5,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
 using Gum.Services.Dialogs;
-using Gum.ToolCommands;
+using Gum.Logic;
 using Gum.ToolStates;
 
 namespace Gum.Dialogs;
@@ -23,7 +23,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
     private readonly ISelectedState _selectedState;
     private readonly INameVerifier _nameVerifier;
-    private readonly IElementCommands _elementCommands;
+    private readonly IAddInstanceLogic _addInstanceLogic;
     private readonly ISetVariableLogic _setVariableLogic;
     
     public bool IsAddingAsParentToSelectedInstance { get; set; }
@@ -31,39 +31,40 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
     public AddInstanceDialogViewModel(
         ISelectedState selectedState,
         INameVerifier nameVerifier, 
-        IElementCommands elementCommands,
+        IAddInstanceLogic addInstanceLogic,
         ISetVariableLogic setVariableLogic)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
-        _elementCommands = elementCommands;
+        _addInstanceLogic = addInstanceLogic;
         _setVariableLogic = setVariableLogic;
     }
 
     public override void OnAffirmative()
     {
         if (Value is null || Error is not null) return;
-        
-        ElementSave selectedElement = _selectedState.SelectedElement;
-        InstanceSave? focusedInstance = _selectedState.SelectedInstance;
-        InstanceSave newInstance =
-            _elementCommands.AddInstance(selectedElement, Value, TypeToCreate);
-        
+
+        if (ObjectFinder.Self.GetElementSave(TypeToCreate) is not { } elementToAdd)
+        {
+            return;
+        }
+
         if (IsAddingAsParentToSelectedInstance)
         {
+            ElementSave selectedElement = _selectedState.SelectedElement;
+            InstanceSave? focusedInstance = _selectedState.SelectedInstance;
             System.Diagnostics.Debug.Assert(focusedInstance != null);
-        }
-        
-        if (focusedInstance != null)
-        {
-            if (IsAddingAsParentToSelectedInstance)
+
+            // The new parent is created at the root, then takes the focused instance's place.
+            InstanceSave? newInstance = _addInstanceLogic.AddInstance(elementToAdd, selectedElement, Value);
+            if (newInstance != null && focusedInstance != null)
             {
                 SetInstanceParentWrapper(selectedElement, newInstance, focusedInstance);
             }
-            else
-            {
-                SetInstanceParent(selectedElement, newInstance, focusedInstance);
-            }
+        }
+        else
+        {
+            _addInstanceLogic.AddInstanceAtDestination(elementToAdd, Value);
         }
 
         base.OnAffirmative();
@@ -106,25 +107,5 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
         _setVariableLogic.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
         _setVariableLogic.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
-    }
-
-    public void SetInstanceParent(ElementSave targetElement, InstanceSave child, InstanceSave parent)
-    {
-        // From DragDropManager:
-        // "Since the Parent property can only be set in the default state, we will
-        // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
-        var stateToAssignOn = targetElement.DefaultState;
-        var variableName = child.Name + ".Parent";
-        var oldValue = stateToAssignOn.GetValue(variableName) as string;        // This will always be empty anyway...
-
-        string newParent = parent.Name;
-        var suffix = ObjectFinder.Self.GetDefaultChildName(parent);
-        if (!string.IsNullOrEmpty(suffix))
-        {
-            newParent = parent.Name + "." + suffix;
-        }
-
-        stateToAssignOn.SetValue(variableName, newParent, "string");
-        _setVariableLogic.PropertyValueChanged("Parent", oldValue, child, targetElement.DefaultState);
     }
 }
