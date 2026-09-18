@@ -1,3 +1,4 @@
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -241,6 +242,20 @@ public class CanvasHostTests
     public void ToPhysicalPixelSize_ConvertsDiuSizeByDpiScale(double diuSize, double dpiScale, int expected)
     {
         AvaloniaGraphicsDeviceControl.ToPhysicalPixelSize(diuSize, dpiScale).ShouldBe(expected);
+    }
+
+    // #4852: a minimized window keeps IsVisible/IsEffectivelyVisible true, so without this check
+    // the 60 Hz frame timer keeps rendering (and re-sizing the render target) while minimized.
+    [Theory]
+    [InlineData(true, WindowState.Normal, true)]
+    [InlineData(true, WindowState.Maximized, true)]
+    [InlineData(true, WindowState.FullScreen, true)]
+    [InlineData(true, null, true)]
+    [InlineData(true, WindowState.Minimized, false)]
+    [InlineData(false, WindowState.Normal, false)]
+    public void ShouldRenderFrame_SkipsHiddenAndMinimized(bool isEffectivelyVisible, WindowState? hostWindowState, bool expected)
+    {
+        AvaloniaGraphicsDeviceControl.ShouldRenderFrame(isEffectivelyVisible, hostWindowState).ShouldBe(expected);
     }
 
     // #4811: IInputHostControl.Width/Height and pointer positions must also convert from Avalonia's

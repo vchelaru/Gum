@@ -201,7 +201,12 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
 
     private void HandleRenderFrame()
     {
-        if (!IsVisible || !IsEffectivelyVisible || Design.IsDesignMode)
+        if (Design.IsDesignMode)
+        {
+            return;
+        }
+        WindowState? hostWindowState = (TopLevel.GetTopLevel(this) as Window)?.WindowState;
+        if (!ShouldRenderFrame(IsVisible && IsEffectivelyVisible, hostWindowState))
         {
             return;
         }
@@ -215,6 +220,18 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         int height = ToPhysicalPixelSize(Bounds.Height, scale);
         _frameLoop!.TryRenderFrame(width, height, this);
     }
+
+    /// <summary>
+    /// Whether a frame should be rendered for a canvas with the given visibility inside a host
+    /// window in the given state (null when the canvas isn't in a <see cref="Window"/>). A
+    /// minimized window keeps its content "visible" as far as <see cref="Visual.IsEffectivelyVisible"/>
+    /// goes, so it's checked explicitly here: rendering while minimized is wasted work, and the
+    /// window's bounds change on the way down and back up, which re-creates the render target,
+    /// bitmap and readback buffer on every minimize/restore (#4852). Pure/static so it's
+    /// unit-testable without a live window.
+    /// </summary>
+    public static bool ShouldRenderFrame(bool isEffectivelyVisible, WindowState? hostWindowState) =>
+        isEffectivelyVisible && hostWindowState != WindowState.Minimized;
 
     /// <summary>
     /// Converts a device-independent (DIU) size to a physical pixel count for the given render
