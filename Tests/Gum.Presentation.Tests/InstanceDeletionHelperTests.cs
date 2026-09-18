@@ -1,5 +1,7 @@
+using System.Linq;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Gui.Plugins;
 using Gum.Managers;
 using Moq;
@@ -83,5 +85,50 @@ public class InstanceDeletionHelperTests : BaseTestClass
         _fileCommands.Verify(
             x => x.MoveToRecycleBin(new FilePath(Path.Combine(_projectDirectory, "MyComponent.gucx"))),
             Times.Once);
+    }
+
+    [Fact]
+    public void DetachChildrenFromInstance_ReparentsChildrenToTheDeletedInstancesOwnParent()
+    {
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+
+        InstanceSave a = new InstanceSave { Name = "A", BaseType = "Container", ParentContainer = screen };
+        InstanceSave b = new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = screen };
+        InstanceSave child1 = new InstanceSave { Name = "Child1", BaseType = "Container", ParentContainer = screen };
+        InstanceSave child2 = new InstanceSave { Name = "Child2", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(a);
+        screen.Instances.Add(b);
+        screen.Instances.Add(child1);
+        screen.Instances.Add(child2);
+
+        defaultState.Variables.Add(new VariableSave { Name = "B.Parent", Value = "A", Type = "string", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Child1.Parent", Value = "B", Type = "string", SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "Child2.Parent", Value = "B", Type = "string", SetsValue = true });
+
+        _instanceDeletionHelper.DetachChildrenFromInstance(b);
+
+        defaultState.Variables.First(v => v.Name == "Child1.Parent").Value.ShouldBe("A");
+        defaultState.Variables.First(v => v.Name == "Child2.Parent").Value.ShouldBe("A");
+    }
+
+    [Fact]
+    public void DetachChildrenFromInstance_WhenDeletedInstanceHasNoParent_RemovesChildrensParentVariable()
+    {
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+
+        InstanceSave b = new InstanceSave { Name = "B", BaseType = "Container", ParentContainer = screen };
+        InstanceSave child1 = new InstanceSave { Name = "Child1", BaseType = "Container", ParentContainer = screen };
+        screen.Instances.Add(b);
+        screen.Instances.Add(child1);
+
+        defaultState.Variables.Add(new VariableSave { Name = "Child1.Parent", Value = "B", Type = "string", SetsValue = true });
+
+        _instanceDeletionHelper.DetachChildrenFromInstance(b);
+
+        defaultState.Variables.Any(v => v.Name == "Child1.Parent").ShouldBeFalse();
     }
 }
