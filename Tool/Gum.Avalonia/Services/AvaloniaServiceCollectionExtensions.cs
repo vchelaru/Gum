@@ -55,6 +55,7 @@ public static class AvaloniaServiceCollectionExtensions
         // Element tree: the shared manager over this head's Project panel.
         services.AddSingleton<IElementTreeViewFactory, AvaloniaElementTreeViewFactory>();
         services.AddSingleton<ElementTreeViewManager>();
+        services.AddSingleton<IElementTreeRoots>(provider => provider.GetRequiredService<ElementTreeViewManager>());
 
         // Shell.
         services.AddSingleton<TabViewRegistry>();
