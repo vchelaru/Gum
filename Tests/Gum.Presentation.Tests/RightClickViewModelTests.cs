@@ -246,6 +246,25 @@ public class RightClickViewModelTests
     }
 
     [Fact]
+    public void GetMenuItems_AddChildAction_ShouldAddAtTheAddDestination()
+    {
+        ComponentSave element = CreateElementWithInstances("InstanceA");
+        InstanceSave instance = element.Instances[0];
+        StandardElementSave text = new StandardElementSave { Name = "Text" };
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+        // ObjectFinder.GetElementSave is not virtual: it reads the finder's own project.
+        _objectFinder.Object.GumProjectSave = new GumProjectSave();
+        _objectFinder.Object.GumProjectSave.StandardElements.Add(text);
+
+        List<ContextMenuItemViewModel> result = _sut.GetMenuItems();
+        ContextMenuItemViewModel addChild = result.First(item => item.Text.StartsWith("Add child object to"));
+        addChild.Children.Single(item => item.Text == "Text").Action!.Invoke();
+
+        _addInstanceLogic.Verify(x => x.AddInstanceAtDestination(text, null), Times.Once);
+    }
+
+    [Fact]
     public void GetEffectiveParentNameFor_ShouldReturnNull_WhenNoParentVariable()
     {
         var element = CreateElementWithInstances("InstanceA");

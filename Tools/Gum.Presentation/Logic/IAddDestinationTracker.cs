@@ -18,7 +18,7 @@ public interface IAddDestinationTracker
 
     /// <summary>
     /// Whether the selection has changed by the user's hand since the last <see cref="Reset"/> or
-    /// <see cref="Anchor"/>.
+    /// <see cref="Anchor"/> or <see cref="MarkSelectionUnchanged"/>.
     /// </summary>
     bool HasSelectionChangedSinceAnchor { get; }
 
@@ -29,8 +29,11 @@ public interface IAddDestinationTracker
     /// </summary>
     void Anchor(object? destination);
 
-    /// <summary>Forgets the destination and treats the selection as unchanged (copy/cut).</summary>
-    void Reset();
+    /// <summary>
+    /// Treats the selection as unchanged, keeping the destination (copy/cut: the paste anchors on
+    /// what was copied, but the container the user last picked still receives the next add).
+    /// </summary>
+    void MarkSelectionUnchanged();
 
     /// <summary>Treats the selection as changed by the user, as a selection message would.</summary>
     void MarkSelectionChanged();

@@ -152,7 +152,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     {
         StoreCopiedObject(copyType, _selectedState);
 
-        _addDestinationTracker.Reset();
+        _addDestinationTracker.MarkSelectionUnchanged();
     }
 
 
@@ -353,7 +353,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         StoreCopiedObject(copyType, _selectedState);
 
-        _addDestinationTracker.Reset();
+        _addDestinationTracker.MarkSelectionUnchanged();
 
         ElementSave? sourceElement = _selectedState.SelectedElement;
 

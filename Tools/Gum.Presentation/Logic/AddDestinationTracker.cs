@@ -28,9 +28,8 @@ public class AddDestinationTracker : IAddDestinationTracker
     }
 
     /// <inheritdoc/>
-    public void Reset()
+    public void MarkSelectionUnchanged()
     {
-        _destination = null;
         _hasSelectionChangedSinceAnchor = false;
     }
 

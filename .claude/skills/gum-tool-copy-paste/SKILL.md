@@ -33,7 +33,7 @@ Where a repeat paste lands is owned by `IAddDestinationTracker` (`Tools/Gum.Pres
 - false with a `Destination` — attach to the remembered container (repeat-paste, or a paste after a Ctrl+Shift-click add into that container)
 - false with no `Destination` — keep the original parents (paste straight after copy)
 
-`OnCopy`/`OnCut` call `Reset()`; `ForceSelectionChanged()` (drag-drop's cross-element move) calls `MarkSelectionChanged()`. Every other way of adding an instance goes through `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`), which anchors the same tracker, so chip clicks, drags, the right-click menus, the Add Instance dialog and pastes keep adding siblings into one container until the user selects something else.
+`OnCopy`/`OnCut` call `MarkSelectionUnchanged()` (the destination is kept); `ForceSelectionChanged()` (drag-drop's cross-element move) calls `MarkSelectionChanged()`. Every other way of adding an instance goes through `IAddInstanceLogic` (`Tools/Gum.Presentation/Logic/AddInstanceLogic.cs`), which anchors the same tracker, so chip clicks, drags, the right-click menus, the Add Instance dialog and pastes keep adding siblings into one container until the user selects something else.
 
 ## Paste Creates New Instances, Does Not Clone
 
