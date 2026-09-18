@@ -1141,7 +1141,7 @@ public class DragDropManager : IDragDropManager
                     HandleDroppingInstanceOnTarget(newInstance, targetTreeNode: null, dropTarget);
                 }
 
-                SetInstanceToPosition(worldX, worldY, newInstance);
+                SetInstanceToPosition(worldX, worldY, newInstance, parentInstance);
 
                 SaveAndRefresh();
             }
@@ -1196,7 +1196,7 @@ public class DragDropManager : IDragDropManager
         _wireframeObjectManager.RefreshAll(true);
     }
 
-    public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance)
+    public void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance, InstanceSave? parentInstance = null)
     {
         var component = _selectedState.SelectedComponent;
 
@@ -1222,6 +1222,24 @@ public class DragDropManager : IDragDropManager
         else
         {
             // leave default
+        }
+
+        if (parentInstance != null)
+        {
+            // The instance is being attached as a child of parentInstance rather than the
+            // top-level element/component root, so its X/Y is relative to parentInstance's own
+            // bounds, not the element's (issue #4834 follow-up: the parent isn't necessarily at
+            // the canvas origin the way the top-level root is). Falls back to the root-relative
+            // container above if the parent's representation can't be found for some reason.
+            var parentRuntime = _wireframeObjectManager.GetRepresentation(parentInstance);
+            if (parentRuntime != null)
+            {
+                containerLeft = parentRuntime.GetAbsoluteLeft();
+                containerTop = parentRuntime.GetAbsoluteTop();
+
+                containerWidth = parentRuntime.Width;
+                containerHeight = parentRuntime.Height;
+            }
         }
 
         var differenceX = worldX - containerLeft;

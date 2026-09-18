@@ -58,7 +58,12 @@ public interface IDragDropManager
     /// <param name="hasNodes">True when the payload contains tree-node data.</param>
     DragAcceptDecision DecideWireframeDragEffect(bool hasFileDrop, bool hasNodes);
 
-    void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance);
+    /// <summary>
+    /// Converts a world-space drop point into <paramref name="instance"/>'s X/Y, relative to
+    /// <paramref name="parentInstance"/>'s bounds when it's being attached as that instance's child
+    /// (#4834), or to the top-level element/component root otherwise.
+    /// </summary>
+    void SetInstanceToPosition(float worldX, float worldY, InstanceSave instance, InstanceSave? parentInstance = null);
     /// <inheritdoc cref="OnNodeSortingDropped"/>
     bool ValidateNodeSorting(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget);
 }
