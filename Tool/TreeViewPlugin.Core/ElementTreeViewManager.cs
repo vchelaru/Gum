@@ -480,22 +480,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         return typeNames.OrderBy(name => name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
+    /// <summary>
+    /// Handles Ctrl+click on a Standards palette chip (and the chip's "add to current" menu item):
+    /// adds the standard at the open Screen/Component's root, through the same drop path as
+    /// Ctrl+Shift-click and dragging the chip.
+    /// </summary>
     private void AddStandardInstanceToCurrentElement(string typeName)
     {
-        var target = _selectedState.SelectedElement;
-        if (target == null || target is StandardElementSave)
-        {
-            return;
-        }
-
-        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
-        {
-            return;
-        }
-
-        using var undoLock = _undoManager.RequestLock();
-        string name = _elementCommands.GetUniqueNameForNewInstance(standardElement, target);
-        _elementCommands.AddInstance(target, name, typeName);
+        AddStandardAsChildOf(typeName, GetTreeNodeFor(_selectedState.SelectedElement));
     }
 
     /// <summary>
@@ -508,40 +500,50 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
-            AddAsChildOfDestination(elementToAdd, selectedNode);
+            AddAsChildOf(elementToAdd, GetAddAsChildTarget(selectedNode));
         }
     }
 
     /// <summary>
-    /// Adds <paramref name="elementToAdd"/> under the remembered add destination, falling back to
-    /// <paramref name="selectedNode"/>, and records that destination so the next add (click or
-    /// paste) lands beside this one rather than under it (#4846).
+    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): adds the standard under the
+    /// current add destination (the remembered container, else the tree selection) instead of the
+    /// open element's root like <see cref="AddStandardInstanceToCurrentElement"/>.
     /// </summary>
-    private void AddAsChildOfDestination(ElementSave elementToAdd, GumTreeNode? selectedNode)
+    private void AddStandardAsChildOfCurrentSelection(string typeName)
     {
-        if (_addAsChildTargetLogic.GetTarget(this, selectedNode) is not GumTreeNode targetNode)
+        AddStandardAsChildOf(typeName, GetAddAsChildTarget(Selection.SelectedNode));
+    }
+
+    private void AddStandardAsChildOf(string typeName, GumTreeNode? targetNode)
+    {
+        if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
+        {
+            AddAsChildOf(standardElement, targetNode);
+        }
+    }
+
+    /// <summary>
+    /// The remembered add destination's node when there is one, else <paramref name="selectedNode"/>
+    /// (#4846): keeps repeated adds as siblings even though each add selects its new child.
+    /// </summary>
+    private GumTreeNode? GetAddAsChildTarget(GumTreeNode? selectedNode) =>
+        _addAsChildTargetLogic.GetTarget(this, selectedNode) as GumTreeNode;
+
+    /// <summary>
+    /// The one add path behind Ctrl+click, Ctrl+Shift-click and chip drag: adds
+    /// <paramref name="elementToAdd"/> under <paramref name="targetNode"/> through the drop
+    /// logic (so circular references, standard-element targets, etc. are enforced the same way)
+    /// and records the target as the destination for the next add or paste.
+    /// </summary>
+    private void AddAsChildOf(ElementSave elementToAdd, GumTreeNode? targetNode)
+    {
+        if (targetNode == null)
         {
             return;
         }
 
         _addDestinationTracker.RunAdd(targetNode.Tag,
             () => _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode));
-    }
-
-    /// <summary>
-    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): the plain Ctrl+click on a chip
-    /// (<see cref="AddStandardInstanceToCurrentElement"/>) always targets the open Screen/Component's
-    /// root, but Ctrl+Shift adds the standard as a child of whatever is currently selected in the
-    /// tree instead - reusing the same tree-node drop path as dragging the chip.
-    /// </summary>
-    private void AddStandardAsChildOfCurrentSelection(string typeName)
-    {
-        if (ObjectFinder.Self.GetStandardElement(typeName) is not { } standardElement)
-        {
-            return;
-        }
-
-        AddAsChildOfDestination(standardElement, Selection.SelectedNode);
     }
 
     /// <summary>
