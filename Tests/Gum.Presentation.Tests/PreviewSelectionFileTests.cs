@@ -32,12 +32,16 @@ public class PreviewSelectionFileTests : IDisposable
     }
 
     [Fact]
-    public void TryWrite_WhenAnotherProcessHoldsTheFileWithoutSharingWrites_ReturnsFalseWithoutThrowing()
+    public void TryWrite_WhenAnotherProcessHoldsTheFileWithoutSharingWrites_DoesNotThrow()
     {
         File.WriteAllText(_path, "element=Old\n");
         using FileStream exclusive = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-        PreviewSelectionFile.TryWrite(_path, "element=New\n").ShouldBeFalse();
+        bool written = PreviewSelectionFile.TryWrite(_path, "element=New\n");
+
+        // Only Windows enforces sharing modes; elsewhere the write goes through. Either way the
+        // caller must get a bool back, never the IOException that disabled the plugin.
+        written.ShouldBe(!OperatingSystem.IsWindows());
     }
 
     [Fact]
