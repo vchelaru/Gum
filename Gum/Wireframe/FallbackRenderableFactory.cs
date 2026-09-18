@@ -7,10 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#if GUM
-using Gum.Services;
-using Gum.ToolStates;
-#endif
 
 #if RAYLIB
 using Gum.Renderables;
@@ -81,19 +77,10 @@ namespace Gum.Wireframe
                     var showComponentLineRectangles = GraphicalUiElement.ShowLineRectangles;
                     if (showComponentLineRectangles)
                     {
+                        // The Gum tool dots this outline and paints it the project's outline color
+                        // itself (EditorRenderableFactory); the runtime keeps a plain white one.
                         LineRectangle lineRectangle = new LineRectangle(systemManagers);
                         lineRectangle.Color = System.Drawing.Color.FromArgb(255, 255, 255, 255);
-#if GUM
-                        lineRectangle.IsDotted = true;
-
-                        var projectState = Locator.GetRequiredService<IProjectState>();
-                        lineRectangle.Color = System.Drawing.Color.FromArgb(
-                            255,
-                            projectState.OutlineColorR,
-                            projectState.OutlineColorG,
-                            projectState.OutlineColorB
-                            );
-#endif
                         containedObject = lineRectangle;
                     }
                     else

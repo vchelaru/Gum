@@ -82,6 +82,20 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     }
 
     [Fact]
+    public void TryHandleAsBaseType_Container_ReturnsSolidWhiteLineRectangle_OutsideTheTool()
+    {
+        // The dotted, project-colored Container outline is an editor concern (issue #4849) applied by
+        // the tool on top of this fallback; a runtime with ShowLineRectangles on keeps a plain outline.
+        GraphicalUiElement.ShowLineRectangles = true;
+
+        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+
+        LineRectangle outline = result.ShouldBeOfType<LineRectangle>();
+        outline.IsDotted.ShouldBeFalse();
+        outline.Color.ToArgb().ShouldBe(System.Drawing.Color.White.ToArgb());
+    }
+
+    [Fact]
     public void TryHandleAsBaseType_Container_ReturnsNonNull_WhenShowLineRectanglesIsFalse()
     {
         // Regression guard for PR #2746: with ShowLineRectangles false (the default, and the
