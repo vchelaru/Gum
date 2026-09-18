@@ -292,6 +292,75 @@ public class DragDropManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void OnNodeSortingDropped_Append_MultipleInstances_OntoDifferentContainer_PreservesSourceOrder()
+    {
+        // Issue #4825: dragging multiple selected instances from one container onto a different
+        // container reversed their order. Unlike AfterSibling(fixedSibling) — whose anchor is a
+        // sibling outside the dragged batch and never moves — Append's anchor (the target's last
+        // existing child, from ResolveFlatListPositionForReorder/FindLastSiblingOfParent) is
+        // recomputed from the CURRENT flat list on every call. Once the first dragged instance is
+        // attached to the new container, it becomes the anchor for the next one. Processing in
+        // descending source-index order (correct for a fixed AfterSibling anchor) then stacks the
+        // highest-source-index item closest to the container and the lowest furthest away —
+        // reversing the drag order. Ascending order is required for Append.
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "MainScreen";
+        screen.States.Add(new StateSave());
+
+        InstanceSave containerA = new InstanceSave { Name = "ContainerA", ParentContainer = screen };
+        InstanceSave containerB = new InstanceSave { Name = "ContainerB", ParentContainer = screen };
+        InstanceSave item1 = new InstanceSave { Name = "Item1", ParentContainer = screen };
+        InstanceSave item2 = new InstanceSave { Name = "Item2", ParentContainer = screen };
+        InstanceSave item3 = new InstanceSave { Name = "Item3", ParentContainer = screen };
+
+        screen.Instances.Add(containerA);
+        screen.Instances.Add(item1);
+        screen.Instances.Add(item2);
+        screen.Instances.Add(item3);
+        screen.Instances.Add(containerB);
+
+        screen.DefaultState.SetValue("Item1.Parent", "ContainerA", "string");
+        screen.DefaultState.SetValue("Item2.Parent", "ContainerA", "string");
+        screen.DefaultState.SetValue("Item3.Parent", "ContainerA", "string");
+
+        Mock<ITreeNode> nodeItem1 = new Mock<ITreeNode>();
+        nodeItem1.Setup(x => x.Tag).Returns(item1);
+        Mock<ITreeNode> nodeItem2 = new Mock<ITreeNode>();
+        nodeItem2.Setup(x => x.Tag).Returns(item2);
+        Mock<ITreeNode> nodeItem3 = new Mock<ITreeNode>();
+        nodeItem3.Setup(x => x.Tag).Returns(item3);
+
+        Mock<ITreeNode> targetNode = new Mock<ITreeNode>();
+        targetNode.Setup(x => x.Tag).Returns(containerB);
+
+        List<ITreeNode> draggedNodes = new() { nodeItem1.Object, nodeItem2.Object, nodeItem3.Object };
+
+        _circularReferenceManager
+            .Setup(x => x.CanTypeBeAddedToElement(It.IsAny<ElementSave>(), It.IsAny<string>()))
+            .Returns(true);
+
+        _mocker.GetMock<ISelectedState>()
+            .Setup(x => x.SelectedStateSave).Returns(screen.DefaultState);
+
+        DropTarget dropTarget = new DropTarget(screen, containerB, new DropPosition.Append());
+
+        _dragDropManager.OnNodeSortingDropped(draggedNodes, targetNode.Object, dropTarget);
+
+        screen.DefaultState.GetValue("Item1.Parent").ShouldBe("ContainerB");
+        screen.DefaultState.GetValue("Item2.Parent").ShouldBe("ContainerB");
+        screen.DefaultState.GetValue("Item3.Parent").ShouldBe("ContainerB");
+
+        int indexOfItem1 = screen.Instances.IndexOf(item1);
+        int indexOfItem2 = screen.Instances.IndexOf(item2);
+        int indexOfItem3 = screen.Instances.IndexOf(item3);
+
+        indexOfItem1.ShouldBeLessThan(indexOfItem2,
+            "Item1 was dragged first (lower source index) and must precede Item2 in ContainerB.");
+        indexOfItem2.ShouldBeLessThan(indexOfItem3,
+            "Item2 must precede Item3 in ContainerB — drag order must be preserved end to end.");
+    }
+
+    [Fact]
     public void OnNodeSortingDropped_MultipleInstances_PreservesRelativeOrder_WhenDroppedAtBeginning()
     {
         // Arrange

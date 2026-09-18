@@ -118,7 +118,14 @@ if ($testFilters.Count -eq 0 -and $sourceProjects.Count -eq 0) {
 foreach ($project in $testFilters.Keys | Sort-Object) {
     $relativeProject = $project.Substring($repo.Length + 1)
     $filter = ($testFilters[$project] | Sort-Object -Unique) -join '|'
-    Invoke-Step -Name "test $relativeProject ($filter)" -Command @('test', $project, '-nologo', '-v:m', '--filter', $filter)
+    $command = @('test', $project, '-nologo', '-v:m', '--filter', $filter)
+    if ($project -match 'GumToolUnitTests\.csproj$') {
+        # The frozen WPF head's plugin post-builds use $(SolutionDir) in their copy steps, which is
+        # undefined when building this csproj directly (see CLAUDE.md "Running focused WPF-head
+        # unit tests").
+        $command += "-p:SolutionDir=$repo\"
+    }
+    Invoke-Step -Name "test $relativeProject ($filter)" -Command $command
 }
 
 foreach ($project in $sourceProjects | Sort-Object) {
