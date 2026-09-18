@@ -175,6 +175,21 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
+#if MONOGAME
+    /// <summary>
+    /// The color operation (e.g. Modulate) used when rendering the sprite.
+    /// </summary>
+    public global::RenderingLibrary.Graphics.ColorOperation ColorOperation
+    {
+        get => ContainedSprite.ColorOperation;
+        set
+        {
+            ContainedSprite.ColorOperation = value;
+            NotifyPropertyChanged();
+        }
+    }
+#endif
+
     #endregion
 
     /// <summary>

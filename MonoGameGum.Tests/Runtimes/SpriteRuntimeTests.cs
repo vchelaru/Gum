@@ -236,6 +236,18 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void ColorOperation_ShouldForwardToContainedSprite()
+    {
+        // Gap 1 of #4792: game code driving frame color ops manually (bypassing Gum's built-in
+        // animation playback) has no way to set ColorOperation without this property.
+        SpriteRuntime sut = new();
+
+        sut.ColorOperation = RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha;
+
+        sut.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
+    }
+
+    [Fact]
     public void CurrentFrameIndex_ShouldSyncTimeIntoAnimation()
     {
         // 3 frames: 0.5s, 1.0s, 0.75s
