@@ -805,15 +805,31 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// <summary>
     /// Reconciles <paramref name="gridCategories"/> (the categories currently shown in the grid) against
     /// <paramref name="newCategories"/> (the categories for the newly selected instance), retargeting
-    /// members in place where possible instead of rebuilding containers.
+    /// members in place where possible instead of rebuilding containers, and leaving
+    /// <paramref name="gridCategories"/> in <paramref name="newCategories"/>' order.
     /// </summary>
     public static void ReconcileCategories(
         IList<MemberCategory> gridCategories,
         IReadOnlyList<MemberCategory> newCategories,
         bool instanceIdentityChanged)
     {
-        foreach (var newCategory in newCategories)
+        // Categories left over from the previously-shown instance with no counterpart in
+        // newCategories (e.g. "Text" from a previously-selected Text instance, when the newly-selected
+        // instance isn't text) must be removed first - otherwise they'd stay stuck in the grid, and the
+        // loop below would have to skip over them when placing the surviving categories in order.
+        for (int i = gridCategories.Count - 1; i >= 0; i--)
         {
+            var existingCategory = gridCategories[i];
+            if (!newCategories.Any(newCategory => newCategory.Name == existingCategory.Name))
+            {
+                gridCategories.RemoveAt(i);
+            }
+        }
+
+        for (int newIndex = 0; newIndex < newCategories.Count; newIndex++)
+        {
+            var newCategory = newCategories[newIndex];
+
             // let's see if any variables have changed
             var oldCategory = gridCategories.FirstOrDefault(item => item.Name == newCategory.Name);
 
@@ -823,39 +839,35 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             // needs at least a per-member retarget, even when the member names match.
             bool namesMatch = oldCategory != null && !DoCategoriesDiffer(oldCategory.Members, newCategory.Members);
 
-            bool canRetargetInPlace = instanceIdentityChanged && namesMatch &&
+            bool canRetargetInPlace = oldCategory != null && instanceIdentityChanged && namesMatch &&
                 CanRetargetAllMembers(oldCategory.Members, newCategory.Members);
 
+            MemberCategory resultCategory;
             if (canRetargetInPlace)
             {
-                RetargetAllMembers(oldCategory.Members, newCategory.Members);
+                RetargetAllMembers(oldCategory!.Members, newCategory.Members);
+                resultCategory = oldCategory;
             }
-            else if (oldCategory != null && (instanceIdentityChanged || !namesMatch))
+            else if (oldCategory != null && !instanceIdentityChanged && namesMatch)
             {
-                int index = gridCategories.IndexOf(oldCategory);
+                // Same instance, same members already shown - leave the existing category object alone.
+                resultCategory = oldCategory;
+            }
+            else
+            {
+                // Either there's no counterpart in the grid yet (a category the previously-shown
+                // instance didn't have), or the existing one can't be reused in place - either way
+                // the newly-built category object is used.
+                resultCategory = newCategory;
+            }
 
-                gridCategories.RemoveAt(index);
-                gridCategories.Insert(index, newCategory);
-            }
-            else if (oldCategory == null)
+            // Move resultCategory (reused or new) to its correct position - it may currently be
+            // missing from gridCategories entirely, or present at the wrong index.
+            if (oldCategory != null)
             {
-                // The new instance has a category the previously-shown instance didn't (e.g. "Text"
-                // when the previous instance had no Text category) - it has no counterpart to
-                // retarget or replace, so it must be added.
-                gridCategories.Add(newCategory);
+                gridCategories.Remove(oldCategory);
             }
-        }
-
-        // Categories left over from the previously-shown instance with no counterpart in
-        // newCategories (e.g. "Text" from a previously-selected Text instance, when the newly-selected
-        // instance isn't text) must be removed - otherwise they stay stuck in the grid.
-        for (int i = gridCategories.Count - 1; i >= 0; i--)
-        {
-            var existingCategory = gridCategories[i];
-            if (!newCategories.Any(newCategory => newCategory.Name == existingCategory.Name))
-            {
-                gridCategories.RemoveAt(i);
-            }
+            gridCategories.Insert(newIndex, resultCategory);
         }
     }
 
