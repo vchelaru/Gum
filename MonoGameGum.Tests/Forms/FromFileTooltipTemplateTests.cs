@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
@@ -45,6 +46,10 @@ public class FromFileTooltipTemplateTests : BaseTestClass
         // The standards must exist in the project for ObjectFinder to resolve the child instances.
         foreach (string standardName in new[] { "Container", "Text" })
         {
+            if (project.StandardElements.Any(standard => standard.Name == standardName))
+            {
+                continue;
+            }
             StandardElementSave standard = new StandardElementSave { Name = standardName };
             standard.States.Add(new StateSave { Name = "Default", ParentContainer = standard });
             project.StandardElements.Add(standard);
@@ -71,6 +76,24 @@ public class FromFileTooltipTemplateTests : BaseTestClass
         tooltip.Visual.ElementSave.ShouldBeSameAs(tooltipComponent);
         tooltip.Visual.GetGraphicalUiElementByName("TextInstance").ShouldNotBeNull();
         tooltip.Visual.FormsControlAsObject.ShouldBeSameAs(tooltip);
+    }
+
+    [Fact]
+    public void Tooltip_WithSeveralTooltipComponents_UsesTheBehaviorsDefaultImplementation()
+    {
+        GumProjectSave project = new GumProjectSave();
+        AddTooltipComponent(project, "Controls/Tooltip");
+        ComponentSave darkTooltip = AddTooltipComponent(project, "Controls/TooltipDark");
+        project.Behaviors.Add(new BehaviorSave
+        {
+            Name = StandardFormsBehaviorNames.TooltipBehaviorName,
+            DefaultImplementation = "Controls/TooltipDark",
+        });
+        ObjectFinder.Self.GumProjectSave = project;
+
+        FormsUtilities.RegisterFromFileFormRuntimeDefaults();
+
+        new Tooltip().Visual.ElementSave.ShouldBeSameAs(darkTooltip);
     }
 
     [Fact]

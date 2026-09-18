@@ -508,11 +508,16 @@ public class FormsUtilities
         // disposed (issue #4626).
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
         _defaultTooltipTemplate = null;
-        _fromFileTooltipTemplate = null;
     }
 
     private static VisualTemplate? _defaultTooltipTemplate;
-    private static VisualTemplate? _fromFileTooltipTemplate;
+
+    // Distinguishes a template this class registered for a project's Tooltip component from one
+    // user code registered, so loading another project can replace it.
+    private class FromFileTooltipTemplate : VisualTemplate
+    {
+        public FromFileTooltipTemplate(Func<object, bool, GraphicalUiElement> creationFunc) : base(creationFunc) { }
+    }
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
@@ -700,13 +705,20 @@ public class FormsUtilities
 
     // Tooltips are the one Forms control the framework instantiates on its own (FrameworkElement.ToolTip
     // setter -> new Tooltip()), so a from-file project has no instance through which to pick the
-    // visual. Point the Tooltip template at the project's first Tooltip-behavior component, unless
+    // visual. Point the Tooltip template at the TooltipBehavior's DefaultImplementation (the same
+    // rule codegen uses), falling back to the project's first Tooltip-behavior component, unless
     // user code already registered its own template (issue #4856). The component is resolved by
-    // name at creation time so a hot reload's freshly loaded project is what gets built.
+    // name at creation time so a hot reload's freshly loaded project is what gets built. The visual
+    // is a bare InteractiveGue rather than the component's registered runtime type
+    // (DefaultFromFileTooltipRuntime), which would create a second, orphaned Tooltip of its own.
     private static void RegisterFromFileTooltipTemplate(GumProjectSave project)
     {
-        ComponentSave? tooltipComponent = project.Components.FirstOrDefault(component =>
-            component.Behaviors.Any(behavior => behavior.BehaviorName == StandardFormsBehaviorNames.TooltipBehaviorName));
+        List<ComponentSave> tooltipComponents = project.Components.Where(component =>
+            component.Behaviors.Any(behavior => behavior.BehaviorName == StandardFormsBehaviorNames.TooltipBehaviorName)).ToList();
+        string? defaultImplementation = project.Behaviors
+            .FirstOrDefault(behavior => behavior.Name == StandardFormsBehaviorNames.TooltipBehaviorName)?.DefaultImplementation;
+        ComponentSave? tooltipComponent = tooltipComponents.FirstOrDefault(component => component.Name == defaultImplementation)
+            ?? tooltipComponents.FirstOrDefault();
         if (tooltipComponent == null)
         {
             return;
@@ -714,14 +726,14 @@ public class FormsUtilities
 
         bool isUserTemplate = FrameworkElement.DefaultFormsTemplates.TryGetValue(typeof(Tooltip), out VisualTemplate? existing)
             && !ReferenceEquals(existing, _defaultTooltipTemplate)
-            && !ReferenceEquals(existing, _fromFileTooltipTemplate);
+            && existing is not FromFileTooltipTemplate;
         if (isUserTemplate)
         {
             return;
         }
 
         string componentName = tooltipComponent.Name;
-        _fromFileTooltipTemplate = new VisualTemplate((_, createForms) =>
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = new FromFileTooltipTemplate((_, createForms) =>
         {
             ComponentSave? component = ObjectFinder.Self.GetComponent(componentName);
             if (component == null)
@@ -738,6 +750,5 @@ public class FormsUtilities
             }
             return visual;
         });
-        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _fromFileTooltipTemplate;
     }
 }
