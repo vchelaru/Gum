@@ -487,7 +487,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     private void AddStandardInstanceToCurrentElement(string typeName)
     {
-        AddStandardAsChildOf(typeName, GetTreeNodeFor(_selectedState.SelectedElement));
+        // A root add is not the user picking a container: whatever destination was remembered stays.
+        AddStandardAsChildOf(typeName, GetTreeNodeFor(_selectedState.SelectedElement), _addDestinationTracker.Destination);
     }
 
     /// <summary>
@@ -500,7 +501,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     {
         if (clickedNode.Tag is ElementSave elementToAdd)
         {
-            AddAsChildOf(elementToAdd, GetAddAsChildTarget(selectedNode));
+            GumTreeNode? targetNode = GetAddAsChildTarget(selectedNode);
+            AddAsChildOf(elementToAdd, targetNode, targetNode?.Tag);
         }
     }
 
@@ -511,14 +513,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     private void AddStandardAsChildOfCurrentSelection(string typeName)
     {
-        AddStandardAsChildOf(typeName, GetAddAsChildTarget(Selection.SelectedNode));
+        GumTreeNode? targetNode = GetAddAsChildTarget(Selection.SelectedNode);
+        AddStandardAsChildOf(typeName, targetNode, targetNode?.Tag);
     }
 
-    private void AddStandardAsChildOf(string typeName, GumTreeNode? targetNode)
+    private void AddStandardAsChildOf(string typeName, GumTreeNode? targetNode, object? destinationToRemember)
     {
         if (ObjectFinder.Self.GetStandardElement(typeName) is { } standardElement)
         {
-            AddAsChildOf(standardElement, targetNode);
+            AddAsChildOf(standardElement, targetNode, destinationToRemember);
         }
     }
 
@@ -533,16 +536,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// The one add path behind Ctrl+click, Ctrl+Shift-click and chip drag: adds
     /// <paramref name="elementToAdd"/> under <paramref name="targetNode"/> through the drop
     /// logic (so circular references, standard-element targets, etc. are enforced the same way)
-    /// and records the target as the destination for the next add or paste.
+    /// and records <paramref name="destinationToRemember"/> for the next add or paste.
     /// </summary>
-    private void AddAsChildOf(ElementSave elementToAdd, GumTreeNode? targetNode)
+    private void AddAsChildOf(ElementSave elementToAdd, GumTreeNode? targetNode, object? destinationToRemember)
     {
         if (targetNode == null)
         {
             return;
         }
 
-        _addDestinationTracker.RunAdd(targetNode.Tag,
+        _addDestinationTracker.RunAdd(destinationToRemember,
             () => _dragDropManager.HandleDroppedElementOnTreeNode(elementToAdd, targetNode));
     }
 
