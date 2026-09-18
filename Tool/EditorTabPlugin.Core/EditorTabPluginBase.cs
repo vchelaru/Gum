@@ -1018,14 +1018,15 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
                 // dragged Standard node.
                 if (ObjectFinder.Self.GetStandardElement(standardChip.StandardElementTypeName) is { } standardElement)
                 {
-                    _dragDropManager.OnNodeObjectDroppedInWireframe(standardElement);
+                    _dragDropManager.OnNodeObjectDroppedInWireframe(standardElement, FindInstanceUnderCursorForDrop());
                 }
                 break;
 
             case WireframeDropAction.Nodes nodes:
+                InstanceSave? instanceUnderCursor = FindInstanceUnderCursorForDrop();
                 foreach (object draggedObject in nodes.Tags)
                 {
-                    _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject);
+                    _dragDropManager.OnNodeObjectDroppedInWireframe(draggedObject, instanceUnderCursor);
                 }
                 break;
 
@@ -1461,6 +1462,33 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Hit-tests the current drop cursor position against the open element and returns whatever
+    /// instance it landed on, or null when it missed every instance (or nothing is open). Used by
+    /// <see cref="HandleWireframeDrop"/> so <see cref="IDragDropManager.OnNodeObjectDroppedInWireframe"/>
+    /// can tell whether the drop landed on the current selection (#4834).
+    /// </summary>
+    private InstanceSave? FindInstanceUnderCursorForDrop()
+    {
+        if (_selectedState.SelectedElement == null)
+        {
+            return null;
+        }
+
+        var position = _pluginManager.GetWorldCursorPosition();
+        if (position == null)
+        {
+            return null;
+        }
+
+        List<ElementWithState> elementStack = new List<ElementWithState>();
+        elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave!.Name });
+
+        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(position.Value.X, position.Value.Y, IsComponentNoInstanceSelected, elementStack);
+
+        return ipsoOver?.Tag as InstanceSave;
     }
 
 

@@ -24,7 +24,14 @@ public interface IDragDropManager
 
     bool IsValidExtensionForFileDrop(string file);
     void OnFilesDroppedInTreeView(string[] files);
-    void OnNodeObjectDroppedInWireframe(object draggedObject);
+
+    /// <summary>
+    /// Creates an instance of <paramref name="draggedObject"/> (an <see cref="ElementSave"/>) on
+    /// the currently-shown element. <paramref name="instanceUnderCursor"/> is whatever instance the
+    /// drop point hit-tested onto (if any) — when it's also the current selection, the new instance
+    /// is attached as that instance's child instead of the element's top level (#4834).
+    /// </summary>
+    void OnNodeObjectDroppedInWireframe(object draggedObject, InstanceSave? instanceUnderCursor = null);
 
     /// <summary>
     /// Creates an instance of the given standard type on the Screen/Component represented by

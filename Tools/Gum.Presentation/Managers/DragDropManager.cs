@@ -1096,7 +1096,7 @@ public class DragDropManager : IDragDropManager
         }
     }
 
-    public void OnNodeObjectDroppedInWireframe(object draggedObject)
+    public void OnNodeObjectDroppedInWireframe(object draggedObject, InstanceSave? instanceUnderCursor = null)
     {
         ElementSave? draggedAsElementSave = draggedObject as ElementSave;
         ElementSave? target = _wireframeObjectManager.ElementShowing;
@@ -1111,8 +1111,17 @@ public class DragDropManager : IDragDropManager
             // into whatever edit comes next. (issue #2658)
             using var undoLock = _undoManager.RequestLock();
 
-            DropTarget appendTarget = new DropTarget(target, null, new DropPosition.Append());
-            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, null, appendTarget);
+            // Attach the new instance to the current selection only when the drop both hit-tests
+            // onto an instance AND that instance is the current selection (#4834) — landing on a
+            // different, unselected instance (or missing every instance) keeps the old top-level
+            // append behavior even though something happens to be selected.
+            InstanceSave? selectedInstance = _selectedState.SelectedInstance;
+            InstanceSave? parentInstance = selectedInstance != null && instanceUnderCursor == selectedInstance
+                ? selectedInstance
+                : null;
+
+            DropTarget dropTarget = new DropTarget(target, parentInstance, new DropPosition.Append());
+            var newInstance = HandleDroppedElementInElement(draggedAsElementSave, target, parentInstance, dropTarget);
 
             float worldX, worldY;
 
@@ -1123,6 +1132,14 @@ public class DragDropManager : IDragDropManager
 
             if(newInstance != null)
             {
+                if (parentInstance != null)
+                {
+                    // Reuse the same onto-instance parenting path a tree-view drop onto an instance
+                    // node takes (resolves a container's default child slot, e.g. a ScrollViewer's
+                    // clip panel) so a canvas drop onto a selected container behaves identically to
+                    // dragging the same element onto its tree node.
+                    HandleDroppingInstanceOnTarget(newInstance, targetTreeNode: null, dropTarget);
+                }
 
                 SetInstanceToPosition(worldX, worldY, newInstance);
 
