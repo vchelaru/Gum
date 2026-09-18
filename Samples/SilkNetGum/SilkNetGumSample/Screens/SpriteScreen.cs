@@ -35,6 +35,9 @@ internal class SpriteScreen : FrameworkElement
         container.Height = -8;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
+        // Wraps into columns once the stack runs out of height, so the gallery never scrolls
+        // off the bottom. Labels are 20% wide (five columns).
+        container.WrapsChildren = true;
         this.AddChild(container);
 
         // Default sprite at native size — PercentageOfSourceFile + Width/Height = 100
@@ -265,8 +268,9 @@ internal class SpriteScreen : FrameworkElement
     {
         TextRuntime label = new TextRuntime();
         label.Text = text;
-        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.Width = 20;
         container.Children.Add(label);
     }
 
