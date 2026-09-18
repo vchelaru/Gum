@@ -1,4 +1,4 @@
-using Gum.GueDeriving;
+﻿using Gum.GueDeriving;
 using Gum.Managers;
 using Gum.RenderingLibrary;
 using Raylib_cs;
@@ -103,9 +103,10 @@ public class SpriteClampTests : BaseTestClass
         inBoundsBlue.R.ShouldBeLessThan((byte)50);
 
         // This is the exact regression the revert in #3457 guarded against: under hardware
-        // TextureWrap.Clamp, FlipHorizontal's negative-source-dimension trick sampled a single
-        // clamped edge texel across the whole quad instead of the flipped image. This assertion
-        // fails the same way if RenderClamped ever routes back through SetTextureWrap.
+        // TextureWrap.Clamp, FlipHorizontal sampled a single clamped edge texel across the whole
+        // quad instead of the flipped image (its source rect was shifted one cell out of bounds,
+        // #4854). This assertion fails the same way if a flip ever pushes the source rect out of
+        // the texture again.
         inBoundsRed.R.ShouldBeGreaterThan((byte)200);
         inBoundsRed.B.ShouldBeLessThan((byte)50);
 

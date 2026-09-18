@@ -1,4 +1,4 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.Forms.Controls;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
@@ -136,6 +136,26 @@ internal class SpriteScreen : FrameworkElement
             s.FlipHorizontal = h;
             s.FlipVertical = v;
             flipRow.Children.Add(s);
+        }
+
+        // Flipping an atlas cell (issue #4854) — a source rect that doesn't start at the texture
+        // origin, so a flip that shifts the sample window shows the neighbouring cell instead.
+        AddLabel(container, "Flipping an atlas cell (none, horizontal, vertical, both):");
+        ContainerRuntime flipCellRow = AddRow(container);
+        foreach ((bool h, bool v) in new[] { (false, false), (true, false), (false, true), (true, true) })
+        {
+            SpriteRuntime s = new SpriteRuntime();
+            s.SourceFileName = "FrameSheet.png";
+            s.TextureAddress = TextureAddress.Custom;
+            s.TextureLeft = 438;
+            s.TextureTop = 231;
+            s.TextureWidth = 42;
+            s.TextureHeight = 42;
+            s.Width = 64;
+            s.Height = 64;
+            s.FlipHorizontal = h;
+            s.FlipVertical = v;
+            flipCellRow.Children.Add(s);
         }
 
         // Rotation — center-pivot so rotated sprites stay anchored.

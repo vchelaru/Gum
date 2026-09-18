@@ -231,18 +231,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         }
         else
         {
-            // Apply flipping by adjusting the source rectangle
-            if (FlipHorizontal)
-            {
-                srcRect.X += srcRect.Width;
-                srcRect.Width = -srcRect.Width;
-            }
-
-            if (FlipVertical)
-            {
-                srcRect.Y += srcRect.Height;
-                srcRect.Height = -srcRect.Height;
-            }
+            ApplyFlip(ref srcRect);
 
             DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
         }
@@ -256,6 +245,16 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         {
             global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter.EndShaderMode();
         }
+    }
+
+    // A negative source dimension is raylib's flip flag: DrawTexturePro mirrors the texcoords over
+    // the source rect's own [X, X+|Width|] / [Y, Y+|Height|] range and rebases the offset itself, so
+    // only the sign changes here. Also shifting X/Y by the dimension (issue #4854) moved the sample
+    // window one cell over, which for an atlas sub-rect meant drawing the neighbouring cell.
+    private void ApplyFlip(ref Rectangle sourceRect)
+    {
+        if (FlipHorizontal) sourceRect.Width = -sourceRect.Width;
+        if (FlipVertical) sourceRect.Height = -sourceRect.Height;
     }
 
     // Repeats sourceRectangle's texture area across destinationRectangle instead of stretching it,
@@ -295,17 +294,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
                 var tileSourceRect = new Rectangle(texLeft, texTop, texWidth, texHeight);
 
-                if (FlipHorizontal)
-                {
-                    tileSourceRect.X += tileSourceRect.Width;
-                    tileSourceRect.Width = -tileSourceRect.Width;
-                }
-
-                if (FlipVertical)
-                {
-                    tileSourceRect.Y += tileSourceRect.Height;
-                    tileSourceRect.Height = -tileSourceRect.Height;
-                }
+                ApplyFlip(ref tileSourceRect);
 
                 Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
                 var tileDestinationRect = new Rectangle(
@@ -337,9 +326,8 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     // repeat it (#3459). Splits source and destination into up to a 3x3 grid at the texture's
     // 0/width and 0/height bounds - in-bounds cells draw straight through, out-of-bounds cells draw
     // a single clamped edge/corner texel stretched to fill, the same edge-stretching idea as
-    // nine-slice. Never calls SetTextureWrap: raylib's negative-source-dimension flip trick (below)
-    // samples a single clamped texel across the whole quad under hardware TextureWrap.Clamp, which
-    // is why the earlier hardware-wrap attempt for this issue was reverted.
+    // nine-slice. Never calls SetTextureWrap: that mutates the shared texture's sampler state, so
+    // it would leak into every other sprite drawing the same texture (including Wrap = true ones).
     //
     // Unlike RenderTiled, cells are reordered (not just content-flipped) when flipping, because a
     // clamped edge and its in-bounds neighbor are not interchangeable the way repeating tiles are -
@@ -375,22 +363,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
                 var tileSourceRect = new Rectangle(xSegment.TexCoordinate, ySegment.TexCoordinate,
                     xSegment.TexLength, ySegment.TexLength);
 
-                // Mirroring a single-texel span is a visual no-op (only one column/row is ever
-                // sampled), so skip the negate-and-shift for it. This also sidesteps a raylib
-                // DrawTexturePro quirk: negating a 1-wide/tall source rect pushes its X/Y to sit
-                // exactly on the texture's far edge (X == textureWidth), which samples garbage
-                // (observed: solid wrong-color fill) instead of the intended edge texel.
-                if (FlipHorizontal && tileSourceRect.Width > 1)
-                {
-                    tileSourceRect.X += tileSourceRect.Width;
-                    tileSourceRect.Width = -tileSourceRect.Width;
-                }
-
-                if (FlipVertical && tileSourceRect.Height > 1)
-                {
-                    tileSourceRect.Y += tileSourceRect.Height;
-                    tileSourceRect.Height = -tileSourceRect.Height;
-                }
+                ApplyFlip(ref tileSourceRect);
 
                 Vector3 tileOffset = matrix.Right() * offsetXFromTopLeft + matrix.Up() * offsetYFromTopLeft;
                 var tileDestinationRect = new Rectangle(
