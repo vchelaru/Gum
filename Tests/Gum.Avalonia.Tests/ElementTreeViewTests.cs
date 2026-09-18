@@ -204,8 +204,16 @@ public class ElementTreeViewTests
         window.Close();
     }
 
-    private static TreeRowView RowFor(AvaloniaGumTreeView tree, GumTreeNode node) =>
-        tree.GetVisualDescendants().OfType<TreeRowView>().Single(view => view.Row?.Node == node);
+    private static TreeRowView RowFor(AvaloniaGumTreeView tree, GumTreeNode node)
+    {
+        List<TreeRowView> rows = tree.GetVisualDescendants().OfType<TreeRowView>().ToList();
+        List<TreeRowView> matches = rows.Where(view => view.Row?.Node == node).ToList();
+        // A missing row is a CI-only flake (#4858); say which stage went wrong rather than just "no match".
+        matches.Count.ShouldBe(1,
+            $"Row for {node.Text}: {matches.Count} matches, {rows.Count} rows realized, " +
+            $"{tree.VisibleNodes.Count} visible nodes, IsMeasureValid {tree.IsMeasureValid}, bounds {tree.Bounds}");
+        return matches[0];
+    }
 
     private static (Window Window, AvaloniaGumTreeView Tree, GumTreeNode Screens, GumTreeNode First, GumTreeNode Second) CreateTree()
     {
@@ -221,13 +229,16 @@ public class ElementTreeViewTests
 
         Window window = new Window { Width = 300, Height = 400, Content = tree };
         window.Show();
+        // The rows are built on a posted dispatcher job and realized on the layout pass after it;
+        // run the layout synchronously too so a row lookup never depends on a render job having run.
         Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
         return (window, tree, screens, first, second);
     }
 
     private static void Click(Window window, AvaloniaGumTreeView tree, GumTreeNode node, RawInputModifiers modifiers)
     {
-        TreeRowView row = tree.GetVisualDescendants().OfType<TreeRowView>().Single(view => view.Row?.Node == node);
+        TreeRowView row = RowFor(tree, node);
         Point point = row.TranslatePoint(new Point(row.Bounds.Width / 2, row.Bounds.Height / 2), window)!.Value;
 
         window.MouseDown(point, MouseButton.Left, modifiers);
