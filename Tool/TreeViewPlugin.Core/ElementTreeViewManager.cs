@@ -508,10 +508,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     }
 
     /// <summary>
-    /// Handles Ctrl+Shift-click on a Standards palette chip (#4837): the plain Ctrl+click on a chip
-    /// (<see cref="AddStandardInstanceToCurrentElement"/>) always targets the open Screen/Component's
-    /// root, but Ctrl+Shift adds the standard as a child of whatever is currently selected in the
-    /// tree instead - reusing the same tree-node drop path as dragging the chip.
+    /// Handles Ctrl+click on a Standards palette chip (#4837): adds the standard as a child of
+    /// whatever is currently selected in the tree, reusing the same tree-node drop path as dragging
+    /// the chip. The chip's right-click "Add to &lt;element&gt;" menu item
+    /// (<see cref="AddStandardInstanceToCurrentElement"/>) is the separate, explicit way to add to
+    /// the open element's root regardless of tree selection.
     /// </summary>
     private void AddStandardAsChildOfCurrentSelection(string typeName)
     {

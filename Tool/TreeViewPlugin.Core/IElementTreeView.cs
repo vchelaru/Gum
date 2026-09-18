@@ -120,13 +120,16 @@ public interface IElementTreeView
     /// <summary>Raised when a drag started from the tree ends, whether it dropped or was cancelled.</summary>
     event Action? DragEnded;
 
-    /// <summary>Raised when the palette's "add to current" action is chosen for a standard type.</summary>
+    /// <summary>
+    /// Raised when the palette chip's right-click "add to current" menu item is chosen for a
+    /// standard type - the explicit way to add it to the open element's root regardless of tree
+    /// selection.
+    /// </summary>
     event Action<string>? AddStandardToCurrentRequested;
 
     /// <summary>
-    /// Raised on a Ctrl+Shift-click on a palette chip (#4837): add the standard type as a child of
-    /// the current tree selection, instead of <see cref="AddStandardToCurrentRequested"/>'s
-    /// always-root-of-the-open-element add.
+    /// Raised on a Ctrl+click on a palette chip (#4837): add the standard type as a child of the
+    /// current tree selection.
     /// </summary>
     event Action<string>? AddStandardAsChildOfSelectionRequested;
 
