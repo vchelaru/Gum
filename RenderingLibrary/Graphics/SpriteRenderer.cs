@@ -585,7 +585,7 @@ public class SpriteRenderer
 
         if (!Renderer.UseCustomEffectRendering && Renderer.UseBasicEffectRendering && basicEffect.FogEnabled)
         {
-            basicEffect.FogColor = new Microsoft.Xna.Framework.Vector3(color.R/255, color.G/255, color.B/255f);
+            basicEffect.FogColor = new Microsoft.Xna.Framework.Vector3(color.R/255f, color.G/255f, color.B/255f);
         }
 
         var quarterRotations = System.Math.Abs(rotation / MathHelper.PiOver2);

@@ -102,11 +102,10 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void AnimateSelf_ShouldLeaveSpriteColorUnchanged_WhenFrameColorOperationIsNotMultiply()
+    public void AnimateSelf_ShouldLeaveSpriteColorUnchanged_WhenFrameColorOperationIsAdd()
     {
-        // ColorOperation is nullable/Add-capable so a frame that doesn't author Multiply must not
-        // reset Red/Green/Blue back to identity — Add is not applied to rendering (tracked
-        // separately in #4477) and an absent ColorOperation means "no per-frame color" entirely.
+        // An Add frame's Red/Green/Blue drive the additive overlay pass (AdditiveTintColor, #4792
+        // Gap 2), not the sprite's own Multiply-style Red/Green/Blue — those must stay untouched.
         var sprite = new Sprite((Texture2D?)null) { Red = 11, Green = 22, Blue = 33 };
 
         var chain = new AnimationChain { Name = "TestChain" };
@@ -121,6 +120,52 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.Red.ShouldBe(11);
         sprite.Green.ShouldBe(22);
         sprite.Blue.ShouldBe(33);
+        sprite.AdditiveTintColor.ShouldBe(System.Drawing.Color.FromArgb(255, 255, 0, 0));
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldDefaultUnsetChannelsTo0_WhenFrameColorOperationIsAdd()
+    {
+        // Black (0) is Add's identity - the opposite default from Multiply's 255 - so an unset
+        // channel must contribute nothing to the additive overlay.
+        var sprite = new Sprite((Texture2D?)null);
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, Green = 200, ColorOperation = AnimationFrameColorOperation.Add });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.AdditiveTintColor.ShouldBe(System.Drawing.Color.FromArgb(255, 0, 200, 0));
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldClearAdditiveTintColor_WhenFrameHasNoColorOperation()
+    {
+        // A later frame with no authored color must not inherit a still-set AdditiveTintColor from
+        // an earlier Add frame - otherwise the overlay pass would leak into frames that never asked
+        // for one.
+        var sprite = new Sprite((Texture2D?)null);
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, Red = 255, Green = 255, Blue = 255, ColorOperation = AnimationFrameColorOperation.Add });
+        chain.Add(new AnimationFrame { FrameLength = 1.0f });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.Animate = true;
+        sprite.CurrentChainName = "TestChain";
+        sprite.AdditiveTintColor.ShouldNotBeNull();
+
+        // 1.5s into chain crosses from frame 0 (ends at 1.0s) into frame 1.
+        sprite.AnimateSelf(1.5);
+
+        sprite.AdditiveTintColor.ShouldBeNull();
     }
 
     [Fact]
@@ -233,6 +278,18 @@ public class SpriteRuntimeTests : BaseTestClass
         sut.Color.G.ShouldBe((byte)20);
         sut.Color.B.ShouldBe((byte)30);
         sut.Color.A.ShouldBe((byte)40);
+    }
+
+    [Fact]
+    public void ColorOperation_ShouldForwardToContainedSprite()
+    {
+        // Gap 1 of #4792: game code driving frame color ops manually (bypassing Gum's built-in
+        // animation playback) has no way to set ColorOperation without this property.
+        SpriteRuntime sut = new();
+
+        sut.ColorOperation = RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha;
+
+        sut.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
     }
 
     [Fact]

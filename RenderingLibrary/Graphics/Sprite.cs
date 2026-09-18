@@ -74,6 +74,14 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public Color Color = Color.White;
 
+    /// <summary>
+    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
+    /// null when the current frame doesn't author one. Applied as a second, additive draw pass on
+    /// top of the sprite's normal <see cref="Color"/> draw (#4792 Gap 2) — see
+    /// <see cref="Renderer.DrawAdditiveColorOverlay"/>.
+    /// </summary>
+    public Color? AdditiveTintColor { get; private set; }
+
     public int Alpha
     {
         get
@@ -395,6 +403,17 @@ public class Sprite : SpriteBatchRenderableBase,
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
+            AdditiveTintColor = null;
+        }
+        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        {
+            // Black (0) is Add's identity (see AnimationFrameColorOperation.Add), so an unset
+            // channel contributes nothing to the overlay - unlike Multiply's 255 identity above.
+            AdditiveTintColor = Color.FromArgb(255, frame.Red ?? 0, frame.Green ?? 0, frame.Blue ?? 0);
+        }
+        else
+        {
+            AdditiveTintColor = null;
         }
     }
 
@@ -458,6 +477,12 @@ public class Sprite : SpriteBatchRenderableBase,
                 }
 
                 Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
+
+                if (AdditiveTintColor.HasValue)
+                {
+                    renderer.DrawAdditiveColorOverlay(systemManagers, this, texture, AdditiveTintColor.Value,
+                        sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
+                }
 
                 this.X = oldX;
                 this.Y = oldY;
