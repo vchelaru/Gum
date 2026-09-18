@@ -94,6 +94,18 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public AnimationFrameColorOperation? ColorOperation;
 
+        /// <summary>
+        /// Which rendering technique the frame's sprite should use — <c>Modulate</c> (normal tinted
+        /// texture, the default) or <c>ColorTextureAlpha</c> (a flat-color silhouette that uses the
+        /// texture only as an alpha mask) — or null if the frame doesn't author one, leaving the
+        /// sprite's current technique unchanged. Distinct from <see cref="ColorOperation"/> above -
+        /// that's FlatRedBall's Multiply/Add per-frame tint; this is Gum's own render-technique
+        /// selector (#4822), which <c>SpriteRuntime.ColorOperation</c> (MonoGame/KNI/FNA, #4792 Gap 1)
+        /// exposes. Applied by <c>Sprite.ApplyAnimationFrame</c> on MonoGame/KNI/FNA only; raylib,
+        /// Skia, and NineSlice don't apply it yet.
+        /// </summary>
+        public global::RenderingLibrary.Graphics.ColorOperation? RenderColorOperation;
+
         #region XML Docs
         /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
@@ -308,6 +320,7 @@ namespace Gum.Graphics.Animation
             frame.Green = animationFrameSave.Green;
             frame.Blue = animationFrameSave.Blue;
             frame.ColorOperation = animationFrameSave.ColorOperation;
+            frame.RenderColorOperation = animationFrameSave.RenderColorOperation;
 
             if (coordinateType == TextureCoordinateType.UV)
             {
