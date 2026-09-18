@@ -174,6 +174,39 @@ internal class SpriteScreen : FrameworkElement
 
             addRow.AddChild(s);
         }
+
+        // RenderColorOperation authored on an animation frame (#4822) — same Modulate/
+        // ColorTextureAlpha technique as the property-driven row above, but driven by the
+        // AnimationFrame.RenderColorOperation field instead of setting SpriteRuntime.ColorOperation
+        // directly. Proves the .achx/.achj-authoring path, not just the runtime property.
+        AddLabel(container, "RenderColorOperation via animation frame (Modulate, ColorTextureAlpha):");
+        var renderColorOpFrameRow = AddRow(container);
+        foreach (var renderColorOperation in new[]
+        {
+            RenderingLibrary.Graphics.ColorOperation.Modulate,
+            RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha,
+        })
+        {
+            var s = new SpriteRuntime();
+            s.Width = 64;
+            s.Height = 64;
+            s.Color = Color.Red;
+
+            var chain = new AnimationChain { Name = "RenderColorOperationDemo" };
+            chain.Add(new AnimationFrame
+            {
+                FrameLength = 1.0f,
+                Texture = bearTexture,
+                RenderColorOperation = renderColorOperation,
+            });
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            s.AnimationChains = chainList;
+            s.CurrentChainName = "RenderColorOperationDemo";
+
+            renderColorOpFrameRow.AddChild(s);
+        }
 #endif
 
         // Alpha — same sprite at 64 / 128 / 192 / 255.

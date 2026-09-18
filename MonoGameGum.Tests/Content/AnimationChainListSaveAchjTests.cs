@@ -153,6 +153,48 @@ public class AnimationChainListSaveAchjTests
     }
 
     [Fact]
+    public void FromFile_AchjExtension_ParsesRenderColorOperation()
+    {
+        // #4822: renderColorOperation is Gum's own Modulate/ColorTextureAlpha render-technique
+        // selector - a key the FlatRedBall Animation Editor never writes (it has no such concept),
+        // distinct from the FRB2-sourced "colorOperation" (Multiply/Add) key covered above.
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            {
+              "name": "Silhouette",
+              "frames": [
+                { "textureName": "bear.png", "frameLength": 0.1, "renderColorOperation": "ColorTextureAlpha" }
+              ]
+            }
+          ]
+        }
+        """, path =>
+        {
+            AnimationFrameSave frame = AnimationChainListSave.FromFile(path).AnimationChains[0].Frames[0];
+
+            frame.RenderColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchjExtension_FrameOmittingRenderColorOperation_IsNull()
+    {
+        WithTempFile(".achj", """
+        {
+          "animationChains": [
+            { "name": "Idle", "frames": [ { "textureName": "idle.png", "frameLength": 0.2 } ] }
+          ]
+        }
+        """, path =>
+        {
+            AnimationFrameSave frame = AnimationChainListSave.FromFile(path).AnimationChains[0].Frames[0];
+
+            frame.RenderColorOperation.ShouldBeNull();
+        });
+    }
+
+    [Fact]
     public void FromFile_AchjExtension_UnknownFrbTwoOnlyFields_AreIgnoredNotThrown()
     {
         // Per-frame shapes are an FRB2 addition Gum doesn't model yet (#4479) — an achj file
@@ -292,6 +334,51 @@ public class AnimationChainListSaveAchjTests
             frame.Green.ShouldBe(20);
             frame.Blue.ShouldBe(30);
             frame.ColorOperation.ShouldBe(AnimationFrameColorOperation.Multiply);
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_ParsesRenderColorOperation()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Silhouette</Name>
+            <Frame>
+              <TextureName>bear.png</TextureName>
+              <FrameLength>0.1</FrameLength>
+              <RenderColorOperation>ColorTextureAlpha</RenderColorOperation>
+            </Frame>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationFrameSave frame = AnimationChainListSave.FromFile(path).AnimationChains[0].Frames[0];
+
+            frame.RenderColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
+        });
+    }
+
+    [Fact]
+    public void FromFile_AchxExtension_FrameOmittingRenderColorOperation_IsNull()
+    {
+        WithTempFile(".achx", """
+        <?xml version="1.0" encoding="utf-8"?>
+        <AnimationChainArraySave>
+          <AnimationChain>
+            <Name>Walk</Name>
+            <Frame>
+              <TextureName>walk_0.png</TextureName>
+              <FrameLength>0.1</FrameLength>
+            </Frame>
+          </AnimationChain>
+        </AnimationChainArraySave>
+        """, path =>
+        {
+            AnimationFrameSave frame = AnimationChainListSave.FromFile(path).AnimationChains[0].Frames[0];
+
+            frame.RenderColorOperation.ShouldBeNull();
         });
     }
 

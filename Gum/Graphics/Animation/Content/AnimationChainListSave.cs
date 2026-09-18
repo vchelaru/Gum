@@ -261,6 +261,10 @@ namespace Gum.Content.AnimationChain
                 Green = IntProperty(frameObj, "green"),
                 Blue = IntProperty(frameObj, "blue"),
                 ColorOperation = ColorOperationProperty(frameObj, "colorOperation"),
+                // "renderColorOperation" has no FlatRedBall2 equivalent - it's Gum's own
+                // Modulate/ColorTextureAlpha render-technique selector (#4822), not a key FRB2's
+                // Animation Editor writes. Present only in Gum-authored/hand-edited .achj files.
+                RenderColorOperation = RenderColorOperationProperty(frameObj, "renderColorOperation"),
             };
         }
 
@@ -275,6 +279,9 @@ namespace Gum.Content.AnimationChain
 
         private static AnimationFrameColorOperation? ColorOperationProperty(JsonObject parent, string name) =>
             parent[name] is JsonValue value ? Enum.Parse<AnimationFrameColorOperation>(value.GetValue<string>()!) : null;
+
+        private static global::RenderingLibrary.Graphics.ColorOperation? RenderColorOperationProperty(JsonObject parent, string name) =>
+            parent[name] is JsonValue value ? Enum.Parse<global::RenderingLibrary.Graphics.ColorOperation>(value.GetValue<string>()!) : null;
 
         #endregion
 

@@ -102,6 +102,44 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
+    public void AnimateSelf_ShouldApplyRenderColorOperation_WhenFrameAuthorsOne()
+    {
+        // #4822: a frame's RenderColorOperation drives Sprite.ColorOperation (the Modulate/
+        // ColorTextureAlpha render-technique selector), distinct from AnimationFrameColorOperation
+        // (Multiply/Add) which drives Red/Green/Blue/AdditiveTintColor instead.
+        var sprite = new Sprite((Texture2D?)null);
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Modulate);
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f, RenderColorOperation = RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
+    }
+
+    [Fact]
+    public void AnimateSelf_ShouldLeaveRenderColorOperationUnchanged_WhenFrameDoesNotAuthorOne()
+    {
+        var sprite = new Sprite((Texture2D?)null) { ColorOperation = RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha };
+
+        var chain = new AnimationChain { Name = "TestChain" };
+        chain.Add(new AnimationFrame { FrameLength = 1.0f });
+
+        var chainList = new AnimationChainList();
+        chainList.Add(chain);
+
+        sprite.AnimationChains = chainList;
+        sprite.CurrentChainName = "TestChain";
+
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.ColorTextureAlpha);
+    }
+
+    [Fact]
     public void AnimateSelf_ShouldLeaveSpriteColorUnchanged_WhenFrameColorOperationIsAdd()
     {
         // An Add frame's Red/Green/Blue drive the additive overlay pass (AdditiveTintColor, #4792

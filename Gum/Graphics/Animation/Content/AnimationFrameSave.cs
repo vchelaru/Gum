@@ -115,6 +115,22 @@ namespace Gum.Content.AnimationChain
         }
 
         /// <summary>
+        /// Which rendering technique the frame's sprite should use — <c>Modulate</c> (normal tinted
+        /// texture, the default) or <c>ColorTextureAlpha</c> (a flat-color silhouette that uses the
+        /// texture only as an alpha mask) — or null if the frame doesn't author one, leaving the
+        /// sprite's current technique unchanged. Distinct from <see cref="ColorOperation"/> above:
+        /// that one is FlatRedBall's Multiply/Add per-frame tint, this one is Gum's own
+        /// <c>RenderingLibrary.Graphics.ColorOperation</c> render-technique selector, which
+        /// <c>SpriteRuntime.ColorOperation</c> (MonoGame/KNI/FNA, #4792 Gap 1) exposes but had no
+        /// authoring path until this field (#4822). raylib, Skia, and NineSlice don't apply it yet.
+        /// </summary>
+        public global::RenderingLibrary.Graphics.ColorOperation? RenderColorOperation;
+        public bool ShouldSerializeRenderColorOperation()
+        {
+            return RenderColorOperation.HasValue;
+        }
+
+        /// <summary>
         /// Used in XML Serialization of AnimationChains - this should
         /// not explicitly be set by the user.
         /// </summary>

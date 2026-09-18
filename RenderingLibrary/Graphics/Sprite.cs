@@ -398,6 +398,13 @@ public class Sprite : SpriteBatchRenderableBase,
             Alpha = frame.Alpha.Value;
         }
 
+        // Modulate/ColorTextureAlpha render-technique selector (#4822) - distinct from
+        // AnimationFrameColorOperation below (FlatRedBall's Multiply/Add per-frame tint).
+        if (frame.RenderColorOperation.HasValue)
+        {
+            ColorOperation = frame.RenderColorOperation.Value;
+        }
+
         if (frame.ColorOperation == AnimationFrameColorOperation.Multiply)
         {
             Red = frame.Red ?? 255;
