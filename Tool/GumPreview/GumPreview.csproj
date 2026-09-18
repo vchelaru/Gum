@@ -125,6 +125,11 @@
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 	</ItemGroup>
 	<ItemGroup>
+		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
+		     referenced so this host stays free of the tool's plugin assemblies. -->
+		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
 		<ProjectReference Include="..\..\MonoGameGum\MonoGameGum.csproj" />
 		<!-- Apos.Shapes-backed shape rendering (filled/rounded/shadowed Circle, Rectangle, Arc,

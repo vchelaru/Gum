@@ -1,6 +1,7 @@
 ﻿#if MONOGAME || KNI || FNA
 #define XNALIKE
 #endif
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Forms.Controls;
 using Gum.Forms.DefaultFromFileVisuals;
@@ -128,7 +129,13 @@ public class FormsUtilities
         TryAdd(typeof(Window), (_, c) => new DefaultVisuals.V3.WindowVisual(tryCreateFormsObject: c));
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = new(uiSpriteSheet);
 
-        TryAdd(typeof(Tooltip), (_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+        // Kept separately so RegisterFromFileFormRuntimeDefaults can tell the code-built default
+        // apart from a template user code registered itself.
+        _defaultTooltipTemplate = new VisualTemplate((_, c) => new DefaultVisuals.V3.TooltipVisual(tryCreateFormsObject: c));
+        if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(typeof(Tooltip)))
+        {
+            FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _defaultTooltipTemplate;
+        }
 
         void TryAdd(Type formsType, Func<object, bool, GraphicalUiElement> factory)
         {
@@ -500,7 +507,12 @@ public class FormsUtilities
         // texture that GumService.Uninitialize's LoaderManager.Self.DisposeAndClear() just
         // disposed (issue #4626).
         Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+        _defaultTooltipTemplate = null;
+        _fromFileTooltipTemplate = null;
     }
+
+    private static VisualTemplate? _defaultTooltipTemplate;
+    private static VisualTemplate? _fromFileTooltipTemplate;
 
     public static void RegisterFromFileFormRuntimeDefaults()
     {
@@ -682,5 +694,50 @@ public class FormsUtilities
                     typeof(DefaultFromFileWindowRuntime), overwriteIfAlreadyExists: false);
             }
         }
+
+        RegisterFromFileTooltipTemplate(ObjectFinder.Self.GumProjectSave);
+    }
+
+    // Tooltips are the one Forms control the framework instantiates on its own (FrameworkElement.ToolTip
+    // setter -> new Tooltip()), so a from-file project has no instance through which to pick the
+    // visual. Point the Tooltip template at the project's first Tooltip-behavior component, unless
+    // user code already registered its own template (issue #4856). The component is resolved by
+    // name at creation time so a hot reload's freshly loaded project is what gets built.
+    private static void RegisterFromFileTooltipTemplate(GumProjectSave project)
+    {
+        ComponentSave? tooltipComponent = project.Components.FirstOrDefault(component =>
+            component.Behaviors.Any(behavior => behavior.BehaviorName == StandardFormsBehaviorNames.TooltipBehaviorName));
+        if (tooltipComponent == null)
+        {
+            return;
+        }
+
+        bool isUserTemplate = FrameworkElement.DefaultFormsTemplates.TryGetValue(typeof(Tooltip), out VisualTemplate? existing)
+            && !ReferenceEquals(existing, _defaultTooltipTemplate)
+            && !ReferenceEquals(existing, _fromFileTooltipTemplate);
+        if (isUserTemplate)
+        {
+            return;
+        }
+
+        string componentName = tooltipComponent.Name;
+        _fromFileTooltipTemplate = new VisualTemplate((_, createForms) =>
+        {
+            ComponentSave? component = ObjectFinder.Self.GetComponent(componentName);
+            if (component == null)
+            {
+                // The component was removed (or the project unloaded) since registration - fall
+                // back to the code-built visual rather than failing every hover.
+                return _defaultTooltipTemplate!.CreateContent(null!, createForms);
+            }
+            InteractiveGue visual = new InteractiveGue();
+            component.SetGraphicalUiElement(visual, SystemManagers.Default);
+            if (createForms)
+            {
+                visual.FormsControlAsObject = new Tooltip(visual);
+            }
+            return visual;
+        });
+        FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _fromFileTooltipTemplate;
     }
 }

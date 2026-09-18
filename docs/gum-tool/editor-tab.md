@@ -58,6 +58,10 @@ The **Preview** button, the icon-only play triangle at the far right of the Edit
 
 Preview needs a saved project and a selected screen or component. If either is missing, Gum reports why in the Output tab instead of opening a window.
 
-While Preview is open, selecting a different screen or component in the tool swaps what Preview shows. Saving changes in the tool updates the Preview window automatically, the same way [hot reload](../code/debugging/hot-reload.md) works for a game you run yourself.
+While Preview is open, selecting a different screen or component in the tool swaps what Preview shows. Selecting a state in the **States** tab puts the previewed element in that state, so you can check each state of a component with the real runtime. Saving changes in the tool updates the Preview window automatically, the same way [hot reload](../code/debugging/hot-reload.md) works for a game you run yourself.
+
+Preview renders with the same sibling order the tool's canvas uses. If **Sort by batch** is selected in the **Performance** tab, Preview sorts by batch too, so what you see matches the tool.
+
+If your project has a component with the `TooltipBehavior`, Preview shows that component when you hover over a control that has a `ToolTip`, the same as a game loading the project does. See [Tooltip](../code/controls/tooltip.md).
 
 Because Preview loads your project the same way a shipped game would, missing texture or font files show up as the same errors a player would see. If a font looks wrong, generate its `FontCache` in the tool first, the same way you would before running your own game. Texture changes need Preview restarted; only font changes are picked up live.

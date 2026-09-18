@@ -317,7 +317,13 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         IPreviewGumxProjectionService previewGumxProjectionService =
             new PreviewGumxProjectionService(new ConvertProjectToJsonService(fileWatchIgnoreList));
-        _previewLauncher = new PreviewLauncher(_selectedState, _projectManager, _outputManager, previewGumxProjectionService, AppContext.BaseDirectory);
+        _previewLauncher = new PreviewLauncher(
+            _selectedState,
+            _projectManager,
+            _outputManager,
+            previewGumxProjectionService,
+            AppContext.BaseDirectory,
+            isSortByBatchKey: () => ReferenceEquals(Renderer.SiblingOrdering, BatchKeyGroupedOrderer.Instance));
 
         _editorViewModel = new EditorViewModel(
             _pluginManager,
@@ -406,6 +412,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         this.ElementSelected += HandleElementSelected;
         this.ElementSelected += _scrollbarService.HandleElementSelected;
         this.ElementSelected += element => _previewLauncher.PushSelection(element);
+        // Picking a state in the tool re-shows the previewed element in that state (issue #4856).
+        this.ReactToStateSaveSelected += _ => _previewLauncher.PushSelection(_selectedState.SelectedElement);
         this.ElementDelete += HandleElementDeleted;
 
         // Keeps a live .gumx preview session's temp JSON copy in sync with the real, edited project
