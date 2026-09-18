@@ -100,6 +100,33 @@ public class PropertyGridManagerReconcileCategoriesTests : BaseTestClass
         gridCategories.Select(c => c.Name).ShouldBe(new[] { "Position", "Appearance" }, ignoreOrder: true);
     }
 
+    /// <summary>
+    /// Reproduces issue report: selecting a Text instance right after an instance without Text/Font
+    /// categories (same element/state, so the cheap reconcile path runs instead of a full rebuild).
+    /// "Text" and "Font" have no counterpart in the old grid, so they get appended to the end instead
+    /// of taking their real position ahead of "Flip and Rotation".
+    /// </summary>
+    [Fact]
+    public void ReconcileCategories_NewCategoriesInsertedInMiddle_PreservesNewCategoriesOrder()
+    {
+        List<MemberCategory> gridCategories = new List<MemberCategory>
+        {
+            MakeCategory("Dimensions"),
+            MakeCategory("Flip and Rotation")
+        };
+        List<MemberCategory> newCategories = new List<MemberCategory>
+        {
+            MakeCategory("Dimensions"),
+            MakeCategory("Text"),
+            MakeCategory("Font"),
+            MakeCategory("Flip and Rotation")
+        };
+
+        PropertyGridManager.ReconcileCategories(gridCategories, newCategories, instanceIdentityChanged: true);
+
+        gridCategories.Select(c => c.Name).ShouldBe(new[] { "Dimensions", "Text", "Font", "Flip and Rotation" });
+    }
+
     [Fact]
     public void ReconcileCategories_MatchingCategoryWithNonRetargetableMembers_ReplacesCategoryObject()
     {
