@@ -204,6 +204,61 @@ public class ElementTreeViewTests
         window.Close();
     }
 
+    /// <summary>
+    /// #4882 follow-up: inserting a row above the current scroll position (e.g. adding an instance
+    /// to a container scrolled out of view above) used to leave the scroll offset untouched, so
+    /// every already-visible row silently shifted down by one - eventually pushing whatever the user
+    /// was clicking off screen. The row insertion must shift the scroll offset by the same amount so
+    /// the already-visible rows stay exactly where they were.
+    /// </summary>
+    [AvaloniaFact]
+    public void InsertingARowAboveTheViewport_KeepsAlreadyVisibleRowsAtTheSameScreenPosition()
+    {
+        AvaloniaGumTreeView tree = new AvaloniaGumTreeView();
+        tree.Selection.IsSelectingOnPush = false;
+
+        GumTreeNode root = new GumTreeNode("Root");
+        List<GumTreeNode> children = new List<GumTreeNode>();
+        for (int i = 0; i < 20; i++)
+        {
+            GumTreeNode child = new GumTreeNode($"Child{i}");
+            children.Add(child);
+            root.Nodes.Add(child);
+        }
+        tree.Nodes.Add(root);
+        root.IsExpanded = true;
+
+        // Short enough that only a handful of the 20 children fit at once.
+        Window window = new Window { Width = 300, Height = 120, Content = tree };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        ScrollViewer scrollViewer = window.GetVisualDescendants().OfType<ScrollViewer>().Single();
+        double rowHeight = RowFor(tree, children[0]).Bounds.Height;
+
+        // Scroll so Child10 sits at the very top of the viewport, with Child0-9 (and Root) above it,
+        // scrolled out of view.
+        scrollViewer.Offset = new Vector(0, rowHeight * 10);
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        double anchorYBefore = RowFor(tree, children[10]).TranslatePoint(new Point(0, 0), window)!.Value.Y;
+
+        // Simulates adding an instance to a container that's scrolled above the viewport: a new
+        // sibling row lands before every currently-visible row.
+        GumTreeNode inserted = new GumTreeNode("Inserted");
+        root.Nodes.Insert(0, inserted);
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        double anchorYAfter = RowFor(tree, children[10]).TranslatePoint(new Point(0, 0), window)!.Value.Y;
+
+        anchorYAfter.ShouldBe(anchorYBefore);
+        scrollViewer.Offset.Y.ShouldBe(rowHeight * 11);
+        window.Close();
+    }
+
     private static TreeRowView RowFor(AvaloniaGumTreeView tree, GumTreeNode node)
     {
         List<TreeRowView> rows = tree.GetVisualDescendants().OfType<TreeRowView>().ToList();
