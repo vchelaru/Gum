@@ -35,6 +35,12 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     bool mHaveErrorsOccurredLoadingProject = false;
 
+    // Guards against a second LoadProjectAsync call overlapping the first now that the load is
+    // async (e.g. a double-clicked recent file, or a drag-drop while a menu click is also
+    // queued) - two loads racing to assign _gumProjectSave / mutate ObjectFinder.Self concurrently
+    // would corrupt state. A call that arrives while one is in flight is ignored, not queued.
+    private Task? _inFlightLoadProjectTask;
+
     private readonly ISelectedState _selectedState;
     private readonly Lazy<IElementCommands> _elementCommands;
     private readonly IDialogService _dialogService;
@@ -176,7 +182,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
             {
-                _fileCommands.Value.LoadProject(_commandLineManager.Value.GlueProjectToLoad);
+                await _fileCommands.Value.LoadProjectAsync(_commandLineManager.Value.GlueProjectToLoad);
 
                 if (!string.IsNullOrEmpty(_commandLineManager.Value.ElementName))
                 {
@@ -185,7 +191,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
             else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
-                _fileCommands.Value.LoadProject(GeneralSettingsFile.LastProject);
+                await _fileCommands.Value.LoadProjectAsync(GeneralSettingsFile.LastProject);
 
                 if(GumProjectSave == null)
                 {
@@ -202,14 +208,14 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             {
                 // Startup with nothing to reopen goes through the same populate-a-starter-project
                 // flow as File > New Project, so a first-time user isn't dropped into a blank tool.
-                _newProjectLogic.Value.CreateNewProject();
+                await _newProjectLogic.Value.CreateNewProjectAsync();
             }
         }
         else
         {
             if(_commandLineManager.Value.ShouldCodeGenAll)
             {
-                _fileCommands.Value.LoadProject(_commandLineManager.Value.GlueProjectToLoad);
+                await _fileCommands.Value.LoadProjectAsync(_commandLineManager.Value.GlueProjectToLoad);
 
                 await _messenger.SendAsync(new RequestCodeGenerationMessage());
             }
@@ -237,7 +243,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         _fileCommands.Value.LoadLocalizationFile();
     }
 
-    public bool LoadProject()
+    public async Task<bool> LoadProjectAsync()
     {
         List<string>? files = _dialogService.OpenFile(new OpenFileDialogOptions
         {
@@ -252,7 +258,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             _selectedState.SelectedInstance = null;
             _selectedState.SelectedElement = null;
 
-            _fileCommands.Value.LoadProject(fileName);
+            await _fileCommands.Value.LoadProjectAsync(fileName);
 
             return true;
         }
@@ -261,19 +267,48 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     }
 
     // made public so that File commands can access this function
-    public void LoadProject(FilePath fileName)
+    public Task LoadProjectAsync(FilePath fileName)
+    {
+        if (_inFlightLoadProjectTask != null)
+        {
+            _guiCommands.PrintOutput(
+                $"Ignoring request to load \"{fileName}\" because a project load is already in progress.");
+            return Task.CompletedTask;
+        }
+
+        _inFlightLoadProjectTask = LoadProjectCoreAsync(fileName);
+        return _inFlightLoadProjectTask;
+    }
+
+    private async Task LoadProjectCoreAsync(FilePath fileName)
+    {
+        try
+        {
+            await LoadProjectUnguardedAsync(fileName);
+        }
+        finally
+        {
+            _inFlightLoadProjectTask = null;
+        }
+    }
+
+    private async Task LoadProjectUnguardedAsync(FilePath fileName)
     {
         using IDisposable totalScope = StartupTiming.Time("LoadProject (total)");
-        // LoadProject runs synchronously on the UI thread and can legitimately take several
-        // seconds on a large project (see #4869) - long enough to starve the freeze watchdog's
-        // heartbeat and have it mistake this known-long load for a real hang. Suspend detection
-        // for the duration; this is a no-op on the WPF head, which has no watchdog registered.
+        // LoadProject can legitimately take several seconds on a large project (see #4869) - long
+        // enough to starve the freeze watchdog's heartbeat and have it mistake this known-long load
+        // for a real hang. Suspend detection for the duration; this is a no-op on the WPF head,
+        // which has no watchdog registered.
         using IDisposable watchdogSuspendScope = UiFreezeWatchdogHook.SuspendScope();
-        GumLoadResult result;
+        GumLoadResult result = null!;
 
         using (StartupTiming.Time("  GumProjectSave.Load (xml deserialize)"))
         {
-            _gumProjectSave = GumProjectSave.Load(fileName.FullPath, out result);
+            // The XML/JSON deserialize is pure parsing with no UI-thread dependency (#4871) - move
+            // it off the calling thread so it doesn't block the UI while it runs. Everything else in
+            // this method stays on whatever thread resumes after the await (the UI thread, for a
+            // caller with a synchronization context) since it touches live tool state.
+            _gumProjectSave = await Task.Run(() => GumProjectSave.Load(fileName.FullPath, out result));
         }
 
         if (_gumProjectSave != null && _gumProjectSave.Version > GumProjectSave.NativeVersion)

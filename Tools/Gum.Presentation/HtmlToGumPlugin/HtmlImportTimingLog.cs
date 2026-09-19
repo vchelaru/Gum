@@ -146,6 +146,20 @@ public sealed class ImportPhaseRecorder
         }
     }
 
+    /// <inheritdoc cref="Measure(string, Action)"/>
+    public async Task MeasureAsync(string name, Func<Task> work)
+    {
+        TimeSpan start = _elapsed();
+        try
+        {
+            await work().ConfigureAwait(true);
+        }
+        finally
+        {
+            Record(name, start);
+        }
+    }
+
     private void Record(string name, TimeSpan start)
     {
         TimeSpan end = _elapsed();

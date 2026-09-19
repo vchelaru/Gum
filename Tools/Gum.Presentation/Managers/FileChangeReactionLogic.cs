@@ -10,6 +10,7 @@ using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Managers
@@ -278,7 +279,25 @@ namespace Gum.Managers
             var currentElement = _selectedState.SelectedElement;
             var elementName = currentElement?.Name;
 
-            _fileCommands.LoadProject(file.Standardized);
+            // Fire-and-forget: this reaction runs from FileWatchManager's synchronous flush loop
+            // (a timer tick, not a user-initiated action), which stays synchronous so one changed
+            // file's reload doesn't block the rest of the queue. The load itself now runs off the
+            // calling thread (#4871), so this needs its own error reporting - a faulted task here
+            // wouldn't otherwise surface anywhere.
+            _ = ReloadProjectAndReselectAsync(file, elementName);
+        }
+
+        private async Task ReloadProjectAndReselectAsync(FilePath file, string? elementName)
+        {
+            try
+            {
+                await _fileCommands.LoadProjectAsync(file.Standardized);
+            }
+            catch (Exception ex)
+            {
+                _guiCommands.PrintOutput($"Error reloading project after external change to {file}: {ex.Message}");
+                return;
+            }
 
             if(!string.IsNullOrEmpty(elementName))
             {

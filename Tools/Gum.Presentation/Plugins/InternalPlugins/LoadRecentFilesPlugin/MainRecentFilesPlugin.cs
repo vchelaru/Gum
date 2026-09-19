@@ -5,6 +5,7 @@ using Gum.Menus;
 using Gum.Plugins.BaseClasses;
 using Gum.Services.Dialogs;
 using Gum.Settings;
+using System;
 using System.ComponentModel.Composition;
 using System.Linq;
 
@@ -18,11 +19,13 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
     {
         private MenuItemModel _recentFilesMenuItem = null!;
         private readonly RecentFilesLogic _recentFilesLogic;
+        private readonly IDialogService _dialogService;
 
         [ImportingConstructor]
         public MainRecentFilesPlugin(IProjectManager projectManager, IFileCommands fileCommands, IDialogService dialogService)
         {
             _recentFilesLogic = new RecentFilesLogic(projectManager, fileCommands, dialogService);
+            _dialogService = dialogService;
         }
 
         public override void StartUp()
@@ -73,12 +76,29 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
         {
             var filePath = item.FilePath;
             string name = RecentFilesLogic.GetDisplayedNameForGumxFilePath(filePath);
-            _recentFilesMenuItem.Items.Add(new MenuItemModel(name, () => _recentFilesLogic.LoadProject(filePath.FullPath)));
+            _recentFilesMenuItem.Items.Add(new MenuItemModel(name, async () =>
+            {
+                try
+                {
+                    await _recentFilesLogic.LoadProjectAsync(filePath.FullPath);
+                }
+                catch (Exception ex)
+                {
+                    _dialogService.ShowMessage($"Error loading project:\n{ex.Message}");
+                }
+            }));
         }
 
-        private void HandleLoadRecentClicked()
+        private async void HandleLoadRecentClicked()
         {
-            _recentFilesLogic.ShowLoadRecentDialog();
+            try
+            {
+                await _recentFilesLogic.ShowLoadRecentDialogAsync();
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Error loading project:\n{ex.Message}");
+            }
             RefreshMenuItems();
         }
     }

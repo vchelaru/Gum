@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace GumFormsPlugin.Services;
 
 /// <summary>
@@ -15,5 +17,5 @@ public interface IFormsThemeImporter
     /// <param name="themeName">Theme to import, as named by <see cref="IFormsFileService.GetAvailableThemes"/>.</param>
     /// <param name="isIncludeDemoScreenGum">Whether the theme's demo screen is imported alongside its controls.</param>
     /// <returns>True when the content was imported; false when the user declined an overwrite prompt.</returns>
-    bool ImportTheme(string themeName, bool isIncludeDemoScreenGum);
+    Task<bool> ImportThemeAsync(string themeName, bool isIncludeDemoScreenGum);
 }

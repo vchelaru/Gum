@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Gum.Logic;
 
 /// <summary>
@@ -12,5 +14,5 @@ public interface INewProjectLogic
     /// user opts out) importing the default Forms theme and adding a starting screen. A cancelled
     /// prompt leaves an empty, unsaved project.
     /// </summary>
-    void CreateNewProject();
+    Task CreateNewProjectAsync();
 }

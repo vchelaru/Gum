@@ -6,6 +6,7 @@ using Gum.Settings;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin;
@@ -43,7 +44,7 @@ public class RecentFilesLogic
     /// <summary>
     /// Loads the project at the given path.
     /// </summary>
-    public void LoadProject(string filePath) => _fileCommands.LoadProject(filePath);
+    public Task LoadProjectAsync(string filePath) => _fileCommands.LoadProjectAsync(filePath);
 
     /// <summary>
     /// Computes the display name for a recent project's file path, disambiguating same-named
@@ -108,13 +109,13 @@ public class RecentFilesLogic
     /// Shows the "Load Recent" dialog, loads the selected project if the user confirms, and
     /// persists any favorite toggles the user made regardless of whether they confirmed.
     /// </summary>
-    public void ShowLoadRecentDialog()
+    public async Task ShowLoadRecentDialogAsync()
     {
         LoadRecentViewModel viewModel = BuildLoadRecentViewModel();
 
         if (_dialogService.Show(viewModel))
         {
-            _fileCommands.LoadProject(viewModel.SelectedItem.FullPath);
+            await _fileCommands.LoadProjectAsync(viewModel.SelectedItem.FullPath);
         }
 
         IReadOnlyList<RecentProjectReference> recentFiles = _projectManager.RecentProjects;

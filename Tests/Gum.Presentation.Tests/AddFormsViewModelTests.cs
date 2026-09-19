@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Gum.DataTypes;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
@@ -43,6 +44,7 @@ public class AddFormsViewModelTests
     {
         _formsFileService.Setup(x => x.GetAvailableThemes())
             .Returns(new List<string> { "Standard", "Bubblegum" });
+        _themeImporter.Setup(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
 
         AddFormsViewModel sut = CreateSut();
         sut.ThemeSelection.SelectedTheme = "Bubblegum";
@@ -51,9 +53,12 @@ public class AddFormsViewModelTests
         bool? affirmativeResult = null;
         sut.RequestClose += (_, e) => affirmativeResult = e;
 
+        // OnAffirmative is async void (it overrides a synchronous virtual member on the base
+        // dialog type); ImportThemeAsync is stubbed to complete synchronously above, so by the
+        // time the call returns, its continuation (including base.OnAffirmative()) has already run.
         sut.OnAffirmative();
 
-        _themeImporter.Verify(x => x.ImportTheme("Bubblegum", true), Times.Once);
+        _themeImporter.Verify(x => x.ImportThemeAsync("Bubblegum", true), Times.Once);
         affirmativeResult.ShouldBe(true);
     }
 
@@ -61,11 +66,12 @@ public class AddFormsViewModelTests
     public void OnAffirmative_FallsBackToDefaultTheme_WhenNoThemeIsSelected()
     {
         _formsFileService.Setup(x => x.GetAvailableThemes()).Returns(new List<string>());
+        _themeImporter.Setup(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
 
         AddFormsViewModel sut = CreateSut();
 
         sut.OnAffirmative();
 
-        _themeImporter.Verify(x => x.ImportTheme("Standard", false), Times.Once);
+        _themeImporter.Verify(x => x.ImportThemeAsync("Standard", false), Times.Once);
     }
 }

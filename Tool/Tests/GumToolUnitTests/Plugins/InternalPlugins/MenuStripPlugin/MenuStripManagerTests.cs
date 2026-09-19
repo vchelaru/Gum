@@ -120,7 +120,7 @@ public class MenuStripManagerTests : BaseTestClass
 
         newProjectItem.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
 
-        _fileCommands.Verify(f => f.NewProject(), Times.Once);
+        _fileCommands.Verify(f => f.NewProjectAsync(), Times.Once);
         _fileCommands.Verify(f => f.ForceSaveProject(It.IsAny<bool>()), Times.Never);
     }
 

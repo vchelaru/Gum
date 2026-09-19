@@ -3,7 +3,7 @@ using System;
 namespace Gum.Diagnostics;
 
 /// <summary>
-/// Process-wide facade that lets shared code (e.g. <c>ProjectManager.LoadProject</c>) suspend the
+/// Process-wide facade that lets shared code (e.g. <c>ProjectManager.LoadProjectAsync</c>) suspend the
 /// Avalonia head's UI freeze watchdog for the duration of a known-long, synchronous operation,
 /// without <c>Gum.ProjectServices</c>/<c>Gum.Presentation</c> taking a project reference to
 /// <c>Tool.Gum.Avalonia</c> (which would invert the head/shared layering - those heads depend on

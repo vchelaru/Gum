@@ -11,6 +11,7 @@ using Gum.ToolStates;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace GumFormsPlugin.Services;
@@ -45,7 +46,7 @@ public class FormsThemeImporter : IFormsThemeImporter
     }
 
     /// <inheritdoc/>
-    public bool ImportTheme(string themeName, bool isIncludeDemoScreenGum)
+    public async Task<bool> ImportThemeAsync(string themeName, bool isIncludeDemoScreenGum)
     {
         // Prerequisites have already been surfaced to the user (inline in the Add Forms dialog,
         // or implicitly by opting in to Forms at project creation) — no separate confirmation popup.
@@ -74,7 +75,7 @@ public class FormsThemeImporter : IFormsThemeImporter
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved)
         {
-            _fileCommands.LoadProject(fileName);
+            await _fileCommands.LoadProjectAsync(fileName);
         }
         else
         {

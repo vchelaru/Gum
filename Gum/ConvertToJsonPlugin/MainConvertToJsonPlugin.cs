@@ -5,6 +5,7 @@ using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using System;
 using System.ComponentModel.Composition;
 using System.Runtime.CompilerServices;
 
@@ -26,6 +27,7 @@ internal class MainConvertToJsonPlugin : PluginBase
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
     private readonly ConvertToJsonLogic _convertToJsonLogic;
+    private readonly IDialogService _dialogService;
 
     [ImportingConstructor]
     public MainConvertToJsonPlugin(
@@ -36,10 +38,21 @@ internal class MainConvertToJsonPlugin : PluginBase
     {
         _convertToJsonLogic = new ConvertToJsonLogic(
             projectState, new ConvertProjectToJsonService(fileWatchIgnoreList), fileCommands, dialogService);
+        _dialogService = dialogService;
     }
 
     public override void StartUp()
     {
-        AddMenuEntry(() => _convertToJsonLogic.ConvertCurrentProject(), "Content", "Convert to JSON…");
+        AddMenuEntry(async () =>
+        {
+            try
+            {
+                await _convertToJsonLogic.ConvertCurrentProjectAsync();
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Error converting project to JSON:\n{ex.Message}");
+            }
+        }, "Content", "Convert to JSON…");
     }
 }

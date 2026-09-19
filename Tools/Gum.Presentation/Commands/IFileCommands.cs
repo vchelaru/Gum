@@ -51,7 +51,7 @@ public interface IFileCommands
 
     void TryAutoSaveObject(object objectToSave);
 
-    void NewProject();
+    Task NewProjectAsync();
 
     bool TryAutoSaveProject(bool forceSaveContainedElements = false);
 
@@ -60,7 +60,7 @@ public interface IFileCommands
     void ForceSaveElement(ElementSave element);
 
 
-    void LoadProject(string fileName);
+    Task LoadProjectAsync(string fileName);
 
     FilePath GetFullFileName(ElementSave element);
 

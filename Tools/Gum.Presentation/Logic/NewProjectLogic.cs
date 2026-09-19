@@ -7,6 +7,7 @@ using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using GumFormsPlugin.Services;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Logic;
@@ -48,7 +49,7 @@ public class NewProjectLogic : INewProjectLogic
     }
 
     /// <inheritdoc/>
-    public void CreateNewProject()
+    public async Task CreateNewProjectAsync()
     {
         // Create first so the tool always has a valid GumProjectSave, even if the user backs out
         // of everything below.
@@ -82,7 +83,7 @@ public class NewProjectLogic : INewProjectLogic
 
         if (viewModel.IsIncludeFormsControls)
         {
-            _themeImporter.ImportTheme(
+            await _themeImporter.ImportThemeAsync(
                 viewModel.ThemeSelection.GetSelectedThemeOrDefault(), viewModel.IsIncludeDemoScreenGum);
         }
 

@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Gum.Managers;
 
@@ -22,7 +23,7 @@ public interface IProjectFileDropLogic
     /// Opens the project among <paramref name="droppedFiles"/>, if there is one. Returns true when
     /// the drop was consumed, so the caller can stop it from reaching the control underneath.
     /// </summary>
-    bool TryOpenDroppedProject(IEnumerable<string>? droppedFiles);
+    Task<bool> TryOpenDroppedProjectAsync(IEnumerable<string>? droppedFiles);
 }
 
 /// <inheritdoc cref="IProjectFileDropLogic"/>
@@ -40,14 +41,14 @@ public class ProjectFileDropLogic : IProjectFileDropLogic
         droppedFiles?.FirstOrDefault(GumProjectSave.IsProjectFile);
 
     /// <inheritdoc/>
-    public bool TryOpenDroppedProject(IEnumerable<string>? droppedFiles)
+    public async Task<bool> TryOpenDroppedProjectAsync(IEnumerable<string>? droppedFiles)
     {
         if (GetProjectFileToOpen(droppedFiles) is not { } projectFile)
         {
             return false;
         }
 
-        _fileCommands.LoadProject(projectFile);
+        await _fileCommands.LoadProjectAsync(projectFile);
         return true;
     }
 }
