@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
+using Gum.Services;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
@@ -18,6 +20,8 @@ public class FileWatchLogicTests
     private readonly Mock<IGuiCommands> _guiCommands;
     private readonly Mock<IProjectState> _projectState;
     private readonly Mock<IProjectManager> _projectManager;
+    private readonly Mock<IDispatcher> _dispatcher;
+    private Action? _postedAction;
     private readonly FileWatchLogic _fileWatchLogic;
 
     public FileWatchLogicTests()
@@ -26,13 +30,20 @@ public class FileWatchLogicTests
         _guiCommands = new Mock<IGuiCommands>();
         _projectState = new Mock<IProjectState>();
         _projectManager = new Mock<IProjectManager>();
+        _dispatcher = new Mock<IDispatcher>();
+        _dispatcher.Setup(d => d.Post(It.IsAny<Action>()))
+            .Callback<Action>(action => _postedAction = action);
 
         _fileWatchLogic = new FileWatchLogic(
             _fileWatchManager.Object,
             _guiCommands.Object,
             _projectState.Object,
-            _projectManager.Object);
+            _projectManager.Object,
+            _dispatcher.Object);
     }
+
+    /// <summary>Runs the scan the same way the real dispatcher would once it processes the post.</summary>
+    private void RunPostedAction() => _postedAction!.Invoke();
 
     [Fact]
     public void HandleProjectUnloaded_DisablesWatcher()
@@ -97,6 +108,7 @@ public class FileWatchLogicTests
             .Callback<HashSet<FilePath>>(directories => watched = directories);
 
         _fileWatchLogic.RefreshRootDirectory();
+        RunPostedAction();
 
         watched.ShouldNotBeNull();
         watched.ShouldContain(new FilePath(root + "FakeGumProject/"));
@@ -111,8 +123,65 @@ public class FileWatchLogicTests
         // is null and RefreshRootDirectory takes the "no project" branch. This avoids
         // GetFileWatchRootDirectories, which would require heavy ObjectFinder.Self setup.
         _fileWatchLogic.RefreshRootDirectory();
+        RunPostedAction();
 
         _fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Once);
         _fileWatchManager.Verify(m => m.Disable(), Times.Once);
+    }
+
+    [Fact]
+    public void RefreshRootDirectory_DoesNotScanSynchronously()
+    {
+        // #4873: the scan is dominated by File.Exists checks and must not run inline on whatever
+        // thread called RefreshRootDirectory (the UI thread, during project load) - it's posted
+        // via the dispatcher instead.
+        _projectManager.Setup(m => m.GumProjectSave).Returns((GumProjectSave)null);
+
+        _fileWatchLogic.RefreshRootDirectory();
+
+        _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
+        _fileWatchManager.Verify(m => m.Disable(), Times.Never);
+        _fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
+    }
+
+    [Fact]
+    public void RefreshRootDirectory_CalledRepeatedlyBeforeScanRuns_CoalescesIntoOneScan()
+    {
+        // A ProjectLoad refresh followed by several IsFile VariableSet-triggered refreshes (e.g. a
+        // multi-select edit) before the dispatcher gets around to running the first one should not
+        // each re-scan the whole project.
+        _projectManager.Setup(m => m.GumProjectSave).Returns((GumProjectSave)null);
+
+        _fileWatchLogic.RefreshRootDirectory();
+        _fileWatchLogic.RefreshRootDirectory();
+        _fileWatchLogic.RefreshRootDirectory();
+
+        _dispatcher.Verify(d => d.Post(It.IsAny<Action>()), Times.Once);
+
+        RunPostedAction();
+
+        _fileWatchManager.Verify(m => m.Disable(), Times.Once);
+    }
+
+    [Fact]
+    public void RefreshRootDirectory_WhenProjectUnloadedBeforeScanRuns_TakesNoProjectBranch()
+    {
+        // The project can be unloaded (or replaced by a newer one) in the gap between the request
+        // and the dispatcher running it. Since GetFileWatchRootDirectories() only runs once the
+        // posted action executes, it reads whatever project is current at that point rather than
+        // acting on stale state captured when the refresh was first requested - this is what keeps
+        // the deferred scan safe without any explicit staleness check (#4873).
+        var project = new GumProjectSave { FullFileName = @"C:\Project\Project.gumx" };
+        _projectManager.Setup(m => m.GumProjectSave).Returns(project);
+
+        _fileWatchLogic.RefreshRootDirectory();
+
+        // Project unloaded (or a different one loaded) before the dispatcher ran the posted scan.
+        _projectManager.Setup(m => m.GumProjectSave).Returns((GumProjectSave)null);
+
+        RunPostedAction();
+
+        _fileWatchManager.Verify(m => m.Disable(), Times.Once);
+        _fileWatchManager.Verify(m => m.EnableWithDirectories(It.IsAny<HashSet<FilePath>>()), Times.Never);
     }
 }
