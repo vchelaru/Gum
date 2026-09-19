@@ -234,7 +234,68 @@ public sealed class AvaloniaGumTreeView : UserControl
             AddVisibleRows(root, 0, rows);
         }
 
+        (GumTreeNode anchorNode, double anchorOffsetWithinRow, double rowHeight)? anchor = CaptureScrollAnchor();
+
         SyncRows(rows);
+
+        if (anchor is { } captured)
+        {
+            RestoreScrollAnchor(captured.anchorNode, captured.anchorOffsetWithinRow, captured.rowHeight);
+        }
+    }
+
+    /// <summary>
+    /// The node currently at the top of the viewport, how far scrolled into its row, and the row
+    /// height at capture time - so a row inserted or removed above the viewport (e.g. adding an
+    /// instance while scrolled past its container, #4882) can be compensated for instead of visually
+    /// shifting everything already on screen. The row height is captured once and reused by
+    /// <see cref="RestoreScrollAnchor"/> rather than re-measured after the rows change, since a
+    /// rebuild can scroll the only realized rows out from under <see cref="RowHeight"/> before the
+    /// next layout pass catches up.
+    /// </summary>
+    private (GumTreeNode, double, double)? CaptureScrollAnchor()
+    {
+        double rowHeight = RowHeight;
+        if (rowHeight <= 0 || _rows.Count == 0)
+        {
+            return null;
+        }
+
+        int anchorIndex = Math.Clamp((int)(_scrollViewer.Offset.Y / rowHeight), 0, _rows.Count - 1);
+        double offsetWithinRow = _scrollViewer.Offset.Y - anchorIndex * rowHeight;
+        return (_rows[anchorIndex].Node, offsetWithinRow, rowHeight);
+    }
+
+    /// <summary>Shifts the scroll offset so <paramref name="anchorNode"/> is back at the same on-screen position it held before the rebuild, if it's still in the tree.</summary>
+    private void RestoreScrollAnchor(GumTreeNode anchorNode, double anchorOffsetWithinRow, double rowHeight)
+    {
+        int newIndex = IndexOfRow(anchorNode);
+        if (newIndex < 0)
+        {
+            return;
+        }
+
+        double newOffsetY = Math.Max(0, newIndex * rowHeight + anchorOffsetWithinRow);
+        if (newOffsetY != _scrollViewer.Offset.Y)
+        {
+            _scrollViewer.Offset = _scrollViewer.Offset.WithY(newOffsetY);
+        }
+    }
+
+    /// <summary>
+    /// The height of a realized row, or a fallback estimate when none is realized. Reads any
+    /// currently-realized row rather than assuming index 0 is realized, since scrolling past the top
+    /// (the common case a scroll-anchor is captured in) virtualizes it away.
+    /// </summary>
+    private double RowHeight
+    {
+        get
+        {
+            double realized = _itemsControl.GetVisualDescendants().OfType<TreeRowView>()
+                .Select(row => row.Bounds.Height)
+                .FirstOrDefault(height => height > 0);
+            return realized > 0 ? realized : DefaultRowHeight;
+        }
     }
 
     private void AddVisibleRows(GumTreeNode node, int level, List<TreeRow> rows)
@@ -484,16 +545,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         base.OnKeyUp(e);
     }
 
-    private int VisibleRowCount
-    {
-        get
-        {
-            double rowHeight = _itemsControl.ContainerFromIndex(0)?.Bounds.Height is > 0 and double height
-                ? height
-                : DefaultRowHeight;
-            return Math.Max(1, (int)(_scrollViewer.Viewport.Height / rowHeight));
-        }
-    }
+    private int VisibleRowCount => Math.Max(1, (int)(_scrollViewer.Viewport.Height / RowHeight));
 
     private static TreeNavigationKey? ToNavigationKey(Key key) => key switch
     {
