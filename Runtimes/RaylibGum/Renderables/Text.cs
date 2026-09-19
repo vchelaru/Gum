@@ -316,10 +316,31 @@ public class Text : IVisible, IRenderableIpso,
         }
         set
         {
+            // Raylib_cs.Font is a struct, so font identity is compared via the loaded atlas texture
+            // id, mirroring CustomSetPropertyOnRenderable.AssignFontIfChanged.
+            bool isNewFont = _font.Texture.Id != value.Texture.Id;
+
             _font = value;
 
             // cache this to make checking this faster
             UpdateLineHeightInPixels();
+
+            if (isNewFont)
+            {
+                // A font reassignment invalidates any wrap/pre-render dimensions measured against
+                // the previous font -- most notably raylib's native GetFontDefault() placeholder,
+                // which this.Font's getter substitutes until a real font is resolved and assigned.
+                // Without this, RawText set before the real font resolves (e.g. under
+                // IsAllLayoutSuspended, where Text assignment isn't suspend-aware but font
+                // resolution is -- see issue #4853) leaves WrappedTextWidth/mPreRenderWidth
+                // permanently measured against the small placeholder font's metrics; nothing else
+                // re-wraps just because Font changed underneath. Mirrors the MonoGame/KNI/FNA Text's
+                // BitmapFont setter (RenderingLibrary/Graphics/Text.cs), which already calls
+                // AssignBitmapFontAndRefresh on every real font reassignment. Both calls are no-ops
+                // while RawText is still null (e.g. the very first assignment, from the constructor).
+                UpdateWrappedText();
+                UpdatePreRenderDimensions();
+            }
         }
     }
 
