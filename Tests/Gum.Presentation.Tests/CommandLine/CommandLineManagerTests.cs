@@ -69,7 +69,7 @@ public class CommandLineManagerTests
         await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "--rebuildfonts", "MyProject.gumx" });
 
         _commandLineManager.ShouldExitImmediately.ShouldBeTrue();
-        _fileCommands.Verify(f => f.LoadProject("MyProject.gumx"), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync("MyProject.gumx"), Times.Once);
         _fontManager.Verify(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Once);
     }
 

@@ -14,7 +14,7 @@ public class GumProjectSaveExtensionMethodsTests : BaseTestClass
     // it always resolves instances with throwExceptionOnMissing: true regardless of what the caller
     // asked for. A component containing an instance of a type whose default state can't be resolved
     // (e.g. a plugin-contributed standard the current process hasn't wired a resolver for) then
-    // crashes the entire load, even though ProjectManager.LoadProject explicitly requests
+    // crashes the entire load, even though ProjectManager.LoadProjectAsync explicitly requests
     // tolerateMissingDefaultStates: true "so we don't immediately crash the tool."
     [Fact]
     public void Initialize_WithTolerateMissingDefaultStates_DoesNotThrow_WhenComponentInstanceHasUnresolvableBaseType()

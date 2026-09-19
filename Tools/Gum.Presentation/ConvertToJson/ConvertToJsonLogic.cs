@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.ProjectServices;
@@ -43,7 +44,7 @@ public class ConvertToJsonLogic
     /// newly-written <c>.gumj</c> so the tool is looking at the JSON version. No-ops (with a message)
     /// if <see cref="CanConvert"/> is false when called.
     /// </summary>
-    public void ConvertCurrentProject()
+    public async Task ConvertCurrentProjectAsync()
     {
         if (!CanConvert)
         {
@@ -73,7 +74,7 @@ public class ConvertToJsonLogic
             return;
         }
 
-        _fileCommands.LoadProject(result.ProjectFilePath);
+        await _fileCommands.LoadProjectAsync(result.ProjectFilePath);
 
         _dialogService.ShowMessage(
             $"Converted {result.TotalFileCount} file(s) to JSON.\n\nNow editing {result.ProjectFilePath}.",

@@ -137,7 +137,7 @@ public class GumxImportService : IGumxImportService
         var fileName = _projectState.GumProjectSave.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
         if (wasSaved)
-            _fileCommands.LoadProject(fileName);
+            await _fileCommands.LoadProjectAsync(fileName);
 
         return result;
     }

@@ -13,6 +13,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Commands;
@@ -180,7 +181,7 @@ public class FileCommands : IFileCommands
     }
 
 
-    public void NewProject()
+    public async Task NewProjectAsync()
     {
         _selectedState.SelectedElement = null;
         _selectedState.SelectedInstance = null;
@@ -188,7 +189,7 @@ public class FileCommands : IFileCommands
         _selectedState.SelectedStateCategorySave = null;
         _selectedState.SelectedStateSave = null;
 
-        _newProjectLogic.CreateNewProject();
+        await _newProjectLogic.CreateNewProjectAsync();
 
         _guiCommands.RefreshStateTreeView();
         _guiCommands.RefreshVariables();
@@ -359,9 +360,9 @@ public class FileCommands : IFileCommands
         }
     }
 
-    public void LoadProject(string fileName)
+    public Task LoadProjectAsync(string fileName)
     {
-        _projectManager.LoadProject(fileName);
+        return _projectManager.LoadProjectAsync(fileName);
     }
 
     public FilePath GetFullFileName(ElementSave element)

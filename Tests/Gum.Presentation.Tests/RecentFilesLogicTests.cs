@@ -8,6 +8,7 @@ using Moq;
 using Shouldly;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
@@ -86,15 +87,15 @@ public class RecentFilesLogicTests
     }
 
     [Fact]
-    public void LoadProject_DelegatesToFileCommands()
+    public async Task LoadProjectAsync_DelegatesToFileCommands()
     {
-        _logic.LoadProject(@"C:\SomeProject.gumx");
+        await _logic.LoadProjectAsync(@"C:\SomeProject.gumx");
 
-        _fileCommands.Verify(x => x.LoadProject(@"C:\SomeProject.gumx"), Times.Once);
+        _fileCommands.Verify(x => x.LoadProjectAsync(@"C:\SomeProject.gumx"), Times.Once);
     }
 
     [Fact]
-    public void ShowLoadRecentDialog_Confirmed_LoadsSelectedProjectAndPersistsFavoriteChanges()
+    public async Task ShowLoadRecentDialogAsync_Confirmed_LoadsSelectedProjectAndPersistsFavoriteChanges()
     {
         // A leading-slash literal is rooted per Path.IsPathRooted on both Windows and Unix. We still
         // route it through FilePath.FullPath rather than comparing to the raw literal, because
@@ -120,15 +121,15 @@ public class RecentFilesLogicTests
             })
             .Returns(true);
 
-        _logic.ShowLoadRecentDialog();
+        await _logic.ShowLoadRecentDialogAsync();
 
-        _fileCommands.Verify(x => x.LoadProject(projectAPath), Times.Once);
+        _fileCommands.Verify(x => x.LoadProjectAsync(projectAPath), Times.Once);
         recentProjects[0].IsFavorite.ShouldBeTrue();
         _fileCommands.Verify(x => x.SaveGeneralSettings(), Times.Once);
     }
 
     [Fact]
-    public void ShowLoadRecentDialog_Cancelled_DoesNotLoadButStillPersistsFavoriteChanges()
+    public async Task ShowLoadRecentDialogAsync_Cancelled_DoesNotLoadButStillPersistsFavoriteChanges()
     {
         List<RecentProjectReference> recentProjects = new()
         {
@@ -144,9 +145,9 @@ public class RecentFilesLogicTests
             })
             .Returns(false);
 
-        _logic.ShowLoadRecentDialog();
+        await _logic.ShowLoadRecentDialogAsync();
 
-        _fileCommands.Verify(x => x.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(x => x.LoadProjectAsync(It.IsAny<string>()), Times.Never);
         recentProjects[0].IsFavorite.ShouldBeTrue();
         _fileCommands.Verify(x => x.SaveGeneralSettings(), Times.Once);
     }

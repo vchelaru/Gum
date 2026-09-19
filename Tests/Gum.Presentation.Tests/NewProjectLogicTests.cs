@@ -87,42 +87,42 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public void CreateNewProject_AlwaysCreatesTheProject_EvenWhenTheOptionsDialogIsCancelled()
+    public async Task CreateNewProjectAsync_AlwaysCreatesTheProject_EvenWhenTheOptionsDialogIsCancelled()
     {
         SetUpDialog(accepted: false);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         // The tool assumes a non-null GumProjectSave, so backing out must still leave one behind.
         _projectManager.Verify(x => x.CreateNewProject(), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_ImportsNothing_WhenTheOptionsDialogIsCancelled()
+    public async Task CreateNewProjectAsync_ImportsNothing_WhenTheOptionsDialogIsCancelled()
     {
         SetUpDialog(accepted: false);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         _projectManager.Verify(x => x.AskUserForProjectNameIfNecessary(out It.Ref<bool>.IsAny), Times.Never);
-        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
         _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
     }
 
     [Fact]
-    public void CreateNewProject_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
+    public async Task CreateNewProjectAsync_ImportsNothing_WhenTheSaveLocationPromptIsCancelled()
     {
         SetUpDialog(accepted: true);
         SetUpSaveLocationPrompt(accepted: false);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
         _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
     }
 
     [Fact]
-    public void CreateNewProject_ForcesContainedElementsOnTheFirstSave()
+    public async Task CreateNewProjectAsync_ForcesContainedElementsOnTheFirstSave()
     {
         // AskUserForProjectNameIfNecessary, called just above this save, already set FullFileName --
         // so SaveProject's own internal isProjectNew detection would report false on this call even
@@ -131,66 +131,66 @@ public class NewProjectLogicTests
         SetUpDialog(accepted: true);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         _fileCommands.Verify(x => x.TryAutoSaveProject(true), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_ImportsTheDefaultThemeAndAddsAStartingScreen()
+    public async Task CreateNewProjectAsync_ImportsTheDefaultThemeAndAddsAStartingScreen()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme("Standard", false), Times.Once);
+        _themeImporter.Verify(x => x.ImportThemeAsync("Standard", false), Times.Once);
         _projectCommands.Verify(
             x => x.AddScreen(It.Is<ScreenSave>(s => s.Name == NewProjectLogic.StartingScreenName)),
             Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_ImportsTheThemePickedInTheDialog_WhenItDiffersFromTheDefault()
+    public async Task CreateNewProjectAsync_ImportsTheThemePickedInTheDialog_WhenItDiffersFromTheDefault()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, selectedTheme: "Bubblegum");
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme("Bubblegum", false), Times.Once);
+        _themeImporter.Verify(x => x.ImportThemeAsync("Bubblegum", false), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_ImportsTheDemoScreenGum_WhenCheckedInTheDialog()
+    public async Task CreateNewProjectAsync_ImportsTheDemoScreenGum_WhenCheckedInTheDialog()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: true, isIncludeDemoScreenGum: true);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme("Standard", true), Times.Once);
+        _themeImporter.Verify(x => x.ImportThemeAsync("Standard", true), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_StillAddsAStartingScreen_WhenFormsAreDeclined()
+    public async Task CreateNewProjectAsync_StillAddsAStartingScreen_WhenFormsAreDeclined()
     {
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
         _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_SelectsTheStartingScreen()
+    public async Task CreateNewProjectAsync_SelectsTheStartingScreen()
     {
         SetUpDialog(accepted: true);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         _selectedState.VerifySet(
             x => x.SelectedScreen = It.Is<ScreenSave>(s => s.Name == NewProjectLogic.StartingScreenName),
@@ -198,20 +198,20 @@ public class NewProjectLogicTests
     }
 
     [Fact]
-    public void CreateNewProject_ImportsNothing_WhenTheInitialSaveFails()
+    public async Task CreateNewProjectAsync_ImportsNothing_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
         SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
-        _themeImporter.Verify(x => x.ImportTheme(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        _themeImporter.Verify(x => x.ImportThemeAsync(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
         _projectCommands.Verify(x => x.AddScreen(It.IsAny<ScreenSave>()), Times.Never);
     }
 
     [Fact]
-    public void CreateNewProject_BundlesTheDefaultFont_AfterTheFirstSave()
+    public async Task CreateNewProjectAsync_BundlesTheDefaultFont_AfterTheFirstSave()
     {
         // StandardElementsManager's Text standard points its Font default at this bundled file
         // instead of a system font name (#4674), so every new project needs it on disk -- even
@@ -219,19 +219,19 @@ public class NewProjectLogicTests
         SetUpDialog(accepted: true, isIncludeFormsControls: false);
         SetUpSaveLocationPrompt(accepted: true);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
-    public void CreateNewProject_DoesNotBundleTheDefaultFont_WhenTheInitialSaveFails()
+    public async Task CreateNewProjectAsync_DoesNotBundleTheDefaultFont_WhenTheInitialSaveFails()
     {
         SetUpDialog(accepted: true);
         SetUpSaveLocationPrompt(accepted: true);
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
-        _logic.CreateNewProject();
+        await _logic.CreateNewProjectAsync();
 
         _defaultFontBundler.Verify(x => x.CopyTo(It.IsAny<string>()), Times.Never);
     }

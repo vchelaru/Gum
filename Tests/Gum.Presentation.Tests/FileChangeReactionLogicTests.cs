@@ -228,7 +228,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
 
         sut.ReactToFileChanged(changedFile);
 
-        fileCommandsMock.Verify(f => f.LoadProject(changedFile.Standardized), Times.Once);
+        fileCommandsMock.Verify(f => f.LoadProjectAsync(changedFile.Standardized), Times.Once);
     }
 
     [Fact]

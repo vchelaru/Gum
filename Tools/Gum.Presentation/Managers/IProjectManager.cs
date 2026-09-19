@@ -62,8 +62,8 @@ public interface IProjectManager
     void LoadSettings();
     Task Initialize();
     void CreateNewProject();
-    bool LoadProject();
-    void LoadProject(FilePath fileName);
+    Task<bool> LoadProjectAsync();
+    Task LoadProjectAsync(FilePath fileName);
     bool SaveProject(bool forceSaveContainedElements = false);
     string MakeAbsoluteIfNecessary(string textureAsString);
     bool AskUserForProjectNameIfNecessary(out bool isProjectNew);

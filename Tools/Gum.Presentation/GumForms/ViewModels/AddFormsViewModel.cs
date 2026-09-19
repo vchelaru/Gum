@@ -28,9 +28,9 @@ public class AddFormsViewModel : DialogViewModel
         _themeImporter = themeImporter;
     }
 
-    public override void OnAffirmative()
+    public override async void OnAffirmative()
     {
-        _themeImporter.ImportTheme(ThemeSelection.GetSelectedThemeOrDefault(), IsIncludeDemoScreenGum);
+        await _themeImporter.ImportThemeAsync(ThemeSelection.GetSelectedThemeOrDefault(), IsIncludeDemoScreenGum);
 
         base.OnAffirmative();
     }

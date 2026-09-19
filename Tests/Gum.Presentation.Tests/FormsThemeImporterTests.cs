@@ -10,6 +10,7 @@ using Gum.ToolStates;
 using GumFormsPlugin.Services;
 using Moq;
 using Shouldly;
+using System.Threading.Tasks;
 using ToolsUtilities;
 
 namespace Gum.Presentation.Tests;
@@ -47,39 +48,39 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_SavesProjectAndReloadsIt_WhenNothingBlocksCopying()
+    public async Task ImportThemeAsync_SavesProjectAndReloadsIt_WhenNothingBlocksCopying()
     {
         _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new Dictionary<string, FilePath>());
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-        bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+        bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
         result.ShouldBeTrue();
         _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Once);
-        _fileCommands.Verify(x => x.LoadProject("C:/project/Test.gumx"), Times.Once);
+        _fileCommands.Verify(x => x.LoadProjectAsync("C:/project/Test.gumx"), Times.Once);
         _dialogService.Verify(
             x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
             Times.Never);
     }
 
     [Fact]
-    public void ImportTheme_TellsUserToSaveManually_WhenAutoSaveFails()
+    public async Task ImportThemeAsync_TellsUserToSaveManually_WhenAutoSaveFails()
     {
         _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
             .Returns(new Dictionary<string, FilePath>());
         _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(false);
 
-        _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+        await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
-        _fileCommands.Verify(x => x.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(x => x.LoadProjectAsync(It.IsAny<string>()), Times.Never);
         _dialogService.Verify(
             x => x.ShowMessage("You must Save, then close/reopen the project.", null, null),
             Times.Once);
     }
 
     [Fact]
-    public void ImportTheme_ReturnsFalseWithoutCopying_WhenNonStandardFilesWouldBeOverwritten()
+    public async Task ImportThemeAsync_ReturnsFalseWithoutCopying_WhenNonStandardFilesWouldBeOverwritten()
     {
         // An existing non-gutx/non-gumx destination file blocks the whole import.
         string existingFile = System.IO.Path.GetTempFileName();
@@ -88,7 +89,7 @@ public class FormsThemeImporterTests
             _formsFileService.Setup(x => x.GetSourceDestinations(It.IsAny<string>(), It.IsAny<bool>()))
                 .Returns(new Dictionary<string, FilePath> { ["source"] = existingFile });
 
-            bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+            bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             result.ShouldBeFalse();
             _fileCommands.Verify(x => x.TryAutoSaveProject(It.IsAny<bool>()), Times.Never);
@@ -100,7 +101,7 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_ImportsComponentsAndBehaviorsBeforeScreens_RegardlessOfSourceOrder()
+    public async Task ImportThemeAsync_ImportsComponentsAndBehaviorsBeforeScreens_RegardlessOfSourceOrder()
     {
         // A screen's own instances are typically Components. Each import triggers a synchronous
         // post-import error check that resolves those instances' BaseType via ObjectFinder, so a
@@ -142,7 +143,7 @@ public class FormsThemeImporterTests
                 });
             _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: true);
+            await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: true);
 
             importOrder.ShouldBe(new[] { "behavior", "component", "screen" });
         }
@@ -153,7 +154,7 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_ProceedsWithoutBlocking_WhenExistingFileIsByteIdenticalToSource()
+    public async Task ImportThemeAsync_ProceedsWithoutBlocking_WhenExistingFileIsByteIdenticalToSource()
     {
         // #4674/#4675 regression: the plain "File > New Project" font bundler and a theme's own
         // bundled Fonts/*.ttf can both write the identical file at the identical destination path
@@ -172,7 +173,7 @@ public class FormsThemeImporterTests
                 .Returns(new Dictionary<string, FilePath> { [sourceFile] = destinationFile });
             _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-            bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+            bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             result.ShouldBeTrue();
             _dialogService.Verify(
@@ -188,7 +189,7 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_ConvertsStandardXmlToProjectFormat_WhenDestinationExtensionDiffersFromSource()
+    public async Task ImportThemeAsync_ConvertsStandardXmlToProjectFormat_WhenDestinationExtensionDiffersFromSource()
     {
         // #4710: for a .gumx project the raw byte copy of a theme's Standards IS the entire
         // mechanism that applies them (the final reload just re-reads the file from disk), but a
@@ -213,7 +214,7 @@ public class FormsThemeImporterTests
                 .Returns(new Dictionary<string, FilePath> { [sourceGutx] = destGutj });
             _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+            await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             System.IO.File.Exists(destGutj).ShouldBeTrue();
             StandardElementSave loaded = ElementReference.DeserializeElement<StandardElementSave>(
@@ -227,7 +228,7 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_ConvertsComponentXmlAndStillRoutesThroughImportLogic_WhenDestinationExtensionDiffersFromSource()
+    public async Task ImportThemeAsync_ConvertsComponentXmlAndStillRoutesThroughImportLogic_WhenDestinationExtensionDiffersFromSource()
     {
         string tempRoot = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "FormsThemeImporterTests_" + System.Guid.NewGuid());
         string sourceDir = System.IO.Path.Combine(tempRoot, "source");
@@ -249,7 +250,7 @@ public class FormsThemeImporterTests
                 .Returns(new Dictionary<string, FilePath> { [sourceComponent] = destGucj });
             _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-            _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+            await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             System.IO.File.Exists(destGucj).ShouldBeTrue();
             ComponentSave loaded = ElementReference.DeserializeElement<ComponentSave>(
@@ -270,7 +271,7 @@ public class FormsThemeImporterTests
     }
 
     [Fact]
-    public void ImportTheme_DoesNotBlockOnExistingStandard_WhenItsExtensionIsTheProjectsJsonFormat()
+    public async Task ImportThemeAsync_DoesNotBlockOnExistingStandard_WhenItsExtensionIsTheProjectsJsonFormat()
     {
         // GetIfShouldSave used to only recognize ".gutx" as a Standard file - for a .gumj project
         // the destination is now ".gutj", and treating it as an ordinary (blocking) file instead of
@@ -297,7 +298,7 @@ public class FormsThemeImporterTests
                 .Returns(MessageDialogResult.Affirmative);
             _fileCommands.Setup(x => x.TryAutoSaveProject(It.IsAny<bool>())).Returns(true);
 
-            bool result = _importer.ImportTheme("Standard", isIncludeDemoScreenGum: false);
+            bool result = await _importer.ImportThemeAsync("Standard", isIncludeDemoScreenGum: false);
 
             result.ShouldBeTrue();
             _dialogService.Verify(

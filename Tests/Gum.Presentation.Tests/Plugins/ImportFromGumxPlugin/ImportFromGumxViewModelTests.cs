@@ -497,7 +497,7 @@ public class ImportFromGumxViewModelTests
 #pragma warning restore CS0067
         public FilePath? ProjectDirectory => null;
         public bool TryAutoSaveProject(bool forceSaveContainedElements = false) => false;
-        public void LoadProject(string fileName) { }
+        public Task LoadProjectAsync(string fileName) => Task.CompletedTask;
         public void DeleteDirectory(FilePath filePath) { }
         public void ClearDirectoryContents(FilePath filePath) { }
         public void MoveToRecycleBin(FilePath filePath) { }
@@ -511,7 +511,7 @@ public class ImportFromGumxViewModelTests
         public void TryAutoSaveElement(ElementSave elementSave) { }
         public void TryAutoSaveBehavior(BehaviorSave behavior) { }
         public void TryAutoSaveObject(object objectToSave) { }
-        public void NewProject() { }
+        public Task NewProjectAsync() => Task.CompletedTask;
         public void ForceSaveProject(bool forceSaveContainedElements = false) { }
         public void ForceSaveElement(ElementSave element) { }
         public FilePath GetFullFileName(ElementSave element) => new FilePath(string.Empty);

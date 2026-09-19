@@ -3,6 +3,7 @@ using Gum.Managers;
 using Moq;
 using Shouldly;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Gum.Presentation.Tests;
 
@@ -21,43 +22,43 @@ public class ProjectFileDropLogicTests
     [InlineData(@"C:\Projects\MyGame\MyGame.gumj")]
     // Windows Explorer hands over whatever casing is on disk, so the check can't be ordinal.
     [InlineData(@"C:\Projects\MyGame\MyGame.GUMX")]
-    public void TryOpenDroppedProject_ProjectFile_LoadsIt(string droppedFile)
+    public async Task TryOpenDroppedProjectAsync_ProjectFile_LoadsIt(string droppedFile)
     {
-        _logic.TryOpenDroppedProject(new List<string> { droppedFile }).ShouldBeTrue();
+        (await _logic.TryOpenDroppedProjectAsync(new List<string> { droppedFile })).ShouldBeTrue();
 
-        _fileCommands.Verify(f => f.LoadProject(droppedFile), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(droppedFile), Times.Once);
     }
 
     [Fact]
-    public void TryOpenDroppedProject_NonProjectFiles_LoadsNothing()
+    public async Task TryOpenDroppedProjectAsync_NonProjectFiles_LoadsNothing()
     {
         List<string> dropped = new() { @"C:\Art\Icon.png", @"C:\Projects\MyGame\Screens\Main.gusx" };
 
-        _logic.TryOpenDroppedProject(dropped).ShouldBeFalse();
+        (await _logic.TryOpenDroppedProjectAsync(dropped)).ShouldBeFalse();
 
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
-    public void TryOpenDroppedProject_MixedDrop_LoadsOnlyTheProject()
+    public async Task TryOpenDroppedProjectAsync_MixedDrop_LoadsOnlyTheProject()
     {
         List<string> dropped = new() { @"C:\Art\Icon.png", @"C:\Projects\MyGame\MyGame.gumx" };
 
-        _logic.TryOpenDroppedProject(dropped).ShouldBeTrue();
+        (await _logic.TryOpenDroppedProjectAsync(dropped)).ShouldBeTrue();
 
-        _fileCommands.Verify(f => f.LoadProject(@"C:\Projects\MyGame\MyGame.gumx"), Times.Once);
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(@"C:\Projects\MyGame\MyGame.gumx"), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
-    public void TryOpenDroppedProject_NoFiles_LoadsNothing()
+    public async Task TryOpenDroppedProjectAsync_NoFiles_LoadsNothing()
     {
         // A drag of something that isn't a file at all (a tree node, a Standards-palette chip)
         // carries no file list.
-        _logic.TryOpenDroppedProject(null).ShouldBeFalse();
-        _logic.TryOpenDroppedProject(new List<string>()).ShouldBeFalse();
+        (await _logic.TryOpenDroppedProjectAsync(null)).ShouldBeFalse();
+        (await _logic.TryOpenDroppedProjectAsync(new List<string>())).ShouldBeFalse();
 
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -67,6 +68,6 @@ public class ProjectFileDropLogicTests
         _logic.GetProjectFileToOpen(new List<string> { @"C:\Projects\MyGame\MyGame.gumx" })
             .ShouldBe(@"C:\Projects\MyGame\MyGame.gumx");
 
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
     }
 }

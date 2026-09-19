@@ -238,7 +238,7 @@ public class MainHtmlToGumPlugin : PluginBase
             string? gumxPath = _projectState.GumProjectSave?.FullFileName;
             if (!string.IsNullOrEmpty(gumxPath))
             {
-                recorder.Measure("LoadProject", () => { _fileCommands.LoadProject(gumxPath); });
+                await recorder.MeasureAsync("LoadProject", () => _fileCommands.LoadProjectAsync(gumxPath));
             }
 
             recorder.Measure("select screen", () =>

@@ -134,7 +134,7 @@ namespace Gum.CommandLine
             // 4. Exit
 
             // 1. and 2.
-            _fileCommands.LoadProject(gumxFile);
+            await _fileCommands.LoadProjectAsync(gumxFile);
 
             // 3.
             await _fontManager.CreateAllMissingFontFiles(_projectManager.GumProjectSave);

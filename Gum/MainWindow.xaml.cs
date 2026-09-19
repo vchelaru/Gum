@@ -4,6 +4,7 @@ using Gum.Input;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.SelectionHistory;
+using Gum.Services.Dialogs;
 using Gum.Settings;
 using Gum.ViewModels;
 using System;
@@ -30,7 +31,8 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         IHotkeyManager hotkeyManager,
         ISelectionHistory selectionHistory,
         IProjectFileDropLogic projectFileDropLogic,
-        IWritableOptions<LayoutSettings> layoutSettings
+        IWritableOptions<LayoutSettings> layoutSettings,
+        IDialogService dialogService
         )
     {
         DataContext = mainWindowViewModel;
@@ -71,9 +73,27 @@ public partial class MainWindow : WindowChromeWindow, IRecipient<CloseMainWindow
         this.PreviewDragOver += acceptProjectDrag;
         this.PreviewDrop += (_, e) =>
         {
-            if (projectFileDropLogic.TryOpenDroppedProject(GetDroppedFiles(e)))
+            // e.Handled must be set synchronously - WPF's drag/drop routing has already moved on
+            // by the time an awaited continuation would run, so the "is this a project file" check
+            // (cheap and synchronous) decides Handled, and the actual load runs fire-and-forget.
+            var droppedFiles = GetDroppedFiles(e);
+            if (projectFileDropLogic.GetProjectFileToOpen(droppedFiles) != null)
             {
                 e.Handled = true;
+
+                async void LoadDroppedProject()
+                {
+                    try
+                    {
+                        await projectFileDropLogic.TryOpenDroppedProjectAsync(droppedFiles);
+                    }
+                    catch (Exception ex)
+                    {
+                        dialogService.ShowMessage($"Error loading dropped project:\n{ex.Message}");
+                    }
+                }
+
+                LoadDroppedProject();
             }
         };
 

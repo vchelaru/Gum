@@ -20,6 +20,7 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
+using ToolsUtilities;
 using Xunit;
 
 namespace Gum.Presentation.Tests;
@@ -98,8 +99,8 @@ public class ProjectManagerTests : BaseTestClass
 
         await _projectManager.Initialize();
 
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
-        _newProjectLogic.Verify(n => n.CreateNewProject(), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
+        _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Once);
     }
 
     [Fact]
@@ -115,8 +116,8 @@ public class ProjectManagerTests : BaseTestClass
 
         await _projectManager.Initialize();
 
-        _fileCommands.Verify(f => f.LoadProject(glueProject), Times.Once);
-        _newProjectLogic.Verify(n => n.CreateNewProject(), Times.Never);
+        _fileCommands.Verify(f => f.LoadProjectAsync(glueProject), Times.Once);
+        _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Never);
     }
 
     [Fact]
@@ -322,44 +323,127 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
-    public void LoadProject_LoadsAndReturnsTrue_WhenFileChosen()
+    public async Task LoadProjectAsync_LoadsAndReturnsTrue_WhenFileChosen()
     {
         string chosenFile = "c:/projects/MyGame.gumx";
         _dialogService
             .Setup(d => d.OpenFile(It.IsAny<OpenFileDialogOptions?>()))
             .Returns(new List<string> { chosenFile });
 
-        bool result = _projectManager.LoadProject();
+        bool result = await _projectManager.LoadProjectAsync();
 
         result.ShouldBeTrue();
-        _fileCommands.Verify(f => f.LoadProject(chosenFile), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(chosenFile), Times.Once);
     }
 
     [Fact]
-    public void LoadProject_ReturnsFalse_WhenCancelled()
+    public async Task LoadProjectAsync_ReturnsFalse_WhenCancelled()
     {
         _dialogService
             .Setup(d => d.OpenFile(It.IsAny<OpenFileDialogOptions?>()))
             .Returns((List<string>?)null);
 
-        bool result = _projectManager.LoadProject();
+        bool result = await _projectManager.LoadProjectAsync();
 
         result.ShouldBeFalse();
-        _fileCommands.Verify(f => f.LoadProject(It.IsAny<string>()), Times.Never);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
-    public void LoadProject_ShowsOpenDialogAcceptingBothXmlAndJsonProjects()
+    public async Task LoadProjectAsync_ShowsOpenDialogAcceptingBothXmlAndJsonProjects()
     {
         // A converted .gumj project (issue #4182) must appear in the Open dialog's file picker.
         _dialogService
             .Setup(d => d.OpenFile(It.IsAny<OpenFileDialogOptions?>()))
             .Returns((List<string>?)null);
 
-        _projectManager.LoadProject();
+        await _projectManager.LoadProjectAsync();
 
         _dialogService.Verify(d => d.OpenFile(It.Is<OpenFileDialogOptions>(o =>
             o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
+    }
+
+    // Saves a minimal-but-loadable project to a fresh temp file and returns its path. Used by the
+    // two tests below, which exercise ProjectManager.LoadProjectAsync(FilePath) end to end (real
+    // GumProjectSave.Load, since it's a static method with no seam) rather than through the
+    // IFileCommands mock, which never reaches this method's body.
+    private static string SaveMinimalProjectToTempFile(out string tempDirectory)
+    {
+        tempDirectory = Path.Combine(Path.GetTempPath(), "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDirectory);
+        string gumxPath = Path.Combine(tempDirectory, "Project.gumx");
+        new GumProjectSave { Version = GumProjectSave.NativeVersion }.Save(gumxPath, saveElements: false);
+        return gumxPath;
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ByFilePath_DeserializesOnABackgroundThread()
+    {
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+
+        int callingThreadId = Environment.CurrentManagedThreadId;
+        int? deserializeThreadId = null;
+        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+        FileManager.CustomGetStreamFromFile = path =>
+        {
+            deserializeThreadId = Environment.CurrentManagedThreadId;
+            return File.OpenRead(path);
+        };
+
+        try
+        {
+            await _projectManager.LoadProjectAsync(gumxPath);
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        deserializeThreadId.ShouldNotBeNull();
+        deserializeThreadId.ShouldNotBe(callingThreadId);
+    }
+
+    [Fact]
+    public async Task LoadProjectAsync_ByFilePath_SecondCallWhileFirstInFlight_IsIgnoredNotDoubleLoaded()
+    {
+        string gumxPath = SaveMinimalProjectToTempFile(out string tempDirectory);
+
+        TaskCompletionSource<bool> hookEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<bool> releaseHook = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        int loadCallCount = 0;
+        Func<string, Stream>? previousHook = FileManager.CustomGetStreamFromFile;
+        FileManager.CustomGetStreamFromFile = path =>
+        {
+            Interlocked.Increment(ref loadCallCount);
+            hookEntered.TrySetResult(true);
+            // Blocks the background Task.Run thread until the test has issued the second,
+            // overlapping LoadProjectAsync call - the deterministic window the guard must survive.
+            releaseHook.Task.Wait();
+            return File.OpenRead(path);
+        };
+
+        try
+        {
+            Task firstLoad = _projectManager.LoadProjectAsync(gumxPath);
+            await hookEntered.Task;
+
+            Task secondLoad = _projectManager.LoadProjectAsync(gumxPath);
+
+            releaseHook.SetResult(true);
+            await firstLoad;
+            await secondLoad;
+        }
+        finally
+        {
+            FileManager.CustomGetStreamFromFile = previousHook;
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+
+        loadCallCount.ShouldBe(1);
+        _guiCommands.Verify(
+            g => g.PrintOutput(It.Is<string>(m => m.Contains("already in progress"))),
+            Times.Once);
     }
 
     [Fact]

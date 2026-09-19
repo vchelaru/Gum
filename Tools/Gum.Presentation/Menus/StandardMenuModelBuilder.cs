@@ -75,8 +75,28 @@ public class StandardMenuModelBuilder
         Model.TopLevelItems.Clear();
 
         MenuItemModel file = new MenuItemModel("File");
-        file.Items.Add(new MenuItemModel("New Project", () => _fileCommands.NewProject()));
-        file.Items.Add(new MenuItemModel("Load Project...", () => _projectManager.LoadProject()));
+        file.Items.Add(new MenuItemModel("New Project", async () =>
+        {
+            try
+            {
+                await _fileCommands.NewProjectAsync();
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Error creating new project:\n{ex.Message}");
+            }
+        }));
+        file.Items.Add(new MenuItemModel("Load Project...", async () =>
+        {
+            try
+            {
+                await _projectManager.LoadProjectAsync();
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowMessage($"Error loading project:\n{ex.Message}");
+            }
+        }));
         file.Items.Add(MenuItemModel.Separator());
         file.Items.Add(new MenuItemModel("Save Project", () => SaveProject(saveAll: false)));
         file.Items.Add(new MenuItemModel("Save All", () => SaveProject(saveAll: true)));
