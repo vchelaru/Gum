@@ -233,6 +233,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
             Margin = new Thickness(0, 0, -4, 0),
             FontSize = 10
         };
+        HintTextBlock.SetResourceReference(TextBlock.ForegroundProperty, WpfDataUi.Keys.DetailTextForegroundKey);
 
         stackPanel.Children.Add(HintTextBlock);
 

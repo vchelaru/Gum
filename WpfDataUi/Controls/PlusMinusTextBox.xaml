@@ -5,6 +5,7 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:local="clr-namespace:WpfDataUi.Controls"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:themes="clr-namespace:WpfDataUi"
   mc:Ignorable="d">
   <Grid x:Name="TopRowGrid">
     <Grid.ContextMenu>
@@ -64,6 +65,7 @@
       Padding="8,1,0,4"
       HorizontalAlignment="Left"
       VerticalAlignment="Top"
+      Foreground="{DynamicResource {x:Static themes:Keys.DetailTextForegroundKey}}"
       FontSize="10"
       Text="This is a property description. But what if it is longer?"
       TextWrapping="Wrap" />
