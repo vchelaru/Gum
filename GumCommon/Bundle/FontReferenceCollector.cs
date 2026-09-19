@@ -31,7 +31,7 @@ namespace Gum.Bundle;
 /// Known limitation: a conditional (ternary) <c>VariableReferences</c> row on the element
 /// itself or a direct instance has every branch pregenerated (see #4042), but a conditional
 /// reference reached only through a nested component instance's inner Text instances
-/// (<see cref="CollectFontsFromNestedTextInstances"/>) still resolves a single value via
+/// (<c>CollectFontsFromNestedTextInstances</c>) still resolves a single value via
 /// <see cref="RecursiveVariableFinder"/> - only the currently-active branch is collected there.
 /// </para>
 /// </remarks>
@@ -246,19 +246,27 @@ public class FontReferenceCollector
     private static BmfcSave? BuildBmfcSave(Func<string, object?> getValue,
         string fontRanges, int spacingHorizontal, int spacingVertical)
     {
-        int? fontSize = getValue("FontSize") as int?;
+        // Font and FontSize gate the result, so read them first and stop on a miss. Every
+        // non-Text instance misses on Font, and each recursive lookup walks the state, base
+        // and instance chains, so the style lookups below only run for real text (#4865).
         string? fontValue = getValue("Font") as string;
+        if (fontValue == null)
+        {
+            return null;
+        }
+
+        int? fontSize = getValue("FontSize") as int?;
+        if (fontSize == null)
+        {
+            return null;
+        }
+
         int outlineValue = getValue("OutlineThickness") as int? ?? 0;
 
         // default to true to match how old behavior worked
         bool fontSmoothing = getValue("UseFontSmoothing") as bool? ?? true;
         bool isItalic = getValue("IsItalic") as bool? ?? false;
         bool isBold = getValue("IsBold") as bool? ?? false;
-
-        if (fontValue == null || fontSize == null)
-        {
-            return null;
-        }
 
         BmfcSave bmfcSave = new BmfcSave();
         bmfcSave.FontSize = fontSize.Value;
