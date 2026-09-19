@@ -226,6 +226,32 @@ public class TooltipTests : BaseTestClass
         associated!.Content.ShouldBe("hello");
     }
 
+    // Issue #4853 (raylib-only bug; pinned here too so a regression on this runtime is also caught).
+    // See RaylibGum.Tests/Forms/TooltipFirstShowSizingTests.cs and
+    // RaylibGum.Tests/Runtimes/TextFontReassignmentRefreshesWrapTests.cs for the root-cause fix
+    // (RaylibGum's Text.Font setter didn't re-wrap/re-measure already-set RawText -- the shared
+    // MonoGame/KNI/FNA Text.BitmapFont setter this test pins already did, via
+    // AssignBitmapFontAndRefresh, so this was never broken on MonoGame).
+    [Fact]
+    public void Show_AfterContentAssignedUnderSuspension_SizesBackgroundToTextOnTheFirstShow()
+    {
+        Button button = new Button();
+        GraphicalUiElement.IsAllLayoutSuspended = true;
+        button.AddToRoot();
+        button.ToolTip = "The quick brown fox jumps over the lazy dog";
+        GraphicalUiElement.IsAllLayoutSuspended = false;
+
+        Tooltip tooltip = ToolTipService.GetTooltip(button)!;
+        var visual = (Gum.Forms.DefaultVisuals.V3.TooltipVisual)tooltip.Visual;
+
+        tooltip.Show(cursorX: 10, cursorY: 10);
+
+        visual.TextInstance.AbsoluteWidth.ShouldBeGreaterThan(300,
+            "a single-line rendering of this string should be well over 300px wide");
+        visual.Background.AbsoluteWidth.ShouldBe(visual.AbsoluteWidth,
+            "the background should exactly track the container on the very first Show()");
+    }
+
     private static Mock<ICursor> SetupCursor()
     {
         Mock<ICursor> cursor = new();
