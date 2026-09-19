@@ -13,6 +13,7 @@ public sealed class UiHeartbeatStallDetector
     private readonly object _lock;
     private DateTimeOffset _lastHeartbeat;
     private bool _hasFiredForCurrentStall;
+    private bool _suspended;
 
     public UiHeartbeatStallDetector(TimeSpan stallThreshold, DateTimeOffset now)
     {
@@ -40,13 +41,42 @@ public sealed class UiHeartbeatStallDetector
     {
         lock (_lock)
         {
-            if (_hasFiredForCurrentStall || now - _lastHeartbeat < _stallThreshold)
+            if (_suspended || _hasFiredForCurrentStall || now - _lastHeartbeat < _stallThreshold)
             {
                 return false;
             }
 
             _hasFiredForCurrentStall = true;
             return true;
+        }
+    }
+
+    /// <summary>
+    /// Suppresses stall detection for a known-long, synchronous operation on the watched thread
+    /// (e.g. project load) that would otherwise starve the heartbeat and read as a false-positive
+    /// freeze. Call <see cref="Resume"/> when the operation finishes.
+    /// </summary>
+    public void Suspend(DateTimeOffset now)
+    {
+        lock (_lock)
+        {
+            _suspended = true;
+        }
+    }
+
+    /// <summary>
+    /// Ends a suspension started by <see cref="Suspend"/> and re-baselines as if a heartbeat had
+    /// just been recorded at <paramref name="now"/>. Re-baselining matters: without it, the real
+    /// wall-clock time that elapsed while suspended would immediately count against the threshold
+    /// the instant detection resumes, causing a false stall right after a long operation finishes.
+    /// </summary>
+    public void Resume(DateTimeOffset now)
+    {
+        lock (_lock)
+        {
+            _suspended = false;
+            _lastHeartbeat = now;
+            _hasFiredForCurrentStall = false;
         }
     }
 }
