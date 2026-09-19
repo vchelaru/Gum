@@ -900,6 +900,78 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
     }
 
     [Fact]
+    public void GetValueRecursive_ScalarVariableDefinitionExistsWithoutValue_SkipsVariableListLookup()
+    {
+        // Perf fix (#4868): once GetVariableRecursive finds *any* scalar VariableSave
+        // definition for this exact name (foundVariable != null), a VariableListSave
+        // with the identical name cannot also exist for real usage (a name is either a
+        // scalar variable or a list, never both — see StandardElementsManager.AddVariableReferenceList,
+        // which always adds "VariableReferences" as a VariableListSave, never a VariableSave).
+        // So the expensive GetVariableListRecursive walk should be skipped whenever a
+        // scalar definition was found, even if it didn't set a value (wasFound == false).
+        //
+        // This test deliberately violates that invariant on purpose: it places a
+        // VariableListSave named "Foo" on the screen's DefaultState (reachable only
+        // through the categorized state's default-state fallback inside
+        // GetVariableListRecursive, not through the local non-recursive StateSave.GetValue
+        // check) alongside an unset scalar VariableSave also named "Foo" on the
+        // categorized state itself. This makes the return value diverge depending on
+        // whether GetVariableListRecursive actually ran, which a same-value assertion
+        // could not detect: before the fix this returns the list ["A"]; after the fix,
+        // the scalar definition short-circuits the list walk and the lookup returns null.
+
+        ScreenSave screen = new() { Name = "ScalarSkipsListScreen" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        VariableListSave<string> defaultStateList = new()
+        {
+            Name = "Foo",
+            Type = "string"
+        };
+        defaultStateList.ValueAsIList.Add("A");
+        screenDefault.VariableLists.Add(defaultStateList);
+
+        StateSaveCategory category = new() { Name = "MyCategory" };
+        StateSave activeState = new() { Name = "Active", ParentContainer = screen };
+        activeState.Variables.Add(new VariableSave
+        {
+            Name = "Foo",
+            Type = "string",
+            SetsValue = false
+        });
+        category.States.Add(activeState);
+        screen.Categories.Add(category);
+
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+
+        var value = activeState.GetValueRecursive("Foo");
+
+        value.ShouldBeNull(
+            "because a scalar VariableSave definition for 'Foo' was found (even though it " +
+            "doesn't set a value), so GetVariableListRecursive must not run; if it had run " +
+            "it would have found the DefaultState's VariableListSave and returned [\"A\"].");
+    }
+
+    [Fact]
+    public void GetValueRecursive_GenuineMiss_ShouldReturnNullWithoutThrowing()
+    {
+        // A name with no scalar VariableSave anywhere in the chain (foundVariable == null)
+        // is a genuine miss: the fix must not skip the VariableList walk in this case, and
+        // the overall lookup must still return null rather than throwing.
+
+        ScreenSave screen = new() { Name = "GenuineMissScreen" };
+        StateSave screenDefault = new() { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        ObjectFinder.Self.GumProjectSave!.Screens.Add(screen);
+
+        var value = screenDefault.GetValueRecursive("ThisVariableDoesNotExistAnywhere");
+
+        value.ShouldBeNull();
+    }
+
+    [Fact]
     public void GetVariableListRecursive_OnDefaultState_ShouldFindInheritedList()
     {
         // Sanity check for the lower-level helper: confirms the

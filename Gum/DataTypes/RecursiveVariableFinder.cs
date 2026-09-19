@@ -394,8 +394,6 @@ public class RecursiveVariableFinder : IVariableFinder
         }
         else
         {
-            var tempValue = GetValue(variableName);
-
             // This doesn't seem to consider states being assigned throughout the stack, but using
             // GetValueRecursive does work that way:
             //return ElementStack[stackIndex].StateSave.GetValue(variableName);
