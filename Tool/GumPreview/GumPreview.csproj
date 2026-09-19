@@ -11,6 +11,13 @@
 		<RollForward>Major</RollForward>
 		<Nullable>enable</Nullable>
 		<AssemblyName>GumPreview</AssemblyName>
+		<!--
+			Per-Monitor-V2 DPI awareness (issue #4841), mirroring Tool/Gum.Avalonia/app.manifest so
+			Preview matches the canvas it previews - both render at physical-pixel resolution instead
+			of a DPI-unaware bitmap Windows then stretches (blurry, and no longer 1:1 with the canvas).
+			Windows-only setting; ignored on other platforms MonoGame DesktopGL targets.
+		-->
+		<ApplicationManifest>app.manifest</ApplicationManifest>
 	</PropertyGroup>
 	<!--
 		ReadyToRun precompiles native code ahead of time to reduce first-call JIT cost, same pattern
