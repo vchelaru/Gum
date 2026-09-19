@@ -39,37 +39,62 @@ else {
     }
 }
 
+$maxAttempts = 3
+
 foreach ($sln in $slns) {
-    Write-Host "`n→ Restoring $sln"
-    dotnet restore $sln -v q
-    if ($LASTEXITCODE -ne 0) {
-        $failures.Add("RESTORE failed: $(Split-Path $sln -Leaf)")
-        continue
+    $leaf = Split-Path $sln -Leaf
+    $succeeded = $false
+    $lastFailureStage = $null
+
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        if ($attempt -gt 1) {
+            # A build-time tool (e.g. Stride.Core's AssemblyProcessor) can extract its own helper
+            # exe/dll to a shared, content-hash-keyed temp path and still hold it open (or have it
+            # locked by Windows Defender scanning the fresh file) for a moment after the process
+            # that ran it exits. Retrying after a short pause clears this without masking a real
+            # compile error, which fails identically on every attempt (#4877 CI flake).
+            Write-Host "Retrying $leaf (attempt $attempt of $maxAttempts) after a transient failure..."
+            Start-Sleep -Seconds 10
+        }
+
+        Write-Host "`n→ Restoring $sln"
+        dotnet restore $sln -v q
+        if ($LASTEXITCODE -ne 0) {
+            $lastFailureStage = 'RESTORE'
+            continue
+        }
+
+        Write-Host "Building $leaf"
+        # PublishAot=false: a few samples set <PublishAot>true</PublishAot>. On `dotnet build`
+        # (this script never publishes) AOT does not actually compile to native — it only forces
+        # resolution of the host-RID (win-x64) runtime pack, which the RID-less `dotnet restore`
+        # above never downloads, so the build fails with "runtime pack ... was not downloaded".
+        # Disabling AOT for the build removes that pointless requirement without losing coverage,
+        # since AOT is only exercised on publish.
+        dotnet build $sln `
+          --configuration Release `
+          --no-restore `
+          --verbosity minimal `
+          --property WarningLevel=0 `
+          --property PublishAot=false `
+          -clp:ErrorsOnly
+
+        if ($LASTEXITCODE -eq 0) {
+            $succeeded = $true
+            break
+        }
+        $lastFailureStage = 'BUILD'
     }
 
-    Write-Host "Building $(Split-Path $sln -Leaf)"
-    # PublishAot=false: a few samples set <PublishAot>true</PublishAot>. On `dotnet build`
-    # (this script never publishes) AOT does not actually compile to native — it only forces
-    # resolution of the host-RID (win-x64) runtime pack, which the RID-less `dotnet restore`
-    # above never downloads, so the build fails with "runtime pack ... was not downloaded".
-    # Disabling AOT for the build removes that pointless requirement without losing coverage,
-    # since AOT is only exercised on publish.
-    dotnet build $sln `
-      --configuration Release `
-      --no-restore `
-      --verbosity minimal `
-      --property WarningLevel=0 `
-      --property PublishAot=false `
-      -clp:ErrorsOnly
-
-    if ($LASTEXITCODE -ne 0) {
-        $failures.Add("$(Split-Path $sln -Leaf)")
-    } 
+    if ($succeeded) {
+        $successes.Add($leaf)
+    }
+    elseif ($lastFailureStage -eq 'RESTORE') {
+        $failures.Add("RESTORE failed: $leaf")
+    }
     else {
-        $successes.Add("$(Split-Path $sln -Leaf)")
+        $failures.Add($leaf)
     }
-
-    
 }
 
 if ($failures.Count -gt 0) {
