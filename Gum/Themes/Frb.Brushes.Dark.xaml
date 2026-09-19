@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary
   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:system="clr-namespace:System;assembly=mscorlib">
+  xmlns:system="clr-namespace:System;assembly=mscorlib"
+  xmlns:wpfdataui="clr-namespace:WpfDataUi;assembly=WpfDataUi">
 
   <ResourceDictionary.MergedDictionaries>
     <ResourceDictionary Source="pack://application:,,,/Gum;component/Themes/Palette.xaml" />
@@ -49,6 +50,8 @@
 
   <SolidColorBrush x:Key="MaterialDesign.Brush.Foreground" Color="{StaticResource Frb.Colors.Foreground}" />
   <SolidColorBrush x:Key="Frb.Brushes.Foreground" Color="{StaticResource Frb.Colors.Foreground}" />
+  <!--  Keeps the WpfDataUi row-detail-text color in sync with this theme instead of the library's own hardcoded default.  -->
+  <SolidColorBrush x:Key="{x:Static wpfdataui:Keys.DetailTextForegroundKey}" Color="{StaticResource Frb.Colors.Foreground}" />
   <SolidColorBrush x:Key="Frb.Brushes.Foreground.Subtle" Color="{StaticResource Frb.Colors.Foreground.Subtle}" />
   <SolidColorBrush
     x:Key="Frb.Brushes.Foreground.Disabled"

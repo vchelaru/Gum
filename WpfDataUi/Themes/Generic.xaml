@@ -15,6 +15,7 @@
         x:Key="{x:Static local:Keys.AlternatingRowBackgroundOddKey}"
         Opacity="0.05"
         Color="Black" />
+    <SolidColorBrush x:Key="{x:Static local:Keys.DetailTextForegroundKey}" Color="Black" />
 
     <!--
         Keyed rather than implicit: WPF looks for a type-keyed template in the theme of the assembly

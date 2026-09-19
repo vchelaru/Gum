@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:WpfDataUi.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:themes="clr-namespace:WpfDataUi"
     MinHeight="80"
     MaxHeight="260"
     d:DesignWidth="200"
@@ -76,6 +77,7 @@
             Grid.Row="2"
             Margin="0,0,-4,0"
             Padding="8,0,0,0"
+            Foreground="{DynamicResource {x:Static themes:Keys.DetailTextForegroundKey}}"
             FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:ListBoxDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
             TextWrapping="Wrap" />
     </Grid>

@@ -21,4 +21,10 @@ public static class Keys
         new ComponentResourceKey(typeof(DataUiGrid), "DataUi.AlternatingRowBackgroundEven");
     public static ComponentResourceKey AlternatingRowBackgroundOddKey { get; } =
         new ComponentResourceKey(typeof(DataUiGrid), "DataUi.AlternatingRowBackgroundOdd");
+    /// <summary>
+    /// The Foreground of each row's detail/hint text (<see cref="DataTypes.InstanceMember.DetailText"/>).
+    /// Lets consumers theme the description text separately from the main label.
+    /// </summary>
+    public static ComponentResourceKey DetailTextForegroundKey { get; } =
+        new ComponentResourceKey(typeof(DataUiGrid), "DataUi.DetailTextForeground");
 }

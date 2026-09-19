@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:Gum.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:themes="clr-namespace:WpfDataUi;assembly=WpfDataUi"
     mc:Ignorable="d">
     <StackPanel>
         <Grid x:Name="MainGrid">
@@ -148,6 +149,7 @@
             x:Name="HintTextBlock"
             Margin="0,0,4,4"
             HorizontalAlignment="Left"
+            Foreground="{DynamicResource {x:Static themes:Keys.DetailTextForegroundKey}}"
             FontSize="10"
             TextWrapping="Wrap"
             Visibility="Collapsed" />
