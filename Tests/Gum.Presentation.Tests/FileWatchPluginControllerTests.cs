@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Gum.Commands;
@@ -6,6 +7,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins.FileWatchPlugin;
+using Gum.Services;
 using Gum.ToolStates;
 using Moq;
 using Shouldly;
@@ -34,11 +36,24 @@ public class FileWatchPluginControllerTests
             fileWatchManager.Object,
             guiCommands.Object,
             projectState.Object,
-            projectManager.Object);
+            projectManager.Object,
+            new SynchronousDispatcher());
 
         var controller = new FileWatchPluginController(fileWatchManager.Object, fileWatchLogic);
 
         return (controller, fileWatchManager, fileWatchLogic, projectManager);
+    }
+
+    /// <summary>
+    /// Runs posted work immediately instead of marshalling to a real UI thread - #4873 defers
+    /// FileWatchLogic's directory scan via IDispatcher, but this controller's own behavior (which
+    /// FileWatchLogic method ends up called) doesn't depend on that timing, so these tests run it
+    /// synchronously.
+    /// </summary>
+    private class SynchronousDispatcher : IDispatcher
+    {
+        public void Invoke(Action action) => action();
+        public void Post(Action action) => action();
     }
 
     [Fact]
