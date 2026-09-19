@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Mvvm;
 using Gum.Plugins.BaseClasses;
@@ -196,12 +197,18 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
     private void HandleProjectLoad(GumProjectSave save)
     {
-        _elementTreeViewManager.RefreshUi();
+        using (StartupTiming.Time("    MainTreeViewPlugin RefreshUi"))
+        {
+            _elementTreeViewManager.RefreshUi();
+        }
 
         // Load user settings and apply tree view state
         _userProjectSettingsManager.LoadForProject(save.FullFileName);
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.RootTreeNodes);
-        RefreshErrorIndicatorsForAllElements();
+        using (StartupTiming.Time("    MainTreeViewPlugin RefreshErrorIndicatorsForAllElements"))
+        {
+            RefreshErrorIndicatorsForAllElements();
+        }
 
         // Repopulate the Standards chip palette for the newly-loaded project's standard types.
         _elementTreeViewManager.ApplyStandardsPaletteMode();
