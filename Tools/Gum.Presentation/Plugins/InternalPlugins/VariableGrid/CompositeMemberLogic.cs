@@ -221,10 +221,10 @@ public class CompositeMemberLogic
         // zero, so the outer MultiSelect lock + these inner composite locks still yield a single undo), and a
         // refresh rebuilds the grid's UI members from the same underlying StateSave/VariableSave data, so it
         // does not corrupt the in-flight multi-set. Unlike the per-channel StateReferencingInstanceMember rows
-        // (which the multi-select path suppresses via IsCallingRefresh = false and refreshes once in
-        // AfterMultiSet), the composite is not a StateReferencingInstanceMember and does not participate in
-        // that batching. Folding the composite into that batching is a possible future optimization; today the
-        // extra refreshes are an accepted, harmless cost.
+        // (which MultiSelectCommitLogic suppresses via IsCallingRefresh = false and refreshes once per batch),
+        // the composite is not a StateReferencingInstanceMember and does not participate in that batching.
+        // Folding the composite into that batching is a possible future optimization; today the extra
+        // refreshes are an accepted, harmless cost.
 
         composite.ContextMenuEvents.Add("Make Default", (_, _) => HandleMakeDefault(triple.ChannelMembers));
 

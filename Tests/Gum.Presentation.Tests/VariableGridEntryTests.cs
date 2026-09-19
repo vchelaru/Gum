@@ -167,6 +167,48 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void NotifyVariableLogic_ShouldNotRefreshOrRecordUndo_WhenDeferringToMultiSelect()
+    {
+        // A multi-select edit sets every wrapped row in a loop; each row must write its value and
+        // run the per-variable reaction, but the grid rebuild and undo belong to the batch owner.
+        ComponentSave component = CreateComponent("DeferredRefreshComponent");
+        component.DefaultState.SetValue("X", 3);
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+        sut.IsCallingRefresh = false;
+
+        sut.SetValue(component, 1, VariablePropertyCommitType.Full);
+
+        _mocker.GetMock<ISetVariableLogic>().Verify(x => x.PropertyValueChanged(
+            "X", 3, null, component.DefaultState, false, false, true, true), Times.Once);
+    }
+
+    [Fact]
+    public void NotifyVariableLogic_ShouldRefreshAndRecordUndo_WhenSingleRowCommitsFully()
+    {
+        ComponentSave component = CreateComponent("SingleRowFullCommitComponent");
+        component.DefaultState.SetValue("X", 3);
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+
+        sut.SetValue(component, 1, VariablePropertyCommitType.Full);
+
+        _mocker.GetMock<ISetVariableLogic>().Verify(x => x.PropertyValueChanged(
+            "X", 3, null, component.DefaultState, true, true, true, true), Times.Once);
+    }
+
+    [Fact]
+    public void NotifyVariableLogic_ShouldRefreshWithoutUndoOrSave_WhenSingleRowCommitIsIntermediate()
+    {
+        ComponentSave component = CreateComponent("SingleRowIntermediateComponent");
+        component.DefaultState.SetValue("X", 3);
+        VariableGridEntry sut = CreateSut("X", component.DefaultState, component);
+
+        sut.SetValue(component, 1, VariablePropertyCommitType.Intermediate);
+
+        _mocker.GetMock<ISetVariableLogic>().Verify(x => x.PropertyValueChanged(
+            "X", It.IsAny<object?>(), null, component.DefaultState, true, false, false, false), Times.Once);
+    }
+
+    [Fact]
     public void PreferredDisplayerKind_ShouldReturnKindOverride_WhenSet()
     {
         // ElementSaveDisplayer (headless) can't reference a concrete WpfDataUi control Type, so it

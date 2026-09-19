@@ -662,6 +662,35 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void RefreshInResponseToVariableChange_ShouldDoNothing_WhenVariableOnlyChangesAValue()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "TextInstance", BaseType = "Text" };
+        screen.Instances.Add(instance);
+
+        _setVariableLogic.RefreshInResponseToVariableChange("X", screen, instance);
+
+        mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshElementTreeView(It.IsAny<ElementSave>()), Times.Never);
+        mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshVariables(It.IsAny<bool>()), Times.Never);
+        mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshVariableValues(), Times.Never);
+    }
+
+    [Fact]
+    public void RefreshInResponseToVariableChange_ShouldRebuildTreeAndGridOnce_WhenVariableIsBaseType()
+    {
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        InstanceSave instance = new InstanceSave { Name = "TextInstance", BaseType = "Label" };
+        screen.Instances.Add(instance);
+
+        _setVariableLogic.RefreshInResponseToVariableChange("BaseType", screen, instance);
+
+        mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshElementTreeView(screen), Times.Once);
+        mocker.GetMock<IGuiCommands>().Verify(x => x.RefreshVariables(true), Times.Once);
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldNotShowCopyDialog_WhenBatchFileCopyDecisionIsSetToFalse()
     {
         // A SourceFile path that resolves outside the project folder should normally

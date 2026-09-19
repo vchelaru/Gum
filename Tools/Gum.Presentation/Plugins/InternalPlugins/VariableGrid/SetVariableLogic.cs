@@ -136,7 +136,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     // added instance property so we can change values even if a tree view is selected
     public GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue,
-        InstanceSave instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
+        InstanceSave? instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
         bool trySave = true, bool isFullCommit = true)
     {
         IInstanceContainer? instanceContainer = null;
@@ -186,7 +186,7 @@ public class SetVariableLogic : ISetVariableLogic
     /// <param name="currentState">The state where the variable was set - the current state save</param>
     /// <param name="refresh"></param>
     public GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
-        InstanceSave instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true)
+        InstanceSave? instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true)
     {
         GeneralResponse response = GeneralResponse.SuccessfulResponse;
         ObjectFinder.Self.EnableCache();
@@ -236,10 +236,13 @@ public class SetVariableLogic : ISetVariableLogic
                         _undoManager.RecordUndo();
                     }
 
-                    if (refresh)
+                    // Structural grid changes (rebuilding the tree view / category list, which adds
+                    // or removes rows) must wait for a committed value: doing them on an intermediate
+                    // scrub tick (e.g. dragging the StrokeWidth label) destroys the control being
+                    // dragged, breaking mouse capture. The full commit on release performs the rebuild.
+                    if (refresh && isFullCommit)
                     {
-                        RefreshInResponseToVariableChange(unqualifiedMember, oldValue, parentElement, instance, qualifiedName, isFullCommit);
-
+                        RefreshInResponseToVariableChange(unqualifiedMember, parentElement, instance);
                     }
                 }
 
@@ -271,18 +274,8 @@ public class SetVariableLogic : ISetVariableLogic
     }
 
 
-    void RefreshInResponseToVariableChange(string unqualifiedMember, object? oldValue, ElementSave parentElement,
-        InstanceSave? instance, string qualifiedName, bool isFullCommit = true)
+    public void RefreshInResponseToVariableChange(string unqualifiedMember, ElementSave parentElement, InstanceSave? instance)
     {
-        // This method only performs structural grid changes (rebuilding the tree view / category
-        // list, which adds or removes rows). Those must wait for a committed value: doing them on
-        // an intermediate scrub tick (e.g. dragging the StrokeWidth label) destroys the control
-        // being dragged, breaking mouse capture. The full commit on release performs the rebuild.
-        if (!isFullCommit)
-        {
-            return;
-        }
-
         var needsToRefreshEntireElement = VariablesRequiringRefresh.ContainsKey(unqualifiedMember);
 
         if (needsToRefreshEntireElement)
