@@ -129,12 +129,10 @@ internal class SpriteScreen : FrameworkElement
             colorOpRow.AddChild(s);
         }
 
-#if !RAYLIB && !SKIA
-        // SpriteRuntime.ColorOperation property (#4792 Gap 1) — same Modulate/ColorTextureAlpha
-        // demo as the row above, but through the new public property instead of casting to
-        // RenderableComponent. MonoGame only for now; raylib/Skia don't expose the property yet,
-        // so this whole row is #if'd out here until they do.
-        AddSectionLabel(page, "ColorOperation via SpriteRuntime.ColorOperation property (MonoGame only):");
+        // SpriteRuntime.ColorOperation property (#4792 Gap 1, widened to every backend by #4821) —
+        // same Modulate/ColorTextureAlpha demo as the row above, but through the public property
+        // instead of casting to RenderableComponent.
+        AddSectionLabel(page, "ColorOperation via SpriteRuntime.ColorOperation property:");
         var colorOpPropertyRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
         page.AddChild(colorOpPropertyRow);
         foreach (var colorOperation in new[] { ColorOperation.Modulate, ColorOperation.ColorTextureAlpha })
@@ -147,7 +145,45 @@ internal class SpriteScreen : FrameworkElement
             s.ColorOperation = colorOperation;
             colorOpPropertyRow.AddChild(s);
         }
-#endif
+
+        // Add color operation (#4792 Gap 2 on MonoGame, extended to raylib by #4821 gap 2) — an
+        // authored AnimationFrameColorOperation.Add frame with Red/Green/Blue=255 renders as a flat
+        // white silhouette (tex.rgb + white saturates to white wherever the texture has any alpha):
+        // the MonsterProjectWeb "un-revealed monster" use case from #4792. Left sprite plays the
+        // chain normally (no color op authored, so it looks like the plain bear); right sprite's
+        // chain frame carries the Add tint. Mirrors the MG SpriteScreen's identical row.
+        AddSectionLabel(page, "Add color operation (normal bear, white-silhouette Add bear):");
+        var addRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(addRow);
+        var bearTextureSource = new SpriteRuntime();
+        bearTextureSource.SourceFileName = "resources\\BearTexture.png";
+        var bearTexture = bearTextureSource.Texture;
+        foreach (var addTint in new Color?[] { null, Color.White })
+        {
+            var s = new SpriteRuntime();
+            s.WidthUnits = DimensionUnitType.PercentageOfSourceFile;
+            s.HeightUnits = DimensionUnitType.PercentageOfSourceFile;
+            s.Width = 100;
+            s.Height = 100;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = bearTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            s.AnimationChains = chainList;
+            s.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(s);
+        }
 
         // Alpha — same sprite at 64 / 128 / 192 / 255.
         AddSectionLabel(page, "Alpha (64, 128, 192, 255):");

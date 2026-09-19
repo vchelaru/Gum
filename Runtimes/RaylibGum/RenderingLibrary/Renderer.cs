@@ -157,6 +157,14 @@ public class Renderer : IRenderer
     public Gum.Renderables.ColorTextureAlphaShader ColorTextureAlphaShader { get; }
 
     /// <summary>
+    /// Owns the fragment shader for the extra additive pass an authored
+    /// <see cref="Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame draws (#4821 gap 2).
+    /// A <see cref="Gum.Renderables.Sprite"/> with a non-null <c>AdditiveTintColor</c> binds
+    /// <c>AdditiveColorOverlayShader.Shader</c> around its extra draw call.
+    /// </summary>
+    public Gum.Renderables.AdditiveColorOverlayShader AdditiveColorOverlayShader { get; }
+
+    /// <summary>
     /// Per-frame render-state-change counters for this renderer, including the authoritative
     /// <see cref="RenderStateChangeStatistics.DrawCallCount"/> measured via the owned RenderBatch.
     /// Reset at the start of each <see cref="Draw(SystemManagers)"/> and readable afterward to
@@ -199,6 +207,7 @@ public class Renderer : IRenderer
         _layers.Add(new Layer());
         ShadowBlur = new ShadowBlurRenderer();
         ColorTextureAlphaShader = new Gum.Renderables.ColorTextureAlphaShader();
+        AdditiveColorOverlayShader = new Gum.Renderables.AdditiveColorOverlayShader();
         RenderStateChangeStatistics = new RenderStateChangeStatistics();
         BatchDrawCallCounter = new BatchDrawCallCounter();
         _bakeScissorRectangleMapping = renderable => GetScissorRectangleFor(_bakeLayer, renderable);

@@ -175,9 +175,9 @@ public class SpriteRuntime : GraphicalUiElement
         }
     }
 
-#if MONOGAME
     /// <summary>
-    /// The color operation (e.g. Modulate) used when rendering the sprite.
+    /// The color operation (e.g. Modulate) used when rendering the sprite. Available on every
+    /// backend (#4821) - was previously gated to MonoGame only (#4792 Gap 1).
     /// </summary>
     public global::RenderingLibrary.Graphics.ColorOperation ColorOperation
     {
@@ -188,7 +188,6 @@ public class SpriteRuntime : GraphicalUiElement
             NotifyPropertyChanged();
         }
     }
-#endif
 
     #endregion
 

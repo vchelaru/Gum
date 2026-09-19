@@ -62,6 +62,39 @@ internal class NineSliceScreen : FrameworkElement
             tintRow.AddChild(ns);
         }
 
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2) even on MonoGame/KNI/FNA. An authored AnimationFrameColorOperation.Add frame
+        // with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain normally
+        // (no color op authored, so it looks like the plain frame); right's chain frame carries the
+        // Add tint. Mirrors the raylib/SilkNetGum NineSliceScreen's identical row.
+        AddLabel(container, "Add color operation (normal frame, white-silhouette Add frame):");
+        var addRow = AddRow(container);
+        var squareFrameTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("SquareFrame.png");
+        foreach (var addTint in new Microsoft.Xna.Framework.Color?[] { null, Color.White })
+        {
+            var ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(ns);
+        }
+
         // IsTilingMiddleSections: stretched (default) vs tiled.
         AddLabel(container, "IsTilingMiddleSections (left: stretched, right: tiled):");
         var tilingRow = AddRow(container);

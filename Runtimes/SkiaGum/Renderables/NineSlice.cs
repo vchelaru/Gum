@@ -67,6 +67,17 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
+            AdditiveTintColor = null;
+        }
+        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        {
+            // Black (0) is Add's identity, so an unset channel contributes nothing to the overlay -
+            // unlike Multiply's 255 identity above. Mirrors SkiaGum.Renderables.Sprite.
+            AdditiveTintColor = new SKColor((byte)(frame.Red ?? 0), (byte)(frame.Green ?? 0), (byte)(frame.Blue ?? 0));
+        }
+        else
+        {
+            AdditiveTintColor = null;
         }
     }
 
@@ -94,6 +105,14 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     public SKImage? Image { get; set; }
 
     public Rectangle? SourceRectangle { get; set; }
+
+    /// <summary>
+    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
+    /// null when the current frame doesn't author one. Composed on top of the Modulate tint filter
+    /// in <see cref="GetPaint"/> via a color-matrix offset (#4821 gap 4), the same single-pass
+    /// technique as <see cref="SkiaGum.Renderables.Sprite"/>.
+    /// </summary>
+    public SKColor? AdditiveTintColor { get; private set; }
 
     public float? TextureWidth => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
@@ -135,7 +154,23 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
         // that only matters for non-image draws (DrawRect, etc.); for DrawImage
         // we need a ColorFilter.
         SKPaint paint = base.GetPaint(boundingRect, absoluteRotation);
-        paint.ColorFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+        SKColorFilter tintFilter = SKColorFilter.CreateBlendMode(Color, SKBlendMode.Modulate);
+        if (AdditiveTintColor.HasValue)
+        {
+            SKColor add = AdditiveTintColor.Value;
+            float[] addMatrix =
+            {
+                1, 0, 0, 0, add.Red / 255f,
+                0, 1, 0, 0, add.Green / 255f,
+                0, 0, 1, 0, add.Blue / 255f,
+                0, 0, 0, 1, 0,
+            };
+            paint.ColorFilter = SKColorFilter.CreateCompose(SKColorFilter.CreateColorMatrix(addMatrix), tintFilter);
+        }
+        else
+        {
+            paint.ColorFilter = tintFilter;
+        }
         // Antialias on DrawImage anti-aliases the destination rect's edges. When
         // two sections of the nine-slice abut at a fractional pixel boundary
         // (because layout placed the whole NineSlice at a non-integer position),

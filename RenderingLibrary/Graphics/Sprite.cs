@@ -80,7 +80,7 @@ public class Sprite : SpriteBatchRenderableBase,
     /// top of the sprite's normal <see cref="Color"/> draw (#4792 Gap 2) — see
     /// <see cref="Renderer.DrawAdditiveColorOverlay"/>.
     /// </summary>
-    public Color? AdditiveTintColor { get; private set; }
+    public Color? AdditiveTintColor { get; internal set; }
 
     public int Alpha
     {

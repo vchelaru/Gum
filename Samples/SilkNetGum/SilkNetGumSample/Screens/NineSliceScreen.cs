@@ -66,6 +66,41 @@ internal class NineSliceScreen : FrameworkElement
             tintRow.Children.Add(ns);
         }
 
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2, extended to Skia by #4821 gap 3). An authored AnimationFrameColorOperation.Add
+        // frame with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain
+        // normally (no color op authored, so it looks like the plain frame); right's chain frame
+        // carries the Add tint. Mirrors the MG/raylib NineSliceScreen's identical row.
+        AddLabel(container, "Add color operation (normal frame, white-silhouette Add frame):");
+        ContainerRuntime addRow = AddRow(container);
+        NineSliceRuntime squareFrameSource = new NineSliceRuntime();
+        squareFrameSource.SourceFileName = "SquareFrame.png";
+        SKBitmap? squareFrameTexture = squareFrameSource.Texture;
+        foreach (SKColor? addTint in new SKColor?[] { null, SKColors.White })
+        {
+            NineSliceRuntime ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            AnimationChain chain = new AnimationChain { Name = "AddDemo" };
+            AnimationFrame frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.Red;
+                frame.Green = addTint.Value.Green;
+                frame.Blue = addTint.Value.Blue;
+            }
+            chain.Add(frame);
+
+            AnimationChainList chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.Children.Add(ns);
+        }
+
         AddLabel(container, "IsTilingMiddleSections (left: stretched, right: tiled):");
         ContainerRuntime tilingRow = AddRow(container);
         NineSliceRuntime stretched = new NineSliceRuntime();

@@ -145,6 +145,14 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
+    /// <summary>
+    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
+    /// null when the current frame doesn't author one. Applied as a second, additive draw pass on
+    /// top of the sprite's normal <see cref="Color"/> draw (#4821 gap 2), mirroring MonoGame/KNI/
+    /// FNA's <c>RenderingLibrary.Graphics.Sprite.AdditiveTintColor</c>.
+    /// </summary>
+    public Color? AdditiveTintColor { get; private set; }
+
     // Re-implement the interface getter so it reports this sprite's real ColorOperation. The base
     // RenderableBase explicitly implements IRenderableIpso.ColorOperation as a hardcoded Modulate
     // (correct for Text/NineSlice/shapes, which never vary it); a Sprite is the one renderable that does.
@@ -234,6 +242,18 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             ApplyFlip(ref srcRect);
 
             DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, Color);
+
+            if (AdditiveTintColor.HasValue)
+            {
+                var counter = global::RenderingLibrary.Graphics.Renderer.Self.BatchDrawCallCounter;
+                counter.BeginShaderMode(global::RenderingLibrary.Graphics.Renderer.Self.AdditiveColorOverlayShader.Shader);
+                counter.BeginBlendModeAddColorPreserveDestinationAlpha();
+
+                DrawTexturePro(textureToDraw, srcRect, destinationRectangle, Vector2.Zero, -absoluteRotation, AdditiveTintColor.Value);
+
+                counter.EndBlendMode();
+                counter.EndShaderMode();
+            }
         }
 
         if (Blend.HasValue)
@@ -506,6 +526,17 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
+            AdditiveTintColor = null;
+        }
+        else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
+        {
+            // Black (0) is Add's identity, so an unset channel contributes nothing to the overlay -
+            // unlike Multiply's 255 identity above. Mirrors RenderingLibrary.Graphics.Sprite.
+            AdditiveTintColor = new Color((byte)(frame.Red ?? 0), (byte)(frame.Green ?? 0), (byte)(frame.Blue ?? 0), (byte)255);
+        }
+        else
+        {
+            AdditiveTintColor = null;
         }
     }
 

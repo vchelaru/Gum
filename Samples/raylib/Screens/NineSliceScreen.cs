@@ -66,6 +66,42 @@ internal class NineSliceScreen : FrameworkElement
             tintRow.AddChild(ns);
         }
 
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2, extended to raylib by #4821 gap 2). An authored AnimationFrameColorOperation.Add
+        // frame with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain
+        // normally (no color op authored, so it looks like the plain frame); right's chain frame
+        // carries the Add tint. Mirrors the MG/SilkNetGum NineSliceScreen's identical row.
+        AddSectionLabel(page, "Add color operation (normal frame, white-silhouette Add frame):");
+        var addRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(addRow);
+        var squareFrameSource = new NineSliceRuntime();
+        squareFrameSource.SourceFileName = "resources\\SquareFrame.png";
+        var squareFrameTexture = squareFrameSource.Texture;
+        foreach (var addTint in new Color?[] { null, Color.White })
+        {
+            var ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(ns);
+        }
+
         // IsTilingMiddleSections: stretched (default) vs tiled. This is the headline feature
         // for raylib — the right cell must repeat the middle band instead of stretching it.
         AddSectionLabel(page, "IsTilingMiddleSections (left: stretched, right: tiled):");
