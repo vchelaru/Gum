@@ -61,6 +61,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IStateEditingIndicatorService _stateEditingIndicatorService;
     private readonly IVariableGridHead _variableGridHead;
     private readonly IVariableFilterService _variableFilterService;
+    private readonly IMultiSelectCommitLogic _multiSelectCommitLogic;
 
     IDataUiGrid mVariablesDataGrid;
     IVariablesTabView mainControl;
@@ -173,6 +174,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _behaviorShowingLogic = new BehaviorShowingLogic(fileCommands, projectState);
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
+        _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic);
     }
 
     // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
@@ -469,61 +471,11 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     {
                         mVariablesDataGrid.SetMultipleCategoryLists(listOfCategories);
 
-                        // remove the individual calls for setting variables, move it to the 
-                        // multi-select object:
-                        foreach (var categoryList in listOfCategories)
-                        {
-                            foreach (var innerCategory in categoryList)
-                            {
-                                foreach (var member in innerCategory.Members)
-                                {
-                                    if (member is StateReferencingInstanceMember srim)
-                                    {
-                                        srim.IsCallingRefresh = false;
-                                    }
-                                }
-                            }
-                        }
-
                         foreach (var gridCategory in mVariablesDataGrid.Categories)
                         {
                             foreach (MultiSelectInstanceMember member in gridCategory.Members)
                             {
-                                IDisposable? undoLock = null;
-
-                                member.BeforeMultiSet += (args) =>
-                                {
-                                    // Only lock for Full commits to avoid locking during intermediate changes (like dragging sliders)
-                                    if (args.CommitType == SetPropertyCommitType.Full)
-                                    {
-                                        undoLock = _undoManager.RequestLock();
-                                    }
-                                };
-
-                                member.AfterMultiSet += (args) =>
-                                {
-                                    // Dispose lock if it was created
-                                    if (undoLock != null)
-                                    {
-                                        undoLock.Dispose();
-                                        undoLock = null;
-                                    }
-
-                                    // Record undo after all values have been set
-                                    if (args.CommitType == SetPropertyCommitType.Full)
-                                    {
-                                        _undoManager.RecordUndo();
-                                    }
-
-                                    // Loop through all instances and refresh
-                                    foreach (var item in member.InstanceMembers)
-                                    {
-                                        if (item is StateReferencingInstanceMember srim)
-                                        {
-                                            srim.NotifyVariableLogic((object)srim.InstanceSave ?? srim.ElementSave, args.CommitType);
-                                        }
-                                    }
-                                };
+                                _multiSelectCommitLogic.Attach(member);
                             }
                         }
                     }

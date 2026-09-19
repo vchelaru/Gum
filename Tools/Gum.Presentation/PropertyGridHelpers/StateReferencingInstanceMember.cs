@@ -352,9 +352,6 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #endregion
 
-    public GeneralResponse NotifyVariableLogic(object gumElementOrInstanceSaveAsObject, SetPropertyCommitType commitType, bool trySave = true) =>
-        _entry.NotifyVariableLogic(gumElementOrInstanceSaveAsObject, MapCommitType(commitType), trySave);
-
     private Type? HandleCustomGetType(object instance) => _entry.GetValueType(instance);
 
     public VariableSave? GetRootVariableSave() => _entry.GetRootVariableSave();
