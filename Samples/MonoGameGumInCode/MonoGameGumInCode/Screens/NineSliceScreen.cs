@@ -21,6 +21,9 @@ internal class NineSliceScreen : FrameworkElement
         container.Height = -8;
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
+        // Wraps into columns once the stack runs out of height, so the gallery never scrolls
+        // off the bottom. Labels are 20% wide (five columns).
+        container.WrapsChildren = true;
         this.AddChild(container);
 
         // Default full-texture nine-slice at three sizes so corner/edge/center
@@ -181,12 +184,9 @@ internal class NineSliceScreen : FrameworkElement
     {
         var label = new TextRuntime();
         label.Text = text;
-        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        // Width/Height = 0 + RelativeToChildren → exactly fit children. A non-zero
-        // value here would be added on top of the children-extent, producing extra
-        // padding the layout almost never wants.
-        label.Width = 0;
+        label.Width = 20;
         label.Height = 0;
         container.AddChild(label);
     }
