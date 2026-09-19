@@ -21,9 +21,18 @@ internal class NineSliceScreen : FrameworkElement
     {
         Dock(Gum.Wireframe.Dock.Fill);
 
-        var page = NewSection(ChildrenLayout.TopToBottomStack, spacing: 4);
+        // Fills the screen and wraps into columns once the stack runs out of height, so the
+        // gallery never scrolls off the bottom. Labels are 20% wide (five columns).
+        var page = new ContainerRuntime();
+        page.WidthUnits = DimensionUnitType.RelativeToParent;
+        page.HeightUnits = DimensionUnitType.RelativeToParent;
         page.X = 4;
         page.Y = 4;
+        page.Width = -8;
+        page.Height = -8;
+        page.ChildrenLayout = ChildrenLayout.TopToBottomStack;
+        page.StackSpacing = 4;
+        page.WrapsChildren = true;
         this.AddChild(page);
 
         // Default full-texture nine-slice at three sizes so corner/edge/center stretching is visible.
@@ -64,6 +73,42 @@ internal class NineSliceScreen : FrameworkElement
             ns.Height = 56;
             ns.Color = tint;
             tintRow.AddChild(ns);
+        }
+
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2, extended to raylib by #4821 gap 2). An authored AnimationFrameColorOperation.Add
+        // frame with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain
+        // normally (no color op authored, so it looks like the plain frame); right's chain frame
+        // carries the Add tint. Mirrors the MG/SilkNetGum NineSliceScreen's identical row.
+        AddSectionLabel(page, "Add color operation (normal frame, white-silhouette Add frame):");
+        var addRow = NewSection(ChildrenLayout.LeftToRightStack, spacing: 6);
+        page.AddChild(addRow);
+        var squareFrameSource = new NineSliceRuntime();
+        squareFrameSource.SourceFileName = "resources\\SquareFrame.png";
+        var squareFrameTexture = squareFrameSource.Texture;
+        foreach (var addTint in new Color?[] { null, Color.White })
+        {
+            var ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(ns);
         }
 
         // IsTilingMiddleSections: stretched (default) vs tiled. This is the headline feature
@@ -164,9 +209,9 @@ internal class NineSliceScreen : FrameworkElement
         label.Red = 220;
         label.Green = 220;
         label.Blue = 220;
-        label.WidthUnits = DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = DimensionUnitType.PercentageOfParent;
         label.HeightUnits = DimensionUnitType.RelativeToChildren;
-        label.Width = 0;
+        label.Width = 20;
         label.Height = 0;
         parent.AddChild(label);
     }

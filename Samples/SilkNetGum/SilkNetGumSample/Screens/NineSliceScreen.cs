@@ -29,6 +29,9 @@ internal class NineSliceScreen : FrameworkElement
         container.Height = -8;
         container.ChildrenLayout = ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
+        // Wraps into columns once the stack runs out of height, so the gallery never scrolls
+        // off the bottom. Labels are 20% wide (five columns).
+        container.WrapsChildren = true;
         this.AddChild(container);
 
         AddLabel(container, "Default nine-slice (Frame.png) at multiple sizes:");
@@ -64,6 +67,41 @@ internal class NineSliceScreen : FrameworkElement
             ns.Height = 56;
             ns.Color = tint;
             tintRow.Children.Add(ns);
+        }
+
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2, extended to Skia by #4821 gap 3). An authored AnimationFrameColorOperation.Add
+        // frame with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain
+        // normally (no color op authored, so it looks like the plain frame); right's chain frame
+        // carries the Add tint. Mirrors the MG/raylib NineSliceScreen's identical row.
+        AddLabel(container, "Add color operation (normal frame, white-silhouette Add frame):");
+        ContainerRuntime addRow = AddRow(container);
+        NineSliceRuntime squareFrameSource = new NineSliceRuntime();
+        squareFrameSource.SourceFileName = "SquareFrame.png";
+        SKBitmap? squareFrameTexture = squareFrameSource.Texture;
+        foreach (SKColor? addTint in new SKColor?[] { null, SKColors.White })
+        {
+            NineSliceRuntime ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            AnimationChain chain = new AnimationChain { Name = "AddDemo" };
+            AnimationFrame frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.Red;
+                frame.Green = addTint.Value.Green;
+                frame.Blue = addTint.Value.Blue;
+            }
+            chain.Add(frame);
+
+            AnimationChainList chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.Children.Add(ns);
         }
 
         AddLabel(container, "IsTilingMiddleSections (left: stretched, right: tiled):");
@@ -142,8 +180,9 @@ internal class NineSliceScreen : FrameworkElement
     {
         TextRuntime label = new TextRuntime();
         label.Text = text;
-        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.Width = 20;
         container.Children.Add(label);
     }
 

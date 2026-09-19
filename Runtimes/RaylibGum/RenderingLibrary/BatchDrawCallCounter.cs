@@ -47,6 +47,7 @@ public sealed unsafe class BatchDrawCallCounter
 
     // GL blend factor / equation constants for the render-target premultiply pass. Kept here so
     // the raw-GL dependency stays contained to the one place that owns blend state.
+    private const int GlZero = 0;
     private const int GlOne = 1;
     private const int GlSrcAlpha = 0x0302;
     private const int GlOneMinusSrcAlpha = 0x0303;
@@ -194,6 +195,21 @@ public sealed unsafe class BatchDrawCallCounter
     {
         Bank();
         Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlOne, GlOne, GlFuncAdd, GlFuncAdd);
+        Raylib.BeginBlendMode(BlendMode.CustomSeparate);
+    }
+
+    /// <summary>
+    /// Enters an additive blend that adds color onto the destination while leaving destination
+    /// alpha untouched (color factors ONE/ONE, alpha factors ZERO/ONE) - the raylib equivalent of
+    /// MonoGame's <c>BlendState.AddColorPreserveDestinationAlpha</c>, used for the
+    /// <see cref="global::Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> overlay pass
+    /// (#4821 gap 2) so the overlay brightens the sprite without widening or punching its silhouette
+    /// alpha. Pair with <see cref="EndBlendMode"/>.
+    /// </summary>
+    public void BeginBlendModeAddColorPreserveDestinationAlpha()
+    {
+        Bank();
+        Rlgl.SetBlendFactorsSeparate(GlOne, GlOne, GlZero, GlOne, GlFuncAdd, GlFuncAdd);
         Raylib.BeginBlendMode(BlendMode.CustomSeparate);
     }
 

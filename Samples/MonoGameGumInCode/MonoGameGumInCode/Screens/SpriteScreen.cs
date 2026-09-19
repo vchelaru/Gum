@@ -100,10 +100,9 @@ internal class SpriteScreen : FrameworkElement
         // ColorOperation (issue #3486) — Modulate (default) multiplies the texture by the red tint,
         // so the bear's detail shows through red; ColorTextureAlpha uses the texture only as an alpha
         // mask and fills with the tint, so the bear reads as a flat red silhouette. Set through
-        // RenderableComponent here since raylib/Skia (which this row mirrors) still lack a
-        // SpriteRuntime.ColorOperation property; MonoGame's own version of that property is
-        // demoed directly in the row below (#4792 Gap 1). Mirrors the raylib SpriteScreen's
-        // identical row.
+        // RenderableComponent here to exercise that path too; the row below demoes the same thing via
+        // the public SpriteRuntime.ColorOperation property (#4792 Gap 1). Mirrors the raylib
+        // SpriteScreen's identical row.
         AddLabel(container, "ColorOperation on a red-tinted bear (Modulate, ColorTextureAlpha):");
         var colorOpRow = AddRow(container);
         foreach (var colorOperation in new[]
@@ -121,12 +120,10 @@ internal class SpriteScreen : FrameworkElement
             colorOpRow.AddChild(s);
         }
 
-#if !RAYLIB && !SKIA
-        // SpriteRuntime.ColorOperation property (#4792 Gap 1) — same Modulate/ColorTextureAlpha
-        // demo as the row above, but through the new public property instead of casting to
-        // RenderableComponent. MonoGame only for now; KNI/FNA/raylib/Skia don't expose the
-        // property yet, so this whole row is #if'd out until they do.
-        AddLabel(container, "ColorOperation via SpriteRuntime.ColorOperation property (MonoGame only):");
+        // SpriteRuntime.ColorOperation property (#4792 Gap 1, widened to every backend by #4821) —
+        // same Modulate/ColorTextureAlpha demo as the row above, but through the public property
+        // instead of casting to RenderableComponent.
+        AddLabel(container, "ColorOperation via SpriteRuntime.ColorOperation property:");
         var colorOpPropertyRow = AddRow(container);
         foreach (var colorOperation in new[]
         {
@@ -143,11 +140,12 @@ internal class SpriteScreen : FrameworkElement
             colorOpPropertyRow.AddChild(s);
         }
 
-        // Add color operation (#4792 Gap 2) — an authored AnimationFrameColorOperation.Add frame
-        // with Red/Green/Blue=255 renders as a flat white silhouette (tex.rgb + white saturates to
-        // white wherever the texture has any alpha): the MonsterProjectWeb "un-revealed monster"
-        // use case from the issue. Left sprite plays the chain normally (no color op authored, so
-        // it looks like the plain bear); right sprite's chain frame carries the Add tint.
+        // Add color operation (#4792 Gap 2 on MonoGame, widened to every backend by #4821) — an
+        // authored AnimationFrameColorOperation.Add frame with Red/Green/Blue=255 renders as a flat
+        // white silhouette (tex.rgb + white saturates to white wherever the texture has any alpha):
+        // the MonsterProjectWeb "un-revealed monster" use case from #4792. Left sprite plays the
+        // chain normally (no color op authored, so it looks like the plain bear); right sprite's
+        // chain frame carries the Add tint. Mirrors the raylib/SilkNetGum SpriteScreen's identical row.
         AddLabel(container, "Add color operation (normal bear, white-silhouette Add bear):");
         var addRow = AddRow(container);
         var bearTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("BearTexture.png");
@@ -178,10 +176,14 @@ internal class SpriteScreen : FrameworkElement
             addRow.AddChild(s);
         }
 
+#if !RAYLIB && !SKIA
         // RenderColorOperation authored on an animation frame (#4822) — same Modulate/
         // ColorTextureAlpha technique as the property-driven row above, but driven by the
         // AnimationFrame.RenderColorOperation field instead of setting SpriteRuntime.ColorOperation
-        // directly. Proves the .achx/.achj-authoring path, not just the runtime property.
+        // directly. Proves the .achx/.achj-authoring path, not just the runtime property. MonoGame
+        // only: unlike AnimationFrameColorOperation.Add (widened to every backend by #4821),
+        // RenderColorOperation is only applied by Sprite.ApplyAnimationFrame on MonoGame/KNI/FNA -
+        // raylib and Skia don't read it from a frame yet, so this row stays #if'd out.
         AddLabel(container, "RenderColorOperation via animation frame (Modulate, ColorTextureAlpha):");
         var renderColorOpFrameRow = AddRow(container);
         foreach (var renderColorOperation in new[]

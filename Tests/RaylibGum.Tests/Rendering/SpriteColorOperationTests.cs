@@ -1,6 +1,5 @@
 using Gum.DataTypes;
 using Gum.GueDeriving;
-using Gum.Renderables;
 using Raylib_cs;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -42,9 +41,7 @@ public class SpriteColorOperationTests : BaseTestClass
 
     // SpriteRuntime defaults WidthUnits/HeightUnits to PercentageOfSourceFile, so Width/Height must be
     // forced to Absolute — otherwise "Width = size" is read as "size% of the 4px source", shrinking the
-    // sprite to a sliver that misses the sampled center. ColorOperation lives on the renderable only
-    // (parity with MonoGame, which exposes no SpriteRuntime.ColorOperation), so it is set via the
-    // contained Sprite through RenderableComponent.
+    // sprite to a sliver that misses the sampled center.
     private static Color BakeSpriteCell(int size, Color textureColor, Color tint, ColorOperation colorOperation)
     {
         Image image = GenImageColor(4, 4, textureColor);
@@ -58,7 +55,7 @@ public class SpriteColorOperationTests : BaseTestClass
         sprite.Height = size;
         sprite.Texture = texture;
         sprite.Color = tint;
-        ((Sprite)sprite.RenderableComponent).ColorOperation = colorOperation;
+        sprite.ColorOperation = colorOperation;
 
         ContainerRuntime cell = new();
         cell.Width = size;

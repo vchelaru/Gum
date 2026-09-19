@@ -21,6 +21,9 @@ internal class NineSliceScreen : FrameworkElement
         container.Height = -8;
         container.ChildrenLayout = Gum.Managers.ChildrenLayout.TopToBottomStack;
         container.StackSpacing = 4;
+        // Wraps into columns once the stack runs out of height, so the gallery never scrolls
+        // off the bottom. Labels are 20% wide (five columns).
+        container.WrapsChildren = true;
         this.AddChild(container);
 
         // Default full-texture nine-slice at three sizes so corner/edge/center
@@ -60,6 +63,39 @@ internal class NineSliceScreen : FrameworkElement
             ns.Height = 56;
             ns.Color = tint;
             tintRow.AddChild(ns);
+        }
+
+        // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
+        // (#4792 Gap 2) even on MonoGame/KNI/FNA. An authored AnimationFrameColorOperation.Add frame
+        // with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain normally
+        // (no color op authored, so it looks like the plain frame); right's chain frame carries the
+        // Add tint. Mirrors the raylib/SilkNetGum NineSliceScreen's identical row.
+        AddLabel(container, "Add color operation (normal frame, white-silhouette Add frame):");
+        var addRow = AddRow(container);
+        var squareFrameTexture = RenderingLibrary.Content.LoaderManager.Self.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>("SquareFrame.png");
+        foreach (var addTint in new Microsoft.Xna.Framework.Color?[] { null, Color.White })
+        {
+            var ns = new NineSliceRuntime();
+            ns.Width = 56;
+            ns.Height = 56;
+
+            var chain = new AnimationChain { Name = "AddDemo" };
+            var frame = new AnimationFrame { FrameLength = 1.0f, Texture = squareFrameTexture };
+            if (addTint.HasValue)
+            {
+                frame.ColorOperation = AnimationFrameColorOperation.Add;
+                frame.Red = addTint.Value.R;
+                frame.Green = addTint.Value.G;
+                frame.Blue = addTint.Value.B;
+            }
+            chain.Add(frame);
+
+            var chainList = new AnimationChainList();
+            chainList.Add(chain);
+            ns.AnimationChains = chainList;
+            ns.CurrentChainName = "AddDemo";
+
+            addRow.AddChild(ns);
         }
 
         // IsTilingMiddleSections: stretched (default) vs tiled.
@@ -148,12 +184,9 @@ internal class NineSliceScreen : FrameworkElement
     {
         var label = new TextRuntime();
         label.Text = text;
-        label.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        label.WidthUnits = Gum.DataTypes.DimensionUnitType.PercentageOfParent;
         label.HeightUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
-        // Width/Height = 0 + RelativeToChildren → exactly fit children. A non-zero
-        // value here would be added on top of the children-extent, producing extra
-        // padding the layout almost never wants.
-        label.Width = 0;
+        label.Width = 20;
         label.Height = 0;
         container.AddChild(label);
     }
