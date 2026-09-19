@@ -96,7 +96,17 @@ public static class StateSaveExtensionMethods
             // on a derived component's DefaultState short-circuits before reaching
             // GetVariableListRecursive and silently returns null — even though the
             // base component sets the list.
-            if (!wasFound && elementContainingState != null)
+            //
+            // foundVariable == null is a perf short-circuit (#4868): a variable name is
+            // either a scalar VariableSave or a VariableListSave, never both (they're
+            // stored in separate StateSave collections and correspond to a single
+            // reflected CLR property — see StandardElementsManager.AddVariableReferenceList,
+            // which always adds "VariableReferences" as a list, never a scalar). So once
+            // GetVariableRecursive already found a scalar definition for this exact name,
+            // a VariableListSave with the same name cannot exist, and the expensive
+            // GetVariableListRecursive walk (which loops every variable in the state
+            // calling IsState) can be skipped.
+            if (!wasFound && foundVariable == null && elementContainingState != null)
             {
                 var foundVariableList = stateSave.GetVariableListRecursive(variableName);
                 if (foundVariableList?.ValueAsIList != null)
