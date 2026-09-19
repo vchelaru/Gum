@@ -81,6 +81,7 @@
         Grid.Row="4"
         Grid.ColumnSpan="3"
         Margin="0,0,4,0"
+        Padding="8,0,0,0"
         HorizontalAlignment="Left"
         VerticalAlignment="Top"
         FontSize="{Binding Path=FontSize, RelativeSource={RelativeSource AncestorType={x:Type local:TextBoxDisplay}}, Converter={StaticResource AddDoubleConverter}, ConverterParameter=-2}"
