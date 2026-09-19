@@ -264,6 +264,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     public void LoadProject(FilePath fileName)
     {
         using IDisposable totalScope = StartupTiming.Time("LoadProject (total)");
+        // LoadProject runs synchronously on the UI thread and can legitimately take several
+        // seconds on a large project (see #4869) - long enough to starve the freeze watchdog's
+        // heartbeat and have it mistake this known-long load for a real hang. Suspend detection
+        // for the duration; this is a no-op on the WPF head, which has no watchdog registered.
+        using IDisposable watchdogSuspendScope = UiFreezeWatchdogHook.SuspendScope();
         GumLoadResult result;
 
         using (StartupTiming.Time("  GumProjectSave.Load (xml deserialize)"))

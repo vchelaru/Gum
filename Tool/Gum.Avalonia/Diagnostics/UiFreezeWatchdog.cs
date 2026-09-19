@@ -45,6 +45,7 @@ public static class UiFreezeWatchdog
 
         _started = true;
         _diagnosticsDirectory = diagnosticsDirectory;
+        UiFreezeWatchdogHook.Register(suspend: Suspend, resume: Resume);
         Thread pollThread = new Thread(PollLoop) { IsBackground = true, Name = "Gum UI freeze watchdog" };
         pollThread.Start();
     }
@@ -72,6 +73,34 @@ public static class UiFreezeWatchdog
     /// <summary>Records a step for the trailing-events log a stall capture writes alongside the dump.</summary>
     public static void RecordStep(string step) =>
         _recentSteps.Add($"{DateTimeOffset.Now:HH:mm:ss.fff}  {step}");
+
+    /// <summary>
+    /// Suppresses stall detection - used via <see cref="UiFreezeWatchdogHook"/> for a known-long,
+    /// synchronous UI-thread operation (project load) that would otherwise starve the heartbeat and
+    /// read as a false freeze. No-op if no heartbeat has happened yet (nothing to suspend).
+    /// </summary>
+    private static void Suspend()
+    {
+        UiHeartbeatStallDetector? detector;
+        lock (_detectorLock)
+        {
+            detector = _detector;
+        }
+
+        detector?.Suspend(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>Ends a suspension started by <see cref="Suspend"/>. See <see cref="UiFreezeWatchdogHook"/>.</summary>
+    private static void Resume()
+    {
+        UiHeartbeatStallDetector? detector;
+        lock (_detectorLock)
+        {
+            detector = _detector;
+        }
+
+        detector?.Resume(DateTimeOffset.UtcNow);
+    }
 
     private static void PollLoop()
     {
