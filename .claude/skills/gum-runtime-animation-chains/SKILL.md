@@ -50,9 +50,21 @@ Skia and Raylib `NineSlice` renderables also compose `AnimationLogic` and apply 
 
 ## Per-frame color (Alpha/Multiply/Add)
 
-`AnimationFrameSave`/`AnimationFrame` carry nullable `Red`/`Green`/`Blue`/`Alpha` (0-255) and an `AnimationFrameColorOperation?` (`Multiply`/`Add`), matching FRB2's Animation Editor fields. Each backend's `ApplyAnimationFrame` sets the renderable's own `Alpha` when authored, and `Red`/`Green`/`Blue` only when `ColorOperation == Multiply` (unset channel defaults to 255) — snapshotted once per frame change, not re-combined at render time, so a frame that authors neither leaves the renderable's current color alone. Alpha (#4489) and Multiply (#4490) are applied on all of XNA/Raylib/Skia; Skia's `Sprite` additionally needed a `Color`-driven `SKColorFilter.CreateBlendMode(..., Modulate)` in `GetPaint` since it previously ignored RGB entirely (NineSlice already had this filter). `Add` is applied on `Sprite` (MonoGame/KNI/FNA only) as a second additive draw pass rather than a shader — see `Sprite.AdditiveTintColor`/`Renderer.DrawAdditiveColorOverlay`. `NineSlice` and raylib/Skia still drop it.
+`AnimationFrameSave`/`AnimationFrame` carry nullable `Red`/`Green`/`Blue`/`Alpha` (0-255) and an `AnimationFrameColorOperation?` (`Multiply`/`Add`), matching FRB2's Animation Editor fields. Each backend's `ApplyAnimationFrame` sets the renderable's own `Alpha` when authored, and its own `Red`/`Green`/`Blue` whenever a `ColorOperation` is authored — snapshotted once per frame change, not re-combined at render time, so a frame that authors neither leaves the renderable's current color alone.
 
-A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrameSave.RenderColorOperation`, lets a frame pick Gum's own `Modulate`/`ColorTextureAlpha` render technique (`SpriteRuntime.ColorOperation`) — distinct from the `ColorOperation` field above despite the name. Applied in `Sprite.ApplyAnimationFrame` only; same MonoGame/KNI/FNA-only, `NineSlice`-not-yet scope.
+**There is one set of colors.** `Color` is the only tint source on a renderable; the renderable's `RenderingLibrary.Graphics.ColorOperation` decides how it is read (#4880) — the same shape as `Alpha` and `Blend`. A frame's `AnimationFrameColorOperation` selects that operation:
+
+| Frame op | Sets `ColorOperation` | Unset-channel default |
+|----------|----------------------|-----------------------|
+| `Multiply` | `Modulate` | 255 (multiply identity) |
+| `Add` | `Add` | 0 (add identity) |
+| none | resets `Add` → `Modulate` | color untouched |
+
+`Add` draws the texture untinted and adds `Color` on top: a second additive pass on XNA/raylib (`Renderer.DrawAdditiveColorOverlay`, raylib's `AdditiveColorOverlayShader`), and a single-pass `SKColorFilter.CreateColorMatrix` offset on Skia. It works on both `Sprite` and `NineSlice` across XNA/raylib/Skia. There is **no** separate additive color field — an earlier `AdditiveTintColor` was folded into `Color` + `ColorOperation.Add`.
+
+A separate nullable field, `AnimationFrame.RenderColorOperation`/`AnimationFrameSave.RenderColorOperation`, also picks the renderable's `ColorOperation` (its original purpose was the `Modulate`/`ColorTextureAlpha` technique selector). It writes the **same field** as the table above, so when a frame authors both, the `AnimationFrameColorOperation` wins — it is applied second. Applied in `Sprite.ApplyAnimationFrame` only.
+
+Note for tool work: exposing `ColorOperation` as a tool-editable variable means codegen emits `X.ColorOperation = ...`, which older runtimes' `NineSliceRuntime` does not have. That needs a syntax-version bump and gate — see `gum-runtime-syntax-version`.
 
 ## Key Files
 
