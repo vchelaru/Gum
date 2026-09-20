@@ -1,4 +1,4 @@
-using Gum.Graphics.Animation;
+﻿using Gum.Graphics.Animation;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Graphics.Animation;
@@ -41,6 +41,10 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable,
     // Sokol does not yet honor Blend at draw time; the property exists for API parity with the
     // unified NineSliceRuntime, which routes its cross-platform Blend property here.
     public Gum.RenderingLibrary.Blend? Blend { get; set; }
+
+    // Sokol does not yet honor ColorOperation at draw time; the property exists for API parity
+    // with the unified NineSliceRuntime, which routes its ColorOperation property here.
+    public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
     public int Alpha { get => Color.A; set => Color.A = (byte)value; }
     public int Red   { get => Color.R; set => Color.R = (byte)value; }

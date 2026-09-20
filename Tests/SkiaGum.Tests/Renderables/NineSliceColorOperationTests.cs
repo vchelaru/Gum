@@ -1,7 +1,8 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using Shouldly;
 using SkiaGum.Renderables;
+using RenderingLibrary.Graphics;
 using SkiaSharp;
 
 namespace SkiaGum.Tests.Renderables;
@@ -28,7 +29,7 @@ public class NineSliceColorOperationTests
     }
 
     [Fact]
-    public void ApplyAnimationFrame_Add_SetsAdditiveTintColor()
+    public void ApplyAnimationFrame_Add_SetsColorAndAddOperation()
     {
         NineSlice sut = new();
 
@@ -40,11 +41,12 @@ public class NineSliceColorOperationTests
         sut.AnimationLogic.AnimationChains = chains;
         sut.AnimationLogic.CurrentChainName = "TestChain";
 
-        sut.AdditiveTintColor.ShouldBe(new SKColor(255, 0, 0));
+        sut.ColorOperation.ShouldBe(ColorOperation.Add);
+        sut.Color.ShouldBe(new SKColor(255, 0, 0));
     }
 
     [Fact]
-    public void ApplyAnimationFrame_Multiply_ClearsAdditiveTintColor()
+    public void ApplyAnimationFrame_Multiply_RestoresModulate()
     {
         NineSlice sut = new();
 
@@ -57,15 +59,15 @@ public class NineSliceColorOperationTests
         sut.AnimationLogic.AnimationChains = chains;
         sut.AnimationLogic.Animate = true;
         sut.AnimationLogic.CurrentChainName = "TestChain";
-        sut.AdditiveTintColor.ShouldNotBeNull();
+        sut.ColorOperation.ShouldBe(ColorOperation.Add);
 
         sut.AnimationLogic.AnimateSelf(1.5);
 
-        sut.AdditiveTintColor.ShouldBeNull();
+        sut.ColorOperation.ShouldBe(ColorOperation.Modulate);
     }
 
     [Fact]
-    public void GetPaint_AdditiveTintColor_AddsOntoModulateResult()
+    public void GetPaint_Add_AddsColorOntoTexel()
     {
         TestableNineSlice sut = new() { Color = SKColors.White };
         sut.ApplyAddFrameForTest(new SKColor(50, 0, 0));

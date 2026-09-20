@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
@@ -13,10 +13,9 @@ using Xunit;
 namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 
 /// <summary>
-/// End-to-end pixel checks for #4792 Gap 2: an authored
-/// <see cref="AnimationFrameColorOperation.Add"/> frame renders as an additive overlay
-/// (<see cref="Sprite.AdditiveTintColor"/> + <see cref="Renderer.DrawAdditiveColorOverlay"/>)
-/// instead of being silently dropped.
+/// End-to-end pixel checks that an authored <see cref="AnimationFrameColorOperation.Add"/> frame
+/// renders as an additive pass (<c>ColorOperation.Add</c> +
+/// <see cref="Renderer.DrawAdditiveColorOverlay"/>) instead of being silently dropped.
 /// </summary>
 public class SpriteAdditiveColorOperationTests : BaseTestClass
 {

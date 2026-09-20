@@ -1,4 +1,4 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.DataTypes;
 using Gum.Graphics.Animation;
 using Gum.GueDeriving;
@@ -12,7 +12,7 @@ namespace RaylibGum.Tests.Rendering;
 /// <summary>
 /// Pixel-readback tests proving raylib applies an authored
 /// <see cref="AnimationFrameColorOperation.Add"/> frame as an additive overlay pass (#4821 gap 2),
-/// mirroring MonoGame/KNI/FNA's <c>Sprite.AdditiveTintColor</c> + <c>Renderer.DrawAdditiveColorOverlay</c>
+/// mirroring MonoGame/KNI/FNA's <c>ColorOperation.Add</c> + <c>Renderer.DrawAdditiveColorOverlay</c>
 /// via a second <c>DrawTexturePro</c> under a premultiplied ColorTextureAlpha-style shader with
 /// <c>AddColorPreserveDestinationAlpha</c>-equivalent blend factors.
 /// Uses the same render-target pixel-readback harness as the sibling <see cref="SpriteColorOperationTests"/>.

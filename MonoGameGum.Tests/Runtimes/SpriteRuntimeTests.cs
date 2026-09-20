@@ -104,9 +104,8 @@ public class SpriteRuntimeTests : BaseTestClass
     [Fact]
     public void AnimateSelf_ShouldApplyRenderColorOperation_WhenFrameAuthorsOne()
     {
-        // #4822: a frame's RenderColorOperation drives Sprite.ColorOperation (the Modulate/
-        // ColorTextureAlpha render-technique selector), distinct from AnimationFrameColorOperation
-        // (Multiply/Add) which drives Red/Green/Blue/AdditiveTintColor instead.
+        // A frame's RenderColorOperation drives Sprite.ColorOperation directly. An authored
+        // AnimationFrameColorOperation (Multiply/Add) writes the same field and wins (#4880).
         var sprite = new Sprite((Texture2D?)null);
         sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Modulate);
 
@@ -140,10 +139,10 @@ public class SpriteRuntimeTests : BaseTestClass
     }
 
     [Fact]
-    public void AnimateSelf_ShouldLeaveSpriteColorUnchanged_WhenFrameColorOperationIsAdd()
+    public void AnimateSelf_ShouldSetColorAndAddOperation_WhenFrameColorOperationIsAdd()
     {
-        // An Add frame's Red/Green/Blue drive the additive overlay pass (AdditiveTintColor, #4792
-        // Gap 2), not the sprite's own Multiply-style Red/Green/Blue — those must stay untouched.
+        // An Add frame drives the sprite's own Color plus ColorOperation.Add (#4880) - Color is the
+        // single tint source, read differently depending on the operation.
         var sprite = new Sprite((Texture2D?)null) { Red = 11, Green = 22, Blue = 33 };
 
         var chain = new AnimationChain { Name = "TestChain" };
@@ -155,17 +154,17 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.AnimationChains = chainList;
         sprite.CurrentChainName = "TestChain";
 
-        sprite.Red.ShouldBe(11);
-        sprite.Green.ShouldBe(22);
-        sprite.Blue.ShouldBe(33);
-        sprite.AdditiveTintColor.ShouldBe(System.Drawing.Color.FromArgb(255, 255, 0, 0));
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Add);
+        sprite.Red.ShouldBe(255);
+        sprite.Green.ShouldBe(0);
+        sprite.Blue.ShouldBe(0);
     }
 
     [Fact]
     public void AnimateSelf_ShouldDefaultUnsetChannelsTo0_WhenFrameColorOperationIsAdd()
     {
         // Black (0) is Add's identity - the opposite default from Multiply's 255 - so an unset
-        // channel must contribute nothing to the additive overlay.
+        // channel must contribute nothing to the additive pass.
         var sprite = new Sprite((Texture2D?)null);
 
         var chain = new AnimationChain { Name = "TestChain" };
@@ -177,15 +176,17 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.AnimationChains = chainList;
         sprite.CurrentChainName = "TestChain";
 
-        sprite.AdditiveTintColor.ShouldBe(System.Drawing.Color.FromArgb(255, 0, 200, 0));
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Add);
+        sprite.Red.ShouldBe(0);
+        sprite.Green.ShouldBe(200);
+        sprite.Blue.ShouldBe(0);
     }
 
     [Fact]
-    public void AnimateSelf_ShouldClearAdditiveTintColor_WhenFrameHasNoColorOperation()
+    public void AnimateSelf_ShouldRestoreModulate_WhenFrameHasNoColorOperation()
     {
-        // A later frame with no authored color must not inherit a still-set AdditiveTintColor from
-        // an earlier Add frame - otherwise the overlay pass would leak into frames that never asked
-        // for one.
+        // A later frame with no authored color must not inherit ColorOperation.Add from an earlier
+        // Add frame - otherwise the additive pass would leak into frames that never asked for one.
         var sprite = new Sprite((Texture2D?)null);
 
         var chain = new AnimationChain { Name = "TestChain" };
@@ -198,12 +199,12 @@ public class SpriteRuntimeTests : BaseTestClass
         sprite.AnimationChains = chainList;
         sprite.Animate = true;
         sprite.CurrentChainName = "TestChain";
-        sprite.AdditiveTintColor.ShouldNotBeNull();
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Add);
 
         // 1.5s into chain crosses from frame 0 (ends at 1.0s) into frame 1.
         sprite.AnimateSelf(1.5);
 
-        sprite.AdditiveTintColor.ShouldBeNull();
+        sprite.ColorOperation.ShouldBe(RenderingLibrary.Graphics.ColorOperation.Modulate);
     }
 
     [Fact]

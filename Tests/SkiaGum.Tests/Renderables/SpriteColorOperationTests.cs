@@ -1,4 +1,4 @@
-using Gum.Content.AnimationChain;
+﻿using Gum.Content.AnimationChain;
 using Gum.Graphics.Animation;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -77,7 +77,7 @@ public class SpriteColorOperationTests
     }
 
     [Fact]
-    public void ApplyAnimationFrame_Add_SetsAdditiveTintColor()
+    public void ApplyAnimationFrame_Add_SetsColorAndAddOperation()
     {
         Sprite sut = new();
 
@@ -89,13 +89,14 @@ public class SpriteColorOperationTests
         sut.AnimationLogic.AnimationChains = chains;
         sut.AnimationLogic.CurrentChainName = "TestChain";
 
-        sut.AdditiveTintColor.ShouldBe(new SKColor(255, 0, 0));
+        sut.ColorOperation.ShouldBe(ColorOperation.Add);
+        sut.Color.ShouldBe(new SKColor(255, 0, 0));
     }
 
     [Fact]
-    public void ApplyAnimationFrame_Multiply_ClearsAdditiveTintColor()
+    public void ApplyAnimationFrame_Multiply_RestoresModulate()
     {
-        // A later frame with no Add must not leave a stale overlay from an earlier Add frame.
+        // A later frame with no Add must not leave ColorOperation stuck on Add.
         Sprite sut = new();
 
         AnimationChain chain = new() { Name = "TestChain" };
@@ -107,15 +108,15 @@ public class SpriteColorOperationTests
         sut.AnimationLogic.AnimationChains = chains;
         sut.AnimationLogic.Animate = true;
         sut.AnimationLogic.CurrentChainName = "TestChain";
-        sut.AdditiveTintColor.ShouldNotBeNull();
+        sut.ColorOperation.ShouldBe(ColorOperation.Add);
 
         sut.AnimationLogic.AnimateSelf(1.5);
 
-        sut.AdditiveTintColor.ShouldBeNull();
+        sut.ColorOperation.ShouldBe(ColorOperation.Modulate);
     }
 
     [Fact]
-    public void GetPaint_AdditiveTintColor_AddsOntoModulateResult()
+    public void GetPaint_Add_AddsColorOntoTexel()
     {
         TestableSprite sut = new() { Color = SKColors.White };
         sut.ApplyAddFrameForTest(new SKColor(50, 0, 0));
@@ -123,8 +124,8 @@ public class SpriteColorOperationTests
         using SKPaint paint = sut.InvokeGetPaint(new SKRect(0, 0, 10, 10), absoluteRotation: 0);
         SKColor filtered = RenderFilteredPixel(paint.ColorFilter!, new SKColor(10, 10, 10, 255));
 
-        // White tint (Modulate identity) leaves the texel at (10,10,10); the additive overlay then
-        // adds (50,0,0) on top.
+        // Add ignores the modulate tint and adds the sprite's own Color - set to (50,0,0) by the
+        // frame - onto the texel at (10,10,10).
         filtered.Red.ShouldBe((byte)60);
         filtered.Green.ShouldBe((byte)10);
         filtered.Blue.ShouldBe((byte)10);

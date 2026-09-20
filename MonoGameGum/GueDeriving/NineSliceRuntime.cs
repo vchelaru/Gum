@@ -1,4 +1,4 @@
-using Gum.Wireframe;
+﻿using Gum.Wireframe;
 using RenderingLibrary;
 using System;
 
@@ -178,6 +178,20 @@ public class NineSliceRuntime : InteractiveGue
         set
         {
             ContainedNineSlice.Color = value.ToContainerColor();
+            NotifyPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// How <see cref="Color"/> combines with the texture. Modulate multiplies, Add adds it on top
+    /// of an untinted draw, and ColorTextureAlpha fills with it using the texture as an alpha mask.
+    /// </summary>
+    public global::RenderingLibrary.Graphics.ColorOperation ColorOperation
+    {
+        get => ContainedNineSlice.ColorOperation;
+        set
+        {
+            ContainedNineSlice.ColorOperation = value;
             NotifyPropertyChanged();
         }
     }

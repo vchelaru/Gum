@@ -15,7 +15,8 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq || true
-apt-get install -y -qq dotnet-sdk-10.0
+# net8.0 test projects (RaylibGum.Tests) need the 8.0 runtime alongside the SDK.
+apt-get install -y -qq dotnet-sdk-10.0 dotnet-runtime-8.0
 
 # Keep telemetry and the first-run banner out of build output.
 {
