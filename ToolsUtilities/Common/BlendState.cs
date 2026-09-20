@@ -315,21 +315,3 @@ namespace Gum
         public override string ToString() => Name;
     }
 }
-namespace RenderingLibrary.Graphics
-{
-    public enum ColorOperation
-    {
-        //Texture,
-        //Add,
-        //Subtract,
-        Modulate = 3,
-        //InverseTexture,
-        //Color,
-        ColorTextureAlpha = 6,
-        //Modulate2X,
-        //Modulate4X,
-        //InterpolateColor
-
-    }
-
-}
