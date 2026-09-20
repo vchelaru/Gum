@@ -33,6 +33,7 @@ public class HotkeyManagerTests : BaseTestClass
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly Mock<ISelectionHistory> _selectionHistory;
     private readonly Mock<IModifierKeyState> _modifierKeyState;
+    private readonly Mock<INameVerifier> _nameVerifier;
     private readonly HotkeyManager _hotkeyManager;
 
     public HotkeyManagerTests()
@@ -51,6 +52,7 @@ public class HotkeyManagerTests : BaseTestClass
         _pluginManager = new Mock<IPluginManager>();
         _selectionHistory = new Mock<ISelectionHistory>();
         _modifierKeyState = new Mock<IModifierKeyState>();
+        _nameVerifier = new Mock<INameVerifier>();
 
         _hotkeyManager = new HotkeyManager(
             _guiCommands.Object,
@@ -67,7 +69,8 @@ public class HotkeyManagerTests : BaseTestClass
             _pluginManager.Object,
             _selectionHistory.Object,
             _modifierKeyState.Object,
-            Mock.Of<IOperatingSystemInfo>()
+            Mock.Of<IOperatingSystemInfo>(),
+            _nameVerifier.Object
         );
     }
 

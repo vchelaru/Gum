@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 namespace Gum.Managers;
 
 public class NameVerifier : INameVerifier
@@ -384,14 +385,14 @@ public class NameVerifier : INameVerifier
             commonValidationError = CommonValidationError.EndsWithSpace;
             return false;
         }
-        foreach (char character in name)
+        foreach (var rune in name.EnumerateRunes())
         {
-            if (character == ' ') continue;
-            
-            var category = char.GetUnicodeCategory(character);
+            if (rune.Value == ' ') continue;
+
+            var category = Rune.GetUnicodeCategory(rune);
             if (!ValidCharacterCategories.Contains(category))
             {
-                whyNotValid = $"The name can't contain invalid character {character}";
+                whyNotValid = $"The name can't contain invalid character {rune}";
                 commonValidationError = CommonValidationError.InvalidCharacter;
                 return false;
             }

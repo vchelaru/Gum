@@ -221,6 +221,17 @@ public class NameVerifierTests : BaseTestClass
     }
 
     [Fact]
+    public void IsCategoryNameValid_ShouldReturnFalse_ForInvalidCharacters_SupplementaryPlane()
+    {
+        // 😀 (U+1F600) is a surrogate pair in UTF-16; the message must embed the whole
+        // character, not one unpaired half-surrogate that can't be rendered by any font.
+        IStateContainer component = new ComponentSave();
+        var isValid = _nameVerifier.IsCategoryNameValid("Invalid😀Category", component, out string whyNotValid);
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldBe("The name can't contain invalid character 😀");
+    }
+
+    [Fact]
     public void IsCategoryNameValid_ShouldReturnFalse_ForDuplicateName_Component()
     {
         ComponentSave component = new ComponentSave();

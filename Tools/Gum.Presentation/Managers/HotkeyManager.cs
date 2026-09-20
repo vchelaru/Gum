@@ -88,6 +88,7 @@ public class HotkeyManager : IHotkeyManager
     private readonly IPluginManager _pluginManager;
     private readonly ISelectionHistory _selectionHistory;
     private readonly IModifierKeyState _modifierKeyState;
+    private readonly INameVerifier _nameVerifier;
 
 
     public HotkeyManager(IGuiCommands guiCommands,
@@ -104,7 +105,8 @@ public class HotkeyManager : IHotkeyManager
         IPluginManager pluginManager,
         ISelectionHistory selectionHistory,
         IModifierKeyState modifierKeyState,
-        IOperatingSystemInfo operatingSystemInfo)
+        IOperatingSystemInfo operatingSystemInfo,
+        INameVerifier nameVerifier)
     {
         KeyCombination ctrlY = KeyCombination.Ctrl(GumKey.Y);
         KeyCombination ctrlShiftZ = new KeyCombination { IsCtrlDown = true, IsShiftDown = true, Key = GumKey.Z };
@@ -125,6 +127,7 @@ public class HotkeyManager : IHotkeyManager
         _pluginManager = pluginManager;
         _selectionHistory = selectionHistory;
         _modifierKeyState = modifierKeyState;
+        _nameVerifier = nameVerifier;
     }
 
     public bool IsPressedInControl(KeyCombination combo)
@@ -209,7 +212,11 @@ public class HotkeyManager : IHotkeyManager
                 GetUserStringOptions options = new()
                 {
                     InitialValue = oldName,
-                    PreSelect = true
+                    PreSelect = true,
+                    Validator = v =>
+                        _nameVerifier.IsInstanceNameValid(v, selectedInstance, selectedInstance.ParentContainer, out string whyNotValid)
+                            ? null
+                            : whyNotValid
                 };
                 
                 if (_dialogService.GetUserString("Enter new name", "Rename Instance", options) is { } newName)
