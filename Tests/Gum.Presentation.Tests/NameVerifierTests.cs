@@ -275,6 +275,20 @@ public class NameVerifierTests : BaseTestClass
         whyNotValid.ShouldBe("Category name cannot be the same as its container's");
     }
 
+    [Fact]
+    public void IsCategoryNameValid_ShouldReturnTrue_ForUnchangedName_WhenRenamingItself()
+    {
+        // Live/ahead-of-time validation during a rename passes the category's own unchanged,
+        // still-present name on the first keystroke; it must not flag itself as a duplicate.
+        var component = new ComponentSave();
+        var category = new StateSaveCategory { Name = "ExistingCategory" };
+        component.Categories.Add(category);
+
+        var isValid = _nameVerifier.IsCategoryNameValid("ExistingCategory", component, out string whyNotValid, category);
+
+        isValid.ShouldBeTrue();
+    }
+
     #endregion
 
     #region StateSave
@@ -299,6 +313,17 @@ public class NameVerifierTests : BaseTestClass
                               "This would cause compiler errors when generating Forms code.");
         
         whyNotValid.ShouldBe("State name cannot be the same as its category's");
+    }
+
+    [Fact]
+    public void IsStateNameValid_ShouldNotThrow_ForUncategorizedState()
+    {
+        // An uncategorized state (e.g. a component's default/top-level states) has no category,
+        // so this must not NRE on category.Name.
+        StateSave state = new() { Name = "Default" };
+        bool isValid = _nameVerifier.IsStateNameValid("NewName", null, state, out string whyNotValid);
+
+        isValid.ShouldBeTrue();
     }
 
     #endregion

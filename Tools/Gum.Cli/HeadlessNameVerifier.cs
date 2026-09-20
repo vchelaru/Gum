@@ -62,7 +62,7 @@ internal class HeadlessNameVerifier : INameVerifier
     }
 
     /// <inheritdoc/>
-    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string? whyNotValid)
+    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string? whyNotValid, StateSaveCategory? categoryToIgnore = null)
     {
         whyNotValid = null;
         return true;

@@ -14,7 +14,7 @@ public interface INameVerifier
 
     bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, out string? whyNotValid);
 
-    bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string? whyNotValid);
+    bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string? whyNotValid, StateSaveCategory? categoryToIgnore = null);
 
     bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string? whyNotValid);
 

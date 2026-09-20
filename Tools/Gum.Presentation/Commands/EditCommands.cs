@@ -205,9 +205,12 @@ public class EditCommands : IEditCommands
         {
             string message = "Enter new state name";
             string title = "Rename state";
-            GetUserStringOptions options = new(){InitialValue = _selectedState.SelectedStateSave.Name};
-
             var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+            GetUserStringOptions options = new()
+            {
+                InitialValue = _selectedState.SelectedStateSave.Name,
+                Validator = v => _nameVerifier.IsStateNameValid(v, category, stateSave, out string whyNotValid) ? null : whyNotValid
+            };
             var changes = _renameLogic.GetChangesForRenamedState(stateSave, stateSave.Name, stateContainer, category);
 
             var changesDetails = changes.GetChangesDetails();

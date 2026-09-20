@@ -174,7 +174,7 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string whyNotValid)
+    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string whyNotValid, StateSaveCategory? categoryToIgnore = null)
     {
         IsNameValidCommon(name, out whyNotValid, out _);
 
@@ -196,6 +196,7 @@ public class NameVerifier : INameVerifier
             string? existingName = null;
             categoryContainer.GetStateSaveCategoryRecursively(item =>
             {
+                if (item == categoryToIgnore) return false;
                 if (Standardize(item.Name) == standardizedName)
                 {
                     existingName = item.Name;
@@ -212,7 +213,7 @@ public class NameVerifier : INameVerifier
 
         if(string.IsNullOrEmpty(whyNotValid) && categoryContainer is ElementSave element)
         {
-            IsNameValidTopLevel(name, element, null, out whyNotValid);
+            IsNameValidTopLevel(name, element, categoryToIgnore, out whyNotValid);
         }
 
         return string.IsNullOrEmpty(whyNotValid);
@@ -222,7 +223,7 @@ public class NameVerifier : INameVerifier
         IsNameValidCommon(name, out whyNotValid, out _);
         if(string.IsNullOrEmpty(whyNotValid))
         {
-            if (name == category.Name)
+            if (category != null && name == category.Name)
             {
                 whyNotValid = "State name cannot be the same as its category's";
                 return false;
