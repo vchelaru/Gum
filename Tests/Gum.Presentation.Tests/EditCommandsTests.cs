@@ -1,9 +1,11 @@
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -90,5 +92,37 @@ public class EditCommandsTests : BaseTestClass
 
         projectRef.Name.ShouldBe("MyBehaviorRenamed");
         behavior.Name.ShouldBe("MyBehaviorRenamed");
+    }
+
+    [Fact]
+    public void AskToRenameState_PassesValidatorThatUsesNameVerifier()
+    {
+        // Rename state must validate as the user types, like Rename Behavior/Rename Instance --
+        // see https://github.com/vchelaru/Gum/issues/4889
+        var component = new ComponentSave { Name = "MyComponent" };
+        var stateSave = new StateSave { Name = "OldState", ParentContainer = component };
+        component.States.Add(stateSave);
+
+        _mocker.GetMock<ISelectedState>().Setup(s => s.SelectedStateSave).Returns(stateSave);
+        _mocker.GetMock<IRenameLogic>()
+            .Setup(r => r.GetChangesForRenamedState(stateSave, stateSave.Name, component, null))
+            .Returns(new StateReferences());
+
+        GetUserStringOptions capturedOptions = null;
+        _dialogService
+            .Setup(d => d.GetUserString(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<GetUserStringOptions>()))
+            .Callback<string, string, GetUserStringOptions>((_, _, options) => capturedOptions = options)
+            .Returns((string)null);
+
+        string whyNotValid = "bad name";
+        _mocker.GetMock<INameVerifier>()
+            .Setup(v => v.IsStateNameValid("Invalid@Name", null, stateSave, out whyNotValid))
+            .Returns(false);
+
+        _editCommands.AskToRenameState(stateSave, component);
+
+        capturedOptions.ShouldNotBeNull();
+        capturedOptions.Validator.ShouldNotBeNull();
+        capturedOptions.Validator!("Invalid@Name").ShouldBe("bad name");
     }
 }

@@ -136,7 +136,11 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             string elemMessage = "Enter new category name";
             string elemTitle = "New Category";
 
-            GetUserStringOptions elemOptions = new() { InitialValue = category.Name };
+            GetUserStringOptions elemOptions = new()
+            {
+                InitialValue = category.Name,
+                Validator = v => _nameVerifier.IsCategoryNameValid(v, elementSave, out string whyNotValid, category) ? null : whyNotValid
+            };
             string elemOldName = category.Name;
             var elemChanges = GetChangesForRenamedCategory(elementSave, category, elemOldName);
 
@@ -157,7 +161,11 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             string title = "New Category";
             string oldName = category.Name;
 
-            GetUserStringOptions options = new() { InitialValue = category.Name };
+            GetUserStringOptions options = new()
+            {
+                InitialValue = category.Name,
+                Validator = v => _nameVerifier.IsCategoryNameValid(v, behaviorSave, out string whyNotValid, category) ? null : whyNotValid
+            };
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
             {

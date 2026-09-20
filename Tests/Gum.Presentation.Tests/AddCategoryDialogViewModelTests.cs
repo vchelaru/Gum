@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
+using Gum.DataTypes.Variables;
 using Gum.Dialogs;
 using Gum.Managers;
 using Gum.ToolCommands;
@@ -46,7 +47,8 @@ public class AddCategoryDialogViewModelTests
             x => x.IsCategoryNameValid(
                 It.IsAny<string>(),
                 It.IsAny<ElementSave>(),
-                out errorMessage));
+                out errorMessage,
+                It.IsAny<StateSaveCategory>()));
 
         _selectedState
             .Setup(x => x.SelectedStateContainer)
@@ -67,7 +69,8 @@ public class AddCategoryDialogViewModelTests
             x => x.IsCategoryNameValid(
                 It.IsAny<string>(),
                 It.IsAny<BehaviorSave>(),
-                out errorMessage));
+                out errorMessage,
+                It.IsAny<StateSaveCategory>()));
 
         _selectedState
             .Setup(x => x.SelectedStateContainer)
