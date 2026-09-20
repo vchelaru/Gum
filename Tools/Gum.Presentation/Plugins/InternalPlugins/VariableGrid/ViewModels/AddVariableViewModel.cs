@@ -39,13 +39,18 @@ public class AddVariableViewModel : DialogViewModel
         set => Set(value);
     }
 
+    public string? ErrorMessage
+    {
+        get => Get<string>();
+        private set => Set(value);
+    }
+
     private readonly IGuiCommands _guiCommands;
     private readonly ISelectedState _selectedState;
     private readonly IUndoManager _undoManager;
     private readonly IElementCommands _elementCommands;
     private readonly IFileCommands _fileCommands;
     private readonly INameVerifier _nameVerifier;
-    private readonly IDialogService _dialogService;
     private readonly IPluginManager _pluginManager;
 
     public List<string> AvailableTypes
@@ -106,7 +111,6 @@ public class AddVariableViewModel : DialogViewModel
         IFileCommands fileCommands,
         INameVerifier nameVerifier,
         ISelectedState selectedState,
-        IDialogService dialogService,
         IPluginManager pluginManager)
     {
         _guiCommands = guiCommands;
@@ -115,7 +119,6 @@ public class AddVariableViewModel : DialogViewModel
         _fileCommands = fileCommands;
         _nameVerifier = nameVerifier;
         _selectedState = selectedState;
-        _dialogService = dialogService;
         _pluginManager = pluginManager;
 
         AvailableTypes = new List<string>();
@@ -125,15 +128,35 @@ public class AddVariableViewModel : DialogViewModel
         AvailableTypes.Add("bool");
 
         SelectedItem = "float";
+
+        PropertyChanged += (_, e) =>
+        {
+            switch (e.PropertyName)
+            {
+                case nameof(EnteredName):
+                case nameof(SelectedItem):
+                    RunValidation();
+                    break;
+                case nameof(ErrorMessage):
+                    AffirmativeCommand.NotifyCanExecuteChanged();
+                    break;
+            }
+        };
+    }
+
+    public override bool CanExecuteAffirmative() => ErrorMessage is null;
+
+    public void RunValidation()
+    {
+        GeneralResponse response = Validate();
+        ErrorMessage = response.Succeeded ? null : response.Message;
     }
 
     public override void OnAffirmative()
     {
-        GeneralResponse response = Validate();
-        if (!response.Succeeded)
+        RunValidation();
+        if (ErrorMessage != null)
         {
-            _dialogService.ShowMessage(response.Message);
-            NegativeCommand.Execute(null);
             return;
         }
 
@@ -183,55 +206,40 @@ public class AddVariableViewModel : DialogViewModel
         var type = SelectedItem;
         var name = EnteredName;
 
-        string whyNotValid;
-        bool isValid = _nameVerifier.IsVariableNameValid(
-            name, Element, Variable, out whyNotValid);
+        var behavior = _selectedState.SelectedBehavior;
 
-        if (!isValid)
+        var newVariable = new VariableSave
         {
-            _dialogService.ShowMessage(whyNotValid);
-        }
-        else
+            Name = name,
+            Type = type,
+            Value = DefaultValue
+        };
+
+        using var undoLock = _undoManager.RequestLock();
+
+        var element = _selectedState.SelectedElement;
+        if (behavior != null)
         {
-            var behavior = _selectedState.SelectedBehavior;
-
-            var newVariable = new VariableSave
-            {
-                Name = name,
-                Type = type,
-                Value = DefaultValue
-            };
-
-            using var undoLock = _undoManager.RequestLock();
-
-            var element = _selectedState.SelectedElement;
-            if (behavior != null)
-            {
-                behavior.RequiredVariables.Variables.Add(newVariable);
-                _elementCommands.SortVariables(behavior);
-                _fileCommands.TryAutoSaveBehavior(behavior);
-            }
-            else if (element != null)
-            {
-                newVariable.IsCustomVariable = true;
-                element.DefaultState.Variables.Add(newVariable);
-                _elementCommands.SortVariables(element);
-                _fileCommands.TryAutoSaveElement(element);
-            }
-            _guiCommands.RefreshVariables(force: true);
-
-            _pluginManager.VariableAdd(element, name);
+            behavior.RequiredVariables.Variables.Add(newVariable);
+            _elementCommands.SortVariables(behavior);
+            _fileCommands.TryAutoSaveBehavior(behavior);
         }
+        else if (element != null)
+        {
+            newVariable.IsCustomVariable = true;
+            element.DefaultState.Variables.Add(newVariable);
+            _elementCommands.SortVariables(element);
+            _fileCommands.TryAutoSaveElement(element);
+        }
+        _guiCommands.RefreshVariables(force: true);
+
+        _pluginManager.VariableAdd(element, name);
     }
 
     private void DoEdit(VariableSave variable, Logic.VariableChangeResponse changes)
     {
         var type = SelectedItem;
         var newName = EnteredName;
-
-        string whyNotValid;
-        bool isValid = _nameVerifier.IsVariableNameValid(
-            newName, Element, Variable, out whyNotValid);
 
         var behavior = _selectedState.SelectedBehavior;
 

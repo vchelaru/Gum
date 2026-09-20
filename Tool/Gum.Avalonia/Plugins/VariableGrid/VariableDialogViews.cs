@@ -4,6 +4,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Gum.Avalonia.Converters;
+using Gum.Avalonia.Dialogs;
+using Gum.Avalonia.Themes;
 using Gum.Dialogs;
 using Gum.Plugins.InternalPlugins.VariableGrid.ViewModels;
 
@@ -35,11 +38,25 @@ public sealed class AddVariableView : StackPanel
         name.Bind(TextBox.TextProperty, new Binding(nameof(AddVariableViewModel.EnteredName)) { Mode = BindingMode.TwoWay });
         Children.Add(name);
 
+        TextBlock error = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 4, 0, 0) }
+            .WithThemeResource(TextBlock.ForegroundProperty, "Frb.Brushes.Error")
+            .WithThemeResource(TextBlock.FontSizeProperty, FrbThemeResources.CaptionFontSizeKey);
+        error.Bind(TextBlock.TextProperty, new Binding(nameof(AddVariableViewModel.ErrorMessage)));
+        error.Bind(IsVisibleProperty, new Binding(nameof(AddVariableViewModel.ErrorMessage)) { Converter = NotNullConverter.Instance });
+        Children.Add(error);
+
         TextBlock detail = new TextBlock { TextWrapping = TextWrapping.Wrap };
         detail.Bind(TextBlock.TextProperty, new Binding(nameof(AddVariableViewModel.DetailText)));
         Children.Add(detail);
 
-        AttachedToVisualTree += (_, _) => name.Focus();
+        DialogWindow.FocusWhenOpened(name, () =>
+        {
+            // As the equivalent GetUserStringDialogView does: the error and the disabled OK
+            // show before any typing, e.g. immediately for a blank Add Variable name.
+            if (DataContext is AddVariableViewModel viewModel)
+            {
+                viewModel.RunValidation();
+            }
+        });
     }
 }
-

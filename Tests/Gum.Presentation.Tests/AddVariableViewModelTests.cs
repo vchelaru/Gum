@@ -9,7 +9,6 @@ using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Commands;
-using Gum.Services.Dialogs;
 using Moq;
 using Shouldly;
 
@@ -23,7 +22,6 @@ public class AddVariableViewModelTests : BaseTestClass
     private readonly Mock<IElementCommands> _elementCommands;
     private readonly Mock<IFileCommands> _fileCommands;
     private readonly Mock<INameVerifier> _nameVerifier;
-    private readonly Mock<IDialogService> _dialogService;
     private readonly Mock<IPluginManager> _pluginManager;
     private readonly AddVariableViewModel _viewModel;
     private readonly ComponentSave _component;
@@ -40,7 +38,6 @@ public class AddVariableViewModelTests : BaseTestClass
         _elementCommands = new Mock<IElementCommands>();
         _fileCommands = new Mock<IFileCommands>();
         _nameVerifier = new Mock<INameVerifier>();
-        _dialogService = new Mock<IDialogService>();
         _pluginManager = new Mock<IPluginManager>();
 
         _selectedState.Setup(x => x.SelectedElement).Returns(_component);
@@ -58,7 +55,6 @@ public class AddVariableViewModelTests : BaseTestClass
             _fileCommands.Object,
             _nameVerifier.Object,
             _selectedState.Object,
-            _dialogService.Object,
             _pluginManager.Object);
 
         GumProjectSave gumProject = new GumProjectSave();
@@ -126,5 +122,37 @@ public class AddVariableViewModelTests : BaseTestClass
 
         screen.DefaultState.GetVariableSave("myComp.NewVar").ShouldNotBeNull();
         screen.DefaultState.GetVariableSave("myComp.OldVar").ShouldBeNull();
+    }
+
+    [Fact]
+    public void EnteringInvalidName_ShouldSetErrorMessageAndDisableAffirmative_WithoutShowingDialog()
+    {
+        string? whyNotValid = "The variable name Dupe is already used";
+        _nameVerifier
+            .Setup(x => x.IsVariableNameValid("Dupe", It.IsAny<ElementSave>(), It.IsAny<VariableSave>(), out whyNotValid))
+            .Returns(false);
+
+        _viewModel.EnteredName = "Dupe";
+
+        _viewModel.ErrorMessage.ShouldBe("The variable name Dupe is already used");
+        _viewModel.CanExecuteAffirmative().ShouldBeFalse();
+    }
+
+    [Fact]
+    public void OnAffirmativeWithInvalidName_ShouldNotAddVariable()
+    {
+        string? whyNotValid = "The variable name Dupe is already used";
+        _nameVerifier
+            .Setup(x => x.IsVariableNameValid("Dupe", It.IsAny<ElementSave>(), It.IsAny<VariableSave>(), out whyNotValid))
+            .Returns(false);
+
+        _viewModel.Variable = null;
+        _viewModel.Element = _component;
+        _viewModel.EnteredName = "Dupe";
+        _viewModel.SelectedItem = "float";
+
+        _viewModel.OnAffirmative();
+
+        _component.DefaultState.Variables.ShouldNotContain(v => v.Name == "Dupe");
     }
 }
