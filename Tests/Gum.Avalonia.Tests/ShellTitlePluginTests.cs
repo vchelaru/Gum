@@ -47,7 +47,8 @@ public class ShellTitlePluginTests
     {
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         ShellViewModel shell = (ShellViewModel)window.DataContext!;
-        Grid titleRow = (Grid)((DockPanel)window.Content!).Children.Single(child => DockPanel.GetDock(child) == Dock.Top);
+        DockPanel content = ((Panel)window.Content!).Children.OfType<DockPanel>().Single();
+        Grid titleRow = (Grid)content.Children.Single(child => DockPanel.GetDock(child) == Dock.Top);
         TextBlock header = titleRow.Children.OfType<TextBlock>().Single();
 
         shell.ProjectFilePath = "C:/My/Folder/Is/Long/GumProject.gumj";
