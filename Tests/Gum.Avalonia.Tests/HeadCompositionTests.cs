@@ -75,7 +75,8 @@ public class HeadCompositionTests
         // another test, and the margin follows the window state whether or not it is on screen.
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         double expectedMargin = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS() ? 8 : 0;
-        MainPanelView panel = ((DockPanel)window.Content!).Children.OfType<MainPanelView>().Single();
+        DockPanel content = ((Panel)window.Content!).Children.OfType<DockPanel>().Single();
+        MainPanelView panel = content.Children.OfType<MainPanelView>().Single();
 
         panel.Margin.Right.ShouldBe(expectedMargin);
 
@@ -87,21 +88,22 @@ public class HeadCompositionTests
     }
 
     [AvaloniaFact]
-    public void MainWindow_ShowsTheStatusBar_OnlyWhileThereIsProgressText()
+    public void MainWindow_ShowsTheStatusOverlay_OnlyWhileThereIsProgressText()
     {
-        // The bar carries nothing but the spinner's progress, so an empty one is wasted height.
+        // The overlay carries nothing but the spinner's progress, so it stays hidden (and out of
+        // the panel's layout, since it's overlaid rather than docked) while there is none.
         MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
         ShellViewModel shell = (ShellViewModel)window.DataContext!;
-        Control statusBar = ((DockPanel)window.Content!).Children.Single(child => DockPanel.GetDock(child) == Dock.Bottom);
+        Border statusOverlay = ((Panel)window.Content!).Children.OfType<Border>().Single();
 
         shell.ProgressText = "";
-        statusBar.IsVisible.ShouldBeFalse();
+        statusOverlay.IsVisible.ShouldBeFalse();
 
         shell.ProgressText = "Working... 1/3";
-        statusBar.IsVisible.ShouldBeTrue();
+        statusOverlay.IsVisible.ShouldBeTrue();
 
         shell.ProgressText = "";
-        statusBar.IsVisible.ShouldBeFalse();
+        statusOverlay.IsVisible.ShouldBeFalse();
     }
 
     [Fact]
