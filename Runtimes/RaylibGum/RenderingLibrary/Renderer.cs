@@ -159,7 +159,7 @@ public class Renderer : IRenderer
     /// <summary>
     /// Owns the fragment shader for the extra additive pass an authored
     /// <see cref="Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame draws (#4821 gap 2).
-    /// A <see cref="Gum.Renderables.Sprite"/> with a non-null <c>AdditiveTintColor</c> binds
+    /// A <see cref="Gum.Renderables.Sprite"/> set to <c>ColorOperation.Add</c> binds
     /// <c>AdditiveColorOverlayShader.Shader</c> around its extra draw call.
     /// </summary>
     public Gum.Renderables.AdditiveColorOverlayShader AdditiveColorOverlayShader { get; }

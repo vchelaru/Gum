@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Gum.Content.AnimationChain;
 using Gum.DataTypes;
@@ -77,7 +77,7 @@ public class NineSliceAdditiveColorOperationTests : BaseTestClass
     }
 
     [Fact]
-    public void AnimateSelf_ShouldSetAdditiveTintColor_WhenFrameColorOperationIsAdd()
+    public void AnimateSelf_ShouldSetColorAndAddOperation_WhenFrameColorOperationIsAdd()
     {
         // Logic-level pin alongside the pixel check above: NineSlice.ApplyAnimationFrame requires a
         // non-null frame texture (throws otherwise), so this needs a real GraphicsDevice - unlike
@@ -100,12 +100,12 @@ public class NineSliceAdditiveColorOperationTests : BaseTestClass
             nineSlice.AnimationChains = chainList;
             nineSlice.CurrentChainName = "TestChain";
 
-            // The Add frame's Red/Green/Blue drive the additive overlay (AdditiveTintColor), not the
-            // NineSlice's own Multiply-style Red/Green/Blue tint - those must stay untouched.
-            nineSlice.Red.ShouldBe(11);
-            nineSlice.Green.ShouldBe(22);
-            nineSlice.Blue.ShouldBe(33);
-            nineSlice.AdditiveTintColor.ShouldBe(System.Drawing.Color.FromArgb(255, 255, 0, 0));
+            // The Add frame drives the NineSlice's own Color plus ColorOperation.Add - Color is the
+            // single tint source, read differently depending on the operation.
+            nineSlice.ColorOperation.ShouldBe(global::RenderingLibrary.Graphics.ColorOperation.Add);
+            nineSlice.Red.ShouldBe(255);
+            nineSlice.Green.ShouldBe(0);
+            nineSlice.Blue.ShouldBe(0);
         }
         finally
         {
@@ -114,9 +114,9 @@ public class NineSliceAdditiveColorOperationTests : BaseTestClass
     }
 
     [Fact]
-    public void AnimateSelf_ShouldClearAdditiveTintColor_WhenFrameHasNoColorOperation()
+    public void AnimateSelf_ShouldRestoreModulate_WhenFrameHasNoColorOperation()
     {
-        // A later frame with no authored color must not inherit a still-set AdditiveTintColor from
+        // A later frame with no authored color must not inherit ColorOperation.Add from
         // an earlier Add frame.
         using MinimalGame game = new();
         game.RunOneFrame();
@@ -137,12 +137,12 @@ public class NineSliceAdditiveColorOperationTests : BaseTestClass
             nineSlice.AnimationChains = chainList;
             nineSlice.Animate = true;
             nineSlice.CurrentChainName = "TestChain";
-            nineSlice.AdditiveTintColor.ShouldNotBeNull();
+            nineSlice.ColorOperation.ShouldBe(global::RenderingLibrary.Graphics.ColorOperation.Add);
 
             // 1.5s into chain crosses from frame 0 (ends at 1.0s) into frame 1.
             nineSlice.AnimateSelf(1.5);
 
-            nineSlice.AdditiveTintColor.ShouldBeNull();
+            nineSlice.ColorOperation.ShouldBe(global::RenderingLibrary.Graphics.ColorOperation.Modulate);
         }
         finally
         {

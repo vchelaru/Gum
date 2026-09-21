@@ -53,14 +53,6 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
-    /// <summary>
-    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
-    /// null when the current frame doesn't author one. Composed on top of the tint filter in
-    /// <see cref="GetPaint"/> via a color-matrix offset (#4821) rather than a second draw pass -
-    /// unlike MonoGame/KNI/FNA's <c>Renderer.DrawAdditiveColorOverlay</c>.
-    /// </summary>
-    public SKColor? AdditiveTintColor { get; private set; }
-
     public Rectangle? SourceRectangle;
     private SKBitmap? _texture;
 
@@ -135,17 +127,20 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
-            AdditiveTintColor = null;
+            ColorOperation = ColorOperation.Modulate;
         }
         else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
         {
-            // Black (0) is Add's identity, so an unset channel contributes nothing to the overlay -
-            // unlike Multiply's 255 identity above. Mirrors RenderingLibrary.Graphics.Sprite.
-            AdditiveTintColor = new SKColor((byte)(frame.Red ?? 0), (byte)(frame.Green ?? 0), (byte)(frame.Blue ?? 0));
+            // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
+            // Multiply's 255 identity above.
+            Red = frame.Red ?? 0;
+            Green = frame.Green ?? 0;
+            Blue = frame.Blue ?? 0;
+            ColorOperation = ColorOperation.Add;
         }
-        else
+        else if (ColorOperation == ColorOperation.Add)
         {
-            AdditiveTintColor = null;
+            ColorOperation = ColorOperation.Modulate;
         }
     }
 
@@ -171,29 +166,26 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
         // non-image draws; DrawImage needs a ColorFilter. White (the default Color, see the
         // constructor) is the Modulate identity, so this is a no-op for sprites that never touch
         // Red/Green/Blue.
-        SKColorFilter tintFilter = SKColorFilter.CreateBlendMode(Color,
-            ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
-
-        // Add (#4821): a single-pass color-matrix offset that adds the additive tint's RGB on top of
-        // the tint filter's result, rather than a second draw pass like
-        // RenderingLibrary.Graphics.Renderer.DrawAdditiveColorOverlay. The offset is added in
-        // unpremultiplied space and gets scaled by the pixel's own alpha when Skia premultiplies for
-        // compositing, so it's naturally masked by the drawn image's silhouette.
-        if (AdditiveTintColor.HasValue)
+        // Add draws the texture untinted and adds Color as a single-pass color-matrix offset,
+        // rather than a second draw pass like RenderingLibrary.Graphics.Renderer.
+        // DrawAdditiveColorOverlay. The offset is added in unpremultiplied space and gets scaled by
+        // the pixel's own alpha when Skia premultiplies for compositing, so it's naturally masked by
+        // the drawn image's silhouette.
+        if (ColorOperation == ColorOperation.Add)
         {
-            SKColor add = AdditiveTintColor.Value;
             float[] addMatrix =
             {
-                1, 0, 0, 0, add.Red / 255f,
-                0, 1, 0, 0, add.Green / 255f,
-                0, 0, 1, 0, add.Blue / 255f,
+                1, 0, 0, 0, Color.Red / 255f,
+                0, 1, 0, 0, Color.Green / 255f,
+                0, 0, 1, 0, Color.Blue / 255f,
                 0, 0, 0, 1, 0,
             };
-            paint.ColorFilter = SKColorFilter.CreateCompose(SKColorFilter.CreateColorMatrix(addMatrix), tintFilter);
+            paint.ColorFilter = SKColorFilter.CreateColorMatrix(addMatrix);
         }
         else
         {
-            paint.ColorFilter = tintFilter;
+            paint.ColorFilter = SKColorFilter.CreateBlendMode(Color,
+                ColorOperation == ColorOperation.ColorTextureAlpha ? SKBlendMode.SrcIn : SKBlendMode.Modulate);
         }
 
         return paint;

@@ -122,7 +122,7 @@ public class NineSlice : SpriteBatchRenderableBase,
     #region Properties
 
     bool IRenderableIpso.IsRenderTarget => false;
-    ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
+    ColorOperation IRenderableIpso.ColorOperation => ColorOperation;
 
     public int Alpha
     {
@@ -398,29 +398,26 @@ public class NineSlice : SpriteBatchRenderableBase,
     }
 
     /// <summary>
-    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
-    /// null when the current frame doesn't author one. Forwarded to all 9 internal sprites the same
-    /// way <see cref="Color"/> is (#4821 gap 4) - each sprite's own draw gets an additive overlay
-    /// pass via <see cref="Renderer.DrawAdditiveColorOverlay"/>, matching Sprite's standalone Add
-    /// support (#4792 Gap 2).
+    /// How <see cref="Color"/> combines with the texture. Forwarded to all 9 internal sprites the
+    /// same way <see cref="Color"/> is.
     /// </summary>
-    public Color? AdditiveTintColor
+    public ColorOperation ColorOperation
     {
         get
         {
-            return mSprites[(int)NineSliceSections.Center].AdditiveTintColor;
+            return mSprites[(int)NineSliceSections.Center].ColorOperation;
         }
         set
         {
-            mSprites[(int)NineSliceSections.TopLeft].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.Top].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.TopRight].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.Right].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.BottomRight].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.Bottom].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.BottomLeft].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.Left].AdditiveTintColor = value;
-            mSprites[(int)NineSliceSections.Center].AdditiveTintColor = value;
+            mSprites[(int)NineSliceSections.TopLeft].ColorOperation = value;
+            mSprites[(int)NineSliceSections.Top].ColorOperation = value;
+            mSprites[(int)NineSliceSections.TopRight].ColorOperation = value;
+            mSprites[(int)NineSliceSections.Right].ColorOperation = value;
+            mSprites[(int)NineSliceSections.BottomRight].ColorOperation = value;
+            mSprites[(int)NineSliceSections.Bottom].ColorOperation = value;
+            mSprites[(int)NineSliceSections.BottomLeft].ColorOperation = value;
+            mSprites[(int)NineSliceSections.Left].ColorOperation = value;
+            mSprites[(int)NineSliceSections.Center].ColorOperation = value;
         }
     }
 
@@ -1007,12 +1004,16 @@ public class NineSlice : SpriteBatchRenderableBase,
         var rotation = sprite.Rotation;
 
 
-        Sprite.Render(managers, spriteRenderer, sprite, texture, color,
+        // Add draws untinted and then adds Color in a second pass, matching Sprite.Render.
+        bool isAdd = sprite.ColorOperation == ColorOperation.Add;
+
+        Sprite.Render(managers, spriteRenderer, sprite, texture,
+            isAdd ? Color.FromArgb(color.A, 255, 255, 255) : color,
             sourceRectangle, flipVertical, rotation, treat0AsFullDimensions:false);
 
-        if (sprite.AdditiveTintColor.HasValue)
+        if (isAdd)
         {
-            managers.Renderer.DrawAdditiveColorOverlay(managers, sprite, texture, sprite.AdditiveTintColor.Value,
+            managers.Renderer.DrawAdditiveColorOverlay(managers, sprite, texture, color,
                 sourceRectangle, flipVertical, rotation, flipDiagonal: false);
         }
     }
@@ -1190,17 +1191,20 @@ public class NineSlice : SpriteBatchRenderableBase,
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
-            AdditiveTintColor = null;
+            ColorOperation = ColorOperation.Modulate;
         }
         else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
         {
-            // Black (0) is Add's identity, so an unset channel contributes nothing to the overlay -
-            // unlike Multiply's 255 identity above. Mirrors RenderingLibrary.Graphics.Sprite.
-            AdditiveTintColor = Color.FromArgb(255, frame.Red ?? 0, frame.Green ?? 0, frame.Blue ?? 0);
+            // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
+            // Multiply's 255 identity above. Mirrors RenderingLibrary.Graphics.Sprite.
+            Red = frame.Red ?? 0;
+            Green = frame.Green ?? 0;
+            Blue = frame.Blue ?? 0;
+            ColorOperation = ColorOperation.Add;
         }
-        else
+        else if (ColorOperation == ColorOperation.Add)
         {
-            AdditiveTintColor = null;
+            ColorOperation = ColorOperation.Modulate;
         }
     }
 

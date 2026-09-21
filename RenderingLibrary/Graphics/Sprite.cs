@@ -74,14 +74,6 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public Color Color = Color.White;
 
-    /// <summary>
-    /// The additive tint from an authored <see cref="AnimationFrameColorOperation.Add"/> frame, or
-    /// null when the current frame doesn't author one. Applied as a second, additive draw pass on
-    /// top of the sprite's normal <see cref="Color"/> draw (#4792 Gap 2) — see
-    /// <see cref="Renderer.DrawAdditiveColorOverlay"/>.
-    /// </summary>
-    public Color? AdditiveTintColor { get; internal set; }
-
     public int Alpha
     {
         get
@@ -410,17 +402,21 @@ public class Sprite : SpriteBatchRenderableBase,
             Red = frame.Red ?? 255;
             Green = frame.Green ?? 255;
             Blue = frame.Blue ?? 255;
-            AdditiveTintColor = null;
+            ColorOperation = ColorOperation.Modulate;
         }
         else if (frame.ColorOperation == AnimationFrameColorOperation.Add)
         {
-            // Black (0) is Add's identity (see AnimationFrameColorOperation.Add), so an unset
-            // channel contributes nothing to the overlay - unlike Multiply's 255 identity above.
-            AdditiveTintColor = Color.FromArgb(255, frame.Red ?? 0, frame.Green ?? 0, frame.Blue ?? 0);
+            // Black (0) is Add's identity, so an unset channel contributes nothing - unlike
+            // Multiply's 255 identity above.
+            Red = frame.Red ?? 0;
+            Green = frame.Green ?? 0;
+            Blue = frame.Blue ?? 0;
+            ColorOperation = ColorOperation.Add;
         }
-        else
+        else if (ColorOperation == ColorOperation.Add)
         {
-            AdditiveTintColor = null;
+            // A frame that authors no color operation must not inherit the previous frame's Add.
+            ColorOperation = ColorOperation.Modulate;
         }
     }
 
@@ -483,11 +479,16 @@ public class Sprite : SpriteBatchRenderableBase,
                     this.Y -= offsetVector.Y;
                 }
 
-                Render(systemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
+                // Add draws the texture untinted and then adds Color in a second pass, so Color
+                // contributes only once. Modulate/ColorTextureAlpha tint the single main pass.
+                bool isAdd = ColorOperation == ColorOperation.Add;
+                Color mainPassColor = isAdd ? Color.FromArgb(Color.A, 255, 255, 255) : Color;
 
-                if (AdditiveTintColor.HasValue)
+                Render(systemManagers, renderer.SpriteRenderer, this, texture, mainPassColor, sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
+
+                if (isAdd)
                 {
-                    renderer.DrawAdditiveColorOverlay(systemManagers, this, texture, AdditiveTintColor.Value,
+                    renderer.DrawAdditiveColorOverlay(systemManagers, this, texture, Color,
                         sourceRectangle, FlipVertical, absoluteRotationDegrees, flipDiagonal: FlipDiagonal);
                 }
 

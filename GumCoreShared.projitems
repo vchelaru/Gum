@@ -137,6 +137,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ITexturable.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ITextureCoordinate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\IVisible.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\ColorOperation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\Layer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\LayerCameraSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)RenderingLibrary\Graphics\NineSlice.cs" />

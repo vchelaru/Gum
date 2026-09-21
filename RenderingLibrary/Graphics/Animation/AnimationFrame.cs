@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Gum.Content.AnimationChain;
 
 #nullable enable
@@ -86,11 +86,11 @@ namespace Gum.Graphics.Animation
 
         /// <summary>
         /// How <see cref="Red"/>/<see cref="Green"/>/<see cref="Blue"/> combine with the texture, or
-        /// null if the frame doesn't author a per-frame color. <see cref="AnimationFrameColorOperation.Multiply"/>
-        /// sets the sprite's own tint (<see cref="Red"/>/<see cref="Green"/>/<see cref="Blue"/>).
-        /// <see cref="AnimationFrameColorOperation.Add"/> instead sets the sprite's <c>AdditiveTintColor</c>,
-        /// drawn as a second additive pass (#4792 Gap 2) on MonoGame/KNI/FNA; raylib, Skia, and
-        /// NineSlice's equivalent frame-apply path don't implement it yet and silently drop it.
+        /// null if the frame doesn't author a per-frame color. Both cases write the sprite's own
+        /// Color; the operation picks how it is read. <see cref="AnimationFrameColorOperation.Multiply"/>
+        /// selects <c>ColorOperation.Modulate</c> and <see cref="AnimationFrameColorOperation.Add"/>
+        /// selects <c>ColorOperation.Add</c>, which draws an extra additive pass. An authored value
+        /// here wins over <see cref="RenderColorOperation"/>, since both target the same field.
         /// </summary>
         public AnimationFrameColorOperation? ColorOperation;
 

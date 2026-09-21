@@ -242,6 +242,9 @@
 		<Compile Include="..\Gum\RenderingLibrary\Blend.cs">
 			<Link>RenderingLibrary\Blend.cs</Link>
 		</Compile>
+		<Compile Include="..\RenderingLibrary\Graphics\ColorOperation.cs">
+			<Link>Graphics\ColorOperation.cs</Link>
+		</Compile>
 		<Compile Include="..\Gum\Wireframe\ElementWithState.cs">
 			<Link>Wireframe\ElementWithState.cs</Link>
 		</Compile>
