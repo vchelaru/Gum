@@ -588,6 +588,31 @@ public class VariableGridEntry
         }
     }
 
+    /// <summary>
+    /// The value "Make Default" (#4893) would restore this variable to: what it would resolve to if
+    /// the selected state stopped authoring it explicitly, even when (as with <see cref="IsDefault"/>
+    /// already true) nothing is currently authored - in that case this walks past the currently-shown
+    /// value to the next level (the default state, or the base type/inherited definition). Computed
+    /// on demand rather than cached, since it requires a recursive inheritance walk.
+    /// </summary>
+    public object? GetMakeDefaultPreviewValue()
+    {
+        if (RootVariableName is "Name" or "BaseType")
+        {
+            return null;
+        }
+
+        var effectiveVariableName = VariableSave?.Name ?? _variableName;
+        var toReturn = _stateSave?.GetValueRecursive(effectiveVariableName, ignoreOwnValue: true);
+
+        if (_isVariable && toReturn == null)
+        {
+            toReturn = DefaultValueFallback?.Invoke();
+        }
+
+        return toReturn;
+    }
+
     #endregion
 
     #region Set Value

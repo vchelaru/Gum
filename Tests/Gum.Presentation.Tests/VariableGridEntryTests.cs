@@ -255,6 +255,25 @@ public class VariableGridEntryTests : BaseTestClass
     }
 
     [Fact]
+    public void GetMakeDefaultPreviewValue_ShouldReturnBaseValue_WhenVariableIsOverriddenOnDerivedComponent()
+    {
+        // #4893: "Make Default" should preview the value it would restore - here, the derived
+        // component's explicit override of X should fall away to the base component's value.
+        ComponentSave baseComponent = CreateComponent("MakeDefaultPreviewBase");
+        baseComponent.DefaultState.SetValue("X", 1f);
+
+        ComponentSave derivedComponent = new() { Name = "MakeDefaultPreviewDerived", BaseType = "MakeDefaultPreviewBase" };
+        derivedComponent.States.Add(new StateSave { Name = "Default", ParentContainer = derivedComponent });
+        derivedComponent.DefaultState.SetValue("X", 2f);
+        ObjectFinder.Self.GumProjectSave!.Components.Add(derivedComponent);
+
+        VariableGridEntry sut = CreateSut("X", derivedComponent.DefaultState, derivedComponent);
+
+        sut.GetValue(derivedComponent).ShouldBe(2f, "the explicit override should still be the displayed value.");
+        sut.GetMakeDefaultPreviewValue().ShouldBe(1f, "Make Default should preview the base component's value.");
+    }
+
+    [Fact]
     public void SetValue_ShouldStoreLastOldFullCommitValue_WhenCommitTypeIsFull()
     {
         ComponentSave component = CreateComponent("MyComponent");

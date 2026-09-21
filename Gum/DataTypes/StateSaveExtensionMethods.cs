@@ -53,11 +53,16 @@ public static class StateSaveExtensionMethods
     /// </remarks>
     /// <param name="stateSave">The state in the current element.</param>
     /// <param name="variableName">The variable name</param>
+    /// <param name="ignoreOwnValue">
+    /// When true, skips <paramref name="stateSave"/>'s own directly-set value and starts the walk as if
+    /// it were absent - used by the "Make Default" preview (#4893) to find what a variable would resolve
+    /// to if this state stopped authoring it explicitly, even when it currently does.
+    /// </param>
     /// <returns>The value found recursively, where the most-derived value has priority.</returns>
-    public static object GetValueRecursive(this StateSave stateSave, string variableName)
+    public static object GetValueRecursive(this StateSave stateSave, string variableName, bool ignoreOwnValue = false)
     {
         // First we check if this state sets the value directly...
-        object value = stateSave.GetValue(variableName);
+        object value = ignoreOwnValue ? null : stateSave.GetValue(variableName);
 
         ElementSave elementContainingState = stateSave.ParentContainer;
         if (value == null && elementContainingState != null)

@@ -1016,4 +1016,32 @@ public class StateSaveExtensionMethodsTests : BaseTestClass
         foundList!.ValueAsIList.Count.ShouldBe(1);
         foundList.ValueAsIList[0].ShouldBe("Red = SomeOtherInstance.Red");
     }
+
+    [Fact]
+    public void GetValueRecursive_WithIgnoreOwnValue_ShouldSkipOwnValueAndReturnBaseValue()
+    {
+        // #4893: the "Make Default" preview needs "what this variable would resolve to if the
+        // selected state stopped authoring it" - i.e. the same recursive walk, but skipping the
+        // state's own explicit value instead of returning it.
+        ComponentSave baseComponent = new() { Name = "BaseComponentForIgnoreOwnValue", BaseType = "Container" };
+        StateSave baseDefaultState = new() { Name = "Default", ParentContainer = baseComponent };
+        baseComponent.States.Add(baseDefaultState);
+        baseDefaultState.SetValue("X", 1f);
+
+        ObjectFinder.Self.GumProjectSave!.Components.Add(baseComponent);
+
+        ComponentSave derivedComponent = new() { Name = "DerivedComponentForIgnoreOwnValue", BaseType = "BaseComponentForIgnoreOwnValue" };
+        StateSave derivedDefaultState = new() { Name = "Default", ParentContainer = derivedComponent };
+        derivedComponent.States.Add(derivedDefaultState);
+        derivedDefaultState.SetValue("X", 2f);
+
+        ObjectFinder.Self.GumProjectSave.Components.Add(derivedComponent);
+
+        derivedDefaultState.GetValueRecursive("X").ShouldBe(2f,
+            "because the ordinary recursive lookup should return the derived state's own explicit value.");
+
+        derivedDefaultState.GetValueRecursive("X", ignoreOwnValue: true).ShouldBe(1f,
+            "because ignoring the derived state's own value should fall through to the base component's value, " +
+            "which is what 'Make Default' would restore.");
+    }
 }
