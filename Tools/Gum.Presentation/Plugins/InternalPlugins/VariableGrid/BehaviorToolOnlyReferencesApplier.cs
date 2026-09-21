@@ -258,21 +258,36 @@ public static class BehaviorToolOnlyReferencesApplier
     }
 
     /// <summary>
-    /// Builds a name-resolver that looks up bare or instance-qualified identifiers
-    /// against every linked behavior's <c>FormsProperty</c> declarations on
-    /// <paramref name="component"/>, returning the declared <c>Value</c>. Used by
-    /// <see cref="EvaluatedSyntax.FromSyntaxNode"/> as a fallback when the state
-    /// has no authored value — so a behavior-declared default (e.g. IsEnabled = true)
-    /// flows through to the wireframe preview without polluting the saved state.
+    /// Builds a name-resolver that looks up bare or instance-qualified identifiers first
+    /// against <paramref name="component"/>'s own default state (its authored baseline) and
+    /// then against every linked behavior's <c>FormsProperty</c> declarations, returning the
+    /// declared <c>Value</c>. Used by <see cref="EvaluatedSyntax.FromSyntaxNode"/> as a
+    /// fallback when the state (the instance's state, when <paramref name="instance"/> is
+    /// non-null) has no authored value — mirroring the three-tier default resolution the rest
+    /// of the Forms-property feature uses (instance override → component default → behavior
+    /// declaration, see the <c>gum-forms-behaviors</c> skill). Consulting only the static
+    /// declaration here — skipping the component-default tier — was issue #4904: once a
+    /// component's own default diverged from the behavior's original declared default (e.g.
+    /// Orientation edited from the declared "Vertical" to "Horizontal"), an instance whose
+    /// value still equalled that stale declared default was wrongly resolved (here, and via
+    /// the "resting" comparison in <see cref="ApplyLine"/> that reuses this fallback) as if
+    /// nothing had changed, instead of inheriting the component's current default.
     /// </summary>
     private static Func<string, object?> BuildFormsPropertyDefaultsFallback(ComponentSave component, InstanceSave? instance)
     {
         string? instancePrefix = instance != null ? instance.Name + "." : null;
+        StateSave? componentDefaultState = instance != null ? component.DefaultState : null;
         return name =>
         {
             string lookupName = instancePrefix != null && name.StartsWith(instancePrefix)
                 ? name.Substring(instancePrefix.Length)
                 : name;
+
+            object? componentValue = componentDefaultState?.GetValue(lookupName);
+            if (componentValue != null)
+            {
+                return componentValue;
+            }
 
             foreach (ElementBehaviorReference reference in component.Behaviors)
             {

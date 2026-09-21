@@ -68,6 +68,18 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     private static string Diagnostics(CountResult lhs, CountResult rhs) =>
         $"lhs: {lhs.Diagnostics} | rhs: {rhs.Diagnostics}";
 
+    /// <summary>
+    /// Next diagnostic layer for issue #4901's recurrence: the first occurrence's <c>BankSegments</c>/
+    /// <c>IsActive</c> diagnostics (added by #4902) showed the counter armed and banking correctly,
+    /// but the single-Sprite/-NineSlice segment recorded zero real draw calls despite drawing the
+    /// same texture that later coalesces fine across three draws - narrowing the open hypothesis to
+    /// the texture itself not being GPU-ready for that first draw (a llvmpipe-only race between
+    /// <see cref="LoadTextureFromImage"/> and the same-frame draw call). <c>IsTextureValid</c> checked
+    /// immediately before the draw settles that hypothesis one way or the other on the next occurrence,
+    /// instead of leaving it open a third time.
+    /// </summary>
+    private static string TextureReadiness(Texture2D texture) => $"textureValid={IsTextureValid(texture)}";
+
     private static Texture2D CreateTexture()
     {
         Image image = GenImageColor(4, 4, Color.White);
@@ -103,10 +115,11 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         Texture2D texture = CreateTexture();
 
         CountResult baseline = CountWith();
+        string readinessBeforeOne = TextureReadiness(texture);
         CountResult one = CountWith(Sprite(texture));
         CountResult three = CountWith(Sprite(texture), Sprite(texture), Sprite(texture));
 
-        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        one.Count.ShouldBeGreaterThan(baseline.Count, $"{Diagnostics(baseline, one)} | {readinessBeforeOne}");
         three.Count.ShouldBe(one.Count, Diagnostics(one, three));
 
         UnloadTexture(texture);
@@ -118,10 +131,11 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         Texture2D texture = CreateTexture();
 
         CountResult baseline = CountWith();
+        string readinessBeforeOne = TextureReadiness(texture);
         CountResult one = CountWith(NineSlice(texture));
         CountResult three = CountWith(NineSlice(texture), NineSlice(texture), NineSlice(texture));
 
-        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        one.Count.ShouldBeGreaterThan(baseline.Count, $"{Diagnostics(baseline, one)} | {readinessBeforeOne}");
         three.Count.ShouldBe(one.Count, Diagnostics(one, three));
 
         UnloadTexture(texture);

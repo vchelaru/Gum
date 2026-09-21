@@ -735,6 +735,139 @@ public class BehaviorToolOnlyReferencesApplierTests : BaseTestClass
     }
 
     [Fact]
+    public void Apply_InstanceOrientationMatchesStaticDefaultButComponentDivergesFromIt_StillMaterializesChildrenLayout()
+    {
+        // Repro #4904: the "resting" comparison that skips materializing an instance's driven
+        // value (#3080) is computed via BuildFormsPropertyDefaultsFallback, which only ever
+        // returns the *static* .behx-declared FormsProperty default ("Vertical") - never the
+        // component's own *current* default state, even after the user explicitly changes it.
+        // Once the component's own Orientation is set to Horizontal, an instance whose
+        // Orientation still equals the original static default ("Vertical") gets wrongly
+        // treated as "at rest" and its ChildrenLayout is skipped - silently inheriting the
+        // component's (now-Horizontal) ChildrenLayout instead of the instance's own explicit
+        // Vertical choice.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        StateSave componentDefaultState = new StateSave { Name = "Default", ParentContainer = component };
+        // The component's own default has been explicitly changed away from the behavior's
+        // static default (Vertical -> Horizontal), as if the user edited it in the tool.
+        componentDefaultState.Variables.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Horizontal", SetsValue = true });
+        componentDefaultState.Variables.Add(new VariableSave { Type = "ChildrenLayout", Name = "ChildrenLayout", Value = ChildrenLayout.LeftToRightStack, SetsValue = true });
+        component.States.Add(componentDefaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave stackInstance = new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(stackInstance);
+
+        // The instance's own explicit choice happens to equal the behavior's static default
+        // (Vertical), but must still win over the component's now-divergent Horizontal default.
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "Orientation",
+            Name = "StackInstance.Orientation",
+            Value = "Vertical",
+            SetsValue = true
+        });
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.GetValue("StackInstance.ChildrenLayout").ShouldBe(ChildrenLayout.TopToBottomStack,
+            "the instance's explicit Vertical choice must win over the component's now-Horizontal default, even though Vertical happens to equal the behavior's original static declaration");
+    }
+
+    [Fact]
+    public void Apply_InstanceOrientationMatchesComponentsDivergedDefault_RemovesStaleMaterializedValue()
+    {
+        // Mirror of the materialization case above: once the component's own default has
+        // diverged from the behavior's static declaration (here, to Horizontal), an instance
+        // whose Orientation now matches that *current* component default - not the original
+        // static one - is genuinely "at rest" relative to it and any previously materialized
+        // override (left over from when the instance explicitly chose Vertical) must be
+        // cleaned up so the instance goes back to inheriting the component's default, exactly
+        // like Apply_InstanceDriverReturnsToDefault_RemovesStaleMaterializedValue but keyed off
+        // the component's live default instead of the static one.
+        BehaviorSave behavior = new BehaviorSave { Name = "StackPanelBehavior" };
+        behavior.FormsProperties.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Vertical" });
+        behavior.ToolOnlyVariableReferences.Add(
+            "ChildrenLayout = Orientation == \"Horizontal\" ? \"LeftToRightStack\" : \"TopToBottomStack\"");
+
+        ComponentSave component = new ComponentSave { Name = "Controls/StackPanel", BaseType = "Container" };
+        StateSave componentDefaultState = new StateSave { Name = "Default", ParentContainer = component };
+        componentDefaultState.Variables.Add(new VariableSave { Type = "Orientation", Name = "Orientation", Value = "Horizontal", SetsValue = true });
+        componentDefaultState.Variables.Add(new VariableSave { Type = "ChildrenLayout", Name = "ChildrenLayout", Value = ChildrenLayout.LeftToRightStack, SetsValue = true });
+        component.States.Add(componentDefaultState);
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "StackPanelBehavior" });
+
+        ScreenSave screen = new ScreenSave { Name = "TestScreen" };
+        StateSave screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(screenDefault);
+
+        InstanceSave stackInstance = new InstanceSave
+        {
+            Name = "StackInstance",
+            BaseType = "Controls/StackPanel",
+            ParentContainer = screen
+        };
+        screen.Instances.Add(stackInstance);
+
+        // The instance now matches the component's current (diverged) default, but still
+        // carries a stale explicit ChildrenLayout from when it was set to Vertical (which,
+        // at that point, differed from the component's Horizontal default).
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "Orientation",
+            Name = "StackInstance.Orientation",
+            Value = "Horizontal",
+            SetsValue = true
+        });
+        screenDefault.Variables.Add(new VariableSave
+        {
+            Type = "ChildrenLayout",
+            Name = "StackInstance.ChildrenLayout",
+            Value = ChildrenLayout.TopToBottomStack,
+            SetsValue = true
+        });
+
+        StandardElementSave containerStandard = new StandardElementSave { Name = "Container" };
+        containerStandard.States.Add(new StateSave { Name = "Default", ParentContainer = containerStandard });
+
+        GumProjectSave project = new GumProjectSave();
+        project.StandardElements.Add(containerStandard);
+        project.Components.Add(component);
+        project.Screens.Add(screen);
+        project.Behaviors.Add(behavior);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        BehaviorToolOnlyReferencesApplier.Apply(screen, screenDefault);
+
+        screenDefault.Variables.ShouldNotContain(v => v.Name == "StackInstance.ChildrenLayout",
+            "the instance's Orientation now matches the component's current default, so the stale override must be removed and the instance must go back to inheriting the component's default");
+    }
+
+    [Fact]
     public void Apply_ComponentOwnDefaultAtResting_KeepsAuthoredBaseline()
     {
         // The element's own default state holds the authored baseline - Controls/StackPanel sets
