@@ -1,5 +1,4 @@
 using System;
-using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -56,7 +55,6 @@ public class WpfHeadStartup : IHeadStartup
     public void InitializePlugins()
     {
         _services.GetRequiredService<PluginManager>().Initialize();
-        VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
     }
 
     /// <inheritdoc/>
