@@ -150,6 +150,25 @@ public class DataUiModelTests
     }
 
     [Fact]
+    public void GetContextMenuEntries_DisablesMakeDefault_WhenMemberIsAlreadyDefault()
+    {
+        // #4895: clicking Make Default on an already-default row is a no-op; disable it instead.
+        DefaultableMember member = new DefaultableMember("Width", new Target()) { IsDefault = true };
+        RecordingDataUi dataUi = new RecordingDataUi { InstanceMember = member };
+
+        dataUi.GetContextMenuEntries().Single().IsEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void GetContextMenuEntries_EnablesMakeDefault_WhenMemberIsNotDefault()
+    {
+        DefaultableMember member = new DefaultableMember("Width", new Target()) { IsDefault = false };
+        RecordingDataUi dataUi = new RecordingDataUi { InstanceMember = member };
+
+        dataUi.GetContextMenuEntries().Single().IsEnabled.ShouldBeTrue();
+    }
+
+    [Fact]
     public void MakeDefault_ResetsRefreshesAndReportsAUiSet()
     {
         DefaultableMember member = new DefaultableMember("Width", new Target());
