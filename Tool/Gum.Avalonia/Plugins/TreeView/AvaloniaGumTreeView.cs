@@ -108,6 +108,14 @@ public sealed class AvaloniaGumTreeView : UserControl
         Nodes.CollectionChanged += (_, _) => RequestRebuild();
 
         DragDrop.SetAllowDrop(this, true);
+        // DragEnterEvent gets its own tick, not just DragOverEvent: Avalonia's DragDropDevice tracks
+        // the hit-tested drop target and, whenever it changes - including between two Controls of the
+        // same row's template (the label, the icon, the blank space) - fires DragLeave on the old one
+        // and DragEnter on the new one INSTEAD of DragOver for that pointer move. Left unhandled,
+        // DragEnter falls through with no explicit effect, so the OS showed its own default cursor for
+        // one tick every time the pointer crossed a sub-element boundary within a row, before the next
+        // DragOver corrected it back (#4906 follow-up). Handling it identically to DragOver closes that gap.
+        AddHandler(DragDrop.DragEnterEvent, HandleDragOver);
         AddHandler(DragDrop.DragOverEvent, HandleDragOver);
         AddHandler(DragDrop.DragLeaveEvent, (_, _) => ClearDropIndicator());
         AddHandler(DragDrop.DropEvent, HandleDrop);
