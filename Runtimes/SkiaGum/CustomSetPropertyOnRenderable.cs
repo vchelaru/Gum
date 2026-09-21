@@ -436,8 +436,12 @@ public partial class CustomSetPropertyOnRenderable
         return false;
     }
 
-    public static void SetPropertyOnRenderable(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value) =>
-        SetPropertyOnRenderableFunc(containedObjectAsIpso, graphicalUiElement, propertyName, value);
+    // bool return: whether the assignment was actually handled here, so GraphicalUiElement.SetProperty
+    // can fall back to a Component's own custom variable when nothing in this dispatch claims the
+    // name (issue #4891). SetPropertyOnRenderableFunc is kept as an alias - AposShapeRuntime wires
+    // it directly into AdditionalPropertyOnRenderable by that name.
+    public static bool SetPropertyOnRenderable(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object? value) =>
+        SetPropertyOnRenderableFunc(containedObjectAsIpso, graphicalUiElement, propertyName, value!);
 
     public static bool SetPropertyOnRenderableFunc(IRenderableIpso containedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
@@ -1147,7 +1151,7 @@ public partial class CustomSetPropertyOnRenderable
 
         if (!handled)
         {
-            GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);
+            handled = GraphicalUiElement.SetPropertyThroughReflection(containedObjectAsIpso, graphicalUiElement, propertyName, value);
             //SetPropertyOnRenderable(mContainedObjectAsIpso, propertyName, value);
         }
 #endif

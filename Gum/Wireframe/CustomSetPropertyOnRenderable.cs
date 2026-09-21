@@ -247,7 +247,10 @@ public partial class CustomSetPropertyOnRenderable
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable = null;
 
-    public static void SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    // bool return: whether the assignment was actually handled here, so GraphicalUiElement.SetProperty
+    // can fall back to a Component's own custom variable when nothing in this dispatch claims the
+    // name (issue #4891).
+    public static bool SetPropertyOnRenderable(IRenderableIpso renderableIpso, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
         bool handled = false;
 
@@ -319,8 +322,10 @@ public partial class CustomSetPropertyOnRenderable
 
         if (!handled)
         {
-            GraphicalUiElement.SetPropertyThroughReflection(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = GraphicalUiElement.SetPropertyThroughReflection(renderableIpso, graphicalUiElement, propertyName, value);
         }
+
+        return handled;
     }
 
 #if !RAYLIB
