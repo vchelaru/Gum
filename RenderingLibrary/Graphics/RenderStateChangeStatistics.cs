@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RenderingLibrary.Graphics
 {
     /// <summary>
@@ -31,6 +33,19 @@ namespace RenderingLibrary.Graphics
         /// </summary>
         public int DrawCallCount { get; private set; }
 
+        private readonly List<int> _bankSegments = new();
+
+        /// <summary>
+        /// One entry per raylib-backed <see cref="AddDrawCalls"/> call recorded since the last
+        /// <see cref="Reset"/> (i.e. one per <c>BatchDrawCallCounter.Bank()</c> invocation, in
+        /// order), each holding that segment's real draw-call count — including zero-draw segments.
+        /// An empty list means the pass never banked at all (the counter was inactive, e.g. the raylib
+        /// window wasn't ready yet); a list of all zeros means it banked but every segment was empty.
+        /// Diagnostic only — added for issue #4901 so a recurrence of that flake shows *why* the
+        /// total didn't grow, instead of only the final <see cref="DrawCallCount"/>.
+        /// </summary>
+        public IReadOnlyList<int> BankSegments => _bankSegments;
+
         /// <summary>
         /// Records one ShapeBatch begin. Called from the Apos.Shapes runtime whenever it opens
         /// (or re-opens) its ShapeBatch.
@@ -41,12 +56,14 @@ namespace RenderingLibrary.Graphics
         }
 
         /// <summary>
-        /// Adds <paramref name="count"/> draw calls to <see cref="DrawCallCount"/>. Called by the
-        /// raylib renderer as it banks the owned <c>RenderBatch</c>'s draw counter at each flush.
+        /// Adds <paramref name="count"/> draw calls to <see cref="DrawCallCount"/> and records the
+        /// segment in <see cref="BankSegments"/>. Called by the raylib renderer as it banks the
+        /// owned <c>RenderBatch</c>'s draw counter at each flush.
         /// </summary>
         public void AddDrawCalls(int count)
         {
             DrawCallCount += count;
+            _bankSegments.Add(count);
         }
 
         /// <summary>
@@ -56,6 +73,7 @@ namespace RenderingLibrary.Graphics
         {
             ShapeBatchBeginCount = 0;
             DrawCallCount = 0;
+            _bankSegments.Clear();
         }
     }
 }

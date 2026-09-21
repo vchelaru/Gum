@@ -13,20 +13,6 @@ namespace RaylibGum.Tests.Rendering;
 public class BatchDrawCallCounterTests : BaseTestClass
 {
     [Fact]
-    public void BeginPass_EmptyPass_RecordsZeroDrawCalls()
-    {
-        BatchDrawCallCounter counter = new();
-        RenderStateChangeStatistics statistics = new();
-
-        BeginDrawing();
-        counter.BeginPass(statistics);
-        counter.EndPass();
-        EndDrawing();
-
-        statistics.DrawCallCount.ShouldBe(0);
-    }
-
-    [Fact]
     public void Bank_SingleRectangle_RecordsOneDrawCall()
     {
         BatchDrawCallCounter counter = new();
@@ -55,5 +41,51 @@ public class BatchDrawCallCounterTests : BaseTestClass
         EndDrawing();
 
         statistics.DrawCallCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void BeginPass_EmptyPass_RecordsZeroDrawCalls()
+    {
+        BatchDrawCallCounter counter = new();
+        RenderStateChangeStatistics statistics = new();
+
+        BeginDrawing();
+        counter.BeginPass(statistics);
+        counter.EndPass();
+        EndDrawing();
+
+        statistics.DrawCallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void IsActive_AfterEndPass_IsFalse()
+    {
+        BatchDrawCallCounter counter = new();
+        RenderStateChangeStatistics statistics = new();
+
+        BeginDrawing();
+        counter.BeginPass(statistics);
+        counter.EndPass();
+        EndDrawing();
+
+        counter.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsActive_BetweenBeginPassAndEndPass_IsTrue()
+    {
+        BatchDrawCallCounter counter = new();
+        RenderStateChangeStatistics statistics = new();
+
+        BeginDrawing();
+        counter.BeginPass(statistics);
+
+        // The GL window used by this test harness is already up from earlier tests in the process
+        // (the batch is initialized lazily, once, for the process lifetime — see BatchDrawCallCounter's
+        // class remarks), so BeginPass is expected to activate counting here.
+        counter.IsActive.ShouldBeTrue();
+
+        counter.EndPass();
+        EndDrawing();
     }
 }

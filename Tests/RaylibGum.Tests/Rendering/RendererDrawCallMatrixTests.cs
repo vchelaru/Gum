@@ -22,21 +22,35 @@ namespace RaylibGum.Tests.Rendering;
 /// </summary>
 public class RendererDrawCallMatrixTests : BaseTestClass
 {
-    private static int DrawAndCount()
+    /// <summary>
+    /// A frame's draw-call total plus a snapshot of how <see cref="BatchDrawCallCounter"/> arrived
+    /// at it (issue #4901 — this matrix flaked once on CI with no way to tell, after the fact,
+    /// whether the owned batch banked zero real draw calls for a segment that should have had some,
+    /// or never banked at all that frame). Surfaced only in assertion failure messages, so a
+    /// recurrence carries this detail in the CI log instead of needing to be reproduced separately.
+    /// </summary>
+    private readonly record struct CountResult(int Count, string Diagnostics);
+
+    private static CountResult DrawAndCount()
     {
         BeginDrawing();
         GumService.Default.Draw();
         EndDrawing();
-        return Renderer.Self.RenderStateChangeStatistics.DrawCallCount;
+
+        RenderStateChangeStatistics stats = Renderer.Self.RenderStateChangeStatistics;
+        string diagnostics =
+            $"drawCallCount={stats.DrawCallCount} bankSegments=[{string.Join(",", stats.BankSegments)}] counterActive={Renderer.Self.BatchDrawCallCounter.IsActive}";
+        return new CountResult(stats.DrawCallCount, diagnostics);
     }
 
     /// <summary>
     /// Adds the given items as adjacent children of the test root, renders one frame, returns the
-    /// draw-call count, then clears them so the next call starts from a clean (zero) baseline.
+    /// draw-call count (plus a diagnostic snapshot, see <see cref="CountResult"/>), then clears them
+    /// so the next call starts from a clean (zero) baseline.
     /// Root children are used (rather than AddToManagers) because <c>BaseTestClass</c> clears them
     /// and they reliably detach — giving deterministic isolation between measurements.
     /// </summary>
-    private static int CountWith(params GraphicalUiElement[] items)
+    private static CountResult CountWith(params GraphicalUiElement[] items)
     {
         foreach (GraphicalUiElement item in items)
         {
@@ -44,11 +58,15 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         }
         GumService.Default.Root.UpdateLayout();
 
-        int count = DrawAndCount();
+        CountResult result = DrawAndCount();
 
         GumService.Default.Root.Children.Clear();
-        return count;
+        return result;
     }
+
+    /// <summary>Formats both sides of a count comparison's diagnostics for an assertion failure message.</summary>
+    private static string Diagnostics(CountResult lhs, CountResult rhs) =>
+        $"lhs: {lhs.Diagnostics} | rhs: {rhs.Diagnostics}";
 
     private static Texture2D CreateTexture()
     {
@@ -71,12 +89,12 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     [Fact]
     public void ColoredRectangle_DrawsAndMultiplesCoalesce()
     {
-        int baseline = CountWith();
-        int one = CountWith(ColoredRect());
-        int three = CountWith(ColoredRect(), ColoredRect(), ColoredRect());
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(ColoredRect());
+        CountResult three = CountWith(ColoredRect(), ColoredRect(), ColoredRect());
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
     }
 
     [Fact]
@@ -84,12 +102,12 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     {
         Texture2D texture = CreateTexture();
 
-        int baseline = CountWith();
-        int one = CountWith(Sprite(texture));
-        int three = CountWith(Sprite(texture), Sprite(texture), Sprite(texture));
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(Sprite(texture));
+        CountResult three = CountWith(Sprite(texture), Sprite(texture), Sprite(texture));
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
 
         UnloadTexture(texture);
     }
@@ -99,12 +117,12 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     {
         Texture2D texture = CreateTexture();
 
-        int baseline = CountWith();
-        int one = CountWith(NineSlice(texture));
-        int three = CountWith(NineSlice(texture), NineSlice(texture), NineSlice(texture));
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(NineSlice(texture));
+        CountResult three = CountWith(NineSlice(texture), NineSlice(texture), NineSlice(texture));
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
 
         UnloadTexture(texture);
     }
@@ -112,45 +130,45 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     [Fact]
     public void Text_DrawsAndMultiplesWithSameFontCoalesce()
     {
-        int baseline = CountWith();
-        int one = CountWith(Text());
-        int three = CountWith(Text(), Text(), Text());
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(Text());
+        CountResult three = CountWith(Text(), Text(), Text());
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
     }
 
     [Fact]
     public void Circle_DrawsAndMultiplesCoalesce()
     {
-        int baseline = CountWith();
-        int one = CountWith(Circle());
-        int three = CountWith(Circle(), Circle(), Circle());
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(Circle());
+        CountResult three = CountWith(Circle(), Circle(), Circle());
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
     }
 
     [Fact]
     public void RectangleShape_DrawsAndMultiplesCoalesce()
     {
-        int baseline = CountWith();
-        int one = CountWith(RectangleShape());
-        int three = CountWith(RectangleShape(), RectangleShape(), RectangleShape());
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(RectangleShape());
+        CountResult three = CountWith(RectangleShape(), RectangleShape(), RectangleShape());
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
     }
 
     [Fact]
     public void Polygon_DrawsAndMultiplesCoalesce()
     {
-        int baseline = CountWith();
-        int one = CountWith(Polygon());
-        int three = CountWith(Polygon(), Polygon(), Polygon());
+        CountResult baseline = CountWith();
+        CountResult one = CountWith(Polygon());
+        CountResult three = CountWith(Polygon(), Polygon(), Polygon());
 
-        one.ShouldBeGreaterThan(baseline);
-        three.ShouldBe(one);
+        one.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, one));
+        three.Count.ShouldBe(one.Count, Diagnostics(one, three));
     }
 
     // ---- A real batch break (distinct textures) DOES increase the count. ----
@@ -162,10 +180,10 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         Texture2D textureB = CreateTexture();
         Texture2D textureC = CreateTexture();
 
-        int shared = CountWith(Sprite(textureA), Sprite(textureA), Sprite(textureA));
-        int distinct = CountWith(Sprite(textureA), Sprite(textureB), Sprite(textureC));
+        CountResult shared = CountWith(Sprite(textureA), Sprite(textureA), Sprite(textureA));
+        CountResult distinct = CountWith(Sprite(textureA), Sprite(textureB), Sprite(textureC));
 
-        distinct.ShouldBeGreaterThan(shared);
+        distinct.Count.ShouldBeGreaterThan(shared.Count, Diagnostics(shared, distinct));
 
         UnloadTexture(textureA);
         UnloadTexture(textureB);
@@ -190,10 +208,10 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     {
         Texture2D texture = CreateTexture();
 
-        int baseline = CountWith();
-        int blended = CountWith(BlendedSprite(texture, blend));
+        CountResult baseline = CountWith();
+        CountResult blended = CountWith(BlendedSprite(texture, blend));
 
-        blended.ShouldBeGreaterThan(baseline);
+        blended.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, blended));
 
         UnloadTexture(texture);
     }
@@ -210,12 +228,12 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     [Fact]
     public void ClippedContainer_CountsChildrenAndIdenticalChildrenCoalesce()
     {
-        int baseline = CountWith();
-        int oneChild = CountWith(ClippedContainerWith(1));
-        int threeChildren = CountWith(ClippedContainerWith(3));
+        CountResult baseline = CountWith();
+        CountResult oneChild = CountWith(ClippedContainerWith(1));
+        CountResult threeChildren = CountWith(ClippedContainerWith(3));
 
-        oneChild.ShouldBeGreaterThan(baseline);
-        threeChildren.ShouldBe(oneChild);
+        oneChild.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, oneChild));
+        threeChildren.Count.ShouldBe(oneChild.Count, Diagnostics(oneChild, threeChildren));
     }
 
     private static ContainerRuntime ClippedContainerWith(int childCount)
@@ -234,10 +252,10 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     [Fact]
     public void DropShadowShape_RendersWithoutCrashingAndIsCounted()
     {
-        int baseline = CountWith();
-        int withShadow = CountWith(ShadowedRectangle());
+        CountResult baseline = CountWith();
+        CountResult withShadow = CountWith(ShadowedRectangle());
 
-        withShadow.ShouldBeGreaterThan(baseline);
+        withShadow.Count.ShouldBeGreaterThan(baseline.Count, Diagnostics(baseline, withShadow));
     }
 
     [Fact]
@@ -246,9 +264,9 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         // Each shadow runs its own offscreen render-target + shader passes. The point here is
         // crash-safety of repeated render-target switches inside the owned batch, plus that the
         // count stays finite and sensible.
-        int count = CountWith(ShadowedRectangle(), ShadowedRectangle(), ShadowedRectangle());
+        CountResult count = CountWith(ShadowedRectangle(), ShadowedRectangle(), ShadowedRectangle());
 
-        count.ShouldBeGreaterThan(0);
+        count.Count.ShouldBeGreaterThan(0, count.Diagnostics);
     }
 
     private static RectangleRuntime ShadowedRectangle()
@@ -287,15 +305,15 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         GumService.Default.Root.Children.Add(root);
         GumService.Default.Root.UpdateLayout();
 
-        int firstFrame = DrawAndCount();
-        int secondFrame = DrawAndCount();
+        CountResult firstFrame = DrawAndCount();
+        CountResult secondFrame = DrawAndCount();
 
         GumService.Default.Root.Children.Clear();
         UnloadTexture(texture);
 
-        firstFrame.ShouldBeGreaterThan(0);
+        firstFrame.Count.ShouldBeGreaterThan(0, firstFrame.Diagnostics);
         // Per-frame Reset means the count must not accumulate frame-over-frame.
-        secondFrame.ShouldBe(firstFrame);
+        secondFrame.Count.ShouldBe(firstFrame.Count, Diagnostics(firstFrame, secondFrame));
     }
 
     [Fact]
@@ -303,17 +321,17 @@ public class RendererDrawCallMatrixTests : BaseTestClass
     {
         Texture2D texture = CreateTexture();
 
-        int withOneSprite = CountMixedScene(texture, spriteCount: 1);
-        int withThreeSprites = CountMixedScene(texture, spriteCount: 3);
+        CountResult withOneSprite = CountMixedScene(texture, spriteCount: 1);
+        CountResult withThreeSprites = CountMixedScene(texture, spriteCount: 3);
 
         // The extra sprites are adjacent and share the texture, so they coalesce: the richer scene
         // costs the same number of draw calls as the leaner one.
-        withThreeSprites.ShouldBe(withOneSprite);
+        withThreeSprites.Count.ShouldBe(withOneSprite.Count, Diagnostics(withOneSprite, withThreeSprites));
 
         UnloadTexture(texture);
     }
 
-    private static int CountMixedScene(Texture2D texture, int spriteCount)
+    private static CountResult CountMixedScene(Texture2D texture, int spriteCount)
     {
         ContainerRuntime root = new() { Width = 400, Height = 400 };
         for (int i = 0; i < spriteCount; i++)
@@ -326,9 +344,9 @@ public class RendererDrawCallMatrixTests : BaseTestClass
         GumService.Default.Root.Children.Add(root);
         GumService.Default.Root.UpdateLayout();
 
-        int count = DrawAndCount();
+        CountResult result = DrawAndCount();
 
         GumService.Default.Root.Children.Clear();
-        return count;
+        return result;
     }
 }

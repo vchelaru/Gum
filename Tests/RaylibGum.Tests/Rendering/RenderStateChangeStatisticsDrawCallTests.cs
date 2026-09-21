@@ -23,11 +23,41 @@ public class RenderStateChangeStatisticsDrawCallTests : BaseTestClass
     }
 
     [Fact]
+    public void AddDrawCalls_Twice_RecordsBothSegmentsInBankSegments()
+    {
+        RenderStateChangeStatistics statistics = new();
+
+        statistics.AddDrawCalls(3);
+        statistics.AddDrawCalls(0);
+
+        statistics.BankSegments.ShouldBe(new[] { 3, 0 });
+    }
+
+    [Fact]
+    public void BankSegments_OnNewInstance_IsEmpty()
+    {
+        RenderStateChangeStatistics statistics = new();
+
+        statistics.BankSegments.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void DrawCallCount_OnNewInstance_IsZero()
     {
         RenderStateChangeStatistics statistics = new();
 
         statistics.DrawCallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Reset_AfterAdding_ClearsBankSegments()
+    {
+        RenderStateChangeStatistics statistics = new();
+        statistics.AddDrawCalls(4);
+
+        statistics.Reset();
+
+        statistics.BankSegments.ShouldBeEmpty();
     }
 
     [Fact]
