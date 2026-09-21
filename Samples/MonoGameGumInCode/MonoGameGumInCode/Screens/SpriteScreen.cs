@@ -140,6 +140,26 @@ internal class SpriteScreen : FrameworkElement
             colorOpPropertyRow.AddChild(s);
         }
 
+        // ColorOperation.Add via property (#4892) — same white-silhouette effect as the
+        // animation-frame row below, but ColorOperation.Add is set directly on
+        // SpriteRuntime.ColorOperation with no animation chain involved. Mirrors the
+        // raylib/SilkNetGum SpriteScreen's identical row.
+        AddLabel(container, "ColorOperation.Add via property (normal bear, white-silhouette Add bear):");
+        var addPropertyRow = AddRow(container);
+        foreach (var useAdd in new[] { false, true })
+        {
+            var s = new SpriteRuntime();
+            s.SourceFileName = "BearTexture.png";
+            s.Width = 64;
+            s.Height = 64;
+            if (useAdd)
+            {
+                s.Color = Color.White;
+                s.ColorOperation = RenderingLibrary.Graphics.ColorOperation.Add;
+            }
+            addPropertyRow.AddChild(s);
+        }
+
         // Add color operation (#4792 Gap 2 on MonoGame, widened to every backend by #4821) — an
         // authored AnimationFrameColorOperation.Add frame with Red/Green/Blue=255 renders as a flat
         // white silhouette (tex.rgb + white saturates to white wherever the texture has any alpha):

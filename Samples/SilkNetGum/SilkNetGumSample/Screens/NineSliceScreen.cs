@@ -69,6 +69,26 @@ internal class NineSliceScreen : FrameworkElement
             tintRow.Children.Add(ns);
         }
 
+        // ColorOperation.Add via property (#4892) — same white-silhouette effect as the
+        // animation-frame row below, but ColorOperation.Add is set directly on
+        // NineSliceRuntime.ColorOperation with no animation chain involved. Mirrors the
+        // MG/raylib NineSliceScreen's identical row.
+        AddLabel(container, "ColorOperation.Add via property (normal frame, white-silhouette Add frame):");
+        ContainerRuntime addPropertyRow = AddRow(container);
+        foreach (bool useAdd in new[] { false, true })
+        {
+            NineSliceRuntime ns = new NineSliceRuntime();
+            ns.SourceFileName = "SquareFrame.png";
+            ns.Width = 56;
+            ns.Height = 56;
+            if (useAdd)
+            {
+                ns.Color = SKColors.White;
+                ns.ColorOperation = RenderingLibrary.Graphics.ColorOperation.Add;
+            }
+            addPropertyRow.Children.Add(ns);
+        }
+
         // Add color operation (#4821 gap 4) — NineSlice never got the Sprite.cs Add-color treatment
         // (#4792 Gap 2, extended to Skia by #4821 gap 3). An authored AnimationFrameColorOperation.Add
         // frame with Red/Green/Blue=255 renders as a flat white silhouette. Left plays the chain
