@@ -220,6 +220,10 @@ public class DataUiGrid : UserControl, IDataUiGrid
             if (container.Displayer is IDataUi dataUi && container.Member != null)
             {
                 dataUi.Refresh();
+                // The displayer's own Refresh() already re-read the value, but a row-frame decoration
+                // bound directly to the member (e.g. the "not default" marker icon) isn't part of the
+                // displayer and needs its own notification.
+                container.Member.NotifyIsDefaultChanged();
                 refreshed.Add(container.Member);
             }
         }
