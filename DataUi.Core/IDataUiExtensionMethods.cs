@@ -240,7 +240,7 @@ public static class IDataUiExtensionMethods
         bool shouldAddMakeDefault = member == null || member.SupportsMakeDefault;
         if (shouldAddMakeDefault)
         {
-            entries.Add(new DataUiContextMenuEntry("Make Default", dataUi.MakeDefault));
+            entries.Add(new DataUiContextMenuEntry(GetMakeDefaultHeader(member), dataUi.MakeDefault));
         }
 
         if (member != null)
@@ -253,5 +253,19 @@ public static class IDataUiExtensionMethods
         }
 
         return entries;
+    }
+
+    /// <summary>
+    /// "Make Default", or "Make Default (value)" when <paramref name="member"/> exposes the value it
+    /// would restore (#4893). A collection-valued preview (e.g. a VariableList) is left out - its
+    /// ToString() is an unhelpful type name, not a value a user would recognize.
+    /// </summary>
+    private static string GetMakeDefaultHeader(InstanceMember? member)
+    {
+        object? previewValue = member?.MakeDefaultPreviewValue;
+        bool showValue = previewValue != null &&
+            (previewValue is string || previewValue is not System.Collections.IEnumerable);
+
+        return showValue ? $"Make Default ({previewValue})" : "Make Default";
     }
 }

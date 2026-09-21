@@ -343,6 +343,16 @@ namespace WpfDataUi.DataTypes
         public virtual bool IsIndeterminate { get; } = false;
 
         /// <summary>
+        /// The value "Make Default" would restore this member to, shown in its menu label (#4893).
+        /// Null means no preview is available (the base <see cref="InstanceMember"/> never has one -
+        /// only <c>StateReferencingInstanceMember</c> overrides this) or, for a real row, that the
+        /// resolved default genuinely is null - either way the label falls back to plain "Make Default".
+        /// Evaluated only when a right-click menu is actually built, not on every grid refresh, since it
+        /// requires a recursive inheritance walk.
+        /// </summary>
+        public virtual object? MakeDefaultPreviewValue => null;
+
+        /// <summary>
         /// Whether the shown value is the default, differs across a multi-selection, or is set
         /// explicitly. Displayers tint their field from this.
         /// </summary>
