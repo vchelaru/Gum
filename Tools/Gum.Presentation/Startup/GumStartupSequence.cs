@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Diagnostics;
 using Gum.Dialogs;
 using Gum.Logic.FileWatch;
@@ -69,6 +70,8 @@ public class GumStartupSequence
         _head.InitializePlugins();
         StartupTiming.Mark("PluginManager.Initialize");
 
+        WireEnumFixups();
+
         IPluginManager pluginManager = _services.GetRequiredService<IPluginManager>();
         StandardElementsManager.Self.Initialize();
         StandardElementsManager.Self.CustomGetDefaultState = pluginManager.GetDefaultStateFor;
@@ -100,5 +103,16 @@ public class GumStartupSequence
         };
 
         fileWatchTimer.Start(TimeSpan.FromMilliseconds(500));
+    }
+
+    /// <summary>
+    /// Promotes enum-typed <see cref="VariableSave"/> values from the on-disk int back to a boxed
+    /// enum after project load (StackPanel's Orientation, TextWrapping, ScrollBarVisibility, a
+    /// StateSaveCategory value, etc). Wired here - shared by both heads - so a head's own
+    /// <see cref="IHeadStartup.InitializePlugins"/> can't individually omit it (#4899).
+    /// </summary>
+    public static void WireEnumFixups()
+    {
+        VariableSaveExtensionMethods.CustomFixEnumerations = VariableSaveExtensionMethodsGumTool.FixEnumerationsWithReflection;
     }
 }
