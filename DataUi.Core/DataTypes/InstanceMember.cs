@@ -489,6 +489,15 @@ namespace WpfDataUi.DataTypes
             OnPropertyChanged(nameof(IsDefault));
         }
 
+        /// <summary>
+        /// Raises a change notification for <see cref="IsDefault"/> alone, without <see cref="SimulateValueChanged"/>'s
+        /// "Value" notification, which would redundantly re-trigger a live displayer's own refresh. Needed after a
+        /// row's displayer was already refreshed directly (its own read of the current value already covers "Value")
+        /// but nothing else has told this member's other listeners - e.g. a row-frame's "not default" marker icon,
+        /// bound straight to <see cref="IsDefault"/> - that it changed.
+        /// </summary>
+        public void NotifyIsDefaultChanged() => OnPropertyChanged(nameof(IsDefault));
+
         protected virtual void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)

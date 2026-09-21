@@ -182,6 +182,31 @@ public class DataUiGridTests
     }
 
     [AvaloniaFact]
+    public void Refresh_NotifiesIsDefaultChanged_EvenWhenTheRowAlreadyHasALiveDisplayer()
+    {
+        EditorFixture fixture = new EditorFixture { Text = "before" };
+        ToggleableDefaultMember member = new ToggleableDefaultMember(nameof(EditorFixture.Text), fixture);
+        MemberCategory category = new MemberCategory("GridIsDefaultNotify");
+        category.Members.Add(member);
+        DataUiGrid grid = new DataUiGrid();
+        grid.SetCategories(new List<MemberCategory> { category });
+        Window window = new Window { Content = grid, Width = 500, Height = 700 };
+        window.Show();
+        window.UpdateLayout();
+        grid.LiveContainers.Single().Member.ShouldBe(member);
+
+        bool notifiedIsDefault = false;
+        member.PropertyChanged += (_, args) => notifiedIsDefault |= args.PropertyName == nameof(InstanceMember.IsDefault);
+        member.IsDefaultValue = false;
+        fixture.Text = "after";
+
+        grid.Refresh();
+
+        notifiedIsDefault.ShouldBeTrue();
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void OverridesIsDefaultStyling_LeavesDefaultValuedFieldsUntinted()
     {
         EditorFixture fixture = new EditorFixture();
@@ -235,6 +260,21 @@ public class DataUiGridTests
         public override bool IsDefault
         {
             get => true;
+            set { }
+        }
+    }
+
+    private sealed class ToggleableDefaultMember : InstanceMember
+    {
+        public ToggleableDefaultMember(string name, object instance) : base(name, instance)
+        {
+        }
+
+        public bool IsDefaultValue { get; set; } = true;
+
+        public override bool IsDefault
+        {
+            get => IsDefaultValue;
             set { }
         }
     }
