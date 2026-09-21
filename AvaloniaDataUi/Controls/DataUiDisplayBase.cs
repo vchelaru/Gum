@@ -131,7 +131,7 @@ public static class DataUiContextMenus
             List<DataUiContextMenuEntry> entries = dataUi.GetContextMenuEntries();
             foreach (DataUiContextMenuEntry entry in entries)
             {
-                MenuItem item = new MenuItem { Header = entry.Header };
+                MenuItem item = new MenuItem { Header = entry.Header, IsEnabled = entry.IsEnabled };
                 item.Click += (_, _) => entry.Execute();
                 menu.Items.Add(item);
             }

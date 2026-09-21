@@ -8,10 +8,11 @@ namespace WpfDataUi;
 public sealed class DataUiContextMenuEntry
 {
     /// <summary>Creates an entry.</summary>
-    public DataUiContextMenuEntry(string header, Action execute)
+    public DataUiContextMenuEntry(string header, Action execute, bool isEnabled = true)
     {
         Header = header;
         Execute = execute;
+        IsEnabled = isEnabled;
     }
 
     /// <summary>The menu text.</summary>
@@ -19,6 +20,9 @@ public sealed class DataUiContextMenuEntry
 
     /// <summary>What clicking the entry does.</summary>
     public Action Execute { get; }
+
+    /// <summary>Whether the entry should render as clickable.</summary>
+    public bool IsEnabled { get; }
 }
 
 public static class IDataUiExtensionMethods
@@ -240,7 +244,8 @@ public static class IDataUiExtensionMethods
         bool shouldAddMakeDefault = member == null || member.SupportsMakeDefault;
         if (shouldAddMakeDefault)
         {
-            entries.Add(new DataUiContextMenuEntry(GetMakeDefaultHeader(member), dataUi.MakeDefault));
+            bool isEnabled = member == null || !member.IsDefault;
+            entries.Add(new DataUiContextMenuEntry(GetMakeDefaultHeader(member), dataUi.MakeDefault, isEnabled));
         }
 
         if (member != null)
