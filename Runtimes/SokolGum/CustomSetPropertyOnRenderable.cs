@@ -48,22 +48,25 @@ public static class CustomSetPropertyOnRenderable
     /// </summary>
     public static Func<IRenderableIpso, GraphicalUiElement, string, object, bool>? AdditionalPropertyOnRenderable;
 
-    public static void SetPropertyOnRenderable(
+    // bool return: whether the assignment was actually handled here, so GraphicalUiElement.SetProperty
+    // can fall back to a Component's own custom variable when nothing in this dispatch claims the
+    // name (issue #4891).
+    public static bool SetPropertyOnRenderable(
         IRenderableIpso renderable,
         GraphicalUiElement element,
         string propertyName,
-        object value)
+        object? value)
     {
         bool handled = renderable switch
         {
-            Text t      => TrySetPropertyOnText(t, element, propertyName, value),
-            Sprite s    => TrySetOnSprite(s, element, propertyName, value),
-            NineSlice n => TrySetOnNineSlice(n, element, propertyName, value),
+            Text t      => TrySetPropertyOnText(t, element, propertyName, value!),
+            Sprite s    => TrySetOnSprite(s, element, propertyName, value!),
+            NineSlice n => TrySetOnNineSlice(n, element, propertyName, value!),
             _           => false,
         };
 
         if (!handled && AdditionalPropertyOnRenderable is { } extra)
-            handled = extra(renderable, element, propertyName, value);
+            handled = extra(renderable, element, propertyName, value!);
 
         if (!handled)
         {
@@ -71,8 +74,10 @@ public static class CustomSetPropertyOnRenderable
             // local SetPropertyWithEnumConversion wrapper here. Core Gum's SetPropertyThroughReflection
             // now performs the same conversions (and swallows conversion failures), so the wrapper
             // was removed — see issue #2924.
-            GraphicalUiElement.SetPropertyThroughReflection(renderable, element, propertyName, value);
+            handled = GraphicalUiElement.SetPropertyThroughReflection(renderable, element, propertyName, value!);
         }
+
+        return handled;
     }
 
     /// <summary>

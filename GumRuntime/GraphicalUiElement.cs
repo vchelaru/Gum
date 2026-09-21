@@ -1797,7 +1797,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public static Action<GraphicalUiElement, GraphicalUiElement, byte[], int, int>? ApplyPooledTextureFromPixelData;
 
-    public static Action<IRenderableIpso, GraphicalUiElement, string, object?> SetPropertyOnRenderable =
+    // bool return: whether the assignment was actually handled, so SetProperty can fall back to
+    // TrySetCustomVariableOnThis when nothing along this dispatch claims the name (issue #4891).
+    public static Func<IRenderableIpso, GraphicalUiElement, string, object?, bool> SetPropertyOnRenderable =
         // This is the default fallback to make Gum work. Specific rendering libraries can change this to provide
         // better performance.
         SetPropertyThroughReflection;
@@ -6347,13 +6349,19 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
     // This is made public so that specific implementations can fall back to it if needed:
-    public static void SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static bool SetPropertyThroughReflection(IRenderableIpso mContainedObjectAsIpso, GraphicalUiElement graphicalUiElement, string propertyName, object? value) =>
+        TrySetPropertyThroughReflection(mContainedObjectAsIpso, propertyName, value);
+
+    // Shared by SetPropertyThroughReflection (targets the contained renderable) and
+    // TrySetCustomVariableOnThis (targets this GUE/generated runtime class itself, issue #4891) so
+    // both get the same enum/Nullable<T> coercion tolerance.
+    private static bool TrySetPropertyThroughReflection(object target, string propertyName, object? value)
     {
-        System.Reflection.PropertyInfo? propertyInfo = mContainedObjectAsIpso.GetType().GetProperty(propertyName);
+        System.Reflection.PropertyInfo? propertyInfo = target.GetType().GetProperty(propertyName);
 
         if (propertyInfo == null || !propertyInfo.CanWrite)
         {
-            return;
+            return false;
         }
 
         if (value != null && value.GetType() != propertyInfo.PropertyType)
@@ -6385,12 +6393,34 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     // One bad variable (incompatible type, undefined enum name, out-of-range value)
                     // must not tear down the entire screen load — skip this assignment.
-                    return;
+                    return false;
                 }
             }
         }
 
-        propertyInfo.SetValue(mContainedObjectAsIpso, value, null);
+        propertyInfo.SetValue(target, value, null);
+        return true;
+    }
+
+    /// <summary>
+    /// Last-resort fallback for a variable name that neither TrySetValueOnThis nor the contained
+    /// renderable's dispatch (SetPropertyOnRenderable) claims. Covers a Component's custom ("new")
+    /// variable (issue #4891): CodeGenerator.FillWithNewVariables emits it as a bare auto-property
+    /// on the generated partial class with no wiring back into the Gum variable system, so without
+    /// this, a .gumx-authored value for it never reaches the property under FindByName
+    /// instantiation. Scoped to properties declared on a type more derived than GraphicalUiElement
+    /// itself - GraphicalUiElement's own properties are already owned by TrySetValueOnThis, and
+    /// this must never compete with it or with a renderable-dispatched name.
+    /// </summary>
+    private bool TrySetCustomVariableOnThis(string propertyName, object? value)
+    {
+        var propertyInfo = this.GetType().GetProperty(propertyName);
+        if (propertyInfo == null || propertyInfo.DeclaringType == typeof(GraphicalUiElement))
+        {
+            return false;
+        }
+
+        return TrySetPropertyThroughReflection(this, propertyName, value);
     }
 
     /// <summary>
@@ -6453,14 +6483,24 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new Exception($"{nameof(SetPropertyOnRenderable)} must be set on GraphicalUiElement");
             }
 #endif
+            bool handledByRenderable;
             try
             {
-                SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
+                handledByRenderable = SetPropertyOnRenderable(mContainedObjectAsIpso, this, propertyName, value);
             }
             catch (InvalidCastException invalidCastException)
             {
                 throw new InvalidCastException($"Error trying to set {propertyName} to {value} on {mContainedObjectAsIpso}", invalidCastException);
             }
+
+            if (!handledByRenderable)
+            {
+                TrySetCustomVariableOnThis(propertyName, value);
+            }
+        }
+        else
+        {
+            TrySetCustomVariableOnThis(propertyName, value);
         }
     }
 
