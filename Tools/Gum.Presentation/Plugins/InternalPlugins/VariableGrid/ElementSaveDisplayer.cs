@@ -718,7 +718,18 @@ public class ElementSaveDisplayer
                 // is picked up; the captured reference doesn't go stale because the entry
                 // is rebuilt whenever the variable grid recomputes.
                 VariableSave declaration = formsProperty;
-                entry.DefaultValueFallback = () => declaration.Value;
+                Type? enumType = type != null ? (Nullable.GetUnderlyingType(type) ?? type) : null;
+                entry.DefaultValueFallback = () =>
+                    // The .behx always authors an enum default as a raw XML string (e.g.
+                    // <Value xsi:type="xsd:string">Vertical</Value> - XML has no native enum
+                    // representation). The combo box displayer selects by matching a boxed
+                    // enum instance against its Enum.GetValues item list, so a raw string never
+                    // matches and the row renders unselected instead of showing the grayed
+                    // default. Mirrors the equivalent runtime-side coercion in
+                    // BehaviorFormsPropertyApplier.Apply.
+                    enumType?.IsEnum == true && declaration.Value is string enumValueName
+                        ? Enum.Parse(enumType, enumValueName, ignoreCase: true)
+                        : declaration.Value;
 
                 // Seed the row's display text from the FormsProperty's authored Description
                 // (persisted in the .behx). Later state-dependent hints set elsewhere via
