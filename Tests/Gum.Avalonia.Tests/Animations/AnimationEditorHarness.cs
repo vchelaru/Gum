@@ -206,11 +206,20 @@ internal sealed class AnimationEditorHarness : IDisposable
         return component;
     }
 
+    /// <summary>Adds an instance of <paramref name="type"/> named <paramref name="name"/> to <paramref name="owner"/>.</summary>
+    public InstanceSave AddInstance(ElementSave owner, string name, ComponentSave type)
+    {
+        InstanceSave instance = new InstanceSave { Name = name, BaseType = type.Name, ParentContainer = owner };
+        owner.Instances.Add(instance);
+        return instance;
+    }
+
     /// <summary>Selects <paramref name="element"/> in the tool, which loads its animations into the tab.</summary>
     public void Select(ElementSave element)
     {
         SelectedState.SelectedElement = element;
         Layout();
+        ThrowIfPluginFailed();
         if (SelectedState.SelectedElement != element || ViewModel.Element != element)
         {
             throw new InvalidOperationException($"Selecting {element.Name} did not stick: the tool selected {SelectedState.SelectedElement?.Name ?? "nothing"} and the tab shows {ViewModel.Element?.Name ?? "nothing"}.");
@@ -234,6 +243,19 @@ internal sealed class AnimationEditorHarness : IDisposable
     #endregion
 
     #region Gestures
+
+    /// <summary>
+    /// Fails with the plugin's own exception when a tool event crashed it: the plugin manager
+    /// disables a plugin that throws, after which the tab silently stops following the tool.
+    /// </summary>
+    public void ThrowIfPluginFailed()
+    {
+        PluginContainer container = _pluginManager.PluginContainers[Plugin];
+        if (!container.IsEnabled)
+        {
+            throw new InvalidOperationException($"The Animations plugin was disabled: {container.FailureDetails}", container.FailureException);
+        }
+    }
 
     /// <summary>Runs pending dispatcher work and lays the window out, so the view reflects the model.</summary>
     public void Layout()

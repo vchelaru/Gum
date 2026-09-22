@@ -17,6 +17,26 @@ namespace MonoGameGum.Tests.Runtimes;
 public class AnimationRuntimeTests : BaseTestClass
 {
     [Fact]
+    public void RefreshCumulativeStates_SkipsASubAnimationKeyframe_WhoseInstanceAnimationNoLongerExists()
+    {
+        // The instance is still there but its animation was deleted, so the reference resolved to
+        // no sub-animation; the tool selects such an element without the Animations plugin crashing.
+        ComponentSave iconType = new ComponentSave { Name = "Icon" };
+        iconType.States.Add(new StateSave { Name = "Default", ParentContainer = iconType });
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        element.Instances.Add(new InstanceSave { Name = "IconInstance", BaseType = "Icon", ParentContainer = element });
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(iconType);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        AnimationRuntime animation = new AnimationRuntime();
+        animation.Keyframes.Add(new KeyframeRuntime { AnimationName = "IconInstance.Gone", Time = 0, SubAnimation = null });
+
+        Should.NotThrow(() => animation.RefreshCumulativeStates(element));
+    }
+
+    [Fact]
     public void GetStateToSet_ShouldInterpolateKeyframes()
     {
         ComponentSave element = new ();

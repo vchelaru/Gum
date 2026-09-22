@@ -62,7 +62,8 @@ public class AnimationRuntime
                 var instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
                 if (instanceElement != null)
                 {
-                    subAnimation.SubAnimation.RefreshCumulativeStates(instanceElement, false);
+                    // Null when the instance's animation was removed after this reference was made.
+                    subAnimation.SubAnimation?.RefreshCumulativeStates(instanceElement, false);
                 }
             }
         }
