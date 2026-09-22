@@ -60,6 +60,7 @@ non-FRB docs.
   changes; a new persisted keyframe field won't save unless added there.
 
 ## Dogfooding the Avalonia tab headlessly
+Full guide: `Tests/Gum.Avalonia.Tests/Animations/README.md`.
 `Tests/Gum.Avalonia.Tests/Animations/AnimationEditorHarness.cs` hosts the real Animations tab (a
 plugin instance of its own on the head's real service graph, over a temp project) in a headless
 window and drives it with pointer and key input, so nothing reaches the desktop. Dialogs are

@@ -73,6 +73,8 @@ If a runtime change is in `GumCommon` and you've already built `MonoGameGum.Test
 
 **Zero new warnings** after every change — verify via the build output; suppress with a comment only when unavoidable. **Never launch Visual Studio, a sample `.exe`, `dotnet run`, or any GUI app** — verify with `dotnet build`/`dotnet test` only, manual/visual testing is the user's step.
 
+**Animation editor work: dogfood it headlessly.** `Tests/Gum.Avalonia.Tests/Animations/README.md` describes the harness that drives the real Animations tab with simulated input (clicks, drags, keys, scripted dialogs, pixel reads) and the find-a-bug, pin-it, fix-it loop built on it. Read it before changing the animation editor; it covers only that tab.
+
 **Running focused WPF-head unit tests (`GumToolUnitTests`, frozen head only).** Building this project triggers the WPF plugin projects' post-build copy, which uses `$(SolutionDir)`. To run the csproj directly, supply it — with **backslashes** (forward slashes break the `copy`/`md` steps):
 
 ```

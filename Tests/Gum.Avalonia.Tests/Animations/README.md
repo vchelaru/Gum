@@ -1,9 +1,10 @@
-# Dogfooding the Animations tab headlessly
+# Dogfooding the animation editor headlessly
 
-This folder drives the real Avalonia Animations tab with simulated clicks, drags, hovers and key
-presses, inside an in-process headless window. Nothing reaches the desktop, so it is safe to run
-while the machine is in use. Use it to find bugs in the animation editor the way a user would hit
-them, pin each one with a test, fix it, and keep the scenario as the regression guard.
+This folder is about one thing: the Animations tab of the Avalonia Gum tool (the animation
+editor). It drives the real tab with simulated clicks, drags, hovers and key presses inside an
+in-process headless window. Nothing reaches the desktop, so it is safe to run while the machine
+is in use. Use it to find bugs in the animation editor the way a user would hit them, pin each
+one with a test, fix it, and keep the scenario as the regression guard.
 
 ## Run it
 
@@ -88,6 +89,3 @@ Rules that keep scenarios honest:
   the headless session sometimes refuses.
 - The first click after a window opens occasionally does not land in a long run; `AddAnimation`
   retries once. Copy that pattern if another first gesture proves flaky.
-- The same approach works for any other tab: build the plugin with `ActivatorUtilities`, set its
-  `[Import]` properties (a scripted `DialogService`), `StartUp()`, register it with the plugin
-  manager, and host its tab content in a test window. See the `gum-unit-tests` skill.
