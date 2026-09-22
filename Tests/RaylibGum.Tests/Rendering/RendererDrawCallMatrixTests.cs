@@ -1,3 +1,4 @@
+using System.Linq;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -39,8 +40,25 @@ public class RendererDrawCallMatrixTests : BaseTestClass
 
         RenderStateChangeStatistics stats = Renderer.Self.RenderStateChangeStatistics;
         string diagnostics =
-            $"drawCallCount={stats.DrawCallCount} bankSegments=[{string.Join(",", stats.BankSegments)}] counterActive={Renderer.Self.BatchDrawCallCounter.IsActive}";
+            $"drawCallCount={stats.DrawCallCount} bankSegments=[{string.Join(",", stats.BankSegments)}] counterActive={Renderer.Self.BatchDrawCallCounter.IsActive} {LayerRenderablesSnapshot()}";
         return new CountResult(stats.DrawCallCount, diagnostics);
+    }
+
+    /// <summary>
+    /// Third diagnostic layer for issue #4901's recurrence: the third occurrence's <c>textureValid=True</c>
+    /// ruled out the texture-readiness-race hypothesis (the texture was GPU-ready), yet the segment's
+    /// real draw-call count was still identical between the empty-scene baseline and the single-Sprite
+    /// draw - so the sprite either never actually reached a draw call, or its draw call silently merged
+    /// into an existing one already counted for the baseline (e.g. a stale/leaked renderable from an
+    /// earlier test still on the layer). This snapshot dumps every renderable actually on the default
+    /// layer at draw time (type, visibility, resolved absolute rect) immediately before the assertion,
+    /// so a recurrence shows exactly what was there instead of just the final tally.
+    /// </summary>
+    private static string LayerRenderablesSnapshot()
+    {
+        var parts = Renderer.Self.Layers[0].Renderables.Select(r =>
+            $"{r.GetType().Name}(V={r.Visible},X={r.GetAbsoluteX():0.##},Y={r.GetAbsoluteY():0.##},W={r.Width:0.##},H={r.Height:0.##})");
+        return $"layerRenderables=[{string.Join(",", parts)}]";
     }
 
     /// <summary>
