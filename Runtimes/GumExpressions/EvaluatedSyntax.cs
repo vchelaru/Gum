@@ -628,17 +628,29 @@ public class EvaluatedSyntax
 
     public static string ConvertToCSharpSyntax(string lineOfText)
     {
-        if (lineOfText.Contains("Components/"))
+        // Anything inside a string or char literal is data, not syntax - an element path prefix or
+        // a slash there belongs to the value the user authored (e.g. "Fonts/Cjk.ttf") and has to
+        // survive untouched, so every rewrite below is applied to the code segments only.
+        var literalSpans = new List<(int Start, int Length)>();
+        var builder = new System.Text.StringBuilder(lineOfText.Length);
+
+        foreach (var segment in SplitOnLiterals(lineOfText))
         {
-            lineOfText = lineOfText.Replace("Components/", "global::Components.");
-        }
-        if (lineOfText.Contains("Screens/"))
-        {
-            lineOfText = lineOfText.Replace("Screens/", "global::Screens.");
-        }
-        if (lineOfText.Contains("Standards/"))
-        {
-            lineOfText = lineOfText.Replace("Standards/", "global::Standards.");
+            var text = lineOfText.Substring(segment.Start, segment.Length);
+
+            if (segment.IsLiteral)
+            {
+                literalSpans.Add((builder.Length, text.Length));
+            }
+            else
+            {
+                text = text
+                    .Replace("Components/", "global::Components.")
+                    .Replace("Screens/", "global::Screens.")
+                    .Replace("Standards/", "global::Standards.");
+            }
+
+            builder.Append(text);
         }
 
         // Remaining slashes are either subfolder path separators (e.g. Folder/SubFolder/Button)
@@ -648,9 +660,69 @@ public class EvaluatedSyntax
         // 2. Left side contains a dot (meaning it's a qualified property, not a path segment)
         // 3. Either side is wrapped in parentheses
         // 4. Spaces surround the slash (fallback for ambiguous cases)
-        lineOfText = ReplacePathSlashes(lineOfText);
+        return ReplacePathSlashes(builder.ToString(), literalSpans);
+    }
 
-        return lineOfText;
+    /// <summary>
+    /// Splits text into alternating code and literal segments, where a literal is a char literal, a
+    /// regular string literal (honoring backslash escapes) or a verbatim string literal.
+    /// </summary>
+    private static IEnumerable<(int Start, int Length, bool IsLiteral)> SplitOnLiterals(string text)
+    {
+        var codeStart = 0;
+
+        for (int i = 0; i < text.Length; i++)
+        {
+            var isVerbatim = text[i] == '@' && i + 1 < text.Length && text[i + 1] == '"';
+
+            if (text[i] != '"' && text[i] != '\'' && !isVerbatim)
+            {
+                continue;
+            }
+
+            if (i > codeStart)
+            {
+                yield return (codeStart, i - codeStart, false);
+            }
+
+            var literalStart = i;
+            var quote = isVerbatim ? '"' : text[i];
+            i += isVerbatim ? 2 : 1;
+
+            while (i < text.Length)
+            {
+                if (!isVerbatim && text[i] == '\\')
+                {
+                    // Skip the escaped character so an escaped quote doesn't end the literal.
+                    i++;
+                }
+                else if (text[i] == quote)
+                {
+                    if (isVerbatim && i + 1 < text.Length && text[i + 1] == '"')
+                    {
+                        // "" is an escaped quote inside a verbatim string.
+                        i++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                i++;
+            }
+
+            // An unterminated literal (the user is mid-edit) runs to the end of the text.
+            var literalEnd = Math.Min(i, text.Length - 1);
+            yield return (literalStart, literalEnd - literalStart + 1, true);
+            codeStart = literalEnd + 1;
+            i = literalEnd;
+        }
+
+        if (codeStart < text.Length)
+        {
+            yield return (codeStart, text.Length - codeStart, false);
+        }
     }
 
     private static bool IsDivisionSlash(string text, int slashIndex)
@@ -758,12 +830,12 @@ public class EvaluatedSyntax
         return char.IsDigit(trimmed[0]) || (trimmed[0] == '.' && trimmed.Length > 1 && char.IsDigit(trimmed[1]));
     }
 
-    private static string ReplacePathSlashes(string text)
+    private static string ReplacePathSlashes(string text, List<(int Start, int Length)> literalSpans)
     {
         var result = new System.Text.StringBuilder(text.Length);
         for (int i = 0; i < text.Length; i++)
         {
-            if (text[i] == '/')
+            if (text[i] == '/' && !IsInsideLiteral(i, literalSpans))
             {
                 if (IsDivisionSlash(text, i))
                 {
@@ -781,6 +853,19 @@ public class EvaluatedSyntax
         }
 
         return result.ToString();
+    }
+
+    private static bool IsInsideLiteral(int index, List<(int Start, int Length)> literalSpans)
+    {
+        foreach (var span in literalSpans)
+        {
+            if (index >= span.Start && index < span.Start + span.Length)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static string ConvertToSlashSyntax(string cSharp)
