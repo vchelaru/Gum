@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Gum.GueDeriving;
 using Gum.Wireframe;
 using Raylib_cs;
@@ -39,8 +41,47 @@ public class RendererDrawCallMatrixTests : BaseTestClass
 
         RenderStateChangeStatistics stats = Renderer.Self.RenderStateChangeStatistics;
         string diagnostics =
-            $"drawCallCount={stats.DrawCallCount} bankSegments=[{string.Join(",", stats.BankSegments)}] counterActive={Renderer.Self.BatchDrawCallCounter.IsActive}";
+            $"drawCallCount={stats.DrawCallCount} bankSegments=[{string.Join(",", stats.BankSegments)}] counterActive={Renderer.Self.BatchDrawCallCounter.IsActive} {LayerRenderablesSnapshot()}";
         return new CountResult(stats.DrawCallCount, diagnostics);
+    }
+
+    /// <summary>
+    /// Third diagnostic layer for issue #4901's recurrence: the third occurrence's <c>textureValid=True</c>
+    /// ruled out the texture-readiness-race hypothesis (the texture was GPU-ready), yet the segment's
+    /// real draw-call count was still identical between the empty-scene baseline and the single-Sprite
+    /// draw - so the sprite either never actually reached a draw call, or its draw call silently merged
+    /// into an existing one already counted for the baseline (e.g. a stale/leaked renderable from an
+    /// earlier test still on the layer). A first version of this snapshot only walked
+    /// <see cref="Layer.Renderables"/> itself, which holds only top-level renderables (Root's own
+    /// container, plus anything else attached with no parent) - a Sprite added as a child of Root
+    /// is reached only via <see cref="IRenderableIpso.Children"/>, so that version could never show
+    /// it. This version walks the whole tree and reports the total node count, a per-type breakdown,
+    /// and every Sprite node's own visibility/resolved rect - so a recurrence shows whether the
+    /// sprite's renderable exists at all, and if so, whether it looked drawable.
+    /// </summary>
+    private static string LayerRenderablesSnapshot()
+    {
+        List<IRenderableIpso> allNodes = new();
+        void Walk(IRenderableIpso node)
+        {
+            allNodes.Add(node);
+            foreach (IRenderableIpso child in node.Children)
+            {
+                Walk(child);
+            }
+        }
+        foreach (IRenderableIpso topLevel in Renderer.Self.Layers[0].Renderables)
+        {
+            Walk(topLevel);
+        }
+
+        var typeCounts = allNodes
+            .GroupBy(r => r.GetType().Name)
+            .Select(g => $"{g.Key}x{g.Count()}");
+        var spriteDetails = allNodes
+            .Where(r => r.GetType().Name == nameof(global::Gum.Renderables.Sprite))
+            .Select(r => $"Sprite(V={r.Visible},X={r.GetAbsoluteX():0.##},Y={r.GetAbsoluteY():0.##},W={r.Width:0.##},H={r.Height:0.##})");
+        return $"treeNodeCount={allNodes.Count} treeTypes=[{string.Join(",", typeCounts)}] sprites=[{string.Join(",", spriteDetails)}]";
     }
 
     /// <summary>
