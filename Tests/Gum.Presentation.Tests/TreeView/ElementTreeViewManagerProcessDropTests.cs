@@ -30,13 +30,10 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
     }
 
     [Fact]
-    public void ProcessDrop_IntoFirstOnElementSave_AppendsSameAsInto()
+    public void ProcessDrop_IntoFirstWithNoChildRows_Appends()
     {
-        // Issue #2864: the visual adornment for IntoFirst is identical to Into
-        // (both draw a rectangle around the row, not a between-rows line). The
-        // user cannot distinguish the two visually, so they must behave the same.
-        // Insertion at index 0 of the element is still reachable via TreeDropKind.Before
-        // on the first child node, which shows an unambiguous line.
+        // IntoFirst is only produced for an expanded row that has children, so a childless
+        // target has no first child to insert ahead of - fall back to Into's append.
         ComponentSave component = new ComponentSave();
         component.Name = "TargetComponent";
         component.Instances.Add(new InstanceSave { Name = "Existing" });
@@ -52,6 +49,64 @@ public class ElementTreeViewManagerProcessDropTests : BaseTestClass
         result.Value.Drop!.ParentElement.ShouldBe(component);
         result.Value.Drop!.ParentInstance.ShouldBeNull();
         result.Value.Drop!.Position.ShouldBeOfType<DropPosition.Append>();
+    }
+
+    [Fact]
+    public void ProcessDrop_IntoFirstOnInstance_InsertsBeforeThatInstancesFirstChild()
+    {
+        // Issue #4927: the line under an expanded row promises "lands here, as this row's
+        // first child", but the drop appended to the end of that row's children instead.
+        ScreenSave screen = new ScreenSave();
+        screen.Name = "Screen";
+        InstanceSave stackPanel = new InstanceSave { Name = "StackPanelInstance", ParentContainer = screen };
+        InstanceSave filler = new InstanceSave { Name = "Filler", ParentContainer = screen };
+        InstanceSave filler2 = new InstanceSave { Name = "Filler2", ParentContainer = screen };
+        screen.Instances.Add(stackPanel);
+        screen.Instances.Add(filler);
+        screen.Instances.Add(filler2);
+
+        GumTreeNode target = new GumTreeNode("StackPanelInstance") { Tag = stackPanel };
+        target.Nodes.Add(new GumTreeNode("Filler") { Tag = filler });
+        target.Nodes.Add(new GumTreeNode("Filler2") { Tag = filler2 });
+
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.IntoFirst);
+
+        result.ShouldNotBeNull();
+        result.Value.TreeTarget.ShouldBeSameAs(target);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(screen);
+        result.Value.Drop!.ParentInstance.ShouldBe(stackPanel);
+        DropPosition.BeforeSibling before = result.Value.Drop!.Position.ShouldBeOfType<DropPosition.BeforeSibling>();
+        before.Sibling.ShouldBe(filler);
+    }
+
+    [Fact]
+    public void ProcessDrop_IntoFirstOnElementSave_InsertsBeforeItsFirstChild()
+    {
+        // Same line, drawn under the element row itself: the drop becomes the element's
+        // first top-level instance rather than its last (#4927).
+        ComponentSave component = new ComponentSave();
+        component.Name = "TargetComponent";
+        InstanceSave first = new InstanceSave { Name = "First", ParentContainer = component };
+        InstanceSave second = new InstanceSave { Name = "Second", ParentContainer = component };
+        component.Instances.Add(first);
+        component.Instances.Add(second);
+
+        GumTreeNode target = new GumTreeNode("TargetComponent") { Tag = component };
+        target.Nodes.Add(new GumTreeNode("First") { Tag = first });
+        target.Nodes.Add(new GumTreeNode("Second") { Tag = second });
+
+        (GumTreeNode TreeTarget, DropTarget? Drop)? result =
+            ElementTreeViewManager.ProcessDrop(target, TreeDropKind.IntoFirst);
+
+        result.ShouldNotBeNull();
+        result.Value.TreeTarget.ShouldBeSameAs(target);
+        result.Value.Drop.ShouldNotBeNull();
+        result.Value.Drop!.ParentElement.ShouldBe(component);
+        result.Value.Drop!.ParentInstance.ShouldBeNull();
+        DropPosition.BeforeSibling before = result.Value.Drop!.Position.ShouldBeOfType<DropPosition.BeforeSibling>();
+        before.Sibling.ShouldBe(first);
     }
 
     [Fact]
