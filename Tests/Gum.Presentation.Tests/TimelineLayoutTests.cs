@@ -131,4 +131,12 @@ public class TimelineLayoutTests
     private static AnimatedKeyframeViewModel Event(string name, float time) => new AnimatedKeyframeViewModel { EventName = name, Time = time };
 
     private static AnimatedKeyframeViewModel SubAnimation(string name, float time) => new AnimatedKeyframeViewModel { AnimationName = name, Time = time };
+
+    [Fact]
+    public void DrawnLength_IsAtLeastOneSecond_SoASingleKeyframeAnimationStillDrawsItsMarker()
+    {
+        TimelineLayout.DrawnLength(0).ShouldBe(1);
+        TimelineLayout.DrawnLength(0.4).ShouldBe(1);
+        TimelineLayout.DrawnLength(2.5).ShouldBe(2.5);
+    }
 }

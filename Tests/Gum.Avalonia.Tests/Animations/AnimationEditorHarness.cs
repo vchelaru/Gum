@@ -4,7 +4,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.StateAnimation;
@@ -295,6 +297,13 @@ internal sealed class AnimationEditorHarness : IDisposable
         return list.ContainerFromItem(item) ?? throw new InvalidOperationException("The list has no row for the item.");
     }
 
+    /// <summary>The height of a timeline row's track; markers are drawn 60% of it.</summary>
+    public double TimelineTrackHeight => Timeline.GetVisualDescendants().OfType<TimelineTrack>().First().Bounds.Height;
+
+    /// <summary>The tooltip set on the track that shows <paramref name="keyframe"/>.</summary>
+    public string? TimelineTrackTipFor(AnimatedKeyframeViewModel keyframe) =>
+        ToolTip.GetTip(Timeline.GetVisualDescendants().OfType<TimelineTrack>().First(track => track.Row.Items.Contains(keyframe))) as string;
+
     /// <summary>The middle of <paramref name="keyframe"/>'s marker on the timeline.</summary>
     public Point KeyframeMarkerCenter(AnimatedKeyframeViewModel keyframe)
     {
@@ -302,7 +311,7 @@ internal sealed class AnimationEditorHarness : IDisposable
         TimelineTrack track = Timeline.GetVisualDescendants().OfType<TimelineTrack>()
             .FirstOrDefault(candidate => candidate.Row.Items.Contains(keyframe))
             ?? throw new InvalidOperationException($"No timeline row shows {keyframe.DisplayString}.");
-        double length = Timeline.Animation?.Length ?? 0;
+        double length = Timeline.DrawnLength;
         double width = track.Bounds.Width;
         double height = track.Bounds.Height;
         double size = height * 0.6;
@@ -368,6 +377,50 @@ internal sealed class AnimationEditorHarness : IDisposable
     }
 
     #endregion
+
+    /// <summary>The rendered color at <paramref name="point"/> in the window.</summary>
+    public Color PixelAt(Point point)
+    {
+        Layout();
+        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        return ReadPixel(frame, (int)point.X, (int)point.Y);
+    }
+
+    /// <summary>
+    /// True when any pixel within <paramref name="radius"/> of <paramref name="center"/> is within
+    /// <paramref name="tolerance"/> per channel of <paramref name="color"/>.
+    /// </summary>
+    public bool AnyPixelNear(Point center, int radius, Color color, int tolerance = 12)
+    {
+        Layout();
+        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
+        for (int y = (int)center.Y - radius; y <= (int)center.Y + radius; y++)
+        {
+            for (int x = (int)center.X - radius; x <= (int)center.X + radius; x++)
+            {
+                if (x < 0 || y < 0 || x >= frame.PixelSize.Width || y >= frame.PixelSize.Height)
+                {
+                    continue;
+                }
+                Color pixel = ReadPixel(frame, x, y);
+                if (Math.Abs(pixel.R - color.R) <= tolerance && Math.Abs(pixel.G - color.G) <= tolerance && Math.Abs(pixel.B - color.B) <= tolerance)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static Color ReadPixel(WriteableBitmap frame, int x, int y)
+    {
+        using ILockedFramebuffer buffer = frame.Lock();
+        int value = System.Runtime.InteropServices.Marshal.ReadInt32(buffer.Address, y * buffer.RowBytes + x * 4);
+        byte b0 = (byte)value, b1 = (byte)(value >> 8), b2 = (byte)(value >> 16), b3 = (byte)(value >> 24);
+        return buffer.Format == PixelFormat.Rgba8888
+            ? Color.FromArgb(b3, b0, b1, b2)
+            : Color.FromArgb(b3, b2, b1, b0);
+    }
 
     /// <summary>Renders the window and saves it as a PNG for a person to look at; returns the path.</summary>
     public string SaveFrame(string name)
