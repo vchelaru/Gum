@@ -123,6 +123,9 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// <summary>The Animations tab this harness added to the tab manager.</summary>
     public AvaloniaPluginTab Tab => _tab;
 
+    /// <summary>The View menu entry this harness's plugin added ("View Animations" / "Hide Animations").</summary>
+    public MenuItemModel ViewMenuItem => _menuItemAdded ?? throw new InvalidOperationException("The plugin added no View menu entry.");
+
     /// <summary>The scripted dialogs; queue an answer before the gesture that opens one.</summary>
     public ScriptedDialogService Dialogs { get; }
 
@@ -205,6 +208,21 @@ internal sealed class AnimationEditorHarness : IDisposable
         component.Categories.Add(categorySave);
         Project.Components.Add(component);
         return component;
+    }
+
+    /// <summary>Adds a screen with a Default state and one category holding <paramref name="states"/>.</summary>
+    public ScreenSave AddScreen(string name, string category, params string[] states)
+    {
+        ScreenSave screen = new ScreenSave { Name = name };
+        screen.States.Add(new StateSave { Name = "Default", ParentContainer = screen });
+        StateSaveCategory categorySave = new StateSaveCategory { Name = category };
+        foreach (string stateName in states)
+        {
+            categorySave.States.Add(new StateSave { Name = stateName, ParentContainer = screen });
+        }
+        screen.Categories.Add(categorySave);
+        Project.Screens.Add(screen);
+        return screen;
     }
 
     /// <summary>Adds an instance of <paramref name="type"/> named <paramref name="name"/> to <paramref name="owner"/>.</summary>
