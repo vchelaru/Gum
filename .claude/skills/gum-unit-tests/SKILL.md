@@ -14,6 +14,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 | `Gum.Presentation.Tests` | `Tests/Gum.Presentation.Tests/` | The tool's headless logic in `Tools/Gum.Presentation` (commands, view models, managers, plugin host) |
 | `Gum.Avalonia.Tests` | `Tests/Gum.Avalonia.Tests/` | The Avalonia tool head: composition, shell, plugin host, canvas host, tree control, theme resources, and an unattended run of the real executable |
 | `Gum.Cli.Tests` | `Tests/Gum.Cli.Tests/` | CLI command exit codes and output |
+| `Gum.Bundle.Tests` | `Tests/Gum.Bundle.Tests/` | `GumCommon/Bundle/`: `GumProjectDependencyWalker`, `FontReferenceCollector`, `.gumpkg` format and file providers. `TestProjectBuilder` builds the in-memory projects and temp-directory fixtures |
 | `MonoGameGum.Tests.V3` | `Tests/MonoGameGum.Tests.V3/` | Tests specific to V3 default visuals |
 | `MonoGameGum.IntegrationTests` | `Tests/MonoGameGum.IntegrationTests/` | Requires a real `GraphicsDevice`: content loading, renderer teardown, full `GumService` lifecycle |
 | `RaylibGum.Tests` | `Tests/RaylibGum.Tests/` | raylib runtime (incl. the `#if RAYLIB` branches of the source-shared `GueDeriving/*Runtime.cs`) |

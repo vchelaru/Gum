@@ -68,6 +68,8 @@ When reverting a variable after failed validation, you must restore the exact pr
 
 **States and categories:** An element has both a flat `States` list (uncategorized) and a `Categories` list of `StateSaveCategory`, each of which has its own `States` list. `AllStates` (on `ElementSave`) enumerates both. The first uncategorized state is conventionally named `"Default"`.
 
+`GumProjectSave.Load` leaves category states' `ParentContainer` null; only the tool's own `ElementSaveExtensionMethods.Initialize` fills it in. Headless callers (`gumcli`, the dependency walker) therefore get an `ArgumentNullException` from `StateSave.GetValueRecursive` on an element-level (undotted) name, since it reaches `VariableSave.IsState`, which requires the container.
+
 **`VariableReferences` list:** Cross-element variable binding is stored as a `VariableListSave<string>` whose `Name` is `"VariableReferences"` or `"InstanceName.VariableReferences"`. Each string entry is `"LeftSide = RightSide"` where the right side is a qualified path like `"Components/MyComp.InstanceName.Width"`. An optional state prefix can appear before a colon: `"Highlighted:Components/MyComp.InstanceName.Width"`. Rename logic must update both sides.
 
 **`GumProjectSave` reference lists vs. loaded lists:** The `.gumx` file serializes `ScreenReferences`, `ComponentReferences`, `StandardElementReferences`, `BehaviorReferences` (each a `List<ElementReference>` or `List<BehaviorReference>`). The `[XmlIgnore]` properties `Screens`, `Components`, `StandardElements`, `Behaviors` hold the loaded objects. Both must be updated on rename: the reference list (for `.gumx`) and the live objects (for in-memory state). `AllElements` is a computed `[XmlIgnore]` property that enumerates Screens + Components + Standards.

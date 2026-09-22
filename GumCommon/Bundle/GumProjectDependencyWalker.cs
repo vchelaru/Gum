@@ -220,12 +220,14 @@ public class GumProjectDependencyWalker
 
         foreach (ElementSave element in project.AllElements)
         {
-            // Element-level (no instance): default state can carry SourceFile / CustomFontFile.
-            CollectFromState(element, instance: null, element.DefaultState, projectRootDirectory,
-                includeFontCache, includeExternal, fontCache, external, missing);
-
             foreach (StateSave state in element.AllStates)
             {
+                // Element-level (no instance): a state can carry SourceFile / CustomFontFile. Category
+                // states matter as much as Default - a Text standard that points each style state at
+                // its own pre-baked atlas has no Default-state reference to those files.
+                CollectFromState(element, instance: null, state, projectRootDirectory,
+                    includeFontCache, includeExternal, fontCache, external, missing);
+
                 if (element.Instances == null)
                 {
                     continue;
@@ -436,18 +438,34 @@ public class GumProjectDependencyWalker
         // Custom font (UseCustomFont=true with a CustomFontFile path) is an ExternalFiles concern;
         // the standard font-cache .fnt + .png pages are emitted by CollectFontCacheReferences via
         // FontReferenceCollector, which handles partial state overrides + Standards inheritance.
-        VariableSave? useCustomFontVariable = state.GetVariableSave(instancePrefix + "UseCustomFont");
-        bool useCustomFont = useCustomFontVariable?.Value is bool b && b;
+        // Fall back to the default state: a category state commonly overrides only CustomFontFile
+        // while the flag that makes it apply is declared once on Default.
+        bool useCustomFont = GetValueConsideringDefaultState(element, state, instancePrefix + "UseCustomFont") as bool? ?? false;
 
         if (useCustomFont)
         {
-            VariableSave? customFontVariable = state.GetVariableSave(instancePrefix + "CustomFontFile");
-            if (customFontVariable?.Value is string customFont && !string.IsNullOrEmpty(customFont))
+            if (GetValueConsideringDefaultState(element, state, instancePrefix + "CustomFontFile") is string customFont
+                && !string.IsNullOrEmpty(customFont))
             {
                 AddExternalOrFontCache(customFont, ownerName, projectRootDirectory,
                     includeFontCache, includeExternal, fontCache, external, missing);
             }
         }
+    }
+
+    /// <summary>
+    /// The value <paramref name="state"/> sets for <paramref name="variableName"/>, or the element's
+    /// default-state value when this state doesn't set it.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not <c>GetValueRecursive</c>: <c>GumProjectSave.Load</c> leaves category
+    /// states' <c>ParentContainer</c> unassigned, which that method requires. Like the rest of this
+    /// walker, it reads declared values and does not climb base types.
+    /// </remarks>
+    private static object? GetValueConsideringDefaultState(ElementSave element, StateSave state, string variableName)
+    {
+        return state.GetVariableSave(variableName)?.Value
+            ?? element.DefaultState?.GetVariableSave(variableName)?.Value;
     }
 
     private static bool IsFileVariable(VariableSave variable, string leafName, ElementSave element, InstanceSave? instance)
