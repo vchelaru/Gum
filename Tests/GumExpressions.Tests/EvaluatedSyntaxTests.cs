@@ -420,6 +420,14 @@ public class EvaluatedSyntaxTests : BaseTestClass
     }
 
     [Fact]
+    public void ConvertToCSharpSyntax_SlashInStringLiteral_LeavesLiteralUntouched()
+    {
+        string result = EvaluatedSyntax.ConvertToCSharpSyntax("IsZh ? \"Fonts/Cjk.ttf\" : \"Components/Latin.ttf\"");
+
+        result.ShouldBe("IsZh ? \"Fonts/Cjk.ttf\" : \"Components/Latin.ttf\"");
+    }
+
+    [Fact]
     public void ConvertToSlashSyntax_StandardsPath_RoundtripsCorrectly()
     {
         string original = "Standards/Text.FontSize";
@@ -779,6 +787,19 @@ public class EvaluatedSyntaxTests : BaseTestClass
 
         result.ShouldNotBeNull();
         result.Value.ShouldBe("Enabled");
+    }
+
+    [Fact]
+    public void FromSyntaxNode_TernaryStringBranchesWithSlashes_PreservesSlashes()
+    {
+        StateSave state = BuildState(
+            ("Instance.IsLocaleZh", false, "bool"));
+
+        EvaluatedSyntax result = Evaluate(
+            "Instance.IsLocaleZh ? \"Fonts/Cjk.ttf\" : \"Fonts/Latin.ttf\"", state);
+
+        result.ShouldNotBeNull();
+        result.Value.ShouldBe("Fonts/Latin.ttf");
     }
 
     [Fact]
