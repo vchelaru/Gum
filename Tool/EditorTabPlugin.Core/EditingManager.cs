@@ -24,6 +24,7 @@ public partial class EditingManager : IContextMenuState
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
+    private readonly IHotkeyManager _hotkeyManager;
 
     public EditingManager(
         IWireframeObjectManager wireframeObjectManager,
@@ -32,7 +33,8 @@ public partial class EditingManager : IContextMenuState
         ISetVariableLogic setVariableLogic,
         ISelectedState selectedState,
         ICircularReferenceManager circularReferenceManager,
-        IFavoriteComponentManager favoriteComponentManager)
+        IFavoriteComponentManager favoriteComponentManager,
+        IHotkeyManager hotkeyManager)
     {
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
@@ -41,6 +43,7 @@ public partial class EditingManager : IContextMenuState
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
+        _hotkeyManager = hotkeyManager;
     }
 
     /// <summary>

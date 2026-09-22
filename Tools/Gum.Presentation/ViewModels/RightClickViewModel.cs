@@ -22,6 +22,7 @@ public class RightClickViewModel
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IFavoriteComponentManager _favoriteComponentManager;
+    private readonly IHotkeyManager _hotkeyManager;
 
     public RightClickViewModel(
         ISelectedState selectedState,
@@ -30,7 +31,8 @@ public class RightClickViewModel
         IAddInstanceLogic addInstanceLogic,
         ISetVariableLogic setVariableLogic,
         ICircularReferenceManager circularReferenceManager,
-        IFavoriteComponentManager favoriteComponentManager)
+        IFavoriteComponentManager favoriteComponentManager,
+        IHotkeyManager hotkeyManager)
     {
         _selectedState = selectedState;
         _reorderLogic = reorderLogic;
@@ -39,6 +41,7 @@ public class RightClickViewModel
         _setVariableLogic = setVariableLogic;
         _circularReferenceManager = circularReferenceManager;
         _favoriteComponentManager = favoriteComponentManager;
+        _hotkeyManager = hotkeyManager;
     }
 
     public List<ContextMenuItemViewModel> GetMenuItems()
@@ -59,7 +62,8 @@ public class RightClickViewModel
         items.Add(new ContextMenuItemViewModel
         {
             Text = "Move Forward",
-            Action = () => _reorderLogic.MoveSelectedInstanceForward()
+            Action = () => _reorderLogic.MoveSelectedInstanceForward(),
+            Shortcut = _hotkeyManager.ReorderDown.ToString()
         });
 
         var moveInFrontOf = new ContextMenuItemViewModel { Text = "Move In Front Of" };
@@ -69,7 +73,8 @@ public class RightClickViewModel
         items.Add(new ContextMenuItemViewModel
         {
             Text = "Move Backward",
-            Action = () => _reorderLogic.MoveSelectedInstanceBackward()
+            Action = () => _reorderLogic.MoveSelectedInstanceBackward(),
+            Shortcut = _hotkeyManager.ReorderUp.ToString()
         });
 
         items.Add(new ContextMenuItemViewModel
