@@ -719,9 +719,10 @@ public sealed class AvaloniaGumTreeView : UserControl
     }
 
     // A line between rows for an insert, an outline around the row for a drop onto it. The line's
-    // left margin matches where the drop will land in the hierarchy - flush with the target row for
-    // a sibling (Before/After), one level further in for a new first child (IntoFirst) - rather than
-    // always spanning the full width, which gave no visual cue of the resulting nesting (#4913).
+    // left margin matches where the drop will land in the hierarchy - flush with the target row's own
+    // highlight for a sibling or an append (Before/After/Into), one level further in for a new first
+    // child (IntoFirst) - rather than always spanning the full width, which gave no visual cue of the
+    // resulting nesting (#4913).
     private void ShowDropIndicator(LogicalRow row, TreeDropKind kind)
     {
         Point topLeft = new Point(-_scrollViewer.Offset.X, row.Top);
@@ -734,7 +735,7 @@ public sealed class AvaloniaGumTreeView : UserControl
         {
             case TreeDropKind.Into:
                 _dropIndicator.BorderThickness = new Thickness(lineThickness);
-                Place(topLeft.X, topLeft.Y, width, height);
+                Place(topLeft.X + indent, topLeft.Y, Math.Max(0, width - indent), height);
                 break;
             case TreeDropKind.Before:
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);

@@ -36,10 +36,12 @@ public class TreeDropLogicIndicatorIndentTests
     }
 
     [Fact]
-    public void GetIndicatorIndent_Into_IsZero()
+    public void GetIndicatorIndent_Into_MatchesTargetsOwnLevel()
     {
         GumTreeNode root = new GumTreeNode("Root");
+        GumTreeNode child = new GumTreeNode("Child");
+        root.Nodes.Add(child);
 
-        TreeDropLogic.GetIndicatorIndent(root, TreeDropKind.Into, 16).ShouldBe(0);
+        TreeDropLogic.GetIndicatorIndent(child, TreeDropKind.Into, 16).ShouldBe(16);
     }
 }
