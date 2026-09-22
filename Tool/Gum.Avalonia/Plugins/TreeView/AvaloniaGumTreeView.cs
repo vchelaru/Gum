@@ -46,6 +46,7 @@ public sealed class AvaloniaGumTreeView : UserControl
     private readonly ItemsControl _itemsControl;
     private readonly ScrollViewer _scrollViewer;
     private readonly global::Avalonia.Controls.Canvas _dropOverlay;
+    private readonly Border _dropParentHighlight;
     private readonly Border _dropIndicator;
     private readonly HashSet<GumTreeNode> _subscribedNodes;
     private readonly HashSet<GumTreeNodeCollection> _subscribedCollections;
@@ -91,12 +92,23 @@ public sealed class AvaloniaGumTreeView : UserControl
                 _itemsControl.MinWidth = _scrollViewer.Viewport.Width;
             }
         };
+        // A soft wash behind the row that will become the dropped nodes' new parent, so a
+        // Before/After/IntoFirst insert doesn't leave the parent to be inferred from the line's
+        // position alone (#4913). Drawn under the line/rectangle, and lighter than it, so it reads
+        // as context rather than competing with it.
+        _dropParentHighlight = new Border
+        {
+            IsVisible = false,
+            IsHitTestVisible = false,
+            CornerRadius = new CornerRadius(2),
+        }.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Primary.Transparent");
         _dropIndicator = new Border
         {
             IsVisible = false,
             IsHitTestVisible = false,
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Primary");
         _dropOverlay = new global::Avalonia.Controls.Canvas { IsHitTestVisible = false };
+        _dropOverlay.Children.Add(_dropParentHighlight);
         _dropOverlay.Children.Add(_dropIndicator);
 
         Grid grid = new Grid();
@@ -722,7 +734,8 @@ public sealed class AvaloniaGumTreeView : UserControl
     // left margin matches where the drop will land in the hierarchy - flush with the target row's own
     // highlight for a sibling or an append (Before/After/Into), one level further in for a new first
     // child (IntoFirst) - rather than always spanning the full width, which gave no visual cue of the
-    // resulting nesting (#4913).
+    // resulting nesting (#4913). A Before/After/IntoFirst insert also washes the row that will become
+    // the new parent, so it doesn't have to be inferred from the line's position alone.
     private void ShowDropIndicator(LogicalRow row, TreeDropKind kind)
     {
         Point topLeft = new Point(-_scrollViewer.Offset.X, row.Top);
@@ -755,6 +768,8 @@ public sealed class AvaloniaGumTreeView : UserControl
                 break;
         }
 
+        ShowParentHighlight(TreeDropLogic.GetParentHighlightNode(row.Node, kind), width);
+
         void Place(double x, double y, double w, double h)
         {
             global::Avalonia.Controls.Canvas.SetLeft(_dropIndicator, x);
@@ -765,7 +780,41 @@ public sealed class AvaloniaGumTreeView : UserControl
         }
     }
 
-    private void ClearDropIndicator() => _dropIndicator.IsVisible = false;
+    private void ShowParentHighlight(GumTreeNode? parentNode, double width)
+    {
+        if (parentNode == null || RowFor(parentNode) is not { } parentRow)
+        {
+            _dropParentHighlight.IsVisible = false;
+            return;
+        }
+
+        double indent = parentNode.Level * TreeRowView.Indent;
+        global::Avalonia.Controls.Canvas.SetLeft(_dropParentHighlight, -_scrollViewer.Offset.X + indent);
+        global::Avalonia.Controls.Canvas.SetTop(_dropParentHighlight, parentRow.Top);
+        _dropParentHighlight.Width = Math.Max(0, width - indent);
+        _dropParentHighlight.Height = Math.Max(1, parentRow.Height);
+        _dropParentHighlight.IsVisible = true;
+    }
+
+    /// <summary>The visible row for <paramref name="node"/>, or null when it isn't currently shown.</summary>
+    private LogicalRow? RowFor(GumTreeNode node)
+    {
+        int index = IndexOfRow(node);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        double rowHeight = RowHeight;
+        double top = index * rowHeight - _scrollViewer.Offset.Y;
+        return new LogicalRow(node, top, rowHeight);
+    }
+
+    private void ClearDropIndicator()
+    {
+        _dropIndicator.IsVisible = false;
+        _dropParentHighlight.IsVisible = false;
+    }
 
     #endregion
 }

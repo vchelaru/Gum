@@ -126,6 +126,21 @@ public static class TreeDropLogic
         };
 
     /// <summary>
+    /// The node whose row should be highlighted as the dropped nodes' new parent, or null when none
+    /// should be (an insert at the tree root has no parent row; <see cref="TreeDropKind.Into"/> already
+    /// draws its own rectangle around <paramref name="target"/>, so a second highlight there would be
+    /// redundant). Before/After insert as a sibling of <paramref name="target"/>, so its parent is the
+    /// new parent; IntoFirst makes <paramref name="target"/> itself the new parent.
+    /// </summary>
+    public static GumTreeNode? GetParentHighlightNode(GumTreeNode target, TreeDropKind kind) =>
+        kind switch
+        {
+            TreeDropKind.Before or TreeDropKind.After => target.Parent,
+            TreeDropKind.IntoFirst => target,
+            _ => null,
+        };
+
+    /// <summary>
     /// Whether <paramref name="node"/> is one of <paramref name="candidates"/> or inside one of them.
     /// A drop there would move a node into its own subtree.
     /// </summary>
