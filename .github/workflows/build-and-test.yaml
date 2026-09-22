@@ -85,53 +85,13 @@ jobs:
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
       #
       # Retries only the tests that actually failed, not the whole assembly: Avalonia's headless
-      # xunit host resolves Dispatcher.UIThread via an unsynchronized `s_uiThread ??= ...`
-      # (Avalonia.Base/Threading/Dispatcher.cs), so a test-session setup race can orphan the
-      # compositor for one test in a while - a real, still-open Avalonia bug (see
-      # Tests/Gum.Avalonia.Tests/Animations/README.md's Gotchas), not a Gum defect and not fixable
-      # here. The poisoning is scoped to that one test's isolated session, not to one Window - a
-      # same-process retry does not help (confirmed by local repro: recreating the Window in place
-      # still failed 3/3), so only a fresh `dotnet test` process gets an independent roll, since
-      # `s_uiThread` resets on process start. Whole-assembly retry does not scale: this assembly has
-      # ~90 tests that each independently roll the dice on this race, so a per-run failure
-      # probability well above the per-test rate compounds further with every test added, and
-      # re-running everything on every retry costs a full ~90s per attempt. Instead, on failure this
-      # parses the .trx for the exact tests that failed and re-runs only that filtered set (a couple
-      # of seconds) in a fresh process, up to 4 total attempts - a genuine failure reproduces on
-      # every attempt and still fails the step, while cost and odds stay tied to the actual number of
-      # flaky tests, not the assembly's size. pwsh is explicit (not the OS default shell) so this one
-      # script runs identically across the Windows/macOS/Linux matrix.
+      # xunit host has a still-open dispatcher-setup race that can orphan one test's compositor.
+      # The script explains the race, the retry strategy, and why the retry .trx files are kept
+      # out of the reporter's TestResults/*.trx glob. pwsh is explicit (not the OS default shell)
+      # so the one script runs identically across the Windows/macOS/Linux matrix.
       - name: Gum.Avalonia.Tests (headless)
         shell: pwsh
-        run: |
-          function Get-FailedTestNames($trxPath) {
-            [xml]$trx = Get-Content $trxPath
-            $ns = New-Object System.Xml.XmlNamespaceManager($trx.NameTable)
-            $ns.AddNamespace("t", "http://microsoft.com/schemas/VisualStudio/TeamTest/2010")
-            return $trx.SelectNodes("//t:UnitTestResult[@outcome='Failed']", $ns) | ForEach-Object { $_.testName }
-          }
-
-          $maxAttempts = 4
-          $filterArgs = @()
-          for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-            $trxName = "avalonia-head-attempt$attempt.trx"
-            dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx;LogFileName=$trxName" --results-directory "TestResults" @filterArgs
-            if ($LASTEXITCODE -eq 0) { break }
-
-            $failedTests = Get-FailedTestNames "TestResults/$trxName"
-            if ($failedTests.Count -eq 0) {
-              # A nonzero exit with no failed UnitTestResult entries is a build/crash, not a test
-              # failure - re-running a filtered subset would not tell us anything new.
-              exit $LASTEXITCODE
-            }
-            if ($attempt -eq $maxAttempts) {
-              Write-Host "::error::Still failing after $maxAttempts attempts: $($failedTests -join ', ')"
-              exit $LASTEXITCODE
-            }
-            Write-Host "::warning::$($failedTests.Count) test(s) failed on attempt $attempt; retrying just those in case this was Avalonia's known headless dispatcher-setup race: $($failedTests -join ', ')"
-            $filter = ($failedTests | ForEach-Object { "FullyQualifiedName=$_" }) -join "|"
-            $filterArgs = @("--filter", $filter)
-          }
+        run: .github/scripts/run-avalonia-head-tests.ps1
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
       # KNI device tests. Only Linux has a cheap virtual display plus software GL on the runner
       # (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves the startup sequence and the
