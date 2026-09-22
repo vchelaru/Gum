@@ -294,6 +294,14 @@ public partial class AnimationViewModel : ViewModel
                 }
                 break;
             case nameof(AnimatedKeyframeViewModel.StateName):
+                if (_selectedState.SelectedElement != null)
+                {
+                    // The state box is editable, so the new name may not be a state at all; flag it
+                    // now rather than on the next reload.
+                    RefreshErrors(_selectedState.SelectedElement);
+                    RefreshCumulativeStates(_selectedState.SelectedElement);
+                }
+                break;
             case nameof(AnimatedKeyframeViewModel.InterpolationType):
             case nameof(AnimatedKeyframeViewModel.Easing):
                 if(_selectedState.SelectedElement != null)

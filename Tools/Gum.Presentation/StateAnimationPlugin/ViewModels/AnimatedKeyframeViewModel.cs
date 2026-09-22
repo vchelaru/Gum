@@ -20,7 +20,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     #region Fields
 
     AnimationViewModel? mSubAnimationViewModel;
-    bool isUncategorized;
 
     #endregion
 
@@ -103,10 +102,15 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
     public bool IsStateComboBoxVisible => !string.IsNullOrEmpty(StateName);
 
     /// <summary>
-    /// True while this keyframe is uncategorized (its referenced state has no parent category).
+    /// True while this keyframe references an existing uncategorized state. Categorized states are
+    /// always written "Category/State", so a state name with no slash is uncategorized, whether the
+    /// keyframe was loaded or just added in the tab; a missing state gets the missing-reference
+    /// warning instead.
     /// The view turns this into <c>Visibility</c> via a stock bool-to-visibility converter (ADR-0004).
     /// </summary>
-    public bool IsUncategorized => isUncategorized;
+    [DependsOn(nameof(StateName))]
+    [DependsOn(nameof(HasValidState))]
+    public bool IsUncategorized => HasValidState && !string.IsNullOrEmpty(StateName) && !StateName.Contains('/');
 
     [DependsOn(nameof(StateName))]
     [DependsOn(nameof(AnimationName))]
@@ -253,8 +257,6 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         toReturn.Time = save.Time;
         toReturn.InterpolationType = save.InterpolationType;
         toReturn.Easing = save.Easing;
-
-        toReturn.isUncategorized = elementSave.States.Any(item => item.Name == save.StateName);
 
         return toReturn;
     }

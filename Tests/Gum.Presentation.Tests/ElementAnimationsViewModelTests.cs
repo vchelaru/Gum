@@ -112,6 +112,25 @@ public class ElementAnimationsViewModelTests
         viewModel.DisplayedAnimationTime.ShouldBe(0.02, 0.0001);
     }
 
+    [Fact]
+    public void MoveSelectedAnimationUp_KeepsTheMovedAnimationSelected_WhenTheListDropsTheSelectionDuringTheMove()
+    {
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
+        AnimationViewModel blink = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Blink" };
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        viewModel.Animations.Add(blink);
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = walk;
+        // A bound list clears its selection when the selected item moves, as the Avalonia ListBox does.
+        viewModel.Animations.CollectionChanged += (_, _) => viewModel.SelectedAnimation = null;
+
+        bool moved = viewModel.MoveSelectedAnimationUp();
+
+        moved.ShouldBeTrue();
+        viewModel.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Walk", "Blink" });
+        viewModel.SelectedAnimation.ShouldBeSameAs(walk);
+    }
+
     private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer)
     {
         ComponentSave element = new() { Name = "Foo" };

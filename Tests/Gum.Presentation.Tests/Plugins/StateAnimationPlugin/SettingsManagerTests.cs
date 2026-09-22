@@ -45,6 +45,28 @@ public class SettingsManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void Default_settings_file_follows_the_user_application_data_override()
+    {
+        // The head's --user-data option redirects every per-user file through this override, so an
+        // unattended run must not write the plugin's column ratio into the user's own settings.
+        string? original = FileManager.UserApplicationDataFolderOverride;
+        FileManager.UserApplicationDataFolderOverride = _tempDirectory;
+        try
+        {
+            SettingsManager settingsManager = new SettingsManager();
+            settingsManager.GlobalSettings.FirstToSecondColumnRatio = 3m;
+
+            settingsManager.SaveSettings();
+
+            File.Exists(Path.Combine(_tempDirectory, "AnimationPlugin", "GlobalAnimationSettings.json")).ShouldBeTrue();
+        }
+        finally
+        {
+            FileManager.UserApplicationDataFolderOverride = original;
+        }
+    }
+
+    [Fact]
     public void SaveSettings_creates_missing_directory()
     {
         FilePath settingsFile = new FilePath(

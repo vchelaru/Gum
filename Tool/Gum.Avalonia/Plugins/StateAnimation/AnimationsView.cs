@@ -7,6 +7,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Gum.Avalonia.Services;
@@ -159,13 +160,15 @@ public sealed class AnimationsView : Grid
         animations.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(ElementAnimationsViewModel.Animations)));
         animations.Bind(SelectingItemsControl.SelectedItemProperty, new Binding(nameof(ElementAnimationsViewModel.SelectedAnimation)) { Mode = BindingMode.TwoWay });
         animations.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(() => ViewModel?.AnimationRightClickItems);
-        animations.KeyDown += (_, e) =>
+        // Tunneling: the list's own key handling moves the selection on an arrow key whatever the
+        // modifiers, so a bubbling handler never sees the Alt+arrow reorder hotkeys.
+        animations.AddHandler(KeyDownEvent, (_, e) =>
         {
             if (ViewModel is { } viewModel && _keyHandler.HandleAnimationListKey(e.ToGumKeyEventArgs(), viewModel))
             {
                 e.Handled = true;
             }
-        };
+        }, RoutingStrategies.Tunnel);
 
         return CreateColumn(title, add, animations);
     }
@@ -212,13 +215,13 @@ public sealed class AnimationsView : Grid
         keyframes.Bind(ItemsControl.ItemsSourceProperty, new Binding("SelectedAnimation.Keyframes"));
         keyframes.Bind(SelectingItemsControl.SelectedItemProperty, new Binding("SelectedAnimation.SelectedKeyframe") { Mode = BindingMode.TwoWay });
         keyframes.ContextMenu = AvaloniaContextMenus.CreateRebuildingMenu(() => ViewModel?.AnimationStateRightClickItems);
-        keyframes.KeyDown += (_, e) =>
+        keyframes.AddHandler(KeyDownEvent, (_, e) =>
         {
             if (ViewModel is { } viewModel && _keyHandler.HandleKeyframeListKey(e.ToGumKeyEventArgs(), viewModel) is { } pasted)
             {
                 KeyframePasted?.Invoke(pasted);
             }
-        };
+        }, RoutingStrategies.Tunnel);
 
         return CreateColumn(title, add, keyframes);
     }

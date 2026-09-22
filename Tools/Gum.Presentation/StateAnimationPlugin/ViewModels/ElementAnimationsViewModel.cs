@@ -743,7 +743,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         var index = Animations.IndexOf(SelectedAnimation);
         if (index > 0)
         {
-            Animations.Move(index, index - 1);
+            MoveAnimation(index, index - 1);
             return true;
         }
         return false;
@@ -755,10 +755,21 @@ public partial class ElementAnimationsViewModel : ViewModel
         var index = Animations.IndexOf(SelectedAnimation);
         if (index < Animations.Count - 1)
         {
-            Animations.Move(index, index + 1);
+            MoveAnimation(index, index + 1);
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Moves the selected animation and keeps it selected: a list bound to the collection can drop
+    /// its selection while the item moves, which the two-way binding would push back here.
+    /// </summary>
+    private void MoveAnimation(int oldIndex, int newIndex)
+    {
+        var moved = Animations[oldIndex];
+        Animations.Move(oldIndex, newIndex);
+        SelectedAnimation = moved;
     }
 
     public void DeleteSelectedAnimation()
