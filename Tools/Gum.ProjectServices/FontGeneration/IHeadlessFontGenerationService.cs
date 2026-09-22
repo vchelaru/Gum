@@ -27,13 +27,6 @@ public interface IHeadlessFontGenerationService
         StateSave stateSave, string projectDirectory);
 
     /// <summary>
-    /// Builds a <see cref="BmfcSave"/> describing the font for the given instance/state,
-    /// or <c>null</c> if no font is configured.
-    /// </summary>
-    BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
-        int spacingHorizontal, int spacingVertical, StateSave? forcedValues);
-
-    /// <summary>
     /// Synchronously creates a single font file if it does not already exist in the project directory.
     /// Intended for use from synchronous code paths such as property setting. Reports
     /// <see cref="FontFileStatus.Generating"/> instead of waiting when a bulk pass is already
