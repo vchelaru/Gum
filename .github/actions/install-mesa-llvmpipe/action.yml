@@ -1,0 +1,82 @@
+name: Install Mesa llvmpipe
+description: >
+  Downloads (with cache + retry) the pinned Mesa llvmpipe software-GL archive from
+  pal1000/mesa-dist-win and copies its x64 opengl32.dll (+ gallium/glapi siblings)
+  into the given destination directories, giving GPU-less Windows runners a working
+  OpenGL 3.3 context. Shared by Native-AOT-Smoke and RaylibGum.Tests (#4915).
+inputs:
+  version:
+    description: Pinned pal1000/mesa-dist-win release tag. Bump this to move the pin.
+    default: '26.1.2'
+  dest-dirs:
+    description: Newline-separated list of directories to copy the Mesa DLLs into.
+    required: true
+runs:
+  using: composite
+  steps:
+    # Save on main only: a cache written from a PR-scoped run is only visible to
+    # reruns of that same PR branch, never to other PRs, so saving there just wastes
+    # upload time against the repo's shared 10 GB cache budget - same reasoning as
+    # the workload/submodule caches in build-and-test.yaml. workflow_dispatch runs
+    # on main also take this branch, so a manual main run can seed the cache too.
+    - name: Cache Mesa archive (main only)
+      id: cache-mesa
+      if: github.ref == 'refs/heads/main'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}\mesa-archive
+        key: mesa-dist-win-${{ inputs.version }}-${{ runner.os }}
+
+    - name: Restore cached Mesa archive (PRs)
+      id: cache-mesa-restore
+      if: github.ref != 'refs/heads/main'
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ runner.temp }}\mesa-archive
+        key: mesa-dist-win-${{ inputs.version }}-${{ runner.os }}
+
+    # Retried against transient GitHub-releases hiccups (e.g. #4909's three
+    # straight 504s) - only reached on a cache miss.
+    - name: Download Mesa archive (cache miss)
+      if: steps.cache-mesa.outputs.cache-hit != 'true' && steps.cache-mesa-restore.outputs.cache-hit != 'true'
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = "Stop"
+        $ProgressPreference = "SilentlyContinue"
+        $ver = "${{ inputs.version }}"
+        $asset = "mesa3d-$ver-release-msvc.7z"
+        $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$ver/$asset"
+        $archiveDir = Join-Path $env:RUNNER_TEMP "mesa-archive"
+        New-Item -ItemType Directory -Force -Path $archiveDir | Out-Null
+        $archive = Join-Path $archiveDir $asset
+        for ($i = 1; $i -le 3; $i++) {
+          try { Write-Host "Downloading $url (attempt $i)"; Invoke-WebRequest -Uri $url -OutFile $archive; break }
+          catch {
+            if ($i -eq 3) { throw }
+            Write-Host "Download failed: $($_.Exception.Message). Retrying in $(5 * $i)s..."
+            Start-Sleep -Seconds (5 * $i)
+          }
+        }
+
+    - name: Extract and install Mesa DLLs
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = "Stop"
+        $ver = "${{ inputs.version }}"
+        $asset = "mesa3d-$ver-release-msvc.7z"
+        $archive = Join-Path (Join-Path $env:RUNNER_TEMP "mesa-archive") $asset
+        $extract = Join-Path $env:RUNNER_TEMP "mesa"
+        7z x $archive "-o$extract" -y -bso0 -bsp0
+        $opengl = Get-ChildItem -Path $extract -Recurse -Filter opengl32.dll |
+                  Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+        if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
+        $dests = @"
+        ${{ inputs.dest-dirs }}
+        "@ -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+        foreach ($dest in $dests) {
+          Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
+          Write-Host "Mesa GL runtime copied to $dest"
+          Get-ChildItem (Join-Path $dest "*.dll") |
+            Where-Object { $_.Name -match "opengl32|gallium|glapi|dxil" } |
+            Format-Table Name, Length
+        }
