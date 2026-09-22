@@ -552,28 +552,36 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             return null;
         }
 
-        // Issue #2864: a drop whose visual adornment is "rectangle around the
-        // row" (Into and IntoFirst both draw the same box) must append to the
-        // flat Instances list the new visual will be added to — never insert
-        // at a stale tree-child index. The user-facing distinction is
-        // "box vs. line": box = append, line = insert at sibling position.
-        // Inserting at index 0 is still reachable as DropKind.Before on the
-        // parent's first child, which draws a line.
+        // The adornment the user is aiming at decides where the drop lands in the flat
+        // Instances list the new visual is added to — never a stale tree-child index
+        // (issue #2864). Into draws a box around the row and appends to it. IntoFirst
+        // draws an insert line indented under the row (issue #4913), so it lands ahead of
+        // that row's existing children, matching the line the user sees — the same place a
+        // DropKind.Before on the first child row, whose line is drawn at the same spot,
+        // already lands (issue #4927).
         switch (kind)
         {
             case TreeDropKind.Into:
             case TreeDropKind.IntoFirst:
+            {
+                InstanceSave? firstChild = kind == TreeDropKind.IntoFirst
+                    ? FirstChildInstanceOf(originalTarget)
+                    : null;
+                DropPosition position = firstChild != null
+                    ? new DropPosition.BeforeSibling(firstChild)
+                    : new DropPosition.Append();
                 switch (originalTarget.Tag)
                 {
                     case ElementSave element:
-                        return (originalTarget, new DropTarget(element, null, new DropPosition.Append()));
+                        return (originalTarget, new DropTarget(element, null, position));
                     case InstanceSave instance when instance.ParentContainer != null:
-                        return (originalTarget, new DropTarget(instance.ParentContainer, instance, new DropPosition.Append()));
+                        return (originalTarget, new DropTarget(instance.ParentContainer, instance, position));
                     default:
                         // Folder/behavior drops: no flat-list semantics. The caller
                         // routes by treeNode kind (IsTopComponentContainerTreeNode etc.).
                         return (originalTarget, null);
                 }
+            }
             case TreeDropKind.After:
             case TreeDropKind.Before:
             {
@@ -599,6 +607,13 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
+    /// <summary>
+    /// The instance the first of <paramref name="target"/>'s child rows shows, or null when it has
+    /// no child rows or they are not instances (folder and behavior rows). Child rows are in flat
+    /// Instances order, so inserting before this one makes the dropped instance the new first child.
+    /// </summary>
+    private static InstanceSave? FirstChildInstanceOf(GumTreeNode target) =>
+        target.Nodes.FirstOrDefault(node => node.Tag is InstanceSave)?.Tag as InstanceSave;
 
     private void CollapseAll()
     {
