@@ -131,6 +131,23 @@ public class ElementAnimationsViewModelTests
         viewModel.SelectedAnimation.ShouldBeSameAs(walk);
     }
 
+    [Fact]
+    public void LosingTheSelectedAnimation_StopsPlayback_AndItsTimer()
+    {
+        // Deleting the playing animation hides the Play button, so nothing else could stop the timer.
+        Mock<IUiTimer> timer = new Mock<IUiTimer>();
+        ElementAnimationsViewModel viewModel = CreateViewModel(timer.Object);
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = walk;
+        viewModel.IsPlaying = true;
+
+        viewModel.SelectedAnimation = null;
+
+        viewModel.IsPlaying.ShouldBeFalse();
+        timer.Verify(t => t.Stop(), Times.Once);
+    }
+
     private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer)
     {
         ComponentSave element = new() { Name = "Foo" };

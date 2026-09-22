@@ -258,6 +258,21 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
     }
 
+    /// <summary>
+    /// Lets real time pass while pumping the dispatcher, so playback timers tick; synchronous, since
+    /// an awaiting test needs a nested dispatcher frame the headless session does not always allow.
+    /// </summary>
+    public void Wait(TimeSpan duration)
+    {
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (stopwatch.Elapsed < duration)
+        {
+            Thread.Sleep(10);
+            Dispatcher.UIThread.RunJobs();
+        }
+        Layout();
+    }
+
     /// <summary>Runs pending dispatcher work and lays the window out, so the view reflects the model.</summary>
     public void Layout()
     {

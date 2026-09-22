@@ -377,6 +377,16 @@ public class AnimationTabController
 
         if (AnimationTabRefreshLogic.ShouldReloadViewModel(currentlyReferencedElement, element, forceReload))
         {
+            if (ViewModel != null)
+            {
+                // The replaced view model owns a timer of its own; left playing, it would tick on
+                // with nothing on screen to stop it.
+                ViewModel.IsPlaying = false;
+                ViewModel.PropertyChanged -= HandlePropertyChanged;
+                ViewModel.AnyChange -= HandleDataChange;
+                ViewModel.AddStateKeyframeRequested -= HandleAddStateKeyframe;
+            }
+
             if (_projectState.GumProjectSave?.FullFileName == null)
             {
                 // OK to assign null, will be fixed down below

@@ -74,7 +74,12 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if (Set(value))
             {
-                if (SelectedAnimation != null)
+                if (SelectedAnimation == null)
+                {
+                    // Nothing is left to play, and the Play button hides with the selection.
+                    IsPlaying = false;
+                }
+                else
                 {
                     var selectedElement = _selectedState.SelectedElement;
                     if(selectedElement == null)

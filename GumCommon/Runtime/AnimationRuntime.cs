@@ -242,7 +242,7 @@ public class AnimationRuntime
     {
         //var stateKeyframes = this.Keyframes.Where(item => !string.IsNullOrEmpty(item.StateName) || item.CachedCumulativeState != null);
 
-        if(this.Loops)
+        if(this.Loops && this.Length > 0)
         {
             animationTime = animationTime % this.Length;
         }

@@ -193,7 +193,7 @@ public class AnimationEditorScenarioTests
     }
 
     [AvaloniaFact]
-    public async Task PressingPlay_AdvancesTheTime_AndStopsAtTheEnd()
+    public void PressingPlay_AdvancesTheTime_AndStopsAtTheEnd()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
         ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
@@ -207,11 +207,9 @@ public class AnimationEditorScenarioTests
 
         editor.ViewModel.IsPlaying.ShouldBeTrue();
         editor.PlayButton.Content.ShouldBe("■ Stop");
-        await Task.Delay(TimeSpan.FromMilliseconds(250));
-        editor.Layout();
+        editor.Wait(TimeSpan.FromMilliseconds(250));
         editor.ViewModel.DisplayedAnimationTime.ShouldBeGreaterThan(0);
-        await Task.Delay(TimeSpan.FromMilliseconds(1200));
-        editor.Layout();
+        editor.Wait(TimeSpan.FromMilliseconds(1200));
         editor.ViewModel.IsPlaying.ShouldBeFalse();
         editor.PlayButton.Content.ShouldBe("▶ Play");
     }
@@ -384,7 +382,7 @@ public class AnimationEditorScenarioTests
     }
 
     [AvaloniaFact]
-    public async Task PlayingALoopingAnimation_WrapsAroundInsteadOfStopping()
+    public void PlayingALoopingAnimation_WrapsAroundInsteadOfStopping()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
         ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
@@ -396,8 +394,7 @@ public class AnimationEditorScenarioTests
         last.Time.ShouldBe(0.3f);
 
         editor.Click(editor.PlayButton);
-        await Task.Delay(TimeSpan.FromMilliseconds(700));
-        editor.Layout();
+        editor.Wait(TimeSpan.FromMilliseconds(700));
 
         editor.ViewModel.IsPlaying.ShouldBeTrue();
         editor.ViewModel.DisplayedAnimationTime.ShouldBeLessThanOrEqualTo(0.3 + 0.05);
