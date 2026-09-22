@@ -46,15 +46,25 @@ partial class Spaced_ComponentRuntime : ContainerRuntime
         }
     }
 
+    private float _spaced_State_Variable;
     public float Spaced_State_Variable
     {
-        get;
-        set;
+        get => _spaced_State_Variable;
+        set
+        {
+            _spaced_State_Variable = value;
+            NotifyPropertyChanged();
+        }
     }
+    private float _spaced_Variable;
     public float Spaced_Variable
     {
-        get;
-        set;
+        get => _spaced_Variable;
+        set
+        {
+            _spaced_Variable = value;
+            NotifyPropertyChanged();
+        }
     }
     public Spaced_ComponentRuntime(bool fullInstantiation = true, bool tryCreateFormsObject = true)
     {

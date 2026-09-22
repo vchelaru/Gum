@@ -53,10 +53,15 @@ partial class _123Component : global::Gum.Forms.Controls.FrameworkElement
         }
     }
 
+    private bool __123Variable;
     public bool _123Variable
     {
-        get;
-        set;
+        get => __123Variable;
+        set
+        {
+            __123Variable = value;
+            OnPropertyChanged();
+        }
     }
     public _123Component(InteractiveGue visual) : base(visual)
     {

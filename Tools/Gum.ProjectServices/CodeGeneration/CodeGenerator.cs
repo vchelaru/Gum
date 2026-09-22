@@ -864,17 +864,28 @@ public class CodeGenerator
 
         var stringBuilder = context.StringBuilder;
 
+        // MonoGameForms generates a Gum.Forms.Controls.FrameworkElement-derived class (see
+        // GetInheritance), which raises property-changed notifications through OnPropertyChanged
+        // rather than GraphicalUiElement's NotifyPropertyChanged.
+        var notifyMethodName = context.CodeOutputProjectSettings.OutputLibrary == OutputLibrary.MonoGameForms
+            ? "OnPropertyChanged"
+            : "NotifyPropertyChanged";
+
         foreach (var variable in variables)
         {
             if (variable.IsCustomVariable)
             {
                 var type = variable.Type;
                 var name = _codeGenerationNameVerifier.ToCSharpName(variable.Name);
-                // Backed by a field (rather than a bare auto-property) so the setter can raise
-                // NotifyPropertyChanged, matching every other generated/hand-written GUE property -
-                // otherwise INotifyPropertyChanged.PropertyChanged never fires for a custom variable,
-                // whether it's set directly in C# or through SetProperty (issue #4911).
-                var fieldName = "_" + char.ToLowerInvariant(name[0]) + name.Substring(1);
+                // Backed by a field (rather than a bare auto-property) so the setter can raise a
+                // property-changed notification, matching every other generated/hand-written
+                // property - otherwise it never fires for a custom variable, whether it's set
+                // directly in C# or through SetProperty (issue #4911).
+                // ToCSharpName escapes a reserved keyword with a leading '@' (e.g. "object" ->
+                // "@object"); strip it before deriving the field name, since '@' is only legal as
+                // the first character of an identifier.
+                var unescapedName = name.StartsWith("@") ? name.Substring(1) : name;
+                var fieldName = "_" + char.ToLowerInvariant(unescapedName[0]) + unescapedName.Substring(1);
                 stringBuilder.AppendLine(context.Tabs + $"private {type} {fieldName};");
                 stringBuilder.AppendLine(context.Tabs + $"public {type} {name}");
                 stringBuilder.AppendLine(context.Tabs + "{");
@@ -884,7 +895,7 @@ public class CodeGenerator
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
                 stringBuilder.AppendLine(context.Tabs + $"{fieldName} = value;");
-                stringBuilder.AppendLine(context.Tabs + "NotifyPropertyChanged();");
+                stringBuilder.AppendLine(context.Tabs + $"{notifyMethodName}();");
                 context.TabCount--;
                 stringBuilder.AppendLine(context.Tabs + "}");
                 context.TabCount--;
