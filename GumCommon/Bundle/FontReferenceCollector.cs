@@ -287,6 +287,13 @@ public class FontReferenceCollector
         bool isItalic = getValue("IsItalic") as bool? ?? false;
         bool isBold = getValue("IsBold") as bool? ?? false;
 
+        // The shadow is baked into the atlas as a blurred silhouette variant, so a dropshadow Text
+        // needs a different file than the same font without one - BmfcSave.FontCacheFileName gives it
+        // a "_ds{blur}" suffix. Offset and color are applied at draw time and don't change the bake,
+        // but they're carried along so the BmfcSave stays a full description of the font - read only
+        // when the shadow is on, so a plain Text doesn't pay seven more recursive lookups (#4929).
+        bool hasDropshadow = getValue("HasDropshadow") as bool? ?? false;
+
         BmfcSave bmfcSave = new BmfcSave();
         bmfcSave.FontSize = fontSize.Value;
         bmfcSave.OutlineThickness = outlineValue;
@@ -296,6 +303,18 @@ public class FontReferenceCollector
         bmfcSave.Ranges = fontRanges;
         bmfcSave.SpacingHorizontal = spacingHorizontal;
         bmfcSave.SpacingVertical = spacingVertical;
+        bmfcSave.HasDropshadow = hasDropshadow;
+
+        if (hasDropshadow)
+        {
+            bmfcSave.DropshadowOffsetX = getValue("DropshadowOffsetX") as float? ?? 0f;
+            bmfcSave.DropshadowOffsetY = getValue("DropshadowOffsetY") as float? ?? 0f;
+            bmfcSave.DropshadowBlur = getValue("DropshadowBlur") as float? ?? 0f;
+            bmfcSave.DropshadowRed = (byte)(getValue("DropshadowRed") as int? ?? 0);
+            bmfcSave.DropshadowGreen = (byte)(getValue("DropshadowGreen") as int? ?? 0);
+            bmfcSave.DropshadowBlue = (byte)(getValue("DropshadowBlue") as int? ?? 0);
+            bmfcSave.DropshadowAlpha = (byte)(getValue("DropshadowAlpha") as int? ?? 0);
+        }
 
         if (BmfcSave.IsFontFilePath(fontValue))
         {
