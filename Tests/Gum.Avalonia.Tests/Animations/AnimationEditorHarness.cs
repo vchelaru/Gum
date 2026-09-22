@@ -94,9 +94,10 @@ internal sealed class AnimationEditorHarness : IDisposable
             _menuItemAdded = viewMenu.Items.Except(viewItemsBefore).SingleOrDefault();
 
             // Selection, rename, undo and the other plugin events reach this instance through the
-            // manager, as they reach the head's own; that one is restored as the undo provider on dispose.
+            // manager in place of the head's own instance, which would otherwise handle every
+            // event too (moving or copying the same sidecar first); it is put back on dispose.
             _headPlugin = _pluginManager.Plugins.FirstOrDefault(plugin => plugin is AvaloniaStateAnimationPlugin);
-            _pluginManager.Plugins = _pluginManager.Plugins.Append(Plugin).ToList();
+            _pluginManager.Plugins = _pluginManager.Plugins.Where(plugin => plugin != _headPlugin).Append(Plugin).ToList();
             _pluginManager.PluginContainers[Plugin] = new PluginContainer(Plugin);
 
             _tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
@@ -472,6 +473,10 @@ internal sealed class AnimationEditorHarness : IDisposable
         SelectedState.SelectedElement = null;
         _pluginManager.Plugins = _pluginManager.Plugins.Where(plugin => plugin != Plugin).ToList();
         _pluginManager.PluginContainers.Remove(Plugin);
+        if (_headPlugin != null)
+        {
+            _pluginManager.Plugins = _pluginManager.Plugins.Append(_headPlugin).ToList();
+        }
         if (_headPlugin is IAnimationUndoProvider headProvider)
         {
             Services.GetRequiredService<IAnimationUndoProviderRegistrar>().Register(headProvider);
