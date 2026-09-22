@@ -171,32 +171,11 @@ jobs:
       - name: Publish harness as Native AOT
         run: dotnet publish "Tests/NativeAotSmoke.Harness/NativeAotSmoke.Harness.csproj" --configuration Release -r win-x64 --self-contained
 
-      # Same download/extract as "Install Mesa llvmpipe" below, pointed at this job's own AOT
-      # publish output instead of RaylibGum.Tests' bin dir.
+      # Shared with RaylibGum.Tests' Mesa install step below (#4915).
       - name: Install Mesa llvmpipe (software GL, no GPU on the runner)
-        run: |
-          $ErrorActionPreference = "Stop"
-          $ProgressPreference = "SilentlyContinue"
-          $ver = "26.1.2"
-          $asset = "mesa3d-$ver-release-msvc.7z"
-          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$ver/$asset"
-          $archive = Join-Path $env:RUNNER_TEMP $asset
-          $extract = Join-Path $env:RUNNER_TEMP "mesa"
-          for ($i = 1; $i -le 3; $i++) {
-            try { Write-Host "Downloading $url (attempt $i)"; Invoke-WebRequest -Uri $url -OutFile $archive; break }
-            catch {
-              if ($i -eq 3) { throw }
-              Write-Host "Download failed: $($_.Exception.Message). Retrying in $(5 * $i)s..."
-              Start-Sleep -Seconds (5 * $i)
-            }
-          }
-          7z x $archive "-o$extract" -y -bso0 -bsp0
-          $opengl = Get-ChildItem -Path $extract -Recurse -Filter opengl32.dll |
-                    Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
-          if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
-          $dest = "Tests/NativeAotSmoke.Harness/bin/Release/net8.0/win-x64/publish"
-          Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
-          Write-Host "Mesa GL runtime copied to $dest"
+        uses: ./.github/actions/install-mesa-llvmpipe
+        with:
+          dest-dirs: Tests/NativeAotSmoke.Harness/bin/Release/net8.0/win-x64/publish
 
       - name: Run harness (exit code is the assertion)
         env:
@@ -665,51 +644,23 @@ jobs:
       #
       # This is a BLOCKING Bucket-A suite (promoted from an advisory probe in #3250
       # after a clean 351/351 run). The install step feeds that blocking gate, so
-      # its download is retried against transient GitHub-releases hiccups; the
-      # timeout-minutes guard on the test step stays so a hang fails fast instead of
-      # burning the job budget, and the trx now lands in the shared TestResults dir
-      # so the "Publish Test Results" reporter gates on it like every other suite.
+      # its download is cached + retried against transient GitHub-releases hiccups
+      # (./.github/actions/install-mesa-llvmpipe, shared with Native-AOT-Smoke's
+      # Mesa install step above - #4915); the timeout-minutes guard on the test
+      # step stays so a hang fails fast instead of burning the job budget, and the
+      # trx now lands in the shared TestResults dir so the "Publish Test Results"
+      # reporter gates on it like every other suite.
       - name: "Install Mesa llvmpipe (Windows, #3250)"
         if: (github.event_name != 'push' || steps.cache-workloads.outputs.cache-hit != 'true') && runner.os == 'Windows' && (github.event_name != 'pull_request' || steps.docs-only.outputs.non-docs == 'true')
-        run: |
-          $ErrorActionPreference = "Stop"
-          $ProgressPreference = "SilentlyContinue"   # Invoke-WebRequest is far faster without progress rendering
-          $ver = "26.1.2"                            # pinned pal1000/mesa-dist-win release
-          $asset = "mesa3d-$ver-release-msvc.7z"
-          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$ver/$asset"
-          $archive = Join-Path $env:RUNNER_TEMP $asset
-          $extract = Join-Path $env:RUNNER_TEMP "mesa"
-          # Retry the download — this feeds a blocking gate, so a transient GitHub
-          # releases hiccup must not red the whole job on the first attempt.
-          for ($i = 1; $i -le 3; $i++) {
-            try { Write-Host "Downloading $url (attempt $i)"; Invoke-WebRequest -Uri $url -OutFile $archive; break }
-            catch {
-              if ($i -eq 3) { throw }
-              Write-Host "Download failed: $($_.Exception.Message). Retrying in $(5 * $i)s..."
-              Start-Sleep -Seconds (5 * $i)
-            }
-          }
-          7z x $archive "-o$extract" -y -bso0 -bsp0
-          # Find the x64 GL runtime in the archive and copy that folder's DLLs next
-          # to the RaylibGum.Tests binaries (the test host's exe directory).
-          $opengl = Get-ChildItem -Path $extract -Recurse -Filter opengl32.dll |
-                    Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
-          if (-not $opengl) { Write-Error "x64 opengl32.dll not found in Mesa archive"; exit 1 }
-          $dests = @(
-            "Tests/RaylibGum.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0",
-            "Tests/Gum.Cli.Tests/bin/Release/net10.0",
-            "Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0",
-            "Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0",
-            "Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0"
-          )
-          foreach ($dest in $dests) {
-            Copy-Item (Join-Path $opengl.Directory.FullName "*.dll") -Destination $dest -Force
-            Write-Host "Mesa GL runtime copied to $dest"
-            Get-ChildItem (Join-Path $dest "*.dll") |
-              Where-Object { $_.Name -match "opengl32|gallium|glapi|dxil" } |
-              Format-Table Name, Length
-          }
+        uses: ./.github/actions/install-mesa-llvmpipe
+        with:
+          dest-dirs: |
+            Tests/RaylibGum.Tests/bin/Release/net8.0
+            Tests/Gum.ProjectServices.Raylib.Tests/bin/Release/net10.0
+            Tests/Gum.Cli.Tests/bin/Release/net10.0
+            Tests/MonoGameGum.IntegrationTests/bin/Release/net8.0
+            Tests/MonoGameGum.Shapes.Tests/bin/Release/net8.0
+            Tests/Gum.ProjectServices.MonoGame.Tests/bin/Release/net10.0
 
       # Moved here (after Mesa is installed) because ScreenshotCommandTests and
       # DiffScreenshotsCommandTests exercise `gumcli screenshot --backend raylib` and
