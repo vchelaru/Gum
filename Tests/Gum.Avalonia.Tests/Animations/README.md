@@ -87,13 +87,17 @@ Rules that keep scenarios honest:
   dispose; a test that adds shared state of its own must clear it the same way.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame that
   the headless session sometimes refuses.
-- About one test in a hundred fails at once with "The tab's window hit-tests nothing after a
-  render tick". That is a known race in Avalonia 11.3's headless xunit host, not in the tab: the
-  session nulls `Dispatcher.UIThread` before each test's app setup, the dispatcher is created lazily
-  without a lock, and a GC finalizer (seen on the finalizer thread in the same millisecond) reaching
-  `Dispatcher.UIThread` during that setup creates a second one. The media context and render timer
-  keep the loser, so nothing in that test renders or hit-tests. Avalonia's master branch creates the
-  dispatcher under a lock; no 11.3.x patch does. Rerun the test. The harness checks for it right
+- Occasionally a test fails at once with "The tab's window hit-tests nothing after a render tick".
+  Confirmed cause, not a Gum bug: `Dispatcher.UIThread` in Avalonia's own
+  `src/Avalonia.Base/Threading/Dispatcher.cs` is `s_uiThread ??= CreateUIThreadDispatcher()` with no
+  lock; the headless session nulls it before each isolated test's app setup and recreates it lazily,
+  so something touching `Dispatcher.UIThread` from another thread in that window (suspected: a GC
+  finalizer, unconfirmed) can create a second instance and orphan the media context/render timer on
+  the loser. Still present through Avalonia 11.3.22 (checked every 11.3.x changelog since 17); a
+  11.3→12 upgrade is not the fix — 12.1.1 has an open, worse version of the same class of bug that
+  poisons the whole test process at a measured 3–5% rate (AvaloniaUI/Avalonia#22021). CI retries the
+  whole `Gum.Avalonia.Tests` run once on failure to absorb this (`build-and-test.yaml`, the
+  `Gum.Avalonia.Tests (headless)` step); locally, just rerun the test. The harness checks for it right
   after the window opens so it fails in milliseconds with that message rather than as a click that
   "did not land". The tool's file watch plugin used to add its own thread-pool timer to the mix; it
   now runs that timer only while its tab is shown. Do not add thread-pool work that reaches into
