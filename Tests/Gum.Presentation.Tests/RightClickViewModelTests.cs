@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using Gum.Input;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
@@ -26,6 +27,7 @@ public class RightClickViewModelTests
     private readonly Mock<ISetVariableLogic> _setVariableLogic;
     private readonly Mock<ICircularReferenceManager> _circularReferenceManager;
     private readonly Mock<IFavoriteComponentManager> _favoriteComponentManager;
+    private readonly Mock<IHotkeyManager> _hotkeyManager;
     private readonly RightClickViewModel _sut;
 
     public RightClickViewModelTests()
@@ -37,6 +39,9 @@ public class RightClickViewModelTests
         _setVariableLogic = new Mock<ISetVariableLogic>();
         _circularReferenceManager = new Mock<ICircularReferenceManager>();
         _favoriteComponentManager = new Mock<IFavoriteComponentManager>();
+        _hotkeyManager = new Mock<IHotkeyManager>();
+        _hotkeyManager.Setup(x => x.ReorderUp).Returns(KeyCombination.Alt(GumKey.Up));
+        _hotkeyManager.Setup(x => x.ReorderDown).Returns(KeyCombination.Alt(GumKey.Down));
 
         // Setup default return for GetFilteredFavoritedComponentsFor to return empty list
         _favoriteComponentManager
@@ -50,7 +55,8 @@ public class RightClickViewModelTests
             _addInstanceLogic.Object,
             _setVariableLogic.Object,
             _circularReferenceManager.Object,
-            _favoriteComponentManager.Object);
+            _favoriteComponentManager.Object,
+            _hotkeyManager.Object);
     }
 
     [Fact]
@@ -172,6 +178,21 @@ public class RightClickViewModelTests
         result[2].Action.ShouldBeNull();    // Move In Front Of (parent-only)
         result[3].Action.ShouldNotBeNull(); // Move Backward
         result[4].Action.ShouldNotBeNull(); // Send to Back
+    }
+
+    [Fact]
+    public void GetMenuItems_ShouldShowReorderShortcuts_MatchingTheHotkeyManagerBindings()
+    {
+        var element = CreateElementWithInstances("InstanceA");
+        var instance = element.Instances[0];
+
+        _selectedState.Setup(x => x.SelectedInstance).Returns(instance);
+        _selectedState.Setup(x => x.SelectedElement).Returns(element);
+
+        var result = _sut.GetMenuItems();
+
+        result[1].Shortcut.ShouldBe("Alt+Down"); // Move Forward
+        result[3].Shortcut.ShouldBe("Alt+Up");   // Move Backward
     }
 
     [Fact]

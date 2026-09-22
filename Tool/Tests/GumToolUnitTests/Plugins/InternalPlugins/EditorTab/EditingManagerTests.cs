@@ -33,7 +33,8 @@ public class EditingManagerTests : BaseTestClass
             Mock.Of<ISetVariableLogic>(),
             _selectedState.Object,
             _circularReferenceManager.Object,
-            _favoriteComponentManager.Object);
+            _favoriteComponentManager.Object,
+            Mock.Of<IHotkeyManager>());
     }
 
     [Fact]

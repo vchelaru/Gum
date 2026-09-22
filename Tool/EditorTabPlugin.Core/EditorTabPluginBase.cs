@@ -276,7 +276,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _setVariableLogic,
             _selectedState,
             _circularReferenceManager,
-            _favoriteComponentManager
+            _favoriteComponentManager,
+            _hotkeyManager
             );
 
         _layerService = new Services.LayerService();
