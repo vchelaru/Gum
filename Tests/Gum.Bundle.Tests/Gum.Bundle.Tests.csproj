@@ -19,6 +19,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\GumCommon\GumCommon.csproj" />
+    <!-- Supplies the Roslyn expression evaluator so conditional (ternary) VariableReferences
+         resolve for real in the collector's branch-enumeration tests. -->
+    <ProjectReference Include="..\..\Runtimes\GumExpressions\GumExpressions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
