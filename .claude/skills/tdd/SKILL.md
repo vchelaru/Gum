@@ -16,6 +16,7 @@ Test projects to look in (pick the one that compiles the source you're editing):
 - `Tests/Gum.Avalonia.Tests/` — for `Tool/Gum.Avalonia/` and `AvaloniaDataUi/` (headless Avalonia)
 - `Tool/Tests/GumToolUnitTests/` — only for the frozen WPF head (`Gum/`, `WpfDataUi/`); new tool logic never lands there
 - `Tests/Gum.Cli.Tests/` — for `Gum.Cli/`
+- `Tests/Gum.Bundle.Tests/` — for `GumCommon/Bundle/` (the dependency walker, font reference collector, `.gumpkg` format)
 - `Tests/Gum.Themes.Tests/` — for `Themes/`
 
 No "the cause is obvious, I'll skip the test" exception — that reasoning is how silent regressions ship. **If you're about to edit one of the directories above without a failing test open, stop.**

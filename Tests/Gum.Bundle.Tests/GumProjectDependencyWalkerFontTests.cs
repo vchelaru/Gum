@@ -193,6 +193,46 @@ public class GumProjectDependencyWalkerFontTests : IDisposable
         result.FontCacheFiles.ShouldContain("FontCache/" + expectedFntBase + "_0.png");
     }
 
+    [Fact]
+    public void Walk_with_ExternalFiles_packs_a_CustomFontFile_set_on_a_category_state()
+    {
+        // Issue #4922's project shape: a Text standard declares UseCustomFont once on Default and
+        // each category state points CustomFontFile at its own pre-baked atlas. Both the inherited
+        // flag and the element-level (no instance) category states have to be seen for the style
+        // states' atlases to make it into the bundle.
+        const string defaultFnt = "Fonts/normal.fnt";
+        const string titleFnt = "Fonts/title.fnt";
+
+        StandardElementSave textStandard = TestProjectBuilder.BuildStandard("Text");
+        StateSave textDefault = textStandard.DefaultState;
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "UseCustomFont", Value = true });
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "CustomFontFile", Value = defaultFnt, IsFile = true });
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "Font", Value = "Arial" });
+        textDefault.Variables.Add(new VariableSave { SetsValue = true, Name = "FontSize", Value = 8 });
+
+        StateSave title = new StateSave { Name = "Title", ParentContainer = textStandard };
+        textStandard.States.Add(title);
+        title.Variables.Add(new VariableSave { SetsValue = true, Name = "CustomFontFile", Value = titleFnt, IsFile = true });
+
+        GumProjectSave project = TestProjectBuilder.BuildProject(standards: new[] { textStandard });
+
+        string root = CreateProjectRoot(new[]
+        {
+            (defaultFnt, EmptyContent),
+            (titleFnt, EmptyContent),
+        });
+
+        ObjectFinder.Self.GumProjectSave = project;
+
+        WalkResult result = new GumProjectDependencyWalker().Walk(
+            project, root, GumBundleInclusion.FontCache | GumBundleInclusion.ExternalFiles);
+
+        result.ExternalFiles.ShouldContain(defaultFnt);
+        result.ExternalFiles.ShouldContain(titleFnt);
+        result.FontCacheFiles.ShouldBeEmpty();
+        result.MissingFiles.ShouldBeEmpty();
+    }
+
     private string CreateProjectRoot(IEnumerable<(string, byte[])> files)
     {
         List<(string, byte[])> withProjectFile = new List<(string, byte[])>(files);

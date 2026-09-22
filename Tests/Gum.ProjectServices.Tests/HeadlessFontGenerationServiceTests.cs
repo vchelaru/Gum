@@ -913,6 +913,51 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void CollectRequiredFonts_ShouldCollectBothCustomTtfBranches_WhenCustomFontFileSetViaConditionalVariableReference()
+    {
+        // UseCustomFont makes CustomFontFile the font's identity, so a ternary on it is as
+        // branch-worthy as one on Font. See the Font-branch test above for the Initialize/reset
+        // pattern.
+        Gum.Expressions.GumExpressionService.Initialize();
+        try
+        {
+            ComponentSave component = new ComponentSave { Name = "Panel", BaseType = "Container" };
+            StateSave state = AddState(component);
+            AddTextInstance(component, "Label");
+
+            SetVar(state, "IsLocaleZh", false);
+            SetVar(state, "Label.UseCustomFont", true);
+            state.Variables.Add(new VariableSave
+            {
+                SetsValue = true,
+                Name = "Label.CustomFontFile",
+                Value = "Latin.ttf",
+                Type = "string"
+            });
+
+            VariableListSave<string> variableReferences = new VariableListSave<string>
+            {
+                Name = "Label.VariableReferences",
+                Type = "string"
+            };
+            variableReferences.ValueAsIList.Add("CustomFontFile = IsLocaleZh ? \"Cjk.ttf\" : \"Latin.ttf\"");
+            state.VariableLists.Add(variableReferences);
+
+            Project.Components.Add(component);
+
+            Dictionary<string, BmfcSave> result = _sut.CollectRequiredFonts(Project, new[] { component });
+
+            result.Values.ShouldContain(f => f.FontFile == "Latin.ttf");
+            result.Values.ShouldContain(f => f.FontFile == "Cjk.ttf");
+            result.Values.ShouldNotContain(f => f.FontName == "Arial");
+        }
+        finally
+        {
+            GumRuntime.ElementSaveExtensions.ClearRegistrations();
+        }
+    }
+
     #endregion
 
     // -------------------------------------------------------------------------

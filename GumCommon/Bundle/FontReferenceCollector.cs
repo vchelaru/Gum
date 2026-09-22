@@ -43,7 +43,8 @@ public class FontReferenceCollector
     /// </summary>
     private static readonly string[] FontAffectingVariableNames =
     {
-        "Font", "FontSize", "OutlineThickness", "UseFontSmoothing", "IsItalic", "IsBold"
+        "Font", "FontSize", "OutlineThickness", "UseFontSmoothing", "IsItalic", "IsBold",
+        "CustomFontFile"
     };
 
     private readonly Func<InstanceSave, ElementSave?> _resolveInstanceElement;
@@ -261,6 +262,24 @@ public class FontReferenceCollector
             return null;
         }
 
+        // UseCustomFont makes CustomFontFile the font's identity and leaves Font and the style
+        // variables inert - the variables tab hides them rather than clearing them, so they keep
+        // whatever system font was last picked. A .ttf/.otf custom file still needs baking (the same
+        // ResolveTtfSourcePath decision every backend's font-loading path makes), but a pre-baked
+        // .fnt is loaded straight off disk and needs nothing generated for it. See #4922.
+        if (getValue("UseCustomFont") as bool? == true)
+        {
+            string? customFontFile = BmfcSave.ResolveTtfSourcePath(
+                useCustomFont: true, getValue("CustomFontFile") as string, fontValue);
+
+            if (customFontFile == null)
+            {
+                return null;
+            }
+
+            fontValue = customFontFile;
+        }
+
         int outlineValue = getValue("OutlineThickness") as int? ?? 0;
 
         // default to true to match how old behavior worked
@@ -373,39 +392,6 @@ public class FontReferenceCollector
     {
         RecursiveVariableFinder rfv = new RecursiveVariableFinder(elementStack);
 
-        string? fontValue = rfv.GetValueByBottomName("Font") as string;
-        int? fontSize = rfv.GetValueByBottomName("FontSize") as int?;
-
-        if (fontValue == null || fontSize == null)
-        {
-            return null;
-        }
-
-        int outlineValue = rfv.GetValueByBottomName("OutlineThickness") as int? ?? 0;
-        bool fontSmoothing = rfv.GetValueByBottomName("UseFontSmoothing") as bool? ?? true;
-        bool isItalic = rfv.GetValueByBottomName("IsItalic") as bool? ?? false;
-        bool isBold = rfv.GetValueByBottomName("IsBold") as bool? ?? false;
-
-        BmfcSave bmfcSave = new BmfcSave();
-        bmfcSave.FontSize = fontSize.Value;
-        bmfcSave.OutlineThickness = outlineValue;
-        bmfcSave.UseSmoothing = fontSmoothing;
-        bmfcSave.IsItalic = isItalic;
-        bmfcSave.IsBold = isBold;
-        bmfcSave.Ranges = fontRanges;
-        bmfcSave.SpacingHorizontal = spacingHorizontal;
-        bmfcSave.SpacingVertical = spacingVertical;
-
-        if (BmfcSave.IsFontFilePath(fontValue))
-        {
-            bmfcSave.FontFile = fontValue;
-            bmfcSave.FontName = Path.GetFileNameWithoutExtension(fontValue);
-        }
-        else
-        {
-            bmfcSave.FontName = fontValue;
-        }
-
-        return bmfcSave;
+        return BuildBmfcSave(name => rfv.GetValueByBottomName(name), fontRanges, spacingHorizontal, spacingVertical);
     }
 }
