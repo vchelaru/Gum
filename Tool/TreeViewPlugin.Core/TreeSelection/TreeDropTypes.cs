@@ -110,6 +110,37 @@ public static class TreeDropLogic
     }
 
     /// <summary>
+    /// How far a drop indicator should be indented from the tree's left edge, in multiples of
+    /// <paramref name="indentPerLevel"/> (one tree level's width) - the same left margin the row's
+    /// own selection/hover highlight uses. <see cref="TreeDropKind.Before"/>, <see cref="TreeDropKind.After"/>
+    /// and <see cref="TreeDropKind.Into"/> land the drop at or onto <paramref name="target"/> itself,
+    /// so they match its own level; <see cref="TreeDropKind.IntoFirst"/> lands it as the target's
+    /// first child, one level deeper - the indent is what tells the two apart on screen.
+    /// </summary>
+    public static double GetIndicatorIndent(GumTreeNode target, TreeDropKind kind, double indentPerLevel) =>
+        kind switch
+        {
+            TreeDropKind.Before or TreeDropKind.After or TreeDropKind.Into => target.Level * indentPerLevel,
+            TreeDropKind.IntoFirst => (target.Level + 1) * indentPerLevel,
+            _ => 0,
+        };
+
+    /// <summary>
+    /// The node whose row should be highlighted as the dropped nodes' new parent, or null when none
+    /// should be (an insert at the tree root has no parent row; <see cref="TreeDropKind.Into"/> already
+    /// draws its own rectangle around <paramref name="target"/>, so a second highlight there would be
+    /// redundant). Before/After insert as a sibling of <paramref name="target"/>, so its parent is the
+    /// new parent; IntoFirst makes <paramref name="target"/> itself the new parent.
+    /// </summary>
+    public static GumTreeNode? GetParentHighlightNode(GumTreeNode target, TreeDropKind kind) =>
+        kind switch
+        {
+            TreeDropKind.Before or TreeDropKind.After => target.Parent,
+            TreeDropKind.IntoFirst => target,
+            _ => null,
+        };
+
+    /// <summary>
     /// Whether <paramref name="node"/> is one of <paramref name="candidates"/> or inside one of them.
     /// A drop there would move a node into its own subtree.
     /// </summary>

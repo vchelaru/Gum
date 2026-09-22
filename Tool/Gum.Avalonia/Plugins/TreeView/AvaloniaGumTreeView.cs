@@ -41,12 +41,12 @@ public sealed class AvaloniaGumTreeView : UserControl
     private const double DragThreshold = 4;
     private const double AutoScrollBand = 20;
     private const double AutoScrollStep = 12;
-    private const double IntoFirstIndent = 14;
 
     private readonly ObservableCollection<TreeRow> _rows;
     private readonly ItemsControl _itemsControl;
     private readonly ScrollViewer _scrollViewer;
     private readonly global::Avalonia.Controls.Canvas _dropOverlay;
+    private readonly Border _dropParentHighlight;
     private readonly Border _dropIndicator;
     private readonly HashSet<GumTreeNode> _subscribedNodes;
     private readonly HashSet<GumTreeNodeCollection> _subscribedCollections;
@@ -92,12 +92,23 @@ public sealed class AvaloniaGumTreeView : UserControl
                 _itemsControl.MinWidth = _scrollViewer.Viewport.Width;
             }
         };
+        // A soft wash behind the row that will become the dropped nodes' new parent, so a
+        // Before/After/IntoFirst insert doesn't leave the parent to be inferred from the line's
+        // position alone (#4913). Drawn under the line/rectangle, and lighter than it, so it reads
+        // as context rather than competing with it.
+        _dropParentHighlight = new Border
+        {
+            IsVisible = false,
+            IsHitTestVisible = false,
+            CornerRadius = new CornerRadius(2),
+        }.WithThemeResource(Border.BackgroundProperty, "Frb.Brushes.Primary.Transparent");
         _dropIndicator = new Border
         {
             IsVisible = false,
             IsHitTestVisible = false,
         }.WithThemeResource(Border.BorderBrushProperty, "Frb.Brushes.Primary");
         _dropOverlay = new global::Avalonia.Controls.Canvas { IsHitTestVisible = false };
+        _dropOverlay.Children.Add(_dropParentHighlight);
         _dropOverlay.Children.Add(_dropIndicator);
 
         Grid grid = new Grid();
@@ -719,37 +730,45 @@ public sealed class AvaloniaGumTreeView : UserControl
         }
     }
 
-    // A line between rows for an insert, an outline around the row for a drop onto it.
+    // A line between rows for an insert, an outline around the row for a drop onto it. The line's
+    // left margin matches where the drop will land in the hierarchy - flush with the target row's own
+    // highlight for a sibling or an append (Before/After/Into), one level further in for a new first
+    // child (IntoFirst) - rather than always spanning the full width, which gave no visual cue of the
+    // resulting nesting (#4913). A Before/After/IntoFirst insert also washes the row that will become
+    // the new parent, so it doesn't have to be inferred from the line's position alone.
     private void ShowDropIndicator(LogicalRow row, TreeDropKind kind)
     {
         Point topLeft = new Point(-_scrollViewer.Offset.X, row.Top);
         double width = Math.Max(_scrollViewer.Viewport.Width, _scrollViewer.Extent.Width);
         double height = Math.Max(1, row.Height);
         const double lineThickness = 2;
+        double indent = TreeDropLogic.GetIndicatorIndent(row.Node, kind, TreeRowView.Indent);
 
         switch (kind)
         {
             case TreeDropKind.Into:
                 _dropIndicator.BorderThickness = new Thickness(lineThickness);
-                Place(topLeft.X, topLeft.Y, width, height);
+                Place(topLeft.X + indent, topLeft.Y, Math.Max(0, width - indent), height);
                 break;
             case TreeDropKind.Before:
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X, topLeft.Y - lineThickness / 2, width, lineThickness);
+                Place(topLeft.X + indent, topLeft.Y - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             case TreeDropKind.After:
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X, topLeft.Y + height - lineThickness / 2, width, lineThickness);
+                Place(topLeft.X + indent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             case TreeDropKind.IntoFirst:
                 // Indented, because the insert point is inside the row above it.
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X + IntoFirstIndent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - IntoFirstIndent), lineThickness);
+                Place(topLeft.X + indent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             default:
                 ClearDropIndicator();
                 break;
         }
+
+        ShowParentHighlight(TreeDropLogic.GetParentHighlightNode(row.Node, kind), width);
 
         void Place(double x, double y, double w, double h)
         {
@@ -761,7 +780,41 @@ public sealed class AvaloniaGumTreeView : UserControl
         }
     }
 
-    private void ClearDropIndicator() => _dropIndicator.IsVisible = false;
+    private void ShowParentHighlight(GumTreeNode? parentNode, double width)
+    {
+        if (parentNode == null || RowFor(parentNode) is not { } parentRow)
+        {
+            _dropParentHighlight.IsVisible = false;
+            return;
+        }
+
+        double indent = parentNode.Level * TreeRowView.Indent;
+        global::Avalonia.Controls.Canvas.SetLeft(_dropParentHighlight, -_scrollViewer.Offset.X + indent);
+        global::Avalonia.Controls.Canvas.SetTop(_dropParentHighlight, parentRow.Top);
+        _dropParentHighlight.Width = Math.Max(0, width - indent);
+        _dropParentHighlight.Height = Math.Max(1, parentRow.Height);
+        _dropParentHighlight.IsVisible = true;
+    }
+
+    /// <summary>The visible row for <paramref name="node"/>, or null when it isn't currently shown.</summary>
+    private LogicalRow? RowFor(GumTreeNode node)
+    {
+        int index = IndexOfRow(node);
+        if (index < 0)
+        {
+            return null;
+        }
+
+        double rowHeight = RowHeight;
+        double top = index * rowHeight - _scrollViewer.Offset.Y;
+        return new LogicalRow(node, top, rowHeight);
+    }
+
+    private void ClearDropIndicator()
+    {
+        _dropIndicator.IsVisible = false;
+        _dropParentHighlight.IsVisible = false;
+    }
 
     #endregion
 }
