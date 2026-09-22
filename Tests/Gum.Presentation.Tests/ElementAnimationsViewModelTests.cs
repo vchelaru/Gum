@@ -6,6 +6,7 @@ using Gum.ToolStates;
 using Gum.Wireframe;
 using Moq;
 using Shouldly;
+using StateAnimationPlugin;
 using StateAnimationPlugin.Managers;
 using StateAnimationPlugin.ViewModels;
 
@@ -148,7 +149,32 @@ public class ElementAnimationsViewModelTests
         timer.Verify(t => t.Stop(), Times.Once);
     }
 
-    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer)
+    [Fact]
+    public void AKeyframeCopiedInOneElementsViewModel_PastesInAnothers_ThroughTheSharedClipboard()
+    {
+        // Selecting another element replaces the view model, and the copied keyframe must survive that.
+        KeyframeClipboard clipboard = new KeyframeClipboard();
+        ElementAnimationsViewModel first = CreateViewModel(Mock.Of<IUiTimer>(), clipboard);
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel released = new AnimatedKeyframeViewModel { StateName = "Cat/Released", Time = 2, HasValidState = true };
+        walk.Keyframes.Add(released);
+        first.Animations.Add(walk);
+        first.SelectedAnimation = walk;
+        walk.SelectedKeyframe = released;
+        first.CopySelectedKeyframe();
+        ElementAnimationsViewModel second = CreateViewModel(Mock.Of<IUiTimer>(), clipboard);
+        AnimationViewModel grow = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Grow" };
+        second.Animations.Add(grow);
+        second.SelectedAnimation = grow;
+
+        AnimatedKeyframeViewModel? pastedFrom = second.PasteKeyframe();
+
+        pastedFrom.ShouldNotBeNull();
+        grow.Keyframes.Single().StateName.ShouldBe("Cat/Released");
+        grow.Keyframes.Single().Time.ShouldBe(2.1f);
+    }
+
+    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null)
     {
         ComponentSave element = new() { Name = "Foo" };
         ISelectedState selectedState = Mock.Of<ISelectedState>(s => s.SelectedElement == element);
@@ -162,6 +188,7 @@ public class ElementAnimationsViewModelTests
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IOutputManager>(),
             Mock.Of<IAnimationFilePathService>(),
-            uiTimer);
+            uiTimer,
+            clipboard);
     }
 }

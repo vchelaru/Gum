@@ -13,6 +13,20 @@ namespace Gum.Presentation.Tests;
 public class AnimatedKeyframeViewModelTests
 {
     [Fact]
+    public void Clone_CopiesAKeyframe_ThatWasNeverGivenAvailableStates()
+    {
+        // Event and sub-animation keyframes are created without the state list; copying one must
+        // not throw (the paste assigns the list).
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel { EventName = "Footstep", Time = 1.5f };
+
+        AnimatedKeyframeViewModel clone = keyframe.Clone();
+
+        clone.EventName.ShouldBe("Footstep");
+        clone.Time.ShouldBe(1.5f);
+        clone.AvailableStates.ShouldBeNull();
+    }
+
+    [Fact]
     public void IsUncategorized_FollowsTheStateName_ForAKeyframeAddedInTheTab()
     {
         // The tab marks a keyframe on an uncategorized state with "!". A keyframe the Add > State

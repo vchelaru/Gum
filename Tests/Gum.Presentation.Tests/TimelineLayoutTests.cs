@@ -20,6 +20,13 @@ public class TimelineLayoutTests
     }
 
     [Fact]
+    public void CenteredLeft_KeepsANegativeTime_AtTheStartOfTheTrack()
+    {
+        // A keyframe typed with a negative time still shows (and can be clicked) at the left edge.
+        TimelineLayout.CenteredLeft(time: -1, length: 4, trackWidth: 400, itemWidth: 10).ShouldBe(-5);
+    }
+
+    [Fact]
     public void CenteredLeft_ShiftsByHalfTheMarkerWidth()
     {
         TimelineLayout.CenteredLeft(time: 1, length: 4, trackWidth: 400, itemWidth: 10).ShouldBe(95);

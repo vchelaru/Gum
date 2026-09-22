@@ -86,7 +86,7 @@ public static class TimelineLayout
         {
             return 0;
         }
-        double x = time / length * Math.Max(0, trackWidth);
+        double x = Math.Max(0, time / length * Math.Max(0, trackWidth));
         // The marker's width may still be 0 on its first measure; then it is not shifted.
         return itemWidth > 0 ? x - itemWidth / 2 : x;
     }

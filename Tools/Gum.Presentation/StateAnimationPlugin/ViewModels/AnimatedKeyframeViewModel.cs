@@ -240,7 +240,8 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         newInstance.InterpolationType = InterpolationType;
         newInstance.Easing = Easing;
 
-        newInstance.AvailableStates = new ObservableCollection<string>(AvailableStates);
+        // Event and sub-animation keyframes are never given the state list.
+        newInstance.AvailableStates = AvailableStates == null ? null : new ObservableCollection<string>(AvailableStates);
 
         newInstance.SubAnimationViewModel = SubAnimationViewModel;
 

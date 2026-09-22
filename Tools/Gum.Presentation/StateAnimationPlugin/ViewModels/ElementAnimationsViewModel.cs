@@ -41,7 +41,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IOutputManager _outputManager;
     private readonly IAnimationFilePathService _animationFilePathService;
-    private AnimatedKeyframeViewModel? _copiedKeyframe;
+    private readonly IKeyframeClipboard _keyframeClipboard;
 
     #endregion
 
@@ -196,8 +196,12 @@ public partial class ElementAnimationsViewModel : ViewModel
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
         ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
-        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer)
+        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer,
+        IKeyframeClipboard? keyframeClipboard = null)
     {
+        // The plugin shares one clipboard across the view models it creates; on its own (tests) a
+        // view model keeps a clipboard of its own.
+        _keyframeClipboard = keyframeClipboard ?? new KeyframeClipboard();
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
 
@@ -708,7 +712,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         if (SelectedAnimation?.SelectedKeyframe != null)
         {
-            _copiedKeyframe = SelectedAnimation.SelectedKeyframe.Clone();
+            _keyframeClipboard.Copied = SelectedAnimation.SelectedKeyframe.Clone();
         }
     }
 
@@ -717,14 +721,14 @@ public partial class ElementAnimationsViewModel : ViewModel
     /// </summary>
     public AnimatedKeyframeViewModel? PasteKeyframe()
     {
-        if (SelectedAnimation != null && _copiedKeyframe != null)
+        if (SelectedAnimation != null && _keyframeClipboard.Copied is { } copied)
         {
-            var copiedKeyframe = _copiedKeyframe.Clone();
+            var copiedKeyframe = copied.Clone();
             copiedKeyframe.Time += .1f;
             SelectedAnimation.Keyframes.Add(copiedKeyframe);
             SelectedAnimation.Keyframes.BubbleSort();
             SelectedAnimation.SelectedKeyframe = copiedKeyframe;
-            return _copiedKeyframe;
+            return copied;
         }
         return null;
     }

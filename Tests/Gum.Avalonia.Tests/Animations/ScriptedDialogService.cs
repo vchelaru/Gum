@@ -97,7 +97,13 @@ internal sealed class ScriptedDialogService : IDialogService
         {
             throw new InvalidOperationException($"No answer was queued for the text prompt \"{message}\".");
         }
-        return _userStrings.Dequeue();
+        string? answer = _userStrings.Dequeue();
+        // The real prompt keeps OK disabled while the validator objects, so a script cannot get past it.
+        if (answer != null && options?.Validator?.Invoke(answer) is { } objection)
+        {
+            throw new InvalidOperationException($"The text prompt \"{message}\" rejects \"{answer}\": {objection}");
+        }
+        return answer;
     }
 
     /// <inheritdoc/>
