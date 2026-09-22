@@ -47,9 +47,12 @@ internal sealed class AnimationEditorHarness : IDisposable
     private readonly MenuItemModel? _menuItemAdded;
     private readonly string? _originalUserDataOverride;
     private readonly string _framesFolder;
+    private readonly string _sidecarExtension;
 
-    public AnimationEditorHarness()
+    /// <param name="jsonProject">True for a .gumj project, whose sidecars are .ganj files.</param>
+    public AnimationEditorHarness(bool jsonProject = false)
     {
+        _sidecarExtension = jsonProject ? "Animations.ganj" : "Animations.ganx";
         // Work another test left queued (a tree view syncing its selection, say) runs now, against
         // that test's state, not later against this harness's project and selection.
         Dispatcher.UIThread.RunJobs();
@@ -78,7 +81,7 @@ internal sealed class AnimationEditorHarness : IDisposable
             IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
             projectManager.CreateNewProject();
             Project = projectManager.GumProjectSave!;
-            Project.FullFileName = Path.Combine(ProjectFolder, "AnimationEditor.gumx");
+            Project.FullFileName = Path.Combine(ProjectFolder, jsonProject ? "AnimationEditor.gumj" : "AnimationEditor.gumx");
 
             Dialogs = new ScriptedDialogService();
             MenuModel menu = Services.GetRequiredService<MenuModel>();
@@ -249,7 +252,7 @@ internal sealed class AnimationEditorHarness : IDisposable
     public string AnimationFilePath(ElementSave element)
     {
         string folder = element is ScreenSave ? "Screens" : "Components";
-        return Path.Combine(ProjectFolder, folder, element.Name + "Animations.ganx");
+        return Path.Combine(ProjectFolder, folder, element.Name + _sidecarExtension);
     }
 
     /// <summary>Reads the saved sidecar back, or null when none has been written.</summary>
