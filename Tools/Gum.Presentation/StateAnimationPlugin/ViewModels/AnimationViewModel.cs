@@ -148,6 +148,18 @@ public partial class AnimationViewModel : ViewModel
 
     public static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationSaveRepository animationCollectionViewModelManager, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager, ElementAnimationsSave? allAnimationSaves = null)
     {
+        return FromSave(save, element, animationCollectionViewModelManager, selectedState, wireframeObjectManager, allAnimationSaves, new HashSet<(ElementSave, string)>());
+    }
+
+    /// <summary>
+    /// Loads <paramref name="save"/> and, recursively, the animations its keyframes play.
+    /// <paramref name="loading"/> holds the (element, animation) pairs above this one in that
+    /// recursion: a keyframe that plays one of them again would recurse forever (two animations
+    /// that each play the other, say), so it is left unresolved and flagged instead.
+    /// </summary>
+    private static AnimationViewModel FromSave(AnimationSave save, ElementSave element, IAnimationSaveRepository animationCollectionViewModelManager, ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager, ElementAnimationsSave? allAnimationSaves, HashSet<(ElementSave Element, string Animation)> loading)
+    {
+        loading.Add((element, save.Name));
         AnimationViewModel toReturn = new AnimationViewModel(selectedState, wireframeObjectManager);
         toReturn.Name = save.Name;
         toReturn.Loops = save.Loops;
@@ -208,9 +220,9 @@ public partial class AnimationViewModel : ViewModel
             }
             var newVm = AnimatedKeyframeViewModel.FromSave(animationReference, element);
 
-            if(animationSave != null && subAnimationElement != null)
+            if(animationSave != null && subAnimationElement != null && !loading.Contains((subAnimationElement, animationSave.Name)))
             {
-                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, selectedState, wireframeObjectManager, subAnimationSiblings);
+                newVm.SubAnimationViewModel = AnimationViewModel.FromSave(animationSave, subAnimationElement, animationCollectionViewModelManager, selectedState, wireframeObjectManager, subAnimationSiblings, loading);
             }
 
 
@@ -223,8 +235,30 @@ public partial class AnimationViewModel : ViewModel
         }
 
         toReturn.SortList();
+        loading.Remove((element, save.Name));
 
         return toReturn;
+    }
+
+    /// <summary>
+    /// True when this animation plays <paramref name="animationName"/>, one of its own element's
+    /// animations, directly or through the animations its keyframes play. Used to keep an animation
+    /// from being offered as a sub-animation of one it already plays, which would loop.
+    /// </summary>
+    public bool PlaysOwnAnimation(string animationName)
+    {
+        foreach (var keyframe in Keyframes)
+        {
+            if (string.IsNullOrEmpty(keyframe.AnimationName) || keyframe.AnimationName.Contains('.'))
+            {
+                continue;
+            }
+            if (keyframe.AnimationName == animationName || keyframe.SubAnimationViewModel?.PlaysOwnAnimation(animationName) == true)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public AnimationSave ToSave()
@@ -294,6 +328,14 @@ public partial class AnimationViewModel : ViewModel
                 }
                 break;
             case nameof(AnimatedKeyframeViewModel.StateName):
+                if (_selectedState.SelectedElement != null)
+                {
+                    // The state box is editable, so the new name may not be a state at all; flag it
+                    // now rather than on the next reload.
+                    RefreshErrors(_selectedState.SelectedElement);
+                    RefreshCumulativeStates(_selectedState.SelectedElement);
+                }
+                break;
             case nameof(AnimatedKeyframeViewModel.InterpolationType):
             case nameof(AnimatedKeyframeViewModel.Easing):
                 if(_selectedState.SelectedElement != null)
@@ -443,62 +485,6 @@ public static class ListExtension
                 }
             }
         }
-    }
-}
-
-#endregion
-
-#region AnimationSave Extension Methods
-
-public static class AnimationSaveExtensions
-{
-    public static float GetLength(this AnimationSave animation, ElementSave elementSave, ElementAnimationsSave allAnimationSaves, IAnimationSaveRepository animationCollectionViewModelManager)
-    {
-        float lastState = animation.States.Max(item => item.Time);
-
-        float endOfLastSubAnimation = 0;
-        if(animation.Animations != null)
-        {
-            foreach(var subAnimation in animation.Animations)
-            {
-                AnimationSave? subAnimationSave = null;
-                ElementSave? subAnimationElement = null;
-                ElementAnimationsSave? subAnimationSiblings = null;
-
-                if(subAnimation.SourceObject == null)
-                {
-                    subAnimationSave = allAnimationSaves.Animations.FirstOrDefault(item => item.Name == subAnimation.Name);
-                    subAnimationElement = elementSave;
-                    subAnimationSiblings = allAnimationSaves;
-                }
-                else
-                {
-                    var instance = elementSave.Instances.FirstOrDefault(item=>item.Name == subAnimation.SourceObject);
-                    if(instance != null)
-                    {
-                        ElementSave? instanceElement = Gum.Managers.ObjectFinder.Self.GetElementSave(instance);
-
-                        if(instanceElement != null)
-                        {
-                            var instanceAnimations = animationCollectionViewModelManager.GetElementAnimationsSave(instanceElement);
-
-                            subAnimationSave = instanceAnimations?.Animations.FirstOrDefault(item => item.Name == subAnimation.RootName);
-                            subAnimationElement = instanceElement;
-                            subAnimationSiblings = instanceAnimations;
-                        }
-                    }
-                }
-
-                if (subAnimationSave != null && subAnimationElement != null && subAnimationSiblings != null)
-                {
-                    endOfLastSubAnimation =
-                        System.Math.Max( endOfLastSubAnimation,
-                        subAnimation.Time + subAnimationSave.GetLength(subAnimationElement, subAnimationSiblings, animationCollectionViewModelManager));
-                }
-            }
-        }
-
-        return System.Math.Max(lastState, endOfLastSubAnimation);
     }
 }
 

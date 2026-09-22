@@ -96,6 +96,9 @@ public sealed class TimelineView : Grid
     /// <summary>The rows currently shown, state and event categories first.</summary>
     internal IReadOnlyList<TimelineRow> Rows { get; private set; } = Array.Empty<TimelineRow>();
 
+    /// <summary>The span the tracks draw: the animation's length, or one second when it has none.</summary>
+    internal double DrawnLength => TimelineLayout.DrawnLength(Animation?.Length ?? 0);
+
     /// <summary>Selects <paramref name="keyframe"/> when it belongs to the shown animation.</summary>
     internal void Select(AnimatedKeyframeViewModel keyframe)
     {
@@ -309,9 +312,9 @@ internal sealed class TimelineTrack : Control
     {
         double width = Bounds.Width;
         double height = Bounds.Height;
-        double length = _owner.Animation?.Length ?? 0;
+        double length = _owner.DrawnLength;
         context.FillRectangle(TrackBackground, new Rect(0, 0, width, height));
-        if (width <= 0 || height <= 0 || length <= 0)
+        if (width <= 0 || height <= 0)
         {
             return;
         }
@@ -389,7 +392,7 @@ internal sealed class TimelineTrack : Control
 
     private AnimatedKeyframeViewModel? KeyframeAt(Point point)
     {
-        double length = _owner.Animation?.Length ?? 0;
+        double length = _owner.DrawnLength;
         for (int i = Row.Items.Count - 1; i >= 0; i--)
         {
             AnimatedKeyframeViewModel keyframe = Row.Items[i];

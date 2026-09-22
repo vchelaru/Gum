@@ -83,8 +83,24 @@ jobs:
         run: dotnet build Gum.slnx --configuration Release --verbosity quiet -p:WarningLevel=0
       # The runners have no GPU, so the KNI device tests (CanvasHostTests) skip themselves here
       # unless GUM_RUN_CANVAS_DEVICE_TESTS=1 opts in; they run in the Xvfb step below instead.
+      #
+      # Retried once on failure: Avalonia's headless xunit host resolves Dispatcher.UIThread via an
+      # unsynchronized `s_uiThread ??= ...` (Avalonia.Base/Threading/Dispatcher.cs), so a test-session
+      # setup race can orphan the compositor for one run in a while - a real, still-open Avalonia bug
+      # (see Tests/Gum.Avalonia.Tests/Animations/README.md's Gotchas), not a Gum defect and not fixable
+      # here. Re-running the whole assembly gives the race a fresh, independent roll; a genuine failure
+      # reproduces on both attempts and still fails the step. pwsh is explicit (not the OS default
+      # shell) so this one script runs identically across the Windows/macOS/Linux matrix.
       - name: Gum.Avalonia.Tests (headless)
-        run: dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx" --results-directory "TestResults"
+        shell: pwsh
+        run: |
+          dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx;LogFileName=avalonia-head.trx" --results-directory "TestResults"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning::Gum.Avalonia.Tests failed; retrying once in case this was Avalonia's known headless dispatcher-setup race."
+            Remove-Item "TestResults/avalonia-head.trx" -ErrorAction SilentlyContinue
+            dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --logger "trx;LogFileName=avalonia-head.trx" --results-directory "TestResults"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
       # KNI device tests. Only Linux has a cheap virtual display plus software GL on the runner
       # (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves the startup sequence and the

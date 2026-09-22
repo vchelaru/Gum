@@ -62,6 +62,15 @@ public static class TimelineLayout
             : DefaultCategoryName;
     }
 
+    /// <summary>The shortest span a track draws, so an animation of one keyframe still shows it.</summary>
+    public const double MinimumDrawnLength = 1;
+
+    /// <summary>
+    /// The span a track draws for an animation <paramref name="length"/> seconds long: the length
+    /// itself, or <see cref="MinimumDrawnLength"/> for an animation whose only keyframes sit at 0.
+    /// </summary>
+    public static double DrawnLength(double length) => Math.Max(length, MinimumDrawnLength);
+
     /// <summary>The x of <paramref name="time"/> on a track <paramref name="width"/> wide showing <paramref name="length"/> seconds.</summary>
     public static double TimeToX(double time, double length, double width) =>
         length <= 0 ? 0 : Math.Max(0, time / length * Math.Max(0, width));
@@ -77,7 +86,7 @@ public static class TimelineLayout
         {
             return 0;
         }
-        double x = time / length * Math.Max(0, trackWidth);
+        double x = Math.Max(0, time / length * Math.Max(0, trackWidth));
         // The marker's width may still be 0 on its first measure; then it is not shifted.
         return itemWidth > 0 ? x - itemWidth / 2 : x;
     }

@@ -65,6 +65,27 @@ public class AnimationViewModelBrokenKeyframeTests
         animation.HasBrokenKeyframe.ShouldBeTrue();
     }
 
+    [Fact]
+    public void RetargetingAKeyframe_ToAStateThatDoesNotExist_FlagsItAtOnce()
+    {
+        // The keyframe's state box is editable (issue #3386), so a typed name may match nothing.
+        Gum.DataTypes.ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        ISelectedState selectedState = Mock.Of<ISelectedState>(state => state.SelectedElement == element);
+        AnimatedKeyframeViewModel keyframe = Keyframe(stateName: "Cat/Idle", hasValidState: true);
+        AnimationViewModel animation = new AnimationViewModel(selectedState, _wireframeObjectManager) { Name = "Anim" };
+        animation.Keyframes.Add(keyframe);
+
+        keyframe.StateName = "Cat/Gone";
+
+        keyframe.IsMissingReference.ShouldBeTrue();
+        animation.HasBrokenKeyframe.ShouldBeTrue();
+
+        keyframe.StateName = "Cat/Idle";
+
+        keyframe.IsMissingReference.ShouldBeFalse();
+        animation.HasBrokenKeyframe.ShouldBeFalse();
+    }
+
     private static Gum.DataTypes.ComponentSave ElementWithCategorizedState(string categoryName, string stateName)
     {
         Gum.DataTypes.Variables.StateSaveCategory category = new Gum.DataTypes.Variables.StateSaveCategory { Name = categoryName };

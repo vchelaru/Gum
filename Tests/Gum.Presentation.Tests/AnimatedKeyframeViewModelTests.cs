@@ -13,6 +13,45 @@ namespace Gum.Presentation.Tests;
 public class AnimatedKeyframeViewModelTests
 {
     [Fact]
+    public void Clone_CopiesAKeyframe_ThatWasNeverGivenAvailableStates()
+    {
+        // Event and sub-animation keyframes are created without the state list; copying one must
+        // not throw (the paste assigns the list).
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel { EventName = "Footstep", Time = 1.5f };
+
+        AnimatedKeyframeViewModel clone = keyframe.Clone();
+
+        clone.EventName.ShouldBe("Footstep");
+        clone.Time.ShouldBe(1.5f);
+        clone.AvailableStates.ShouldBeNull();
+    }
+
+    [Fact]
+    public void IsUncategorized_FollowsTheStateName_ForAKeyframeAddedInTheTab()
+    {
+        // The tab marks a keyframe on an uncategorized state with "!". A keyframe the Add > State
+        // dialog creates has no save to read the flag from, so it follows the name: categorized
+        // states are always written "Category/State".
+        AnimatedKeyframeViewModel keyframe = new AnimatedKeyframeViewModel { StateName = "Hidden", HasValidState = true };
+        List<string> changed = new List<string>();
+        keyframe.PropertyChanged += (_, e) => changed.Add(e.PropertyName ?? "");
+
+        keyframe.IsUncategorized.ShouldBeTrue();
+
+        keyframe.StateName = "Visibility/Hidden";
+        keyframe.IsUncategorized.ShouldBeFalse();
+        changed.ShouldContain(nameof(AnimatedKeyframeViewModel.IsUncategorized));
+
+        keyframe.StateName = "";
+        keyframe.IsUncategorized.ShouldBeFalse();
+
+        // A state that no longer exists gets the missing-reference warning, not the uncategorized mark.
+        keyframe.StateName = "Gone";
+        keyframe.HasValidState = false;
+        keyframe.IsUncategorized.ShouldBeFalse();
+    }
+
+    [Fact]
     public void ChangingHasValidState_RaisesPropertyChanged_ForIsMissingReference()
     {
         // The keyframe-list icon reacts to error recomputation only because HasValidState now

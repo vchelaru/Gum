@@ -41,7 +41,10 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IOutputManager _outputManager;
     private readonly IAnimationFilePathService _animationFilePathService;
-    private AnimatedKeyframeViewModel? _copiedKeyframe;
+    private readonly IKeyframeClipboard _keyframeClipboard;
+
+    private int _batchDepth;
+    private bool _batchHasChange;
 
     #endregion
 
@@ -74,7 +77,12 @@ public partial class ElementAnimationsViewModel : ViewModel
         {
             if (Set(value))
             {
-                if (SelectedAnimation != null)
+                if (SelectedAnimation == null)
+                {
+                    // Nothing is left to play, and the Play button hides with the selection.
+                    IsPlaying = false;
+                }
+                else
                 {
                     var selectedElement = _selectedState.SelectedElement;
                     if(selectedElement == null)
@@ -191,8 +199,12 @@ public partial class ElementAnimationsViewModel : ViewModel
     public ElementAnimationsViewModel(INameVerifier nameVerifier, IDialogService dialogService,
         IAnimationCollectionViewModelManager animationCollectionViewModelManager, IRenameManager renameManager,
         ISelectedState selectedState, IWireframeObjectManager wireframeObjectManager,
-        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer)
+        IOutputManager outputManager, IAnimationFilePathService animationFilePathService, IUiTimer playTimer,
+        IKeyframeClipboard? keyframeClipboard = null)
     {
+        // The plugin shares one clipboard across the view models it creates; on its own (tests) a
+        // view model keeps a clipboard of its own.
+        _keyframeClipboard = keyframeClipboard ?? new KeyframeClipboard();
         ClampInterpolationVisuals = true;
         CurrentGameSpeed = "100%";
 
@@ -245,6 +257,45 @@ public partial class ElementAnimationsViewModel : ViewModel
     private void OnPropertyChanged(string? propertyName)
     {
         OnAnyChange(this, propertyName);
+    }
+
+    /// <summary>
+    /// Holds every <see cref="AnyChange"/> until the returned token is disposed, then raises one
+    /// (for <see cref="Animations"/>) if anything changed. The plugin saves and records an undo per
+    /// reported change, so a gesture that edits several things at once (a rename and the keyframes
+    /// that play the renamed animation, a squash of every keyframe) must report once, or an undo
+    /// takes the gesture apart piece by piece.
+    /// </summary>
+    private IDisposable BatchChanges()
+    {
+        _batchDepth++;
+        return new BatchToken(this);
+    }
+
+    private void EndBatch()
+    {
+        _batchDepth--;
+        if (_batchDepth == 0 && _batchHasChange)
+        {
+            _batchHasChange = false;
+            AnyChange?.Invoke(this, new PropertyChangedEventArgs(nameof(Animations)));
+        }
+    }
+
+    private sealed class BatchToken : IDisposable
+    {
+        private ElementAnimationsViewModel? _owner;
+
+        public BatchToken(ElementAnimationsViewModel owner)
+        {
+            _owner = owner;
+        }
+
+        public void Dispose()
+        {
+            _owner?.EndBatch();
+            _owner = null;
+        }
     }
 
     private void RefreshAnimationsRightClickMenuItems()
@@ -355,12 +406,15 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
         {
-            var oldAnimationName = SelectedAnimation.Name;
-            SelectedAnimation.Name = result;
+            using (BatchChanges())
+            {
+                var oldAnimationName = SelectedAnimation.Name;
+                SelectedAnimation.Name = result;
 
-            _renameManager.HandleRename(
-                SelectedAnimation,
-                oldAnimationName, Animations, Element);
+                _renameManager.HandleRename(
+                    SelectedAnimation,
+                    oldAnimationName, Animations, Element);
+            }
         }
     }
 
@@ -391,13 +445,16 @@ public partial class ElementAnimationsViewModel : ViewModel
             {
                 var multiplier = value / animationLengthBeforeChange;
 
-                foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                using (BatchChanges())
                 {
-                    var frameTime = (decimal)frame.Time;
+                    foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                    {
+                        var frameTime = (decimal)frame.Time;
 
-                    var newTime = frameTime * multiplier;
+                        var newTime = frameTime * multiplier;
 
-                    frame.Time = (float)newTime;
+                        frame.Time = (float)newTime;
+                    }
                 }
             }
 
@@ -425,16 +482,20 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         var copyOfAnimation = SelectedAnimation.Clone();
 
+        // The copy is a new animation; the keyframes that play the original keep playing it, here
+        // and in the elements whose instances play it, so this is not a rename.
         copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";
-        _renameManager.HandleRename(
-            copyOfAnimation,
-            SelectedAnimation.Name, Animations, Element);
 
         Animations.Add(copyOfAnimation);
     }
 
     private void OnAnyChange(object? sender, string? propertyName)
     {
+        if (_batchDepth > 0)
+        {
+            _batchHasChange = true;
+            return;
+        }
         AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
     }
 
@@ -452,9 +513,38 @@ public partial class ElementAnimationsViewModel : ViewModel
                 }
             }
         }
+        if (eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove && eventArgs.OldItems != null)
+        {
+            foreach (AnimationViewModel removed in eventArgs.OldItems)
+            {
+                BreakKeyframesPlaying(removed);
+            }
+        }
         NotifyPropertyChanged(nameof(OverLengthTime));
 
         OnAnyChange(this, "Animations");
+    }
+
+    /// <summary>
+    /// Marks every keyframe that plays <paramref name="removed"/> (a sub-animation of this element)
+    /// as broken now, rather than on the next reload when the reference fails to resolve.
+    /// </summary>
+    private void BreakKeyframesPlaying(AnimationViewModel removed)
+    {
+        foreach (var animation in Animations)
+        {
+            foreach (var keyframe in animation.Keyframes)
+            {
+                // The keyframe's copy of the animation was loaded separately, so match by name: a
+                // sub-animation of this element is named without an instance prefix.
+                bool playsRemoved = keyframe.SubAnimationViewModel == removed || keyframe.AnimationName == removed.Name;
+                if (playsRemoved)
+                {
+                    keyframe.SubAnimationViewModel = null;
+                    keyframe.HasValidState = false;
+                }
+            }
+        }
     }
 
     private void HandleFrameItemChanged(object? sender, PropertyChangedEventArgs e)
@@ -703,7 +793,7 @@ public partial class ElementAnimationsViewModel : ViewModel
     {
         if (SelectedAnimation?.SelectedKeyframe != null)
         {
-            _copiedKeyframe = SelectedAnimation.SelectedKeyframe.Clone();
+            _keyframeClipboard.Copied = SelectedAnimation.SelectedKeyframe.Clone();
         }
     }
 
@@ -712,14 +802,14 @@ public partial class ElementAnimationsViewModel : ViewModel
     /// </summary>
     public AnimatedKeyframeViewModel? PasteKeyframe()
     {
-        if (SelectedAnimation != null && _copiedKeyframe != null)
+        if (SelectedAnimation != null && _keyframeClipboard.Copied is { } copied)
         {
-            var copiedKeyframe = _copiedKeyframe.Clone();
+            var copiedKeyframe = copied.Clone();
             copiedKeyframe.Time += .1f;
             SelectedAnimation.Keyframes.Add(copiedKeyframe);
             SelectedAnimation.Keyframes.BubbleSort();
             SelectedAnimation.SelectedKeyframe = copiedKeyframe;
-            return _copiedKeyframe;
+            return copied;
         }
         return null;
     }
@@ -743,7 +833,7 @@ public partial class ElementAnimationsViewModel : ViewModel
         var index = Animations.IndexOf(SelectedAnimation);
         if (index > 0)
         {
-            Animations.Move(index, index - 1);
+            MoveAnimation(index, index - 1);
             return true;
         }
         return false;
@@ -755,10 +845,21 @@ public partial class ElementAnimationsViewModel : ViewModel
         var index = Animations.IndexOf(SelectedAnimation);
         if (index < Animations.Count - 1)
         {
-            Animations.Move(index, index + 1);
+            MoveAnimation(index, index + 1);
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Moves the selected animation and keeps it selected: a list bound to the collection can drop
+    /// its selection while the item moves, which the two-way binding would push back here.
+    /// </summary>
+    private void MoveAnimation(int oldIndex, int newIndex)
+    {
+        var moved = Animations[oldIndex];
+        Animations.Move(oldIndex, newIndex);
+        SelectedAnimation = moved;
     }
 
     public void DeleteSelectedAnimation()

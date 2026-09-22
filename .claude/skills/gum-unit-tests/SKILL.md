@@ -55,6 +55,26 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - `MainWindow` is a container singleton that `HeadCompositionTests` shows and closes. A test that needs it must not `Show()` it again (a closed window cannot be re-shown) and must not build a second one through `ActivatorUtilities` (it re-parents the singleton plugin tab controls and breaks unrelated tests). Read its state through `window.Content` without showing it.
 - `HeadProcessTests` launches the built head (`Tool/Gum.Avalonia/bin/<Config>/net10.0`) on a copied
   fixture; it skips without a display and on CI.
+- To drive a whole plugin tab with real input, follow `Animations/AnimationEditorHarness`: build the
+  plugin with `ActivatorUtilities`, set its `[Import]` properties (`DialogService` gets a scripted
+  double, so no dialog can hang the run), `StartUp()`, then add it to both `PluginManager.Plugins`
+  and `PluginManager.PluginContainers` (events are dispatched only to plugins with a container) and
+  host its tab's content in a test window. Remove it all again in `Dispose`, and re-register the
+  head's own plugin as the animation undo provider.
+- A list's own arrow-key navigation runs before a bubbling `KeyDown` handler and marks the event
+  handled whatever the modifiers, so an Alt+arrow hotkey on a `ListBox` needs
+  `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
+- `window.CaptureRenderedFrame()` returns a bitmap of a headless window (the test app runs Skia, not
+  the headless stub); save it as a PNG and read it to check what a view actually drew.
+- A window that renders and hit-tests nothing for a whole test (a click that "did not land") is
+  Avalonia 11.3's headless host racing a finalizer on the lazily created `Dispatcher.UIThread`
+  during per-test setup; about one test in a hundred. Rerun it. Details and the harness's
+  fail-fast check: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work
+  that reaches into Avalonia (timers, continuations) to a test or a plugin's StartUp.
+- Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
+  and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
+  let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
+  duration instead of awaiting (`AnimationEditorHarness.Wait`).
 
 ## Save parity corpus
 

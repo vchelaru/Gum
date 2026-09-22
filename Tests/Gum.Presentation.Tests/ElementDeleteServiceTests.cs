@@ -70,6 +70,20 @@ public class ElementDeleteServiceTests : IDisposable
     }
 
     [Fact]
+    public void HandleDeleteOptionsWindowShow_NamesTheJsonSidecar_InAJsonProject()
+    {
+        // A .gumj project keeps .ganj sidecars (issue #4182); the option names the file it deletes.
+        ComponentSave component = new ComponentSave { Name = "Foo" };
+        FilePath ganjPath = new FilePath(Path.Combine(_tempDirectory, "FooAnimations.ganj"));
+        File.WriteAllText(ganjPath.FullPath, "{}");
+        _animationFilePathService.Setup(x => x.GetAbsoluteAnimationFileNameFor(component)).Returns(ganjPath);
+
+        DeleteOptionCheckboxViewModel? checkbox = _service.HandleDeleteOptionsWindowShow(new object[] { component });
+
+        checkbox.ShouldNotBeNull().Label.ShouldBe("Delete Animation file (.ganj)");
+    }
+
+    [Fact]
     public void HandleDeleteOptionsWindowShow_ReturnsCheckedCheckbox_WhenComponentHasAnimationFile()
     {
         ComponentSave component = new ComponentSave { Name = "Foo" };
