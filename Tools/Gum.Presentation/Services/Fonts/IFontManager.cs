@@ -38,13 +38,6 @@ public interface IFontManager : IRuntimeFontService
         StateSave stateSave);
 
     /// <summary>
-    /// Builds a <see cref="BmfcSave"/> describing the font for the given instance/state,
-    /// or <c>null</c> if no font is configured.
-    /// </summary>
-    BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
-        int spacingHorizontal, int spacingVertical, StateSave? forcedValues);
-
-    /// <summary>
     /// Determines the smallest texture size that keeps the font on a single page.
     /// </summary>
     Task<GeneralResponse<Point>> GetOptimizedSizeFor(BmfcSave bmfcSave,

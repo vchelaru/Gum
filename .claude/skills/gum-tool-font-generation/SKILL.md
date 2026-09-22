@@ -36,7 +36,7 @@ FontManager (tool facade)
 
 ## Generation Flow
 
-1. **Property collection**: `TryGetBmfcSaveFor` reads font properties from a `StateSave` (with optional instance prefix and forced overrides) and returns a `BmfcSave` or null. For direct Text instances this is sufficient, but for component instances containing Text, `CollectFontsFromNestedTextInstances` recursively descends using `RecursiveVariableFinder` to resolve font properties through exposed variables and inheritance.
+1. **Property collection**: `FontReferenceCollector.BuildBmfcSave` (`GumCommon/Bundle/FontReferenceCollector.cs`) reads font properties through a `getValue` callback and returns a `BmfcSave` or null. It is the single source of truth for building a `BmfcSave` from variables - don't add a second copy alongside it. For direct Text instances a plain state lookup is enough, but for component instances containing Text, `CollectFontsFromNestedTextInstances` recursively descends using `RecursiveVariableFinder` to resolve font properties through exposed variables and inheritance.
 2. **Deduplication**: `CollectRequiredFonts` iterates all elements/states/instances and deduplicates by `FontCacheFileName` (a deterministic name encoding all font parameters).
 3. **Size estimation**: Before generating, `AssignEstimatedNeededSizeOn` either runs a binary-search optimization (`GetOptimizedSizeFor`, controlled by `AutoSizeFontOutputs` project setting) or uses a heuristic lookup table (`EstimateBlocksNeeded`) based on effective font size.
 4. **Template expansion**: `BmfcSave.Save()` loads `Content/BmfcTemplate.bmfc`, replaces placeholders, and writes the `.bmfc` file alongside the target `.fnt` path.
@@ -95,13 +95,14 @@ Both delegate to `HeadlessFontGenerationService`. Legacy `IRuntimeFontService`, 
 
 | File | Purpose |
 |------|---------|
-| `Gum/Services/Fonts/IFontManager.cs` | Interface for the tool-facing font manager |
-| `Gum/Services/Fonts/FontManager.cs` | Tool facade — delegates to headless service via DI |
+| `Tools/Gum.Presentation/Services/Fonts/IFontManager.cs` | Interface for the tool-facing font manager |
+| `Tools/Gum.Presentation/Services/Fonts/FontManager.cs` | Tool facade — delegates to headless service via DI |
 | `Tools/Gum.ProjectServices/FontGeneration/HeadlessFontGenerationService.cs` | Core generation logic — collection, size estimation, bmfont.exe invocation |
 | `Tools/Gum.ProjectServices/FontGeneration/IHeadlessFontGenerationService.cs` | Interface for the headless service |
 | `Tools/Gum.ProjectServices/FontGeneration/IFontGenerationCallbacks.cs` | Callback interface (output, spinner, file-watch ignore) |
-| `Gum/Services/Fonts/ToolFontGenerationCallbacks.cs` | Tool-specific callback implementation |
+| `Tools/Gum.Presentation/Services/Fonts/ToolFontGenerationCallbacks.cs` | Tool-specific callback implementation |
 | `RenderingLibrary/Graphics/Fonts/BmfcSave.cs` | Font data model, .bmfc serialization, cache file naming, range utilities |
+| `GumCommon/Bundle/FontReferenceCollector.cs` | Builds every `BmfcSave` a project needs from its variables |
 | `Gum/Content/BmfcTemplate.bmfc` | Template with placeholders for bmfont.exe config |
 | `GumProjectFontGenerator/Program.cs` | Standalone CLI for batch font generation |
 

@@ -65,14 +65,6 @@ public class FontManager : IFontManager
             _projectState.GumProjectSave?.AutoSizeFontOutputs ?? false);
     }
 
-    /// <inheritdoc/>
-    public BmfcSave? TryGetBmfcSaveFor(InstanceSave? instance, StateSave stateSave, string fontRanges,
-        int spacingHorizontal, int spacingVertical, StateSave? forcedValues)
-    {
-        return _fontGenerationService.TryGetBmfcSaveFor(instance, stateSave, fontRanges,
-            spacingHorizontal, spacingVertical, forcedValues);
-    }
-
     /// <summary>
     /// Determines the smallest texture size that keeps the font on a single page.
     /// </summary>
