@@ -1,6 +1,6 @@
 ---
 name: gum-cli
-description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands (new, check, diff-standards, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, FormsTemplateCreator, DiffStandardsService.
+description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands (new, add-forms, check, diff-standards, codegen, codegen-init, fonts, screenshot, svg), Gum.ProjectServices, HeadlessErrorChecker, ProjectLoader, HeadlessCodeGenerationService, CodeGenerationAutoSetupService, FormsTemplateCreator, DiffStandardsService.
 ---
 
 # GumCli Reference
@@ -17,6 +17,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 | Command | Purpose |
 |---------|---------|
 | `gumcli new <path> [--template]` | Create a new project. Templates: `forms` (default, includes all Forms UI controls) or `empty` (minimal). |
+| `gumcli add-forms <project.gumx\|project.gumj>` | Merge the Forms template's Components/Standards/Behaviors/Fonts/UISpriteSheet.png into an already-existing project, skipping anything already referenced. Backed by `AddFormsToProjectService`, which reuses `FormsTemplateCreator` against a throwaway temp project rather than duplicating its embedded-resource extraction. |
 | `gumcli check <project.gumx> [--json]` | Validate all elements (.gusx, .gutx, .gucx) that belong to the project. Human-readable or JSON output. Use this for post-write validation of any element file, not just the .gumx. |
 | `gumcli check-references <project.gumx> [--json] [--fix]` | Detect (and optionally fix) `VariableReferences` rows whose left-hand-side scalars are not materialized into the state's `Variables` — the inconsistent shape commonly produced by AI agents and hand edits that bypass the Gum tool's author-time propagation. `--fix` runs `ApplyVariableReferences` on affected states and saves the modified element files. Scans Screens and Components only (StandardElements have known default-evaluating refs whose missing scalars are correct on-disk state — see [gum-tool-variable-references](../gum-tool-variable-references/SKILL.md) for the model). Exits 1 if anything is unpropagated. |
 | `gumcli diff-standards <project.gumx> [--json]` | Compare the project's Standards against `StandardElementsManager.Self`'s programmatic defaults (the same source the Gum tool's File → New uses) and report variable-level drift. Exits 1 on drift, 0 on clean. Theme authors and CI use it to enforce the "Standards must match Default" invariant. |
@@ -37,6 +38,7 @@ description: GumCli — headless CLI for Gum projects. Triggers: gumcli commands
 ```
 Program.cs
   ├── NewCommand      → ProjectCreator / FormsTemplateCreator
+  ├── AddFormsCommand → AddFormsToProjectService (loads target, extracts FormsTemplateCreator into a throwaway temp project, merges in anything not already referenced)
   ├── CheckCommand    → ProjectLoader → HeadlessErrorChecker
   ├── CheckReferencesCommand → ProjectLoader → ReferencePropagationService (Detect / PropagateReferences). Wires GumExpressionService so literal/expression RHSes evaluate; sets ObjectFinder.Self.GumProjectSave so cross-element refs resolve.
   ├── DiffStandardsCommand → ProjectLoader → DiffStandardsService (project Standards vs StandardElementsManager.Self defaults)
@@ -65,6 +67,7 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 | `HeadlessErrorChecker` / `IHeadlessErrorChecker` | Validates base types, behaviors, parent refs, variable types. Delegates from tool's `ErrorChecker`. |
 | `ProjectCreator` / `IProjectCreator` | Creates blank projects with subfolder structure |
 | `FormsTemplateCreator` / `IFormsTemplateCreator` | Extracts embedded Forms template resources |
+| `AddFormsToProjectService` / `IAddFormsToProjectService` | Merges Components/Standards/Behaviors/Fonts/UISpriteSheet.png from a `FormsTemplateCreator` extraction into an already-loaded project, skipping anything already referenced by name |
 | `HeadlessCodeGenerationService` | Orchestrates per-element code file generation |
 | `CodeGenerationAutoSetupService` | Walks up to find `.csproj`, derives `CodeProjectRoot`, namespace, output library |
 | `CodeOutputProjectSettingsManager` | Loads/saves `ProjectCodeSettings.codsj` |
@@ -89,6 +92,8 @@ The headless service library GumCli depends on. All logic lives here; the CLI ju
 `DiffStandardsService` compares the loaded project against a fresh reference built by `StandardElementsManager.Self.PopulateProjectWithDefaultStandards(...)` — the same path the tool's File → New uses. The CLI matches the tool's import-dialog drift detection by construction. `gumcli new --template empty`'s `Standards/*.gutx` files are generated from that same call at creation time (#4676) rather than extracted from a baked resource, so a fresh empty project is drift-free by construction, not by convention.
 
 Font files are named like `Font18Arial.fnt` and `Font18Arial_0.png` (size+name convention, zero-indexed). Always use `gumcli fonts <project.gumx>` to generate missing bitmap fonts — never create `.fnt` files manually.
+
+The checked-in `Templates/FormsTemplate/GumProject.gumx` carries `BehaviorReference.SourcePath` on most shared behaviors (e.g. `"../FormsBehaviors/ButtonBehavior.behx"`), meant only for `Gum.FormsStaging`'s build-time flattening into the shipped tool's `Content/FormsThemes` folder. `FormsTemplateCreator.Create` always extracts every manifest-listed `.behx` locally into the new project's own `Behaviors/` folder, so a `SourcePath` surviving into the extracted `.gumx` is stale the moment a real project exists (`BehaviorReference.GetRelativeFilePath` prefers `SourcePath` when set, and it never resolves relative to a real project — `ToBehaviorSave` then silently returns an empty `IsSourceFileMissing` stub with no error). `FormsTemplateCreator.StripStaleBehaviorSourcePaths` clears `SourcePath` on every extracted `BehaviorReference` right after extraction to prevent this.
 
 ## Codegen Flow (non-obvious details)
 

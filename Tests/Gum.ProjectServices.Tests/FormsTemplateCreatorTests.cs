@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.ProjectServices;
 using Shouldly;
@@ -422,6 +423,32 @@ public class FormsTemplateCreatorTests : IDisposable
     }
 
     [Fact]
+    public void Create_ButtonBehavior_ShouldLoadItsRealDefinitionNotAnEmptyStub()
+    {
+        // ButtonBehavior (and ~25 other shared behaviors) carry a SourcePath="../FormsBehaviors/..."
+        // in the checked-in template - meant for Gum.FormsStaging's build-time resolution into the
+        // shipped tool's Content/FormsThemes folder. FormsTemplateCreator instead extracts every
+        // manifest-listed .behx locally into the new project's own Behaviors/ folder, so the
+        // SourcePath is stale the moment a real project exists: BehaviorReference.GetRelativeFilePath
+        // prefers SourcePath whenever it's set, so ToBehaviorSave looks for
+        // "<project>/../FormsBehaviors/ButtonBehavior.behx" (never present) instead of the file that
+        // was actually extracted, and silently returns an empty IsSourceFileMissing stub with no
+        // Categories/DefaultImplementation and no reported error.
+        string filePath = Path.Combine(_tempDirectory, "TestProject.gumx");
+        _sut.Create(filePath);
+
+        ProjectLoadResult result = new ProjectLoader().Load(filePath);
+        result.Success.ShouldBeTrue();
+        result.LoadErrors.ShouldBeEmpty();
+
+        BehaviorSave buttonBehavior = result.Project!.Behaviors.First(b => b.Name == "ButtonBehavior");
+
+        buttonBehavior.IsSourceFileMissing.ShouldBeFalse();
+        buttonBehavior.Categories.ShouldNotBeEmpty();
+        buttonBehavior.DefaultImplementation.ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
     public void Create_WithGumjExtension_ShouldProduceLoadableJsonProjectWithNoLeftoverXml()
     {
         string filePath = Path.Combine(_tempDirectory, "TestProject.gumj");
@@ -437,11 +464,13 @@ public class FormsTemplateCreatorTests : IDisposable
 
         File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucj")).ShouldBeTrue();
         File.Exists(Path.Combine(_tempDirectory, "Components", "Controls", "ButtonStandard.gucx")).ShouldBeFalse();
-        // TreeViewBehavior has no SourcePath (unlike e.g. ButtonBehavior, which links to a shared
-        // ../FormsBehaviors/ file outside the project and is a no-op here either way), so it
-        // resolves conventionally under this project's own Behaviors/ folder.
         File.Exists(Path.Combine(_tempDirectory, "Behaviors", "TreeViewBehavior.behj")).ShouldBeTrue();
         File.Exists(Path.Combine(_tempDirectory, "Behaviors", "TreeViewBehavior.behx")).ShouldBeFalse();
+        // ButtonBehavior originally carried a SourcePath into a shared ../FormsBehaviors/ location
+        // (see StripStaleBehaviorSourcePaths); confirm it converts to JSON like any other behavior
+        // instead of being silently dropped.
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behj")).ShouldBeTrue();
+        File.Exists(Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx")).ShouldBeFalse();
         File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutj")).ShouldBeTrue();
         File.Exists(Path.Combine(_tempDirectory, "Standards", "Text.gutx")).ShouldBeFalse();
     }
