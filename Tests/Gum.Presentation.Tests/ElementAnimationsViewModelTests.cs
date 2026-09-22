@@ -174,6 +174,27 @@ public class ElementAnimationsViewModelTests
         grow.Keyframes.Single().Time.ShouldBe(2.1f);
     }
 
+    [Fact]
+    public void RemovingAnAnimation_BreaksTheKeyframesThatPlayIt()
+    {
+        // The referencing keyframe holds its own copy of the removed animation (the picker loads
+        // one from disk), so it is matched by name; it must show as broken now rather than after
+        // the element is reselected.
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>());
+        AnimationViewModel blink = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Blink" };
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel reference = new AnimatedKeyframeViewModel { AnimationName = "Blink", SubAnimationViewModel = blink.Clone(), HasValidState = true };
+        walk.Keyframes.Add(reference);
+        viewModel.Animations.Add(blink);
+        viewModel.Animations.Add(walk);
+
+        viewModel.Animations.Remove(blink);
+
+        reference.IsMissingReference.ShouldBeTrue();
+        reference.SubAnimationViewModel.ShouldBeNull();
+        walk.HasBrokenKeyframe.ShouldBeTrue();
+    }
+
     private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null)
     {
         ComponentSave element = new() { Name = "Foo" };

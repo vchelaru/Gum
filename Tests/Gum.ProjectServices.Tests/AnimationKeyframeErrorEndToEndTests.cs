@@ -57,6 +57,30 @@ public class AnimationKeyframeErrorEndToEndTests : BaseTestClass, IDisposable
         errors.ShouldContain(error => error.Message.Contains("Cat/Missing"));
     }
 
+    [Fact]
+    public void GetErrorsFor_ReportsASubAnimationKeyframe_WhoseAnimationDoesNotExist()
+    {
+        ComponentSave element = new ComponentSave { Name = "Foo" };
+        _project.Components.Add(element);
+        AnimationSave walk = new AnimationSave { Name = "Walk" };
+        walk.Animations.Add(new AnimationReferenceSave { Name = "Blink", Time = 1 });
+        ElementAnimationsSave animations = new ElementAnimationsSave();
+        animations.Animations.Add(walk);
+        string directory = Path.Combine(_tempDirectory, "Components");
+        Directory.CreateDirectory(directory);
+        FileManager.XmlSerialize(animations, Path.Combine(directory, "FooAnimations.ganx"));
+        HeadlessErrorChecker checker = new HeadlessErrorChecker(
+            Mock.Of<ITypeResolver>(),
+            new IAdditionalErrorSource[] { new AnimationKeyframeErrorSource(new FileElementAnimationsProvider()) });
+
+        IReadOnlyList<ErrorResult> errors = checker.GetErrorsFor(element, _project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.ElementName.ShouldBe("Foo");
+        error.Message.ShouldContain("Walk");
+        error.Message.ShouldContain("Blink");
+    }
+
     private void WriteGanx(string relativeDirectory, string fileName, string animationName, string keyframeStateName)
     {
         string directory = Path.Combine(_tempDirectory, relativeDirectory);

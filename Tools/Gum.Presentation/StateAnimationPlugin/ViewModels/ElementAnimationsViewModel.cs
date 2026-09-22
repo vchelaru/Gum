@@ -461,9 +461,38 @@ public partial class ElementAnimationsViewModel : ViewModel
                 }
             }
         }
+        if (eventArgs.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove && eventArgs.OldItems != null)
+        {
+            foreach (AnimationViewModel removed in eventArgs.OldItems)
+            {
+                BreakKeyframesPlaying(removed);
+            }
+        }
         NotifyPropertyChanged(nameof(OverLengthTime));
 
         OnAnyChange(this, "Animations");
+    }
+
+    /// <summary>
+    /// Marks every keyframe that plays <paramref name="removed"/> (a sub-animation of this element)
+    /// as broken now, rather than on the next reload when the reference fails to resolve.
+    /// </summary>
+    private void BreakKeyframesPlaying(AnimationViewModel removed)
+    {
+        foreach (var animation in Animations)
+        {
+            foreach (var keyframe in animation.Keyframes)
+            {
+                // The keyframe's copy of the animation was loaded separately, so match by name: a
+                // sub-animation of this element is named without an instance prefix.
+                bool playsRemoved = keyframe.SubAnimationViewModel == removed || keyframe.AnimationName == removed.Name;
+                if (playsRemoved)
+                {
+                    keyframe.SubAnimationViewModel = null;
+                    keyframe.HasValidState = false;
+                }
+            }
+        }
     }
 
     private void HandleFrameItemChanged(object? sender, PropertyChangedEventArgs e)

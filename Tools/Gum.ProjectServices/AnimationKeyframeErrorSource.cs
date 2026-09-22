@@ -49,7 +49,42 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
                     };
                 }
             }
+
+            foreach (AnimationReferenceSave keyframe in animation.Animations)
+            {
+                if (!string.IsNullOrEmpty(keyframe.Name) && !SubAnimationExists(keyframe, element, animations, project))
+                {
+                    yield return new ErrorResult
+                    {
+                        ElementName = element.Name,
+                        Message = $"Animation '{animation.Name}' keyframe at time {keyframe.Time} " +
+                                  $"plays animation '{keyframe.Name}' which does not exist.",
+                        Severity = ErrorSeverity.Error
+                    };
+                }
+            }
         }
+    }
+
+    /// <summary>
+    /// Mirrors the State Animation plugin's reference resolution: "Animation" is one of the element's
+    /// own animations; "Instance.Animation" is one of the instance's element's animations.
+    /// </summary>
+    private bool SubAnimationExists(AnimationReferenceSave keyframe, ElementSave element, ElementAnimationsSave ownAnimations, GumProjectSave project)
+    {
+        if (string.IsNullOrEmpty(keyframe.SourceObject))
+        {
+            return ownAnimations.Animations.Any(item => item.Name == keyframe.RootName);
+        }
+
+        InstanceSave? instance = element.Instances.FirstOrDefault(item => item.Name == keyframe.SourceObject);
+        ElementSave? instanceElement = instance == null ? null : project.AllElements.FirstOrDefault(item => item.Name == instance.BaseType);
+        if (instanceElement == null)
+        {
+            return false;
+        }
+        ElementAnimationsSave? instanceAnimations = _animationsProvider.GetAnimationsFor(instanceElement, project);
+        return instanceAnimations?.Animations.Any(item => item.Name == keyframe.RootName) == true;
     }
 
     /// <summary>
