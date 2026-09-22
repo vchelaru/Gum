@@ -259,6 +259,51 @@ public class ElementTreeViewTests
         window.Close();
     }
 
+    /// <summary>
+    /// #4906: dragging near the top/bottom edge auto-scrolls the tree (<c>AutoScrollWhileDragging</c>)
+    /// and, in the same pointer-move tick, asks which row is now under the pointer - before the
+    /// virtualizing panel's next layout pass has realized rows at their new positions. Hit-testing the
+    /// realized visuals at that moment sees stale containers, so the drop target (and with it the drag
+    /// cursor and the drop indicator) flickered between found and not-found every tick. <c>NodeAt</c>
+    /// must answer correctly from the scroll offset alone, without waiting for a layout pass.
+    /// </summary>
+    [AvaloniaFact]
+    public void NodeAt_ImmediatelyAfterScrollOffsetChanges_FindsTheRowAtTheNewOffset_WithoutALayoutPass()
+    {
+        AvaloniaGumTreeView tree = new AvaloniaGumTreeView();
+        tree.Selection.IsSelectingOnPush = false;
+
+        GumTreeNode root = new GumTreeNode("Root");
+        List<GumTreeNode> children = new List<GumTreeNode>();
+        for (int i = 0; i < 20; i++)
+        {
+            GumTreeNode child = new GumTreeNode($"Child{i}");
+            children.Add(child);
+            root.Nodes.Add(child);
+        }
+        tree.Nodes.Add(root);
+        root.IsExpanded = true;
+
+        // Short enough that only a handful of the 20 children are realized at once.
+        Window window = new Window { Width = 300, Height = 120, Content = tree };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        double rowHeight = RowFor(tree, children[0]).Bounds.Height;
+
+        // Scroll ten rows down - deliberately not following this with RunJobs()/UpdateLayout(), the
+        // same as HandleDragOver calling GetDropAt right after AutoScrollWhileDragging moves the
+        // offset within one DragOver tick. Root is row 0, so Child9 (row 10) lands at the top.
+        ScrollViewer scrollViewer = window.GetVisualDescendants().OfType<ScrollViewer>().Single();
+        scrollViewer.Offset = new Vector(0, rowHeight * 10);
+
+        GumTreeNode? found = tree.NodeAt(new Point(10, rowHeight / 2));
+
+        found.ShouldBe(children[9]);
+        window.Close();
+    }
+
     private static TreeRowView RowFor(AvaloniaGumTreeView tree, GumTreeNode node)
     {
         List<TreeRowView> rows = tree.GetVisualDescendants().OfType<TreeRowView>().ToList();
