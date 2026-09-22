@@ -43,6 +43,7 @@ public interface IHotkeyManager
     KeyCombination Rename { get; }
     KeyCombination NavigateBack { get; }
     KeyCombination NavigateForward { get; }
+    KeyCombination ShowHotkeys { get; }
 
     /// <summary>
     /// Handles application-wide hotkeys (search, undo/redo, zoom). Callers at the WinForms/WPF boundary

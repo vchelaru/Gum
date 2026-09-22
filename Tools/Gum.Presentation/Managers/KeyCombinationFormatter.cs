@@ -109,6 +109,7 @@ public class KeyCombinationFormatter : IKeyCombinationFormatter
             GumKey.Subtract => "Numpad -",
             GumKey.Oemplus => "=",
             GumKey.OemMinus => "-",
+            GumKey.OemQuestion => "/",
             _ => key.ToString(),
         };
     }

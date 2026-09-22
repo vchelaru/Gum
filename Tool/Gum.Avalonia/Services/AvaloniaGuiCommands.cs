@@ -73,6 +73,9 @@ public class AvaloniaGuiCommands : IGuiCommands
     public void FocusVariableFilter() => _pluginManager.FocusVariableFilter();
 
     /// <inheritdoc/>
+    public void ShowHotkeys() => _pluginManager.ShowHotkeys();
+
+    /// <inheritdoc/>
     public ISpinner ShowSpinner() => _spinnerFactory.Create();
 
     /// <inheritdoc/>
