@@ -19,6 +19,11 @@ public interface IGuiCommands
     void FocusVariableFilter();
 
     /// <summary>
+    /// Shows the Hotkeys tab and brings it to the foreground.
+    /// </summary>
+    void ShowHotkeys();
+
+    /// <summary>
     /// Shows a progress spinner and returns it as a framework-neutral <see cref="ISpinner"/>.
     /// </summary>
     ISpinner ShowSpinner();

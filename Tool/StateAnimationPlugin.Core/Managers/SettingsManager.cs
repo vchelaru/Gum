@@ -1,7 +1,6 @@
 using System.IO;
 using Newtonsoft.Json;
 using StateAnimationPlugin.Models;
-using System;
 using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers
@@ -22,14 +21,14 @@ namespace StateAnimationPlugin.Managers
         /// </summary>
         /// <param name="globalSettingsFilePath">
         /// The file the global settings are read from and written to. When null (the default used
-        /// by the running tool), the per-user application-data location is used.
+        /// by the running tool), the tool's per-user application-data folder is used, which an
+        /// unattended run redirects through <see cref="FileManager.UserApplicationDataFolderOverride"/>.
         /// </param>
         public SettingsManager(FilePath? globalSettingsFilePath = null)
         {
             GlobalSettings = new AnimationPluginSettings();
             _globalSettingsFilePath = globalSettingsFilePath ?? new FilePath(Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData, Environment.SpecialFolderOption.Create),
-                "Gum", "AnimationPlugin", "GlobalAnimationSettings.json"));
+                FileManager.UserApplicationDataForThisApplication, "AnimationPlugin", "GlobalAnimationSettings.json"));
         }
 
         /// <inheritdoc/>

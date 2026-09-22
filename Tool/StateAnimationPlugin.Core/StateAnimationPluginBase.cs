@@ -51,6 +51,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
     private readonly IProjectManager _projectManager;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IAnimationCollectionViewModelManager _animationCollectionViewModelManager;
+    private readonly IKeyframeClipboard _keyframeClipboard;
 
     // Built in StartUp, not the ctor: they need _dialogService/_guiCommands, which are PluginBase
     // [Import] properties that MEF sets after this constructor returns.
@@ -113,6 +114,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
 
         _animationFilePathService = new AnimationFilePathService(_selectedState, fileCommands, _projectManager);
         _settingsManager = new SettingsManager();
+        _keyframeClipboard = new KeyframeClipboard();
 
         // The factory closure reads _animationCollectionViewModelManager and _renameManager lazily
         // (when invoked, after both are assigned just below, hence the !), which breaks the
@@ -123,7 +125,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         _animationVmFactory = () => new ElementAnimationsViewModel(
             _nameVerifier, _dialogService, _animationCollectionViewModelManager!, _renameManager!,
             _selectedState, _wireframeObjectManager, _outputManager, _animationFilePathService,
-            CreateUiTimer());
+            CreateUiTimer(), _keyframeClipboard);
         _animationCollectionViewModelManager = new AnimationCollectionViewModelManager(
             _selectedState, _outputManager, _fileWatchManager, _animationFilePathService, _animationVmFactory);
         _renameManager = new RenameManager(

@@ -17,6 +17,47 @@ namespace MonoGameGum.Tests.Runtimes;
 public class AnimationRuntimeTests : BaseTestClass
 {
     [Fact]
+    public void GetStateToSet_AppliesTheOnlyKeyframe_OfALoopingAnimationWithNoLength()
+    {
+        // Loops wrap the time with a modulo; with one keyframe at 0 the length is 0 and the wrap
+        // must not turn the time into NaN and skip the keyframe.
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        StateSaveCategory category = new StateSaveCategory { Name = "Cat" };
+        StateSave released = new StateSave { Name = "Released", ParentContainer = element };
+        released.Variables.Add(new VariableSave { Name = "X", Value = 100f, SetsValue = true });
+        category.States.Add(released);
+        element.Categories.Add(category);
+        AnimationRuntime animation = new AnimationRuntime { Loops = true };
+        animation.Keyframes.Add(new KeyframeRuntime { StateName = "Cat/Released", Time = 0, InterpolationType = FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear });
+        animation.RefreshCumulativeStates(element);
+
+        StateSave shown = animation.GetStateToSet(0, element, defaultIfNull: true);
+
+        shown.GetValue("X").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void RefreshCumulativeStates_SkipsASubAnimationKeyframe_WhoseInstanceAnimationNoLongerExists()
+    {
+        // The instance is still there but its animation was deleted, so the reference resolved to
+        // no sub-animation; the tool selects such an element without the Animations plugin crashing.
+        ComponentSave iconType = new ComponentSave { Name = "Icon" };
+        iconType.States.Add(new StateSave { Name = "Default", ParentContainer = iconType });
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        element.Instances.Add(new InstanceSave { Name = "IconInstance", BaseType = "Icon", ParentContainer = element });
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(iconType);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        AnimationRuntime animation = new AnimationRuntime();
+        animation.Keyframes.Add(new KeyframeRuntime { AnimationName = "IconInstance.Gone", Time = 0, SubAnimation = null });
+
+        Should.NotThrow(() => animation.RefreshCumulativeStates(element));
+    }
+
+    [Fact]
     public void GetStateToSet_ShouldInterpolateKeyframes()
     {
         ComponentSave element = new ();

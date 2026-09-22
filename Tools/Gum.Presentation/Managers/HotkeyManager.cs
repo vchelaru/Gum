@@ -71,6 +71,8 @@ public class HotkeyManager : IHotkeyManager
     public KeyCombination NavigateBack { get; private set; } = KeyCombination.Alt(GumKey.Left);
     public KeyCombination NavigateForward { get; private set; } = KeyCombination.Alt(GumKey.Right);
 
+    public KeyCombination ShowHotkeys { get; private set; } = KeyCombination.Ctrl(GumKey.OemQuestion);
+
     // If adding any new keys here, modify HotkeyViewModel
 
 
@@ -162,6 +164,7 @@ public class HotkeyManager : IHotkeyManager
             _ when Undo.IsPressed(e) => _undoManager.PerformUndo,
             _ when NavigateBack.IsPressed(e) => _selectionHistory.NavigateBack,
             _ when NavigateForward.IsPressed(e) => _selectionHistory.NavigateForward,
+            _ when ShowHotkeys.IsPressed(e) => _guiCommands.ShowHotkeys,
             _ when ZoomDirection() is { } dir && enableEntireAppZoom => () => _uiSettingsService.BaseFontSize += dir,
             _ => null
         };

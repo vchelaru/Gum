@@ -98,21 +98,13 @@ public class SubAnimationSelectionDialogViewModel : DialogViewModel
                     toReturn.Name = item.Name;
                     toReturn.ContainingInstance = container.InstanceSave;
 
-                    bool shouldSkip = false;
-
-                    // Right now we're just checking to make sure an animation doesn't
-                    // reference itself, but that doesn't prevent A referending B referencing A
-                    // Eventually we need a deeper reursive check.
-
-                    // skip if...
-                    shouldSkip =
-                        // we selected an animation that isn't on an instance (if it is, then
-                        // there is no chance of it being recursive)...
+                    // An animation on this element (an instance's animations cannot reach back
+                    // here) is skipped when it is the one being edited, or already plays it,
+                    // directly or through another animation: either would loop when played.
+                    bool shouldSkip =
                         container.InstanceSave == null &&
-                        // And there is something to exclude...
                         AnimationToExclude != null &&
-                        // and the names match
-                        toReturn.Name == AnimationToExclude.Name;
+                        (toReturn.Name == AnimationToExclude.Name || toReturn.PlaysOwnAnimation(AnimationToExclude.Name));
 
                     if (!shouldSkip)
                     {

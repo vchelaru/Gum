@@ -164,6 +164,7 @@ public abstract class PluginBase : IPlugin
     public event Func<IEnumerable<ITreeNode>>? GetSelectedNodes;
     public event Action? FocusSearch;
     public event Action? FocusVariableFilter;
+    public event Action? ShowHotkeys;
 
     public event Action<BehaviorSave?>? BehaviorSelected;
     public event Action<BehaviorSave>? BehaviorCreated;
@@ -504,6 +505,8 @@ public abstract class PluginBase : IPlugin
     public void CallFocusSearch() => FocusSearch?.Invoke();
 
     public void CallFocusVariableFilter() => FocusVariableFilter?.Invoke();
+
+    public void CallShowHotkeys() => ShowHotkeys?.Invoke();
 
     public ITreeNode? CallGetTreeNodeOver() => GetTreeNodeOver?.Invoke();
 

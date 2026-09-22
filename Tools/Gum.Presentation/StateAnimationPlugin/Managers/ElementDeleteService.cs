@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.Services.Dialogs;
 using System;
 using System.Linq;
+using ToolsUtilities;
 
 namespace StateAnimationPlugin.Managers;
 
@@ -36,18 +37,20 @@ public class ElementDeleteService
     /// </summary>
     public DeleteOptionCheckboxViewModel? HandleDeleteOptionsWindowShow(Array objectsToDelete)
     {
-        bool anyAnimationFileExists = objectsToDelete.OfType<ElementSave>()
+        FilePath? firstAnimationFile = objectsToDelete.OfType<ElementSave>()
             .Where(item => item is ComponentSave or ScreenSave)
-            .Any(item => _animationFilePathService.GetAbsoluteAnimationFileNameFor(item)?.Exists() == true);
+            .Select(item => _animationFilePathService.GetAbsoluteAnimationFileNameFor(item))
+            .FirstOrDefault(file => file?.Exists() == true);
 
-        if (!anyAnimationFileExists)
+        if (firstAnimationFile == null)
         {
             return null;
         }
 
+        // .ganx in an XML project, .ganj in a JSON one.
         return new DeleteOptionCheckboxViewModel
         {
-            Label = "Delete Animation file (.ganx)",
+            Label = $"Delete Animation file (.{firstAnimationFile.Extension})",
             IsChecked = true
         };
     }

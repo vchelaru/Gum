@@ -55,9 +55,11 @@ public class MainFileWatchPlugin : CorePriorityPlugin
 
         showFileWatchMenuItem = AddMenuEntry(HandleShowFileWatch, "View", "Show File Watch");
 
-        const int millisecondsTimerFrequency = 200;
+        // The timer only feeds the tab's own display, so it runs while the tab is shown (see
+        // HandleTabShown) and not otherwise: it is a thread-pool timer that hops to the UI thread
+        // every tick, and in the headless test host a pool thread touching the UI dispatcher races
+        // the per-test dispatcher reset, after which nothing in that test renders or hit-tests.
         refreshDisplayTimer.Tick += HandleRefreshDisplayTimerElapsed;
-        refreshDisplayTimer.Start(TimeSpan.FromMilliseconds(millisecondsTimerFrequency));
 
         AssignEvents();
     }
@@ -84,11 +86,14 @@ public class MainFileWatchPlugin : CorePriorityPlugin
     private void HandleTabShown()
     {
         showFileWatchMenuItem.Header = "Hide File Watch";
+        const int millisecondsTimerFrequency = 200;
+        refreshDisplayTimer.Start(TimeSpan.FromMilliseconds(millisecondsTimerFrequency));
     }
 
     private void HandleTabHidden()
     {
         showFileWatchMenuItem.Header = "Show File Watch";
+        refreshDisplayTimer.Stop();
     }
 
     private void HandleShowFileWatch()
