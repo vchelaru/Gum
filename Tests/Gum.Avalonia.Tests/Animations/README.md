@@ -87,5 +87,14 @@ Rules that keep scenarios honest:
   dispose; a test that adds shared state of its own must clear it the same way.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame that
   the headless session sometimes refuses.
-- The first click after a window opens occasionally does not land in a long run; `AddAnimation`
-  retries once. Copy that pattern if another first gesture proves flaky.
+- About one test in a hundred fails at once with "The tab's window hit-tests nothing after a
+  render tick". That is a known race in Avalonia 11.3's headless xunit host, not in the tab: the
+  session nulls `Dispatcher.UIThread` before each test's app setup, the dispatcher is created lazily
+  without a lock, and a GC finalizer (seen on the finalizer thread in the same millisecond) reaching
+  `Dispatcher.UIThread` during that setup creates a second one. The media context and render timer
+  keep the loser, so nothing in that test renders or hit-tests. Avalonia's master branch creates the
+  dispatcher under a lock; no 11.3.x patch does. Rerun the test. The harness checks for it right
+  after the window opens so it fails in milliseconds with that message rather than as a click that
+  "did not land". The tool's file watch plugin used to add its own thread-pool timer to the mix; it
+  now runs that timer only while its tab is shown. Do not add thread-pool work that reaches into
+  Avalonia to the harness or to a plugin's StartUp.

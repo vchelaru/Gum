@@ -43,6 +43,9 @@ public partial class ElementAnimationsViewModel : ViewModel
     private readonly IAnimationFilePathService _animationFilePathService;
     private readonly IKeyframeClipboard _keyframeClipboard;
 
+    private int _batchDepth;
+    private bool _batchHasChange;
+
     #endregion
 
     #region Properties
@@ -256,6 +259,45 @@ public partial class ElementAnimationsViewModel : ViewModel
         OnAnyChange(this, propertyName);
     }
 
+    /// <summary>
+    /// Holds every <see cref="AnyChange"/> until the returned token is disposed, then raises one
+    /// (for <see cref="Animations"/>) if anything changed. The plugin saves and records an undo per
+    /// reported change, so a gesture that edits several things at once (a rename and the keyframes
+    /// that play the renamed animation, a squash of every keyframe) must report once, or an undo
+    /// takes the gesture apart piece by piece.
+    /// </summary>
+    private IDisposable BatchChanges()
+    {
+        _batchDepth++;
+        return new BatchToken(this);
+    }
+
+    private void EndBatch()
+    {
+        _batchDepth--;
+        if (_batchDepth == 0 && _batchHasChange)
+        {
+            _batchHasChange = false;
+            AnyChange?.Invoke(this, new PropertyChangedEventArgs(nameof(Animations)));
+        }
+    }
+
+    private sealed class BatchToken : IDisposable
+    {
+        private ElementAnimationsViewModel? _owner;
+
+        public BatchToken(ElementAnimationsViewModel owner)
+        {
+            _owner = owner;
+        }
+
+        public void Dispose()
+        {
+            _owner?.EndBatch();
+            _owner = null;
+        }
+    }
+
     private void RefreshAnimationsRightClickMenuItems()
     {
         AnimationRightClickItems.Clear();
@@ -364,12 +406,15 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         if (_dialogService.GetUserString(message, null, options) is { } result)
         {
-            var oldAnimationName = SelectedAnimation.Name;
-            SelectedAnimation.Name = result;
+            using (BatchChanges())
+            {
+                var oldAnimationName = SelectedAnimation.Name;
+                SelectedAnimation.Name = result;
 
-            _renameManager.HandleRename(
-                SelectedAnimation,
-                oldAnimationName, Animations, Element);
+                _renameManager.HandleRename(
+                    SelectedAnimation,
+                    oldAnimationName, Animations, Element);
+            }
         }
     }
 
@@ -400,13 +445,16 @@ public partial class ElementAnimationsViewModel : ViewModel
             {
                 var multiplier = value / animationLengthBeforeChange;
 
-                foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                using (BatchChanges())
                 {
-                    var frameTime = (decimal)frame.Time;
+                    foreach(var frame in this.SelectedAnimation.Keyframes.ToArray())
+                    {
+                        var frameTime = (decimal)frame.Time;
 
-                    var newTime = frameTime * multiplier;
+                        var newTime = frameTime * multiplier;
 
-                    frame.Time = (float)newTime;
+                        frame.Time = (float)newTime;
+                    }
                 }
             }
 
@@ -434,16 +482,20 @@ public partial class ElementAnimationsViewModel : ViewModel
 
         var copyOfAnimation = SelectedAnimation.Clone();
 
+        // The copy is a new animation; the keyframes that play the original keep playing it, here
+        // and in the elements whose instances play it, so this is not a rename.
         copyOfAnimation.Name = $"Copy of {copyOfAnimation.Name}";
-        _renameManager.HandleRename(
-            copyOfAnimation,
-            SelectedAnimation.Name, Animations, Element);
 
         Animations.Add(copyOfAnimation);
     }
 
     private void OnAnyChange(object? sender, string? propertyName)
     {
+        if (_batchDepth > 0)
+        {
+            _batchHasChange = true;
+            return;
+        }
         AnyChange?.Invoke(sender, new PropertyChangedEventArgs(propertyName));
     }
 

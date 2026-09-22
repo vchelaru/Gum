@@ -50,7 +50,11 @@ internal sealed class AnimationEditorHarness : IDisposable
     private readonly string _sidecarExtension;
 
     /// <param name="jsonProject">True for a .gumj project, whose sidecars are .ganj files.</param>
-    public AnimationEditorHarness(bool jsonProject = false)
+    /// <param name="userDataFolder">
+    /// Where the tool's per-user files (the plugin's settings) go for this run; a second harness given
+    /// the same folder starts the way a restarted tool would. Defaults to a folder under the temp project.
+    /// </param>
+    public AnimationEditorHarness(bool jsonProject = false, string? userDataFolder = null)
     {
         _sidecarExtension = jsonProject ? "Animations.ganj" : "Animations.ganx";
         // Work another test left queued (a tree view syncing its selection, say) runs now, against
@@ -73,7 +77,7 @@ internal sealed class AnimationEditorHarness : IDisposable
 
         // The plugin's settings file follows the tool's user-data folder; keep it out of the user's.
         _originalUserDataOverride = FileManager.UserApplicationDataFolderOverride;
-        FileManager.UserApplicationDataFolderOverride = Path.Combine(ProjectFolder, "UserData");
+        FileManager.UserApplicationDataFolderOverride = userDataFolder ?? Path.Combine(ProjectFolder, "UserData");
         try
         {
             SelectedState = Services.GetRequiredService<ISelectedState>();
@@ -110,6 +114,12 @@ internal sealed class AnimationEditorHarness : IDisposable
             Window = new Window { Content = View, Width = 1100, Height = 640 };
             Window.Show();
             Layout();
+            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+            if (Window.InputHitTest(new Point(2, 2)) == null)
+            {
+                // Every gesture would land on nothing; see TestAppBuilder.CreateUiThreadDispatcherFirst.
+                throw new InvalidOperationException("The tab's window hit-tests nothing after a render tick: this test's Avalonia session bound its compositor to a dispatcher that is not the current one.");
+            }
         }
         catch
         {
@@ -173,6 +183,21 @@ internal sealed class AnimationEditorHarness : IDisposable
 
     /// <summary>The splitter between the animation and keyframe columns.</summary>
     public GridSplitter ColumnSplitter => Window.GetVisualDescendants().OfType<GridSplitter>().First(splitter => splitter.ResizeDirection == GridResizeDirection.Columns);
+
+    /// <summary>The animation column's width over the keyframe column's, as laid out.</summary>
+    public double AnimationColumnRatio
+    {
+        get
+        {
+            Layout();
+            Grid columns = (Grid)AnimationList.GetVisualParent()!.GetVisualParent()!;
+            return columns.ColumnDefinitions[0].ActualWidth / columns.ColumnDefinitions[2].ActualWidth;
+        }
+    }
+
+    /// <summary>The context menu a right-click opened, or null when none is open.</summary>
+    public ContextMenu? OpenContextMenu =>
+        Window.GetSelfAndVisualDescendants().OfType<Control>().Select(control => control.ContextMenu).FirstOrDefault(menu => menu?.IsOpen == true);
 
     /// <summary>The text box inside the selected keyframe's editable state combo.</summary>
     public TextBox StateComboTextBox => DetailCombos[0].GetVisualDescendants().OfType<TextBox>().Single();
@@ -354,6 +379,36 @@ internal sealed class AnimationEditorHarness : IDisposable
         Layout();
     }
 
+    /// <summary>Right-clicks <paramref name="control"/>, which opens its context menu.</summary>
+    public void RightClick(Control control)
+    {
+        Point point = CenterOf(control);
+        Window.MouseMove(point, RawInputModifiers.None);
+        Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
+        Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
+        Layout();
+    }
+
+    /// <summary>
+    /// Picks <paramref name="header"/> from the open context menu; a click when the popup laid the
+    /// item out, else the item's own click event, as <see cref="PickAddKeyframe"/> does for the flyout.
+    /// </summary>
+    public void PickContextMenuItem(string header)
+    {
+        ContextMenu menu = OpenContextMenu ?? throw new InvalidOperationException("No context menu is open.");
+        MenuItem item = menu.Items.OfType<MenuItem>().Single(candidate => (string)candidate.Header! == header);
+        if (item.IsEffectivelyVisible && item.Bounds.Width > 0)
+        {
+            Click(item);
+        }
+        else
+        {
+            item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        }
+        menu.Close();
+        Layout();
+    }
+
     public void Hover(Point point)
     {
         Window.MouseMove(point, RawInputModifiers.None);
@@ -461,12 +516,18 @@ internal sealed class AnimationEditorHarness : IDisposable
         Click(AddAnimationButton);
         if (!asked)
         {
-            // Once in a long run the first click after the window opens does not land; a second does.
-            Layout();
-            Click(AddAnimationButton);
+            throw new InvalidOperationException($"The click on the + button did not open the add-animation dialog: {DescribeClickTarget(AddAnimationButton)}");
         }
         return ViewModel.Animations.SingleOrDefault(animation => animation.Name == name)
             ?? throw new InvalidOperationException($"{name} was not added: the tab shows {ViewModel.Element?.Name ?? "no element"} with [{string.Join(", ", ViewModel.Animations.Select(animation => animation.Name))}] and the tool selected {SelectedState.SelectedElement?.Name ?? "nothing"}.");
+    }
+
+    /// <summary>What the window hit-tests where <paramref name="control"/> is, for a gesture that did not land.</summary>
+    private string DescribeClickTarget(Control control)
+    {
+        Point point = CenterOf(control);
+        Control? hit = Window.InputHitTest(point) as Control;
+        return $"at {point} the window hit-tests {hit?.GetType().Name ?? "nothing"}{(hit == control ? " (the control)" : "")}; control bounds {control.Bounds}, visible {control.IsEffectivelyVisible}, enabled {control.IsEffectivelyEnabled}, DataContext {(View.DataContext == null ? "null" : "set")}";
     }
 
     /// <summary>Adds a state keyframe through the + menu, picking <paramref name="stateName"/> in the dialog.</summary>

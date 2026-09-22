@@ -89,6 +89,35 @@ public class ExternalChangeTests
     }
 
     [AvaloniaFact]
+    public void ASidecarCorruptedOnDisk_EmptiesTheTab_WhichKeepsWorking_AndWritesAReadableFileAgain()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        ComponentSave other = editor.AddComponent("Other", Category, "A");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        string path = editor.AnimationFilePath(button);
+        File.WriteAllText(path, "<ElementAnimationsSave><Animations><AnimationSave><Name>Walk");
+
+        editor.Plugin.CallReactToFileChanged(new FilePath(path));
+        editor.Layout();
+
+        editor.ThrowIfPluginFailed();
+        editor.ViewModel.Element.ShouldBeSameAs(button);
+        editor.ViewModel.Animations.ShouldBeEmpty();
+        editor.ViewModel.AnimationColumnTitle.ShouldBe("Button Animations");
+
+        editor.Select(other);
+        editor.Select(button);
+        editor.ViewModel.Animations.ShouldBeEmpty();
+        editor.AddAnimation("Run");
+        editor.AddStateKeyframe($"{Category}/Released");
+
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().Name.ShouldBe("Run");
+    }
+
+    [AvaloniaFact]
     public void Undo_AfterVisitingAnotherElement_RevertsTheFirstElementsAnimationEdit()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();

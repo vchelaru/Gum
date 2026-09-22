@@ -195,16 +195,83 @@ public class ElementAnimationsViewModelTests
         walk.HasBrokenKeyframe.ShouldBeTrue();
     }
 
-    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null)
+    [Fact]
+    public void RenamingAnAnimation_ReportsOneChange_OnceTheNameAndTheReferencesToItAgree()
+    {
+        // The plugin saves and records an undo per reported change, so the name and the keyframes
+        // that play the animation must land in one record, or an undo leaves them disagreeing.
+        Mock<IDialogService> dialogs = new Mock<IDialogService>();
+        dialogs.Setup(d => d.GetUserString(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<GetUserStringOptions?>())).Returns("Wink");
+        Mock<IRenameManager> renameManager = new Mock<IRenameManager>();
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), dialogs: dialogs.Object, renameManager: renameManager.Object);
+        AnimationViewModel blink = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Blink" };
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel playsBlink = new AnimatedKeyframeViewModel { AnimationName = "Blink", HasValidState = true };
+        walk.Keyframes.Add(playsBlink);
+        viewModel.Animations.Add(blink);
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = blink;
+        renameManager.Setup(r => r.HandleRename(blink, "Blink", It.IsAny<IEnumerable<AnimationViewModel>>(), It.IsAny<ElementSave>()))
+            .Callback(() => playsBlink.AnimationName = "Wink");
+        List<(string Name, string Reference)> reported = new List<(string, string)>();
+        viewModel.AnyChange += (_, _) => reported.Add((blink.Name, playsBlink.AnimationName));
+
+        viewModel.AnimationRightClickItems.Single(item => item.Text == "Rename Animation").Action!();
+
+        reported.ShouldBe(new[] { ("Wink", "Wink") });
+    }
+
+    [Fact]
+    public void SquashingAnAnimation_ReportsOneChange_OnceEveryKeyframeHasMoved()
+    {
+        Mock<IDialogService> dialogs = new Mock<IDialogService>();
+        dialogs.Setup(d => d.GetUserString(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<GetUserStringOptions?>())).Returns("4");
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), dialogs: dialogs.Object);
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/A", Time = 0, HasValidState = true });
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/B", Time = 1, HasValidState = true });
+        walk.Keyframes.Add(new AnimatedKeyframeViewModel { StateName = "Cat/C", Time = 2, HasValidState = true });
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = walk;
+        List<float[]> reported = new List<float[]>();
+        viewModel.AnyChange += (_, _) => reported.Add(walk.Keyframes.Select(keyframe => keyframe.Time).ToArray());
+
+        viewModel.AnimationRightClickItems.Single(item => item.Text == "Squash/Stretch Frame Times").Action!();
+
+        reported.Count.ShouldBe(1);
+        reported[0].ShouldBe(new[] { 0f, 2f, 4f });
+    }
+
+    [Fact]
+    public void DuplicatingAnAnimation_LeavesTheKeyframesThatPlayTheOriginal_PlayingTheOriginal()
+    {
+        Mock<IRenameManager> renameManager = new Mock<IRenameManager>();
+        ElementAnimationsViewModel viewModel = CreateViewModel(Mock.Of<IUiTimer>(), renameManager: renameManager.Object);
+        AnimationViewModel blink = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Blink" };
+        AnimationViewModel walk = new(Mock.Of<ISelectedState>(), Mock.Of<IWireframeObjectManager>()) { Name = "Walk" };
+        AnimatedKeyframeViewModel playsBlink = new AnimatedKeyframeViewModel { AnimationName = "Blink", HasValidState = true };
+        walk.Keyframes.Add(playsBlink);
+        viewModel.Animations.Add(blink);
+        viewModel.Animations.Add(walk);
+        viewModel.SelectedAnimation = blink;
+
+        viewModel.AnimationRightClickItems.Single(item => item.Text == "Duplicate Animation").Action!();
+
+        viewModel.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Blink", "Walk", "Copy of Blink" });
+        playsBlink.AnimationName.ShouldBe("Blink");
+        renameManager.Verify(r => r.HandleRename(It.IsAny<AnimationViewModel>(), It.IsAny<string>(), It.IsAny<IEnumerable<AnimationViewModel>>(), It.IsAny<ElementSave>()), Times.Never);
+    }
+
+    private static ElementAnimationsViewModel CreateViewModel(IUiTimer uiTimer, IKeyframeClipboard? clipboard = null, IDialogService? dialogs = null, IRenameManager? renameManager = null)
     {
         ComponentSave element = new() { Name = "Foo" };
         ISelectedState selectedState = Mock.Of<ISelectedState>(s => s.SelectedElement == element);
 
         return new ElementAnimationsViewModel(
             Mock.Of<INameVerifier>(),
-            Mock.Of<IDialogService>(),
+            dialogs ?? Mock.Of<IDialogService>(),
             Mock.Of<IAnimationCollectionViewModelManager>(),
-            Mock.Of<IRenameManager>(),
+            renameManager ?? Mock.Of<IRenameManager>(),
             selectedState,
             Mock.Of<IWireframeObjectManager>(),
             Mock.Of<IOutputManager>(),

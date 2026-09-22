@@ -237,6 +237,70 @@ public class KeyframeEditingTests
     }
 
     [AvaloniaFact]
+    public void ChangingTheInterpolation_ThenUndo_RestoresIt_InTheTabAndOnDisk()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.DetailCombos[1].SelectedItem = FlatRedBall.Glue.StateInterpolation.InterpolationType.Bounce;
+        editor.Layout();
+        editor.DetailCombos[2].SelectedItem = FlatRedBall.Glue.StateInterpolation.Easing.InOut;
+        editor.Layout();
+
+        editor.UndoManager.PerformUndo();
+        editor.Layout();
+
+        editor.ThrowIfPluginFailed();
+        AnimatedKeyframeViewModel keyframe = editor.ViewModel.Animations.Single().Keyframes.Single();
+        keyframe.InterpolationType.ShouldBe(FlatRedBall.Glue.StateInterpolation.InterpolationType.Bounce);
+        keyframe.Easing.ShouldBe(FlatRedBall.Glue.StateInterpolation.Easing.Out);
+        editor.ViewModel.SelectedAnimation!.SelectedKeyframe.ShouldBeSameAs(keyframe);
+        editor.DetailCombos[2].SelectedItem.ShouldBe(FlatRedBall.Glue.StateInterpolation.Easing.Out);
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Single().Easing.ShouldBe(FlatRedBall.Glue.StateInterpolation.Easing.Out);
+
+        editor.UndoManager.PerformUndo();
+        editor.Layout();
+
+        keyframe = editor.ViewModel.Animations.Single().Keyframes.Single();
+        keyframe.InterpolationType.ShouldBe(FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear);
+        editor.DetailCombos[1].SelectedItem.ShouldBe(FlatRedBall.Glue.StateInterpolation.InterpolationType.Linear);
+
+        editor.UndoManager.PerformRedo();
+        editor.Layout();
+
+        editor.ViewModel.Animations.Single().Keyframes.Single().InterpolationType.ShouldBe(FlatRedBall.Glue.StateInterpolation.InterpolationType.Bounce);
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Single().InterpolationType.ShouldBe(FlatRedBall.Glue.StateInterpolation.InterpolationType.Bounce);
+    }
+
+    [AvaloniaFact]
+    public void RightClickingAKeyframe_OpensItsMenu_WhoseDeleteRemovesIt()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        AnimationViewModel walk = editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        AnimatedKeyframeViewModel released = editor.AddStateKeyframe($"{Category}/Released");
+        walk.SelectedKeyframe = null;
+        editor.Layout();
+
+        editor.RightClick(editor.RowFor(editor.KeyframeList, released));
+
+        walk.SelectedKeyframe.ShouldBeSameAs(released, "a right-click selects the row it lands on");
+        editor.OpenContextMenu.ShouldNotBeNull().Items.OfType<global::Avalonia.Controls.MenuItem>().Select(item => item.Header).ShouldBe(new object?[] { "Add Keyframe", "Delete Keyframe" });
+
+        editor.Dialogs.AnswerNextMessage(MessageDialogResult.Affirmative);
+        editor.PickContextMenuItem("Delete Keyframe");
+
+        editor.ThrowIfPluginFailed();
+        walk.Keyframes.Select(keyframe => keyframe.StateName).ShouldBe(new[] { $"{Category}/Pressed" });
+        editor.KeyframeList.Items.Count.ShouldBe(1);
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().States.Count.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
     public void DeletingAKeyframe_ThenUndo_BringsItBack_AndRedoRemovesItAgain()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();

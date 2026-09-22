@@ -176,4 +176,39 @@ public class AnimationEditorReloadTests
         File.ReadAllText(settings).ShouldContain("FirstToSecondColumnRatio");
         File.ReadAllText(settings).ShouldNotContain("\"FirstToSecondColumnRatio\":1.0");
     }
+
+    [AvaloniaFact]
+    public void TheColumnRatio_ComesBack_WhenTheTabIsOpenedAgain_WithTheSameUserData()
+    {
+        string userData = Path.Combine(Path.GetTempPath(), "GumAnimationEditor", "UserData" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            double ratio;
+            using (AnimationEditorHarness first = new AnimationEditorHarness(userDataFolder: userData))
+            {
+                ComponentSave component = first.AddComponent("Button", Category, "Pressed");
+                first.Select(component);
+                first.AnimationColumnRatio.ShouldBe(1, 0.01);
+                Point from = first.CenterOf(first.ColumnSplitter);
+
+                first.Drag(from, new Point(from.X + 120, from.Y));
+
+                ratio = first.AnimationColumnRatio;
+                ratio.ShouldBeGreaterThan(1.3);
+            }
+
+            using AnimationEditorHarness second = new AnimationEditorHarness(userDataFolder: userData);
+            ComponentSave again = second.AddComponent("Button", Category, "Pressed");
+            second.Select(again);
+
+            second.AnimationColumnRatio.ShouldBe(ratio, 0.05);
+        }
+        finally
+        {
+            if (Directory.Exists(userData))
+            {
+                Directory.Delete(userData, recursive: true);
+            }
+        }
+    }
 }

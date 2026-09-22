@@ -50,6 +50,46 @@ public class AnimationListScenarioTests
     }
 
     [AvaloniaFact]
+    public void RenamingAnAnimation_ThenUndo_RestoresTheNameAndTheReferencesToIt_Together()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        AnimationViewModel blink = editor.AddAnimation("Blink");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddAnimation("Walk");
+        editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
+        {
+            dialog.SelectedContainer = dialog.AnimationContainers!.Single();
+            dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
+            return true;
+        });
+        editor.PickAddKeyframe("Sub-Animation");
+        editor.Click(editor.RowFor(editor.AnimationList, blink));
+        editor.Dialogs.AnswerNextUserString("Wink");
+        editor.ViewModel.AnimationRightClickItems.Single(item => item.Text == "Rename Animation").Action!();
+        editor.Layout();
+
+        editor.UndoManager.PerformUndo();
+        editor.Layout();
+
+        editor.ThrowIfPluginFailed();
+        editor.ViewModel.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Blink", "Walk" });
+        AnimationViewModel walk = editor.ViewModel.Animations[1];
+        walk.Keyframes.Single().AnimationName.ShouldBe("Blink");
+        walk.HasBrokenKeyframe.ShouldBeFalse();
+        ElementAnimationsSave saved = editor.ReadSavedAnimations(component).ShouldNotBeNull();
+        saved.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Blink", "Walk" });
+        saved.Animations[1].Animations.Single().Name.ShouldBe("Blink");
+
+        editor.UndoManager.PerformRedo();
+        editor.Layout();
+
+        editor.ViewModel.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Wink", "Walk" });
+        editor.ViewModel.Animations[1].Keyframes.Single().AnimationName.ShouldBe("Wink");
+    }
+
+    [AvaloniaFact]
     public void DuplicatingAnAnimation_FromTheContextMenu_AddsACopyWithItsKeyframes_AndSaves()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
@@ -67,6 +107,33 @@ public class AnimationListScenarioTests
             .ShouldBe(new[] { ($"{Category}/Pressed", 0f), ($"{Category}/Released", 1f) });
         editor.AnimationList.Items.Count.ShouldBe(2);
         editor.ReadSavedAnimations(component).ShouldNotBeNull().Animations.Select(animation => animation.Name).ShouldBe(new[] { "Walk", "Copy of Walk" });
+    }
+
+    [AvaloniaFact]
+    public void DuplicatingAnAnimation_LeavesTheKeyframesThatPlayIt_PlayingTheOriginal()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        AnimationViewModel blink = editor.AddAnimation("Blink");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        AnimationViewModel walk = editor.AddAnimation("Walk");
+        editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
+        {
+            dialog.SelectedContainer = dialog.AnimationContainers!.Single();
+            dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
+            return true;
+        });
+        editor.PickAddKeyframe("Sub-Animation");
+        editor.Click(editor.RowFor(editor.AnimationList, blink));
+
+        editor.ViewModel.AnimationRightClickItems.Single(item => item.Text == "Duplicate Animation").Action!();
+        editor.Layout();
+
+        editor.ViewModel.Animations.Select(animation => animation.Name).ShouldBe(new[] { "Blink", "Walk", "Copy of Blink" });
+        walk.Keyframes.Single().AnimationName.ShouldBe("Blink");
+        walk.HasBrokenKeyframe.ShouldBeFalse();
+        editor.ReadSavedAnimations(component).ShouldNotBeNull().Animations.Single(animation => animation.Name == "Walk").Animations.Single().Name.ShouldBe("Blink");
     }
 
     [AvaloniaFact]

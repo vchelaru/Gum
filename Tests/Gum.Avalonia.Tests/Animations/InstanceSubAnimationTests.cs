@@ -108,6 +108,65 @@ public class InstanceSubAnimationTests
         editor.SelectedState.CustomCurrentStateSave.ShouldNotBeNull();
     }
 
+    [AvaloniaFact]
+    public void AScreen_CanPlayAnInstancesAnimation_AndSavesItBesideTheScreen()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave iconType = editor.AddComponent("Icon", Category, "Dim", "Bright");
+        editor.Select(iconType);
+        editor.AddAnimation("Blink", loops: true);
+        editor.AddStateKeyframe($"{Category}/Dim");
+        editor.AddStateKeyframe($"{Category}/Bright");
+        ScreenSave menu = editor.AddScreen("MainMenu", Category, "Shown", "Hidden");
+        InstanceSave icon = editor.AddInstance(menu, "IconInstance", iconType);
+        editor.Select(menu);
+        AnimationViewModel intro = editor.AddAnimation("Intro");
+        editor.AddStateKeyframe($"{Category}/Shown");
+
+        editor.Dialogs.AnswerNext<SubAnimationSelectionDialogViewModel>(dialog =>
+        {
+            dialog.AnimationContainers!.Select(container => container.Name).ShouldBe(new[] { "MainMenu (container)", "IconInstance (Icon)" });
+            dialog.SelectedContainer = dialog.AnimationContainers.Single(container => container.InstanceSave == icon);
+            dialog.SelectedAnimation = dialog.Animations.Single(animation => animation.Name == "Blink");
+            return true;
+        });
+        editor.PickAddKeyframe("Sub-Animation");
+
+        AnimatedKeyframeViewModel sub = intro.SelectedKeyframe.ShouldNotBeNull();
+        sub.AnimationName.ShouldBe("IconInstance.Blink");
+        sub.Length.ShouldBe(1f);
+        intro.Length.ShouldBe(2f);
+        AnimationReferenceSave saved = editor.ReadSavedAnimations(menu).ShouldNotBeNull().Animations.Single().Animations.Single();
+        saved.SourceObject.ShouldBe("IconInstance");
+        saved.RootName.ShouldBe("Blink");
+        editor.Select(iconType);
+        editor.Select(menu);
+        editor.ViewModel.Animations.Single().Keyframes.Single(keyframe => keyframe.AnimationName == "IconInstance.Blink").IsMissingReference.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void RenamingTheInstancesAnimation_InItsOwnElement_FollowsIntoTheReferencingElement()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        (ComponentSave button, InstanceSave icon) = ButtonWithAnimatedIcon(editor);
+        AddIconBlink(editor, icon);
+        ComponentSave iconType = editor.Project.Components.Single(component => component.Name == "Icon");
+        editor.Select(iconType);
+        AnimationViewModel blink = editor.ViewModel.Animations.Single();
+        editor.Click(editor.RowFor(editor.AnimationList, blink));
+
+        editor.Dialogs.AnswerNextUserString("Wink");
+        editor.ViewModel.AnimationRightClickItems.Single(item => item.Text == "Rename Animation").Action!();
+        editor.Layout();
+
+        editor.ThrowIfPluginFailed();
+        editor.ReadSavedAnimations(button).ShouldNotBeNull().Animations.Single().Animations.Single().Name.ShouldBe("IconInstance.Wink");
+        editor.Select(button);
+        AnimatedKeyframeViewModel sub = editor.ViewModel.Animations.Single().Keyframes.Single(keyframe => !string.IsNullOrEmpty(keyframe.AnimationName));
+        sub.AnimationName.ShouldBe("IconInstance.Wink");
+        sub.IsMissingReference.ShouldBeFalse();
+    }
+
     /// <summary>
     /// An Icon component whose Blink animation runs one second, and a Button holding an IconInstance
     /// of it; leaves Button selected with an empty Walk animation plus a Pressed keyframe at 0.

@@ -66,6 +66,11 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
 - `window.CaptureRenderedFrame()` returns a bitmap of a headless window (the test app runs Skia, not
   the headless stub); save it as a PNG and read it to check what a view actually drew.
+- A window that renders and hit-tests nothing for a whole test (a click that "did not land") is
+  Avalonia 11.3's headless host racing a finalizer on the lazily created `Dispatcher.UIThread`
+  during per-test setup; about one test in a hundred. Rerun it. Details and the harness's
+  fail-fast check: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work
+  that reaches into Avalonia (timers, continuations) to a test or a plugin's StartUp.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
   and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
   let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
