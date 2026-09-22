@@ -288,7 +288,9 @@ public sealed class AnimationsView : Grid
 
         KeyframeDetailView detail = new KeyframeDetailView();
         detail.Bind(DataContextProperty, new Binding("SelectedAnimation.SelectedKeyframe"));
-        detail.Bind(IsVisibleProperty, new Binding("SelectedAnimation.SelectedKeyframe") { Converter = ObjectConverters.IsNotNull });
+        // The view's own DataContext is the keyframe (or null once it is deselected), so the
+        // visibility follows that rather than a path that no longer resolves against it.
+        detail.Bind(IsVisibleProperty, new Binding(".") { Converter = ObjectConverters.IsNotNull });
 
         return CreateColumn(title, action: null, detail);
     }

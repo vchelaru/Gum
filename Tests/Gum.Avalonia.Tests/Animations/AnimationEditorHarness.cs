@@ -177,6 +177,17 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// <summary>The text box inside the selected keyframe's editable state combo.</summary>
     public TextBox StateComboTextBox => DetailCombos[0].GetVisualDescendants().OfType<TextBox>().Single();
 
+    /// <summary>The detail column's header text: "State", the event or sub-animation name, or "No Keyframe Selected".</summary>
+    public string DetailTitle
+    {
+        get
+        {
+            Layout();
+            DockPanel column = (DockPanel)Detail.GetVisualParent()!;
+            return column.GetVisualDescendants().OfType<TextBlock>().First().Text ?? "";
+        }
+    }
+
     /// <summary>The selected keyframe's time box in the detail column.</summary>
     public TextBox DetailTimeBox => Detail.GetVisualDescendants().OfType<TextBox>().Single(box => box.FindAncestorOfType<ComboBox>() == null);
 
@@ -449,7 +460,12 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// True when any pixel within <paramref name="radius"/> of <paramref name="center"/> is within
     /// <paramref name="tolerance"/> per channel of <paramref name="color"/>.
     /// </summary>
-    public bool AnyPixelNear(Point center, int radius, Color color, int tolerance = 12)
+    public bool AnyPixelNear(Point center, int radius, Color color, int tolerance = 12) =>
+        AnyPixelNear(center, radius, pixel =>
+            Math.Abs(pixel.R - color.R) <= tolerance && Math.Abs(pixel.G - color.G) <= tolerance && Math.Abs(pixel.B - color.B) <= tolerance);
+
+    /// <summary>True when any pixel within <paramref name="radius"/> of <paramref name="center"/> satisfies <paramref name="matches"/>.</summary>
+    public bool AnyPixelNear(Point center, int radius, Func<Color, bool> matches)
     {
         Layout();
         using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
@@ -461,8 +477,7 @@ internal sealed class AnimationEditorHarness : IDisposable
                 {
                     continue;
                 }
-                Color pixel = ReadPixel(frame, x, y);
-                if (Math.Abs(pixel.R - color.R) <= tolerance && Math.Abs(pixel.G - color.G) <= tolerance && Math.Abs(pixel.B - color.B) <= tolerance)
+                if (matches(ReadPixel(frame, x, y)))
                 {
                     return true;
                 }
