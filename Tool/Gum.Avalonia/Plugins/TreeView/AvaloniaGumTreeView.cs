@@ -41,7 +41,6 @@ public sealed class AvaloniaGumTreeView : UserControl
     private const double DragThreshold = 4;
     private const double AutoScrollBand = 20;
     private const double AutoScrollStep = 12;
-    private const double IntoFirstIndent = 14;
 
     private readonly ObservableCollection<TreeRow> _rows;
     private readonly ItemsControl _itemsControl;
@@ -719,13 +718,17 @@ public sealed class AvaloniaGumTreeView : UserControl
         }
     }
 
-    // A line between rows for an insert, an outline around the row for a drop onto it.
+    // A line between rows for an insert, an outline around the row for a drop onto it. The line's
+    // left margin matches where the drop will land in the hierarchy - flush with the target row for
+    // a sibling (Before/After), one level further in for a new first child (IntoFirst) - rather than
+    // always spanning the full width, which gave no visual cue of the resulting nesting (#4913).
     private void ShowDropIndicator(LogicalRow row, TreeDropKind kind)
     {
         Point topLeft = new Point(-_scrollViewer.Offset.X, row.Top);
         double width = Math.Max(_scrollViewer.Viewport.Width, _scrollViewer.Extent.Width);
         double height = Math.Max(1, row.Height);
         const double lineThickness = 2;
+        double indent = TreeDropLogic.GetIndicatorIndent(row.Node, kind, TreeRowView.Indent);
 
         switch (kind)
         {
@@ -735,16 +738,16 @@ public sealed class AvaloniaGumTreeView : UserControl
                 break;
             case TreeDropKind.Before:
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X, topLeft.Y - lineThickness / 2, width, lineThickness);
+                Place(topLeft.X + indent, topLeft.Y - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             case TreeDropKind.After:
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X, topLeft.Y + height - lineThickness / 2, width, lineThickness);
+                Place(topLeft.X + indent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             case TreeDropKind.IntoFirst:
                 // Indented, because the insert point is inside the row above it.
                 _dropIndicator.BorderThickness = new Thickness(0, lineThickness, 0, 0);
-                Place(topLeft.X + IntoFirstIndent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - IntoFirstIndent), lineThickness);
+                Place(topLeft.X + indent, topLeft.Y + height - lineThickness / 2, Math.Max(0, width - indent), lineThickness);
                 break;
             default:
                 ClearDropIndicator();

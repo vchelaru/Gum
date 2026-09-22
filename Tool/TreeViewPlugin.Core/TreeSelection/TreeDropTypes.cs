@@ -110,6 +110,21 @@ public static class TreeDropLogic
     }
 
     /// <summary>
+    /// How far a drop indicator's insert line should be indented from the tree's left edge, in
+    /// multiples of <paramref name="indentPerLevel"/> (one tree level's width). <see cref="TreeDropKind.Before"/>
+    /// and <see cref="TreeDropKind.After"/> land the drop as a sibling of <paramref name="target"/>, at
+    /// its own level; <see cref="TreeDropKind.IntoFirst"/> lands it as the target's first child, one
+    /// level deeper - the indent is what tells the two apart on screen.
+    /// </summary>
+    public static double GetIndicatorIndent(GumTreeNode target, TreeDropKind kind, double indentPerLevel) =>
+        kind switch
+        {
+            TreeDropKind.Before or TreeDropKind.After => target.Level * indentPerLevel,
+            TreeDropKind.IntoFirst => (target.Level + 1) * indentPerLevel,
+            _ => 0,
+        };
+
+    /// <summary>
     /// Whether <paramref name="node"/> is one of <paramref name="candidates"/> or inside one of them.
     /// A drop there would move a node into its own subtree.
     /// </summary>
