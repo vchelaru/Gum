@@ -59,10 +59,15 @@ partial class Spaced_Component : global::Gum.Forms.Controls.FrameworkElement
         }
     }
 
+    private int _spaced_Variable;
     public int Spaced_Variable
     {
-        get;
-        set;
+        get => _spaced_Variable;
+        set
+        {
+            _spaced_Variable = value;
+            OnPropertyChanged();
+        }
     }
     public Spaced_Component(InteractiveGue visual) : base(visual)
     {

@@ -59,10 +59,15 @@ partial class @interface : global::Gum.Forms.Controls.FrameworkElement
         }
     }
 
+    private string _object;
     public string @object
     {
-        get;
-        set;
+        get => _object;
+        set
+        {
+            _object = value;
+            OnPropertyChanged();
+        }
     }
     public @interface(InteractiveGue visual) : base(visual)
     {

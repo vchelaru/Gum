@@ -117,7 +117,11 @@ internal sealed class AnimationEditorHarness : IDisposable
             AvaloniaHeadlessPlatform.ForceRenderTimerTick();
             if (Window.InputHitTest(new Point(2, 2)) == null)
             {
-                // Every gesture would land on nothing; see TestAppBuilder.CreateUiThreadDispatcherFirst.
+                // Every gesture would land on nothing; see this folder's README, "Gotchas". A
+                // same-process retry here does not help - this is confirmed (not just suspected) to
+                // be scoped to the whole test's own isolated dispatcher session, not to one Window:
+                // recreating the Window 3x in place still failed 3/3 in local repro, so only a fresh
+                // process (a new xunit test-assembly run) gets a genuinely independent roll.
                 throw new InvalidOperationException("The tab's window hit-tests nothing after a render tick: this test's Avalonia session bound its compositor to a dispatcher that is not the current one.");
             }
         }
