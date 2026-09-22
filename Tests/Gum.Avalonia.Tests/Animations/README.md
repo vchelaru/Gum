@@ -99,13 +99,19 @@ Rules that keep scenarios honest:
   is scoped to the whole test's isolated dispatcher session, not to one Window: recreating just the
   Window in place (closing it and building a fresh one) still failed 3/3 in local repro, confirmed by
   running the suite until it reproduced locally. Only a fresh process gets a genuinely independent
-  roll, since `s_uiThread` resets on process start; CI exploits that by retrying the whole
-  `Gum.Avalonia.Tests` run as a fresh `dotnet test` process, up to 5 attempts total, on failure
-  (`build-and-test.yaml`, the `Gum.Avalonia.Tests (headless)` step) — with ~30 harness-creating tests
-  per run and a locally-measured ~1-2% per-test rate, the per-run failure probability compounds to
-  roughly 50%, so a single retry (2 attempts) left too much residual failure; locally, just rerun the
-  test. The harness checks for the race right after the window opens so it fails in milliseconds with
-  that message rather than as a click that "did not land". The
-  tool's file watch plugin used to add its own thread-pool timer to the mix; it now runs that timer
+  roll, since `s_uiThread` resets on process start.
+
+  This assembly has ~90 tests that each independently create a harness (and so each independently
+  roll the dice on this race), so a *whole-assembly* retry does not scale: the per-run failure
+  probability compounds well above the per-test rate as tests are added, and every retry re-pays the
+  full ~90s run cost even though usually at most one test actually flaked. CI instead parses the
+  `.trx` on failure for the exact test(s) that failed and re-runs only that filtered set as a fresh
+  process (`build-and-test.yaml`, the `Gum.Avalonia.Tests (headless)` step) — a couple of seconds,
+  not another ~90s — up to 4 total attempts; a genuine failure reproduces on every attempt and still
+  fails the step. Both cost and odds now scale with the number of tests that actually flake (usually
+  0 or 1), not with the assembly's size. Locally, just rerun the test. The harness checks for the
+  race right after the window opens so it fails in milliseconds with that message rather than as a
+  click that "did not land". The tool's file watch plugin used to add its own thread-pool timer to
+  the mix; it now runs that timer
   only while its tab is shown. Do not add thread-pool work that reaches into Avalonia to the harness
   or to a plugin's StartUp.
