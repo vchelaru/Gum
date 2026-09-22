@@ -870,11 +870,23 @@ public class CodeGenerator
             {
                 var type = variable.Type;
                 var name = _codeGenerationNameVerifier.ToCSharpName(variable.Name);
+                // Backed by a field (rather than a bare auto-property) so the setter can raise
+                // NotifyPropertyChanged, matching every other generated/hand-written GUE property -
+                // otherwise INotifyPropertyChanged.PropertyChanged never fires for a custom variable,
+                // whether it's set directly in C# or through SetProperty (issue #4911).
+                var fieldName = "_" + char.ToLowerInvariant(name[0]) + name.Substring(1);
+                stringBuilder.AppendLine(context.Tabs + $"private {type} {fieldName};");
                 stringBuilder.AppendLine(context.Tabs + $"public {type} {name}");
                 stringBuilder.AppendLine(context.Tabs + "{");
                 context.TabCount++;
-                stringBuilder.AppendLine(context.Tabs + $"get;");
-                stringBuilder.AppendLine(context.Tabs + $"set;");
+                stringBuilder.AppendLine(context.Tabs + $"get => {fieldName};");
+                stringBuilder.AppendLine(context.Tabs + "set");
+                stringBuilder.AppendLine(context.Tabs + "{");
+                context.TabCount++;
+                stringBuilder.AppendLine(context.Tabs + $"{fieldName} = value;");
+                stringBuilder.AppendLine(context.Tabs + "NotifyPropertyChanged();");
+                context.TabCount--;
+                stringBuilder.AppendLine(context.Tabs + "}");
                 context.TabCount--;
 
                 stringBuilder.AppendLine(context.Tabs + "}");
