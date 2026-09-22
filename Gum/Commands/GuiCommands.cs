@@ -137,6 +137,12 @@ public class GuiCommands : IGuiCommands
     }
 
     /// <inheritdoc/>
+    public void ShowHotkeys()
+    {
+        _pluginManager.ShowHotkeys();
+    }
+
+    /// <inheritdoc/>
     public ISpinner ShowSpinner() => _spinnerFactory.Create();
 
     /// <inheritdoc/>

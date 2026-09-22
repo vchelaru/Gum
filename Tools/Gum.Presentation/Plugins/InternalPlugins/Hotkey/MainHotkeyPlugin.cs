@@ -27,6 +27,8 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
             pluginTab.TabShown += HandleTabShown;
             pluginTab.TabHidden += HandleTabHidden;
             pluginTab.CanClose = true;
+
+            this.ShowHotkeys += HandleShowHotkeysRequested;
         }
 
         private void HandleTabShown()
@@ -43,6 +45,16 @@ namespace Gum.Plugins.InternalPlugins.Hotkey
         private void HandleToggleTabVisibility()
         {
             pluginTab.IsVisible = !pluginTab.IsVisible;
+            if (pluginTab.IsVisible)
+            {
+                pluginTab.IsSelected = true;
+            }
+        }
+
+        private void HandleShowHotkeysRequested()
+        {
+            pluginTab.IsVisible = true;
+            pluginTab.IsSelected = true;
         }
     }
 }

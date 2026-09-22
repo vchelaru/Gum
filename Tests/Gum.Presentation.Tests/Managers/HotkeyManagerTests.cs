@@ -1,3 +1,4 @@
+using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
@@ -13,6 +14,30 @@ namespace Gum.Presentation.Tests.Managers;
 /// <summary>The platform-dependent defaults of <see cref="HotkeyManager"/>.</summary>
 public class HotkeyManagerTests
 {
+    [Fact]
+    public void ShowHotkeys_KeyCombination_ShouldBeCtrlSlash()
+    {
+        AutoMocker mocker = new AutoMocker();
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+
+        hotkeyManager.ShowHotkeys.Key.ShouldBe(GumKey.OemQuestion);
+        hotkeyManager.ShowHotkeys.IsCtrlDown.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PreviewKeyDownAppWide_CtrlSlash_InvokesGuiCommandsShowHotkeysAndSetsHandled()
+    {
+        AutoMocker mocker = new AutoMocker();
+        HotkeyManager hotkeyManager = mocker.CreateInstance<HotkeyManager>();
+        GumKeyEventArgs e = new() { Key = GumKey.OemQuestion, IsCtrlDown = true };
+
+        bool handled = hotkeyManager.PreviewKeyDownAppWide(e);
+
+        handled.ShouldBeTrue();
+        e.Handled.ShouldBeTrue();
+        mocker.GetMock<IGuiCommands>().Verify(g => g.ShowHotkeys(), Times.Once);
+    }
+
     [Theory]
     [InlineData(false, GumKey.Y, false, GumKey.Z, true)]
     [InlineData(true, GumKey.Z, true, GumKey.Y, false)]

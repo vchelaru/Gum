@@ -145,6 +145,7 @@ public interface IPluginManager
     bool GetIfShouldSuppressRemoveEditorHighlight();
     void FocusSearch();
     void FocusVariableFilter();
+    void ShowHotkeys();
     bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf);
 
     // Widened for #3753: MainBehaviorsPlugin/MainEditorTabPlugin previously took the concrete
