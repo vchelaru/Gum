@@ -66,6 +66,10 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
 - `window.CaptureRenderedFrame()` returns a bitmap of a headless window (the test app runs Skia, not
   the headless stub); save it as a PNG and read it to check what a view actually drew.
+- Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
+  and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
+  let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
+  duration instead of awaiting (`AnimationEditorHarness.Wait`).
 
 ## Save parity corpus
 

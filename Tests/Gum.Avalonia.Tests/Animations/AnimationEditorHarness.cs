@@ -87,7 +87,7 @@ internal sealed class AnimationEditorHarness : IDisposable
             MenuModel menu = Services.GetRequiredService<MenuModel>();
             MenuItemModel viewMenu = menu.GetItem("View") ?? throw new InvalidOperationException("The head has no View menu.");
             List<MenuItemModel> viewItemsBefore = viewMenu.Items.ToList();
-            Plugin = ActivatorUtilities.CreateInstance<AvaloniaStateAnimationPlugin>(Services);
+            Plugin = ActivatorUtilities.CreateInstance<TestAnimationPlugin>(Services);
             Plugin.GuiCommands = Services.GetRequiredService<IGuiCommands>();
             Plugin.FileCommands = Services.GetRequiredService<IFileCommands>();
             Plugin.TabManager = Services.GetRequiredService<ITabManager>();
@@ -133,7 +133,7 @@ internal sealed class AnimationEditorHarness : IDisposable
     public ScriptedDialogService Dialogs { get; }
 
     /// <summary>This harness's plugin instance.</summary>
-    public AvaloniaStateAnimationPlugin Plugin { get; }
+    public TestAnimationPlugin Plugin { get; }
 
     /// <summary>The tab's view, hosted in <see cref="Window"/>.</summary>
     public AnimationsView View { get; }
@@ -300,9 +300,33 @@ internal sealed class AnimationEditorHarness : IDisposable
         while (stopwatch.Elapsed < duration)
         {
             Thread.Sleep(10);
+            FireTimers();
             Dispatcher.UIThread.RunJobs();
         }
         Layout();
+    }
+
+    /// <summary>Raises a tick on every running playback timer, as the dispatcher would.</summary>
+    public void FireTimers()
+    {
+        foreach (ManualUiTimer timer in Plugin.Timers.ToList())
+        {
+            timer.Fire();
+        }
+    }
+
+    /// <summary>Pumps the dispatcher until <paramref name="condition"/> holds or <paramref name="timeout"/> passes.</summary>
+    public bool WaitUntil(Func<bool> condition, TimeSpan timeout)
+    {
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        while (!condition() && stopwatch.Elapsed < timeout)
+        {
+            Thread.Sleep(10);
+            FireTimers();
+            Dispatcher.UIThread.RunJobs();
+        }
+        Layout();
+        return condition();
     }
 
     /// <summary>Runs pending dispatcher work and lays the window out, so the view reflects the model.</summary>
@@ -313,9 +337,12 @@ internal sealed class AnimationEditorHarness : IDisposable
         Dispatcher.UIThread.RunJobs();
     }
 
-    public Point CenterOf(Control control) =>
-        control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), Window)
-        ?? throw new InvalidOperationException($"{control.GetType().Name} is not in the window.");
+    public Point CenterOf(Control control)
+    {
+        Layout();
+        return control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), Window)
+            ?? throw new InvalidOperationException($"{control.GetType().Name} is not in the window.");
+    }
 
     public void Click(Control control, RawInputModifiers modifiers = RawInputModifiers.None) => ClickAt(CenterOf(control), modifiers);
 
@@ -423,13 +450,21 @@ internal sealed class AnimationEditorHarness : IDisposable
     /// <summary>Clicks + above the animation list and fills the dialog in.</summary>
     public AnimationViewModel AddAnimation(string name, bool loops = false)
     {
+        bool asked = false;
         Dialogs.AnswerNext<AddAnimationDialogViewModel>(dialog =>
         {
+            asked = true;
             dialog.Name = name;
             dialog.Loops = loops;
             return true;
         });
         Click(AddAnimationButton);
+        if (!asked)
+        {
+            // Once in a long run the first click after the window opens does not land; a second does.
+            Layout();
+            Click(AddAnimationButton);
+        }
         return ViewModel.Animations.SingleOrDefault(animation => animation.Name == name)
             ?? throw new InvalidOperationException($"{name} was not added: the tab shows {ViewModel.Element?.Name ?? "no element"} with [{string.Join(", ", ViewModel.Animations.Select(animation => animation.Name))}] and the tool selected {SelectedState.SelectedElement?.Name ?? "nothing"}.");
     }

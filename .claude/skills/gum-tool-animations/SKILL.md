@@ -68,10 +68,14 @@ an unanswered dialog throws instead of hanging. Read results from `ViewModel`, t
 (`AnimationList`, `KeyframeList`, `Timeline`, `Detail`, `DetailCombos`, `Scrubber`) and the saved
 sidecar (`ReadSavedAnimations`). `KeyframeMarkerCenter` gives a marker's point on the timeline for a
 click or hover; `SaveFrame` writes a PNG of the window (folder from `GUM_HEADLESS_FRAMES`, else
-`%TEMP%\GumAnimationEditor\frames`) to look at. Scenarios live beside it
-(`AnimationEditorScenarioTests`, `AnimationListScenarioTests`, `AnimationEditorReloadTests`); add a
-new gesture there first, then fix what it finds. The plugin must be in
-`PluginManager.PluginContainers` as well as `Plugins`, or no tool event reaches it.
+`%TEMP%\GumAnimationEditor\frames`) to look at, and `AnyPixelNear` reads the rendered pixels
+(match thin antialiased lines by hue, not exact color). Scenarios live beside it, one file per
+area (editor, list, reload, timeline, instance sub-animations, element lifecycle, playback,
+keyframe editing, errors, tab lifecycle, JSON projects, detail column, external changes); add a
+new gesture there first, then fix what it finds. `ThrowIfPluginFailed` surfaces a crash the
+plugin manager would otherwise swallow by disabling the plugin. The plugin must be in
+`PluginManager.PluginContainers` as well as `Plugins`, or no tool event reaches it; the harness
+stands in for the head's own plugin instance while it runs, so events are not handled twice.
 
 ## Docs
 User-facing content today is a 4-part tutorial under

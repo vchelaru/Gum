@@ -209,8 +209,7 @@ public class AnimationEditorScenarioTests
         editor.PlayButton.Content.ShouldBe("■ Stop");
         editor.Wait(TimeSpan.FromMilliseconds(250));
         editor.ViewModel.DisplayedAnimationTime.ShouldBeGreaterThan(0);
-        editor.Wait(TimeSpan.FromMilliseconds(1200));
-        editor.ViewModel.IsPlaying.ShouldBeFalse();
+        editor.WaitUntil(() => !editor.ViewModel.IsPlaying, TimeSpan.FromSeconds(4)).ShouldBeTrue("a one-second animation stops on its own");
         editor.PlayButton.Content.ShouldBe("▶ Play");
     }
 

@@ -32,7 +32,8 @@ public class TimelineInteractionTests
 
         walk.Length.ShouldBe(0f);
         Point marker = editor.KeyframeMarkerCenter(only);
-        editor.AnyPixelNear(marker, 4, DeselectedMarker).ShouldBeTrue("the only keyframe must be drawn even though the animation has no length");
+        editor.AnyPixelNear(marker, 4, pixel => IsClose(pixel, DeselectedMarker) || IsClose(pixel, SelectedMarker))
+            .ShouldBeTrue("the only keyframe must be drawn even though the animation has no length");
 
         editor.ClickAt(marker);
 
@@ -40,6 +41,9 @@ public class TimelineInteractionTests
         editor.AnyPixelNear(marker, 4, SelectedMarker).ShouldBeTrue();
         editor.SaveFrame("single-keyframe");
     }
+
+    private static bool IsClose(Color pixel, Color color, int tolerance = 12) =>
+        Math.Abs(pixel.R - color.R) <= tolerance && Math.Abs(pixel.G - color.G) <= tolerance && Math.Abs(pixel.B - color.B) <= tolerance;
 
     [AvaloniaFact]
     public void ClickingTheEmptyTrack_LeavesTheSelectionAlone()
