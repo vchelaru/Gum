@@ -43,10 +43,46 @@ public class FormsTemplateCreator : IFormsTemplateCreator
             extractedPaths.Add(destinationPath);
         }
 
+        var extractedXmlProjectPath = Path.Combine(directory, xmlProjectFileName);
+        StripStaleBehaviorSourcePaths(extractedXmlProjectPath);
+
         if (isJsonFormat)
         {
-            var xmlProjectPath = Path.Combine(directory, xmlProjectFileName);
-            ConvertExtractedTemplateToJson(xmlProjectPath, extractedPaths);
+            ConvertExtractedTemplateToJson(extractedXmlProjectPath, extractedPaths);
+        }
+    }
+
+    // The checked-in template's GumProject.gumx carries BehaviorReference.SourcePath values
+    // (e.g. "../FormsBehaviors/ButtonBehavior.behx") that only resolve at build time, when
+    // Gum.FormsStaging flattens them into the shipped tool's Content/FormsThemes folder. This
+    // extraction instead copies every manifest-listed .behx locally into the new project's own
+    // Behaviors/ folder (see the manifest loop above), so a SourcePath surviving into the
+    // extracted project is always stale - GetRelativeFilePath prefers it over the local copy,
+    // and the referenced file never exists relative to a real project, so it silently loads as
+    // an empty IsSourceFileMissing stub instead of the real behavior (no reported error).
+    private static void StripStaleBehaviorSourcePaths(string xmlProjectPath)
+    {
+        IProjectLoader loader = new ProjectLoader();
+        ProjectLoadResult loadResult = loader.Load(xmlProjectPath);
+        if (!loadResult.Success || loadResult.Project == null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to load the extracted Forms template to fix stale behavior source paths: {loadResult.ErrorMessage}");
+        }
+
+        bool anyChanged = false;
+        foreach (var behaviorReference in loadResult.Project.BehaviorReferences)
+        {
+            if (!string.IsNullOrEmpty(behaviorReference.SourcePath))
+            {
+                behaviorReference.SourcePath = string.Empty;
+                anyChanged = true;
+            }
+        }
+
+        if (anyChanged)
+        {
+            loadResult.Project.Save(xmlProjectPath, saveElements: false);
         }
     }
 

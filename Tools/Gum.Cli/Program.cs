@@ -24,6 +24,7 @@ public class Program
         var rootCommand = new RootCommand($"gumcli v{version} - create projects, check for errors, and generate code.");
 
         rootCommand.AddCommand(NewCommand.Create());
+        rootCommand.AddCommand(AddFormsCommand.Create());
         rootCommand.AddCommand(CheckCommand.Create());
         rootCommand.AddCommand(CheckReferencesCommand.Create());
         rootCommand.AddCommand(DiffStandardsCommand.Create());
