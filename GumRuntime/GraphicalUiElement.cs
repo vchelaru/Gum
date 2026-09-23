@@ -284,6 +284,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // null by default, non-null if an object uses
     // stacked layout for its children.
     public List<float> StackedRowOrColumnDimensions { get; private set; }
+
+    // Custom variables that arrived before this had a Forms control to receive them.
+    // See TrySetCustomVariableOnFormsControl.
+    private Dictionary<string, object?>? _pendingCustomVariables;
     #endregion
 
     #region Properties
@@ -6415,12 +6419,66 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private bool TrySetCustomVariableOnThis(string propertyName, object? value)
     {
         var propertyInfo = this.GetType().GetProperty(propertyName);
-        if (propertyInfo == null || propertyInfo.DeclaringType == typeof(GraphicalUiElement))
+        if (propertyInfo == null)
+        {
+            return TrySetCustomVariableOnFormsControl(propertyName, value);
+        }
+
+        if (propertyInfo.DeclaringType == typeof(GraphicalUiElement))
         {
             return false;
         }
 
         return TrySetPropertyThroughReflection(this, propertyName, value);
+    }
+
+    /// <summary>
+    /// Second half of the custom-variable fallback, for MonoGameForms codegen (issue #4947): there
+    /// the generated property lives on the Forms class rather than on the visual, so the reflection
+    /// above cannot find it. The generated template applies the element's state before creating the
+    /// Forms control, so a value that arrives first is held until one is assigned.
+    /// </summary>
+    private bool TrySetCustomVariableOnFormsControl(string propertyName, object? value)
+    {
+        InteractiveGue? interactiveGue = this as InteractiveGue;
+        if (interactiveGue == null)
+        {
+            return false;
+        }
+
+        object? formsControl = interactiveGue.FormsControlAsObject;
+        if (formsControl != null)
+        {
+            return TrySetPropertyThroughReflection(formsControl, propertyName, value);
+        }
+
+        if (_pendingCustomVariables == null)
+        {
+            _pendingCustomVariables = new Dictionary<string, object?>();
+        }
+        _pendingCustomVariables[propertyName] = value;
+        return false;
+    }
+
+    /// <summary>
+    /// Applies the custom variables that arrived before a Forms control existed, then discards
+    /// them so a later Forms control does not inherit stale values. Called by
+    /// <see cref="InteractiveGue.FormsControlAsObject"/>'s setter.
+    /// </summary>
+    private protected void ApplyPendingCustomVariables(object formsControl)
+    {
+        if (_pendingCustomVariables == null)
+        {
+            return;
+        }
+
+        Dictionary<string, object?> pending = _pendingCustomVariables;
+        _pendingCustomVariables = null;
+
+        foreach (KeyValuePair<string, object?> variable in pending)
+        {
+            TrySetPropertyThroughReflection(formsControl, variable.Key, variable.Value);
+        }
     }
 
     /// <summary>
