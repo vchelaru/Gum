@@ -1,4 +1,7 @@
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 using WpfDataUi;
@@ -100,6 +103,62 @@ public class CompositeEditorTests : IDisposable
         fixture.Lines.ShouldBe(new List<string> { "one", "two" });
         display.EditorTextBox.CaretIndex = 5;
         display.GetCurrentLineText().ShouldBe("two");
+    }
+
+    [AvaloniaFact]
+    public void StringListTextBoxDisplay_ApplyButton_ShowsOnlyWhileEditsAreUnapplied_AndNeverTakesFocus()
+    {
+        EditorFixture fixture = new EditorFixture();
+        StringListTextBoxDisplay display = new StringListTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Lines)) };
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+        display.ApplyButton.Focusable.ShouldBeFalse();
+        display.ApplyButton.IsTabStop.ShouldBeFalse();
+
+        display.EditorTextBox.Text = "one\ntwo";
+        display.ApplyButton.IsVisible.ShouldBeTrue();
+        fixture.Lines.ShouldBe(new List<string> { "alpha" });
+
+        display.ApplyButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+        fixture.Lines.ShouldBe(new List<string> { "one", "two" });
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+
+        display.EditorTextBox.Text = "three";
+        display.EditorTextBox.RaiseEvent(new RoutedEventArgs(InputElement.LostFocusEvent));
+
+        fixture.Lines.ShouldBe(new List<string> { "three" });
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void StringListTextBoxDisplay_CtrlEnterApplies_EnterDoesNot_AndEscapeReverts()
+    {
+        EditorFixture fixture = new EditorFixture();
+        StringListTextBoxDisplay display = new StringListTextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Lines)) };
+
+        display.EditorTextBox.Text = "one";
+        display.EditorTextBox.RaiseEvent(new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter });
+        fixture.Lines.ShouldBe(new List<string> { "alpha" });
+
+        KeyEventArgs ctrlEnter = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Enter, KeyModifiers = KeyModifiers.Control };
+        display.EditorTextBox.RaiseEvent(ctrlEnter);
+        ctrlEnter.Handled.ShouldBeTrue();
+        fixture.Lines.ShouldBe(new List<string> { "one" });
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+
+        display.EditorTextBox.Text = "discarded";
+        KeyEventArgs escape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+        display.EditorTextBox.RaiseEvent(escape);
+
+        escape.Handled.ShouldBeTrue();
+        display.EditorTextBox.Text.ShouldBe("one");
+        display.ApplyButton.IsVisible.ShouldBeFalse();
+        fixture.Lines.ShouldBe(new List<string> { "one" });
+
+        // With nothing to revert, Escape is left for whatever else listens for it.
+        KeyEventArgs secondEscape = new KeyEventArgs { RoutedEvent = InputElement.KeyDownEvent, Key = Key.Escape };
+        display.EditorTextBox.RaiseEvent(secondEscape);
+        secondEscape.Handled.ShouldBeFalse();
     }
 
     [AvaloniaFact]
