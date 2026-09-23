@@ -16,8 +16,8 @@ namespace ConvertToJsonPlugin;
 
 /// <summary>
 /// Adds the "Convert to JSON" menu item (issue #4175). Converts the whole currently-open project to
-/// its JSON representation, leaving the existing XML untouched (ADR: adopting a JSON project format
-/// for Native AOT compatibility). All business logic lives in <see cref="ConvertToJsonLogic"/>
+/// its JSON representation, optionally moving the original XML to the OS trash (ADR: adopting a JSON
+/// project format for Native AOT compatibility). All business logic lives in <see cref="ConvertToJsonLogic"/>
 /// (headless, unit tested) - this plugin is only menu plumbing.
 /// </summary>
 [Export(typeof(PluginBase))]

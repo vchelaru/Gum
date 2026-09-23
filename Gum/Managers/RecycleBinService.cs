@@ -14,4 +14,13 @@ public class RecycleBinService : IRecycleBinService
         Microsoft.VisualBasic.FileIO.FileSystem.DeleteFile(filePath.FullPath,
             Microsoft.VisualBasic.FileIO.UIOption.OnlyErrorDialogs,
             Microsoft.VisualBasic.FileIO.RecycleOption.SendToRecycleBin);
+
+    /// <inheritdoc/>
+    public void MoveToRecycleBin(System.Collections.Generic.IReadOnlyList<FilePath> filePaths)
+    {
+        foreach (FilePath filePath in filePaths)
+        {
+            MoveToRecycleBin(filePath);
+        }
+    }
 }

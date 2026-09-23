@@ -22,11 +22,15 @@ public interface IFileCommands
     void ClearDirectoryContents(FilePath directory);
 
     /// <summary>
-    /// Moves a file to the recycle bin rather than permanently deleting it.
-    /// Currently uses Microsoft.VisualBasic.FileIO (Windows-only). If Gum ever
-    /// moves to a cross-platform UI, update the implementation here.
+    /// Moves a file to the OS recycle bin/trash rather than permanently deleting it.
     /// </summary>
     void MoveToRecycleBin(FilePath filePath);
+
+    /// <summary>
+    /// Moves several files to the OS recycle bin/trash in as few OS calls as the platform allows,
+    /// so a large batch doesn't play the trash sound or spawn a process once per file.
+    /// </summary>
+    void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths);
 
     string[] GetFiles(string path);
 

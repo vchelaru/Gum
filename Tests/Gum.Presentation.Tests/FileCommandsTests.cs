@@ -82,6 +82,16 @@ public class FileCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void MoveToRecycleBin_WithSeveralFiles_ShouldDelegateTheWholeBatchInOneCall()
+    {
+        List<FilePath> filePaths = new List<FilePath> { "/MyProject/Button.gucx", "/MyProject/Label.gucx" };
+
+        _fileCommands.MoveToRecycleBin(filePaths);
+
+        _recycleBinService.Verify(x => x.MoveToRecycleBin(filePaths), Times.Once);
+    }
+
+    [Fact]
     public void GetFullFileName_ShouldReturnPathUnderProjectDirectory()
     {
         // A real, OS-native temp directory is used here (rather than a hardcoded "C:\..." literal)

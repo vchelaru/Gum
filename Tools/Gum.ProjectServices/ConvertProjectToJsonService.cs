@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Gum.DataTypes;
@@ -75,19 +76,36 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         // (issue #4219) - otherwise the file watcher reacts to each write as an external change and
         // triggers a full element reload + tree-view refresh per file, mirroring the pattern already
         // used by FileCommands/ProjectManager when they save.
+        string xmlProjectPath = project.FullFileName;
         IgnoreUpcomingElementWrites(project, outputDirectory);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(jsonProjectPath);
         project.Save(jsonProjectPath, saveElements: true);
 
-        return new ConvertProjectToJsonResult
+        ConvertProjectToJsonResult result = new ConvertProjectToJsonResult
         {
             ProjectFilePath = jsonProjectPath,
             ScreenCount = project.Screens.Count(s => !s.IsSourceFileMissing),
             ComponentCount = project.Components.Count(c => !c.IsSourceFileMissing),
             StandardElementCount = project.StandardElements.Count(s => !s.IsSourceFileMissing),
-            BehaviorCount = ConvertBehaviors(project, outputDirectory),
-            AnimationCount = ConvertAnimations(project, sourceDirectory, outputDirectory),
         };
+
+        AddIfOnDisk(result.ConvertedXmlFiles, xmlProjectPath);
+        foreach (ElementSave element in project.AllElements.Where(e => !e.IsSourceFileMissing))
+        {
+            AddIfOnDisk(result.ConvertedXmlFiles, GetElementXmlPath(element, sourceDirectory));
+        }
+        result.BehaviorCount = ConvertBehaviors(project, sourceDirectory, outputDirectory, result.ConvertedXmlFiles);
+        result.AnimationCount = ConvertAnimations(project, sourceDirectory, outputDirectory, result.ConvertedXmlFiles);
+
+        return result;
+    }
+
+    private static void AddIfOnDisk(List<FilePath> files, string path)
+    {
+        if (FileManager.FileExists(path))
+        {
+            files.Add(new FilePath(path));
+        }
     }
 
     private void IgnoreUpcomingElementWrites(GumProjectSave project, string projectDirectory)
@@ -117,7 +135,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         _fileWatchIgnoreList.IgnoreNextChangeUntil(ToJsonSiblingPath(elementXmlPath));
     }
 
-    private int ConvertBehaviors(GumProjectSave project, string outputDirectory)
+    private int ConvertBehaviors(GumProjectSave project, string sourceDirectory, string outputDirectory, List<FilePath> convertedXmlFiles)
     {
         int count = 0;
 
@@ -135,31 +153,24 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
                 continue;
             }
 
-            string xmlPath = outputDirectory + reference.GetRelativeFilePath(isJsonFormat: false);
-            string jsonPath = ToJsonSiblingPath(xmlPath);
+            string relativeXmlPath = reference.GetRelativeFilePath(isJsonFormat: false);
+            string jsonPath = ToJsonSiblingPath(outputDirectory + relativeXmlPath);
             _fileWatchIgnoreList.IgnoreNextChangeUntil(jsonPath);
             behavior.Save(jsonPath);
+            AddIfOnDisk(convertedXmlFiles, sourceDirectory + relativeXmlPath);
             count++;
         }
 
         return count;
     }
 
-    private int ConvertAnimations(GumProjectSave project, string sourceDirectory, string outputDirectory)
+    private int ConvertAnimations(GumProjectSave project, string sourceDirectory, string outputDirectory, List<FilePath> convertedXmlFiles)
     {
         int count = 0;
 
-        foreach (ScreenSave screen in project.Screens)
+        foreach (ElementSave element in project.AllElements)
         {
-            count += ConvertAnimationIfPresent(screen, sourceDirectory, outputDirectory);
-        }
-        foreach (ComponentSave component in project.Components)
-        {
-            count += ConvertAnimationIfPresent(component, sourceDirectory, outputDirectory);
-        }
-        foreach (StandardElementSave standard in project.StandardElements)
-        {
-            count += ConvertAnimationIfPresent(standard, sourceDirectory, outputDirectory);
+            count += ConvertAnimationIfPresent(element, sourceDirectory, outputDirectory, convertedXmlFiles);
         }
 
         return count;
@@ -172,9 +183,9 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
     /// <paramref name="sourceDirectory"/> — the project's own directory, where that XML actually
     /// lives — while the <c>.ganj</c> is written under <paramref name="outputDirectory"/>, which
     /// differs from the source when converting to a throwaway copy elsewhere. Returns 1 when
-    /// converted, 0 otherwise.
+    /// converted (adding the <c>.ganx</c> to <paramref name="convertedXmlFiles"/>), 0 otherwise.
     /// </summary>
-    private int ConvertAnimationIfPresent(ElementSave element, string sourceDirectory, string outputDirectory)
+    private int ConvertAnimationIfPresent(ElementSave element, string sourceDirectory, string outputDirectory, List<FilePath> convertedXmlFiles)
     {
         if (element.IsSourceFileMissing)
         {
@@ -194,6 +205,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         string animationJsonPath = FileManager.RemoveExtension(outputElementXmlPath) + ElementAnimationsSave.GetFileNameSuffix(isJsonFormat: true);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(animationJsonPath);
         GumJsonFileSerializer.WriteToFile(animationJsonPath, GumAnimationJsonFileSerializer.SerializeElementAnimations(animations));
+        convertedXmlFiles.Add(new FilePath(animationXmlPath));
 
         return 1;
     }

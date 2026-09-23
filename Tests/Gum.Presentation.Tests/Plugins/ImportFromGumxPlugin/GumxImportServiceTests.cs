@@ -1098,6 +1098,7 @@ public class GumxImportServiceTests : IDisposable
         public void DeleteDirectory(FilePath filePath) { }
         public void ClearDirectoryContents(FilePath filePath) { }
         public void MoveToRecycleBin(FilePath filePath) { }
+        public void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths) { }
         public string[] GetFiles(string path) => Array.Empty<string>();
         public string[] GetFiles(string path, string searchPattern, SearchOption searchOption) => Array.Empty<string>();
         public string ReadAllText(string path) => File.ReadAllText(path);

@@ -138,6 +138,40 @@ public class ConvertProjectToJsonServiceTests : IDisposable
     }
 
     [Fact]
+    public void ConvertToJson_FullProject_ReportsEveryXmlFileThatGotAJsonSibling()
+    {
+        string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
+        GumProjectSave project = new GumProjectSave { Version = GumProjectSave.NativeVersion, FullFileName = gumxPath.Replace('\\', '/') };
+        project.Screens.Add(new ScreenSave { Name = "MainMenu" });
+        project.Components.Add(new ComponentSave { Name = "Button" });
+        project.StandardElements.Add(new StandardElementSave { Name = "Container" });
+        project.Behaviors.Add(new BehaviorSave { Name = "ButtonBehavior" });
+        project.BehaviorReferences.Add(new BehaviorReference { Name = "ButtonBehavior" });
+        project.Save(gumxPath, saveElements: true);
+        string behaviorXmlPath = Path.Combine(_tempDirectory, "Behaviors", "ButtonBehavior.behx");
+        Directory.CreateDirectory(Path.GetDirectoryName(behaviorXmlPath)!);
+        project.Behaviors[0].Save(behaviorXmlPath);
+        string animationXmlPath = Path.Combine(_tempDirectory, "Components", "ButtonAnimations.ganx");
+        WriteAnimationXml(animationXmlPath, animationName: "FadeIn");
+        // Neither of these has XML on disk, so neither may be reported for removal.
+        project.Screens.Add(new ScreenSave { Name = "GhostScreen", IsSourceFileMissing = true });
+        project.Components.Add(new ComponentSave { Name = "NeverSaved" });
+
+        ConvertProjectToJsonResult result = _service.ConvertToJson(project);
+
+        string[] expected = new[]
+        {
+            gumxPath,
+            Path.Combine(_tempDirectory, "Screens", "MainMenu.gusx"),
+            Path.Combine(_tempDirectory, "Components", "Button.gucx"),
+            Path.Combine(_tempDirectory, "Standards", "Container.gutx"),
+            behaviorXmlPath,
+            animationXmlPath,
+        }.Select(path => new FilePath(path).FullPath).OrderBy(path => path).ToArray();
+        result.ConvertedXmlFiles.Select(file => file.FullPath).OrderBy(path => path).ToArray().ShouldBe(expected);
+    }
+
+    [Fact]
     public void ConvertToJson_ElementWithMissingSourceFile_IsSkippedAndNotCounted()
     {
         string gumxPath = Path.Combine(_tempDirectory, "Project.gumx");
