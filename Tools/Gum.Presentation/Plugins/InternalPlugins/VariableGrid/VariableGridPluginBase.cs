@@ -74,7 +74,8 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         _propertyGridManager.RefreshVariablesDataGridValues();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue,
+        bool isFullCommit)
     {
         _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue);
     }
@@ -186,6 +187,7 @@ public abstract class ExclusionsPluginBase : PluginBase, IPriorityPlugin
     public override void StartUp()
     {
         this.VariableExcluded += _logic.GetIfVariableIsExcluded;
-        this.VariableSet += _logic.HandleVariableSet;
+        this.VariableSet += (element, instance, variableName, oldValue, _) =>
+            _logic.HandleVariableSet(element, instance, variableName, oldValue);
     }
 }

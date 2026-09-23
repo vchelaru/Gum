@@ -92,7 +92,8 @@ public abstract class StateTreePluginBase : PluginBase, IPriorityPlugin
         InstanceSelected += _controller.HandleInstanceSelected;
         ElementSelected += _controller.HandleElementSelected;
         ElementDelete += _controller.HandleElementDeleted;
-        VariableSet += _controller.HandleVariableSet;
+        VariableSet += (element, instance, variableName, oldValue, _) =>
+            _controller.HandleVariableSet(element, instance, variableName, oldValue);
 
         _controller.TabTitleChanged += title =>
         {

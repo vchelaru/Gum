@@ -1172,7 +1172,7 @@ public class UndoManagerTests : BaseTestClass
         _undoManager.PerformUndo();
 
         _fileCommands.Verify(x => x.TryAutoSaveElement(otherScreen), Times.Once);
-        _pluginNotifier.Verify(x => x.VariableSet(otherScreen, instance, "Variable1", null), Times.Once);
+        _pluginNotifier.Verify(x => x.VariableSet(otherScreen, instance, "Variable1", null, true), Times.Once);
     }
 
     [Fact]

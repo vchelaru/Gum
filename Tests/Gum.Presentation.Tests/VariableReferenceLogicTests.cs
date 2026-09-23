@@ -2,6 +2,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Expressions;
+using GumRuntime;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
@@ -309,6 +310,59 @@ public class VariableReferenceLogicTests : BaseTestClass
             x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()),
             Times.Once);
         _guiCommandsMock.Verify(x => x.RefreshVariables(true), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DoVariableReferenceReaction_ReportsTheCommitKindForEveryReferencingElement(bool isFullCommit)
+    {
+        // Editing a style color reapplies references on every element that references it, and each
+        // changed value notifies plugins. Dragging a style color therefore multiplies the plugin
+        // cascade by the number of referencing elements, so those notifications have to carry the
+        // commit kind too, not just the edited element's own (issue #4946).
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+
+        ComponentSave colors = new ComponentSave { Name = "Styles/Colors" };
+        StateSave colorsDefaultState = new StateSave { Name = "Default", ParentContainer = colors };
+        colorsDefaultState.Variables.Add(new VariableSave { Name = "Red", SetsValue = true, Value = 12, Type = "int" });
+        colors.States.Add(colorsDefaultState);
+        project.Components.Add(colors);
+
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        StateSave buttonDefaultState = new StateSave { Name = "Default", ParentContainer = button };
+        buttonDefaultState.Variables.Add(new VariableSave { Name = "Red", SetsValue = true, Value = 0, Type = "int" });
+        VariableListSave<string> buttonReferences = new VariableListSave<string>
+        {
+            Name = "VariableReferences",
+            Type = "string"
+        };
+        buttonReferences.Value.Add("Red = Components/Styles/Colors.Red");
+        buttonDefaultState.VariableLists.Add(buttonReferences);
+        button.States.Add(buttonDefaultState);
+        project.Components.Add(button);
+
+        List<(ElementSave Element, bool IsFullCommit)> notifications = new List<(ElementSave, bool)>();
+        ElementSaveExtensions.VariableChangedThroughReference = (element, _, _, _, commitKind) =>
+            notifications.Add((element, commitKind));
+        try
+        {
+            _sut.DoVariableReferenceReaction(
+                parentElement: colors,
+                leftSideInstance: null,
+                unqualifiedMember: "Red",
+                stateSave: colorsDefaultState,
+                qualifiedName: "Red",
+                trySave: false,
+                isFullCommit: isFullCommit);
+        }
+        finally
+        {
+            ElementSaveExtensions.VariableChangedThroughReference = null!;
+        }
+
+        notifications.ShouldContain((button, isFullCommit));
     }
 
     [Fact]

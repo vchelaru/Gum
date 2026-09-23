@@ -74,7 +74,7 @@ public class EditorContextTests
 
         // Assert
         mockPluginManager.Verify(
-            x => x.VariableSet(selectedElement, null, "Points", It.IsAny<object>()),
+            x => x.VariableSet(selectedElement, null, "Points", It.IsAny<object>(), true),
             Times.Once);
     }
 }

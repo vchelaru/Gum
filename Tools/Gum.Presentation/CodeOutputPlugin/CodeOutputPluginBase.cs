@@ -303,13 +303,14 @@ public abstract class CodeOutputPluginBase : PluginBase
         HandleRefreshAndExport();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
         _renameService.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
 
-        HandleRefreshAndExport();
+        HandleRefreshAndExport(isFullCommit);
     }
     private void HandleVariableAdd(ElementSave elementSave, string variableName)
     {
@@ -345,7 +346,8 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleInstanceReordered(InstanceSave obj) => HandleRefreshAndExport();
 
 
-    private void HandleRefreshAndExport() => _controller?.HandleRefreshAndExport(codeOutputProjectSettings);
+    private void HandleRefreshAndExport(bool isFullCommit = true) =>
+        _controller?.HandleRefreshAndExport(codeOutputProjectSettings, isFullCommit);
 
     // Refresh + auto-regenerate for an explicit owning element rather than the live
     // SelectedElement. Used by instance add/delete events because the affected instance

@@ -216,6 +216,34 @@ public class CodeOutputTabControllerTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleRefreshAndExport_IntermediateCommit_NeitherRefreshesTheDisplayNorGeneratesCode()
+    {
+        // Regenerating the element's code on every tick of a drag is what made a color edit take
+        // 10+ seconds with the Code tab open (issue #4946). Everything else here is set up so
+        // generation WOULD happen: the tab is selected and the element auto-generates on change.
+        GumProjectSave project = new();
+        ScreenSave screen = CreateScreenWithDefaultState(project);
+        ObjectFinder.Self.GumProjectSave = project;
+
+        _selectedState.Setup(s => s.SelectedElement).Returns(screen);
+        _tabSelectionState.Setup(t => t.IsSelected).Returns(true);
+        _view.SetupProperty(v => v.CodeOutputElementSettings,
+            new CodeOutputElementSettings { GenerationBehavior = GenerationBehavior.GenerateAutomaticallyOnPropertyChange });
+        CodeOutputProjectSettings codeOutputProjectSettings = new()
+        {
+            CodeProjectRoot = _tempDirectory + Path.DirectorySeparatorChar,
+            RootNamespace = "MyGame",
+            OutputLibrary = OutputLibrary.MonoGame
+        };
+        CodeOutputTabController controller = CreateController();
+
+        controller.HandleRefreshAndExport(codeOutputProjectSettings, isFullCommit: false);
+
+        File.Exists(Path.Combine(_tempDirectory, "Screens", "MyScreenRuntime.Generated.cs")).ShouldBeFalse();
+        _viewModel.Code.ShouldBeNullOrEmpty();
+    }
+
+    [Fact]
     public void LoadCodeSettingsFile_ElementAndProjectLoaded_LoadsDefaultsViaElementSettingsManager()
     {
         ScreenSave screen = new() { Name = "MyScreen" };

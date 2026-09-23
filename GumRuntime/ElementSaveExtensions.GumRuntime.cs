@@ -456,8 +456,9 @@ namespace GumRuntime
             }
         }
 
-        // void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue)
-        public static Action<ElementSave, InstanceSave, string, object> VariableChangedThroughReference;
+        // void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue,
+        //     bool isFullCommit)
+        public static Action<ElementSave, InstanceSave, string, object, bool> VariableChangedThroughReference;
 
         /// <summary>
         /// Applies variable references on all elements in the project in dependency order.
@@ -838,7 +839,10 @@ namespace GumRuntime
         // currently rendered (e.g. the tool's wireframe for the element being edited). Lets right-side
         // references resolve runtime-computed identifiers such as AbsoluteWidth; null (the default)
         // leaves those identifiers unresolved, same as before this parameter existed.
-        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null)
+        // isFullCommit: reported to VariableChangedThroughReference so the tool can tell a committed
+        // edit from an intermediate one produced while the user is still dragging.
+        public static void ApplyVariableReferences(this ElementSave element, StateSave stateSave, GraphicalUiElement? liveRoot = null,
+            bool isFullCommit = true)
         {
             foreach (var variableList in stateSave.VariableLists)
             {
@@ -871,7 +875,7 @@ namespace GumRuntime
                                 if (!ValueEquality(result.OldValue, result.NewValue))
                                 {
                                     VariableChangedThroughReference?.Invoke(
-                                        element, null, unqualified, result.OldValue);
+                                        element, null, unqualified, result.OldValue, isFullCommit);
                                 }
                             }
                         }

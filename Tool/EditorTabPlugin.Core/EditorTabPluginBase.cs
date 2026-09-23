@@ -569,7 +569,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _selectionManager.SelectedGue = ipso as GraphicalUiElement;
     }
 
-    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4)
+    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4, bool isFullCommit)
     {
         _selectionManager.Refresh();
         _editorViewModel.RefreshGridSnapWarning();
@@ -736,7 +736,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         OnUiBaseFontSizeChanged(message.Size);
     }
 
-    private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue)
+    private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue,
+        bool isFullCommit)
     {
         /////////////////////////////Early Out//////////////////////////
         if(element == null)

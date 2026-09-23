@@ -362,10 +362,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void VariableDelete(ElementSave elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue)
+    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
+        bool isFullCommit = true)
     {
-        CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue));
-        CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue), "VariableSet (Late)");
+        CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit));
+        CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
     }
 
     public virtual void VariableSelected(IStateContainer container, VariableSave variable) =>

@@ -222,7 +222,8 @@ public class SetVariableLogic : ISetVariableLogic
                         qualifiedName = $"{instance.Name}.{unqualifiedMember}";
                     }
 
-                    _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave);
+                    _variableReferenceLogic.DoVariableReferenceReaction(parentElement, instance, unqualifiedMember, currentState, qualifiedName, trySave,
+                        isFullCommit);
 
                     _variableInCategoryPropagationLogic.PropagateVariablesInCategory(qualifiedName, parentElement,
                         // This code used to not specify the category, so it defaulted to the selected category.
@@ -249,7 +250,7 @@ public class SetVariableLogic : ISetVariableLogic
                 // see comment by ReactToChangedMember about why we make this call here
                 // Also this should happen after we update the wireframe so that plugins like
                 // the texture window which depend on the wireframe will have the correct values
-                _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue);
+                _pluginManager.VariableSet(parentElement, instance, unqualifiedMember, oldValue, isFullCommit);
             }
 
             // This used to only check if values have changed. However, this can cause problems
