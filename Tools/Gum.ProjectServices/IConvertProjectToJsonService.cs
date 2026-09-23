@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Gum.DataTypes;
+using ToolsUtilities;
 
 namespace Gum.ProjectServices;
 
@@ -55,6 +57,12 @@ public class ConvertProjectToJsonResult
 
     /// <summary>Number of element animation files converted (<c>.ganj</c> files written).</summary>
     public int AnimationCount { get; set; }
+
+    /// <summary>
+    /// The source XML files (project, elements, behaviors, animations) that now have a JSON sibling
+    /// and exist on disk. These are the files that are safe to remove once the JSON project is in use.
+    /// </summary>
+    public List<FilePath> ConvertedXmlFiles { get; set; } = new List<FilePath>();
 
     /// <summary>Total number of JSON files written, including the project file itself.</summary>
     public int TotalFileCount =>

@@ -117,6 +117,11 @@ namespace Gum.Managers
             extension == GumProjectSave.ComponentExtension || extension == GumProjectSave.ComponentJsonExtension ||
             extension == GumProjectSave.StandardExtension || extension == GumProjectSave.StandardJsonExtension;
 
+        private static bool IsJsonElementExtension(string extension) =>
+            extension == GumProjectSave.ScreenJsonExtension ||
+            extension == GumProjectSave.ComponentJsonExtension ||
+            extension == GumProjectSave.StandardJsonExtension;
+
         private void ReactToElementSaveDeleted(FilePath file)
         {
             // Defensive: the flush already gates on the file being gone, but if a delete event was
@@ -134,12 +139,16 @@ namespace Gum.Managers
         /// <summary>
         /// Maps an element file path (.gusx/.gucx/.gutx) to the name ObjectFinder uses - the path
         /// relative to its type folder, e.g. "MyButton" or "Sub/MyButton". Returns null when the
-        /// file isn't under the project directory (the same early-out the change path applied).
+        /// file isn't under the project directory (the same early-out the change path applied), or
+        /// when the file is in the other format than the open project, e.g. a leftover .gucx next
+        /// to a JSON project - that file does not back any loaded element (issue #4926).
         /// </summary>
         internal static string? GetElementNameForElementFile(FilePath file, FilePath projectDirectory)
         {
             if (projectDirectory == null) return null;
             if (!projectDirectory.IsRootOf(file)) return null;
+            bool isJsonProject = GumProjectSave.IsJsonFormat(ObjectFinder.Self.GumProjectSave?.FullFileName ?? "");
+            if (IsJsonElementExtension(file.Extension) != isJsonProject) return null;
 
             FilePath standardized = file.RemoveExtension().StandardizedCaseSensitive;
             var relativeToFolderForType = standardized.RelativeTo(projectDirectory).Replace("\\", "/");

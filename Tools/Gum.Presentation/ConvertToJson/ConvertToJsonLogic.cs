@@ -1,10 +1,13 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using ToolsUtilities;
 
 namespace ConvertToJsonPlugin;
 
@@ -20,17 +23,20 @@ public class ConvertToJsonLogic
     private readonly IConvertProjectToJsonService _convertService;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly IFileWatchIgnoreList _fileWatchIgnoreList;
 
     public ConvertToJsonLogic(
         IProjectState projectState,
         IConvertProjectToJsonService convertService,
         IFileCommands fileCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _projectState = projectState;
         _convertService = convertService;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
+        _fileWatchIgnoreList = fileWatchIgnoreList;
     }
 
     /// <summary>
@@ -41,8 +47,9 @@ public class ConvertToJsonLogic
 
     /// <summary>
     /// Confirms with the user, converts the currently-open project to JSON, then reopens it from the
-    /// newly-written <c>.gumj</c> so the tool is looking at the JSON version. No-ops (with a message)
-    /// if <see cref="CanConvert"/> is false when called.
+    /// newly-written <c>.gumj</c> so the tool is looking at the JSON version. When the user opted in,
+    /// the converted XML files then go to the OS trash, but only once the JSON project is confirmed
+    /// open. No-ops (with a message) if <see cref="CanConvert"/> is false when called.
     /// </summary>
     public async Task ConvertCurrentProjectAsync()
     {
@@ -53,12 +60,11 @@ public class ConvertToJsonLogic
         }
 
         GumProjectSave project = _projectState.GumProjectSave!;
+        string xmlFileName = Path.GetFileName(project.FullFileName);
+        string jsonFileName = Path.ChangeExtension(xmlFileName, GumProjectSave.ProjectJsonExtension);
 
-        bool confirmed = _dialogService.ShowYesNoMessage(
-            "This creates new .gumj/.gusj/.gucj/.gutj/.behj/.ganj files alongside the project's " +
-            "existing XML files. The existing XML files are not modified or deleted.\n\nConvert to JSON?",
-            "Convert to JSON");
-        if (!confirmed)
+        ConvertToJsonDialogViewModel dialog = new ConvertToJsonDialogViewModel(xmlFileName, jsonFileName);
+        if (!_dialogService.Show(dialog))
         {
             return;
         }
@@ -76,8 +82,44 @@ public class ConvertToJsonLogic
 
         await _fileCommands.LoadProjectAsync(result.ProjectFilePath);
 
+        string recycleSummary = "The original XML files are still in the project folder.";
+        if (dialog.ShouldRecycleXmlFiles)
+        {
+            recycleSummary = RecycleConvertedXml(result);
+        }
+
         _dialogService.ShowMessage(
-            $"Converted {result.TotalFileCount} file(s) to JSON.\n\nNow editing {result.ProjectFilePath}.",
+            $"Converted {result.TotalFileCount} file(s) to JSON: 1 project, {result.ScreenCount} screen(s), " +
+            $"{result.ComponentCount} component(s), {result.StandardElementCount} standard(s), " +
+            $"{result.BehaviorCount} behavior(s), {result.AnimationCount} animation file(s).\n\n" +
+            $"{recycleSummary}\n\n" +
+            $"Now editing {result.ProjectFilePath}. Update your game to load {jsonFileName} instead of {xmlFileName}.",
             "Convert to JSON");
+    }
+
+    private string RecycleConvertedXml(ConvertProjectToJsonResult result)
+    {
+        string trashName = ConvertToJsonDialogViewModel.TrashName;
+        string? openProject = _projectState.GumProjectSave?.FullFileName;
+        if (openProject == null || new FilePath(openProject) != new FilePath(result.ProjectFilePath))
+        {
+            return $"The JSON project did not open, so the original XML files were not moved to the {trashName}.";
+        }
+
+        // Gum is deleting these itself, so the file watcher must not react to them as external deletes.
+        foreach (FilePath file in result.ConvertedXmlFiles)
+        {
+            _fileWatchIgnoreList.IgnoreNextChangeUntil(file);
+        }
+
+        try
+        {
+            _fileCommands.MoveToRecycleBin(result.ConvertedXmlFiles);
+        }
+        catch (Exception ex)
+        {
+            return $"Some or all of the original XML files could not be moved to the {trashName}: {ex.Message}";
+        }
+        return $"Moved {result.ConvertedXmlFiles.Count} XML file(s) to the {trashName}.";
     }
 }

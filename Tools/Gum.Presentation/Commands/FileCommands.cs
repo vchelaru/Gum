@@ -10,6 +10,7 @@ using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -82,6 +83,9 @@ public class FileCommands : IFileCommands
 
     public void MoveToRecycleBin(FilePath filePath) =>
         _recycleBinService.MoveToRecycleBin(filePath);
+
+    public void MoveToRecycleBin(IReadOnlyList<FilePath> filePaths) =>
+        _recycleBinService.MoveToRecycleBin(filePaths);
 
     public string[] GetFiles(string path) => System.IO.Directory.GetFiles(path);
 
