@@ -6,9 +6,7 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-One change needs your attention:
-
-* The built-in content loaders are now `sealed`. This is a **hard break** only if you derived a class from one, which was never a supported way to customize loading.
+This release seals the built-in content loaders, so you can no longer derive a class from one. This is a **hard break**, but it reaches you only if you inherited from a built-in loader, which never let you change how loading works in the first place. Implementing `IContentLoader` yourself, the supported way to customize loading, is unchanged.
 
 ## Upgrading the Gum Tool
 

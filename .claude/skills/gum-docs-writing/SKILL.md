@@ -137,6 +137,10 @@ Then flag accordingly in a `{% hint style="info" %}` block (same pattern as date
 - **Shipped in preview** — note that it's a preview feature.
 - **Fully shipped** — no flag; write it as current behavior.
 
+## Monthly Migration Pages
+
+A `docs/gum-tool/upgrading/migrating-to-<year>-<month>.md` page opens its **What Changed at a Glance** section with prose naming the release and what it ships. `migrating-to-2026-july.md` is the model. Never use a stock lead-in over a bullet list ("Two changes need your attention:"); it is filler, and it reads worse the fewer changes there are.
+
 ## Prose Style: Clarity Beats Brevity
 
 Cut length that adds *reading*, never length that adds *understanding*. Density and clarity are separate axes, and a longer sentence that lands the first time beats a compressed one the reader has to decode. Trimming a page is not the same as making it clearer, and a reader who has to re-read a sentence has not been saved anything.
