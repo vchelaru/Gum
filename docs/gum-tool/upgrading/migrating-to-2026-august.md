@@ -6,10 +6,9 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-Two changes need your attention:
+`2026 August` ships two changes. `GraphicalUiElement`'s `GetAbsoluteWidth()` and `GetAbsoluteHeight()` methods become the `AbsoluteWidth` and `AbsoluteHeight` properties, matching the existing `AbsoluteLeft`, `AbsoluteTop`, `AbsoluteRight`, and `AbsoluteBottom` properties. This is a **soft break**: the old methods still compile and work, but now emit a `CS0618` obsolete warning.
 
-* `GraphicalUiElement`'s `GetAbsoluteWidth()` and `GetAbsoluteHeight()` methods are renamed to the `AbsoluteWidth` and `AbsoluteHeight` properties, matching the existing `AbsoluteLeft`/`AbsoluteTop`/`AbsoluteRight`/`AbsoluteBottom` properties. This is a **soft break**: the old methods still compile and work, but now emit a `CS0618` obsolete warning.
-* `MonoGameGum.csproj`'s iOS and Android target frameworks changed from opt-out to opt-in. This affects you only if you reference the MonoGameGum **source project** directly. If you use the `Gum.MonoGame` NuGet package, nothing changes.
+Separately, `MonoGameGum.csproj`'s iOS and Android target frameworks change from opt-out to opt-in. This affects you only if you reference the MonoGameGum **source project** directly. Nothing changes if you use the `Gum.MonoGame` NuGet package.
 
 ## Upgrading the Gum Tool
 

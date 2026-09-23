@@ -6,10 +6,9 @@ This page discusses breaking changes and other considerations when migrating fro
 
 ## What Changed at a Glance
 
-Two changes need your attention:
+`2026 September` ships two breaking changes. The V1 and V2 default Forms visuals are removed, so `DefaultVisualsVersion.V1`, `.V2`, and their backing classes no longer exist. This is a **hard break**, but it reaches you only if you explicitly requested V1 or V2. Everyone else was already on V3.
 
-* The V1 and V2 default Forms visuals are removed. This is a **hard break**: `DefaultVisualsVersion.V1`/`.V2` and their backing classes no longer exist. This only affects you if you explicitly requested V1 or V2; everyone else was already on V3.
-* `Gum.SkiaSharp` now compiles `GumService` (and its new `GumServiceSkiaBase`) directly instead of requiring host projects to file-link `GumService.cs`. This affects you only if you previously file-linked `Runtimes/SkiaGum.Standalone/GumService.cs` into your own project.
+Separately, `Gum.SkiaSharp` now compiles `GumService` (and its new `GumServiceSkiaBase`) directly instead of requiring host projects to file-link `GumService.cs`. This affects you only if you previously file-linked `Runtimes/SkiaGum.Standalone/GumService.cs` into your own project.
 
 ## Upgrading the Gum Tool
 
