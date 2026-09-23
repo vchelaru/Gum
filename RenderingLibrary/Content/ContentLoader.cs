@@ -15,7 +15,13 @@ namespace RenderingLibrary.Content;
 /// using the LoaderManager and not specifying their own custom ContentLoader.
 /// This content loader uses the default SystemManagers internally.
 /// </summary>
-public class ContentLoader : IContentLoader
+/// <remarks>
+/// Sealed on purpose: nothing here is virtual, so deriving from it gains nothing. To customize
+/// loading, implement <see cref="IContentLoader"/> and delegate to an instance of this class for
+/// the content names you do not handle — see the "Custom content loader" section of the file
+/// loading docs.
+/// </remarks>
+public sealed class ContentLoader : IContentLoader
 {
     public SystemManagers SystemManagers { get; set; }
 

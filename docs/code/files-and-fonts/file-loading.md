@@ -136,6 +136,8 @@ The active loader is held by `LoaderManager.Self.ContentLoader`. Each runtime (M
 
 The cleanest approach is to *wrap* the built-in loader: intercept only the content names you care about, and forward everything else to the default loader. This keeps Gum's normal file loading, and its texture caching, working for all the assets you do not handle yourself.
 
+Wrapping is the only way to build on the built-in loader. Each backend's built-in loader is `sealed`, and none of its methods are virtual, so you implement `IContentLoader` yourself and hold the built-in loader as a field rather than inheriting from it.
+
 ```csharp
 // Class scope
 public class CustomContentLoader : RenderingLibrary.Content.IContentLoader
