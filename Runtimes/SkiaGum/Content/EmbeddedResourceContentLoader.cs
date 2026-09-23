@@ -4,7 +4,15 @@ using SKSvg = Svg.Skia.SKSvg;
 
 namespace SkiaGum.Content
 {
-    public class EmbeddedResourceContentLoader : IContentLoader
+    /// <summary>
+    /// Loads Skia content out of embedded resources.
+    /// </summary>
+    /// <remarks>
+    /// Sealed on purpose: nothing here is virtual, so deriving from it gains nothing. To customize
+    /// loading, implement <see cref="IContentLoader"/> and delegate to an instance of this class for
+    /// the content names you do not handle.
+    /// </remarks>
+    public sealed class EmbeddedResourceContentLoader : IContentLoader
     {
         public T LoadContent<T>(string contentName)
         {
