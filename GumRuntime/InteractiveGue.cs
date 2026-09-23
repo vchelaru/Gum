@@ -162,10 +162,26 @@ public partial class InteractiveGue : GraphicalUiElement
         }
     }
 
+    private object _formsControlAsObject;
+
     /// <summary>
     /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
     /// </summary>
-    public virtual object FormsControlAsObject { get; set; }
+    public virtual object FormsControlAsObject
+    {
+        get => _formsControlAsObject;
+        set
+        {
+            _formsControlAsObject = value;
+
+            if (value != null)
+            {
+                // A custom variable whose generated property lives on the Forms class was held
+                // until now, because the element's state is applied before this is assigned.
+                ApplyPendingCustomVariables(value);
+            }
+        }
+    }
 
     #region Events 
 
