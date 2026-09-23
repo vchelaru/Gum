@@ -27,7 +27,7 @@ LeftProperty = RightSide
   - Literals: `X = 42`
 - **Comments:** Lines starting with `//` are skipped. Invalid lines are auto-commented on validation failure.
 - **Shorthand:** Writing just `OtherInstance.X` (no left side) auto-expands to `X = OtherInstance.X`.
-- **Color expansion:** `Color = OtherInstance.Color` auto-expands to separate `Red`, `Green`, `Blue` assignments.
+- **Composite names (`Color`, `CornerRadius`):** a line like `Color = OtherInstance.FillColor` is stored collapsed and expanded into per-channel lines (`Red = OtherInstance.FillRed`, ...) at apply and validate time by `ElementSaveExtensions.ExpandCompositeReferenceLine`. Any code reading raw `VariableReferences` line text must expand through that method first: there is no `Color` variable, so matching the collapsed left side against real variable names silently never hits.
 
 ### Roslyn Parsing
 
