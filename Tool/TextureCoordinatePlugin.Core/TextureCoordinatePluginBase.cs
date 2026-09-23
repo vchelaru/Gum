@@ -199,7 +199,8 @@ public abstract class TextureCoordinatePluginBase : PluginBase, IRecipient<UiBas
         _displayController.CenterCameraOnSelection();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
         _displayController.Refresh();
         _displayController.RefreshSelector(Logic.RefreshType.Force);

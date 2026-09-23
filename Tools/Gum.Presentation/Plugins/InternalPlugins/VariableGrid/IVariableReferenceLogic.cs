@@ -10,7 +10,7 @@ public interface IVariableReferenceLogic
     AssignmentExpressionSyntax? GetAssignmentSyntax(string item);
 
     void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
-        StateSave stateSave, string qualifiedName, bool trySave);
+        StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true);
 
     void ReactIfChangedMemberIsVariableReference(InstanceSave? instance, StateSave stateSave, string changedMember, object? oldValue);
 }

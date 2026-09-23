@@ -39,7 +39,7 @@ public class MainInheritancePlugin : CorePriorityPlugin
         _inheritanceLogic.HandleInstanceReordered(instance);
 
     private void HandleVariableSet(ElementSave container, InstanceSave? instance,
-        string variableName, object? oldValue)
+        string variableName, object? oldValue, bool isFullCommit)
     {
         if (variableName == "BaseType" && container != null)
         {

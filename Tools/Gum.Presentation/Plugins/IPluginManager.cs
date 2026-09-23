@@ -78,7 +78,11 @@ public interface IPluginManager
     /// <param name="instance">The optional instance that holds the variable</param>
     /// <param name="unqualifiedChangedMemberName">The unqualified name. If an instance's value is set, this would be unqualified, such as "X" instead of "SpriteInstance.X"</param>
     /// <param name="oldValue">The value prior to being set.</param>
-    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue);
+    /// <param name="isFullCommit">Whether the value is committed, as opposed to an intermediate value
+    /// produced while the user is still dragging. Plugins whose reaction is expensive should only react
+    /// to a committed value.</param>
+    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
+        bool isFullCommit = true);
     void VariableSelected(IStateContainer container, VariableSave variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
     void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName);

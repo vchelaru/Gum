@@ -116,8 +116,16 @@ public class MainErrorsPlugin : CorePriorityPlugin
         UpdateErrorsForElement(element);
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
+        // Checking an element walks its file references and reads the disk, so it waits for a
+        // committed value rather than running on every tick of a drag (issue #4946).
+        if (!isFullCommit)
+        {
+            return;
+        }
+
         UpdateErrorsForElement(element);
     }
 

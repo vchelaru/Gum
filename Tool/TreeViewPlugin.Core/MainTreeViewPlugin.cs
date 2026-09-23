@@ -379,9 +379,15 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue)
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
-        RefreshErrorIndicatorsForElement(element);
+        // The "!" indicator's error check reads the disk, so it waits for a committed value rather
+        // than running on every tick of a drag (issue #4946).
+        if (isFullCommit)
+        {
+            RefreshErrorIndicatorsForElement(element);
+        }
 
         if(instance != null && variableName == nameof(instance.Locked))
         {

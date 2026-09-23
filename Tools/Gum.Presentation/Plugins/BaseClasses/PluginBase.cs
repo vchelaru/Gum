@@ -130,18 +130,23 @@ public abstract class PluginBase : IPlugin
     /// [InstanceSave] - current InstanceSave (like a sprite in a Screen). This may be null 
     /// [string] - name of the variable set. If an InstanceSave exists, this is the variable name on the instance without the instance name (the stripped name)
     /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
+    /// [bool] - whether the value is committed, as opposed to an intermediate value produced while the
+    /// user is still dragging. A handler that does expensive work (checking for errors, generating code,
+    /// rebuilding a grid) should only do it for a committed value; one that keeps a live display in step
+    /// with the drag (the wireframe, the texture coordinate selector) reacts to both.
     /// </summary>
-    public event Action<ElementSave, InstanceSave?, string, object?>? VariableSet;
+    public event Action<ElementSave, InstanceSave?, string, object?, bool>? VariableSet;
 
     /// <summary>
-    /// Event raised after a variable has been set - this can be used to perform action after most 
+    /// Event raised after a variable has been set - this can be used to perform action after most
     /// plugins have responded to VariableSet, such as refreshing views.
-    /// [ElementSave] - current ElementSave (like the Screen) 
-    /// [InstanceSave] - current InstanceSave (like a sprite in a Screen). This may be null 
-    /// [string] - name of the variable set 
+    /// [ElementSave] - current ElementSave (like the Screen)
+    /// [InstanceSave] - current InstanceSave (like a sprite in a Screen). This may be null
+    /// [string] - name of the variable set
     /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
+    /// [bool] - whether the value is committed, as described on <see cref="VariableSet"/>.
     /// </summary>
-    public event Action<ElementSave, InstanceSave?, string, object?>? VariableSetLate;
+    public event Action<ElementSave, InstanceSave?, string, object?, bool>? VariableSetLate;
     public event Action<IStateContainer, VariableSave>? VariableSelected;
 
     /// <summary>
@@ -383,11 +388,13 @@ public abstract class PluginBase : IPlugin
     public void CallVariableDelete(ElementSave elementSave, string variableName) =>
         VariableDelete?.Invoke(elementSave, variableName);
 
-    public void CallVariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue) =>
-        VariableSet?.Invoke(parentElement, instance, changedMember, oldValue);
+    public void CallVariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue,
+        bool isFullCommit = true) =>
+        VariableSet?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
 
-    public void CallVariableSetLate(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue) =>
-        VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue);
+    public void CallVariableSetLate(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue,
+        bool isFullCommit = true) =>
+        VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
 
     public void CallVariableSelected(IStateContainer container, VariableSave variable) =>
         VariableSelected?.Invoke(container, variable);

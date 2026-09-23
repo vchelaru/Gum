@@ -217,7 +217,7 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
 
         bool delegateFired = false;
         string changedMember = null;
-        ElementSaveExtensions.VariableChangedThroughReference = (element, instance, member, oldValue) =>
+        ElementSaveExtensions.VariableChangedThroughReference = (element, instance, member, oldValue, _) =>
         {
             delegateFired = true;
             changedMember = member;
@@ -238,7 +238,7 @@ public class ApplyVariableReferencesElementSaveTests : BaseTestClass
             ("OtherInstance.X", 42f, "float"));
 
         bool delegateFired = false;
-        ElementSaveExtensions.VariableChangedThroughReference = (_, _, _, _) =>
+        ElementSaveExtensions.VariableChangedThroughReference = (_, _, _, _, _) =>
         {
             delegateFired = true;
         };

@@ -19,5 +19,6 @@ public interface IUndoPluginNotifier
 
     void BehaviorSelected(BehaviorSave? behaviorSave);
 
-    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue);
+    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
+        bool isFullCommit = true);
 }

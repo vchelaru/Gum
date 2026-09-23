@@ -74,7 +74,8 @@ public class MainFileWatchPlugin : CorePriorityPlugin
         this.VariableSet += HandleVariableSet;
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue) =>
+    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit) =>
         _controller.HandleVariableSet(element, instance, variableName, oldValue);
 
     private void HandleProjectLocationSet(FilePath path) =>

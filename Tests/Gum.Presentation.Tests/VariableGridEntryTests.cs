@@ -154,7 +154,7 @@ public class VariableGridEntryTests : BaseTestClass
         component.DefaultState.GetVariableSave("X").ShouldBeNull();
         _mocker.GetMock<IUndoManager>().Verify(x => x.RecordUndo(), Times.Once);
         _mocker.GetMock<IWireframeObjectManager>().Verify(x => x.RefreshAll(true, false), Times.Once);
-        _mocker.GetMock<IPluginManager>().Verify(x => x.VariableSet(component, null, "X", 5f), Times.Once);
+        _mocker.GetMock<IPluginManager>().Verify(x => x.VariableSet(component, null, "X", 5f, true), Times.Once);
     }
 
     [Fact]

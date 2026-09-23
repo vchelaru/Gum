@@ -465,7 +465,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
 
     public void DoVariableReferenceReaction(ElementSave parentElement, InstanceSave? leftSideInstance, string unqualifiedMember,
-        StateSave stateSave, string qualifiedName, bool trySave)
+        StateSave stateSave, string qualifiedName, bool trySave, bool isFullCommit = true)
     {
         // The currently-rendered wireframe representation of parentElement, if any. Lets a right
         // side like "Root.AbsoluteWidth" resolve against the live, already-laid-out object - null
@@ -505,7 +505,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         // apply references on this element first, then apply the values to the other references:
-        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot);
+        ElementSaveExtensions.ApplyVariableReferences(parentElement, stateSave, liveRoot, isFullCommit);
 
         // Then evaluate any behavior-level ToolOnlyVariableReferences so design-time
         // wireframe preview reflects FormsProperty values (e.g. IsEnabled = false →
@@ -534,7 +534,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             if (statesAlreadyApplied.Contains(reference.StateSave) == false)
             {
                 ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave,
-                    _wireframeObjectManager.GetRepresentation(reference.OwnerOfReferencingObject));
+                    _wireframeObjectManager.GetRepresentation(reference.OwnerOfReferencingObject), isFullCommit);
                 statesAlreadyApplied.Add(reference.StateSave);
                 elementsToSave.Add(reference.OwnerOfReferencingObject);
             }

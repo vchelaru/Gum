@@ -572,6 +572,32 @@ public class SetVariableLogicTests : BaseTestClass
             .Verify(x => x.RefreshElementTreeView(It.IsAny<ElementSave>()), Times.AtLeastOnce);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ReactToPropertyValueChanged_ShouldTellPluginsWhetherTheCommitIsFull(bool isFullCommit)
+    {
+        // Plugins whose reaction is expensive (error checking, code generation) use this to skip
+        // the intermediate ticks of a drag and only react to the committed value (issue #4946).
+        ScreenSave screen = new ScreenSave { Name = "MyScreen" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(state);
+
+        _setVariableLogic.ReactToPropertyValueChanged(
+            "X",
+            0f,
+            screen,
+            null,
+            state,
+            refresh: false,
+            recordUndo: false,
+            trySave: false,
+            isFullCommit: isFullCommit);
+
+        mocker.GetMock<IPluginManager>()
+            .Verify(x => x.VariableSet(screen, null, "X", 0f, isFullCommit), Times.Once);
+    }
+
     [Fact]
     public void ReactToPropertyValueChanged_ShouldSuppressFontRegeneration_WhileCommitIsIntermediate()
     {
@@ -585,7 +611,7 @@ public class SetVariableLogicTests : BaseTestClass
 
         bool? suppressedDuringDispatch = null;
         mocker.GetMock<IPluginManager>()
-            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>()))
+            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>(), It.IsAny<bool>()))
             .Callback(() => suppressedDuringDispatch = GraphicalUiElement.SuppressFontRegeneration);
 
         _setVariableLogic.ReactToPropertyValueChanged(
@@ -612,7 +638,7 @@ public class SetVariableLogicTests : BaseTestClass
 
         bool? suppressedDuringDispatch = null;
         mocker.GetMock<IPluginManager>()
-            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>()))
+            .Setup(x => x.VariableSet(It.IsAny<ElementSave>(), It.IsAny<InstanceSave>(), It.IsAny<string>(), It.IsAny<object>(), It.IsAny<bool>()))
             .Callback(() => suppressedDuringDispatch = GraphicalUiElement.SuppressFontRegeneration);
 
         _setVariableLogic.ReactToPropertyValueChanged(

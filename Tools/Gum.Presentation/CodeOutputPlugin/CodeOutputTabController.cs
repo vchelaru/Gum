@@ -174,8 +174,17 @@ public class CodeOutputTabController
     /// Refreshes the display for the currently-selected element, then auto-regenerates its code file
     /// if the view's current element settings have <see cref="CodeOutputElementSettings.AutoGenerateOnChange"/> set.
     /// </summary>
-    public void HandleRefreshAndExport(CodeOutputProjectSettings codeOutputProjectSettings)
+    /// <param name="codeOutputProjectSettings">The project's code output settings.</param>
+    /// <param name="isFullCommit">Whether the change that triggered this is a committed value. Generating
+    /// an element's code is expensive, so an intermediate value produced while the user is still dragging
+    /// is ignored - the commit that ends the drag refreshes and exports (issue #4946).</param>
+    public void HandleRefreshAndExport(CodeOutputProjectSettings codeOutputProjectSettings, bool isFullCommit = true)
     {
+        if (!isFullCommit)
+        {
+            return;
+        }
+
         RefreshCodeDisplay(codeOutputProjectSettings);
 
         _view.CodeOutputElementSettings ??= new CodeOutputElementSettings();
