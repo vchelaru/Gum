@@ -18,6 +18,10 @@ public class CompositeInstanceMember : InstanceMember
     private readonly Func<object, object?[]> _decompose;
     private readonly Type _compositeType;
 
+    // Indices of the channels written by intermediate commits since the last full commit, i.e. the
+    // channels a drag in progress has moved.
+    private readonly HashSet<int> _channelsWrittenWhileScrubbing;
+
     /// <summary>
     /// Raised before the channel members are written during a set. Allows a consumer to prepare for the
     /// multi-channel write, such as requesting a single undo lock so all channel writes coalesce.
@@ -81,6 +85,7 @@ public class CompositeInstanceMember : InstanceMember
         _compositeType = compositeType;
         _compose = compose;
         _decompose = decompose;
+        _channelsWrittenWhileScrubbing = new HashSet<int>();
 
         CustomGetEvent += HandleCustomGet;
         CustomGetTypeEvent += HandleCustomGetType;
@@ -133,15 +138,34 @@ public class CompositeInstanceMember : InstanceMember
                     // value. Some composites (e.g. corner radius) have channels that carry an
                     // inherit-vs-explicit distinction via nullability; force-writing an unchanged
                     // channel on every commit would silently flip it from inherited to explicit.
-                    if (!Equals(ChannelMembers[i].Value, decomposed[i]))
+                    //
+                    // A channel a drag already wrote is the exception. Its intermediate writes left
+                    // the channel holding the final value, so the full commit that ends the drag
+                    // matches and would be skipped - taking with it the work only a full commit
+                    // does, such as recording undo and saving the file.
+                    bool isChanged = !Equals(ChannelMembers[i].Value, decomposed[i]);
+                    bool needsCommitAfterScrubbing = args.CommitType == SetPropertyCommitType.Full &&
+                        _channelsWrittenWhileScrubbing.Contains(i);
+
+                    if (isChanged || needsCommitAfterScrubbing)
                     {
                         ChannelMembers[i].SetValue(decomposed[i], args.CommitType);
+
+                        if (args.CommitType == SetPropertyCommitType.Intermediate)
+                        {
+                            _channelsWrittenWhileScrubbing.Add(i);
+                        }
                     }
                 }
             }
         }
         finally
         {
+            if (args.CommitType == SetPropertyCommitType.Full)
+            {
+                _channelsWrittenWhileScrubbing.Clear();
+            }
+
             AfterComposite?.Invoke(args);
         }
     }

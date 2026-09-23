@@ -106,6 +106,50 @@ public class CompositeInstanceMemberTests
     }
 
     [Fact]
+    public void SetValue_ShouldRepeatTheDraggedChannelsOnTheFullCommit_AfterIntermediateWrites()
+    {
+        // A drag writes intermediate values, so by the time the full commit arrives every channel
+        // already holds the dragged value. Skipping those writes as "unchanged" drops the work that
+        // only a full commit does downstream - recording undo and saving the element - so the edit
+        // is in memory but never reaches disk.
+        FakeChannelMember red = new() { BackingValue = 0 };
+        FakeChannelMember green = new() { BackingValue = 0 };
+        FakeChannelMember blue = new() { BackingValue = 0 };
+
+        CompositeInstanceMember composite = MakeComposite(red, green, blue);
+
+        composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Intermediate);
+        composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full);
+
+        red.SetCallCount.ShouldBe(2);
+        green.SetCallCount.ShouldBe(2);
+        blue.SetCallCount.ShouldBe(2);
+        red.LastCommitType.ShouldBe(SetPropertyCommitType.Full);
+        green.LastCommitType.ShouldBe(SetPropertyCommitType.Full);
+        blue.LastCommitType.ShouldBe(SetPropertyCommitType.Full);
+    }
+
+    [Fact]
+    public void SetValue_ShouldSkipUnchangedChannels_OnAFullCommitFollowingAnEarlierFullCommit()
+    {
+        // The repeat above covers only the channels an unfinished drag wrote. A later full commit
+        // that changes nothing must still skip them, or the inherit/explicit flip of issue #3617
+        // comes back through the second edit instead of the first.
+        FakeChannelMember red = new() { BackingValue = 0 };
+        FakeChannelMember green = new() { BackingValue = 0 };
+        FakeChannelMember blue = new() { BackingValue = 0 };
+
+        CompositeInstanceMember composite = MakeComposite(red, green, blue);
+
+        composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full);
+        composite.SetValue((1 << 16) | (2 << 8) | 3, SetPropertyCommitType.Full);
+
+        red.SetCallCount.ShouldBe(1);
+        green.SetCallCount.ShouldBe(1);
+        blue.SetCallCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void SetValue_ShouldRaiseAfterComposite_EvenWhenAChannelThrows()
     {
         // AfterComposite is where the consumer disposes the undo lock taken in BeforeComposite. If a
@@ -187,6 +231,8 @@ public class CompositeInstanceMemberTests
 
         public int SetCallCount { get; private set; }
 
+        public SetPropertyCommitType? LastCommitType { get; private set; }
+
         public override bool IsDefault
         {
             get => _isDefault;
@@ -206,6 +252,7 @@ public class CompositeInstanceMemberTests
             CustomSetPropertyEvent += (_, args) =>
             {
                 SetCallCount++;
+                LastCommitType = args.CommitType;
                 if (ThrowOnSet)
                 {
                     throw new InvalidOperationException("Simulated channel write failure.");
