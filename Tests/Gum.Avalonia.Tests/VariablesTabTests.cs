@@ -5,6 +5,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaDataUi;
@@ -212,6 +213,28 @@ public class VariablesTabTests
         display.CommitHexText();
         fixture.Color.ShouldBe(DrawingColor.FromArgb(128, 255, 128, 64));
         display.HexTextBox.Text.ShouldBe("FF8040");
+    }
+
+    [AvaloniaFact]
+    public void ColorDisplay_ShowsTheUntintedColor_WhenTheRowIsReadOnly()
+    {
+        // A read-only row (a variable reference drives it) disables the whole editor, and the
+        // chrome's disabled-button tint would then render the swatch as a color the variable does
+        // not have (issue #4942).
+        GumEditorFixture fixture = new GumEditorFixture();
+        ColorDisplay display = new ColorDisplay
+        {
+            InstanceMember = new InstanceMember(nameof(GumEditorFixture.Color), fixture) { IsReadOnly = true }
+        };
+        Window window = new Window { Content = display, Width = 400, Height = 300 };
+        window.Show();
+        window.UpdateLayout();
+
+        Button swatchButton = display.GetVisualDescendants().OfType<Button>().Single();
+        swatchButton.IsEffectivelyEnabled.ShouldBeFalse();
+        swatchButton.Opacity.ShouldBe(1);
+        display.Swatch.Opacity.ShouldBe(1);
+        ((ISolidColorBrush)display.Swatch.Background!).Color.ShouldBe(Color.FromRgb(10, 20, 30));
     }
 
     [AvaloniaFact]

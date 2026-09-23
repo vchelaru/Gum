@@ -339,6 +339,13 @@ public class ElementSaveDisplayer
         #endregion
     }
 
+    /// <summary>
+    /// Maps variable name to the right side of the reference assigning it, for every variable the
+    /// grid should show as reference-driven (read-only, with the assignment as subtext). Composite
+    /// lines are expanded first: <c>Color = Other.FillColor</c> is stored collapsed but applied as
+    /// Red/Green/Blue, and only the channel rows exist in the grid - without expanding here the
+    /// swatch stays editable and silently loses its value on the next apply (issue #4942).
+    /// </summary>
     private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave currentState, string variableListName)
     {
         Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
@@ -351,10 +358,17 @@ public class ElementSaveDisplayer
                 var assignment = item as string;
                 if (assignment?.Contains("=") == true)
                 {
-                    var indexOfEquals = assignment.IndexOf("=");
-                    var variableName = assignment.Substring(0, indexOfEquals).Trim();
-                    var rightSideEquals = assignment.Substring(indexOfEquals + 1).Trim();
-                    variablesSetThroughReference[variableName] = rightSideEquals;
+                    foreach (var expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(assignment, elementSave))
+                    {
+                        var indexOfEquals = expanded.IndexOf("=");
+                        if (indexOfEquals == -1)
+                        {
+                            continue;
+                        }
+                        var variableName = expanded.Substring(0, indexOfEquals).Trim();
+                        var rightSideEquals = expanded.Substring(indexOfEquals + 1).Trim();
+                        variablesSetThroughReference[variableName] = rightSideEquals;
+                    }
                 }
             }
         }
@@ -382,28 +396,34 @@ public class ElementSaveDisplayer
 
             if (variable?.ValueAsIList != null)
             {
+                var channelOwner = ObjectFinder.Self.GetElementSave(instanceWithExposedVariables);
+
                 foreach (string item in variable.ValueAsIList)
                 {
                     if(item?.StartsWith("//") == true)
                     {
                         continue;
                     }
-                    var indexOfEquals = item.IndexOf("=");
 
-                    if(indexOfEquals == -1)
+                    foreach (var expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(item, channelOwner))
                     {
-                        continue;
-                    }
+                        var indexOfEquals = expanded?.IndexOf("=") ?? -1;
 
-                    try
-                    {
-                        var variableName = instanceWithExposedVariables.Name + "." + item.Substring(0, indexOfEquals).Trim();
-                        var rightSideEquals = item.Substring(indexOfEquals + 1).Trim();
-                        variablesSetThroughReference[variableName] = rightSideEquals;
+                        if(indexOfEquals == -1)
+                        {
+                            continue;
+                        }
+
+                        try
+                        {
+                            var variableName = instanceWithExposedVariables.Name + "." + expanded.Substring(0, indexOfEquals).Trim();
+                            var rightSideEquals = expanded.Substring(indexOfEquals + 1).Trim();
+                            variablesSetThroughReference[variableName] = rightSideEquals;
+                        }
+                        // swallow this exception, anything could be typed in this text box, and we don't
+                        // want to crash here because of it.
+                        catch { }
                     }
-                    // swallow this exception, anything could be typed in this text box, and we don't
-                    // want to crash here because of it.
-                    catch { }
                 }
             }
         }

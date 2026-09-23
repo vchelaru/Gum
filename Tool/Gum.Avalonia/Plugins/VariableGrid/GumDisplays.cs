@@ -209,6 +209,9 @@ public class ColorDisplay : DataUiDisplayBase
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             Flyout = flyout,
         };
+        // The swatch is the value, so it keeps its exact color when a reference drives the variable
+        // and the row is disabled.
+        swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
         _hexTextBox = new TextBox { Width = 76, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(_hexTextBox, "Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored.");
@@ -244,6 +247,9 @@ public class ColorDisplay : DataUiDisplayBase
 
     /// <summary>The hex field, for tests.</summary>
     internal TextBox HexTextBox => _hexTextBox;
+
+    /// <summary>The color swatch, for tests.</summary>
+    internal Border Swatch => _swatch;
 
     /// <summary>The picker in the swatch's flyout, for tests.</summary>
     internal ColorView ColorView => _colorView;

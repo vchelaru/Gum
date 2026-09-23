@@ -53,6 +53,14 @@ public static class GumChromeStyles
     /// <summary>The class for a tree view whose rows keep the WPF 19px expander column rather than Fluent's 36px.</summary>
     public const string CompactTreeClass = "gumCompactTree";
 
+    /// <summary>
+    /// The class for a button whose content <em>is</em> the value being displayed rather than
+    /// chrome around it - the Variables tab's color swatch, say. A disabled button is tinted so it
+    /// reads as unavailable, which for these renders a value the variable does not hold, so they
+    /// keep their full opacity when disabled.
+    /// </summary>
+    public const string ValuePreviewButtonClass = "gumValuePreviewButton";
+
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
 
@@ -195,6 +203,10 @@ public static class GumChromeStyles
         new Style(selector => selector.OfType<Button>().Class(":disabled"))
         {
             Setters = { new Setter(Visual.OpacityProperty, 0.75) },
+        },
+        new Style(selector => selector.OfType<Button>().Class(ValuePreviewButtonClass).Class(":disabled"))
+        {
+            Setters = { new Setter(Visual.OpacityProperty, 1.0) },
         },
 
         new Style(selector => selector.OfType<Button>().Class(IconButtonClass))
