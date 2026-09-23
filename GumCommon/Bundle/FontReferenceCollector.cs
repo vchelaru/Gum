@@ -41,10 +41,18 @@ public class FontReferenceCollector
     /// Font-affecting properties whose <c>VariableReferences</c> row is branch-enumerated
     /// (all ternary branches collected, not just the one active now). See #4042.
     /// </summary>
+    /// <remarks>
+    /// This is every input to <see cref="BmfcSave.GetFontCacheFileNameFor"/>, which is what makes
+    /// two Texts need two baked atlases - <c>UseCustomFont</c> included, since it decides whether
+    /// <c>Font</c> or <c>CustomFontFile</c> is the identity. A property that reaches
+    /// <see cref="BuildBmfcSave"/> but not the cache name (the dropshadow offset and color, applied
+    /// at draw time) deliberately stays out: its branches all bake the same file. Anything added to
+    /// the cache name belongs here too, or only its currently-active branch gets pregenerated (#4936).
+    /// </remarks>
     private static readonly string[] FontAffectingVariableNames =
     {
         "Font", "FontSize", "OutlineThickness", "UseFontSmoothing", "IsItalic", "IsBold",
-        "CustomFontFile"
+        "UseCustomFont", "CustomFontFile", "HasDropshadow", "DropshadowBlur"
     };
 
     private readonly Func<InstanceSave, ElementSave?> _resolveInstanceElement;
