@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -22,17 +23,20 @@ public class ConvertToJsonLogic
     private readonly IConvertProjectToJsonService _convertService;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly IFileWatchIgnoreList _fileWatchIgnoreList;
 
     public ConvertToJsonLogic(
         IProjectState projectState,
         IConvertProjectToJsonService convertService,
         IFileCommands fileCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _projectState = projectState;
         _convertService = convertService;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
+        _fileWatchIgnoreList = fileWatchIgnoreList;
     }
 
     /// <summary>
@@ -100,6 +104,12 @@ public class ConvertToJsonLogic
         if (openProject == null || new FilePath(openProject) != new FilePath(result.ProjectFilePath))
         {
             return $"The JSON project did not open, so the original XML files were not moved to the {trashName}.";
+        }
+
+        // Gum is deleting these itself, so the file watcher must not react to them as external deletes.
+        foreach (FilePath file in result.ConvertedXmlFiles)
+        {
+            _fileWatchIgnoreList.IgnoreNextChangeUntil(file);
         }
 
         try

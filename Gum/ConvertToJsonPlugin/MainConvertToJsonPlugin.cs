@@ -37,7 +37,8 @@ internal class MainConvertToJsonPlugin : PluginBase
         IFileWatchIgnoreList fileWatchIgnoreList)
     {
         _convertToJsonLogic = new ConvertToJsonLogic(
-            projectState, new ConvertProjectToJsonService(fileWatchIgnoreList), fileCommands, dialogService);
+            projectState, new ConvertProjectToJsonService(fileWatchIgnoreList), fileCommands, dialogService,
+            fileWatchIgnoreList);
         _dialogService = dialogService;
     }
 

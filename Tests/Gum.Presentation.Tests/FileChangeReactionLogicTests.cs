@@ -113,7 +113,7 @@ public class FileChangeReactionLogicTests : BaseTestClass
             out Mock<IPluginManager> pluginManagerMock);
         fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(projectDirectory);
 
-        GumProjectSave project = new GumProjectSave();
+        GumProjectSave project = new GumProjectSave { FullFileName = Path.Combine(tempDir, "Project.gumj") };
         ComponentSave component = new ComponentSave { Name = "MyButton" };
         project.Components.Add(component);
         ObjectFinder.Self.GumProjectSave = project;
@@ -124,6 +124,64 @@ public class FileChangeReactionLogicTests : BaseTestClass
             component.IsSourceFileMissing.ShouldBeTrue();
             guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
             pluginManagerMock.Verify(p => p.ElementReloaded(component), Times.Once);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileDeleted_ShouldNotFlagElement_WhenDeletedFileIsTheOtherFormatsSibling()
+    {
+        // Issue #4926: after Convert to JSON trashes the old XML, each .gucx delete must not flag the
+        // element, whose source is now the .gucj.
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock);
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath("/proj/"));
+
+        GumProjectSave project = new GumProjectSave { FullFileName = "/proj/Project.gumj" };
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            sut.ReactToFileDeleted(new FilePath("/proj/Components/MyButton.gucx"));
+
+            component.IsSourceFileMissing.ShouldBeFalse();
+            guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Never);
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Never);
+        }
+        finally
+        {
+            ObjectFinder.Self.GumProjectSave = null;
+        }
+    }
+
+    [Fact]
+    public void ReactToFileChanged_ShouldNotReloadElement_WhenChangedFileIsTheOtherFormatsSibling()
+    {
+        // A leftover .gucx changing next to a JSON project must not reload the element, which is
+        // backed by its .gucj (issue #4926).
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out Mock<IFileCommands> fileCommandsMock,
+            out Mock<IPluginManager> pluginManagerMock,
+            out Mock<IProjectState> projectStateMock);
+        fileCommandsMock.Setup(f => f.ProjectDirectory).Returns(new FilePath("/proj/"));
+
+        GumProjectSave project = new GumProjectSave { FullFileName = "/proj/Project.gumj" };
+        ComponentSave component = new ComponentSave { Name = "MyButton" };
+        project.Components.Add(component);
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+        ObjectFinder.Self.GumProjectSave = project;
+        try
+        {
+            sut.ReactToFileChanged(new FilePath("/proj/Components/MyButton.gucx"));
+
+            pluginManagerMock.Verify(p => p.ElementReloaded(It.IsAny<ElementSave>()), Times.Never);
         }
         finally
         {

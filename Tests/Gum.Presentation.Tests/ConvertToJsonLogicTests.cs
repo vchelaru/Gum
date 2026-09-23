@@ -1,6 +1,7 @@
 using ConvertToJsonPlugin;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.Logic.FileWatch;
 using Gum.ProjectServices;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
@@ -24,13 +25,31 @@ public class ConvertToJsonLogicTests
     private readonly Mock<IConvertProjectToJsonService> _convertService = new();
     private readonly Mock<IFileCommands> _fileCommands = new();
     private readonly Mock<IDialogService> _dialogService = new();
+    private readonly Mock<IFileWatchIgnoreList> _fileWatchIgnoreList = new();
     private readonly ConvertToJsonLogic _logic;
+    private readonly List<FilePath> _ignoredBeforeRecycle = new();
     private string? _summary;
 
     public ConvertToJsonLogicTests()
     {
+        // Records which files the file watcher was told to ignore before anything was trashed, so a
+        // trashed .gucx isn't treated as an external delete (issue #4926).
+        bool recycled = false;
+        _fileCommands
+            .Setup(x => x.MoveToRecycleBin(It.IsAny<IReadOnlyList<FilePath>>()))
+            .Callback(() => recycled = true);
+        _fileWatchIgnoreList
+            .Setup(x => x.IgnoreNextChangeUntil(It.IsAny<FilePath>(), It.IsAny<DateTime?>()))
+            .Callback<FilePath, DateTime?>((file, _) =>
+            {
+                if (!recycled)
+                {
+                    _ignoredBeforeRecycle.Add(file);
+                }
+            });
         _logic = new ConvertToJsonLogic(
-            _projectState.Object, _convertService.Object, _fileCommands.Object, _dialogService.Object);
+            _projectState.Object, _convertService.Object, _fileCommands.Object, _dialogService.Object,
+            _fileWatchIgnoreList.Object);
     }
 
     [Fact]
@@ -155,6 +174,7 @@ public class ConvertToJsonLogicTests
         await _logic.ConvertCurrentProjectAsync();
 
         _fileCommands.Verify(x => x.MoveToRecycleBin(convertedXml), Times.Once);
+        _ignoredBeforeRecycle.ShouldBe(convertedXml);
         _summary.ShouldNotBeNull();
         _summary.ShouldContain("Moved 2 XML file(s)");
         _summary.ShouldContain("MyProject.gumj");
