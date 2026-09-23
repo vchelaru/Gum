@@ -484,7 +484,9 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
 }
 
 /// <summary>
-/// A list of strings edited as multi-line text, one entry per line, committed when focus leaves.
+/// A list of strings edited as multi-line text, one entry per line. Enter inserts a line; edits apply
+/// on focus loss, Ctrl+Enter, or the Apply button, which shows only while edits are unapplied. Escape
+/// reverts unapplied edits.
 /// </summary>
 public class StringListTextBoxDisplay : DataUiDisplayBase
 {
@@ -492,13 +494,13 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
     private readonly TextBlock _label;
     private readonly TextBox _textBox;
     private readonly TextBlock _hint;
-    private string _textAtFocus;
+    private string _appliedText;
 
     /// <summary>Builds the displayer.</summary>
     public StringListTextBoxDisplay()
     {
         _listLogic = new StringListLogic();
-        _textAtFocus = string.Empty;
+        _appliedText = string.Empty;
         _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4, 4, 4, 0), TextWrapping = TextWrapping.Wrap };
         _textBox = new TextBox
         {
@@ -508,26 +510,47 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
             TextWrapping = TextWrapping.NoWrap,
             VerticalContentAlignment = VerticalAlignment.Top,
         };
-        _textBox.GotFocus += (_, _) => _textAtFocus = _textBox.Text ?? string.Empty;
-        _textBox.LostFocus += (_, _) =>
+        _textBox.PropertyChanged += (_, e) =>
         {
-            // Compared against the text at focus rather than tracked through TextChanged, so a
-            // refresh's programmatic text never reads as a user edit (which would override an
-            // inherited value on the next focus loss).
-            if ((_textBox.Text ?? string.Empty) != _textAtFocus)
+            if (e.Property == TextBox.TextProperty)
             {
-                this.TrySetValueOnInstance();
+                RefreshApplyButton();
             }
         };
+        _textBox.LostFocus += (_, _) => Apply();
+        // Tunnel so Ctrl+Enter is handled before the text box inserts a line.
+        _textBox.AddHandler(KeyDownEvent, HandleTextBoxKeyDown, RoutingStrategies.Tunnel);
+
+        // Not focusable, so clicking it leaves the caret in the text box and Tab skips it.
+        ApplyButton = new Button
+        {
+            Content = "Apply",
+            Focusable = false,
+            IsTabStop = false,
+            IsVisible = false,
+            HorizontalAlignment = HorizontalAlignment.Right,
+            VerticalAlignment = VerticalAlignment.Bottom,
+            Margin = new Thickness(0, 0, 4, 4),
+        };
+        ToolTip.SetTip(ApplyButton, "Apply (Ctrl+Enter)");
+        ApplyButton.Click += (_, _) => Apply();
+
         _hint = CreateHintTextBlock();
+
+        // The button overlays the text box so showing it doesn't push the rows below.
+        Grid editorArea = new Grid();
+        editorArea.Children.Add(_textBox);
+        editorArea.Children.Add(ApplyButton);
 
         StackPanel panel = new StackPanel();
         panel.Children.Add(_label);
-        panel.Children.Add(_textBox);
+        panel.Children.Add(editorArea);
         panel.Children.Add(_hint);
         Content = panel;
-
     }
+
+    /// <summary>Applies unapplied edits; visible only while there are some.</summary>
+    public Button ApplyButton { get; }
 
     /// <summary>The text editor; the tool listens to its keys for go-to-definition.</summary>
     public TextBox EditorTextBox => _textBox;
@@ -576,9 +599,45 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
     {
         if (value is List<string> lines)
         {
-            _textBox.Text = _listLogic.JoinLines(lines);
+            // Set the baseline first so the text change this raises doesn't read as an edit.
+            _appliedText = _listLogic.JoinLines(lines);
+            _textBox.Text = _appliedText;
+            RefreshApplyButton();
         }
         return ApplyValueResult.Success;
+    }
+
+    private void Apply()
+    {
+        // Compared against the applied text rather than tracked through TextChanged, so a
+        // refresh's programmatic text never reads as a user edit (which would override an
+        // inherited value).
+        if ((_textBox.Text ?? string.Empty) != _appliedText)
+        {
+            this.TrySetValueOnInstance();
+            // The commit may rewrite the lines (reference expansion), which refreshes the text.
+            _appliedText = _textBox.Text ?? string.Empty;
+        }
+        RefreshApplyButton();
+    }
+
+    private void HandleTextBoxKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+        {
+            Apply();
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && (_textBox.Text ?? string.Empty) != _appliedText)
+        {
+            _textBox.Text = _appliedText;
+            e.Handled = true;
+        }
+    }
+
+    private void RefreshApplyButton()
+    {
+        ApplyButton.IsVisible = (_textBox.Text ?? string.Empty) != _appliedText;
     }
 }
 
