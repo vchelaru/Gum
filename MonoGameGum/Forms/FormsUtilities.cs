@@ -65,21 +65,38 @@ public class FormsUtilities
         FrameworkElement.MainCursor = cursor;
     }
 
-    static IInputReceiverKeyboard keyboard;
+    // Null only before InitializeDefaults and after Uninitialize; Update never runs in either window.
+    static IInputReceiverKeyboard? keyboard;
 
-    public static IInputReceiverKeyboard Keyboard => keyboard;
+    public static IInputReceiverKeyboard Keyboard => keyboard!;
 
     /// <summary>
-    /// Replaces the keyboard that <c>Update</c> feeds to the focused <see cref="IInputReceiver"/>
-    /// each frame, and keeps <see cref="FrameworkElement.MainKeyboard"/> in sync -- exactly as
-    /// <see cref="SetCursor"/> does for the cursor. Deliberately does not touch
-    /// <see cref="FrameworkElement.KeyboardsForUiControl"/>.
-    /// Note that <c>MonoGameGum.GumService.Keyboard</c> is an <c>as</c> cast to the concrete
-    /// <c>MonoGameGum.Input.Keyboard</c> type, so it returns null while a non-<c>Keyboard</c>
-    /// implementation (e.g. a custom or test keyboard) is installed here.
+    /// Replaces the keyboard that Forms reads each frame, for example with a replay driver or a
+    /// virtual keyboard.
     /// </summary>
+    /// <remarks>
+    /// This also sets <see cref="FrameworkElement.MainKeyboard"/> and swaps the new keyboard into
+    /// <see cref="FrameworkElement.KeyboardsForUiControl"/> wherever the old one was registered, so
+    /// neither needs to be updated separately. <c>GumService.Keyboard</c> returns only the built-in
+    /// <c>Keyboard</c> type, so it is null while a custom keyboard is installed.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException"><paramref name="keyboard"/> is null.</exception>
     public static void SetKeyboard(IInputReceiverKeyboard keyboard)
     {
+        if (keyboard == null)
+        {
+            throw new ArgumentNullException(nameof(keyboard));
+        }
+
+        var keyboardsForUiControl = FrameworkElement.KeyboardsForUiControl;
+        for (int i = 0; i < keyboardsForUiControl.Count; i++)
+        {
+            if (keyboardsForUiControl[i] == FormsUtilities.keyboard)
+            {
+                keyboardsForUiControl[i] = keyboard;
+            }
+        }
+
         FormsUtilities.keyboard = keyboard;
         FrameworkElement.MainKeyboard = keyboard;
     }
@@ -317,7 +334,7 @@ public class FormsUtilities
         double gameTimeSeconds = gameTime;
 #endif
         cursor.Activity(gameTimeSeconds);
-        keyboard.Activity(gameTimeSeconds);
+        keyboard!.Activity(gameTimeSeconds);
         UpdateGamepads(gameTimeSeconds);
         innerList.Clear();
 
@@ -425,7 +442,7 @@ public class FormsUtilities
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList,
             cursor,
-            keyboard,
+            keyboard!,
             gameTimeSeconds);
 
         _lastEventRoots.Clear();

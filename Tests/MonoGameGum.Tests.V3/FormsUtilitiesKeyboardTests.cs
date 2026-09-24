@@ -18,7 +18,7 @@ public class FormsUtilitiesKeyboardTests
     [Fact]
     public void SetKeyboard_InstallsInstanceOnFormsUtilitiesKeyboardAndFrameworkElementMainKeyboard()
     {
-        IInputReceiverKeyboard? priorKeyboard = FormsUtilities.Keyboard;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
         StubKeyboard stubKeyboard = new StubKeyboard();
 
         try
@@ -35,14 +35,92 @@ public class FormsUtilitiesKeyboardTests
     }
 
     [Fact]
+    public void SetKeyboard_Null_Throws()
+    {
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+
+        Should.Throw<ArgumentNullException>(() => FormsUtilities.SetKeyboard(null!));
+
+        FormsUtilities.Keyboard.ShouldBeSameAs(priorKeyboard);
+    }
+
+    [Fact]
+    public void SetKeyboard_WhenPreviousKeyboardIsInKeyboardsForUiControl_ReplacesIt()
+    {
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        StubKeyboard firstKeyboard = new StubKeyboard();
+        StubKeyboard secondKeyboard = new StubKeyboard();
+        StubKeyboard otherKeyboard = new StubKeyboard();
+
+        try
+        {
+            FormsUtilities.SetKeyboard(firstKeyboard);
+            FrameworkElement.KeyboardsForUiControl.Add(otherKeyboard);
+            FrameworkElement.KeyboardsForUiControl.Add(firstKeyboard);
+
+            FormsUtilities.SetKeyboard(secondKeyboard);
+
+            FrameworkElement.KeyboardsForUiControl.ShouldBe(
+                new IInputReceiverKeyboard[] { otherKeyboard, secondKeyboard });
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            FormsUtilities.SetKeyboard(priorKeyboard);
+        }
+    }
+
+    [Fact]
+    public void SetKeyboard_WhenPreviousKeyboardIsNotInKeyboardsForUiControl_DoesNotAddIt()
+    {
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        StubKeyboard stubKeyboard = new StubKeyboard();
+
+        try
+        {
+            FormsUtilities.SetKeyboard(stubKeyboard);
+
+            FrameworkElement.KeyboardsForUiControl.ShouldBeEmpty();
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            FormsUtilities.SetKeyboard(priorKeyboard);
+        }
+    }
+
+    [Fact]
+    public void UseKeyboardDefaults_AfterSetKeyboard_RegistersInstalledKeyboard()
+    {
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
+        StubKeyboard stubKeyboard = new StubKeyboard();
+
+        try
+        {
+            FormsUtilities.SetKeyboard(stubKeyboard);
+
+            global::Gum.GumService.Default.UseKeyboardDefaults();
+
+            FrameworkElement.KeyboardsForUiControl.ShouldBe(
+                new IInputReceiverKeyboard[] { stubKeyboard });
+        }
+        finally
+        {
+            FrameworkElement.KeyboardsForUiControl.Clear();
+            FormsUtilities.SetKeyboard(priorKeyboard);
+        }
+    }
+
+    [Fact]
     public void FocusedTextBox_AfterUpdate_ReceivesCharactersFromInstalledKeyboard()
     {
-        IInputReceiverKeyboard? priorKeyboard = FormsUtilities.Keyboard;
+        global::Gum.GumService gumService = global::Gum.GumService.Default;
+        IInputReceiverKeyboard priorKeyboard = FormsUtilities.Keyboard;
         StubKeyboard stubKeyboard = new StubKeyboard { StringTyped = "hi" };
 
         try
         {
-            GumService.Default.InitializeForTesting();
+            gumService.InitializeForTesting();
             FormsUtilities.SetKeyboard(stubKeyboard);
 
             TextBox textBox = new TextBox();
@@ -51,14 +129,14 @@ public class FormsUtilitiesKeyboardTests
             // CurrentInputReceiver directly, which cascades into OnGainFocus -> IsFocused = true).
             InteractiveGue.CurrentInputReceiver = textBox;
 
-            FormsUtilities.Update(null!, new GameTime(TimeSpan.Zero, TimeSpan.Zero), GumService.Default.Root);
+            FormsUtilities.Update(null!, new GameTime(TimeSpan.Zero, TimeSpan.Zero), gumService.Root);
 
             textBox.Text.ShouldBe("hi");
         }
         finally
         {
             InteractiveGue.CurrentInputReceiver = null;
-            GumService.Default.Root.Children.Clear();
+            gumService.Root.Children.Clear();
             FormsUtilities.SetKeyboard(priorKeyboard);
         }
     }
