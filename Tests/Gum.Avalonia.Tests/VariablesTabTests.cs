@@ -19,6 +19,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -65,10 +66,6 @@ public class VariablesTabTests
     public void PluginManager_LoadsTheSharedVariableGridPlugins()
     {
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
 
         Type[] loaded = pluginManager.Plugins.Select(plugin => plugin.GetType()).ToArray();
 
@@ -306,15 +303,6 @@ public class VariablesTabTests
     [AvaloniaFact]
     public void PropertyGridManager_FillsTheHeadsGridWithGumEditors_AndFiltersIt()
     {
-        // Startup order: plugins first, since the tool's standard-state refresh goes through them.
-        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
         AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
         // A fresh manager so this test owns its tab; the head's singleton is left alone.
@@ -372,44 +360,47 @@ public class VariablesTabTests
     }
 
     [AvaloniaFact]
-    public void ElementSelected_AloneShowsTheAddVariableButton()
+    public void AddingAComponent_RefreshesTheHeadsOwnVariablesTab()
     {
-        // Adding a component selects it through ISelectedState, which raises ElementSelected but no
-        // TreeNodeSelected (#4961). A fresh manager and plugin so this test owns its tab.
-        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
-        AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        // The whole gesture through the head's own singleton plugin and grid manager: adding a
+        // component selects it, which raises ElementSelected (and a state selection) but no
+        // TreeNodeSelected, and the tab fills and shows its Add Variable button (#4961).
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
-        PropertyGridManager sut = ActivatorUtilities.CreateInstance<PropertyGridManager>(Services);
-        sut.InitializeEarly();
-        AvaloniaPluginTab tab = tabManager.CenterBottom.Last(candidate => candidate.Title == "Variables");
-        MainVariableGridPlugin plugin = ActivatorUtilities.CreateInstance<MainVariableGridPlugin>(Services, sut);
-        plugin.StartUp();
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        PropertyGridManager gridManager = Services.GetRequiredService<PropertyGridManager>();
+        ProjectCommands projectCommands = Services.GetRequiredService<ProjectCommands>();
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        DataUiGrid grid = (DataUiGrid)((VariablesTabView)ToolStartup.VariablesTab.Content).VariablesGrid;
         projectManager.CreateNewProject();
-        ComponentSave component = new ComponentSave { Name = "NewComponent", BaseType = "Container" };
-        component.InitializeDefaultAndComponentVariables();
-        projectManager.GumProjectSave!.Components.Add(component);
+        // Adding autosaves, as in the tool; the project goes to a temp folder, not the user's.
+        string projectFolder = Path.Combine(Path.GetTempPath(), "GumAvaloniaTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(projectFolder);
+        projectManager.GumProjectSave!.FullFileName = Path.Combine(projectFolder, "Project.gumx");
+        ComponentSave component = new ComponentSave();
+        projectCommands.PrepareNewComponentSave(component, "AddedComponent");
         try
         {
-            selectedState.SelectedComponent = component;
-            sut.VariableViewModel.IsAddVariableButtonVisible.ShouldBeFalse();
+            // Whatever an earlier test selected; the grid starts empty for this one.
+            selectedState.SelectedElement = null;
+            gridManager.RefreshEntireGrid(force: true);
+            gridManager.VariableViewModel.ShowVariableGrid.ShouldBeFalse();
 
-            plugin.CallElementSelected(component);
+            projectCommands.AddComponent(component);
 
-            sut.VariableViewModel.IsAddVariableButtonVisible.ShouldBeTrue();
+            PluginContainer container = pluginManager.PluginContainers
+                .Single(pair => pair.Key is MainVariableGridPlugin).Value;
+            container.FailureException?.ToString().ShouldBeNull(container.FailureDetails);
+            container.IsEnabled.ShouldBeTrue();
+            selectedState.SelectedElement.ShouldBeSameAs(component);
+            gridManager.VariableViewModel.ShowVariableGrid.ShouldBeTrue();
+            gridManager.VariableViewModel.IsAddVariableButtonVisible.ShouldBeTrue();
+            ShownMemberNames(grid).ShouldContain("X");
         }
         finally
         {
             selectedState.SelectedElement = null;
             ObjectFinder.Self.GumProjectSave = null;
-            tabManager.RemoveTab(tab);
+            Directory.Delete(projectFolder, recursive: true);
         }
     }
 
@@ -418,14 +409,6 @@ public class VariablesTabTests
     {
         // Releasing a slider commits the color (one undo); the grid must not rebuild the row out
         // from under the open flyout (#4943).
-        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
         AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
         PropertyGridManager sut = ActivatorUtilities.CreateInstance<PropertyGridManager>(Services);

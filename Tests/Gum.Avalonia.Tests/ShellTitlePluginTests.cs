@@ -61,10 +61,6 @@ public class ShellTitlePluginTests
     private static ShellTitlePlugin GetPlugin()
     {
         PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
         return pluginManager.Plugins.OfType<ShellTitlePlugin>().Single();
     }
 }

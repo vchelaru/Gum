@@ -61,13 +61,6 @@ internal sealed class AnimationEditorHarness : IDisposable
         // that test's state, not later against this harness's project and selection.
         Dispatcher.UIThread.RunJobs();
         _pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!_pluginManager.IsInitialized)
-        {
-            _pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
 
         ProjectFolder = Path.Combine(Path.GetTempPath(), "GumAnimationEditor", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(ProjectFolder);

@@ -101,10 +101,6 @@ public class PluginHostTests
     public void PluginManager_LoadsThisHeadsBuiltInPlugins()
     {
         PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
 
         Type[] loaded = pluginManager.Plugins.Select(plugin => plugin.GetType()).ToArray();
 
@@ -121,11 +117,6 @@ public class PluginHostTests
     [AvaloniaFact]
     public void EveryTabASharedPluginAdds_ResolvesToAnAvaloniaView()
     {
-        PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
         AvaloniaTabManager tabs = TestAppBuilder.Services.GetRequiredService<AvaloniaTabManager>();
 
         string[] unresolved = tabs.AllTabs

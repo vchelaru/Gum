@@ -69,7 +69,9 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   the headless stub); save it as a PNG and read it to check what a view actually drew.
 - A window that renders and hit-tests nothing for a whole test (a click that "did not land") is
   Avalonia 11.3's headless host racing a finalizer on the lazily created `Dispatcher.UIThread`
-  during per-test setup; about one test in a hundred. Rerun it. Details and the harness's
+  during per-test setup; about one test in a hundred. Rerun it. Classify it from the failure message
+  and rerun that one test, never the suite: a repeated full-suite run, or a baseline run on `main`
+  for comparison, costs minutes and tells you nothing the message doesn't. Details and the harness's
   fail-fast check: `Tests/Gum.Avalonia.Tests/Animations/README.md`. Never add thread-pool work
   that reaches into Avalonia (timers, continuations) to a test or a plugin's StartUp.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame,
