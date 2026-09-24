@@ -1162,6 +1162,13 @@ public interface IInputReceiverKeyboard
     bool IsAltDown { get; }
 
     /// <summary>
+    /// Whether the macOS Command key is held. Text controls accept it in place of Ctrl for the clipboard and
+    /// select-all shortcuts (Command+C/X/V/A), which is where macOS users press them. Defaults to false, so
+    /// runtimes that do not report Command keep Ctrl-only shortcuts.
+    /// </summary>
+    bool IsCommandDown => false;
+
+    /// <summary>
     /// Returns the keys typed this frame in the shared <see cref="Gum.Forms.Input.Keys"/>
     /// space. Implementations must translate from any native key type to Gum/XNA values
     /// before yielding.

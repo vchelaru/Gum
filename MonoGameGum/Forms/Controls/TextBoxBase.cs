@@ -800,8 +800,16 @@ public abstract class TextBoxBase :
     /// <param name="isShiftDown"></param>
     /// <param name="isAltDown"></param>
     /// <param name="isCtrlDown"></param>
-    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown)
+    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown) =>
+        HandleKeyDown(key, isShiftDown, isAltDown, isCtrlDown, isCommandDown: false);
+
+    /// <summary>
+    /// As <see cref="HandleKeyDown(Keys, bool, bool, bool)"/>, with the macOS Command key, which stands in for Ctrl
+    /// in the clipboard and select-all shortcuts only. Word navigation and deletion stay on Ctrl.
+    /// </summary>
+    public void HandleKeyDown(Keys key, bool isShiftDown, bool isAltDown, bool isCtrlDown, bool isCommandDown)
     {
+        var isShortcutDown = isCtrlDown || isCommandDown;
         //////////////////////////Early Out////////////////////////
         if (!isFocused) return;
         /////////////////////////End Early Out/////////////////////
@@ -931,7 +939,7 @@ public abstract class TextBoxBase :
                 break;
             case Keys.C:
                     
-                if (isCtrlDown)
+                if (isShortcutDown)
                 {
                     HandleCopy();
                 }
@@ -939,7 +947,7 @@ public abstract class TextBoxBase :
             case Keys.X:
                 if (!IsReadOnly)
                 {
-                    if (isCtrlDown)
+                    if (isShortcutDown)
                     {
                         HandleCut();
                     }
@@ -948,7 +956,7 @@ public abstract class TextBoxBase :
             case Keys.V:
                 if (!IsReadOnly)
                 {
-                    if (isCtrlDown)
+                    if (isShortcutDown)
                     {
                         HandlePaste();
                     }
@@ -956,7 +964,7 @@ public abstract class TextBoxBase :
                 break;
             case Keys.A:
 
-                if(isCtrlDown)
+                if(isShortcutDown)
                 {
                     SelectAll();
                 }
@@ -1164,6 +1172,7 @@ public abstract class TextBoxBase :
 
         var shift = keyboard.IsShiftDown;
         var ctrl = keyboard.IsCtrlDown;
+        var command = keyboard.IsCommandDown;
         var alt = keyboard.IsAltDown;
 
 
@@ -1177,7 +1186,7 @@ public abstract class TextBoxBase :
         //   Situations: LEFT, HOME, END, BACK (Backspace), RIGHT, UP, DOWN, DELETE, CTRL+C, CTRL+X, CTRL+V, CTRL+A
         foreach (Keys key in keyboard.KeysTyped)
         {
-            HandleKeyDown(key, shift, alt, ctrl);
+            HandleKeyDown(key, shift, alt, ctrl, command);
         }
 
         // String of letters typed and captured via the TextInput() Monogame event
