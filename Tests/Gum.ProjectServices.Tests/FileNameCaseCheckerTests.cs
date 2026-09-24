@@ -45,4 +45,48 @@ public class FileNameCaseCheckerTests : IDisposable
 
         actual.ShouldBeNull();
     }
+
+    [Fact]
+    public void FindCaseMismatch_SeesAFileRenamedAfterAnEarlierCheck()
+    {
+        FileNameCaseChecker checker = new FileNameCaseChecker();
+        checker.FindCaseMismatch(_root, "Textures/hero.png").ShouldBeNull();
+
+        File.Move(Path.Combine(_root, "Textures", "hero.png"), Path.Combine(_root, "Textures", "Hero.png"));
+
+        checker.FindCaseMismatch(_root, "Textures/hero.png").ShouldBe("Textures/Hero.png");
+    }
+
+    [Fact]
+    public void FindCaseMismatch_ReusesAListing_WhileItsDirectoryIsUnchanged()
+    {
+        string textures = Path.Combine(_root, "Textures");
+        DateTime unchangedSince = DateTime.UtcNow.AddMinutes(-1);
+        Directory.SetLastWriteTimeUtc(textures, unchangedSince);
+        FileNameCaseChecker checker = new FileNameCaseChecker();
+        checker.FindCaseMismatch(_root, "Textures/Other.png").ShouldBeNull();
+
+        // A file added without the directory's last-write time moving is invisible to a cached listing.
+        File.WriteAllText(Path.Combine(textures, "other.png"), string.Empty);
+        Directory.SetLastWriteTimeUtc(textures, unchangedSince);
+
+        checker.FindCaseMismatch(_root, "Textures/Other.png").ShouldBeNull();
+    }
+
+    [Fact]
+    public void FindCaseMismatch_RereadsAListing_TakenTooSoonAfterItsDirectoryChanged()
+    {
+        // A coarse file-system clock can give a change made in the same tick as the listing an
+        // unchanged last-write time, so a listing taken that soon is not trusted.
+        string textures = Path.Combine(_root, "Textures");
+        DateTime changedJustNow = DateTime.UtcNow;
+        Directory.SetLastWriteTimeUtc(textures, changedJustNow);
+        FileNameCaseChecker checker = new FileNameCaseChecker();
+        checker.FindCaseMismatch(_root, "Textures/Other.png").ShouldBeNull();
+
+        File.WriteAllText(Path.Combine(textures, "other.png"), string.Empty);
+        Directory.SetLastWriteTimeUtc(textures, changedJustNow);
+
+        checker.FindCaseMismatch(_root, "Textures/Other.png").ShouldBe("Textures/other.png");
+    }
 }

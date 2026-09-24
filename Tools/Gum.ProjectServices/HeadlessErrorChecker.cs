@@ -35,12 +35,12 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     private readonly ITypeResolver _typeResolver;
     private readonly List<IAdditionalErrorSource> _additionalErrorSources;
     private readonly Dictionary<string, Type?> _enumTypesByName;
+    // Shared across calls so a check doesn't re-list every directory an element references.
+    private readonly IFileNameCaseChecker _caseChecker;
 
     public HeadlessErrorChecker(ITypeResolver typeResolver)
+        : this(typeResolver, Array.Empty<IAdditionalErrorSource>())
     {
-        _typeResolver = typeResolver;
-        _additionalErrorSources = new List<IAdditionalErrorSource>();
-        _enumTypesByName = new Dictionary<string, Type?>();
     }
 
     public HeadlessErrorChecker(ITypeResolver typeResolver, IEnumerable<IAdditionalErrorSource> additionalErrorSources)
@@ -48,6 +48,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         _typeResolver = typeResolver;
         _additionalErrorSources = new List<IAdditionalErrorSource>(additionalErrorSources);
         _enumTypesByName = new Dictionary<string, Type?>();
+        _caseChecker = new FileNameCaseChecker();
     }
 
     /// <inheritdoc/>
@@ -530,7 +531,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// comment in ElementReference.ToElementSave), because saving the element is exactly what
     /// recreates the missing file.
     /// </summary>
-    private static List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element, GumProjectSave project)
+    private List<ErrorResult> GetMissingSourceFileErrorsFor(ElementSave element, GumProjectSave project)
     {
         var errors = new List<ErrorResult>();
 
@@ -538,7 +539,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
             element.GetFileExtension(GumProjectSave.IsJsonFormat(project?.FullFileName ?? ""));
 
         // A file that exists under a different case is GUM0008, whether or not this file system found it.
-        if (TryGetCaseMismatchError(element, project, element.Name, expectedRelativePath, new FileNameCaseChecker(), out var caseMismatch))
+        if (TryGetCaseMismatchError(element, project, element.Name, expectedRelativePath, _caseChecker, out var caseMismatch))
         {
             errors.Add(caseMismatch);
             return errors;
@@ -576,7 +577,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
     /// generation for that element - the same reasoning <see cref="GetAchxOriginErrorsFor"/>
     /// already uses for its content-drift warning.
     /// </summary>
-    private static List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project)
+    private List<ErrorResult> GetMissingExternalFileErrorsFor(ElementSave element, GumProjectSave project)
     {
         var errors = new List<ErrorResult>();
 
@@ -588,14 +589,13 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         var projectRootDirectory = FileManager.GetDirectory(project.FullFileName);
         var walker = new GumProjectDependencyWalker();
         var result = walker.Walk(project, projectRootDirectory, GumBundleInclusion.ExternalFiles, element);
-        var caseChecker = new FileNameCaseChecker();
         // A case-sensitive file system lists a mismatched file as missing and may also include it;
         // one GUM0008 per path, attributed to the instance when the walker names one.
         var caseMismatchPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var warning in result.MissingFiles)
         {
-            if (TryGetCaseMismatchError(element, project, warning.ReferencedFromElementName, warning.ReferencedPath, caseChecker, out var caseMismatch))
+            if (TryGetCaseMismatchError(element, project, warning.ReferencedFromElementName, warning.ReferencedPath, _caseChecker, out var caseMismatch))
             {
                 if (caseMismatchPaths.Add(warning.ReferencedPath))
                 {
@@ -618,7 +618,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         foreach (var includedFile in result.ExternalFiles.Concat(result.FontCacheFiles))
         {
             if (!caseMismatchPaths.Contains(includedFile)
-                && TryGetCaseMismatchError(element, project, element.Name, includedFile, caseChecker, out var caseMismatch))
+                && TryGetCaseMismatchError(element, project, element.Name, includedFile, _caseChecker, out var caseMismatch))
             {
                 caseMismatchPaths.Add(includedFile);
                 errors.Add(caseMismatch);
