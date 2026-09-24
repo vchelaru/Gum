@@ -413,6 +413,64 @@ public class VariablesTabTests
         }
     }
 
+    [AvaloniaFact]
+    public void ColorFlyout_StaysOpen_WhenASliderDragIsCommitted()
+    {
+        // Releasing a slider commits the color (one undo); the grid must not rebuild the row out
+        // from under the open flyout (#4943).
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        if (!pluginManager.IsInitialized)
+        {
+            pluginManager.Initialize();
+        }
+        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
+        StandardElementsManager.Self.Initialize();
+        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
+        AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
+        PropertyGridManager sut = ActivatorUtilities.CreateInstance<PropertyGridManager>(Services);
+        sut.InitializeEarly();
+        AvaloniaPluginTab tab = tabManager.CenterBottom.Last(candidate => candidate.Title == "Variables");
+        MainVariableGridPlugin plugin = ActivatorUtilities.CreateInstance<MainVariableGridPlugin>(Services, sut);
+        plugin.StartUp();
+        VariablesTabView view = (VariablesTabView)tab.Content;
+        Window window = new Window { Content = view, Width = 500, Height = 1400 };
+        window.Show();
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        projectManager.CreateNewProject();
+        StandardElementSave text = projectManager.GumProjectSave!.StandardElements.First(element => element.Name == "Text");
+        try
+        {
+            selectedState.SelectedElement = text;
+            plugin.CallElementSelected(text);
+            sut.RefreshEntireGrid(force: true);
+            window.UpdateLayout();
+            DataUiGrid grid = (DataUiGrid)view.VariablesGrid;
+            ColorDisplay display = grid.LiveContainers.Select(row => row.Displayer).OfType<ColorDisplay>().First();
+            Button swatchButton = display.GetVisualDescendants().OfType<Button>().Single();
+            swatchButton.Flyout!.ShowAt(swatchButton);
+
+            display.ColorPicker.ChannelSliders[0].Color = global::Avalonia.Media.Color.FromRgb(12, 255, 255);
+            display.CommitPendingFull();
+            // The composite's full commit asks the head's grid for a refresh; this test's
+            // manager owns its own tab, so it is refreshed directly.
+            sut.RefreshEntireGrid(force: false);
+            Dispatcher.UIThread.RunJobs();
+            window.UpdateLayout();
+
+            grid.LiveContainers.Select(row => row.Displayer).ShouldContain(display);
+            swatchButton.Flyout.IsOpen.ShouldBeTrue();
+            swatchButton.Flyout.Hide();
+        }
+        finally
+        {
+            selectedState.SelectedElement = null;
+            ObjectFinder.Self.GumProjectSave = null;
+            window.Close();
+            tabManager.RemoveTab(tab);
+        }
+    }
+
     private static List<string> ShownMemberNames(DataUiGrid grid) =>
         grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
 }

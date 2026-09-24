@@ -160,6 +160,29 @@ public class PropertyGridManagerReconcileCategoriesTests : BaseTestClass
         gridCategories[0].ShouldBeSameAs(oldCategory);
     }
 
+    [Fact]
+    public void ReconcileCategories_UnchangedCategoriesInPlace_RaiseNoCollectionChanges()
+    {
+        // Removing and re-inserting a reused category tears down every row the view built for it,
+        // closing any open editor flyout (#4943).
+        MemberCategory position = MakeCategory("Position", new InstanceMember { Name = "X" });
+        MemberCategory text = MakeCategory("Text", new InstanceMember { Name = "Text" });
+        System.Collections.ObjectModel.ObservableCollection<MemberCategory> gridCategories =
+            new System.Collections.ObjectModel.ObservableCollection<MemberCategory> { position, text };
+        int changes = 0;
+        gridCategories.CollectionChanged += (_, _) => changes++;
+        List<MemberCategory> newCategories = new List<MemberCategory>
+        {
+            MakeCategory("Position", new InstanceMember { Name = "X" }),
+            MakeCategory("Text", new InstanceMember { Name = "Text" })
+        };
+
+        PropertyGridManager.ReconcileCategories(gridCategories, newCategories, instanceIdentityChanged: false);
+
+        changes.ShouldBe(0);
+        gridCategories.ShouldBe(new[] { position, text });
+    }
+
     private static MemberCategory MakeCategory(string name, params InstanceMember[] members)
     {
         MemberCategory category = new MemberCategory { Name = name };
