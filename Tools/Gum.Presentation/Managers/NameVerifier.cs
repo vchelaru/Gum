@@ -339,7 +339,10 @@ public class NameVerifier : INameVerifier
             // there's a variable but we shouldn't consider it
             // unless it's "Active" - inactive variables may be
             // leftovers from a type change
-            if(existingVariable != null && elementSave != null)
+            // A state can hold its own copy of the edited variable, so match by name as well as by reference.
+            var isVariableBeingEdited = variableSave != null && existingVariable != null &&
+                (existingVariable == variableSave || existingVariable.Name == variableSave.Name);
+            if(existingVariable != null && elementSave != null && !isVariableBeingEdited)
             {
                 var isActive = _variableSaveLogic.GetIfVariableIsActive(existingVariable,
                     elementSave, null);
