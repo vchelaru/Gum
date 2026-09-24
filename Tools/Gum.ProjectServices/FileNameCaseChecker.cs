@@ -22,15 +22,22 @@ public interface IFileNameCaseChecker
 }
 
 /// <inheritdoc/>
-/// <remarks>Directory listings are cached for the life of the instance, so create one per check pass.</remarks>
+/// <remarks>
+/// Directory listings are cached for the life of the instance and re-read when a directory's
+/// last-write time changes, so one instance can serve every check (issue #4950).
+/// </remarks>
 public class FileNameCaseChecker : IFileNameCaseChecker
 {
-    private readonly Dictionary<string, string[]?> _listings;
+    // Wider than the coarsest common file-system timestamp (FAT's 2 seconds): a directory changed
+    // this close to its listing may keep the same last-write time, so the listing is not reused.
+    private static readonly TimeSpan UntrustedListingAge = TimeSpan.FromSeconds(3);
+
+    private readonly Dictionary<string, Listing> _listings;
 
     /// <summary>Creates a checker with an empty listing cache.</summary>
     public FileNameCaseChecker()
     {
-        _listings = new Dictionary<string, string[]?>(StringComparer.Ordinal);
+        _listings = new Dictionary<string, Listing>(StringComparer.Ordinal);
     }
 
     /// <inheritdoc/>
@@ -81,13 +88,22 @@ public class FileNameCaseChecker : IFileNameCaseChecker
 
     private string[]? ListNames(string directory)
     {
-        if (!_listings.TryGetValue(directory, out string[]? names))
+        // A missing directory reports a fixed placeholder time, which changes once it is created.
+        DateTime lastWriteUtc = Directory.GetLastWriteTimeUtc(directory);
+        if (_listings.TryGetValue(directory, out Listing? cached)
+            && cached.LastWriteUtc == lastWriteUtc
+            && cached.ListedAtUtc - lastWriteUtc > UntrustedListingAge)
         {
-            names = Directory.Exists(directory)
-                ? Directory.EnumerateFileSystemEntries(directory).Select(Path.GetFileName).OfType<string>().ToArray()
-                : null;
-            _listings[directory] = names;
+            return cached.Names;
         }
+
+        DateTime listedAtUtc = DateTime.UtcNow;
+        string[]? names = Directory.Exists(directory)
+            ? Directory.EnumerateFileSystemEntries(directory).Select(Path.GetFileName).OfType<string>().ToArray()
+            : null;
+        _listings[directory] = new Listing(lastWriteUtc, listedAtUtc, names);
         return names;
     }
+
+    private sealed record Listing(DateTime LastWriteUtc, DateTime ListedAtUtc, string[]? Names);
 }

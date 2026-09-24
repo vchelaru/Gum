@@ -16,34 +16,26 @@ Two tiers of error detection, merged into one display.
 ## Error Pipeline
 
 ```
-User action (e.g. InstanceAdd, VariableSet, Undo)
+Plugin notification (VariableSet, InstanceAdd, StateAdd, Undo, ...)
     ↓
-MainTreeViewPlugin → RefreshErrorIndicatorsForElement(element)
+MainErrorsPlugin or MainTreeViewPlugin (never both for one notification)
     ↓
-ErrorChecker.GetErrorsFor(element, project)
-    ↓
-ElementTreeViewManager.UpdateErrorIndicatorsForElement()
-    └─ Swaps icon to ExclamationIndex (6) if errors exist
-
-SEPARATELY — Errors tab:
-MainErrorsPlugin → UpdateErrorsForElement() or HandleErrorRefreshRequest()
-    ↓
-ErrorChecker.GetErrorsFor(element, project)
-    ↓
-AllErrorsViewModel.Errors (ObservableCollection) → ErrorDisplay.xaml ListBox
+ErrorChecker.GetErrorsFor(element, project) → raises IErrorChecker.ErrorsChecked
+    ├─ MainErrorsPlugin: fills AllErrorsViewModel.Errors (the Errors tab)
+    └─ MainTreeViewPlugin.HandleErrorsChecked → ElementTreeViewManager.UpdateErrorIndicatorsForElement
 ```
 
-The tree icon refresh and the Errors tab refresh are independent. Both call `ErrorChecker.GetErrorsFor` but are triggered separately.
+The tree's "!" follows every full check through `ErrorsChecked`, including the Errors tab's.
 
 ## Adding New Error Checks
 
-**Core check** (missing references, structural problems): Add it to `HeadlessErrorChecker.GetErrorsForInternal` in `Gum.ProjectServices`, **not** the tool's `Gum/Managers/ErrorChecker.cs`. The tool's checker delegates to the headless one (and converts `ErrorResult` → `ErrorViewModel`); putting checks in the headless layer means both the tool's Errors tab (per-selected-element refresh) and `gumcli check` (whole-project pass via `GetAllErrors`) surface them automatically. Pattern: iterate states/instances, emit `new ErrorResult { ElementName = ..., Message = ..., Code = "GUM00XX", Severity = ... }`. Register the code in `ErrorDocsRegistry` to get a help URL.
+**Core check** (missing references, structural problems): Add it to `HeadlessErrorChecker.GetErrorsForInternal` in `Gum.ProjectServices`, **not** the tool's `Tools/Gum.Presentation/Managers/ErrorChecker.cs`. The tool's checker delegates to the headless one (and converts `ErrorResult` → `ErrorViewModel`); putting checks in the headless layer means both the tool's Errors tab (per-selected-element refresh) and `gumcli check` (whole-project pass via `GetAllErrors`) surface them automatically. Pattern: iterate states/instances, emit `new ErrorResult { ElementName = ..., Message = ..., Code = "GUM00XX", Severity = ... }`. Register the code in `ErrorDocsRegistry` to get a help URL.
 
 **Plugin check** (feature-specific, tool-side only): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each. Plugin checks only show in the tool — the CLI doesn't load plugins. If the check should fire in CI / pre-commit, use the headless path above instead.
 
 **Fixable errors**: set `ActionName` and `ActionCommand` on the `ErrorViewModel` to render a button beside the row that resolves the error in place (`HasAction` drives its visibility). An action that destroys anything unrecoverable still owes the user a confirmation before it runs.
 
-**Triggering refresh**: Send `RequestErrorRefreshMessage` via messenger to refresh the Errors tab list. Tree icon refresh is driven by existing plugin event subscriptions in `MainTreeViewPlugin`.
+**Triggering refresh**: Send `RequestErrorRefreshMessage` via messenger; the Errors tab re-checks the selected element and the tree icon follows.
 
 ## Current Core Checks (ErrorChecker)
 
@@ -61,13 +53,14 @@ The tree icon refresh and the Errors tab refresh are independent. Both call `Err
 
 | File | Purpose |
 |------|---------|
-| `Gum/Managers/ErrorChecker.cs` | All core error checks |
+| `Tools/Gum.ProjectServices/HeadlessErrorChecker.cs` | All core error checks |
+| `Tools/Gum.Presentation/Managers/ErrorChecker.cs` | Tool wrapper: headless checks + plugin checks; raises `ErrorsChecked` |
 | `Tools/Gum.Presentation/Managers/ErrorViewModel.cs` | Data model (`Message`, `OwnerPlugin` — `object?`, headless `Gum.Presentation`, ADR-0005) |
-| `Gum/Managers/IErrorChecker.cs` | Interface |
-| `Gum/Plugins/InternalPlugins/Errors/MainErrorsPlugin.cs` | Errors tab plugin; handles `RequestErrorRefreshMessage` |
+| `Tools/Gum.Presentation/Plugins/InternalPlugins/Errors/MainErrorsPlugin.cs` | Errors tab plugin; handles `RequestErrorRefreshMessage` |
 | `Tools/Gum.Presentation/Plugins/InternalPlugins/Errors/AllErrorsViewModel.cs` | ObservableCollection of errors; `CountDescription` for tab header (headless `Gum.Presentation`, ADR-0005) |
-| `Gum/Plugins/InternalPlugins/TreeView/ElementTreeViewManager.cs` | `UpdateErrorIndicatorsForElement`; `ExclamationIndex = 6` |
-| `Gum/Messages/RequestErrorRefreshMessage.cs` | Message to force Errors tab refresh |
+| `Tool/TreeViewPlugin.Core/MainTreeViewPlugin.cs` | Tree "!" indicator; checks only on notifications the Errors tab doesn't |
+| `Tool/TreeViewPlugin.Core/ElementTreeViewManager.cs` | `UpdateErrorIndicatorsForElement` |
+| `Tools/Gum.Presentation/Messages/RequestErrorRefreshMessage.cs` | Message to force an error refresh |
 | `Tests/Gum.Presentation.Tests/Managers/ErrorCheckerTests.cs` | Unit tests for ErrorChecker |
 
 ## Element Reload and Errors
@@ -78,7 +71,9 @@ Do **not** rely on `ElementSelected` alone for error refresh after reload: the r
 
 ## Non-Obvious Behaviors
 
-**Two separate refreshes**: The "!" icon in the tree and the Errors tab list are populated independently. Changing `ErrorChecker` automatically affects both, but only if the right events trigger both refresh paths.
+**One check per notification**: a check walks the element's file references and reads the disk, so a notification triggers a check in only one plugin. A new refresh trigger for the selected element goes in `MainErrorsPlugin`; the tree picks up the result. The tree only checks where the Errors tab doesn't (states, categories, undo, behavior instances, all elements on project load).
+
+**Case-check listings are cached**: `HeadlessErrorChecker` keeps one `FileNameCaseChecker` for its lifetime. It re-reads a directory only when that directory's last-write time changes, so a new GUM0008 check doesn't need its own `FileNameCaseChecker`.
 
 **Cache wrapping**: `ErrorChecker.GetErrorsFor` wraps its checks in `ObjectFinder.Self.EnableCache()` / `DisableCache()`. New checks added inside the method benefit from this automatically.
 

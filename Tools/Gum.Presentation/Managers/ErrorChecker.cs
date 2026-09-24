@@ -2,6 +2,7 @@ using Gum.DataTypes;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices;
+using System;
 using System.Collections.Generic;
 
 namespace Gum.Managers;
@@ -25,6 +26,9 @@ public class ErrorChecker : IErrorChecker
         _pluginManager = pluginManager;
         _errorDocsRegistry = errorDocsRegistry;
     }
+
+    /// <inheritdoc/>
+    public event Action<ElementSave, ErrorViewModel[]>? ErrorsChecked;
 
     public ErrorViewModel[] GetErrorsFor(ElementSave? element, GumProjectSave project)
     {
@@ -50,6 +54,10 @@ public class ErrorChecker : IErrorChecker
             }
 
             ApplyDefaultElementName(list, element);
+
+            ErrorViewModel[] errors = list.ToArray();
+            ErrorsChecked?.Invoke(element, errors);
+            return errors;
         }
 
         return list.ToArray();

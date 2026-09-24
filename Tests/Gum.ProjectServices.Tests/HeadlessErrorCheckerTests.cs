@@ -1199,6 +1199,45 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         }
     }
 
+    [Fact]
+    public void GetErrorsFor_ReusesDirectoryListingsAcrossCalls_WhileTheDirectoryIsUnchanged()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), "GumErrorChecker_" + Guid.NewGuid().ToString("N"));
+        string texturesDirectory = Path.Combine(tempDirectory, "Textures");
+        Directory.CreateDirectory(texturesDirectory);
+        try
+        {
+            Project.FullFileName = Path.Combine(tempDirectory, "Project.gumx");
+            ComponentSave component = new ComponentSave { Name = "HeroHolder" };
+            component.Instances.Add(new InstanceSave { Name = "MySprite", BaseType = "Sprite" });
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+            defaultState.Variables.Add(new VariableSave
+            {
+                Name = "MySprite.SourceFile",
+                Value = "Textures/Hero.png",
+                Type = "string",
+                IsFile = true,
+            });
+            component.States.Add(defaultState);
+            Project.Components.Add(component);
+            DateTime unchangedSince = DateTime.UtcNow.AddMinutes(-1);
+            Directory.SetLastWriteTimeUtc(texturesDirectory, unchangedSince);
+            _sut.GetErrorsFor(component, Project);
+
+            // A file added without the directory's last-write time moving is invisible to a
+            // listing kept from the first call, so no case mismatch is reported.
+            File.WriteAllText(Path.Combine(texturesDirectory, "hero.png"), string.Empty);
+            Directory.SetLastWriteTimeUtc(texturesDirectory, unchangedSince);
+            IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+            errors.ShouldNotContain(e => e.Code == "GUM0008");
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     #endregion
 
     #region GUM0007 — Enum variable value is not defined

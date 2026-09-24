@@ -1,6 +1,7 @@
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices;
 using Moq;
 using Shouldly;
@@ -86,5 +87,35 @@ public class ErrorCheckerTests : BaseTestClass
         ErrorViewModel[] errors = sut.GetErrorsFor(component, project);
 
         errors.ShouldContain(e => e.Message == "plugin error" && e.ElementName == "SomeComponent");
+    }
+
+    [Fact]
+    public void GetErrorsFor_RaisesErrorsChecked_WithTheElementsErrors()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave component = new ComponentSave { Name = "DerivedComponent", BaseType = "NonExistentBase" };
+        project.Components.Add(component);
+        List<(ElementSave, ErrorViewModel[])> raised = new List<(ElementSave, ErrorViewModel[])>();
+        _sut.ErrorsChecked += (element, errors) => raised.Add((element, errors));
+
+        ErrorViewModel[] returned = _sut.GetErrorsFor(component, project);
+
+        (ElementSave checkedElement, ErrorViewModel[] reported) = raised.ShouldHaveSingleItem();
+        checkedElement.ShouldBe(component);
+        reported.ShouldBe(returned);
+        reported.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_DoesNotRaiseErrorsChecked_ForOnePluginsErrors()
+    {
+        ComponentSave component = new ComponentSave { Name = "SomeComponent" };
+        int raisedCount = 0;
+        _sut.ErrorsChecked += (_, _) => raisedCount++;
+
+        _sut.GetErrorsFor(component, new Mock<PluginBase>().Object);
+
+        raisedCount.ShouldBe(0);
     }
 }
