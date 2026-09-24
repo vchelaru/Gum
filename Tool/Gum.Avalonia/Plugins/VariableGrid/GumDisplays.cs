@@ -361,7 +361,7 @@ public class ColorDisplay : DataUiDisplayBase
         if (TryGetValueOnUi(out object? value) == ApplyValueResult.Success &&
             this.TrySetValueOnInstance(value!, commitType) == ApplyValueResult.NotSupported)
         {
-            IsEnabled = false;
+            SetIsEditable(false);
         }
         _isSetting = false;
     }
@@ -519,7 +519,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
             TrySetValueOnUi(valueOnInstance);
         }
         _label.Text = InstanceMember.DisplayName;
-        IsEnabled = !InstanceMember.IsReadOnly;
+        SetIsEditable(!InstanceMember.IsReadOnly);
         RefreshHint(_hint);
         RefreshBackgrounds();
     }

@@ -253,13 +253,13 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     {
         if (_lastApplyValueResult == ApplyValueResult.NotSupported || InstanceMember?.IsReadOnly == true)
         {
-            IsEnabled = false;
+            SetIsEditable(false);
             return;
         }
 
         // A null nullable value keeps the field disabled until "Is Null" is cleared.
         _textBox.IsEnabled = !IsDisplayedTypeNullable() || forceNullableEnable || valueOnInstance != null;
-        IsEnabled = true;
+        SetIsEditable(true);
     }
 
     private void HandleTextBoxLostFocus(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)

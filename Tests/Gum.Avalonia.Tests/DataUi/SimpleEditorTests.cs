@@ -166,6 +166,6 @@ public class SimpleEditorTests
 
         CheckBoxDisplay display = new CheckBoxDisplay { InstanceMember = member };
 
-        display.IsEnabled.ShouldBeFalse();
+        ((global::Avalonia.Controls.Control)display.Content!).IsEnabled.ShouldBeFalse();
     }
 }

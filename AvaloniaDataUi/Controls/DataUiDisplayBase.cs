@@ -12,7 +12,7 @@ namespace AvaloniaDataUi.Controls;
 
 /// <summary>
 /// Shared plumbing for the Avalonia displayers: tracks the <see cref="InstanceMember"/>, refreshes
-/// when its value or detail text changes, keeps the control disabled for read-only members, and
+/// when its value or detail text changes, keeps the row's content disabled for read-only members, and
 /// builds the right-click menu from <see cref="IDataUiExtensionMethods.GetContextMenuEntries"/>.
 /// </summary>
 public abstract class DataUiDisplayBase : UserControl, IDataUi
@@ -86,10 +86,22 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
         }
     }
 
-    /// <summary>Disables the control for a read-only member.</summary>
+    /// <summary>Disables the row's content for a read-only member.</summary>
     protected void RefreshIsEnabled()
     {
-        IsEnabled = InstanceMember?.IsReadOnly != true;
+        SetIsEditable(InstanceMember?.IsReadOnly != true);
+    }
+
+    /// <summary>
+    /// Enables or disables the row's content. The control itself stays enabled because it owns the
+    /// right-click menu, which a disabled control never opens (#4956).
+    /// </summary>
+    protected void SetIsEditable(bool isEditable)
+    {
+        if (Content is Control content)
+        {
+            content.IsEnabled = isEditable;
+        }
     }
 
     /// <summary>Creates the small wrapping text under a row that shows <see cref="InstanceMember.DetailText"/>.</summary>
