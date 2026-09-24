@@ -58,6 +58,12 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
     public bool IsCtrlDown => KeyDown(Keys.LeftControl) || KeyDown(Keys.RightControl);
 
     /// <summary>
+    /// Returns whether either Command key is held on macOS, where MonoGame reports it as a Windows key. Always
+    /// false elsewhere, so the Windows key never triggers text shortcuts (Windows+V is the clipboard history).
+    /// </summary>
+    public bool IsCommandDown => OperatingSystem.IsMacOS() && (KeyDown(Keys.LeftWindows) || KeyDown(Keys.RightWindows));
+
+    /// <summary>
     /// Returns whether either Alt key is currently held down.
     /// </summary>
     public bool IsAltDown => KeyDown(Keys.LeftAlt) || KeyDown(Keys.RightAlt);
