@@ -162,7 +162,7 @@ public class ColorDisplay : DataUiDisplayBase
     private readonly TextBlock _label;
     private readonly Border _swatch;
     private readonly TextBox _hexTextBox;
-    private readonly ColorView _colorView;
+    private readonly CompactColorPicker _colorPicker;
     private readonly TextBlock _hint;
     private DrawingColor _current;
     private Type? _propertyType;
@@ -176,29 +176,11 @@ public class ColorDisplay : DataUiDisplayBase
         _label = new TextBlock { MinWidth = 100, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(4, 0) };
         _swatch = new Border { Height = 18, MinWidth = 60, CornerRadius = new CornerRadius(2), BorderBrush = Brushes.Gray, BorderThickness = new Thickness(1) };
 
-        // Avalonia's picker without its alpha and palette parts: the hex field beside the swatch
-        // already covers hex entry. Alpha is a separate Gum variable.
-        _colorView = new ColorView
-        {
-            ColorModel = ColorModel.Rgba,
-            IsAlphaEnabled = false,
-            IsAlphaVisible = false,
-            IsColorPaletteVisible = false,
-            IsColorSpectrumVisible = true,
-            IsComponentSliderVisible = true,
-            IsComponentTextInputVisible = true,
-            IsHexInputVisible = false,
-            IsColorPreviewVisible = true,
-        };
-        _colorView.ColorChanged += (_, e) =>
-        {
-            if (!_isSyncing)
-            {
-                HandleColorPicked(e.NewColor);
-            }
-        };
-        _colorView.AddHandler(PointerReleasedEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Bubble, handledEventsToo: true);
-        Flyout flyout = new Flyout { Content = _colorView };
+        _colorPicker = new CompactColorPicker();
+        _colorPicker.ColorChanged += (_, color) => HandleColorPicked(color);
+        _colorPicker.AddHandler(PointerReleasedEvent, (_, _) => CommitPendingFull(), RoutingStrategies.Bubble, handledEventsToo: true);
+        Flyout flyout = new Flyout { Content = _colorPicker };
+        flyout.Opening += (_, _) => _colorPicker.OriginalColor = _colorPicker.Color;
         flyout.Closed += (_, _) => CommitPendingFull();
 
         Button swatchButton = new Button
@@ -252,7 +234,7 @@ public class ColorDisplay : DataUiDisplayBase
     internal Border Swatch => _swatch;
 
     /// <summary>The picker in the swatch's flyout, for tests.</summary>
-    internal ColorView ColorView => _colorView;
+    internal CompactColorPicker ColorPicker => _colorPicker;
 
     /// <inheritdoc/>
     public override void Refresh(bool forceRefreshEvenIfFocused = false)
@@ -311,8 +293,7 @@ public class ColorDisplay : DataUiDisplayBase
     /// <summary>Takes the picker's color, keeping alpha, as an intermediate write, as dragging does.</summary>
     internal void HandleColorPicked(Color picked)
     {
-        // The picker re-raises its color as its parts bind (opening the flyout, say); only a change
-        // is a write, or the value would be written and an undo recorded for nothing.
+        // Only a change is a write, or the value would be written and an undo recorded for nothing.
         if (picked.R == _current.R && picked.G == _current.G && picked.B == _current.B)
         {
             return;
@@ -371,9 +352,7 @@ public class ColorDisplay : DataUiDisplayBase
         _swatch.Background = new SolidColorBrush(Color.FromRgb(_current.R, _current.G, _current.B));
         if (updatePicker)
         {
-            _isSyncing = true;
-            _colorView.Color = Color.FromRgb(_current.R, _current.G, _current.B);
-            _isSyncing = false;
+            _colorPicker.Color = Color.FromRgb(_current.R, _current.G, _current.B);
         }
         if (updateHex)
         {
