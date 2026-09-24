@@ -773,13 +773,18 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             string? chosenFileName = _dialogService.SaveFile(new SaveFileDialogOptions
             {
-                Filter = "Gum Project (*.gumx;*.gumj)|*.gumx;*.gumj",
+                // .gumj (JSON, AOT-safe) is the default (#4705). It is listed first because macOS's
+                // save panel appends the first extension to a name typed without one (#4980). XML stays
+                // available - the user can still type/pick a .gumx name.
+                Filter = "Gum Project (*.gumj;*.gumx)|*.gumj;*.gumx",
                 Title = "Where would you like to save the Gum project?",
-                // Suggest .gumj (JSON, AOT-safe) rather than defaulting to .gumx purely because it's
-                // listed first in the combined filter above (#4705). XML stays available - the user
-                // can still type/pick a .gumx name - just no longer the unlabeled default.
                 FileName = "NewProject.gumj",
             });
+
+            if (chosenFileName != null && !HasProjectExtension(chosenFileName))
+            {
+                chosenFileName += ".gumj";
+            }
 
             bool shouldProceed = chosenFileName != null;
 
@@ -816,6 +821,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
         }
         return shouldSave;
+    }
+
+    private static bool HasProjectExtension(string fileName)
+    {
+        string extension = System.IO.Path.GetExtension(fileName);
+        return extension.Equals(".gumj", StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(".gumx", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <inheritdoc/>

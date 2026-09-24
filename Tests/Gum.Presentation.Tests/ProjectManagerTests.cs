@@ -461,6 +461,41 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void AskUserForProjectNameIfNecessary_AppendsGumj_WhenChosenNameHasNoExtension()
+    {
+        GumProjectSave project = new GumProjectSave();
+        SetCurrentProject(project);
+
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns(Path.Combine(tempDirectory, "MyProject"));
+
+        bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        shouldSave.ShouldBeTrue();
+        project.FullFileName.ShouldBe(Path.Combine(tempDirectory, "MyProject.gumj"));
+    }
+
+    [Fact]
+    public void AskUserForProjectNameIfNecessary_ListsGumjFirstInFilter()
+    {
+        // macOS's save panel appends the filter's first extension to a name typed without one.
+        SetCurrentProject(new GumProjectSave());
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns((string?)null);
+
+        _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        _dialogService.Verify(d => d.SaveFile(It.Is<SaveFileDialogOptions>(o =>
+            o.Filter.Split('|', StringSplitOptions.None)[1].StartsWith("*.gumj"))), Times.Once);
+    }
+
+    [Fact]
     public void AskUserForProjectNameIfNecessary_SuggestsGumjFileName()
     {
         // New projects should default to .gumj (JSON, AOT-safe) rather than .gumx (#4705).
