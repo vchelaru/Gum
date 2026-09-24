@@ -1,3 +1,7 @@
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
 using Avalonia.Headless.XUnit;
 using AvaloniaDataUi.Controls;
 using Shouldly;
@@ -43,6 +47,26 @@ public class SimpleEditorTests
         display.ApplyScrub(-20);
         display.EndScrub();
         fixture.Count.ShouldBe(0);
+    }
+
+    [AvaloniaFact]
+    public void TextBoxDisplay_LabelScrub_StartsAnywhereInTheLabelColumn()
+    {
+        EditorFixture fixture = new EditorFixture { Count = 3 };
+        TextBoxDisplay display = new TextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Count)) };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        // Right of the "Count" glyphs and above the vertically centered text: empty label-column space.
+        Point press = display.TranslatePoint(new Point(95, 1), window)!.Value;
+
+        window.MouseDown(press, MouseButton.Left);
+        window.MouseMove(press + new Point(4, 0));
+        window.MouseUp(press + new Point(4, 0), MouseButton.Left);
+
+        fixture.Count.ShouldBe(7);
+        window.InputHitTest(press).ShouldBeAssignableTo<InputElement>()!.Cursor.ShouldNotBeNull();
+        window.Close();
     }
 
     [AvaloniaFact]
