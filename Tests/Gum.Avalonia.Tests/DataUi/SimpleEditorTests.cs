@@ -70,6 +70,34 @@ public class SimpleEditorTests
     }
 
     [AvaloniaFact]
+    public void TextBoxDisplay_LabelScrub_FromNull_CommitsFullOnlyOnRelease()
+    {
+        EditorFixture fixture = new EditorFixture { MaybeNumber = null };
+        InstanceMember member = fixture.Member(nameof(EditorFixture.MaybeNumber));
+        List<(object? Value, SetPropertyCommitType CommitType)> commits = new();
+        member.CustomSetPropertyEvent += (_, args) =>
+        {
+            fixture.MaybeNumber = (float?)args.Value;
+            commits.Add((args.Value, args.CommitType));
+        };
+        TextBoxDisplay display = new TextBoxDisplay { InstanceMember = member };
+        Window window = new Window { Content = display, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        Point press = display.TranslatePoint(new Point(95, 1), window)!.Value;
+
+        window.MouseDown(press, MouseButton.Left);
+        window.MouseMove(press + new Point(4, 0));
+        window.MouseUp(press + new Point(4, 0), MouseButton.Left);
+
+        fixture.MaybeNumber.ShouldBe(4f);
+        display.TextBox.IsEnabled.ShouldBeTrue();
+        commits.Count(c => c.CommitType == SetPropertyCommitType.Full).ShouldBe(1);
+        commits.Last().ShouldBe((4f, SetPropertyCommitType.Full));
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void TextBoxDisplay_NullableType_IsNullCheckBoxWritesNull()
     {
         EditorFixture fixture = new EditorFixture { MaybeNumber = 2 };

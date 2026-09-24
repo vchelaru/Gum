@@ -356,7 +356,10 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
         if (TryGetValueOnUi(out _) == ApplyValueResult.Success)
         {
+            // Scrubbing from null clears "Is Null"; its handler would commit that as a separate full edit.
+            SuppressSettingProperty = true;
             TrySetValueOnUi(rounded);
+            SuppressSettingProperty = false;
             // A scrub is a user edit; the text box does not report programmatic text as one.
             _logic.HasUserChangedAnything = true;
             _lastApplyValueResult = _logic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
