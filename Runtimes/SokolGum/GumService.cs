@@ -97,6 +97,10 @@ public sealed class GumService : IGumService
     /// Gets the default keyboard, fed by Sokol key / char events forwarded via
     /// <see cref="HandleSokolEvent"/>.
     /// </summary>
+    /// <remarks>
+    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>.
+    /// <see cref="FormsUtilities.Keyboard"/> returns whichever keyboard is active.
+    /// </remarks>
     public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <summary>
@@ -128,7 +132,7 @@ public sealed class GumService : IGumService
     /// </summary>
     public void UseKeyboardDefaults()
     {
-        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(GumService.Default.Keyboard);
+        Gum.Forms.Controls.FrameworkElement.KeyboardsForUiControl.Add(FormsUtilities.Keyboard);
     }
 
     private Gum.Async.SingleThreadSynchronizationContext? _syncContext;

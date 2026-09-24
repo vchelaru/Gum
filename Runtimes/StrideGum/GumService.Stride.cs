@@ -96,6 +96,10 @@ public class GumService : GumServiceSkiaBase, IGumService
     /// <summary>
     /// Gets the default keyboard.
     /// </summary>
+    /// <remarks>
+    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>.
+    /// <see cref="FormsUtilities.Keyboard"/> returns whichever keyboard is active.
+    /// </remarks>
     public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
     /// <inheritdoc/>
