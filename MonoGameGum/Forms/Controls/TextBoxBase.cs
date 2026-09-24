@@ -1192,7 +1192,9 @@ public abstract class TextBoxBase :
         // String of letters typed and captured via the TextInput() Monogame event
         var stringTyped = keyboard.GetStringTyped();
 
-        if (stringTyped != null)
+        // Command+letter is a shortcut on macOS and never types text. Ctrl is not filtered because
+        // AltGr arrives as Ctrl+Alt on Windows and types real characters.
+        if (stringTyped != null && !command)
         {
             for (int i = 0; i < stringTyped.Length; i++)
             {

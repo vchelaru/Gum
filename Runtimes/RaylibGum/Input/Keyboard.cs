@@ -162,6 +162,12 @@ public class Keyboard : IInputReceiverKeyboard
     public bool IsCtrlDown => KeyDown(GumKeys.LeftControl) || KeyDown(GumKeys.RightControl);
 
     /// <summary>
+    /// Returns true if either Command key is held on macOS, where it is reported as a Windows key. Always false
+    /// elsewhere, so the Windows key never triggers text shortcuts.
+    /// </summary>
+    public bool IsCommandDown => System.OperatingSystem.IsMacOS() && (KeyDown(GumKeys.LeftWindows) || KeyDown(GumKeys.RightWindows));
+
+    /// <summary>
     /// Returns true if either the left or right alt key is currently pressed down.
     /// </summary>
     public bool IsAltDown => KeyDown(GumKeys.LeftAlt) || KeyDown(GumKeys.RightAlt);
