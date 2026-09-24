@@ -94,20 +94,19 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
     private void HandleElementSelected(ElementSave? save)
     {
         _selectionCoordinator.Reset();
+        RefreshAddVariableButtonVisibility();
         // Selecting an element also selects a state, and the state refresh covers the grid.
     }
 
     private void HandleBehaviorSelected(BehaviorSave? save)
     {
+        RefreshAddVariableButtonVisibility();
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
     private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
     {
-        // Auto-selecting a new instance (e.g. right-click Add Object on an already-selected
-        // Screen) only raises InstanceSelected, not TreeNodeSelected - see issue #4067.
-        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible =
-            AddVariableButtonVisibilityLogic.ShouldShow(_selectedState);
+        RefreshAddVariableButtonVisibility();
 
         if (!_selectionCoordinator.ShouldRefreshOnInstanceSelected(instance))
         {
@@ -145,13 +144,20 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
     private void HandleTreeNodeSelected(ITreeNode? node)
     {
         _selectionCoordinator.Reset();
-        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible =
-            AddVariableButtonVisibilityLogic.ShouldShow(_selectedState);
+        RefreshAddVariableButtonVisibility();
 
         if (_selectedState.SelectedBehavior == null && _selectedState.SelectedInstance == null && _selectedState.SelectedElement == null)
         {
             _propertyGridManager.RefreshEntireGrid(force: true);
         }
+    }
+
+    // Every selection event recomputes this: a programmatic selection (adding a component, or
+    // auto-selecting a new instance) raises only its own event, not TreeNodeSelected (#4067, #4961).
+    private void RefreshAddVariableButtonVisibility()
+    {
+        _propertyGridManager.VariableViewModel.IsAddVariableButtonVisible =
+            AddVariableButtonVisibilityLogic.ShouldShow(_selectedState);
     }
 
     private void HandleRefreshVariableView(bool force)
