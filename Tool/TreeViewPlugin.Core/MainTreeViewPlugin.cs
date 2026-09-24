@@ -21,7 +21,7 @@ using RenderingLibrary;
 namespace Gum.Plugins.InternalPlugins.TreeView;
 
 [Export(typeof(PluginBase))]
-internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<RequestErrorRefreshMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
+internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<ApplicationTeardownMessage>, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<StandardsPaletteSettingChangedMessage>
 {
     private readonly ISelectedState _selectedState;
     private readonly ElementTreeViewManager _elementTreeViewManager;
@@ -81,6 +81,12 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
     private void AssignEvents()
     {
+        // The "!" indicator follows every check of an element. A check reads the disk, so the tree
+        // only checks on notifications the Errors tab doesn't already check for (VariableSet,
+        // InstanceAdd/Delete, ElementReloaded, VariableRemovedFromCategory,
+        // BehaviorReferencesChanged, RequestErrorRefreshMessage), issue #4950.
+        _errorChecker.ErrorsChecked += HandleErrorsChecked;
+
         this.InstanceSelected += MainTreeViewPlugin_InstanceSelected;
         this.InstanceAdd += HandleInstanceAdd;
 
@@ -93,7 +99,6 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         this.ElementDelete += HandleElementDeleted;
         this.ElementAdd += HandleElementAdd;
         this.ElementDuplicate += HandleElementDuplicate;
-        this.ElementReloaded += HandleElementReloaded;
 
         this.RefreshElementTreeView += HandleRefreshElementTreeView;
 
@@ -109,23 +114,21 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         this.GetSelectedNodes += HandleGetSelectedNodes;
 
         this.VariableSet += HandleVariableSet;
-        this.VariableRemovedFromCategory += HandleVariableRemovedFromCategory;
         this.HighlightTreeNode += HandleHighlightTreeNode;
         this.AfterUndo += HandleAfterUndo;
         this.InstanceDelete += HandleInstanceDelete;
         this.StateAdd += HandleStateAdd;
         this.StateDelete += HandleStateDelete;
         this.CategoryDelete += HandleCategoryDelete;
-        this.BehaviorReferencesChanged += HandleBehaviorReferencesChanged;
         this.BehaviorInstanceAdd += HandleBehaviorInstanceAdd;
         this.BehaviorInstanceDelete += HandleBehaviorInstanceDelete;
         this.BehaviorInstanceRename += HandleBehaviorInstanceRename;
         this.ElementImported += HandleElementImported;
     }
 
-    private void HandleElementReloaded(ElementSave save)
+    private void HandleErrorsChecked(ElementSave element, ErrorViewModel[] errors)
     {
-        RefreshErrorIndicatorsForElement(save);
+        _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, errors.Length > 0);
     }
 
     private IEnumerable<ITreeNode> HandleGetSelectedNodes()
@@ -187,7 +190,6 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     private void HandleInstanceAdd(ElementSave save1, InstanceSave save2)
     {
         _elementTreeViewManager.RefreshUi();
-        RefreshErrorIndicatorsForElement(save1);
     }
 
     private void HandleBehaviorDeleted(BehaviorSave save)
@@ -330,27 +332,13 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         _elementTreeViewManager.ApplyStandardsPaletteMode();
     }
 
-    void IRecipient<RequestErrorRefreshMessage>.Receive(RequestErrorRefreshMessage message)
-    {
-        // A full error refresh (RequestingPlugin == null) is requested after an edit changes an
-        // element's error set but fires no structural plugin event — notably an animation keyframe
-        // edit (MainStateAnimationPlugin.HandleDataChange), which only saves the .ganx. Re-check the
-        // selected element's "!" indicator (detection itself is selection-independent and headless;
-        // this is purely the refresh trigger). Plugin-scoped requests (RequestingPlugin != null,
-        // sent on view-model refresh / selection) are ignored so selection is NOT a refresh trigger.
-        if (message.RequestingPlugin == null)
-        {
-            RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
-        }
-    }
-
+    // The indicator itself updates in HandleErrorsChecked.
     private void RefreshErrorIndicatorsForElement(ElementSave? element)
     {
         if (element == null) return;
         var project = _projectState.GumProjectSave;
         if (project == null) return;
-        bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
-        _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+        _errorChecker.GetErrorsFor(element, project);
     }
 
     private void RefreshErrorIndicatorsForAllElements()
@@ -369,8 +357,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         {
             foreach (var element in allElements)
             {
-                bool hasErrors = _errorChecker.GetErrorsFor(element, project).Length > 0;
-                _elementTreeViewManager.UpdateErrorIndicatorsForElement(element, hasErrors);
+                _errorChecker.GetErrorsFor(element, project);
             }
         }
         finally
@@ -382,25 +369,10 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
-        // The "!" indicator's error check reads the disk, so it waits for a committed value rather
-        // than running on every tick of a drag (issue #4946).
-        if (isFullCommit)
-        {
-            RefreshErrorIndicatorsForElement(element);
-        }
-
         if(instance != null && variableName == nameof(instance.Locked))
         {
             _elementTreeViewManager.RefreshUi(instance);
         }
-    }
-
-    private void HandleVariableRemovedFromCategory(string variableName, StateSaveCategory category)
-    {
-        // Removing a variable from a category's states can clear an error (e.g. a GUM0003
-        // self-referential category state), so the "!" tree indicator must refresh. The
-        // category belongs to the currently selected element.
-        RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
     private void HandleAfterUndo()
@@ -418,7 +390,6 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
     {
         _elementTreeViewManager.RefreshUi();
-        RefreshErrorIndicatorsForElement(element);
     }
 
     private void HandleStateAdd(StateSave state)
@@ -435,11 +406,6 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
     {
         _elementTreeViewManager.RefreshUi();
         RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
-    }
-
-    private void HandleBehaviorReferencesChanged(ElementSave elementSave)
-    {
-        RefreshErrorIndicatorsForElement(elementSave);
     }
 
     private void HandleBehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance)

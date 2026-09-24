@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
+using Gum.Messages;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Gum.Plugins.Errors;
@@ -19,6 +21,8 @@ public class MainErrorsPluginTests : BaseTestClass
 {
     private readonly Mock<IErrorChecker> _errorChecker = new();
     private readonly Mock<IProjectState> _projectState = new();
+    private readonly Mock<ISelectedState> _selectedState = new();
+    private readonly IMessenger _messenger = new WeakReferenceMessenger();
     private readonly GumProjectSave _project;
     private readonly ScreenSave _screen;
     private readonly MainErrorsPlugin _plugin;
@@ -38,8 +42,8 @@ public class MainErrorsPluginTests : BaseTestClass
 
         _plugin = new MainErrorsPlugin(
             _errorChecker.Object,
-            Mock.Of<IMessenger>(),
-            Mock.Of<ISelectedState>(),
+            _messenger,
+            _selectedState.Object,
             Mock.Of<IClipboardService>(),
             Mock.Of<IFileSystemRevealService>(),
             _projectState.Object)
@@ -59,10 +63,47 @@ public class MainErrorsPluginTests : BaseTestClass
             Times.Never);
     }
 
-    [Fact]
-    public void VariableSet_FullCommit_ChecksForErrors()
+    /// <summary>
+    /// The tree's "!" indicator doesn't check on these notifications itself; it shows the result of
+    /// this check (issue #4950).
+    /// </summary>
+    [Theory]
+    [InlineData("VariableSet")]
+    [InlineData("InstanceAdd")]
+    [InlineData("InstanceDelete")]
+    [InlineData("ElementReloaded")]
+    [InlineData("VariableRemovedFromCategory")]
+    [InlineData("BehaviorReferencesChanged")]
+    [InlineData("RequestErrorRefreshMessage")]
+    public void ANotificationTheTreeIndicatorReliesOn_ChecksTheElementOnce(string notification)
     {
-        _plugin.CallVariableSet(_screen, null, "Red", 0, isFullCommit: true);
+        _selectedState.Setup(s => s.SelectedElement).Returns(_screen);
+        InstanceSave instance = new InstanceSave { Name = "Child", BaseType = "Sprite", ParentContainer = _screen };
+
+        switch (notification)
+        {
+            case "VariableSet":
+                _plugin.CallVariableSet(_screen, null, "Red", 0, isFullCommit: true);
+                break;
+            case "InstanceAdd":
+                _plugin.CallInstanceAdd(_screen, instance);
+                break;
+            case "InstanceDelete":
+                _plugin.CallInstanceDelete(_screen, instance);
+                break;
+            case "ElementReloaded":
+                _plugin.CallElementReloaded(_screen);
+                break;
+            case "VariableRemovedFromCategory":
+                _plugin.CallVariableRemovedFromCategory("Red", new StateSaveCategory { Name = "Category" });
+                break;
+            case "BehaviorReferencesChanged":
+                _plugin.CallBehaviorReferencesChanged(_screen);
+                break;
+            case "RequestErrorRefreshMessage":
+                _messenger.Send(new RequestErrorRefreshMessage());
+                break;
+        }
 
         _errorChecker.Verify(c => c.GetErrorsFor(_screen, _project), Times.Once);
     }
