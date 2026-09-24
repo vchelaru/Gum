@@ -2,7 +2,7 @@
 
 ## Introduction
 
-An `.achx` file is an FRB-style (FlatRedBall) XML animation chain — a list of named animations, where each animation is a sequence of frames that swap texture, source rectangle, and flip state over time. This is frame-by-frame "flipbook" animation, the kind you'd use for a walk cycle or an explosion sprite sheet. Gum's runtime can load an `.achx` and play it back on a `SpriteRuntime` or a `NineSliceRuntime`.
+An `.achx` file is an FRB-style (FlatRedBall) XML animation chain — a list of named animations, where each animation is a sequence of frames that swap texture, source rectangle, and flip state over time. This is frame-by-frame "flipbook" animation, the kind you'd use for a walk cycle or an explosion sprite sheet. Gum's runtime can load an `.achx` and play it back on a `SpriteRuntime` or a `NineSliceRuntime`. You create `.achx` files with the [AnimationEditor](https://github.com/vchelaru/FlatRedBall2/releases/tag/animationeditor-latest).
 
 {% hint style="info" %}
 Don't confuse animation chains with the [Animation](../animationruntime.md) (`AnimationRuntime`) system. `AnimationRuntime` plays back keyframed *property* animations authored in the Gum tool (position, color, visibility, and so on) on any `GraphicalUiElement`. Animation chains are texture-swapping animations authored in an external FRB-format `.achx` file and only apply to `Sprite` and `NineSlice`. The two systems are unrelated and can be used together.
@@ -130,7 +130,7 @@ If you need lower-level control — for example, driving animation outside of `G
 
 Each `AnimationFrame` carries optional `RelativeX`/`RelativeY` values, and `Sprite` applies them as a position offset on every render while an animation with those values is playing. `NineSlice` does not apply `RelativeX`/`RelativeY` at all — a `NineSliceRuntime` ignores them even if the source `.achx` sets them.
 
-These offsets are authored against FlatRedBall's center-anchored `Sprite`, while Gum positions from a configurable origin (top-left by default). For a `SpriteRuntime` with a fixed size this difference doesn't matter, but on a sprite whose size tracks its source rectangle (for example `HeightUnits = PercentageOfSourceFile`), the offset can visibly drift from what FRB's `AnimationEditor` previewed.
+These offsets are authored against FlatRedBall's center-anchored `Sprite`, while Gum positions from a configurable origin (top-left by default). For a `SpriteRuntime` with a fixed size this difference doesn't matter, but on a sprite whose size tracks its source rectangle (for example `HeightUnits = PercentageOfSourceFile`), the offset can visibly drift from what the [AnimationEditor](https://github.com/vchelaru/FlatRedBall2/releases/tag/animationeditor-latest) previewed.
 
 ## Related Pages
 

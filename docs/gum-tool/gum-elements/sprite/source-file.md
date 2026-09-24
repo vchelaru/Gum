@@ -28,7 +28,7 @@ If a file is referenced outside of the .gumx folder, then Gum asks if you would 
 
 ### ACHX Files
 
-Gum natively supports referencing Animation Chain XML files (.achx) which are created by the FlatRedBall AnimationEditor. For more information on creating .achx files, see the FlatRedBall [AnimationEditor page](https://docs.flatredball.com/flatredball/glue-gluevault-component-pages-animationeditor-plugin).
+Gum natively supports referencing Animation Chain XML files (.achx), which you create with the [AnimationEditor](https://github.com/vchelaru/FlatRedBall2/releases/tag/animationeditor-latest). Download the latest AnimationEditor from that page.
 
 Once you have created an .achx file, you can reference it the same as a .png by entering its name or selecting it with the **...** button.
 
@@ -42,12 +42,12 @@ When referencing an .achx file, be sure to also check the **Animate** checkbox a
 
 #### Per-Frame Offsets and Sprite Origin
 
-Frames in an .achx can carry per-frame `RelativeX` / `RelativeY` offsets, typically authored in the FlatRedBall AnimationEditor to keep visual content (e.g. the bottom of a collapsing object) anchored as the source rectangle changes size from frame to frame.
+Frames in an .achx can carry per-frame `RelativeX` / `RelativeY` offsets, typically authored in the AnimationEditor to keep visual content (e.g. the bottom of a collapsing object) anchored as the source rectangle changes size from frame to frame.
 
 The AnimationEditor authors these offsets against a **center-anchored** Sprite. When a Sprite in Gum plays back an .achx with non-zero offsets, set both **XOrigin** and **YOrigin** to **Center** so the offsets compensate as intended.
 
 {% hint style="warning" %}
-If the Sprite's origin is left at the default (top-left) and its Width/Height units track the source file (such as `PercentageOfSourceFile`), frames that change size will drift — typically the visual will appear to climb or slide as the animation progresses, even though the offsets look correct in the AnimationEditor. The Gum tool will surface a warning in the Errors tab when it detects this combination.
+If the Sprite's origin is left at the default (top-left) and its Width/Height units track the source file (such as `PercentageOfSourceFile`), frames that change size will drift. Typically the visual will appear to climb or slide as the animation progresses, even though the offsets look correct in the AnimationEditor. The Gum tool will surface a warning in the Errors tab when it detects this combination.
 {% endhint %}
 
 ### Referencing URLs
