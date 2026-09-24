@@ -38,9 +38,11 @@ public class FileWatchPluginController
         }
     }
 
-    public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue)
+    public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
-        if (element == null)
+        // A file path is never scrubbed, so an intermediate drag tick can't be one.
+        if (element == null || !isFullCommit)
         {
             return;
         }

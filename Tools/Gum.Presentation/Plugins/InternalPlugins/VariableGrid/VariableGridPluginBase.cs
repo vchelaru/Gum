@@ -77,7 +77,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
     private void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
-        _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue);
+        _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue, isFullCommit);
     }
 
     private void HandleElementDeleted(ElementSave save)

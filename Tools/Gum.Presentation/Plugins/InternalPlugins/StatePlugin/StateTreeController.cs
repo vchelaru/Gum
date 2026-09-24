@@ -175,8 +175,16 @@ public class StateTreeController
         TabTitleChanged?.Invoke(desiredTitle);
     }
 
-    public void HandleVariableSet(ElementSave elementSave, InstanceSave? instance, string variableName, object? oldValue)
+    public void HandleVariableSet(ElementSave elementSave, InstanceSave? instance, string variableName, object? oldValue,
+        bool isFullCommit)
     {
+        // A drag's intermediate ticks don't change which states set the variable; the full
+        // commit that ends the drag refreshes the highlights once.
+        if (!isFullCommit)
+        {
+            return;
+        }
+
         // Do this to refresh the yellow highlights - We may not need to do more than this:
         ViewModel.RefreshTo(elementSave, _selectedState, _objectFinder);
     }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Localization;
@@ -8,6 +9,8 @@ using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Plugins.VariableGrid;
 using Gum.Reflection;
+using Gum.Services;
+using Gum.ToolStates;
 using Moq;
 using Moq.AutoMock;
 using Shouldly;
@@ -102,6 +105,31 @@ public class PropertyGridManagerTests
         _tab.Verify(tab => tab.Show(), Times.Once);
         _tab.VerifySet(tab => tab.IsSelected = true, Times.Once);
         _view.FocusCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void HandleVariableSet_IntermediateTickInACategoryState_WaitsForTheFullCommitToRebuildTheGrid()
+    {
+        // Rebuilding mid-drag destroys the row being dragged, which breaks its mouse capture.
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.InitializeEarly();
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedStateCategorySave).Returns(new StateSaveCategory { Name = "ButtonCategory" });
+        selectedState.SetupGet(state => state.SelectedStateSave).Returns(new StateSave { Name = "Highlighted" });
+        selectedState.SetupGet(state => state.SelectedInstances).Returns(new List<InstanceSave>());
+        _mocker.GetMock<IStateEditingIndicatorService>()
+            .Setup(service => service.GetInfo())
+            .Returns(new StateEditingIndicatorInfo(HasStateInformation: false, StateInformation: null, StateBackground: default));
+        MemberCategory position = CategoryWith("Position", "X");
+        _view.Variables.SetCategories(new List<MemberCategory> { position });
+
+        sut.HandleVariableSet(new ComponentSave(), instance: null, strippedName: "X", oldValue: 0f, isFullCommit: false);
+
+        _view.Variables.Categories.ShouldBe(new[] { position });
+
+        sut.HandleVariableSet(new ComponentSave(), instance: null, strippedName: "X", oldValue: 0f, isFullCommit: true);
+
+        _view.Variables.Categories.ShouldNotContain(position);
     }
 
     [Fact]

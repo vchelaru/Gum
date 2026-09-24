@@ -20,6 +20,24 @@ namespace Gum.Presentation.Tests.Plugins.StateAnimationPlugin;
 public class AnimationTabControllerTests
 {
     [Fact]
+    public void HandleVariableSet_IntermediateTick_WaitsForTheFullCommitToRefreshPreviewStates()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        Mock<ISelectedState> selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedElement).Returns(button);
+        AnimationTabController controller = CreateController(selectedState.Object);
+        controller.CreateInitialViewModel();
+
+        controller.HandleVariableSet(button, save2: null, arg3: "X", arg4: 0f, isFullCommit: false);
+
+        selectedState.VerifyGet(state => state.SelectedStateSave, Times.Never);
+
+        controller.HandleVariableSet(button, save2: null, arg3: "X", arg4: 0f, isFullCommit: true);
+
+        selectedState.VerifyGet(state => state.SelectedStateSave, Times.Once);
+    }
+
+    [Fact]
     public void RefreshViewModel_ForAnotherElement_StopsTheReplacedViewModelsPlayback()
     {
         // Each element gets its own view model with its own timer; a replaced one that kept
@@ -68,6 +86,19 @@ public class AnimationTabControllerTests
         buttonTab.IsPlaying.ShouldBeFalse();
         timers[button].Verify(timer => timer.Stop(), Times.Once);
     }
+
+    private static AnimationTabController CreateController(ISelectedState selectedState) =>
+        new AnimationTabController(
+            selectedState,
+            Mock.Of<IUndoManager>(),
+            Mock.Of<IGuiCommands>(),
+            Mock.Of<IDialogService>(),
+            Mock.Of<IProjectState>(),
+            Mock.Of<IAnimationCollectionViewModelManager>(),
+            Mock.Of<IRenameManager>(),
+            Mock.Of<IDuplicateService>(),
+            Mock.Of<IAnimationFilePathService>(),
+            () => CreateViewModel(selectedState, Mock.Of<IUiTimer>()));
 
     private static ElementAnimationsViewModel CreateViewModel(ISelectedState selectedState, IUiTimer timer) =>
         new ElementAnimationsViewModel(

@@ -188,8 +188,14 @@ public class AnimationTabController
     /// Wired to <c>PluginBase.VariableSet</c>: recomputes each animation's cumulative preview states
     /// when the changed variable belongs to the default state, or to a state a keyframe references.
     /// </summary>
-    public void HandleVariableSet(ElementSave element, InstanceSave? save2, string arg3, object? arg4)
+    public void HandleVariableSet(ElementSave element, InstanceSave? save2, string arg3, object? arg4, bool isFullCommit)
     {
+        // Recomputing every animation's preview states waits for the full commit that ends a drag.
+        if (!isFullCommit)
+        {
+            return;
+        }
+
         // This maybe a little inefficient but it should address all issues:
         // eventually this could be more targeted
         var state = _selectedState.SelectedStateSave;

@@ -69,6 +69,22 @@ public class StateTreeControllerTests
     }
 
     [Fact]
+    public void HandleVariableSet_IntermediateTick_WaitsForTheFullCommitToRefreshTheTree()
+    {
+        var (controller, _, _, _) = CreateSut();
+        ComponentSave element = new() { Name = "MyComponent" };
+        element.Categories.Add(new StateSaveCategory { Name = "ButtonCategory" });
+
+        controller.HandleVariableSet(element, instance: null, variableName: "X", oldValue: 0f, isFullCommit: false);
+
+        controller.ViewModel.Categories.ShouldBeEmpty();
+
+        controller.HandleVariableSet(element, instance: null, variableName: "X", oldValue: 0f, isFullCommit: true);
+
+        controller.ViewModel.Categories.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void HandleStateSelected_CategorizedState_PropagatesEachVariableInThatState()
     {
         var (controller, rightClickService, selectedState, propagationLogic) = CreateSut();
