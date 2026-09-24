@@ -33,15 +33,6 @@ public class StandardsPaletteAddTests
     [AvaloniaFact]
     public void EveryAddGesture_AddsAtTheAddDestination_AndPasteFollowsIt()
     {
-        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
-
         AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
         ICopyPasteLogic copyPasteLogic = Services.GetRequiredService<ICopyPasteLogic>();

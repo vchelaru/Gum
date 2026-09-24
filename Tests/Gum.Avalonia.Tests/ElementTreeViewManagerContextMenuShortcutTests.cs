@@ -25,15 +25,6 @@ public class ElementTreeViewManagerContextMenuShortcutTests
     [AvaloniaFact]
     public void BuildContextMenuItems_ForInstance_ShowsShortcutsMatchingHotkeyManager()
     {
-        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
-        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
-        StandardElementsManager.Self.Initialize();
-        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
-
         ITabManager tabManager = Services.GetRequiredService<ITabManager>();
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
         IHotkeyManager hotkeyManager = Services.GetRequiredService<IHotkeyManager>();

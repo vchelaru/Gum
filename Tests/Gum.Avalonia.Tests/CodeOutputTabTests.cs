@@ -28,10 +28,6 @@ public class CodeOutputTabTests
     public void PluginManager_LoadsTheSharedCodeOutputPlugin()
     {
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
-        if (!pluginManager.IsInitialized)
-        {
-            pluginManager.Initialize();
-        }
 
         pluginManager.Plugins.Select(plugin => plugin.GetType()).ShouldContain(typeof(MainCodeOutputPlugin));
     }

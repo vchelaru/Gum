@@ -20,5 +20,9 @@ public static class TestAppBuilder
             // Real Skia text rendering rather than the headless stub, which cannot load the icon
             // font (FluentIcons) the Variables tab and States tree use.
             .UseSkia()
-            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false });
+            .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
+            // The tool's own startup steps, before any test body can raise a plugin event at a
+            // manager that has not been initialized yet. The head runs them once the window opens,
+            // which the headless lifetime never does.
+            .AfterSetup(_ => ToolStartup.EnsureInitialized());
 }
