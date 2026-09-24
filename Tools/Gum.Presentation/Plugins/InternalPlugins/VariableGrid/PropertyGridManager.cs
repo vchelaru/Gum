@@ -813,6 +813,13 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 resultCategory = newCategory;
             }
 
+            // Already in place: leave the collection untouched. A remove+insert would make the view
+            // rebuild every row in the category, closing any editor flyout open on it (#4943).
+            if (newIndex < gridCategories.Count && ReferenceEquals(gridCategories[newIndex], resultCategory))
+            {
+                continue;
+            }
+
             // Move resultCategory (reused or new) to its correct position - it may currently be
             // missing from gridCategories entirely, or present at the wrong index.
             if (oldCategory != null)
