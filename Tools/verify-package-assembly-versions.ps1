@@ -39,8 +39,16 @@ function ConvertTo-AssemblyVersion([string]$packageVersion) {
 	return [version]::Parse(($parts[0..3] -join '.'))
 }
 
+# Packages built from vendored third-party source. Their assemblies carry the upstream project's own
+# version (FNA.dll is 25.03.0.0, from fna/src/Properties/AssemblyInfo.cs), which is unrelated to the
+# version we stamp on the package, so comparing the two says nothing about a clobbered build.
+$excludedPackageIds = @('FNA')
+
+# --include-symbols writes a second .symbols.nupkg holding the same lib assemblies, so checking it
+# only duplicates every finding.
 $packages = @(Get-ChildItem -Path $PackageDirectory -Filter '*.nupkg' |
-	Where-Object { $_.Name -notlike '*.snupkg' } | Sort-Object Name)
+	Where-Object { $_.Name -notlike '*.snupkg' -and $_.Name -notlike '*.symbols.nupkg' } |
+	Sort-Object Name)
 
 if ($packages.Count -eq 0) {
 	throw "No .nupkg files found in '$PackageDirectory'."
@@ -64,6 +72,9 @@ try {
 
 			$reader = New-Object System.IO.StreamReader($nuspecEntry.Open())
 			try { $nuspecXml = [xml]$reader.ReadToEnd() } finally { $reader.Dispose() }
+
+			$packageId = $nuspecXml.package.metadata.id
+			if ($excludedPackageIds -contains $packageId) { continue }
 
 			$packageVersion = $nuspecXml.package.metadata.version
 			$expected = ConvertTo-AssemblyVersion $packageVersion
