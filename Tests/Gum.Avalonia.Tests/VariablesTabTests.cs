@@ -150,15 +150,20 @@ public class VariablesTabTests
     }
 
     [AvaloniaTheory]
-    [InlineData(typeof(TextBoxDisplay), nameof(GumEditorFixture.Number), false)]
-    [InlineData(typeof(TextHorizontalAlignmentDisplay), nameof(GumEditorFixture.Alignment), true)]
-    public void RightClick_AnywhereOnAnEditorRow_OpensItsMenu(Type displayType, string memberName, bool rowExtendsPastValue)
+    [InlineData(typeof(TextBoxDisplay), nameof(GumEditorFixture.Number), false, false)]
+    [InlineData(typeof(TextHorizontalAlignmentDisplay), nameof(GumEditorFixture.Alignment), true, false)]
+    [InlineData(typeof(TextBoxDisplay), nameof(GumEditorFixture.Number), false, true)]
+    [InlineData(typeof(TextHorizontalAlignmentDisplay), nameof(GumEditorFixture.Alignment), true, true)]
+    public void RightClick_AnywhereOnAnEditorRow_OpensItsMenu(Type displayType, string memberName, bool rowExtendsPastValue, bool isReadOnly)
     {
         // As the WPF grid: the label, the value control and the row's empty space all open the
         // member's menu. A text box fills its row, so only the toggle row has empty space to probe.
+        // A read-only row (e.g. set by a variable reference, #4956) keeps its menu.
         GumEditorFixture fixture = new GumEditorFixture();
         DataUiDisplayBase display = (DataUiDisplayBase)Activator.CreateInstance(displayType)!;
-        display.InstanceMember = fixture.Member(memberName);
+        InstanceMember member = fixture.Member(memberName);
+        member.IsReadOnly = isReadOnly;
+        display.InstanceMember = member;
         Window window = new Window { Content = display, Width = 500, Height = 200 };
         window.Show();
         window.UpdateLayout();

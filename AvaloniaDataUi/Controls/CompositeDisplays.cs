@@ -982,7 +982,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
         {
             if (_textLogic.TryApplyToInstance() == ApplyValueResult.NotSupported)
             {
-                IsEnabled = false;
+                SetIsEditable(false);
             }
             RefreshRevealButton();
         }
@@ -1222,7 +1222,7 @@ public class InlineChannelsDisplay : DataUiDisplayBase
         }
 
         _label.Text = InstanceMember.DisplayName;
-        IsEnabled = !InstanceMember.IsReadOnly;
+        SetIsEditable(!InstanceMember.IsReadOnly);
         RefreshHint(_hint);
 
         _isSyncingFromInstance = true;

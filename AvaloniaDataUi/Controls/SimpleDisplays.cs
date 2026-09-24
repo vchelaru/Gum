@@ -783,6 +783,6 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
 
     private void RefreshEnabledState()
     {
-        IsEnabled = _lastApplyValueResult != ApplyValueResult.NotSupported && InstanceMember?.IsReadOnly != true;
+        SetIsEditable(_lastApplyValueResult != ApplyValueResult.NotSupported && InstanceMember?.IsReadOnly != true);
     }
 }
