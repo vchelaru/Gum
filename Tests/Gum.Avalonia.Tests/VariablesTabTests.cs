@@ -371,6 +371,48 @@ public class VariablesTabTests
         }
     }
 
+    [AvaloniaFact]
+    public void ElementSelected_AloneShowsTheAddVariableButton()
+    {
+        // Adding a component selects it through ISelectedState, which raises ElementSelected but no
+        // TreeNodeSelected (#4961). A fresh manager and plugin so this test owns its tab.
+        PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
+        if (!pluginManager.IsInitialized)
+        {
+            pluginManager.Initialize();
+        }
+        Services.GetRequiredService<Gum.Reflection.ITypeManager>().Initialize();
+        StandardElementsManager.Self.Initialize();
+        Services.GetRequiredService<IStandardElementsManagerGumTool>().Initialize();
+        AvaloniaTabManager tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
+        PropertyGridManager sut = ActivatorUtilities.CreateInstance<PropertyGridManager>(Services);
+        sut.InitializeEarly();
+        AvaloniaPluginTab tab = tabManager.CenterBottom.Last(candidate => candidate.Title == "Variables");
+        MainVariableGridPlugin plugin = ActivatorUtilities.CreateInstance<MainVariableGridPlugin>(Services, sut);
+        plugin.StartUp();
+        IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
+        projectManager.CreateNewProject();
+        ComponentSave component = new ComponentSave { Name = "NewComponent", BaseType = "Container" };
+        component.InitializeDefaultAndComponentVariables();
+        projectManager.GumProjectSave!.Components.Add(component);
+        try
+        {
+            selectedState.SelectedComponent = component;
+            sut.VariableViewModel.IsAddVariableButtonVisible.ShouldBeFalse();
+
+            plugin.CallElementSelected(component);
+
+            sut.VariableViewModel.IsAddVariableButtonVisible.ShouldBeTrue();
+        }
+        finally
+        {
+            selectedState.SelectedElement = null;
+            ObjectFinder.Self.GumProjectSave = null;
+            tabManager.RemoveTab(tab);
+        }
+    }
+
     private static List<string> ShownMemberNames(DataUiGrid grid) =>
         grid.Categories.SelectMany(category => category.Members).Select(member => member.Name).ToList();
 }
