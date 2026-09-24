@@ -252,8 +252,7 @@ public abstract class StateAnimationPluginBase : PluginBase, IAnimationUndoProvi
         this.StateAdd += _controller.HandleStateAdd;
         this.StateDelete += _controller.HandleStateDelete;
 
-        this.VariableSet += (element, instance, variableName, oldValue, _) =>
-            _controller.HandleVariableSet(element, instance, variableName, oldValue);
+        this.VariableSet += _controller.HandleVariableSet;
 
         this.CategoryRename += _controller.HandleCategoryRename;
 

@@ -1310,14 +1310,17 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue)
+    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue,
+        bool isFullCommit)
     {
         if (strippedName == "VariableReferences")
         {
             // force refresh:
             RefreshEntireGrid(force: true);
         }
-        if (_selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null)
+        // Rebuilding the grid on an intermediate tick of a drag destroys the row being dragged,
+        // breaking its mouse capture. The full commit that ends the drag does the rebuild.
+        if (isFullCommit && _selectedState.SelectedStateCategorySave != null && _selectedState.SelectedStateSave != null)
         {
             // If setting a value on a variable in a category, the variable may be newly-added to the state.
             // If we don't already indicate that this is set by this category, we should update the grid immediately:

@@ -94,7 +94,7 @@ public class FileWatchPluginControllerTests
             IsFile = true
         });
 
-        controller.HandleVariableSet(element, instance: null, variableName: "SourceFile", oldValue: null);
+        controller.HandleVariableSet(element, instance: null, variableName: "SourceFile", oldValue: null, isFullCommit: true);
 
         // RefreshRootDirectory -> no project loaded -> clears ignores and disables.
         fileWatchManager.Verify(m => m.Disable(), Times.Once);
@@ -113,10 +113,29 @@ public class FileWatchPluginControllerTests
             IsFile = false
         });
 
-        controller.HandleVariableSet(element, instance: null, variableName: "SomeVariable", oldValue: null);
+        controller.HandleVariableSet(element, instance: null, variableName: "SomeVariable", oldValue: null, isFullCommit: true);
 
         fileWatchManager.Verify(m => m.Disable(), Times.Never);
         fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
+    }
+
+    [Fact]
+    public void HandleVariableSet_WhenIntermediateTick_DoesNotRefreshRootDirectory()
+    {
+        var (controller, fileWatchManager, _, projectManager) = CreateSut();
+        projectManager.Setup(m => m.GumProjectSave).Returns((GumProjectSave)null);
+        var element = new ComponentSave();
+        element.States.Add(new StateSave());
+        element.DefaultState.Variables.Add(new VariableSave
+        {
+            Name = "SourceFile",
+            IsCustomVariable = true,
+            IsFile = true
+        });
+
+        controller.HandleVariableSet(element, instance: null, variableName: "SourceFile", oldValue: null, isFullCommit: false);
+
+        fileWatchManager.Verify(m => m.Disable(), Times.Never);
     }
 
     [Fact]
@@ -124,7 +143,7 @@ public class FileWatchPluginControllerTests
     {
         var (controller, fileWatchManager, _, _) = CreateSut();
 
-        controller.HandleVariableSet(element: null, instance: null, variableName: "SourceFile", oldValue: null);
+        controller.HandleVariableSet(element: null, instance: null, variableName: "SourceFile", oldValue: null, isFullCommit: true);
 
         fileWatchManager.Verify(m => m.Disable(), Times.Never);
         fileWatchManager.Verify(m => m.ClearIgnoredFiles(), Times.Never);
