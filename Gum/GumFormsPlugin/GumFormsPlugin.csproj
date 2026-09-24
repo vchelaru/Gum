@@ -56,15 +56,22 @@
 			<SolutionDir Condition="'$(SolutionDir)' == '' or '$(SolutionDir)' == '*Undefined*'">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
 			<AvaloniaHeadDir>$(SolutionDir)Tool/Gum.Avalonia/bin/$(ConfigurationName)/net10.0/</AvaloniaHeadDir>
 		</PropertyGroup>
-		<!-- Gum.FormsStaging isn't guaranteed to build before this project in a solution build,
-		     so build it explicitly before shelling out to it below (#4070). -->
 		<PropertyGroup>
-			<!-- The dotnet host running this build, so the nested build uses the same SDK (a user-local SDK
+			<!-- The dotnet host running this build, so shelling out uses the same SDK (a user-local SDK
 			     is not on PATH); Visual Studio's MSBuild does not set it, so fall back to PATH there. -->
 			<DotNetHost>dotnet</DotNetHost>
 			<DotNetHost Condition="'$(DOTNET_HOST_PATH)' != ''">&quot;$(DOTNET_HOST_PATH)&quot;</DotNetHost>
 		</PropertyGroup>
-		<Exec Command="$(DotNetHost) build &quot;$(SolutionDir)Tools/Gum.FormsStaging/Gum.FormsStaging.csproj&quot; -c $(ConfigurationName) --nologo" />
+		<!--
+			Do NOT add an `Exec dotnet build Gum.FormsStaging` here as belt-and-braces for the
+			ProjectReference above. A nested `dotnet build` inherits none of the outer build's
+			global properties, so the release workflow's `-p:Version=` is missing from it and
+			every project it reaches (Gum.ProjectServices, GumCommon) recompiles at its csproj's
+			stale literal version into the same bin folder, clobbering the assemblies the rest of
+			the build already compiled against. That shipped a GumCommon.dll stamped 2026.4.10.1
+			inside FlatRedBall.GumCommon 2026.9.24.1-preview.1 (#4974). The ProjectReference is
+			the build-order guarantee; if it ever fails, the run below fails loudly.
+		-->
 
 		<ItemGroup>
 			<PluginOutputFiles Include="$(TargetPath)" />
@@ -88,35 +95,35 @@
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard')" />
 		<Copy SourceFiles="@(StandardThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsTemplate/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsTemplate/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Standard/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Bubblegum" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Bubblegum')" />
 		<Copy SourceFiles="@(BubblegumThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Bubblegum/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Bubblegum/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Bubblegum/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Bubblegum/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Bubblegum/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Hazard" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Hazard')" />
 		<Copy SourceFiles="@(HazardThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Hazard/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Hazard/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Hazard/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Hazard/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Hazard/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/DarkPro" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/DarkPro')" />
 		<Copy SourceFiles="@(DarkProThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/DarkPro/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/DarkPro/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/DarkPro/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/DarkPro/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/DarkPro/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Retro95" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Retro95')" />
 		<Copy SourceFiles="@(Retro95ThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Retro95/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Retro95/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Retro95/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Retro95/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Retro95/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/ForestGlade" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/ForestGlade')" />
 		<Copy SourceFiles="@(ForestGladeThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/ForestGlade/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/ForestGlade/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/ForestGlade/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/ForestGlade/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/ForestGlade/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Neon" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Neon')" />
 		<Copy SourceFiles="@(NeonThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Neon/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Neon/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Neon/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Neon/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Neon/Behaviors&quot;" />
 
 		<RemoveDir Directories="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow" Condition="Exists('$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow')" />
 		<Copy SourceFiles="@(MeadowThemeFiles)" DestinationFolder="$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/%(RecursiveDir)" />
-		<Exec Command="dotnet &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Meadow/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/Behaviors&quot;" />
+		<Exec Command="$(DotNetHost) &quot;$(SolutionDir)Tools/Gum.FormsStaging/bin/$(ConfigurationName)/net10.0/Gum.FormsStaging.dll&quot; &quot;$(SolutionDir)Tools/Gum.ProjectServices/Templates/FormsThemes/Meadow/GumProject.gumx&quot; &quot;$(SolutionDir)Gum/bin/$(ConfigurationName)/Content/FormsThemes/Meadow/Behaviors&quot;" />
 
 		<!-- The Avalonia head reads the same staged themes from its own Content folder. -->
 		<ItemGroup>

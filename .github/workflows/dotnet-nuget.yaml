@@ -95,6 +95,15 @@ jobs:
     - name: Pack GumCli
       run: dotnet pack Tools/Gum.Cli/Gum.Cli.csproj --configuration ${{ env.CONFIGURATION }} --no-build --output ./nupkgs ${{ steps.ver.outputs.flag }}
 
+    # Every package in a wave is built with the same -p:Version, so every packed assembly must carry
+    # it too. A project rebuilt without that property (a nested `dotnet build` from a target, say)
+    # overwrites the assembly everything else compiled against, and pack is --no-build, so the
+    # mismatch ships and consumers get a FileNotFoundException for a version that exists nowhere
+    # (#4974). Runs before the publish steps so a bad wave never reaches NuGet.org.
+    - name: Verify packed assembly versions
+      shell: pwsh
+      run: pwsh Tools/verify-package-assembly-versions.ps1 -PackageDirectory ./nupkgs
+
     # Upload artifacts for inspection (both .nupkg and .snupkg)
     - name: Upload NuGet packages as artifacts
       uses: actions/upload-artifact@v4
