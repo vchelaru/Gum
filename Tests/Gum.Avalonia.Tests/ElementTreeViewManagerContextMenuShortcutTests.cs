@@ -1,10 +1,7 @@
 using Avalonia.Headless.XUnit;
-using Gum.Avalonia.Shell;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
-using Gum.Plugins;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -25,7 +22,6 @@ public class ElementTreeViewManagerContextMenuShortcutTests
     [AvaloniaFact]
     public void BuildContextMenuItems_ForInstance_ShowsShortcutsMatchingHotkeyManager()
     {
-        ITabManager tabManager = Services.GetRequiredService<ITabManager>();
         ISelectedState selectedState = Services.GetRequiredService<ISelectedState>();
         IHotkeyManager hotkeyManager = Services.GetRequiredService<IHotkeyManager>();
         IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
@@ -39,9 +35,10 @@ public class ElementTreeViewManagerContextMenuShortcutTests
         component.Instances.Add(instance);
         project.Components.Add(component);
 
-        ElementTreeViewManager treeViewManager = ActivatorUtilities.CreateInstance<ElementTreeViewManager>(Services);
-        treeViewManager.Initialize();
-        AvaloniaPluginTab projectTab = ((AvaloniaTabManager)tabManager).Left.Last(tab => tab.Title == "Project");
+        // The head's own tree, the one its plugin syncs selection into. A second manager would
+        // fight this one over ISelectedState: the plugin selects into the tree it owns, and a
+        // node it cannot find there clears the selection the test just made.
+        ElementTreeViewManager treeViewManager = Services.GetRequiredService<ElementTreeViewManager>();
         try
         {
             treeViewManager.RefreshUi();
@@ -63,8 +60,11 @@ public class ElementTreeViewManagerContextMenuShortcutTests
         {
             selectedState.SelectedInstance = null;
             selectedState.SelectedElement = null;
+            treeViewManager.SelectedNode = null;
             ObjectFinder.Self.GumProjectSave = null;
-            tabManager.RemoveTab(projectTab);
+            // The project manager keeps this project, and IProjectState reads the folder off it, so
+            // a later test would walk a directory that was never created.
+            project.FullFileName = null!;
         }
     }
 }

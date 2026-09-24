@@ -12,7 +12,6 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
 using Gum.Plugins;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.ToolStates;
 using Gum.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,9 +21,9 @@ namespace Gum.Avalonia.Tests;
 
 /// <summary>
 /// Every add gesture, driven with real pointer input through the head's real service graph on a
-/// tree manager of its own (the head's singleton manager keeps its tab for the main-window tests):
-/// each add lands at the add destination, the container the user last clicked, and paste follows
-/// the same destination.
+/// tree manager of its own (the head's singleton manager keeps its panel for the main-window
+/// tests): each add lands at the add destination, the container the user last clicked, and paste
+/// follows the same destination.
 /// </summary>
 public class StandardsPaletteAddTests
 {
@@ -49,7 +48,9 @@ public class StandardsPaletteAddTests
         ComponentSave button = NewComponent("Button");
         project.Components.Add(button);
 
-        // A manager of this test's own, so its panel can live in this test's window.
+        // A manager of this test's own, so its panel can live in this test's window: hosting the
+        // head's own panel here leaves its template attached to this window and the main-window
+        // tests then cannot show it.
         ElementTreeViewManager treeViewManager = ActivatorUtilities.CreateInstance<ElementTreeViewManager>(Services);
         treeViewManager.Initialize();
         AvaloniaPluginTab projectTab = tabManager.Left.Last(tab => tab.Title == "Project");
@@ -111,7 +112,11 @@ public class StandardsPaletteAddTests
         {
             selectedState.SelectedInstance = null;
             selectedState.SelectedElement = null;
+            treeViewManager.SelectedNode = null;
             ObjectFinder.Self.GumProjectSave = null;
+            // The project manager keeps this project, and IProjectState reads the folder off it, so
+            // a later test would walk a directory that was never created.
+            project.FullFileName = null!;
             window.Content = null;
             window.Close();
             tabManager.RemoveTab(projectTab);
