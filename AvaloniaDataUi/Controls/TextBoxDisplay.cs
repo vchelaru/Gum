@@ -21,6 +21,8 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     private readonly LabelDragScrubLogic _scrubLogic;
     private readonly Grid _grid;
     private readonly TextBlock _label;
+    // Fills the label column with a hit-testable background so a scrub starts anywhere left of the field.
+    private readonly Border _labelHost;
     private readonly TextBox _textBox;
     private readonly CheckBox _nullableCheckBox;
     private readonly TextBlock _hint;
@@ -40,9 +42,14 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             VerticalAlignment = VerticalAlignment.Center,
             TextWrapping = global::Avalonia.Media.TextWrapping.Wrap,
         };
-        _label.PointerPressed += HandleLabelPointerPressed;
-        _label.PointerMoved += HandleLabelPointerMoved;
-        _label.PointerReleased += HandleLabelPointerReleased;
+        _labelHost = new Border
+        {
+            Background = global::Avalonia.Media.Brushes.Transparent,
+            Child = _label,
+        };
+        _labelHost.PointerPressed += HandleLabelPointerPressed;
+        _labelHost.PointerMoved += HandleLabelPointerMoved;
+        _labelHost.PointerReleased += HandleLabelPointerReleased;
 
         _textBox = new TextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
         _textBox.GotFocus += (_, _) => RefreshPlaceholderText();
@@ -68,7 +75,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         Grid.SetColumn(_nullableCheckBox, 2);
         Grid.SetRow(_hint, 2);
         Grid.SetColumnSpan(_hint, 3);
-        _grid.Children.Add(_label);
+        _grid.Children.Add(_labelHost);
         _grid.Children.Add(_textBox);
         _grid.Children.Add(_nullableCheckBox);
         _grid.Children.Add(_hint);
@@ -167,7 +174,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
         SuppressSettingProperty = false;
 
-        _label.Cursor = _logic.IsNumeric ? new Cursor(StandardCursorType.SizeWestEast) : null;
+        _labelHost.Cursor = _logic.IsNumeric ? new Cursor(StandardCursorType.SizeWestEast) : null;
         _nullableCheckBox.IsVisible = IsDisplayedTypeNullable();
     }
 
@@ -305,7 +312,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
     private void HandleLabelPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (!_logic.IsNumeric || !EnableLabelDragValueChange || !e.GetCurrentPoint(_label).Properties.IsLeftButtonPressed)
+        if (!_logic.IsNumeric || !EnableLabelDragValueChange || !e.GetCurrentPoint(_labelHost).Properties.IsLeftButtonPressed)
         {
             return;
         }
@@ -318,7 +325,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _scrubLogic.Begin(value, _logic.InstancePropertyType);
         _dragLastPosition = e.GetPosition(this);
         _dragPressedPosition = _dragLastPosition;
-        e.Pointer.Capture(_label);
+        e.Pointer.Capture(_labelHost);
         e.Handled = true;
     }
 
@@ -349,7 +356,10 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
         if (TryGetValueOnUi(out _) == ApplyValueResult.Success)
         {
+            // Scrubbing from null clears "Is Null"; its handler would commit that as a separate full edit.
+            SuppressSettingProperty = true;
             TrySetValueOnUi(rounded);
+            SuppressSettingProperty = false;
             // A scrub is a user edit; the text box does not report programmatic text as one.
             _logic.HasUserChangedAnything = true;
             _lastApplyValueResult = _logic.TryApplyToInstance(SetPropertyCommitType.Intermediate);
