@@ -44,11 +44,15 @@ internal static class ToolStartup
 
         IServiceProvider services = TestAppBuilder.Services;
         services.GetRequiredService<ITypeManager>().Initialize();
+        AvaloniaTabManager tabManager = (AvaloniaTabManager)services.GetRequiredService<ITabManager>();
+
+        // Builds the Project tab's tree. Until this has run, the first project load that reaches
+        // the tree's plugin throws on the view it never got.
+        services.GetRequiredService<ElementTreeViewManager>().Initialize();
 
         // Builds the Variables tab's view and grid. Until this has run, the first selection event
         // that reaches the tab's plugin throws on the grid it never got.
         services.GetRequiredService<PropertyGridManager>().InitializeEarly();
-        AvaloniaTabManager tabManager = (AvaloniaTabManager)services.GetRequiredService<ITabManager>();
         _variablesTab = tabManager.CenterBottom.Last(tab => tab.Title == "Variables");
 
         PluginManager pluginManager = services.GetRequiredService<PluginManager>();

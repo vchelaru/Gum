@@ -1,8 +1,11 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.StateAnimation.SaveClasses;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace Gum.ProjectServices;
 
@@ -28,11 +31,30 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
     /// <inheritdoc/>
     public IEnumerable<ErrorResult> GetErrors(ElementSave element, GumProjectSave project)
     {
-        ElementAnimationsSave? animations = _animationsProvider.GetAnimationsFor(element, project);
-        if (animations == null)
+        ElementAnimationsSave? animations;
+        try
         {
-            yield break;
+            animations = _animationsProvider.GetAnimationsFor(element, project);
         }
+        catch (Exception exception) when (IsUnreadableFile(exception))
+        {
+            // A corrupt sidecar is an error to show, not an exception that disables the Errors tab.
+            return
+            [
+                new ErrorResult
+                {
+                    ElementName = element.Name,
+                    Message = $"The animation file could not be read: {exception.Message}",
+                    Severity = ErrorSeverity.Error
+                }
+            ];
+        }
+
+        return animations == null ? [] : GetKeyframeErrors(element, animations, project);
+    }
+
+    private IEnumerable<ErrorResult> GetKeyframeErrors(ElementSave element, ElementAnimationsSave animations, GumProjectSave project)
+    {
 
         foreach (AnimationSave animation in animations.Animations)
         {
@@ -83,9 +105,22 @@ public class AnimationKeyframeErrorSource : IAdditionalErrorSource
         {
             return false;
         }
-        ElementAnimationsSave? instanceAnimations = _animationsProvider.GetAnimationsFor(instanceElement, project);
+        ElementAnimationsSave? instanceAnimations;
+        try
+        {
+            instanceAnimations = _animationsProvider.GetAnimationsFor(instanceElement, project);
+        }
+        catch (Exception exception) when (IsUnreadableFile(exception))
+        {
+            // The instance element's own check reports its unreadable file; a keyframe into it
+            // cannot be judged, so it is not also reported as missing.
+            return true;
+        }
         return instanceAnimations?.Animations.Any(item => item.Name == keyframe.RootName) == true;
     }
+
+    private static bool IsUnreadableFile(Exception exception) =>
+        exception is IOException or UnauthorizedAccessException or JsonException;
 
     /// <summary>
     /// Mirrors the State Animation plugin's categorized-name lookup: a keyframe's

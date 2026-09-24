@@ -61,6 +61,21 @@ public class AnimationKeyframeErrorSourceTests
         CreateSut().GetErrors(element, new GumProjectSave()).ShouldBeEmpty();
     }
 
+    [Fact]
+    public void GetErrors_ReportsAnError_WhenTheAnimationFileCannotBeRead()
+    {
+        ComponentSave element = ElementWithCategorizedState("Cat", "Idle");
+        _animationsProvider
+            .Setup(provider => provider.GetAnimationsFor(element, It.IsAny<GumProjectSave>()))
+            .Throws(new System.IO.IOException("Could not deserialize the XML file"));
+
+        List<ErrorResult> errors = CreateSut().GetErrors(element, new GumProjectSave()).ToList();
+
+        errors.Count.ShouldBe(1);
+        errors[0].ElementName.ShouldBe("Foo");
+        errors[0].Message.ShouldContain("Could not deserialize the XML file");
+    }
+
     private AnimationKeyframeErrorSource CreateSut()
     {
         return new AnimationKeyframeErrorSource(_animationsProvider.Object);

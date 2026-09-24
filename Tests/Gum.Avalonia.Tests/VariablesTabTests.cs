@@ -400,6 +400,9 @@ public class VariablesTabTests
         {
             selectedState.SelectedElement = null;
             ObjectFinder.Self.GumProjectSave = null;
+            // The project manager keeps this project, and IProjectState reads the folder off it, so
+            // a later test would walk a directory this one just deleted.
+            projectManager.GumProjectSave!.FullFileName = null!;
             Directory.Delete(projectFolder, recursive: true);
         }
     }

@@ -1277,7 +1277,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                     .ToList()
                 : new List<GumTreeNode>();
 
-            Select(treeNodeList);
+            // As the single-instance overload above: nodes the tree does not hold (a project just
+            // loaded, a refresh it has not had, a filter that dropped them) leave the tree's own
+            // selection alone. Clearing it here travels back out through AfterSelect and nulls the
+            // instance the caller just selected.
+            if (treeNodeList.Count != 0)
+            {
+                Select(treeNodeList);
+            }
         }
         else
         {
