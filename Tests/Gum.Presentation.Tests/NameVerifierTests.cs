@@ -146,6 +146,42 @@ public class NameVerifierTests : BaseTestClass
         isValid.ShouldBeTrue("Because an inactive variable (e.g. a leftover from a type change) should not block reuse of its name.");
     }
 
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnTrue_WhenNameBelongsToTheVariableBeingEdited()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        VariableSave editedVariable = new VariableSave { Name = "EditedVar", Type = "int", IsCustomVariable = true };
+        element.DefaultState.Variables.Add(editedVariable);
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns((ElementSave?)null);
+        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(editedVariable, element, null)).Returns(true);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("EditedVar", element, editedVariable, out string whyNotValid);
+
+        isValid.ShouldBeTrue("Because keeping a variable's own name (e.g. to change only its type) is not a duplicate.");
+    }
+
+    [Fact]
+    public void IsVariableNameValid_ShouldReturnTrue_WhenSelectedStateHoldsACopyOfTheVariableBeingEdited()
+    {
+        ComponentSave element = new ComponentSave { Name = "MyComponent" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        VariableSave editedVariable = new VariableSave { Name = "EditedVar", Type = "int", IsCustomVariable = true };
+        element.DefaultState.Variables.Add(editedVariable);
+        StateSave selectedStateSave = new StateSave { Name = "Highlighted" };
+        VariableSave stateCopy = new VariableSave { Name = "EditedVar", Type = "int" };
+        selectedStateSave.Variables.Add(stateCopy);
+
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(element);
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns(selectedStateSave);
+        _variableSaveLogic.Setup(x => x.GetIfVariableIsActive(stateCopy, element, null)).Returns(true);
+
+        bool isValid = _nameVerifier.IsVariableNameValid("EditedVar", element, editedVariable, out string whyNotValid);
+
+        isValid.ShouldBeTrue("Because the selected state's value for the edited variable is the same variable, not a duplicate.");
+    }
+
     #endregion
 
     #region StateSaveCategory
