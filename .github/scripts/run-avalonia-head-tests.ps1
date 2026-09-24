@@ -20,6 +20,11 @@
 # retry passes. Retry runs therefore write to TestResults/retries/ (out of the non-recursive glob)
 # and their outcomes are merged back into the first attempt's report, which keeps the published
 # report a full-suite result instead of a stale failure or a filtered handful of tests.
+#
+# Every attempt runs --no-build against the workflow's preceding Release build of Gum.slnx. A
+# rebuild re-rolls a parallel-build file lock (MSB3248 on a DLL two nodes write at once), which
+# fails the attempt before any test runs, so a retry meant to re-roll the dispatcher race could
+# never get to it.
 
 $ErrorActionPreference = 'Stop'
 
@@ -85,7 +90,7 @@ for ($attempt = 1; $attempt -le $maxAttempts; $attempt++)
     $trxDirectory = if ($isRetry) { $retryDirectory } else { $resultsDirectory }
     $trxPath = Join-Path $trxDirectory $trxName
 
-    dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release `
+    dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build `
         --logger "trx;LogFileName=$trxName" --results-directory $trxDirectory @filterArgs
     $exitCode = $LASTEXITCODE
 
