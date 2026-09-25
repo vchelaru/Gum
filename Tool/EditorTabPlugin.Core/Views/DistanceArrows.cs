@@ -150,6 +150,8 @@ namespace Gum.Wireframe
             Arrow1.Visible = (arrow1Start - startAbsolute).Length() > ToWorld(6);
             Arrow2.Visible = (arrow2Start - endAbsolute).Length() > ToWorld(6);
 
+            Arrow1.LinePixelWidth = _displayScale.DisplayScale;
+            Arrow2.LinePixelWidth = _displayScale.DisplayScale;
             Arrow1.SetFrom(arrow1Start, startAbsolute, ToWorld(8));
             Arrow2.SetFrom(arrow2Start, endAbsolute, ToWorld(8));
         }
@@ -187,6 +189,17 @@ namespace Gum.Wireframe
                 body.Color = value;
                 endLine1.Color = value;
                 endLine2.Color = value;
+            }
+        }
+
+        public float LinePixelWidth
+        {
+            get => body.LinePixelWidth;
+            set
+            {
+                body.LinePixelWidth = value;
+                endLine1.LinePixelWidth = value;
+                endLine2.LinePixelWidth = value;
             }
         }
 

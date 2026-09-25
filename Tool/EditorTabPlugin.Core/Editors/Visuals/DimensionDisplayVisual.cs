@@ -184,6 +184,11 @@ public class DimensionDisplayVisual : EditorVisualBase
         float endCapLength = 12 * adjustedScaleFactorWithEditorZoom;
         _dimensionDisplayText.FontScale = adjustedScaleFactorWithEditorZoom;
 
+        float lineWidth = Context.DisplayScale.DisplayScale;
+        _middleLine.LinePixelWidth = lineWidth;
+        _endCap1.LinePixelWidth = lineWidth;
+        _endCap2.LinePixelWidth = lineWidth;
+
         var rotationMatrix = asIpso.GetAbsoluteRotationMatrix();
         var rotatedLeftDirection = new Vector2(rotationMatrix.Left().X, rotationMatrix.Left().Y);
         var rotatedRightDirection = new Vector2(rotationMatrix.Right().X, rotationMatrix.Right().Y);

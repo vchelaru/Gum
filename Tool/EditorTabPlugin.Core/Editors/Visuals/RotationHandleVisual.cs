@@ -105,6 +105,7 @@ public class RotationHandleVisual : EditorVisualBase, IRotationHandleVisual
         _rotationHandle.X = singleSelectedObject.AbsoluteX + offset.X;
         _rotationHandle.Y = singleSelectedObject.AbsoluteY + offset.Y;
         _rotationHandle.Radius = ToWorldOverlaySize(RadiusAtNoZoom);
+        _rotationHandle.LinePixelWidth = Context.DisplayScale.DisplayScale;
     }
 
     public override void Destroy()

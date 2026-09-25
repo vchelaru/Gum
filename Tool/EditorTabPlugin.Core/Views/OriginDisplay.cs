@@ -44,31 +44,31 @@ namespace Gum.Wireframe
         {
             _displayScale = displayScale;
 
-            mXLine1 = new Line(null);
-            mXLine2 = new Line(null);
+            mXLine1 = new Line();
+            mXLine2 = new Line();
             mXLine1.Name = "Resize Handle X Line 1";
             mXLine2.Name = "Resize Handle X Line 2";
 
             ShapeManager.Self.Add(mXLine1, layer);
             ShapeManager.Self.Add(mXLine2, layer);
 
-            mXOriginLine = new Line(null);
+            mXOriginLine = new Line();
             mXOriginLine.Name = "Origin X Line";
             mXOriginLine.Color = Color.Red;
             ShapeManager.Self.Add(mXOriginLine, layer);
 
-            mYOriginLine = new Line(null);
+            mYOriginLine = new Line();
             mYOriginLine.Name = "Origin Y Line";
             mYOriginLine.Color = Color.Green;
             ShapeManager.Self.Add(mYOriginLine, layer);
 
-            mTopConnectorLine = new Line(null);
+            mTopConnectorLine = new Line();
             mTopConnectorLine.Name = "Origin Top Connector";
             mTopConnectorLine.Color = Color.FromArgb(127, 0, 128, 0); // transparent green, matches Y axis
             mTopConnectorLine.IsDotted = true;
             ShapeManager.Self.Add(mTopConnectorLine, layer);
 
-            mLeftConnectorLine = new Line(null);
+            mLeftConnectorLine = new Line();
             mLeftConnectorLine.Name = "Origin Left Connector";
             mLeftConnectorLine.Color = Color.FromArgb(127, 255, 0, 0); // transparent red, matches X axis
             mLeftConnectorLine.IsDotted = true;
@@ -93,6 +93,12 @@ namespace Gum.Wireframe
 
             mXOriginLine.Visible = true;
             mYOriginLine.Visible = true;
+
+            float lineWidth = _displayScale.DisplayScale;
+            mXOriginLine.LinePixelWidth = lineWidth;
+            mYOriginLine.LinePixelWidth = lineWidth;
+            mTopConnectorLine.LinePixelWidth = lineWidth;
+            mLeftConnectorLine.LinePixelWidth = lineWidth;
 
             // The child's position is relative
             // to the parent, but not always the
@@ -256,6 +262,9 @@ namespace Gum.Wireframe
 
             mXLine2.X = selectedObjectX - offset;
             mXLine2.Y = selectedObjectY + offset;
+
+            mXLine1.LinePixelWidth = _displayScale.DisplayScale;
+            mXLine2.LinePixelWidth = _displayScale.DisplayScale;
 
             mXLine1.RelativePoint = new Vector2(offset * 2, offset * 2);
             mXLine2.RelativePoint = new Vector2(offset * 2, -offset * 2);

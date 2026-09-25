@@ -92,6 +92,15 @@ namespace RenderingLibrary.Math.Geometry
             get { return true; }
         }
 
+        /// <summary>
+        /// The stroke width in screen pixels, unaffected by camera zoom.
+        /// </summary>
+        public float LinePixelWidth
+        {
+            get => mLinePrimitive.LinePixelWidth;
+            set => mLinePrimitive.LinePixelWidth = value;
+        }
+
         public CircleOrigin CircleOrigin
         {
             get
