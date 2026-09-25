@@ -81,6 +81,7 @@ public class UndoManager : IUndoManager
             _elementStrategy.TryRecord();
             _elementStrategy.TryRecordTargeted();
             _behaviorStrategy.TryRecord();
+            _elementStrategy.DiscardPendingCrossElementChanges();
         }
     }
 
@@ -106,8 +107,9 @@ public class UndoManager : IUndoManager
     public void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges)
         => _elementStrategy.ApplyUndoSnapshotToElement(undoSnapshot, toApplyTo, propagateNameChanges);
 
-    public void AttachCrossElementVariableRemovals(IEnumerable<CrossElementVariableChange> removals)
-        => _elementStrategy.AttachCrossElementVariableRemovals(removals);
+    /// <inheritdoc/>
+    public void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes)
+        => _elementStrategy.RecordCrossElementVariableChanges(changes);
 
     public UndoLock RequestLock()
     {

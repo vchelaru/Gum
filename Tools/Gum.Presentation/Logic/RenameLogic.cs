@@ -28,6 +28,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     private readonly IRenamePluginNotifier _renamePluginNotifier;
     private readonly IStandardElementsManagerGumTool _standardElementsManagerGumTool;
     private readonly IReferenceFinder _referenceFinder;
+    // Lazy: UndoManager depends on this class through IUndoRenameLogic.
+    private readonly Lazy<IUndoManager> _undoManager;
 
     public RenameLogic(ISelectedState selectedState,
         INameVerifier nameVerifier,
@@ -38,7 +40,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         IRenameProjectProvider renameProjectProvider,
         IRenamePluginNotifier renamePluginNotifier,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
-        IReferenceFinder referenceFinder)
+        IReferenceFinder referenceFinder,
+        Lazy<IUndoManager> undoManager)
     {
         _selectedState = selectedState;
         _nameVerifier = nameVerifier;
@@ -50,6 +53,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         _renamePluginNotifier = renamePluginNotifier;
         _standardElementsManagerGumTool = standardElementsManagerGumTool;
         _referenceFinder = referenceFinder;
+        _undoManager = undoManager;
     }
 
     #region StateSave
@@ -95,12 +99,24 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
     public void ApplyStateReferences(StateReferences changes, StateSave state)
     {
         var elementsToSave = new HashSet<ElementSave>();
+        var undoChanges = new List<CrossElementVariableChange>();
 
         foreach (var (container, variable) in changes.VariablesToUpdate)
         {
+            var owningState = container.AllStates.FirstOrDefault(item => item.Variables.Contains(variable));
+            var undoChange = owningState == null ? null : CrossElementVariableChange.CaptureBefore(container, owningState, variable);
+
             variable.Value = state.Name;
             elementsToSave.Add(container);
+
+            if (undoChange != null)
+            {
+                undoChange.CaptureAfter(variable);
+                undoChanges.Add(undoChange);
+            }
         }
+
+        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges);
 
         foreach (var elementToSave in elementsToSave)
         {
@@ -186,6 +202,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         category.Name = newName;
 
         HashSet<ElementSave> elementsWithChangedVariables = new HashSet<ElementSave>();
+        var undoChanges = new List<(CrossElementVariableChange Change, VariableSave Variable)>();
 
         foreach (var change in categoryChanges.VariableChanges)
         {
@@ -193,6 +210,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             if (containerElement != null)
             {
                 elementsWithChangedVariables.Add(change.Container as ElementSave);
+                undoChanges.Add((CrossElementVariableChange.CaptureBefore(containerElement, change.State, change.Variable), change.Variable));
             }
             change.Variable.Type = newName;
             if (change.Variable.GetRootName() == $"{oldName}State")
@@ -224,6 +242,12 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 state.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
             }
         }
+
+        foreach (var (undoChange, variable) in undoChanges)
+        {
+            undoChange.CaptureAfter(variable);
+        }
+        _undoManager.Value.RecordCrossElementVariableChanges(undoChanges.Select(item => item.Change));
 
         _guiCommands.RefreshStateTreeView();
         // I don't think we need to save the project when renaming a state:

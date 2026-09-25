@@ -47,6 +47,10 @@ public class ElementUndoStrategy : IUndoStrategy
     // keyed by the element; recorded into that element's history when the last lock is released.
     private readonly Dictionary<ElementSave, UndoSnapshot> _targetedBaselines = new Dictionary<ElementSave, UndoSnapshot>();
 
+    // Changes to other elements made under the current lock; attached to the action TryRecord appends
+    // when the last lock is released, then discarded.
+    private readonly List<CrossElementVariableChange> _pendingCrossElementChanges;
+
     public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
 
     public ElementHistory CurrentElementHistory
@@ -87,6 +91,7 @@ public class ElementUndoStrategy : IUndoStrategy
         _projectProvider = projectProvider;
         _areUndoLocksActive = areUndoLocksActive;
         _raiseUndosChanged = raiseUndosChanged;
+        _pendingCrossElementChanges = new List<CrossElementVariableChange>();
     }
 
     /// <summary>
@@ -283,6 +288,12 @@ public class ElementUndoStrategy : IUndoStrategy
                     currentAnimations, baselineAnimations);
 
                 AppendAction(history, undoSnapshot, redoSnapshot);
+
+                if (_pendingCrossElementChanges.Count > 0)
+                {
+                    history.Actions[history.Actions.Count - 1].CrossElementVariableChanges = _pendingCrossElementChanges.ToList();
+                    _pendingCrossElementChanges.Clear();
+                }
 
                 CaptureBaseline();
 
@@ -491,7 +502,7 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshStateTreeView,
                 out bool shouldRefreshBehaviorView);
 
-            ReplayCrossElementVariableRemovals(undoSnapshot.CrossElementVariableRemovals, restoring: true);
+            ReplayCrossElementVariableChanges(undoSnapshot.CrossElementVariableChanges, isUndo: true);
 
             //if (undoSnapshot.UndoState.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
             //    undoSnapshot.UndoState.StateName != _selectedState.SelectedStateSave?.Name)
@@ -636,7 +647,7 @@ public class ElementUndoStrategy : IUndoStrategy
                 out bool shouldRefreshStateTreeView,
                 out bool shouldRefreshBehaviorView);
 
-            ReplayCrossElementVariableRemovals(actionToRedo!.CrossElementVariableRemovals, restoring: false);
+            ReplayCrossElementVariableChanges(actionToRedo!.CrossElementVariableChanges, isUndo: false);
 
             if (redoSnapshot.CategoryName != _selectedState.SelectedStateCategorySave?.Name ||
                 redoSnapshot.StateName != _selectedState.SelectedStateSave?.Name)
@@ -670,86 +681,110 @@ public class ElementUndoStrategy : IUndoStrategy
     }
 
     /// <summary>
-    /// Attaches instance-level variable removals made on other elements to the most recently recorded
-    /// action for the currently selected element (the owner). Must be called after the RequestLock
-    /// that performed the removals has disposed, so TryRecord has already appended the owner's own
-    /// action to attach to. See ADR 0016.
+    /// Queues changes made to elements other than the selected one, to be attached to the action
+    /// recorded when the last undo lock is released. Ignored when no lock is held, since no action
+    /// would record them.
     /// </summary>
-    public void AttachCrossElementVariableRemovals(IEnumerable<CrossElementVariableChange> removals)
+    public void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes)
     {
-        var list = removals as IReadOnlyCollection<CrossElementVariableChange> ?? removals.ToList();
-        if (list.Count == 0 || _selectedState.SelectedElement == null)
+        if (_areUndoLocksActive())
         {
-            return;
+            _pendingCrossElementChanges.AddRange(changes);
         }
-
-        if (!mUndos.TryGetValue(_selectedState.SelectedElement, out var history) || history.Actions.Count == 0)
-        {
-            return;
-        }
-
-        history.Actions[history.Actions.Count - 1].CrossElementVariableRemovals = list.ToList();
     }
 
     /// <summary>
-    /// Restores (undo, <paramref name="restoring"/> true) or re-removes (redo, false) each cross-element
-    /// variable removal attached to an action, tolerating an instance, state, or whole element deleted
-    /// since the action was recorded by skipping it. Mirrors a normal edit: saves each element it
-    /// touches and notifies plugins via the same VariableSet event a live edit fires.
+    /// Drops queued cross-element changes that no recorded action claimed. Called once the last lock
+    /// is released and recording has run.
     /// </summary>
-    private void ReplayCrossElementVariableRemovals(List<CrossElementVariableChange>? removals, bool restoring)
+    public void DiscardPendingCrossElementChanges()
     {
-        if (removals == null)
+        _pendingCrossElementChanges.Clear();
+    }
+
+    /// <summary>
+    /// Reverses (undo) or re-applies (redo) each cross-element change attached to an action, skipping
+    /// an element, instance, or state deleted since the action was recorded. Mirrors a normal edit:
+    /// saves each element it touches and notifies plugins via the same VariableSet event a live edit
+    /// fires.
+    /// </summary>
+    private void ReplayCrossElementVariableChanges(List<CrossElementVariableChange>? changes, bool isUndo)
+    {
+        if (changes == null)
         {
             return;
         }
 
-        foreach (var removal in removals)
+        IEnumerable<CrossElementVariableChange> ordered = isUndo ? Enumerable.Reverse(changes) : changes;
+
+        foreach (var change in ordered)
         {
             // Whole-element deletion is a separate, non-undoable action (its own history is discarded
             // with it) - the deleted element's object can still be referenced here since C# references
             // don't get cleared by removing it from the project's element lists, so this must be
             // checked explicitly or a stale reference resurrects a file for a screen/component the
             // user already deleted.
-            if (_projectProvider.GumProjectSave?.AllElements.Contains(removal.Container) != true ||
-                !removal.Container.Instances.Contains(removal.Instance) ||
-                !removal.Container.AllStates.Contains(removal.State))
+            if (_projectProvider.GumProjectSave?.AllElements.Contains(change.Container) != true ||
+                (change.Instance != null && !change.Container.Instances.Contains(change.Instance)) ||
+                !change.Container.AllStates.Contains(change.State))
             {
                 continue;
             }
 
-            var variables = removal.State.Variables;
+            var from = isUndo ? change.After : change.Before;
+            var to = isUndo ? change.Before : change.After;
 
-            // Match by name, not by the captured object reference: StateSave.SetValue creates a NEW
-            // VariableSave when none exists under that name, so a value re-assigned after the cascade
-            // removed the original is a different object with the same Name - and VariableSave has no
-            // value-equality override, so reference-based Contains/Remove would silently miss it.
-            var existing = variables.FirstOrDefault(v => v.Name == removal.Variable.Name);
-
-            bool changed;
-            if (restoring)
+            if (ApplyCrossElementVariableChange(change.State, from, to))
             {
-                changed = existing == null;
-                if (changed)
-                {
-                    variables.Add(removal.Variable);
-                }
-            }
-            else
-            {
-                changed = existing != null;
-                if (changed)
-                {
-                    variables.Remove(existing!);
-                }
-            }
-
-            if (changed)
-            {
-                _fileCommands.TryAutoSaveElement(removal.Container);
-                _pluginNotifier.VariableSet(removal.Container, removal.Instance, removal.Variable.GetRootName(), null);
+                _fileCommands.TryAutoSaveElement(change.Container);
+                _pluginNotifier.VariableSet(change.Container, change.Instance, (to ?? from)!.GetRootName(), null);
             }
         }
+    }
+
+    /// <summary>
+    /// Moves one variable in <paramref name="state"/> from <paramref name="from"/> to
+    /// <paramref name="to"/> (null meaning absent). Returns whether anything changed. Restoring a
+    /// removed variable is skipped if one with that name exists again; modifying one is skipped unless
+    /// it still holds exactly what the action left, so an edit made since is never overwritten.
+    /// </summary>
+    private static bool ApplyCrossElementVariableChange(StateSave state, VariableSave? from, VariableSave? to)
+    {
+        var variables = state.Variables;
+
+        // Match by name, not by the captured object reference: StateSave.SetValue creates a NEW
+        // VariableSave when none exists under that name, so a value re-assigned since is a different
+        // object with the same Name.
+        var existing = variables.FirstOrDefault(v => v.Name == (from ?? to)!.Name);
+
+        if (to == null)
+        {
+            if (existing == null)
+            {
+                return false;
+            }
+            variables.Remove(existing);
+            return true;
+        }
+
+        if (from == null)
+        {
+            if (existing != null)
+            {
+                return false;
+            }
+            variables.Add(to.Clone());
+            return true;
+        }
+
+        if (existing == null || existing.Type != from.Type || !Equals(existing.Value, from.Value))
+        {
+            return false;
+        }
+        existing.Name = to.Name;
+        existing.Type = to.Type;
+        existing.Value = to.Value;
+        return true;
     }
 
     private AddedAndRemovedInstances? ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo,

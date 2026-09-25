@@ -5,6 +5,7 @@ using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
+using Gum.Undo;
 using Gum.Wireframe;
 using System;
 using System.Collections;
@@ -25,6 +26,8 @@ public class DeleteLogic : IDeleteLogic
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IDeleteProjectProvider _deleteProjectProvider;
     private readonly IReferenceFinder _referenceFinder;
+    // Lazy: UndoManager depends on RenameLogic, which depends on this class.
+    private readonly Lazy<IUndoManager> _undoManager;
 
     public DeleteLogic(
         ISelectedState selectedState,
@@ -35,7 +38,8 @@ public class DeleteLogic : IDeleteLogic
         IDeletePluginNotifier deletePluginNotifier,
         IWireframeObjectManager wireframeObjectManager,
         IDeleteProjectProvider deleteProjectProvider,
-        IReferenceFinder referenceFinder)
+        IReferenceFinder referenceFinder,
+        Lazy<IUndoManager> undoManager)
     {
         _selectedState = selectedState;
         _dialogService = dialogService;
@@ -46,6 +50,7 @@ public class DeleteLogic : IDeleteLogic
         _wireframeObjectManager = wireframeObjectManager;
         _deleteProjectProvider = deleteProjectProvider;
         _referenceFinder = referenceFinder;
+        _undoManager = undoManager;
     }
 
 
@@ -690,6 +695,7 @@ public class DeleteLogic : IDeleteLogic
         if (_selectedState.SelectedElement != null)
         {
             var element = _selectedState.SelectedElement;
+            var removals = new List<CrossElementVariableChange>();
 
             foreach (var state in element.AllStates)
             {
@@ -699,6 +705,9 @@ public class DeleteLogic : IDeleteLogic
 
                     if (variable.Type == category.Name)
                     {
+                        // The element's own undo snapshot covers only its selected state and its
+                        // categories, so a removal from another uncategorized state is recorded too.
+                        removals.Add(CrossElementVariableChange.CaptureBefore(element, state, variable));
                         state.Variables.RemoveAt(i);
                     }
                 }
@@ -719,6 +728,11 @@ public class DeleteLogic : IDeleteLogic
 
                     foreach (var state in ownerOfInstance.AllStates)
                     {
+                        foreach (var variable in state.Variables.Where(item => item.Name == variableToRemove))
+                        {
+                            removals.Add(CrossElementVariableChange.CaptureBefore(ownerOfInstance, state, variable));
+                        }
+
                         var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
 
                         if (numberRemoved > 0)
@@ -733,6 +747,8 @@ public class DeleteLogic : IDeleteLogic
                     }
                 }
             }
+
+            _undoManager.Value.RecordCrossElementVariableChanges(removals);
         }
 
         if (isRemovingSelectedCategory)
@@ -937,16 +953,21 @@ public class DeleteLogic : IDeleteLogic
         StateReferences references = _referenceFinder.GetReferencesToState(stateSave, stateSave.Name, container, category);
 
         var elementsToSave = new HashSet<ElementSave>();
+        var removals = new List<CrossElementVariableChange>();
         foreach (var (referencingElement, variable) in references.VariablesToUpdate)
         {
             foreach (var state in referencingElement.AllStates)
             {
-                if (state.Variables.Remove(variable))
+                if (state.Variables.Contains(variable))
                 {
+                    removals.Add(CrossElementVariableChange.CaptureBefore(referencingElement, state, variable));
+                    state.Variables.Remove(variable);
                     elementsToSave.Add(referencingElement);
                 }
             }
         }
+
+        _undoManager.Value.RecordCrossElementVariableChanges(removals);
 
         foreach (var elementToSave in elementsToSave)
         {

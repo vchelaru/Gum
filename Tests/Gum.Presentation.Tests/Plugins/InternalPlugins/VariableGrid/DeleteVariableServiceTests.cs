@@ -51,10 +51,10 @@ public class DeleteVariableServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void DeleteVariable_WhenNoReferencesExist_ShouldNotAttachCrossElementRemovals()
+    public void DeleteVariable_WhenNoReferencesExist_ShouldNotRecordCrossElementChanges()
     {
         // The most common case: nobody references the variable at all. This must delete plainly and
-        // must never call AttachCrossElementVariableRemovals with an empty/pointless entry.
+        // must never record an empty/pointless entry.
         var (owner, variable) = MakeOwnerWithCustomVariable();
 
         _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
@@ -63,7 +63,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         _service.DeleteVariable(variable, owner);
 
         owner.DefaultState.Variables.ShouldNotContain(variable);
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class DeleteVariableServiceTests : BaseTestClass
     }
 
     [Fact]
-    public void DeleteVariable_WhenReferencedOnlyByInstanceValueOverride_ShouldAttachCrossElementRemovalForUndo()
+    public void DeleteVariable_WhenReferencedOnlyByInstanceValueOverride_ShouldRecordCrossElementRemovalForUndo()
     {
         var (owner, variable) = MakeOwnerWithCustomVariable();
 
@@ -117,12 +117,50 @@ public class DeleteVariableServiceTests : BaseTestClass
 
         _service.DeleteVariable(variable, owner);
 
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(
             It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
                 System.Linq.Enumerable.Single(removals).Container == otherScreen &&
                 System.Linq.Enumerable.Single(removals).Instance == instance &&
-                System.Linq.Enumerable.Single(removals).Variable == instanceVariable)),
+                System.Linq.Enumerable.Single(removals).Before!.Name == instanceVariable.Name && System.Linq.Enumerable.Single(removals).After == null)),
             Times.Once);
+    }
+
+    [Fact]
+    public void DeleteVariable_WhenReferencedOnlyByInstanceValueOverride_ShouldRecordRemovalWhileHoldingTheLock()
+    {
+        // The undo manager attaches recorded changes to the action its lock records on release, so a
+        // record made after the lock is disposed would be dropped.
+        var (owner, variable) = MakeOwnerWithCustomVariable();
+
+        var otherScreen = new ScreenSave { Name = "Screen1" };
+        otherScreen.States.Add(new StateSave { Name = "Default", ParentContainer = otherScreen });
+        var instance = new InstanceSave { Name = "Variable1Instance", BaseType = "Component1", ParentContainer = otherScreen };
+        otherScreen.Instances.Add(instance);
+        var instanceVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 7f };
+        otherScreen.DefaultState.Variables.Add(instanceVariable);
+
+        _renameLogic.Setup(x => x.GetChangesForRenamedVariable(owner, variable.Name, variable.GetRootName()))
+            .Returns(new VariableChangeResponse
+            {
+                VariableChanges =
+                {
+                    new VariableChange { Container = otherScreen, State = otherScreen.DefaultState, Variable = instanceVariable }
+                }
+            });
+        bool isLockHeld = false;
+        bool? wasLockHeldWhenRecorded = null;
+        _undoManager.Setup(x => x.RequestLock()).Returns(() =>
+        {
+            isLockHeld = true;
+            return new UndoLock(() => isLockHeld = false);
+        });
+        _undoManager
+            .Setup(x => x.RecordCrossElementVariableChanges(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()))
+            .Callback(() => wasLockHeldWhenRecorded = isLockHeld);
+
+        _service.DeleteVariable(variable, owner);
+
+        wasLockHeldWhenRecorded.ShouldBe(true);
     }
 
     [Fact]
@@ -182,7 +220,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         owner.DefaultState.Variables.ShouldContain(variable);
         defaultStateDerived.Variables.ShouldContain(exposedVariable);
         _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
     }
 
     [Fact]
@@ -220,11 +258,11 @@ public class DeleteVariableServiceTests : BaseTestClass
 
         owner.DefaultState.Variables.ShouldContain(variable);
         screenWithOverride.DefaultState.Variables.ShouldContain(instanceVariable);
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(It.IsAny<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>()), Times.Never);
     }
 
     [Fact]
-    public void DeleteVariable_WhenReferencedByMultipleInstanceOverrides_ShouldCascadeAndAttachAllOfThem()
+    public void DeleteVariable_WhenReferencedByMultipleInstanceOverrides_ShouldCascadeAndRecordAllOfThem()
     {
         var (owner, variable) = MakeOwnerWithCustomVariable();
 
@@ -257,7 +295,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         screenA.DefaultState.Variables.ShouldNotContain(variableA);
         screenB.DefaultState.Variables.ShouldNotContain(variableB);
 
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(
             It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
                 System.Linq.Enumerable.Count(removals) == 2)),
             Times.Once);
@@ -297,7 +335,7 @@ public class DeleteVariableServiceTests : BaseTestClass
         categoryState.Variables.ShouldNotContain(instanceVariable);
         otherScreen.DefaultState.Variables.ShouldNotContain(instanceVariable);
 
-        _undoManager.Verify(x => x.AttachCrossElementVariableRemovals(
+        _undoManager.Verify(x => x.RecordCrossElementVariableChanges(
             It.Is<System.Collections.Generic.IEnumerable<CrossElementVariableChange>>(removals =>
                 System.Linq.Enumerable.Single(removals).State == categoryState)),
             Times.Once);

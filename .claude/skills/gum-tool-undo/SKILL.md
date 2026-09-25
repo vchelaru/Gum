@@ -14,7 +14,7 @@ Gum has a snapshot-based undo/redo system scoped per-element. Undo history is di
 ### Per-Element Scoping
 Undo history is stored separately for each open element (Screen, Component, or StandardElement). Switching between elements does not share or merge history — each element maintains its own independent undo stack.
 
-**Narrow exception — cross-element variable removals (ADR 0016 / #4658).** An action that removes an instance-level variable assignment on OTHER elements (e.g. deleting a component variable that instances elsewhere had set) can attach those removals to the initiating element's own action via `IUndoManager.AttachCrossElementVariableRemovals`. The entry still lives only in the initiating element's history; undo/redo replays the attached `CrossElementVariableChange` list against the other elements directly (tolerating an instance or state deleted since recording), saving each one via the normal `TryAutoSaveElement` and firing the same `VariableSet` plugin event a live edit would. This works only because Gum has no tabs — at most one element has an active `RecordState` baseline at a time, so the replay can never collide with another element's own capture. See `DeleteVariableService` for the only current caller.
+**Narrow exception — cross-element variable changes (ADR 0016).** An action that removes or rewrites variables on OTHER elements (deleting a component variable or a state/category that instances elsewhere set, renaming a state/category) records those changes with `IUndoManager.RecordCrossElementVariableChanges` **while holding its `RequestLock`**; they attach to the action recorded when the last lock releases and are discarded if none is. Each `CrossElementVariableChange` holds before/after copies (`CaptureBefore`/`CaptureAfter`). Undo/redo replays them against the other elements directly, skipping deleted targets, restoring a removal only if the name is absent, and reversing a modification only if the variable still holds what the action left; each replay saves via `TryAutoSaveElement` and fires `VariableSet`. This works only because Gum has no tabs — at most one element has an active `RecordState` baseline at a time. Callers: `DeleteVariableService`, `DeleteLogic` (state/category delete), `RenameLogic` (state/category rename).
 
 ### No Selection Tracking
 Undos do not record or restore the user's selection state. After undoing or redoing an operation, the selected object in the tree view or canvas may not match what was selected when the change was originally made.
@@ -89,11 +89,11 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 | File | Purpose |
 |------|---------|
 | `Tools/Gum.Presentation/Undo/UndoManager.cs` | Orchestrator; delegates to `ElementUndoStrategy` (per-element history, `Dictionary<ElementSave, ElementHistory>`) and `BehaviorUndoStrategy` |
-| `Tools/Gum.Presentation/Undo/ElementUndoStrategy.cs` | Element undo/redo track: capture/diff/apply, plus cross-element variable removal attach + replay |
+| `Tools/Gum.Presentation/Undo/ElementUndoStrategy.cs` | Element undo/redo track: capture/diff/apply, plus cross-element variable change attach + replay |
 | `Tools/Gum.Presentation/Undo/UndoPlugin.cs` | Event handlers that call `RecordState()` / `RecordUndo()` (shared by both heads) |
 | `Tools/Gum.Presentation/Undo/UndoSnapshot.cs` | Snapshot structure and diff/comparison logic (`UndoComparison`) |
-| `Tools/Gum.Presentation/Undo/ElementHistory.cs` | `HistoryAction` (undo/redo snapshot pair + optional `CrossElementVariableRemovals`) and `ElementHistory` |
-| `Tools/Gum.Presentation/Undo/CrossElementVariableChange.cs` | One instance-level variable removal on another element, attached to an action for undo/redo replay |
+| `Tools/Gum.Presentation/Undo/ElementHistory.cs` | `HistoryAction` (undo/redo snapshot pair + optional `CrossElementVariableChanges`) and `ElementHistory` |
+| `Tools/Gum.Presentation/Undo/CrossElementVariableChange.cs` | One variable removal or modification on another element, attached to an action for undo/redo replay |
 | `Tools/Gum.Presentation/Undos/UndosViewModel.cs` | History tab display and description generation (shared) |
 | `Tool/Gum.Avalonia/Panels/InternalPanelViews.cs` (`UndosView`) | Avalonia History tab (the shipped tool) |
 | `Gum/Plugins/InternalPlugins/Undos/UndoDisplay.xaml` | WPF ListBox UI for the History tab (frozen head) |
@@ -104,7 +104,7 @@ Consequence: after an undo, `_selectedState.SelectedInstance` may point to a sta
 
 | Limitation | Details |
 |------------|---------|
-| No general cross-element undo | Undo stacks are per-element; a change to a non-selected element records into that element's own history through `RequestLock(element)` (undo it after selecting that element), and the only action spanning two histories is instance-level variable removal attached via `AttachCrossElementVariableRemovals` (see above) — everything else stays ungrouped |
+| No general cross-element undo | Undo stacks are per-element; a change to a non-selected element records into that element's own history through `RequestLock(element)` (undo it after selecting that element), and the only action spanning two histories is a variable change recorded via `RecordCrossElementVariableChanges` (see above) — everything else stays ungrouped |
 | No selection restore | Selection state is not captured or restored on undo/redo |
 | No persistence | History is cleared on project load or app close |
 | No element-deletion undo | Deleting an element removes its history permanently |

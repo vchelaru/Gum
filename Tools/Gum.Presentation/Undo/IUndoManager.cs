@@ -44,12 +44,12 @@ public interface IUndoManager
     void ApplyUndoSnapshotToElement(UndoSnapshot undoSnapshot, ElementSave toApplyTo, bool propagateNameChanges);
 
     /// <summary>
-    /// Attaches instance-level variable removals made on OTHER elements to the most recently recorded
-    /// undo action for the currently selected element. Call after the RequestLock that performed those
-    /// removals has been disposed (so the owning element's own action already exists to attach to).
-    /// See ADR 0016.
+    /// Records variable changes made on OTHER elements as part of the selected element's current edit,
+    /// so undoing that edit reverses them and redoing it re-applies them. Call while holding the
+    /// <see cref="RequestLock()"/> that brackets the edit; the changes attach to the action recorded
+    /// when the lock is released. Ignored when no lock is held. See ADR 0016.
     /// </summary>
-    void AttachCrossElementVariableRemovals(IEnumerable<CrossElementVariableChange> removals);
+    void RecordCrossElementVariableChanges(IEnumerable<CrossElementVariableChange> changes);
 
     void PerformUndo();
 

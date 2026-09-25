@@ -67,7 +67,8 @@ public class DeleteLogicTests : BaseTestClass
             _deletePluginNotifier.Object,
             _wireframeObjectManager.Object,
             _deleteProjectProvider.Object,
-            _referenceFinder.Object);
+            _referenceFinder.Object,
+            new Lazy<IUndoManager>(() => _mocker.GetMock<IUndoManager>().Object));
 
         _gumProject = new GumProjectSave();
         ObjectFinder.Self.GumProjectSave = _gumProject;
