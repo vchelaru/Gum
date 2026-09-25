@@ -14,24 +14,25 @@ public class UndoComparison
     public List<VariableSave> ModifiedElementProperties = new List<VariableSave>();
     public List<VariableSave> ModifiedInstanceProperties = new List<VariableSave>();
 
-    public List<StateSaveCategory> AddedCategories;
-    public List<StateSaveCategory> RemovedCategories;
+    // Null means the comparison found nothing of that kind (or couldn't compare it).
+    public List<StateSaveCategory>? AddedCategories;
+    public List<StateSaveCategory>? RemovedCategories;
 
-    public List<ElementBehaviorReference> AddedBehaviors;
-    public List<ElementBehaviorReference> RemovedBehaviors;
+    public List<ElementBehaviorReference>? AddedBehaviors;
+    public List<ElementBehaviorReference>? RemovedBehaviors;
 
-    public List<InstanceSave> AddedInstances;
-    public List<InstanceSave> RemovedInstances;
+    public List<InstanceSave>? AddedInstances;
+    public List<InstanceSave>? RemovedInstances;
     
-    public List<StateSave> AddedStates;
-    public List<StateSave> RemovedStates;
+    public List<StateSave>? AddedStates;
+    public List<StateSave>? RemovedStates;
 
-    public List<StateSave> ModifiedStates;
-    public List<VariableSave> ExposedVariables;
-    public List<VariableSave> UnexposedVariables;
+    public List<StateSave> ModifiedStates = new List<StateSave>();
+    public List<VariableSave>? ExposedVariables;
+    public List<VariableSave>? UnexposedVariables;
 
-    public List<string> HiddenFromInstancesVariables;
-    public List<string> ShownOnInstancesVariables;
+    public List<string>? HiddenFromInstancesVariables;
+    public List<string>? ShownOnInstancesVariables;
 
     public override string ToString()
     {
@@ -142,9 +143,9 @@ public class UndoComparison
 
 public class UndoSnapshot
 {
-    public ElementSave Element;
-    public string CategoryName;
-    public string StateName;
+    public required ElementSave Element;
+    public string? CategoryName;
+    public string? StateName;
 
     /// <summary>
     /// The element's animations captured alongside its element data, so an animation edit undoes
@@ -302,7 +303,7 @@ public class UndoSnapshot
             });
         }
 
-        if (currentElement.BaseType != null && snapshotToApply.BaseType != null && currentElement?.BaseType != snapshotToApply?.BaseType)
+        if (currentElement.BaseType != null && snapshotToApply.BaseType != null && currentElement.BaseType != snapshotToApply.BaseType)
         {
             toReturn.ModifiedElementProperties.Add(new VariableSave
             {
@@ -319,7 +320,7 @@ public class UndoSnapshot
             var matchingInToApply = categoryToApply.States.FirstOrDefault(otherState => otherState.Name == state.Name);
             if (matchingInToApply == null)
             {
-                toReturn.RemovedStates.Add(state);
+                (toReturn.RemovedStates ??= new List<StateSave>()).Add(state);
             }
         }
         foreach (var state in categoryToApply.States)
@@ -327,7 +328,7 @@ public class UndoSnapshot
             var matchingInCurrent = currentCategory.States.FirstOrDefault(otherState => otherState.Name == state.Name);
             if (matchingInCurrent == null)
             {
-                toReturn.AddedStates.Add(state);
+                (toReturn.AddedStates ??= new List<StateSave>()).Add(state);
             }
         }
     }
@@ -338,25 +339,28 @@ public class UndoSnapshot
         var currentInstances = currentElement.Instances;
         var instancesToApply = snapshotToApply.Instances;
 
-        toReturn.RemovedInstances = new List<InstanceSave>();
-        toReturn.AddedInstances = new List<InstanceSave>();
+        var removedInstances = new List<InstanceSave>();
+        var addedInstances = new List<InstanceSave>();
+        toReturn.RemovedInstances = removedInstances;
+        toReturn.AddedInstances = addedInstances;
 
         if (instancesToApply != null && currentInstances != null)
         {
-            var instanceNamesToApply = instancesToApply?.Select(item => item.Name).ToHashSet();
-            var instanceNamesInCurrent = currentInstances?.Select(item => item.Name).ToHashSet();
+            var instanceNamesToApply = instancesToApply.Select(item => item.Name).ToHashSet();
+            var instanceNamesInCurrent = currentInstances.Select(item => item.Name).ToHashSet();
 
             foreach (var instanceToApply in instancesToApply)
             {
                 var isMatchingInCurrent = instanceNamesInCurrent.Contains(instanceToApply.Name);
                 if (!isMatchingInCurrent)
                 {
-                    toReturn.AddedInstances.Add(instanceToApply);
+                    addedInstances.Add(instanceToApply);
                 }
                 else
                 {
                     // found a match, compare some values that don't get set on states:
-                    var matching = currentInstances.FirstOrDefault(item => item.Name == instanceToApply.Name);
+                    // instanceNamesInCurrent holds exactly the names in currentInstances.
+                    var matching = currentInstances.First(item => item.Name == instanceToApply.Name);
 
                     if (matching.BaseType != instanceToApply.BaseType)
                     {
@@ -402,7 +406,7 @@ public class UndoSnapshot
                 var matchingInToApply = instanceNamesToApply.Contains(instance.Name);
                 if (!matchingInToApply)
                 {
-                    toReturn.RemovedInstances.Add(instance);
+                    removedInstances.Add(instance);
                 }
             }
         }
@@ -442,7 +446,9 @@ public class UndoSnapshot
         foreach(var variableList in removedVariableLists)
         {
             var clone = variableList.Clone();
-            clone.ValueAsIList = null;
+            // Null marks the list as removed in the History text (see ToString). This clone is
+            // display-only and never applied or saved.
+            clone.ValueAsIList = null!;
             modifiedState.VariableLists.Add(clone);
 
         }
@@ -504,7 +510,7 @@ public class UndoSnapshot
                             areEqual = true;
                             for (int i = 0; i < thisList.Count; i++)
                             {
-                                if (thisList[i].Equals(otherList[i]) == false)
+                                if (Equals(thisList[i], otherList[i]) == false)
                                 {
                                     areEqual = false;
                                     break;

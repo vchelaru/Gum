@@ -60,10 +60,11 @@ public class ProjectCommands : ICopyPasteProjectCommands
     {
         screenSave.Initialize(StandardElementsManager.Self.GetDefaultStateFor("Screen"));
         _standardElementsManagerGumTool.FixCustomTypeConverters(screenSave);
-        _projectManager.GumProjectSave.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
-        _projectManager.GumProjectSave.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-        _projectManager.GumProjectSave.Screens.Add(screenSave);
-        _projectManager.GumProjectSave.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
+        var gumProject = _projectManager.GetLoadedProject();
+        gumProject.ScreenReferences.Add(new ElementReference { Name = screenSave.Name, ElementType = ElementType.Screen });
+        gumProject.ScreenReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+        gumProject.Screens.Add(screenSave);
+        gumProject.Screens.Sort((first, second) => first.Name.CompareTo(second.Name));
 
 
         _fileCommands.TryAutoSaveProject();
@@ -87,7 +88,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
 
     public void AddComponent(ComponentSave componentSave)
     {
-        var gumProject = _projectState.GumProjectSave;
+        var gumProject = _projectState.GetLoadedProject();
         gumProject.ComponentReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
         gumProject.ComponentReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
         gumProject.Components.Add(componentSave);

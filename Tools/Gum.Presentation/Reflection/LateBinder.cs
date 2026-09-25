@@ -17,16 +17,17 @@ namespace Gum.Reflection
             {
                 Type t = typeof(LateBinder<>).MakeGenericType(
                     type);
-                object obj = Activator.CreateInstance(t);
+                // LateBinder<T> has a public parameterless constructor, so this is never null.
+                var obj = (LateBinder)Activator.CreateInstance(t)!;
 
-                mLateBinders.Add(type, obj as LateBinder);
+                mLateBinders.Add(type, obj);
             }
             return mLateBinders[type];
 
         }
 
-        public abstract object GetValue(object target, string name);
-        public abstract void SetValue(object target, string name, object value);
+        public abstract object? GetValue(object? target, string name);
+        public abstract void SetValue(object? target, string name, object? value);
     }
 
 
@@ -49,7 +50,7 @@ namespace Gum.Reflection
 
         private Dictionary<Type, List<string>> mFields;
 
-        private T mTarget = default(T);
+        private T? mTarget = default(T);
 
         private static LateBinder<T> _instance;
 
@@ -67,7 +68,7 @@ namespace Gum.Reflection
         /// The instance that this binder operates on by default
         /// </summary>
         /// <remarks>This can be overridden by the caller explicitly passing a target to the indexer</remarks>
-        public T Target
+        public T? Target
         {
             get { return mTarget; }
             set { mTarget = value; }
@@ -77,24 +78,24 @@ namespace Gum.Reflection
         /// Gets or Sets the supplied property on the contained <seealso cref="Instance"/>
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if the contained Instance is null.</exception>
-        public object this[string propertyName]
+        public object? this[string propertyName]
         {
             get
             {
                 ValidateInstance();
-                return this[mTarget, propertyName];
+                return this[mTarget!, propertyName];
             }
             set
             {
                 ValidateInstance();
-                this[mTarget, propertyName] = value;
+                this[mTarget!, propertyName] = value;
             }
         }
 
         /// <summary>
         /// Gets or Sets the supplied property on the supplied target
         /// </summary>
-        public object this[T target, string propertyName]
+        public object? this[T target, string propertyName]
         {
             get
             {
@@ -141,7 +142,7 @@ namespace Gum.Reflection
 
         #region Public Accessors
 
-        public override object GetValue(object target, string name)
+        public override object? GetValue(object? target, string name)
         {
             if (mFieldsSet.Contains(name))
             {
@@ -166,7 +167,7 @@ namespace Gum.Reflection
             }
         }
 
-        public override void SetValue(object target, string name, object value)
+        public override void SetValue(object? target, string name, object? value)
         {
             if (mFieldsSet.Contains(name))
             {
@@ -193,13 +194,18 @@ namespace Gum.Reflection
             }
         }
 
-        private void SetField(object target, string name, object value)
+        private void SetField(object? target, string name, object? value)
         {
 #if XBOX360 || WINDOWS_PHONE || SILVERLIGHT
             throw new NotImplementedException();
 #else
+            if (target == null)
+            {
+                throw new ArgumentNullException(nameof(target), "Setting field " + name + " needs a target");
+            }
+
             FieldInfo fieldInfo = target.GetType().GetField(
-                name);
+                name) ?? throw new Exception("Could nto find field by the name " + name);
 
 
 #if DEBUG
@@ -209,8 +215,9 @@ namespace Gum.Reflection
 
 
 
+                // SetValueDirect sets a reference-type field to null fine; only its annotation says otherwise.
                 fieldInfo.SetValueDirect(
-                    __makeref(target), value);
+                    __makeref(target), value!);
 
 
 #if DEBUG
@@ -224,7 +231,7 @@ namespace Gum.Reflection
                 else
                 {
 
-                    throw new Exception("Error trying to set field " + name + " which is of type " + fieldInfo.FieldType + ".\nTrying to set to " + value + " of type " + value.GetType());
+                    throw new Exception("Error trying to set field " + name + " which is of type " + fieldInfo.FieldType + ".\nTrying to set to " + value + " of type " + value?.GetType());
                 }
             }
 #endif
@@ -238,7 +245,7 @@ namespace Gum.Reflection
         /// Sets the supplied property on the supplied target
         /// </summary>
         /// <typeparam name="K">the type of the value</typeparam>
-        public void SetProperty<K>(object target, string propertyName, K value)
+        public void SetProperty<K>(object? target, string propertyName, K value)
         {
 #if XBOX360 || SILVERLIGHT || ZUNE || WINDOWS_PHONE
 
@@ -279,7 +286,7 @@ namespace Gum.Reflection
             {
                 // This is probably not a property so see if it is a field.
 
-                FieldInfo fieldInfo = mType.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+                FieldInfo? fieldInfo = mType.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
 
                 if (fieldInfo == null)
                 {
@@ -297,7 +304,7 @@ namespace Gum.Reflection
                     }
                     else
                     {
-                        object[] args = { value };
+                        object?[] args = { value };
                         mType.InvokeMember(propertyName, BindingFlags.SetField, null, target, args);
                     }
                 }
@@ -307,20 +314,21 @@ namespace Gum.Reflection
 
         static BindingFlags mGetFieldBindingFlags = BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-        public object GetField(object target, string fieldName)
+        public object? GetField(object? target, string fieldName)
         {
 
 
             if (target == null)
             {
-                FieldInfo fieldInfo = mType.GetField(fieldName, mGetFieldBindingFlags);
+                FieldInfo fieldInfo = mType.GetField(fieldName, mGetFieldBindingFlags)
+                    ?? throw new MissingFieldException(mType.Name, fieldName);
                 return fieldInfo.GetValue(null);
 
             }
             else
             {
-                Binder binder = null;
-                object[] args = null; 
+                Binder? binder = null;
+                object?[]? args = null; 
                 
                 return mType.InvokeMember(
                    fieldName,
@@ -332,21 +340,21 @@ namespace Gum.Reflection
             }
         }
 
-        public ReturnType GetField<ReturnType>(T target, string propertyName)
+        public ReturnType? GetField<ReturnType>(T target, string propertyName)
         {
-            return (ReturnType)GetField(target, propertyName);
+            return (ReturnType?)GetField(target, propertyName);
         }
 
         /// <summary>
         /// Gets  the supplied property on the supplied target
         /// </summary>
         /// <typeparam name="K">The type of the property being returned</typeparam>
-        public K GetProperty<K>(T target, string propertyName)
+        public K? GetProperty<K>(T target, string propertyName)
         {
-            return (K)GetProperty(target, propertyName);
+            return (K?)GetProperty(target, propertyName);
         }
 
-        public object GetProperty(object target, string propertyName)
+        public object? GetProperty(object? target, string propertyName)
         {
 #if XBOX360 || SILVERLIGHT || ZUNE || WINDOWS_PHONE || XNA4
             // SLOW, but still works
@@ -379,9 +387,9 @@ namespace Gum.Reflection
 
         }
 
-        private static object GetPropertyThroughReflection(object target, string propertyName)
+        private static object? GetPropertyThroughReflection(object? target, string propertyName)
         {
-            PropertyInfo pi = typeof(T).GetProperty(propertyName, mGetterBindingFlags);
+            PropertyInfo? pi = typeof(T).GetProperty(propertyName, mGetterBindingFlags);
 
             if (pi == null)
             {
@@ -418,7 +426,7 @@ namespace Gum.Reflection
                 BindingFlags bindingFlags =
                     BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.Static;
 
-                PropertyInfo propertyInfo = mType.GetProperty(propertyName, bindingFlags);
+                PropertyInfo? propertyInfo = mType.GetProperty(propertyName, bindingFlags);
 
                 if (propertyInfo != null)
                 {
@@ -437,7 +445,7 @@ namespace Gum.Reflection
             {
 
 
-                PropertyInfo propertyInfo = mType.GetProperty(propertyName, mGetterBindingFlags);
+                PropertyInfo? propertyInfo = mType.GetProperty(propertyName, mGetterBindingFlags);
 
                 if (propertyInfo != null)
                 {
@@ -449,8 +457,8 @@ namespace Gum.Reflection
         #endregion
 
         #region Contained Classes
-        internal delegate object GetHandler(object source);
-        internal delegate void SetHandler(object source, object value);
+        internal delegate object? GetHandler(object? source);
+        internal delegate void SetHandler(object? source, object? value);
         internal delegate object InstantiateObjectHandler();
 
         /// <summary>
@@ -469,7 +477,7 @@ namespace Gum.Reflection
             internal static InstantiateObjectHandler CreateInstantiateObjectHandler(Type type)
             {
 #if !XBOX360 && !SILVERLIGHT && !ZUNE && !WINDOWS_PHONE
-                ConstructorInfo constructorInfo = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
+                ConstructorInfo? constructorInfo = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new Type[0], null);
                 if (constructorInfo == null)
                 {
                     throw new ApplicationException(string.Format("The type {0} must declare an empty constructor (the constructor may be private, internal, protected, protected internal, or public).", type));
@@ -489,7 +497,8 @@ namespace Gum.Reflection
             internal static GetHandler CreateGetHandler(Type type, PropertyInfo propertyInfo)
             {
 #if !XBOX360 && !SILVERLIGHT && !ZUNE && !WINDOWS_PHONE
-                MethodInfo getMethodInfo = propertyInfo.GetGetMethod(true);
+                MethodInfo getMethodInfo = propertyInfo.GetGetMethod(true)
+                    ?? throw new ArgumentException($"The property {propertyInfo.Name} has no getter", nameof(propertyInfo));
                 DynamicMethod dynamicGet = CreateGetDynamicMethod(type);
                 ILGenerator getGenerator = dynamicGet.GetILGenerator();
 
@@ -526,7 +535,8 @@ namespace Gum.Reflection
             internal static SetHandler CreateSetHandler(Type type, PropertyInfo propertyInfo)
             {
 #if !XBOX360 && !SILVERLIGHT && !ZUNE && !WINDOWS_PHONE
-                MethodInfo setMethodInfo = propertyInfo.GetSetMethod(true);
+                MethodInfo setMethodInfo = propertyInfo.GetSetMethod(true)
+                    ?? throw new ArgumentException($"The property {propertyInfo.Name} has no setter", nameof(propertyInfo));
 
                 DynamicMethod dynamicSet = CreateSetDynamicMethod(type);
                 ILGenerator setGenerator = dynamicSet.GetILGenerator();

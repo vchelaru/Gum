@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Gum.Undo;
 
@@ -53,11 +54,11 @@ public class ElementUndoStrategy : IUndoStrategy
 
     public UndoSnapshot? RecordedSnapshot => recordedSnapshot;
 
-    public ElementHistory CurrentElementHistory
+    public ElementHistory? CurrentElementHistory
     {
         get
         {
-            ElementHistory history = null;
+            ElementHistory? history = null;
 
             if (_selectedState.SelectedElement != null && mUndos.ContainsKey(_selectedState.SelectedElement))
             {
@@ -249,42 +250,45 @@ public class ElementUndoStrategy : IUndoStrategy
             return;
         }
 
-        StateSave newStateSave = _selectedState.SelectedStateSave;
-        var currentCategory = _selectedState.SelectedStateCategorySave;
-        ElementSave newElement = _selectedState.SelectedElement;
+        // canUndo above requires both of these.
+        UndoSnapshot baseline = recordedSnapshot!;
+        ElementSave newElement = _selectedState.SelectedElement!;
 
-        StateSave oldState = null;
+        StateSave? newStateSave = _selectedState.SelectedStateSave;
+        var currentCategory = _selectedState.SelectedStateCategorySave;
+
+        StateSave? oldState = null;
 
         if (newStateSave != null)
         {
             if (currentCategory != null)
             {
-                var category = recordedSnapshot.Element.Categories.Find(item => item.Name == currentCategory.Name);
+                var category = baseline.Element.Categories.Find(item => item.Name == currentCategory.Name);
                 oldState = category?.States.Find(item => item.Name == newStateSave.Name);
             }
             else
             {
                 var stateName = newStateSave.Name;
-                oldState = recordedSnapshot.Element.States.Find(item => item.Name == stateName);
+                oldState = baseline.Element.States.Find(item => item.Name == stateName);
             }
         }
 
         // The live animation state, diffed against the baseline captured on selection / after the
         // previous record. baselineAnimations restores on undo; currentAnimations re-applies on redo.
-        var baselineAnimations = recordedSnapshot.Animations;
+        var baselineAnimations = baseline.Animations;
         var currentAnimations = _animationUndoProvider.GetCurrentAnimations(newElement);
 
-        UndoSnapshot undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
-            recordedSnapshot.Element, recordedSnapshot.CategoryName, recordedSnapshot.StateName,
+        UndoSnapshot? undoSnapshot = TryGetUndoSnapshotToAdd(newStateSave, newElement, oldState,
+            baseline.Element, baseline.CategoryName, baseline.StateName,
             baselineAnimations, currentAnimations);
 
         if (undoSnapshot != null)
         {
-            if(mUndos.ContainsKey(_selectedState.SelectedElement))
+            if(mUndos.ContainsKey(newElement))
             {
-                var history = mUndos[_selectedState.SelectedElement];
+                var history = mUndos[newElement];
 
-                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, recordedSnapshot.Element, newStateSave, newElement, recordedSnapshot.CategoryName, recordedSnapshot.StateName,
+                var redoSnapshot = TryGetUndoSnapshotToAdd(oldState, baseline.Element, newStateSave, newElement, baseline.CategoryName, baseline.StateName,
                     currentAnimations, baselineAnimations);
 
                 AppendAction(history, undoSnapshot, redoSnapshot);
@@ -312,8 +316,8 @@ public class ElementUndoStrategy : IUndoStrategy
     /// <summary>
     /// Checks if anything has changed and if so returns an UndoSnapshot
     /// </summary>
-    private UndoSnapshot? TryGetUndoSnapshotToAdd(StateSave newState, ElementSave newElement,
-        StateSave oldState, ElementSave oldElement, string categoryName, string stateName,
+    private UndoSnapshot? TryGetUndoSnapshotToAdd(StateSave? newState, ElementSave newElement,
+        StateSave? oldState, ElementSave oldElement, string? categoryName, string? stateName,
         ElementAnimationsSave? oldAnimations, ElementAnimationsSave? newAnimations)
     {
         bool doStatesDiffer = FileManager.AreSaveObjectsEqual(oldState, newState) == false;
@@ -341,23 +345,25 @@ public class ElementUndoStrategy : IUndoStrategy
             ;
         if (didAnythingChange)
         {
+            // A null member means "unchanged, don't apply" when this snapshot is applied, which
+            // the ElementSave types don't declare, so these nulls are forgiven.
             var clone = CloneWithFixedEnumerations(oldElement);
             if (!doInstanceListsDiffer)
             {
-                clone.Instances = null;
+                clone.Instances = null!;
             }
             if (!doStatesDiffer)
             {
-                clone.States = null;
+                clone.States = null!;
             }
 
             if (!doStateCategoriesDiffer)
             {
-                clone.Categories = null;
+                clone.Categories = null!;
             }
             if (!doNamesDiffer)
             {
-                clone.Name = null;
+                clone.Name = null!;
             }
             if (!doTypesDiffer)
             {
@@ -365,11 +371,11 @@ public class ElementUndoStrategy : IUndoStrategy
             }
             if(!doBehaviorsDiffer)
             {
-                clone.Behaviors = null;
+                clone.Behaviors = null!;
             }
             if (!doVariablesHiddenFromInstancesDiffer)
             {
-                clone.VariablesHiddenFromInstances = null;
+                clone.VariablesHiddenFromInstances = null!;
             }
 
             snapshotToAdd = new UndoSnapshot
@@ -392,44 +398,39 @@ public class ElementUndoStrategy : IUndoStrategy
 
     public static ElementSave CloneWithFixedEnumerations(ElementSave elementSave)
     {
-        ElementSave cloned = null;
-        if (elementSave is ScreenSave screenSave)
+        ElementSave cloned = elementSave switch
         {
-            cloned = FileManager.CloneSaveObject(screenSave);
-        }
-        else if (elementSave is ComponentSave componentSave)
+            ScreenSave screenSave => FileManager.CloneSaveObject(screenSave),
+            ComponentSave componentSave => FileManager.CloneSaveObject(componentSave),
+            StandardElementSave standard => FileManager.CloneSaveObject(standard),
+            _ => throw new ArgumentException($"Unexpected element type {elementSave.GetType()}", nameof(elementSave))
+        };
         {
-            cloned = FileManager.CloneSaveObject(componentSave);
-        }
-        else if (elementSave is StandardElementSave standard)
-        {
-            cloned = FileManager.CloneSaveObject(standard);
-        }
-        if (cloned != null)
-        {
+            // Keep an undo snapshot's "unchanged" nulls (see TryGetUndoSnapshotToAdd), which the
+            // serializer round trip would otherwise turn into empty lists.
             if(elementSave.States == null)
             {
-                cloned.States = null;
+                cloned.States = null!;
             }
             if(elementSave.Instances == null)
             {
-                cloned.Instances = null;
+                cloned.Instances = null!;
             }
             if(elementSave.Categories == null)
             {
-                cloned.Categories = null;
+                cloned.Categories = null!;
             }
             if(elementSave.Events == null)
             {
-                cloned.Events = null;
+                cloned.Events = null!;
             }
             if(elementSave.Behaviors == null)
             {
-                cloned.Behaviors = null;
+                cloned.Behaviors = null!;
             }
             if (elementSave.VariablesHiddenFromInstances == null)
             {
-                cloned.VariablesHiddenFromInstances = null;
+                cloned.VariablesHiddenFromInstances = null!;
             }
 
             foreach (var state in cloned.AllStates)
@@ -482,16 +483,15 @@ public class ElementUndoStrategy : IUndoStrategy
 
         var isLast = elementHistory!.UndoIndex == elementHistory.Actions.Count - 1;
 
+        // CanUndo found this element's history, so an element is selected.
+        ElementSave toApplyTo = _selectedState.SelectedElement!;
+
         if(isLast)
         {
-            elementHistory.FinalState = CloneWithFixedEnumerations(_selectedState.SelectedElement);
+            elementHistory.FinalState = CloneWithFixedEnumerations(toApplyTo);
         }
 
         var undoSnapshot = elementHistory.Actions.ElementAt(elementHistory.UndoIndex);
-
-
-
-        ElementSave? toApplyTo = _selectedState.SelectedElement;
 
         AddedAndRemovedInstances? addedAndRemovedInstances = null;
 
@@ -598,17 +598,13 @@ public class ElementUndoStrategy : IUndoStrategy
         return CanRedo(elementHistory, redoSnapshot);
     }
 
-    private bool CanRedo(ElementHistory? elementHistory, UndoSnapshot? redoSnapshot)
+    // A redo snapshot only comes from an existing history.
+    private bool CanRedo([NotNullWhen(true)] ElementHistory? elementHistory, [NotNullWhen(true)] UndoSnapshot? redoSnapshot)
     {
-        if (redoSnapshot != null)
-        {
-            return true;
-        }
-
-        return false;
+        return elementHistory != null && redoSnapshot != null;
     }
 
-    private UndoSnapshot? GetRedoSnapshot(ElementHistory elementHistory) => GetActionToRedo(elementHistory)?.RedoState;
+    private UndoSnapshot? GetRedoSnapshot(ElementHistory? elementHistory) => GetActionToRedo(elementHistory)?.RedoState;
 
     private HistoryAction? GetActionToRedo(ElementHistory? elementHistory)
     {
@@ -636,7 +632,7 @@ public class ElementUndoStrategy : IUndoStrategy
         }
         ////////////////////////////////////End Early Out////////////////////////////////////////
 
-        ElementSave toApplyTo = _selectedState.SelectedElement;
+        ElementSave? toApplyTo = _selectedState.SelectedElement;
 
         AddedAndRemovedInstances? addedAndRemoved = null;
 

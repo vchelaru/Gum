@@ -171,8 +171,6 @@ namespace Gum.Plugins.Undos
         private List<string> GetUndoStringList(ElementHistory elementHistory, int? numberOfItemsFromEnd = null)
         {
 
-            ElementSave selectedElementClone = null;
-
             var elementToClone =
                 //elementHistory.InitialState;
                 _selectedState.SelectedElement;
@@ -183,7 +181,13 @@ namespace Gum.Plugins.Undos
                 elementToClone = elementHistory.FinalState;
             }
 
-            selectedElementClone = ElementUndoStrategy.CloneWithFixedEnumerations(elementToClone);
+            // A history only exists for a selected element, and FinalState is set by the first undo.
+            if (elementToClone == null)
+            {
+                return new List<string>();
+            }
+
+            ElementSave selectedElementClone = ElementUndoStrategy.CloneWithFixedEnumerations(elementToClone);
 
             List<string> undoStringList = new List<string>();
 
@@ -255,7 +259,7 @@ namespace Gum.Plugins.Undos
             return string.Join("\n    ", lines);
         }
 
-        private ElementSave GetSelectedElementClone()
+        private ElementSave? GetSelectedElementClone()
         {
             if (_selectedState.SelectedElement != null)
             {
@@ -272,7 +276,7 @@ namespace Gum.Plugins.Undos
             _undoManager.UndosChanged += HandleUndosChanged;
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         private void HandleUndosChanged(object? sender, UndoOperationEventArgs e)
         {
