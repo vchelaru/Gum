@@ -1283,6 +1283,40 @@ public class UndoManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void PerformUndo_WithAttachedCrossElementVariableRemoval_ShouldRestoreIntoCategoryStateReplacedSinceRecording()
+    {
+        // The other element's own undo restores its categories and instances as clones, so the
+        // captured StateSave and InstanceSave are no longer in it. The change must still land on the
+        // state and instance of the same names.
+        ComponentSave component = _selectedState.Object.SelectedComponent!;
+        var ownerVariable = new VariableSave { Name = "Variable1", Type = "float", IsCustomVariable = true, Value = 5f };
+        component.DefaultState.Variables.Add(ownerVariable);
+
+        var (otherScreen, instance, _) = SetUpOtherElementWithAssignedVariable();
+        var category = new StateSaveCategory { Name = "Mode" };
+        var editState = new StateSave { Name = "Edit", ParentContainer = otherScreen };
+        category.States.Add(editState);
+        otherScreen.Categories.Add(category);
+        var editVariable = new VariableSave { Name = "Variable1Instance.Variable1", Type = "float", Value = 9f };
+        editState.Variables.Add(editVariable);
+
+        _undoManager.RecordState();
+
+        component.DefaultState.Variables.Remove(ownerVariable);
+        var change = CrossElementVariableChange.CaptureBefore(otherScreen, editState, editVariable);
+        editState.Variables.Remove(editVariable);
+        RecordUndoWithCrossElementChanges(change);
+
+        otherScreen.Categories[0] = category.Clone();
+        otherScreen.Instances[0] = instance.Clone();
+
+        _undoManager.PerformUndo();
+
+        otherScreen.Categories[0].States[0].GetValue("Variable1Instance.Variable1").ShouldBe(9f);
+        _pluginNotifier.Verify(x => x.VariableSet(otherScreen, otherScreen.Instances[0], "Variable1", null, true), Times.Once);
+    }
+
+    [Fact]
     public void PerformUndo_WithAttachedCrossElementVariableRemoval_ShouldSkipStateRemovedSinceRecording()
     {
         // Mirrors the instance-removed-since-recording tolerance test, for the other half of the

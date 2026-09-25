@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
+using System.Linq;
 
 namespace Gum.Undo;
 
@@ -27,6 +28,12 @@ public class CrossElementVariableChange
     public StateSave State { get; set; } = null!;
 
     /// <summary>
+    /// The category <see cref="State"/> belonged to when captured, or null for an uncategorized state.
+    /// Used to find the state by name if the container's own undo has since replaced it with a clone.
+    /// </summary>
+    public string? CategoryName { get; set; }
+
+    /// <summary>
     /// A copy of the variable before the change, or null when the change added it.
     /// </summary>
     public VariableSave? Before { get; set; }
@@ -47,6 +54,7 @@ public class CrossElementVariableChange
             Container = container,
             Instance = string.IsNullOrEmpty(variable.SourceObject) ? null : container.GetInstance(variable.SourceObject),
             State = state,
+            CategoryName = container.Categories.FirstOrDefault(category => category.States.Contains(state))?.Name,
             Before = variable.Clone(),
         };
     }

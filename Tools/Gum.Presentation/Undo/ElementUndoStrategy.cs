@@ -704,7 +704,8 @@ public class ElementUndoStrategy : IUndoStrategy
 
     /// <summary>
     /// Reverses (undo) or re-applies (redo) each cross-element change attached to an action, skipping
-    /// an element, instance, or state deleted since the action was recorded. Mirrors a normal edit:
+    /// an element, instance, or state deleted since the action was recorded. An instance or state the
+    /// container's own undo replaced with a clone is found again by name. Mirrors a normal edit:
     /// saves each element it touches and notifies plugins via the same VariableSet event a live edit
     /// fires.
     /// </summary>
@@ -724,9 +725,14 @@ public class ElementUndoStrategy : IUndoStrategy
             // don't get cleared by removing it from the project's element lists, so this must be
             // checked explicitly or a stale reference resurrects a file for a screen/component the
             // user already deleted.
-            if (_projectProvider.GumProjectSave?.AllElements.Contains(change.Container) != true ||
-                (change.Instance != null && !change.Container.Instances.Contains(change.Instance)) ||
-                !change.Container.AllStates.Contains(change.State))
+            if (_projectProvider.GumProjectSave?.AllElements.Contains(change.Container) != true)
+            {
+                continue;
+            }
+
+            var instance = ResolveInstance(change);
+            var state = ResolveState(change);
+            if ((change.Instance != null && instance == null) || state == null)
             {
                 continue;
             }
@@ -734,12 +740,35 @@ public class ElementUndoStrategy : IUndoStrategy
             var from = isUndo ? change.After : change.Before;
             var to = isUndo ? change.Before : change.After;
 
-            if (ApplyCrossElementVariableChange(change.State, from, to))
+            if (ApplyCrossElementVariableChange(state, from, to))
             {
                 _fileCommands.TryAutoSaveElement(change.Container);
-                _pluginNotifier.VariableSet(change.Container, change.Instance, (to ?? from)!.GetRootName(), null);
+                _pluginNotifier.VariableSet(change.Container, instance, (to ?? from)!.GetRootName(), null);
             }
         }
+    }
+
+    // Undo on the container swaps its instances and category states for clones, so a captured
+    // reference goes stale without the object being deleted; fall back to the same name.
+    private static InstanceSave? ResolveInstance(CrossElementVariableChange change)
+    {
+        if (change.Instance == null || change.Container.Instances.Contains(change.Instance))
+        {
+            return change.Instance;
+        }
+        return change.Container.Instances.FirstOrDefault(item => item.Name == change.Instance.Name);
+    }
+
+    private static StateSave? ResolveState(CrossElementVariableChange change)
+    {
+        if (change.Container.AllStates.Contains(change.State))
+        {
+            return change.State;
+        }
+        var states = change.CategoryName == null
+            ? change.Container.States
+            : change.Container.Categories.FirstOrDefault(category => category.Name == change.CategoryName)?.States;
+        return states?.FirstOrDefault(item => item.Name == change.State.Name);
     }
 
     /// <summary>
@@ -997,20 +1026,6 @@ public class ElementUndoStrategy : IUndoStrategy
                     state.ParentContainer = parent;
                 }
                 listToApplyTo.Add(category);
-            }
-        }
-    }
-
-    private void AddAndRemoveStates(List<StateSave> undoList, List<StateSave> listToApplyTo, ElementSave parent)
-    {
-        if (listToApplyTo != null && undoList != null)
-        {
-            listToApplyTo.Clear();
-
-            foreach (var undoItem in undoList)
-            {
-                undoItem.ParentContainer = parent;
-                listToApplyTo.Add(undoItem);
             }
         }
     }
