@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Gum.GueDeriving;
+using RenderingLibrary.Math.Geometry;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using RenderingLibrary.Graphics;
@@ -12,7 +12,7 @@ namespace MonoGameGum.IntegrationTests.MonoGameGum.Rendering;
 
 /// <summary>
 /// A stroked rectangle drawn through <see cref="Renderer.SinglePixelSourceRectangle"/> (solids sampled
-/// from an atlas region) must be <see cref="RectangleRuntime.StrokeWidth"/> screen pixels thick at any
+/// from an atlas region) must be <see cref="LineRectangle.LinePixelWidth"/> screen pixels thick at any
 /// camera zoom, the same as when no source rectangle is set.
 /// </summary>
 public class SinglePixelSourceRectangleStrokeWidthTests : BaseTestClass
@@ -38,28 +38,29 @@ public class SinglePixelSourceRectangleStrokeWidthTests : BaseTestClass
         renderer.SinglePixelSourceRectangle = new System.Drawing.Rectangle(1, 1, 1, 1);
         renderer.Camera.Zoom = zoom;
 
-        RectangleRuntime rectangle = new();
+        // LineRectangle directly: RectangleRuntime only pushes StrokeWidth to its renderable in
+        // PreRender, which the renderer runs once per host frame, not per Draw call.
+        LineRectangle rectangle = new(managers);
         rectangle.X = 10;
         rectangle.Y = 10;
         rectangle.Width = 50;
         rectangle.Height = 50;
-        rectangle.StrokeWidth = 8;
-        rectangle.Color = XnaColor.White;
-        rectangle.AddToManagers(managers, null);
-        rectangle.UpdateLayout();
+        rectangle.LinePixelWidth = 8;
+        rectangle.Color = System.Drawing.Color.White;
+        managers.ShapeManager.Add(rectangle);
 
-        int thickness = MeasureTopEdgeThickness(gd, renderer, managers, 200, 200, column: (int)(35 * zoom));
+        (int thickness, string columnDump) = MeasureTopEdgeThickness(gd, renderer, managers, 200, 200, column: (int)(35 * zoom));
 
-        rectangle.RemoveFromManagers();
+        managers.ShapeManager.Remove(rectangle);
 
-        thickness.ShouldBe(8);
+        thickness.ShouldBe(8, columnDump);
     }
 
     /// <summary>
     /// Renders the scene and counts the white pixels in <paramref name="column"/>, starting from the
-    /// first white pixel found scanning down.
+    /// first white pixel found scanning down. Also returns the column's red values for failure output.
     /// </summary>
-    private static int MeasureTopEdgeThickness(GraphicsDevice gd, Renderer renderer, SystemManagers managers,
+    private static (int thickness, string columnDump) MeasureTopEdgeThickness(GraphicsDevice gd, Renderer renderer, SystemManagers managers,
         int w, int h, int column)
     {
         using RenderTarget2D capture = new(gd, w, h, false, SurfaceFormat.Color, DepthFormat.None, 0,
@@ -77,7 +78,10 @@ public class SinglePixelSourceRectangleStrokeWidthTests : BaseTestClass
         while (y < h && data[(y * w) + column].R < 128) y++;
         int thickness = 0;
         while (y + thickness < h && data[((y + thickness) * w) + column].R >= 128) thickness++;
-        return thickness;
+
+        string columnDump = "column R values, rows 0-59: " +
+            string.Join(",", Enumerable.Range(0, System.Math.Min(60, h)).Select(row => data[(row * w) + column].R));
+        return (thickness, columnDump);
     }
 
     private class MinimalGame : Game
