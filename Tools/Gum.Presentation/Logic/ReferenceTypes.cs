@@ -281,8 +281,8 @@ public class StateReferences
     }
 
     /// <summary>
-    /// Returns a description of which variables reference this state and will become
-    /// invalid after deletion (orphaned references are not automatically cleaned up).
+    /// Returns a description of which variables reference this state and will be removed
+    /// when it is deleted.
     /// </summary>
     public string GetDeleteImpactDetails()
     {
@@ -291,7 +291,7 @@ public class StateReferences
             return string.Empty;
         }
 
-        var details = "The following variables reference this state and will become invalid:";
+        var details = "The following variables reference this state and will be removed:";
         foreach (var (container, variable) in VariablesToUpdate)
         {
             details += $"\n• {variable.Name} in {container.Name}";

@@ -326,12 +326,26 @@ public class ReferenceFinder : IReferenceFinder
                     var variablesToFix = parentOfInstance.AllStates
                         .SelectMany(item => item.Variables)
                         .Where(item => item.Name == variableNameToLookFor)
-                        .Where(item => (string?)item.Value == oldName);
+                        .Where(item => item.Value as string == oldName);
 
                     foreach (var variable in variablesToFix)
                     {
                         changes.VariablesToUpdate.Add((parentOfInstance, variable));
                     }
+                }
+            }
+
+            // Elements deriving from the container can set the state on themselves.
+            foreach (var derivedElement in ObjectFinder.Self.GetElementsInheritingFrom(elementSave))
+            {
+                var variablesToFix = derivedElement.AllStates
+                    .SelectMany(item => item.Variables)
+                    .Where(item => item.Name == variableName)
+                    .Where(item => item.Value as string == oldName);
+
+                foreach (var variable in variablesToFix)
+                {
+                    changes.VariablesToUpdate.Add((derivedElement, variable));
                 }
             }
         }

@@ -908,6 +908,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveState(StateSave stateSave, IStateContainer elementToRemoveFrom)
     {
+        RemoveReferencesToState(stateSave, elementToRemoveFrom);
 
         elementToRemoveFrom.UncategorizedStates.Remove(stateSave);
 
@@ -923,6 +924,33 @@ public class DeleteLogic : IDeleteLogic
         else if (elementToRemoveFrom is ElementSave elementSave)
         {
             _fileCommands.TryAutoSaveElement(elementSave);
+        }
+    }
+
+    /// <summary>
+    /// Removes variables in other elements that set the state, so they fall back to their
+    /// inherited value instead of naming a state that no longer exists.
+    /// </summary>
+    private void RemoveReferencesToState(StateSave stateSave, IStateContainer container)
+    {
+        var category = container.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+        StateReferences references = _referenceFinder.GetReferencesToState(stateSave, stateSave.Name, container, category);
+
+        var elementsToSave = new HashSet<ElementSave>();
+        foreach (var (referencingElement, variable) in references.VariablesToUpdate)
+        {
+            foreach (var state in referencingElement.AllStates)
+            {
+                if (state.Variables.Remove(variable))
+                {
+                    elementsToSave.Add(referencingElement);
+                }
+            }
+        }
+
+        foreach (var elementToSave in elementsToSave)
+        {
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 
