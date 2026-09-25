@@ -6,10 +6,9 @@
 >
 > **Status 2026-09-14.** Phases 10 to 110 are on `main` (merged 2026-09-14, #4689) and the release
 > ships the Avalonia head only (#4699 renamed the solutions and dropped the WPF zip, #4702 rewrote
-> the user docs). That happened *before* phase 120's entry gates were run: the manual parity
-> checklist has no cell filled in, the head has never been launched on macOS, and the rewritten
-> release workflow has not run yet. The Status column below says what each phase still owes; the
-> remaining phase-120 work (owner steps, then the WPF deletion PR) is listed in its doc.
+> the user docs). That happened before phase 120's entry gates were run; they were closed on
+> 2026-09-24 (macOS runs and fixes, release workflow in use, unsigned by decision, manual parity
+> checklist dropped). Deleting the frozen WPF projects is deferred with no date.
 
 ## Goal
 
@@ -23,8 +22,8 @@ implementations, the property grid, the canvas host, and the plugin panel contra
 generated code are byte-identical to the WPF tool's output; (3) no plugin is permanently
 feature-flagged off; (4) `gum.exe` and everything it loads has zero `UseWPF`/`UseWindowsForms`.
 
-**Against that bar, 2026-09-14:** (1) not met by hand on any OS (automated parity only, see
-phase 100 and `parity-checklist.md`); (2) enforced by `ProjectSaveParityTests` on three OSes and by
+**Against that bar, 2026-09-14:** (1) the manual checklist was never run and was dropped 2026-09-24: the head ships, and real use finds parity gaps faster than a manual pass, so they are filed as issues
+(automated parity is in phase 100); (2) enforced by `ProjectSaveParityTests` on three OSes and by
 the codegen drift check; (3) met; (4) met for the shipped package (`Gum.Avalonia` and its load
 graph carry no WPF or WinForms assembly), not yet for the repo, which still holds the frozen WPF
 projects until the phase-120 deletion PR.
@@ -88,8 +87,8 @@ risk is the chance the phase changes the plan.
 | 80 | Views and dialogs: ~65 remaining XAML files across `Gum/` and plugins | M–H | Low | [phase-80-views-and-dialogs.md](phase-80-views-and-dialogs.md) | Done |
 | 90 | Theming, icons, and third-party WPF library replacement | M | Medium | [phase-90-theming-and-third-party.md](phase-90-theming-and-third-party.md) | Done; AppCenter dropped 2026-09-14 |
 | 100 | Testing and parity: headless smoke, full-startup, golden-file byte parity per OS | M | Medium | [phase-100-testing-and-parity.md](phase-100-testing-and-parity.md) | Automated layers green on three OSes; manual checklist never run |
-| 110 | Packaging and distribution: per-RID publish, macOS signing/notarization, Linux, release workflow | M | Medium | [phase-110-packaging-and-distribution.md](phase-110-packaging-and-distribution.md) | Packaging is the release since #4699; unsigned, no `.icns`, workflow not yet run, no clean-machine launch |
-| 120 | Cutover: retire WPF/WinForms, re-point solutions/CI/docs | S | **High** (irreversible) | [phase-120-cutover.md](phase-120-cutover.md) | Shipped ahead of its gates on 2026-09-14; guidance/docs/notice done 2026-09-14; owner steps and the WPF deletion PR remain |
+| 110 | Packaging and distribution: per-RID publish, macOS signing/notarization, Linux, release workflow | M | Medium | [phase-110-packaging-and-distribution.md](phase-110-packaging-and-distribution.md) | Packaging is the release since #4699; runs on all three OSes; unsigned by decision (2026-09-24) |
+| 120 | Cutover: retire WPF/WinForms, re-point solutions/CI/docs | S | **High** (irreversible) | [phase-120-cutover.md](phase-120-cutover.md) | Shipped ahead of its gates on 2026-09-14; guidance/docs/notice done 2026-09-14; gates closed 2026-09-24; WPF deletion deferred, no date |
 
 ## Dependency flow
 

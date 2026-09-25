@@ -3,7 +3,7 @@
     Bundles the Gum.Analyzers Roslyn analyzer DLL into the package so NuGet consumers get GUM001
     namespace-migration warnings + code fixes. Not a ProjectReference: source-linkers' .sln files
     must not require Tools/Gum.Analyzers/ to build. The analyzer builds independently (e.g. via
-    AllLibraries.sln / GumFull.sln); the Exists() guard makes this a no-op when the DLL is absent,
+    AllLibraries.sln); the Exists() guard makes this a no-op when the DLL is absent,
     so source-only builds keep working with zero impact.
 
     Imported by RaylibGum, SkiaGum, SilkNetGum, MonoGameGumShapes, and KniGumShapes. SokolGum

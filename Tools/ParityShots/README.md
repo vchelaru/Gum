@@ -168,5 +168,4 @@ dotnet test Tests/Gum.Bundle.Tests
 ```
 
 Linux needs a desktop session, a GL driver, and `libfontconfig1` (SkiaSharp's Linux native uses
-it). Findings from these runs are recorded in `Direction/avalonia-migration/parity-checklist.md`
-under "Per-OS quirks found" and in `coverage-matrix.md`.
+it). File findings from these runs as issues; cross-platform leaks also go in `coverage-matrix.md`.

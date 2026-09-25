@@ -30,10 +30,9 @@ const entrypoint = resolveGumCliEntrypoint(gumCliCsproj);
 const result = entrypoint.mode === 'dll'
   ? spawnSync('dotnet', [entrypoint.dllPath, cmd, ...rest], { stdio: 'inherit', shell: true })
   : (() => {
-    // Gum.Cli is part of GumFull.sln — building the Gum Tool normally already produces
-    // gumcli.dll. This path only runs before that's ever happened, and `dotnet run` pays
+    // This path only runs before Tools/Gum.Cli/Gum.Cli.csproj has ever been built, and `dotnet run` pays
     // a full MSBuild re-evaluation (several seconds) on every call as a result.
-    console.warn('gumcli.dll not found in Tools/Gum.Cli/bin — falling back to `dotnet run` (slow). Build GumFull.sln (or Tools/Gum.Cli/Gum.Cli.csproj) once to skip this.');
+    console.warn('gumcli.dll not found in Tools/Gum.Cli/bin — falling back to `dotnet run` (slow). Build Tools/Gum.Cli/Gum.Cli.csproj once to skip this.');
     return spawnSync('dotnet', ['run', '--project', entrypoint.csprojPath, '--', cmd, ...rest], { stdio: 'inherit', shell: true });
   })();
 process.exit(result.status ?? 1);

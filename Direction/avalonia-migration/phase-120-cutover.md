@@ -33,7 +33,10 @@ draft. The WPF projects are still in the repo, frozen.
   `remove_gum.sh`) and the TeamCity `ZipGumScript.ps1` are deleted; the historical upgrade notes
   that linked them now link the September 2, 2026 tag.
 - Every phase doc's status and checkboxes now say what actually landed and what is still owed;
-  the plan README has a status column; `parity-checklist.md` records that it was never run.
+  the plan README has a status column.
+
+**2026-09-24:** the manual parity checklist (`parity-checklist.md`) was never run and was deleted;
+parity gaps found in real use are filed as issues.
 
 **Decisions recorded here, as the doc asked:**
 
@@ -46,17 +49,20 @@ draft. The WPF projects are still in the repo, frozen.
   silently break the frozen head (Vic: "Gum.Wpf.sln stays buildable", #4699).
 - AppCenter is dropped (phase 90); the packages leave with the WPF head.
 
-**What remains, in order:**
+**Gates closed 2026-09-24:** the head has run on a Mac since 2026-09-15 and its findings were
+filed and fixed (#4724 onward); `build-and-release.yml` has published pre-releases since
+2026-09-17; Gum ships unsigned by decision (phase 110). The release announcement is part of Vic's
+normal release process, not tracked here.
 
-1. Owner steps the gates asked for: launch the head on a real Mac (clean machine), fill in
-   `parity-checklist.md` per OS, run `build-and-release.yml` once as `test`, decide signing
-   (phase 110). File the findings as issues.
-2. The first Avalonia release's notes carry the plugin-break and download-name announcement
-   (ADR-0018); Discord post.
-3. **The WPF deletion PR** (tasks 2, 3, 4, 8 below, one revertible PR): delete `Gum/` except what
+**Nothing remains as open work.** Deleting the WPF projects is deferred with no date; Vic will do
+it himself. The list below is the reference for when that happens.
+
+1. **The WPF deletion PR** (tasks 2, 3, 4, 8 below, one revertible PR): delete `Gum/` except what
    the head still reads (`Gum/Themes/GumIcons.xaml` and the palette dictionaries are embedded by
    the Avalonia head from those paths, and its csproj links `Gum/Content/**` and `Gum/GumIcon.ico`
    into its output; move them under `Tool/Gum.Avalonia` first),
+   `GumFormsPlugin.csproj`'s postbuild (it stages Forms themes into `Gum/bin/<Config>/Content/FormsThemes/`
+   and copies them on to the head; stage straight into the head),
    `Gum/Properties/AssemblyInfo.cs` (then point the release workflow's version-bump step at the
    head or drop it), `WpfPluginBase`/`PriorityPlugin` and the `AddMenuItem` shim, the four WPF
    plugin heads (`EditorTabPlugin_XNA`, `TextureCoordinateSelectionPlugin`, `StateAnimationPlugin`,
@@ -85,7 +91,7 @@ the WPF/WinForms projects and files that back nothing else; confirm the tool gra
 ## Decisions
 
 - **Entry criteria are hard gates, checked in the PR description:** parity checklist dated and
-  all-OS green; byte-parity CI green; no plugin feature-flagged off; preview channel has shipped;
+  all-OS green (dropped 2026-09-24, see Status); byte-parity CI green; no plugin feature-flagged off; preview channel has shipped;
   the plugin compatibility notice has been public for at least one release.
 - **Retire only the tool graph.** Delete: `Gum/` WPF views, converters, behaviors, themes, the WPF
   seam implementations, `WpfPluginBase`, `WpfDataUi`, the WPF adapter files split out of

@@ -14,7 +14,7 @@
 > baseline-update switch (`GUM_UPDATE_PARITY_BASELINES=1`). Mechanism decision: a bespoke byte
 > compare with an in-test update switch, not Verify, because the corpus is whole project folders
 > and per-OS line endings come from the checkout. Head-side tests cover the tree control, theme
-> resources and icons. The manual checklist is `parity-checklist.md` (per-OS columns, not yet run).
+> resources and icons. The manual checklist (`parity-checklist.md`) was never run and was dropped 2026-09-24: the head ships, and real use finds parity gaps faster than a manual pass, so they are filed as issues.
 >
 > Generated-code parity is already enforced: CI's "Codegen Drift Check" regenerates every
 > `Tests/CodeGen_*` fixture with `gumcli` and fails on any change, and both heads generate through the
@@ -107,7 +107,7 @@ checked-in document with per-OS columns.
 **Out:** driving real mouse/keyboard through a live window; pixel tests of the editor canvas;
 performance benchmarks beyond the phase-10 numbers.
 
-## Manual parity checklist (owned here, run before 110 and again before 120)
+## Manual parity checklist (dropped 2026-09-24, never run)
 
 Open project · tree navigation · select/multi-select · move/resize/rotate on canvas · add
 instance by drag · edit each variable editor type · states and categories · animations and
