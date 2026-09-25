@@ -70,9 +70,9 @@ namespace Gum.Plugins.InternalPlugins.DuplicateVariablePlugin
             }
 
 
-            var duplicateVariables = GetStateVariableDuplicates(element.DefaultState);
+            var duplicateVariables = GetStateVariableDuplicates(element.GetDefaultStateOrThrow());
 
-            var duplicateVariableLists = GetStateVariableListDuplicates(element.DefaultState);
+            var duplicateVariableLists = GetStateVariableListDuplicates(element.GetDefaultStateOrThrow());
 
             string message = string.Empty;
             if (duplicateVariables.Count > 0) 

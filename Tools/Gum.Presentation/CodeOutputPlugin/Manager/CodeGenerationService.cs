@@ -103,9 +103,10 @@ public class CodeGenerationService
         {
             var elementReferences = ObjectFinder.Self.GetElementsReferencedByThis(selectedElement);
             var elementsWithMissingCodeGen = elementReferences
+                .OfType<ElementSave>()
                 .Where(item =>
                 {
-                    if(item is StandardElementSave || item == null)
+                    if(item is StandardElementSave)
                     {
                         return false;
                     }

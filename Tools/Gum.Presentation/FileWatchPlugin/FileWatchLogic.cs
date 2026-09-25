@@ -127,10 +127,9 @@ public class FileWatchLogic
             }
         }
 
-        FilePath gumProjectFilePath = gumProject.FullFileName;
-
-        if (gumProjectFilePath != null)
+        if (gumProject.FullFileName is { } projectFileName)
         {
+            FilePath gumProjectFilePath = projectFileName;
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
             if (gumProjectFilePath.GetDirectoryContainingThis() is { } projectDirectory)
             {

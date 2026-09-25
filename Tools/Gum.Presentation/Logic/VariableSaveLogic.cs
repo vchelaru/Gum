@@ -32,7 +32,7 @@ public class VariableSaveLogic : IVariableSaveLogic
     /// it only does so on the <c>forceDefault: false</c> path this class doesn't call.
     /// </summary>
     private static VariableSave? GetVariableFromThisOrBaseDefaultState(ElementSave element, string variable) =>
-        element.DefaultState.GetVariableRecursive(variable);
+        element.GetDefaultStateOrThrow().GetVariableRecursive(variable);
 
     /// <inheritdoc/>
     public bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave? container, InstanceSave? currentInstance)
@@ -113,7 +113,7 @@ public class VariableSaveLogic : IVariableSaveLogic
                 else
                 {
                     // Without an instance, the container is the element being shown.
-                    rvf = new RecursiveVariableFinder(container!.DefaultState);
+                    rvf = new RecursiveVariableFinder(container!.GetDefaultStateOrThrow());
                 }
             }
 
@@ -213,7 +213,7 @@ public class VariableSaveLogic : IVariableSaveLogic
                 // on the rootElementSave
                 if (!shouldInclude && rootElementSave != null)
                 {
-                    shouldInclude = rootElementSave.DefaultState.GetVariableListRecursive(variableList.Name) != null;
+                    shouldInclude = rootElementSave.GetDefaultStateOrThrow().GetVariableListRecursive(variableList.Name) != null;
                 }
             }
         }
@@ -269,7 +269,7 @@ public class VariableSaveLogic : IVariableSaveLogic
                 // on the rootElementSave
                 if (!shouldInclude && rootElementSave != null)
                 {
-                    shouldInclude = rootElementSave.DefaultState.GetVariableSave(defaultVariable.Name) != null;
+                    shouldInclude = rootElementSave.GetDefaultStateOrThrow().GetVariableSave(defaultVariable.Name) != null;
                 }
 
                 string? nameWithoutState = null;

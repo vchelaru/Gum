@@ -500,9 +500,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     internal void CopyLinkedComponents(GumProjectSave gumProjectSave)
     {
-        // A project file path is absolute, so it always has a containing directory.
-        var gumDirectory = new FilePath(gumProjectSave.FullFileName).GetDirectoryContainingThis()!;
-        var isJsonFormat = GumProjectSave.IsJsonFormat(gumProjectSave.FullFileName);
+        // Runs while loading a project from disk, so it has a file name. A project file path is
+        // absolute, so it always has a containing directory.
+        string projectFileName = gumProjectSave.GetSavedFileName();
+        var gumDirectory = new FilePath(projectFileName).GetDirectoryContainingThis()!;
+        var isJsonFormat = GumProjectSave.IsJsonFormat(projectFileName);
 
         void CopyReference(ElementReference reference)
         {
@@ -576,14 +578,16 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
                 StandardElementsManager.Self.AddStandardElementSaveInstance(gumProjectSave, element.Name);
 
-                string gumProjectDirectory = FileManager.GetDirectory(gumProjectSave.FullFileName);
+                // Runs while loading a project from disk, so it has a file name.
+                string projectFileName = gumProjectSave.GetSavedFileName();
+                string gumProjectDirectory = FileManager.GetDirectory(projectFileName);
 
                 // Both flags must be passed explicitly: the defaults (verbose XML) would recreate
                 // the standard as a .gutx a .gumj project never loads back, and in a compact-format
                 // project would write a verbose file its siblings don't match (issue #4595).
                 gumProjectSave.SaveStandardElements(gumProjectDirectory,
                     useCompact: gumProjectSave.Version >= (int)GumProjectSave.GumxVersions.AttributeVersion,
-                    isJsonFormat: GumProjectSave.IsJsonFormat(gumProjectSave.FullFileName));
+                    isJsonFormat: GumProjectSave.IsJsonFormat(projectFileName));
             }
         }
 
@@ -652,7 +656,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             bool shouldSave = AskUserForProjectNameIfNecessary(out isNewProject);
 
             // shouldSave means a project is loaded and has a file name.
-            if (shouldSave && GumProjectSave is { } project)
+            if (shouldSave && GumProjectSave is { FullFileName: { } projectFileName } project)
             {
                 _pluginManager.BeforeSavingProjectSave(project);
 
@@ -663,7 +667,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 try
                 {
 
-                    _fileWatchManager.Value.IgnoreNextChangeUntil(project.FullFileName);
+                    _fileWatchManager.Value.IgnoreNextChangeUntil(projectFileName);
 
                     if (saveContainedElements)
                     {
@@ -719,9 +723,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     // Keep the project's own extension so the fallback copy saves in the same format
                     // (and stays loadable). "s" formats as 2026-09-03T12:34:56, whose colons are
                     // illegal in a Windows file name, so use a colon-free stamp (issue #4595).
-                    var tempFileName = FileManager.RemoveExtension(project.FullFileName)
+                    var tempFileName = FileManager.RemoveExtension(projectFileName)
                         + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss")
-                        + "." + FileManager.GetExtension(project.FullFileName);
+                        + "." + FileManager.GetExtension(projectFileName);
                     _retryService.TryMultipleTimes(() => project.Save(tempFileName, saveContainedElements));
 
                     string? fileName = TryGetFileNameFromException(exception);

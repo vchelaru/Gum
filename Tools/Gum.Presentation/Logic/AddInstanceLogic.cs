@@ -163,7 +163,7 @@ public class AddInstanceLogic : IAddInstanceLogic
     /// </summary>
     private string GetParentName(InstanceSave parent)
     {
-        string defaultChild = ObjectFinder.Self.GetDefaultChildName(parent, _selectedState.SelectedStateSave);
+        string? defaultChild = ObjectFinder.Self.GetDefaultChildName(parent, _selectedState.SelectedStateSave);
         return string.IsNullOrEmpty(defaultChild) ? parent.Name : $"{parent.Name}.{defaultChild}";
     }
 }

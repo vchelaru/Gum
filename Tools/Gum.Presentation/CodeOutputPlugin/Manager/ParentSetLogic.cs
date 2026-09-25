@@ -81,7 +81,7 @@ public class ParentSetLogic
     public void HandleNewCreatedInstance(ElementSave element, InstanceSave instance,  CodeOutputProjectSettings codeOutputProjectSettings)
     {
        
-        var rfv = new RecursiveVariableFinder(element.DefaultState);
+        var rfv = new RecursiveVariableFinder(element.GetDefaultStateOrThrow());
         var newParentName = rfv.GetValue<string>($"{instance.Name}.Parent");
 
         InstanceSave? newParent = null;
@@ -119,7 +119,7 @@ public class ParentSetLogic
     int CountInstancesWithParent(ElementSave element, string? name)
     {
         int count = 0;
-        var defaultVariables = element.DefaultState.Variables;
+        var defaultVariables = element.GetDefaultStateOrThrow().Variables;
 
         foreach(var variable in defaultVariables)
         {

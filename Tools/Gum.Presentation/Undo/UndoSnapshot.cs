@@ -412,7 +412,8 @@ public class UndoSnapshot
         }
     }
 
-    private static void AddVariableModifications(StateSave stateToApply, StateSave currentState, UndoComparison snapshot)
+    // An undo snapshot leaves States null when they didn't change, so either default state can be null.
+    private static void AddVariableModifications(StateSave? stateToApply, StateSave? currentState, UndoComparison snapshot)
     {
         if (stateToApply == null || currentState == null) return;
         

@@ -66,7 +66,7 @@ public class ReferenceFinder : IReferenceFinder
             }
         }
 
-        foreach (var variable in element.DefaultState.Variables.Where(v => v.GetRootName() == "ContainedType"))
+        foreach (var variable in element.GetDefaultStateOrThrow().Variables.Where(v => v.GetRootName() == "ContainedType"))
         {
             if (variable.Value as string == oldName)
             {
@@ -561,7 +561,8 @@ public class ReferenceFinder : IReferenceFinder
                                 // see if the owner of the right side is this element or an inheriting element:
                                 var rightSideOwner = stateContainingRightSideVariable.ParentContainer;
 
-                                matchesRight = changedVariableOwnerElement == rightSideOwner || inheritingElements.Contains(rightSideOwner);
+                                matchesRight = changedVariableOwnerElement == rightSideOwner ||
+                                    (rightSideOwner != null && inheritingElements.Contains(rightSideOwner));
                             }
 
                             if (matchesLeft || matchesRight)

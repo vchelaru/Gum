@@ -90,7 +90,7 @@ public class ElementCommands : IElementCommands
         // Set the parent before adding the instance in case plugins want to reject the creation of the object...
         if (!string.IsNullOrEmpty(parentName))
         {
-            elementToAddTo.DefaultState.SetValue($"{instanceSave.Name}.Parent", parentName, "string");
+            elementToAddTo.GetDefaultStateOrThrow().SetValue($"{instanceSave.Name}.Parent", parentName, "string");
         }
 
         // We need to call InstanceAdd before we select the new object - the Undo manager expects it
@@ -696,7 +696,7 @@ public class ElementCommands : IElementCommands
         // should be shown.
         if (objectToAddTo is ElementSave elementToAddTo)
         {              
-            elementToAddTo.DefaultState.Variables.Add(new VariableSave()
+            elementToAddTo.GetDefaultStateOrThrow().Variables.Add(new VariableSave()
             {
                 Name = category.Name + "State",
                 // We used to set the type with the word "State" appended but why? Gum seems to not do this everywhere, and this can add confusion, so let's omit the "State" suffix
@@ -708,7 +708,7 @@ public class ElementCommands : IElementCommands
                 CustomTypeConverter = new Gum.PropertyGridHelpers.Converters.AvailableStatesConverter(category.Name, _selectedState)
             });
 
-            elementToAddTo.DefaultState.Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
+            elementToAddTo.GetDefaultStateOrThrow().Variables.Sort((first, second) => first.Name.CompareTo(second.Name));
         }
         else if(objectToAddTo is BehaviorSave behaviorSave)
         {

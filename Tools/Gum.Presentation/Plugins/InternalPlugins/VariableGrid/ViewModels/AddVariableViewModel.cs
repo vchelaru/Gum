@@ -227,7 +227,7 @@ public class AddVariableViewModel : DialogViewModel
         else if (element != null)
         {
             newVariable.IsCustomVariable = true;
-            element.DefaultState.Variables.Add(newVariable);
+            element.GetDefaultStateOrThrow().Variables.Add(newVariable);
             _elementCommands.SortVariables(element);
             _fileCommands.TryAutoSaveElement(element);
         }
@@ -376,11 +376,17 @@ public class AddVariableViewModel : DialogViewModel
             var oldFullName = instance.Name + "." + oldName;
             var newFullName = instance.Name + "." + newName;
 
-            if (ApplyEditVariableOnElement(reference.OwnerOfReferencingObject, oldFullName, newFullName, type,
+            // ObjectFinder sets the owner on every instance reference it returns.
+            if (reference.OwnerOfReferencingObject is not { } owner)
+            {
+                continue;
+            }
+
+            if (ApplyEditVariableOnElement(owner, oldFullName, newFullName, type,
                 // Instances treat the name as a normal variable, so do a full rename
                 RenameType.NormalName))
             {
-                elementsToSave.Add(reference.OwnerOfReferencingObject);
+                elementsToSave.Add(owner);
             }
         }
 

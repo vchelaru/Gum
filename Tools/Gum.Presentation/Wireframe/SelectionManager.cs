@@ -480,8 +480,13 @@ public class SelectionManager : ISelectionManager
                 }
                 else
                 {
-                    // With no element selected the canvas is cleared, so nothing reads this stack entry.
-                    var elementStack = new List<ElementWithState> { new ElementWithState(_selectedState.SelectedElement!) };
+                    // With no element selected the canvas is cleared, so there is nothing to hit and
+                    // the stack stays empty.
+                    var elementStack = new List<ElementWithState>();
+                    if (_selectedState.SelectedElement is { } selectedElement)
+                    {
+                        elementStack.Add(new ElementWithState(selectedElement));
+                    }
                     representationOver = GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
 
                     if (representationOver != null)
@@ -1183,8 +1188,12 @@ public class SelectionManager : ISelectionManager
                 _camera.ScreenToWorld(_cursor.X, _cursor.Y, out float x, out float y);
 
                 List<ElementWithState> elementStack = new List<ElementWithState>();
-                // With no element selected the canvas is cleared, so nothing reads this stack entry.
-                elementStack.Add(new ElementWithState(_selectedState.SelectedElement!));
+                // With no element selected the canvas is cleared, so there is nothing to hit and
+                // the stack stays empty.
+                if (_selectedState.SelectedElement is { } elementShown)
+                {
+                    elementStack.Add(new ElementWithState(elementShown));
+                }
 
 
                 IRenderableIpso? representation =

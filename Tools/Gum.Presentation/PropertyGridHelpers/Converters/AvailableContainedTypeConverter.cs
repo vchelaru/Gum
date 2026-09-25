@@ -59,7 +59,7 @@ namespace Gum.PropertyGridHelpers.Converters
                 {
                     var parentVariableName = $"{otherInstance.Name}.Parent";
 
-                    var variable = currentElement.DefaultState.Variables.Find(item => item.Name == parentVariableName);
+                    var variable = currentElement.GetDefaultStateOrThrow().Variables.Find(item => item.Name == parentVariableName);
 
                     if(variable != null && variable.Value is string asString && asString == instanceName)
                     {

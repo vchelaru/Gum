@@ -358,7 +358,7 @@ namespace GumRuntime
         /// for why the two paths exist and the plan to collapse them.
         /// </para>
         /// </remarks>
-        public static Func<string, ISystemManagers, IRenderable>? CustomCreateGraphicalComponentFunc { get; set; }
+        public static Func<string, ISystemManagers, IRenderable?>? CustomCreateGraphicalComponentFunc { get; set; }
 
         public static void CreateGraphicalComponent(this GraphicalUiElement graphicalElement, ElementSave elementSave, ISystemManagers systemManagers)
         {

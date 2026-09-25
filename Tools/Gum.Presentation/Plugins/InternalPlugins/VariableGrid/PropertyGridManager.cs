@@ -730,7 +730,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
                     foreach(var requiredVariable in requiredVariables)
                     {
-                        bool existsInComponent = asComponent.DefaultState.Variables
+                        bool existsInComponent = asComponent.GetDefaultStateOrThrow().Variables
                             .Any(item =>
                                 (item.Name == requiredVariable.Name || item.ExposedAsName == requiredVariable.Name) &&
                                 item.Type == requiredVariable.Type);
@@ -1260,7 +1260,9 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 // Standard variables resolve through ObjectFinder. Behavior FormsProperties
                 // (e.g. ToolTip) aren't a project-defined variable, so the lookup returns
                 // null — fall back to the trailing identifier of the member's qualified name.
-                var baseVariable = ObjectFinder.Self.GetRootVariable(member.Name, stateSave.ParentContainer);
+                var baseVariable = stateSave.ParentContainer is { } stateOwner
+                    ? ObjectFinder.Self.GetRootVariable(member.Name, stateOwner)
+                    : null;
                 var rootName = baseVariable?.Name ?? GetTrailingName(member.Name);
 
                 if (IsEligibleStringDisplayerRootName(rootName))

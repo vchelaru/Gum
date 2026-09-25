@@ -228,7 +228,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             var baseElementsDerivedFirst = element != null ? ObjectFinder.Self.GetBaseElements(element) : new List<ElementSave>();
             for (int i = baseElementsDerivedFirst.Count - 1; i > -1; i--)
             {
-                CopiedData.CopiedBaseElementDefaultStates.Add(baseElementsDerivedFirst[i].DefaultState.Clone());
+                CopiedData.CopiedBaseElementDefaultStates.Add(baseElementsDerivedFirst[i].GetDefaultStateOrThrow().Clone());
             }
 
             if (state != null)
@@ -247,7 +247,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             if (selectedState.SelectedStateCategorySave != null && selectedState.SelectedStateSave != null && element != null)
             {
                 // it's categorized, so add the default:
-                CopiedData.CopiedStates.Add(element.DefaultState.Clone());
+                CopiedData.CopiedStates.Add(element.GetDefaultStateOrThrow().Clone());
             }
 
             List<InstanceSave> selected = new List<InstanceSave>();
@@ -594,7 +594,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             foreach (var variableName in newStateVariableNames)
             {
                 // this variable better exist..somewhere:
-                var existingVariable = targetElement.DefaultState.GetVariableRecursive(variableName);
+                var existingVariable = targetElement.GetDefaultStateOrThrow().GetVariableRecursive(variableName);
 
                 if (existingVariable == null)
                 {
@@ -840,9 +840,9 @@ public class CopyPasteLogic : ICopyPasteLogic
                     {
                         // When pasting into the source element, it is the selected element.
                         StateSave baseTargetState = targetElement != sourceElement
-                            ? targetElement.DefaultState
+                            ? targetElement.GetDefaultStateOrThrow()
                             : (targetElement.AllStates.FirstOrDefault(item => item.Name == baseStateSave.Name)
-                                ?? targetElement.DefaultState);
+                                ?? targetElement.GetDefaultStateOrThrow());
 
                         var baseVariables = baseStateSave.Variables.Where(item =>
                             item.SourceObject == sourceInstance.Name &&
@@ -885,13 +885,13 @@ public class CopyPasteLogic : ICopyPasteLogic
                             _dialogService.ShowMessage("Only the default state variables will be copied since the source and target elements differ.");
                         }
 
-                        targetState = targetElement.DefaultState;
+                        targetState = targetElement.GetDefaultStateOrThrow();
                     }
                     else
                     {
                         // When pasting into the source element, it is the selected element.
                         targetState = targetElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ??
-                            targetElement.DefaultState;
+                            targetElement.GetDefaultStateOrThrow();
                         //_selectedState.SelectedStateSave ?? _selectedState.SelectedElement.DefaultState;
 
                     }
@@ -1126,7 +1126,7 @@ public class CopyPasteLogic : ICopyPasteLogic
         // instances used for index calculation), fall back to the element state.
         if(!copiedParentMap.TryGetValue(instance.Name, out var parentName))
         {
-            parentName = element.DefaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
+            parentName = element.GetDefaultStateOrThrow().GetValueRecursive($"{instance.Name}.Parent") as string;
         }
 
         if(string.IsNullOrEmpty(parentName))
@@ -1241,14 +1241,14 @@ public class CopyPasteLogic : ICopyPasteLogic
         ElementSave sourceElement = instance.ParentContainer
             ?? throw new InvalidOperationException(
                 $"The instance {instance.Name} must have a ParentContainer to be promoted into a component.");
-        StateSave sourceDefault = sourceElement.DefaultState;
+        StateSave sourceDefault = sourceElement.GetDefaultStateOrThrow();
 
         // The instance's type becomes the component's base type; the rest of the new-component
         // setup (default-state seeding, type converters, nulling the root position) is shared
         // with the regular "add component" flow.
         ComponentSave component = new ComponentSave();
         _projectCommands.PrepareNewComponentSave(component, componentName, instance.BaseType);
-        StateSave componentDefault = component.DefaultState;
+        StateSave componentDefault = component.GetDefaultStateOrThrow();
 
         // GetAllInstancesAndChildrenOf includes the instance itself - but the instance BECOMES the
         // component root rather than one of its children, so exclude it from the copied set.
@@ -1443,7 +1443,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     private void FillWithChildrenOf(InstanceSave instance, List<InstanceSave> listToFill, ElementSave container)
     {
-        var defaultState = container.DefaultState;
+        var defaultState = container.GetDefaultStateOrThrow();
 
         foreach (var variable in defaultState.Variables)
         {

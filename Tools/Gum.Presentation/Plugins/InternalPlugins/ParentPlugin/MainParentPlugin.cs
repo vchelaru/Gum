@@ -35,7 +35,7 @@ namespace Gum.Plugins.ParentPlugin
 
             var currentState = _selectedState.SelectedStateSave ?? 
                 // This can happen if the user drag+drops one item on another without anything selected:
-                container.DefaultState;
+                container.GetDefaultStateOrThrow();
             var newParentName = currentState.GetValueOrDefault<string>($"{instance.Name}.Parent");
             InstanceSave? newParent = null;
             if (!string.IsNullOrEmpty(newParentName))

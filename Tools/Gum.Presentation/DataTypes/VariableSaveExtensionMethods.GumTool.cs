@@ -28,7 +28,7 @@ namespace Gum.DataTypes
                 return false;
             }
 
-            Type type = Locator.GetRequiredService<ITypeManager>().GetTypeFromString(variableSave.Type);
+            Type? type = Locator.GetRequiredService<ITypeManager>().GetTypeFromString(variableSave.Type);
 
             if (type == null)
             {
@@ -46,7 +46,7 @@ namespace Gum.DataTypes
 
             string typeAsString = variableSave.Type;
 
-            Type foundType = VariableSaveExtensionMethods.GetPrimitiveType(typeAsString);
+            Type? foundType = VariableSaveExtensionMethods.GetPrimitiveType(typeAsString);
 
             if (foundType != null)
             {
@@ -106,8 +106,8 @@ namespace Gum.DataTypes
 
         public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container)
         {
-            ElementSave categoryContainer;
-            StateSaveCategory category;
+            ElementSave? categoryContainer;
+            StateSaveCategory? category;
 
             if (variableSave.CustomTypeConverter != null)
             {
@@ -156,7 +156,7 @@ namespace Gum.DataTypes
 
                         if (foundElementSave != null)
                         {
-                            VariableSave? rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
+                            VariableSave? rootVariableSave = foundElementSave.GetDefaultStateOrThrow().GetVariableSave(variableSave.GetRootName());
 
                             if (rootVariableSave != null)
                             {

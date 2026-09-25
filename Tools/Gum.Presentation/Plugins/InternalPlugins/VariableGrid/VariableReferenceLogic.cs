@@ -154,7 +154,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             return;
         }
 
-        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState, liveRoot: liveRoot);
+        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.GetDefaultStateOrThrow(), liveRoot: liveRoot);
 
         if (evaluatedSyntax == null)
         {
@@ -519,12 +519,17 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
         foreach (var reference in filteredReferences)
         {
-            if (statesAlreadyApplied.Contains(reference.StateSave) == false)
+            // ObjectFinder sets the owner and state on every variable reference it returns.
+            if (reference is not { OwnerOfReferencingObject: { } owner, StateSave: { } referencingState })
             {
-                ElementSaveExtensions.ApplyVariableReferences(reference.OwnerOfReferencingObject, reference.StateSave,
-                    _wireframeObjectManager.GetRepresentation(reference.OwnerOfReferencingObject), isFullCommit);
-                statesAlreadyApplied.Add(reference.StateSave);
-                elementsToSave.Add(reference.OwnerOfReferencingObject);
+                continue;
+            }
+            if (statesAlreadyApplied.Contains(referencingState) == false)
+            {
+                ElementSaveExtensions.ApplyVariableReferences(owner, referencingState,
+                    _wireframeObjectManager.GetRepresentation(owner), isFullCommit);
+                statesAlreadyApplied.Add(referencingState);
+                elementsToSave.Add(owner);
             }
         }
 
@@ -567,7 +572,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         {
             // Equivalent to the tool-only ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase(element,
             // variable, forceDefault: true) expansion, without depending on that Locator-touching, Gum-only file.
-            var variableOnInstance = instanceElement.DefaultState.GetVariableRecursive(unqualifiedVariableName);
+            var variableOnInstance = instanceElement.GetDefaultStateOrThrow().GetVariableRecursive(unqualifiedVariableName);
 
             List<TypedElementReference> references = ObjectFinder.Self.GetElementReferencesToThis(instanceElement);
             var filteredReferences = references

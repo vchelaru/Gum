@@ -458,7 +458,7 @@ public class SetVariableLogic : ISetVariableLogic
         var instanceElement = instance != null ? ObjectFinder.Self.GetElementSave(instance) : null;
         if (instanceElement != null)
         {
-            var variable = instanceElement.DefaultState.Variables
+            var variable = instanceElement.GetDefaultStateOrThrow().Variables
                 .FirstOrDefault(item => item.ExposedAsName == changedMember);
 
             if (variable != null)
@@ -1016,7 +1016,7 @@ public class SetVariableLogic : ISetVariableLogic
 
     private List<InstanceSave> GetRecursiveChildrenOf(ElementSave parent, InstanceSave instance)
     {
-        var defaultState = parent.DefaultState;
+        var defaultState = parent.GetDefaultStateOrThrow();
         List<InstanceSave> toReturn = new List<InstanceSave>();
         List<InstanceSave> directChildren = new List<InstanceSave>();
         foreach (var potentialChild in parent.Instances)
@@ -1054,14 +1054,14 @@ public class SetVariableLogic : ISetVariableLogic
             }
             else
             {
-                rvf = new RecursiveVariableFinder(parentElement.DefaultState);
+                rvf = new RecursiveVariableFinder(parentElement.GetDefaultStateOrThrow());
             }
 
             var textureAddress = rvf.GetValue<TextureAddress>("TextureAddress");
 
             if (textureAddress == TextureAddress.Custom)
             {
-                string sourceFile = rvf.GetValue<string>("SourceFile");
+                string? sourceFile = rvf.GetValue<string>("SourceFile");
 
                 if (!string.IsNullOrEmpty(sourceFile))
                 {
@@ -1087,10 +1087,10 @@ public class SetVariableLogic : ISetVariableLogic
 
                             if (size != null && instance != null)
                             {
-                                parentElement.DefaultState.SetValue(instance.Name + ".TextureTop", 0, "int");
-                                parentElement.DefaultState.SetValue(instance.Name + ".TextureLeft", 0, "int");
-                                parentElement.DefaultState.SetValue(instance.Name + ".TextureWidth", size.Value.Width, "int");
-                                parentElement.DefaultState.SetValue(instance.Name + ".TextureHeight", size.Value.Height, "int");
+                                parentElement.GetDefaultStateOrThrow().SetValue(instance.Name + ".TextureTop", 0, "int");
+                                parentElement.GetDefaultStateOrThrow().SetValue(instance.Name + ".TextureLeft", 0, "int");
+                                parentElement.GetDefaultStateOrThrow().SetValue(instance.Name + ".TextureWidth", size.Value.Width, "int");
+                                parentElement.GetDefaultStateOrThrow().SetValue(instance.Name + ".TextureHeight", size.Value.Height, "int");
 
                                 _wireframeCommands.Refresh();
                             }

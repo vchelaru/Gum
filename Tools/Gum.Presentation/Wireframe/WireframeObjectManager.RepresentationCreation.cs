@@ -96,7 +96,7 @@ public partial class WireframeObjectManager
             {
                 RecursiveVariableFinder rvf = new DataTypes.RecursiveVariableFinder(elementStack);
 
-                string parentName = rvf.GetValue<string>($"{childInstanceSave.Name}.Parent");
+                string? parentName = rvf.GetValue<string>($"{childInstanceSave.Name}.Parent");
 
                 if (!string.IsNullOrEmpty(parentName) && parentName != StandardElementsManager.ScreenBoundsName)
                 {

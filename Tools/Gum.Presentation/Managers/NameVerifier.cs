@@ -274,7 +274,9 @@ public class NameVerifier : INameVerifier
     }
     private void IsNameUsedByStandardVariables(string nameToCheck, out string? whyNotValid)
     {
-        var variables = _standardElementsManager.DefaultStates.SelectMany(item => item.Value.Variables);
+        var defaultStates = _standardElementsManager.DefaultStates ??
+            throw new System.InvalidOperationException("StandardElementsManager hasn't been initialized.");
+        var variables = defaultStates.SelectMany(item => item.Value.Variables);
         var names = variables.Select(item => item.Name).ToHashSet();
         whyNotValid = null;
         if(names.Contains(nameToCheck))
@@ -437,7 +439,7 @@ public class NameVerifier : INameVerifier
     {
         var stateToPullFrom = (element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null)
             ? _selectedState.SelectedStateSave
-            : element.DefaultState;
+            : element.GetDefaultStateOrThrow();
 
         return stateToPullFrom.GetVariableRecursive(variable);
     }
