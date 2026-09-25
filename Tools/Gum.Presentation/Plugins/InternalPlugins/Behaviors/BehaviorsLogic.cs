@@ -59,7 +59,7 @@ public class BehaviorsLogic
 
     public void HandleStateMovedToCategory(StateSave stateSave, StateSaveCategory newCategory, StateSaveCategory oldCategory)
     {
-        BehaviorSave? behavior = ObjectFinder.Self.GumProjectSave.Behaviors
+        BehaviorSave? behavior = ObjectFinder.Self.GumProjectSave?.Behaviors
             .FirstOrDefault(item => item.AllStates.Contains(stateSave));
 
         if (behavior != null)
@@ -70,7 +70,7 @@ public class BehaviorsLogic
 
     public void HandleStateAdd(StateSave stateSave)
     {
-        BehaviorSave? behavior = ObjectFinder.Self.GumProjectSave.Behaviors
+        BehaviorSave? behavior = ObjectFinder.Self.GumProjectSave?.Behaviors
             .FirstOrDefault(item => item.AllStates.Contains(stateSave));
 
         if (behavior != null)
@@ -83,7 +83,7 @@ public class BehaviorsLogic
     {
         StateSaveCategory? category = behavior.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
 
-        List<ElementSave> elementsUsingBehavior = ObjectFinder.Self.GumProjectSave.AllElements
+        List<ElementSave> elementsUsingBehavior = (ObjectFinder.Self.GumProjectSave?.AllElements ?? Enumerable.Empty<ElementSave>())
             .Where(item => item.Behaviors.Any(b => b.BehaviorName == behavior.Name))
             .ToList();
 
@@ -120,16 +120,16 @@ public class BehaviorsLogic
         {
             using UndoLock undoLock = _undoManager.RequestLock();
 
-            List<string> selectedBehaviorNames = _viewModel.AllBehaviors
+            List<string?> selectedBehaviorNames = _viewModel.AllBehaviors
                 .Where(item => item.IsChecked)
                 .Select(item => item.Name)
                 .ToList();
 
-            List<string> addedBehaviors = selectedBehaviorNames
+            List<string?> addedBehaviors = selectedBehaviorNames
                 .Except(component.Behaviors.Select(item => item.BehaviorName))
                 .ToList();
 
-            List<string> removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
+            List<string?> removedBehaviors = component.Behaviors.Select(item => item.BehaviorName)
                 .Except(selectedBehaviorNames)
                 .ToList();
 
@@ -198,7 +198,7 @@ public class BehaviorsLogic
         }
     }
 
-    public void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
+    public void HandleInstanceSelected(ElementSave? save1, InstanceSave? save2)
     {
         UpdateTabPresence();
     }

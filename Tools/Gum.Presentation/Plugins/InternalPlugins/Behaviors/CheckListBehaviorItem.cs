@@ -4,9 +4,10 @@ namespace Gum.Plugins.Behaviors
 {
     public class CheckListBehaviorItem : ViewModel
     {
-        public string Name
+        /// <summary>The behavior's name, or null for a malformed component reference with no name.</summary>
+        public string? Name
         {
-            get => Get<string>();
+            get => Get<string?>();
             set => Set(value);
         }
 
@@ -28,6 +29,6 @@ namespace Gum.Plugins.Behaviors
 
         [DependsOn(nameof(Name))]
         [DependsOn(nameof(IsOrphaned))]
-        public string DisplayText => IsOrphaned ? $"{Name} (missing)" : Name;
+        public string DisplayText => IsOrphaned ? $"{Name} (missing)" : Name ?? "";
     }
 }

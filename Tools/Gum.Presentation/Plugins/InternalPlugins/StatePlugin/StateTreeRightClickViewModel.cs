@@ -182,12 +182,18 @@ public class StateTreeRightClickViewModel
 
     private void AddMoveToCategoryItems(List<ContextMenuItemViewModel> items)
     {
-        var categoryNames = _selectedState.SelectedStateContainer?.Categories
+        var stateContainer = _selectedState.SelectedStateContainer;
+        if (stateContainer == null)
+        {
+            return;
+        }
+
+        var categoryNames = stateContainer.Categories
             .Where(item => item != _selectedState.SelectedStateCategorySave)
             .Select(item => item.Name).ToList();
 
         // As of before 2024 we no longer allow uncategorized non-default states
-        if (categoryNames?.Count != 0)
+        if (categoryNames.Count != 0)
         {
             items.Add(new ContextMenuItemViewModel { IsSeparator = true });
 
@@ -222,8 +228,14 @@ public class StateTreeRightClickViewModel
     /// <returns>True if the state actually moved (and the tree/state were saved).</returns>
     public bool MoveStateInDirection(int direction)
     {
-        var state = _selectedState.SelectedStateSave;
-        var list = _selectedState.SelectedStateContainer.UncategorizedStates;
+        // The reorder hotkey also reaches here from an empty States tab.
+        if (_selectedState.SelectedStateSave is not { } state ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return false;
+        }
+
+        var list = stateContainer.UncategorizedStates;
         if (_selectedState.SelectedStateCategorySave != null)
         {
             list = _selectedState.SelectedStateCategorySave.States;
@@ -258,7 +270,7 @@ public class StateTreeRightClickViewModel
         return didMove;
     }
 
-    private bool GetIfCanMoveUp(StateSave state, StateSaveCategory category)
+    private bool GetIfCanMoveUp(StateSave state, StateSaveCategory? category)
     {
         var list = _selectedState.SelectedStateCategorySave?.States;
         if (category != null)
@@ -283,7 +295,7 @@ public class StateTreeRightClickViewModel
         return stateIndex > indexToBeGreaterThan;
     }
 
-    private bool GetIfCanMoveDown(StateSave state, StateSaveCategory category)
+    private bool GetIfCanMoveDown(StateSave state, StateSaveCategory? category)
     {
         var list = _selectedState.SelectedStateCategorySave?.States;
         if (category != null)
@@ -302,16 +314,22 @@ public class StateTreeRightClickViewModel
 
     public void DeleteCategoryClick()
     {
-        _editCommands.AskToDeleteStateCategory(
-            _selectedState.SelectedStateCategorySave,
-            _selectedState.SelectedStateContainer);
+        if (_selectedState.SelectedStateCategorySave is not { } category ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
+        _editCommands.AskToDeleteStateCategory(category, stateContainer);
     }
 
     public void DeleteStateClick()
     {
-        _editCommands.AskToDeleteState(
-            _selectedState.SelectedStateSave,
-            _selectedState.SelectedStateContainer);
+        if (_selectedState.SelectedStateSave is not { } state ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
+        _editCommands.AskToDeleteState(state, stateContainer);
     }
 
     private void DuplicateStateClick()
@@ -322,25 +340,32 @@ public class StateTreeRightClickViewModel
             _dialogService.ShowMessage("Cannot duplicate state while a custom state is displaying. Are you creating or playing animations?");
             return;
         }
-        if (_selectedState.SelectedStateCategorySave == null)
+        if (_selectedState.SelectedStateCategorySave is not { } category)
         {
             _dialogService.ShowMessage("Cannot duplicate uncategorized states. Select a state in a category first.");
             return;
         }
+        // The menu item only shows while a state, and so its container, is selected.
+        if (_selectedState.SelectedStateSave is not { } selectedStateSave ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
         ////////End Early Out///////////////
 
-        StateSave newState = _selectedState.SelectedStateSave.Clone();
+        StateSave newState = selectedStateSave.Clone();
 
-        newState.ParentContainer = _selectedState.SelectedElement;
+        // A behavior's states have no element, so their ParentContainer stays null.
+        newState.ParentContainer = _selectedState.SelectedElement!;
 
-        int index = _selectedState.SelectedStateCategorySave.States.IndexOf(_selectedState.SelectedStateSave);
+        int index = category.States.IndexOf(selectedStateSave);
 
-        while (_selectedState.SelectedStateContainer.AllStates.Any(item => item != newState && item.Name == newState.Name))
+        while (stateContainer.AllStates.Any(item => item != newState && item.Name == newState.Name))
         {
             newState.Name = StringFunctions.IncrementNumberAtEnd(newState.Name);
         }
 
-        _elementCommands.AddState(_selectedState.SelectedStateContainer, _selectedState.SelectedStateCategorySave, newState, index + 1);
+        _elementCommands.AddState(stateContainer, category, newState, index + 1);
 
         _guiCommands.RefreshStateTreeView();
 
@@ -351,15 +376,22 @@ public class StateTreeRightClickViewModel
 
     public void RenameStateClick()
     {
-        _editCommands.AskToRenameState(_selectedState.SelectedStateSave,
-            _selectedState.SelectedStateContainer);
+        if (_selectedState.SelectedStateSave is not { } state ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
+        _editCommands.AskToRenameState(state, stateContainer);
     }
 
     public void RenameCategoryClick()
     {
-        _editCommands.AskToRenameStateCategory(
-            _selectedState.SelectedStateCategorySave,
-            _selectedState.SelectedStateContainer);
+        if (_selectedState.SelectedStateCategorySave is not { } category ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
+        _editCommands.AskToRenameStateCategory(category, stateContainer);
     }
 
     /// <summary>Sorts the selected category's states alphabetically by name.</summary>
@@ -379,8 +411,11 @@ public class StateTreeRightClickViewModel
 
     private void MoveToCategory(string categoryNameToMoveTo)
     {
-        var stateToMove = _selectedState.SelectedStateSave;
-        var stateContainer = _selectedState.SelectedStateContainer;
+        if (_selectedState.SelectedStateSave is not { } stateToMove ||
+            _selectedState.SelectedStateContainer is not { } stateContainer)
+        {
+            return;
+        }
         _editCommands.MoveToCategory(categoryNameToMoveTo, stateToMove, stateContainer);
     }
 

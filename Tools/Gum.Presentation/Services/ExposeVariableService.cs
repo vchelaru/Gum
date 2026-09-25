@@ -52,10 +52,12 @@ public class ExposeVariableService : IExposeVariableService
         var parentElement = instanceSave.ParentContainer;
         var variableSave = parentElement?.DefaultState.GetVariableSave(
             $"{instanceSave.Name}.{rootVariableName}");
+        var elementSave = _selectedState.SelectedElement;
 
-        var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
+        var canExpose = GetIfCanExpose(instanceSave, elementSave, variableSave, rootVariableName);
 
-        if(canExpose.Succeeded == false)
+        // GetIfCanExpose fails when there is no selected element.
+        if(canExpose.Succeeded == false || elementSave == null)
         {
             // show message
             _dialogService.ShowMessage(canExpose.Message);
@@ -73,14 +75,14 @@ public class ExposeVariableService : IExposeVariableService
         {
             InitialValue = fullVariableName.Replace(".", "").Replace(" ", ""),
             Validator = v =>
-                _nameVerifier.IsVariableNameValid(v, _selectedState.SelectedElement, variableSave, out string? whyNot)
+                _nameVerifier.IsVariableNameValid(v ?? "", elementSave, variableSave, out string? whyNot)
                     ? null
                     : whyNot
         };
 
         if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-            return ApplyExposure(instanceSave, rootVariableName, variableSave, result);
+            return ApplyExposure(elementSave, instanceSave, rootVariableName, variableSave, result);
         }
 
         // User cancelled the prompt: attempted, but nothing exposed.
@@ -92,27 +94,28 @@ public class ExposeVariableService : IExposeVariableService
         var parentElement = instanceSave.ParentContainer;
         var variableSave = parentElement?.DefaultState.GetVariableSave(
             $"{instanceSave.Name}.{rootVariableName}");
+        var elementSave = _selectedState.SelectedElement;
 
-        var canExpose = GetIfCanExpose(instanceSave, variableSave, rootVariableName);
+        var canExpose = GetIfCanExpose(instanceSave, elementSave, variableSave, rootVariableName);
 
-        if (canExpose.Succeeded == false)
+        // GetIfCanExpose fails when there is no selected element.
+        if (canExpose.Succeeded == false || elementSave == null)
         {
             _dialogService.ShowMessage(canExpose.Message);
             return OptionallyAttemptedGeneralResponse<VariableSave>.SuccessfulWithoutAttempt;
         }
 
-        return ApplyExposure(instanceSave, rootVariableName, variableSave, exposedName);
+        return ApplyExposure(elementSave, instanceSave, rootVariableName, variableSave, exposedName);
     }
 
     /// <summary>
     /// Performs the actual exposure once the final exposed name is known. Shared by the prompt-driven
     /// <see cref="HandleExposeVariableClick"/> and the name-supplied <see cref="ExposeVariable"/>.
     /// </summary>
-    private OptionallyAttemptedGeneralResponse<VariableSave> ApplyExposure(InstanceSave instanceSave,
+    private OptionallyAttemptedGeneralResponse<VariableSave> ApplyExposure(ElementSave elementSave, InstanceSave instanceSave,
         string rootVariableName, VariableSave? variableSave, string exposedName)
     {
         var fullVariableName = instanceSave.Name + "." + rootVariableName;
-        var elementSave = _selectedState.SelectedElement;
 
         // if there is an inactive variable, we should get rid of it:
         var existingVariable = GetVariableFromThisOrBase(elementSave, exposedName);
@@ -140,7 +143,8 @@ public class ExposeVariableService : IExposeVariableService
         {
             StateSave stateToExposeOn = elementSave.DefaultState;
 
-            var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer);
+            // GetIfCanExpose only succeeds for an instance in an element.
+            var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer!);
 
             if (variableInDefault == null)
             {
@@ -150,7 +154,8 @@ public class ExposeVariableService : IExposeVariableService
             string variableType = variableInDefault.Type;
             stateToExposeOn.SetValue(fullVariableName, null, instanceSave, variableType);
 
-            variableSave = stateToExposeOn.GetVariableSave(fullVariableName);
+            // SetValue just added the variable.
+            variableSave = stateToExposeOn.GetVariableSave(fullVariableName)!;
 
             // Not sure if we need this, but setting SetsValue to false matches the old behavior when
             // this code used to be part of validation
@@ -187,21 +192,18 @@ public class ExposeVariableService : IExposeVariableService
         return stateToPullFrom.GetVariableRecursive(variable);
     }
 
-    private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, VariableSave variableSave, string rootVariableName)
+    private GeneralResponse GetIfCanExpose(InstanceSave instanceSave, ElementSave? selectedElement, VariableSave? variableSave, string rootVariableName)
     {
         if (instanceSave == null)
         {
             return GeneralResponse.UnsuccessfulWith("Cannot expose variables on components or screens, only on instances");
         }
 
-        // Update June 1, 2017
-        // This code used to expose
-        // a variable on whatever state
-        // was selected; however, exposed
-        // variables should be exposed on the
-        // default state or else Gum breaks
-        //StateSave currentStateSave = _selectedState.SelectedStateSave;
-        StateSave stateToExposeOn = _selectedState.SelectedElement.DefaultState;
+        // A behavior's instances have no element to expose the variable on.
+        if (instanceSave.ParentContainer is not { } parentContainer || selectedElement == null)
+        {
+            return GeneralResponse.UnsuccessfulWith("Variables can only be exposed on instances in a component or screen");
+        }
 
         if (variableSave == null)
         {
@@ -210,12 +212,13 @@ public class ExposeVariableService : IExposeVariableService
             string variableName = instanceSave.Name + "." + rootVariableName;
             string rawVariableName = rootVariableName;
 
-            ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-            var variableInDefault = elementForInstance.DefaultState.GetVariableSave(rawVariableName);
+            // An instance of a missing type has no base variables.
+            ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+            var variableInDefault = elementForInstance?.DefaultState.GetVariableSave(rawVariableName);
 
             if(variableInDefault == null)
             {
-                variableInDefault = ObjectFinder.Self.GetRootVariable(variableName, instanceSave.ParentContainer);
+                variableInDefault = ObjectFinder.Self.GetRootVariable(variableName, parentContainer);
             }
 
             if (variableInDefault == null)
@@ -257,7 +260,13 @@ public class ExposeVariableService : IExposeVariableService
         // do we want to support undos? I think so....?
 
 
-        var response = GetIfCanUnexposeVariable(variableSave, elementSave);
+        // The un-expose menu item only shows for an exposed variable.
+        if (variableSave.ExposedAsName is not { } oldExposedName)
+        {
+            return;
+        }
+
+        var response = GetIfCanUnexposeVariable(variableSave, oldExposedName, elementSave);
         if (response.Succeeded == false)
         {
             _dialogService.ShowMessage(response.Message);
@@ -266,7 +275,6 @@ public class ExposeVariableService : IExposeVariableService
 
         using var undoLock = _undoManager.RequestLock();
 
-        var oldExposedName = variableSave.ExposedAsName;
         variableSave.ExposedAsName = null;
 
         _pluginManager.VariableDelete(elementSave, oldExposedName);
@@ -274,13 +282,13 @@ public class ExposeVariableService : IExposeVariableService
         _guiCommands.RefreshVariables(force: true);
     }
 
-    private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, ElementSave elementSave)
+    private GeneralResponse GetIfCanUnexposeVariable(VariableSave variableSave, string exposedName, ElementSave elementSave)
     {
-        var renames = _renameLogic.GetChangesForRenamedVariable(elementSave, variableSave.Name, variableSave.ExposedAsName);
+        var renames = _renameLogic.GetChangesForRenamedVariable(elementSave, variableSave.Name, exposedName);
 
         if (renames.VariableReferenceChanges.Count > 0)
         {
-            string message = $"Cannot unexpose variable {variableSave.ExposedAsName} because it is referenced by:\n\n";
+            string message = $"Cannot unexpose variable {exposedName} because it is referenced by:\n\n";
             foreach (var item in renames.VariableReferenceChanges)
             {
                 message += $"{item.VariableReferenceList.ValueAsIList[item.LineIndex]} in {item.VariableReferenceList.Name} ({item.Container})\n";
