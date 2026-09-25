@@ -55,7 +55,6 @@ public class DeleteVariableService : IDeleteVariableService
         }
 
         var elementSave = stateContainer as ElementSave;
-        var crossElementRemovals = new List<CrossElementVariableChange>();
 
         using (_undoManager.RequestLock())
         {
@@ -72,29 +71,24 @@ public class DeleteVariableService : IDeleteVariableService
 
             // Instance-level value overrides elsewhere in the project are cascaded (removed, and
             // recorded so undo/redo can restore/re-remove them). See ADR 0016.
+            var crossElementRemovals = new List<CrossElementVariableChange>();
             foreach (var change in cascadingInstanceOverrides)
             {
                 if (change.Container is ElementSave changeElement &&
                     changeElement.GetInstance(change.Variable.SourceObject) is { } instance)
                 {
+                    crossElementRemovals.Add(CrossElementVariableChange.CaptureBefore(changeElement, change.State, change.Variable));
+
                     change.State.Variables.Remove(change.Variable);
                     _fileCommands.TryAutoSaveElement(changeElement);
                     _pluginManager.VariableSet(changeElement, instance, change.Variable.GetRootName(), null);
-
-                    crossElementRemovals.Add(new CrossElementVariableChange
-                    {
-                        Container = changeElement,
-                        Instance = instance,
-                        State = change.State,
-                        Variable = change.Variable
-                    });
                 }
             }
-        }
 
-        if (crossElementRemovals.Count > 0)
-        {
-            _undoManager.AttachCrossElementVariableRemovals(crossElementRemovals);
+            if (crossElementRemovals.Count > 0)
+            {
+                _undoManager.RecordCrossElementVariableChanges(crossElementRemovals);
+            }
         }
 
         _guiCommands.RefreshVariables(force: true);

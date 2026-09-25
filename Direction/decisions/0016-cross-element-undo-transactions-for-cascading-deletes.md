@@ -78,3 +78,11 @@ elements is out of scope and would need its own decision if it comes up.
   support for speculative future cases. Rejected as premature scope: the known cases share one
   concrete shape (frozen affected-set, atomic apply/revert, no live conflict resolution), and a general
   framework would solve problems nobody has hit yet.
+
+## Follow-up
+
+[#5011](https://github.com/vchelaru/Gum/issues/5011) extended the primitive from removals to
+modifications (before/after copies) and applied it to state/category delete and rename. Changes are
+recorded under the edit's undo lock instead of attached after it. A modification is reversed only if
+the variable still holds what the action left, so undo never overwrites a later edit; redo of a
+removal still follows last-write-wins as above.

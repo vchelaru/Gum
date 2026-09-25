@@ -878,8 +878,8 @@ public class ReferenceFinderTests : BaseTestClass
         // ElementSave owners. The instance-override scan gates on `owner as ElementSave`, so a
         // BehaviorSave owner must never produce a VariableChanges match here even when an unrelated
         // element instance happens to have an override with a matching root name - if this ever started
-        // matching, DeleteVariableService would cascade-remove it while AttachCrossElementVariableRemovals
-        // (which only knows about the currently selected ElementSave) would silently misattach the data.
+        // matching, DeleteVariableService would cascade-remove it while RecordCrossElementVariableChanges
+        // (which only attaches to the currently selected ElementSave's action) would silently drop the data.
         var behavior = new BehaviorSave { Name = "MyBehavior" };
         var requiredVariable = new VariableSave { Name = "RequiredVar", Type = "float" };
         behavior.RequiredVariables.Variables.Add(requiredVariable);
