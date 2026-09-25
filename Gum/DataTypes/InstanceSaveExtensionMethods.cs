@@ -7,16 +7,8 @@ using Gum.Wireframe;
 
 namespace Gum.DataTypes
 {
-    class InstanceStatePair
-    {
-        public InstanceSave InstanceSave { get; set;}
-        public string VariableName { get; set; }
-    }
     public static class InstanceSaveExtensionMethods
     {
-
-        // To prevent infinite recursion we need to keep track of states that are being looked up
-        static List<InstanceStatePair> mActiveInstanceStatePairs = new List<InstanceStatePair>();
 
         public static bool IsParentASibling(this InstanceSave instanceSave, List<ElementWithState> elementStack)
         {
@@ -27,11 +19,12 @@ namespace Gum.DataTypes
 
             RecursiveVariableFinder rvf = new RecursiveVariableFinder(instanceSave, elementStack);
 
-            string parent = rvf.GetValue<string>("Parent");
+            string? parent = rvf.GetValue<string>("Parent");
             bool found = false;
             if (!string.IsNullOrEmpty(parent) && parent != StandardElementsManager.ScreenBoundsName)
             {
-                ElementSave parentElement = instanceSave.ParentContainer;
+                // An instance found through an element stack always belongs to an element.
+                ElementSave parentElement = instanceSave.ParentContainer!;
 
                 found = parentElement.Instances.Any(item => item.Name == parent);
             }
@@ -122,7 +115,7 @@ namespace Gum.DataTypes
 
         public static bool IsComponent(this InstanceSave instanceSave)
         {
-            ComponentSave baseAsComponentSave = ObjectFinder.Self.GetComponent(instanceSave.BaseType);
+            ComponentSave? baseAsComponentSave = ObjectFinder.Self.GetComponent(instanceSave.BaseType);
 
             return baseAsComponentSave != null;
 
@@ -130,7 +123,7 @@ namespace Gum.DataTypes
 
 
         
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+        public static VariableSave? GetVariableFromThisOrBase(this InstanceSave instance,
             ElementWithState parent, string variable)
         {
             var elementStack = new List<ElementWithState> { parent };
@@ -149,17 +142,17 @@ namespace Gum.DataTypes
         //    return GetVariableFromThisOrBase(instance, elementStack, new RecursiveVariableFinder(instance, elementStack), variable, forceDefault, false);
         //}
 
-        public static VariableSave GetVariableFromThisOrBase(this InstanceSave instance,
+        public static VariableSave? GetVariableFromThisOrBase(this InstanceSave instance,
             List<ElementWithState> elementStack, RecursiveVariableFinder rvf, string variable, bool forceDefault, bool onlyIfSetsValue)
         {
-            ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            ElementSave? instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
             List<StateSave> statesToPullFrom;
             StateSave defaultState;
             GetStatesToUse(instance, elementStack, forceDefault, instanceBase, rvf, out statesToPullFrom, out defaultState);
 
 
-            VariableSave variableSave = null;
+            VariableSave? variableSave = null;
 
             // See if the variable is set by the container of the instance:
             foreach (var stateToPullFrom in statesToPullFrom)
@@ -182,7 +175,7 @@ namespace Gum.DataTypes
             if ((variableSave == null || 
                 (onlyIfSetsValue && (variableSave.SetsValue == false || variableSave.Value == null))) && instanceBase != null)
             {
-                VariableSave foundVariableSave = TryGetVariableFromStatesOnInstance(instance, variable, instanceBase, statesToPullFrom);
+                VariableSave? foundVariableSave = TryGetVariableFromStatesOnInstance(instance, variable, instanceBase, statesToPullFrom);
 
                 if (foundVariableSave != null)
                 {
@@ -200,19 +193,19 @@ namespace Gum.DataTypes
             if (variableSave != null && variableSave.Value == null && instanceBase != null && onlyIfSetsValue)
             {
                 // This can happen if there is a tunneled variable that is null
-                VariableSave possibleVariable = instanceBase.DefaultState.GetVariableSave(variable);
+                VariableSave? possibleVariable = instanceBase.DefaultState!.GetVariableSave(variable);
                 if (possibleVariable != null && possibleVariable.Value != null && (!onlyIfSetsValue || possibleVariable.SetsValue))
                 {
                     variableSave = possibleVariable;
                 }
                 else if (!string.IsNullOrEmpty(instanceBase.BaseType))
                 {
-                    ElementSave element = ObjectFinder.Self.GetElementSave(instanceBase.BaseType);
+                    ElementSave? element = ObjectFinder.Self.GetElementSave(instanceBase.BaseType);
 
                     if (element != null)
                     {
                         //variableSave = element.GetVariableFromThisOrBase(variable, forceDefault);
-                        StateSave stateToPullFrom = element.DefaultState;
+                        StateSave stateToPullFrom = element.DefaultState!;
                         variableSave = stateToPullFrom.GetVariableRecursive(variable);
                     }
                 }
@@ -222,34 +215,35 @@ namespace Gum.DataTypes
 
         }
 
-        private static void GetStatesToUse(InstanceSave instance, List<ElementWithState> elementStack, bool forceDefault, ElementSave instanceBase, RecursiveVariableFinder rvf, out List<StateSave> statesToPullFrom, out StateSave defaultState)
+        private static void GetStatesToUse(InstanceSave instance, List<ElementWithState> elementStack, bool forceDefault, ElementSave? instanceBase, RecursiveVariableFinder rvf, out List<StateSave> statesToPullFrom, out StateSave defaultState)
         {
-            statesToPullFrom = null;
-            defaultState = null;
-
             // October 19, 2023
             // I don't know if this is actually needed anymore. I'm commenting it out so we can move this to GumCommon
             // and my simple tests seem to indicate this is not needed.
 
-            if (elementStack.Count != 0)
+            if (elementStack.Count == 0)
+            {
+                throw new InvalidOperationException("The ElementStack is empty, so there is no element to get the instance's states from");
+            }
+            else
             {
                 if (elementStack.Last().Element == null)
                 {
                     throw new InvalidOperationException("The ElementStack contains an ElementWithState with no Element");
                 }
                 statesToPullFrom = elementStack.Last().AllStates.ToList();
-                defaultState = elementStack.Last().Element.DefaultState;
+                defaultState = elementStack.Last().Element.DefaultState!;
             }
         }
 
-        private static VariableSave TryGetVariableFromStatesOnInstance(InstanceSave instance, string variable, ElementSave instanceBase, IEnumerable<StateSave> statesToPullFrom)
+        private static VariableSave? TryGetVariableFromStatesOnInstance(InstanceSave instance, string variable, ElementSave instanceBase, IEnumerable<StateSave> statesToPullFrom)
         {
 
             string stateVariableName;
-            StateSave fallbackState;
+            StateSave? fallbackState;
             List<StateSave> statesToLoopThrough;
 
-            VariableSave foundVariableSave = null;
+            VariableSave? foundVariableSave = null;
 
             foreach (var stateCategory in instanceBase.Categories)
             {
@@ -274,12 +268,12 @@ namespace Gum.DataTypes
             return foundVariableSave;
         }
 
-        private static VariableSave TryGetVariableFromStateOnInstance(InstanceSave instance, string variable, IEnumerable<StateSave> statesToPullFrom, string stateVariableName, StateSave fallbackState, List<StateSave> statesToLoopThrough)
+        private static VariableSave? TryGetVariableFromStateOnInstance(InstanceSave instance, string variable, IEnumerable<StateSave> statesToPullFrom, string stateVariableName, StateSave? fallbackState, List<StateSave> statesToLoopThrough)
         {
-            VariableSave foundVariableSave = null;
+            VariableSave? foundVariableSave = null;
 
             // Let's see if this is in a non-default state
-            string thisState = null;
+            string? thisState = null;
             foreach (var stateToPullFrom in statesToPullFrom)
             {
                 var foundStateVariable = stateToPullFrom.GetVariableSave(instance.Name + "." + stateVariableName);
@@ -288,7 +282,7 @@ namespace Gum.DataTypes
                     thisState = foundStateVariable.Value as string;
                 }
             }
-            StateSave instanceStateToPullFrom = fallbackState;
+            StateSave? instanceStateToPullFrom = fallbackState;
 
             // if thisState is not null, then the state is being explicitly set, so let's try to get that state
             if (!string.IsNullOrEmpty(thisState) && statesToLoopThrough.Any(item => item.Name == thisState))
@@ -306,22 +300,22 @@ namespace Gum.DataTypes
 
 
 
-        public static VariableListSave GetVariableListFromThisOrBase(this InstanceSave instance, ElementSave parentContainer, string variable)
+        public static VariableListSave? GetVariableListFromThisOrBase(this InstanceSave instance, ElementSave? parentContainer, string variable)
         {
             // instanceBase can be null here because the instance could reference a type that has been deleted
-            ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            ElementSave? instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
-            VariableListSave variableListSave = parentContainer?.DefaultState.GetVariableListRecursive(instance.Name + "." + variable);
+            VariableListSave? variableListSave = parentContainer?.DefaultState!.GetVariableListRecursive(instance.Name + "." + variable);
             if (variableListSave == null)
             {
 
-                variableListSave = instanceBase?.DefaultState.GetVariableListSave(variable);
+                variableListSave = instanceBase?.DefaultState!.GetVariableListSave(variable);
             }
 
             if (variableListSave != null && variableListSave.ValueAsIList == null)
             {
                 // This can happen if there is a tunneled variable that is null
-                VariableListSave possibleVariable = instanceBase.DefaultState.GetVariableListRecursive(variable);
+                VariableListSave? possibleVariable = instanceBase?.DefaultState!.GetVariableListRecursive(variable);
                 if (possibleVariable != null && possibleVariable.ValueAsIList != null)
                 {
                     variableListSave = possibleVariable;
@@ -332,13 +326,13 @@ namespace Gum.DataTypes
 
         }
 
-        public static object GetValueFromThisOrBase(this InstanceSave instance, ElementSave parent, string variable,
+        public static object? GetValueFromThisOrBase(this InstanceSave instance, ElementSave parent, string variable,
             bool forceDefault = false)
         {
             return GetValueFromThisOrBase(instance, new List<ElementWithState>() { new ElementWithState(parent) }, variable, forceDefault);
         }
 
-        static object GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,
+        static object? GetValueFromThisOrBase(this InstanceSave instance, List<ElementWithState> elementStack, string variable,
             bool forceDefault = false)
         {
             ElementWithState parentContainer = elementStack.Last();
@@ -354,15 +348,15 @@ namespace Gum.DataTypes
             }
             else
             {
-                VariableListSave variableListSave = parentContainer.Element.DefaultState.GetVariableListSave(instance.Name + "." + variable);
+                VariableListSave? variableListSave = parentContainer.Element.DefaultState!.GetVariableListSave(instance.Name + "." + variable);
 
                 if (variableListSave == null)
                 {
-                    ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                    ElementSave? instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
 
                     if (instanceBase != null)
                     {
-                        variableListSave = instanceBase.DefaultState.GetVariableListSave(variable);
+                        variableListSave = instanceBase.DefaultState!.GetVariableListSave(variable);
                     }
                 }
 

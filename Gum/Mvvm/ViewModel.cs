@@ -35,7 +35,7 @@ namespace Gum.Mvvm
     public class ViewModel : INotifyPropertyChanged
     {
         Dictionary<string, List<string>> notifyRelationships = new Dictionary<string, List<string>>();
-        private Dictionary<string, object> propertyDictionary = new Dictionary<string, object>();
+        private Dictionary<string, object?> propertyDictionary = new Dictionary<string, object?>();
 
         public int GetPropertyChangeCount() => PropertyChanged?.GetInvocationList().Length ?? 0;
 
@@ -45,7 +45,7 @@ namespace Gum.Mvvm
 
             if (propertyName != null && propertyDictionary.ContainsKey(propertyName))
             {
-                toReturn = (T)propertyDictionary[propertyName];
+                toReturn = (T)propertyDictionary[propertyName]!;
             }
 
             return toReturn;
@@ -97,7 +97,7 @@ namespace Gum.Mvvm
 
             if (propertyDictionary.ContainsKey(propertyName))
             {
-                var storage = (T)propertyDictionary[propertyName];
+                var storage = (T?)propertyDictionary[propertyName];
                 if (EqualityComparer<T>.Default.Equals(storage, propertyValue) == false)
                 {
                     didSet = true;
@@ -134,13 +134,12 @@ namespace Gum.Mvvm
                 string child = property.Name;
                 foreach (var uncastedAttribute in attributes)
                 {
-                    if (uncastedAttribute is DependsOnAttribute)
+                    if (uncastedAttribute is DependsOnAttribute attribute)
                     {
-                        var attribute = uncastedAttribute as DependsOnAttribute;
 
                         string parent = attribute.ParentProperty;
 
-                        List<string> childrenProps = null;
+                        List<string> childrenProps;
                         if (notifyRelationships.ContainsKey(parent) == false)
                         {
                             childrenProps = new List<string>();
@@ -195,7 +194,7 @@ namespace Gum.Mvvm
         {
             var asObject = this.MemberwiseClone();
             var asViewModel = (ViewModel)asObject;
-            asViewModel.propertyDictionary = new Dictionary<string, object>(this.propertyDictionary);
+            asViewModel.propertyDictionary = new Dictionary<string, object?>(this.propertyDictionary);
             foreach(var kvp in propertyDictionary)
             {
                 asViewModel.propertyDictionary[kvp.Key] = kvp.Value;

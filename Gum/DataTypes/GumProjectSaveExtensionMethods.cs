@@ -154,7 +154,7 @@ namespace Gum.DataTypes
                 // We need to fix that
                 foreach (StandardElementSave standardElementSave in gumProjectSave.StandardElements)
                 {
-                    var defaultState = standardElementSave.DefaultState;
+                    var defaultState = standardElementSave.DefaultState!;
 
                     foreach (var variable in defaultState.Variables)
                     {
@@ -173,7 +173,7 @@ namespace Gum.DataTypes
                     if (baseComponent == null)
                     {
 
-                        var defaultState = component.DefaultState;
+                        var defaultState = component.DefaultState!;
 
 
                         foreach (var variable in defaultState.Variables)
@@ -341,7 +341,7 @@ namespace Gum.DataTypes
                 {
                     foreach (var variable in defaultState.Variables)
                     {
-                        var variableInLoadedElement = element.DefaultState.GetVariableSave(variable.Name);
+                        var variableInLoadedElement = element.DefaultState!.GetVariableSave(variable.Name);
 
                         if (variableInLoadedElement == null)
                         {
@@ -469,7 +469,7 @@ namespace Gum.DataTypes
             foreach (var radiusVariable in radiusVariables)
             {
                 var prefix = radiusVariable.Name.Substring(0, radiusVariable.Name.Length - radiusName.Length);
-                var diameter = (float)radiusVariable.Value * 2f;
+                var diameter = (float)radiusVariable.Value! * 2f;
 
                 SetOrAddFloat(state, prefix + "Width", diameter);
                 SetOrAddFloat(state, prefix + "Height", diameter);

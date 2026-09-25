@@ -29,8 +29,8 @@ public class TypedElementReference
     /// The owner of the reference. This may be the owner of the StateSave that has a variable referending the type, 
     /// or the owner of the instance. If the element is an instance of the type, then this is the element that is referenced.
     /// </summary>
-    public ElementSave OwnerOfReferencingObject { get; set; }
-    public StateSave StateSave { get; set; }
+    public ElementSave? OwnerOfReferencingObject { get; set; }
+    public StateSave? StateSave { get; set; }
 
     /// <summary>
     /// The object that is doing the referencing. This could be an InstanceSave, a VariableSave, a VariableListSave, or a BehaviorReference.
@@ -223,7 +223,7 @@ public class ObjectFinder : IObjectFinder
     /// </summary>
     /// <param name="screenName"></param>
     /// <returns></returns>
-    public ScreenSave? GetScreen(string screenName)
+    public ScreenSave? GetScreen(string? screenName)
     {
         if(cachedDictionary != null)
         {
@@ -234,7 +234,7 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            GumProjectSave gps = GumProjectSave;
+            GumProjectSave? gps = GumProjectSave;
 
             if (gps != null)
             {
@@ -254,9 +254,9 @@ public class ObjectFinder : IObjectFinder
         return null;
     }
 
-    public ComponentSave GetComponent(InstanceSave instance) => GetComponent(instance.BaseType);
+    public ComponentSave? GetComponent(InstanceSave instance) => GetComponent(instance.BaseType);
 
-    public ComponentSave? GetComponent(string componentName)
+    public ComponentSave? GetComponent(string? componentName)
     {
         if (cachedDictionary != null)
         {
@@ -267,7 +267,7 @@ public class ObjectFinder : IObjectFinder
         }
         else
         {
-            GumProjectSave gps = GumProjectSave;
+            GumProjectSave? gps = GumProjectSave;
 
             if (gps != null)
             {
@@ -296,7 +296,7 @@ public class ObjectFinder : IObjectFinder
         }
         if (cachedDictionary != null)
         {
-            if (elementName != null && cachedDictionary.ContainsKey(elementName))
+            if (cachedDictionary.ContainsKey(elementName))
             {
                 return cachedDictionary[elementName] as StandardElementSave;
             }
@@ -350,7 +350,7 @@ public class ObjectFinder : IObjectFinder
         }
         if(cachedDictionary != null)
         {
-            if(elementName != null && cachedDictionary.ContainsKey(elementName))
+            if(cachedDictionary.ContainsKey(elementName))
             {
                 return cachedDictionary[elementName];
             }
@@ -436,7 +436,7 @@ public class ObjectFinder : IObjectFinder
         {
             foreach (InstanceSave instanceSave in component.Instances)
             {
-                ElementSave elementForInstance = this.GetElementSave(instanceSave.BaseType);
+                ElementSave? elementForInstance = this.GetElementSave(instanceSave.BaseType);
                 
                 if (elementForInstance != null && elementForInstance.IsOfType(elementSave.Name))
                 {
@@ -465,6 +465,11 @@ public class ObjectFinder : IObjectFinder
 
     public List<ElementSave> GetElementsReferencing(string partialFileName)
     {
+        if (GumProjectSave == null)
+        {
+            return new List<ElementSave>();
+        }
+
         partialFileName = partialFileName.ToLower().Replace("\\", "/");
 
         List<ElementSave> referencingElements = new List<ElementSave>();
@@ -511,7 +516,7 @@ public class ObjectFinder : IObjectFinder
         return toReturn;
     }
 
-    public ElementSave GetContainerOf(StateSaveCategory category)
+    public ElementSave? GetContainerOf(StateSaveCategory category)
     {
         if(GumProjectSave != null)
         {
@@ -541,7 +546,7 @@ public class ObjectFinder : IObjectFinder
         return null;
     }
 
-    public BehaviorSave GetBehaviorContainerOf(InstanceSave instance)
+    public BehaviorSave? GetBehaviorContainerOf(InstanceSave instance)
     {
         if (GumProjectSave != null)
         {
@@ -556,7 +561,7 @@ public class ObjectFinder : IObjectFinder
         return null;
     }
 
-    public ElementSave GetElementContainerOf(InstanceSave instanceSave)
+    public ElementSave? GetElementContainerOf(InstanceSave instanceSave)
     {
         if (GumProjectSave != null)
         {
@@ -592,6 +597,10 @@ public class ObjectFinder : IObjectFinder
 
     public ElementSave? GetContainerOf(VariableSave variable)
     {
+        if (GumProjectSave == null)
+        {
+            return null;
+        }
         foreach(var element in GumProjectSave.AllElements)
         {
             foreach(var state in element.AllStates)
@@ -607,6 +616,10 @@ public class ObjectFinder : IObjectFinder
 
     public ElementSave? GetElementContainerOf(VariableListSave variableList)
     {
+        if (GumProjectSave == null)
+        {
+            return null;
+        }
         foreach (var element in GumProjectSave.AllElements)
         {
             foreach (var state in element.AllStates)
@@ -623,6 +636,10 @@ public class ObjectFinder : IObjectFinder
     public List<ElementSave> GetElementsReferencing(BehaviorSave behavior)
     {
         List<ElementSave> referencingElements = new List<ElementSave>();
+        if (GumProjectSave == null)
+        {
+            return referencingElements;
+        }
         foreach(var component in GumProjectSave.Components)
         {
             if(component.Behaviors.Any(item => item.BehaviorName == behavior.Name))
@@ -688,6 +705,10 @@ public class ObjectFinder : IObjectFinder
         if(element == null)
         {
             throw new ArgumentNullException(nameof(element));
+        }
+        if (GumProjectSave == null)
+        {
+            return;
         }
 
         if(element is ScreenSave)
@@ -799,7 +820,8 @@ public class ObjectFinder : IObjectFinder
             return result;
         }
 
-        string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
+        // Referenced files resolve relative to the project file, so this is only called for a project on disk.
+        string gumProjectDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName!);
 
         Gum.Bundle.GumProjectDependencyWalker walker = new Gum.Bundle.GumProjectDependencyWalker();
         Gum.Bundle.WalkResult walkResult = walker.Walk(
@@ -835,15 +857,14 @@ public class ObjectFinder : IObjectFinder
 
     #region Get Instance
 
-    public InstanceSave GetInstanceRecursively(ElementSave element, string instanceName)
+    public InstanceSave? GetInstanceRecursively(ElementSave element, string instanceName)
     {
         var strippedInstanceName = instanceName;
         if(strippedInstanceName.Contains("."))
         {
             strippedInstanceName = strippedInstanceName.Substring(0, strippedInstanceName.LastIndexOf('.'));
         }
-        InstanceSave instance = null;
-        instance = element.Instances.FirstOrDefault(item => item.Name == strippedInstanceName);
+        InstanceSave? instance = element.Instances.FirstOrDefault(item => item.Name == strippedInstanceName);
         if (instance != null && instanceName.Contains("."))
         {
             var instanceElement = GetElementSave(instance);
@@ -857,16 +878,17 @@ public class ObjectFinder : IObjectFinder
         return instance;
     }
 
-    public string GetDefaultChildName(InstanceSave targetInstance, StateSave? stateSave = null)
+    public string? GetDefaultChildName(InstanceSave targetInstance, StateSave? stateSave = null)
     {
-        string defaultChild = null;
+        string? defaultChild = null;
         // check if the target instance is a ComponentSave. If so, use the RecursiveVariableFinder to get its DefaultChildContainer property
         var targetInstanceComponent = ObjectFinder.Self.GetComponent(targetInstance);
         if (targetInstanceComponent != null)
         {
             var instanceContainer = ObjectFinder.Self.GetElementContainerOf(targetInstance);
 
-            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave ?? instanceContainer?.DefaultState);
+            // A component instance lives in a screen or component, so the container is found.
+            var recursiveVariableFinder = new RecursiveVariableFinder(stateSave ?? instanceContainer!.DefaultState!);
             defaultChild = recursiveVariableFinder.GetValue<string>($"{targetInstance.Name}.DefaultChildContainer");
 
 
@@ -951,6 +973,10 @@ public class ObjectFinder : IObjectFinder
         var elementQualifiedName = GetQualifiedElementName(element);
 
         List<TypedElementReference> references = new List<TypedElementReference>();
+        if (GumProjectSave == null)
+        {
+            return references;
+        }
         foreach (var screen in GumProjectSave.Screens)
         {
             foreach (var instanceInScreen in screen.Instances)
@@ -964,7 +990,7 @@ public class ObjectFinder : IObjectFinder
                 }
             }
 
-            foreach (var variable in screen.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
+            foreach (var variable in screen.DefaultState!.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
             {
                 if (variable.Value as string == elementName)
                 {
@@ -996,7 +1022,7 @@ public class ObjectFinder : IObjectFinder
                 }
             }
 
-            foreach (var variable in component.DefaultState.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
+            foreach (var variable in component.DefaultState!.Variables.Where(item => item.GetRootName() == "ContainedType" || item.GetRootName() == "Contained Type"))
             {
                 if (variable.Value as string == elementName)
                 {
@@ -1046,15 +1072,16 @@ public class ObjectFinder : IObjectFinder
         return references;
     }
 
-    public List<ElementSave> GetElementsReferencedByThis(ElementSave elementSave)
+    /// <remarks>Contains null for a referenced type that is missing from the project.</remarks>
+    public List<ElementSave?> GetElementsReferencedByThis(ElementSave elementSave)
     {
-        Dictionary<string, ElementSave> elementNames = new();
+        Dictionary<string, ElementSave?> elementNames = new();
         GetElementReferencesByThisInternal(elementSave, elementNames);
 
         return elementNames.Values.ToList();
     }
 
-    private void GetElementReferencesByThisInternal(ElementSave elementSave, Dictionary<string, ElementSave> elementNames)
+    private void GetElementReferencesByThisInternal(ElementSave elementSave, Dictionary<string, ElementSave?> elementNames)
     {
         if (!string.IsNullOrEmpty(elementSave.BaseType) && elementNames.ContainsKey(elementSave.BaseType) == false)
         {
@@ -1108,11 +1135,11 @@ public class ObjectFinder : IObjectFinder
         }
     }
 
-    public VariableListSave GetRootVariableList(string name, ElementSave element)
+    public VariableListSave? GetRootVariableList(string name, ElementSave element)
     {
         var effectiveName = name;
 
-        VariableListSave toReturn = null;
+        VariableListSave? toReturn = null;
 
         if (effectiveName.Contains('.'))
         {
@@ -1135,14 +1162,14 @@ public class ObjectFinder : IObjectFinder
             }
             else
             {
-                toReturn = element.DefaultState.VariableLists.FirstOrDefault(item => item.Name == effectiveName);
+                toReturn = element.DefaultState!.VariableLists.FirstOrDefault(item => item.Name == effectiveName);
             }
         }
 
         return toReturn;
     }
 
-    public VariableListSave GetRootVariableList(string name, InstanceSave instance)
+    public VariableListSave? GetRootVariableList(string name, InstanceSave instance)
     {
         // This could be referencing an invalid type
         var instanceElement = GetElementSave(instance.BaseType);
@@ -1165,7 +1192,7 @@ public class ObjectFinder : IObjectFinder
     /// <returns>The root variable if found</returns>
     public VariableSave? GetRootVariable(string name, ElementSave element)
     {
-        var exposedVariable = element.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == name);
+        var exposedVariable = element.DefaultState!.Variables.FirstOrDefault(item => item.ExposedAsName == name);
 
         var effectiveName = exposedVariable?.Name ?? name;
 
@@ -1270,11 +1297,12 @@ public class ObjectFinder : IObjectFinder
     }
 
     [Obsolete("GetElementContainerOf to clearly indicate that the method does return behaviors. ")]
-    public ElementSave GetContainerOf(StateSave stateSave) => GetElementContainerOf(stateSave);
+    public ElementSave? GetContainerOf(StateSave stateSave) => GetElementContainerOf(stateSave);
 
     public bool IsVariableOrphaned(VariableSave variable, StateSave defaultState)
     {
-        var container = GetElementContainerOf(defaultState);
+        // Callers pass the default state of an element in the project.
+        var container = GetElementContainerOf(defaultState)!;
 
         if(!string.IsNullOrEmpty(variable.SourceObject))
         {
@@ -1287,7 +1315,7 @@ public class ObjectFinder : IObjectFinder
             {
                 var instanceElement = ObjectFinder.Self.GetElementSave(instance);
                 var variableRootName = variable.GetRootName();
-                var foundVariable = instanceElement?.DefaultState.GetVariableRecursive(variableRootName);
+                var foundVariable = instanceElement?.DefaultState!.GetVariableRecursive(variableRootName);
 
                 if(foundVariable == null)
                 {
@@ -1295,7 +1323,7 @@ public class ObjectFinder : IObjectFinder
                 }
                 else
                 {
-                    return IsVariableOrphaned(foundVariable, instanceElement.DefaultState);
+                    return IsVariableOrphaned(foundVariable, instanceElement!.DefaultState!);
                 }
             }
         }
@@ -1304,7 +1332,7 @@ public class ObjectFinder : IObjectFinder
         {
             // If it's a standard element, then check if the default state contains this variable name
             var standardelementDefault = StandardElementsManager.Self.GetDefaultStateFor(container.Name);
-            return standardelementDefault.Variables.Any(item => item.Name == variable.Name) == false;
+            return standardelementDefault!.Variables.Any(item => item.Name == variable.Name) == false;
         }
         else
         {
@@ -1325,7 +1353,7 @@ public class ObjectFinder : IObjectFinder
                 }
                 else
                 {
-                    return IsVariableOrphaned(variable, baseElement.DefaultState);
+                    return IsVariableOrphaned(variable, baseElement.DefaultState!);
                 }
             }
         }
@@ -1366,7 +1394,7 @@ public class ObjectFinder : IObjectFinder
                 var baseElementSave = GetElementSave(baseType);
                 if(baseElementSave != null)
                 {
-                    return IsInstanceRecursivelyReferencingElement(instance, baseElement);
+                    return IsInstanceRecursivelyReferencingElement(instance, baseElementSave);
 
                 }
                 else
@@ -1397,7 +1425,7 @@ public static class InstanceExtensionMethods
         }
     }
 
-    public static InstanceSave GetParentInstance(this InstanceSave instanceSave)
+    public static InstanceSave? GetParentInstance(this InstanceSave instanceSave)
     {
         var container = instanceSave.ParentContainer;
         if(container == null)
@@ -1407,7 +1435,7 @@ public static class InstanceExtensionMethods
         }
         else
         {
-            var defaultState = container.DefaultState;
+            var defaultState = container.DefaultState!;
             var thisParentValue = defaultState.GetValueOrDefault<string>($"{instanceSave.Name}.Parent");
 
             return container.Instances.FirstOrDefault(item => item.Name == thisParentValue);
@@ -1424,7 +1452,7 @@ public static class InstanceExtensionMethods
         StateSave? defaultState = null;
         if(container != null)
         {
-            defaultState = container.DefaultState;
+            defaultState = container.DefaultState!;
 
 
             List<InstanceSave> toReturn = new List<InstanceSave>();
@@ -1469,7 +1497,7 @@ public static class InstanceExtensionMethods
         }
         else
         {
-            foreach(var behavior in ObjectFinder.Self.GumProjectSave.Behaviors)
+            foreach(var behavior in ObjectFinder.Self.GumProjectSave?.Behaviors ?? new List<BehaviorSave>())
             {
                 if(behavior.RequiredInstances.Contains(thisInstance))
                 {

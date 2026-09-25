@@ -90,14 +90,14 @@ internal static class BehaviorFormsPropertyApplier
         if (container?.ElementSave != null && !string.IsNullOrEmpty(visual.Name))
         {
             string qualified = visual.Name + "." + propertyName;
-            object? overrideValue = new RecursiveVariableFinder(container.ElementSave.DefaultState).GetValue(qualified);
+            object? overrideValue = new RecursiveVariableFinder(container.ElementSave.DefaultState!).GetValue(qualified);
             if (overrideValue != null)
             {
                 return overrideValue;
             }
         }
 
-        return new RecursiveVariableFinder(visual.ElementSave.DefaultState).GetValue(propertyName);
+        return new RecursiveVariableFinder(visual.ElementSave.DefaultState!).GetValue(propertyName);
     }
 
     private static IEnumerable<VariableSave> EnumerateFormsPropertyDeclarations(
