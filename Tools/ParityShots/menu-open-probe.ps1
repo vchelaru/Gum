@@ -1,4 +1,4 @@
-param([string]$ProcessName = "Gum.Avalonia", [string]$Menu = "Edit", [string]$Out = (Join-Path $PSScriptRoot "out\menu-open.png"))
+param([string]$ProcessName = "Gum", [string]$Menu = "Edit", [string]$Out = (Join-Path $PSScriptRoot "out\menu-open.png"))
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes

@@ -69,7 +69,7 @@ public sealed class App : Application
         Styles.Add(new FluentTheme { DensityStyle = DensityStyle.Compact });
         FrbThemeResources.Install(Resources);
         // ColorPicker ships its templates separately from the Fluent theme.
-        Styles.Add(new StyleInclude(new Uri("avares://Gum.Avalonia/"))
+        Styles.Add(new StyleInclude(new Uri("avares://Gum/"))
         {
             Source = new Uri("avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml"),
         });

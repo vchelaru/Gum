@@ -25,7 +25,7 @@ Each download includes everything it needs, so you do not need to install .NET f
 {% tabs %}
 {% tab title="Windows" %}
 1. Unzip `Gum-win-x64.zip` into a folder of your choice.
-2. Run `Gum.Avalonia.exe`.
+2. Run `Gum.exe`.
 
 Gum is not signed, so Windows shows the "Windows protected your PC" popup the first time. Click **More info**, then **Run anyway**. Alternatively, right-click the `.zip` file and select the option to unblock it before extracting.
 {% endtab %}

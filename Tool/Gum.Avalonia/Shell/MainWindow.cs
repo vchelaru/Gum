@@ -75,7 +75,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         messenger.RegisterAll(this);
 
         Title = shell.Title;
-        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Gum.Avalonia/GumIcon.ico")));
+        Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Gum/GumIcon.ico")));
         Width = WindowSettings.DefaultWidth;
         Height = WindowSettings.DefaultHeight;
         MinWidth = 640;
@@ -248,7 +248,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     {
         ThemeMode mode = ActualThemeVariant == ThemeVariant.Light ? ThemeMode.Light : ThemeMode.Dark;
         string logoFile = MainWindowIconLogic.GetIconSource(mode).Split('/')[^1];
-        _logo.Source = new global::Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri("avares://Gum.Avalonia/" + logoFile)));
+        _logo.Source = new global::Avalonia.Media.Imaging.Bitmap(AssetLoader.Open(new Uri("avares://Gum/" + logoFile)));
     }
 
     /// <summary>Shows a startup failure in place of the panels, so an unattended run captures it.</summary>

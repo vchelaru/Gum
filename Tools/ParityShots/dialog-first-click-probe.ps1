@@ -1,4 +1,4 @@
-param([string]$ProcessName = "Gum.Avalonia", [string[]]$Path = @("Edit", "Add", "Screen"), [int]$WaitMs = 1500, [string]$Button = "Cancel", [switch]$PreClickCaption)
+param([string]$ProcessName = "Gum", [string[]]$Path = @("Edit", "Add", "Screen"), [int]$WaitMs = 1500, [string]$Button = "Cancel", [switch]$PreClickCaption)
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes

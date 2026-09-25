@@ -132,6 +132,10 @@
 		<PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
 	</ItemGroup>
 	<ItemGroup>
+		<!-- MonoGame's SDL window loads Icon.bmp from the entry assembly and falls back to the MonoGame logo. -->
+		<EmbeddedResource Include="..\Gum.Avalonia\Packaging\Icon.bmp" LogicalName="Icon.bmp" />
+	</ItemGroup>
+	<ItemGroup>
 		<!-- The selection-file format shared with the tool side (PreviewLauncher), linked rather than
 		     referenced so this host stays free of the tool's plugin assemblies. -->
 		<Compile Include="..\EditorTabPlugin.Core\Services\PreviewSelectionMessage.cs" Link="PreviewSelectionMessage.cs" />

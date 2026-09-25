@@ -123,7 +123,7 @@ jobs:
               cp -R "$out/." "$app/Contents/MacOS/"
               sed "s/__VERSION__/$version/g" Tool/Gum.Avalonia/Packaging/macOS/Info.plist > "$app/Contents/Info.plist"
               cp Tool/Gum.Avalonia/Packaging/macOS/Gum.icns "$app/Contents/Resources/"
-              chmod +x "$app/Contents/MacOS/Gum.Avalonia"
+              chmod +x "$app/Contents/MacOS/Gum"
               codesign --force --deep --sign - "$app"
               # xz over gzip (#4753): measured ~28-31% smaller than gzip on a representative
               # self-contained publish, for ~5s more CI time than gzip (plain default xz level,
@@ -133,7 +133,7 @@ jobs:
               (cd dist && shasum -a 256 "Gum-$rid.tar.xz" > "Gum-$rid.sha256")
               ;;
             linux-*)
-              chmod +x "$out/Gum.Avalonia"
+              chmod +x "$out/Gum"
               tar -cJf "dist/Gum-$rid.tar.xz" -C "$out" .
               (cd dist && shasum -a 256 "Gum-$rid.tar.xz" > "Gum-$rid.sha256")
               ;;

@@ -120,7 +120,7 @@ function CloseMenus() { Keys "{ESC}"; Keys "{ESC}"; Pause 300 }
 
 $script:ComboPoint = $null
 foreach ($head in $Heads) {
-    $processName = if ($head -eq "wpf") { "Gum" } else { "Gum.Avalonia" }
+    $processName = "Gum"
     $proc = Get-Process -Name $processName -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($proc -eq $null) { Note "$head : $processName is not running, skipped"; continue }
     $out = Join-Path $OutRoot $head

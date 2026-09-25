@@ -15,7 +15,7 @@
   <key>CFBundleIdentifier</key>
   <string>com.flatredball.gum</string>
   <key>CFBundleExecutable</key>
-  <string>Gum.Avalonia</string>
+  <string>Gum</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleIconFile</key>
