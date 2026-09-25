@@ -10,6 +10,7 @@ using Vector3 = System.Numerics.Vector3;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using EditorTabPlugin_XNA.Utilities;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 namespace Gum.Wireframe
 {
@@ -34,6 +35,7 @@ namespace Gum.Wireframe
         readonly List<OriginDisplay> _originDisplays = new List<OriginDisplay>();
         Layer _layer;
         Color _color;
+        readonly ICanvasDisplayScale _displayScale;
         bool _originDisplaysVisible = true;
 
         const float WidthAtNoZoom = 12;
@@ -114,8 +116,9 @@ namespace Gum.Wireframe
 
         #region Methods
 
-        public ResizeHandles(Layer layer, Color color)
+        public ResizeHandles(Layer layer, Color color, ICanvasDisplayScale displayScale)
         {
+            _displayScale = displayScale;
             for (int i = 0; i < mHandles.Length; i++)
             {
                 mHandles[i] = new LineRectangle();
@@ -244,17 +247,22 @@ namespace Gum.Wireframe
 
         public void UpdateHandleSizes()
         {
+            var lineWidth = _displayScale.DisplayScale;
             foreach (var handle in this.mHandles)
             {
-                handle.Width = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
-                handle.Height = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
+                handle.Width = ToWorld(WidthAtNoZoom);
+                handle.Height = ToWorld(WidthAtNoZoom);
+                handle.LinePixelWidth = lineWidth;
             }
             foreach(var innerHandle in mInnerHandles)
             {
-                innerHandle.Width = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
-                innerHandle.Height = (WidthAtNoZoom-2) / Renderer.Self.Camera.Zoom;
+                innerHandle.Width = ToWorld(WidthAtNoZoom - 2);
+                innerHandle.Height = ToWorld(WidthAtNoZoom - 2);
+                innerHandle.LinePixelWidth = lineWidth;
             }
         }
+
+        private float ToWorld(float overlaySize) => _displayScale.ToWorld(overlaySize, Renderer.Self.Camera.Zoom);
 
         private void AdjustOriginDisplayCount(int count)
         {
@@ -266,7 +274,7 @@ namespace Gum.Wireframe
 
             while (_originDisplays.Count < count)
             {
-                var display = new OriginDisplay(_layer);
+                var display = new OriginDisplay(_layer, _displayScale);
                 display.SetColor(_color);
                 display.Visible = _originDisplaysVisible && ShowOrigin;
                 _originDisplays.Add(display);
@@ -275,7 +283,7 @@ namespace Gum.Wireframe
 
         private void UpdateToProperties()
         {
-            var dim = WidthAtNoZoom / Renderer.Self.Camera.Zoom;
+            var dim = ToWorld(WidthAtNoZoom);
             var halflDim = dim / 2.0f;
 
             mHandles[0].X = 0 - dim;
@@ -320,8 +328,8 @@ namespace Gum.Wireframe
 
                 var innerHandlePosition = new Vector3( handle.Position, 0);
                 // shift 1 pixel
-                innerHandlePosition += rotationMatrix.Right() / Renderer.Self.Camera.Zoom;
-                innerHandlePosition += rotationMatrix.Up() / Renderer.Self.Camera.Zoom;
+                innerHandlePosition += rotationMatrix.Right() * ToWorld(1);
+                innerHandlePosition += rotationMatrix.Up() * ToWorld(1);
                 innerHandle.Position.X = innerHandlePosition.X;
                 innerHandle.Position.Y = innerHandlePosition.Y;
 

@@ -24,14 +24,13 @@ public class SelectedPointHighlightVisual : EditorVisualBase
     /// </summary>
     public int? SelectedIndex { get; set; }
 
-    private float NodeDisplayWidth => RadiusAtNoZoom * 2 / Zoom;
+    private float NodeDisplayWidth => ToWorldOverlaySize(RadiusAtNoZoom * 2);
 
     public SelectedPointHighlightVisual(EditorContext context, Layer layer) : base(context)
     {
         _highlightRectangle = new LineRectangle();
         _highlightRectangle.Color = Color.Magenta;
         _highlightRectangle.IsDotted = false;
-        _highlightRectangle.LinePixelWidth = LinePixelWidth;
         _highlightRectangle.Visible = false;
 
         ShapeManager.Self.Add(_highlightRectangle, layer);
@@ -61,11 +60,12 @@ public class SelectedPointHighlightVisual : EditorVisualBase
 
     private void UpdatePosition(LinePolygon polygon, int index)
     {
-        var padding = PaddingAtNoZoom / Zoom;
+        var padding = ToWorldOverlaySize(PaddingAtNoZoom);
         var highlightSize = NodeDisplayWidth + padding;
 
         _highlightRectangle.Width = highlightSize;
         _highlightRectangle.Height = highlightSize;
+        _highlightRectangle.LinePixelWidth = LinePixelWidth * Context.DisplayScale.DisplayScale;
 
         var vertexPosition = polygon.AbsolutePointAt(index);
 

@@ -48,7 +48,8 @@ public class WireframeEditorLostReleaseTests
             System.Drawing.Color.White,
             new Camera(),
             _cursor.Object,
-            Mock.Of<IPluginManager>());
+            Mock.Of<IPluginManager>(),
+            new Gum.Plugins.InternalPlugins.EditorTab.Services.CanvasDisplayScale());
 
         bool isActive = false;
         _handler.SetupGet(h => h.IsActive).Returns(() => isActive);

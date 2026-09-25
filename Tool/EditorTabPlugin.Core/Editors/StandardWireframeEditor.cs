@@ -1,4 +1,5 @@
-﻿using Gum.Converters;
+﻿using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Converters;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Input;
@@ -97,7 +98,8 @@ public class StandardWireframeEditor : WireframeEditor
         Camera camera,
         IGumCursorState cursor,
         IToolFontService toolFontService,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICanvasDisplayScale displayScale)
         : base(
               hotkeyManager,
               selectionManager,
@@ -115,7 +117,8 @@ public class StandardWireframeEditor : WireframeEditor
               textColor,
               camera,
               cursor,
-              pluginManager)
+              pluginManager,
+              displayScale)
     {
         _elementCommands = elementCommands;
         _wireframeObjectManager = wireframeObjectManager;

@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
@@ -51,7 +52,8 @@ public class SelectionManagerEditorFactoryTests : BaseTestClass
                 System.Drawing.Color.White,
                 new Camera(),
                 Mock.Of<IGumCursorState>(),
-                Mock.Of<IPluginManager>())
+                Mock.Of<IPluginManager>(),
+                new CanvasDisplayScale())
         {
         }
 

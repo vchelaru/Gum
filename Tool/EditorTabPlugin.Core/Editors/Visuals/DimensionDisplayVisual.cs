@@ -176,9 +176,8 @@ public class DimensionDisplayVisual : EditorVisualBase
         // font scale
         float finalizedScaleFactor = (decreasedScaleFactor < 1 ? 1 : decreasedScaleFactor) / GraphicalUiElement.GlobalFontScale;
 
-        // The dividing by zoom makes sure when we zoom the editor, it retains the same size for text
-        // even though the editor objects are changing in size.
-        float adjustedScaleFactorWithEditorZoom = finalizedScaleFactor / Zoom;
+        // Keeps the text the same on-screen size at any editor zoom, scaled by the OS display scale.
+        float adjustedScaleFactorWithEditorZoom = ToWorldOverlaySize(finalizedScaleFactor);
 
         // Apply zoom factors combined to the offsets and font scale
         float fromBodyOffset = 26 * adjustedScaleFactorWithEditorZoom;
@@ -190,7 +189,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         var rotatedRightDirection = new Vector2(rotationMatrix.Right().X, rotationMatrix.Right().Y);
         var rotatedUpDirection = new Vector2(rotationMatrix.Down().X, rotationMatrix.Down().Y);
         var rotatedDownDirection = new Vector2(rotationMatrix.Up().X, rotationMatrix.Up().Y);
-        var extraTextOffset = 4;
+        var extraTextOffset = ToWorldOverlaySize(4);
 
         if (_dimensionType == WidthOrHeight.Width)
         {
@@ -306,7 +305,7 @@ public class DimensionDisplayVisual : EditorVisualBase
             desiredPosition.X = camera.AbsoluteRight - _dimensionDisplayText.WrappedTextWidth;
         }
 
-        const float rulerPadding = 12;
+        float rulerPadding = ToWorldOverlaySize(12);
 
         if (desiredPosition.X < camera.AbsoluteLeft + rulerPadding)
         {

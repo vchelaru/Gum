@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
@@ -64,7 +65,8 @@ public class EditorContextTests
             System.Drawing.Color.White,
             new Camera(),
             Mock.Of<IGumCursorState>(),
-            mockPluginManager.Object);
+            mockPluginManager.Object,
+            new CanvasDisplayScale());
 
         // Snapshot the "before drag" state so DoEndOfSettingValuesLogic has something to diff against.
         context.GrabbedState.HandlePush();

@@ -38,6 +38,10 @@ public class Ruler
     SystemManagers mManagers;
     Cursor mCursor;
     private readonly LayerService _layerService;
+    private readonly ICanvasDisplayScale _displayScale;
+    private float _builtDisplayScale;
+
+    const float ThicknessAtNoScale = 10;
 
     SolidRectangle mRectangle;
     List<Line> mRulerLines = new List<Line>();
@@ -215,8 +219,10 @@ public class Ruler
         IToolFontService toolFontService,
         IToolLayerService toolLayerService,
         LayerService layerService,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        ICanvasDisplayScale displayScale)
     {
+        _displayScale = displayScale;
         _toolFontService = toolFontService;
         _toolLayerService = toolLayerService;
         _hotkeyManager = hotkeyManager;
@@ -239,9 +245,9 @@ public class Ruler
 
     private void CreateArrows(SystemManagers managers)
     {
-        DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService);
+        DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService, _displayScale);
         DistanceArrow1.AddToManagers();
-        DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService);
+        DistanceArrow2 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService, _displayScale);
         DistanceArrow2.AddToManagers();
 
         DistanceArrow1.IsStartArrowTipVisible = false;
@@ -253,6 +259,11 @@ public class Ruler
 
     public bool HandleXnaUpdate(bool isCursorInWindow)
     {
+        if (_builtDisplayScale != _displayScale.DisplayScale)
+        {
+            ReactToRulerSides();
+        }
+
         IsCursorOver = false;
         UpdateOffsetSpritePosition();
 
@@ -306,6 +317,26 @@ public class Ruler
         mGuides.Clear();
     }
 
+    /// <summary>The ruler strip's thickness in screen pixels.</summary>
+    private float Thickness => Scaled(ThicknessAtNoScale);
+
+    /// <summary>Scales a ruler size (never a tick position or a labeled value) by the display scale.</summary>
+    private float Scaled(float sizeAtNoScale) => sizeAtNoScale * _displayScale.DisplayScale;
+
+    /// <summary>Starts a guide at the ruler's inner edge, keeping its position along the ruler.</summary>
+    private void PlaceGuideAtRulerEdge(Line guide)
+    {
+        if (RulerSide == RulerSide.Left)
+        {
+            guide.X = Thickness;
+            guide.RelativePoint = new Vector2(Scaled(6000), 0);
+        }
+        else
+        {
+            guide.Y = Thickness;
+            guide.RelativePoint = new Vector2(0, Scaled(6000));
+        }
+    }
 
     private int GetTickMultiplier()
     {
@@ -322,14 +353,14 @@ public class Ruler
 
         if (RulerSide == RulerSide.Left)
         {
-            line.X = 10 - length;
+            line.X = Thickness - length;
             line.Y = MathFunctions.RoundToInt(position) + .5f;
             line.RelativePoint = new Vector2(length, 0);
         }
         else // Top
         {
             line.X = MathFunctions.RoundToInt(position) + .5f;
-            line.Y = 10 - length;
+            line.Y = Thickness - length;
             line.RelativePoint = new Vector2(0, length);
         }
 
@@ -358,8 +389,8 @@ public class Ruler
         {
             foreach (Line line in mGuides)
             {
-                if (RulerSide == RulerSide.Left && Math.Abs(line.Y - guideSpacePosition) < 3 ||
-                    RulerSide == RulerSide.Top && Math.Abs(line.X - guideSpacePosition) < 3)
+                if (RulerSide == RulerSide.Left && Math.Abs(line.Y - guideSpacePosition) < Scaled(3) ||
+                    RulerSide == RulerSide.Top && Math.Abs(line.X - guideSpacePosition) < Scaled(3))
                 {
                     guideOver = line;
                     break;
@@ -547,23 +578,24 @@ public class Ruler
     {
         // need to make it bigger to support scrollbars
         //const float distanceFromEdge = 10;
-        const float distanceFromEdge = 30;
+        float distanceFromEdge = Scaled(30);
         _grabbedGuideText.Visible = false;
         if (mCursor.PrimaryDown && mGrabbedGuide != null)
         {
             _grabbedGuideText.Visible = true;
+            _grabbedGuideText.FontScale = _displayScale.DisplayScale;
             _grabbedGuideText.Color = guideTextColor;
             if (RulerSide == RulerSide.Left)
             {
-                _grabbedGuideText.Y = mGrabbedGuide.Y - 21;
+                _grabbedGuideText.Y = mGrabbedGuide.Y - Scaled(21);
                 _grabbedGuideText.X = Renderer.Camera.ClientWidth - distanceFromEdge - _grabbedGuideText.EffectiveWidth;
                 _grabbedGuideText.RawText = (mGrabbedGuide.Y / mZoomValue).ToString();
                 _grabbedGuideText.HorizontalAlignment = HorizontalAlignment.Right;
             }
             else
             {
-                _grabbedGuideText.Y = Renderer.Camera.ClientHeight - distanceFromEdge - 22;
-                _grabbedGuideText.X = mGrabbedGuide.X + 4;
+                _grabbedGuideText.Y = Renderer.Camera.ClientHeight - distanceFromEdge - Scaled(22);
+                _grabbedGuideText.X = mGrabbedGuide.X + Scaled(4);
                 _grabbedGuideText.RawText = (mGrabbedGuide.X / mZoomValue).ToString();
                 _grabbedGuideText.HorizontalAlignment = HorizontalAlignment.Left;
 
@@ -647,16 +679,13 @@ public class Ruler
 
         if (RulerSide == RulerSide.Left)
         {
-            line.X = 10;
             line.Y = relevantValue;
-            line.RelativePoint = new Vector2(6000, 0);
         }
-        else if (RulerSide == RulerSide.Top)
+        else
         {
-            line.Y = 10;
             line.X = relevantValue;
-            line.RelativePoint = new Vector2(0, 6000);
         }
+        PlaceGuideAtRulerEdge(line);
         line.Color = guideColor;
         line.Z = 2;
 
@@ -668,27 +697,33 @@ public class Ruler
     private void ReactToRulerSides()
     {
         DestroyRulerLines();
+        _builtDisplayScale = _displayScale.DisplayScale;
 
         if (RulerSide == RulerSide.Left)
         {
-            mRectangle.Width = 10;
-            mRectangle.Height = 4000;
+            mRectangle.Width = Thickness;
+            mRectangle.Height = Scaled(4000);
         }
         else // Top
         {
-            mRectangle.Width = 4000;
-            mRectangle.Height = 10;
+            mRectangle.Width = Scaled(4000);
+            mRectangle.Height = Thickness;
+        }
+
+        foreach (Line guide in mGuides)
+        {
+            PlaceGuideAtRulerEdge(guide);
         }
 
         int multiplier = GetTickMultiplier();
         float tickSpacing = 16f * multiplier;
         const int tickCount = 300;
 
-        CreateRulerLineForSide(position: 0, length: 10);
+        CreateRulerLineForSide(position: 0, length: Thickness);
         for (int i = 1; i <= tickCount; i++)
         {
             float pos = i * tickSpacing * mZoomValue;
-            float length = (i % 5 == 0) ? 8f : 4f;
+            float length = Scaled((i % 5 == 0) ? 8f : 4f);
             CreateRulerLineForSide(pos, length);
             CreateRulerLineForSide(-pos, length);
         }

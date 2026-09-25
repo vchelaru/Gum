@@ -49,7 +49,8 @@ public class SelectionManagerLostReleaseTests : BaseTestClass
                     Mock.Of<IUndoManager>(), Mock.Of<IVariableInCategoryPropagationLogic>(),
                     Mock.Of<IWireframeObjectManager>(), Mock.Of<IUiSettingsService>(), new Layer(),
                     System.Drawing.Color.White, System.Drawing.Color.White, new Camera(), cursor,
-                    Mock.Of<IPluginManager>());
+                    Mock.Of<IPluginManager>(),
+            new Gum.Plugins.InternalPlugins.EditorTab.Services.CanvasDisplayScale());
                 editor.AddHandler(_handler.Object);
                 return editor;
             });

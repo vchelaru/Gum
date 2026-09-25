@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
@@ -31,6 +32,7 @@ public class WireframeEditorFactory : IWireframeEditorFactory
     private readonly IToolFontService _toolFontService;
     private readonly IPluginManager _pluginManager;
     private readonly IProjectManager _projectManager;
+    private readonly ICanvasDisplayScale _displayScale;
 
     public WireframeEditorFactory(
         IHotkeyManager hotkeyManager,
@@ -45,8 +47,10 @@ public class WireframeEditorFactory : IWireframeEditorFactory
         IUiSettingsService uiSettingsService,
         IToolFontService toolFontService,
         IPluginManager pluginManager,
-        IProjectManager projectManager)
+        IProjectManager projectManager,
+        ICanvasDisplayScale displayScale)
     {
+        _displayScale = displayScale;
         _hotkeyManager = hotkeyManager;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -90,7 +94,8 @@ public class WireframeEditorFactory : IWireframeEditorFactory
             camera,
             cursor,
             _toolFontService,
-            _pluginManager);
+            _pluginManager,
+            _displayScale);
     }
 
     public WireframeEditor CreatePolygonEditor(ISelectionManager selectionManager, Layer layer, Camera camera, IGumCursorState cursor)
@@ -110,6 +115,7 @@ public class WireframeEditorFactory : IWireframeEditorFactory
             _uiSettingsService,
             camera,
             cursor,
-            _pluginManager);
+            _pluginManager,
+            _displayScale);
     }
 }

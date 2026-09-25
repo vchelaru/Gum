@@ -1,4 +1,5 @@
-﻿using Gum.Commands;
+﻿using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
@@ -74,7 +75,8 @@ public class PolygonWireframeEditor : WireframeEditor
         IUiSettingsService uiSettingsService,
         Camera camera,
         IGumCursorState cursor,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICanvasDisplayScale displayScale)
         : base(
               hotkeyManager,
               selectionManager,
@@ -92,7 +94,8 @@ public class PolygonWireframeEditor : WireframeEditor
               System.Drawing.Color.White,
               camera,
               cursor,
-              pluginManager)
+              pluginManager,
+              displayScale)
     {
         this.layer = layer;
 

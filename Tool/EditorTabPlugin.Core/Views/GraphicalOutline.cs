@@ -1,4 +1,5 @@
 ﻿using EditorTabPlugin_XNA.Utilities;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -58,8 +59,11 @@ namespace Gum.Wireframe
 
         #region Methods
 
-        public GraphicalOutline(Layer uiLayer)
+        readonly ICanvasDisplayScale _displayScale;
+
+        public GraphicalOutline(Layer uiLayer, ICanvasDisplayScale displayScale)
         {
+            _displayScale = displayScale;
             SelectionBorder = 2;
             mUiLayer = uiLayer;
         }
@@ -143,9 +147,10 @@ namespace Gum.Wireframe
 
         private void SetLineRectangleAroundIpso(LineRectangle rectangle, IRenderableIpso pso)
         {
-            float adjustedSelectionBorder = SelectionBorder / Renderer.Self.Camera.Zoom;
+            float adjustedSelectionBorder = _displayScale.ToWorld(SelectionBorder, Renderer.Self.Camera.Zoom);
 
             rectangle.Visible = true;
+            rectangle.LinePixelWidth = _displayScale.DisplayScale;
 
             float left, top, width, height;
             GetDimensions(pso, out left, out top, out width, out height);

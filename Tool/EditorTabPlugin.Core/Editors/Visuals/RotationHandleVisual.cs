@@ -81,7 +81,7 @@ public class RotationHandleVisual : EditorVisualBase, IRotationHandleVisual
         var singleSelectedObject = Context.SelectedObjects[0];
         _rotationHandle.Visible = Visible;
 
-        float minimumOffset = ScaleByZoom(MinimumOffsetAtNoZoom);
+        float minimumOffset = ToWorldOverlaySize(MinimumOffsetAtNoZoom);
         float xOffset = 0;
 
         if (singleSelectedObject.XOrigin == HorizontalAlignment.Left)
@@ -104,7 +104,7 @@ public class RotationHandleVisual : EditorVisualBase, IRotationHandleVisual
 
         _rotationHandle.X = singleSelectedObject.AbsoluteX + offset.X;
         _rotationHandle.Y = singleSelectedObject.AbsoluteY + offset.Y;
-        _rotationHandle.Radius = ScaleByZoom(RadiusAtNoZoom);
+        _rotationHandle.Radius = ToWorldOverlaySize(RadiusAtNoZoom);
     }
 
     public override void Destroy()
