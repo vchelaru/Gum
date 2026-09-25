@@ -92,8 +92,51 @@ public class ResizeHandleLayoutTests : BaseTestClass
         selector.Height = 20;
 
         // The first rectangle is the selector's outline; the 8 handles follow.
-        List<LineRectangle> handleRectangles = managers.ShapeManager.Rectangles.Skip(1).ToList();
+        List<LineRectangle> handleRectangles = managers.ShapeManager.Rectangles.Skip(1).Take(8).ToList();
         handleRectangles.Select(handle => new Vector2(handle.X, handle.Y)).ShouldBe(ExpectedPositions);
+    }
+
+    [Fact]
+    public void EditorResizeHandles_DrawsBlackInnerHandleInsideEachHandle()
+    {
+        Layer layer = SystemManagers.Default!.Renderer.MainLayer;
+        ResizeHandles handles = new ResizeHandles(layer, Color.White, new CanvasDisplayScale());
+
+        handles.X = 100;
+        handles.Y = 50;
+        handles.Width = 40;
+        handles.Height = 20;
+
+        List<LineRectangle> innerHandles = layer.Renderables.OfType<LineRectangle>()
+            .Where((_, index) => index % 2 == 1)
+            .ToList();
+        ShouldBeInnerHandles(innerHandles);
+    }
+
+    [Fact]
+    public void TextureRectangleSelector_DrawsBlackInnerHandleInsideEachHandle()
+    {
+        SystemManagers managers = SystemManagers.Default!;
+        TexCoordRectangleSelector selector = new TexCoordRectangleSelector(managers, new CanvasDisplayScale());
+        selector.AddToManagers(managers);
+
+        selector.Left = 100;
+        selector.Top = 50;
+        selector.Width = 40;
+        selector.Height = 20;
+
+        // Outline, then the 8 handles, then their 8 inner handles.
+        List<LineRectangle> innerHandles = managers.ShapeManager.Rectangles.Skip(9).ToList();
+        ShouldBeInnerHandles(innerHandles);
+    }
+
+    // Each inner handle is inset 1 unit from its 12-unit handle, so it is 10 units wide.
+    private static void ShouldBeInnerHandles(List<LineRectangle> innerHandles)
+    {
+        innerHandles.Select(handle => new Vector2(handle.X, handle.Y))
+            .ShouldBe(ExpectedPositions.Select(position => position + new Vector2(1, 1)));
+        innerHandles.ShouldAllBe(handle => handle.Width == 10 && handle.Height == 10);
+        innerHandles.ShouldAllBe(handle => handle.Color.ToArgb() == Color.Black.ToArgb());
     }
 
     // A 40x20 rect at (100, 50) with 12-unit handles, in ResizeSide order.

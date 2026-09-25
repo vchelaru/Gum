@@ -260,13 +260,11 @@ namespace Gum.Wireframe
             }
             foreach(var innerHandle in mInnerHandles)
             {
-                innerHandle.Width = ToWorld(WidthAtNoZoom - 2);
-                innerHandle.Height = ToWorld(WidthAtNoZoom - 2);
+                innerHandle.Width = _layout.GetInnerHandleWorldSize(Renderer.Self.Camera.Zoom);
+                innerHandle.Height = innerHandle.Width;
                 innerHandle.LinePixelWidth = lineWidth;
             }
         }
-
-        private float ToWorld(float overlaySize) => _displayScale.ToWorld(overlaySize, Renderer.Self.Camera.Zoom);
 
         private void AdjustOriginDisplayCount(int count)
         {
@@ -314,9 +312,9 @@ namespace Gum.Wireframe
                 innerHandle.Rotation = mRotation;
 
                 var innerHandlePosition = new Vector3( handle.Position, 0);
-                // shift 1 pixel
-                innerHandlePosition += rotationMatrix.Right() * ToWorld(1);
-                innerHandlePosition += rotationMatrix.Up() * ToWorld(1);
+                var inset = _layout.GetInnerHandleWorldInset(Renderer.Self.Camera.Zoom);
+                innerHandlePosition += rotationMatrix.Right() * inset;
+                innerHandlePosition += rotationMatrix.Up() * inset;
                 innerHandle.Position.X = innerHandlePosition.X;
                 innerHandle.Position.Y = innerHandlePosition.Y;
 
