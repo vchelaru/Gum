@@ -686,70 +686,11 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveStateCategory(StateSaveCategory category, IStateContainer stateCategoryListContainer)
     {
-        var stateCategoryListContainerToUse = _selectedState.SelectedStateContainer;
-
         var isRemovingSelectedCategory = _selectedState.SelectedStateCategorySave == category;
 
-        stateCategoryListContainerToUse.Categories.Remove(category);
+        RemoveReferencesToStateCategory(category, stateCategoryListContainer);
 
-        if (_selectedState.SelectedElement != null)
-        {
-            var element = _selectedState.SelectedElement;
-            var removals = new List<CrossElementVariableChange>();
-
-            foreach (var state in element.AllStates)
-            {
-                for (int i = state.Variables.Count - 1; i > -1; i--)
-                {
-                    var variable = state.Variables[i];
-
-                    if (variable.Type == category.Name)
-                    {
-                        // The element's own undo snapshot covers only its selected state and its
-                        // categories, so a removal from another uncategorized state is recorded too.
-                        removals.Add(CrossElementVariableChange.CaptureBefore(element, state, variable));
-                        state.Variables.RemoveAt(i);
-                    }
-                }
-            }
-
-            var elementReferences = ObjectFinder.Self.GetElementReferencesToThis(element);
-
-            foreach (var reference in elementReferences)
-            {
-                if (reference.ReferenceType == ReferenceType.InstanceOfType)
-                {
-                    var shouldSave = false;
-
-                    var ownerOfInstance = reference.OwnerOfReferencingObject;
-                    var instance = reference.ReferencingObject as InstanceSave;
-
-                    var variableToRemove = $"{instance.Name}.{category.Name}State";
-
-                    foreach (var state in ownerOfInstance.AllStates)
-                    {
-                        foreach (var variable in state.Variables.Where(item => item.Name == variableToRemove))
-                        {
-                            removals.Add(CrossElementVariableChange.CaptureBefore(ownerOfInstance, state, variable));
-                        }
-
-                        var numberRemoved = state.Variables.RemoveAll(item => item.Name == variableToRemove);
-
-                        if (numberRemoved > 0)
-                        {
-                            shouldSave = true;
-                        }
-                    }
-
-                    if (shouldSave)
-                    {
-                        _fileCommands.TryAutoSaveElement(ownerOfInstance);
-                    }
-                }
-            }
-
-            _undoManager.Value.RecordCrossElementVariableChanges(removals);
-        }
+        stateCategoryListContainer.Categories.Remove(category);
 
         if (isRemovingSelectedCategory)
         {
@@ -940,6 +881,36 @@ public class DeleteLogic : IDeleteLogic
         else if (elementToRemoveFrom is ElementSave elementSave)
         {
             _fileCommands.TryAutoSaveElement(elementSave);
+        }
+    }
+
+    /// <summary>
+    /// Removes every variable that sets a state of the category - the same set the delete dialog
+    /// lists: the owner's own, those on elements deriving from it, and those on instances of either.
+    /// </summary>
+    private void RemoveReferencesToStateCategory(StateSaveCategory category, IStateContainer owner)
+    {
+        CategoryReferences references = _referenceFinder.GetReferencesToStateCategory(owner, category, category.Name);
+
+        var elementsToSave = new HashSet<ElementSave>();
+        var removals = new List<CrossElementVariableChange>();
+        foreach (var change in references.VariableChanges)
+        {
+            if (change.Container is ElementSave referencingElement)
+            {
+                // The element's own undo snapshot covers only its selected state and its
+                // categories, so every removal is recorded as a cross-element change.
+                removals.Add(CrossElementVariableChange.CaptureBefore(referencingElement, change.State, change.Variable));
+                change.State.Variables.Remove(change.Variable);
+                elementsToSave.Add(referencingElement);
+            }
+        }
+
+        _undoManager.Value.RecordCrossElementVariableChanges(removals);
+
+        foreach (var elementToSave in elementsToSave)
+        {
+            _fileCommands.TryAutoSaveElement(elementToSave);
         }
     }
 
