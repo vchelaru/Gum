@@ -34,6 +34,8 @@ then open only the file relevant to the topic. You do not need to load everythin
   `foundation.md` (what is already done on `main`), `coverage-matrix.md` (every Windows-only
   dependency in the tool graph and the phase that removes it), and one `phase-NN-*.md` per
   conversion area. Living. **Start here for any Avalonia / cross-platform editor work.**
+- **`texture-edge-bleed.md`** — history and open problems of the load-time texture edge bleed
+  (#3691). Living; append to its Log.
 
 ## Two lifecycles (why this is a collection, not one doc)
 

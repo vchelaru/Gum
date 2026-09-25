@@ -57,6 +57,48 @@ public class LinearFilterEdgeDarkeningTests : BaseTestClass
         sampled.R.ShouldBeLessThan((byte)210);
     }
 
+    [Fact]
+    public void ContentManagerTexture_IsNotBled_EvenWhenEdgeBleedEnabled()
+    {
+        // A content-pipeline texture is the ContentManager's cached instance, shared with the game
+        // and usually premultiplied. Bleeding RGB into its A==0 texels corrupts it for the game's own
+        // AlphaBlend draws, so the loader must leave it untouched.
+        Renderer.BleedTransparentTextureEdgesOnLoad = true;
+        XnaColor transparentBlack = new((byte)0, (byte)0, (byte)0, (byte)0);
+
+        using MinimalGame game = new();
+        game.RunOneFrame();
+
+        using Texture2D pipelineTexture = new(game.GraphicsDevice, 2, 1, false, SurfaceFormat.Color);
+        pipelineTexture.SetData(new[]
+        {
+            new XnaColor((byte)255, (byte)255, (byte)255, (byte)255),
+            transparentBlack,
+        });
+
+        ContentLoader contentLoader = (ContentLoader)LoaderManager.Self.ContentLoader!;
+        contentLoader.XnaContentManager = new SingleTextureContentManager(game.Services, pipelineTexture);
+
+        Texture2D loaded = LoaderManager.Self.LoadContent<Texture2D>("sheet");
+
+        loaded.ShouldBeSameAs(pipelineTexture);
+        XnaColor[] pixels = new XnaColor[2];
+        loaded.GetData(pixels);
+        pixels[1].ShouldBe(transparentBlack);
+    }
+
+    private class SingleTextureContentManager : Microsoft.Xna.Framework.Content.ContentManager
+    {
+        private readonly Texture2D _texture;
+
+        public SingleTextureContentManager(IServiceProvider services, Texture2D texture) : base(services)
+        {
+            _texture = texture;
+        }
+
+        public override T Load<T>(string assetName) => (T)(object)_texture;
+    }
+
     /// <summary>
     /// Loads a 2x1 (opaque white | transparent black) PNG through the real LoaderManager, stretches
     /// it to 100x100 over an opaque white background with Linear filtering, and returns the pixel at

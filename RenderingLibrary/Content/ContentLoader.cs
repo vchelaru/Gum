@@ -89,16 +89,22 @@ public sealed class ContentLoader : IContentLoader
             }
         }
 
+        bool isFromContentManager = false;
         if (FileManager.IsUrl(fileName))
         {
             toReturn = LoadTextureFromUrl(fileName, managers);
         }
         else
         {
-            toReturn = LoadTextureFromFile(fileName, managers);
+            toReturn = LoadTextureFromFile(fileName, out isFromContentManager, managers);
         }
 
-        ApplyEdgeBleed(toReturn);
+        // A ContentManager texture is that manager's cached instance, shared with the game, and the
+        // content pipeline premultiplies by default. Bleeding it would corrupt the game's own draws.
+        if (!isFromContentManager)
+        {
+            ApplyEdgeBleed(toReturn);
+        }
 
         if (LoaderManager.Self.CacheTextures && toReturn != null)
         {
@@ -112,8 +118,8 @@ public sealed class ContentLoader : IContentLoader
     /// Bleeds edge color into fully-transparent texels so a non-premultiplied Linear pipeline does
     /// not darken anti-aliased edges toward black (issue #3691). No-op unless
     /// <see cref="Graphics.Renderer.BleedTransparentTextureEdgesOnLoad"/> is set, and only applies to
-    /// uncompressed <see cref="SurfaceFormat.Color"/> textures (what <c>Texture2D.FromStream</c>
-    /// produces) — compressed / content-pipeline formats are left untouched.
+    /// uncompressed <see cref="SurfaceFormat.Color"/> textures. Callers skip ContentManager textures,
+    /// which can also be <see cref="SurfaceFormat.Color"/>.
     /// </summary>
     private static void ApplyEdgeBleed(Texture2D? texture)
     {
@@ -182,10 +188,13 @@ public sealed class ContentLoader : IContentLoader
     /// will always return a unique Texture2D. This should not be used in most cases, as caching is preferred
     /// </summary>
     /// <param name="fileName">The filename to load</param>
+    /// <param name="isFromContentManager">True when the texture came from <see cref="XnaContentManager"/>, which
+    /// owns and caches it, rather than being created by this loader.</param>
     /// <param name="managers">The optional SystemManagers to use when loading the file to obtain a GraphicsDevice</param>
     /// <returns>The loaded Texture2D</returns>
-    private Texture2D? LoadTextureFromFile(string fileName, SystemManagers? managers = null)
+    private Texture2D? LoadTextureFromFile(string fileName, out bool isFromContentManager, SystemManagers? managers = null)
     {
+        isFromContentManager = false;
         string fileNameStandardized = FileManager.Standardize(fileName, true, false);
 
         if (FileManager.IsRelative(fileNameStandardized))
@@ -292,6 +301,7 @@ public sealed class ContentLoader : IContentLoader
         else if (string.IsNullOrEmpty(extension) && XnaContentManager != null)
         {
             toReturn = LoadFromContentManager(fileName, fileNameStandardized);
+            isFromContentManager = true;
         }
 #endif
 
@@ -323,6 +333,7 @@ public sealed class ContentLoader : IContentLoader
                     var noExtension = FileManager.RemoveExtension(fileNameStandardized);
 
                     toReturn = LoadFromContentManager(fileName, noExtension);
+                    isFromContentManager = true;
                     if(toReturn is Texture2D asTexture2D)
                     {
                         // Since we asked with extension, include the extension:
