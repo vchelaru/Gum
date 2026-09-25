@@ -120,6 +120,45 @@ public class ProjectManagerTests : BaseTestClass
         _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Never);
     }
 
+    [Theory]
+    [InlineData("MyProject", "MyProject.gumj")]
+    [InlineData("My.Project", "My.Project.gumj")]
+    [InlineData("MyProject.gumx", "MyProject.gumx")]
+    public void AskUserForProjectNameIfNecessary_AppendsGumjOnlyWhenNoProjectExtension(
+        string chosenName, string expectedName)
+    {
+        GumProjectSave project = new GumProjectSave();
+        SetCurrentProject(project);
+
+        string tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "GumProjectManagerTests_" + Guid.NewGuid().ToString("N"));
+
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns(Path.Combine(tempDirectory, chosenName));
+
+        bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        shouldSave.ShouldBeTrue();
+        project.FullFileName.ShouldBe(Path.Combine(tempDirectory, expectedName));
+    }
+
+    [Fact]
+    public void AskUserForProjectNameIfNecessary_ListsGumjFirstInFilter()
+    {
+        // macOS's save panel appends the filter's first extension to a name typed without one.
+        SetCurrentProject(new GumProjectSave());
+        _dialogService
+            .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
+            .Returns((string?)null);
+
+        _projectManager.AskUserForProjectNameIfNecessary(out _);
+
+        _dialogService.Verify(d => d.SaveFile(It.Is<SaveFileDialogOptions>(o =>
+            o.Filter.Split('|', StringSplitOptions.None)[1].StartsWith("*.gumj"))), Times.Once);
+    }
+
     [Fact]
     public void AskUserForProjectNameIfNecessary_ReturnsFalse_WhenFolderNotEmptyAndUserDeclines()
     {
