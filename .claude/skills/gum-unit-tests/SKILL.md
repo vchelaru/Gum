@@ -131,3 +131,5 @@ Baselines are **approved snapshots, not derived from spec** — same convention 
 ## Integration Tests (MonoGameGum.IntegrationTests)
 
 Use this project for anything requiring a real `GraphicsDevice`. Each test creates a minimal nested `Game` subclass, calls `game.RunOneFrame()` to trigger `Initialize`, then asserts. See `Tests/MonoGameGum.IntegrationTests/MonoGameGum/GumServiceUnitTests.cs` for the established pattern. Always call `LoaderManager.Self?.DisposeAndClear()` in the `Game.Dispose` override to prevent state leaking across tests via the singleton.
+
+The project uses xunit v3 with its own `Main` (`MainThreadTestHost.cs`) so tests run on the main thread, which macOS requires. Don't reference `MonoGameGum.TestsCommon` from it, because that project brings in xunit v2.
