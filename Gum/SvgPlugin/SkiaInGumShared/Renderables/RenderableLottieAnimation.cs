@@ -1,4 +1,5 @@
-﻿using SkiaSharp;
+﻿using RenderingLibrary.Graphics;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,7 +7,7 @@ using ToolsUtilities;
 
 namespace SkiaGum.Renderables
 {
-    public class RenderableLottieAnimation : RenderableSkiaObject
+    public class RenderableLottieAnimation : RenderableSkiaObject, IAnimatingRenderable
     {
         string sourceFile;
         public string SourceFile
@@ -23,8 +24,6 @@ namespace SkiaGum.Renderables
             }
         }
 
-        public bool IsAnimating { get; set; } = true;
-
         readonly Func<DateTime> _getNow;
 
         public RenderableLottieAnimation() : this(() => DateTime.Now) { }
@@ -39,14 +38,12 @@ namespace SkiaGum.Renderables
             sourceFile = "";
         }
 
-        // This alias exists to match the other interfaces, but should not be used in code:
-        public bool Animate
-        {
-            get => IsAnimating;
-            set => IsAnimating = value;
-        }
-
         DateTime _lastFrameAdvance;
+
+        /// <summary>
+        /// True once an animation is loaded. Lottie animations always play, matching the SkiaGum runtime.
+        /// </summary>
+        public bool IsAnimating => animation != null;
 
         const double SecondsBetweenUpdates = .1;
 
@@ -85,11 +82,6 @@ namespace SkiaGum.Renderables
 
         public override void PreRender()
         {
-            if (!IsAnimating)
-            {
-                return;
-            }
-
             DateTime now = _getNow();
             if ((now - _lastFrameAdvance).TotalSeconds >= SecondsBetweenUpdates)
             {

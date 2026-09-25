@@ -14,7 +14,7 @@ namespace SkiaGum.Renderables
     /// and <see cref="IManagedObject"/> concerns so that shape classes can remain pure
     /// Skia drawing objects.
     /// </summary>
-    public class SkiaTexturedRenderable : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject, IAspectRatio
+    public class SkiaTexturedRenderable : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IManagedObject, IAspectRatio, IAnimatingRenderable
     {
         #region Fields
 
@@ -50,6 +50,9 @@ namespace SkiaGum.Renderables
         /// The underlying shape/content object that draws to a Skia surface.
         /// </summary>
         public ISkiaSurfaceDrawable Drawable => _drawable;
+
+        /// <inheritdoc/>
+        public bool IsAnimating => _drawable is IAnimatingRenderable { IsAnimating: true };
 
         #endregion
 

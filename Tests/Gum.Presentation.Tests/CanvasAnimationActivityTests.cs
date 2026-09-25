@@ -8,6 +8,11 @@ namespace Gum.Presentation.Tests;
 
 public class CanvasAnimationActivityTests
 {
+    private sealed class AnimatingRenderable : InvisibleRenderable, IAnimatingRenderable
+    {
+        public bool IsAnimating { get; set; }
+    }
+
     private static AnimationChainList ChainWithFrames(int frameCount)
     {
         AnimationChain chain = new AnimationChain { Name = "Walk" };
@@ -51,5 +56,17 @@ public class CanvasAnimationActivityTests
         GraphicalUiElement gue = new GraphicalUiElement(nineSlice);
 
         CanvasAnimationActivity.IsAnimating(gue).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsAnimating_FollowsAnyAnimatingRenderable()
+    {
+        AnimatingRenderable renderable = new AnimatingRenderable { IsAnimating = true };
+        GraphicalUiElement gue = new GraphicalUiElement(renderable);
+
+        CanvasAnimationActivity.IsAnimating(gue).ShouldBeTrue();
+
+        renderable.IsAnimating = false;
+        CanvasAnimationActivity.IsAnimating(gue).ShouldBeFalse();
     }
 }
