@@ -270,6 +270,31 @@ public class ReferenceFinderTests : BaseTestClass
     }
 
     [Fact]
+    public void GetReferencesToState_DerivedElementOwnVariable_IsDetected()
+    {
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        StateSaveCategory visibilityCategory = new StateSaveCategory { Name = "Visibility" };
+        StateSave shownState = new StateSave { Name = "Shown", ParentContainer = button };
+        visibilityCategory.States.Add(shownState);
+        button.Categories.Add(visibilityCategory);
+        _project.Components.Add(button);
+
+        ComponentSave derivedButton = new ComponentSave { Name = "DerivedButton", BaseType = "Button" };
+        StateSave derivedDefault = new StateSave { Name = "Default", ParentContainer = derivedButton };
+        derivedButton.States.Add(derivedDefault);
+        VariableSave stateVar = new VariableSave { Name = "VisibilityState", Value = "Shown" };
+        derivedDefault.Variables.Add(stateVar);
+        _project.Components.Add(derivedButton);
+
+        StateReferences changes = _referenceFinder.GetReferencesToState(shownState, "Shown", button, visibilityCategory);
+
+        changes.VariablesToUpdate.Count.ShouldBe(1);
+        changes.VariablesToUpdate[0].Container.ShouldBe(derivedButton);
+        changes.VariablesToUpdate[0].Variable.ShouldBe(stateVar);
+    }
+
+    [Fact]
     public void GetReferencesToState_NonMatchingValue_IsNotDetected()
     {
         ComponentSave button = new ComponentSave { Name = "Button" };
