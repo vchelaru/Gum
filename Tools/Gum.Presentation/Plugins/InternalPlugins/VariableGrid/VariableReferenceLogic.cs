@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using ToolsUtilities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Gum.Plugins.InternalPlugins.VariableGrid;
 public class VariableReferenceLogic : IVariableReferenceLogic
@@ -129,88 +130,69 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         var assignmentSyntax = GetAssignmentSyntax(line);
 
-        GeneralResponse response = GeneralResponse.SuccessfulResponse;
-
         if (assignmentSyntax == null)
         {
-            response = GeneralResponse.UnsuccessfulWith("Could not parse line. This should be an assignment such as X=Y");
+            failures.Add((line, GeneralResponse.UnsuccessfulWith("Could not parse line. This should be an assignment such as X=Y")));
+            return;
         }
 
-        VariableSave leftSideVariable = null;
+        var leftSide = assignmentSyntax.Left?.ToString();
 
-        if(response.Succeeded)
+        if(leftSide is "Name" or "BaseType" or "DefaultChildContainer")
         {
-            var leftSide = assignmentSyntax.Left?.ToString();
-
-            if(leftSide is "Name" or "BaseType" or "DefaultChildContainer")
-            {
-                response = GeneralResponse.UnsuccessfulWith($"{leftSide} cannot be assigned in variable references");
-            }
+            failures.Add((line, GeneralResponse.UnsuccessfulWith($"{leftSide} cannot be assigned in variable references")));
+            return;
         }
 
-        if (response.Succeeded)
+        var leftSideResponse =
+            CheckLeftSideVariableExistence(parentElement, leftSideInstance, assignmentSyntax);
+
+        // A successful response always carries the variable.
+        if (leftSideResponse.Succeeded == false || leftSideResponse.Data is not { } leftSideVariable)
         {
-            var leftSideResponse =
-                CheckLeftSideVariableExistence(parentElement, leftSideInstance, assignmentSyntax);
-
-            if (leftSideResponse.Succeeded == false)
-            {
-                response = leftSideResponse;
-            }
-            else
-            {
-                leftSideVariable = leftSideResponse.Data;
-            }
+            failures.Add((line, leftSideResponse));
+            return;
         }
 
-        EvaluatedSyntax evaluatedSyntax = null;
+        EvaluatedSyntax? evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState, liveRoot: liveRoot);
 
-        if (response.Succeeded)
+        if (evaluatedSyntax == null)
         {
-            evaluatedSyntax = EvaluatedSyntax.FromSyntaxNode(assignmentSyntax.Right, parentElement.DefaultState, liveRoot: liveRoot);
-
-            if (evaluatedSyntax == null)
-            {
-                response = GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}");
-            }
+            failures.Add((line, GeneralResponse.UnsuccessfulWith($"Could not evaluate right-side expression {assignmentSyntax}")));
+            return;
         }
 
-        if (response.Succeeded && evaluatedSyntax.EvaluatedType == null)
+        if (evaluatedSyntax.EvaluatedType == null)
         {
-            response = GeneralResponse.UnsuccessfulWith(
-                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?");
+            failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                $"The right side cannot be evaluated, are you referencing a variable that doesn't exist or mixing variable types?")));
+            return;
         }
 
-        if (response.Succeeded && IsCategoryStateLeftSide(leftSideVariable, parentElement, leftSideInstance, out _))
+        if (IsCategoryStateLeftSide(leftSideVariable, parentElement, leftSideInstance, out _))
         {
             // Category-state LHS: cast to string so any string-producing RHS (literal,
             // ternary, expression) is accepted; CheckIfVariableTypesMatch enforces the
             // string-only rule and (for literals) the state-name existence check.
             if (!evaluatedSyntax.CastTo("string"))
             {
-                response = GeneralResponse.UnsuccessfulWith(
-                    $"Could not cast {evaluatedSyntax.EvaluatedType} to string for category-state assignment");
+                failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                    $"Could not cast {evaluatedSyntax.EvaluatedType} to string for category-state assignment")));
+                return;
             }
         }
-        else if (response.Succeeded && !evaluatedSyntax.CastTo(leftSideVariable.Type))
+        else if (!evaluatedSyntax.CastTo(leftSideVariable.Type))
         {
-            response = GeneralResponse.UnsuccessfulWith(
-                $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}");
+            failures.Add((line, GeneralResponse.UnsuccessfulWith(
+                $"Could not cast {evaluatedSyntax.EvaluatedType} to {leftSideVariable.Type}")));
+            return;
         }
 
-        if (response.Succeeded)
-        {
-            var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaluatedSyntax);
+        var typeMatchResponse = CheckIfVariableTypesMatch(leftSideVariable, parentElement, leftSideInstance, evaluatedSyntax);
 
-            if (typeMatchResponse.Succeeded == false)
-            {
-                response = typeMatchResponse;
-            }
-        }
-
-        if (response.Succeeded == false)
+        if (typeMatchResponse.Succeeded == false)
         {
-            failures.Add((line, response));
+            failures.Add((line, typeMatchResponse));
         }
     }
 
@@ -260,7 +242,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     private GeneralResponse CheckIfVariableTypesMatch(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave? leftSideInstance, EvaluatedSyntax assignment)
     {
         var leftSideType = leftSideVariable.Type;
-        string rightSideType = null;
+        string? rightSideType = null;
         // get the right side type to compare:
         var ownerOfRightSideVariable = parentElement.DefaultState;
 
@@ -276,7 +258,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
             if (rightSideType != "string")
             {
                 return GeneralResponse.UnsuccessfulWith(
-                    $"Left side is a state of category [{category!.Name}] but right side is of type [{rightSideType}]");
+                    $"Left side is a state of category [{category.Name}] but right side is of type [{rightSideType}]");
             }
 
             var isStringLiteral = assignment.SyntaxNode is LiteralExpressionSyntax literal
@@ -326,10 +308,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 : leftSideInstance.Name + "." + leftSideVariable.Name;
 
             var leftSideRoot = ObjectFinder.Self.GetRootVariable(leftSideQualified, parentElement);
-            VariableSave rightSideRoot = null;
-            var rightSide = assignment.SyntaxNode.ToString();
+            VariableSave? rightSideRoot = null;
+            string rightSide = assignment.SyntaxNode.ToString();
 
-            if(rightSide?.Contains("global::") == true)
+            if(rightSide.Contains("global::"))
             {
                 EvaluatedSyntax.ConvertGlobalToElementNameWithSlashes(rightSide, out string elementName, out string elementType);
 
@@ -366,9 +348,15 @@ public class VariableReferenceLogic : IVariableReferenceLogic
 
         var leftSide = syntax.Left.ToString();
 
+        // An instance whose type is missing has no variables to assign.
+        if (element == null)
+        {
+            return GeneralResponse<VariableSave>.UnsuccessfulWith($"Could not find variable [{leftSide}]");
+        }
+
         var rootVar = ObjectFinder.Self.GetRootVariable(leftSide, element);
 
-        if (rootVar == null && element != null)
+        if (rootVar == null)
         {
             // Synthetic category-state LHS: "<CategoryName>State" assigns a state from the
             // matching StateSaveCategory. The variable does not exist on DefaultState but the
@@ -441,7 +429,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     /// produced by <see cref="CheckLeftSideVariableExistence"/> for a "&lt;CategoryName&gt;State"
     /// assignment, and outputs the resolved category.
     /// </summary>
-    private static bool IsCategoryStateLeftSide(VariableSave leftSideVariable, ElementSave parentElement, InstanceSave? leftSideInstance, out StateSaveCategory? category)
+    private static bool IsCategoryStateLeftSide(VariableSave? leftSideVariable, ElementSave parentElement, InstanceSave? leftSideInstance, [NotNullWhen(true)] out StateSaveCategory? category)
     {
         category = null;
         if (leftSideVariable?.Name == null || !leftSideVariable.Name.EndsWith("State"))
@@ -567,36 +555,31 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
     }
 
-    private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave? instance, StateSave stateSave, string unqualifiedVariableName, object newValue)
+    private static bool DoVariableReferenceReactionOnInstanceVariableSet(ElementSave container, InstanceSave? instance, StateSave stateSave, string unqualifiedVariableName, object? newValue)
     {
         var didAssignDeepReference = false;
-        ElementSave instanceElement = null;
+        ElementSave? instanceElement = null;
         if (instance != null)
         {
             instanceElement = ObjectFinder.Self.GetElementSave(instance.BaseType);
         }
-        if (instanceElement != null)
+        if (instance != null && instanceElement != null)
         {
             // Equivalent to the tool-only ElementSaveExtensionMethodsGumTool.GetVariableFromThisOrBase(element,
             // variable, forceDefault: true) expansion, without depending on that Locator-touching, Gum-only file.
             var variableOnInstance = instanceElement.DefaultState.GetVariableRecursive(unqualifiedVariableName);
 
-            List<TypedElementReference> references = null;
-
-            references = ObjectFinder.Self.GetElementReferencesToThis(instanceElement);
+            List<TypedElementReference> references = ObjectFinder.Self.GetElementReferencesToThis(instanceElement);
             var filteredReferences = references
                 .Where(item => item.ReferenceType == ReferenceType.VariableReference)
                 .ToArray();
 
-            if (references != null && variableOnInstance != null)
+            if (variableOnInstance != null)
             {
                 foreach (var reference in filteredReferences)
                 {
-                    var variableListSave = reference.ReferencingObject as VariableListSave;
-
-                    var stringList = variableListSave?.ValueAsIList as List<string>;
-
-                    if (stringList != null)
+                    if (reference.ReferencingObject is VariableListSave variableListSave &&
+                        variableListSave.ValueAsIList is List<string> stringList)
                     {
                         foreach (var assignment in stringList)
                         {
@@ -692,7 +675,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
     #region Line Assignment Expansion / Modifications
 
     static char[] equalsArray = new char[] { '=' };
-    bool ModifyLines(object? oldValue, List<string> newValueAsList, InstanceSave? selectedInstance,
+    bool ModifyLines(object? oldValue, List<string>? newValueAsList, InstanceSave? selectedInstance,
         ElementSave? ownerElement)
     {
         var oldValueAsList = oldValue as List<string>;
@@ -711,7 +694,7 @@ public class VariableReferenceLogic : IVariableReferenceLogic
                 string[] split = new string[0];
                 if(assignment == null)
                 {
-                    split = new string[] { item?.Trim() };
+                    split = new string[] { item.Trim() };
                 }
                 else
                 {
@@ -754,17 +737,10 @@ public class VariableReferenceLogic : IVariableReferenceLogic
         }
 
         var didChange = false;
-        if (oldValueAsList == null && newValueAsList == null)
+        if (oldValueAsList == null || newValueAsList == null)
         {
-            didChange = false;
-        }
-        else if (oldValueAsList == null && newValueAsList != null)
-        {
-            didChange = true;
-        }
-        else if (oldValueAsList != null && newValueAsList == null)
-        {
-            didChange = true;
+            // Changed unless both are null.
+            didChange = oldValueAsList != newValueAsList;
         }
         else if (oldValueAsList.Count != newValueAsList.Count)
         {

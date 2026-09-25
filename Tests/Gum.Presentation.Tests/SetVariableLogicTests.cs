@@ -599,6 +599,58 @@ public class SetVariableLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToPropertyValueChanged_SourceFileInAnUnsavedProject_DoesNotThrow()
+    {
+        // Cancelling the New Project dialog leaves a project with no file, so no project directory.
+        mocker.GetMock<IProjectState>().Setup(x => x.ProjectDirectory).Returns((string?)null);
+        ComponentSave container = new ComponentSave { Name = "MyComponent" };
+        container.States.Add(new StateSave { Name = "Default", ParentContainer = container });
+        InstanceSave instance = new InstanceSave { Name = "SpriteInstance", BaseType = "Sprite", ParentContainer = container };
+        container.Instances.Add(instance);
+        container.DefaultState.Variables.Add(new VariableSave
+            { Name = "SpriteInstance.SourceFile", Type = "string", Value = "image.png", IsFile = true, SetsValue = true });
+        mocker.GetMock<ISelectedState>().Setup(x => x.SelectedStateSave).Returns(container.DefaultState);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "SourceFile",
+            null,
+            container,
+            instance,
+            container.DefaultState,
+            refresh: false,
+            recordUndo: false,
+            trySave: false);
+
+        response.Succeeded.ShouldBeTrue();
+        container.DefaultState.GetValue("SpriteInstance.SourceFile").ShouldBe("image.png");
+    }
+
+    [Fact]
+    public void ReactToPropertyValueChanged_ParentSetOnTheComponentItself_DoesNotThrow()
+    {
+        // The Parent row also shows when the component itself is selected, not only its instances.
+        ComponentSave component = new ComponentSave { Name = "MyComponent" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        component.Instances.Add(new InstanceSave { Name = "Child", BaseType = "Container", ParentContainer = component });
+        VariableSave parentVariable = new VariableSave { Name = "Parent", Type = "string", Value = "Child", SetsValue = true };
+        state.Variables.Add(parentVariable);
+        mocker.GetMock<ISelectedState>().Setup(x => x.SelectedVariableSave).Returns(parentVariable);
+
+        GeneralResponse response = _setVariableLogic.ReactToPropertyValueChanged(
+            "Parent",
+            null,
+            component,
+            null,
+            state,
+            refresh: false,
+            recordUndo: false,
+            trySave: false);
+
+        response.Succeeded.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ReactToPropertyValueChanged_ShouldSuppressFontRegeneration_WhileCommitIsIntermediate()
     {
         // Issue #4005 follow-up: dragging a numeric font-affecting variable (e.g. DropshadowOffsetX)
