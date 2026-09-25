@@ -147,6 +147,15 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
         set;
     }
 
+    /// <summary>
+    /// The stroke width in screen pixels, unaffected by camera zoom.
+    /// </summary>
+    public float LinePixelWidth
+    {
+        get => mLinePrimitive.LinePixelWidth;
+        set => mLinePrimitive.LinePixelWidth = value;
+    }
+
     public bool Wrap
     {
         get { return true; }

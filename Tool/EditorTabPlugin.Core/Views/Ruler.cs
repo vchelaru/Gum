@@ -326,6 +326,7 @@ public class Ruler
     /// <summary>Starts a guide at the ruler's inner edge, keeping its position along the ruler.</summary>
     private void PlaceGuideAtRulerEdge(Line guide)
     {
+        guide.LinePixelWidth = _displayScale.DisplayScale;
         if (RulerSide == RulerSide.Left)
         {
             guide.X = Thickness;
@@ -347,6 +348,7 @@ public class Ruler
     {
         Line line = new Line(mManagers);
         line.Color = Color.LightGray;
+        line.LinePixelWidth = _displayScale.DisplayScale;
         line.Z = 1;
         line.Visible = visible;
         line.Parent = mOffsetSprite;
