@@ -3656,7 +3656,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             dimensionToReturn = 2 * System.Math.Max(abs1, abs2);
         }
-        else if (units == GeneralUnitType.PixelsFromLarge)
+        // A non-Text parent's baseline is its bottom edge, so Baseline measures like PixelsFromLarge.
+        else if (units == GeneralUnitType.PixelsFromLarge || units == GeneralUnitType.PixelsFromBaseline)
         {
             smallEdge = System.Math.Min(0, smallEdge);
             bigEdge = 0;
@@ -3709,7 +3710,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
              (mYUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentHeightNoDependencyOrOnParent) ||
 #pragma warning restore CS0618
-             mYUnits == GeneralUnitType.PixelsFromBaseline);
+             // A non-Text parent's baseline is its bottom edge, so this depends on parent height like PixelsFromLarge.
+             (mYUnits == GeneralUnitType.PixelsFromBaseline && isParentHeightNoDependencyOrOnParent));
 
         if (doesParentWrapStack)
         {
@@ -3746,12 +3748,21 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var isNotParentDependent = mHeightUnit.GetDependencyType() != HierarchyDependencyType.DependsOnParent ||
                 this.HeightUnits.GetDependencyType() == HierarchyDependencyType.NoDependency ||
                 mHeightUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
+            // A wrapping stack measures its RelativeToChildren height from each child's laid-out Y.
+            // A Y measured from the parent's height (PixelsFromLarge, etc.) isn't refreshed before that
+            // measure, so counting it lets a stale parent height sustain or ratchet itself.
+            var parentHeightDependencyType = parent.HeightUnits.GetDependencyType();
+            var canPositionFromParentHeightCount = !doesParentWrapStack ||
+                parentHeightDependencyType == HierarchyDependencyType.NoDependency ||
+                parentHeightDependencyType == HierarchyDependencyType.DependsOnParent;
             isAbsolute = isNotParentDependent &&
-                (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+                (mYUnits == GeneralUnitType.PixelsFromSmall ||
+                    ((mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
 #pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
-                    mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+                    mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
 #pragma warning restore CS0618
-                    mYUnits == GeneralUnitType.PixelsFromBaseline);
+                    mYUnits == GeneralUnitType.PixelsFromBaseline) &&
+                    canPositionFromParentHeightCount));
 
         }
 
