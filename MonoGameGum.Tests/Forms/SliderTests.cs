@@ -224,4 +224,24 @@ public class SliderTests : BaseTestClass
         slider.Value.ShouldBe(55);
         wasRaised.ShouldBeTrue();
     }
+
+    [Fact]
+    public void ApplyValueConsideringSnapping_ShouldSnap_WhenCalledThroughRangeBase()
+    {
+        RangeBaseCallingSlider slider = new RangeBaseCallingSlider();
+        slider.Minimum = 0;
+        slider.Maximum = 100;
+        slider.TicksFrequency = 10;
+        slider.IsSnapToTickEnabled = true;
+
+        slider.ApplyThroughRangeBase(23);
+
+        slider.Value.ShouldBe(20);
+    }
+
+    class RangeBaseCallingSlider : Slider
+    {
+        // Binds to RangeBase's virtual, the same call RangeBase's track-repeat path makes.
+        public void ApplyThroughRangeBase(double value) => ApplyValueConsideringSnapping(value);
+    }
 }

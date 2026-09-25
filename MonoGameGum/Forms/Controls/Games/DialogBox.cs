@@ -84,9 +84,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
     int typingTargetLetterCount;
 #endif
 
-#pragma warning disable CS0067 // OnFocusUpdate never raises this; see #5001
-    public event Action<IInputReceiver> FocusUpdate;
-#pragma warning restore CS0067
+    public event Action<IInputReceiver>? FocusUpdate;
 
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
 
@@ -817,7 +815,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
             var genericGamepads = GuiManager.GenericGamePadsForUiControl;
             for(int i = 0; i < genericGamepads.Count; i++)
             {
-                var gamepad = gamepads[i];
+                var gamepad = genericGamepads[i];
 
                 var inputDevice = gamepad as IInputDevice;
 
@@ -862,6 +860,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #endif
         }
 
+        FocusUpdate?.Invoke(this);
     }
 
     public void OnGainFocus()

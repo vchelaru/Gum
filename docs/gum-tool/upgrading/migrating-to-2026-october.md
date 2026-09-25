@@ -8,6 +8,8 @@ This page discusses breaking changes and other considerations when migrating fro
 
 This release seals the built-in content loaders, so you can no longer derive a class from one. This is a **hard break**, but it reaches you only if you inherited from a built-in loader, which never let you change how loading works in the first place. Implementing `IContentLoader` yourself, the supported way to customize loading, is unchanged.
 
+`TextBox` and `PasswordBox` now raise the `KeyDown` event every other Forms control uses, so the handler you pass must be a `KeyEventHandler`. Lambdas and methods keep compiling without changes.
+
 ## Upgrading the Gum Tool
 
 {% hint style="warning" %}
@@ -95,3 +97,25 @@ loaderManager.ContentLoader = new MyContentLoader(loaderManager.ContentLoader);
 ```
 
 For the full explanation, including what your loader receives and how caching works, see [File Loading](../../code/files-and-fonts/file-loading.md).
+
+### TextBox and PasswordBox KeyDown Uses KeyEventHandler
+
+`TextBox` and `PasswordBox` used to declare their own `KeyDown` event, typed `Action<object, KeyEventArgs>`, which hid `FrameworkElement.KeyDown`. A handler added through a `FrameworkElement` reference never ran for a text box. The text box now raises `FrameworkElement.KeyDown`, typed `KeyEventHandler`, like `Button` and `Slider` do.
+
+A lambda or a method passed to `+=` compiles unchanged, since both event types take the same `(object, KeyEventArgs)` parameters. Only a handler stored in a variable typed `Action<object, KeyEventArgs>` stops compiling. Change the variable's type to `KeyEventHandler`.
+
+❌ Old:
+
+```csharp
+// Initialize
+System.Action<object, KeyEventArgs> handler = (sender, args) => { /* ... */ };
+textBox.KeyDown += handler;
+```
+
+✅ New:
+
+```csharp
+// Initialize
+KeyEventHandler handler = (sender, args) => { /* ... */ };
+textBox.KeyDown += handler;
+```

@@ -1088,8 +1088,14 @@ public class ScrollViewer :
         base.HandleKeyboardFocusUpdate();
 #endif
 
-        FocusUpdate?.Invoke(this);
+        RaiseFocusUpdate();
     }
+
+    /// <summary>
+    /// Raises <see cref="FocusUpdate"/>. Called by derived controls that override <see cref="OnFocusUpdate"/>
+    /// without calling the base implementation.
+    /// </summary>
+    protected void RaiseFocusUpdate() => FocusUpdate?.Invoke(this);
 
     private void DoTopLevelFocusUpdate()
     {

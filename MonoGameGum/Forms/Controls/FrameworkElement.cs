@@ -789,7 +789,7 @@ public class FrameworkElement : INotifyPropertyChanged
     {
         if (child == null)
         {
-            throw new InvalidOperationException($"The child of type {child.GetType()} must have a Visual before being removed from the parent");
+            throw new ArgumentNullException(nameof(child));
         }
         if (this.Visual == null)
         {
