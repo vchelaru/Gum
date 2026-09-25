@@ -234,11 +234,35 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             }
         }
 
+        /// <summary>The handle size in device-independent pixels at 100% zoom.</summary>
         float HandleSize
         {
             get;
             set;
         }
+
+        float displayScale = 1;
+        /// <summary>
+        /// The OS display scale of the monitor the canvas is on (1 at 100%). The outline and handle
+        /// strokes are this many pixels wide, and the handles grow by it, so they match the editor overlay.
+        /// </summary>
+        public float DisplayScale
+        {
+            get => displayScale;
+            set
+            {
+                displayScale = value;
+                mLineRectangle.LinePixelWidth = value;
+                foreach (var handle in mHandles)
+                {
+                    handle.LinePixelWidth = value;
+                }
+                UpdateHandleSizes();
+                UpdateHandles();
+            }
+        }
+
+        float HandleWorldSize => HandleSize * displayScale / managers.Renderer.Camera.Zoom;
 
         public bool AllowMoveWithoutHandles
         {
@@ -389,7 +413,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         public void UpdateHandles()
         {
-            var dim = HandleSize / managers.Renderer.Camera.Zoom;
+            var dim = HandleWorldSize;
             var halfDim = dim / 2.0f;
 
             mHandles[0].X = Left - dim;
@@ -437,8 +461,10 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
             // Resize even if the cursor isn't in the window - because these may have been made visible by clicking on some winforms UI and we want
             // the size to be properly set
-            ResizeCircleActivity();
-
+            if (Visible && ShowHandles)
+            {
+                UpdateHandleSizes();
+            }
         }
 
         private void KeyboardActivity(Keyboard keyBoard)
@@ -526,18 +552,13 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             }
         }
 
-        private void ResizeCircleActivity()
+        private void UpdateHandleSizes()
         {
-            if (Visible && ShowHandles)
+            var dim = HandleWorldSize;
+            foreach (var handle in mHandles)
             {
-
-                foreach (var handle in mHandles)
-                {
-                    handle.Width = HandleSize / managers.Renderer.Camera.Zoom;
-                    handle.Height = HandleSize / managers.Renderer.Camera.Zoom;
-                }
-
-
+                handle.Width = dim;
+                handle.Height = dim;
             }
         }
 

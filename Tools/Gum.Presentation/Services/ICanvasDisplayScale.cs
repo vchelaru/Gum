@@ -1,9 +1,10 @@
-namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
+namespace Gum.Services;
 
 /// <summary>
-/// The OS display scale of the monitor the wireframe canvas is on (1 at 100%, 2 on a Retina
-/// display). Project content renders at physical pixels and ignores it; the editor overlay
-/// (handles, dimension display, rulers) multiplies its sizes by it so it matches the tool's UI.
+/// The OS display scale of the monitor a canvas is on (1 at 100%, 2 on a Retina display). Project
+/// content renders at physical pixels and ignores it; the overlay of the editor and Texture
+/// Coordinates canvases (handles, outlines, guides, rulers) multiplies its sizes by it so it matches
+/// the tool's UI.
 /// Only sizes are scaled, never positions or measured values.
 /// </summary>
 public interface ICanvasDisplayScale
