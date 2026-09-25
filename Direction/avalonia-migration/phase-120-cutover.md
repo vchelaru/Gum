@@ -54,7 +54,8 @@ filed and fixed (#4724 onward); `build-and-release.yml` has published pre-releas
 2026-09-17; Gum ships unsigned by decision (phase 110). The release announcement is part of Vic's
 normal release process, not tracked here.
 
-**What remains:**
+**Nothing remains as open work.** Deleting the WPF projects is deferred with no date; Vic will do
+it himself. The list below is the reference for when that happens.
 
 1. **The WPF deletion PR** (tasks 2, 3, 4, 8 below, one revertible PR): delete `Gum/` except what
    the head still reads (`Gum/Themes/GumIcons.xaml` and the palette dictionaries are embedded by
