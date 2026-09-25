@@ -47,25 +47,6 @@ public partial class WireframeObjectManager
     #endregion
 
 
-    private bool GetIfSelectedStateIsSetRecursively()
-    {
-        var category = _selectedState.SelectedStateCategorySave;
-        if(category != null)
-        {
-            var selectedElement = _selectedState.SelectedElement;
-            foreach(var behaviorReference in selectedElement.Behaviors)
-            {
-                var behavior = ObjectFinder.Self.GetBehavior(behaviorReference);
-
-                if(behavior != null && behavior.Categories.Any(item => item.Name == category.Name))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     bool IsRecursive(GraphicalUiElement item, HashSet<GraphicalUiElement> history)
     {
         if (history.Contains(item))
@@ -158,17 +139,6 @@ public partial class WireframeObjectManager
         }
     }
     
-    private IPositionedSizedObject CreateRectangleFor(InstanceSave instance, List<ElementWithState> elementStack, GraphicalUiElement graphicalUiElement)
-    {
-        ElementSave instanceBase = ObjectFinder.Self.GetElementSave(instance.BaseType);
-        graphicalUiElement.CreateGraphicalComponent(instanceBase, null);
-        graphicalUiElement.Tag = instance;
-        graphicalUiElement.Name = instance.Name;
-        graphicalUiElement.Component.Tag = instance;
-        
-        return graphicalUiElement;
-    }
-
     private void SetGuideParent(GraphicalUiElement parentIpso, GraphicalUiElement ipso, string guideName)
     {
         // I dont't think we want to do this anymore because it should be handled by the GraphicalUiElement

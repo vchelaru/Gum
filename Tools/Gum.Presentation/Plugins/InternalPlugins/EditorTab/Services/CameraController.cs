@@ -14,13 +14,14 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 /// </summary>
 public class CameraController
 {
+    // Set by Initialize, which each canvas calls right after construction.
     Camera Camera
     {
         get;
         set;
-    }
+    } = null!;
 
-    IZoomController _zoomController;
+    IZoomController _zoomController = null!;
     readonly WheelZoomAccumulator _wheelZoomAccumulator = new();
 
     int _lastMouseX;
@@ -30,7 +31,7 @@ public class CameraController
     bool _isSpacePanning;
 
     public event Action? CameraChanged;
-    IHotkeyManager _hotkeyManager;
+    IHotkeyManager _hotkeyManager = null!;
 
     /// <summary>Whether a middle-button or Space+left-button drag is currently panning the camera.</summary>
     public bool IsPanning => _isPanning;

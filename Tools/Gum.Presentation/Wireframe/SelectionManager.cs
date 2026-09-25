@@ -42,9 +42,10 @@ public class SelectionManager : ISelectionManager
 
     public event Action<IPositionedSizedObject?>? HighlightedIpsoChanged;
 
-    IHighlightOutlineVisual mGraphicalOutline;
+    // Set by Initialize, which the canvas calls before any selection activity.
+    IHighlightOutlineVisual mGraphicalOutline = null!;
 
-    IHighlightOverlayVisual highlightManager;
+    IHighlightOverlayVisual highlightManager = null!;
 
     #endregion
 
@@ -61,9 +62,10 @@ public class SelectionManager : ISelectionManager
     private readonly INineSliceCoordinateRefresher _nineSliceCoordinateRefresher;
     private readonly IPreciseHitTester _preciseHitTester;
 
-    private Layer _overlayLayer;
-    private Camera _camera;
-    private IGumCursorState _cursor;
+    // Set by Initialize, which the canvas calls before any selection activity.
+    private Layer _overlayLayer = null!;
+    private Camera _camera = null!;
+    private IGumCursorState _cursor = null!;
 
     public virtual bool IsOverBody
     {
@@ -478,7 +480,8 @@ public class SelectionManager : ISelectionManager
                 }
                 else
                 {
-                    var elementStack = new List<ElementWithState> { new ElementWithState(_selectedState.SelectedElement) };
+                    // With no element selected the canvas is cleared, so nothing reads this stack entry.
+                    var elementStack = new List<ElementWithState> { new ElementWithState(_selectedState.SelectedElement!) };
                     representationOver = GetRepresentationAt(worldXAt, worldYAt, IsComponentNoInstanceSelected, elementStack);
 
                     if (representationOver != null)
@@ -541,11 +544,11 @@ public class SelectionManager : ISelectionManager
     /// </summary>
     private GumCursorKind ApplyHandlerCursor(GumCursorKind defaultCursor, float worldXAt, float worldYAt)
     {
-        var cursorKind = WireframeEditor.GetCursorToShow(worldXAt, worldYAt);
+        var cursorKind = WireframeEditor?.GetCursorToShow(worldXAt, worldYAt);
         return cursorKind ?? defaultCursor;
     }
 
-    public GraphicalUiElement GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
+    public GraphicalUiElement? GetRepresentationAt(float x, float y, bool trySkipSelected, List<ElementWithState> elementStack)
     {
         GraphicalUiElement? ipsoOver = null;
 
@@ -555,9 +558,9 @@ public class SelectionManager : ISelectionManager
         int indexToStartAt = -1;
         if (trySkipSelected)
         {
-            if (selectedRepresentations?.Length > 0)
+            if (selectedRepresentations?.FirstOrDefault() is { } firstSelected)
             {
-                indexToStartAt = _wireframeObjectManager.AllIpsos.IndexOf(selectedRepresentations.First());
+                indexToStartAt = _wireframeObjectManager.AllIpsos.IndexOf(firstSelected);
             }
         }
         else
@@ -658,9 +661,9 @@ public class SelectionManager : ISelectionManager
         return ipsoOver;
     }
 
-    private GraphicalUiElement ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck, List<ElementWithState> elementStack)
+    private GraphicalUiElement? ReverseLoopToFindIpso(float x, float y, int indexToStartAt, int indexToEndAt, bool visibleToCheck, List<ElementWithState> elementStack)
     {
-        GraphicalUiElement ipsoOver = null;
+        GraphicalUiElement? ipsoOver = null;
 
         if (indexToEndAt < -1)
         {
@@ -758,9 +761,10 @@ public class SelectionManager : ISelectionManager
             // use the Polygon wireframe editor
             SwitchToPolygonEditor();
         }
-        else if (SelectedGues.Count > 0 && SelectedGue?.Tag is ScreenSave == false)
+        // SelectedGue is the first of SelectedGues, so it's non-null whenever any are selected.
+        else if (SelectedGue is { } selectedGue && selectedGue.Tag is ScreenSave == false)
         {
-            var tag = SelectedGue.Tag as ElementSave;
+            var tag = selectedGue.Tag as ElementSave;
 
             if (ObjectFinder.Self.GetRootStandardElementSave(tag)?.Name == "Polygon")
             {
@@ -1179,10 +1183,11 @@ public class SelectionManager : ISelectionManager
                 _camera.ScreenToWorld(_cursor.X, _cursor.Y, out float x, out float y);
 
                 List<ElementWithState> elementStack = new List<ElementWithState>();
-                elementStack.Add(new ElementWithState(_selectedState.SelectedElement));
+                // With no element selected the canvas is cleared, so nothing reads this stack entry.
+                elementStack.Add(new ElementWithState(_selectedState.SelectedElement!));
 
 
-                IRenderableIpso representation =
+                IRenderableIpso? representation =
                     GetRepresentationAt(x, y, _cursor.PrimaryDoubleClick || IsComponentNoInstanceSelected, elementStack);
                 bool hasChanged = true;
 
@@ -1230,7 +1235,7 @@ public class SelectionManager : ISelectionManager
                             representation = _wireframeObjectManager.GetRepresentation(selectedInstance, elementStack);
                         }
                     }
-                    else
+                    else if (selectedElement != null)
                     {
                         _selectedState.SelectedInstance = null;
                         _selectedState.SelectedElement = selectedElement;

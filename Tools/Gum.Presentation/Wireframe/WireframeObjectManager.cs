@@ -90,7 +90,9 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         // to preserve the prior always-on behavior.
         IRenderable? containedObject = _pluginManager.CreateRenderableForType(type);
 
-        return containedObject;
+        // CreateGraphicalComponent handles a null renderable (it falls back to the base type);
+        // the delegate's return type just isn't annotated as nullable.
+        return containedObject!;
     }
 
     #endregion
@@ -306,7 +308,12 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             throw new InvalidOperationException("Cannot apply localization - the LocalizationService doesn't have a localization database loaded");
         }
 
-        var texts = GetTextsRecurisve(RootGue);
+        if (RootGue is not { } rootGue)
+        {
+            return;
+        }
+
+        var texts = GetTextsRecurisve(rootGue);
 
         foreach (var textContainer in texts)
         {
@@ -315,9 +322,9 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     }
 
 
-    public void ApplyLocalization(GraphicalUiElement gue, string forcedId = null)
+    public void ApplyLocalization(GraphicalUiElement gue, string? forcedId = null)
     {
-        var shouldLocalize = _projectState.GumProjectSave.ShowLocalizationInGum;
+        var shouldLocalize = _projectState.GetLoadedProject().ShowLocalizationInGum;
 
         if(shouldLocalize)
         {
@@ -405,7 +412,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
     }
 
-    public GraphicalUiElement[] GetSelectedRepresentations()
+    public GraphicalUiElement?[]? GetSelectedRepresentations()
     {
         if (_selectedState.SelectedIpso == null)
         {
@@ -419,7 +426,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         }
         else if (_selectedState.SelectedElement != null)
         {
-            return new GraphicalUiElement[]
+            return new GraphicalUiElement?[]
             {
                 GetRepresentation(_selectedState.SelectedElement)
             };
@@ -436,7 +443,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// </summary>
     /// <param name="elementSave">The element to search for.</param>
     /// <returns>The matching representation, or null if one isn't found.</returns>
-    public GraphicalUiElement GetRepresentation(ElementSave elementSave)
+    public GraphicalUiElement? GetRepresentation(ElementSave elementSave)
     {
 #if DEBUG
         if (elementSave == null)
@@ -481,10 +488,14 @@ public partial class WireframeObjectManager : IWireframeObjectManager
     /// </summary>
     /// <param name="representation">The representation in question.</param>
     /// <returns>The InstanceSave or null if one isn't found.</returns>
-    public InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, 
+    public InstanceSave? GetInstance(IRenderableIpso representation, InstanceFetchType fetchType, 
         List<ElementWithState> elementStack)
     {
-        ElementSave selectedElement = _selectedState.SelectedElement;
+        ElementSave? selectedElement = _selectedState.SelectedElement;
+        if (selectedElement == null)
+        {
+            return null;
+        }
 
         string prefix = selectedElement.Name + ".";
         // Screens now have parents, so we no longer need to strip prefixes:
@@ -496,7 +507,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         return GetInstance(representation, selectedElement, prefix, fetchType, elementStack);
     }
 
-    public InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer, 
+    public InstanceSave? GetInstance(IRenderableIpso representation, ElementSave? instanceContainer, 
         string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack)
     {
         if (instanceContainer == null)
@@ -504,7 +515,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             return null;
         }
 
-        InstanceSave toReturn = null;
+        InstanceSave? toReturn = null;
 
 
         string qualifiedName = representation.GetAttachmentQualifiedName(elementStack);
@@ -526,7 +537,12 @@ public partial class WireframeObjectManager : IWireframeObjectManager
         {
             foreach (InstanceSave instanceSave in instanceContainer.Instances)
             {
-                ElementSave instanceElement = instanceSave.GetBaseElementSave();
+                ElementSave? instanceElement = instanceSave.GetBaseElementSave();
+                // An instance of a missing type has no instances to search.
+                if (instanceElement == null)
+                {
+                    continue;
+                }
 
                 bool alreadyInStack = elementStack.Any(item => item.Element == instanceElement);
 
@@ -561,7 +577,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     private string StripGuideOrParentNameIfNecessaryName(string qualifiedName, IRenderableIpso representation)
     {
-        foreach (NamedRectangle rectangle in ObjectFinder.Self.GumProjectSave.Guides)
+        foreach (NamedRectangle rectangle in ObjectFinder.Self.GumProjectSave?.Guides ?? new List<GuideRectangle>())
         {
             if (qualifiedName.StartsWith(rectangle.Name + "."))
             {
@@ -569,12 +585,12 @@ public partial class WireframeObjectManager : IWireframeObjectManager
             }
         }
 
-        if (representation.Parent != null && representation.Parent.Tag is InstanceSave && representation.Tag is InstanceSave)
+        if (representation.Parent?.Tag is InstanceSave parentInstance && representation.Tag is InstanceSave instance)
         {
             // strip this off!
-            if ((representation.Parent.Tag as InstanceSave).ParentContainer == (representation.Tag as InstanceSave).ParentContainer)
+            if (parentInstance.ParentContainer == instance.ParentContainer)
             {
-                string whatToTakeOff = (representation.Parent.Tag as InstanceSave).Name + ".";
+                string whatToTakeOff = parentInstance.Name + ".";
 
                 int index = qualifiedName.IndexOf(whatToTakeOff);
 
@@ -590,7 +606,7 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     public bool IsRepresentation(IPositionedSizedObject ipso) => AllIpsos.Contains(ipso);
 
-    public ElementSave GetElement(IPositionedSizedObject representation)
+    public ElementSave? GetElement(IPositionedSizedObject representation)
     {
         if (_selectedState.SelectedElement != null &&
             _selectedState.SelectedElement.Name == representation.Name)

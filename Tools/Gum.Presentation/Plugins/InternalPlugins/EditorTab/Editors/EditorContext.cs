@@ -205,6 +205,13 @@ public class EditorContext
         {
             throw new System.InvalidOperationException("The SelectedStateSave is null, this should not happen");
         }
+        if (selectedElement == null)
+        {
+            throw new System.InvalidOperationException("The SelectedElement is null, this should not happen");
+        }
+        // The push that started this edit recorded the state, since edits only start with a state selected.
+        var grabbedStateSave = GrabbedState.StateSave ??
+            throw new System.InvalidOperationException("The GrabbedState has no StateSave, this should not happen");
 
         FileCommands.TryAutoSaveElement(selectedElement);
 
@@ -212,11 +219,11 @@ public class EditorContext
 
         GuiCommands.RefreshVariableValues();
 
-        var element = SelectedState.SelectedElement;
+        var element = selectedElement;
 
         foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
         {
-            var oldValue = GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
+            var oldValue = grabbedStateSave.GetValue(possiblyChangedVariable.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
             {
@@ -234,7 +241,7 @@ public class EditorContext
 
         foreach (var possiblyChangedVariableList in stateSave.VariableLists)
         {
-            var oldValue = GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+            var oldValue = grabbedStateSave.GetVariableListSave(possiblyChangedVariableList.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
@@ -246,7 +253,7 @@ public class EditorContext
         HasChangedAnythingSinceLastPush = false;
     }
 
-    private bool DoValuesDiffer(DataTypes.Variables.StateSave newStateSave, string variableName, object oldValue)
+    private bool DoValuesDiffer(DataTypes.Variables.StateSave newStateSave, string variableName, object? oldValue)
     {
         var newValue = newStateSave.GetValue(variableName);
         if (newValue == null && oldValue != null)
@@ -266,37 +273,37 @@ public class EditorContext
         {
             if (oldValue is float oldFloat)
             {
-                var newFloat = (float)newValue;
+                var newFloat = (float)newValue!;
                 return oldFloat != newFloat;
             }
             else if (oldValue is string)
             {
-                return (string)oldValue != (string)newValue;
+                return (string)oldValue != (string?)newValue;
             }
             else if (oldValue is bool)
             {
-                return (bool)oldValue != (bool)newValue;
+                return (bool)oldValue != (bool)newValue!;
             }
             else if (oldValue is int)
             {
-                return (int)oldValue != (int)newValue;
+                return (int)oldValue != (int)newValue!;
             }
             else if (oldValue is System.Numerics.Vector2)
             {
-                return (System.Numerics.Vector2)oldValue != (System.Numerics.Vector2)newValue;
+                return (System.Numerics.Vector2)oldValue != (System.Numerics.Vector2)newValue!;
             }
             else if (oldValue is System.Collections.IList oldList)
             {
-                return AreListsSame(oldList, (System.Collections.IList)newValue);
+                return AreListsSame(oldList, (System.Collections.IList?)newValue);
             }
             else
             {
-                return oldValue.Equals(newValue) == false;
+                return oldValue!.Equals(newValue) == false;
             }
         }
     }
 
-    private bool AreListsSame(System.Collections.IList oldList, System.Collections.IList newList)
+    private bool AreListsSame(System.Collections.IList? oldList, System.Collections.IList? newList)
     {
         if (oldList == null && newList == null)
         {
@@ -309,7 +316,7 @@ public class EditorContext
 
         for (int i = 0; i < oldList.Count; i++)
         {
-            if (oldList[i].Equals(newList[i]) == false)
+            if (Equals(oldList[i], newList[i]) == false)
             {
                 return false;
             }

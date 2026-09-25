@@ -9,7 +9,7 @@
     {
         #region Fields/Properties
 
-        static TimeManager mSelf;
+        static TimeManager? mSelf;
 
         System.Diagnostics.Stopwatch mStopWatch;
 
@@ -50,6 +50,7 @@
         }
 
 
+        [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mStopWatch))]
         void InitializeStopwatch()
         {
             mStopWatch = new System.Diagnostics.Stopwatch();

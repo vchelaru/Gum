@@ -28,6 +28,11 @@ public abstract class InputHandlerBase : IInputHandler
         {
             return false;
         }
+        // Selecting a category (rather than a state) leaves no state for an edit to write to.
+        if (Context.SelectedState.SelectedStateSave == null)
+        {
+            return false;
+        }
         if (HasCursorOver(worldX, worldY))
         {
             IsActive = true;

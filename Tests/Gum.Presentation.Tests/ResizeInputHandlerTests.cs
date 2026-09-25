@@ -1,5 +1,6 @@
 using Gum.DataTypes;
 using Gum.Input;
+using Gum.ToolStates;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Handlers;
 using Gum.Wireframe.Editors.Visuals;
@@ -30,7 +31,12 @@ public class ResizeInputHandlerTests
         var wireframeObjectManager = new Mock<IWireframeObjectManager>();
         wireframeObjectManager.Setup(w => w.GetRepresentation(It.IsAny<ElementSave>())).Returns(new GraphicalUiElement());
 
+        // The resize handles only show for a selection on the selected element's canvas.
+        var selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(s => s.SelectedElement).Returns(new ComponentSave { Name = "Component" });
+
         var context = EditorContextTestHelper.Create(
+            selectedState: selectedState.Object,
             wireframeObjectManager: wireframeObjectManager.Object,
             cursor: mockCursor.Object);
 
