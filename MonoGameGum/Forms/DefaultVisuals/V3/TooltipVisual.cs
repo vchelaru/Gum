@@ -153,5 +153,5 @@ public class TooltipVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed <see cref="Tooltip"/> Forms control backing this visual.
     /// </summary>
-    public Tooltip FormsControl => (Tooltip)FormsControlAsObject;
+    public Tooltip FormsControl => (Tooltip)FormsControlAsObject!;
 }

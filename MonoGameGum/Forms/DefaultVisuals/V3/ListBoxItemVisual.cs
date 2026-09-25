@@ -271,5 +271,5 @@ public class ListBoxItemVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ListBoxItem Forms control backing this visual.
     /// </summary>
-    public ListBoxItem FormsControl => (ListBoxItem)FormsControlAsObject;
+    public ListBoxItem FormsControl => (ListBoxItem)FormsControlAsObject!;
 }

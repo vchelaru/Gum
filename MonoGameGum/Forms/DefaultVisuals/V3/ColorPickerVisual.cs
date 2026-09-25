@@ -42,7 +42,7 @@ public class ColorPickerVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ColorPicker Forms control backing this visual.
     /// </summary>
-    public ColorPicker FormsControl => (ColorPicker)FormsControlAsObject;
+    public ColorPicker FormsControl => (ColorPicker)FormsControlAsObject!;
 
     /// <summary>
     /// Creates a new ColorPickerVisual, optionally building the backing Forms control.

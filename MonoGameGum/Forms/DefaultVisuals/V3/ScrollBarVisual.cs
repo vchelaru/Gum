@@ -362,5 +362,5 @@ public class ScrollBarVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ScrollBar Forms control backing this visual.
     /// </summary>
-    public ScrollBar FormsControl => (ScrollBar)this.FormsControlAsObject;
+    public ScrollBar FormsControl => (ScrollBar)this.FormsControlAsObject!;
 }

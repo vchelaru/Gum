@@ -365,5 +365,5 @@ public class RadioButtonVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed RadioButton Forms control backing this visual.
     /// </summary>
-    public RadioButton FormsControl => (RadioButton)FormsControlAsObject;
+    public RadioButton FormsControl => (RadioButton)FormsControlAsObject!;
 }

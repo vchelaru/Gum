@@ -262,5 +262,5 @@ public class WindowVisual : InteractiveGue
         this.Height = bottomMargin;
     }
 
-    public Window FormsControl => (Window)FormsControlAsObject;
+    public Window FormsControl => (Window)FormsControlAsObject!;
 }

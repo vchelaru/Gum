@@ -22,6 +22,6 @@ namespace Gum.Forms.DefaultVisuals.V3
         /// <summary>
         /// Returns the strongly-typed TextBox Forms control backing this visual.
         /// </summary>
-        public TextBox FormsControl => (TextBox)FormsControlAsObject;
+        public TextBox FormsControl => (TextBox)FormsControlAsObject!;
     }
 }

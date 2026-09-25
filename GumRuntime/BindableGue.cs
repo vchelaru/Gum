@@ -22,7 +22,7 @@ public class BindableGue : GraphicalUiElement
     /// Deprecated. Use <see cref="GraphicalUiElement.ConvertValue"/> instead.
     /// </summary>
     [Obsolete("Use GraphicalUiElement.ConvertValue instead.")]
-    public static new object ConvertValue(object value, Type desiredType, string format)
+    public static new object? ConvertValue(object? value, Type desiredType, string? format)
         => GraphicalUiElement.ConvertValue(value, desiredType, format);
 }
 #endif

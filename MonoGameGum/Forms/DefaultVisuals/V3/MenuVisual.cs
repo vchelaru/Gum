@@ -133,5 +133,5 @@ public class MenuVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed Menu Forms control backing this visual.
     /// </summary>
-    public Menu FormsControl => (Menu)FormsControlAsObject;
+    public Menu FormsControl => (Menu)FormsControlAsObject!;
 }

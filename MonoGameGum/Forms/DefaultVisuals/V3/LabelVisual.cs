@@ -52,5 +52,5 @@ public class LabelVisual : TextRuntime
     /// <summary>
     /// Returns the strongly-typed Label Forms control backing this visual.
     /// </summary>
-    public Label FormsControl => (Label)FormsControlAsObject;
+    public Label FormsControl => (Label)FormsControlAsObject!;
 }

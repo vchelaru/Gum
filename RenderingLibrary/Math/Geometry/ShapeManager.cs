@@ -65,7 +65,7 @@ namespace RenderingLibrary.Math.Geometry
             Add(lineRectangle, Renderer.LayersWritable[0]);
         }
 
-        public void Add(LineRectangle lineRectangle, Layer layer)
+        public void Add(LineRectangle lineRectangle, Layer? layer)
         {
             if (layer == null)
             {
@@ -116,7 +116,7 @@ namespace RenderingLibrary.Math.Geometry
             Add(lineCircle, Renderer.LayersWritable[0]);
         }
             
-        public void Add(LineCircle lineCircle, Layer layer)
+        public void Add(LineCircle lineCircle, Layer? layer)
         {
             mCircles.Add(lineCircle);
 
@@ -133,7 +133,7 @@ namespace RenderingLibrary.Math.Geometry
             Add(linePolygon, Renderer.LayersWritable[0]);
         }
 
-        public void Add(LinePolygon linePolygon, Layer layer)
+        public void Add(LinePolygon linePolygon, Layer? layer)
         {
             mLinePolygons.Add(linePolygon);
 

@@ -19,7 +19,7 @@ public struct TagInfo
     /// The index that this tag begins after tags have been stripped from the text.
     /// </summary>
     public int StartStrippedIndex;
-    public string Argument;
+    public string? Argument;
 
     // even though FoundTag has Name, we add the name here so we can
     // sort open/close in one list
@@ -89,7 +89,7 @@ public static class BbCodeParser
         public int StartIndex;
         public int Count;
         public string Name;
-        public string Argument;
+        public string? Argument;
         public int StartStrippedIndex;
 
         public override string ToString()

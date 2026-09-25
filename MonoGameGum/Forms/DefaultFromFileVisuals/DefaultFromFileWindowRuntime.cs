@@ -21,5 +21,5 @@ public class DefaultFromFileWindowRuntime : InteractiveGue
         }
     }
 
-    public Window FormsControl => (Window)FormsControlAsObject;
+    public Window FormsControl => (Window)FormsControlAsObject!;
 }

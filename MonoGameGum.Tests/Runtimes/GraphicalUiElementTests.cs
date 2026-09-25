@@ -2369,4 +2369,45 @@ public class GraphicalUiElementTests : BaseTestClass
     }
 
     #endregion
+
+    [Fact]
+    public void Z_SetOnElementWithoutRenderable_DoesNotThrow()
+    {
+        // A GraphicalUiElement created with no contained renderable (like a Screen) reports Z as 0.
+        GraphicalUiElement element = new GraphicalUiElement();
+
+        Should.NotThrow(() => element.Z = 3);
+        element.Z.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UpdateLayout_ElementWithoutRenderableSizedToTextChild_DoesNotThrow()
+    {
+        // Like a Screen: no contained renderable, children attached through ElementGueContainingThis.
+        GraphicalUiElement element = new GraphicalUiElement();
+        element.WidthUnits = Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+        TextRuntime text = new TextRuntime();
+        text.ElementGueContainingThis = element;
+
+        Should.NotThrow(() => element.UpdateLayout());
+    }
+
+    [Fact]
+    public void SetInitialState_ElementCreatedInCode_DoesNotThrow()
+    {
+        GraphicalUiElement element = new GraphicalUiElement();
+
+        Should.NotThrow(() => element.SetInitialState());
+    }
+
+    [Fact]
+    public void ApplyState_ParentVariableOnElementCreatedInCode_DoesNotThrow()
+    {
+        ContainerRuntime element = new ContainerRuntime();
+        StateSave state = new StateSave();
+        state.Variables.Add(new VariableSave { Name = "Parent", Type = "string", Value = "Missing", SetsValue = true });
+        state.Variables.Add(new VariableSave { Name = "Child.Parent", Type = "string", Value = "Missing", SetsValue = true });
+
+        Should.NotThrow(() => element.ApplyState(state));
+    }
 }

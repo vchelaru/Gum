@@ -353,6 +353,6 @@ public class ComboBoxVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ComboBox Forms control backing this visual.
     /// </summary>
-    public ComboBox FormsControl => (ComboBox)FormsControlAsObject;
+    public ComboBox FormsControl => (ComboBox)FormsControlAsObject!;
 
 }

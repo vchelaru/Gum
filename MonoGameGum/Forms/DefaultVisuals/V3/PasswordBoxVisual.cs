@@ -22,6 +22,6 @@ namespace Gum.Forms.DefaultVisuals.V3
         /// <summary>
         /// Returns the strongly-typed PasswordBox Forms control backing this visual.
         /// </summary>
-        public PasswordBox FormsControl => (PasswordBox)FormsControlAsObject;
+        public PasswordBox FormsControl => (PasswordBox)FormsControlAsObject!;
     }
 }

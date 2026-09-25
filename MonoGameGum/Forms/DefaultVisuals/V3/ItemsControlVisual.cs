@@ -29,5 +29,5 @@ public class ItemsControlVisual : ScrollViewerVisual
     /// <summary>
     /// Returns the strongly-typed ItemsControl Forms control backing this visual.
     /// </summary>
-    public new ItemsControl? FormsControl => (ItemsControl)FormsControlAsObject;
+    public new ItemsControl? FormsControl => (ItemsControl)FormsControlAsObject!;
 }

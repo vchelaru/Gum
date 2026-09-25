@@ -403,5 +403,5 @@ public class CheckBoxVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed CheckBox Forms control backing this visual.
     /// </summary>
-    public CheckBox FormsControl => (CheckBox)FormsControlAsObject;
+    public CheckBox FormsControl => (CheckBox)FormsControlAsObject!;
 }

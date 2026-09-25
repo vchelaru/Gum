@@ -1784,4 +1784,34 @@ char id=67 x=0 y=0 width={xadvance} height=13 xoffset=0 yoffset=4 xadvance={xadv
 
     #endregion
 
+
+    [Theory]
+    [InlineData("[Red]Hi[/Red]")]
+    [InlineData("[Red=abc]Hi[/Red]")]
+    [InlineData("[Color]Hi[/Color]")]
+    public void Text_ColorTagWithMissingOrInvalidArgument_IsIgnored(string bbCode)
+    {
+        TextRuntime text = new();
+
+        Should.NotThrow(() => text.Text = bbCode);
+
+        ((Text)text.RenderableComponent!).RawText.ShouldBe("Hi");
+    }
+
+    [Fact]
+    public void FontSize_SetWithoutFontAssignedInConstructor_DoesNotThrow()
+    {
+        TextRuntime.AssignFontInConstructor = false;
+        try
+        {
+            TextRuntime text = new();
+
+            Should.NotThrow(() => text.FontSize = 24);
+            Should.NotThrow(() => text.Text = "[FontSize=30]Hi[/FontSize]");
+        }
+        finally
+        {
+            TextRuntime.AssignFontInConstructor = true;
+        }
+    }
 }

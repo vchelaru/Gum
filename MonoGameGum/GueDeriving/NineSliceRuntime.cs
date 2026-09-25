@@ -101,7 +101,7 @@ public class NineSliceRuntime : InteractiveGue
     // #if XNALIKE gate. The backend-neutral Blend? property below is the unified API;
     // exposing the Microsoft.Xna.Framework BlendState type cannot be done on Raylib/Skia.
     // Mirrors SpriteRuntime, which made the same call.
-    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState? BlendState
     {
         get => ContainedNineSlice.BlendState.ToXNA();
         set

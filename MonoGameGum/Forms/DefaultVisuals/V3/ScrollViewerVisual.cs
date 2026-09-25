@@ -455,5 +455,5 @@ public class ScrollViewerVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ScrollViewer Forms control backing this visual.
     /// </summary>
-    public ScrollViewer FormsControl => (ScrollViewer)this.FormsControlAsObject;
+    public ScrollViewer FormsControl => (ScrollViewer)this.FormsControlAsObject!;
 }

@@ -135,7 +135,7 @@ public class SpriteRuntime : GraphicalUiElement
     /// <summary>
     /// The XNA/MonoGame BlendState used for rendering the sprite.
     /// </summary>
-    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState? BlendState
     {
         get => ContainedSprite.BlendState.ToXNA();
         set

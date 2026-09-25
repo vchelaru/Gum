@@ -41,9 +41,9 @@ public static class BlendExtensions
 
 #if FRB
     // FRB uses generated code which is harder to upgrade, so we will keep this signature the same here
-    public static Blend ToBlend(this BlendState blendState)
+    public static Blend ToBlend(this BlendState? blendState)
 #else
-    public static Blend? ToBlend(this BlendState blendState)
+    public static Blend? ToBlend(this BlendState? blendState)
 #endif
     {
         if (blendState == BlendState.NonPremultiplied)

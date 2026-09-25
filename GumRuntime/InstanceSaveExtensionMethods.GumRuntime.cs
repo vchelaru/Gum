@@ -9,7 +9,8 @@ namespace GumRuntime
     public static class InstanceSaveExtensionMethods
     {
 
-        public static GraphicalUiElement ToGraphicalUiElement(this InstanceSave instanceSave, ISystemManagers systemManagers)
+        /// <returns>The created element, or null if the instance BaseType is not in the project.</returns>
+        public static GraphicalUiElement? ToGraphicalUiElement(this InstanceSave instanceSave, ISystemManagers systemManagers)
         {
 #if FULL_DIAGNOSTICS
             if (ObjectFinder.Self.GumProjectSave == null)
@@ -17,18 +18,20 @@ namespace GumRuntime
                 throw new InvalidOperationException("You need to set the ObjectFinder's GumProjectSave first so it can track references");
             }
 #endif
-            ElementSave instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+            ElementSave? instanceElement = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
-            GraphicalUiElement toReturn = null;
+            GraphicalUiElement? toReturn = null;
             if (instanceElement != null)
             {
-                string genericType = null;
+                string? genericType = null;
 
 
                 if(instanceElement.Name == "Container" && instanceElement is StandardElementSave)
                 {
-                    genericType = instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "ContainedType") ??
-                        instanceSave.ParentContainer.DefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
+                    // Instances being created belong to a loaded element, which has a default state.
+                    var containerDefaultState = instanceSave.ParentContainer!.DefaultState!;
+                    genericType = containerDefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "ContainedType") ??
+                        containerDefaultState.GetValueOrDefault<string>(instanceSave.Name + "." + "Contained Type");
                 }
 
                 toReturn = ElementSaveExtensions.ToGraphicalUiElement(instanceElement, systemManagers, 
