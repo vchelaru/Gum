@@ -43,13 +43,23 @@ public static class AvaloniaMouseMapping
     public static GumMouseEventArgs ToGumWheelEventArgs(this PointerWheelEventArgs e, Visual relativeTo)
     {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(relativeTo, PointerUpdateKind.Other);
-        WheelSource source = !OperatingSystem.IsMacOS() ? WheelSource.Wheel
-            : MacScrollEvent.IsCurrentEventPrecise() ? WheelSource.MacTrackpad
-            : WheelSource.MacMouseWheel;
+        WheelSource source = WheelSource.Wheel;
+        if (OperatingSystem.IsMacOS())
+        {
+            MacScrollEvent.ReadCurrentEvent(out bool isPrecise, out bool hasGesturePhase);
+            source = GetMacWheelSource(isPrecise, hasGesturePhase);
+        }
         double dpiScale = TopLevel.GetTopLevel(relativeTo)?.RenderScaling ?? 1.0;
         ApplyWheelDelta(args, e.Delta, e.KeyModifiers, source, dpiScale);
         return args;
     }
+
+    /// <summary>
+    /// Classifies a macOS scroll event. Only a trackpad or Magic Mouse gesture carries a phase;
+    /// remote-desktop tools inject a mouse wheel's clicks as precise scrolls with none.
+    /// </summary>
+    public static WheelSource GetMacWheelSource(bool isPrecise, bool hasGesturePhase) =>
+        isPrecise && hasGesturePhase ? WheelSource.MacTrackpad : WheelSource.MacMouseWheel;
 
     /// <summary>
     /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
@@ -110,6 +120,6 @@ public enum WheelSource
     Wheel,
     /// <summary>A mouse wheel on macOS: one event per click, delta scaled by acceleration.</summary>
     MacMouseWheel,
-    /// <summary>A precise-delta device on macOS (trackpad, Magic Mouse).</summary>
+    /// <summary>A gesture on a precise-delta device on macOS (trackpad, Magic Mouse).</summary>
     MacTrackpad,
 }

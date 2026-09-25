@@ -63,6 +63,16 @@ public class AvaloniaWheelMappingTests
         fastClick.Delta.ShouldBe(-120);
     }
 
+    [Theory]
+    [InlineData(true, true, WheelSource.MacTrackpad)]
+    [InlineData(true, false, WheelSource.MacMouseWheel)]
+    [InlineData(false, false, WheelSource.MacMouseWheel)]
+    public void GetMacWheelSource_PanOnlyForPreciseEventsWithAGesturePhase(bool isPrecise, bool hasGesturePhase, WheelSource expected)
+    {
+        // Remote desktop injects precise pixel scrolls with no gesture phase for mouse-wheel clicks.
+        AvaloniaMouseMapping.GetMacWheelSource(isPrecise, hasGesturePhase).ShouldBe(expected);
+    }
+
     [Fact]
     public void PinchToWheelDelta_ZoomsOneNotchPerFifteenPercentOfPinch()
     {
