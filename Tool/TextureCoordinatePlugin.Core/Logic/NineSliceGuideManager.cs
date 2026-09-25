@@ -1,4 +1,5 @@
 using FlatRedBall.SpecializedXnaControls.RegionSelection;
+using Gum.Services;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
@@ -14,11 +15,17 @@ public class NineSliceGuideManager : IVisualOverlayManager
     // [2] - top horizontal line
     // [3] - bottom horizontal line
     private readonly Line[] _nineSliceGuideLines = new Line[4];
+    private readonly ICanvasDisplayScale _displayScale;
 
     public bool ShowGuides { get; set; }
     public Texture2D CurrentTexture { get; set; }
     public RectangleSelector Selector { get; set; }
     public float? CustomFrameWidth { get; set; }
+
+    public NineSliceGuideManager(ICanvasDisplayScale displayScale)
+    {
+        _displayScale = displayScale;
+    }
 
     public void Initialize(SystemManagers systemManagers)
     {
@@ -44,6 +51,7 @@ public class NineSliceGuideManager : IVisualOverlayManager
         for (int i = 0; i < 4; i++)
         {
             _nineSliceGuideLines[i].Visible = ShowGuides;
+            _nineSliceGuideLines[i].LinePixelWidth = _displayScale.DisplayScale;
         }
 
         // todo - this hasn't been tested extensively to make sure it aligns

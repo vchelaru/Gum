@@ -424,11 +424,23 @@ public class ImageRegionSelectionCore
     /// so this stands in for the WinForms <c>Control.DoubleClick</c> the control used to expose.
     /// </summary>
     public event EventHandler? DoubleClick;
+
+    /// <summary>
+    /// Raised when <see cref="DisplayScale"/> changes, such as when the window moves to a monitor
+    /// with a different scale.
+    /// </summary>
+    public event Action? DisplayScaleChanged;
     #endregion
 
     #region Methods
 
     private readonly ICanvasHost _host;
+
+    /// <summary>
+    /// The host's OS display scale (1 at 100%), read every frame. The selectors size their strokes
+    /// and handles by it.
+    /// </summary>
+    public float DisplayScale { get; private set; } = 1;
 
     /// <summary>Creates the canvas over its host control and initializes rendering.</summary>
     public ImageRegionSelectionCore(ICanvasHost host)
@@ -534,6 +546,7 @@ public class ImageRegionSelectionCore
         newSelector.CanChangeY = canChangeY;
         newSelector.CanChangeWidth = canChangeWidth;
         newSelector.CanChangeHeight = canChangeHeight;
+        newSelector.DisplayScale = DisplayScale;
 
         mRectangleSelectors.Add(newSelector);
 
@@ -576,6 +589,8 @@ public class ImageRegionSelectionCore
 
     void PerformActivity()
     {
+        UpdateDisplayScale();
+
         mTimeManager.Activity();
 
         mCursor.Activity(mTimeManager.CurrentTime);
@@ -589,6 +604,23 @@ public class ImageRegionSelectionCore
                 item.Activity(mCursor, mKeyboard, mInputHost);
             }
         }
+    }
+
+    // Read every frame so the overlay follows the window to a monitor with a different scale.
+    private void UpdateDisplayScale()
+    {
+        float hostScale = (float)_host.DisplayScale;
+        if (hostScale == DisplayScale)
+        {
+            return;
+        }
+
+        DisplayScale = hostScale;
+        foreach (var selector in mRectangleSelectors)
+        {
+            selector.DisplayScale = hostScale;
+        }
+        DisplayScaleChanged?.Invoke();
     }
 
     /// <summary>The host calls this with the render target bound and cleared.</summary>

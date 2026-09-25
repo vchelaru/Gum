@@ -85,7 +85,7 @@ public class WireframeEditorCursorTests
             new Camera(),
             Mock.Of<IGumCursorState>(),
             Mock.Of<IPluginManager>(),
-            new Gum.Plugins.InternalPlugins.EditorTab.Services.CanvasDisplayScale());
+            new Gum.Services.CanvasDisplayScale());
     }
 
     private static Mock<IInputHandler> CreateHandlerMock(int priority, GumCursorKind? cursorToShow)

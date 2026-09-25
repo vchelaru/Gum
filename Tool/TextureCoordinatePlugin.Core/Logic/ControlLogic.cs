@@ -57,6 +57,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
     private readonly LineGridManager _lineGridManager;
     private readonly NineSliceGuideManager _nineSliceGuideManager;
     private readonly TextureOutlineManager _textureOutlineManager;
+    private readonly CanvasDisplayScale _displayScale = new CanvasDisplayScale();
 
     bool _isSnapToGridEnabled;
     int _snapToGridSize;
@@ -109,8 +110,8 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         _backgroundManager = new BackgroundManager(messenger, themingService);
         _lineGridManager = new LineGridManager();
-        _nineSliceGuideManager = new NineSliceGuideManager();
-        _textureOutlineManager = new TextureOutlineManager();
+        _nineSliceGuideManager = new NineSliceGuideManager(_displayScale);
+        _textureOutlineManager = new TextureOutlineManager(_displayScale);
     }
 
     public IPluginTab CreateControl(ITextureCoordinateView view, object dataContext, IList<int> availableZoomLevels)
@@ -122,6 +123,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         innerControl.StartRegionChanged += HandleStartRegionChanged;
         innerControl.RegionChanged += HandleRegionChanged;
         innerControl.EndRegionChanged += HandleEndRegionChanged;
+        innerControl.DisplayScaleChanged += HandleDisplayScaleChanged;
         _view.KeyDown += HandleKeyDown;
         _view.KeyUp += HandleKeyUp;
         _view.MouseDown += HandleMouseDown;
@@ -160,6 +162,13 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         {
             UpdateScrollBarsToTexture();
         };
+    }
+
+    private void HandleDisplayScaleChanged()
+    {
+        _displayScale.DisplayScale = _view.Canvas.DisplayScale;
+        _textureOutlineManager.Refresh();
+        _nineSliceGuideManager.Refresh();
     }
 
     private void HandleCameraChanged()
