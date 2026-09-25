@@ -191,7 +191,14 @@ namespace RenderingLibrary.Math.Geometry
             mVectors[index] = point;
         }
 
-        public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers, 
+        /// <summary>
+        /// Y scale that stretches a source region <paramref name="sourceHeight"/> texels tall to a line
+        /// <paramref name="linePixelWidth"/> screen pixels thick, independent of camera zoom.
+        /// </summary>
+        internal static float GetThicknessScale(float linePixelWidth, float cameraZoom, int sourceHeight) =>
+            linePixelWidth / cameraZoom / sourceHeight;
+
+        public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers,
             Texture2D textureToUse, float repetitionsPerLength, System.Drawing.Rectangle? sourceRectangle = null, float rotation = 0)
         {
             if (mVectors.Count < 2)
@@ -262,8 +269,8 @@ namespace RenderingLibrary.Math.Geometry
                 if(sourceRectangle != null)
                 {
                     sourceRectangleToUse = sourceRectangle;
-                    // do nothing
-                    scale = new Vector2(distance / sourceRectangle.Value.Width, 1 / sourceRectangle.Value.Height);
+                    scale = new Vector2(distance / sourceRectangle.Value.Width,
+                        GetThicknessScale(LinePixelWidth, renderer.CurrentZoom, sourceRectangle.Value.Height));
                 }
                 else if (repetitionsPerLength == 0)
                 {
