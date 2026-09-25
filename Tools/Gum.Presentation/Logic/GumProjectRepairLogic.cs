@@ -236,7 +236,8 @@ public class GumProjectRepairLogic : IGumProjectRepairLogic
             List<VariableSave> newVariables = new List<VariableSave>();
             foreach (string variableName in variableNames)
             {
-                VariableSave matchingVariable = state.Variables.FirstOrDefault(item => item.Name == variableName);
+                // variableNames came from these variables, so each name has a match.
+                VariableSave matchingVariable = state.Variables.First(item => item.Name == variableName);
                 newVariables.Add(matchingVariable);
             }
 

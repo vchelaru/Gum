@@ -59,7 +59,9 @@ public class ReorderLogic : IReorderLogic
                     else if(behavior != null && instance is BehaviorInstanceSave behaviorInstance)
                     {
                         behavior.RequiredInstances.Remove(behaviorInstance);
-                        var nextSiblingIndexInContainer = behavior.RequiredInstances.IndexOf(nextSibling as BehaviorInstanceSave);
+                        var nextSiblingIndexInContainer = nextSibling is BehaviorInstanceSave nextBehaviorSibling
+                            ? behavior.RequiredInstances.IndexOf(nextBehaviorSibling)
+                            : -1;
                         behavior.RequiredInstances.Insert(nextSiblingIndexInContainer + 1, behaviorInstance);
                     }
                     RefreshInResponseToReorder(instance);
@@ -97,7 +99,9 @@ public class ReorderLogic : IReorderLogic
                     else if(behavior != null && instance is BehaviorInstanceSave behaviorInstance)
                     {
                         behavior.RequiredInstances.Remove(behaviorInstance);
-                        var previousSiblingIndexInContainer = behavior.RequiredInstances.IndexOf(previousSibling as BehaviorInstanceSave);
+                        var previousSiblingIndexInContainer = previousSibling is BehaviorInstanceSave previousBehaviorSibling
+                            ? behavior.RequiredInstances.IndexOf(previousBehaviorSibling)
+                            : -1;
                         behavior.RequiredInstances.Insert(previousSiblingIndexInContainer, behaviorInstance);
                     }
 
@@ -179,7 +183,9 @@ public class ReorderLogic : IReorderLogic
                 else if(behavior != null && whatToInsert is BehaviorInstanceSave behaviorInstance)
                 {
                     behavior.RequiredInstances.Remove(behaviorInstance);
-                    int whereToInsert = behavior.RequiredInstances.IndexOf(whatToMoveInFrontOf as BehaviorInstanceSave) + 1;
+                    int whereToInsert = (whatToMoveInFrontOf is BehaviorInstanceSave behaviorInstanceInFront
+                        ? behavior.RequiredInstances.IndexOf(behaviorInstanceInFront)
+                        : -1) + 1;
                     behavior.RequiredInstances.Insert(whereToInsert, behaviorInstance);
                     RefreshInResponseToReorder(whatToMoveInFrontOf);
                 }

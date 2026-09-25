@@ -76,4 +76,16 @@ public class CopyPasteLogicDestinationTests : BaseTestClass
         InstanceSave pasted = _component.Instances.Single(i => i != _container && i != _copied);
         _component.DefaultState.GetValue($"{pasted.Name}.Parent").ShouldBe("Container");
     }
+
+    [Fact]
+    public void OnPaste_StateWithNoCategorySelected_LeavesTheElementUnchanged()
+    {
+        // The Default state is uncategorized, so selecting it leaves no category selected.
+        _copyPasteLogic.OnCopy(CopyType.State);
+
+        _copyPasteLogic.OnPaste(CopyType.State);
+
+        _component.States.Count.ShouldBe(1);
+        _component.Categories.ShouldBeEmpty();
+    }
 }

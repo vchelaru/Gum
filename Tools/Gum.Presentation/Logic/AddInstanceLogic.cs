@@ -65,7 +65,8 @@ public class AddInstanceLogic : IAddInstanceLogic
         InstanceSave? newInstance = container switch
         {
             BehaviorSave behavior => AddToBehavior(elementToAdd, behavior, name),
-            InstanceSave parent => AddToElement(elementToAdd, parent.ParentContainer, parent, name, position),
+            // GetErrorMessage rejected a parent with no element (a behavior's instance).
+            InstanceSave parent => AddToElement(elementToAdd, parent.ParentContainer!, parent, name, position),
             _ => AddToElement(elementToAdd, (ElementSave)container!, null, name, position),
         };
 

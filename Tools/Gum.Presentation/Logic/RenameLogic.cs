@@ -58,9 +58,9 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
     #region StateSave
 
-    public void RenameState(StateSave stateSave, StateSaveCategory category, string newName, bool applyRefactoringChanges = true)
+    public void RenameState(StateSave stateSave, StateSaveCategory? category, string newName, bool applyRefactoringChanges = true)
     {
-        if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string whyNotValid))
+        if (!_nameVerifier.IsStateNameValid(newName, category, stateSave, out string? whyNotValid))
         {
             _dialogService.ShowMessage(whyNotValid);
         }
@@ -155,7 +155,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             GetUserStringOptions elemOptions = new()
             {
                 InitialValue = category.Name,
-                Validator = v => _nameVerifier.IsCategoryNameValid(v, elementSave, out string whyNotValid, category) ? null : whyNotValid
+                Validator = v => _nameVerifier.IsCategoryNameValid(v, elementSave, out string? whyNotValid, category) ? null : whyNotValid
             };
             string elemOldName = category.Name;
             var elemChanges = GetChangesForRenamedCategory(elementSave, category, elemOldName);
@@ -180,7 +180,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             GetUserStringOptions options = new()
             {
                 InitialValue = category.Name,
-                Validator = v => _nameVerifier.IsCategoryNameValid(v, behaviorSave, out string whyNotValid, category) ? null : whyNotValid
+                Validator = v => _nameVerifier.IsCategoryNameValid(v, behaviorSave, out string? whyNotValid, category) ? null : whyNotValid
             };
 
             if (_dialogService.GetUserString(message, title, options) is { } newName)
@@ -209,7 +209,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
             var containerElement = change.Container as ElementSave;
             if (containerElement != null)
             {
-                elementsWithChangedVariables.Add(change.Container as ElementSave);
+                elementsWithChangedVariables.Add(containerElement);
                 undoChanges.Add((CrossElementVariableChange.CaptureBefore(containerElement, change.State, change.Variable), change.Variable));
             }
             change.Variable.Type = newName;
@@ -476,7 +476,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 // does, then we're safe to delete the old files.
                 _fileCommands.TryAutoSaveObject(instanceContainer);
 
-                if (isRenamingXmlFile)
+                // Only an element's own file is renamed; a behavior is renamed by EditCommands.
+                if (isRenamingXmlFile && elementSave != null)
                 {
                     RenameXml(elementSave, oldName);
                 }
@@ -484,7 +485,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                 _guiCommands.RefreshElementTreeView(instanceContainer);
             }
 
-            if (!shouldContinue && isRenamingXmlFile)
+            if (!shouldContinue && isRenamingXmlFile && elementSave != null)
             {
                 elementSave.Name = oldName;
             }
@@ -517,11 +518,12 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         // (Windows/macOS). TryAutoSaveObject already wrote the current content there under the new
         // name, so deleting "the old file" (below) would delete that just-saved content outright.
         // File.Move corrects the on-disk casing instead.
+        // Both are null only for a project that was never saved, which has no files to move.
         bool isSameFileDifferentCase = oldXml != null && newXml != null &&
             oldXml.FullPath != newXml.FullPath &&
             string.Equals(oldXml.FullPath, newXml.FullPath, StringComparison.OrdinalIgnoreCase);
 
-        if (isSameFileDifferentCase)
+        if (isSameFileDifferentCase && oldXml != null && newXml != null)
         {
             if (oldXml.Exists())
             {
@@ -533,7 +535,7 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         // exist, no biggie - we
         // were going to delete it
         // anyway.
-        else if (oldXml.Exists())
+        else if (oldXml?.Exists() == true)
         {
             System.IO.File.Delete(oldXml.FullPath);
         }
@@ -542,8 +544,8 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
 
         _fileCommands.TryAutoSaveProject();
 
-        var oldDirectory = oldXml.GetDirectoryContainingThis();
-        var newDirectory = newXml.GetDirectoryContainingThis();
+        var oldDirectory = oldXml?.GetDirectoryContainingThis();
+        var newDirectory = newXml?.GetDirectoryContainingThis();
 
         bool didMoveToNewDirectory = oldDirectory != newDirectory;
 
@@ -558,9 +560,11 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         }
     }
 
-    private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave instance, string oldName)
+    private void RenameAllReferencesTo(ElementSave elementSave, InstanceSave? instance, string oldName)
     {
-        var project = _renameProjectProvider.GumProjectSave;
+        // Renames only happen while a project is open.
+        var project = _renameProjectProvider.GumProjectSave
+            ?? throw new InvalidOperationException("No Gum project is loaded.");
         // Tell the GumProjectSave to react to the rename.
         // This changes the names of the ElementSave references.
         project.ReactToRenamed(elementSave, instance, oldName);
@@ -621,17 +625,17 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
                         {
                             foreach (var variable in state.Variables)
                             {
-                                if (variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
+                                if (variable.GetRootName() == "Parent" && variable.Value is string value && value.Contains("."))
                                 {
-                                    var value = variable.Value as string;
                                     var valueBeforeDot = value.Substring(0, value.IndexOf("."));
                                     var valueAfterDot = value.Substring(value.IndexOf(".") + 1);
                                     if (valueAfterDot == oldName)
                                     {
                                         // let's be safe, see if the instance is of the type elementSave
                                         var parentInstance = elementToCheckParent.GetInstance(valueBeforeDot);
-                                        var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
-                                        if (parentInstanceElement == elementSave)
+                                        // A Parent can name an instance that no longer exists.
+                                        var parentInstanceElement = parentInstance == null ? null : ObjectFinder.Self.GetElementSave(parentInstance);
+                                        if (parentInstance != null && parentInstanceElement == elementSave)
                                         {
                                             variable.Value = parentInstance.Name + "." + newName;
                                             shouldSaveElement = true;
@@ -695,9 +699,9 @@ public class RenameLogic : IRenameLogic, IUndoRenameLogic
         return shouldContinue;
     }
 
-    private bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave instance, bool shouldContinue)
+    private bool ValidateWithPopup(IInstanceContainer instanceContainer, InstanceSave? instance, bool shouldContinue)
     {
-        string whyNot;
+        string? whyNot;
         if (instance != null)
         {
             if (_nameVerifier.IsInstanceNameValid(instance.Name, instance, instanceContainer, out whyNot) == false)
