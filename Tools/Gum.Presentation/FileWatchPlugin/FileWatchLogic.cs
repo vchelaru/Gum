@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToolsUtilities;
+using Gum.DataTypes;
 
 namespace Gum.Logic.FileWatch;
 
@@ -61,12 +62,12 @@ public class FileWatchLogic
     {
         using var _ = Gum.Diagnostics.StartupTiming.Time("FileWatchLogic.RefreshRootDirectory (total)");
 
-        if (_projectManager.GumProjectSave?.FullFileName != null)
+        if (_projectManager.GumProjectSave is { FullFileName: not null } project)
         {
             HashSet<FilePath> directories;
             using (Gum.Diagnostics.StartupTiming.Time("  GetFileWatchRootDirectories"))
             {
-                directories = GetFileWatchRootDirectories();
+                directories = GetFileWatchRootDirectories(project);
             }
 
             using (Gum.Diagnostics.StartupTiming.Time("  EnableWithDirectories (create FileSystemWatchers)"))
@@ -82,7 +83,7 @@ public class FileWatchLogic
         }
     }
 
-    private HashSet<FilePath> GetFileWatchRootDirectories()
+    private HashSet<FilePath> GetFileWatchRootDirectories(GumProjectSave gumProject)
     {
         HashSet<FilePath> directories = new HashSet<FilePath>();
 
@@ -120,18 +121,21 @@ public class FileWatchLogic
             }
 
             // Skip if any already-tracked directory is a root of this one.
-            if (!directories.Any(existing => existing.IsRootOf(directory)))
+            if (directory != null && !directories.Any(existing => existing.IsRootOf(directory)))
             {
                 directories.Add(directory);
             }
         }
 
-        FilePath gumProjectFilePath = _projectManager.GumProjectSave.FullFileName;
+        FilePath gumProjectFilePath = gumProject.FullFileName;
 
         if (gumProjectFilePath != null)
         {
             char gumProjectDrive = gumProjectFilePath.Standardized[0];
-            directories.Add(gumProjectFilePath.GetDirectoryContainingThis());
+            if (gumProjectFilePath.GetDirectoryContainingThis() is { } projectDirectory)
+            {
+                directories.Add(projectDirectory);
+            }
 
             // why are we adding the deep ones, isn't it enough to add the roots?
 
@@ -141,19 +145,16 @@ public class FileWatchLogic
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "Behaviors/");
             //directories.Add(gumProjectFilePath.GetDirectoryContainingThis() + "FontCache/");
 
-            var gumProject = _projectState.GumProjectSave;
-            if (!string.IsNullOrEmpty(gumProject.LocalizationFile))
+            if (!string.IsNullOrEmpty(gumProject.LocalizationFile) &&
+                new FilePath(_projectState.ProjectDirectory + gumProject.LocalizationFile)
+                    .GetDirectoryContainingThis() is { } localizationDirectory)
             {
-                var localizationDirectory = new FilePath(
-                        _projectState.ProjectDirectory + gumProject.LocalizationFile)
-                    .GetDirectoryContainingThis();
                 directories.Add(localizationDirectory);
             }
-            if (gumProject.UseFontCharacterFile)
+            if (gumProject.UseFontCharacterFile &&
+                new FilePath(_projectState.ProjectDirectory + ".gumfcs")
+                    .GetDirectoryContainingThis() is { } fontCharacterDirectory)
             {
-                var fontCharacterDirectory = new FilePath(
-                        _projectState.ProjectDirectory + ".gumfcs")
-                    .GetDirectoryContainingThis();
                 directories.Add(fontCharacterDirectory);
             }
         }

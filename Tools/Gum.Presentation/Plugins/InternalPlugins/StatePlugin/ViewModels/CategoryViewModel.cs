@@ -32,7 +32,7 @@ public abstract class StateTreeViewItem : ViewModel
         set => Set(value);
     }
 
-    public override string ToString() => DataAsObject?.ToString();
+    public override string? ToString() => DataAsObject.ToString();
 
 
     internal void ForceRefreshTitle() => NotifyPropertyChanged(nameof(Title));
@@ -40,12 +40,12 @@ public abstract class StateTreeViewItem : ViewModel
 
 public class CategoryViewModel : StateTreeViewItem
 {
-    public StateSaveCategory Data { get; set; }
+    public required StateSaveCategory Data { get; set; }
     public override object DataAsObject => Data;
 
     public ObservableCollection<StateViewModel> States { get; set; } = new ObservableCollection<StateViewModel>();
 
-    public override string Title => Data?.Name;
+    public override string Title => Data.Name;
 
     /// <summary>
     /// Raised when the user clicks this category's "+" button. The owning <see cref="StateTreeViewModel"/>

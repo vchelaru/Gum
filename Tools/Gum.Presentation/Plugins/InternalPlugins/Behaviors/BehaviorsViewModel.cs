@@ -15,12 +15,12 @@ namespace Gum.Plugins.Behaviors
         private readonly ISelectedState _selectedState;
         private readonly IProjectManager _projectManager;
 
-        public event EventHandler ApplyChangedValues;
+        public event EventHandler? ApplyChangedValues;
 
         public ObservableCollection<CheckListBehaviorItem> AddedBehaviors { get; set; } = new ObservableCollection<CheckListBehaviorItem>();
         public ObservableCollection<CheckListBehaviorItem> AllBehaviors { get; set; } = new ObservableCollection<CheckListBehaviorItem>();
 
-        ElementSave ElementSave { get; set; }
+        ElementSave? ElementSave { get; set; }
 
         public CheckListBehaviorItem? SelectedBehavior
         {
@@ -84,7 +84,7 @@ namespace Gum.Plugins.Behaviors
 
         public void HandleOkEditClick()
         {
-            ApplyChangedValues?.Invoke(this, null);
+            ApplyChangedValues?.Invoke(this, EventArgs.Empty);
         }
 
         public void UpdateTo(ComponentSave component)
@@ -103,7 +103,7 @@ namespace Gum.Plugins.Behaviors
                 {
                     Name = reference.BehaviorName,
                     IsChecked = true,
-                    IsOrphaned = !projectBehaviorNames.Contains(reference.BehaviorName),
+                    IsOrphaned = reference.BehaviorName is not { } behaviorName || !projectBehaviorNames.Contains(behaviorName),
                 });
             }
 
@@ -113,7 +113,7 @@ namespace Gum.Plugins.Behaviors
             // reference (and its error icon) is invisible.
             AllBehaviors.Clear();
 
-            HashSet<string> componentBehaviorNames = new HashSet<string>(
+            HashSet<string?> componentBehaviorNames = new HashSet<string?>(
                 component.Behaviors.Select(b => b.BehaviorName));
 
             foreach (var name in projectBehaviorNames)
@@ -128,7 +128,7 @@ namespace Gum.Plugins.Behaviors
 
             foreach (var reference in component.Behaviors)
             {
-                if (!projectBehaviorNames.Contains(reference.BehaviorName))
+                if (reference.BehaviorName is not { } behaviorName || !projectBehaviorNames.Contains(behaviorName))
                 {
                     AllBehaviors.Add(new CheckListBehaviorItem
                     {

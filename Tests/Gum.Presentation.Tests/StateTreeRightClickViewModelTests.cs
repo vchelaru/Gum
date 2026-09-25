@@ -300,6 +300,16 @@ public class StateTreeRightClickViewModelTests
     }
 
     [Fact]
+    public void MoveStateInDirection_ShouldReturnFalse_WhenNothingIsSelected()
+    {
+        // The reorder hotkey reaches this from an empty States tab, e.g. with a folder selected.
+        bool result = _sut.MoveStateInDirection(-1);
+
+        result.ShouldBeFalse();
+        _guiCommands.Verify(x => x.RefreshStateTreeView(), Times.Never);
+    }
+
+    [Fact]
     public void SortStatesAlphabeticallyClick_ShouldSortStatesByName_CaseInsensitive_AndRefresh()
     {
         ComponentSave element = new() { Name = "MyComponent" };

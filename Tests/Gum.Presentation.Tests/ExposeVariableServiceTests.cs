@@ -86,6 +86,22 @@ public class ExposeVariableServiceTests : BaseTestClass
     }
 
     [Fact]
+    public void HandleExposeVariableClick_OnABehaviorsInstance_ShowsAMessageInsteadOfThrowing()
+    {
+        // A behavior's instance has no element to expose the variable on, and while the behavior
+        // is selected there is no selected element either.
+        var instance = new InstanceSave { Name = "TextInstance", BaseType = "Text" };
+        _selectedState.Setup(x => x.SelectedElement).Returns((ElementSave?)null);
+
+        var response = _service.HandleExposeVariableClick(instance, "Text");
+
+        response.Succeeded.ShouldBeTrue();
+        response.DidAttempt.ShouldBeFalse();
+        _dialogService.Verify(x => x.ShowMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+        _pluginManager.Verify(x => x.VariableAdd(It.IsAny<ElementSave?>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void HandleUnexposeVariableClick_ShouldClearExposedAsNameAndNotifyPlugins_WhenNoReferencesExist()
     {
         var component = new ComponentSave { Name = "MyComponent" };

@@ -106,9 +106,13 @@ public class EditVariableService : IEditVariableService
         string message = "Enter desired exposed variable name.";
         string title = "Edit Variable Name";
 
+        // The ExposedName edit mode is only offered for an exposed variable.
+        if (variable.ExposedAsName is not { } oldName)
+        {
+            return;
+        }
 
-
-        var changes = _renameLogic.GetChangesForRenamedVariable(container, variable.Name, variable.ExposedAsName);
+        var changes = _renameLogic.GetChangesForRenamedVariable(container, variable.Name, oldName);
         string changesDetails = changes.GetChangesDetails();
 
         if(!string.IsNullOrEmpty(changesDetails))
@@ -120,17 +124,15 @@ public class EditVariableService : IEditVariableService
 
         if (_dialogService.GetUserString(message, title, options) is { } result)
         {
-            RenameExposedVariable(variable, result, container, changes);
+            RenameExposedVariable(variable, oldName, result, container, changes);
         }
     }
 
-    private void RenameExposedVariable(VariableSave variable, string newName, IStateContainer container, VariableChangeResponse changeResponse)
+    private void RenameExposedVariable(VariableSave variable, string oldName, string newName, IStateContainer container, VariableChangeResponse changeResponse)
     {
         using var undoLock = _undoManager.RequestLock();
 
         var variableChanges = changeResponse.VariableChanges;
-
-        var oldName = variable.ExposedAsName;
 
         variable.ExposedAsName = newName;
 

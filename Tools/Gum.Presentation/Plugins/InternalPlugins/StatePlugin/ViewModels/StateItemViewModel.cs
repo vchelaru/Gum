@@ -11,7 +11,7 @@ namespace Gum.Plugins.InternalPlugins.StatePlugin.ViewModels;
 
 public class StateViewModel : StateTreeViewItem
 {
-    public StateSave Data { get; set; }
+    public required StateSave Data { get; set; }
     public bool IncludesVariablesForSelectedInstance
     {
         get => Get<bool>();
@@ -20,6 +20,6 @@ public class StateViewModel : StateTreeViewItem
 
 
     public override object DataAsObject => Data;
-    public override string Title => Data?.Name;
+    public override string Title => Data.Name;
 
 }
