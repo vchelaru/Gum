@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using Gum.DataTypes;
 using Gum.Logic;
 using Shouldly;
@@ -41,6 +42,18 @@ public class SkiaShapeStandardsLogicTests
         {
             preV3.ShouldContain(name);
             v3.ShouldContain(name);
+        }
+    }
+
+    [Fact]
+    public void EveryStandard_HasGutxEmbeddedInTheLogicAssembly()
+    {
+        System.Reflection.Assembly assembly = typeof(SkiaShapeStandardsLogic).Assembly;
+
+        foreach (string name in SkiaShapeStandardsLogic.GetStandardNamesToAdd(OlderThanV3))
+        {
+            using Stream? stream = assembly.GetManifestResourceStream($"Gum.Embedded.SkiaShapes.{name}.gutx");
+            stream.ShouldNotBeNull(name);
         }
     }
 }
