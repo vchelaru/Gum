@@ -13,7 +13,7 @@
     <Variable>
       <Type>bool</Type>
       <Name>Animate</Name>
-      <Value xsi:type="xsd:boolean">false</Value>
+      <Value xsi:type="xsd:boolean">true</Value>
       <Category>Animation</Category>
       <SetsValue>true</SetsValue>
     </Variable>

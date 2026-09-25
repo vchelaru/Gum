@@ -32,7 +32,7 @@
 
   <ItemGroup>
     <!-- Skia shape Standards .gutx files plus the StandardAdder logic moved into
-         Gum.csproj (see Gum/Embedded/SkiaShapes/ and Gum/Logic/SkiaShapeStandardsLogic.cs)
+         Gum.Presentation (see Tools/Gum.Presentation/Embedded/SkiaShapes/ and Logic/SkiaShapeStandardsLogic.cs)
          so the project-authoring half is no longer Skia-plugin-specific. SkiaPlugin
          keeps the rendering half. -->
     <PackageReference Include="SkiaSharp.Extended">

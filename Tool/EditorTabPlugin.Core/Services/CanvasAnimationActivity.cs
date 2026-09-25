@@ -11,8 +11,8 @@ namespace EditorTabPlugin_XNA.Services;
 public static class CanvasAnimationActivity
 {
     /// <summary>
-    /// True when a visible element under <paramref name="root"/> plays a multi-frame animation chain
-    /// or a runtime animation. Hidden subtrees are skipped, matching
+    /// True when a visible element under <paramref name="root"/> has an
+    /// <see cref="IAnimatingRenderable"/> that is animating, or plays a runtime animation. Hidden subtrees are skipped, matching
     /// <see cref="GraphicalUiElement.AnimateSelf"/>.
     /// </summary>
     public static bool IsAnimating(GraphicalUiElement? root)
@@ -22,7 +22,7 @@ public static class CanvasAnimationActivity
             return false;
         }
 
-        if (root.AnimationController.IsPlaying || IsPlayingChain(root.RenderableComponent))
+        if (root.AnimationController.IsPlaying || root.RenderableComponent is IAnimatingRenderable { IsAnimating: true })
         {
             return true;
         }
@@ -37,11 +37,4 @@ public static class CanvasAnimationActivity
         }
         return false;
     }
-
-    private static bool IsPlayingChain(object? renderable) => renderable switch
-    {
-        Sprite sprite => sprite.Animate && sprite.CurrentChain?.Count > 1,
-        NineSlice nineSlice => nineSlice.Animate && nineSlice.CurrentChain?.Count > 1,
-        _ => false,
-    };
 }

@@ -26,7 +26,7 @@ public class NineSlice : SpriteBatchRenderableBase,
     IVisible, 
     IAspectRatio,
     ITextureCoordinate, 
-    IAnimatable, ICloneable
+    IAnimatable, IAnimatingRenderable, ICloneable
 {
     #region Fields
 
@@ -467,6 +467,8 @@ public class NineSlice : SpriteBatchRenderableBase,
         get => AnimationLogic.Animate;
         set => AnimationLogic.Animate = value;
     }
+
+    bool IAnimatingRenderable.IsAnimating => Animate && CurrentChain?.Count > 1;
 
     public event Action AnimationChainCycled
     {
