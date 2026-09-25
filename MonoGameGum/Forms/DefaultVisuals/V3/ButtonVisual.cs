@@ -275,5 +275,5 @@ public class ButtonVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed Button Forms control backing this visual.
     /// </summary>
-    public Button FormsControl => (Button)FormsControlAsObject;
+    public Button FormsControl => (Button)FormsControlAsObject!;
 }

@@ -146,5 +146,5 @@ public class DialogBoxVisual : InteractiveGue
         }
     }
 
-    public DialogBox FormsControl => (DialogBox)FormsControlAsObject;
+    public DialogBox FormsControl => (DialogBox)FormsControlAsObject!;
 }

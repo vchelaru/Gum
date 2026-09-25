@@ -69,7 +69,7 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     }
 
 #if XNALIKE
-    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState? BlendState
     {
         get => ContainedColoredRectangle.BlendState.ToXNA();
         set

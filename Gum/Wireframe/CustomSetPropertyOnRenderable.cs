@@ -254,11 +254,15 @@ public partial class CustomSetPropertyOnRenderable
     {
         bool handled = false;
 
+        // The handlers below take a non-null value. They unbox value-typed properties (a null value
+        // there throws, as it always has) and read reference-typed ones with as, which tolerates null.
+        object dispatchValue = value!;
+
         // First try special-casing.
 
         if (renderableIpso is Text renderableText)
         {
-            handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnText(renderableText, graphicalUiElement, propertyName, dispatchValue);
         }
 #if !FRB
         // Issue #2925 — dispatch by RUNTIME type for CircleRuntime / RectangleRuntime before
@@ -276,48 +280,48 @@ public partial class CustomSetPropertyOnRenderable
         // instead on raylib, indistinguishable from a real rendering bug.
         else if (graphicalUiElement is Gum.GueDeriving.CircleRuntime circleRuntime)
         {
-            handled = TrySetPropertyOnCircleRuntime(circleRuntime, propertyName, value);
+            handled = TrySetPropertyOnCircleRuntime(circleRuntime, propertyName, dispatchValue);
         }
         else if (graphicalUiElement is Gum.GueDeriving.RectangleRuntime rectangleRuntime)
         {
-            handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, value);
+            handled = TrySetPropertyOnRectangleRuntime(rectangleRuntime, propertyName, dispatchValue);
         }
 #endif
 #if !RAYLIB
         else if (renderableIpso is LineCircle)
         {
-            handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnLineCircle(renderableIpso, graphicalUiElement, propertyName, dispatchValue);
         }
         else if (renderableIpso is LineRectangle)
         {
-            handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnLineRectangle(renderableIpso, graphicalUiElement, propertyName, dispatchValue);
         }
         else if (renderableIpso is LinePolygon)
         {
-            handled = TrySetPropertyOnLinePolygon(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnLinePolygon(renderableIpso, graphicalUiElement, propertyName, dispatchValue);
         }
         else if (renderableIpso is SolidRectangle)
         {
-            handled = TrySetPropertyOnSolidRectangle(renderableIpso, propertyName, value, handled);
+            handled = TrySetPropertyOnSolidRectangle(renderableIpso, propertyName, dispatchValue, handled);
         }
 #endif
 
         else if (renderableIpso is Sprite renderableSprite)
         {
-            handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnSprite(renderableSprite, graphicalUiElement, propertyName, dispatchValue);
         }
         else if (renderableIpso is NineSlice nineSlice)
         {
-            handled = TrySetPropertyOnNineSlice(nineSlice, graphicalUiElement, propertyName, value, handled);
+            handled = TrySetPropertyOnNineSlice(nineSlice, graphicalUiElement, propertyName, dispatchValue, handled);
         }
         else if (renderableIpso is InvisibleRenderable invisibleRenderable)
         {
-            handled = TrySetPropertyOnContainer(invisibleRenderable, graphicalUiElement, propertyName, value);
+            handled = TrySetPropertyOnContainer(invisibleRenderable, graphicalUiElement, propertyName, dispatchValue);
         }
 
         if (!handled && AdditionalPropertyOnRenderable != null)
         {
-            handled = AdditionalPropertyOnRenderable(renderableIpso, graphicalUiElement, propertyName, value);
+            handled = AdditionalPropertyOnRenderable(renderableIpso, graphicalUiElement, propertyName, dispatchValue);
         }
 
         if (!handled)
@@ -331,7 +335,7 @@ public partial class CustomSetPropertyOnRenderable
 #if !RAYLIB
     private static bool TrySetPropertyOnSolidRectangle(IRenderableIpso renderableIpso, string propertyName, object value, bool handled)
     {
-        var solidRect = renderableIpso as SolidRectangle;
+        var solidRect = (SolidRectangle)renderableIpso;
 
         if (propertyName == "Blend")
         {
@@ -639,7 +643,7 @@ public partial class CustomSetPropertyOnRenderable
             return handled;
     }
 
-    private static void AssignSourceFileOnNineSlice(string value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
+    private static void AssignSourceFileOnNineSlice(string? value, GraphicalUiElement graphicalUiElement, NineSlice nineSlice)
     {
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
 
@@ -649,7 +653,7 @@ public partial class CustomSetPropertyOnRenderable
         }
         else if (IsAnimationChainFile(value))
         {
-            AnimationChainList animationChainList = GetAnimationChainList(ref value, loaderManager);
+            AnimationChainList? animationChainList = GetAnimationChainList(ref value, loaderManager);
 
             nineSlice.AnimationChains = animationChainList;
 
@@ -897,7 +901,7 @@ public partial class CustomSetPropertyOnRenderable
     // width-wrapper/re-layout logic. Called directly by TextRuntime.Text/SetTextNoTranslate
     // (MonoGameGum/GueDeriving/TextRuntime.cs) and, for FRB (which has no TextRuntime), by
     // TrySetPropertyOnText below. Public so both call sites can reach it (#3706).
-    public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
+    public static void SetText(Text textRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object? value)
     {
         var widthBefore = textRenderable.WrappedTextWidth;
         var heightBefore = textRenderable.WrappedTextHeight;
@@ -954,7 +958,8 @@ public partial class CustomSetPropertyOnRenderable
 #else
             var shouldTranslate = true;
 #endif
-            if(LocalizationService != null && propertyName == "Text" && shouldTranslate)
+            // A null Text stays null; translating it would display the service placeholder.
+            if(LocalizationService != null && rawText != null && propertyName == "Text" && shouldTranslate)
             {
                 rawText = LocalizationService.Translate(rawText);
             }
@@ -1472,7 +1477,7 @@ public partial class CustomSetPropertyOnRenderable
     // push their value on open and pop on close, so a run resolves to the font implied by every tag currently
     // open over it - the whole reason nested markup needs a stack rather than a flat lookup.
     static Stack<float> fontSizeStack = new Stack<float>();
-    static Stack<string> fontNameStack = new Stack<string>();
+    static Stack<string?> fontNameStack = new Stack<string?>();
     static Stack<int> outlineThicknessStack = new Stack<int>();
     static Stack<bool> useFontSmoothingStack = new Stack<bool>();
     static Stack<bool> isItalicStack = new Stack<bool>();
@@ -1696,7 +1701,7 @@ public partial class CustomSetPropertyOnRenderable
         // The rendering/wrapping code ignores '\r', so normalize CRLF to LF before computing indexes.
         // Parsing and stripping from the same normalized string keeps InlineVariable indexes aligned
         // with the RawText the renderer sees.
-        var normalized = bbcode?.Replace("\r\n", "\n");
+        var normalized = bbcode.Replace("\r\n", "\n");
 
         var results = BbCodeParser.Parse(normalized, Tags);
         var strippedText = BbCodeParser.RemoveTags(normalized, results);
@@ -1711,15 +1716,19 @@ public partial class CustomSetPropertyOnRenderable
         // emitted regardless of whether the owning element is a TextRuntime.
         foreach (var item in expandedResults)
         {
-            object castedValue = item.Open.Argument;
+            object? castedValue = item.Open.Argument;
             var shouldApply = false;
             switch (item.Name)
             {
                 case "Red":
                 case "Green":
                 case "Blue":
-                    castedValue = byte.Parse(item.Open.Argument);
-                    shouldApply = true;
+                    // A missing or non-numeric argument (e.g. [Red] or [Red=abc]) leaves the run uncolored.
+                    if (byte.TryParse(item.Open.Argument, out byte parsedByte))
+                    {
+                        castedValue = parsedByte;
+                        shouldApply = true;
+                    }
                     break;
                 case "Color":
                     {
@@ -1729,12 +1738,13 @@ public partial class CustomSetPropertyOnRenderable
                                                                             out int result))
                         {
                             castedValue = System.Drawing.Color.FromArgb(result);
+                            shouldApply = true;
                         }
-                        else
+                        else if (item.Open.Argument != null)
                         {
                             castedValue = System.Drawing.Color.FromName(item.Open.Argument);
+                            shouldApply = true;
                         }
-                        shouldApply = true;
                     }
                     break;
                 case "FontScale":
@@ -1790,7 +1800,8 @@ public partial class CustomSetPropertyOnRenderable
                     CharacterCount = item.Close.StartStrippedIndex - item.Open.StartStrippedIndex,
                     StartIndex = item.Open.StartStrippedIndex,
                     VariableName = item.Name,
-                    Value = castedValue
+                    // shouldApply is only set alongside a parsed value.
+                    Value = castedValue!
                 });
             }
         }
@@ -1894,7 +1905,7 @@ public partial class CustomSetPropertyOnRenderable
         allTags.AddRange(results.Select(item => item.Close));
         allTags.Sort((a, b) => a.StartIndex - b.StartIndex);
 
-        InlineVariable lastFontInlineVariable = null;
+        InlineVariable? lastFontInlineVariable = null;
         // Every BBCode push (open tag) and pop (close tag) below calls
         // GetAndCreateFontIfNecessary. The pop case re-asks for a font that was
         // already resolved on the matching push — caching is intentionally NOT
@@ -1906,7 +1917,7 @@ public partial class CustomSetPropertyOnRenderable
         {
             // The run's value: a resolved Raylib_cs.Font (crisp), or - for a [FontSize] tag with no font
             // creator wired - the raw pixel size as a float (ResolveRunFont then scales the base atlas).
-            object castedValue = null;
+            object? castedValue = null;
             string convertedName = "BitmapFont"; // shared historical run-marker name (see ResolvedFont note).
             switch (tag.Name)
             {
@@ -2028,7 +2039,7 @@ public partial class CustomSetPropertyOnRenderable
         // Close off the last font run so it extends to the end of the text.
         if (lastFontInlineVariable != null)
         {
-            lastFontInlineVariable.CharacterCount = asText.RawText.Length - lastFontInlineVariable.StartIndex;
+            lastFontInlineVariable.CharacterCount = (asText.RawText?.Length ?? 0) - lastFontInlineVariable.StartIndex;
         }
 
         // Creates (or returns a cached) resolved font for the current stack state. Only the font-CREATION
@@ -2038,8 +2049,16 @@ public partial class CustomSetPropertyOnRenderable
         // preserves the Dispose-then-AddDisposable cache-heal from the former TryGetOrCreateFontAtSize.
         ResolvedFont? GetAndCreateFontIfNecessary()
         {
+            // A TextRuntime with no Font or CustomFontFile (e.g. AssignFontInConstructor = false) has no
+            // family to resolve a run font from, so the range stays at the base font.
+            string? currentFontName = fontNameStack.Peek();
+            if (string.IsNullOrEmpty(currentFontName))
+            {
+                return null;
+            }
+
 #if !RAYLIB
-            var fontFileName = GetFontFileName();
+            var fontFileName = GetFontFileName(currentFontName);
 
             var font = global::RenderingLibrary.Content.LoaderManager.Self.GetDisposable(fontFileName) as BitmapFont;
 
@@ -2056,11 +2075,11 @@ public partial class CustomSetPropertyOnRenderable
                 {
                     try
                     {
-                        string? bbFontFile = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+                        string? bbFontFile = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                         BmfcSave bmfcSave = BuildInlineRunBmfcSave(
                             fontSizeStack.Peek(), outlineThicknessStack.Peek(), useFontSmoothingStack.Peek(),
-                            isItalicStack.Peek(), isBoldStack.Peek(), bbFontFile, fontNameStack.Peek());
+                            isItalicStack.Peek(), isBoldStack.Peek(), bbFontFile, currentFontName);
 
                         font = InMemoryFontCreator.TryCreateFont(bmfcSave);
                         if (font != null)
@@ -2075,7 +2094,7 @@ public partial class CustomSetPropertyOnRenderable
                         // Fall through to disk-based path, but surface the failure instead of leaving it
                         // completely silent (previously: catch { } with zero diagnostics anywhere - #4464).
                         RaisePropertyAssignmentError(
-                            $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
+                            $"Error creating in-memory font '{currentFontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
                     }
                 }
 
@@ -2102,7 +2121,7 @@ public partial class CustomSetPropertyOnRenderable
                         // user could have typed anything in there, so who knows if this will succeed. Therefore, try/catch:
                         try
                         {
-                            string? bbFontFileForDisk = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+                            string? bbFontFileForDisk = BmfcSave.IsFontFilePath(currentFontName) ? currentFontName : null;
 
                             BmfcSave bmfcSave = new BmfcSave();
                             bmfcSave.FontSize = fontSizeStack.Peek();
@@ -2119,7 +2138,7 @@ public partial class CustomSetPropertyOnRenderable
                             }
                             else
                             {
-                                bmfcSave.FontName = fontNameStack.Peek();
+                                bmfcSave.FontName = currentFontName;
                             }
 #if !FRB
                             // BBCode inline font creation: when BBCode tags like [FontSize=24] reference a font
@@ -2138,7 +2157,7 @@ public partial class CustomSetPropertyOnRenderable
                             // Fall through to the default font, but surface the failure instead of
                             // swallowing it (#4732).
                             RaisePropertyAssignmentError(
-                                $"Error generating font '{fontNameStack.Peek()}' via {FontService.GetType().Name}:\n{ex}");
+                                $"Error generating font '{currentFontName}' via {FontService.GetType().Name}:\n{ex}");
                         }
                     }
 #endif
@@ -2162,8 +2181,12 @@ public partial class CustomSetPropertyOnRenderable
                             font = Text.DefaultBitmapFont;
                         }
                         // #3530: Replace so re-adding an already-occupied key heals it instead of throwing.
-                        global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
-                            global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
+                        // No default font loaded yet means nothing to cache.
+                        if (font != null)
+                        {
+                            global::RenderingLibrary.Content.LoaderManager.Self.AddDisposable(fontFileName, font,
+                                global::RenderingLibrary.Content.LoaderManager.ExistingContentBehavior.Replace);
+                        }
                     }
                 }
             }
@@ -2183,7 +2206,7 @@ public partial class CustomSetPropertyOnRenderable
 
             try
             {
-                string fontName = fontNameStack.Peek();
+                string fontName = currentFontName;
                 string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 string fontCacheName = BmfcSave.GetFontCacheFileNameFor(
@@ -2232,7 +2255,7 @@ public partial class CustomSetPropertyOnRenderable
                 // Fall through to null - the caller uses the base font / base-atlas scale fallback -
                 // but surface the failure instead of leaving it completely silent.
                 RaisePropertyAssignmentError(
-                    $"Error creating in-memory font '{fontNameStack.Peek()}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
+                    $"Error creating in-memory font '{currentFontName}' via {InMemoryFontCreator.GetType().Name}:\n{ex}");
             }
 
             return null;
@@ -2240,20 +2263,20 @@ public partial class CustomSetPropertyOnRenderable
         }
 
 #if !RAYLIB
-        string GetFontFileName()
+        string GetFontFileName(string fontName)
         {
             string fontFileNameName;
             if (useCustomFontStack.Peek())
             {
-                fontFileNameName = fontNameStack.Peek() + ".fnt";
+                fontFileNameName = fontName + ".fnt";
             }
             else
             {
-                string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontNameStack.Peek()) ? fontNameStack.Peek() : null;
+                string? bbCodeFontFilePath = BmfcSave.IsFontFilePath(fontName) ? fontName : null;
 
                 fontFileNameName = global::RenderingLibrary.Graphics.Fonts.BmfcSave.GetFontCacheFileNameFor(
                     fontSizeStack.Peek(),
-                    fontNameStack.Peek(),
+                    fontName,
                     outlineThicknessStack.Peek(),
                     useFontSmoothingStack.Peek(),
                     isItalicStack.Peek(),
@@ -3148,7 +3171,7 @@ public partial class CustomSetPropertyOnRenderable
     }
 #endif
 
-    public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string value)
+    public static bool AssignSourceFileOnSprite(Sprite sprite, GraphicalUiElement graphicalUiElement, string? value)
     {
         bool handled;
 
@@ -3303,42 +3326,42 @@ public partial class CustomSetPropertyOnRenderable
         return animationChainList;
     }
 
-    public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer layer)
+    public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer? layer)
     {
-        var managers = iSystemManagers as SystemManagers;
+        var managers = (SystemManagers)iSystemManagers;
 
 #if !RAYLIB
-        if (renderable is Sprite)
+        if (renderable is Sprite sprite)
         {
-            managers.SpriteManager.Add(renderable as Sprite, layer);
+            managers.SpriteManager.Add(sprite, layer);
         }
-        else if (renderable is NineSlice)
+        else if (renderable is NineSlice nineSlice)
         {
-            managers.SpriteManager.Add(renderable as NineSlice, layer);
+            managers.SpriteManager.Add(nineSlice, layer);
         }
-        else if (renderable is LineRectangle)
+        else if (renderable is LineRectangle lineRectangle)
         {
-            managers.ShapeManager.Add(renderable as LineRectangle, layer);
+            managers.ShapeManager.Add(lineRectangle, layer);
         }
-        else if (renderable is SolidRectangle)
+        else if (renderable is SolidRectangle solidRectangle)
         {
-            managers.ShapeManager.Add(renderable as SolidRectangle, layer);
+            managers.ShapeManager.Add(solidRectangle, layer);
         }
-        else if (renderable is Text)
+        else if (renderable is Text text)
         {
-            managers.TextManager.Add(renderable as Text, layer);
+            managers.TextManager.Add(text, layer);
         }
-        else if (renderable is LineCircle)
+        else if (renderable is LineCircle lineCircle)
         {
-            managers.ShapeManager.Add(renderable as LineCircle, layer);
+            managers.ShapeManager.Add(lineCircle, layer);
         }
-        else if (renderable is LinePolygon)
+        else if (renderable is LinePolygon linePolygon)
         {
-            managers.ShapeManager.Add(renderable as LinePolygon, layer);
+            managers.ShapeManager.Add(linePolygon, layer);
         }
-        else if (renderable is InvisibleRenderable)
+        else if (renderable is InvisibleRenderable invisibleRenderable)
         {
-            managers.SpriteManager.Add(renderable as InvisibleRenderable, layer);
+            managers.SpriteManager.Add(invisibleRenderable, layer);
         }
         else
 #endif
@@ -3442,14 +3465,15 @@ public partial class CustomSetPropertyOnRenderable
         // the project doesn't actually use Arial12.
         // We need to wait until the graphical UI element is fully created before we try to throw an exception, so
         // that's what we're going to do here:
-        if (graphicalUiElement != null && graphicalUiElement.RenderableComponent is Text asText)
+        if (graphicalUiElement.RenderableComponent is Text asText)
         {
 
 #if FRB
         // FRB doesn't yet have a TextRuntime, so we have to do this:
         var textRuntime = graphicalUiElement;
 #else
-            var textRuntime = graphicalUiElement as Gum.GueDeriving.TextRuntime;
+            // Outside FRB a Text renderable is always wrapped in a TextRuntime.
+            var textRuntime = (Gum.GueDeriving.TextRuntime)graphicalUiElement;
 
 #endif
 
@@ -3459,7 +3483,7 @@ public partial class CustomSetPropertyOnRenderable
             {
                 if (textRuntime.UseCustomFont)
                 {
-                    var fontName = ToolsUtilities.FileManager.Standardize(textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
+                    var fontName = ToolsUtilities.FileManager.Standardize(textRuntime.CustomFontFile ?? string.Empty, preserveCase: true, makeAbsolute: true);
 
                     throw new System.IO.FileNotFoundException($"Missing:{fontName}");
                 }

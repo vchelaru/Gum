@@ -260,5 +260,5 @@ public class SliderVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed Slider Forms control backing this visual.
     /// </summary>
-    public Controls.Slider FormsControl => (Slider)FormsControlAsObject;
+    public Controls.Slider FormsControl => (Slider)FormsControlAsObject!;
 }

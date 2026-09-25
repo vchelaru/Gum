@@ -155,7 +155,7 @@ namespace GumRuntime
         // safe even though the annotation does not survive the round trip.
         [UnconditionalSuppressMessage("Trimming", "IL2072",
             Justification = "Types reach this dictionary only via RegisterGueInstantiationType, whose parameter is annotated with PublicConstructors.")]
-        private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string genericType)
+        private static GraphicalUiElement? TryCreateStrongTypeForElement(ElementSave elementSave, bool fullInstantiation, string? genericType)
         {
             GraphicalUiElement? toReturn = null;
             var elementName = elementSave.Name;
@@ -179,7 +179,7 @@ namespace GumRuntime
 
                 if (!string.IsNullOrEmpty(genericType))
                 {
-                    type = MakeGenericRuntimeType(type, mElementToGueTypes[genericType]);
+                    type = MakeGenericRuntimeType(type, mElementToGueTypes[genericType!]);
                 }
 
                 toReturn = InstantiateRegisteredType(type, elementName, fullInstantiation);
@@ -248,7 +248,7 @@ namespace GumRuntime
             // For InteractiveGue in MonoGame Gum
             if (type.GetConstructor(Type.EmptyTypes) != null)
             {
-                return (GraphicalUiElement)Activator.CreateInstance(type);
+                return (GraphicalUiElement)Activator.CreateInstance(type)!;
             }
 
             throw new InvalidOperationException(
@@ -409,9 +409,9 @@ namespace GumRuntime
 
             if (elementSave != null)
             {
-                foreach (var variable in elementSave.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
+                foreach (var variable in elementSave.DefaultState!.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
                 {
-                    graphicalElement.AddExposedVariable(variable.ExposedAsName, variable.Name);
+                    graphicalElement.AddExposedVariable(variable.ExposedAsName!, variable.Name);
                 }
             }
 
@@ -435,7 +435,7 @@ namespace GumRuntime
                 if (baseElementSave != null)
                 {
 
-                    graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState);
+                    graphicalElement.SetVariablesRecursively(baseElementSave, baseElementSave.DefaultState!);
                 }
             }
 
@@ -444,7 +444,7 @@ namespace GumRuntime
             ApplyVariableReferences(graphicalElement, stateSave);
         }
 
-        public static bool ValueEquality(object val1, object val2)
+        public static bool ValueEquality(object? val1, object? val2)
         {
             if (val1 is string string1 && val2 is string string2)
             {
@@ -458,7 +458,7 @@ namespace GumRuntime
 
         // void VariableSet(ElementSave parentElement, InstanceSave instance, string changedMember, object oldValue,
         //     bool isFullCommit)
-        public static Action<ElementSave, InstanceSave, string, object, bool> VariableChangedThroughReference;
+        public static Action<ElementSave, InstanceSave?, string, object?, bool>? VariableChangedThroughReference;
 
         /// <summary>
         /// Applies variable references on all elements in the project in dependency order.
@@ -481,7 +481,7 @@ namespace GumRuntime
             foreach (var element in allElements)
             {
                 dependsOn[element] = new List<ElementSave>();
-                string qualifiedName = GetQualifiedName(element);
+                string? qualifiedName = GetQualifiedName(element);
                 if (qualifiedName != null)
                 {
                     elementsByQualifiedName[qualifiedName] = element;
@@ -507,7 +507,7 @@ namespace GumRuntime
                                 continue;
                             }
 
-                            string referencedElementName = GetReferencedElementName(referenceString);
+                            string? referencedElementName = GetReferencedElementName(referenceString);
                             if (referencedElementName != null && elementsByQualifiedName.TryGetValue(referencedElementName, out var referencedElement))
                             {
                                 if (referencedElement != element && !dependsOn[element].Contains(referencedElement))
@@ -608,7 +608,7 @@ namespace GumRuntime
         }
 
 
-        private static string GetQualifiedName(ElementSave element)
+        private static string? GetQualifiedName(ElementSave element)
         {
             if (element is ScreenSave)
             {
@@ -629,7 +629,7 @@ namespace GumRuntime
         /// Extracts the referenced element name from a variable reference string.
         /// Returns null if the reference is local (no cross-element dependency).
         /// </summary>
-        private static string GetReferencedElementName(string referenceString)
+        private static string? GetReferencedElementName(string referenceString)
         {
             // Split on '=' to get the right side
             var equalsIndex = referenceString.IndexOf('=');
@@ -769,7 +769,7 @@ namespace GumRuntime
             var result = new HashSet<string>(StringComparer.Ordinal);
             if (state == null || instance == null) return result;
 
-            ElementSave element = state.ParentContainer;
+            ElementSave? element = state.ParentContainer;
             if (element == null) return result;
 
             // (a) Local refs on this state targeting the instance.
@@ -788,12 +788,12 @@ namespace GumRuntime
             {
                 var variable = state.Variables[i];
                 if (!variable.SetsValue || variable.SourceObject != instance.Name) continue;
-                if (!variable.IsState(element, out _, out StateSaveCategory category)) continue;
+                if (!variable.IsState(element, out _, out StateSaveCategory? category)) continue;
                 if (category == null) continue;
 
                 string? stateName = variable.Value as string;
                 if (string.IsNullOrEmpty(stateName)) continue;
-                StateSave matchedState = instanceType.GetStateSaveRecursively(stateName);
+                StateSave? matchedState = instanceType.GetStateSaveRecursively(stateName);
                 if (matchedState == null) continue;
 
                 // (b) refs on the matched state — LHSes + a marker for the row itself.
@@ -848,7 +848,7 @@ namespace GumRuntime
             {
                 if (variableList.GetRootName() == "VariableReferences" && variableList.ValueAsIList.Count > 0)
                 {
-                    InstanceSave instance = null;
+                    InstanceSave? instance = null;
                     if (!string.IsNullOrEmpty(variableList.SourceObject))
                     {
                         instance = element.GetInstance(variableList.SourceObject);
@@ -867,8 +867,9 @@ namespace GumRuntime
                             // need to happen
                             if (!string.IsNullOrEmpty(result.VariableName))
                             {
-                                var unqualified = result.VariableName;
-                                if (unqualified?.Contains(".") == true)
+                                // IsNullOrEmpty above rules out null.
+                                var unqualified = result.VariableName!;
+                                if (unqualified.Contains(".") == true)
                                 {
                                     unqualified = unqualified.Substring(unqualified.IndexOf(".") + 1);
                                 }
@@ -909,7 +910,7 @@ namespace GumRuntime
                     }
                     else
                     {
-                        GraphicalUiElement instance = null;
+                        GraphicalUiElement? instance = null;
 
                         if (graphicalElement.Tag is InstanceSave asInstanceSave && asInstanceSave.Name == variableList.SourceObject)
                         {
@@ -1109,7 +1110,7 @@ namespace GumRuntime
         public static void ApplyVariableReferencesOnSpecificOwner(GraphicalUiElement referenceOwner, string referenceString, StateSave stateSave, GraphicalUiElement? liveRootForRightSide = null)
         {
             //////////////////////////////Early Out/////////////////////////////////
-            if(referenceString?.StartsWith("//") == true)
+            if(referenceString.StartsWith("//"))
             {
                 return;
             }
@@ -1133,13 +1134,12 @@ namespace GumRuntime
                 ? left
                 : instanceLeft.Name + "." + left;
 
-            string leftSideType = null;
+            string? leftSideType = null;
             var leftVariableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
             leftSideType = leftVariableOnState?.Type;
             if (leftSideType == null)
             {
-                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
-                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
 
@@ -1153,11 +1153,18 @@ namespace GumRuntime
             }
         }
 
+        private static string? GetRootVariableType(string leftVariableName, InstanceSave? instanceLeft, StateSave stateSave)
+        {
+            // Variable references need a state owned by an element (RecursiveVariableFinder requires it).
+            var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer!;
+            return ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+        }
+
         public struct VariableReferenceAssignmentResult
         {
-            public string VariableName;
-            public object OldValue;
-            public object NewValue;
+            public string? VariableName;
+            public object? OldValue;
+            public object? NewValue;
         }
 
         /// <summary>
@@ -1173,11 +1180,11 @@ namespace GumRuntime
         /// wireframe for this element); null when applying against pure save data with nothing
         /// rendered, in which case such identifiers are simply unresolvable.
         /// </summary>
-        public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
+        public static VariableReferenceAssignmentResult ApplyVariableReferencesOnSpecificOwner(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
 
             //////////////////////////////Early Out/////////////////////////////////
-            if (referenceString?.StartsWith("//") == true)
+            if (referenceString.StartsWith("//"))
             {
                 return new VariableReferenceAssignmentResult { NewValue = null, OldValue = null, VariableName = null };
             }
@@ -1198,20 +1205,19 @@ namespace GumRuntime
                 ? left
                 : instanceLeft.Name + "." + left;
 
-            string leftSideType = null;
+            string? leftSideType = null;
             var variableOnState = stateSave.Variables.FirstOrDefault(item =>  item.Name == leftVariableName);
             leftSideType = variableOnState?.Type;
             if(leftSideType == null)
             {
-                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
-                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
             var right = split[1];
-            object value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
+            object? value = GetRightSideValue(stateSave, right, leftSideType, liveRoot);
 
-            object valueBefore = null;
-            string effectiveLeft = null;
+            object? valueBefore = null;
+            string? effectiveLeft = null;
             if (value != null)
             {
                 if (instanceLeft == null)
@@ -1234,7 +1240,7 @@ namespace GumRuntime
             };
         }
 
-        private static object GetRightSideValue(StateSave stateSave, string right, string leftSideType, GraphicalUiElement? liveRoot = null)
+        private static object? GetRightSideValue(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
         {
             if (right.TrimStart().StartsWith("!"))
             {
@@ -1270,7 +1276,7 @@ namespace GumRuntime
         /// wrapping <see cref="GetRightSideValue"/> when <see cref="CustomEvaluateExpressionAllBranches"/>
         /// is unset (no Roslyn evaluator wired up).
         /// </summary>
-        private static IEnumerable<object> GetAllRightSideValues(StateSave stateSave, string right, string leftSideType, GraphicalUiElement? liveRoot = null)
+        private static IEnumerable<object> GetAllRightSideValues(StateSave stateSave, string right, string? leftSideType, GraphicalUiElement? liveRoot = null)
         {
             if (right.TrimStart().StartsWith("!"))
             {
@@ -1313,7 +1319,7 @@ namespace GumRuntime
         /// </summary>
         public static (string VariableName, IEnumerable<object> Values)? GetAllVariableReferenceBranches(InstanceSave? instanceLeft, string referenceString, StateSave stateSave, GraphicalUiElement? liveRoot = null)
         {
-            if (referenceString?.StartsWith("//") == true)
+            if (referenceString.StartsWith("//"))
             {
                 return null;
             }
@@ -1330,13 +1336,12 @@ namespace GumRuntime
             var left = split[0];
             var leftVariableName = instanceLeft == null ? left : instanceLeft.Name + "." + left;
 
-            string leftSideType = null;
+            string? leftSideType = null;
             var variableOnState = stateSave.Variables.FirstOrDefault(item => item.Name == leftVariableName);
             leftSideType = variableOnState?.Type;
             if (leftSideType == null)
             {
-                var elementOwningInstance = instanceLeft?.ParentContainer ?? stateSave.ParentContainer;
-                leftSideType = ObjectFinder.Self.GetRootVariable(leftVariableName, elementOwningInstance)?.Type;
+                leftSideType = GetRootVariableType(leftVariableName, instanceLeft, stateSave);
             }
 
             var right = split[1];
@@ -1388,7 +1393,7 @@ namespace GumRuntime
 
         private static StateSave GetRightSide(ref string right, int firstDot, ElementSave element)
         {
-            StateSave stateSave = element.DefaultState;
+            StateSave stateSave = element.DefaultState!;
             right = right.Substring(firstDot + 1);
 
             if (right.Contains("."))

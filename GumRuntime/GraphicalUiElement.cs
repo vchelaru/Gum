@@ -200,7 +200,13 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     // to save on casting:
     protected IRenderableIpso? mContainedObjectAsIpso;
-    protected IVisible mContainedObjectAsIVisible;
+    protected IVisible? mContainedObjectAsIVisible;
+
+    // Rendering and layout sizing of this element's own renderable only happen when it has one.
+    // A GraphicalUiElement with no contained renderable (such as a Screen) never reaches them.
+    IRenderableIpso RequiredContainedObject => mContainedObjectAsIpso ??
+        throw new InvalidOperationException("This GraphicalUiElement has not had its visual set, so it has no renderable. " +
+            "This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
 
     GraphicalUiElement? mWhatContainsThis;
 
@@ -283,7 +289,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     // null by default, non-null if an object uses
     // stacked layout for its children.
-    public List<float> StackedRowOrColumnDimensions { get; private set; }
+    public List<float>? StackedRowOrColumnDimensions { get; private set; }
 
     // Custom variables that arrived before this had a Forms control to receive them.
     // See TrySetCustomVariableOnFormsControl.
@@ -292,11 +298,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     #region Properties
 
-    ColorOperation IRenderableIpso.ColorOperation => mContainedObjectAsIpso.ColorOperation;
+    ColorOperation IRenderableIpso.ColorOperation => RequiredContainedObject.ColorOperation;
 
     public static MissingFileBehavior MissingFileBehavior { get; set; } = MissingFileBehavior.ConsumeSilently;
 
-    public ElementSave ElementSave
+    /// <summary>
+    /// The element this was created from, or null for an element created in code.
+    /// </summary>
+    public ElementSave? ElementSave
     {
         get;
         set;
@@ -563,7 +572,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         set
         {
-            mContainedObjectAsIpso.Width = value;
+            RequiredContainedObject.Width = value;
         }
     }
 
@@ -582,7 +591,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         set
         {
-            mContainedObjectAsIpso.Height = value;
+            RequiredContainedObject.Height = value;
         }
     }
 
@@ -602,7 +611,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     void IRenderableIpso.SetParentDirect(IRenderableIpso? parent)
     {
-        mContainedObjectAsIpso.SetParentDirect(parent);
+        RequiredContainedObject.SetParentDirect(parent);
     }
 
     #endregion
@@ -622,36 +631,34 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
         set
         {
-            mContainedObjectAsIpso.Z = value;
+            // Without a renderable there is nothing to hold Z, and the getter reports 0.
+            if (mContainedObjectAsIpso != null)
+            {
+                mContainedObjectAsIpso.Z = value;
+            }
         }
     }
 
     #region IRenderable properties
 
 
-    BlendState IRenderable.BlendState
+    BlendState? IRenderable.BlendState
     {
         get
         {
-#if FULL_DIAGNOSTICS
-            if (mContainedObjectAsIpso == null)
-            {
-                throw new NullReferenceException("This GraphicalUiElemente has not had its visual set, so it does not have a blend operation. This can happen if a GraphicalUiElement was added as a child without its contained renderable having been set.");
-            }
-#endif
-            return mContainedObjectAsIpso.BlendState;
+            return RequiredContainedObject.BlendState;
         }
     }
 
 
     bool IRenderable.Wrap
     {
-        get { return mContainedObjectAsIpso.Wrap; }
+        get { return RequiredContainedObject.Wrap; }
     }
 
     public virtual void Render(ISystemManagers managers)
     {
-        mContainedObjectAsIpso.Render(managers);
+        RequiredContainedObject.Render(managers);
     }
 
     public virtual string BatchKey => mContainedObjectAsIpso?.BatchKey ?? string.Empty;
@@ -1213,7 +1220,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     // Made obsolete November 4, 2017
     [Obsolete("Use ElementGueContainingThis instead - it more clearly indicates the relationship, " +
         "as the ParentGue may not actually be the parent. If the effective parent is desired, use EffectiveParentGue")]
-    public GraphicalUiElement ParentGue
+    public GraphicalUiElement? ParentGue
     {
         get { return ElementGueContainingThis; }
         set { ElementGueContainingThis = value; }
@@ -1262,7 +1269,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    public IRenderable RenderableComponent
+    /// <summary>
+    /// The renderable this element displays, or null if it has none (such as a Screen).
+    /// </summary>
+    public IRenderable? RenderableComponent
     {
         get
         {
@@ -1331,7 +1341,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
 
 
-    object mTagIfNoContainedObject;
+    object? mTagIfNoContainedObject;
     public object? Tag
     {
         get
@@ -1482,7 +1492,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// </summary>
     public float AbsoluteBottom => AbsoluteTop + this.AbsoluteHeight;
 
-    public IVisible ExplicitIVisibleParent
+    public IVisible? ExplicitIVisibleParent
     {
         get;
         set;
@@ -1759,10 +1769,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     /// set (such as Width or WidthUnits), or by an indirect value changing, such as if a Parent is resized and if
     /// this uses a WidthUnits depending on the parent.
     /// </summary>
-    public event EventHandler SizeChanged;
-    public event EventHandler PositionChanged;
-    public event EventHandler VisibleChanged;
-    public event EventHandler<ParentChangedEventArgs> ParentChanged;
+    public event EventHandler? SizeChanged;
+    public event EventHandler? PositionChanged;
+    public event EventHandler? VisibleChanged;
+    public event EventHandler<ParentChangedEventArgs>? ParentChanged;
 
     public class ParentChangedEventArgs
     {
@@ -1783,7 +1793,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public static Action<IText, GraphicalUiElement>? UpdateFontFromProperties;
     public static Action<GraphicalUiElement>? ThrowExceptionsForMissingFiles;
     public static Action<IRenderableIpso, ISystemManagers>? RemoveRenderableFromManagers;
-    public static Action<IRenderableIpso, ISystemManagers, Layer>? AddRenderableToManagers;
+    public static Action<IRenderableIpso, ISystemManagers, Layer?>? AddRenderableToManagers;
     public static Action<string, GraphicalUiElement>? ApplyMarkup;
 
     /// <summary>
@@ -1840,7 +1850,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         mIsLayoutSuspended = false;
     }
 
-    public GraphicalUiElement(IRenderable containedObject, GraphicalUiElement? whatContainsThis = null)
+    public GraphicalUiElement(IRenderable? containedObject, GraphicalUiElement? whatContainsThis = null)
     {
         mIsLayoutSuspended = true;
         Width = 32;
@@ -1861,9 +1871,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             mWhatContainsThis.mWhatThisContains.Add(this);
 
             // I don't think we want to do this. 
-            if (whatContainsThis.mContainedObjectAsIpso != null)
+            if (mWhatContainsThis.mContainedObjectAsIpso != null)
             {
-                this.Parent = whatContainsThis;
+                this.Parent = mWhatContainsThis;
             }
         }
 
@@ -1875,7 +1885,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     partial void OnConstructor();
 
-    public void SetContainedObject(IRenderable containedObject)
+    public void SetContainedObject(IRenderable? containedObject)
     {
         if (containedObject == this)
         {
@@ -1949,7 +1959,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 throw new InvalidOperationException($"{this.mContainedObjectAsIpso?.GetType()} needs to implement ICloneable or " +
                     $"GraphicalUiElement.CloneRenderableFunction must be set before calling clone");
             }
-            clonedRenderable = GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
+            clonedRenderable = this.mContainedObjectAsIpso == null
+                ? null
+                : GraphicalUiElement.CloneRenderableFunction(this.mContainedObjectAsIpso);
         }
 
         GraphicalUiElement? newClone = (GraphicalUiElement)this.MemberwiseClone();
@@ -2086,7 +2098,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // changed for them.
             if (!gateClimbOnSizeChange)
             {
-                var asGue = this.Parent as GraphicalUiElement;
+                // GetIfShouldCallUpdateOnParent only returns true for a GraphicalUiElement parent.
+                var asGue = (GraphicalUiElement)this.Parent!;
                 // Just climb up one and update from there
                 asGue.UpdateLayout(parentUpdateType, childrenUpdateDepth + 1, gateClimbOnSizeChange: true);
                 ChildrenUpdatingParentLayoutCalls++;
@@ -2231,7 +2244,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 if (this.ChildrenLayout == Gum.Managers.ChildrenLayout.TopToBottomStack &&
                     this.HeightUnits.GetDependencyType() == HierarchyDependencyType.DependsOnChildren &&
                     this.UseFixedStackChildrenSize &&
-                    this.Children?.Count > 1)
+                    this.Children.Count > 1)
                 {
 
                     //UpdateDimensions(parentWidth, parentHeight, XOrY.Y, considerWrappedStacked: false);
@@ -2240,12 +2253,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                     if (childLayout == ChildType.Absolute)
                     {
-                        firstChild?.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
+                        firstChild.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1);
                         fullyUpdatedChildren.Add(firstChild);
                     }
                     else
                     {
-                        firstChild?.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
+                        firstChild.UpdateLayout(ParentUpdateType.None, childrenUpdateDepth - 1, XOrY.Y);
                     }
                 }
                 else
@@ -2375,7 +2388,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 }
             }
 
-            if (sizeDependsOnChildren && canOneDimensionChangeOtherDimension)
+            // Without a renderable (such as a Screen) there is no size of our own to re-measure.
+            if (sizeDependsOnChildren && canOneDimensionChangeOtherDimension && mContainedObjectAsIpso != null)
             {
                 float widthBeforeSecondLayout = mContainedObjectAsIpso.Width;
                 float heightBeforeSecondLayout = mContainedObjectAsIpso.Height;
@@ -2450,8 +2464,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             (mWidthUnit == DimensionUnitType.MaintainFileAspectRatio && mHeightUnit == DimensionUnitType.MaintainFileAspectRatio)
             )
         {
-            mContainedObjectAsIpso.Width = mWidth;
-            mContainedObjectAsIpso.Height = mHeight;
+            RequiredContainedObject.Width = mWidth;
+            RequiredContainedObject.Height = mHeight;
         }
         else
         {
@@ -2734,7 +2748,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             case DimensionUnitType.PercentageOfOtherDimension:
                 {
-                    pixelHeightToSet = mContainedObjectAsIpso.Width * mHeight / 100.0f;
+                    pixelHeightToSet = RequiredContainedObject.Width * mHeight / 100.0f;
                 }
                 break;
             #endregion
@@ -2855,7 +2869,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             pixelHeightToSet = _minHeight.Value;
         }
 
-        mContainedObjectAsIpso.Height = pixelHeightToSet;
+        RequiredContainedObject.Height = pixelHeightToSet;
     }
 
     private float GetMaxCellHeight(bool considerWrappedStacked, float maxHeight)
@@ -3161,7 +3175,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
             case DimensionUnitType.PercentageOfOtherDimension:
                 {
-                    pixelWidthToSet = mContainedObjectAsIpso.Height * mWidth / 100.0f;
+                    pixelWidthToSet = RequiredContainedObject.Height * mWidth / 100.0f;
                 }
                 break;
             #endregion
@@ -3285,7 +3299,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             pixelWidthToSet = _minWidth.Value;
         }
 
-        mContainedObjectAsIpso.Width = pixelWidthToSet;
+        RequiredContainedObject.Width = pixelWidthToSet;
 
 
     }
@@ -3580,14 +3594,14 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (mTextureWidthScale != 0)
         {
-            width = (int)(mContainedObjectAsIpso.Width / mTextureWidthScale);
+            width = (int)(RequiredContainedObject.Width / mTextureWidthScale);
         }
 
         int height = 0;
 
         if (mTextureHeightScale != 0)
         {
-            height = (int)(mContainedObjectAsIpso.Height / mTextureHeightScale);
+            height = (int)(RequiredContainedObject.Height / mTextureHeightScale);
         }
 
 
@@ -4060,19 +4074,22 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
                 mYUnits == GeneralUnitType.Percentage)
             {
-                if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.TopToBottomStack)
+                var effectiveParentGue = this.EffectiveParentGue;
+                if (effectiveParentGue?.ChildrenLayout == ChildrenLayout.TopToBottomStack)
                 {
-                    System.Collections.IList siblings = null;
+                    // With no Parent, the effective parent is the element containing this.
+                    System.Collections.IList? siblings = null;
 
                     if (this.Parent == null)
                     {
-                        siblings = this.ElementGueContainingThis.mWhatThisContains;
+                        siblings = effectiveParentGue.mWhatThisContains;
                     }
                     else if (this.Parent is GraphicalUiElement)
                     {
                         siblings = ((GraphicalUiElement)Parent).Children as System.Collections.IList;
                     }
-                    var thisIndex = siblings.IndexOf(this);
+                    // A non-GraphicalUiElement Parent has no sibling list to stack in.
+                    var thisIndex = siblings?.IndexOf(this) ?? -1;
                     if (thisIndex > 0)
                     {
                         forcePixelsFromSmall = true;
@@ -4382,15 +4399,15 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         HorizontalAlignment effectiveXorigin = isParentFlippedHorizontally ? mXOrigin.Flip() : mXOrigin;
 
-        if (!float.IsNaN(mContainedObjectAsIpso.Width))
+        if (!float.IsNaN(RequiredContainedObject.Width))
         {
             if (effectiveXorigin == HorizontalAlignment.Center)
             {
-                offsetX -= mContainedObjectAsIpso.Width / 2.0f;
+                offsetX -= RequiredContainedObject.Width / 2.0f;
             }
             else if (effectiveXorigin == HorizontalAlignment.Right)
             {
-                offsetX -= mContainedObjectAsIpso.Width;
+                offsetX -= RequiredContainedObject.Width;
             }
         }
         // no need to handle left
@@ -4398,7 +4415,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (mYOrigin == VerticalAlignment.Center)
         {
-            offsetY -= mContainedObjectAsIpso.Height / 2.0f;
+            offsetY -= RequiredContainedObject.Height / 2.0f;
         }
         else if (mYOrigin == VerticalAlignment.TextBaseline)
         {
@@ -4408,12 +4425,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             }
             else
             {
-                offsetY -= mContainedObjectAsIpso.Height;
+                offsetY -= RequiredContainedObject.Height;
             }
         }
         else if (mYOrigin == VerticalAlignment.Bottom)
         {
-            offsetY -= mContainedObjectAsIpso.Height;
+            offsetY -= RequiredContainedObject.Height;
         }
         // no need to handle top
 
@@ -4609,7 +4626,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
     private void GetCellDimensions(int indexInSiblingList, out int xIndex, out int yIndex, out float cellWidth, out float cellHeight)
     {
-        var effectiveParent = EffectiveParentGue;
+        // Only called for a child of an auto-grid parent.
+        var effectiveParent = EffectiveParentGue!;
         var columnCount = effectiveParent.AutoGridHorizontalCells;
         var rowCount = effectiveParent.AutoGridVerticalCells;
         if (columnCount < 1) columnCount = 1;
@@ -4692,7 +4710,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 {
                     break;
                 }
-                if (((IVisible)siblings[i]).Visible)
+                if (((IVisible)siblings[i]!).Visible)
                 {
                     thisIndex++;
                 }
@@ -4898,7 +4916,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
         if (this.Parent == null)
         {
-            siblings = this.ElementGueContainingThis.mWhatThisContains;
+            // With no Parent, parentGue (the effective parent) is the element containing this.
+            siblings = parentGue.mWhatThisContains;
         }
         else if (this.Parent is GraphicalUiElement)
         {
@@ -4935,7 +4954,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             var index = thisIndex - 1;
             while (index > -1)
             {
-                if (((IVisible)siblings[index]).Visible)
+                if (((IVisible)siblings[index]!).Visible)
                 {
                     whatToStackAfter = siblings[index] as GraphicalUiElement;
                     break;
@@ -4951,10 +4970,10 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 // This is going to be on a new row/column. That means the following are true:
                 // * It will have a previous sibling.
                 // * It will be positioned at the start/end of its row/column
-                this.StackedRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex + 1;
+                this.StackedRowOrColumnIndex = ((GraphicalUiElement)whatToStackAfter).StackedRowOrColumnIndex + 1;
 
 
-                thisRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex + 1;
+                thisRowOrColumnIndex = ((GraphicalUiElement)whatToStackAfter).StackedRowOrColumnIndex + 1;
                 var previousRowOrColumnIndex = thisRowOrColumnIndex - 1;
                 if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                 {
@@ -4982,9 +5001,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
 
                 if (whatToStackAfter != null)
                 {
-                    thisRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
+                    thisRowOrColumnIndex = ((GraphicalUiElement)whatToStackAfter).StackedRowOrColumnIndex;
 
-                    this.StackedRowOrColumnIndex = (whatToStackAfter as GraphicalUiElement).StackedRowOrColumnIndex;
+                    this.StackedRowOrColumnIndex = ((GraphicalUiElement)whatToStackAfter).StackedRowOrColumnIndex;
                     if (parentGue.ChildrenLayout == Gum.Managers.ChildrenLayout.LeftToRightStack)
                     {
                         whatToStackAfterX = whatToStackAfter.X + whatToStackAfter.Width + parentGue.StackSpacing;
@@ -5657,7 +5676,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     public virtual void SetInitialState()
     {
         var elementSave = this.Tag as ElementSave ?? this.ElementSave;
-        this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+        // An element created in code has no ElementSave, so there is no initial state to apply.
+        if (elementSave != null)
+        {
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState!);
+        }
     }
 
     /// <summary>
@@ -5745,7 +5768,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         var elementSave = this.Tag as ElementSave ?? this.ElementSave;
         if (elementSave != null)
         {
-            this.SetVariablesRecursively(elementSave, elementSave.DefaultState);
+            this.SetVariablesRecursively(elementSave, elementSave.DefaultState!);
         }
     }
 
@@ -6108,7 +6131,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    private void AddChildren(ISystemManagers managers, Layer layer)
+    private void AddChildren(ISystemManagers managers, Layer? layer)
     {
         // In a simple situation we'd just loop through the
         // ContainedElements and add them to the manager.  However,
@@ -6194,12 +6217,12 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     }
 
 
-    private void AddContainedRenderableToManagers(ISystemManagers managers, Layer layer)
+    private void AddContainedRenderableToManagers(ISystemManagers managers, Layer? layer)
     {
         // This may be a Screen
         if (mContainedObjectAsIpso != null)
         {
-            AddRenderableToManagers?.Invoke(mContainedObjectAsIpso, Managers, layer);
+            AddRenderableToManagers?.Invoke(mContainedObjectAsIpso, managers, layer);
 
         }
     }
@@ -6304,6 +6327,11 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     private int GetOrderedIndexForParentVariable(VariableSave item)
     {
         var objectName = item.SourceObject;
+        // An element created in code has no instances to order by.
+        if (ElementSave == null)
+        {
+            return -1;
+        }
         for (int i = 0; i < ElementSave.Instances.Count; i++)
         {
             if (objectName == ElementSave.Instances[i].Name)
@@ -7087,7 +7115,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         {
             foreach (var category in ElementSave.Categories)
             {
-                string valueOnThisState = rvf.GetValue<string>(category.Name + "State");
+                string? valueOnThisState = rvf.GetValue<string>(category.Name + "State");
 
                 if (!string.IsNullOrEmpty(valueOnThisState))
                 {
@@ -7712,7 +7740,7 @@ public static class GraphicalUiElementExtensions
     /// single lookup rather than an apply-everything call.
     /// </summary>
     public static bool TryGetStateByName(this GraphicalUiElement graphicalUiElement, string name,
-        out Gum.DataTypes.Variables.StateSave? state)
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Gum.DataTypes.Variables.StateSave? state)
     {
         if (graphicalUiElement.States.TryGetValue(name, out state))
         {

@@ -272,5 +272,5 @@ public class ToggleButtonVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed ToggleButton Forms control backing this visual.
     /// </summary>
-    public ToggleButton FormsControl => (ToggleButton)FormsControlAsObject;
+    public ToggleButton FormsControl => (ToggleButton)FormsControlAsObject!;
 }

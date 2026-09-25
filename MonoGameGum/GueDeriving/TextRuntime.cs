@@ -53,7 +53,9 @@ public class TextRuntime : InteractiveGue
         {
             if (_containedText == null)
             {
-                _containedText = (Text)this.RenderableComponent;
+                _containedText = (Text?)this.RenderableComponent
+                    ?? throw new System.InvalidOperationException(
+                        "This TextRuntime has no Text renderable. It was created with fullInstantiation: false and none was assigned.");
 #if XNALIKE || RAYLIB
                 _containedText.OnPreRender = UpdateAutomaticFontOversampling;
                 _containedText.OnGlyphGrowthCheck = CheckAndGrowFont;
@@ -68,7 +70,7 @@ public class TextRuntime : InteractiveGue
     /// The XNA blend state used when rendering the text. This controls how
     /// color and alpha values blend with the background.
     /// </summary>
-    public Microsoft.Xna.Framework.Graphics.BlendState BlendState
+    public Microsoft.Xna.Framework.Graphics.BlendState? BlendState
     {
         get => ContainedText.BlendState.ToXNA();
         set
@@ -237,7 +239,7 @@ public class TextRuntime : InteractiveGue
     /// <see cref="FontSize"/> resolved to, or an explicitly assigned override. Same concept as
     /// Raylib's and Skia's <c>Typeface</c>, typed to this backend's own font representation.
     /// </summary>
-    public BitmapFont Typeface
+    public BitmapFont? Typeface
     {
         get => ContainedText.BitmapFont;
         set
@@ -338,11 +340,11 @@ public class TextRuntime : InteractiveGue
         set { customFontFile = value; UpdateToFontValues(); }
     }
 
-    string font;
+    string? font;
     /// <summary>
     /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
-    public string Font
+    public string? Font
     {
         get => FontFamily;
         set => FontFamily = value;
@@ -351,7 +353,7 @@ public class TextRuntime : InteractiveGue
     /// <summary>
     /// The font name, such as "Arial", which is used to load fonts from
     /// </summary>
-    public string FontFamily
+    public string? FontFamily
     {
         get { return font; }
         set { font = value; UpdateToFontValues(); }
@@ -638,7 +640,11 @@ public class TextRuntime : InteractiveGue
         }
         else
         {
-            bmfcSave.FontName = Font;
+            // An unset Font (AssignFontInConstructor = false) keeps the BmfcSave default family.
+            if (Font != null)
+            {
+                bmfcSave.FontName = Font;
+            }
             bmfcSave.FontFile = null;
         }
     }
@@ -648,9 +654,10 @@ public class TextRuntime : InteractiveGue
     /// </summary>
     internal string GetFontCacheFileName(string? fontFilePath)
     {
+        // Callers either pass a font file path (which takes priority over Font) or check Font first.
         return BmfcSave.GetFontCacheFileNameFor(
             FontSize,
-            Font,
+            Font ?? string.Empty,
             OutlineThickness,
             UseFontSmoothing,
             IsItalic,
@@ -1067,7 +1074,7 @@ public class TextRuntime : InteractiveGue
                 // Font is the only identity that applies there. When UseCustomFont is true, Font
                 // still holds whatever unrelated default/last value it was constructed or last set
                 // to (e.g. "Arial") -- CustomFontFile/fontFilePath is the actual font in that case.
-                string fontIdentity = fontFilePath ?? Font;
+                string? fontIdentity = fontFilePath ?? Font;
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Font '{fontIdentity}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
                     "no glyph for them exists in the font file.");
@@ -1153,7 +1160,7 @@ public class TextRuntime : InteractiveGue
                 // Font is the only identity that applies there. When UseCustomFont is true, Font
                 // still holds whatever unrelated default/last value it was constructed or last set
                 // to (e.g. "Arial") -- CustomFontFile/fontFilePath is the actual font in that case.
-                string fontIdentity = fontFilePath ?? Font;
+                string? fontIdentity = fontFilePath ?? Font;
                 CustomSetPropertyOnRenderableType.RaisePropertyAssignmentError(
                     $"Font '{fontIdentity}' cannot render character(s) \"{new string(failed.ToArray())}\" -- " +
                     "no glyph for them exists in the font file.");

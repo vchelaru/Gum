@@ -89,5 +89,5 @@ public class SplitterVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed Splitter Forms control backing this visual.
     /// </summary>
-    public Splitter FormsControl => (Splitter)FormsControlAsObject;
+    public Splitter FormsControl => (Splitter)FormsControlAsObject!;
 }

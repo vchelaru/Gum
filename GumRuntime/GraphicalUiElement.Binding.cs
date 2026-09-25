@@ -279,7 +279,7 @@ public partial class GraphicalUiElement
     public object? BindingContextBindingPropertyOwner { get; private set; }
     public string? BindingContextBinding { get; private set; }
 
-    public event Action<object, BindingContextChangedEventArgs> BindingContextChanged;
+    public event Action<object, BindingContextChangedEventArgs>? BindingContextChanged;
 
     object? EffectiveBindingContext => mBindingContext ?? InheritedBindingContext;
 

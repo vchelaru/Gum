@@ -65,6 +65,18 @@ public class LocalizeTextTests : BaseTestClass
     }
 
     [Fact]
+    public void Text_SetToNull_ShouldNotDisplayPlaceholder()
+    {
+        TextRuntime text = new();
+        text.AddToRoot();
+        text.Text = "Greeting";
+
+        text.Text = null;
+
+        (text.Text ?? string.Empty).ShouldBeEmpty();
+    }
+
+    [Fact]
     public void Text_ShouldNotBeTranslated_WhenLocalizeTextIsFalse()
     {
         TextRuntime text = new();

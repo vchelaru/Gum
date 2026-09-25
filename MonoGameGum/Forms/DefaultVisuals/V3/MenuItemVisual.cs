@@ -288,7 +288,7 @@ public class MenuItemVisual : InteractiveGue
     /// <summary>
     /// Sets the FormsControlAsObject and configures the MenuItem's scroll viewer visual template.
     /// </summary>
-    public override object FormsControlAsObject
+    public override object? FormsControlAsObject
     {
         get => base.FormsControlAsObject;
         set
@@ -307,5 +307,5 @@ public class MenuItemVisual : InteractiveGue
     /// <summary>
     /// Returns the strongly-typed MenuItem Forms control backing this visual.
     /// </summary>
-    public MenuItem FormsControl => (MenuItem)FormsControlAsObject;
+    public MenuItem FormsControl => (MenuItem)FormsControlAsObject!;
 }

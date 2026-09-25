@@ -139,7 +139,7 @@ public partial class InteractiveGue : GraphicalUiElement
             if (isEnabled != value)
             {
                 isEnabled = value;
-                EnabledChange?.Invoke(this, null);
+                EnabledChange?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -162,12 +162,16 @@ public partial class InteractiveGue : GraphicalUiElement
         }
     }
 
-    private object _formsControlAsObject;
+    private object? _formsControlAsObject;
 
     /// <summary>
     /// Provides an uncasted reference to the Gum Forms element which uses this as visual element.
     /// </summary>
-    public virtual object FormsControlAsObject
+    /// <remarks>
+    /// Null for a plain visual. The default visuals create their control in their constructor unless
+    /// passed tryCreateFormsObject: false, so their typed FormsControl properties treat it as set.
+    /// </remarks>
+    public virtual object? FormsControlAsObject
     {
         get => _formsControlAsObject;
         set
@@ -401,7 +405,8 @@ public partial class InteractiveGue : GraphicalUiElement
 
                     if (child != null && HasCursorOver(cursor, child, layer))
                     {
-                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child, layer);
+                        // hasCursorOver is only true when child is non-null.
+                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child!, layer);
 
                         if (handledByChild)
                         {
@@ -432,7 +437,8 @@ public partial class InteractiveGue : GraphicalUiElement
                     }
                     if (hasCursorOver)
                     {
-                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child, layer);
+                        // hasCursorOver is only true when child is non-null.
+                        handledByChild = DoUiActivityRecursively(cursor, ref handledActions, child!, layer);
 
                         if (handledByChild)
                         {
@@ -823,9 +829,8 @@ public partial class InteractiveGue : GraphicalUiElement
         {
             return true;
         }
-        else if (gue.Tag is Gum.DataTypes.InstanceSave)
+        else if (gue.Tag is Gum.DataTypes.InstanceSave instance)
         {
-            var instance = gue.Tag as Gum.DataTypes.InstanceSave;
 
             var baseType = instance.BaseType;
 
@@ -880,7 +885,7 @@ public partial class InteractiveGue : GraphicalUiElement
             Click += (_, _) => _losePush?.Invoke(this, EventArgs.Empty);
             RollOff += (_, args) =>
             {
-                ICursor cursor = (args as InputEventArgs)?.InputDevice as ICursor;
+                ICursor? cursor = (args as InputEventArgs)?.InputDevice as ICursor;
 
                 if(cursor?.WindowPushed == this)
                 {

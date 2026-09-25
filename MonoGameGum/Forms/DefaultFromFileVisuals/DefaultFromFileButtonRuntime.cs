@@ -22,5 +22,5 @@ public class DefaultFromFileButtonRuntime : InteractiveGue
         }
     }
 
-    public Button FormsControl => (Button)FormsControlAsObject;
+    public Button FormsControl => (Button)FormsControlAsObject!;
 }
