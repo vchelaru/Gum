@@ -91,6 +91,13 @@ service is synchronous (a nested dispatcher loop), so an action invoked inside t
 opened its dialog while the menu was still open, and the menu's light-dismiss swallowed the first
 click into the dialog. A new menu site must use the same helper; `MenuBuilderTests` pins it.
 
+The macOS menu bar needs more than a dispatcher post: its click arrives while AppKit is still
+tracking the menu, and Avalonia's dispatcher runs during tracking, so a dialog opened from a plain
+post is ordered in but never brought to the front or made key. `AvaloniaNativeMenuBuilder` takes an
+`invokeAfterClick` scheduler, and the shell passes `Shell/MacOS/MenuTrackingScheduler.InvokeAfterTracking`
+(a CoreFoundation timer in the default run-loop mode, which cannot fire until tracking ends). A new
+native menu must pass it too.
+
 ## Common Pitfalls
 
 **Wrong system**: The most common mistake is modifying `DialogWindow.xaml` or `Dialog.cs` expecting it to affect the delete dialog. Always verify which system shows the dialog you're fixing.

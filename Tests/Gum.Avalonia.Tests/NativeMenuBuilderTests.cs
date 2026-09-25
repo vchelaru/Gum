@@ -70,6 +70,42 @@ public class NativeMenuBuilderTests
     }
 
     [AvaloniaFact]
+    public void LeafClick_RunsTheModel_ThroughTheSuppliedScheduler()
+    {
+        // The shell passes a scheduler that waits for AppKit's menu tracking to end (#4982).
+        int invoked = 0;
+        List<Action> scheduled = new List<Action>();
+        MenuModel model = new MenuModel();
+        MenuItemModel file = new MenuItemModel("File");
+        file.Items.Add(new MenuItemModel("Leaf", () => invoked++));
+        model.TopLevelItems.Add(file);
+        NativeMenu menu = AvaloniaNativeMenuBuilder.Build(model, KeyModifiers.Meta, invokeAfterClick: scheduled.Add);
+        NativeMenuItem leaf = (NativeMenuItem)((NativeMenuItem)menu.Items[0]).Menu!.Items[0];
+
+        ((INativeMenuItemExporterEventsImplBridge)leaf).RaiseClicked();
+        Dispatcher.UIThread.RunJobs();
+
+        invoked.ShouldBe(0);
+        scheduled.ShouldHaveSingleItem().Invoke();
+        invoked.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
+    public void BuildAppMenu_RunsAbout_ThroughTheSuppliedScheduler()
+    {
+        int invoked = 0;
+        List<Action> scheduled = new List<Action>();
+
+        NativeMenu appMenu = AvaloniaNativeMenuBuilder.BuildAppMenu(() => invoked++, scheduled.Add);
+        ((INativeMenuItemExporterEventsImplBridge)appMenu.Items[0]).RaiseClicked();
+        Dispatcher.UIThread.RunJobs();
+
+        invoked.ShouldBe(0);
+        scheduled.ShouldHaveSingleItem().Invoke();
+        invoked.ShouldBe(1);
+    }
+
+    [AvaloniaFact]
     public void Build_BindsTheModelsGesture_WithThePlatformCommandModifier()
     {
         // On macOS AppKit matches a menu item's key equivalent before the window's keyDown, so the
