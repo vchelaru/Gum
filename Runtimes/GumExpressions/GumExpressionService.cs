@@ -23,7 +23,7 @@ public static class GumExpressionService
         ElementSaveExtensions.CustomEvaluateExpressionAllBranches = EvaluateExpressionAllBranches;
     }
 
-    private static object EvaluateExpression(StateSave stateSave, string expression, string desiredType, GraphicalUiElement? liveRoot)
+    private static object? EvaluateExpression(StateSave stateSave, string expression, string? desiredType, GraphicalUiElement? liveRoot)
     {
         expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
 
@@ -49,7 +49,7 @@ public static class GumExpressionService
     /// branches, not just the one the condition currently selects). See
     /// <see cref="EvaluatedSyntax.EnumerateAllBranches"/>.
     /// </summary>
-    private static IEnumerable<object> EvaluateExpressionAllBranches(StateSave stateSave, string expression, string desiredType, GraphicalUiElement? liveRoot)
+    private static IEnumerable<object> EvaluateExpressionAllBranches(StateSave stateSave, string expression, string? desiredType, GraphicalUiElement? liveRoot)
     {
         expression = EvaluatedSyntax.ConvertToCSharpSyntax(expression);
         var syntax = SyntaxFactory.ParseExpression(expression);

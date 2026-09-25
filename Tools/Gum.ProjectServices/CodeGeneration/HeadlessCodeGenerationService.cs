@@ -177,9 +177,10 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
     {
         var elementReferences = ObjectFinder.Self.GetElementsReferencedByThis(element);
         var elementsWithMissingCodeGen = elementReferences
+            .OfType<ElementSave>()
             .Where(item =>
             {
-                if (item is StandardElementSave || item == null)
+                if (item is StandardElementSave)
                 {
                     return false;
                 }

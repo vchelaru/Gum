@@ -175,7 +175,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         {
             var variable = state.Variables[i];
             if (!variable.SetsValue || string.IsNullOrEmpty(variable.SourceObject)) continue;
-            if (!variable.IsState(element, out _, out StateSaveCategory category)) continue;
+            if (!variable.IsState(element, out _, out StateSaveCategory? category)) continue;
             if (category == null) continue; // only categorized states own references
 
             InstanceSave? instance = element.GetInstance(variable.SourceObject);
@@ -185,7 +185,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
             string? stateName = variable.Value as string;
             if (string.IsNullOrEmpty(stateName)) continue;
-            StateSave matchedState = instanceType.GetStateSaveRecursively(stateName);
+            StateSave? matchedState = instanceType.GetStateSaveRecursively(stateName);
             if (matchedState == null) continue;
 
             // If the source state already has a local VariableReferences row for this instance,
@@ -328,7 +328,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                         continue;
                     }
 
-                    if (variable.IsState(element, out _, out StateSaveCategory referencedCategory)
+                    if (variable.IsState(element, out _, out StateSaveCategory? referencedCategory)
                         && referencedCategory != null
                         && referencedCategory.Name == category.Name)
                     {
@@ -395,7 +395,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
 
     private static void AddErrorsForBehaviorVariable(ComponentSave component, List<ErrorResult> errors, BehaviorSave behavior, VariableSave behaviorVariable)
     {
-        var rfv = new RecursiveVariableFinder(component.DefaultState);
+        var rfv = new RecursiveVariableFinder(component.DefaultState!);
         var variable = rfv.GetVariable(behaviorVariable.Name);
 
         if (variable == null)

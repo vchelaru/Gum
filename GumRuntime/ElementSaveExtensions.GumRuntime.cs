@@ -33,7 +33,7 @@ namespace GumRuntime
         /// design-time apply path with no wireframe rendered) - it lets the evaluator resolve
         /// runtime-computed identifiers like <c>AbsoluteWidth</c> that don't exist on authored data.
         /// </summary>
-        public static Func<StateSave, string, string, GraphicalUiElement?, object>? CustomEvaluateExpression;
+        public static Func<StateSave, string, string?, GraphicalUiElement?, object?>? CustomEvaluateExpression;
 
         /// <summary>
         /// Enumerates every value a reference's right side could resolve to (all ternary
@@ -43,7 +43,7 @@ namespace GumRuntime
         /// (see issue #4042) so it can pregenerate every branch of a conditional Font-affecting
         /// expression instead of only the one active at collection time.
         /// </summary>
-        public static Func<StateSave, string, string, GraphicalUiElement?, IEnumerable<object>>? CustomEvaluateExpressionAllBranches;
+        public static Func<StateSave, string, string?, GraphicalUiElement?, IEnumerable<object>>? CustomEvaluateExpressionAllBranches;
 
         /// <summary>
         /// Associates an element name with a strongly-typed <see cref="GraphicalUiElement"/> subclass
