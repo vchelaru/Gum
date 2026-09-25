@@ -5,9 +5,8 @@ import { dirname, join } from 'node:path';
 const CONFIGS = ['Release', 'Debug'];
 
 /**
- * Gum.Cli is already a project in GumFull.sln, so building the Gum Tool (the ordinary dev
- * workflow, and what CI/packaging already do) produces gumcli.dll as a side effect —
- * there's no reason for the HtmlToGum converter to rebuild it itself on every call.
+ * Building Tools/Gum.Cli/Gum.Cli.csproj once (CI and packaging already do) produces gumcli.dll,
+ * so there's no reason for the HtmlToGum converter to rebuild it itself on every call.
  * `dotnet run --project ...` re-evaluates the whole MSBuild graph and does an up-to-date
  * check on every single invocation — measured at 7-16s per call versus ~0.3s for invoking
  * an already-built DLL directly (`dotnet <dll> ...`, which skips MSBuild entirely). Prefer

@@ -121,4 +121,4 @@ and the cutover bar. Phase 60's drag-drop needs the drop reader from here.
 
 - [ ] Both canvases render, select, move, resize, rotate, drop, zoom, scroll on all three OSes. Windows: verified by unattended runs and the ParityShots driver; Linux: render and select verified under WSLg; **macOS: not run.**
 - [x] `XnaAndWinforms` and `InputLibrary` are `net10.0`; the WPF tool is unchanged (2026-09-10).
-- [x] Per-OS quirk list recorded (`parity-checklist.md`); no feature-flagged-off canvas behavior.
+- [x] Per-OS quirk list recorded (in `parity-checklist.md`, since deleted; see git history); no feature-flagged-off canvas behavior.

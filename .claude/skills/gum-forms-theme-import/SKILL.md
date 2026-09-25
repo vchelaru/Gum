@@ -58,10 +58,10 @@ testing after the fact. Sequence a new theme port like this:
    an IDE-driven incremental "Build" can decide the project is up to date and skip the postbuild
    even though the theme source changed. The result: every content-only fix looks correct on disk
    and in every automated check, but the *staged* output the running tool actually reads from
-   (`Gum/bin/<Config>/Content/FormsThemes/<Name>/`) is still the old content, and a fresh Add
+   (`Tool/Gum.Avalonia/bin/<Config>/net10.0/Content/FormsThemes/<Name>/`, copied from the intermediate `Gum/bin/<Config>/Content/FormsThemes/`) is still the old content, and a fresh Add
    Forms import reproduces the exact bug you just fixed. After any content-only change, diff a
    file directly from the staged output (not just the source template) before calling the fix
-   verified — a full `dotnet build GumFull.sln` from the command line has reliably re-triggered
+   verified — a full `dotnet build Gum.slnx` from the command line has reliably re-triggered
    the postbuild in practice; an IDE "Build" may not.
 
 ## Key files
@@ -242,7 +242,7 @@ exercise real behavior and catch what structural checks can't:
   `<Variable>` values in place (the state that's actually rendered, not `Default` — category-state
   values override `Default` at render/instantiation time), screenshot, then revert before moving on
   — do this per control for every state whose geometry or color meaningfully diverges from resting.
-- **The staged build, not the source.** Add Forms reads from `Gum/bin/<Config>/Content/FormsThemes/<Theme>/`,
+- **The staged build, not the source.** Add Forms reads from `Tool/Gum.Avalonia/bin/<Config>/net10.0/Content/FormsThemes/<Theme>/`,
   not from `Templates/FormsThemes/<Theme>/` — and per the postbuild-can-no-op landmine above, those
   two can silently diverge even after a correct, committed fix. Diff a file straight from the staged
   path after rebuilding, not just the source template, before calling anything verified.

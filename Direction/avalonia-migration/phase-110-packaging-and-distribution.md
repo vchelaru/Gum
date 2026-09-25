@@ -35,9 +35,10 @@
 > opens `.tar.xz` natively; Linux's `tar`/`xz-utils` are standard on any desktop distro. A DMG
 > wasn't needed since the plain compression swap alone hit the bar.
 >
-> **Open (owner):** Apple Developer ID certificate and notarization secrets; Windows Authenticode;
-> a signing key for the Linux checksums; a macOS `.icns` icon; clean-VM launches on macOS and
-> Linux (never run from this Windows machine).
+> **Decided 2026-09-24: Gum ships unsigned.** No Apple Developer ID or notarization, no Windows
+> Authenticode, no signed Linux checksums; Vic won't pay the yearly fees. The macOS bundle keeps
+> its ad-hoc signature, and the setup docs explain the SmartScreen prompt and the `xattr` step.
+> The `.icns` icon landed in #4731.
 
 ## Purpose
 
@@ -129,5 +130,5 @@ Needs phase 100 green. Blocks phase 120.
 ## Done when
 
 - [ ] Preview artifacts for all four RIDs attached to a release; each launches on a clean machine.
-- [ ] macOS build is notarized and stapled; Linux checksum signed; Windows signing status documented.
+- [x] Signing status documented: unsigned on all three OSes by decision (2026-09-24); notarization and signed checksums dropped.
 - [ ] Install docs for macOS and Linux published; known-issues page live.
