@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -177,7 +176,7 @@ public class ResizeInputHandler : InputHandlerBase
     {
         if (Context.HasChangedAnythingSinceLastPush)
         {
-            DoEndOfSettingValuesLogic();
+            Context.DoEndOfSettingValuesLogic();
         }
 
         _sideGrabbed = ResizeSide.None;
@@ -980,136 +979,5 @@ public class ResizeInputHandler : InputHandlerBase
                 }
             }
         }
-    }
-
-    private void DoEndOfSettingValuesLogic()
-    {
-        var selectedElement = Context.SelectedState.SelectedElement;
-        var stateSave = Context.SelectedState.SelectedStateSave;
-        if (stateSave == null)
-        {
-            throw new InvalidOperationException("The SelectedStateSave is null, this should not happen");
-        }
-        if (selectedElement == null)
-        {
-            throw new InvalidOperationException("The SelectedElement is null, this should not happen");
-        }
-        // The push that started this edit recorded the state, since edits only start with a state selected.
-        var grabbedStateSave = Context.GrabbedState.StateSave ??
-            throw new InvalidOperationException("The GrabbedState has no StateSave, this should not happen");
-
-        Context.FileCommands.TryAutoSaveElement(selectedElement);
-
-        using var undoLock = Context.UndoManager.RequestLock();
-
-        Context.GuiCommands.RefreshVariableValues();
-
-        var element = selectedElement;
-
-        foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
-        {
-            var oldValue = grabbedStateSave.GetValue(possiblyChangedVariable.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
-
-                // should this be:
-                Context.SetVariableLogic.PropertyValueChanged(possiblyChangedVariable.GetRootName(),
-                   oldValue,
-                   instance,
-                   element.DefaultState,
-                   refresh: true,
-                   recordUndo: false,
-                   trySave: false);
-                // instead of this?
-                //PluginManager.Self.VariableSet(element, instance, possiblyChangedVariable.GetRootName(), oldValue);
-            }
-        }
-
-        foreach (var possiblyChangedVariableList in stateSave.VariableLists)
-        {
-            var oldValue = grabbedStateSave.GetVariableListSave(possiblyChangedVariableList.Name);
-
-            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
-            {
-                var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
-                Context.PluginManager.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
-            }
-        }
-
-        Context.HasChangedAnythingSinceLastPush = false;
-    }
-
-    private bool DoValuesDiffer(StateSave newStateSave, string variableName, object? oldValue)
-    {
-        var newValue = newStateSave.GetValue(variableName);
-        if (newValue == null && oldValue != null)
-        {
-            return true;
-        }
-        if (newValue != null && oldValue == null)
-        {
-            return true;
-        }
-        if(oldValue == null && newValue == null)
-        {
-            return true;
-        }
-        // neither are null
-        else
-        {
-            if (oldValue is float oldFloat)
-            {
-                var newFloat = (float)newValue!;
-
-                return oldFloat != newFloat;
-            }
-            else if (oldValue is string oldString)
-            {
-                return oldString != (string)newValue!;
-            }
-            else if (oldValue is bool oldBool)
-            {
-                return oldBool != (bool)newValue!;
-            }
-            else if (oldValue is int oldInt)
-            {
-                return oldInt != (int)newValue!;
-            }
-            else if (oldValue is Vector2 oldVector2)
-            {
-                return oldVector2 != (Vector2)newValue!;
-            }
-            else if (oldValue is IList oldList)
-            {
-                return AreListsSame(oldList, (IList)newValue!);
-            }
-            else
-            {
-                return oldValue!.Equals(newValue) == false;
-            }
-        }
-    }
-
-    private bool AreListsSame(IList? oldList, IList? newList)
-    {
-        if (oldList == null && newList == null)
-        {
-            return true;
-        }
-        if (oldList == null || newList == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < oldList.Count; i++)
-        {
-            if (Equals(oldList[i], newList[i]) == false)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 }
