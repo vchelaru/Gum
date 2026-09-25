@@ -31,8 +31,11 @@ public interface IContentLoader
     /// The content name, typically a file path resolved relative to
     /// <see cref="ToolsUtilities.FileManager.RelativeDirectory"/>.
     /// </param>
-    /// <returns>The loaded asset.</returns>
-    T LoadContent<T>(string contentName);
+    /// <returns>
+    /// The loaded asset. The XNA-family loader returns null instead of throwing for a texture file
+    /// that is missing on a desktop OS (see <c>ContentLoader.LoadTexture2D</c>).
+    /// </returns>
+    T? LoadContent<T>(string contentName);
 
     /// <summary>
     /// Attempts to load content of the requested type by name, returning the type's default value
@@ -45,5 +48,5 @@ public interface IContentLoader
     /// <see cref="ToolsUtilities.FileManager.RelativeDirectory"/>.
     /// </param>
     /// <returns>The loaded asset, or <c>default(T)</c> if it could not be loaded.</returns>
-    T TryLoadContent<T>(string contentName);
+    T? TryLoadContent<T>(string contentName);
 }

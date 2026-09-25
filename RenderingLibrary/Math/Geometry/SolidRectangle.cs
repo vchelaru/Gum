@@ -15,7 +15,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
     #region Fields
     
     Vector2 Position;
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
@@ -32,7 +32,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         get { return false; }
     }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -75,7 +75,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
             return false;
         }
     }
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -104,9 +104,9 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         get { return mChildren; }
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
-    public new BlendState BlendState { get; set; }
+    public new BlendState? BlendState { get; set; }
 
 
     public int Alpha
@@ -173,15 +173,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
         // See NineSlice for explanation of this Visible check
         if (this.Width > 0 && this.Height > 0)
         {
-            Renderer renderer = null;
-            if (managers == null)
-            {
-                renderer = Renderer.Self;
-            }
-            else
-            {
-                renderer = managers.Renderer as Renderer;
-            }
+            var renderer = (Renderer)managers.Renderer;
 
             var texture = renderer.SinglePixelTexture;
             Rectangle? sourceRect = renderer.SinglePixelSourceRectangle;
@@ -189,7 +181,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
             var rotation =
                 this.GetAbsoluteRotation(ignoreParentRotationIfRenderTarget: true);
 
-            Sprite.Render(managers as SystemManagers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false,
+            Sprite.Render((SystemManagers)managers, renderer.SpriteRenderer, this, texture, Color, sourceRect, false,
                 rotation);
         }
     }

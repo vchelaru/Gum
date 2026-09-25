@@ -16,10 +16,10 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
     public Vector2 RelativePoint;
 
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
-    SystemManagers mManagers;
+    SystemManagers? mManagers;
 
     #endregion
 
@@ -31,7 +31,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
     public bool FlipHorizontal { get; set; }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -70,7 +70,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
     int IRenderableIpso.Alpha => Color.A;
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get { return BlendState.NonPremultiplied; }
     }
@@ -95,7 +95,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
             return false;
         }
     }
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -120,7 +120,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
         get { return mChildren; }
     }
 
-    public object Tag
+    public object? Tag
     {
         get;
         set;
@@ -185,7 +185,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
     }
 
-    public Line(SystemManagers managers)
+    public Line(SystemManagers? managers)
     {
         mManagers = managers;
 
@@ -235,7 +235,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
                 textureToUse = AssociatedRenderer.DottedLineTexture;
             }
 
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
 
             mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers, textureToUse, .2f * AssociatedRenderer.Camera.Zoom);
         }
@@ -245,7 +245,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
     void IRenderable.PreRender() { }
 
-    public override string ToString()
+    public override string? ToString()
     {
         if(!string.IsNullOrEmpty(Name))
         {

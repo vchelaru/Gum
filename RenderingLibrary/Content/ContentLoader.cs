@@ -23,7 +23,7 @@ namespace RenderingLibrary.Content;
 /// </remarks>
 public sealed class ContentLoader : IContentLoader
 {
-    public SystemManagers SystemManagers { get; set; }
+    public SystemManagers? SystemManagers { get; set; }
 
 #if XNALIKE && !FRB
     /// <summary>
@@ -33,12 +33,12 @@ public sealed class ContentLoader : IContentLoader
 #endif
 
     /// <inheritdoc/>
-    public T LoadContent<T>(string contentName)
+    public T? LoadContent<T>(string contentName)
     {
         if(typeof(T) == typeof(Texture2D))
         {
             var texture = LoadTexture2D(contentName, SystemManagers);
-            return (T)(object)texture;
+            return (T?)(object?)texture;
         }
         else
         {
@@ -56,7 +56,7 @@ public sealed class ContentLoader : IContentLoader
             {
                 knownType = true;
                 var texture = LoadTexture2D(contentName, SystemManagers);
-                return (T)(object)texture;
+                return (T?)(object?)texture;
             }
         }
         catch
@@ -74,7 +74,7 @@ public sealed class ContentLoader : IContentLoader
         }
     }
 
-    private Texture2D? LoadTexture2D(string fileName, SystemManagers managers)
+    private Texture2D? LoadTexture2D(string fileName, SystemManagers? managers)
     {
         string fileNameStandardized = StandardizeCaseSensitive(fileName);
 
@@ -152,17 +152,18 @@ public sealed class ContentLoader : IContentLoader
         return fileNameStandardized;
     }
 
-    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers managers)
+    private Texture2D LoadTextureFromUrl(string fileName, SystemManagers? managers)
     {
 
-        Renderer renderer = Renderer.Self ?? managers.Renderer;
+        Renderer renderer = Renderer.Self ?? managers!.Renderer;
 
         string fileNameStandardized = FileManager.Standardize(fileName, preserveCase: true, makeAbsolute: false);
 
         Texture2D texture;
         using (var stream = GetUrlStream(fileName))
         {
-            texture = Texture2D.FromStream(renderer.GraphicsDevice,
+            // Headless (no device): FromStream throws, and TryLoadContent callers catch it.
+            texture = Texture2D.FromStream(renderer.GraphicsDevice!,
                 stream);
 
             texture.Name = fileNameStandardized;
@@ -172,7 +173,7 @@ public sealed class ContentLoader : IContentLoader
 
     private static System.IO.Stream GetUrlStream(string url)
     {
-        byte[] imageData = null;
+        byte[] imageData;
 
 #pragma warning disable SYSLIB0014 // obsolete but still supported; kept for its synchronous DownloadData
         using (var wc = new System.Net.WebClient())
@@ -236,7 +237,7 @@ public sealed class ContentLoader : IContentLoader
 
         Texture2D toReturn;
         string extension = FileManager.GetExtension(fileName);
-        Renderer renderer = null;
+        Renderer renderer;
         if (managers == null)
         {
             renderer = Renderer.Self;
@@ -316,9 +317,8 @@ public sealed class ContentLoader : IContentLoader
             {
                 using var stream = FileManager.GetStreamForFile(fileNameStandardized);
 
-                Texture2D texture = null;
-
-                texture = Texture2D.FromStream(renderer.GraphicsDevice,
+                // Headless (no device): FromStream throws, which the catch below handles.
+                Texture2D texture = Texture2D.FromStream(renderer.GraphicsDevice!,
                     stream);
 
                 texture.Name = fileNameStandardized;

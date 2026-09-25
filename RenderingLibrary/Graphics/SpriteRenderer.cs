@@ -29,17 +29,18 @@ public class SpriteRenderer
 {
     #region Fields
 
-    private SpriteBatchStack mSpriteBatch;
+    // These are created in Initialize; the SpriteRenderer is not usable before that.
+    private SpriteBatchStack mSpriteBatch = null!;
 
-    RasterizerState scissorTestEnabled;
-    RasterizerState scissorTestDisabled;
+    RasterizerState scissorTestEnabled = null!;
+    RasterizerState scissorTestDisabled = null!;
 
-    SamplerState linearWrapWithMipBias;
-    SamplerState pointWrapWithMipBias;
-    SamplerState linearClampWithMipBias;
-    SamplerState pointClampWithMipBias;
+    SamplerState linearWrapWithMipBias = null!;
+    SamplerState pointWrapWithMipBias = null!;
+    SamplerState linearClampWithMipBias = null!;
+    SamplerState pointClampWithMipBias = null!;
 
-    BasicEffect basicEffect;
+    BasicEffect basicEffect = null!;
 
     /// <summary>
     /// Optional consumer-supplied transform that <b>composes on top of</b> the camera-derived
@@ -89,7 +90,7 @@ public class SpriteRenderer
     /// own draw calls with Gum's immediate-mode rendering) can issue draws into the
     /// same batch between Begin/End without managing a second SpriteBatch.
     /// </summary>
-    public SpriteBatch SpriteBatch => mSpriteBatch?.SpriteBatch;
+    public SpriteBatch SpriteBatch => mSpriteBatch.SpriteBatch;
 
     /// <summary>
     /// The shared scissor-enabled RasterizerState used by Sprite clipping. Exposed so
@@ -182,7 +183,7 @@ public class SpriteRenderer
         mSpriteBatch.RemoveLastStateStackEntry();
     }
 
-    public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object objectStartingSpriteBatch, Effect? effectOverride = null)
+    public void BeginSpriteBatch(RenderStateVariables renderStates, Layer layer, BeginType beginType, Camera camera, object? objectStartingSpriteBatch, Effect? effectOverride = null)
     {
         // Use the full camera transform for both UsingEffect and non-UsingEffect paths.
         // Historically the UsingEffect branch returned a layer-zoom-only matrix because the
@@ -200,9 +201,9 @@ public class SpriteRenderer
         var rasterizerState = isFullscreen ? scissorTestDisabled : scissorTestEnabled;
 
         var scissorRectangle = new Rectangle();
-        if (rasterizerState.ScissorTestEnable)
+        if (renderStates.ClipRectangle is Rectangle clipRectangle)
         {
-            scissorRectangle = renderStates.ClipRectangle.Value;
+            scissorRectangle = clipRectangle;
 
             // Make sure values of with and height are never less than 0:
             if (scissorRectangle.Width < 0)
@@ -237,7 +238,7 @@ public class SpriteRenderer
         // re-begins the batch; for state that isn't changing this is output-identical.
         mSpriteBatch.FlushIfBegan();
 
-        Effect effectiveEffect = null;
+        Effect? effectiveEffect = null;
 
         // A render-target container can supply its own post-process shader. When present it
         // replaces Gum's BasicEffect/CustomEffect for this Begin: the override handles its own
@@ -568,7 +569,7 @@ public class SpriteRenderer
         Vector2 scale, SpriteEffects effects, 
         float depth, 
         object objectRequestingChange, 
-        Renderer renderer = null, 
+        Renderer? renderer = null, 
         bool offsetPixel = true,
         DimensionSnapping dimensionSnapping = DimensionSnapping.SideSnapping)
     {
@@ -648,7 +649,7 @@ public class SpriteRenderer
             float y = MathFunctions.RoundToInt(position.Y * CurrentZoom) / CurrentZoom + effectivePixelOffsetY / CurrentZoom;
 
             // need to also adjust scale:
-            if(shouldSnapDimensions && textureToUse != null)
+            if(shouldSnapDimensions)
             {
                 int sourceWidth = sourceRectangle?.Width ?? textureToUse.Width;
                 int sourceHeight = sourceRectangle?.Height ?? textureToUse.Height;

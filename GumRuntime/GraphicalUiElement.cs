@@ -1295,8 +1295,8 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
         }
     }
 
-    string name;
-    public string Name
+    string? name;
+    public string? Name
     {
         get => name;
         set

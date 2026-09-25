@@ -62,7 +62,8 @@
             );
         }
 
-        public static Microsoft.Xna.Framework.Graphics.BlendState ToXNA(this Gum.BlendState value)
+        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull("value")]
+        public static Microsoft.Xna.Framework.Graphics.BlendState? ToXNA(this Gum.BlendState? value)
         {
             if (value == null) return null;
             else if (value == Gum.BlendState.Opaque) return Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
@@ -108,7 +109,8 @@
 
 
 
-        public static Gum.BlendState ToGum(this Microsoft.Xna.Framework.Graphics.BlendState value)
+        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull("value")]
+        public static Gum.BlendState? ToGum(this Microsoft.Xna.Framework.Graphics.BlendState? value)
         {
             if (value == null) return null;
             else if(value == Microsoft.Xna.Framework.Graphics.BlendState.Opaque) return Gum.BlendState.Opaque;

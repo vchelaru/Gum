@@ -15,13 +15,16 @@ namespace RenderingLibrary.Graphics
         private int height;
         
         // if SurfaceFormat.Color, use these
-        private Color[] mData;
+        // Null when the ImageData was built from byte data; the Color-based methods need ColorData.
+        private Color[]? mData;
+        Color[] ColorData => mData ??
+            throw new InvalidOperationException("This ImageData was created from byte data and has no Color data.");
         private static Color[] mStaticData = new Color[128 * 128];
 
         // if SurfaceFormat.DXT3, use these
-        private byte[] mByteData;
+        private byte[]? mByteData;
 
-        SystemManagers mManagers;
+        SystemManagers? mManagers;
 
         #endregion
 
@@ -43,7 +46,7 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public Color[] Data
+        public Color[]? Data
         {
             get
             {
@@ -57,13 +60,13 @@ namespace RenderingLibrary.Graphics
 
         #region Constructor
 
-        public ImageData(int width, int height, SystemManagers managers)
+        public ImageData(int width, int height, SystemManagers? managers)
             : this(width, height, new Microsoft.Xna.Framework.Color[width * height], managers)
         {
 
         }
 
-        public ImageData(int width, int height, Microsoft.Xna.Framework.Color[] data, SystemManagers managers)
+        public ImageData(int width, int height, Microsoft.Xna.Framework.Color[] data, SystemManagers? managers)
         {
             this.width = width;
             this.height = height;
@@ -72,7 +75,7 @@ namespace RenderingLibrary.Graphics
         }
 
 
-        public ImageData(int width, int height, byte[] data, SystemManagers managers)
+        public ImageData(int width, int height, byte[] data, SystemManagers? managers)
         {
             this.width = width;
             this.height = height;
@@ -86,15 +89,15 @@ namespace RenderingLibrary.Graphics
 
 
 
-        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers)
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers? managers)
         {
             return FromTexture2D(texture2D, managers, null);
 
         }
 
-        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers managers, Microsoft.Xna.Framework.Color[] colorBuffer)
+        public static ImageData FromTexture2D(Texture2D texture2D, SystemManagers? managers, Microsoft.Xna.Framework.Color[]? colorBuffer)
         {
-            ImageData imageData = null;
+            ImageData? imageData = null;
         
 
             switch (texture2D.Format)
@@ -173,7 +176,7 @@ namespace RenderingLibrary.Graphics
 
         public void CopyFrom(Texture2D texture2D)
         {
-            texture2D.GetData(mData, 0, texture2D.Width * texture2D.Height);
+            texture2D.GetData(ColorData, 0, texture2D.Width * texture2D.Height);
         }
 
         public void CopyTo(ImageData destination, int xOffset, int yOffset)
@@ -182,14 +185,14 @@ namespace RenderingLibrary.Graphics
             {
                 for (int y = 0; y < height; y++)
                 {
-                    destination.mData[(y + yOffset) * destination.width + (x + xOffset)] = this.mData[y * width + x];
+                    destination.ColorData[(y + yOffset) * destination.width + (x + xOffset)] = this.ColorData[y * width + x];
                 }
             }
         }
 
         public void ExpandIfNecessary(int desiredWidth, int desiredHeight)
         {
-            if (desiredWidth * desiredHeight > mData.Length)
+            if (desiredWidth * desiredHeight > ColorData.Length)
             {
                 SetDataDimensions(desiredWidth, desiredHeight);
             }
@@ -197,9 +200,9 @@ namespace RenderingLibrary.Graphics
 
         public void Fill(Color fillColor)
         {
-            for (int i = 0; i < Data.Length; i++)
+            for (int i = 0; i < ColorData.Length; i++)
             {
-                Data[i] = fillColor;
+                ColorData[i] = fillColor;
             }
         }
 
@@ -224,10 +227,10 @@ namespace RenderingLibrary.Graphics
             {
                 for (int y = 0; y < height; y++)
                 {
-                    Color temp = mData[x + y * Width];
+                    Color temp = ColorData[x + y * Width];
 
-                    mData[x + y * width] = mData[(widthMinusOne - x) + y * width];
-                    mData[widthMinusOne - x + y * width] = temp;
+                    ColorData[x + y * width] = ColorData[(widthMinusOne - x) + y * width];
+                    ColorData[widthMinusOne - x + y * width] = temp;
 
                 }
             }
@@ -245,10 +248,10 @@ namespace RenderingLibrary.Graphics
             {
                 for (int y = 0; y < halfHeight; y++)
                 {
-                    Color temp = mData[x + y * Width];
+                    Color temp = ColorData[x + y * Width];
 
-                    mData[x + y * width] = mData[x + (heightMinusOne - y) * width];
-                    mData[x + (heightMinusOne - y) * width] = temp;
+                    ColorData[x + y * width] = ColorData[x + (heightMinusOne - y) * width];
+                    ColorData[x + (heightMinusOne - y) * width] = temp;
 
                 }
             }
@@ -256,7 +259,7 @@ namespace RenderingLibrary.Graphics
 
         public Color GetPixelColor(int x, int y)
         {
-            return this.Data[x + y * Width];
+            return this.ColorData[x + y * Width];
         }
 
         public void GetXAndY(int absoluteIndex, out int x, out int y)
@@ -283,7 +286,7 @@ namespace RenderingLibrary.Graphics
                     {
                         continue;
                     }
-                    newData[destinationY * newWidth + destinationX] = mData[y * width + x];
+                    newData[destinationY * newWidth + destinationX] = ColorData[y * width + x];
 
                     destinationX++;
                 }
@@ -313,7 +316,7 @@ namespace RenderingLibrary.Graphics
                     {
                         continue;
                     }
-                    newData[destinationY * newWidth + destinationX] = mData[y * width + x];
+                    newData[destinationY * newWidth + destinationX] = ColorData[y * width + x];
 
                     destinationX++;
                 }
@@ -348,7 +351,7 @@ namespace RenderingLibrary.Graphics
                 destinationX = 0;
                 for (int x = 0; x < width; x++)
                 {
-                    newData[destinationY * width + destinationX] = mData[y * width + x];
+                    newData[destinationY * width + destinationX] = ColorData[y * width + x];
 
                     destinationX++;
                 }
@@ -377,7 +380,7 @@ namespace RenderingLibrary.Graphics
                 destinationX = 0;
                 for (int x = 0; x < width; x++)
                 {
-                    newData[destinationY * width + destinationX] = mData[y * width + x];
+                    newData[destinationY * width + destinationX] = ColorData[y * width + x];
 
                     destinationX++;
                 }
@@ -391,11 +394,11 @@ namespace RenderingLibrary.Graphics
 
         public void Replace(Color oldColor, Color newColor)
         {
-            for (int i = 0; i < mData.Length; i++)
+            for (int i = 0; i < ColorData.Length; i++)
             {
-                if (mData[i] == oldColor)
+                if (ColorData[i] == oldColor)
                 {
-                    mData[i] = newColor;
+                    ColorData[i] = newColor;
                 }
             }
         }
@@ -418,7 +421,7 @@ namespace RenderingLibrary.Graphics
                     yToPullFrom = x;
 
                     newData[y * newWidth + x] =
-                        mData[yToPullFrom * width + xToPullFrom];
+                        ColorData[yToPullFrom * width + xToPullFrom];
                 }
             }
 
@@ -436,23 +439,23 @@ namespace RenderingLibrary.Graphics
 
         public void SetPixel(int x, int y, Color color)
         {
-            Data[y * width + x] = color;
+            ColorData[y * width + x] = color;
         }
 
         public void AddPixelRegular(int x, int y, Color color)
         {
-            var existingData = Data[y * width + x];
+            var existingData = ColorData[y * width + x];
 
-            if (Data[y * width + x].A != 0)
+            if (ColorData[y * width + x].A != 0)
             {
-                Data[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
-                Data[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
-                Data[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
-                Data[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
+                ColorData[y * width + x].R = (byte)((existingData.R * (255 - color.A) / 255.0f) + color.R * color.A / 255.0f);
+                ColorData[y * width + x].G = (byte)((existingData.G * (255 - color.A) / 255.0f) + color.G * color.A / 255.0f);
+                ColorData[y * width + x].B = (byte)((existingData.B * (255 - color.A) / 255.0f) + color.B * color.A / 255.0f);
+                ColorData[y * width + x].A = (byte)Math.MathFunctions.RoundToInt((existingData.A + (255 - existingData.A) * (color.A / 255.0f)));
             }
             else
             {
-                Data[y * width + x] = color;
+                ColorData[y * width + x] = color;
             }
         }
 
@@ -487,7 +490,7 @@ namespace RenderingLibrary.Graphics
 
                             // temporary for testing
                             mStaticData[y * textureWidth + x] =
-                                mData[((int)(sourcePixelY * Width) + (int)(sourcePixelX))];
+                                ColorData[((int)(sourcePixelY * Width) + (int)(sourcePixelX))];
                         }
                         //catch
                         //{
@@ -500,7 +503,7 @@ namespace RenderingLibrary.Graphics
             }
             else
             {
-                return ToTexture2D(mData, textureWidth, textureHeight, generateMipmaps, mManagers);
+                return ToTexture2D(ColorData, textureWidth, textureHeight, generateMipmaps, mManagers);
 
             }
         }
@@ -512,7 +515,7 @@ namespace RenderingLibrary.Graphics
             {
                 managers = SystemManagers.Default;
             }
-            lock (managers.Renderer.GraphicsDevice)
+            lock (managers.Renderer.InitializedGraphicsDevice)
             {
                 textureToFill.SetData<Color>(this.mData, 0, textureToFill.Width * textureToFill.Height);
             }
@@ -525,14 +528,14 @@ namespace RenderingLibrary.Graphics
 
         internal void MakePremultiplied()
         {
-            MakePremultiplied(mData.Length);
+            MakePremultiplied(ColorData.Length);
         }
 
         internal void MakePremultiplied(int count)
         {
             for (int i = count - 1; i > -1; i--)
             {
-                Color color = mData[i];
+                Color color = ColorData[i];
 
                 float multiplier = color.A / 255.0f;
 
@@ -540,20 +543,20 @@ namespace RenderingLibrary.Graphics
                 color.B = (byte)(color.B * multiplier);
                 color.G = (byte)(color.G * multiplier);
 
-                mData[i] = color;
+                ColorData[i] = color;
             }
         }
 
-        internal static Texture2D ToTexture2D(Color[] pixelData, int textureWidth, int textureHeight, SystemManagers managers)
+        internal static Texture2D ToTexture2D(Color[] pixelData, int textureWidth, int textureHeight, SystemManagers? managers)
         {
 
             return ToTexture2D(pixelData, textureWidth, textureHeight, true, managers);
         }
 
-        internal static Texture2D ToTexture2D(Color[] pixelData, int textureWidth, int textureHeight, bool generateMipmaps, SystemManagers managers)
+        internal static Texture2D ToTexture2D(Color[] pixelData, int textureWidth, int textureHeight, bool generateMipmaps, SystemManagers? managers)
         {
             
-            Texture2D texture = null;
+            Texture2D texture;
 
             Renderer renderer;
             if (managers == null)
@@ -565,12 +568,12 @@ namespace RenderingLibrary.Graphics
                 renderer = managers.Renderer;
             }
 
-            lock (renderer.GraphicsDevice)
+            lock (renderer.InitializedGraphicsDevice)
             {
                 const int startIndex = 0;
 
 
-                texture = new Texture2D(renderer.GraphicsDevice,
+                texture = new Texture2D(renderer.InitializedGraphicsDevice,
                     textureWidth, textureHeight, generateMipmaps, SurfaceFormat.Color);
 
 

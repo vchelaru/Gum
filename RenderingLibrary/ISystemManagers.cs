@@ -12,6 +12,7 @@ namespace RenderingLibrary
         bool EnableTouchEvents { get; set; }
         IRenderer Renderer { get; }
 
-        public static ISystemManagers Default { get; set;  }
+        // Set by Gum initialization (e.g. GumService.Initialize); not usable before that.
+        public static ISystemManagers Default { get; set; } = null!;
     }
 }

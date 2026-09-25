@@ -17,7 +17,7 @@ namespace RenderingLibrary.Graphics;
 
 public abstract class SpriteBatchRenderableBase : IRenderable
 {
-    public BlendState BlendState
+    public BlendState? BlendState
     {
         get;
         set;

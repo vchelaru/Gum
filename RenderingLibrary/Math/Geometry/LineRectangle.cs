@@ -26,10 +26,10 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
 
-    SystemManagers mManagers;
+    SystemManagers? mManagers;
 
     bool mVisible;
 
@@ -49,7 +49,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         set;
     }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -105,7 +105,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         }
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -145,9 +145,9 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         get { return mChildren; }
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get { return BlendState.NonPremultiplied; }
     }
@@ -212,7 +212,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
 
     }
 
-    public LineRectangle(SystemManagers managers)
+    public LineRectangle(SystemManagers? managers)
     {
         LocalVisible = true;
 
@@ -272,7 +272,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
         if(LocalVisible)
         {
             // todo - add rotation
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
             RenderLinePrimitive(mLinePrimitive, systemManagers.Renderer.SpriteRenderer, this, systemManagers, IsDotted);
 
         }

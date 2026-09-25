@@ -20,7 +20,7 @@ namespace RenderingLibrary.Math.Geometry
         float mRadius;
         LinePrimitive mLinePrimitive;
 
-        IRenderableIpso mParent;
+        IRenderableIpso? mParent;
 
         bool mVisible;
 
@@ -33,7 +33,7 @@ namespace RenderingLibrary.Math.Geometry
         #region Properties
         ColorOperation IRenderableIpso.ColorOperation => ColorOperation.Modulate;
 
-        public string Name
+        public string? Name
         {
             get;
             set;
@@ -82,7 +82,7 @@ namespace RenderingLibrary.Math.Geometry
         }
         int IRenderableIpso.Alpha => Color.A;
 
-        public new BlendState BlendState
+        public new BlendState? BlendState
         {
             get { return BlendState.NonPremultiplied; }
         }
@@ -178,7 +178,7 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
-        public LineCircle(SystemManagers managers)
+        public LineCircle(SystemManagers? managers)
         {
 
             mChildren = new ();
@@ -242,7 +242,7 @@ namespace RenderingLibrary.Math.Geometry
                 mLinePrimitive.Position.X = this.GetAbsoluteLeft();
                 mLinePrimitive.Position.Y = this.GetAbsoluteTop();
 
-                var systemManagers = managers as SystemManagers;
+                var systemManagers = (SystemManagers)managers;
                 var renderer = systemManagers.Renderer;
                 mLinePrimitive.Render(
                     renderer.SpriteRenderer, 
@@ -256,7 +256,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
 
-        public IRenderableIpso Parent
+        public IRenderableIpso? Parent
         {
             get { return mParent; }
             set
@@ -286,7 +286,7 @@ namespace RenderingLibrary.Math.Geometry
             mParent = parent;
         }
 
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         /// <inheritdoc/>
         public bool Visible

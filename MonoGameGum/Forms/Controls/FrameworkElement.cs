@@ -442,7 +442,7 @@ public class FrameworkElement : INotifyPropertyChanged
         set { Visual.Visible = value; }
     }
 
-    public string Name
+    public string? Name
     {
         get { return Visual.Name; }
         set { Visual.Name = value; }

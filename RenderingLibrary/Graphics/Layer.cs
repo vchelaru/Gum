@@ -18,19 +18,19 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
-        public IRenderableIpso ScissorIpso { get; set; }
+        public IRenderableIpso? ScissorIpso { get; set; }
 
         /// <summary>
         /// Contains values which the Layer can use to override the camera settings.
         /// By default this is null, which means the Layer uses the camera settings. 
         /// </summary>
-        public LayerCameraSettings LayerCameraSettings
+        public LayerCameraSettings? LayerCameraSettings
         {
             get;
             set;
         }
 
-        public string Name
+        public string? Name
         {
             get;
             set;
@@ -52,7 +52,7 @@ namespace RenderingLibrary.Graphics
         //    }
         //}
 
-        public Layer ParentLayer
+        public Layer? ParentLayer
         {
             get;
             set;

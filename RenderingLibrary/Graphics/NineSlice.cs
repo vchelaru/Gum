@@ -58,15 +58,15 @@ public class NineSlice : SpriteBatchRenderableBase,
         set => AnimationLogic.TimeIntoAnimation = value;
     }
 
-    public AnimationChainList AnimationChains
+    public AnimationChainList? AnimationChains
     {
         get => AnimationLogic.AnimationChains;
         set => AnimationLogic.AnimationChains = value;
     }
 
-    public AnimationChain CurrentChain => AnimationLogic.CurrentChain;
+    public AnimationChain? CurrentChain => AnimationLogic.CurrentChain;
 
-    public string CurrentChainName
+    public string? CurrentChainName
     {
         get => AnimationLogic.CurrentChainName;
         set => AnimationLogic.CurrentChainName = value;
@@ -74,7 +74,7 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     Vector2 Position;
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
 //      Sprite mTopLeftSprite = new Sprite(null);
 //      Sprite mTopSprite = new Sprite(null);
@@ -194,13 +194,13 @@ public class NineSlice : SpriteBatchRenderableBase,
     /// </summary>
     public bool FlipDiagonal { get; set; }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
     public float Width
     {
@@ -254,47 +254,47 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     bool IsOnlyRenderingCenterSprite => CustomFrameTextureCoordinateWidth <= 0;
 
-    public Texture2D TopLeftTexture 
+    public Texture2D? TopLeftTexture 
     {
         get { return mSprites[(int)NineSliceSections.TopLeft].Texture; }
         set { mSprites[(int) NineSliceSections.TopLeft].Texture = value; }
     }
-    public Texture2D TopTexture 
+    public Texture2D? TopTexture 
     {
         get { return mSprites[(int)NineSliceSections.Top].Texture; }
         set { mSprites[(int)NineSliceSections.Top].Texture = value; }
     }
-    public Texture2D TopRightTexture 
+    public Texture2D? TopRightTexture 
     {
         get { return mSprites[(int)NineSliceSections.TopRight].Texture; }
         set { mSprites[(int)NineSliceSections.TopRight].Texture = value; }
     }
-    public Texture2D RightTexture 
+    public Texture2D? RightTexture 
     {
         get { return mSprites[(int)NineSliceSections.Right].Texture; }
         set { mSprites[(int)NineSliceSections.Right].Texture = value; }
     }
-    public Texture2D BottomRightTexture 
+    public Texture2D? BottomRightTexture 
     {
         get { return mSprites[(int)NineSliceSections.BottomRight].Texture; }
         set { mSprites[(int)NineSliceSections.BottomRight].Texture = value; }
     }
-    public Texture2D BottomTexture 
+    public Texture2D? BottomTexture 
     {
         get { return mSprites[(int)NineSliceSections.Bottom].Texture; }
         set { mSprites[(int)NineSliceSections.Bottom].Texture = value; }
     }
-    public Texture2D BottomLeftTexture
+    public Texture2D? BottomLeftTexture
     {
         get { return mSprites[(int)NineSliceSections.BottomLeft].Texture; }
         set { mSprites[(int)NineSliceSections.BottomLeft].Texture = value; }
     }
-    public Texture2D LeftTexture
+    public Texture2D? LeftTexture
     {
         get { return mSprites[(int)NineSliceSections.Left].Texture; }
         set { mSprites[(int)NineSliceSections.Left].Texture = value; }
     }
-    public Texture2D CenterTexture
+    public Texture2D? CenterTexture
     {
         get { return mSprites[(int)NineSliceSections.Center].Texture; }
         set { mSprites[(int)NineSliceSections.Center].Texture = value; }
@@ -357,7 +357,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         set;
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -421,7 +421,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         }
     }
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get
         {
@@ -456,7 +456,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         get { return mSprites[(int)NineSliceSections.TopLeft].Height; }
     }
 
-    public IAnimation Animation
+    public IAnimation? Animation
     {
         get;
         set;
@@ -536,7 +536,7 @@ public class NineSlice : SpriteBatchRenderableBase,
 
             RefreshSpriteDimensions();
 
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
             var spriteRenderer = systemManagers.Renderer.SpriteRenderer;
 
             float x = this.GetAbsoluteX();
@@ -852,7 +852,8 @@ public class NineSlice : SpriteBatchRenderableBase,
 
         if (useMulti)
         {
-            if (mSprites[(int)NineSliceSections.TopLeft].Texture == null)
+            var topLeftTexture = mSprites[(int)NineSliceSections.TopLeft].Texture;
+            if (topLeftTexture == null)
             {
                 for (var sprite = 0; sprite < mSprites.Count(); sprite++)
                 {
@@ -864,22 +865,25 @@ public class NineSlice : SpriteBatchRenderableBase,
                 for (var sprite = 0; sprite < mSprites.Count(); sprite++)
                 {
 
-                    _fullOutsideTexturePixelWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width;
-                    _fullInsideTexturePixelWidth = mSprites[(int)NineSliceSections.TopLeft].Texture.Width - (_fullOutsideTexturePixelWidth * 2);
+                    _fullOutsideTexturePixelWidth = topLeftTexture.Width;
+                    _fullInsideTexturePixelWidth = topLeftTexture.Width - (_fullOutsideTexturePixelWidth * 2);
 
-                    mSprites[sprite].SourceRectangle = new Rectangle(0, 0, mSprites[sprite].Texture.Width, mSprites[sprite].Texture.Height);
+                    var spriteTexture = mSprites[sprite].Texture;
+                    // A piece can be null when its texture was assigned individually.
+                    mSprites[sprite].SourceRectangle = spriteTexture == null
+                        ? null
+                        : new Rectangle(0, 0, spriteTexture.Width, spriteTexture.Height);
                 }
 
             }
         }
-        else if ((mSprites[(int) NineSliceSections.TopLeft].Texture != null))
+        else if (mSprites[(int) NineSliceSections.TopLeft].Texture is Texture2D texture)
         {
             int leftCoordinate;
             int rightCoordinate;
             int topCoordinate;
             int bottomCoordinate;
 
-            var texture = mSprites[(int)NineSliceSections.TopLeft].Texture;
 
             leftCoordinate = 0;
             rightCoordinate = texture.Width;
@@ -1267,7 +1271,8 @@ public class NineSlice : SpriteBatchRenderableBase,
 
     public void AnimationActivity(double currentTime)
     {
-        if (Animate)
+        // SpriteManager.Activity only calls this when Animation is set.
+        if (Animate && Animation != null)
         {
             Animation.AnimationActivity(currentTime);
 

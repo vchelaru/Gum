@@ -7,7 +7,7 @@ namespace RenderingLibrary.Math.Geometry
     {
         #region Fields
 
-        static ShapeManager mSelf;
+        static ShapeManager? mSelf;
 
         List<LineRectangle> mRectangles = new List<LineRectangle>();
         List<SolidRectangle> mSolidRectangles = new List<SolidRectangle>();
@@ -19,7 +19,7 @@ namespace RenderingLibrary.Math.Geometry
         #endregion
 
         #region Properties
-        public SystemManagers Managers
+        public SystemManagers? Managers
         {
             get;
             set;
@@ -42,7 +42,7 @@ namespace RenderingLibrary.Math.Geometry
             {
                 if (Managers == null)
                 {
-                    return SystemManagers.Default?.Renderer;
+                    return SystemManagers.Default.Renderer;
                 }
                 else
                 {
@@ -88,7 +88,7 @@ namespace RenderingLibrary.Math.Geometry
             layer.Add(solidRectangle);
         }
 
-        public void Add(LineGrid lineGrid, Layer layer = null)
+        public void Add(LineGrid lineGrid, Layer? layer = null)
         {
             if (layer == null)
             {
@@ -100,7 +100,7 @@ namespace RenderingLibrary.Math.Geometry
 
         }
 
-        public void Add(Line line, Layer layer = null)
+        public void Add(Line line, Layer? layer = null)
         {
             if(layer == null)
             {

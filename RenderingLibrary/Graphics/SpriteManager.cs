@@ -6,7 +6,7 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        static SpriteManager mSelf;
+        static SpriteManager? mSelf;
 
         List<Sprite> mSprites = new List<Sprite>();
         List<NineSlice> mNineSlices = new List<NineSlice>();
@@ -16,7 +16,7 @@ namespace RenderingLibrary.Graphics
 
         #region Properties
 
-        public SystemManagers Managers
+        public SystemManagers? Managers
         {
             get;
             set;
@@ -74,7 +74,7 @@ namespace RenderingLibrary.Graphics
 
         #endregion
 
-        public void Add(Sprite sprite, Layer layer = null)
+        public void Add(Sprite sprite, Layer? layer = null)
         {
             mSprites.Add(sprite);
 #if !TEST
@@ -88,7 +88,7 @@ namespace RenderingLibrary.Graphics
 #endif
         }
 
-        public void Add(InvisibleRenderable renderable, Layer layer = null)
+        public void Add(InvisibleRenderable renderable, Layer? layer = null)
         {
             invisibleRenderables.Add(renderable);
 #if !TEST
@@ -102,7 +102,7 @@ namespace RenderingLibrary.Graphics
 #endif
         }
 
-        public void Add(NineSlice nineSlice, Layer layer = null)
+        public void Add(NineSlice nineSlice, Layer? layer = null)
         {
             mNineSlices.Add(nineSlice);
 

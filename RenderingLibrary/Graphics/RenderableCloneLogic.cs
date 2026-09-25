@@ -10,7 +10,7 @@ public static class RenderableCloneLogic
 {
     public static IRenderable Clone(IRenderable original)
     {
-        IRenderable clonedRenderable = null;
+        IRenderable? clonedRenderable = null;
         switch (original)
         {
             case SolidRectangle solidRectangle:
