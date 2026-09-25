@@ -594,6 +594,29 @@ char id=67 x=0 y=0 width=10 height=13 xoffset=0 yoffset=4 xadvance=10 page=0 chn
     }
 
     [Fact]
+    public void MeasureString_CreatedWhileNoDefaultBitmapFont_ReturnsZero()
+    {
+        // A Text created before SystemManagers sets DefaultBitmapFont (e.g. before
+        // GumService.Initialize) has no font at all, and MonoGameGum never sets Text.DefaultFont.
+        BitmapFont? savedDefault = Text.DefaultBitmapFont;
+        Text.DefaultBitmapFont = null;
+        try
+        {
+            Text text = new Text();
+
+            text.MeasureString("hi").ShouldBe(0);
+            text.MeasureString("hi", HorizontalMeasurementStyle.Full).ShouldBe(0);
+
+            text.InlineVariables.Add(new InlineVariable { VariableName = "FontScale", Value = 2f, StartIndex = 0, CharacterCount = 2 });
+            text.MeasureString("hi", absoluteStartIndexInStrippedText: 0).ShouldBe(0);
+        }
+        finally
+        {
+            Text.DefaultBitmapFont = savedDefault;
+        }
+    }
+
+    [Fact]
     public void MeasureString_WithStyleAndNoBitmapFont_DoesNotThrow()
     {
         Text text = new Text();

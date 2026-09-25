@@ -11,8 +11,9 @@ namespace RenderingLibrary.Graphics;
 
 public class ParsedFontFile
 {
-    public FontFileInfoLine Info { get; private set; }
-    public FontFileCommonLine Common { get; private set; }
+    // Both are required in a text .fnt (the constructor throws otherwise); an XML .fnt can omit them.
+    public FontFileInfoLine? Info { get; private set; }
+    public FontFileCommonLine? Common { get; private set; }
     public List<FontFileCharLine> Chars { get; } = new List<FontFileCharLine>(300);
     public List<FontFileKerningLine> Kernings { get; } = new List<FontFileKerningLine>(300);
     public List<FontFilePage> Pages { get; } = new List<FontFilePage>(10);
@@ -315,10 +316,10 @@ public class ParsedFontLine
         Tag = tag;
     }
 
-    public static (ParsedFontLine line, int nextIndex) Parse(string contents, int startIndex)
+    public static (ParsedFontLine? line, int nextIndex) Parse(string contents, int startIndex)
     {
-        var parsedLine = (ParsedFontLine)null;
-        var currentAttributeName = (string)null;
+        var parsedLine = (ParsedFontLine?)null;
+        var currentAttributeName = (string?)null;
         var wordStartIndex = (int?)null;
         var isInQuotes = false;
         var index = startIndex;

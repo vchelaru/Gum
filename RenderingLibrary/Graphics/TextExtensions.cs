@@ -89,7 +89,7 @@ public static class TextExtensions
         return gapBetweenTextAndEdge;
     }
 
-    private static int GetIndex(Text textInstance, float cursorOffset, string textToUse)
+    private static int GetIndex(Text textInstance, float cursorOffset, string? textToUse)
     {
         var index = textToUse?.Length ?? 0;
         float distanceMeasuredSoFar = 0;
@@ -123,8 +123,10 @@ public static class TextExtensions
 
         for (int i = 0; i < (textToUse?.Length ?? 0); i++)
         {
-            char character = textToUse[i];
-            global::RenderingLibrary.Graphics.BitmapCharacterInfo characterInfo = bitmapFont.GetCharacterInfo(character);
+            // The loop only runs when textToUse has characters.
+            char character = textToUse![i];
+            // No font yet measures as 0, like Text.MeasureString.
+            global::RenderingLibrary.Graphics.BitmapCharacterInfo? characterInfo = bitmapFont?.GetCharacterInfo(character);
 
             int advance = 0;
 

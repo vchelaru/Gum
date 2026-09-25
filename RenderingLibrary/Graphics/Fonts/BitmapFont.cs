@@ -38,7 +38,8 @@ public class BitmapFont : IDisposable
 {
     #region Fields
 
-    internal Texture2D[] mTextures;
+    // A page is null for a font built without textures (headless tests, no graphics device).
+    internal Texture2D?[] mTextures;
 
     BitmapCharacterInfo[] mCharacterInfo;
 
@@ -57,8 +58,10 @@ public class BitmapFont : IDisposable
 
     int mLineHeightInPixels;
 
-    internal string mFontFile;
-    internal string[] mTextureNames = new string[1];
+    // Null for a font built in memory (no .fnt file).
+    internal string? mFontFile;
+    // An entry is null when its page texture is null (in-memory fonts built without a texture).
+    internal string?[] mTextureNames = new string?[1];
 
     int mOutlineThickness;
 
@@ -87,26 +90,26 @@ public class BitmapFont : IDisposable
         get { return mTextures.Length > 0 ? mTextures[0] : null; }
         set
         {
-            mTextures[0] = value!;
+            mTextures[0] = value;
 
-            mTextureNames[0] = mTextures[0].Name;
+            mTextureNames[0] = value?.Name;
         }
     }
 
     /// <summary>
     /// All texture pages for this font. Multi-page fonts use separate textures for different glyph ranges.
     /// </summary>
-    public Texture2D[] Textures => mTextures;
+    public Texture2D?[] Textures => mTextures;
 
     /// <summary>
     /// The standardized path to the .fnt file that defines this font.
     /// </summary>
-    public string FontFile => mFontFile;
+    public string? FontFile => mFontFile;
 
     /// <summary>
     /// The name or path of the first texture page.
     /// </summary>
-    public string TextureName => mTextureNames[0]; 
+    public string? TextureName => mTextureNames[0]; 
 
     /// <summary>
     /// The number of pixels from the top of the line to the bottom of the line, including ascenders and descenders.
@@ -225,13 +228,14 @@ public class BitmapFont : IDisposable
         return s.All(ch => ch >= 32 && ch <= 126);
     }
 
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mTextures))]
     private void ReloadTextures(string fontFile, string fontContents)
     {
         var unqualifiedTextureNames = _ParsedFontFile.GetPagesAsArrayOfStrings;
 
 
-        mTextures = new Texture2D[unqualifiedTextureNames.Length];
-        mTextureNames = new string[unqualifiedTextureNames.Length];
+        mTextures = new Texture2D?[unqualifiedTextureNames.Length];
+        mTextureNames = new string?[unqualifiedTextureNames.Length];
 
         string directory = FileManager.GetDirectory(fontFile);
         for (int i = 0; i < mTextures.Length; i++)
@@ -274,7 +278,8 @@ public class BitmapFont : IDisposable
             // Don't rely on FileExists because mTextureNames may be aliased.
             // If aliased, the internal loader may redirect. Let it do its job:
             //if (ToolsUtilities.FileManager.FileExists(mTextureNames[i]))
-            mTextures[i] = LoadPageTextureOrPlaceholder(mTextureNames[i]);
+            // Only a font loaded from a .fnt file is reloaded, and those always have page names.
+            mTextures[i] = LoadPageTextureOrPlaceholder(mTextureNames[i]!);
         }
     }
 
@@ -335,16 +340,17 @@ public class BitmapFont : IDisposable
     /// <param name="managers">The system managers used for content loading.</param>
     public BitmapFont(string textureFile, string fontFile, SystemManagers managers)
     {
-        mTextures = new Texture2D[1];
+        mTextures = new Texture2D?[1];
 
-        mTextureNames = new string[] { textureFile };
+        mTextureNames = new string?[] { textureFile };
 
         // Set before the page load so a failure report can name the .fnt (SetFontPatternFromFile
         // below assigns it again, unchanged).
         mFontFile = fontFile;
-        mTextures[0] = LoadPageTextureOrPlaceholder(textureFile);
+        var pageTexture = LoadPageTextureOrPlaceholder(textureFile);
+        mTextures[0] = pageTexture;
 
-        mTextureNames[0] = mTextures[0].Name;
+        mTextureNames[0] = pageTexture.Name;
 
         //if (FlatRedBall.IO.FileManager.IsRelative(fontFile))
         //    fontFile = FlatRedBall.IO.FileManager.MakeAbsolute(fontFile);
@@ -359,15 +365,15 @@ public class BitmapFont : IDisposable
     /// </summary>
     /// <param name="fontTextureGraphic">The pre-loaded texture containing the glyph atlas.</param>
     /// <param name="fontPattern">The raw text content of the .fnt file.</param>
-    public BitmapFont(Texture2D fontTextureGraphic, string fontPattern)
+    public BitmapFont(Texture2D? fontTextureGraphic, string fontPattern)
     {
         // the font could be an extended character set - let's say for Chinese
         // default it to 256, but search for the largest number.
-        mTextures = new Texture2D[1];
+        mTextures = new Texture2D?[1];
         mTextures[0] = fontTextureGraphic;
 
         //mTextureName = mTexture.Name;
-        mTextureNames = new string[1];
+        mTextureNames = new string?[1];
         mTextureNames[0] = mTextures[0]?.Name;
 
         _ParsedFontFile = new ParsedFontFile(fontPattern);
@@ -380,11 +386,11 @@ public class BitmapFont : IDisposable
     /// and .fnt content. No disk I/O is performed. This is intended for runtime font
     /// generation where a library like KernSmith produces textures and metadata directly.
     /// </summary>
-    public BitmapFont(Texture2D[] textures, string fntContent)
+    public BitmapFont(Texture2D?[] textures, string fntContent)
     {
         mTextures = textures;
 
-        mTextureNames = new string[textures.Length];
+        mTextureNames = new string?[textures.Length];
         for (int i = 0; i < textures.Length; i++)
         {
             mTextureNames[i] = textures[i]?.Name;
@@ -404,7 +410,7 @@ public class BitmapFont : IDisposable
     public void AssignCharacterTextureCoordinates(int asciiNumber, out float tVTop, out float tVBottom,
         out float tULeft, out float tURight)
     {
-        BitmapCharacterInfo characterInfo = null;
+        BitmapCharacterInfo characterInfo;
 
         if (asciiNumber < mCharacterInfo.Length)
         {
@@ -444,7 +450,7 @@ public class BitmapFont : IDisposable
     /// Falls back to the space character if the code is outside the font's range,
     /// or returns null if the font has no characters at all.
     /// </summary>
-    public BitmapCharacterInfo GetCharacterInfo(int asciiNumber)
+    public BitmapCharacterInfo? GetCharacterInfo(int asciiNumber)
     {
         if(mCharacterInfo.Length == 0)
         {
@@ -461,7 +467,7 @@ public class BitmapFont : IDisposable
     }
 
     /// <inheritdoc cref="GetCharacterInfo(int)"/>
-    public BitmapCharacterInfo GetCharacterInfo(char character)
+    public BitmapCharacterInfo? GetCharacterInfo(char character)
     {
         int asciiNumber = (int)character;
         return GetCharacterInfo(asciiNumber);
@@ -519,6 +525,7 @@ public class BitmapFont : IDisposable
     /// and kerning pairs. Normally reads texture dimensions from the loaded textures; the forced
     /// parameters allow overriding this when textures are not yet loaded.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo))]
     public void SetFontPattern(int? forcedTextureWidth = null, int? forcedTextureHeight = null)
     {
 
@@ -528,10 +535,11 @@ public class BitmapFont : IDisposable
 
         var charArraySize = (parsedData.Chars.LastOrDefault()?.Id + 1) ?? 0;
         mCharacterInfo = new BitmapCharacterInfo[charArraySize];
-        _defaultCharacterInfo = null;
         mKnownCharacterIds.Clear();
-        mLineHeightInPixels = parsedData.Common.LineHeight;
-        BaselineY = parsedData.Common.Base;
+        var common = parsedData.Common ??
+            throw new InvalidOperationException("The font file has no common line.");
+        mLineHeightInPixels = common.LineHeight;
+        BaselineY = common.Base;
 
         int textureWidth = 255;
         int textureHeight = 255;
@@ -561,7 +569,7 @@ public class BitmapFont : IDisposable
         {
             var fontSize = 18;
 
-            var absFontSize = System.Math.Abs(parsedData.Info.Size);
+            var absFontSize = System.Math.Abs(parsedData.Info?.Size ?? 0);
             if (absFontSize > 0)
             {
                 // bmfc uses negative values for fonts
@@ -595,23 +603,28 @@ public class BitmapFont : IDisposable
                 mCharacterInfo[i] = space;
             }
 
+            // Tab and newline get their own instances. Every slot above shares the one space instance,
+            // so editing it in place would also change the space and every missing-glyph fallback.
             if (mCharacterInfo.Length > (int)'\t')
             {
                 // Make the tab character be equivalent to 4 spaces:
-                mCharacterInfo['\t'].ScaleX = space.ScaleX * 4;
-                mCharacterInfo['\t'].Spacing = space.Spacing * 4;
-                mCharacterInfo['\t'].XAdvance = space.XAdvance * 4;
-                mCharacterInfo['\t'].XOffsetInPixels = space.XOffsetInPixels * 4;
+                var tab = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
+                tab.ScaleX = space.ScaleX * 4;
+                tab.Spacing = space.Spacing * 4;
+                tab.XAdvance = space.XAdvance * 4;
+                tab.XOffsetInPixels = space.XOffsetInPixels * 4;
+                mCharacterInfo['\t'] = tab;
                 mKnownCharacterIds.Add('\t');
             }
             if(mCharacterInfo.Length > (int)'\n')
             {
-                mCharacterInfo['\n'].ScaleX = 0;
-                mCharacterInfo['\n'].Spacing = 0;
-                mCharacterInfo['\n'].TURight = 0;
-                mCharacterInfo['\n'].TULeft = 0;
-                //mCharacterInfo['\n'].XOffset = 0;
-                mCharacterInfo['\n'].XOffsetInPixels = 0;
+                var newline = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
+                newline.ScaleX = 0;
+                newline.Spacing = 0;
+                newline.TURight = 0;
+                newline.TULeft = 0;
+                newline.XOffsetInPixels = 0;
+                mCharacterInfo['\n'] = newline;
                 mKnownCharacterIds.Add('\n');
             }
         }
@@ -772,11 +785,11 @@ public class BitmapFont : IDisposable
     /// them at a larger size or with an added page. Does not dispose the previous pages -- the
     /// caller owns their lifetime, matching the <see cref="Texture"/> setter.
     /// </summary>
-    public void ReplaceTexturePages(Texture2D[] textures)
+    public void ReplaceTexturePages(Texture2D?[] textures)
     {
         mTextures = textures;
 
-        mTextureNames = new string[textures.Length];
+        mTextureNames = new string?[textures.Length];
         for (int i = 0; i < textures.Length; i++)
         {
             mTextureNames[i] = textures[i]?.Name;
@@ -787,6 +800,7 @@ public class BitmapFont : IDisposable
     /// Loads a .fnt file from disk and re-parses the font data, replacing the current character layout.
     /// Does not reload textures.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mCharacterInfo), nameof(_defaultCharacterInfo), nameof(_ParsedFontFile))]
     public void SetFontPatternFromFile(string fntFileName)
     {
         // standardize before doing anything else
@@ -806,7 +820,7 @@ public class BitmapFont : IDisposable
     /// <summary>
     /// Renders the given text string to a <see cref="RenderTarget2D"/> using left alignment.
     /// </summary>
-    public Texture2D RenderToTexture2D(string whatToRender, SystemManagers managers, object objectRequestingRender)
+    public Texture2D? RenderToTexture2D(string whatToRender, SystemManagers? managers, object objectRequestingRender)
     {
         var lines = whatToRender.Split('\n').ToList();
 
@@ -816,7 +830,7 @@ public class BitmapFont : IDisposable
     /// <summary>
     /// Renders the given text string to a <see cref="RenderTarget2D"/> using the specified alignment.
     /// </summary>
-    public Texture2D RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers managers, object objectRequestingRender)
+    public Texture2D? RenderToTexture2D(string whatToRender, HorizontalAlignment horizontalAlignment, SystemManagers? managers, object objectRequestingRender)
     {
         var lines = whatToRender.Split('\n').ToList();
 
@@ -835,8 +849,8 @@ public class BitmapFont : IDisposable
     /// <param name="numberOfLettersToRender">The maximum number of characters to render, or null for all.</param>
     /// <param name="lineHeightMultiplier">Multiplier applied to line height for spacing between lines.</param>
     /// <returns>A render target containing the rendered text, or null if there is nothing to render.</returns>
-    public Texture2D RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
-        SystemManagers managers, Texture2D toReplace, object objectRequestingRender,
+    public Texture2D? RenderToTexture2D(List<string> lines, HorizontalAlignment horizontalAlignment,
+        SystemManagers? managers, Texture2D? toReplace, object objectRequestingRender,
         int? numberOfLettersToRender = null, float lineHeightMultiplier = 1)
     {
         if (managers == null)
@@ -845,7 +859,7 @@ public class BitmapFont : IDisposable
         }
 
         ////////////////// Early out /////////////////////////
-        if (managers.Renderer.GraphicsDevice.GraphicsDeviceStatus != GraphicsDeviceStatus.Normal)
+        if (managers.Renderer.GraphicsDevice?.GraphicsDeviceStatus != GraphicsDeviceStatus.Normal)
         {
             return null;
         }
@@ -855,7 +869,7 @@ public class BitmapFont : IDisposable
         }
         ///////////////// End early out //////////////////////
 
-        RenderTarget2D renderTarget = null;
+        RenderTarget2D? renderTarget = null;
 
         int requiredWidth;
         int requiredHeight;
@@ -868,7 +882,7 @@ public class BitmapFont : IDisposable
 #if FULL_DIAGNOSTICS
             foreach (var texture in this.Textures)
             {
-                if (texture.IsDisposed)
+                if (texture?.IsDisposed == true)
                 {
                     string message =
                         $"The font:\n{this.FontFile}\nis disposed";
@@ -1171,7 +1185,8 @@ public class BitmapFont : IDisposable
                         var letterRenderInfo = letterInfos[charIndex];
 
                         spriteRenderer.Draw(
-                            mTextures[letterRenderInfo.PageIndex],
+                            // Only a font with loaded pages can draw.
+                            mTextures[letterRenderInfo.PageIndex]!,
                             letterRenderInfo.FinalPosition,
                             letterRenderInfo.SourceRectangle,
                             color,
@@ -1191,7 +1206,8 @@ public class BitmapFont : IDisposable
                         var letterRenderInfo = letterInfos[charIndex];
 
                         spriteRenderer.Draw(
-                            mTextures[letterRenderInfo.PageIndex],
+                            // Only a font with loaded pages can draw.
+                            mTextures[letterRenderInfo.PageIndex]!,
                             letterRenderInfo.FinalPosition,
                             letterRenderInfo.SourceRectangle,
                             color,
@@ -1240,7 +1256,7 @@ public class BitmapFont : IDisposable
         {
             throw new InvalidOperationException("The bitmap font has a null texture so it cannot return a character rectangle");
         }
-        BitmapCharacterInfo characterInfo = GetCharacterInfo(c);
+        BitmapCharacterInfo? characterInfo = GetCharacterInfo(c);
 
         int sourceLeft = 0;
         int sourceTop = 0;
@@ -1310,7 +1326,7 @@ public class BitmapFont : IDisposable
     }
 
     // This sucks, but if we pass an IEnumerable, it allocates memory like crazy. Duplicate code to handle List to reduce alloc
-    //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+    //public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     /// <summary>
     /// Returns the width and height required to render the argument line of text.
     /// </summary>
@@ -1348,7 +1364,7 @@ public class BitmapFont : IDisposable
     }
 
     /// <inheritdoc cref="GetRequiredWidthAndHeight(List{string}, out int, out int, List{int}?)"/>
-    public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int> widths)
+    public void GetRequiredWidthAndHeight(IEnumerable<string> lines, out int requiredWidth, out int requiredHeight, List<int>? widths)
     {
 
         requiredWidth = 0;
@@ -1391,7 +1407,7 @@ public class BitmapFont : IDisposable
         for (int i = 0; i < line.Length; i++)
         {
             char character = line[i];
-            BitmapCharacterInfo characterInfo = GetCharacterInfo(character);
+            BitmapCharacterInfo? characterInfo = GetCharacterInfo(character);
 
             if (characterInfo != null)
             {
@@ -1456,6 +1472,11 @@ public class BitmapFont : IDisposable
     public void MakeNumbersMonospaced()
     {
         var character0 = GetCharacterInfo('0');
+        if (character0 == null)
+        {
+            // The font has no characters at all.
+            return;
+        }
 
         int characterIndex = (int)'1';
 
@@ -1522,7 +1543,7 @@ public class BitmapFont : IDisposable
             // Issue #4364: only a font built directly from pre-generated textures (see _ownsTextures)
             // owns them exclusively -- string-path fonts share theirs through LoaderManager's cache,
             // which still handles disposing those.
-            foreach (Texture2D texture in mTextures)
+            foreach (Texture2D? texture in mTextures)
             {
                 texture?.Dispose();
             }
@@ -1530,7 +1551,7 @@ public class BitmapFont : IDisposable
         }
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
         return mFontFile;
     }

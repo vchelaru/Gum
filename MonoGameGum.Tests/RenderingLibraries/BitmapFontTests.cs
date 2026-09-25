@@ -437,5 +437,25 @@ char id=5   x=0   y=0   width=3     height=1     xoffset=-1    yoffset=20    xad
 
         withoutNewline.ShouldBe(withNewline, "Because a trailing newline should not affect the width of a text, regardless of its XAdavance");
     }
+
+    [Fact]
+    public void MeasureString_FontWithoutSpaceGlyph_SpaceUsesSyntheticWidth()
+    {
+        // size=-18 with no char 32 (e.g. a Hiero "Extended" font), so SetFontPattern synthesizes a
+        // space of 18 / 3 = 6 pixels.
+        const string noSpaceFontData =
+@"info face=""Arial"" size=-18 bold=0 italic=0 charset="""" unicode=1 stretchH=100 smooth=1 aa=1 padding=0,0,0,0 spacing=1,1 outline=0
+common lineHeight=21 base=17 scaleW=256 scaleH=256 pages=1 packed=0 alphaChnl=0 redChnl=4 greenChnl=4 blueChnl=4
+page id=0 file=""Font18Arial_0.png""
+chars count=1
+char id=65   x=0   y=0   width=10     height=13     xoffset=0    yoffset=4    xadvance=10     page=0  chnl=15
+";
+        BitmapFont font = new BitmapFont((Texture2D)null!, noSpaceFontData);
+
+        int withSpace = font.MeasureString("A A", HorizontalMeasurementStyle.Full);
+        int withoutSpace = font.MeasureString("AA", HorizontalMeasurementStyle.Full);
+
+        (withSpace - withoutSpace).ShouldBe(6);
+    }
 }
 

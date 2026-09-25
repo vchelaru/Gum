@@ -86,7 +86,7 @@ public class ParameterizedLetterCustomizationCall
 
     public int CharacterIndex { get; set; }
 
-    public string TextBlock { get; set; }
+    public string TextBlock { get; set; } = string.Empty;
 }
 
 #endregion
@@ -95,7 +95,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 {
     #region Fields
 
-    public static SpriteFont DefaultFont
+    public static SpriteFont? DefaultFont
     {
         get;
         set;
@@ -104,7 +104,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// <summary>
     /// The default BitmapFont to use if a Text instance is referencing a null font.
     /// </summary>
-    public static BitmapFont DefaultBitmapFont
+    public static BitmapFont? DefaultBitmapFont
     {
         get;
         set;
@@ -162,16 +162,16 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     List<string> mWrappedText = new List<string>();
     float? mWidth = 200;
     float mHeight = 200;
-    LinePrimitive mBounds;
+    LinePrimitive? mBounds;
 
     public List<InlineVariable> InlineVariables { get; private set; } = new List<InlineVariable>();
 
-    BitmapFont mBitmapFont;
-    Texture2D mTextureToRender;
+    BitmapFont? mBitmapFont;
+    Texture2D? mTextureToRender;
 
     IRenderableIpso? mParent;
 
-    ObservableCollectionNoReset<IRenderableIpso> mChildren;
+    ObservableCollectionNoReset<IRenderableIpso> mChildren = new();
 
     int mAlpha = 255;
     int mRed = 255;
@@ -287,7 +287,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     // It's now turned on, and we have more unit tests to cover this.
     public static bool IsMidWordLineBreakEnabled = true;
 
-    SystemManagers mManagers;
+    SystemManagers? mManagers;
 
     bool mNeedsBitmapFontRefresh = true;
 
@@ -354,7 +354,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         set;
     }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -427,7 +427,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     /// This only exists to make it easier for the code that creates InlineVariables
     /// to use this.
     /// </summary>
-    public string StoredMarkupText { get; set; }
+    public string? StoredMarkupText { get; set; }
 
     public List<string> WrappedText => mWrappedText;
 
@@ -631,7 +631,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             ? (mBitmapFont ?? DefaultBitmapFont)?.Texture
             : null;
 
-    public BitmapFont BitmapFont
+    public BitmapFont? BitmapFont
     {
         get
         {
@@ -682,7 +682,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    private void AssignBitmapFontAndRefresh(BitmapFont value)
+    private void AssignBitmapFontAndRefresh(BitmapFont? value)
     {
         mBitmapFont = value;
         UpdateWrappedText();
@@ -757,9 +757,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
-    public new BlendState BlendState { get; set; }
+    public new BlendState? BlendState { get; set; }
 
     Renderer Renderer
     {
@@ -891,18 +891,17 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         Initialize(SystemManagers.Default, "Hello");
     }
 
-    public Text(SystemManagers managers, string text = "Hello")
+    public Text(SystemManagers? managers, string text = "Hello")
     {
         Initialize(managers, text);
     }
 
-    private void Initialize(SystemManagers managers, string text)
+    private void Initialize(SystemManagers? managers, string text)
     {
         Visible = true;
         RenderBoundary = RenderBoundaryDefault;
 
         mManagers = managers;
-        mChildren = new ();
 
         mRawText = text;
         mNeedsBitmapFontRefresh = true;
@@ -918,6 +917,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         UpdateLinePrimitive();
     }
 
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mBounds))]
     private void CreateBounds(SystemManagers managers)
     {
         mBounds = new LinePrimitive(managers.Renderer?.TryGetSinglePixelTexture());
@@ -985,8 +985,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 #if TEST
             return 0;
 #else
-            float wordWidth = DefaultFont.MeasureString(whatToMeasure).X;
-            return wordWidth;
+            // No font at all (e.g. created before SystemManagers set DefaultBitmapFont). MonoGameGum
+            // never sets DefaultFont, so there is nothing to measure against.
+            return DefaultFont?.MeasureString(whatToMeasure).X ?? 0;
 #endif
         }
     }
@@ -1012,8 +1013,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 #if TEST
             return 0;
 #else
-            float wordWidth = DefaultFont.MeasureString(whatToMeasure).X;
-            return wordWidth;
+            // No font at all (e.g. created before SystemManagers set DefaultBitmapFont). MonoGameGum
+            // never sets DefaultFont, so there is nothing to measure against.
+            return DefaultFont?.MeasureString(whatToMeasure).X ?? 0;
 #endif
         }
     }
@@ -1053,7 +1055,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     {
         if (!mIsTextureCreationSuppressed && TextRenderingMode == TextRenderingMode.RenderTarget)
         {
-            BitmapFont fontToUse = mBitmapFont;
+            BitmapFont? fontToUse = mBitmapFont;
             if (mBitmapFont == null)
             {
                 fontToUse = DefaultBitmapFont;
@@ -1076,20 +1078,20 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 {
                     mTextureToRender.Dispose();
 
-                    if (mTextureToRender is RenderTarget2D)
+                    if (mTextureToRender is RenderTarget2D oldRenderTarget)
                     {
 #pragma warning disable CS0618 // MonoGame never raises ContentLost, but other XNA-family backends compile this too
-                        (mTextureToRender as RenderTarget2D).ContentLost -= SetNeedsRefresh;
+                        oldRenderTarget.ContentLost -= SetNeedsRefresh;
 #pragma warning restore CS0618
                     }
                     mTextureToRender = null;
                 }
                 mTextureToRender = returnedRenderTarget;
 
-                if (isNewInstance && mTextureToRender is RenderTarget2D)
+                if (isNewInstance && mTextureToRender is RenderTarget2D newRenderTarget)
                 {
 #pragma warning disable CS0618 // MonoGame never raises ContentLost, but other XNA-family backends compile this too
-                    (mTextureToRender as RenderTarget2D).ContentLost += SetNeedsRefresh;
+                    newRenderTarget.ContentLost += SetNeedsRefresh;
 #pragma warning restore CS0618
                     mTextureToRender.Name = "Render Target for Text " + this.Name;
 
@@ -1144,7 +1146,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             //{
             //    UpdateTextureToRender();
             //}
-            if (RenderBoundary)
+            // mBounds is only created once the Text has SystemManagers (see UpdateLinePrimitive).
+            if (RenderBoundary && mBounds != null)
             {
                 LineRectangle.RenderLinePrimitive(mBounds, spriteRenderer, this, systemManagers, false);
             }
@@ -1172,7 +1175,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     static List<int> widths = new List<int>();
     private void RenderCharacterByCharacter(SpriteRenderer spriteRenderer)
     {
-        BitmapFont fontToUse = mBitmapFont;
+        BitmapFont? fontToUse = mBitmapFont;
         if (mBitmapFont == null)
         {
             fontToUse = DefaultBitmapFont;
@@ -1252,7 +1255,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     List<int> individualLineWidth = new List<int>() { 0 };
     private void DrawWithInlineVariables(BitmapFont fontToUse, int requiredWidth, SpriteRenderer spriteRenderer)
     {
-        var absoluteTop = mTempForRendering.GetAbsoluteTop();
+        // The caller runs UpdateIpsoForRendering first.
+        var tempForRendering = mTempForRendering!;
+        var absoluteTop = tempForRendering.GetAbsoluteTop();
 
         int startOfLineIndex = 0;
 
@@ -1265,7 +1270,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             {
                 break;
             }
-            var absoluteLeft = mTempForRendering.GetAbsoluteLeft();
+            var absoluteLeft = tempForRendering.GetAbsoluteLeft();
             var lineOfText = WrappedText[i];
 
             var color = Color;
@@ -1574,6 +1579,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         return mTempForRendering;
     }
 
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mTempForRendering))]
     private void UpdateIpsoForRendering()
     {
         if (mTempForRendering == null)
@@ -1644,7 +1650,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         }
     }
 
-    IRenderableIpso mTempForRendering;
+    IRenderableIpso? mTempForRendering;
 
     private void RenderUsingSpriteFont(SpriteRenderer spriteRenderer)
     {
@@ -1654,7 +1660,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         float leftSide = offset.X + this.GetAbsoluteX();
         float topSide = offset.Y + this.GetAbsoluteY();
 
-        SpriteFont font = DefaultFont;
+        SpriteFont? font = DefaultFont;
         // Maybe this hasn't been loaded yet?
         if (font != null)
         {
@@ -1704,12 +1710,12 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 offset.X = (int)offset.X; // so we don't have half-pixels that render weird
 
                 spriteRenderer.DrawString(font, line, offset, Color, this);
-                offsetY += DefaultFont.LineSpacing;
+                offsetY += font.LineSpacing;
             }
         }
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
         return this.Name;
     }
@@ -1752,7 +1758,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else
                 {
-                    EffectiveMeasurementFont.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
+                    // mBitmapFont is non-null here, so EffectiveMeasurementFont is too.
+                    EffectiveMeasurementFont!.GetRequiredWidthAndHeight(WrappedText, out requiredWidth, out requiredHeight);
                 }
             }
 
@@ -1793,7 +1800,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             if (substrings.Count == 0)
             {
                 lineHeightFactor = 1;
-                lineWidthInBaseUnits = mBitmapFont.MeasureString(line);
+                // Only reached from UpdatePreRenderDimensions, which requires mBitmapFont.
+                lineWidthInBaseUnits = mBitmapFont!.MeasureString(line);
             }
             else
             {
@@ -1845,7 +1853,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
         {
             var substring = substrings[substringIndex];
             float runScale = effectiveFontScale;
-            BitmapFont runFont = mBitmapFont;
+            // Null when no font is loaded yet (see MeasureString); that run then measures as 0.
+            BitmapFont? runFont = mBitmapFont;
             float runHeightScale = effectiveFontScale;
             for (int variableIndex = 0; variableIndex < substring.Variables.Count; variableIndex++)
             {
@@ -1857,8 +1866,8 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
                 }
                 else if (variable.VariableName == nameof(BitmapFont))
                 {
-                    runFont = (BitmapFont)variable.Value;
-                    if (mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
+                    runFont = (BitmapFont?)variable.Value;
+                    if (runFont != null && mBitmapFont != null && mBitmapFont.LineHeightInPixels > 0)
                     {
                         runHeightScale = effectiveFontScale * runFont.LineHeightInPixels / mBitmapFont.LineHeightInPixels;
                     }
@@ -1867,7 +1876,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
             var measurementStyle = substringIndex == substrings.Count - 1
                 ? HorizontalMeasurementStyle.TrimRight
                 : HorizontalMeasurementStyle.Full;
-            lineWidthAtScale += runFont.MeasureString(substring.Substring, measurementStyle) * runScale;
+            lineWidthAtScale += (runFont?.MeasureString(substring.Substring, measurementStyle) ?? 0) * runScale;
             maxRunScale = System.Math.Max(maxRunScale, runHeightScale);
         }
         lineHeightFactor = effectiveFontScale > 0 ? maxRunScale / effectiveFontScale : 1;
