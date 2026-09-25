@@ -86,6 +86,10 @@ public class BaseTestClass : IDisposable
         InteractiveGue.ClearNextClickActions();
 
         GumService.Default.Root.Children!.Clear();
+        // A leaked popup keeps drawing with a texture the cache reset below frees, and a later
+        // test's fresh texture can reuse its GPU id and batch into that draw call (#4901).
+        Gum.GumService.Default.ModalRoot.Children!.Clear();
+        Gum.GumService.Default.PopupRoot.Children!.Clear();
         FrameworkElement.AdditionalPopupRootPairs.Clear();
 
         // #3066: sweep any renderables a test added straight to the renderer layers via
@@ -100,10 +104,6 @@ public class BaseTestClass : IDisposable
                 layer.Remove(renderable);
             }
         }
-
-        // Why aren't these available?
-        //GumService.Default.ModalRoot.Children!.Clear();
-        //GumService.Default.PopupRoot.Children!.Clear();
 
         //CustomSetPropertyOnRenderable.LocalizationService = null;
 

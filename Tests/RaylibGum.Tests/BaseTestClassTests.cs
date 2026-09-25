@@ -12,12 +12,12 @@ public class BaseTestClassTests
         // Dispose has already freed. A later test's fresh texture can then reuse that GPU id and
         // batch into the leaked popup's draw call, hiding its own (#4901).
         BaseTestClass test = new BaseTestClass();
-        GumService.Default.PopupRoot.Children.Add(new ContainerRuntime());
-        GumService.Default.ModalRoot.Children.Add(new ContainerRuntime());
+        Gum.GumService.Default.PopupRoot.Children.Add(new ContainerRuntime());
+        Gum.GumService.Default.ModalRoot.Children.Add(new ContainerRuntime());
 
         test.Dispose();
 
-        GumService.Default.PopupRoot.Children.ShouldBeEmpty();
-        GumService.Default.ModalRoot.Children.ShouldBeEmpty();
+        Gum.GumService.Default.PopupRoot.Children.ShouldBeEmpty();
+        Gum.GumService.Default.ModalRoot.Children.ShouldBeEmpty();
     }
 }
