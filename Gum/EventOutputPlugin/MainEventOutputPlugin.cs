@@ -71,7 +71,7 @@ namespace EventOutputPlugin
 
         }
 
-        private string GetElementPrefix(ElementSave element)
+        private string? GetElementPrefix(ElementSave? element)
         {
             if (element is ScreenSave)
             {

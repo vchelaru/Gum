@@ -8,7 +8,7 @@ public interface IGuiCommands
     void RefreshVariables(bool force = false);
     void RefreshVariableValues();
     void RefreshElementTreeView();
-    void RefreshElementTreeView(IInstanceContainer instanceContainer);
+    void RefreshElementTreeView(IInstanceContainer? instanceContainer);
     void PrintOutput(string output);
     void ToggleToolVisibility();
     void FocusSearch();

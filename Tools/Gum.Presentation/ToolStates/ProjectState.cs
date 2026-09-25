@@ -14,7 +14,7 @@ public class ProjectState : IProjectState
         _projectManager = projectManager;
     }
 
-    public GumProjectSave GumProjectSave => _projectManager.GumProjectSave;
+    public GumProjectSave? GumProjectSave => _projectManager.GumProjectSave;
     public bool EffectiveUseStandardsPalette => _projectManager.EffectiveUseStandardsPalette;
     public byte OutlineColorR => _projectManager.OutlineColorR;
     public byte OutlineColorG => _projectManager.OutlineColorG;
@@ -40,5 +40,5 @@ public class ProjectState : IProjectState
     public FilePath BehaviorFilePath => ProjectDirectory + "Behaviors/";
 
     public bool NeedsToSaveProject =>
-        ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectManager.GumProjectSave.FullFileName);
+        ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectManager.GumProjectSave?.FullFileName);
 }

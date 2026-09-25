@@ -23,11 +23,11 @@ namespace Gum.Plugins.ParentPlugin
             this.VariableSet += HandleVariableSet;
         }
 
-        private void HandleVariableSet(ElementSave container, InstanceSave? instance, string variableName, object? oldValue,
+        private void HandleVariableSet(ElementSave? container, InstanceSave? instance, string variableName, object? oldValue,
             bool isFullCommit)
         {
             ///////////////////////Early Out//////////////////
-            if (variableName != "Parent" || instance == null)
+            if (variableName != "Parent" || instance == null || container == null)
             {
                 return;
             }

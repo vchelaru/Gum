@@ -37,7 +37,7 @@ public class CodeOutputElementSettingsManager
     /// Pass <paramref name="forcedElementName"/> to resolve the path the file had under a different
     /// element name, which rename uses to find the file still sitting at the old name.
     /// </summary>
-    public FilePath? GetCodeSettingsFilePath(ElementSave element, string? forcedElementName = null)
+    public FilePath? GetCodeSettingsFilePath(ElementSave? element, string? forcedElementName = null)
     {
         FilePath? fileName = ElementFilePathHelper.GetFullPathXmlFile(element,
             _projectDirectoryProvider.ProjectDirectory, forcedElementName);
@@ -51,7 +51,7 @@ public class CodeOutputElementSettingsManager
     /// <summary>
     /// Loads element-level code settings from disk, or creates defaults if the file does not exist.
     /// </summary>
-    public CodeOutputElementSettings LoadOrCreateSettingsFor(ElementSave element)
+    public CodeOutputElementSettings LoadOrCreateSettingsFor(ElementSave? element)
     {
         CodeOutputElementSettings toReturn;
         var fileName = GetCodeSettingsFilePath(element);

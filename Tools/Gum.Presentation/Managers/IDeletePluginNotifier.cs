@@ -29,7 +29,7 @@ public interface IDeletePluginNotifier
 
     void BehaviorDeleted(BehaviorSave behavior);
 
-    void InstanceDelete(ElementSave elementSave, InstanceSave instance);
+    void InstanceDelete(ElementSave? elementSave, InstanceSave instance);
 
     void InstancesDelete(ElementSave elementSave, InstanceSave[] instances);
 

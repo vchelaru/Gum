@@ -57,8 +57,8 @@ public class AvaloniaHeadStartup : IHeadStartup
 
         // Until the plugin-management dialog comes across, the Output tab is where a user can see
         // which plugins this head composed.
-        string names = string.Join(", ", pluginManager.Plugins.Select(plugin => plugin.FriendlyName).OrderBy(name => name));
-        _services.GetRequiredService<IOutputManager>().AddOutput($"Loaded {pluginManager.Plugins.Count()} plugin(s): {names}");
+        string names = string.Join(", ", pluginManager.InitializedPlugins.Select(plugin => plugin.FriendlyName).OrderBy(name => name));
+        _services.GetRequiredService<IOutputManager>().AddOutput($"Loaded {pluginManager.InitializedPlugins.Count()} plugin(s): {names}");
     }
 
     /// <inheritdoc/>

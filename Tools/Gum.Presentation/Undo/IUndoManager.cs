@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Gum.Undo;
 public interface IUndoManager
 {
-    ElementHistory CurrentElementHistory { get; }
+    ElementHistory? CurrentElementHistory { get; }
     BehaviorHistory? CurrentBehaviorHistory { get; }
 
     event EventHandler<UndoOperationEventArgs> UndosChanged;

@@ -113,7 +113,7 @@ public class SelectedState : ISelectedState
         var instancesBefore = SelectedInstances.ToList();
 
         var instanceClearedAsSideEffect = false;
-        if (value?.Count > 0)
+        if (value.Count > 0)
         {
             // Setting an element implicitly deselects any selected instance. Fire
             // InstanceSelected with a null instance so listeners (notably the variable
@@ -247,13 +247,13 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public ElementBehaviorReference SelectedBehaviorReference
+    public ElementBehaviorReference? SelectedBehaviorReference
     {
         get => snapshot.SelectedBehaviorReference;
         set => HandleBehaviorReferenceSelected(value);
     }
 
-    private void HandleBehaviorReferenceSelected(ElementBehaviorReference behaviorReference)
+    private void HandleBehaviorReferenceSelected(ElementBehaviorReference? behaviorReference)
     {
         snapshot.SelectedBehaviorReference = behaviorReference;
 
@@ -288,7 +288,7 @@ public class SelectedState : ISelectedState
         {
             SelectedBehaviorReference = null;
 
-            UpdateToSelectedBehaviors(value);
+            UpdateToSelectedBehaviors(value ?? new List<BehaviorSave>());
         }
 
 
@@ -349,7 +349,7 @@ public class SelectedState : ISelectedState
     #region Instance
 
 
-    public InstanceSave SelectedInstance
+    public InstanceSave? SelectedInstance
     {
         get
         {
@@ -376,7 +376,7 @@ public class SelectedState : ISelectedState
         }
         set
         {
-            HandleSelectedInstances(value?.ToList());
+            HandleSelectedInstances(value?.ToList() ?? new List<InstanceSave>());
         }
 
     }
@@ -386,7 +386,7 @@ public class SelectedState : ISelectedState
         var instancesBefore = snapshot.SelectedInstances.ToList();
         var elementBefore = snapshot.SelectedElement;
 
-        var newInstance = value?.FirstOrDefault();
+        var newInstance = value.FirstOrDefault();
 
         var behaviorBefore = SelectedBehavior;
 
@@ -574,7 +574,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory selectedStateSaveCategory)
+    private void UpdateToSetSelectedStateSaveCategory(StateSaveCategory? selectedStateSaveCategory)
     {
         var isSame = snapshot.SelectedStateCategorySave == selectedStateSaveCategory;
         if (!isSame)
@@ -584,7 +584,7 @@ public class SelectedState : ISelectedState
     }
 
 
-    private void TakeSnapshot(StateSaveCategory stateSaveCategory)
+    private void TakeSnapshot(StateSaveCategory? stateSaveCategory)
     {
         snapshot.SelectedStateCategorySave = stateSaveCategory;
         snapshot.SelectedStateSave = null;
@@ -594,7 +594,7 @@ public class SelectedState : ISelectedState
 
     #region StateSave
 
-    public StateSave CustomCurrentStateSave
+    public StateSave? CustomCurrentStateSave
     {
         get => snapshot.CustomCurrentStateSave;
         set
@@ -604,7 +604,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleCustomStateSaveSelected(StateSave value)
+    private void HandleCustomStateSaveSelected(StateSave? value)
     {
         snapshot.CustomCurrentStateSave = value;
 
@@ -632,7 +632,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    public StateSave SelectedStateSaveOrDefault
+    public StateSave? SelectedStateSaveOrDefault
     {
         get
         {
@@ -646,7 +646,10 @@ public class SelectedState : ISelectedState
         var elementContainer =
             ObjectFinder.Self.GetStateContainerOf(stateSave);
 
-        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+        if (stateSave != null)
+        {
+            category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
+        }
 
         if (category != null && category != snapshot.SelectedStateCategorySave)
         {
@@ -666,13 +669,16 @@ public class SelectedState : ISelectedState
 
     }
 
-    private void TakeSnapshot(StateSave selectedStateSave)
+    private void TakeSnapshot(StateSave? selectedStateSave)
     {
         snapshot.SelectedStateSave = selectedStateSave;
         var elementContainer =
             ObjectFinder.Self.GetStateContainerOf(selectedStateSave);
-        StateSaveCategory category = null;
-        category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
+        StateSaveCategory? category = null;
+        if (selectedStateSave != null)
+        {
+            category = elementContainer?.Categories.FirstOrDefault(item => item.States.Contains(selectedStateSave));
+        }
         snapshot.SelectedStateCategorySave = category;
     }
 
@@ -680,7 +686,7 @@ public class SelectedState : ISelectedState
 
     #region Variables
 
-    public VariableSave SelectedVariableSave
+    public VariableSave? SelectedVariableSave
     {
         get
         {
@@ -693,7 +699,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleVariableSaveSelected(VariableSave value)
+    private void HandleVariableSaveSelected(VariableSave? value)
     {
         snapshot.SelectedVariableSave = value;
 
@@ -703,7 +709,7 @@ public class SelectedState : ISelectedState
 
     }
 
-    public VariableSave SelectedBehaviorVariable
+    public VariableSave? SelectedBehaviorVariable
     {
         get
         {
@@ -716,7 +722,7 @@ public class SelectedState : ISelectedState
         }
     }
 
-    private void HandleSelectedBehaviorVariable(VariableSave value)
+    private void HandleSelectedBehaviorVariable(VariableSave? value)
     {
         UpdateToSelectedBehaviorVariable(value);
 
@@ -728,7 +734,7 @@ public class SelectedState : ISelectedState
     /// There may not be a VariableSave backing the selection as the
     /// value may be null in the StateSave
     /// </summary>
-    public string SelectedVariableName
+    public string? SelectedVariableName
     {
         get
         {
@@ -737,7 +743,7 @@ public class SelectedState : ISelectedState
     }
 
 
-    private void UpdateToSelectedBehaviorVariable(VariableSave variable)
+    private void UpdateToSelectedBehaviorVariable(VariableSave? variable)
     {
         if (variable != snapshot.SelectedBehaviorVariable)
         {

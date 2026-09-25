@@ -39,13 +39,13 @@ namespace Gum.Plugins
             }
         }
 
-        public Exception FailureException
+        public Exception? FailureException
         {
             get;
             private set;
         }
 
-        public string FailureDetails
+        public string? FailureDetails
         {
             get;
             private set;

@@ -12,12 +12,12 @@ public interface IVariableSaveLogic
     /// <summary>
     /// Returns whether the given variable should be active (visible/editable) for the current selection context.
     /// </summary>
-    bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave container, InstanceSave? currentInstance);
+    bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave? container, InstanceSave? currentInstance);
 
     /// <summary>
     /// Returns whether the given variable list should be included based on the container's base type.
     /// </summary>
-    bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave rootElementSave);
+    bool GetShouldIncludeBasedOnBaseType(VariableListSave variableList, ElementSave container, StandardElementSave? rootElementSave);
 
     /// <summary>
     /// Returns whether a variable is hidden from instances of the given element, walking the inheritance chain.
@@ -33,5 +33,5 @@ public interface IVariableSaveLogic
     /// so headless callers (e.g. the relocated <c>ElementSaveDisplayer</c>) don't need to reference
     /// that tool-only extension method directly.
     /// </summary>
-    TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container);
+    TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave container);
 }

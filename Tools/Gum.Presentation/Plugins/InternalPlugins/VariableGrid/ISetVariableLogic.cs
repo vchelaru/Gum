@@ -16,11 +16,11 @@ public interface ISetVariableLogic
     bool AttemptToPersistPositionsOnUnitChanges { get; set; }
 
     GeneralResponse PropertyValueChanged(string unqualifiedMemberName, object? oldValue,
-        InstanceSave? instance, StateSave stateContainingVariable, bool refresh = true, bool recordUndo = true,
+        InstanceSave? instance, StateSave? stateContainingVariable, bool refresh = true, bool recordUndo = true,
         bool trySave = true, bool isFullCommit = true);
 
-    GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer instanceContainer,
-        InstanceSave? instance, StateSave currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true);
+    GeneralResponse ReactToPropertyValueChanged(string unqualifiedMember, object? oldValue, IInstanceContainer? instanceContainer,
+        InstanceSave? instance, StateSave? currentState, bool refresh, bool recordUndo = true, bool trySave = true, bool isFullCommit = true);
 
     /// <summary>
     /// Performs the structural refresh a committed change to <paramref name="unqualifiedMember"/>

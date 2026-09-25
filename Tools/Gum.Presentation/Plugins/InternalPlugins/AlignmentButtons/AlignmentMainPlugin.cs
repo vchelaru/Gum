@@ -66,7 +66,7 @@ namespace Gum.Plugins.AlignmentButtons
             Refresh();
         }
 
-        private void HandleInstanceSelected(ElementSave elementSave, InstanceSave instance)
+        private void HandleInstanceSelected(ElementSave? elementSave, InstanceSave? instance)
         {
             // Auto-selecting a new instance (e.g. right-click Add Object on an already-selected
             // Screen) only raises InstanceSelected, not TreeNodeSelected - see issue #4067.

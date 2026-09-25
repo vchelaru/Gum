@@ -29,7 +29,7 @@ public class CodeOutputTabTests
     {
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
 
-        pluginManager.Plugins.Select(plugin => plugin.GetType()).ShouldContain(typeof(MainCodeOutputPlugin));
+        pluginManager.InitializedPlugins.Select(plugin => plugin.GetType()).ShouldContain(typeof(MainCodeOutputPlugin));
     }
 
     [AvaloniaFact]

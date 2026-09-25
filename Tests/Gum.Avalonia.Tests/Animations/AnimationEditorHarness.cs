@@ -96,8 +96,8 @@ internal sealed class AnimationEditorHarness : IDisposable
             // Selection, rename, undo and the other plugin events reach this instance through the
             // manager in place of the head's own instance, which would otherwise handle every
             // event too (moving or copying the same sidecar first); it is put back on dispose.
-            _headPlugin = _pluginManager.Plugins.FirstOrDefault(plugin => plugin is AvaloniaStateAnimationPlugin);
-            _pluginManager.Plugins = _pluginManager.Plugins.Where(plugin => plugin != _headPlugin).Append(Plugin).ToList();
+            _headPlugin = _pluginManager.InitializedPlugins.FirstOrDefault(plugin => plugin is AvaloniaStateAnimationPlugin);
+            _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != _headPlugin).Append(Plugin).ToList();
             _pluginManager.PluginContainers[Plugin] = new PluginContainer(Plugin);
 
             _tabManager = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
@@ -615,7 +615,7 @@ internal sealed class AnimationEditorHarness : IDisposable
         }
         SelectedState.SelectedInstance = null;
         SelectedState.SelectedElement = null;
-        _pluginManager.Plugins = _pluginManager.Plugins.Where(plugin => plugin != Plugin).ToList();
+        _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != Plugin).ToList();
         _pluginManager.PluginContainers.Remove(Plugin);
         if (_headPlugin != null)
         {

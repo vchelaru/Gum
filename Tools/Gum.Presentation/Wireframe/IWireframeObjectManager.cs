@@ -20,17 +20,17 @@ public interface IWireframeObjectManager
     void RefreshAll(bool forceLayout, bool forceReloadTextures = false);
     GraphicalUiElement? GetSelectedRepresentation();
 
-    GraphicalUiElement[] GetSelectedRepresentations();
+    GraphicalUiElement?[]? GetSelectedRepresentations();
 
     GraphicalUiElement? GetRepresentation(ElementSave elementSave);
 
-    GraphicalUiElement? GetRepresentation(InstanceSave instanceSave, List<ElementWithState> elementStack = null);
+    GraphicalUiElement? GetRepresentation(InstanceSave instanceSave, List<ElementWithState>? elementStack = null);
 
 
-    InstanceSave GetInstance(IRenderableIpso representation, InstanceFetchType fetchType,
+    InstanceSave? GetInstance(IRenderableIpso representation, InstanceFetchType fetchType,
         List<ElementWithState> elementStack);
 
-    InstanceSave GetInstance(IRenderableIpso representation, ElementSave instanceContainer,
+    InstanceSave? GetInstance(IRenderableIpso representation, ElementSave? instanceContainer,
         string prefix, InstanceFetchType fetchType, List<ElementWithState> elementStack);
 
     bool IsRepresentation(IPositionedSizedObject ipso);
@@ -43,5 +43,5 @@ public interface IWireframeObjectManager
 
     void Activity();
 
-    void ApplyLocalization(GraphicalUiElement gue, string forcedId = null);
+    void ApplyLocalization(GraphicalUiElement gue, string? forcedId = null);
 }

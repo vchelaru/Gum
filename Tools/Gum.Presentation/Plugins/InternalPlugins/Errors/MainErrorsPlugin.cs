@@ -106,7 +106,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         UpdateErrorsForElement(_selectedState.SelectedElement);
     }
 
-    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
         UpdateErrorsForElement(element);
     }
@@ -116,7 +116,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         UpdateErrorsForElement(element);
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+    private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
         // Checking an element walks its file references and reads the disk, so it waits for a
@@ -129,7 +129,7 @@ public class MainErrorsPlugin : CorePriorityPlugin
         UpdateErrorsForElement(element);
     }
 
-    private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
+    private void HandleInstanceDelete(ElementSave? element, InstanceSave instance)
     {
         UpdateErrorsForElement(element);
     }

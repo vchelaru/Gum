@@ -167,7 +167,7 @@ namespace SkiaPlugin
             }
         }
 
-        private bool HandleIsExtensionValid(string arg1, ElementSave arg2, InstanceSave arg3, string arg4)
+        private bool HandleIsExtensionValid(string arg1, ElementSave arg2, InstanceSave? arg3, string arg4)
         {
             // for now blindly support .svg and .json
             return arg1 == "svg" || arg1 == "json";
@@ -193,7 +193,7 @@ namespace SkiaPlugin
             return null;
         }
 
-        private StateSave HandleGetDefaultStateForType(string type)
+        private StateSave? HandleGetDefaultStateForType(string type)
         {
             switch(type)
             {

@@ -188,7 +188,7 @@ public class AnimationTabController
     /// Wired to <c>PluginBase.VariableSet</c>: recomputes each animation's cumulative preview states
     /// when the changed variable belongs to the default state, or to a state a keyframe references.
     /// </summary>
-    public void HandleVariableSet(ElementSave element, InstanceSave? save2, string arg3, object? arg4, bool isFullCommit)
+    public void HandleVariableSet(ElementSave? element, InstanceSave? save2, string arg3, object? arg4, bool isFullCommit)
     {
         // Recomputing every animation's preview states waits for the full commit that ends a drag.
         if (!isFullCommit)
@@ -199,7 +199,8 @@ public class AnimationTabController
         // This maybe a little inefficient but it should address all issues:
         // eventually this could be more targeted
         var state = _selectedState.SelectedStateSave;
-        if (ViewModel == null || state == null) return;
+        // No element means a behavior's instance, and behaviors have no animations.
+        if (ViewModel == null || state == null || element == null) return;
 
         var isDefault =
             state == _selectedState.SelectedElement?.DefaultState;
@@ -254,7 +255,7 @@ public class AnimationTabController
     }
 
     /// <summary>Wired to <c>PluginBase.InstanceRename</c>: propagates the rename into keyframe references.</summary>
-    public void HandleInstanceRename(ElementSave element, InstanceSave instanceSave, string oldName)
+    public void HandleInstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName)
     {
         if (ViewModel == null)
         {

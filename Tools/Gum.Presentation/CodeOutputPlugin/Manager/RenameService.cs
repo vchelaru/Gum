@@ -242,10 +242,10 @@ public class RenameService
         }
     }
 
-    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         /////////////////////////Early Out////////////////////
-        if (variableName != "BaseType" || instance != null)
+        if (variableName != "BaseType" || instance != null || element == null)
         {
             return;
         }

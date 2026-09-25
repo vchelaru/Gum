@@ -102,7 +102,7 @@ public class DeleteOptionsDialogTests
 
         public void BehaviorDeleted(BehaviorSave behavior) { }
 
-        public void InstanceDelete(ElementSave elementSave, InstanceSave instance) { }
+        public void InstanceDelete(ElementSave? elementSave, InstanceSave instance) { }
 
         public void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) { }
 

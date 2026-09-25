@@ -204,7 +204,7 @@ public class CodeOutputTabController
     /// tree-view selection that doesn't match what the codegen tab is viewing), in
     /// which case regenerating for SelectedElement writes the wrong file or NREs.
     /// </summary>
-    public void HandleRefreshAndExportForElement(ElementSave element, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleRefreshAndExportForElement(ElementSave? element, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         RefreshCodeDisplay(codeOutputProjectSettings);
 

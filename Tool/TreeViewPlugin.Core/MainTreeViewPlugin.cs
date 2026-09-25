@@ -284,7 +284,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
     }
 
-    private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave element, DataTypes.InstanceSave instance)
+    private void MainTreeViewPlugin_InstanceSelected(DataTypes.ElementSave? element, DataTypes.InstanceSave? instance)
     {
         // Selecting an instance means a standard's defaults are no longer the edit target.
         if (instance != null)
@@ -366,7 +366,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+    private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
         if(instance != null && variableName == nameof(instance.Locked))
@@ -387,7 +387,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
     }
 
-    private void HandleInstanceDelete(ElementSave element, InstanceSave instance)
+    private void HandleInstanceDelete(ElementSave? element, InstanceSave instance)
     {
         _elementTreeViewManager.RefreshUi();
     }

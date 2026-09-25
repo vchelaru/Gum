@@ -27,7 +27,7 @@ public interface IPluginManager
 
     void ProjectSave(GumProjectSave savedProject);
 
-    GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave);
+    GraphicalUiElement? CreateGraphicalUiElement(ElementSave elementSave);
 
     void ProjectLocationSet(FilePath filePath);
 
@@ -60,7 +60,7 @@ public interface IPluginManager
 
     void ReactToFileChanged(FilePath filePath);
 
-    void ReactToCustomStateSaveSelected(StateSave stateSave);
+    void ReactToCustomStateSaveSelected(StateSave? stateSave);
     void RefreshStateTreeView();
     void RefreshElementTreeView(IInstanceContainer? instanceContainer = null);
     void CategoryRename(StateSaveCategory category, string oldName);
@@ -69,8 +69,8 @@ public interface IPluginManager
     DeleteResponse GetDeleteStateCategoryResponse(StateSaveCategory stateSaveCategory, IStateContainer element);
     DeleteResponse GetDeleteStateResponse(StateSave stateSave, IStateContainer element);
     void ReactToStateSaveCategorySelected(StateSaveCategory? category);
-    void VariableAdd(ElementSave elementSave, string variableName);
-    void VariableDelete(ElementSave elementSave, string variableName);
+    void VariableAdd(ElementSave? elementSave, string variableName);
+    void VariableDelete(ElementSave? elementSave, string variableName);
     /// <summary>
     /// Raised when a variable is set.
     /// </summary>
@@ -81,11 +81,11 @@ public interface IPluginManager
     /// <param name="isFullCommit">Whether the value is committed, as opposed to an intermediate value
     /// produced while the user is still dragging. Plugins whose reaction is expensive should only react
     /// to a committed value.</param>
-    void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
+    void VariableSet(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
         bool isFullCommit = true);
-    void VariableSelected(IStateContainer container, VariableSave variable);
+    void VariableSelected(IStateContainer? container, VariableSave? variable);
     void VariableRemovedFromCategory(string variableName, StateSaveCategory category);
-    void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName);
+    void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);
     void AfterUndo();
     List<Attribute> GetAttributesFor(VariableSave variableSave);
     void ElementSelected(ElementSave? elementSave);
@@ -101,13 +101,13 @@ public interface IPluginManager
     ITreeNode? GetTreeNodeOver();
     IEnumerable<ITreeNode> GetSelectedNodes();
     void BehaviorSelected(BehaviorSave? behaviorSave);
-    void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave);
-    void BehaviorVariableSelected(VariableSave variable);
+    void BehaviorReferenceSelected(ElementBehaviorReference? behaviorReference, ElementSave? elementSave);
+    void BehaviorVariableSelected(VariableSave? variable);
     void BehaviorCreated(BehaviorSave behavior);
     void BehaviorDeleted(BehaviorSave behavior);
-    void InstanceSelected(ElementSave elementSave, InstanceSave instance);
+    void InstanceSelected(ElementSave? elementSave, InstanceSave? instance);
     void InstanceAdd(ElementSave elementSave, InstanceSave instance);
-    void InstanceDelete(ElementSave elementSave, InstanceSave instance);
+    void InstanceDelete(ElementSave? elementSave, InstanceSave instance);
     void BehaviorInstanceAdd(BehaviorSave behavior, BehaviorInstanceSave instance);
     void BehaviorInstanceDelete(BehaviorSave behavior, BehaviorInstanceSave instance);
     void BehaviorInstanceRename(BehaviorSave behavior, BehaviorInstanceSave instance);
@@ -115,7 +115,7 @@ public interface IPluginManager
     void InstancesDelete(ElementSave elementSave, InstanceSave[] instances);
     StateSave? GetDefaultStateFor(string type);
     void InstanceReordered(InstanceSave instance);
-    bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember);
+    bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave? instance, string changedMember);
     void RefreshBehaviorView(ElementSave elementSave);
 
 
@@ -166,7 +166,7 @@ public interface IPluginManager
     // the concrete PluginManager as a ctor/field type because these weren't on the interface yet.
     void RefreshVariableView(bool force);
     void WireframePropertyChanged(string propertyName);
-    IRenderableIpso CreateRenderableForType(string type);
+    IRenderableIpso? CreateRenderableForType(string type);
     void WireframeRefreshed();
     // Sealed to object (not System.Windows.Forms.TreeNode) per the WinForms/WPF interface-leak ratchet
     // (UiDecouplingRatchetTests) -- same pattern as ITabManager.AddControl.

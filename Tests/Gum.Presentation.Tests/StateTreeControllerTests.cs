@@ -85,6 +85,24 @@ public class StateTreeControllerTests
     }
 
     [Fact]
+    public void HandleVariableSet_OnABehaviorInstance_KeepsTheBehaviorsCategories()
+    {
+        // Renaming a behavior's instance (F2) raises VariableSet with no element.
+        var (controller, _, selectedState, _) = CreateSut();
+        BehaviorSave behavior = new() { Name = "ButtonBehavior" };
+        behavior.Categories.Add(new StateSaveCategory { Name = "ButtonCategory" });
+        BehaviorInstanceSave instance = new() { Name = "TextInstance" };
+        behavior.RequiredInstances.Add(instance);
+        selectedState.SetupGet(s => s.SelectedStateContainer).Returns(behavior);
+        controller.HandleInstanceSelected(null, instance);
+        controller.ViewModel.Categories.Count.ShouldBe(1);
+
+        controller.HandleVariableSet(null, instance, variableName: "Name", oldValue: "OldName", isFullCommit: true);
+
+        controller.ViewModel.Categories.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public void HandleStateSelected_CategorizedState_PropagatesEachVariableInThatState()
     {
         var (controller, rightClickService, selectedState, propagationLogic) = CreateSut();

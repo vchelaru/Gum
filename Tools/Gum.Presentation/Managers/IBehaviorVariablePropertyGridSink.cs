@@ -9,5 +9,5 @@ namespace Gum.Managers;
 /// </summary>
 public interface IBehaviorVariablePropertyGridSink
 {
-    VariableSave SelectedBehaviorVariable { set; }
+    VariableSave? SelectedBehaviorVariable { set; }
 }
