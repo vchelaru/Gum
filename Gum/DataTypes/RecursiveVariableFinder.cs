@@ -28,10 +28,11 @@ public class RecursiveVariableFinder : IVariableFinder
 
     #region Fields
 
-    InstanceSave mInstanceSave;
-    public InstanceSave InstanceSave => mInstanceSave;
+    // Exactly one of these is set, matching ContainerType.
+    InstanceSave? mInstanceSave;
+    public InstanceSave? InstanceSave => mInstanceSave;
     public List<ElementWithState> ElementStack { get; private set; }
-    StateSave mStateSave;
+    StateSave? mStateSave;
 
 
 
@@ -84,7 +85,7 @@ public class RecursiveVariableFinder : IVariableFinder
         // internally and let the user only pass "X"
 
         var elementWithState = new ElementWithState(container);
-        elementWithState.InstanceName = instanceSave?.Name;
+        elementWithState.InstanceName = instanceSave.Name;
         ElementStack = new List<ElementWithState>() { elementWithState };
     }
 
@@ -145,7 +146,7 @@ public class RecursiveVariableFinder : IVariableFinder
         ElementStack = new List<ElementWithState>();
 
 
-        ElementStack.Add(new ElementWithState(stateSave.ParentContainer) { StateName = stateSave.Name });
+        ElementStack.Add(new ElementWithState(stateSave.ParentContainer!) { StateName = stateSave.Name });
     }
 
     /// <summary>
@@ -156,7 +157,7 @@ public class RecursiveVariableFinder : IVariableFinder
     /// </summary>
     public Func<string, object?>? Fallback { get; set; }
 
-    public object GetValue(string variableName)
+    public object? GetValue(string variableName)
     {
         object? toReturn;
         switch (ContainerType)
@@ -173,11 +174,11 @@ public class RecursiveVariableFinder : IVariableFinder
                 }
 #endif
 
-                VariableSave variable = GetVariable(variableName);
+                VariableSave? variable = GetVariable(variableName);
                 toReturn = variable?.Value;
                 break;
             case VariableContainerType.StateSave:
-                toReturn = mStateSave.GetValueRecursive(variableName);
+                toReturn = mStateSave!.GetValueRecursive(variableName);
                 break;
             default:
                 throw new NotImplementedException();
@@ -191,7 +192,7 @@ public class RecursiveVariableFinder : IVariableFinder
         return toReturn;
     }
 
-    public T GetValue<T>(string variableName)
+    public T? GetValue<T>(string variableName)
     {
 #if FULL_DIAGNOSTICS
         if ( ElementStack.Count != 0)
@@ -204,7 +205,7 @@ public class RecursiveVariableFinder : IVariableFinder
 #endif
 
 
-        object valueAsObject = GetValue(variableName);
+        object? valueAsObject = GetValue(variableName);
         if (valueAsObject is T)
         {
             return (T)valueAsObject;
@@ -215,13 +216,13 @@ public class RecursiveVariableFinder : IVariableFinder
         }
     }
 
-    public VariableSave GetVariable(string variableName)
+    public VariableSave? GetVariable(string variableName)
     {
         switch (ContainerType)
         {
             case VariableContainerType.InstanceSave:
 
-                string instanceName = null;
+                string? instanceName = null;
                 if (ElementStack.Count != 0)
                 {
                     // October 11, 2023
@@ -242,10 +243,10 @@ public class RecursiveVariableFinder : IVariableFinder
                 }
 #endif
 
-                var found = mInstanceSave.GetVariableFromThisOrBase(ElementStack, this, variableName, false, onlyIfSetsValue);
+                var found = mInstanceSave!.GetVariableFromThisOrBase(ElementStack, this, variableName, false, onlyIfSetsValue);
                 if (found != null && !string.IsNullOrEmpty(found.ExposedAsName))
                 {
-                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave, instanceName, ElementStack, variableName);
+                    var allExposed = GetExposedVariablesForThisInstance(mInstanceSave!, instanceName, ElementStack, variableName);
                     var exposed = allExposed.FirstOrDefault();
 
                     if (exposed != null && exposed.Value != null)
@@ -257,31 +258,31 @@ public class RecursiveVariableFinder : IVariableFinder
                 if (found == null || found.SetsValue == false || found.Value == null)
                 {
                     onlyIfSetsValue = true;
-                    found = mInstanceSave.GetVariableFromThisOrBase(ElementStack, this, variableName, false, true);
+                    found = mInstanceSave!.GetVariableFromThisOrBase(ElementStack, this, variableName, false, true);
                 }
 
                 return found;
             case VariableContainerType.StateSave:
-                return mStateSave.GetVariableRecursive(variableName);
+                return mStateSave!.GetVariableRecursive(variableName);
             //break;
         }
         throw new NotImplementedException();
     }
 
-    public VariableListSave GetVariableList(string variableName)
+    public VariableListSave? GetVariableList(string variableName)
     {
         switch (ContainerType)
         {
             case VariableContainerType.InstanceSave:
-                return mInstanceSave.GetVariableListFromThisOrBase(ElementStack.Last().Element, variableName);
+                return mInstanceSave!.GetVariableListFromThisOrBase(ElementStack.Last().Element, variableName);
             case VariableContainerType.StateSave:
-                return mStateSave.GetVariableListRecursive(variableName);
+                return mStateSave!.GetVariableListRecursive(variableName);
             //break;
         }
         throw new NotImplementedException();
     }
 
-    public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string parentInstanceName, 
+    public List<VariableSave> GetExposedVariablesForThisInstance(DataTypes.InstanceSave instance, string? parentInstanceName, 
         List<ElementWithState> elementStack, string requiredName)
     {
         List<VariableSave> exposedVariables = new List<VariableSave>();
@@ -290,14 +291,14 @@ public class RecursiveVariableFinder : IVariableFinder
             ElementWithState containerOfVariables = elementStack[elementStack.Count - 2];
             ElementWithState definerOfVariables = elementStack[elementStack.Count - 1];
 
-            foreach (VariableSave variable in definerOfVariables.Element.DefaultState.Variables.Where(
+            foreach (VariableSave variable in definerOfVariables.Element.DefaultState!.Variables.Where(
                 item => !string.IsNullOrEmpty(item.ExposedAsName) && item.GetRootName() == requiredName))
             {
                 if (variable.SourceObject == instance.Name)
                 {
                     // This variable is exposed, let's see if the container does anything with it
 
-                    VariableSave foundVariable = containerOfVariables.StateSave.GetVariableRecursive(
+                    VariableSave? foundVariable = containerOfVariables.StateSave.GetVariableRecursive(
                         parentInstanceName + "." + variable.ExposedAsName);
 
                     if (foundVariable != null)
@@ -306,7 +307,8 @@ public class RecursiveVariableFinder : IVariableFinder
                         {
                             // This variable is itself exposed, so we should go up one level to see 
                             // what's going on.
-                            var instanceInParent = containerOfVariables.Element.GetInstance(parentInstanceName);
+                            // The stack was built from this instance, so the container has it.
+                            var instanceInParent = containerOfVariables.Element.GetInstance(parentInstanceName)!;
                             var parentparentInstanceName = containerOfVariables.InstanceName;
 
                             List<ElementWithState> stackWithLastRemoved = new List<ElementWithState>();
@@ -318,7 +320,7 @@ public class RecursiveVariableFinder : IVariableFinder
                                 // This used to be this:
                                 //foundVariable.ExposedAsName
                                 // But it should be this:
-                                variable.ExposedAsName
+                                variable.ExposedAsName!
                                 );
 
                             if (exposedExposed.Count != 0)
@@ -345,11 +347,11 @@ public class RecursiveVariableFinder : IVariableFinder
     /// <summary>
     /// Returns the value of the variable from the bottom of the stack by climbing back up to find the most derived assignment
     /// </summary>
-    public object GetValueByBottomName(string variableName, int? currentStackIndex = null)
+    public object? GetValueByBottomName(string variableName, int? currentStackIndex = null)
     {
         int stackIndex = currentStackIndex ?? this.ElementStack.Count - 1;
 
-        ElementWithState itemBefore = null;
+        ElementWithState? itemBefore = null;
 
         // This assumes that the ElementStack has all of the instances leading down to the Text instance.
         // For example, the element stack may have:
@@ -362,14 +364,14 @@ public class RecursiveVariableFinder : IVariableFinder
             itemBefore = this.ElementStack[stackIndex - 1];
         }
 
-        string variableNameAbove = null;
+        string? variableNameAbove = null;
 
         if(itemBefore != null)
         {
             if(variableName.Contains("."))
             {
                 var element = ElementStack[stackIndex].Element;
-                var exposed = element.DefaultState.Variables
+                var exposed = element.DefaultState!.Variables
                     .FirstOrDefault(item => item.Name == variableName && !string.IsNullOrEmpty(item.ExposedAsName));
 
                 if(exposed != null)
@@ -383,7 +385,7 @@ public class RecursiveVariableFinder : IVariableFinder
             }
         }
 
-        object fromAbove = null;
+        object? fromAbove = null;
         if(variableNameAbove != null)
         {
             fromAbove = GetValueByBottomName(variableNameAbove, stackIndex - 1);

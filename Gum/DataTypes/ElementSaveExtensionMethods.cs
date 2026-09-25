@@ -13,7 +13,7 @@ namespace Gum.DataTypes
         {
             get;
             set;
-        }
+        } = new List<VariableSave>();
 
         public int Compare(VariableSave? x, VariableSave? y)
         {
@@ -149,7 +149,8 @@ namespace Gum.DataTypes
                 //elementSave.States[0] = replacement;
                 StateSave stateForNewType = defaultState.Clone();
 
-                var elementDefaultState = elementSave.DefaultState;
+                // States is not empty here, so DefaultState is States[0].
+                var elementDefaultState = elementSave.DefaultState!;
                 foreach (VariableSave variableSave in stateForNewType.Variables)
                 {
                     VariableSave? existingVariable = elementDefaultState.GetVariableSave(variableSave.Name);
@@ -166,7 +167,7 @@ namespace Gum.DataTypes
                     {
                         wasModified = true;
                         modifications?.Add(variableSave.Name);
-                        elementSave.DefaultState.Variables.Add(variableSave.Clone());
+                        elementDefaultState.Variables.Add(variableSave.Clone());
                     }
                     else
                     {
@@ -202,14 +203,14 @@ namespace Gum.DataTypes
                 // We also need to add any VariableListSaves here
                 foreach (VariableListSave variableList in stateForNewType.VariableLists)
                 {
-                    VariableListSave existingList = elementSave.DefaultState.GetVariableListSave(variableList.Name);
+                    VariableListSave? existingList = elementDefaultState.GetVariableListSave(variableList.Name);
 
                     if (existingList == null)
                     {
                         wasModified = true;
                         modifications?.Add(variableList.Name);
                         // this type doesn't have this list yet, so let's add it
-                        elementSave.DefaultState.VariableLists.Add(variableList.Clone());
+                        elementDefaultState.VariableLists.Add(variableList.Clone());
                     }
                     else
                     {
@@ -231,11 +232,11 @@ namespace Gum.DataTypes
 
                 foreach (var stateSaveCategory in elementSave.Categories)
                 {
-                    VariableSave? foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+                    VariableSave? foundVariable = elementDefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
 
                     if (foundVariable == null)
                     {
-                        elementSave.DefaultState.Variables.Add(new VariableSave()
+                        elementDefaultState.Variables.Add(new VariableSave()
                         {
                             Name = stateSaveCategory.Name + "State",
                             Type = "string",
@@ -254,7 +255,7 @@ namespace Gum.DataTypes
                 vss.ListOrderToMatch = defaultState.Variables;
 
 
-                elementSave.DefaultState.Variables.Sort(vss);
+                elementDefaultState.Variables.Sort(vss);
 
 
             }
@@ -282,9 +283,9 @@ namespace Gum.DataTypes
 
         public static bool IsOfType(this ElementSave elementSave, string typeToCheck)
         {
-            if (elementSave is ComponentSave)
+            if (elementSave is ComponentSave componentSave)
             {
-                return (elementSave as ComponentSave).IsOfType(typeToCheck);
+                return componentSave.IsOfType(typeToCheck);
             }
             else
             {
@@ -295,7 +296,7 @@ namespace Gum.DataTypes
         }
 
 
-        public static StateSave GetStateSaveRecursively(this ElementSave element, string stateName)
+        public static StateSave? GetStateSaveRecursively(this ElementSave element, string? stateName)
         {
             var foundState = element.AllStates.FirstOrDefault(item => item.Name == stateName);
 
@@ -308,7 +309,8 @@ namespace Gum.DataTypes
             {
                 var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
 
-                return baseElement.GetStateSaveRecursively(stateName);
+                // The base can be missing from the project (e.g. deleted), which the tool tolerates.
+                return baseElement?.GetStateSaveRecursively(stateName);
             }
 
             return null;
@@ -317,10 +319,10 @@ namespace Gum.DataTypes
         public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, Func<StateSaveCategory, bool> condition) =>
             GetStateSaveCategoryRecursively(element, condition, out IStateContainer? _);
         
-        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string categoryName) =>
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName) =>
             GetStateSaveCategoryRecursively(element, categoryName, out IStateContainer? _);
 
-        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string categoryName, out IStateContainer? categoryContainer) => 
+        public static StateSaveCategory? GetStateSaveCategoryRecursively(this IStateContainer element, string? categoryName, out IStateContainer? categoryContainer) => 
             GetStateSaveCategoryRecursively(element, item => item.Name == categoryName, out categoryContainer);
         
         /// <returns>

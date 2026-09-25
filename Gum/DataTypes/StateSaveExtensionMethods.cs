@@ -59,12 +59,12 @@ public static class StateSaveExtensionMethods
     /// to if this state stopped authoring it explicitly, even when it currently does.
     /// </param>
     /// <returns>The value found recursively, where the most-derived value has priority.</returns>
-    public static object GetValueRecursive(this StateSave stateSave, string variableName, bool ignoreOwnValue = false)
+    public static object? GetValueRecursive(this StateSave stateSave, string variableName, bool ignoreOwnValue = false)
     {
         // First we check if this state sets the value directly...
-        object value = ignoreOwnValue ? null : stateSave.GetValue(variableName);
+        object? value = ignoreOwnValue ? null : stateSave.GetValue(variableName);
 
-        ElementSave elementContainingState = stateSave.ParentContainer;
+        ElementSave? elementContainingState = stateSave.ParentContainer;
         if (value == null && elementContainingState != null)
         {
             // See if variableName is an alias from exposing:
@@ -143,7 +143,7 @@ public static class StateSaveExtensionMethods
                 // set on the instance which then sets the value, so we need to follow those
                 var sourceObjectName = VariableSave.GetSourceObject(variableName);
                 var instance = elementContainingState?.Instances.FirstOrDefault(item => item.Name == sourceObjectName);
-                if (instance != null)
+                if (instance != null && elementContainingState != null)
                 {
 
                     var instanceType = ObjectFinder.Self.GetElementSave(instance);
@@ -163,7 +163,7 @@ public static class StateSaveExtensionMethods
                             {
                                 // GetStateSaveRecursively walks the instance type's BaseType
                                 // chain so categories inherited from a base component are found.
-                                var matchingState = instanceType.GetStateSaveRecursively((string)instanceStateVariable.Value);
+                                var matchingState = instanceType.GetStateSaveRecursively((string?)instanceStateVariable.Value);
 
                                 if (matchingState != null)
                                 {
@@ -193,9 +193,12 @@ public static class StateSaveExtensionMethods
                     for (int i = 0; i < stateSave.Variables.Count; i++)
                     {
                         var stateVariable = stateSave.Variables[i];
-                        ElementSave categoryOwner = null;
-                        StateSaveCategory category = null;
-                        if (string.IsNullOrEmpty(stateVariable.SourceObject) && stateVariable.SetsValue &&
+                        ElementSave? categoryOwner = null;
+                        StateSaveCategory? category = null;
+                        // A state with no ParentContainer has no categories to look through, and
+                        // IsState throws on a null container.
+                        if (elementContainingState != null &&
+                            string.IsNullOrEmpty(stateVariable.SourceObject) && stateVariable.SetsValue &&
                             stateVariable.Value is string stateName &&
                             // check this last since it's the slowest:
                             stateVariable.IsState(elementContainingState, out categoryOwner, out category) && category != null)
@@ -222,20 +225,20 @@ public static class StateSaveExtensionMethods
 
                 if (value == null)
                 {
-                    ElementSave baseElement = GetBaseElementFromVariable(variableName, elementContainingState);
+                    ElementSave? baseElement = GetBaseElementFromVariable(variableName, elementContainingState);
 
                     if (baseElement != null)
                     {
 
 
-                        value = baseElement.DefaultState.GetValueRecursive(nameInBase);
+                        value = baseElement.DefaultState!.GetValueRecursive(nameInBase);
                     }
                 }
 
 
                 if (value == null && elementContainingState is ComponentSave)
                 {
-                    StateSave defaultStateForComponent = StandardElementsManager.Self.GetDefaultStateFor("Component");
+                    StateSave? defaultStateForComponent = StandardElementsManager.Self.GetDefaultStateFor("Component");
                     if (defaultStateForComponent != null)
                     {
                         value = defaultStateForComponent.GetValueRecursive(variableName);
@@ -249,9 +252,9 @@ public static class StateSaveExtensionMethods
     }
 
 
-    private static object TryToGetValueFromInheritance(string variableName, string baseType)
+    private static object? TryToGetValueFromInheritance(string variableName, string baseType)
     {
-        object foundValue = null;
+        object? foundValue = null;
 
         var baseElement = ObjectFinder.Self.GetElementSave(baseType);
 
@@ -273,18 +276,18 @@ public static class StateSaveExtensionMethods
         return foundValue;
     }
 
-    private static ElementSave GetBaseElementFromVariable(string variableName, ElementSave parent)
+    private static ElementSave? GetBaseElementFromVariable(string variableName, ElementSave parent)
     {
         // this thing is the default state
         // But it's null, so we have to look
         // to the parent
-        ElementSave baseElement = null;
+        ElementSave? baseElement = null;
 
         if (StringFunctions.ContainsNoAlloc(variableName, '.'))
         {
             string instanceToSearchFor = variableName.Substring(0, variableName.IndexOf('.'));
 
-            InstanceSave instanceSave = parent.GetInstance(instanceToSearchFor);
+            InstanceSave? instanceSave = parent.GetInstance(instanceToSearchFor);
 
             if (instanceSave != null)
             {
@@ -320,17 +323,17 @@ public static class StateSaveExtensionMethods
             bool shouldGoToInstanceComponent = false;
 
             // Is this thing the default?
-            ElementSave elementContainingState = stateSave.ParentContainer;
+            ElementSave? elementContainingState = stateSave.ParentContainer;
 
             if (elementContainingState != null)
             {
-                if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
+                if (stateSave != elementContainingState.DefaultState)
                 {
                     shouldGoToDefaultState = true;
                 }
 
                 var isVariableOnInstance = variableName.Contains('.');
-                InstanceSave instance = null;
+                InstanceSave? instance = null;
                 bool canGoToBase = false;
 
                 var hasBaseType = !string.IsNullOrEmpty(elementContainingState.BaseType);
@@ -367,7 +370,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToDefaultState)
                 {
-                    variableSave = elementContainingState.DefaultState.GetVariableSave(variableName);
+                    variableSave = elementContainingState.DefaultState!.GetVariableSave(variableName);
                     if (variableSave == null)
                     {
                         shouldGoToBaseType = canGoToBase;
@@ -380,12 +383,12 @@ public static class StateSaveExtensionMethods
 
                     if (baseElement != null)
                     {
-                        variableSave = baseElement.DefaultState.GetVariableRecursive(variableName);
+                        variableSave = baseElement.DefaultState!.GetVariableRecursive(variableName);
                     }
                 }
                 else if (shouldGoToInstanceComponent)
                 {
-                    ElementSave instanceElement = null;
+                    ElementSave? instanceElement = null;
                     if (instance != null)
                     {
                         instanceElement = ObjectFinder.Self.GetElementSave(instance);
@@ -393,7 +396,7 @@ public static class StateSaveExtensionMethods
 
                     if (instanceElement != null)
                     {
-                        variableSave = instanceElement.DefaultState.GetVariableRecursive(VariableSave.GetRootName(variableName));
+                        variableSave = instanceElement.DefaultState!.GetVariableRecursive(VariableSave.GetRootName(variableName));
                     }
                 }
 
@@ -403,13 +406,13 @@ public static class StateSaveExtensionMethods
         return variableSave;
     }
 
-    public static VariableListSave GetVariableListRecursive(this StateSave stateSave, string variableName)
+    public static VariableListSave? GetVariableListRecursive(this StateSave stateSave, string variableName)
     {
-        VariableListSave variableListSave = stateSave.GetVariableListSave(variableName);
+        VariableListSave? variableListSave = stateSave.GetVariableListSave(variableName);
 
         if (variableListSave == null)
         {
-            ElementSave elementContainingState = stateSave.ParentContainer;
+            ElementSave? elementContainingState = stateSave.ParentContainer;
 
             // Most-specific-wins: if the variable is on an instance and the
             // instance has a categorized state set in this state (e.g.
@@ -440,7 +443,7 @@ public static class StateSaveExtensionMethods
                                 // GetStateSaveRecursively walks the instance type's BaseType
                                 // chain so categories inherited from a base component are found.
                                 var matchingState = instanceType.GetStateSaveRecursively(
-                                    (string)instanceStateVariable.Value);
+                                    (string?)instanceStateVariable.Value);
                                 if (matchingState != null)
                                 {
                                     variableListSave = matchingState.GetVariableListRecursive(nameInBase);
@@ -468,13 +471,13 @@ public static class StateSaveExtensionMethods
 
             if (elementContainingState != null)
             {
-                if (elementContainingState != null && stateSave != elementContainingState.DefaultState)
+                if (stateSave != elementContainingState.DefaultState)
                 {
                     shouldGoToDefaultState = true;
                 }
 
                 var isVariableOnInstance = variableName.Contains('.');
-                InstanceSave instance = null;
+                InstanceSave? instance = null;
                 bool canGoToBase = false;
 
 
@@ -513,7 +516,7 @@ public static class StateSaveExtensionMethods
 
                 if (shouldGoToDefaultState)
                 {
-                    variableListSave = elementContainingState.DefaultState.GetVariableListSave(variableName);
+                    variableListSave = elementContainingState.DefaultState!.GetVariableListSave(variableName);
                     if (variableListSave == null)
                     {
                         shouldGoToBaseType = canGoToBase;
@@ -527,12 +530,12 @@ public static class StateSaveExtensionMethods
 
                     if (baseElement != null)
                     {
-                        variableListSave = baseElement.DefaultState.GetVariableListRecursive(variableName);
+                        variableListSave = baseElement.DefaultState!.GetVariableListRecursive(variableName);
                     }
                 }
                 else if (shouldGoToInstanceComponent)
                 {
-                    ElementSave instanceType = null;
+                    ElementSave? instanceType = null;
                     if (instance != null)
                     {
                         instanceType = ObjectFinder.Self.GetElementSave(instance);
@@ -551,7 +554,7 @@ public static class StateSaveExtensionMethods
                                 instanceStateVariable.IsState(elementContainingState))
                             {
                                 var matchingState = instanceType.GetStateSaveRecursively(
-                                    (string)instanceStateVariable.Value);
+                                    (string?)instanceStateVariable.Value);
 
                                 if (matchingState != null)
                                 {
@@ -567,7 +570,7 @@ public static class StateSaveExtensionMethods
 
                         if (!wasFound)
                         {
-                            variableListSave = instanceType.DefaultState.GetVariableListRecursive(nameInBase);
+                            variableListSave = instanceType.DefaultState!.GetVariableListRecursive(nameInBase);
                         }
                     }
                 }
@@ -587,7 +590,7 @@ public static class StateSaveExtensionMethods
     /// <param name="value">The value of the variable</param>
     /// <param name="instanceSave">The instance modified by the variable.</param>
     /// <param name="variableType">The type of the variable. If this is a VariableList, then the type of the items inside the list (like int)</param>
-    public static void SetValue(this StateSave stateSave, string variableName, object value,
+    public static void SetValue(this StateSave stateSave, string variableName, object? value,
         InstanceSave? instanceSave = null, string? variableType = null)
     {
         bool isReservedName = TrySetReservedValues(stateSave, variableName, value, instanceSave);
@@ -595,29 +598,29 @@ public static class StateSaveExtensionMethods
 
         if (!isReservedName)
         {
-            VariableSave variableSave = stateSave.GetVariableSave(variableName);
+            VariableSave? variableSave = stateSave.GetVariableSave(variableName);
             var coreVariableDefinition = stateSave.GetVariableRecursive(variableName);
             VariableSave? rootVariable = null;
             var element = instanceSave?.ParentContainer ?? stateSave.ParentContainer;
             if (element != null)
             {
-                rootVariable = ObjectFinder.Self.GetRootVariable(variableName, instanceSave?.ParentContainer ?? stateSave.ParentContainer);
+                rootVariable = ObjectFinder.Self.GetRootVariable(variableName, element);
             }
 
-            string exposedVariableSourceName = null;
+            string? exposedVariableSourceName = null;
             if (!string.IsNullOrEmpty(coreVariableDefinition?.ExposedAsName) && instanceSave == null)
             {
                 exposedVariableSourceName = coreVariableDefinition.Name;
             }
             bool isFile = DetermineIfIsFile(stateSave, variableName, instanceSave, variableSave);
 
-            if (value != null && value is IList)
+            if (value is IList valueAsList)
             {
                 // This should already be the type
                 // in the list like "int" and not "List<int>"
-                string typeInList = variableType;
+                string? typeInList = variableType;
 
-                stateSave.AssignVariableListSave(variableName, value, instanceSave, typeInList);
+                stateSave.AssignVariableListSave(variableName, valueAsList, instanceSave, typeInList);
             }
             else
             {
@@ -644,7 +647,8 @@ public static class StateSaveExtensionMethods
                 !string.IsNullOrEmpty(asString) &&
                 !FileManager.IsRelative(asString))
             {
-                string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
+                // File variables are only set with absolute paths in the tool, which always has a saved project.
+                string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave!.FullFileName!);
 
                 const bool preserveCase = true;
                 if(!FileManager.IsUrl(asString))
@@ -660,7 +664,7 @@ public static class StateSaveExtensionMethods
 
     }
 
-    private static bool DetermineIfIsFile(StateSave stateSave, string variableName, InstanceSave instanceSave, VariableSave variableSave)
+    private static bool DetermineIfIsFile(StateSave stateSave, string variableName, InstanceSave? instanceSave, VariableSave? variableSave)
     {
         bool isFile = false;
 
@@ -672,22 +676,12 @@ public static class StateSaveExtensionMethods
         // instanceSave may (probably will be) null.
         if (instanceSave != null)
         {
-            VariableSave temp = variableSave;
-            if (variableSave == null)
-            {
-                temp = new VariableSave();
-                temp.Name = variableName;
-            }
+            VariableSave temp = variableSave ?? new VariableSave { Name = variableName };
             isFile = temp.GetIsFileFromRoot(instanceSave);
         }
         else
         {
-            VariableSave temp = variableSave;
-            if (variableSave == null)
-            {
-                temp = new VariableSave();
-                temp.Name = variableName;
-            }
+            VariableSave temp = variableSave ?? new VariableSave { Name = variableName };
             if (stateSave.ParentContainer != null)
             {
                 isFile = temp.GetIsFileFromRoot(stateSave.ParentContainer);
@@ -697,17 +691,18 @@ public static class StateSaveExtensionMethods
         return isFile;
     }
 
-    private static bool TrySetReservedValues(StateSave stateSave, string variableName, object value, InstanceSave instanceSave)
+    private static bool TrySetReservedValues(StateSave stateSave, string variableName, object? value, InstanceSave? instanceSave)
     {
         bool isReservedName = false;
 
-        // Check for reserved names
-        if (variableName == "Name")
+        // Check for reserved names. Like StateSave.GetValue, these only apply when the state
+        // belongs to an element; a detached state stores them as ordinary variables.
+        if (variableName == "Name" && stateSave.ParentContainer != null)
         {
-            stateSave.ParentContainer.Name = value as string;
+            stateSave.ParentContainer.Name = (value as string)!;
             isReservedName = true;
         }
-        else if (variableName == "BaseType")
+        else if (variableName == "BaseType" && stateSave.ParentContainer != null)
         {
             if(value?.ToString() == string.Empty)
             {
@@ -724,27 +719,32 @@ public static class StateSaveExtensionMethods
         {
             string instanceName = variableName.Substring(0, variableName.IndexOf('.'));
 
-            ElementSave elementSave = stateSave.ParentContainer;
+            // The caller may pass only the qualified name, so find the instance it names.
+            instanceSave ??= stateSave.ParentContainer?.GetInstance(instanceName);
 
             // This is a variable on an instance
-            if (variableName.EndsWith(".Name"))
+            if (instanceSave == null)
             {
-                instanceSave.Name = (string)value;
+                // No instance to set it on, so like StateSave.GetValue, treat it as an ordinary variable.
+            }
+            else if (variableName.EndsWith(".Name"))
+            {
+                instanceSave.Name = (string)value!;
                 isReservedName = true;
             }
             else if (variableName.EndsWith(".BaseType"))
             {
-                instanceSave.BaseType = value.ToString();
+                instanceSave.BaseType = value!.ToString()!;
                 isReservedName = true;
             }
             else if (variableName.EndsWith(".Locked"))
             {
-                instanceSave.Locked = (bool)value;
+                instanceSave.Locked = (bool)value!;
                 isReservedName = true;
             }
             else if (variableName.EndsWith(".IsSlot"))
             {
-                instanceSave.IsSlot = (bool)value;
+                instanceSave.IsSlot = (bool)value!;
                 isReservedName = true;
             }
         }
@@ -752,9 +752,9 @@ public static class StateSaveExtensionMethods
     }
 
 
-    private static void AssignVariableListSave(this StateSave stateSave, string variableName, object value, InstanceSave instanceSave, string? typeInList = null)
+    private static void AssignVariableListSave(this StateSave stateSave, string variableName, IList value, InstanceSave? instanceSave, string? typeInList = null)
     {
-        VariableListSave variableListSave = stateSave.GetVariableListSave(variableName);
+        VariableListSave? variableListSave = stateSave.GetVariableListSave(variableName);
 
         if (variableListSave == null)
         {
@@ -796,26 +796,20 @@ public static class StateSaveExtensionMethods
             }
             if (instanceSave != null)
             {
-                VariableListSave baseVariableListSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableListSave(rootName);
+                // The root standard element is missing when the instance's base type is not in the project.
+                VariableListSave? baseVariableListSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave)?.DefaultState!.GetVariableListSave(rootName);
                 variableListSave.IsFile = baseVariableListSave?.IsFile == true;
             }
             variableListSave.Name = variableName;
         }
 
-        // Don't assign the actual reference. Doing so may result in an element instance 
+        // Don't assign the actual reference. Doing so may result in an element instance
         // sharing the same IList reference as the StandardElement:
         //variableListSave.ValueAsIList = value as IList;
         variableListSave.ValueAsIList.Clear();
-        if(value as IList == null)
+        foreach(var item in value)
         {
-            variableListSave.ValueAsIList = null;
-        }
-        else
-        {
-            foreach(var item in value as IList)
-            {
-                variableListSave.ValueAsIList.Add(item);
-            }
+            variableListSave.ValueAsIList.Add(item);
         }
     }
 
@@ -827,8 +821,8 @@ public static class StateSaveExtensionMethods
     /// <param name="value">The value to assign to the variable.</param>
     /// <param name="instanceSave">The instance that owns this variable.  This may be null.</param>
     /// <param name="variableType">The type of the variable.  This is only needed if the value is null.</param>
-    private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object value,
-        InstanceSave instanceSave, string? variableType = null)
+    private static VariableSave AssignVariableSave(this StateSave stateSave, string variableName, object? value,
+        InstanceSave? instanceSave, string? variableType = null)
     {
         // Not a reserved variable, so use the State's variables
         VariableSave? variableSave = stateSave.GetVariableSave(variableName);
@@ -882,7 +876,8 @@ public static class StateSaveExtensionMethods
             }
             else if (value == null)
             {
-                variableSave.Type = variableType;
+                // variableType is null or empty here, and a null Type is kept as-is (see StateSave.SetValue).
+                variableSave.Type = variableType!;
             }
             else
             {
@@ -942,7 +937,7 @@ public static class StateSaveExtensionMethods
 
                 if (instanceBase != null)
                 {
-                    VariableSave baseVariableSave = instanceBase.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName || item.Name == rootName);
+                    VariableSave? baseVariableSave = instanceBase.DefaultState!.Variables.FirstOrDefault(item => item.ExposedAsName == rootName || item.Name == rootName);
                     if (baseVariableSave != null)
                     {
                         variableSave.IsFile = baseVariableSave.IsFile;
@@ -952,7 +947,8 @@ public static class StateSaveExtensionMethods
 
                 if (!found)
                 {
-                    VariableSave baseVariableSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave).DefaultState.GetVariableSave(rootName);
+                    // The root standard element is missing when the instance's base type is not in the project.
+                    VariableSave? baseVariableSave = ObjectFinder.Self.GetRootStandardElementSave(instanceSave)?.DefaultState!.GetVariableSave(rootName);
                     if (baseVariableSave != null)
                     {
                         variableSave.IsFile = baseVariableSave.IsFile;
@@ -1091,16 +1087,16 @@ public static class StateSaveExtensionMethods
 
         foreach (var secondVariable in secondState.Variables)
         {
-            object secondValue = secondVariable.Value;
+            object? secondValue = secondVariable.Value;
 
-            VariableSave firstVariable = firstState.GetVariableSave(secondVariable.Name);
+            VariableSave? firstVariable = firstState.GetVariableSave(secondVariable.Name);
 
             // If this variable doesn't have a value, or if the variable doesn't set the variable
             // then we need to go recursive to see what the value is:
             bool needsValueFromBase = firstVariable == null || firstVariable.SetsValue == false;
             bool setsValue = secondVariable.SetsValue;
 
-            object firstValue = null;
+            object? firstValue = null;
 
             if (firstVariable == null)
             {
@@ -1125,7 +1121,7 @@ public static class StateSaveExtensionMethods
 
             if (setsValue)
             {
-                object interpolated = GetValueConsideringInterpolation(firstValue, secondValue, secondRatio);
+                object? interpolated = GetValueConsideringInterpolation(firstValue, secondValue, secondRatio);
 
                 VariableSaveValues value = new VariableSaveValues();
                 value.Name = secondVariable.Name;
@@ -1153,7 +1149,7 @@ public static class StateSaveExtensionMethods
         foreach (var variableSave in other.Variables)
         {
             // The first will use its default if one doesn't exist
-            VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+            VariableSave? whatToSet = thisState.GetVariableSave(variableSave.Name);
 
             // If this variable doesn't have a value, or if the variable doesn't set the variable
             // then we need to go recursive to see what the value is:
@@ -1193,7 +1189,7 @@ public static class StateSaveExtensionMethods
         foreach (var variableSave in other.Variables)
         {
             // The first will use its default if one doesn't exist
-            VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+            VariableSave? whatToSet = thisState.GetVariableSave(variableSave.Name);
 
             if (whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
             {
@@ -1212,7 +1208,7 @@ public static class StateSaveExtensionMethods
         foreach (var variableSave in other.Variables)
         {
             // The first will use its default if one doesn't exist
-            VariableSave whatToSet = thisState.GetVariableSave(variableSave.Name);
+            VariableSave? whatToSet = thisState.GetVariableSave(variableSave.Name);
 
             if (whatToSet != null && (whatToSet.SetsValue || variableSave.SetsValue))
             {
@@ -1226,7 +1222,7 @@ public static class StateSaveExtensionMethods
 
     }
 
-    private static object SubtractValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? SubtractValue(VariableSave firstVariable, VariableSave secondVariable)
     {
         if (firstVariable.Value == null || secondVariable.Value == null)
         {
@@ -1263,7 +1259,7 @@ public static class StateSaveExtensionMethods
 
 
 
-    private static object AddValue(VariableSave firstVariable, VariableSave secondVariable)
+    private static object? AddValue(VariableSave firstVariable, VariableSave secondVariable)
     {
         if (firstVariable.Value == null || secondVariable.Value == null)
         {
@@ -1305,7 +1301,7 @@ public static class StateSaveExtensionMethods
     /// <param name="secondValue">The second value as a numeric value.</param>
     /// <param name="interpolationValue">A value between 0 and 1. A value of 0 returns the firstValue. A value of 1 returns the second value.</param>
     /// <returns>The resulting interpolated value, matching the type of the arguments.</returns>
-    public static object GetValueConsideringInterpolation(object firstValue, object secondValue, float interpolationValue)
+    public static object? GetValueConsideringInterpolation(object? firstValue, object? secondValue, float interpolationValue)
     {
         if (firstValue == null || secondValue == null)
         {

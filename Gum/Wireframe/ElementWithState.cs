@@ -23,7 +23,7 @@ namespace Gum.Wireframe
             set;
         }
 
-        public string StateName
+        public string? StateName
         {
             get;
             set;
@@ -37,7 +37,7 @@ namespace Gum.Wireframe
 
 
 
-        public string InstanceName
+        public string? InstanceName
         {
             get;
             set;
@@ -77,7 +77,8 @@ namespace Gum.Wireframe
                 var toReturn = Element.AllStates.FirstOrDefault(item => item.Name == StateName);
                 if (toReturn == null)
                 {
-                    toReturn = Element.DefaultState;
+                    // Elements in a stack come from a loaded project, which gives every element a default state.
+                    toReturn = Element.DefaultState!;
                 }
                 return toReturn;
             }
@@ -124,7 +125,11 @@ namespace Gum.Wireframe
 
         public static void Remove(this List<ElementWithState> toAddTo, ElementSave elementSave)
         {
-            toAddTo.Remove(toAddTo.FirstOrDefault(item => item.Element == elementSave));
+            var toRemove = toAddTo.FirstOrDefault(item => item.Element == elementSave);
+            if (toRemove != null)
+            {
+                toAddTo.Remove(toRemove);
+            }
         }
     }
 

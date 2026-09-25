@@ -71,9 +71,12 @@ public class StandardElementsManager
 
     public const string ScreenBoundsName = "<SCREEN BOUNDS>";
 
-    Dictionary<string, StateSave> mDefaults;
+    Dictionary<string, StateSave>? mDefaults;
 
-    static StandardElementsManager mSelf;
+    Dictionary<string, StateSave> Defaults => mDefaults ??
+        throw new InvalidOperationException("You must first call Initialize on StandardElementsManager before calling this function");
+
+    static StandardElementsManager? mSelf;
 
     // Standard types kept in mDefaults so legacy projects that already contain them still load
     // with correct default variable values, but which are no longer seeded into newly created
@@ -98,7 +101,7 @@ public class StandardElementsManager
     {
         get
         {
-            foreach (var kvp in mDefaults)
+            foreach (var kvp in Defaults)
             {
                 yield return kvp.Key;
             }
@@ -111,7 +114,7 @@ public class StandardElementsManager
     /// standard element) and deprecated types retained only for backward-compatible loading.
     /// </summary>
     public IEnumerable<string> SeedableStandardTypes =>
-        mDefaults.Keys.Where(name => name != "Screen" && !_deprecatedStandardTypeNames.Contains(name));
+        Defaults.Keys.Where(name => name != "Screen" && !_deprecatedStandardTypeNames.Contains(name));
 
     public static StandardElementsManager Self
     {
@@ -127,7 +130,8 @@ public class StandardElementsManager
 
     public string DefaultType => "Container";
 
-    public Dictionary<string, StateSave> DefaultStates => mDefaults;
+    /// <summary>The default state of each standard type, or null before <see cref="Initialize"/>.</summary>
+    public Dictionary<string, StateSave>? DefaultStates => mDefaults;
 
     #endregion
 
@@ -913,7 +917,7 @@ public class StandardElementsManager
         else
         {
 
-            StateSave customState = CustomGetDefaultState?.Invoke(type);
+            StateSave? customState = CustomGetDefaultState?.Invoke(type);
             // Vic says - not sure if this is still used. If so, we need to create a 
             // CustomGetDefaultState that returns a state as shown below.
             //#if SKIA
@@ -941,6 +945,7 @@ public class StandardElementsManager
         }
     }
 
+    /// <returns>The default state, or null if <paramref name="type"/> is unknown and <paramref name="throwExceptionOnMissing"/> is false.</returns>
     public StateSave? GetDefaultStateFor(string type, bool throwExceptionOnMissing = true)
     {
         if (mDefaults == null)
@@ -952,7 +957,7 @@ public class StandardElementsManager
 
     public bool IsDefaultType(string type)
     {
-        return mDefaults.ContainsKey(type);
+        return Defaults.ContainsKey(type);
     }
 
     public void PopulateProjectWithDefaultStandards(GumProjectSave gumProjectSave)
@@ -971,7 +976,7 @@ public class StandardElementsManager
 
     public StandardElementSave AddStandardElementSaveInstance(GumProjectSave gumProjectSave, string type)
     {
-        if (!mDefaults.TryGetValue(type, out StateSave defaultState))
+        if (!Defaults.TryGetValue(type, out StateSave? defaultState))
         {
             // Plugin-contributed standards (the Skia shapes Arc/Canvas/Line/Svg/LottieAnimation and
             // the legacy ColoredCircle/RoundedRectangle) are never placed in mDefaults, so they can't

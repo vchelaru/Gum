@@ -581,7 +581,8 @@ public partial class GumService : IGumService
             var localizationFiles = gumProject?.LocalizationFiles;
             if (localizationFiles != null && localizationFiles.Count > 0)
             {
-                var projectDirectory = FileManager.GetDirectory(gumProject!.FullFileName);
+                // A project with localization files was loaded from disk, so it has a file name.
+                var projectDirectory = FileManager.GetDirectory(gumProject!.FullFileName!);
                 var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
 
                 var resolvedPaths = new List<string>();
@@ -724,7 +725,7 @@ public partial class GumService : IGumService
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
 
-        float GetFloat(string variableName) => current?.DefaultState.GetValueOrDefault<float>(variableName) ?? 0;
+        float GetFloat(string variableName) => current?.DefaultState!.GetValueOrDefault<float>(variableName) ?? 0;
     }
 
     // RegisterRuntimeTypesThroughReflection (the codegen/module-initializer fallback registration)

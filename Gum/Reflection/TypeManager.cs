@@ -9,10 +9,14 @@ namespace Gum.Reflection;
 
 public class TypeManager : ITypeManager
 {
-    List<Type> mTypes;
+    List<Type>? mTypes;
 
     public void AddType(Type type)
     {
+        if (mTypes == null)
+        {
+            throw new Exception("Must call TypeManager.Initialize first");
+        }
         mTypes.Add(type);
     }
 
@@ -23,16 +27,16 @@ public class TypeManager : ITypeManager
 
         allTypes.AddRange(Assembly.GetExecutingAssembly().GetTypes());
 
-        allTypes.AddRange(Assembly.GetAssembly(typeof(VerticalAlignment)).GetTypes());
+        allTypes.AddRange(Assembly.GetAssembly(typeof(VerticalAlignment))!.GetTypes());
 
-        allTypes.AddRange(Assembly.GetAssembly(typeof(DimensionUnitType)).GetTypes());
+        allTypes.AddRange(Assembly.GetAssembly(typeof(DimensionUnitType))!.GetTypes());
 
         mTypes = allTypes;
     }
 
 
     [RequiresDynamicCode("Resolving a nullable-enum type name calls Type.MakeGenericType, which requires generating new code at runtime.")]
-    public Type GetTypeFromString(string typeAsString)
+    public Type? GetTypeFromString(string typeAsString)
     {
         if (mTypes == null)
         {

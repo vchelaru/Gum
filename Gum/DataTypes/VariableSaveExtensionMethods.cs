@@ -12,9 +12,9 @@ namespace Gum.DataTypes
     public static class VariableSaveExtensionMethods
     {
 
-        public static Type GetPrimitiveType(string typeAsString)
+        public static Type? GetPrimitiveType(string typeAsString)
         {
-            Type foundType = null;
+            Type? foundType = null;
             switch (typeAsString)
             {
                 case "string":
@@ -50,12 +50,12 @@ namespace Gum.DataTypes
 
         public static bool IsState(this VariableSave variableSave, ElementSave container)
         {
-            ElementSave throwaway1;
-            StateSaveCategory throwaway2;
+            ElementSave? throwaway1;
+            StateSaveCategory? throwaway2;
             return variableSave.IsState(container, out throwaway1, out throwaway2);
         }
 
-        public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave categoryContainer, out StateSaveCategory category, bool recursive = true)
+        public static bool IsState(this VariableSave variableSave, ElementSave container, out ElementSave? categoryContainer, out StateSaveCategory? category, bool recursive = true)
         {
             if(container == null)
             {
@@ -83,7 +83,7 @@ namespace Gum.DataTypes
 
             // what about uncategorized
 
-            string categoryName = null;
+            string? categoryName = null;
 
             if (endsWithState)
             {
@@ -113,8 +113,8 @@ namespace Gum.DataTypes
                         var rootName = variableSave.GetRootName();
                         // why do we ToArray it? That's slow
                         //var subVariable = element.DefaultState.Variables.ToArray().FirstOrDefault(item => item.ExposedAsName == rootName);
-                        VariableSave subVariable = null;
-                        var variables = element.DefaultState.Variables;
+                        VariableSave? subVariable = null;
+                        var variables = defaultState.Variables;
                         for (int i = 0; i < variables.Count; i++)
                         {
                             var variableAtI = variables[i];
@@ -140,7 +140,7 @@ namespace Gum.DataTypes
                             else
                             {
                                 
-                                category = element.GetStateSaveCategoryRecursively(categoryName, out IStateContainer foundCategoryContainer);
+                                category = element.GetStateSaveCategoryRecursively(categoryName, out IStateContainer? foundCategoryContainer);
                                 categoryContainer = foundCategoryContainer as ElementSave;
                                 return category != null;
                             }
@@ -157,7 +157,7 @@ namespace Gum.DataTypes
                 else
                 {
 
-                    category = container.GetStateSaveCategoryRecursively(categoryName, out IStateContainer foundCategoryContainer);
+                    category = container.GetStateSaveCategoryRecursively(categoryName, out IStateContainer? foundCategoryContainer);
                     categoryContainer = foundCategoryContainer as ElementSave;
 
                     return category != null;
@@ -227,7 +227,7 @@ namespace Gum.DataTypes
             }
         }
 
-        public static Func<VariableSave, bool> CustomFixEnumerations;
+        public static Func<VariableSave, bool>? CustomFixEnumerations;
 
         /// <summary>
         /// Converts integer values to their corresponding enumeration values. This should be called
@@ -358,12 +358,12 @@ namespace Gum.DataTypes
 
         public static bool GetIsFileFromRoot(this VariableSave variable, ElementSave element)
         {
-            var variableInRoot = element.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+            var variableInRoot = element.DefaultState!.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
 
             if (variableInRoot != null)
             {
                 return variableInRoot.IsFile;
-            }            
+            }
             else
             {
                 // unknown so assume no
@@ -373,11 +373,13 @@ namespace Gum.DataTypes
 
         public static bool GetIsFileFromRoot(this VariableSave variable, InstanceSave instance)
         {
+            // The instance's base type can be missing from the project (e.g. deleted), which the tool
+            // tolerates, so the lookups below can come back empty. Unknown means not a file.
             if (string.IsNullOrEmpty(variable.SourceObject))
             {
-                ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);
+                ElementSave? root = ObjectFinder.Self.GetRootStandardElementSave(instance);
 
-                var variableInRoot = root.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+                var variableInRoot = root?.DefaultState!.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
 
                 if (variableInRoot != null)
                 {
@@ -386,14 +388,18 @@ namespace Gum.DataTypes
             }
             else
             {
-                ElementSave elementForInstance = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instance.BaseType);
+                if (elementForInstance == null)
+                {
+                    return false;
+                }
 
                 string rootName = variable.GetRootName();
-                VariableSave exposedVariable = elementForInstance.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == rootName);
+                VariableSave? exposedVariable = elementForInstance.DefaultState!.Variables.FirstOrDefault(item => item.ExposedAsName == rootName);
 
                 if (exposedVariable != null)
                 {
-                    InstanceSave subInstance = elementForInstance.Instances.FirstOrDefault(item => item.Name == exposedVariable.SourceObject);
+                    InstanceSave? subInstance = elementForInstance.Instances.FirstOrDefault(item => item.Name == exposedVariable.SourceObject);
 
                     if (subInstance != null)
                     {
@@ -404,9 +410,9 @@ namespace Gum.DataTypes
                 {
                     // it's not exposed, so let's just get to the root of it:
 
-                    ElementSave root = ObjectFinder.Self.GetRootStandardElementSave(instance);
+                    ElementSave? root = ObjectFinder.Self.GetRootStandardElementSave(instance);
 
-                    var variableInRoot = root.DefaultState.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
+                    var variableInRoot = root?.DefaultState!.Variables.FirstOrDefault(item => item.Name == variable.GetRootName());
 
                     if (variableInRoot != null)
                     {
@@ -421,7 +427,7 @@ namespace Gum.DataTypes
 
     public static class VariableSaveListExtensionMethods
     {
-        public static VariableSave GetVariableSave(this List<VariableSave> variables, string variableName)
+        public static VariableSave? GetVariableSave(this List<VariableSave> variables, string variableName)
         {
             foreach(var variableSave in variables)
             {

@@ -13,7 +13,7 @@ namespace Gum.DataTypes
             }
             else if (!string.IsNullOrEmpty(componentSave.BaseType))
             {
-                ComponentSave baseComponentSave = ObjectFinder.Self.GetComponent(componentSave.BaseType);
+                ComponentSave? baseComponentSave = ObjectFinder.Self.GetComponent(componentSave.BaseType);
                 if (baseComponentSave == null)
                 {
                     return false;
