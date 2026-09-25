@@ -19,17 +19,17 @@ namespace Gum.PropertyGridHelpers.Converters
             _projectManager = Locator.GetRequiredService<IProjectManager>();
         }
         
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
             List<string> values = new List<string>();
 
@@ -37,7 +37,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
             values.AddRange(Enum.GetNames(typeof(StandardElementTypes)));
 
-            foreach (ComponentSave componentSave in _projectManager.GumProjectSave.Components)
+            foreach (ComponentSave componentSave in _projectManager.GumProjectSave?.Components ?? new List<ComponentSave>())
             {
                 // Currently we allow any type. We may want to make sure we don't include the current type....or do we?
                 //if (element == null || element.IsOfType(componentSave.Name) == false || element.Name == instance?.BaseType)

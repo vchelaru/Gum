@@ -45,7 +45,7 @@ public class BehaviorShowingLogic
             Get = () => behavior.DefaultImplementation,
             Set = (newValue) =>
             {
-                behavior.DefaultImplementation = (string)newValue!;
+                behavior.DefaultImplementation = (string?)newValue;
                 _fileCommands.TryAutoSaveBehavior(behavior);
             },
             DetailText = "Code generation is required for this to work at runtime",

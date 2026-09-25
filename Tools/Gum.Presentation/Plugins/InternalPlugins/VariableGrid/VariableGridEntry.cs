@@ -47,7 +47,7 @@ public class VariableGridEntry
     private readonly ITypeManager _typeManager;
     private readonly IClipboardService _clipboardService;
 
-    private readonly IStateContainer _stateListCategoryContainer;
+    private readonly IStateContainer? _stateListCategoryContainer;
     private readonly StateSave? _stateSave;
     private readonly string _variableName;
     private readonly bool _isVariable;
@@ -81,7 +81,7 @@ public class VariableGridEntry
     public string Name => _variableName;
 
     /// <summary>The container this variable is currently read from/written to (an instance, element, or behavior).</summary>
-    public object? Instance { get; }
+    public object Instance { get; }
 
     /// <summary>The unqualified variable name - the portion of <see cref="Name"/> after the last dot, if any.</summary>
     public string RootVariableName
@@ -294,7 +294,7 @@ public class VariableGridEntry
         StateSaveCategory? stateSaveCategory,
         string variableName,
         InstanceSave? instanceSave,
-        IStateContainer stateListCategoryContainer,
+        IStateContainer? stateListCategoryContainer,
         ISelectedState selectedState,
         IUndoManager undoManager,
         IGuiCommands guiCommands,
@@ -336,7 +336,9 @@ public class VariableGridEntry
         InstanceSave = instanceSave;
         ElementSave = stateListCategoryContainer as ElementSave;
 
-        Instance = instanceSave != null ? instanceSave : stateListCategoryContainer;
+        // Every row has one or the other: a behavior's instance rows have no container.
+        Instance = (object?)instanceSave ?? stateListCategoryContainer
+            ?? throw new ArgumentException("A variable row needs an instance or a container");
 
         IsAssignedByReference = isAssignedByReference;
 
@@ -386,7 +388,10 @@ public class VariableGridEntry
 
                         foreach (var kvp in definingVariable.PropertiesToSetOnDisplayer)
                         {
-                            PropertiesToSetOnDisplayer[kvp.Key] = kvp.Value;
+                            if (kvp.Value is { } value)
+                            {
+                                PropertiesToSetOnDisplayer[kvp.Key] = value;
+                            }
                         }
 
                         SortValue = definingVariable.DesiredOrder;
@@ -682,7 +687,7 @@ public class VariableGridEntry
             }
             else if (instanceSave != null && RootVariableName == "BaseType")
             {
-                instanceSave.BaseType = newValue?.ToString();
+                instanceSave.BaseType = newValue?.ToString() ?? string.Empty;
             }
             else if (stateSave != null && elementSave != null)
             {
@@ -702,11 +707,11 @@ public class VariableGridEntry
                 }
                 // ...set variable after getting it from base, or else we'd get the variable we just set...
                 stateSave.SetValue(Name, newValue, instanceSave, variableType);
-                if (!string.IsNullOrEmpty(existingVariable?.ExposedAsName) && variableDefinedInThisOrBase != null)
+                if (existingVariable?.ExposedAsName is { Length: > 0 } exposedAsName && variableDefinedInThisOrBase != null &&
+                    stateSave.GetVariableSave(Name) is { } variable)
                 {
                     //... then assign it here if we found it:
-                    var variable = stateSave.GetVariableSave(Name);
-                    variable.ExposedAsName = existingVariable.ExposedAsName;
+                    variable.ExposedAsName = exposedAsName;
                 }
             }
 
@@ -826,7 +831,8 @@ public class VariableGridEntry
                 // variables that are categorized state variables for categories defined in this element.
                 if (shouldRemove)
                 {
-                    var isState = variable.IsState(selectedElement, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
+                    // A variable is only found when a state is selected, which means an element is selected.
+                    var isState = variable.IsState(selectedElement!, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
 
                     if (isState)
                     {
@@ -889,7 +895,7 @@ public class VariableGridEntry
                 }
             }
 
-            if (selectedElement != null)
+            if (selectedElement != null && state != null)
             {
                 ElementSaveExtensions.ApplyVariableReferences(selectedElement, state);
             }
@@ -901,7 +907,8 @@ public class VariableGridEntry
             _guiCommands.RefreshVariables(force: true);
             _wireframeObjectManager.RefreshAll(true);
 
-            _pluginManager.VariableSet(selectedElement, selectedInstance, variableName, oldValue);
+            // A change is only made when a state is selected, which means an element is selected.
+            _pluginManager.VariableSet(selectedElement!, selectedInstance, variableName, oldValue);
 
             if (affectsTreeView)
             {
@@ -911,7 +918,7 @@ public class VariableGridEntry
             _fileCommands.TryAutoSaveElement(_selectedState.SelectedElement);
         }
 
-        NotifyVariableLogic(Instance!, VariablePropertyCommitType.Full, trySave: true);
+        NotifyVariableLogic(Instance, VariablePropertyCommitType.Full, trySave: true);
     }
 
     #endregion
@@ -924,15 +931,17 @@ public class VariableGridEntry
         {
             // need to set the exposed name on the variable, but only if it is defined in this component or in
             // a base component:
-            variableDefinedInThisOrBase = _selectedState.SelectedStateSave!.GetVariableSave(Name);
-            if (variableDefinedInThisOrBase == null && _selectedState.SelectedStateSave != _selectedState.SelectedElement!.DefaultState)
+            var selectedStateSave = _selectedState.SelectedStateSave!;
+            var selectedElement = _selectedState.SelectedElement!;
+            variableDefinedInThisOrBase = selectedStateSave.GetVariableSave(Name);
+            if (variableDefinedInThisOrBase == null && selectedStateSave != selectedElement.DefaultState)
             {
-                variableDefinedInThisOrBase = _selectedState.SelectedElement.DefaultState.GetVariableSave(Name);
+                variableDefinedInThisOrBase = selectedElement.DefaultState.GetVariableSave(Name);
             }
 
             if (variableDefinedInThisOrBase == null)
             {
-                var allBase = ObjectFinder.Self.GetBaseElements(_selectedState.SelectedElement);
+                var allBase = ObjectFinder.Self.GetBaseElements(selectedElement);
                 foreach (var baseElement in allBase)
                 {
                     variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
@@ -1149,11 +1158,13 @@ public class VariableGridEntry
         // WPF-typed InstanceMember and can't be called from headless code) with the already-headless
         // IEditVariableService split-interface counterpart (see the ui-decoupling-plan.md
         // IEditVariableService/WpfDataUi split gotcha).
-        if (_editVariableService.GetEditVariableMenuLabel(VariableSave, _stateListCategoryContainer) is { } label)
+        // Behavior-instance rows have no container and nothing to edit.
+        if (_stateListCategoryContainer is { } container &&
+            VariableSave is { } variableToEdit &&
+            _editVariableService.GetEditVariableMenuLabel(variableToEdit, container) is { } label)
         {
-            var variableToEdit = VariableSave!;
             actions.Add(new VariableContextMenuAction(label, () =>
-                _editVariableService.ShowEditVariableWindow(variableToEdit, _stateListCategoryContainer)));
+                _editVariableService.ShowEditVariableWindow(variableToEdit, container)));
         }
 
         return actions;
@@ -1240,7 +1251,7 @@ public class VariableGridEntry
 
     #region Hide from Instances
 
-    private void TryAddHideFromInstancesMenuOptions(List<VariableContextMenuAction> actions, InstanceSave? instanceSave, IStateContainer stateListCategoryContainer)
+    private void TryAddHideFromInstancesMenuOptions(List<VariableContextMenuAction> actions, InstanceSave? instanceSave, IStateContainer? stateListCategoryContainer)
     {
         if (instanceSave != null)
         {

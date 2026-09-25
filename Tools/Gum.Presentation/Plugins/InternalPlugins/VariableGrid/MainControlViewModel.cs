@@ -32,9 +32,9 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
-    public string StateInformation
+    public string? StateInformation
     {
-        get => Get<string>();
+        get => Get<string?>();
         set => Set(value);
     }
 
@@ -44,9 +44,9 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
-    public string ErrorInformation
+    public string? ErrorInformation
     {
-        get => Get<string>();
+        get => Get<string?>();
         set => Set(value);
     }
 
@@ -58,7 +58,7 @@ public class MainControlViewModel : ViewModel
         set => Set(value);
     }
 
-    public BehaviorSave BehaviorSave { get; set; }
+    public BehaviorSave? BehaviorSave { get; set; }
 
     public ObservableCollection<VariableSave> BehaviorVariables
     {
@@ -66,9 +66,9 @@ public class MainControlViewModel : ViewModel
         private set;
     } = new ObservableCollection<VariableSave>();
 
-    public VariableSave SelectedBehaviorVariable
+    public VariableSave? SelectedBehaviorVariable
     {
-        get => Get<VariableSave>();
+        get => Get<VariableSave?>();
         set
         {
             if (Set(value))
@@ -128,7 +128,7 @@ public class MainControlViewModel : ViewModel
     [DependsOn(nameof(VariableFilterText))]
     public bool IsFilterWatermarkVisible => string.IsNullOrEmpty(VariableFilterText);
 
-    public VariableSave EffectiveSelectedBehaviorVariable
+    public VariableSave? EffectiveSelectedBehaviorVariable
     {
         get
         {
@@ -172,7 +172,7 @@ public class MainControlViewModel : ViewModel
 
     private void HandleDeleteVariableClicked()
     {
-        if (BehaviorSave != null)
+        if (BehaviorSave != null && SelectedBehaviorVariable != null)
         {
             _deleteVariableService.DeleteVariable(SelectedBehaviorVariable, BehaviorSave);
         }
@@ -180,6 +180,12 @@ public class MainControlViewModel : ViewModel
 
     private void HandleEditVariableClicked()
     {
+        // The menu item only exists while a behavior variable is selected.
+        if (BehaviorSave == null || SelectedBehaviorVariable == null)
+        {
+            return;
+        }
+
         var editModes =
             _editVariableService.GetAvailableEditModeFor(SelectedBehaviorVariable, BehaviorSave);
 

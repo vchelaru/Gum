@@ -8,6 +8,6 @@ namespace Gum.Logic;
 public class VariableTypeConverterProvider : IVariableTypeConverterProvider
 {
     /// <inheritdoc/>
-    public TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container) =>
+    public TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave container) =>
         defaultVariable.GetTypeConverter(container);
 }

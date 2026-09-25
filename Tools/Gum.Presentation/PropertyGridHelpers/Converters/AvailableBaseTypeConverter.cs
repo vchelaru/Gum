@@ -9,36 +9,40 @@ namespace Gum.PropertyGridHelpers.Converters
 {
     public class AvailableBaseTypeConverter : TypeConverter
     {
-        ElementSave elementViewing;
-        InstanceSave instance;
+        ElementSave? elementViewing;
+        InstanceSave? instance;
         private StandardValuesCollection standardValues;
         private readonly IProjectState _projectState;
 
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public AvailableBaseTypeConverter(ElementSave instanceOwner, InstanceSave instance, IProjectState projectState) : base()
+        public AvailableBaseTypeConverter(ElementSave? instanceOwner, InstanceSave? instance, IProjectState projectState) : base()
         {
             this.elementViewing = instanceOwner;
             this.instance = instance;
             _projectState = projectState;
 
-            CacheStandardValuesCollection();
+            standardValues = CreateStandardValuesCollection();
 
         }
 
-        private void CacheStandardValuesCollection()
+        private StandardValuesCollection CreateStandardValuesCollection()
         {
             List<string> values = new List<string>();
 
             var gumProject = _projectState.GumProjectSave;
+            if (gumProject == null)
+            {
+                return new StandardValuesCollection(values);
+            }
 
             ElementSave? effectiveElement = elementViewing;
             if (instance != null)
@@ -82,10 +86,10 @@ namespace Gum.PropertyGridHelpers.Converters
 
             }
 
-            standardValues = new StandardValuesCollection(values);
+            return new StandardValuesCollection(values);
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) => standardValues;
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context) => standardValues;
 
     }
 }

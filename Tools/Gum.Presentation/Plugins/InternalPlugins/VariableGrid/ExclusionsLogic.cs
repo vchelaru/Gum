@@ -34,7 +34,7 @@ public class ExclusionsLogic
     /// Responds to a variable being set. Currently only reacts to ChildrenLayout changes, which
     /// can change which other variables are shown, so it forces the grid to refresh.
     /// </summary>
-    public void HandleVariableSet(ElementSave save1, InstanceSave? save2, string variableName, object? oldValue)
+    public void HandleVariableSet(ElementSave? save1, InstanceSave? save2, string variableName, object? oldValue)
     {
         if (variableName == "ChildrenLayout")
         {
