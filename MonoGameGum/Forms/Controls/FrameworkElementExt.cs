@@ -50,12 +50,16 @@ public static class FrameworkElementExt
 
     public static FrameworkElement? GetFrameworkElement(this FrameworkElement element, string name)
     {
+#pragma warning disable CS0618 // migrating changes throw-on-miss to null, see #5000
         return element.Visual?.GetFrameworkElementByName<FrameworkElement>(name);
+#pragma warning restore CS0618
     }
 
     public static T? GetFrameworkElement<T>(this FrameworkElement element, string name) where T : FrameworkElement
     {
+#pragma warning disable CS0618 // migrating changes throw-on-miss to null, see #5000
         return element.Visual?.GetFrameworkElementByName<T>(name);
+#pragma warning restore CS0618
     }
 
     public static IInputReceiver? GetParentInputReceiver(this FrameworkElement element)

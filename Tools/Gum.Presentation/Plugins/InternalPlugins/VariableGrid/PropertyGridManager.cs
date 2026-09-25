@@ -1040,7 +1040,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                 instanceMember.CustomGetEvent += (_) => row.Get();
                 if (row.Set != null)
                 {
-                    instanceMember.CustomSetEvent += (_, newValue) => row.Set(newValue);
+                    instanceMember.CustomSetPropertyEvent += (_, args) => row.Set(args.Value);
                 }
                 if (row.CustomOptions != null)
                 {

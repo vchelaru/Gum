@@ -19,13 +19,13 @@ public class RetryService : IRetryService
                 action();
                 break;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 failureCount++;
                 Thread.Sleep(msSleep);
                 if (failureCount >= numberOfTimesToTry)
                 {
-                    throw e;
+                    throw;
                 }
             }
         }

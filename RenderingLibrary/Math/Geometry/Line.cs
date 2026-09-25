@@ -70,7 +70,7 @@ public class Line : SpriteBatchRenderableBase, IRenderableIpso
 
     int IRenderableIpso.Alpha => Color.A;
 
-    public BlendState BlendState
+    public new BlendState BlendState
     {
         get { return BlendState.NonPremultiplied; }
     }

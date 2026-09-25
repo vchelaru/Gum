@@ -167,7 +167,7 @@ namespace Gum.DataTypes
         /// <summary>
         /// Variable names listed here are hidden in the Variables tab when editing an instance of this element,
         /// unless the variable has been explicitly set on that instance in the current state.
-        /// Checked recursively up the inheritance chain via <see cref="IObjectFinder.IsVariableHiddenRecursively"/>.
+        /// Checked recursively up the inheritance chain via <see cref="Gum.Managers.IObjectFinder.IsVariableHiddenRecursively"/>.
         /// </summary>
         public List<string> VariablesHiddenFromInstances { get; set; } = new List<string>();
 

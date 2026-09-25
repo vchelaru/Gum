@@ -170,7 +170,8 @@ public class ComboBoxVisual : InteractiveGue
         public StateSave Pushed { get; set; } = new StateSave() { Name = FrameworkElement.PushedStateName };
     }
 
-    public ComboBoxCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ComboBoxCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

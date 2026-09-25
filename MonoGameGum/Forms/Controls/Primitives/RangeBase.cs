@@ -316,7 +316,7 @@ public abstract class RangeBase :
     // cascades into the ScrollBar visuals (TrackInstance.HasEvents must be true) and could break
     // user-authored Gum visuals. Fixing this properly requires auditing the Track semantics across
     // ScrollBar vs Slider and all visual versions. See also: ScrollBar.RefreshInternalVisualReferences.
-    protected virtual void RefreshInternalVisualReferences()
+    protected new virtual void RefreshInternalVisualReferences()
     {
         // assign explicit track before adding events
         AssignExplicitTrack();

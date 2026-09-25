@@ -420,7 +420,10 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
 
     private float _dropshadowBlurX;
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>
+    /// Horizontal blur radius of the dropshadow, in pixels: how far the shadow visibly extends,
+    /// not the Gaussian sigma. 0 is a hard edge.
+    /// </summary>
     /// <remarks>Apos approximates the visible falloff using the shape primitive's
     /// <c>antiAliasSize</c> parameter — no true Gaussian, but the user-set value still
     /// represents how many pixels the shadow visibly extends.</remarks>
@@ -861,6 +864,10 @@ public abstract class RenderableShapeBase : RenderableBase, Gum.GueDeriving.IBle
     /// <see cref="Arc.Render"/>; <see cref="RoundedRectangle"/> handles its own rotation via
     /// <c>ShapeBatch.DrawRectangle</c>'s rotation parameter and does not call this.
     /// </summary>
+    /// <param name="absoluteLeft">The shape's absolute left edge.</param>
+    /// <param name="absoluteTop">The shape's absolute top edge.</param>
+    /// <param name="width">The shape's width.</param>
+    /// <param name="height">The shape's height.</param>
     /// <param name="rotationRadians">Already negated to match the rendering convention
     /// (negative of the GUE's degrees-based Rotation).</param>
     public static Vector2 GetRotatedCenter(float absoluteLeft, float absoluteTop, float width, float height, float rotationRadians)

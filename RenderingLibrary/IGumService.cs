@@ -12,7 +12,7 @@ namespace RenderingLibrary
     /// each runtime implements this interface.
     /// </summary>
     /// <remarks>
-    /// The no-arg <see cref="Initialize"/> works on runtimes that do not require
+    /// The no-arg <see cref="Initialize()"/> works on runtimes that do not require
     /// a host object (e.g. Raylib). On runtimes that do — currently MonoGame,
     /// KNI, and FNA, which all need a <c>Game</c> instance — the call throws
     /// <see cref="System.NotSupportedException"/>. Engine code targeting those

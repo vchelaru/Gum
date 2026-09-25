@@ -101,7 +101,9 @@ public partial class CustomSetPropertyOnRenderable
     /// is not <see cref="MissingFileBehavior.ThrowException"/>. Mirrors the MonoGame/raylib dispatcher's
     /// event of the same name (<c>Gum.Wireframe.CustomSetPropertyOnRenderable.PropertyAssignmentError</c>).
     /// </summary>
+#pragma warning disable CS0067 // raised only in the SkiaGum build
     public static event Action<string>? PropertyAssignmentError;
+#pragma warning restore CS0067
 
     // Issue #2956 follow-up — two-slot CircleRuntime / RectangleRuntime own a fill renderable
     // AND a stroke renderable. The runtime's typed setters (UseGradient, IsFilled,
@@ -388,6 +390,7 @@ public partial class CustomSetPropertyOnRenderable
     // RectangleRuntime inside that branch's switch.
     private static bool TrySetPropertyOnRoundedRectangleRuntime(GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
         if (graphicalUiElement is not RoundedRectangleRuntime asRoundedRectangleRuntime)
         {
             return false;
@@ -402,6 +405,7 @@ public partial class CustomSetPropertyOnRenderable
                 asRoundedRectangleRuntime.StrokeDashLength = (float)value;
                 return true;
             case nameof(RoundedRectangleRuntime.StrokeGapLength):
+#pragma warning restore CS0618
                 asRoundedRectangleRuntime.StrokeGapLength = (float)value;
                 return true;
         }
@@ -415,6 +419,7 @@ public partial class CustomSetPropertyOnRenderable
     // CircleRuntime inside that branch's switch.
     private static bool TrySetPropertyOnColoredCircleRuntime(GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
         if (graphicalUiElement is not ColoredCircleRuntime asColoredCircleRuntime)
         {
             return false;
@@ -429,6 +434,7 @@ public partial class CustomSetPropertyOnRenderable
                 asColoredCircleRuntime.StrokeDashLength = (float)value;
                 return true;
             case nameof(ColoredCircleRuntime.StrokeGapLength):
+#pragma warning restore CS0618
                 asColoredCircleRuntime.StrokeGapLength = (float)value;
                 return true;
         }
@@ -454,10 +460,12 @@ public partial class CustomSetPropertyOnRenderable
             // renderable. See issue #2629.
             switch (propertyName)
             {
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
                 case nameof(ArcRuntime.StrokeWidth):
                     if (graphicalUiElement is ArcRuntime arcStrokeRuntime)
                     {
                         arcStrokeRuntime.StrokeWidth = (float)value;
+#pragma warning restore CS0618
                     }
                     else
                     {

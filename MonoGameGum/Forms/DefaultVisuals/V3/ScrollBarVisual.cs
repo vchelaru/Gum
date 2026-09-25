@@ -89,7 +89,8 @@ public class ScrollBarVisual : InteractiveGue
         public StateSave Horizontal { get; set; } = new StateSave() { Name = FrameworkElement.HorizontalStateName };
     }
 
-    public ScrollBarStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ScrollBarStates States;
 
     /// <summary>
     /// The state category controlling vertical vs horizontal layout.

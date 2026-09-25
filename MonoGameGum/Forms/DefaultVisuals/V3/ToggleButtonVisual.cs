@@ -61,7 +61,8 @@ public class ToggleButtonVisual : InteractiveGue
         public StateSave DisabledFocusedOff { get; set; } = new StateSave { Name = nameof(DisabledFocusedOff) };
     }
 
-    public ToggleButtonCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ToggleButtonCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

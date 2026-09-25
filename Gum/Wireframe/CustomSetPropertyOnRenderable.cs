@@ -1883,8 +1883,8 @@ public partial class CustomSetPropertyOnRenderable
     /// resolved-font (<c>"BitmapFont"</c>) inline variables using a stack model: each open tag pushes its
     /// value and each close tag pops it, so a run resolves to the font implied by every tag open over it.
     /// The push/pop/sort/character-count loop is identical on every platform; only the font-CREATION body
-    /// (<see cref="GetAndCreateFontIfNecessary"/>) is platform-specific, since Raylib produces a
-    /// <see cref="Raylib_cs.Font"/> (or, with no creator, falls back to scaling the base atlas) while the
+    /// (<c>GetAndCreateFontIfNecessary</c>) is platform-specific, since Raylib produces a
+    /// <c>Raylib_cs.Font</c> (or, with no creator, falls back to scaling the base atlas) while the
     /// XNA-family backends produce a <see cref="BitmapFont"/>.
     /// </summary>
     private static void ApplyFontVariables(Text asText, List<FoundTag> results)

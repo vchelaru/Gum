@@ -75,7 +75,8 @@ public class RadioButtonVisual : InteractiveGue
 
     }
 
-    public RadioButtonCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new RadioButtonCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

@@ -666,7 +666,7 @@ public class ArcRuntime
     /// <para><b>Visual progression as Thickness grows</b></para>
     /// <para>
     /// Arcs render as a stroked band centered on a curve inscribed in the bounding box. The
-    /// stroke is inset by half its width (<see cref="RenderableShapeBase.IsOffsetAppliedForStroke"/>),
+    /// stroke is inset by half its width (<c>RenderableShapeBase.IsOffsetAppliedForStroke</c>),
     /// so the curve's radius shrinks as <c>Thickness</c> grows. For a square arc with
     /// <c>Width = Height = W</c>:
     /// </para>
@@ -683,7 +683,7 @@ public class ArcRuntime
     /// </list>
     /// <para><b>Gradient interaction</b></para>
     /// <para>
-    /// Setting <see cref="SkiaShapeRuntime.UseGradient"/> = true (after seeding gradient colors
+    /// Setting <c>SkiaShapeRuntime.UseGradient</c> = true (after seeding gradient colors
     /// and endpoints) applies the gradient to the stroke band at any Thickness — including at
     /// <c>Thickness = W / 2</c>, which produces a gradient-filled pie wedge.
     /// </para>

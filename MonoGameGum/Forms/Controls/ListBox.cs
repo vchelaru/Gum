@@ -521,7 +521,8 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Raised every frame while this control has input focus. Can be used
     /// to perform custom per-frame logic while the control is focused.
     /// </summary>
-    public event Action<IInputReceiver>? FocusUpdate;
+    // Hides ScrollViewer.FocusUpdate instead of raising it; see #5001.
+    public new event Action<IInputReceiver>? FocusUpdate;
 
     /// <summary>
     /// Event raised when the user presses a button, whether at the top level or internally on
@@ -2160,7 +2161,7 @@ public class ListBox : ItemsControl, IInputReceiver
     {
     }
 
-    public void DoKeyboardAction(IInputReceiverKeyboard keyboard)
+    public new void DoKeyboardAction(IInputReceiverKeyboard keyboard)
     {
     }
 

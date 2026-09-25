@@ -266,8 +266,10 @@ namespace Gum.Wireframe
                 endAbsolute.X - startAbsolute.X,
                 endAbsolute.Y - startAbsolute.Y);
 
+#pragma warning disable CS0618 // these are plain renderables, not GraphicalUiElements, so the X/Y ambiguity does not apply
             endLine1.SetPosition(endAbsolute);
             endLine2.SetPosition(endAbsolute);
+#pragma warning restore CS0618
             var normalizedBack = Vector2.Normalize(startAbsolute - endAbsolute);
 
             var angle = Vector2Methods.Angle(normalizedBack).Value;

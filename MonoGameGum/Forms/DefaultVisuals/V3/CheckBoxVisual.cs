@@ -81,7 +81,8 @@ public class CheckBoxVisual : InteractiveGue
     }
 
 
-    public CheckBoxCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new CheckBoxCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

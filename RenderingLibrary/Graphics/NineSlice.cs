@@ -421,7 +421,7 @@ public class NineSlice : SpriteBatchRenderableBase,
         }
     }
 
-    public BlendState BlendState
+    public new BlendState BlendState
     {
         get
         {

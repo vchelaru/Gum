@@ -62,12 +62,10 @@ public class StateReferencingInstanceMember : InstanceMember
             if (wasReadOnly)
             {
                 this.CustomSetPropertyEvent += HandleCustomSet;
-                this.SetToDefault += HandleSetToDefault;
             }
             else
             {
                 this.CustomSetPropertyEvent -= HandleCustomSet;
-                this.SetToDefault -= HandleSetToDefault;
             }
         }
 
@@ -275,7 +273,6 @@ public class StateReferencingInstanceMember : InstanceMember
         if (!_entry.IsReadOnly)
         {
             this.CustomSetPropertyEvent += HandleCustomSet;
-            this.SetToDefault += HandleSetToDefault;
         }
         this.CustomGetEvent += HandleCustomGet;
         this.CustomGetTypeEvent += HandleCustomGetType;
@@ -344,13 +341,6 @@ public class StateReferencingInstanceMember : InstanceMember
             setPropertyArgs.IsAssignmentCancelled = true;
         }
     }
-
-    #endregion
-
-    #region Set to default
-
-    public event Action<string>? SetToDefault;
-    private void HandleSetToDefault(string obj) => _entry.ResetToDefault();
 
     #endregion
 

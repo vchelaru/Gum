@@ -11,7 +11,7 @@ namespace Gum.Input;
 /// OS's modal text-entry dialog (used most visibly on iOS). Registered onto
 /// <c>GumService.NativeTextInput</c> during initialization so platform-agnostic
 /// callers like <c>TextBoxBase</c> can request native text entry through
-/// <see cref="IGumService.NativeTextInput"/>.
+/// <c>IGumService.NativeTextInput</c>.
 /// </summary>
 /// <remarks>
 /// FNA does not ship <c>Microsoft.Xna.Framework.Input.KeyboardInput</c>, so this

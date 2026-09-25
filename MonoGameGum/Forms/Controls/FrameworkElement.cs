@@ -82,7 +82,7 @@ public enum SizeMode
 /// </summary>
 public enum GamepadNavigationMode
 {
-    /// <summary>Index-based navigation (<see cref="FrameworkElement.HandleTab"/>) — the default.</summary>
+    /// <summary>Index-based navigation (<see cref="FrameworkElement.HandleTab(TabDirection, FrameworkElement?, bool)"/>) — the default.</summary>
     TabOrder,
     /// <summary>On-screen-position-based navigation (<see cref="Gum.Forms.SpatialNavigationService"/>).</summary>
     Spatial
@@ -1898,7 +1898,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// Keyboard counterpart to <see cref="HandleGamepadNavigation(GamePadForNavigation)"/> (issue
     /// #4272): resolves the same <see cref="GamepadNavigationMode"/> and dispatches to
     /// <see cref="Gum.Forms.SpatialNavigationService"/> scoring (honoring
-    /// <see cref="SpatialNavigationUp"/>-style overrides) or index-based <see cref="HandleTab"/>,
+    /// <see cref="SpatialNavigationUp"/>-style overrides) or index-based <see cref="HandleTab(TabDirection, FrameworkElement?, bool)"/>,
     /// driven by <see cref="UpKeyCombos"/>/<see cref="DownKeyCombos"/>/<see cref="LeftKeyCombos"/>/
     /// <see cref="RightKeyCombos"/> instead of a gamepad's D-pad/stick. Called once per frame from
     /// <see cref="HandleKeyboardFocusUpdate"/>, for whichever element currently has focus.

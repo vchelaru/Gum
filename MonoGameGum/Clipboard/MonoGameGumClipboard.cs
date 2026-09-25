@@ -7,7 +7,7 @@ namespace Gum.Clipboard;
 /// MonoGame / KNI / FNA / Raylib / Sokol implementation of <see cref="IGumClipboard"/>.
 /// Wraps the existing static <see cref="ClipboardImplementation"/> helper so the
 /// platform-agnostic Forms controls in GumCommon can reach clipboard text through
-/// the <see cref="IGumService.Clipboard"/> abstraction. Registered onto
+/// the <c>IGumService.Clipboard</c> abstraction. Registered onto
 /// <c>GumService.Clipboard</c> during initialization.
 /// </summary>
 /// <remarks>

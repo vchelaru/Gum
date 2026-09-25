@@ -27,7 +27,6 @@ internal class MainConvertToJsonPlugin : PluginBase
     public override bool ShutDown(PluginShutDownReason shutDownReason) => true;
 
     private readonly ConvertToJsonLogic _convertToJsonLogic;
-    private readonly IDialogService _dialogService;
 
     [ImportingConstructor]
     public MainConvertToJsonPlugin(

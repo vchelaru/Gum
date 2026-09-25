@@ -84,7 +84,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     }
 
 
-    public BlendState BlendState
+    public new BlendState BlendState
     {
         get;
         set;

@@ -30,7 +30,7 @@ public interface IGumHotReloadManager
 
     /// <summary>
     /// Starts watching the directory containing the specified .gumx project file for changes.
-    /// This is not typically called directly — use <see cref="GumServiceSkiaBase.EnableHotReload"/>
+    /// This is not typically called directly — use <c>GumServiceSkiaBase.EnableHotReload</c>
     /// or the MonoGame/Raylib GumService's equivalent instead.
     /// </summary>
     /// <param name="absoluteGumxSourcePath">The absolute path to the .gumx project file.</param>

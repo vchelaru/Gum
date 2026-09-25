@@ -216,7 +216,9 @@ public class DimensionDisplayVisual : EditorVisualBase
     {
         string suffix = GetDimensionSuffix(objectToUpdateTo.WidthUnits, isWidth: true);
 
+#pragma warning disable CS0618 // these are plain renderables, not GraphicalUiElements, so the X/Y ambiguity does not apply
         _middleLine.SetPosition(topLeft + rotatedUpDirection * fromBodyOffset);
+#pragma warning restore CS0618
         _middleLine.RelativePoint = rotatedRightDirection * absoluteWidth;
 
         if (suffix != null)
@@ -235,6 +237,7 @@ public class DimensionDisplayVisual : EditorVisualBase
 
         desiredPosition = ClampPositionToCamera(desiredPosition);
 
+#pragma warning disable CS0618 // these are plain renderables, not GraphicalUiElements, so the X/Y ambiguity does not apply
         _dimensionDisplayText.SetPosition(desiredPosition);
         _dimensionDisplayText.HorizontalAlignment = HorizontalAlignment.Center;
         _dimensionDisplayText.VerticalAlignment = VerticalAlignment.Center;
@@ -243,6 +246,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         _endCap1.RelativePoint = rotatedDownDirection * endCapLength;
 
         _endCap2.SetPosition(_middleLine.GetPosition() + rotatedRightDirection * absoluteWidth + rotatedUpDirection * endCapLength / 2.0f);
+#pragma warning restore CS0618
         _endCap2.RelativePoint = rotatedDownDirection * endCapLength;
     }
 
@@ -277,10 +281,12 @@ public class DimensionDisplayVisual : EditorVisualBase
         _dimensionDisplayText.Position = desiredPosition;
         _dimensionDisplayText.VerticalAlignment = VerticalAlignment.Center;
 
+#pragma warning disable CS0618 // these are plain renderables, not GraphicalUiElements, so the X/Y ambiguity does not apply
         _endCap1.SetPosition(_middleLine.GetPosition() + rotatedLeftDirection * endCapLength / 2.0f);
         _endCap1.RelativePoint = rotatedRightDirection * endCapLength;
 
         _endCap2.SetPosition(_middleLine.GetPosition() + _middleLine.RelativePoint + rotatedLeftDirection * endCapLength / 2.0f);
+#pragma warning restore CS0618
         _endCap2.RelativePoint = rotatedRightDirection * endCapLength;
     }
 

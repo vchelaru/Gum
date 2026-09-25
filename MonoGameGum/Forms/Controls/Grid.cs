@@ -146,7 +146,8 @@ public class Grid :
     /// Removes a child element from the grid.
     /// </summary>
     /// <param name="child">The child element to remove.</param>
-    public void RemoveChild(FrameworkElement child)
+    // Should override FrameworkElement.RemoveChild; see #5001.
+    public new void RemoveChild(FrameworkElement child)
     {
         if (child == null)
         {
@@ -199,7 +200,8 @@ public class Grid :
     /// Removes a raw <see cref="GraphicalUiElement"/> child from the grid.
     /// </summary>
     /// <param name="child">The child element to remove.</param>
-    public void RemoveChild(GraphicalUiElement child)
+    // Should override FrameworkElement.RemoveChild; see #5001.
+    public new void RemoveChild(GraphicalUiElement child)
     {
         if (child == null)
         {

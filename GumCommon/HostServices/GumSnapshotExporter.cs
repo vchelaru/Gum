@@ -16,8 +16,8 @@ namespace Gum;
 
 /// <summary>
 /// Exports a live <see cref="GraphicalUiElement"/> tree to a Gum project on disk, so it can be opened
-/// and inspected in the Gum tool. Composed by the owning service (<see cref="GumService.ExportSnapshot"/>
-/// / <see cref="GumServiceSkiaBase.ExportSnapshot"/>) rather than static, matching
+/// and inspected in the Gum tool. Composed by the owning service (<c>GumService.ExportSnapshot</c>
+/// / <c>GumServiceSkiaBase.ExportSnapshot</c>) rather than static, matching
 /// <see cref="GumHotReloadManager"/>'s shape: the one platform-specific piece (saving an embedded/
 /// generated texture to a PNG) is supplied by the owning service via the constructor instead of being
 /// hardcoded to a specific concrete engine.

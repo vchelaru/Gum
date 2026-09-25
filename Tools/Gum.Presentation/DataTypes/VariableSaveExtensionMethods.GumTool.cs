@@ -142,7 +142,6 @@ namespace Gum.DataTypes
             else
             {
                 // We should see if it's an exposed variable, and if so, let's look to the source object's type converters
-                bool foundInRoot = false;
                 if (!string.IsNullOrEmpty(variableSave.SourceObject) && container != null)
                 {
                     InstanceSave instance = container.GetInstance(variableSave.SourceObject);

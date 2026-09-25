@@ -119,7 +119,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
 
     readonly ScrollbarService _scrollbarService;
-    private readonly IGuiCommands _guiCommands;
     private readonly IOutputManager _outputManager;
     private readonly LocalizationService _localizationService;
     private readonly ScreenshotService _screenshotService;
@@ -130,7 +129,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private bool _isXnaInitialized;
     private readonly ISelectedState _selectedState;
     private readonly WireframeCommands _wireframeCommands;
-    private readonly IFileCommands _fileCommands;
     private readonly IHotkeyManager _hotkeyManager;
     private readonly ISetVariableLogic _setVariableLogic;
     private readonly IUiSettingsService _uiSettingsService;
@@ -146,7 +144,6 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private LayerService _layerService;
     private Func<string, object?>? _renderTargetShaderResolver;
     private EditingManager _editingManager;
-    private readonly IDialogService _dialogService;
     private readonly IVariableInCategoryPropagationLogic _variableInCategoryPropagationLogic;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly ICircularReferenceManager _circularReferenceManager;

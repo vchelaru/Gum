@@ -537,7 +537,7 @@ public class TextRuntime : InteractiveGue
     /// Blur radius for the baked drop shadow, passed to KernSmith as a single scalar.
     /// </summary>
     /// <remarks>
-    /// On Skia this also seeds <see cref="DropshadowBlurX"/>/<see cref="DropshadowBlurY"/> equally,
+    /// On Skia this also seeds <c>DropshadowBlurX</c>/<c>DropshadowBlurY</c> equally,
     /// so callers that only ever set this scalar keep behaving the same as before those per-axis
     /// properties existed. Set the per-axis properties explicitly to diverge the two.
     /// </remarks>
@@ -612,7 +612,7 @@ public class TextRuntime : InteractiveGue
 
 #if !FRB
     /// <summary>
-    /// Copies font-generation fields (including dropshadow) onto a <see cref="RenderingLibrary.Graphics.Fonts.BmfcSave"/>
+    /// Copies font-generation fields (including dropshadow) onto a <c>RenderingLibrary.Graphics.Fonts.BmfcSave</c>
     /// for KernSmith or disk-cache font creation.
     /// </summary>
     internal void CopyFontGenerationFieldsTo(BmfcSave bmfcSave, string? resolvedFontFilePath)
@@ -1635,7 +1635,7 @@ public class TextRuntime : InteractiveGue
     // gum-cross-platform-unification's rule is to never widen an obsolete member's footprint even
     // when the "outlier" reasoning would otherwise apply. Narrower footprint wins. (#3709)
     [Obsolete("Use the AddToRoot extension method instead (e.g. myText.AddToRoot()).")]
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+    public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
     /// <summary>

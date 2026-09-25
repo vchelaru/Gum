@@ -34,7 +34,6 @@ namespace SkiaPlugin
         
         private readonly ISelectedState _selectedState;
         private readonly IWireframeCommands _wireframeCommands;
-        private readonly IDialogService _dialogService;
 
         #endregion
 

@@ -84,7 +84,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
     int typingTargetLetterCount;
 #endif
 
+#pragma warning disable CS0067 // OnFocusUpdate never raises this; see #5001
     public event Action<IInputReceiver> FocusUpdate;
+#pragma warning restore CS0067
 
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
 
@@ -187,7 +189,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public void Show(IEnumerable<string> pages, Layer frbLayer = null)
     {
+#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
+#pragma warning restore CS0618
         EnsureVisualInRoot();
 
         Pages.Clear();
@@ -246,7 +250,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public async Task ShowAsync(IEnumerable<string> pages, Layer frbLayer = null)
     {
+#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
+#pragma warning restore CS0618
         EnsureVisualInRoot();
 
         Pages.Clear();
@@ -272,7 +278,9 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public async Task ShowAsync(IEnumerable<DialogPageTask> pageTasks, Layer frbLayer = null)
     {
+#pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
+#pragma warning restore CS0618
         EnsureVisualInRoot();
 
         Pages.Clear();

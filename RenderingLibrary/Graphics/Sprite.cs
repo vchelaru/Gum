@@ -275,7 +275,7 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public object Tag { get; set; }
 
-    public BlendState BlendState
+    public new BlendState BlendState
     {
         get;
         set;

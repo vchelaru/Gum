@@ -174,7 +174,7 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
     internal static bool SuppressLayoutFromFontChange = false;
 
     /// <summary>
-    /// While true, <see cref="CustomSetPropertyOnRenderable"/>'s font-value update (bitmap font
+    /// While true, <c>CustomSetPropertyOnRenderable</c>'s font-value update (bitmap font
     /// resolution/regeneration, including KernSmith dropshadow baking) is skipped entirely on every
     /// font-property assignment (both the direct-setter and string <c>SetProperty</c> paths). Set by
     /// the tool's Variable Grid while a numeric drag-scrub is mid-gesture (<c>VariablePropertyCommitType
@@ -3455,7 +3455,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             float smallEdge = positionValue;
 
             var units = mYUnits;
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             if (units == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
             {
                 smallEdge *= -1;
             }
@@ -3644,7 +3646,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             dimensionToReturn = bigEdge - smallEdge;
         }
         else if (units == GeneralUnitType.PixelsFromMiddle ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             units == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
         {
             // use the full width
             float abs1 = System.Math.Abs(smallEdge);
@@ -3695,12 +3699,16 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             (mXUnits == GeneralUnitType.PixelsFromSmall ||
              (mXUnits == GeneralUnitType.PixelsFromMiddle && isParentWidthNoDependencyOrOnParent) ||
              (mXUnits == GeneralUnitType.PixelsFromLarge && isParentWidthNoDependencyOrOnParent) ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
              (mXUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentWidthNoDependencyOrOnParent)) &&
+#pragma warning restore CS0618
 
             (mYUnits == GeneralUnitType.PixelsFromSmall ||
              (mYUnits == GeneralUnitType.PixelsFromMiddle && isParentHeightNoDependencyOrOnParent) ||
              (mYUnits == GeneralUnitType.PixelsFromLarge && isParentHeightNoDependencyOrOnParent) ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
              (mYUnits == GeneralUnitType.PixelsFromMiddleInverted && isParentHeightNoDependencyOrOnParent) ||
+#pragma warning restore CS0618
              mYUnits == GeneralUnitType.PixelsFromBaseline);
 
         if (doesParentWrapStack)
@@ -3728,7 +3736,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mWidthUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
             isAbsolute = isNotParentDependent &&
                 (mXUnits == GeneralUnitType.PixelsFromLarge || mXUnits == GeneralUnitType.PixelsFromMiddle ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                     mXUnits == GeneralUnitType.PixelsFromSmall || mXUnits == GeneralUnitType.PixelsFromMiddleInverted);
+#pragma warning restore CS0618
 
         }
         else // Y
@@ -3738,7 +3748,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 mHeightUnit == DimensionUnitType.RelativeToMaxParentOrChildren;
             isAbsolute = isNotParentDependent &&
                 (mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromMiddle ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                     mYUnits == GeneralUnitType.PixelsFromSmall || mYUnits == GeneralUnitType.PixelsFromMiddleInverted &&
+#pragma warning restore CS0618
                     mYUnits == GeneralUnitType.PixelsFromBaseline);
 
         }
@@ -3962,7 +3974,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
             bool forcePixelsFromSmall = false;
 
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             if (mXUnits == GeneralUnitType.PixelsFromMiddle || mXUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+#pragma warning restore CS0618
                 mXUnits == GeneralUnitType.PixelsFromLarge)
             {
                 if (this.EffectiveParentGue?.ChildrenLayout == ChildrenLayout.LeftToRightStack)
@@ -4029,7 +4043,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
             // For information on why this force exists, see https://github.com/vchelaru/Gum/issues/695
             bool forcePixelsFromSmall = false;
 
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted ||
+#pragma warning restore CS0618
                 mYUnits == GeneralUnitType.PixelsFromLarge || mYUnits == GeneralUnitType.PixelsFromBaseline ||
                 mYUnits == GeneralUnitType.Percentage)
             {
@@ -4067,7 +4083,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                 value = parentHeight;
                 wasHandledY = true;
             }
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             else if (mYUnits == GeneralUnitType.PixelsFromMiddle || mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
             {
                 value = parentHeight / 2.0f;
                 wasHandledY = true;
@@ -4166,7 +4184,9 @@ public partial class GraphicalUiElement : IRenderableIpso, IVisible, INotifyProp
                     unitOffsetY = 64 * mY / 100.0f;
                 }
             }
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             else if (mYUnits == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
             {
                 unitOffsetY += -mY;
             }

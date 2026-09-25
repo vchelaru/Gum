@@ -777,8 +777,7 @@ public class VariableGridEntry
 
     /// <summary>
     /// Resets the variable to its default (usually removing it so an inherited/base value takes
-    /// over), mirroring <c>StateReferencingInstanceMember.HandleSetToDefault</c>'s reset/remove
-    /// rules.
+    /// over).
     /// </summary>
     public void ResetToDefault()
     {

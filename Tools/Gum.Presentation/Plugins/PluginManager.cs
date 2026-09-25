@@ -273,7 +273,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 }
                 catch (Exception e)
                 {
-                    ReportPluginFailure(container, e, "Failed in " + TryHandleDelete);
+                    ReportPluginFailure(container, e, "Failed in " + nameof(TryHandleDelete));
                 }
             }
         }

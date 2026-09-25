@@ -645,7 +645,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 
 public interface IInputReceiverKeyboardMonoGame : IInputReceiverKeyboard
 {
-    IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
+    new IReadOnlyCollection<Microsoft.Xna.Framework.Input.Keys> KeysTyped { get; }
     bool KeyDown(Keys key);
     bool KeyPushed(Keys key);
     bool KeyReleased(Keys key);
