@@ -66,13 +66,16 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     private const String CompatibilityFileName = "Compatibility.txt";
     
-    static PluginManager mGlobalInstance;
+    // Set by Initialize; the static plugin-shutdown/export helpers only run after startup.
+    static PluginManager mGlobalInstance = null!;
     static List<PluginManager> mInstances = new List<PluginManager>();
 
-    private IGuiCommands _guiCommands;
-    private IMessenger _messenger;
-    private IDialogService _dialogService;
-    private IOutputManager _outputManager;
+    // Resolved in Initialize rather than the ctor: these services depend on IPluginManager,
+    // so injecting them would be a DI cycle.
+    private IGuiCommands _guiCommands = null!;
+    private IMessenger _messenger = null!;
+    private IDialogService _dialogService = null!;
+    private IOutputManager _outputManager = null!;
 
     public static string PluginFolder
     {
@@ -88,7 +91,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 
     [ImportMany(AllowRecomposition = true)]
-    public IEnumerable<PluginBase> Plugins { get; set; }
+    public IEnumerable<PluginBase>? Plugins { get; set; }
+
+    /// <summary>The loaded plugins; throws if <see cref="Plugins"/> hasn't been set yet.</summary>
+    public IEnumerable<PluginBase> InitializedPlugins =>
+        Plugins ?? throw new InvalidOperationException("Plugins haven't yet been initialized");
 
     
 
@@ -155,21 +162,18 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
     }
 
-    void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = null)
+    void CallMethodOnPlugin(Action<PluginBase> methodToCall, [CallerMemberName]string methodName = "")
     {
-        if(this.Plugins == null)
-        {
-            throw new InvalidOperationException("Plugins haven't yet been initialized");
-        }
+        var plugins = InitializedPlugins;
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
+        var sortedPlugins = plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             // No container means the plugin hasn't started yet: a broadcast can arrive while an earlier
             // plugin's StartUp pumps the UI message loop (the Avalonia canvas creates its graphics
             // device there, and a pointer move over the tree raises hover). It has nothing to handle.
-            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer? container))
             {
                 continue;
             }
@@ -222,9 +226,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void ProjectSave(GumProjectSave savedProject) =>
         CallMethodOnPlugin(plugin => plugin.CallProjectSave(savedProject));
 
-    public GraphicalUiElement CreateGraphicalUiElement(ElementSave elementSave)
+    public GraphicalUiElement? CreateGraphicalUiElement(ElementSave elementSave)
     {
-        GraphicalUiElement toReturn = null;
+        GraphicalUiElement? toReturn = null;
         CallMethodOnPlugin(plugin =>
         {
             var internalGue = plugin.CallCreateGraphicalUiElement(elementSave);
@@ -252,11 +256,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
+        var sortedPlugins = InitializedPlugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             // Not started yet; see CallMethodOnPlugin.
-            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer? container))
             {
                 continue;
             }
@@ -334,7 +338,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public virtual void ReactToStateSaveSelected(StateSave? stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveSelected(stateSave));
 
-    public virtual void ReactToCustomStateSaveSelected(StateSave stateSave) =>
+    public virtual void ReactToCustomStateSaveSelected(StateSave? stateSave) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToCustomStateSaveSelected(stateSave));
 
     public void RefreshStateTreeView() =>
@@ -356,26 +360,26 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public virtual void ReactToStateSaveCategorySelected(StateSaveCategory? category) =>
         CallMethodOnPlugin((plugin) => plugin.CallReactToStateSaveCategorySelected(category));
 
-    public void VariableAdd(ElementSave elementSave, string variableName) =>
+    public void VariableAdd(ElementSave? elementSave, string variableName) =>
         CallMethodOnPlugin((plugin) => plugin.CallVariableAdd(elementSave, variableName));
 
-    public void VariableDelete(ElementSave elementSave, string variableName) =>
+    public void VariableDelete(ElementSave? elementSave, string variableName) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableDelete(elementSave, variableName));
 
-    public void VariableSet(ElementSave parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
+    public void VariableSet(ElementSave? parentElement, InstanceSave? instance, string unqualifiedChangedMemberName, object? oldValue,
         bool isFullCommit = true)
     {
         CallMethodOnPlugin(plugin => plugin.CallVariableSet(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit));
         CallMethodOnPlugin(plugin => plugin.CallVariableSetLate(parentElement, instance, unqualifiedChangedMemberName, oldValue, isFullCommit), "VariableSet (Late)");
     }
 
-    public virtual void VariableSelected(IStateContainer container, VariableSave variable) =>
+    public virtual void VariableSelected(IStateContainer? container, VariableSave? variable) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableSelected(container, variable));
 
     public void VariableRemovedFromCategory(string variableName, StateSaveCategory category) =>
         CallMethodOnPlugin(plugin => plugin.CallVariableRemovedFromCategory(variableName, category));
 
-    public void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName) =>
+    public void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceRename(element, instanceSave, oldName));
             
     public void AfterUndo() =>
@@ -429,10 +433,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public virtual void BehaviorSelected(BehaviorSave? behaviorSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorSelected(behaviorSave));
 
-    public virtual void BehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave elementSave) =>
+    public virtual void BehaviorReferenceSelected(ElementBehaviorReference? behaviorReference, ElementSave? elementSave) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorReferenceSelected(behaviorReference, elementSave));
 
-    public virtual void BehaviorVariableSelected(VariableSave variable) =>
+    public virtual void BehaviorVariableSelected(VariableSave? variable) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorVariableSelected(variable));
     public void BehaviorCreated(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorCreated(behavior));
@@ -440,14 +444,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void BehaviorDeleted(BehaviorSave behavior) =>
         CallMethodOnPlugin(plugin => plugin.CallBehaviorDeleted(behavior));
 
-    public virtual void InstanceSelected(ElementSave elementSave, InstanceSave instance) =>
+    public virtual void InstanceSelected(ElementSave? elementSave, InstanceSave? instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceSelected(elementSave, instance));
 
     public virtual void InstanceAdd(ElementSave elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceAdd(elementSave, instance));
 
 
-    public virtual void InstanceDelete(ElementSave elementSave, InstanceSave instance) =>
+    public virtual void InstanceDelete(ElementSave? elementSave, InstanceSave instance) =>
         CallMethodOnPlugin(plugin => plugin.CallInstanceDelete(elementSave, instance));
 
     public virtual void InstancesDelete(ElementSave elementSave, InstanceSave[] instances) =>
@@ -473,7 +477,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         CallMethodOnPlugin(plugin => plugin.CallInstanceReordered(instance));
     
 
-    public bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember)
+    public bool GetIfExtensionIsValid(string extension, ElementSave parentElement, InstanceSave? instance, string changedMember)
     {
         bool toReturn = false;
         CallMethodOnPlugin(plugin =>
@@ -504,9 +508,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public void WireframePropertyChanged(string propertyName) =>
         CallMethodOnPlugin(plugin => plugin.CallWireframePropertyChanged(propertyName));
 
-    public IRenderableIpso CreateRenderableForType(string type)
+    public IRenderableIpso? CreateRenderableForType(string type)
     {
-        IRenderableIpso toReturn = null;
+        IRenderableIpso? toReturn = null;
 
 
         CallMethodOnPlugin(
@@ -533,11 +537,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
+        var sortedPlugins = InitializedPlugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             // Not started yet; see CallMethodOnPlugin.
-            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer? container))
             {
                 continue;
             }
@@ -573,11 +577,11 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
 #if !TEST
         // let internal plugins handle changes first before external plugins.
-        var sortedPlugins = this.Plugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
+        var sortedPlugins = InitializedPlugins.OrderBy(item => !(item is IPriorityPlugin)).ToArray();
         foreach (var plugin in sortedPlugins)
         {
             // Not started yet; see CallMethodOnPlugin.
-            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer container))
+            if (!this.PluginContainers.TryGetValue(plugin, out PluginContainer? container))
             {
                 continue;
             }
@@ -733,7 +737,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     public bool ShouldExclude(VariableSave defaultVariable, RecursiveVariableFinder rvf)
     {
         bool shouldExclude = false;
-        foreach (var plugin in this.Plugins.Where(item => this.PluginContainers.TryGetValue(item, out PluginContainer c) && c.IsEnabled))
+        foreach (var plugin in InitializedPlugins.Where(item => this.PluginContainers.TryGetValue(item, out PluginContainer? c) && c.IsEnabled))
         {
             PluginContainer container = this.PluginContainers[plugin];
 
@@ -990,14 +994,14 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         catch (Exception e)
         {
             string error = "Error loading plugins\n";
-            if (e is ReflectionTypeLoadException)
+            if (e is ReflectionTypeLoadException typeLoadException)
             {
                 error += "Error is a reflection type load exception\n";
-                var loaderExceptions = (e as ReflectionTypeLoadException).LoaderExceptions;
+                var loaderExceptions = typeLoadException.LoaderExceptions;
 
                 foreach (var loaderException in loaderExceptions)
                 {
-                    error += "\n" + loaderException.ToString();
+                    error += "\n" + loaderException?.ToString();
                 }
             }
             else
@@ -1037,7 +1041,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         var startedPluginTypes = new Dictionary<Type, PluginBase>();
         using (StartupTiming.Time("    StartupPlugin on all plugins (total)"))
         {
-            foreach (PluginBase plugin in instance.Plugins)
+            foreach (PluginBase plugin in instance.InitializedPlugins)
             {
                 Type pluginType = plugin.GetType();
                 if (startedPluginTypes.ContainsKey(pluginType))
@@ -1110,7 +1114,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
             try
             {
-                plugin.UniqueId = plugin.GetType().FullName;
+                plugin.UniqueId = plugin.GetType().FullName ?? plugin.GetType().Name;
 
 
                 if (!instance._pluginEnablementStore.IsDisabled(plugin.UniqueId))
@@ -1229,7 +1233,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     {
         PluginManager pluginManager = mGlobalInstance;
 
-        foreach (PluginBase plugin in pluginManager.Plugins)
+        foreach (PluginBase plugin in pluginManager.InitializedPlugins)
         {
             PluginContainer container = pluginManager.mPluginContainers[plugin];
 

@@ -116,7 +116,7 @@ public class StateTreeViewModel : ViewModel
 
     #region Refresh
 
-    public void RefreshTo(IStateContainer stateContainer, ISelectedState selectedState, ObjectFinder objectFinder)
+    public void RefreshTo(IStateContainer? stateContainer, ISelectedState selectedState, ObjectFinder objectFinder)
     {
         if(stateContainer != null)
         {
@@ -260,7 +260,8 @@ public class StateTreeViewModel : ViewModel
             var category = stateContainer.Categories.ElementAt(categoryIndex);
             if (categoryViewModel.Data != category)
             {
-                var categoryToMove = Categories.FirstOrDefault(item => item.Data == category);
+                // AddMissingItems has already added a view model for every category.
+                var categoryToMove = Categories.First(item => item.Data == category);
                 var oldIndex = Categories.IndexOf(categoryToMove);
                 Categories.Move(oldIndex, categoryIndex);
             }
@@ -327,7 +328,7 @@ public class StateTreeViewModel : ViewModel
 
     #region Methods
 
-    public void SetSelectedState(StateSave stateSave)
+    public void SetSelectedState(StateSave? stateSave)
     {
         var foundState = States.FirstOrDefault(item => item.Data == stateSave);
         if (foundState == null)
@@ -368,7 +369,7 @@ public class StateTreeViewModel : ViewModel
         }
     }
 
-    public void SetSelectedStateSaveCategory(StateSaveCategory category)
+    public void SetSelectedStateSaveCategory(StateSaveCategory? category)
     {
         var foundCategory = Categories.FirstOrDefault(item => item.Data == category);
 

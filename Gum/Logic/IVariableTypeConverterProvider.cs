@@ -15,5 +15,5 @@ public interface IVariableTypeConverterProvider
     /// <summary>
     /// Returns the <see cref="TypeConverter"/> that should be used to edit/display the given variable.
     /// </summary>
-    TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container);
+    TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave container);
 }

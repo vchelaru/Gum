@@ -94,7 +94,7 @@ public class GuiCommands : IGuiCommands
         _pluginManager.RefreshElementTreeView();
     }
 
-    public void RefreshElementTreeView(IInstanceContainer instanceContainer)
+    public void RefreshElementTreeView(IInstanceContainer? instanceContainer)
     {
         _pluginManager.RefreshElementTreeView(instanceContainer);
     }

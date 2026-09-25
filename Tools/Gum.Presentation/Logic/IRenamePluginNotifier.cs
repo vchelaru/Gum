@@ -19,5 +19,5 @@ public interface IRenamePluginNotifier
 
     void ElementRename(ElementSave elementSave, string oldName);
 
-    void InstanceRename(ElementSave element, InstanceSave instanceSave, string oldName);
+    void InstanceRename(ElementSave? element, InstanceSave instanceSave, string oldName);
 }

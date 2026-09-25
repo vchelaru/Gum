@@ -11,9 +11,9 @@ namespace Gum.ToolCommands;
 public interface IElementCommands
 {
     #region Instance
-    InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null);
+    InstanceSave? AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null);
 
-    InstanceSave AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
+    InstanceSave? AddInstance(ElementSave elementToAddTo, InstanceSave instanceSave, string? parentName = null, int? desiredIndex = null);
     
     string GetUniqueNameForNewInstance(ElementSave elementSaveForNewInstance, ElementSave containerForNewInstance);
 
@@ -25,7 +25,7 @@ public interface IElementCommands
 
     StateSave AddState(IStateContainer stateContainer, StateSaveCategory category, string name);
 
-    void AddState(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null);
+    void AddState(IStateContainer stateContainer, StateSaveCategory? category, StateSave stateSave, int? desiredIndex = null);
 
     #endregion
 
@@ -43,7 +43,7 @@ public interface IElementCommands
 
     float ModifyVariable(string baseVariableName, float modificationAmount, ElementSave elementSave);
 
-    object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave);
+    object? GetCurrentValueForVariable(string baseVariableName, InstanceSave? instanceSave);
 
 
     #endregion
@@ -56,11 +56,11 @@ public interface IElementCommands
 
     #region Behavior
 
-    BehaviorInstanceSave AddInstance(BehaviorSave behaviorToAddTo, string name, string type = null, string parentName = null);
+    BehaviorInstanceSave AddInstance(BehaviorSave behaviorToAddTo, string name, string? type = null, string? parentName = null);
 
     void AddBehaviorTo(BehaviorSave behavior, ComponentSave componentSave, bool performSave = true);
 
-    void AddBehaviorTo(string behaviorName, ComponentSave componentSave, bool performSave = true);
+    void AddBehaviorTo(string? behaviorName, ComponentSave componentSave, bool performSave = true);
 
     #endregion
 

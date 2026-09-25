@@ -102,7 +102,7 @@ public class PluginHostTests
     {
         PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
 
-        Type[] loaded = pluginManager.Plugins.Select(plugin => plugin.GetType()).ToArray();
+        Type[] loaded = pluginManager.InitializedPlugins.Select(plugin => plugin.GetType()).ToArray();
 
         loaded.ShouldContain(typeof(ShellTitlePlugin));
         // Built-in plugins shared with the WPF head live in Gum.Presentation and are internal there.

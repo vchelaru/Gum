@@ -12,7 +12,7 @@ public interface IRenameLogic
 {
     #region StateSave
 
-    void RenameState(StateSave stateSave, StateSaveCategory category, string newName, bool applyRefactoringChanges = true);
+    void RenameState(StateSave stateSave, StateSaveCategory? category, string newName, bool applyRefactoringChanges = true);
 
     StateReferences GetChangesForRenamedState(StateSave state, string oldName, IStateContainer? container, StateSaveCategory? category);
 

@@ -35,9 +35,9 @@ public class MainMenuRefreshPlugin : CorePriorityPlugin
 
     private void HandleAfterUndo() => _menuBuilder.RefreshUI();
 
-    private void HandleBehaviorVariableSelected(VariableSave save) => _menuBuilder.RefreshUI();
+    private void HandleBehaviorVariableSelected(VariableSave? save) => _menuBuilder.RefreshUI();
 
-    private void HandleInstanceSelected(ElementSave element, InstanceSave instance) => _menuBuilder.RefreshUI();
+    private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance) => _menuBuilder.RefreshUI();
 
     private void HandleBehaviorSelected(BehaviorSave? behavior) => _menuBuilder.RefreshUI();
 

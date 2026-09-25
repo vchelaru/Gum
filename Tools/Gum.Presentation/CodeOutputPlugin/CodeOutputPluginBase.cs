@@ -268,7 +268,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         }
     }
 
-    private void HandleInstanceSelected(ElementSave arg1, InstanceSave instance)
+    private void HandleInstanceSelected(ElementSave? arg1, InstanceSave? instance)
     {
         if(control != null && _selectedState.SelectedElement != null)
         {
@@ -303,7 +303,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         HandleRefreshAndExport();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue,
+    private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
         _parentSetLogic.HandleVariableSet(element, instance, variableName, oldValue, codeOutputProjectSettings);
@@ -312,7 +312,7 @@ public abstract class CodeOutputPluginBase : PluginBase
 
         HandleRefreshAndExport(isFullCommit);
     }
-    private void HandleVariableAdd(ElementSave elementSave, string variableName)
+    private void HandleVariableAdd(ElementSave? elementSave, string variableName)
     {
         if(control != null)
         {
@@ -321,7 +321,7 @@ public abstract class CodeOutputPluginBase : PluginBase
         HandleRefreshAndExport();
     }
     //private void /*/*HandleVariableRemoved*/*/(ElementSave elementSave, string variableName) => HandleRefreshAndExport();
-    private void HandleVariableDelete(ElementSave arg1, string arg2)
+    private void HandleVariableDelete(ElementSave? arg1, string arg2)
     {
         if (control != null)
         {
@@ -334,7 +334,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     private void HandleStateAdd(StateSave obj) => HandleRefreshAndExport();
     private void HandleStateDelete(StateSave obj) => HandleRefreshAndExport();
 
-    private void HandleInstanceDeleted(ElementSave element, InstanceSave instance) =>
+    private void HandleInstanceDeleted(ElementSave? element, InstanceSave instance) =>
         HandleRefreshAndExportForElement(element);
 
     private void HandleInstanceAdd(ElementSave element, InstanceSave instance)
@@ -354,7 +354,7 @@ public abstract class CodeOutputPluginBase : PluginBase
     // may live in an element that is not currently selected (e.g. delete fired from a
     // tree-view selection that doesn't match what the codegen tab is viewing), in
     // which case regenerating for SelectedElement writes the wrong file or NREs.
-    private void HandleRefreshAndExportForElement(ElementSave element) =>
+    private void HandleRefreshAndExportForElement(ElementSave? element) =>
         _controller?.HandleRefreshAndExportForElement(element, codeOutputProjectSettings);
 
     private void RefreshCodeDisplay() => _controller?.RefreshCodeDisplay(codeOutputProjectSettings);

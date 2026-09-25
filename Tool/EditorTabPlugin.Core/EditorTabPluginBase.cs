@@ -569,7 +569,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _selectionManager.SelectedGue = ipso as GraphicalUiElement;
     }
 
-    private void HandleVariableSet(ElementSave save1, InstanceSave save2, string arg3, object arg4, bool isFullCommit)
+    private void HandleVariableSet(ElementSave? save1, InstanceSave? save2, string arg3, object? arg4, bool isFullCommit)
     {
         _selectionManager.Refresh();
         _editorViewModel.RefreshGridSnapWarning();
@@ -597,7 +597,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _selectionManager.Refresh();
     }
 
-    private void HandleInstanceDelete(ElementSave save1, InstanceSave save2)
+    private void HandleInstanceDelete(ElementSave? save1, InstanceSave save2)
     {
         _selectionManager.Refresh();
     }
@@ -736,7 +736,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         OnUiBaseFontSizeChanged(message.Size);
     }
 
-    private void HandleVariableSetLate(ElementSave? element, InstanceSave instance, string unqualifiedName, object oldValue,
+    private void HandleVariableSetLate(ElementSave? element, InstanceSave? instance, string unqualifiedName, object? oldValue,
         bool isFullCommit)
     {
         /////////////////////////////Early Out//////////////////////////
@@ -932,7 +932,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _editorViewModel.UpdateHasSelectedElement(save);
     }
 
-    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
         _wireframeObjectManager.RefreshAll(forceLayout: false);
         _editingManager.RefreshContextMenu();
@@ -1236,8 +1236,13 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
 
-        InstanceSave instance =
+        InstanceSave? instance =
             _elementCommands.AddInstance(element, nameToAdd, baseType);
+        // A plugin can reject the new instance.
+        if (instance == null)
+        {
+            return;
+        }
 
         _dragDropManager.SetInstanceToPosition(worldX, worldY, instance);
 
@@ -1267,7 +1272,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         // see if it's over the component:
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
+        IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
         string extension = FileManager.GetExtension(files[0]);
         bool isFontFile = extension == "ttf";
@@ -1503,7 +1508,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
+        IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
         if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
         {
@@ -1523,7 +1528,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
+        IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
         if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
         {
@@ -1560,7 +1565,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave!.Name });
 
-        IPositionedSizedObject ipsoOver = _selectionManager.GetRepresentationAt(position.Value.X, position.Value.Y, IsComponentNoInstanceSelected, elementStack);
+        IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(position.Value.X, position.Value.Y, IsComponentNoInstanceSelected, elementStack);
 
         return ipsoOver?.Tag as InstanceSave;
     }

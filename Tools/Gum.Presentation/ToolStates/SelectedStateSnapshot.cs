@@ -50,9 +50,9 @@ public class SelectedStateSnapshot : ISelectedState
         }
     }
 
-    public IStateContainer SelectedStateContainer
+    public IStateContainer? SelectedStateContainer
     {
-        get => (IStateContainer)SelectedElement ?? SelectedBehavior;
+        get => (IStateContainer?)SelectedElement ?? SelectedBehavior;
         set
         {
             if (value is ElementSave elementSave)
@@ -111,7 +111,7 @@ public class SelectedStateSnapshot : ISelectedState
     public StateSave? SelectedStateSaveOrDefault { get; set; }
 
     public StateSaveCategory? SelectedStateCategorySave { get; set; }
-    public ComponentSave SelectedComponent
+    public ComponentSave? SelectedComponent
     {
         get => SelectedElement as ComponentSave;
         set
@@ -163,6 +163,6 @@ public class SelectedStateSnapshot : ISelectedState
 
     public ITreeNode? SelectedTreeNode { get; set; }
 
-    public IEnumerable<ITreeNode> SelectedTreeNodes { get; set; }
+    public IEnumerable<ITreeNode> SelectedTreeNodes { get; set; } = new List<ITreeNode>();
 
 }

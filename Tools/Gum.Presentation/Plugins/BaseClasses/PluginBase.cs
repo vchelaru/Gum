@@ -27,10 +27,10 @@ public abstract class PluginBase : IPlugin
     // after construction and before StartUp(), so reference them in StartUp()/handlers, not
     // in a plugin constructor (a plugin needing one at construction time should inject it via
     // its own [ImportingConstructor] instead).
-    protected IGuiCommands _guiCommands;
-    protected IFileCommands _fileCommands;
-    protected ITabManager _tabManager;
-    protected IDialogService _dialogService;
+    protected IGuiCommands _guiCommands = null!;
+    protected IFileCommands _fileCommands = null!;
+    protected ITabManager _tabManager = null!;
+    protected IDialogService _dialogService = null!;
 
     [Import] public IGuiCommands GuiCommands { get => _guiCommands; set => _guiCommands = value; }
     [Import] public IFileCommands FileCommands { get => _fileCommands; set => _fileCommands = value; }
@@ -70,7 +70,7 @@ public abstract class PluginBase : IPlugin
     /// Raised when an element is duplicated. First argument is the old element, second is the new.
     /// </summary>
     public event Action<ElementSave, ElementSave>? ElementDuplicate;
-    public event Action<ElementSave> ElementReloaded;
+    public event Action<ElementSave>? ElementReloaded;
 
     /// <summary>
     /// Event raised when the element is renamed.
@@ -135,7 +135,7 @@ public abstract class PluginBase : IPlugin
     /// rebuilding a grid) should only do it for a committed value; one that keeps a live display in step
     /// with the drag (the wireframe, the texture coordinate selector) reacts to both.
     /// </summary>
-    public event Action<ElementSave, InstanceSave?, string, object?, bool>? VariableSet;
+    public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSet;
 
     /// <summary>
     /// Event raised after a variable has been set - this can be used to perform action after most
@@ -146,8 +146,8 @@ public abstract class PluginBase : IPlugin
     /// [object] - OLD value of the variable.  New value must be obtained through the InstanceSave
     /// [bool] - whether the value is committed, as described on <see cref="VariableSet"/>.
     /// </summary>
-    public event Action<ElementSave, InstanceSave?, string, object?, bool>? VariableSetLate;
-    public event Action<IStateContainer, VariableSave>? VariableSelected;
+    public event Action<ElementSave?, InstanceSave?, string, object?, bool>? VariableSetLate;
+    public event Action<IStateContainer?, VariableSave?>? VariableSelected;
 
     /// <summary>
     /// Event raised when a new variable is added. At the time of this writing
@@ -160,8 +160,8 @@ public abstract class PluginBase : IPlugin
     /// is not a new variable but rather a "public" alias of an existing variable. However,
     /// plugins may need to respond to this so it is treated as an event.
     /// </remarks>
-    public event Action<ElementSave, string>? VariableAdd;
-    public event Action<ElementSave, string>? VariableDelete;
+    public event Action<ElementSave?, string>? VariableAdd;
+    public event Action<ElementSave?, string>? VariableDelete;
 
     public event Action<ElementSave?>? ElementSelected;
     public event Action<ITreeNode?>? TreeNodeSelected;
@@ -174,26 +174,27 @@ public abstract class PluginBase : IPlugin
     public event Action<BehaviorSave?>? BehaviorSelected;
     public event Action<BehaviorSave>? BehaviorCreated;
     public event Action<BehaviorSave>? BehaviorDeleted;
-    public event Action<VariableSave>? BehaviorVariableSelected;
+    public event Action<VariableSave?>? BehaviorVariableSelected;
 
 
-    public event Action<ElementBehaviorReference, ElementSave>? BehaviorReferenceSelected;
+    public event Action<ElementBehaviorReference?, ElementSave?>? BehaviorReferenceSelected;
     public event Action<ElementSave>? BehaviorReferencesChanged;
 
-    public event Action<ElementSave, InstanceSave>? InstanceSelected;
+    public event Action<ElementSave?, InstanceSave?>? InstanceSelected;
 
     /// <summary>
     /// Event raised whenever a new instance is added. Note that this can be called after the parent is set on the new instance.
     /// </summary>
     public event Action<ElementSave, InstanceSave>? InstanceAdd;
-    public event Action<ElementSave, InstanceSave>? InstanceDelete;
+    /// <summary>Raised when an instance is deleted. The element is null for a behavior's instance.</summary>
+    public event Action<ElementSave?, InstanceSave>? InstanceDelete;
     public event Action<ElementSave, InstanceSave[]>? InstancesDelete;
 
 
     /// <summary>
     /// Event raised whenever an instance is renamed. Third parameter is the old name.
     /// </summary>
-    public event Action<ElementSave, InstanceSave, string>? InstanceRename;
+    public event Action<ElementSave?, InstanceSave, string>? InstanceRename;
     public event Action<InstanceSave>? InstanceReordered;
 
     /// <summary>
@@ -232,7 +233,7 @@ public abstract class PluginBase : IPlugin
     /// to return a set of variables and their defaults for a completely custom StandardElementSave instead
     /// of relying on StandardElementsManager
     /// </summary>
-    public event Func<string, StateSave>? GetDefaultStateForType;
+    public event Func<string, StateSave?>? GetDefaultStateForType;
 
 
     public event Func<string, IRenderableIpso?>? CreateRenderableForType;
@@ -256,12 +257,12 @@ public abstract class PluginBase : IPlugin
     public event Action<FilePath>? ReactToFileChanged;
 
     // Parameters are: extension, parentElement, instance, changedMember
-    public event Func<string, ElementSave, InstanceSave, string, bool>? IsExtensionValid;
+    public event Func<string, ElementSave, InstanceSave?, string, bool>? IsExtensionValid;
 
     public event Action<GraphicalUiElement?>? SetHighlightedIpso;
     public event Action<IPositionedSizedObject?>? HighlightTreeNode;
     public event Action<IPositionedSizedObject?>? IpsoSelected;
-    public event Func<IEnumerable<IPositionedSizedObject>?> GetSelectedIpsos;
+    public event Func<IEnumerable<IPositionedSizedObject>?>? GetSelectedIpsos;
 
     public event Func<ElementSave, GraphicalUiElement?>? CreateGraphicalUiElement;
 
@@ -273,11 +274,12 @@ public abstract class PluginBase : IPlugin
 
     #endregion
 
+    // Assigned by PluginManager.StartupPlugin before StartUp runs.
     public string UniqueId
     {
         get;
         set;
-    }
+    } = null!;
 
     public abstract string FriendlyName { get; }
 
@@ -361,12 +363,12 @@ public abstract class PluginBase : IPlugin
     public void CallStateDelete(StateSave stateSave) => StateDelete?.Invoke(stateSave);
 
     public void CallRefreshStateTreeView() => RefreshStateTreeView?.Invoke();
-    public void CallRefreshElementTreeView(IInstanceContainer instanceContanier) => RefreshElementTreeView?.Invoke(instanceContanier);
+    public void CallRefreshElementTreeView(IInstanceContainer? instanceContanier) => RefreshElementTreeView?.Invoke(instanceContanier);
     public void CallAfterUndo() => AfterUndo?.Invoke();
 
 
     public void CallReactToStateSaveSelected(StateSave? stateSave) => ReactToStateSaveSelected?.Invoke(stateSave);
-    public void CallReactToCustomStateSaveSelected(StateSave stateSave) => ReactToCustomStateSaveSelected?.Invoke(stateSave);
+    public void CallReactToCustomStateSaveSelected(StateSave? stateSave) => ReactToCustomStateSaveSelected?.Invoke(stateSave);
     public void CallReactToStateSaveCategorySelected(StateSaveCategory? category) => ReactToStateSaveCategorySelected?.Invoke(category);
     public void CallStateCategoryRename(StateSaveCategory category, string oldName) => CategoryRename?.Invoke(category, oldName);
 
@@ -376,27 +378,27 @@ public abstract class PluginBase : IPlugin
 
     public void CallVariableRemovedFromCategory(string variableName, StateSaveCategory category) => VariableRemovedFromCategory?.Invoke(variableName, category);
 
-    public void CallInstanceRename(ElementSave parentElement, InstanceSave instanceSave, string oldName) => 
+    public void CallInstanceRename(ElementSave? parentElement, InstanceSave instanceSave, string oldName) => 
         InstanceRename?.Invoke(parentElement, instanceSave, oldName);
 
     public void CallFillVariableAttributes(VariableSave variableSave, List<Attribute> listToFill) =>
         FillVariableAttributes?.Invoke(variableSave, listToFill);
 
-    public void CallVariableAdd(ElementSave elementSave, string variableName) =>
+    public void CallVariableAdd(ElementSave? elementSave, string variableName) =>
         VariableAdd?.Invoke(elementSave, variableName);
 
-    public void CallVariableDelete(ElementSave elementSave, string variableName) =>
+    public void CallVariableDelete(ElementSave? elementSave, string variableName) =>
         VariableDelete?.Invoke(elementSave, variableName);
 
-    public void CallVariableSet(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue,
+    public void CallVariableSet(ElementSave? parentElement, InstanceSave? instance, string changedMember, object? oldValue,
         bool isFullCommit = true) =>
         VariableSet?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
 
-    public void CallVariableSetLate(ElementSave parentElement, InstanceSave? instance, string changedMember, object? oldValue,
+    public void CallVariableSetLate(ElementSave? parentElement, InstanceSave? instance, string changedMember, object? oldValue,
         bool isFullCommit = true) =>
         VariableSetLate?.Invoke(parentElement, instance, changedMember, oldValue, isFullCommit);
 
-    public void CallVariableSelected(IStateContainer container, VariableSave variable) =>
+    public void CallVariableSelected(IStateContainer? container, VariableSave? variable) =>
         VariableSelected?.Invoke(container, variable);
 
     public void CallAddAndRemoveVariablesForType(string type, StateSave standardDefaultStateSave) =>
@@ -411,9 +413,9 @@ public abstract class PluginBase : IPlugin
     public void CallBehaviorCreated(BehaviorSave behavior) => BehaviorCreated?.Invoke(behavior);
 
     public void CallBehaviorDeleted(BehaviorSave behavior) => BehaviorDeleted?.Invoke(behavior);
-    public void CallBehaviorVariableSelected(VariableSave behaviorVariable) => BehaviorVariableSelected?.Invoke(behaviorVariable);
+    public void CallBehaviorVariableSelected(VariableSave? behaviorVariable) => BehaviorVariableSelected?.Invoke(behaviorVariable);
 
-    public void CallInstanceSelected(ElementSave elementSave, InstanceSave instance) => InstanceSelected?.Invoke(elementSave, instance);
+    public void CallInstanceSelected(ElementSave? elementSave, InstanceSave? instance) => InstanceSelected?.Invoke(elementSave, instance);
 
     public void CallInstanceAdd(ElementSave elementSave, InstanceSave instance) => InstanceAdd?.Invoke(elementSave, instance);
 
@@ -423,13 +425,13 @@ public abstract class PluginBase : IPlugin
 
     public void CallBehaviorReferencesChanged(ElementSave element) => BehaviorReferencesChanged?.Invoke(element);
 
-    public void CallBehaviorReferenceSelected(ElementBehaviorReference behaviorReference, ElementSave element) => BehaviorReferenceSelected?.Invoke(behaviorReference, element);
+    public void CallBehaviorReferenceSelected(ElementBehaviorReference? behaviorReference, ElementSave? element) => BehaviorReferenceSelected?.Invoke(behaviorReference, element);
 
     public void CallRefreshBehaviorUi() => RefreshBehaviorView?.Invoke();
 
     public void CallRefreshVariableView(bool force) => RefreshVariableView?.Invoke(force);
 
-    public void CallInstanceDelete(ElementSave elementSave, InstanceSave instance) => InstanceDelete?.Invoke(elementSave, instance);
+    public void CallInstanceDelete(ElementSave? elementSave, InstanceSave instance) => InstanceDelete?.Invoke(elementSave, instance);
 
     public void CallInstancesDelete(ElementSave elementSave, InstanceSave[] instances)
     {
@@ -459,7 +461,7 @@ public abstract class PluginBase : IPlugin
     public void CallWireframePropertyChanged(string propertyName) =>
         WireframePropertyChanged?.Invoke(propertyName);
 
-    public StateSave CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
+    public StateSave? CallGetDefaultStateFor(string type) => GetDefaultStateForType?.Invoke(type);
 
     public IRenderableIpso? CallCreateRenderableForType(string type) => CreateRenderableForType?.Invoke(type);
 
@@ -477,7 +479,7 @@ public abstract class PluginBase : IPlugin
 
     public void CallReactToFileChanged(FilePath filePath) => ReactToFileChanged?.Invoke(filePath);
 
-    public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave instance, string changedMember) =>
+    public bool CallIsExtensionValid(string extension, ElementSave parentElement, InstanceSave? instance, string changedMember) =>
         IsExtensionValid?.Invoke(extension, parentElement, instance, changedMember) ?? false;
 
     public void CallSetHighlightedIpso(GraphicalUiElement? element) =>

@@ -28,7 +28,7 @@ internal class MainSelectionHistoryPlugin : CorePriorityPlugin
         this.ElementSelected += HandleElementSelected;
     }
 
-    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
         _selectionHistory.RecordSelection(element, instance);
     }

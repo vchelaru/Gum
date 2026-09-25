@@ -28,7 +28,7 @@ public interface ISelectedState
     ElementBehaviorReference? SelectedBehaviorReference { get; set; }
     StateSave? CustomCurrentStateSave{ get; set; }
     StateSave? SelectedStateSave { get; set; }
-    StateSave SelectedStateSaveOrDefault { get;}
+    StateSave? SelectedStateSaveOrDefault { get;}
 
     StateSaveCategory? SelectedStateCategorySave { get; set; }
     ComponentSave? SelectedComponent { get; set; }
@@ -47,21 +47,6 @@ public interface ISelectedState
     VariableSave? SelectedBehaviorVariable { get; set; }
     ITreeNode? SelectedTreeNode { get; }
     IEnumerable<ITreeNode> SelectedTreeNodes { get; }
-    public RecursiveVariableFinder SelectedRecursiveVariableFinder
-    {
-        get
-        {
-            if (SelectedInstance != null)
-            {
-                return new RecursiveVariableFinder(SelectedInstance, SelectedElement);
-            }
-            else
-            {
-                return new RecursiveVariableFinder(SelectedStateSave);
-            }
-        }
-    }
-
     public List<ElementWithState> GetTopLevelElementStack()
     {
         List<ElementWithState> toReturn = new List<ElementWithState>();

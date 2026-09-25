@@ -67,7 +67,7 @@ public class VariablesTabTests
     {
         PluginManager pluginManager = Services.GetRequiredService<PluginManager>();
 
-        Type[] loaded = pluginManager.Plugins.Select(plugin => plugin.GetType()).ToArray();
+        Type[] loaded = pluginManager.InitializedPlugins.Select(plugin => plugin.GetType()).ToArray();
 
         loaded.ShouldContain(typeof(MainVariableGridPlugin));
         loaded.ShouldContain(typeof(ExclusionsPlugin));

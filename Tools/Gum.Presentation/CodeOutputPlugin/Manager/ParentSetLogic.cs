@@ -33,11 +33,11 @@ public class ParentSetLogic
         _fileCommands = fileCommands;
     }
 
-    public void HandleVariableSet(ElementSave element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
+    public void HandleVariableSet(ElementSave? element, InstanceSave? instance, string variableName, object? oldValue, CodeOutputProjectSettings codeOutputProjectSettings)
     {
         var currentState = _selectedState.SelectedStateSave;
         ///////////////////////Early Out//////////////////
-        if(variableName != "Parent" || instance == null || currentState == null)
+        if(variableName != "Parent" || instance == null || currentState == null || element == null)
         {
             return;
         }

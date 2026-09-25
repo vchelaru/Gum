@@ -47,7 +47,7 @@ public class UndoPlugin : CorePriorityPlugin
 
     ElementSave? lastSelectedElement;
 
-    private void HandleStateSelected(StateSave save)
+    private void HandleStateSelected(StateSave? save)
     {
         _undoManager.RecordState();
         OptionallyBroadcastUndosChanged();
@@ -65,7 +65,7 @@ public class UndoPlugin : CorePriorityPlugin
         OptionallyBroadcastUndosChanged();
     }
 
-    void HandleInstanceDelete(ElementSave arg1, InstanceSave arg2)
+    void HandleInstanceDelete(ElementSave? arg1, InstanceSave arg2)
     {
         if (_selectedState.SelectedBehavior != null)
         {
@@ -90,13 +90,13 @@ public class UndoPlugin : CorePriorityPlugin
         OptionallyBroadcastUndosChanged();
     }
 
-    void HandleElementSelected(DataTypes.ElementSave obj)
+    void HandleElementSelected(DataTypes.ElementSave? obj)
     {
         _undoManager.RecordState();
         OptionallyBroadcastUndosChanged();
     }
 
-    void HandleInstanceSelected(DataTypes.ElementSave elementSave, InstanceSave instanceSave)
+    void HandleInstanceSelected(DataTypes.ElementSave? elementSave, InstanceSave? instanceSave)
     {
         _undoManager.RecordState();
 
@@ -152,7 +152,7 @@ public class UndoPlugin : CorePriorityPlugin
         _undoManager.RecordBehaviorUndo();
     }
 
-    private void HandleInstanceRenameForBehaviorUndo(ElementSave element, InstanceSave instance, string oldName)
+    private void HandleInstanceRenameForBehaviorUndo(ElementSave? element, InstanceSave instance, string oldName)
     {
         if (_selectedState.SelectedBehavior != null)
         {

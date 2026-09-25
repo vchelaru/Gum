@@ -12,7 +12,7 @@ using ToolsUtilities;
 namespace Gum.Commands;
 public interface IFileCommands
 {
-    FilePath? ProjectDirectory { get; }
+    FilePath ProjectDirectory { get; }
 
     void DeleteDirectory(FilePath filePath);
 
@@ -49,7 +49,7 @@ public interface IFileCommands
 
     void TryAutoSaveCurrentElement();
 
-    void TryAutoSaveElement(ElementSave elementSave);
+    void TryAutoSaveElement(ElementSave? elementSave);
 
     void TryAutoSaveBehavior(BehaviorSave behavior);
 
@@ -66,7 +66,7 @@ public interface IFileCommands
 
     Task LoadProjectAsync(string fileName);
 
-    FilePath GetFullFileName(ElementSave element);
+    FilePath? GetFullFileName(ElementSave element);
 
     /// <summary>
     /// Gets the full path to an element's XML file as though it were still named
@@ -77,7 +77,7 @@ public interface IFileCommands
     event Action? LocalizationLoaded;
     void LoadLocalizationFile();
 
-    FilePath GetFullPathXmlFile(BehaviorSave behaviorSave);
+    FilePath? GetFullPathXmlFile(BehaviorSave behaviorSave);
 
     void SaveGeneralSettings();
 

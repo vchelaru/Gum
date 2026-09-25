@@ -339,7 +339,7 @@ namespace Gum.Converters
             }
         }
 
-        public static bool TryConvertToGeneralUnit(object unitType, out GeneralUnitType result)
+        public static bool TryConvertToGeneralUnit(object? unitType, out GeneralUnitType result)
         {
             result = GeneralUnitType.PixelsFromSmall;
 
@@ -367,7 +367,7 @@ namespace Gum.Converters
             }
         }
 
-        public static GeneralUnitType ConvertToGeneralUnit(object unitType)
+        public static GeneralUnitType ConvertToGeneralUnit(object? unitType)
         {
             if(unitType is GeneralUnitType generalUnitType)
             {

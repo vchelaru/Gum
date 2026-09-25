@@ -22,7 +22,7 @@ public class CodeGenerationNameVerifier
     {
         isPrefixed = false;
 
-        if (!_nameVerifier.IsValidCSharpName(name, out string whyNotValid, out CommonValidationError validationError))
+        if (!_nameVerifier.IsValidCSharpName(name, out string? whyNotValid, out CommonValidationError validationError))
         {
             if (validationError == CommonValidationError.InvalidStartingCharacterForCSharp)
             {

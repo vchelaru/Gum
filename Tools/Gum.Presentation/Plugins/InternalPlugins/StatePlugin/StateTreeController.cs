@@ -74,7 +74,7 @@ public class StateTreeController
         RefreshTabHeaders();
     }
 
-    public void HandleInstanceSelected(ElementSave save1, InstanceSave save2)
+    public void HandleInstanceSelected(ElementSave? save1, InstanceSave? save2)
     {
         RefreshUI(_selectedState.SelectedStateContainer);
 
@@ -91,7 +91,7 @@ public class StateTreeController
         HandleRefreshStateTreeView();
     }
 
-    public void HandleBehaviorReferenceSelected(ElementBehaviorReference reference, ElementSave element)
+    public void HandleBehaviorReferenceSelected(ElementBehaviorReference? reference, ElementSave? element)
     {
         HandleRefreshStateTreeView();
     }
@@ -175,12 +175,13 @@ public class StateTreeController
         TabTitleChanged?.Invoke(desiredTitle);
     }
 
-    public void HandleVariableSet(ElementSave elementSave, InstanceSave? instance, string variableName, object? oldValue,
+    public void HandleVariableSet(ElementSave? elementSave, InstanceSave? instance, string variableName, object? oldValue,
         bool isFullCommit)
     {
         // A drag's intermediate ticks don't change which states set the variable; the full
-        // commit that ends the drag refreshes the highlights once.
-        if (!isFullCommit)
+        // commit that ends the drag refreshes the highlights once. No element means the variable
+        // is on a behavior's instance, and refreshing to null would empty the behavior's tree.
+        if (!isFullCommit || elementSave == null)
         {
             return;
         }
@@ -197,7 +198,7 @@ public class StateTreeController
         }
     }
 
-    private void RefreshUI(IStateContainer stateContainer)
+    private void RefreshUI(IStateContainer? stateContainer)
     {
         ViewModel.RefreshTo(stateContainer, _selectedState, _objectFinder);
     }

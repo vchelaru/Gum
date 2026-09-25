@@ -58,7 +58,7 @@ public class AvaloniaGuiCommands : IGuiCommands
     public void RefreshElementTreeView() => _pluginManager.RefreshElementTreeView();
 
     /// <inheritdoc/>
-    public void RefreshElementTreeView(IInstanceContainer instanceContainer) => _pluginManager.RefreshElementTreeView(instanceContainer);
+    public void RefreshElementTreeView(IInstanceContainer? instanceContainer) => _pluginManager.RefreshElementTreeView(instanceContainer);
 
     /// <inheritdoc/>
     public void PrintOutput(string output) => _dispatcher.Invoke(() => _outputManager.AddOutput(output));

@@ -29,16 +29,16 @@ public class MainInheritancePlugin : CorePriorityPlugin
     private void HandleInstanceAdded(ElementSave container, InstanceSave instance) =>
         _inheritanceLogic.HandleInstanceAdded(container, instance);
 
-    private void HandleInstanceDeleted(ElementSave container, InstanceSave instance) =>
+    private void HandleInstanceDeleted(ElementSave? container, InstanceSave instance) =>
         _inheritanceLogic.HandleInstanceDeleted(container, instance);
 
-    private void HandleInstanceRenamed(ElementSave container, InstanceSave instance, string oldName) =>
+    private void HandleInstanceRenamed(ElementSave? container, InstanceSave instance, string oldName) =>
         _inheritanceLogic.HandleInstanceRenamed(container, instance, oldName);
 
     private void HandleInstanceReordered(InstanceSave instance) =>
         _inheritanceLogic.HandleInstanceReordered(instance);
 
-    private void HandleVariableSet(ElementSave container, InstanceSave? instance,
+    private void HandleVariableSet(ElementSave? container, InstanceSave? instance,
         string variableName, object? oldValue, bool isFullCommit)
     {
         if (variableName == "BaseType" && container != null)

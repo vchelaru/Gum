@@ -81,7 +81,7 @@ public class ExportEventFileManager
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
     }
 
-    public static void ExportEvent(string newName, string oldName, GumEventTypes eventType, string elementType)
+    public static void ExportEvent(string? newName, string? oldName, GumEventTypes eventType, string? elementType)
     {
         if(!string.IsNullOrWhiteSpace(EventExportDirectory))
         {
