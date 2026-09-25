@@ -17,7 +17,7 @@ namespace Gum.Avalonia.Plugins.TreeView;
 /// </summary>
 public static class AvaloniaTreeIcons
 {
-    private const string ResourceRoot = "avares://Gum.Avalonia/";
+    private const string ResourceRoot = "avares://Gum/";
 
     // The tints come from the application's resources once the FRB theme dictionaries are ported;
     // until then, and for any key a theme lacks, the dark palette's values.

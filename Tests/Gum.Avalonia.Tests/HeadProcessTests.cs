@@ -25,7 +25,7 @@ public class HeadProcessTests
 
         string repositoryRoot = FindRepositoryRoot();
         string configuration = new DirectoryInfo(AppContext.BaseDirectory.TrimEnd(Path.DirectorySeparatorChar)).Parent!.Name;
-        string head = Path.Combine(repositoryRoot, "Tool", "Gum.Avalonia", "bin", configuration, "net10.0", "Gum.Avalonia.dll");
+        string head = Path.Combine(repositoryRoot, "Tool", "Gum.Avalonia", "bin", configuration, "net10.0", "Gum.dll");
         File.Exists(head).ShouldBeTrue(head);
 
         string workingDirectory = Path.Combine(Path.GetTempPath(), "GumHeadRun_" + Guid.NewGuid().ToString("N"));

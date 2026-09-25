@@ -96,7 +96,7 @@ Build your project to produce a .dll. That .dll file needs to be in a folder und
 Tool/Gum.Avalonia/bin/Debug/net10.0/Plugins/MyPluginProject/MyPluginProject.dll
 ```
 
-For a downloaded release, the folder is `Plugins/MyPluginProject/` beside `Gum.Avalonia.exe` (Windows), inside `Gum.app/Contents/MacOS/` (macOS), or beside `Gum.Avalonia` (Linux). The same folder layout works on every operating system.
+For a downloaded release, the folder is `Plugins/MyPluginProject/` beside `Gum.exe` (Windows), inside `Gum.app/Contents/MacOS/` (macOS), or beside `Gum` (Linux). The same folder layout works on every operating system.
 
 [Setting up post-build events](setting-up-post-build-events.md) shows how to copy the .dll there automatically on every build.
 

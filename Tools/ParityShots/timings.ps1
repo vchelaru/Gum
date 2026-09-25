@@ -68,7 +68,7 @@ New-Item -ItemType Directory -Force $OutRoot | Out-Null
 $repo = Resolve-Path (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "..\..")
 function ExeFor($head) {
     if ($head -eq "wpf") { Join-Path $repo "Gum\bin\$Configuration\Gum.exe" }
-    else { Join-Path $repo "Tool\Gum.Avalonia\bin\$Configuration\net10.0\Gum.Avalonia.exe" }
+    else { Join-Path $repo "Tool\Gum.Avalonia\bin\$Configuration\net10.0\Gum.exe" }
 }
 function Keys($text) { [System.Windows.Forms.SendKeys]::SendWait($text) }
 function Click($x, $y, $right = $false) {
