@@ -37,7 +37,7 @@ public class ElementAnimationsSave
     public string ElementName
     {
         get; set;
-    }
+    } = null!;
 
     public ElementAnimationsSave()
     {

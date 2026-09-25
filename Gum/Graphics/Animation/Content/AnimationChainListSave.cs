@@ -22,7 +22,7 @@ namespace Gum.Content.AnimationChain
         private List<string> mToRuntimeErrors = new List<string>();
 
         [XmlIgnore]
-        public string FileName
+        public string? FileName
         {
             set { mFileName = value; }
             get { return mFileName; }
@@ -39,7 +39,7 @@ namespace Gum.Content.AnimationChain
         }
 
         [XmlIgnore]
-        protected string mFileName;
+        protected string? mFileName;
 
         /// <summary>
         /// Whether files (usually image files) referenced by this object (and .achx) are

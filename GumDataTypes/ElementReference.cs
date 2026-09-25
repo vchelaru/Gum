@@ -81,14 +81,14 @@ namespace Gum.DataTypes
             }
         }
 
-        public string Name;
+        public string Name = null!;
 
         /// <summary>
         /// The location of the file relative to the project if it differs from the Name. By default
         /// this will be empty, so the Name will be used to load/save the element. However, if this is not null,
         /// then this value is used instead to load the referenced element.
         /// </summary>
-        public string Link { get; set; }
+        public string? Link { get; set; }
 
         //public ElementSave ToElementSave(string projectroot, string extension)
         //{
@@ -101,15 +101,14 @@ namespace Gum.DataTypes
 
         public T ToElementSave<T>(string projectroot, string extension, GumLoadResult result, LinkLoadingPreference linkLoadingPreference = LinkLoadingPreference.PreferLinked, int projectVersion = 1) where T : ElementSave, new()
         {
-            FilePath linkedName = null;
-            FilePath containedReferenceName = null;
+            FilePath? linkedName = null;
 
             if (!string.IsNullOrWhiteSpace(this.Link))
             {
                 linkedName = projectroot + this.Link;
 
             }
-            containedReferenceName = projectroot + Subfolder + "/" + Name + "." + extension;
+            FilePath containedReferenceName = projectroot + Subfolder + "/" + Name + "." + extension;
 
             if (linkedName != null && ToolsUtilities.FileManager.IsRelative(linkedName.Original))
             {
@@ -135,7 +134,7 @@ namespace Gum.DataTypes
                 T elementSave = DeserializeElement<T>(linkedName.FullPath, projectVersion);
                 return elementSave;
             }
-            else if (  ((usesTitleContainer && containedReferenceName != null) ||  containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
+            else if (  (usesTitleContainer || containedReferenceName.Exists()) && (linkedName == null || linkLoadingPreference == LinkLoadingPreference.PreferLinked))
             {
                 T elementSave = DeserializeElement<T>(
                     containedReferenceName.FullPath,
@@ -211,7 +210,8 @@ namespace Gum.DataTypes
                         ? GumFileSerializer.GetLegacyInstancesCompactSerializer(typeof(T))
                         : GumFileSerializer.GetCompactSerializer(typeof(T));
                     using var reader = new StringReader(content);
-                    return (T)serializer.Deserialize(reader);
+                    // XmlSerializer returns null only for an xsi:nil root, which Gum never writes.
+                    return (T)serializer.Deserialize(reader)!;
                 }
                 else
                 {

@@ -36,7 +36,7 @@ namespace Gum.DataTypes.Variables
         } = string.Empty;
 
         [XmlIgnore]
-        public string SourceObject
+        public string? SourceObject
         {
             get
             {
@@ -59,7 +59,7 @@ namespace Gum.DataTypes.Variables
 
 
         [XmlIgnore]
-        public Type PreferredDisplayer { get; set; }
+        public Type? PreferredDisplayer { get; set; }
 
         [XmlIgnore]
         public string DetailText { get; set; } = string.Empty;

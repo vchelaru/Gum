@@ -13,7 +13,7 @@ public class AnimationReferenceSave
     {
         get;
         set;
-    }
+    } = null!;
 
     public float Time
     {
@@ -22,7 +22,7 @@ public class AnimationReferenceSave
     }
 
     [XmlIgnore]
-    public string SourceObject
+    public string? SourceObject
     {
         get
         {

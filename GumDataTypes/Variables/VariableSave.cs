@@ -11,7 +11,7 @@ namespace Gum.DataTypes.Variables;
 /// </summary>
 public struct VariableSaveValues
 {
-    public object Value;
+    public object? Value;
     public string Name;
 }
 
@@ -48,8 +48,8 @@ public class VariableSave
 
     // rootName and sourceObject are used so frequently that storing them off 
     // should save in performance.
-    string name;
-    string rootName;
+    string name = null!;
+    string rootName = null!;
     string? sourceObject;
     public string Name
     {
@@ -167,7 +167,7 @@ public class VariableSave
     } = new List<object>();
 
     [XmlIgnore]
-    public TypeConverter CustomTypeConverter
+    public TypeConverter? CustomTypeConverter
     {
         get;
         set;
@@ -204,7 +204,7 @@ public class VariableSave
     public Dictionary<string, object?> PropertiesToSetOnDisplayer { get; private set; } = new Dictionary<string, object?>();
 
     [XmlIgnore]
-    public Type PreferredDisplayer { get; set; }
+    public Type? PreferredDisplayer { get; set; }
     // If adding stuff here, make sure to add to the Clone method!
 
     /// <summary>
@@ -270,7 +270,7 @@ public class VariableSave
         }
         else
         {
-            return variableName;
+            return variableName!;
         }
     }
 

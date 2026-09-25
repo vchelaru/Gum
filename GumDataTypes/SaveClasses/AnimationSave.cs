@@ -12,7 +12,7 @@ public class AnimationSave
 {
     public bool Loops { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = null!;
 
     public List<AnimatedStateSave> States { get; set; } = new List<AnimatedStateSave>();
     public List<AnimationReferenceSave> Animations { get; set; } = new List<AnimationReferenceSave>();

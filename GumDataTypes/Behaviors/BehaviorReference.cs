@@ -16,7 +16,7 @@ namespace Gum.DataTypes.Behaviors
         /// <summary>JSON counterpart of <see cref="Extension"/>. See <see cref="GumJsonFileSerializer"/>.</summary>
         public const string JsonExtension = "behj";
 
-        public string Name;
+        public string Name = null!;
 
         /// <summary>
         /// Optional path (relative to the project root, may traverse outside it via "../") to the
@@ -24,7 +24,7 @@ namespace Gum.DataTypes.Behaviors
         /// copied into this project's own Behaviors folder. Null/empty falls back to the
         /// conventional <c>Behaviors/{Name}.behx</c> location under the project root.
         /// </summary>
-        public string SourcePath;
+        public string? SourcePath;
 
         /// <summary>
         /// Optional per-project override for the backing behavior's <see cref="BehaviorSave.DefaultImplementation"/>,
@@ -32,7 +32,7 @@ namespace Gum.DataTypes.Behaviors
         /// while still supplying its own default-visual path (e.g. each Forms theme's own
         /// default button component), without writing a theme-specific value into the shared file.
         /// </summary>
-        public string DefaultImplementationOverride;
+        public string? DefaultImplementationOverride;
 
         /// <summary>
         /// Returns the relative path to this behavior's backing file. When <see cref="SourcePath"/>
@@ -95,7 +95,8 @@ namespace Gum.DataTypes.Behaviors
             if (projectVersion >= (int)GumProjectSave.GumxVersions.AttributeVersion)
             {
                 string content = FileManager.FromFileText(filePath);
-                return GumFileSerializer.DeserializeBehaviorSave(content, projectVersion);
+                // XmlSerializer returns null only for an xsi:nil root, which Gum never writes.
+                return GumFileSerializer.DeserializeBehaviorSave(content, projectVersion)!;
             }
             return FileManager.XmlDeserialize<BehaviorSave>(filePath);
         }

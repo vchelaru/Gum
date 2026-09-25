@@ -2,9 +2,9 @@
 {
     public class EventSave
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public bool Enabled { get; set; }
-        public string ExposedAsName { get; set; }
+        public string? ExposedAsName { get; set; }
 
         public string GetExposedOrRootName()
         {
@@ -31,7 +31,7 @@
             }
         }
 
-        public string GetSourceObject()
+        public string? GetSourceObject()
         {
             if (ToolsUtilities.StringFunctions.ContainsNoAlloc(Name, '.'))
             {

@@ -33,7 +33,7 @@ namespace Gum.DataTypes
             return false;
         }
 
-        public static object GetValue(this List<CustomPropertySave> propertySaveList, string nameToSearchFor)
+        public static object? GetValue(this List<CustomPropertySave> propertySaveList, string nameToSearchFor)
         {
             foreach (CustomPropertySave propertySave in propertySaveList)
             {
@@ -45,13 +45,13 @@ namespace Gum.DataTypes
             return null;
         }
 
-        public static T GetValue<T>(this List<CustomPropertySave> propertySaveList, string nameToSearchFor)
+        public static T? GetValue<T>(this List<CustomPropertySave> propertySaveList, string nameToSearchFor)
         {
             foreach (CustomPropertySave propertySave in propertySaveList)
             {
                 if (propertySave.Name == nameToSearchFor)
                 {
-                    return (T)propertySave.Value;
+                    return (T?)propertySave.Value;
                 }
             }
             return default(T);

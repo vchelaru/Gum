@@ -23,7 +23,10 @@ namespace ToolsUtilities
             return (f1 == f2) == false;
         }
 
-        public static implicit operator FilePath(string s)
+#if NET5_0_OR_GREATER
+        [return: System.Diagnostics.CodeAnalysis.NotNullIfNotNull("s")]
+#endif
+        public static implicit operator FilePath?(string? s)
         {
             if(s == null)
             {
@@ -186,9 +189,6 @@ namespace ToolsUtilities
 
         private string StandardizeInternal(string fileNameToFix)
         {
-            if (fileNameToFix == null)
-                return null;
-
             bool isNetwork = fileNameToFix.StartsWith("\\\\");
 
             ReplaceSlashes(ref fileNameToFix);

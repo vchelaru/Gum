@@ -213,7 +213,7 @@ public static class GumFileSerializer
                     ? GetLegacyInstancesCompactSerializer(typeof(T))
                     : GetCompactSerializer(typeof(T));
                 using var reader = new StringReader(content);
-                return (T)serializer.Deserialize(reader);
+                return (T?)serializer.Deserialize(reader);
             }
         }
 
@@ -239,7 +239,7 @@ public static class GumFileSerializer
                     ? GetLegacyInstancesCompactSerializer(typeof(BehaviorSave))
                     : GetCompactSerializer(typeof(BehaviorSave));
                 using var reader = new StringReader(content);
-                return (BehaviorSave)serializer.Deserialize(reader);
+                return (BehaviorSave?)serializer.Deserialize(reader);
             }
         }
 

@@ -10,7 +10,7 @@ namespace ToolsUtilitiesStandard.Network
 
     public class NetworkManager
     {
-        static NetworkManager mSelf;
+        static NetworkManager? mSelf;
         public static NetworkManager Self
         {
             get
@@ -41,9 +41,11 @@ namespace ToolsUtilitiesStandard.Network
                         System.IO.File.Delete(destination.FullPath);
                     }
 
-                    if(!Directory.Exists(destination.GetDirectoryContainingThis().FullPath))
+                    // A download destination is a file path, so it always has a containing directory.
+                    var destinationDirectory = destination.GetDirectoryContainingThis()!;
+                    if(!Directory.Exists(destinationDirectory.FullPath))
                     {
-                        System.IO.Directory.CreateDirectory(destination.GetDirectoryContainingThis().FullPath);
+                        System.IO.Directory.CreateDirectory(destinationDirectory.FullPath);
                     }
 
                     using (var contentStream = await response.Content.ReadAsStreamAsync())
@@ -62,7 +64,7 @@ namespace ToolsUtilitiesStandard.Network
         }
 
         private async Task ProcessContentStream(long? totalDownloadSize, Stream contentStream, 
-            Stream destinationStream, Action<long?, long> progressChanged, CancellationToken cancellationToken = default)
+            Stream destinationStream, Action<long?, long>? progressChanged, CancellationToken cancellationToken = default)
         {
             var totalBytesRead = 0L;
             var readCount = 0L;
