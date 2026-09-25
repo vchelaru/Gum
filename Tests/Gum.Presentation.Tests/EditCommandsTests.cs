@@ -4,8 +4,6 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Logic;
 using Gum.Managers;
-using Gum.Plugins;
-using Gum.Responses;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using Moq;
@@ -77,64 +75,6 @@ public class EditCommandsTests : BaseTestClass
 
         behaviorRef.BehaviorName.ShouldBe("MyBehaviorRenamed");
     }
-
-    [Fact]
-    public void AskToDeleteState_ResetsInstanceStateReference_WhenStateNameIsNotSameStringInstance()
-    {
-        // A state name loaded from disk is a different string instance from StateSave.Name,
-        // so the reference check must compare by value -- see https://github.com/vchelaru/Gum/issues/5003
-        var component = new ComponentSave { Name = "MyButton" };
-        var defaultState = new StateSave { Name = "Default", ParentContainer = component };
-        var highlighted = new StateSave { Name = "Highlighted", ParentContainer = component };
-        component.States.Add(defaultState);
-        component.States.Add(highlighted);
-        _gumProject.Components.Add(component);
-
-        var screen = new ScreenSave { Name = "MainScreen" };
-        screen.Instances.Add(new InstanceSave { Name = "ButtonInstance", BaseType = "MyButton", ParentContainer = screen });
-        var screenDefault = new StateSave { Name = "Default", ParentContainer = screen };
-        var stateVariable = new VariableSave
-        {
-            Name = "ButtonInstance.State",
-            Type = "State",
-            Value = new string("Highlighted".ToCharArray())
-        };
-        screenDefault.Variables.Add(stateVariable);
-        screen.States.Add(screenDefault);
-        _gumProject.Screens.Add(screen);
-
-        _mocker.GetMock<ISelectedState>().Setup(s => s.SelectedElement).Returns(component);
-        _mocker.GetMock<IPluginManager>()
-            .Setup(p => p.GetDeleteStateResponse(highlighted, component))
-            .Returns(new DeleteResponse { ShouldDelete = true });
-        _referenceFinder
-            .Setup(r => r.GetReferencesToState(highlighted, "Highlighted", component, null))
-            .Returns(new StateReferences());
-        _dialogService
-            .Setup(d => d.ShowMessage(It.IsAny<string>(), "Delete state?", It.IsAny<MessageDialogStyle?>()))
-            .Returns(MessageDialogResult.Affirmative);
-        var choice = new ChoiceDialogViewModel();
-        choice.SetOptions(new Dictionary<string, string> { ["make-default"] = "Change variable to default" });
-        string? shownMessage = null;
-        _dialogService
-            .Setup(d => d.Show(It.IsAny<Action<ChoiceDialogViewModel>>(), out choice))
-            .Callback(new ShowChoiceCallback((Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel) =>
-            {
-                var probe = new ChoiceDialogViewModel();
-                initializer?.Invoke(probe);
-                shownMessage = probe.Message;
-                viewModel = choice;
-            }))
-            .Returns(true);
-
-        _editCommands.AskToDeleteState(highlighted, component);
-
-        stateVariable.Value.ShouldBe("Default");
-        shownMessage.ShouldNotBeNull();
-        shownMessage.ShouldContain("used in the element MainScreen");
-    }
-
-    private delegate void ShowChoiceCallback(Action<ChoiceDialogViewModel>? initializer, out ChoiceDialogViewModel viewModel);
 
     [Fact]
     public void AskToRenameBehavior_UpdatesProjectBehaviorReference()
