@@ -59,8 +59,12 @@ public class ConvertToJsonLogic
             return;
         }
 
-        GumProjectSave project = _projectState.GumProjectSave!;
-        string xmlFileName = Path.GetFileName(project.FullFileName);
+        // CanConvert means the project is loaded and saved, so it has a file name.
+        if (_projectState.GumProjectSave is not { FullFileName: { } projectFileName } project)
+        {
+            return;
+        }
+        string xmlFileName = Path.GetFileName(projectFileName);
         string jsonFileName = Path.ChangeExtension(xmlFileName, GumProjectSave.ProjectJsonExtension);
 
         ConvertToJsonDialogViewModel dialog = new ConvertToJsonDialogViewModel(xmlFileName, jsonFileName);

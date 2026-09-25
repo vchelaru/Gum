@@ -502,7 +502,7 @@ public class VariableGridEntry
     {
         var stateToPullFrom = element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null
             ? _selectedState.SelectedStateSave
-            : element.DefaultState;
+            : element.GetDefaultStateOrThrow();
 
         return stateToPullFrom.GetVariableRecursive(variable);
     }
@@ -512,7 +512,7 @@ public class VariableGridEntry
     {
         var stateToPullFrom = element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null
             ? _selectedState.SelectedStateSave
-            : element.DefaultState;
+            : element.GetDefaultStateOrThrow();
 
         return stateToPullFrom.GetVariableListRecursive(variable);
     }
@@ -819,7 +819,9 @@ public class VariableGridEntry
         {
             bool isPartOfCategory = StateSaveCategory != null;
 
-            if (variable != null)
+            // A behavior's instance has no element; its grid only shows Name and BaseType, which
+            // aren't state variables.
+            if (variable != null && selectedElement != null)
             {
                 // Don't remove the variable if it's part of an element - we still want it there
                 // so it can be set, we just don't want it to set a value. Also, don't remove it if
@@ -831,8 +833,7 @@ public class VariableGridEntry
                 // variables that are categorized state variables for categories defined in this element.
                 if (shouldRemove)
                 {
-                    // A variable is only found when a state is selected, which means an element is selected.
-                    var isState = variable.IsState(selectedElement!, out ElementSave categoryContainer, out StateSaveCategory categoryForVariable);
+                    var isState = variable.IsState(selectedElement, out ElementSave? categoryContainer, out StateSaveCategory? categoryForVariable);
 
                     if (isState)
                     {
@@ -848,7 +849,7 @@ public class VariableGridEntry
                 }
                 else if (isPartOfCategory)
                 {
-                    var variableInDefault = selectedElement!.DefaultState.GetVariableSave(variable.Name);
+                    var variableInDefault = selectedElement.GetDefaultStateOrThrow().GetVariableSave(variable.Name);
                     if (variableInDefault != null)
                     {
                         _guiCommands.PrintOutput(
@@ -936,7 +937,7 @@ public class VariableGridEntry
             variableDefinedInThisOrBase = selectedStateSave.GetVariableSave(Name);
             if (variableDefinedInThisOrBase == null && selectedStateSave != selectedElement.DefaultState)
             {
-                variableDefinedInThisOrBase = selectedElement.DefaultState.GetVariableSave(Name);
+                variableDefinedInThisOrBase = selectedElement.GetDefaultStateOrThrow().GetVariableSave(Name);
             }
 
             if (variableDefinedInThisOrBase == null)
@@ -944,7 +945,7 @@ public class VariableGridEntry
                 var allBase = ObjectFinder.Self.GetBaseElements(selectedElement);
                 foreach (var baseElement in allBase)
                 {
-                    variableDefinedInThisOrBase = baseElement.DefaultState.GetVariableSave(Name);
+                    variableDefinedInThisOrBase = baseElement.GetDefaultStateOrThrow().GetVariableSave(Name);
                     if (variableDefinedInThisOrBase != null)
                     {
                         break;
@@ -982,7 +983,7 @@ public class VariableGridEntry
         // change using the underlying variable if so:
         if (gumElementOrInstanceSaveAsObject is ElementSave elementSave)
         {
-            var variable = elementSave.DefaultState.Variables
+            var variable = elementSave.GetDefaultStateOrThrow().Variables
                 .FirstOrDefault(item => item.ExposedAsName == RootVariableName);
             if (variable != null)
             {

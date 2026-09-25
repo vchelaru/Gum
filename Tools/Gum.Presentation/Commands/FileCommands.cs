@@ -251,12 +251,12 @@ public class FileCommands : IFileCommands
     /// </summary>
     public void CreateDefaultFontCharacterFile(bool forceOverwrite = false)
     {
-        var gumProject = ObjectFinder.Self.GumProjectSave;
-        if (gumProject == null)
+        // A project that was never saved has no folder to put the file in.
+        if (ObjectFinder.Self.GumProjectSave?.FullFileName is not { } projectFileName)
             return;
 
         var sourceFile = System.IO.Path.Combine(GetExecutingDirectory(), "Content", ".gumfcs");
-        var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + ".gumfcs";
+        var destinationFile = FileManager.GetDirectory(projectFileName) + ".gumfcs";
 
         // Exit early if the destination file already exists and we are not forcing an overwrite
         if (System.IO.File.Exists(destinationFile) && !forceOverwrite)

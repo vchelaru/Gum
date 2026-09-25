@@ -114,8 +114,8 @@ public class ProjectCommands : ICopyPasteProjectCommands
 
         // components shouldn't set their positions to 0 by default, so if the
         // default state sets those values, we should null them out:
-        var xVariable = componentSave.DefaultState.GetVariableSave("X");
-        var yVariable = componentSave.DefaultState.GetVariableSave("Y");
+        var xVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("X");
+        var yVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("Y");
 
         if (xVariable != null)
         {
@@ -128,7 +128,7 @@ public class ProjectCommands : ICopyPasteProjectCommands
             yVariable.SetsValue = false;
         }
 
-        var hasEventsVariable = componentSave.DefaultState.GetVariableSave("HasEvents");
+        var hasEventsVariable = componentSave.GetDefaultStateOrThrow().GetVariableSave("HasEvents");
         if (hasEventsVariable != null)
         {
             hasEventsVariable.Value = true;

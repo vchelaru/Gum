@@ -60,7 +60,7 @@ public class DeleteVariableService : IDeleteVariableService
         {
             if(elementSave != null)
             {
-                elementSave.DefaultState.Variables.Remove(variable);
+                elementSave.GetDefaultStateOrThrow().Variables.Remove(variable);
                 _fileCommands.TryAutoSaveElement(elementSave);
             }
             else if(stateContainer is BehaviorSave behavior)
@@ -120,7 +120,7 @@ public class DeleteVariableService : IDeleteVariableService
         if (stateContainer is ElementSave elementSave)
         {
             isVariableContained =
-                elementSave.DefaultState.Variables.Contains(variable);
+                elementSave.GetDefaultStateOrThrow().Variables.Contains(variable);
         }
         else if (stateContainer is BehaviorSave behaviorSave)
         {

@@ -42,7 +42,7 @@ public class SubtextLogic
         if(variableOwner != null)
         {
             var nameToSearchFor = instanceSave == null ? propertyName : instanceSave.Name + "." + propertyName;
-            var variableInOwner = variableOwner.DefaultState.GetVariableSave(nameToSearchFor);
+            var variableInOwner = variableOwner.GetDefaultStateOrThrow().GetVariableSave(nameToSearchFor);
 
 
             foreach (var category in variableOwner.Categories)
@@ -91,7 +91,10 @@ public class SubtextLogic
 
     public bool HasSubtextFunctionFor(StateSave stateSave, string variableName)
     {
-        var root = ObjectFinder.Self.GetRootVariable(variableName, stateSave.ParentContainer);
+        // A behavior's states have no element, and none of their variables have subtext.
+        var root = stateSave.ParentContainer is { } element
+            ? ObjectFinder.Self.GetRootVariable(variableName, element)
+            : null;
         return root != null && GetSubtextCalls.ContainsKey(root.Name);
     }
 
@@ -103,7 +106,9 @@ public class SubtextLogic
             throw new ArgumentNullException(nameof(stateSave));
         }
 #endif
-        var root = ObjectFinder.Self.GetRootVariable(variableName, stateSave.ParentContainer);
+        var root = stateSave.ParentContainer is { } element
+            ? ObjectFinder.Self.GetRootVariable(variableName, element)
+            : null;
 
         if(root != null && GetSubtextCalls.ContainsKey(root.Name))
         {

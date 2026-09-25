@@ -54,7 +54,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
         }
         ///////////////////End Early Out////////////////////////
 
-        var defaultState = element.DefaultState;
+        var defaultState = element.GetDefaultStateOrThrow();
         var defaultVariable = defaultState.GetVariableSave(memberName);
         if (defaultVariable == null)
         {
@@ -126,7 +126,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
 
         if(defaultValue == null)
         {
-            defaultValue = element.DefaultState.GetValueRecursive(memberName);
+            defaultValue = element.GetDefaultStateOrThrow().GetValueRecursive(memberName);
         }
 
         foreach (var state in states)

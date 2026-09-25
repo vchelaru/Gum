@@ -75,11 +75,16 @@ namespace StateAnimationPlugin.Managers
                 {
                     throw new InvalidOperationException("Renaming elements is not supported when a Gum project is null...how did this happen anyway?");
                 }
-                var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName);
+                // A project that was never saved has no folder, so there is no animation file to move.
+                if (gumProject.FullFileName is not { } projectFileName)
+                {
+                    return;
+                }
+                var projectDirectory = FileManager.GetDirectory(projectFileName);
 
                 // Suffix follows the open project's own format so a .gumj project moves .ganj
                 // rather than looking for a .ganx that doesn't exist (issue #4595).
-                var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(gumProject.FullFileName));
+                var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(projectFileName));
 
                 var oldFile = new FilePath( projectDirectory + elementSave.Subfolder + "/" + oldName + suffix);
 

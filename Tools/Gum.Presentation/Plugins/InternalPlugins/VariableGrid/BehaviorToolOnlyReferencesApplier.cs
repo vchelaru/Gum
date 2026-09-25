@@ -254,7 +254,9 @@ public static class BehaviorToolOnlyReferencesApplier
         }
 
         ElementSave? elementOwningInstance = instance?.ParentContainer ?? stateSave.ParentContainer;
-        return ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
+        return elementOwningInstance == null
+            ? null
+            : ObjectFinder.Self.GetRootVariable(qualifiedLeftName, elementOwningInstance)?.Type;
     }
 
     /// <summary>

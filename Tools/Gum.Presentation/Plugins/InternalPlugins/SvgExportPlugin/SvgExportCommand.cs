@@ -4,6 +4,7 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.ToolStates;
 
 namespace Gum.Plugins.InternalPlugins.SvgExportPlugin;
 
@@ -54,7 +55,8 @@ internal class SvgExportCommand : ISvgExportCommand
             return;
         }
 
-        RunGumCliSvgExport(gumCliPath, projectSave.FullFileName, element.Name, outputPath);
+        // SvgExportMenuLogic.TryPrepareExport only lets a saved project through.
+        RunGumCliSvgExport(gumCliPath, projectSave.GetSavedFileName(), element.Name, outputPath);
     }
 
     /// <summary>

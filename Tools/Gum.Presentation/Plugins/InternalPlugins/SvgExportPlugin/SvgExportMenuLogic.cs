@@ -53,6 +53,13 @@ public class SvgExportMenuLogic
             return false;
         }
 
+        // gumcli exports from the project file, which a never-saved project doesn't have.
+        if (string.IsNullOrEmpty(projectSave.FullFileName))
+        {
+            _guiCommands.PrintOutput("Save the project before exporting to SVG.");
+            return false;
+        }
+
         return true;
     }
 }

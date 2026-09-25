@@ -33,15 +33,16 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 
     public void Initialize()
     {
+        // The tool initializes StandardElementsManager before its own startup.
         var defaultStates =
-            StandardElementsManager.Self.DefaultStates;
+            StandardElementsManager.Self.DefaultStates ?? throw new InvalidOperationException("StandardElementsManager hasn't been initialized.");
         defaultStates["Container"].Variables.First(item => item.Name == "ContainedType").CustomTypeConverter =
             new AvailableContainedTypeConverter();
 
         defaultStates["Component"].Variables
             .Add(new VariableSave { SetsValue = true, Type = "State", Value = null, Name = "State", CustomTypeConverter = new AvailableStatesConverter(null, _selectedState) });
 
-        foreach (var state in StandardElementsManager.Self.DefaultStates.Values)
+        foreach (var state in defaultStates.Values)
         {
             SetPreferredDisplayers(state);
         }
@@ -189,7 +190,7 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
     {
         foreach (var stateSaveCategory in elementSave.Categories)
         {
-            VariableSave? foundVariable = elementSave.DefaultState.Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
+            VariableSave? foundVariable = elementSave.GetDefaultStateOrThrow().Variables.FirstOrDefault(item => item.Name == stateSaveCategory.Name + "State");
 
             if (foundVariable != null)
             {
@@ -206,7 +207,9 @@ public class StandardElementsManagerGumTool : IStandardElementsManagerGumTool
 
     public void RefreshStateVariablesThroughPlugins()
     {
-        foreach (var kvp in StandardElementsManager.Self.DefaultStates)
+        var defaultStates =
+            StandardElementsManager.Self.DefaultStates ?? throw new InvalidOperationException("StandardElementsManager hasn't been initialized.");
+        foreach (var kvp in defaultStates)
         {
             _pluginManager.ModifyDefaultStandardState(kvp.Key, kvp.Value);
         }

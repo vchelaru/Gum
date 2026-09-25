@@ -432,18 +432,24 @@ public class HotkeyManager : IHotkeyManager
                 return false;
             }
 
-            if(!_isNudging)
-            {
-                _isNudging = true;
-                _undoManager.RecordState();
-            }
-
             float oldX = 0;
             float oldY = 0;
             if(instance != null && element != null)
             {
-                oldX = (float)instance.GetValueFromThisOrBase(element, "X");
-                oldY = (float)instance.GetValueFromThisOrBase(element, "Y");
+                // An instance whose type is missing has no X or Y, so there is nothing to nudge.
+                if (instance.GetValueFromThisOrBase(element, "X") is not float instanceX ||
+                    instance.GetValueFromThisOrBase(element, "Y") is not float instanceY)
+                {
+                    return false;
+                }
+                oldX = instanceX;
+                oldY = instanceY;
+            }
+
+            if(!_isNudging)
+            {
+                _isNudging = true;
+                _undoManager.RecordState();
             }
             
             _elementCommands.MoveSelectedObjectsBy(nudgeX, nudgeY);

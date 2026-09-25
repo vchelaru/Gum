@@ -75,7 +75,7 @@ public class ElementSaveDisplayer
 
     private record PropertyData(
         string OriginalName,
-        Type ComponentType,
+        Type? ComponentType,
         Attribute[] Attributes,
         TypeConverter? Converter,
         string? Category,
@@ -270,7 +270,7 @@ public class ElementSaveDisplayer
         {
             if (instanceOwner != null)
             {
-                var exposedVariablesOnThisInstance = instanceOwner.DefaultState.Variables
+                var exposedVariablesOnThisInstance = instanceOwner.GetDefaultStateOrThrow().Variables
                     .Where(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instanceSave.Name);
                 foreach (var variable in exposedVariablesOnThisInstance)
                 {
@@ -319,7 +319,7 @@ public class ElementSaveDisplayer
             var shouldSkip = false;
 
             if(currentState != effectiveElementSave.DefaultState &&
-                defaultVariable.IsState(effectiveElementSave, out ElementSave categoryContainer, out StateSaveCategory category))
+                defaultVariable.IsState(effectiveElementSave, out ElementSave? categoryContainer, out StateSaveCategory? category))
             {
                 if(currentState != null && category?.States.Contains(currentState) == true)
                 {
@@ -376,7 +376,7 @@ public class ElementSaveDisplayer
         }
 
         HashSet<InstanceSave> instancesWithExposedVariables = new HashSet<InstanceSave>();
-        foreach (var variable in elementSave.DefaultState.Variables)
+        foreach (var variable in elementSave.GetDefaultStateOrThrow().Variables)
         {
             if (!string.IsNullOrEmpty(variable.SourceObject) && !string.IsNullOrEmpty(variable.ExposedAsName))
             {
@@ -899,13 +899,13 @@ public class ElementSaveDisplayer
         }
         else
         {
-            var variablesToAdd = elementSave.DefaultState.Variables
+            var variablesToAdd = elementSave.GetDefaultStateOrThrow().Variables
                 .Select(item => item.Clone())
                 .Where(item => existingVariableNames.Contains(item.Name) == false);
 
             stateToAddTo.Variables.AddRange(variablesToAdd);
 
-            var variableListsToAdd = elementSave.DefaultState.VariableLists
+            var variableListsToAdd = elementSave.GetDefaultStateOrThrow().VariableLists
                 .Select(item => item.Clone())
                 .Where(item => existingVariableListNames.Contains(item.Name) == false);
 
@@ -937,7 +937,7 @@ public class ElementSaveDisplayer
     {
         var stateToPullFrom = element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null
             ? _selectedState.SelectedStateSave
-            : element.DefaultState;
+            : element.GetDefaultStateOrThrow();
 
         return stateToPullFrom.GetVariableRecursive(variable);
     }
@@ -1062,7 +1062,7 @@ public class ElementSaveDisplayer
             }
         }
 
-        var isState = defaultVariable.IsState(elementSave, out ElementSave categoryContainer, out StateSaveCategory categorySave);
+        var isState = defaultVariable.IsState(elementSave, out ElementSave? categoryContainer, out StateSaveCategory? categorySave);
 
         if(isState && shouldInclude)
         {
@@ -1104,7 +1104,8 @@ public class ElementSaveDisplayer
                 throw new Exception($"Could not find type for {defaultVariable}");
             }
 
-            Type type;
+            // An unknown type name gives no type; the grid shows a text box for it.
+            Type? type;
 
             if(!string.IsNullOrEmpty(defaultVariable.Type))
             {
@@ -1224,7 +1225,7 @@ public class ElementSaveDisplayer
             }
             else
             {
-                rfv = new RecursiveVariableFinder(instanceOwner.DefaultState);
+                rfv = new RecursiveVariableFinder(instanceOwner.GetDefaultStateOrThrow());
             }
             // create a fake variable here to see if it's excluded:
             var fakeBaseTypeVariable = new VariableSave

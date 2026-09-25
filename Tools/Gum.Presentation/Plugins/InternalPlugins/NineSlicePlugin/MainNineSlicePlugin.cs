@@ -28,14 +28,15 @@ internal class MainNineSlicePlugin : CorePriorityPlugin
 
     private void HandleProjectLocationSet(FilePath path)
     {
+        // Setting the project's location gives it a file name.
         var gumProject = ObjectFinder.Self.GumProjectSave;
-        if (gumProject == null)
+        if (gumProject?.FullFileName is not { } projectFileName)
         {
             return;
         }
 
         var sourceFile = Path.Combine(GetExecutingDirectory(), "Content", "ExampleSpriteFrame.png");
-        var destinationFile = FileManager.GetDirectory(gumProject.FullFileName) + "ExampleSpriteFrame.png";
+        var destinationFile = FileManager.GetDirectory(projectFileName) + "ExampleSpriteFrame.png";
         try
         {
             System.IO.File.Copy(sourceFile, destinationFile);
@@ -45,7 +46,7 @@ internal class MainNineSlicePlugin : CorePriorityPlugin
             {
                 return;
             }
-            nineSliceStandard.DefaultState.SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
+            nineSliceStandard.GetDefaultStateOrThrow().SetValue("SourceFile", "ExampleSpriteFrame.png", "string");
 
             _fileCommands.TryAutoSaveElement(nineSliceStandard);    
         }

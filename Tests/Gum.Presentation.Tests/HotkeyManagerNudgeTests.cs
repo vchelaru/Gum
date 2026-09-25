@@ -26,4 +26,24 @@ public class HotkeyManagerNudgeTests : BaseTestClass
 
         sut.ProcessCmdKeyWireframe(GumKey.Right, isShiftDown: false, isCtrlDown: false, isAltDown: false);
     }
+
+    [Fact]
+    public void ProcessCmdKeyWireframe_NudgingAnInstanceWhoseTypeIsMissing_DoesNotThrow()
+    {
+        // An instance whose type was deleted has no X or Y to read.
+        AutoMocker mocker = new();
+        GumProjectSave project = new();
+        ComponentSave component = new() { Name = "MyComponent" };
+        component.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default", ParentContainer = component });
+        InstanceSave instance = new() { Name = "OrphanInstance", BaseType = "DeletedComponent", ParentContainer = component };
+        component.Instances.Add(instance);
+        project.Components.Add(component);
+        ObjectFinder.Self.GumProjectSave = project;
+        mocker.GetMock<ISelectedState>().SetupGet(x => x.SelectedElement).Returns(component);
+        mocker.GetMock<ISelectedState>().SetupGet(x => x.SelectedInstance).Returns(instance);
+        mocker.GetMock<ISelectedState>().SetupGet(x => x.SelectedStateSave).Returns(component.DefaultState);
+        HotkeyManager sut = mocker.CreateInstance<HotkeyManager>();
+
+        sut.ProcessCmdKeyWireframe(GumKey.Right, isShiftDown: false, isCtrlDown: false, isAltDown: false);
+    }
 }

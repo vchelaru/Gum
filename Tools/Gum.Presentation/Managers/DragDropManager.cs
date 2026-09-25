@@ -181,7 +181,7 @@ public class DragDropManager : IDragDropManager
             // Folder nodes only exist once the project is saved, so both paths are known here.
             if(fullFolderPath != null && fullElementFilePath != null && fullFolderPath != fullElementFilePath)
             {
-                var projectFolder = FileManager.GetDirectory(_projectManager.GetLoadedProject().FullFileName);
+                var projectFolder = FileManager.GetDirectory(_projectManager.GetLoadedProject().GetSavedFileName());
 
                 string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "/", preserveCase:true)
                     .Replace("\\", "/");
@@ -330,7 +330,7 @@ public class DragDropManager : IDragDropManager
                 List<InstanceSave> instances = new List<InstanceSave>() { draggedAsInstanceSave };
                 List<StateSave> stateWithVariablesForOriginalInstance = new List<StateSave>
                 {
-                    draggedAsInstanceSave.ParentContainer?.DefaultState.Clone() ?? new StateSave()
+                    draggedAsInstanceSave.ParentContainer?.GetDefaultStateOrThrow().Clone() ?? new StateSave()
                 };
 
                 _copyPasteLogic.ForceSelectionChanged();
@@ -416,7 +416,7 @@ public class DragDropManager : IDragDropManager
         if (parentInstance != null)
         {
             parentName = parentInstance.Name;
-            string defaultChild = ObjectFinder.Self.GetDefaultChildName(parentInstance, _selectedState.SelectedStateSave);
+            string? defaultChild = ObjectFinder.Self.GetDefaultChildName(parentInstance, _selectedState.SelectedStateSave);
             if (!string.IsNullOrEmpty(defaultChild))
             {
                 parentName += "." + defaultChild;
@@ -467,7 +467,7 @@ public class DragDropManager : IDragDropManager
 
         // Since the Parent property can only be set in the default state, we will
         // set the Parent variable on that instead of the _selectedState.SelectedStateSave
-        var stateToAssignOn = targetElementSave.DefaultState;
+        var stateToAssignOn = targetElementSave.GetDefaultStateOrThrow();
 
         var oldValue = stateToAssignOn.GetValue(variableName) as string;
         stateToAssignOn.SetValue(variableName, parentName, "string");
@@ -523,7 +523,7 @@ public class DragDropManager : IDragDropManager
 
     private static bool ParentVariableAlreadyMatches(ElementSave element, InstanceSave instance, string? expectedParentName)
     {
-        var currentParent = element.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value as string;
+        var currentParent = element.GetDefaultStateOrThrow().GetVariableRecursive(instance.Name + ".Parent")?.Value as string;
         if (string.IsNullOrEmpty(expectedParentName))
         {
             return string.IsNullOrEmpty(currentParent);
@@ -547,7 +547,7 @@ public class DragDropManager : IDragDropManager
             {
                 continue;
             }
-            var parentValue = element.DefaultState.GetVariableRecursive(instance.Name + ".Parent")?.Value;
+            var parentValue = element.GetDefaultStateOrThrow().GetVariableRecursive(instance.Name + ".Parent")?.Value;
             if (parentValue is string parentString &&
                 (parentString == parentName || parentString.StartsWith(parentName + ".")))
             {
@@ -801,7 +801,7 @@ public class DragDropManager : IDragDropManager
 
         // Folder nodes only exist once the project is saved.
         string projectFolder =
-            FileManager.GetDirectory(_projectManager.GetLoadedProject().FullFileName);
+            FileManager.GetDirectory(_projectManager.GetLoadedProject().GetSavedFileName());
 
         string subfolder;
         IEnumerable<ElementSave> elements;
@@ -1048,12 +1048,15 @@ public class DragDropManager : IDragDropManager
 
         // The instance was just added and selected, which selects a state.
         StateSave selectedStateSave = _selectedState.SelectedStateSave!;
-        var instanceXUnits = (PositionUnitType)selectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
+        // Every standard type defines XUnits and YUnits, so the dropped instance has both.
+        var instanceXUnits = (PositionUnitType)(selectedStateSave.GetValueRecursive($"{instance.Name}.XUnits")
+            ?? throw new InvalidOperationException($"{instance.Name} has no XUnits"));
         var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
         xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
         var differenceY = worldY - containerTop;
-        var instanceYUnits = (PositionUnitType)selectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
+        var instanceYUnits = (PositionUnitType)(selectedStateSave.GetValueRecursive($"{instance.Name}.YUnits")
+            ?? throw new InvalidOperationException($"{instance.Name} has no YUnits"));
         var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 

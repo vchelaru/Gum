@@ -51,7 +51,7 @@ public class SvgExportMenuLogicTests
     public void TryPrepareExport_ComponentSelectedAndProjectLoaded_ReturnsTrue()
     {
         ComponentSave component = new() { Name = "MyComponent" };
-        GumProjectSave project = new();
+        GumProjectSave project = new() { FullFileName = "/projects/MyProject.gumx" };
         _selectedState.Setup(x => x.SelectedElement).Returns(component);
         _projectState.Setup(x => x.GumProjectSave).Returns(project);
 
@@ -86,5 +86,19 @@ public class SvgExportMenuLogicTests
         result.ShouldBeFalse();
         projectSave.ShouldBeNull();
         _guiCommands.Verify(x => x.PrintOutput("No project is loaded."), Times.Once);
+    }
+
+    [Fact]
+    public void TryPrepareExport_UnsavedProject_ReturnsFalseAndPrintsMessage()
+    {
+        // gumcli exports from the project file, which a never-saved project doesn't have.
+        ComponentSave component = new() { Name = "MyComponent" };
+        _selectedState.Setup(x => x.SelectedElement).Returns(component);
+        _projectState.Setup(x => x.GumProjectSave).Returns(new GumProjectSave());
+
+        bool result = _logic.TryPrepareExport(out _, out _);
+
+        result.ShouldBeFalse();
+        _guiCommands.Verify(x => x.PrintOutput("Save the project before exporting to SVG."), Times.Once);
     }
 }

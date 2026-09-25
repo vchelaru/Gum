@@ -390,8 +390,8 @@ public class CompositeMemberLogic
     private VariableSave? GetChannelVariable(string channelRootName, ElementSave element, InstanceSave? instance)
     {
         return instance != null
-            ? element.DefaultState.GetVariableSave($"{instance.Name}.{channelRootName}")
-            : element.DefaultState.GetVariableSave(channelRootName);
+            ? element.GetDefaultStateOrThrow().GetVariableSave($"{instance.Name}.{channelRootName}")
+            : element.GetDefaultStateOrThrow().GetVariableSave(channelRootName);
     }
 
     /// <summary>

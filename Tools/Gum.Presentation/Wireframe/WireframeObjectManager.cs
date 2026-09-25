@@ -82,17 +82,14 @@ public partial class WireframeObjectManager : IWireframeObjectManager
 
     }
 
-    private IRenderable HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
+    private IRenderable? HandleCreateGraphicalComponent(string type, ISystemManagers systemManagers)
     {
         // Was previously guarded by "#if GUM" from when this class lived in Gum.csproj (which
         // always defines GUM), making the guard always-true and effectively dead. This class now
         // lives in Gum.Presentation (which does not define GUM), so the assignment is unconditional
         // to preserve the prior always-on behavior.
-        IRenderable? containedObject = _pluginManager.CreateRenderableForType(type);
-
-        // CreateGraphicalComponent handles a null renderable (it falls back to the base type);
-        // the delegate's return type just isn't annotated as nullable.
-        return containedObject!;
+        // Null means no plugin makes this type; CreateGraphicalComponent then falls back to the base type.
+        return _pluginManager.CreateRenderableForType(type);
     }
 
     #endregion

@@ -50,7 +50,7 @@ public class ExposeVariableService : IExposeVariableService
     {
         // find the variable if it exists:
         var parentElement = instanceSave.ParentContainer;
-        var variableSave = parentElement?.DefaultState.GetVariableSave(
+        var variableSave = parentElement?.GetDefaultStateOrThrow().GetVariableSave(
             $"{instanceSave.Name}.{rootVariableName}");
         var elementSave = _selectedState.SelectedElement;
 
@@ -92,7 +92,7 @@ public class ExposeVariableService : IExposeVariableService
     public OptionallyAttemptedGeneralResponse<VariableSave> ExposeVariable(InstanceSave instanceSave, string rootVariableName, string exposedName)
     {
         var parentElement = instanceSave.ParentContainer;
-        var variableSave = parentElement?.DefaultState.GetVariableSave(
+        var variableSave = parentElement?.GetDefaultStateOrThrow().GetVariableSave(
             $"{instanceSave.Name}.{rootVariableName}");
         var elementSave = _selectedState.SelectedElement;
 
@@ -131,17 +131,17 @@ public class ExposeVariableService : IExposeVariableService
             if (isActive == false)
             {
                 // gotta remove the variable:
-                if (elementSave.DefaultState.Variables.Contains(existingVariable))
+                if (elementSave.GetDefaultStateOrThrow().Variables.Contains(existingVariable))
                 {
                     // We may need to worry about inheritance...eventually
-                    elementSave.DefaultState.Variables.Remove(existingVariable);
+                    elementSave.GetDefaultStateOrThrow().Variables.Remove(existingVariable);
                 }
             }
         }
 
         if (variableSave == null)
         {
-            StateSave stateToExposeOn = elementSave.DefaultState;
+            StateSave stateToExposeOn = elementSave.GetDefaultStateOrThrow();
 
             // GetIfCanExpose only succeeds for an instance in an element.
             var variableInDefault = ObjectFinder.Self.GetRootVariable(fullVariableName, instanceSave.ParentContainer!);
@@ -187,7 +187,7 @@ public class ExposeVariableService : IExposeVariableService
     {
         var stateToPullFrom = (element == _selectedState.SelectedElement && _selectedState.SelectedStateSave != null)
             ? _selectedState.SelectedStateSave
-            : element.DefaultState;
+            : element.GetDefaultStateOrThrow();
 
         return stateToPullFrom.GetVariableRecursive(variable);
     }
@@ -214,7 +214,7 @@ public class ExposeVariableService : IExposeVariableService
 
             // An instance of a missing type has no base variables.
             ElementSave? elementForInstance = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
-            var variableInDefault = elementForInstance?.DefaultState.GetVariableSave(rawVariableName);
+            var variableInDefault = elementForInstance?.GetDefaultStateOrThrow().GetVariableSave(rawVariableName);
 
             if(variableInDefault == null)
             {
