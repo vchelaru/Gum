@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Avalonia.Canvas;
 using Gum.Commands;
 using Gum.Dialogs;
 using Gum.Logic.FileWatch;
@@ -20,6 +21,8 @@ namespace Gum.Avalonia.Plugins.TextureCoordinates;
 [Export(typeof(PluginBase))]
 public class AvaloniaTextureCoordinatePlugin : TextureCoordinatePluginBase
 {
+    private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
+
     [ImportingConstructor]
     public AvaloniaTextureCoordinatePlugin(
         ISelectedState selectedState,
@@ -33,12 +36,14 @@ public class AvaloniaTextureCoordinatePlugin : TextureCoordinatePluginBase
         IProjectManager projectManager,
         IFileWatchManager fileWatchManager,
         IMessenger messenger,
-        IThemingService themingService)
+        IThemingService themingService,
+        ICanvasRedrawScheduler canvasRedrawScheduler)
         : base(selectedState, wireframeCommands, undoManager, guiCommands, fileCommands, setVariableLogic,
             tabManager, hotkeyManager, projectManager, fileWatchManager, messenger, themingService)
     {
+        _canvasRedrawScheduler = canvasRedrawScheduler;
     }
 
     /// <inheritdoc/>
-    protected override ITextureCoordinateView CreateView() => new TextureCoordinateView();
+    protected override ITextureCoordinateView CreateView() => new TextureCoordinateView(_canvasRedrawScheduler);
 }

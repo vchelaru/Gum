@@ -27,10 +27,10 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
     private readonly Button _minusButton;
     private readonly Button _plusButton;
 
-    /// <summary>Builds the view.</summary>
-    public TextureCoordinateView()
+    /// <summary>Builds the view; its canvas draws when <paramref name="redrawScheduler"/> asks.</summary>
+    public TextureCoordinateView(ICanvasRedrawScheduler redrawScheduler)
     {
-        _canvasControl = new ImageRegionCanvasControl();
+        _canvasControl = new ImageRegionCanvasControl(redrawScheduler);
         _canvasControl.SizeChanged += (_, _) => CanvasResized?.Invoke();
         _canvasControl.AddHandler(KeyDownEvent, HandleCanvasKeyDown, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
         _canvasControl.AddHandler(KeyUpEvent, HandleCanvasKeyUp, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
@@ -190,7 +190,8 @@ public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
     public ImageRegionSelectionCore Core { get; }
 
     /// <summary>Creates the control and its core.</summary>
-    public ImageRegionCanvasControl()
+    public ImageRegionCanvasControl(ICanvasRedrawScheduler redrawScheduler)
+        : base(redrawScheduler)
     {
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);

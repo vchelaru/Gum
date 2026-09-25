@@ -2,9 +2,11 @@ using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.VisualTree;
+using Gum.Avalonia.Canvas;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Services.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using StateAnimationPlugin.ViewModels;
 
@@ -39,6 +41,33 @@ public class PlaybackTests
         editor.Wait(TimeSpan.FromMilliseconds(300));
         buttonTab.DisplayedAnimationTime.ShouldBe(timeWhenReplaced);
         editor.ViewModel.IsPlaying.ShouldBeFalse();
+    }
+
+    [AvaloniaFact]
+    public void EachPlaybackTick_RequestsACanvasRedraw()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave button = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(button);
+        editor.AddAnimation("Walk", loops: true);
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddStateKeyframe($"{Category}/Released");
+        editor.Click(editor.PlayButton);
+        ICanvasRedrawScheduler scheduler = TestAppBuilder.Services.GetRequiredService<ICanvasRedrawScheduler>();
+        int requestCount = 0;
+        Action countRequest = () => requestCount++;
+        scheduler.RedrawRequested += countRequest;
+
+        try
+        {
+            editor.FireTimers();
+        }
+        finally
+        {
+            scheduler.RedrawRequested -= countRequest;
+        }
+
+        requestCount.ShouldBeGreaterThan(0, "playback changes the canvas with no input behind it");
     }
 
     [AvaloniaFact]
