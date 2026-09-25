@@ -40,10 +40,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Include="..\..\GumRuntime\BbCodeParser.cs" Link="Renderables\BbCodeParser.cs" />
-		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainListSave.cs" Link="Animation\Content\AnimationChainListSave.cs" />
-		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationChainSave.cs" Link="Animation\Content\AnimationChainSave.cs" />
-		<Compile Include="..\..\Gum\Graphics\Animation\Content\AnimationFrameSave.cs" Link="Animation\Content\AnimationFrameSave.cs" />
 		<Compile Include="..\..\Gum\RenderingLibrary\BlendExtensions.cs" Link="RenderingLibrary\BlendExtensions.cs" />
 		<Compile Include="..\..\Gum\Wireframe\CustomSetPropertyOnRenderable.cs" Link="Utilities\CustomSetPropertyOnRenderable.cs" />
 		<Compile Include="..\..\Gum\Wireframe\FallbackRenderableFactory.cs" Link="GueDeriving\FallbackRenderableFactory.cs" />
@@ -61,7 +57,6 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\IAnimation.cs" Link="Renderables\IAnimation.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\ImageData.cs" Link="RenderingLibrary\ImageData.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\NineSlice.cs" Link="Renderables\NineSlice.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\NineSliceExtensions.cs" Link="Renderables\NineSliceExtensions.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderableCloneLogic.cs" Link="RenderingLibrary\RenderableCloneLogic.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchKeyGroupedOrderer.cs" Link="RenderingLibrary\BatchKeyGroupedOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\BatchOrchestrator.cs" Link="RenderingLibrary\BatchOrchestrator.cs" />
@@ -211,7 +206,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Animation\Content\" />
 		<Folder Include="Renderables\Fonts\" />
 		<Folder Include="Utilities\" />
 		<Folder Include="RenderingLibrary\" />
