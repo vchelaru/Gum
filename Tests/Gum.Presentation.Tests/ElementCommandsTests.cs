@@ -74,6 +74,40 @@ public class ElementCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void MoveSelectedObjectsBy_ComponentWithOnlyACategorySelected_DoesNotThrow()
+    {
+        // Selecting a category in the States tab leaves no state selected.
+        ComponentSave component = new() { Name = "MyComponent" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.DefaultState.SetValue("X", 10f);
+        _selectedState.SetupGet(x => x.SelectedComponent).Returns(component);
+        _selectedState.SetupGet(x => x.SelectedElement).Returns(component);
+        _selectedState.SetupGet(x => x.SelectedInstances).Returns(new List<InstanceSave>());
+        _selectedState.SetupGet(x => x.SelectedStateCategorySave).Returns(new StateSaveCategory { Name = "MyCategory" });
+        _selectedState.SetupGet(x => x.SelectedStateSave).Returns((StateSave?)null);
+
+        _sut.MoveSelectedObjectsBy(1, 0);
+
+        component.DefaultState.GetValue("X").ShouldBe(10f);
+    }
+
+    [Fact]
+    public void AddState_WithDesiredIndex_InsertsAtThatIndex()
+    {
+        // Duplicate State passes the index right after the original.
+        ComponentSave component = new() { Name = "MyComponent" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        StateSaveCategory category = new() { Name = "MyCategory" };
+        category.States.Add(new StateSave { Name = "First" });
+        category.States.Add(new StateSave { Name = "Second" });
+        component.Categories.Add(category);
+
+        _sut.AddState(component, category, new StateSave { Name = "FirstCopy" }, desiredIndex: 1);
+
+        category.States.Select(item => item.Name).ShouldBe(new[] { "First", "FirstCopy", "Second" });
+    }
+
+    [Fact]
     public void AddInstance_AddsInstanceToProject()
     {
         ComponentSave component = new();

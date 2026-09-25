@@ -5,8 +5,10 @@ namespace Gum.Undo;
 
 public class HistoryAction
 {
-    public UndoSnapshot UndoState { get; set; }
-    public UndoSnapshot RedoState { get; set; }
+    public required UndoSnapshot UndoState { get; set; }
+
+    /// <summary>Null when the action has nothing to redo.</summary>
+    public UndoSnapshot? RedoState { get; set; }
 
     /// <summary>
     /// Variable changes on OTHER elements made by this action (e.g. deleting a state removes the
@@ -23,7 +25,8 @@ public class HistoryAction
 
 public class ElementHistory
 {
-    public ElementSave FinalState { get; set; }
+    /// <summary>The element as it was before the first undo from the end of the history; null until then.</summary>
+    public ElementSave? FinalState { get; set; }
 
     /// <summary>
     /// A list of actions for the current element, where the most recent action is at the end of the list.

@@ -29,7 +29,7 @@ public class UndoManager : IUndoManager
     internal ObservableCollection<UndoLock> UndoLocks { get; private set; }
 
     public UndoSnapshot? RecordedSnapshot => _elementStrategy.RecordedSnapshot;
-    public ElementHistory CurrentElementHistory => _elementStrategy.CurrentElementHistory;
+    public ElementHistory? CurrentElementHistory => _elementStrategy.CurrentElementHistory;
     public BehaviorHistory? CurrentBehaviorHistory => _behaviorStrategy.CurrentBehaviorHistory;
 
     // The element strategy is the fallback (its AppliesToCurrentSelection is always true), so the

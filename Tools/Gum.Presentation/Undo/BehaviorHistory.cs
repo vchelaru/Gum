@@ -5,12 +5,12 @@ namespace Gum.Undo;
 
 public class BehaviorSnapshot
 {
-    public BehaviorSave Behavior { get; set; }
+    public required BehaviorSave Behavior { get; set; }
 }
 
 public class BehaviorHistoryAction
 {
-    public BehaviorSnapshot UndoState { get; set; }
+    public required BehaviorSnapshot UndoState { get; set; }
     public BehaviorSnapshot? RedoState { get; set; }
 }
 

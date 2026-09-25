@@ -56,7 +56,7 @@ public class ElementCommands : IElementCommands
 
     #region Instance
 
-    public InstanceSave AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null)
+    public InstanceSave? AddInstance(ElementSave elementToAddTo, string name, string? type = null, string? parentName = null, int? desiredIndex = null)
     {
         InstanceSave instanceSave = new InstanceSave();
         instanceSave.Name = name;
@@ -106,12 +106,11 @@ public class ElementCommands : IElementCommands
             // removes the new instance. Should it be? Will it causes NullReferenceExceptions
             // on systems which always expect this to be non-null? Unsure....
             // August 4, 2022 - nope, this already is causing problems, we should return null.
-            instanceSave = null;
+            _fileCommands.TryAutoSaveElement(elementToAddTo);
+            return null;
         }
-        else
-        {
-            _selectedState.SelectedInstance = instanceSave;
-        }
+
+        _selectedState.SelectedInstance = instanceSave;
 
         _fileCommands.TryAutoSaveElement(elementToAddTo);
 
@@ -168,9 +167,9 @@ public class ElementCommands : IElementCommands
         return stateSave;
     }
 
-    public void AddState(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null)
+    public void AddState(IStateContainer stateContainer, StateSaveCategory? category, StateSave stateSave, int? desiredIndex = null)
     {
-        AddStateInternal(stateContainer, category, stateSave);
+        AddStateInternal(stateContainer, category, stateSave, desiredIndex);
 
         var otherState = category?.States.FirstOrDefault(item => item != stateSave);
         if (otherState != null && stateContainer is ElementSave elementSave)
@@ -197,9 +196,10 @@ public class ElementCommands : IElementCommands
         }
     }
 
-    private void AddStateInternal(IStateContainer stateContainer, StateSaveCategory category, StateSave stateSave, int? desiredIndex = null)
+    private void AddStateInternal(IStateContainer stateContainer, StateSaveCategory? category, StateSave stateSave, int? desiredIndex = null)
     {
-        stateSave.ParentContainer = stateContainer as ElementSave;
+        // A behavior's states have no element, so their ParentContainer stays null.
+        stateSave.ParentContainer = (stateContainer as ElementSave)!;
 
         if (category == null)
         {
@@ -231,7 +231,7 @@ public class ElementCommands : IElementCommands
 
     public void SortVariables()
     {
-        var gumProject = _projectState.GumProjectSave;
+        var gumProject = _projectState.GetLoadedProject();
 
         foreach (var elementSave in gumProject.AllElements)
         {
@@ -273,9 +273,9 @@ public class ElementCommands : IElementCommands
         var isMovingElement = _selectedState.SelectedInstances.Count() == 0 &&
             (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null);
 
-        if (isMovingElement)
+        // A selected component or standard element is the selected element.
+        if (isMovingElement && _selectedState.SelectedElement is { } element)
         {
-            var element = _selectedState.SelectedElement;
             if (xToMoveBy != 0)
             {
                 hasChangeOccurred = true;
@@ -322,7 +322,13 @@ public class ElementCommands : IElementCommands
 
     public bool ShouldSkipDraggingMovementOn(InstanceSave instanceSave)
     {
-        ElementWithState element = new ElementWithState(_selectedState.SelectedElement);
+        // A behavior's instances have no element and no representation to be attached to.
+        if (_selectedState.SelectedElement is not { } selectedElement)
+        {
+            return false;
+        }
+
+        ElementWithState element = new ElementWithState(selectedElement);
 
         List<ElementWithState> stack = new List<ElementWithState>() { element };
 
@@ -354,28 +360,20 @@ public class ElementCommands : IElementCommands
     public float ModifyVariable(string baseVariableName, float modificationAmount, InstanceSave instanceSave)
     {
 
-        string nameWithInstance;
-        object currentValueAsObject;
-        GetCurrentValueForVariable(baseVariableName, instanceSave, out nameWithInstance, out currentValueAsObject);
+        GetCurrentValueForVariable(baseVariableName, instanceSave, out string nameWithInstance, out object? currentValueAsObject);
 
-        bool shouldContinue = true;
-
-        if (_selectedState.CustomCurrentStateSave != null || currentValueAsObject == null)
-        {
-            // This is okay, we will do nothing here:
-            shouldContinue = false;
-        }
-
-        if (shouldContinue)
+        // A value is only found while a state, and so its element, is selected. A custom state
+        // (animation preview) is not edited.
+        if (_selectedState.CustomCurrentStateSave == null && currentValueAsObject != null &&
+            _selectedState.SelectedStateSave is { } selectedStateSave &&
+            _selectedState.SelectedElement is { } selectedElement)
         {
             var graphicalUiElement = _wireframeObjectManager.GetRepresentation(instanceSave, null);
 
             float currentValue = (float)currentValueAsObject;
 
             string unitsVariableName = baseVariableName + "Units";
-            string unitsNameWithInstance;
-            object unitsVariableAsObject;
-            GetCurrentValueForVariable(unitsVariableName, instanceSave, out unitsNameWithInstance, out unitsVariableAsObject);
+            GetCurrentValueForVariable(unitsVariableName, instanceSave, out _, out object? unitsVariableAsObject);
 
             if (float.IsPositiveInfinity(modificationAmount))
             {
@@ -387,7 +385,7 @@ public class ElementCommands : IElementCommands
                 graphicalUiElement != null)
             {
                 return ModifyRatioVariable(baseVariableName, modificationAmount, instanceSave,
-                    graphicalUiElement, currentValue, nameWithInstance);
+                    graphicalUiElement, currentValue, nameWithInstance, selectedStateSave, selectedElement);
             }
 
             modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
@@ -403,21 +401,21 @@ public class ElementCommands : IElementCommands
             }
 
             float newValue = currentValue + modificationAmount;
-            _selectedState.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+            selectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
 
             // Push the dragged instance's own new value onto its live GUE *before* resolving
             // references, so a sibling reference reading a runtime-computed identifier such as
             // AbsoluteWidth (which only exists on a live, laid-out GraphicalUiElement) sees this
             // tick's position rather than the previous one.
-            graphicalUiElement.SetProperty(baseVariableName, newValue);
+            graphicalUiElement?.SetProperty(baseVariableName, newValue);
 
             var rootGue = _wireframeObjectManager.RootGue;
-            ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave, rootGue);
+            ElementSaveExtensions.ApplyVariableReferences(selectedElement, selectedStateSave, rootGue);
 
-            rootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
+            rootGue?.ApplyVariableReferences(selectedStateSave);
 
             _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
-                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+                selectedElement, _selectedState.SelectedStateCategorySave);
 
 
             return newValue;
@@ -436,7 +434,8 @@ public class ElementCommands : IElementCommands
     /// set to Ratio - are adjusted alongside it to keep the drag tracking the cursor.
     /// </summary>
     private float ModifyRatioVariable(string baseVariableName, float modificationAmount, InstanceSave instanceSave,
-        GraphicalUiElement graphicalUiElement, float currentValue, string nameWithInstance)
+        GraphicalUiElement graphicalUiElement, float currentValue, string nameWithInstance,
+        StateSave selectedStateSave, ElementSave selectedElement)
     {
         var ratioSiblings = (graphicalUiElement.Parent?.Children ?? Enumerable.Empty<GraphicalUiElement>())
             .Where(child => child != graphicalUiElement && child.Tag is InstanceSave)
@@ -451,7 +450,7 @@ public class ElementCommands : IElementCommands
         RatioResizeCalculator.ApplyResize(currentValue, currentPixelSize, modificationAmount, siblingCurrentRatios,
             out float newValue, out float[] siblingNewRatios);
 
-        _selectedState.SelectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
+        selectedStateSave.SetValue(nameWithInstance, newValue, instanceSave, "float");
         graphicalUiElement.SetProperty(baseVariableName, newValue);
 
         for (int i = 0; i < ratioSiblings.Count; i++)
@@ -459,23 +458,23 @@ public class ElementCommands : IElementCommands
             InstanceSave siblingInstance = (InstanceSave)ratioSiblings[i].Tag!;
             string siblingNameWithInstance = siblingInstance.Name + "." + baseVariableName;
 
-            _selectedState.SelectedStateSave.SetValue(siblingNameWithInstance, siblingNewRatios[i], siblingInstance, "float");
+            selectedStateSave.SetValue(siblingNameWithInstance, siblingNewRatios[i], siblingInstance, "float");
             ratioSiblings[i].SetProperty(baseVariableName, siblingNewRatios[i]);
         }
 
         var rootGue = _wireframeObjectManager.RootGue;
-        ElementSaveExtensions.ApplyVariableReferences(_selectedState.SelectedElement, _selectedState.SelectedStateSave, rootGue);
+        ElementSaveExtensions.ApplyVariableReferences(selectedElement, selectedStateSave, rootGue);
 
-        rootGue?.ApplyVariableReferences(_selectedState.SelectedStateSave);
+        rootGue?.ApplyVariableReferences(selectedStateSave);
 
         _variableInCategoryPropagationLogic.PropagateVariablesInCategory(nameWithInstance,
-            _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+            selectedElement, _selectedState.SelectedStateCategorySave);
 
         for (int i = 0; i < ratioSiblings.Count; i++)
         {
             InstanceSave siblingInstance = (InstanceSave)ratioSiblings[i].Tag!;
             _variableInCategoryPropagationLogic.PropagateVariablesInCategory(siblingInstance.Name + "." + baseVariableName,
-                _selectedState.SelectedElement, _selectedState.SelectedStateCategorySave);
+                selectedElement, _selectedState.SelectedStateCategorySave);
         }
 
         return newValue;
@@ -483,23 +482,26 @@ public class ElementCommands : IElementCommands
 
     public float ModifyVariable(string baseVariableName, float modificationAmount, ElementSave elementSave)
     {
-        object currentValueAsObject;
-        currentValueAsObject = GetCurrentValueForVariable(baseVariableName, null);
+        object? currentValueAsObject = GetCurrentValueForVariable(baseVariableName, null);
+
+        // Selecting only a category leaves no state selected, so there is no value to move.
+        if (currentValueAsObject == null || _selectedState.SelectedStateSave is not { } selectedStateSave)
+        {
+            return 0;
+        }
 
         float currentValue = (float)currentValueAsObject;
         string unitsVariableName = baseVariableName + " Units";
-        string unitsNameWithInstance;
-        object unitsVariableAsObject;
-        GetCurrentValueForVariable(unitsVariableName, null, out unitsNameWithInstance, out unitsVariableAsObject);
+        GetCurrentValueForVariable(unitsVariableName, null, out _, out object? unitsVariableAsObject);
 
         modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
 
         float newValue = currentValue + modificationAmount;
-        _selectedState.SelectedStateSave.SetValue(baseVariableName, newValue, null, "float");
+        selectedStateSave.SetValue(baseVariableName, newValue, null, "float");
 
 
         var ipso = _wireframeObjectManager.GetRepresentation(elementSave);
-        ipso.SetProperty(baseVariableName, newValue);
+        ipso?.SetProperty(baseVariableName, newValue);
 
         _variableInCategoryPropagationLogic.PropagateVariablesInCategory(baseVariableName,
             elementSave,
@@ -509,10 +511,10 @@ public class ElementCommands : IElementCommands
     }
 
 
-    public object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave)
+    public object? GetCurrentValueForVariable(string baseVariableName, InstanceSave? instanceSave)
     {
         string throwaway;
-        object currentValueAsObject;
+        object? currentValueAsObject;
         GetCurrentValueForVariable(baseVariableName, instanceSave, out throwaway, out currentValueAsObject);
         return currentValueAsObject;
     }
@@ -526,7 +528,7 @@ public class ElementCommands : IElementCommands
     /// <param name="nameWithInstance"></param>
     /// <param name="currentValue"></param>
     /// <returns></returns>
-    private object GetCurrentValueForVariable(string baseVariableName, InstanceSave instanceSave, out string nameWithInstance, out object currentValue)
+    private object? GetCurrentValueForVariable(string baseVariableName, InstanceSave? instanceSave, out string nameWithInstance, out object? currentValue)
     {
         nameWithInstance = baseVariableName;
 
@@ -548,7 +550,7 @@ public class ElementCommands : IElementCommands
         return currentValue;
     }
 
-    private float ConvertAmountToPixelAccordingToUnitType(string baseVariableName, float amount, object unitsVariableAsObject)
+    private float ConvertAmountToPixelAccordingToUnitType(string baseVariableName, float amount, object? unitsVariableAsObject)
     {
         if (unitsVariableAsObject is DimensionUnitType.AbsoluteMultipliedByFontScale)
         {
@@ -594,10 +596,12 @@ public class ElementCommands : IElementCommands
             float outY;
 
 
-            var ipso = _wireframeObjectManager.GetSelectedRepresentation();
+            // Only reached while dragging or nudging a selected object, which has a representation.
+            var ipso = _wireframeObjectManager.GetSelectedRepresentation()!;
+            var project = _projectManager.GetLoadedProject();
             ipso.GetFileWidthAndHeightOrDefault(out fileWidth, out fileHeight);
             ipso.GetParentWidthAndHeight(
-                _projectManager.GumProjectSave.DefaultCanvasWidth, _projectManager.GumProjectSave.DefaultCanvasHeight,
+                project.DefaultCanvasWidth, project.DefaultCanvasHeight,
                 out parentWidth, out parentHeight);
 
             var unitsVariable = UnitConverter.ConvertToGeneralUnit(unitsVariableAsObject);
@@ -690,9 +694,8 @@ public class ElementCommands : IElementCommands
         // it's own categorized state in the default state,
         // instances use this variable to determine if a variable
         // should be shown.
-        if (objectToAddTo is ElementSave)
+        if (objectToAddTo is ElementSave elementToAddTo)
         {              
-            var elementToAddTo = objectToAddTo as ElementSave;
             elementToAddTo.DefaultState.Variables.Add(new VariableSave()
             {
                 Name = category.Name + "State",
@@ -732,7 +735,7 @@ public class ElementCommands : IElementCommands
 
     #region Behavior
 
-    public BehaviorInstanceSave AddInstance(BehaviorSave behaviorToAddTo, string name, string type = null, string parentName = null)
+    public BehaviorInstanceSave AddInstance(BehaviorSave behaviorToAddTo, string name, string? type = null, string? parentName = null)
     {
         if (behaviorToAddTo == null)
         {
@@ -789,9 +792,9 @@ public class ElementCommands : IElementCommands
         AddBehaviorTo(behavior.Name, componentSave, performSave);
     }
 
-    public void AddBehaviorTo(string behaviorName, ComponentSave componentSave, bool performSave = true)
+    public void AddBehaviorTo(string? behaviorName, ComponentSave componentSave, bool performSave = true)
     {
-        var project = _projectManager.GumProjectSave;
+        var project = _projectManager.GetLoadedProject();
         var behaviorSave = project.Behaviors.FirstOrDefault(item => item.Name == behaviorName);
 
         if(behaviorSave != null)
@@ -817,7 +820,7 @@ public class ElementCommands : IElementCommands
     {
         foreach (var behaviorCategory in behaviorSave.Categories)
         {
-            StateSaveCategory matchingComponentCategory =
+            StateSaveCategory? matchingComponentCategory =
                 element.Categories.FirstOrDefault(item => item.Name == behaviorCategory.Name);
 
             if (matchingComponentCategory == null)
