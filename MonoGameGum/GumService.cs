@@ -61,6 +61,11 @@ public partial class GumService : IGumService
     /// <summary>
     /// Gets the default cursor, which represents either mouse or touch screen depending on hardware capabilities.
     /// </summary>
+    /// <remarks>
+    /// Null while a custom cursor is installed with <see cref="FormsUtilities.SetCursor"/>, because this
+    /// property returns the concrete <see cref="Cursor"/> type. <see cref="FormsUtilities.Cursor"/> returns
+    /// whichever cursor is active. This property switches to <see cref="ICursor"/> in a later breaking release (#5028).
+    /// </remarks>
     // 'as' (not a hard cast) preserves the prior null-on-mismatch behavior: tests may install a mock
     // ICursor/IInputReceiverKeyboard via FormsUtilities.SetCursor, and this forwarder returned null for
     // a non-Cursor before FormsUtilities.Cursor changed from 'Cursor?' to 'ICursor'. The '!' only
@@ -71,8 +76,10 @@ public partial class GumService : IGumService
     /// Gets the default keyboard.
     /// </summary>
     /// <remarks>
-    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>.
-    /// <see cref="FormsUtilities.Keyboard"/> returns whichever keyboard is active.
+    /// Null while a custom keyboard is installed with <see cref="FormsUtilities.SetKeyboard"/>, because this
+    /// property returns the concrete <see cref="Keyboard"/> type. <see cref="FormsUtilities.Keyboard"/> returns
+    /// whichever keyboard is active. This property switches to <see cref="IInputReceiverKeyboard"/> in a later
+    /// breaking release (#5028).
     /// </remarks>
     public Keyboard Keyboard => (FormsUtilities.Keyboard as Keyboard)!;
 
