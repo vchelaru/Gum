@@ -163,12 +163,10 @@ public class EditCommands : IEditCommands
             {
                 var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
 
-#pragma warning disable CS0252 // reference comparison is a bug; see #5003
-                if (foundVariable != null && foundVariable.Value == stateSave.Name)
-#pragma warning restore CS0252
+                if (foundVariable != null && foundVariable.Value as string == stateSave.Name)
                 {
                     string message = "The state " + stateSave.Name + " is used in the element " +
-                        elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
+                        parent + " in its state " + stateInContainer + ".\n  What would you like to do?";
 
                     DialogChoices<string> choices = new()
                     {
