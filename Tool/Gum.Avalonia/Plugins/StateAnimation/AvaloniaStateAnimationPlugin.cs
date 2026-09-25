@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Services;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
@@ -24,6 +25,7 @@ namespace Gum.Avalonia.Plugins.StateAnimation;
 [Export(typeof(PluginBase))]
 public class AvaloniaStateAnimationPlugin : StateAnimationPluginBase
 {
+    private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
     private AnimationsView? _view;
 
     /// <summary>Creates the plugin over the services the host bridges.</summary>
@@ -40,10 +42,12 @@ public class AvaloniaStateAnimationPlugin : StateAnimationPluginBase
         IWireframeObjectManager wireframeObjectManager,
         IUndoManager undoManager,
         IAnimationUndoProviderRegistrar animationUndoProviderRegistrar,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        ICanvasRedrawScheduler canvasRedrawScheduler)
         : base(selectedState, nameVerifier, messenger, outputManager, fileWatchManager, fileCommands, projectState,
             projectManager, wireframeObjectManager, undoManager, animationUndoProviderRegistrar, hotkeyManager)
     {
+        _canvasRedrawScheduler = canvasRedrawScheduler;
     }
 
     /// <inheritdoc/>
@@ -67,5 +71,15 @@ public class AvaloniaStateAnimationPlugin : StateAnimationPluginBase
     }
 
     /// <inheritdoc/>
-    protected override IUiTimer CreateUiTimer() => new AvaloniaUiTimer();
+    /// <remarks>Each playback tick applies a state to the canvas with no input behind it, so it
+    /// requests a redraw.</remarks>
+    protected sealed override IUiTimer CreateUiTimer()
+    {
+        IUiTimer timer = CreatePlaybackTimer();
+        timer.Tick += _canvasRedrawScheduler.RequestRedraw;
+        return timer;
+    }
+
+    /// <summary>Creates the timer that drives playback; tests substitute a manual one.</summary>
+    protected virtual IUiTimer CreatePlaybackTimer() => new AvaloniaUiTimer();
 }

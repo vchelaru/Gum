@@ -22,7 +22,9 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
     public WireframeCanvasCore Core { get; }
 
     /// <summary>Creates the control and its core.</summary>
-    public WireframeCanvasControl(IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager)
+    public WireframeCanvasControl(IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager,
+        ICanvasRedrawScheduler redrawScheduler)
+        : base(redrawScheduler)
     {
         // Ctrl+= / Ctrl+- zoom this canvas's camera, not the app-wide font size.
         CameraZoomScope.SetOwnsCameraZoom(this, true);

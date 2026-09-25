@@ -1,3 +1,5 @@
+using System;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Plugins.TreeView;
 using Gum.Avalonia.Shell;
@@ -34,6 +36,7 @@ public static class AvaloniaServiceCollectionExtensions
         services.AddSingleton<IRecycleBinService, AvaloniaRecycleBinService>();
         services.AddSingleton<ISpinnerFactory, AvaloniaSpinnerFactory>();
         services.AddSingleton<IGuiCommands, AvaloniaGuiCommands>();
+        services.AddSingleton<ICanvasRedrawScheduler>(_ => new CanvasRedrawScheduler(TimeProvider.System));
 
         // Dialogs.
         services.AddSingleton<DialogViewRegistry>();

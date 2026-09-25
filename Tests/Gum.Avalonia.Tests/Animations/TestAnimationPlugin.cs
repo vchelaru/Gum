@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Gum;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Plugins.StateAnimation;
 using Gum.Commands;
 using Gum.Logic.FileWatch;
@@ -55,9 +56,11 @@ internal sealed class TestAnimationPlugin : AvaloniaStateAnimationPlugin
         IWireframeObjectManager wireframeObjectManager,
         IUndoManager undoManager,
         IAnimationUndoProviderRegistrar animationUndoProviderRegistrar,
-        IHotkeyManager hotkeyManager)
+        IHotkeyManager hotkeyManager,
+        ICanvasRedrawScheduler canvasRedrawScheduler)
         : base(selectedState, nameVerifier, messenger, outputManager, fileWatchManager, fileCommands, projectState,
-            projectManager, wireframeObjectManager, undoManager, animationUndoProviderRegistrar, hotkeyManager)
+            projectManager, wireframeObjectManager, undoManager, animationUndoProviderRegistrar, hotkeyManager,
+            canvasRedrawScheduler)
     {
     }
 
@@ -65,7 +68,7 @@ internal sealed class TestAnimationPlugin : AvaloniaStateAnimationPlugin
     public List<ManualUiTimer> Timers { get; } = new List<ManualUiTimer>();
 
     /// <inheritdoc/>
-    protected override IUiTimer CreateUiTimer()
+    protected override IUiTimer CreatePlaybackTimer()
     {
         ManualUiTimer timer = new ManualUiTimer();
         Timers.Add(timer);

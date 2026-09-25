@@ -16,6 +16,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
 using Gum.Commands;
@@ -52,6 +53,8 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 [Export(typeof(PluginBase))]
 public class AvaloniaEditorTabPlugin : EditorTabPluginBase
 {
+    private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
+    private readonly IWireframeObjectManager _wireframeObjectManager;
     private WireframeCanvasControl? _canvasControl;
     private readonly ContextMenu _contextMenu = new ContextMenu();
 
@@ -82,19 +85,26 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         IFavoriteComponentManager favoriteComponentManager,
         IPluginManager pluginManager,
         IFileWatchIgnoreList fileWatchIgnoreList,
-        IProjectState projectState)
+        IProjectState projectState,
+        ICanvasRedrawScheduler canvasRedrawScheduler)
         : base(selectedState, projectManager, guiCommands, outputManager, localizationService, reorderLogic,
             addInstanceLogic, variableInCategoryPropagationLogic, wireframeObjectManager, fileLocations, undoManager,
             dialogService, hotkeyManager, elementCommands, fileCommands, setVariableLogic, uiSettingsService,
             wireframeCommands, messenger, themingService, dragDropManager, circularReferenceManager,
             favoriteComponentManager, pluginManager, fileWatchIgnoreList, projectState)
     {
+        _canvasRedrawScheduler = canvasRedrawScheduler;
+        _wireframeObjectManager = wireframeObjectManager;
     }
 
     /// <inheritdoc/>
     protected override WireframeCanvasCore CreateCanvas(IDialogService dialogService, IOutputManager outputManager, IPluginManager pluginManager)
     {
-        _canvasControl = new WireframeCanvasControl(dialogService, outputManager, pluginManager);
+        _canvasControl = new WireframeCanvasControl(dialogService, outputManager, pluginManager, _canvasRedrawScheduler);
+        // Changes that arrive without input: a project load, a file changed on disk, an async
+        // reload. All of them end in a wireframe refresh.
+        WireframeRefreshed += _canvasRedrawScheduler.RequestRedraw;
+        _canvasRedrawScheduler.AddContinuousRedrawSource(() => CanvasAnimationActivity.IsAnimating(_wireframeObjectManager.RootGue));
         _canvasControl.SizeChanged += (_, _) => OnCanvasResized();
         _canvasControl.AddHandler(InputElement.PointerPressedEvent, (_, e) =>
         {

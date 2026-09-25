@@ -106,7 +106,7 @@ public class CanvasHostTests
     [AvaloniaFact]
     public void Control_DoesNotCreateTheDevice_UntilItIsUsed()
     {
-        using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl();
+        using AvaloniaGraphicsDeviceControl control = new AvaloniaGraphicsDeviceControl(new CanvasRedrawScheduler(TimeProvider.System));
 
         GameRenderDeviceHost.IsSharedDeviceCreated.ShouldBeFalse();
     }

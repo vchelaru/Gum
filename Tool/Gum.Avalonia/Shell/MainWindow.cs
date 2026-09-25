@@ -7,6 +7,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell.MacOS;
 using Gum.Avalonia.Themes;
@@ -61,7 +62,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         IWritableOptions<LayoutSettings> layoutSettings,
         IAppScaleProvider appScaleProvider,
         IFileSystemRevealService fileSystemRevealService,
-        IClipboardService clipboardService)
+        IClipboardService clipboardService,
+        ICanvasRedrawScheduler canvasRedrawScheduler)
     {
         _shell = shell;
         _hotkeyManager = hotkeyManager;
@@ -94,8 +96,13 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         {
             // The menu-bar key equivalents are live only while this window is active, so a dialog keeps its own Cmd+Z.
             // Actions wait for AppKit's menu tracking to end so a dialog they open comes to the front (#4982).
+            // A menu-bar click or key equivalent never reaches Avalonia's input, so it asks for its own redraw.
             NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel, PlatformKeyModifiers.Command,
-                this.GetObservable(IsActiveProperty), MenuTrackingScheduler.InvokeAfterTracking));
+                this.GetObservable(IsActiveProperty), action => MenuTrackingScheduler.InvokeAfterTracking(() =>
+                {
+                    action();
+                    canvasRedrawScheduler.RequestRedraw();
+                })));
         }
         else
         {

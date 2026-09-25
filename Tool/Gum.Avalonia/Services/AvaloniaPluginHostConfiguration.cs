@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
 using System.Reflection;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Shell;
 using Gum.Input;
 using Gum.Managers;
@@ -57,6 +58,7 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
         batch.AddExportedValue<AvaloniaTabManager>(_services.GetRequiredService<AvaloniaTabManager>());
         batch.AddExportedValue<ElementTreeViewManager>(_services.GetRequiredService<ElementTreeViewManager>());
         batch.AddExportedValue<IToolsVisibility>(_services.GetRequiredService<AvaloniaTabManager>());
+        batch.AddExportedValue<ICanvasRedrawScheduler>(_services.GetRequiredService<ICanvasRedrawScheduler>());
     }
 
     /// <inheritdoc/>

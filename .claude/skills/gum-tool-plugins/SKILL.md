@@ -99,6 +99,12 @@ Both canvases draw through `ICanvasHost` (`XnaAndWinforms`, net10.0): `WpfGraphi
 (`XnaAndWinforms.Wpf`) in the WPF head, `AvaloniaGraphicsDeviceControl` in the Avalonia head. Logic
 added to a canvas goes in the core, never in one head's plugin.
 
+**The Avalonia canvases draw on demand.** `AvaloniaGraphicsDeviceControl` skips a frame unless
+`ICanvasRedrawScheduler` (`Tool/Gum.Avalonia/Canvas/`) asks for one. Input in any window, wireframe
+refreshes and playback ticks already ask. A canvas change that arrives with none of these (a timer,
+an async callback) must call `RequestRedraw()` or register a continuous source, or the canvas stays
+stale until the next input.
+
 **Gum.csproj is save-class territory.** It should operate purely on save classes (data model) without runtime/rendering dependencies. Runtime code that still exists in Gum.csproj (like `WireframeObjectManager`) is legacy being actively refactored out to plugins. Do not add new runtime/rendering code to Gum.csproj.
 
 ## Non-Obvious Behaviors

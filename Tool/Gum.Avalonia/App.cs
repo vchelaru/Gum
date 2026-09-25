@@ -11,6 +11,7 @@ using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
+using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Diagnostics;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
@@ -81,6 +82,7 @@ public sealed class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             IMessenger messenger = _services.GetRequiredService<IMessenger>();
+            IDisposable canvasInputHook = CanvasInputRedrawHook.Install(_services.GetRequiredService<ICanvasRedrawScheduler>());
             MainWindow window = _services.GetRequiredService<MainWindow>();
             desktop.MainWindow = window;
             StartupTiming.Mark("MainWindow resolved");
@@ -94,6 +96,7 @@ public sealed class App : Application
                 {
                     action();
                 }
+                canvasInputHook.Dispose();
                 _freezeDiagnostics.EndSessionCleanly();
             };
 

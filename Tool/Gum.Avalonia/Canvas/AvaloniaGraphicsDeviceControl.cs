@@ -17,7 +17,8 @@ namespace Gum.Avalonia.Canvas;
 /// <see cref="GameRenderDeviceHost"/> (sharing the process-wide device), reads it back, and shows
 /// it through an <see cref="Image"/> over a <see cref="AvaloniaRenderSurface"/>. Frames run on the
 /// UI thread from a render-priority timer through the same <see cref="RenderTargetFrameLoop"/> the
-/// WPF control uses. Derived classes override <see cref="PreDrawUpdate"/> and <see cref="Draw"/>.
+/// WPF control uses, but only when a <see cref="CanvasFrameGate"/> says something changed. Derived
+/// classes override <see cref="PreDrawUpdate"/> and <see cref="Draw"/>.
 /// </summary>
 /// <remarks>
 /// <see cref="Visual.Bounds"/> are device-independent units (DIU); the render target and backing
@@ -44,11 +45,19 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     private ISharedRenderDeviceHost? _deviceHost;
     private RenderTargetFrameLoop? _frameLoop;
     private AvaloniaInputHostAdapter? _inputHost;
+    private readonly ICanvasRedrawScheduler _redrawScheduler;
+    private readonly CanvasFrameGate _frameGate;
     private float _desiredFramesPerSecondBeforeInit = 30;
+    private WindowBase? _hostWindow;
 
-    /// <summary>Creates the control. The shared device is taken on first use, not here.</summary>
-    public AvaloniaGraphicsDeviceControl()
+    /// <summary>
+    /// Creates the control, drawing only when <paramref name="redrawScheduler"/> or its own surface
+    /// says something changed. The shared device is taken on first use, not here.
+    /// </summary>
+    public AvaloniaGraphicsDeviceControl(ICanvasRedrawScheduler redrawScheduler)
     {
+        _redrawScheduler = redrawScheduler;
+        _frameGate = new CanvasFrameGate(redrawScheduler);
         _surface = new AvaloniaRenderSurface();
 
         Focusable = true;
@@ -182,6 +191,12 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        // Coming back to the window (after editing a file it watches in another app, say) redraws.
+        _hostWindow = TopLevel.GetTopLevel(this) as WindowBase;
+        if (_hostWindow != null)
+        {
+            _hostWindow.Activated += HandleHostWindowActivated;
+        }
         _frameTimer.Start();
     }
 
@@ -189,7 +204,30 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _frameTimer.Stop();
+        if (_hostWindow != null)
+        {
+            _hostWindow.Activated -= HandleHostWindowActivated;
+            _hostWindow = null;
+        }
         base.OnDetachedFromVisualTree(e);
+    }
+
+    private void HandleHostWindowActivated(object? sender, EventArgs e) => _redrawScheduler.RequestRedraw();
+
+    /// <inheritdoc/>
+    /// <remarks>Enter and exit are direct events, which the app-wide input hook doesn't see; a hover
+    /// highlight has to clear when the pointer leaves.</remarks>
+    protected override void OnPointerEntered(PointerEventArgs e)
+    {
+        _redrawScheduler.RequestRedraw();
+        base.OnPointerEntered(e);
+    }
+
+    /// <inheritdoc/>
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        _redrawScheduler.RequestRedraw();
+        base.OnPointerExited(e);
     }
 
     /// <summary>
@@ -211,6 +249,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         WindowState? hostWindowState = (TopLevel.GetTopLevel(this) as Window)?.WindowState;
         if (!ShouldRenderFrame(IsVisible && IsEffectivelyVisible, hostWindowState))
         {
+            _frameGate.MarkSkipped();
             return;
         }
         EnsureDevice();
@@ -221,7 +260,19 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         double scale = RenderScaling;
         int width = ToPhysicalPixelSize(Bounds.Width, scale);
         int height = ToPhysicalPixelSize(Bounds.Height, scale);
-        _frameLoop!.TryRenderFrame(width, height, this);
+
+        // Drawing and reading the frame back is nearly all of the canvas's cost, and an idle
+        // canvas would otherwise pay it every frame (#4989). A skipped frame skips the per-frame
+        // update too: input polling picks up where it left off, and anything that changes on its
+        // own keeps the scheduler asking for frames.
+        if (!_frameGate.ShouldDraw(width, height, _frameLoop!.Error.HasErrors))
+        {
+            return;
+        }
+        if (_frameLoop.TryRenderFrame(width, height, this))
+        {
+            _frameGate.MarkDrawn(width, height);
+        }
     }
 
     /// <summary>
