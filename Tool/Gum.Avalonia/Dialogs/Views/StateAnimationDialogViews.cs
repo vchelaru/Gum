@@ -34,7 +34,7 @@ public sealed class AddAnimationDialogView : StackPanel
         loops.Bind(ToggleButton.IsCheckedProperty, new Binding(nameof(AddAnimationDialogViewModel.Loops)) { Mode = BindingMode.TwoWay });
         Children.Add(loops);
 
-        DialogViewHelpers.FocusAndSelectAllWhenShown(this, name);
+        DialogViewHelpers.FocusAndSelectAllWhenShown(name);
     }
 }
 

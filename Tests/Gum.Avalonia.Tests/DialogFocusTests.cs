@@ -7,6 +7,7 @@ using Gum.Dialogs;
 using Gum.Services.Dialogs;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using StateAnimationPlugin.ViewModels;
 
 namespace Gum.Avalonia.Tests;
 
@@ -27,6 +28,36 @@ public class DialogFocusTests
 
         TextBox textBox = window.GetVisualDescendants().OfType<TextBox>().First();
         textBox.IsFocused.ShouldBeTrue();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void AddAnimationDialog_FocusesAndSelectsItsNameOnceOpen()
+    {
+        // The name box took focus before the window opened, and the affirmative-button fallback
+        // then took it away (#5039).
+        AddAnimationDialogViewModel viewModel = new AddAnimationDialogViewModel { Name = "Anim1" };
+        AssertTextBoxFocusedAndSelectedOnceOpen(viewModel, "Anim1");
+    }
+
+    [AvaloniaFact]
+    public void ExposeColorDialog_FocusesAndSelectsItsBaseNameOnceOpen()
+    {
+        ExposeColorDialogViewModel viewModel = new ExposeColorDialogViewModel("Base", new[] { "Red" }, _ => null);
+        AssertTextBoxFocusedAndSelectedOnceOpen(viewModel, "Base");
+    }
+
+    private static void AssertTextBoxFocusedAndSelectedOnceOpen(DialogViewModel viewModel, string expectedText)
+    {
+        Control view = Services.GetRequiredService<DialogViewRegistry>().CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view);
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        TextBox textBox = window.GetVisualDescendants().OfType<TextBox>().First();
+        textBox.IsFocused.ShouldBeTrue();
+        textBox.SelectedText.ShouldBe(expectedText);
         window.Close();
     }
 

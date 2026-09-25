@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
-using Avalonia.Input;
 using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Dialogs.Views;
@@ -25,15 +24,9 @@ internal static class DialogViewHelpers
         };
     }
 
-    /// <summary>Focuses <paramref name="textBox"/> and selects its text once the view is shown.</summary>
-    public static void FocusAndSelectAllWhenShown(Control view, TextBox textBox)
-    {
-        view.AttachedToVisualTree += (_, _) =>
-        {
-            textBox.Focus(NavigationMethod.Tab);
-            textBox.SelectAll();
-        };
-    }
+    /// <summary>Focuses <paramref name="textBox"/> and selects its text once the dialog window opens.</summary>
+    public static void FocusAndSelectAllWhenShown(TextBox textBox) =>
+        DialogWindow.FocusWhenOpened(textBox, textBox.SelectAll);
 
     /// <summary>An item template that shows the item's <paramref name="propertyName"/> as text.</summary>
     public static IDataTemplate TextTemplate(string propertyName) =>
