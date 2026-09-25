@@ -90,8 +90,10 @@ for ($attempt = 1; $attempt -le $maxAttempts; $attempt++)
     $trxDirectory = if ($isRetry) { $retryDirectory } else { $resultsDirectory }
     $trxPath = Join-Path $trxDirectory $trxName
 
+    # --blame names the test that was running if the test host crashes, which a crash otherwise
+    # reports only as "Test host process crashed".
     dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build `
-        --logger "trx;LogFileName=$trxName" --results-directory $trxDirectory @filterArgs
+        --blame --logger "trx;LogFileName=$trxName" --results-directory $trxDirectory @filterArgs
     $exitCode = $LASTEXITCODE
 
     # A nonzero exit with no .trx, or none naming a failed test, is a build or host crash rather
