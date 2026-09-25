@@ -20,8 +20,20 @@ public class ResizeHandleLayout
         _displayScale = displayScale;
     }
 
+    /// <summary>
+    /// How far, in device-independent pixels, the black inner rectangle drawn inside each handle is
+    /// inset from the handle's edges.
+    /// </summary>
+    public const float InnerHandleInset = 1;
+
     /// <summary>The handle size in world units at the given camera zoom.</summary>
     public float GetHandleWorldSize(float zoom) => _displayScale.ToWorld(HandleSize, zoom);
+
+    /// <summary>The inner handle size in world units at the given camera zoom.</summary>
+    public float GetInnerHandleWorldSize(float zoom) => _displayScale.ToWorld(HandleSize - 2 * InnerHandleInset, zoom);
+
+    /// <summary>The inner handle's inset from its handle in world units at the given camera zoom.</summary>
+    public float GetInnerHandleWorldInset(float zoom) => _displayScale.ToWorld(InnerHandleInset, zoom);
 
     /// <summary>
     /// Returns the top-left of the handle for <paramref name="side"/>. Corner handles sit just

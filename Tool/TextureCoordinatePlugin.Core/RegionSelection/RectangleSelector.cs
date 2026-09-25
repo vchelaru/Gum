@@ -52,6 +52,8 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
         readonly ResizeHandleLayout handleLayout;
 
         List<LineRectangle> mHandles;
+        // Drawn inside each handle to match the editor canvas's handles.
+        List<LineRectangle> mInnerHandles;
 
         bool mShowHandles = true;
 
@@ -326,6 +328,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             ResetsCursorIfNotOver = true;
             mShowHandles = true;
             mHandles = new List<LineRectangle>();
+            mInnerHandles = new List<LineRectangle>();
             mLineRectangle = new LineRectangle(managers);
 
             for (int i = 0; i < 8; i++)
@@ -333,6 +336,11 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
                 var lineRectangle = new LineRectangle(managers);
                 lineRectangle.IsDotted = false;
                 mHandles.Add(lineRectangle);
+
+                var innerHandle = new LineRectangle(managers);
+                innerHandle.IsDotted = false;
+                innerHandle.Color = System.Drawing.Color.Black;
+                mInnerHandles.Add(innerHandle);
             }
 
             Width = 34;
@@ -375,6 +383,12 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
                 handle.Z = 1;
                 managers.ShapeManager.Add(handle);
             }
+
+            foreach (var innerHandle in mInnerHandles)
+            {
+                innerHandle.Z = 1;
+                managers.ShapeManager.Add(innerHandle);
+            }
         }
 
         public void RemoveFromManagers()
@@ -386,11 +400,17 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 managers.ShapeManager.Remove(handle);
             }
+
+            foreach (var innerHandle in mInnerHandles)
+            {
+                managers.ShapeManager.Remove(innerHandle);
+            }
         }
 
         public void UpdateHandles()
         {
             var dim = HandleWorldSize;
+            var innerInset = handleLayout.GetInnerHandleWorldInset(managers.Renderer.Camera.Zoom);
             float left = Left;
             float top = Top;
             float width = Width;
@@ -402,6 +422,9 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
                 var position = handleLayout.GetHandlePosition((Gum.Wireframe.ResizeSide)i, left, top, width, height, dim);
                 mHandles[i].X = position.X;
                 mHandles[i].Y = position.Y;
+
+                mInnerHandles[i].X = position.X + innerInset;
+                mInnerHandles[i].Y = position.Y + innerInset;
             }
         }
 
@@ -416,6 +439,10 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             foreach (var handle in mHandles)
             {
                 handle.LinePixelWidth = displayScale.DisplayScale;
+            }
+            foreach (var innerHandle in mInnerHandles)
+            {
+                innerHandle.LinePixelWidth = displayScale.DisplayScale;
             }
             UpdateHandleSizes();
             UpdateHandles();
@@ -539,6 +566,13 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 handle.Width = dim;
                 handle.Height = dim;
+            }
+
+            var innerDim = handleLayout.GetInnerHandleWorldSize(managers.Renderer.Camera.Zoom);
+            foreach (var innerHandle in mInnerHandles)
+            {
+                innerHandle.Width = innerDim;
+                innerHandle.Height = innerDim;
             }
         }
 
@@ -905,6 +939,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             {
                 bool handleVisible = mShowHandles && mVisible && IsHandleVisible((ResizeSide)i);
                 mHandles[i].Visible = handleVisible;
+                mInnerHandles[i].Visible = handleVisible;
             }
         }
 
