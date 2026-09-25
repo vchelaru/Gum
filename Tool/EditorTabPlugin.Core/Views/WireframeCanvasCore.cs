@@ -405,6 +405,7 @@ public sealed class WireframeCanvasCore
 
                 // Read every frame so the overlay follows the window to a monitor with a different scale.
                 _displayScale!.DisplayScale = (float)_host.DisplayScale;
+                mCanvasBounds!.LinePixelWidth = _displayScale.DisplayScale;
 
                 // Camera.ClientWidth/Height come from the GraphicsDevice viewport, which isn't
                 // valid yet the first time a project loads (before the first XNA frame has run) -

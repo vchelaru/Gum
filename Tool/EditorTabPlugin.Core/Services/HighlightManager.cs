@@ -7,6 +7,7 @@ using Vector2 = System.Numerics.Vector2;
 using Color = System.Drawing.Color;
 using Matrix = System.Numerics.Matrix4x4;
 using EditorTabPlugin_XNA.Utilities;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 namespace Gum.Wireframe;
 
@@ -16,6 +17,7 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
     Sprite mOverlaySprite;
     NineSlice mOverlayNineSlice;
     LinePolygon mOverlayLinePolygon;
+    private readonly ICanvasDisplayScale _displayScale;
 
     public IPositionedSizedObject? HighlightedIpso { get; set; }
 
@@ -74,8 +76,9 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
         }
     }
 
-    public HighlightManager(Layer layer)
+    public HighlightManager(Layer layer, ICanvasDisplayScale displayScale)
     {
+        _displayScale = displayScale;
 
         mOverlaySolidRectangle = new SolidRectangle();
         mOverlaySolidRectangle.Name = "Overlay SolidRectangle";
@@ -180,6 +183,7 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
             // todo - finish here
             var overlay = mOverlayLinePolygon;
             overlay.Visible = true;
+            overlay.LinePixelWidth = _displayScale.DisplayScale;
             overlay.X = HighlightedLinePolygon.GetAbsoluteX();
             overlay.Y = HighlightedLinePolygon.GetAbsoluteY();
 

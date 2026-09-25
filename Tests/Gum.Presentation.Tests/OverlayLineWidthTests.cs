@@ -77,6 +77,21 @@ public class OverlayLineWidthTests : BaseTestClass
     }
 
     [Fact]
+    public void HighlightManager_UpdateHighlightObjects_SetsPolygonWidthToDisplayScale()
+    {
+        Layer layer = new Layer();
+        CanvasDisplayScale displayScale = new CanvasDisplayScale { DisplayScale = 2 };
+        HighlightManager highlightManager = new HighlightManager(layer, displayScale);
+        GraphicalUiElement element = new GraphicalUiElement(new LinePolygon());
+        highlightManager.HighlightedIpso = element;
+
+        highlightManager.AreHighlightsVisible = true;
+
+        LinePolygon overlay = layer.Renderables.OfType<LinePolygon>().Single();
+        overlay.LinePixelWidth.ShouldBe(2);
+    }
+
+    [Fact]
     public void OriginDisplay_UpdateTo_SetsLineWidthToDisplayScale()
     {
         Layer layer = new Layer();

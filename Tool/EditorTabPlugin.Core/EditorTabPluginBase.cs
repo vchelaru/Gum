@@ -963,7 +963,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             InputLibrary.Cursor.Self,
             new Gum.Wireframe.Editors.Visuals.SelectionRectangleVisual(_layerService.OverlayLayer, _canvasDisplayScale),
             new GraphicalOutline(_layerService.OverlayLayer, _canvasDisplayScale),
-            new HighlightManager(_layerService.OverlayLayer));
+            new HighlightManager(_layerService.OverlayLayer, _canvasDisplayScale));
 
         _canvas.ShareLayerReferences(_layerService);
 
