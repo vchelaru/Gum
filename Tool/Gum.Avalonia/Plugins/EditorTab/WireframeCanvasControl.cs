@@ -30,6 +30,7 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
         CameraZoomScope.SetOwnsCameraZoom(this, true);
 
         Core = new WireframeCanvasCore(this, dialogService, outputManager, pluginManager);
+        Gestures.AddPointerTouchPadGestureMagnifyHandler(this, HandlePinch);
     }
 
     /// <inheritdoc/>
@@ -80,9 +81,16 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
+        GumMouseEventArgs args = e.ToGumWheelEventArgs(this);
+        Core.HandleMouseWheel(args);
+        e.Handled = args.Handled;
+    }
+
+    // Avalonia raises the trackpad pinch only on macOS.
+    private void HandlePinch(object? sender, PointerDeltaEventArgs e)
+    {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(this, PointerUpdateKind.Other);
-        // WPF reports 120 per notch; Avalonia reports 1.
-        args.Delta = (int)(e.Delta.Y * 120);
+        args.Delta = AvaloniaMouseMapping.PinchToWheelDelta(e.Delta.X);
         Core.HandleMouseWheel(args);
         e.Handled = args.Handled;
     }

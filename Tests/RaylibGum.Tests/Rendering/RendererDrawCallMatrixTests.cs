@@ -79,7 +79,7 @@ public class RendererDrawCallMatrixTests : BaseTestClass
             .GroupBy(r => r.GetType().Name)
             .Select(g => $"{g.Key}x{g.Count()}");
         var spriteDetails = allNodes
-            .Where(r => r.GetType().Name == nameof(global::Gum.Renderables.Sprite))
+            .Where(r => r is global::Gum.Renderables.Sprite or SpriteRuntime)
             .Select(r => $"Sprite(V={r.Visible},X={r.GetAbsoluteX():0.##},Y={r.GetAbsoluteY():0.##},W={r.Width:0.##},H={r.Height:0.##})");
         return $"treeNodeCount={allNodes.Count} treeTypes=[{string.Join(",", typeCounts)}] sprites=[{string.Join(",", spriteDetails)}]";
     }

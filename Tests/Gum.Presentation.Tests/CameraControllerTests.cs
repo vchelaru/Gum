@@ -271,6 +271,29 @@ public class CameraControllerTests
     }
 
     [Fact]
+    public void HandleMouseWheel_PanScroll_MovesTheContentWithTheFingersAndDoesNotZoom()
+    {
+        var (controller, camera, _, zoomController) = CreateSut();
+        camera.Zoom = 2f;
+        camera.X = 100;
+        camera.Y = 50;
+        var raised = 0;
+        controller.CameraChanged += () => raised++;
+
+        // Delta is set too, to show a pan scroll ignores it.
+        var mouseArgs = new GumMouseEventArgs { X = 300, Y = 200, Delta = 120, IsPanScroll = true, PanX = 40, PanY = -20 };
+        controller.HandleMouseWheel(mouseArgs);
+
+        // Content moving 40 screen pixels right at 2x zoom means the camera moves 20 world units left.
+        camera.X.ShouldBe(80);
+        camera.Y.ShouldBe(60);
+        zoomController.Verify(z => z.ZoomIn(), Times.Never);
+        zoomController.Verify(z => z.ZoomOut(), Times.Never);
+        mouseArgs.Handled.ShouldBeTrue();
+        raised.ShouldBe(1);
+    }
+
+    [Fact]
     public void HandleMouseWheel_ScrollDown_CallsZoomOut()
     {
         var (controller, camera, _, zoomController) = CreateSut();
