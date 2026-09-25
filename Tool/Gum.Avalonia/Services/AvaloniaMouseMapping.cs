@@ -43,9 +43,11 @@ public static class AvaloniaMouseMapping
     public static GumMouseEventArgs ToGumWheelEventArgs(this PointerWheelEventArgs e, Visual relativeTo)
     {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(relativeTo, PointerUpdateKind.Other);
-        bool isTrackpadScroll = OperatingSystem.IsMacOS() && MacScrollEvent.IsCurrentEventPrecise();
+        WheelSource source = !OperatingSystem.IsMacOS() ? WheelSource.Wheel
+            : MacScrollEvent.IsCurrentEventPrecise() ? WheelSource.MacTrackpad
+            : WheelSource.MacMouseWheel;
         double dpiScale = TopLevel.GetTopLevel(relativeTo)?.RenderScaling ?? 1.0;
-        ApplyWheelDelta(args, e.Delta, e.KeyModifiers, isTrackpadScroll, dpiScale);
+        ApplyWheelDelta(args, e.Delta, e.KeyModifiers, source, dpiScale);
         return args;
     }
 
@@ -53,13 +55,21 @@ public static class AvaloniaMouseMapping
     /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
     /// trackpad scroll without Cmd, its pan in physical pixels.
     /// </summary>
-    public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, bool isTrackpadScroll, double dpiScale)
+    public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, WheelSource source, double dpiScale)
     {
-        if (isTrackpadScroll && !modifiers.HasFlag(KeyModifiers.Meta))
+        if (source == WheelSource.MacTrackpad && !modifiers.HasFlag(KeyModifiers.Meta))
         {
             args.IsPanScroll = true;
             args.PanX = (float)(delta.X * PrecisePointsPerDelta * dpiScale);
             args.PanY = (float)(delta.Y * PrecisePointsPerDelta * dpiScale);
+            return;
+        }
+
+        if (source == WheelSource.MacMouseWheel)
+        {
+            // macOS sends one event per click but scales its delta by scroll acceleration (about
+            // 0.02 for a slow click), so only the direction counts (#5010).
+            args.Delta = Math.Sign(delta.Y) * WheelNotchDelta;
             return;
         }
 
@@ -91,4 +101,15 @@ public static class AvaloniaMouseMapping
         _ when properties.IsMiddleButtonPressed => GumMouseButton.Middle,
         _ => GumMouseButton.None,
     };
+}
+
+/// <summary>Where a wheel event came from, which decides whether it zooms or pans and how far.</summary>
+public enum WheelSource
+{
+    /// <summary>A mouse wheel on Windows or Linux, reporting 1 per notch.</summary>
+    Wheel,
+    /// <summary>A mouse wheel on macOS: one event per click, delta scaled by acceleration.</summary>
+    MacMouseWheel,
+    /// <summary>A precise-delta device on macOS (trackpad, Magic Mouse).</summary>
+    MacTrackpad,
 }

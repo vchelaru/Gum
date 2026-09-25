@@ -18,7 +18,7 @@ public class AvaloniaWheelMappingTests
         GumMouseEventArgs args = new GumMouseEventArgs();
 
         // Avalonia divides a precise scroll's points by 50; at 2x scaling one point is two pixels.
-        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0.2, -0.1), KeyModifiers.None, isTrackpadScroll: true, dpiScale: 2);
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0.2, -0.1), KeyModifiers.None, WheelSource.MacTrackpad, dpiScale: 2);
 
         args.IsPanScroll.ShouldBeTrue();
         args.PanX.ShouldBe(20f, tolerance: 0.001f);
@@ -31,7 +31,7 @@ public class AvaloniaWheelMappingTests
     {
         GumMouseEventArgs args = new GumMouseEventArgs();
 
-        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, 0.5), KeyModifiers.Meta, isTrackpadScroll: true, dpiScale: 2);
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, 0.5), KeyModifiers.Meta, WheelSource.MacTrackpad, dpiScale: 2);
 
         args.IsPanScroll.ShouldBeFalse();
         args.Delta.ShouldBe(60);
@@ -42,10 +42,25 @@ public class AvaloniaWheelMappingTests
     {
         GumMouseEventArgs args = new GumMouseEventArgs();
 
-        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, -1), KeyModifiers.None, isTrackpadScroll: false, dpiScale: 2);
+        AvaloniaMouseMapping.ApplyWheelDelta(args, new Vector(0, -1), KeyModifiers.None, WheelSource.Wheel, dpiScale: 2);
 
         args.IsPanScroll.ShouldBeFalse();
         args.Delta.ShouldBe(-120);
+    }
+
+    [Fact]
+    public void ApplyWheelDelta_MacMouseWheel_ZoomsOneNotchPerEventWhateverTheAcceleratedDelta()
+    {
+        // macOS reports one event per wheel click, scaled by scroll acceleration: about 0.02 for a
+        // slow click and 3+ for a fast one (#5010).
+        GumMouseEventArgs slowClick = new GumMouseEventArgs();
+        GumMouseEventArgs fastClick = new GumMouseEventArgs();
+
+        AvaloniaMouseMapping.ApplyWheelDelta(slowClick, new Vector(0, 0.02), KeyModifiers.None, WheelSource.MacMouseWheel, dpiScale: 2);
+        AvaloniaMouseMapping.ApplyWheelDelta(fastClick, new Vector(0, -3.4), KeyModifiers.None, WheelSource.MacMouseWheel, dpiScale: 2);
+
+        slowClick.Delta.ShouldBe(120);
+        fastClick.Delta.ShouldBe(-120);
     }
 
     [Fact]

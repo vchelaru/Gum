@@ -18,10 +18,16 @@ public class WheelZoomAccumulator
     /// <summary>
     /// Feeds one wheel-delta report in. Returns 1 or -1 once the running total crosses a full
     /// notch in that direction (consuming exactly one notch's worth from the total and carrying
-    /// any remainder to the next call), or 0 if no notch has been reached yet.
+    /// any remainder to the next call), or 0 if no notch has been reached yet. A delta against
+    /// the carried total's direction drops the total first, so a reversal never steps the old way.
     /// </summary>
     public int Consume(int delta)
     {
+        if (System.Math.Sign(delta) == -System.Math.Sign(_accumulated))
+        {
+            _accumulated = 0;
+        }
+
         _accumulated += delta;
 
         if (_accumulated >= NotchDelta)
