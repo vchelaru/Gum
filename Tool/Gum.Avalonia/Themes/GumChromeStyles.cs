@@ -91,7 +91,7 @@ public static class GumChromeStyles
                 new Setter(TemplatedControl.ForegroundProperty, Resource("Frb.Brushes.Foreground.Subtle")),
                 new Setter(TemplatedControl.BackgroundProperty, Brushes.Transparent),
                 new Setter(TemplatedControl.BorderBrushProperty, Brushes.Transparent),
-                new Setter(TemplatedControl.PaddingProperty, new Thickness(6, 1, 6, 3)),
+                new Setter(TemplatedControl.PaddingProperty, new Thickness(6, OperatingSystem.IsMacOS() ? 4 : 1, 6, 3)),
                 new Setter(Layoutable.MinHeightProperty, 0d),
                 new Setter(Layoutable.MarginProperty, new Thickness(0)),
             },
