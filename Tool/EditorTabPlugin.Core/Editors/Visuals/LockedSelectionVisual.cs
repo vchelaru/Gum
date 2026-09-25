@@ -22,7 +22,6 @@ public class LockedSelectionVisual : EditorVisualBase
         _outline = new LineRectangle();
         _outline.IsDotted = true;
         _outline.Color = lineColor;
-        _outline.LinePixelWidth = 1;
         ShapeManager.Self.Add(_outline, OverlayLayer);
         Visible = false; // Sync _visible in base class; must come after _outline is assigned
     }
@@ -56,13 +55,14 @@ public class LockedSelectionVisual : EditorVisualBase
 
     private void UpdateOutlineBounds(GraphicalUiElement selected)
     {
-        var border = ScaleByZoom(1);
+        var border = ToWorldOverlaySize(1);
         var bounds = selected.GetBounds();
         _outline.X = bounds.left - border;
         _outline.Y = bounds.top - border;
         _outline.Width = bounds.right - bounds.left + border * 2;
         _outline.Height = bounds.bottom - bounds.top + border * 2;
         _outline.Rotation = selected.GetAbsoluteRotation();
+        _outline.LinePixelWidth = Context.DisplayScale.DisplayScale;
     }
 
     public override void Destroy()

@@ -15,7 +15,7 @@ public class OriginDisplayVisual : EditorVisualBase
 
     public OriginDisplayVisual(EditorContext context) : base(context)
     {
-        _originDisplay = new OriginDisplay(OverlayLayer);
+        _originDisplay = new OriginDisplay(OverlayLayer, context.DisplayScale);
     }
 
     protected override void OnVisibilityChanged(bool isVisible)

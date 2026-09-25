@@ -1,4 +1,5 @@
-﻿using RenderingLibrary;
+﻿using Gum.Plugins.InternalPlugins.EditorTab.Services;
+using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
 using ToolsUtilitiesStandard.Helpers;
@@ -37,8 +38,11 @@ namespace Gum.Wireframe
             }
         }
 
-        public OriginDisplay(Layer layer)
+        readonly ICanvasDisplayScale _displayScale;
+
+        public OriginDisplay(Layer layer, ICanvasDisplayScale displayScale)
         {
+            _displayScale = displayScale;
 
             mXLine1 = new Line(null);
             mXLine2 = new Line(null);
@@ -243,9 +247,7 @@ namespace Gum.Wireframe
 
 
             IPositionedSizedObject asIpso = asGue;
-            float zoom = Renderer.Self.Camera.Zoom;
-
-            float offset = RadiusAtNoZoom * 1.5f / zoom;
+            float offset = _displayScale.ToWorld(RadiusAtNoZoom * 1.5f, Renderer.Self.Camera.Zoom);
 
 
 

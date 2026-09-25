@@ -33,7 +33,7 @@ public class PolygonPointNodesVisual : EditorVisualBase
     /// </summary>
     public int? SelectedIndex { get; set; }
 
-    private float NodeDisplayWidth => RadiusAtNoZoom * 2 / Zoom;
+    private float NodeDisplayWidth => ToWorldOverlaySize(RadiusAtNoZoom * 2);
 
     public PolygonPointNodesVisual(EditorContext context, Layer layer) : base(context)
     {
@@ -148,7 +148,7 @@ public class PolygonPointNodesVisual : EditorVisualBase
     /// </summary>
     public int? GetIndexOver(float worldX, float worldY)
     {
-        var effectiveRadius = RadiusAtNoZoom / Zoom;
+        var effectiveRadius = ToWorldOverlaySize(RadiusAtNoZoom);
         for (int i = 0; i < _pointNodes.Count; i++)
         {
             var node = _pointNodes[i];

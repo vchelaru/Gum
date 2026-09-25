@@ -6,6 +6,7 @@ using MathHelper = ToolsUtilitiesStandard.Helpers.MathHelper;
 using Vector2 = System.Numerics.Vector2;
 using Matrix = System.Numerics.Matrix4x4;
 using Gum.Managers;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Microsoft.Xna.Framework;
 
 namespace Gum.Wireframe
@@ -13,6 +14,7 @@ namespace Gum.Wireframe
     public class DistanceArrows
     {
         private IToolLayerService _toolLayerService;
+        private readonly ICanvasDisplayScale _displayScale;
         Arrow Arrow1;
         Arrow Arrow2;
 
@@ -64,8 +66,9 @@ namespace Gum.Wireframe
             }
         }
 
-        public DistanceArrows(SystemManagers systemManagers, IToolFontService toolFontService, IToolLayerService toolLayerService)
+        public DistanceArrows(SystemManagers systemManagers, IToolFontService toolFontService, IToolLayerService toolLayerService, ICanvasDisplayScale displayScale)
         {
+            _displayScale = displayScale;
             _toolLayerService = toolLayerService;
             Arrow1 = new Arrow();
             Arrow2 = new Arrow();
@@ -90,7 +93,7 @@ namespace Gum.Wireframe
             _distanceText.RawText =
                 (endAbsolute - startAbsolute).Length().ToString("0.00");
 
-            _distanceText.FontScale = 1 / Zoom;
+            _distanceText.FontScale = ToWorld(1);
             //distanceText.Position.ToString();
             _distanceText.Position = midpoint;
 
@@ -125,7 +128,7 @@ namespace Gum.Wireframe
                 textGap = _distanceText.EffectiveWidth;
             }
 
-            textGap += 4 / Zoom;
+            textGap += ToWorld(4);
 
 
 
@@ -144,12 +147,14 @@ namespace Gum.Wireframe
             var arrow2Start = midpoint + (endAbsolute - midpoint).AtLength(textGap / 2);
 
             // make sure we can at least draw the line a few pixels
-            Arrow1.Visible = (arrow1Start - startAbsolute).Length() > 6/Zoom;
-            Arrow2.Visible = (arrow2Start - endAbsolute).Length() > 6 / Zoom;
+            Arrow1.Visible = (arrow1Start - startAbsolute).Length() > ToWorld(6);
+            Arrow2.Visible = (arrow2Start - endAbsolute).Length() > ToWorld(6);
 
-            Arrow1.SetFrom(arrow1Start, startAbsolute, Zoom);
-            Arrow2.SetFrom(arrow2Start, endAbsolute, Zoom);
+            Arrow1.SetFrom(arrow1Start, startAbsolute, ToWorld(8));
+            Arrow2.SetFrom(arrow2Start, endAbsolute, ToWorld(8));
         }
+
+        private float ToWorld(float overlaySize) => _displayScale.ToWorld(overlaySize, Zoom);
 
         public void AddToManagers()
         {
@@ -237,7 +242,7 @@ namespace Gum.Wireframe
             layer.Remove(body);
         }
 
-        public void SetFrom(Vector2 startAbsolute, Vector2 endAbsolute, float zoom = 1)
+        public void SetFrom(Vector2 startAbsolute, Vector2 endAbsolute, float arrowPointLineLength)
         {
             if (startAbsolute == endAbsolute) return;
 
@@ -251,8 +256,6 @@ namespace Gum.Wireframe
             endLine1.SetPosition(endAbsolute);
             endLine2.SetPosition(endAbsolute);
             var normalizedBack = Vector2.Normalize(startAbsolute - endAbsolute);
-
-            float arrowPointLineLength = 8 / zoom;
 
             var angle = Vector2Methods.Angle(normalizedBack).Value;
             angle += MathHelper.PiOver4;

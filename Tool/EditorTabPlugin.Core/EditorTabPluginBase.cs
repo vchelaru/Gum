@@ -153,6 +153,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly IFavoriteComponentManager _favoriteComponentManager;
     private readonly IToolFontService _toolFontService;
     private readonly IToolLayerService _toolLayerService;
+    private readonly ICanvasDisplayScale _canvasDisplayScale;
     private readonly IPluginManager _pluginManager;
     private IWireframeEditorFactory _wireframeEditorFactory;
     private readonly IPreviewLauncher _previewLauncher;
@@ -286,6 +287,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         // instance of each and threads it down to the XNA objects it constructs. See issue #3294.
         _toolFontService = new ToolFontService();
         _toolLayerService = new ToolLayerService();
+        _canvasDisplayScale = new CanvasDisplayScale();
 
         _wireframeEditorFactory = new WireframeEditorFactory(
             _hotkeyManager,
@@ -300,7 +302,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _uiSettingsService,
             _toolFontService,
             _pluginManager,
-            _projectManager);
+            _projectManager,
+            _canvasDisplayScale);
 
         _selectionManager = new SelectionManager(
             _selectedState,
@@ -950,7 +953,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _editorViewModel,
             _projectManager,
             _toolFontService,
-            _toolLayerService);
+            _toolLayerService,
+            _canvasDisplayScale);
         var systemManagers = _canvas.SystemManagers;
 
 
@@ -960,8 +964,8 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             _layerService.OverlayLayer,
             Renderer.Self.Camera,
             InputLibrary.Cursor.Self,
-            new Gum.Wireframe.Editors.Visuals.SelectionRectangleVisual(_layerService.OverlayLayer),
-            new GraphicalOutline(_layerService.OverlayLayer),
+            new Gum.Wireframe.Editors.Visuals.SelectionRectangleVisual(_layerService.OverlayLayer, _canvasDisplayScale),
+            new GraphicalOutline(_layerService.OverlayLayer, _canvasDisplayScale),
             new HighlightManager(_layerService.OverlayLayer));
 
         _canvas.ShareLayerReferences(_layerService);

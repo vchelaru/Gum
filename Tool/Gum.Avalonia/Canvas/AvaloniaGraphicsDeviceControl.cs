@@ -119,6 +119,9 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     /// </summary>
     protected double RenderScaling => TopLevel.GetTopLevel(this)?.RenderScaling ?? 1.0;
 
+    /// <inheritdoc/>
+    public double DisplayScale => RenderScaling;
+
     /// <summary>A provider holding the device service, for content managers.</summary>
     public IServiceProvider Services => DeviceHost.Services;
 

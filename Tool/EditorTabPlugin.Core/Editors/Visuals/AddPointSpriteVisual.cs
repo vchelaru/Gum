@@ -93,11 +93,11 @@ public class AddPointSpriteVisual : EditorVisualBase
 
     private void UpdatePosition(LinePolygon polygon, float cursorX, float cursorY)
     {
-        var size = SizeAtNoZoom / Zoom;
+        var size = ToWorldOverlaySize(SizeAtNoZoom);
         _addPointSprite.Width = _addPointSprite.Height = size;
 
         var closestResult = GetClosestLineSegment(polygon, cursorX, cursorY);
-        var maxDistance = MaxPixelsForAddPoint / Zoom;
+        var maxDistance = ToWorldOverlaySize(MaxPixelsForAddPoint);
 
         _addPointSprite.Visible = closestResult.Distance < maxDistance;
         InsertAfterIndex = closestResult.SegmentIndex;

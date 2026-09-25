@@ -45,6 +45,11 @@ public class WpfGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFrameCli
     #region Properties
 
     /// <summary>
+    /// Always 1: the frozen WPF head keeps its editor overlay at physical pixels (ADR-0017).
+    /// </summary>
+    public double DisplayScale => 1;
+
+    /// <summary>
     /// The frame rate this control aims for. The underlying WPF render pass fires at the
     /// compositor's cadence; frames beyond this rate are skipped.
     /// </summary>

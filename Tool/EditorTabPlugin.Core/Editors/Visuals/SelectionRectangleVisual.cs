@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using RenderingLibrary.Math.Geometry;
@@ -14,11 +15,16 @@ namespace Gum.Wireframe.Editors.Visuals;
 public class SelectionRectangleVisual : ISelectionRectangleVisual
 {
     private readonly LineRectangle _selectionRectangle;
+    private readonly ICanvasDisplayScale _displayScale;
 
     public bool Visible
     {
         get => _selectionRectangle.Visible;
-        set => _selectionRectangle.Visible = value;
+        set
+        {
+            _selectionRectangle.Visible = value;
+            _selectionRectangle.LinePixelWidth = _displayScale.DisplayScale;
+        }
     }
 
     public float X
@@ -45,12 +51,12 @@ public class SelectionRectangleVisual : ISelectionRectangleVisual
         set => _selectionRectangle.Height = value;
     }
 
-    public SelectionRectangleVisual(Layer overlayLayer)
+    public SelectionRectangleVisual(Layer overlayLayer, ICanvasDisplayScale displayScale)
     {
+        _displayScale = displayScale;
         _selectionRectangle = new LineRectangle();
         _selectionRectangle.Color = Color.DodgerBlue;
         _selectionRectangle.IsDotted = true;
-        _selectionRectangle.LinePixelWidth = 1;
         _selectionRectangle.Visible = false;
 
         ShapeManager.Self.Add(_selectionRectangle, overlayLayer);

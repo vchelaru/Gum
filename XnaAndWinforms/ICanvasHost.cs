@@ -23,6 +23,12 @@ public interface ICanvasHost
     /// <summary>Whether the pointer is currently over the control.</summary>
     bool IsPointerOver { get; }
 
+    /// <summary>
+    /// The OS display scale of the monitor the control is on (1 at 100%). The canvas sizes its
+    /// editor overlay by it; project content stays at physical pixels.
+    /// </summary>
+    double DisplayScale { get; }
+
     /// <summary>The frame rate the host aims for.</summary>
     float DesiredFramesPerSecond { get; set; }
 }

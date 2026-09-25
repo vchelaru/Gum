@@ -43,6 +43,7 @@ public sealed class WireframeCanvasCore
     private IDragDropManager? _dragDropManager;
     private IToolFontService? _toolFontService;
     private IToolLayerService? _toolLayerService;
+    private ICanvasDisplayScale? _displayScale;
     private CameraController? _cameraController;
 
     private LineRectangle? mCanvasBounds;
@@ -204,7 +205,8 @@ public sealed class WireframeCanvasCore
         EditorViewModel editorViewModel,
         IProjectManager projectManager,
         IToolFontService toolFontService,
-        IToolLayerService toolLayerService)
+        IToolLayerService toolLayerService,
+        ICanvasDisplayScale displayScale)
     {
         _selectionManager = selectionManager;
         _dragDropManager = dragDropManager;
@@ -212,6 +214,7 @@ public sealed class WireframeCanvasCore
         _projectManager = projectManager;
         _toolFontService = toolFontService;
         _toolLayerService = toolLayerService;
+        _displayScale = displayScale;
 
         try
         {
@@ -372,13 +375,15 @@ public sealed class WireframeCanvasCore
             _toolFontService!,
             _toolLayerService!,
             layerService,
-            _hotkeyManager!);
+            _hotkeyManager!,
+            _displayScale!);
         LeftRuler = new Ruler(SystemManagers.Default,
             InputLibrary.Cursor.Self,
             _toolFontService!,
             _toolLayerService!,
             layerService,
-            _hotkeyManager!);
+            _hotkeyManager!,
+            _displayScale!);
         LeftRuler.RulerSide = RulerSide.Left;
     }
 
@@ -395,6 +400,9 @@ public sealed class WireframeCanvasCore
             {
                 InputLibrary.Cursor.Self.StartCursorSettingFrameStart();
                 TimeManager.Self.Activity();
+
+                // Read every frame so the overlay follows the window to a monitor with a different scale.
+                _displayScale!.DisplayScale = (float)_host.DisplayScale;
 
                 // Camera.ClientWidth/Height come from the GraphicsDevice viewport, which isn't
                 // valid yet the first time a project loads (before the first XNA frame has run) -

@@ -34,7 +34,7 @@ public class ResizeHandlesVisual : EditorVisualBase, IResizeHandlesVisual
 
     public ResizeHandlesVisual(EditorContext context, Color lineColor) : base(context)
     {
-        _resizeHandles = new ResizeHandles(OverlayLayer, lineColor);
+        _resizeHandles = new ResizeHandles(OverlayLayer, lineColor, context.DisplayScale);
         _resizeHandles.ShowOrigin = true;
         Visible = false; // Sync base visibility with handles
     }

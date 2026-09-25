@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.Input;
 using Gum.Managers;
@@ -30,7 +31,8 @@ internal static class EditorContextTestHelper
         IHotkeyManager? hotkeyManager = null,
         IGumCursorState? cursor = null,
         Camera? camera = null,
-        IElementCommands? elementCommands = null)
+        IElementCommands? elementCommands = null,
+        ICanvasDisplayScale? displayScale = null)
     {
         return new EditorContext(
             selectedState ?? Mock.Of<ISelectedState>(),
@@ -49,6 +51,7 @@ internal static class EditorContextTestHelper
             System.Drawing.Color.White,
             camera ?? new Camera(),
             cursor ?? Mock.Of<IGumCursorState>(),
-            Mock.Of<IPluginManager>());
+            Mock.Of<IPluginManager>(),
+            displayScale ?? new CanvasDisplayScale());
     }
 }

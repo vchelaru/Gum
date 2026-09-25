@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using System.Collections.Generic;
 using System.Linq;
 using Gum.Commands;
@@ -67,7 +68,8 @@ public abstract class WireframeEditor
         Color textColor,
         Camera camera,
         IGumCursorState cursor,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICanvasDisplayScale displayScale)
     {
         // Create shared EditorContext and MoveInputHandler
         _context = new EditorContext(
@@ -87,7 +89,8 @@ public abstract class WireframeEditor
             textColor,
             camera,
             cursor,
-            pluginManager);
+            pluginManager,
+            displayScale);
 
         _moveInputHandler = new MoveInputHandler(_context);
     }

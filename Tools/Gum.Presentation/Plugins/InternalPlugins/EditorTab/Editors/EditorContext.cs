@@ -5,6 +5,7 @@ using Gum.DataTypes;
 using Gum.Input;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.PropertyGridHelpers;
 using Gum.Services;
@@ -53,6 +54,12 @@ public class EditorContext
     /// reference at restore). Same object at runtime, just obtained explicitly.
     /// </summary>
     public IGumCursorState Cursor { get; }
+
+    /// <summary>
+    /// The OS display scale, which overlay visuals multiply their sizes by. See
+    /// <see cref="ToWorldOverlaySize"/>.
+    /// </summary>
+    public ICanvasDisplayScale DisplayScale { get; }
 
     #endregion
 
@@ -127,8 +134,10 @@ public class EditorContext
         Color textColor,
         Camera camera,
         IGumCursorState cursor,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICanvasDisplayScale displayScale)
     {
+        DisplayScale = displayScale;
         UiSettingsService = uiSettingsService;
         Camera = camera;
         Cursor = cursor;
@@ -150,6 +159,13 @@ public class EditorContext
     }
 
     #region Helper Methods
+
+    /// <summary>
+    /// Converts an overlay size (a handle's width, a font scale, a padding) from device-independent
+    /// pixels to world units: multiplied by the display scale, divided by the camera zoom. Use it
+    /// for how the overlay looks, never for positions or measured values.
+    /// </summary>
+    public float ToWorldOverlaySize(float overlaySize) => DisplayScale.ToWorld(overlaySize, Camera.Zoom);
 
     /// <summary>
     /// Returns true if the currently selected instance is locked and should not be

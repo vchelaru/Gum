@@ -1,3 +1,4 @@
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Input;
@@ -43,11 +44,12 @@ internal class TestWireframeEditor : WireframeEditor
         System.Drawing.Color textColor,
         Camera camera,
         IGumCursorState cursor,
-        IPluginManager pluginManager)
+        IPluginManager pluginManager,
+        ICanvasDisplayScale displayScale)
         : base(hotkeyManager, selectionManager, selectedState, elementCommands, guiCommands,
               fileCommands, setVariableLogic, undoManager, variableInCategoryPropagationLogic,
               wireframeObjectManager, uiSettingsService, layer, lineColor, textColor, camera,
-              cursor, pluginManager)
+              cursor, pluginManager, displayScale)
     {
     }
 
@@ -82,7 +84,8 @@ public class WireframeEditorCursorTests
             System.Drawing.Color.White,
             new Camera(),
             Mock.Of<IGumCursorState>(),
-            Mock.Of<IPluginManager>());
+            Mock.Of<IPluginManager>(),
+            new Gum.Plugins.InternalPlugins.EditorTab.Services.CanvasDisplayScale());
     }
 
     private static Mock<IInputHandler> CreateHandlerMock(int priority, GumCursorKind? cursorToShow)

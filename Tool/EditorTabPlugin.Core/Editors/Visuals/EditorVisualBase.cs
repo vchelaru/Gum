@@ -47,14 +47,10 @@ public abstract class EditorVisualBase : IEditorVisual
     #region Helper Methods
 
     /// <summary>
-    /// Returns the current camera zoom level.
+    /// Converts an overlay size in device-independent pixels to world units, so it stays the same
+    /// on-screen size at any zoom and matches the OS display scale. Sizes only, never positions.
     /// </summary>
-    protected float Zoom => Renderer.Self.Camera.Zoom;
-
-    /// <summary>
-    /// Scales a size value to be consistent regardless of zoom level.
-    /// </summary>
-    protected float ScaleByZoom(float sizeAtNoZoom) => sizeAtNoZoom / Zoom;
+    protected float ToWorldOverlaySize(float overlaySize) => Context.ToWorldOverlaySize(overlaySize);
 
     #endregion
 }
