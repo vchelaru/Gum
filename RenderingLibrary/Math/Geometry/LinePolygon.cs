@@ -15,7 +15,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
     #region Fields
 
     LinePrimitive mLinePrimitive;
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
     bool mVisible;
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
 
@@ -23,7 +23,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
 
     #region Properties
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -106,7 +106,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
 
     int IRenderableIpso.Alpha => Color.A;
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get { return BlendState.NonPremultiplied; }
     }
@@ -241,10 +241,10 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
             mLinePrimitive.Position.Y = this.GetAbsoluteTop();
 
             Renderer renderer;
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
             if (managers != null)
             {
-                renderer = managers.Renderer as Renderer;
+                renderer = (Renderer)managers.Renderer;
             }
             else
             {
@@ -277,7 +277,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
         }
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -307,7 +307,7 @@ public class LinePolygon : SpriteBatchRenderableBase, IVisible, IRenderableIpso
         mParent = parent;
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
     /// <inheritdoc/>
     public bool Visible

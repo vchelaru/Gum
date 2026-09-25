@@ -136,13 +136,13 @@ public class Sprite : SpriteBatchRenderableBase,
         }
     }
 
-    Texture2D mTexture;
+    Texture2D? mTexture;
 
 
 
     // todo:  Anim sizing
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -196,7 +196,7 @@ public class Sprite : SpriteBatchRenderableBase,
         }
     }
 
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
     public IRenderableIpso? Parent
     {
         get { return mParent; }
@@ -242,7 +242,7 @@ public class Sprite : SpriteBatchRenderableBase,
     // October 30, 2024
     // Vic asks - is this even used?
     // @VIC Read your comment above sir
-    public IAnimation Animation
+    public IAnimation? Animation
     {
         get;
         set;
@@ -276,9 +276,9 @@ public class Sprite : SpriteBatchRenderableBase,
         get { return mChildren; }
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get;
         set;
@@ -428,7 +428,7 @@ public class Sprite : SpriteBatchRenderableBase,
         // See NineSlice for explanation of this Visible check
         if (Width > 0 && Height > 0)
         {
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
             var renderer = systemManagers.Renderer;
             bool shouldTileByMultipleCalls = this.Wrap && (this as IRenderable).Wrap == false;
             if (shouldTileByMultipleCalls && this.Texture != null && RenderTargetTextureSource == null)
@@ -438,7 +438,7 @@ public class Sprite : SpriteBatchRenderableBase,
             else
             {
                 Rectangle? sourceRectangle = EffectiveRectangle;
-                Texture2D texture = Texture;
+                Texture2D? texture = Texture;
 
                 if (RenderTargetTextureSource != null)
                 {
@@ -744,7 +744,7 @@ public class Sprite : SpriteBatchRenderableBase,
 
 
 
-    public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IRenderableIpso ipso, Texture2D texture)
+    public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer, IRenderableIpso ipso, Texture2D? texture)
     {
         Color color = Color.White;
 
@@ -795,13 +795,13 @@ public class Sprite : SpriteBatchRenderableBase,
     }
 
     public static void Render(SystemManagers managers, SpriteRenderer spriteRenderer,
-        IRenderableIpso ipso, Texture2D texture, Color color,
+        IRenderableIpso ipso, Texture2D? texture, Color color,
         Rectangle? sourceRectangle = null,
         bool flipVertical = false,
         float rotationInDegrees = 0,
         bool treat0AsFullDimensions = false,
         // In the case of Text objects, we send in a line rectangle, but we want the Text object to be the owner of any resulting render states
-        object objectCausingRendering = null,
+        object? objectCausingRendering = null,
         bool flipDiagonal = false
         )
     {
@@ -1004,7 +1004,8 @@ public class Sprite : SpriteBatchRenderableBase,
 
     public void AnimationActivity(double currentTime)
     {
-        if (Animate)
+        // SpriteManager.Activity only calls this when Animation is set.
+        if (Animate && Animation != null)
         {
             Animation.AnimationActivity(currentTime);
 

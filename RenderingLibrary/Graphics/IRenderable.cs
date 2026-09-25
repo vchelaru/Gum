@@ -4,7 +4,7 @@ namespace RenderingLibrary.Graphics;
 
 public interface IRenderable
 {
-    BlendState BlendState { get; }
+    BlendState? BlendState { get; }
 
     bool Wrap { get; }
 

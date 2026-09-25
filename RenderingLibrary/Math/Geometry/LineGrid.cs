@@ -19,7 +19,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     int mRowCount = 8;
     int mColumnCount = 8;
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     #endregion
 
@@ -84,7 +84,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     }
 
 
-    public new BlendState BlendState
+    public new BlendState? BlendState
     {
         get;
         set;
@@ -103,7 +103,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
         }
     }
 
-    IRenderableIpso IRenderableIpso.Parent
+    IRenderableIpso? IRenderableIpso.Parent
     {
         get
         {
@@ -122,7 +122,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
         private set;
     } = new ObservableCollectionNoReset<IRenderableIpso>();
 
-    BlendState IRenderable.BlendState
+    BlendState? IRenderable.BlendState
     {
         get
         {
@@ -215,13 +215,13 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
         }
     }
 
-    string IPositionedSizedObject.Name
+    string? IPositionedSizedObject.Name
     {
         get;
         set;
     }
 
-    object IPositionedSizedObject.Tag
+    object? IPositionedSizedObject.Tag
     {
         get;
         set;
@@ -245,7 +245,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
     #endregion
 
 
-    public LineGrid(SystemManagers managers)
+    public LineGrid(SystemManagers? managers)
     {
         Visible = true;
         if (managers != null)
@@ -298,7 +298,7 @@ public class LineGrid : SpriteBatchRenderableBase, IRenderableIpso
         // See NineSlice for explanation of this Visible check
         //if (Visible)
         {
-            var systemManagers = managers as SystemManagers;
+            var systemManagers = (SystemManagers)managers;
             mLinePrimitive.Render(systemManagers.Renderer.SpriteRenderer, systemManagers);
         }
     }

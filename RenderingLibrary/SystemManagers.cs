@@ -50,11 +50,14 @@ public partial class SystemManagers : ISystemManagers
         System.OperatingSystem.IsAndroid() ||
             System.OperatingSystem.IsIOS();
 
+    /// <summary>
+    /// The SystemManagers created by Gum initialization (e.g. GumService.Initialize). Not usable before that.
+    /// </summary>
     public static SystemManagers Default
     {
         get;
         set;
-    }
+    } = null!;
 
 
     /// <summary>
@@ -65,33 +68,34 @@ public partial class SystemManagers : ISystemManagers
     {
         get;
         set;
-    }
+    } = null!;
 
     IRenderer ISystemManagers.Renderer => Renderer;
 
 #if !RAYLIB
+    // The managers below are created in Initialize.
     public SpriteManager SpriteManager
     {
         get;
         private set;
-    }
+    } = null!;
 
     public ShapeManager ShapeManager
     {
         get;
         // setter public for testing
         set;
-    }
+    } = null!;
 
     public TextManager TextManager
     {
         get;
         // setter public or testing
         set;
-    }
+    } = null!;
 #endif
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -258,7 +262,7 @@ public partial class SystemManagers : ISystemManagers
             // Load the default font, and then the bold, italic, and italic_bold options for bbcode
             var loadedFont = LoadEmbeddedFont("Font18Arial");
             Text.DefaultBitmapFont = loadedFont;
-            Renderer.InternalShapesTexture = loadedFont.Texture;
+            Renderer.InternalShapesTexture = loadedFont.Texture!; // the embedded font always has its page
 
             LoadEmbeddedFont("Font18Arial_Bold");
             LoadEmbeddedFont("Font18Arial_Italic");
@@ -492,7 +496,7 @@ public partial class SystemManagers : ISystemManagers
     }
 #endif
 
-    public override string ToString()
+    public override string? ToString()
     {
         return Name;
     }

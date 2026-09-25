@@ -23,7 +23,7 @@ namespace RenderingLibrary.Graphics;
 
 public class RenderStateVariables
 {
-    public BlendState BlendState;
+    public BlendState? BlendState;
     public ColorOperation ColorOperation;
     public bool Filtering;
     public bool Wrap;
@@ -81,9 +81,12 @@ public class Renderer : IRenderer
 
     RenderStateVariables mRenderStateVariables = new RenderStateVariables();
 
-    GraphicsDevice mGraphicsDevice;
+    // Null until Initialize. Headless unit tests never initialize the Renderer.
+    GraphicsDevice? mGraphicsDevice;
 
-    private RenderTargetService renderTargetService;
+    // Set in Initialize; the renderer cannot draw before that.
+
+    private RenderTargetService renderTargetService = null!;
     private bool _renderTargetSweepCompletedForHostFrame;
     private bool _allLayersPreRenderedForHostFrame;
     private bool _referencedRenderTargetsCollectedForHostFrame;
@@ -109,11 +112,11 @@ public class Renderer : IRenderer
     // Draw and the layered SubmitDrawRenderable) so Sprite.Render can look up the layer it's being
     // drawn on for its own mid-render BeginSpriteBatch calls (#4792 Gap 2's additive overlay pass),
     // without changing the IRenderableIpso.Render(ISystemManagers) interface to carry a Layer.
-    private Layer _currentRenderLayer;
+    private Layer? _currentRenderLayer;
     internal Layer CurrentRenderLayer => _currentRenderLayer ?? _layers[0];
 
-    Texture2D mSinglePixelTexture;
-    Texture2D mDottedLineTexture;
+    Texture2D mSinglePixelTexture = null!;
+    Texture2D mDottedLineTexture = null!;
 
     public static object LockObject = new object();
 
@@ -200,15 +203,19 @@ public class Renderer : IRenderer
         }
     }
 
-    internal Texture2D InternalShapesTexture { get; set; }
+    internal Texture2D InternalShapesTexture { get; set; } = null!;
 
-    public GraphicsDevice GraphicsDevice
+    public GraphicsDevice? GraphicsDevice
     {
         get
         {
             return mGraphicsDevice;
         }
     }
+
+    // Drawing requires Initialize, which sets the device.
+    internal GraphicsDevice InitializedGraphicsDevice => mGraphicsDevice ??
+        throw new InvalidOperationException("Renderer.Initialize must be called before drawing");
 
     public static Renderer Self
     {
@@ -368,13 +375,10 @@ public class Renderer : IRenderer
     {
         renderTargetService = new RenderTargetService();
 
-        if (graphicsDevice != null)
-        {
-            mCamera.ClientWidth = graphicsDevice.Viewport.Width;
-            mCamera.ClientHeight = graphicsDevice.Viewport.Height;
-            mCamera.ClientLeft = graphicsDevice.Viewport.X;
-            mCamera.ClientTop = graphicsDevice.Viewport.Y;
-        }
+        mCamera.ClientWidth = graphicsDevice.Viewport.Width;
+        mCamera.ClientHeight = graphicsDevice.Viewport.Height;
+        mCamera.ClientLeft = graphicsDevice.Viewport.X;
+        mCamera.ClientTop = graphicsDevice.Viewport.Y;
 
                 // for open gl (desktop gl) this should be 0
                 // for DirectX it should be 0.5 I believe....
@@ -407,23 +411,15 @@ public class Renderer : IRenderer
         pixels[0] = Microsoft.Xna.Framework.Color.White;
         pixels[1] = Microsoft.Xna.Framework.Color.Transparent;
         mDottedLineTexture.SetData<Microsoft.Xna.Framework.Color>(pixels);
-
-        if (GraphicsDevice != null)
-        {
-            mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
-            mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
-            mCamera.ClientLeft = GraphicsDevice.Viewport.X;
-            mCamera.ClientTop = GraphicsDevice.Viewport.Y;
-        }
     }
 
     public void Uninitialize()
     {
         mSinglePixelTexture?.Dispose();
-        mSinglePixelTexture = null;
+        mSinglePixelTexture = null!;
 
         mDottedLineTexture?.Dispose();
-        mDottedLineTexture = null;
+        mDottedLineTexture = null!;
 
         CustomEffectManager.Reset();
     }
@@ -601,7 +597,7 @@ public class Renderer : IRenderer
 #if !FNA
         if (GraphicsDevice != null)
         {
-            RenderStateChangeStatistics.AddDrawCalls((int)(GraphicsDevice.Metrics.DrawCount - drawCountBefore));
+            RenderStateChangeStatistics.AddDrawCalls((int)(InitializedGraphicsDevice.Metrics.DrawCount - drawCountBefore));
         }
 #endif
     }
@@ -620,17 +616,14 @@ public class Renderer : IRenderer
         // So that 2 controls don't render at the same time.
         lock (LockObject)
         {
-            if (GraphicsDevice != null)
-            {
-                mCamera.ClientWidth = GraphicsDevice.Viewport.Width;
-                mCamera.ClientHeight = GraphicsDevice.Viewport.Height;
-                mCamera.ClientLeft = GraphicsDevice.Viewport.X;
-                mCamera.ClientTop = GraphicsDevice.Viewport.Y;
-            }
+            mCamera.ClientWidth = InitializedGraphicsDevice.Viewport.Width;
+            mCamera.ClientHeight = InitializedGraphicsDevice.Viewport.Height;
+            mCamera.ClientLeft = InitializedGraphicsDevice.Viewport.X;
+            mCamera.ClientTop = InitializedGraphicsDevice.Viewport.Y;
 
             TrySweepUnusedRenderTargetsAtFrameBoundary();
 
-            var oldSampler = GraphicsDevice.SamplerStates[0];
+            var oldSampler = InitializedGraphicsDevice.SamplerStates[0];
 
             mRenderStateVariables.BlendState = Renderer.NormalBlendState;
             mRenderStateVariables.Wrap = false;
@@ -645,7 +638,7 @@ public class Renderer : IRenderer
 
             if (oldSampler != null)
             {
-                GraphicsDevice.SamplerStates[0] = oldSampler;
+                InitializedGraphicsDevice.SamplerStates[0] = oldSampler;
             }
         }
     }
@@ -682,7 +675,7 @@ public class Renderer : IRenderer
 
     void IRenderer.RenderLayer(RenderingLibrary.ISystemManagers managers, RenderingLibrary.Graphics.Layer layer, bool prerender)
     {
-        RenderLayer(managers as SystemManagers, layer, prerender);
+        RenderLayer((SystemManagers)managers, layer, prerender);
     }
     
 
@@ -872,7 +865,7 @@ public class Renderer : IRenderer
         if (GraphicsDevice != null)
         {
             RenderStateChangeStatistics.AddDrawCalls(
-                (int)(GraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
+                (int)(InitializedGraphicsDevice.Metrics.DrawCount - _immediateModeDrawCountBeforeCycle));
         }
 #endif
     }
@@ -991,7 +984,7 @@ public class Renderer : IRenderer
         return source;
     }
 
-    GumBatch gumBatch;
+    GumBatch? gumBatch;
 
     // True only while RenderToRenderTarget's nested Draw call is baking a subtree over a
     // transparent clear. Tells AdjustRenderStates/AdjustNonClipRenderStates to substitute
@@ -1003,12 +996,12 @@ public class Renderer : IRenderer
     {
 
 
-        Texture oldRenderTarget = null;
+        Texture? oldRenderTarget = null;
 
         // RenderTargetCount isn't supported in raw XNA or KNI
         //if (GraphicsDevice.RenderTargetCount > 0)
         //{
-            oldRenderTarget = GraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
+            oldRenderTarget = InitializedGraphicsDevice.GetRenderTargets().FirstOrDefault().RenderTarget;
         //}
         var oldCameraWidth = Camera.ClientWidth;
         var oldCameraHeight = Camera.ClientHeight;
@@ -1017,7 +1010,7 @@ public class Renderer : IRenderer
 
         var oldCameraX = Camera.X;
         var oldCameraY = Camera.Y;
-        var oldViewport = GraphicsDevice.Viewport;
+        var oldViewport = InitializedGraphicsDevice.Viewport;
 
         // Cache key must match what TryGetBakedRenderTargetFor resolves for a
         // RenderTargetTextureSource reference (#3451) — always the contained renderable, not the
@@ -1025,13 +1018,13 @@ public class Renderer : IRenderer
         // source bakes under the wrapper while the referencing Sprite looks up the raw renderable
         // and misses.
         var renderTarget = renderTargetService.GetRenderTargetFor(
-            GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
+            InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
         if(renderTarget != null)
         {
-            GraphicsDevice.SetRenderTarget(renderTarget);
+            InitializedGraphicsDevice.SetRenderTarget(renderTarget);
 
-            GraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
+            InitializedGraphicsDevice.Clear(Microsoft.Xna.Framework.Color.Transparent);
 
             var oldX = renderable.GetAbsoluteLeft();
             var oldY = renderable.GetAbsoluteTop();
@@ -1093,7 +1086,7 @@ public class Renderer : IRenderer
             _isBakingRenderTarget = false;
 
             gumBatch.End();
-            GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
+            InitializedGraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
 
             Camera.ClientWidth = oldCameraWidth;
             Camera.ClientHeight = oldCameraHeight;
@@ -1102,7 +1095,7 @@ public class Renderer : IRenderer
             Camera.ClientLeft = oldCameraClientLeft;
             Camera.ClientTop = oldCameraClientTop;
 
-            GraphicsDevice.Viewport = oldViewport;
+            InitializedGraphicsDevice.Viewport = oldViewport;
 
             // Uncomment this to test saving...
             //if (!System.IO.File.Exists("Output.png"))
@@ -1162,7 +1155,7 @@ public class Renderer : IRenderer
     }
 
 
-    Sprite renderTargetRenderableSprite = new Sprite((Texture2D)null);
+    Sprite renderTargetRenderableSprite = new Sprite((Texture2D?)null);
 
     readonly BatchOrchestrator _batchOrchestrator = new();
 
@@ -1195,7 +1188,7 @@ public class Renderer : IRenderer
             {
                 // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
                 var renderTarget = renderTargetService.GetRenderTargetFor(
-                    GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
+                    InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
                 if(renderTarget != null)
                 {
@@ -1340,7 +1333,7 @@ public class Renderer : IRenderer
     /// begin with the override, draw, then begin again with the restored ambient state so sibling
     /// renderables later in the walk aren't affected.
     /// </summary>
-    internal void DrawAdditiveColorOverlay(SystemManagers managers, IRenderableIpso ipso, Texture2D texture,
+    internal void DrawAdditiveColorOverlay(SystemManagers managers, IRenderableIpso ipso, Texture2D? texture,
         Color tintColor, Rectangle? sourceRectangle, bool flipVertical, float rotationInDegrees, bool flipDiagonal)
     {
         var layer = CurrentRenderLayer;
@@ -1375,7 +1368,7 @@ public class Renderer : IRenderer
             // call SetRenderTarget here — that only happens in PreRender / RenderToRenderTarget.
             // Resolved cache key — see the matching comment in RenderToRenderTarget (#3451).
             var renderTarget = renderTargetService.GetRenderTargetFor(
-                GraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
+                InitializedGraphicsDevice, ResolveRenderTargetCacheOwner(renderable), Camera);
 
             if (renderTarget != null)
             {
@@ -1516,15 +1509,11 @@ public class Renderer : IRenderer
 
     private void AdjustRenderStates(RenderStateVariables renderState, Layer layer, IRenderableIpso renderable, SystemManagers managers)
     {
-        BlendState renderBlendState = renderable.BlendState;
+        BlendState renderBlendState = renderable.BlendState ?? Renderer.NormalBlendState;
         bool wrap = renderable.Wrap;
         bool shouldResetStates = false;
         bool didClipChange = false;
 
-        if (renderBlendState == null)
-        {
-            renderBlendState = Renderer.NormalBlendState;
-        }
         renderBlendState = AdjustBlendStateForRenderTargetBake(renderBlendState, _isBakingRenderTarget);
         if (renderState.BlendState != renderBlendState)
         {
@@ -1727,10 +1716,10 @@ public class GumBatch
 
         State = GumBatchState.BeginCalled;
 
-        systemManagers.Renderer.Camera.ClientWidth = systemManagers.Renderer.GraphicsDevice.Viewport.Width;
-        systemManagers.Renderer.Camera.ClientHeight = systemManagers.Renderer.GraphicsDevice.Viewport.Height;
-        systemManagers.Renderer.Camera.ClientLeft = systemManagers.Renderer.GraphicsDevice.Viewport.X;
-        systemManagers.Renderer.Camera.ClientTop = systemManagers.Renderer.GraphicsDevice.Viewport.Y;
+        systemManagers.Renderer.Camera.ClientWidth = systemManagers.Renderer.InitializedGraphicsDevice.Viewport.Width;
+        systemManagers.Renderer.Camera.ClientHeight = systemManagers.Renderer.InitializedGraphicsDevice.Viewport.Height;
+        systemManagers.Renderer.Camera.ClientLeft = systemManagers.Renderer.InitializedGraphicsDevice.Viewport.X;
+        systemManagers.Renderer.Camera.ClientTop = systemManagers.Renderer.InitializedGraphicsDevice.Viewport.Y;
 
         systemManagers.Renderer.Begin(spriteBatchMatrix, mode);
     }
@@ -2068,7 +2057,7 @@ public class CustomEffectManager
     {
         #region Fields
 
-        Dictionary<Type, object> services = new Dictionary<Type, object>();
+        Dictionary<Type, object?> services = new Dictionary<Type, object?>();
 
         #endregion
 
@@ -2079,9 +2068,9 @@ public class CustomEffectManager
             services.Add(typeof(T), service);
         }
 
-        public object GetService(Type serviceType)
+        public object? GetService(Type serviceType)
         {
-            object service;
+            object? service;
 
             services.TryGetValue(serviceType, out service);
 
@@ -2091,7 +2080,7 @@ public class CustomEffectManager
         #endregion
     }
 
-    static ContentManager mContentManager;
+    static ContentManager? mContentManager;
 
     // The optional custom shader is probed for existence to avoid a noisy load exception when
     // no shader ships. The path must be anchored to baseDirectory (the app base directory, where
@@ -2245,19 +2234,20 @@ public class CustomEffectManager
         mContentManager = null;
     }
 
-    static EffectTechnique GetTechniqueVariant(bool useDefaultOrPointFilter, EffectTechnique point, EffectTechnique pointLinearized, EffectTechnique linear, EffectTechnique linearLinearized)
+    // A shader in the old format has no _LN or _Linear techniques, so a variant can be null.
+    static EffectTechnique? GetTechniqueVariant(bool useDefaultOrPointFilter, EffectTechnique? point, EffectTechnique? pointLinearized, EffectTechnique? linear, EffectTechnique? linearLinearized)
     {
         return useDefaultOrPointFilter ?
             (Renderer.LinearizeTextures ? pointLinearized : point) :
             (Renderer.LinearizeTextures ? linearLinearized : linear);
     }
 
-    public EffectTechnique GetVertexColorTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
+    public EffectTechnique? GetVertexColorTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
     {
         if (_effect == null)
             throw new InvalidOperationException("The effect hasn't been set.");
 
-        EffectTechnique technique = null!;
+        EffectTechnique? technique = null;
 
         bool useDefaultOrPointFilterInternal;
 
@@ -2332,12 +2322,12 @@ public class CustomEffectManager
         return technique;
     }
 
-    public EffectTechnique GetColorModifierTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
+    public EffectTechnique? GetColorModifierTechniqueFromColorOperation(ColorOperation value, bool? useDefaultOrPointFilter = null)
     {
         if (_effect == null)
             throw new InvalidOperationException("The effect hasn't been set.");
 
-        EffectTechnique technique = null!;
+        EffectTechnique? technique = null;
 
         bool useDefaultOrPointFilterInternal;
 
@@ -2426,7 +2416,7 @@ public class DeviceManager : IGraphicsDeviceService
     public event EventHandler<EventArgs>? DeviceDisposing;
 #pragma warning restore CS0067
 
-    private EventHandler<EventArgs> deviceReset;
+    private EventHandler<EventArgs>? deviceReset;
     event EventHandler<EventArgs> IGraphicsDeviceService.DeviceReset
     {
         add
@@ -2446,7 +2436,7 @@ public class DeviceManager : IGraphicsDeviceService
     }
 
 #pragma warning disable CS0067 // required by IGraphicsDeviceService; this wraps an existing device and never raises them
-    public event EventHandler<EventArgs> DeviceResetting;
+    public event EventHandler<EventArgs>? DeviceResetting;
 #pragma warning restore CS0067
 }
 

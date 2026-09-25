@@ -48,7 +48,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
         }
     }
 
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     protected IRenderableIpso? _parent;
     public IRenderableIpso? Parent
@@ -115,7 +115,7 @@ public abstract class RenderableBase : IVisible, IRenderableIpso,
         _parent = parent;
     }
 
-    public override string ToString()
+    public override string? ToString()
     {
         return Name;
     }

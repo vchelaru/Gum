@@ -16,7 +16,7 @@ namespace RenderingLibrary
         bool FlipHorizontal { get; set; }
         float Width { get; set; }
         float Height { get; set; }
-        string Name { get; set; }
+        string? Name { get; set; }
         object? Tag { get; set; }
     }
 

@@ -332,7 +332,7 @@ namespace RenderingLibrary
                 || bounds.Top > clip.Bottom + margin;
         }
 
-        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer layer, IRenderableIpso ipso)
+        public static System.Drawing.Rectangle GetScissorRectangleFor(this Camera camera, Layer? layer, IRenderableIpso? ipso)
         {
             if (ipso == null)
             {
@@ -364,7 +364,7 @@ namespace RenderingLibrary
         /// is still used, unmodified, to apply the actual GPU clip for ClipsChildren renderables, so
         /// this never changes what's visually cropped, only what gets culled.
         /// </summary>
-        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer layer, IRenderableIpso ipso)
+        public static System.Drawing.Rectangle GetCullTestBoundsFor(this Camera camera, Layer? layer, IRenderableIpso ipso)
         {
             if (ipso == null)
             {
@@ -417,7 +417,7 @@ namespace RenderingLibrary
         /// duplicating it.
         /// </summary>
         private static System.Drawing.Rectangle GetScissorRectangleForWorldBounds(
-            this Camera camera, Layer layer, float worldLeft, float worldTop, float worldRight, float worldBottom)
+            this Camera camera, Layer? layer, float worldLeft, float worldTop, float worldRight, float worldBottom)
         {
             float screenX, screenY;
             if (layer != null)

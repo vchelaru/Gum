@@ -24,7 +24,7 @@ namespace RenderingLibrary.Math.Geometry
             set;
         }
 
-        Texture2D mTexture;
+        Texture2D? mTexture;
 
         /// <summary>
         /// The list of points relative to the LinePrimitive (in object space)

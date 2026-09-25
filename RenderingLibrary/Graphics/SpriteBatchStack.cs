@@ -13,9 +13,9 @@ namespace RenderingLibrary.Graphics
 
     public struct StateChangeInfo
     {
-        public Texture2D Texture;
-        public SpriteFont SpriteFont;
-        public object ObjectRequestingChange;
+        public Texture2D? Texture;
+        public SpriteFont? SpriteFont;
+        public object? ObjectRequestingChange;
     }
 
     public enum BeginType
@@ -35,15 +35,15 @@ namespace RenderingLibrary.Graphics
         }
 
         public SpriteSortMode SortMode { get; set; }
-        public BlendState BlendState { get; set; }
+        public BlendState? BlendState { get; set; }
         public SamplerState SamplerState { get; set; }
         public DepthStencilState DepthStencilState { get; set; }
         public RasterizerState RasterizerState { get; set; }
-        public Effect Effect { get; set; }
+        public Effect? Effect { get; set; }
         public Microsoft.Xna.Framework.Matrix TransformMatrix { get; set; }
         public Rectangle ScissorRectangle { get; set; }
 
-        public object ObjectChangingState { get; set; }
+        public object? ObjectChangingState { get; set; }
 
         /// <summary>
         /// A list of changes that happened with these same parameters which required changing either the Texture or SpriteFont.
@@ -221,8 +221,8 @@ namespace RenderingLibrary.Graphics
         }
 
         public void PushRenderStates(SpriteSortMode sortMode,
-            BlendState blendState, SamplerState samplerState,
-            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect effect,
+            BlendState? blendState, SamplerState samplerState,
+            DepthStencilState depthStencilState, RasterizerState rasterizerState, Effect? effect,
             Microsoft.Xna.Framework.Matrix transformMatrix, Rectangle scissorRectangle,
             object? objectChangingState)
         {
@@ -251,10 +251,10 @@ namespace RenderingLibrary.Graphics
         }
 
         public void ReplaceRenderStates(SpriteSortMode sortMode,
-            BlendState blendState,
+            BlendState? blendState,
             SamplerState samplerState,
             DepthStencilState depthStencilState, RasterizerState rasterizerState,
-            Effect effect, Microsoft.Xna.Framework.Matrix transformMatrix,
+            Effect? effect, Microsoft.Xna.Framework.Matrix transformMatrix,
             Rectangle scissorRectangle,
             object? objectChangingState)
         {
@@ -342,9 +342,10 @@ namespace RenderingLibrary.Graphics
             SpriteBatch.DrawString(font, line, offset.ToXNA(), color.ToXNA());
         }
 
-        private void AdjustCurrentParametersDrawCall(Texture2D texture, SpriteFont spriteFont, object objectRequestingChange)
+        private void AdjustCurrentParametersDrawCall(Texture2D? texture, SpriteFont? spriteFont, object? objectRequestingChange)
         {
-            var paramsValue = currentParameters.Value;
+            // Draw calls only happen between Begin and End, which set currentParameters.
+            var paramsValue = currentParameters!.Value;
 
             bool shouldRecordChange = paramsValue.ChangeRecord.Count == 0;
 

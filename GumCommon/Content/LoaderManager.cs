@@ -124,7 +124,7 @@ public class LoaderManager
     /// after), because each backend's caching and disposal model differs and only the loader knows which
     /// applies.
     /// </remarks>
-    public T LoadContent<T>(string contentName)
+    public T? LoadContent<T>(string contentName)
     {
 #if FULL_DIAGNOSTICS
         if (this.ContentLoader == null)
@@ -141,7 +141,7 @@ public class LoaderManager
     /// <see cref="ContentLoader"/>, returning <c>default(T)</c> instead of throwing when the content
     /// cannot be loaded. As with <see cref="LoadContent{T}"/>, caching is handled by the loader.
     /// </summary>
-    public T TryLoadContent<T>(string contentName)
+    public T? TryLoadContent<T>(string contentName)
     {
 
 #if FULL_DIAGNOSTICS
@@ -158,7 +158,7 @@ public class LoaderManager
     /// Returns the cached asset of type <typeparamref name="T"/> stored under <paramref name="contentName"/>,
     /// or <c>default(T)</c> if none is cached. Unlike <see cref="LoadContent{T}"/>, this never loads from disk.
     /// </summary>
-    public T TryGetCachedDisposable<T>(string contentName)
+    public T? TryGetCachedDisposable<T>(string contentName)
     {
         if (mCachedDisposables.ContainsKey(contentName))
         {

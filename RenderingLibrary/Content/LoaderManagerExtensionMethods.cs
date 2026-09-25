@@ -32,7 +32,10 @@ public static class LoaderManagerExtensionMethods
                 LoaderManager.Self.RemoveWithoutDisposing(Text.DefaultBitmapFont);
                 foreach(var texture in Text.DefaultBitmapFont.Textures)
                 {
-                    LoaderManager.Self.RemoveWithoutDisposing(texture);
+                    if (texture != null)
+                    {
+                        LoaderManager.Self.RemoveWithoutDisposing(texture);
+                    }
                 }
             }
             else
@@ -51,7 +54,10 @@ public static class LoaderManagerExtensionMethods
             Sprite.InvalidTexture = loaderManager.LoadContent<Texture2D>(invalidTextureLocation);
             // Remove the loaded contnet from the loaderManager so it is never accidentally disposed
             // when we clear cache
-            loaderManager.RemoveWithoutDisposing(Sprite.InvalidTexture);
+            if (Sprite.InvalidTexture != null)
+            {
+                loaderManager.RemoveWithoutDisposing(Sprite.InvalidTexture);
+            }
         }
         else
         {
