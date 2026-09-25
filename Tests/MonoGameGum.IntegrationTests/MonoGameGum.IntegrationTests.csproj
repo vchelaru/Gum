@@ -7,6 +7,9 @@
 
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
+		<!-- Every test here creates a MonoGame window, which macOS only allows on the process main
+		     thread. xunit owns that thread, so on macOS the run aborts. CI runs these on Windows. #5025 tracks running them on macOS. -->
+		<IsTestProject Condition="$([MSBuild]::IsOSPlatform('OSX'))">false</IsTestProject>
 		<Configurations>Debug;Release;Release_No_Diagnostics</Configurations>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
@@ -43,4 +46,7 @@
 		<Using Include="Xunit" />
 	</ItemGroup>
 
+	<Target Name="ReportSkippedOnMacOS" BeforeTargets="VSTest" Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+		<Message Importance="high" Text="MonoGameGum.IntegrationTests: skipped on macOS (a MonoGame window needs the main thread). CI runs them on Windows." />
+	</Target>
 </Project>
