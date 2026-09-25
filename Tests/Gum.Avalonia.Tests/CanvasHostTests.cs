@@ -20,13 +20,13 @@ namespace Gum.Avalonia.Tests;
 /// skipped on a headless machine and on CI runners unless <c>GUM_RUN_CANVAS_DEVICE_TESTS=1</c>
 /// opts in (the Linux CI job does, under Xvfb with Mesa's software GL). A GPU-less runner is not
 /// merely slow: KNI's device creation fails there and the half-built device's finalizer crashes
-/// the whole test host.
+/// the whole test host. They never run on macOS (see <see cref="TestEnvironment.CanCreateDeviceInProcess"/>).
 /// </summary>
 public class CanvasHostTests
 {
-    private const string SkipReason = "needs a display and a GL driver; set GUM_RUN_CANVAS_DEVICE_TESTS=1 to run on CI";
+    private const string SkipReason = "needs a display and a GL driver, and not macOS; set GUM_RUN_CANVAS_DEVICE_TESTS=1 to run on CI";
 
-    private static bool HasDisplay => TestEnvironment.CanUseDisplay("GUM_RUN_CANVAS_DEVICE_TESTS");
+    private static bool HasDisplay => TestEnvironment.CanCreateDeviceInProcess("GUM_RUN_CANVAS_DEVICE_TESTS");
 
     // The shared KNI GL device belongs to the thread that created it, and the head creates it on
     // the Avalonia UI thread, so device tests run there too instead of on an xunit worker.
