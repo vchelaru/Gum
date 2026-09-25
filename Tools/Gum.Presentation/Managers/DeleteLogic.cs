@@ -29,6 +29,10 @@ public class DeleteLogic : IDeleteLogic
     // Lazy: UndoManager depends on RenameLogic, which depends on this class.
     private readonly Lazy<IUndoManager> _undoManager;
 
+    // Deleting from the project only happens while one is open.
+    private GumProjectSave LoadedProject =>
+        _deleteProjectProvider.GumProjectSave ?? throw new InvalidOperationException("No Gum project is loaded.");
+
     public DeleteLogic(
         ISelectedState selectedState,
         IDialogService dialogService,
@@ -102,7 +106,7 @@ public class DeleteLogic : IDeleteLogic
         var selectedInstance = _selectedState.SelectedInstance;
         var selectedBehavior = _selectedState.SelectedBehavior;
 
-        var selectedStateContainer = (IStateContainer)selectedElements.FirstOrDefault() ?? selectedBehavior;
+        var selectedStateContainer = (IStateContainer?)selectedElements.FirstOrDefault() ?? selectedBehavior;
 
         if (_selectedState.SelectedInstances.Count() > 1)
         {
@@ -209,7 +213,8 @@ public class DeleteLogic : IDeleteLogic
             shouldDelete = selectedInstance.DefinedByBase == false;
         }
 
-        if (shouldDelete)
+        // shouldDelete means objectsDeleted has items.
+        if (shouldDelete && objectsDeleted != null)
         {
             _deleteDialogService.NotifyConfirmed(deleteDialogResult!, objectsDeleted);
         }
@@ -717,7 +722,7 @@ public class DeleteLogic : IDeleteLogic
         {
             var behaviorNames = componentSave.Behaviors.Select(item => item.BehaviorName);
 
-            foreach (var behavior in _deleteProjectProvider.GumProjectSave.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
+            foreach (var behavior in LoadedProject.Behaviors.Where(item => behaviorNames.Contains(item.Name)))
             {
                 bool needsCategory = behavior.Categories.Any(item => item.Name == category.Name);
 
@@ -737,7 +742,9 @@ public class DeleteLogic : IDeleteLogic
         var shouldSelectAfterRemoval = stateSave == _selectedState.SelectedStateSave;
         int index = stateCategory?.States.IndexOf(stateSave) ?? -1;
 
-        RemoveState(stateSave, _selectedState.SelectedStateContainer);
+        // Deleting a state starts from the selected element or behavior.
+        RemoveState(stateSave, _selectedState.SelectedStateContainer
+            ?? throw new InvalidOperationException("No element or behavior is selected"));
         _deletePluginNotifier.StateDelete(stateSave);
 
         _guiCommands.RefreshVariables();
@@ -746,7 +753,8 @@ public class DeleteLogic : IDeleteLogic
         if (shouldSelectAfterRemoval)
         {
             int? newIndex = null;
-            if (index != -1)
+            // index is only found when there is a category.
+            if (index != -1 && stateCategory != null)
             {
                 if (index < stateCategory.States.Count)
                 {
@@ -763,7 +771,7 @@ public class DeleteLogic : IDeleteLogic
                 _selectedState.SelectedStateCategorySave = stateCategory;
                 _selectedState.SelectedStateSave = null;
             }
-            else if (newIndex != null)
+            else if (newIndex != null && stateCategory != null)
             {
                 _selectedState.SelectedStateSave = stateCategory.States[newIndex.Value];
             }
@@ -948,7 +956,7 @@ public class DeleteLogic : IDeleteLogic
 
     public void RemoveElement(ElementSave element)
     {
-        var gps = _deleteProjectProvider.GumProjectSave;
+        var gps = LoadedProject;
         var name = element.Name;
         var removed = false;
 
@@ -991,13 +999,13 @@ public class DeleteLogic : IDeleteLogic
     public void RemoveBehavior(BehaviorSave behavior)
     {
         var behaviorName = behavior.Name;
-        var gps = _deleteProjectProvider.GumProjectSave;
+        var gps = LoadedProject;
 
         gps.BehaviorReferences.RemoveAll(item => item.Name == behaviorName);
         gps.Behaviors.Remove(behavior);
 
         var elementsReferencingBehavior = new List<ElementSave>();
-        foreach (var element in ObjectFinder.Self.GumProjectSave.AllElements)
+        foreach (var element in ObjectFinder.Self.GumProjectSave?.AllElements ?? Enumerable.Empty<ElementSave>())
         {
             var matchingBehavior = element.Behaviors.FirstOrDefault(item => item.BehaviorName == behaviorName);
             if (matchingBehavior != null)
@@ -1085,7 +1093,8 @@ public class DeleteLogic : IDeleteLogic
 
         foreach (var node in folderNodes)
         {
-            string fullPath = node.GetFullFilePath().FullPath;
+            // Folder nodes always have a path on disk.
+            string fullPath = node.GetFullFilePath()!.FullPath;
             string? blocker = GetFolderDeletionBlocker(fullPath);
 
             if (blocker != null)

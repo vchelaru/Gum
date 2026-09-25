@@ -132,7 +132,7 @@ public class DragDropManager : IDragDropManager
 
     #region Drop Element (like components) on TreeView
 
-    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
+    private void HandleDroppedElementSave(object draggedComponentOrElement, ITreeNode treeNodeDroppedOn, object? targetTag, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {
         ElementSave draggedAsElementSave = (ElementSave)draggedComponentOrElement;
 
@@ -176,18 +176,19 @@ public class DragDropManager : IDragDropManager
         {
             var fullFolderPath = treeNodeDroppedOn.GetFullFilePath();
 
-            var fullElementFilePath = GetFullPathXmlFile(draggedAsElementSave).GetDirectoryContainingThis();
+            var fullElementFilePath = GetFullPathXmlFile(draggedAsElementSave)?.GetDirectoryContainingThis();
 
-            if(fullFolderPath != fullElementFilePath)
+            // Folder nodes only exist once the project is saved, so both paths are known here.
+            if(fullFolderPath != null && fullElementFilePath != null && fullFolderPath != fullElementFilePath)
             {
-                var projectFolder = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
+                var projectFolder = FileManager.GetDirectory(_projectManager.GetLoadedProject().FullFileName);
 
                 string nodeRelativeToProject = FileManager.MakeRelative(fullFolderPath.FullPath, projectFolder + draggedAsElementSave.Subfolder + "/", preserveCase:true)
                     .Replace("\\", "/");
 
                 string oldName = draggedAsElementSave.Name;
                 draggedAsElementSave.Name = nodeRelativeToProject + FileManager.RemovePath(draggedAsElementSave.Name);
-                _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null,  oldName, NameChangeAction.Move);
+                _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave?)null,  oldName, NameChangeAction.Move);
             }
 
         }
@@ -204,7 +205,7 @@ public class DragDropManager : IDragDropManager
         {
             // It's in a directory, we're going to move it out
             draggedAsElementSave.Name = FileManager.RemovePath(name);
-            _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave)null, name, NameChangeAction.Move);
+            _renameLogic.HandleRename(draggedAsElementSave, (InstanceSave?)null, name, NameChangeAction.Move);
         }
     }
 
@@ -291,8 +292,9 @@ public class DragDropManager : IDragDropManager
 
     private void HandleDroppedInstance(object draggedObject, ITreeNode targetTreeNode, DropTarget? dropTarget)
     {
-        object targetObject = targetTreeNode.Tag;
+        object? targetObject = targetTreeNode.Tag;
 
+        // The caller only sends instances here.
         InstanceSave draggedAsInstanceSave = (InstanceSave)draggedObject;
 
         var targetElementSave = targetObject as ElementSave;
@@ -303,16 +305,11 @@ public class DragDropManager : IDragDropManager
         }
 
 
-        bool isSameElement = draggedAsInstanceSave != null && targetElementSave == draggedAsInstanceSave.ParentContainer;
+        bool isSameElement = targetElementSave == draggedAsInstanceSave.ParentContainer;
 
         if (targetElementSave != null)
         {
-            var canBeAdded = true;
-
-            if(draggedAsInstanceSave != null)
-            {
-                canBeAdded = _circularReferenceManager.CanTypeBeAddedToElement(targetElementSave, draggedAsInstanceSave.BaseType);
-            }
+            var canBeAdded = _circularReferenceManager.CanTypeBeAddedToElement(targetElementSave, draggedAsInstanceSave.BaseType);
 
             if (!canBeAdded)
             {
@@ -637,7 +634,7 @@ public class DragDropManager : IDragDropManager
             {
                 var fullFolderPath = targetTreeNode.GetFullFilePath();
 
-                var fullElementFilePath = GetFullPathXmlFile(draggedElement).GetDirectoryContainingThis();
+                var fullElementFilePath = GetFullPathXmlFile(draggedElement)?.GetDirectoryContainingThis();
 
                 // If not equal, it was moved to a different folder, which is allowed:
                 return fullFolderPath != fullElementFilePath;
@@ -711,7 +708,7 @@ public class DragDropManager : IDragDropManager
         var targetPath = targetTreeNode.GetFullFilePath();
 
         // Cannot drop onto itself
-        if (draggedPath == targetPath)
+        if (draggedPath == null || targetPath == null || draggedPath == targetPath)
         {
             return false;
         }
@@ -802,8 +799,9 @@ public class DragDropManager : IDragDropManager
             return;
         }
 
+        // Folder nodes only exist once the project is saved.
         string projectFolder =
-            FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
+            FileManager.GetDirectory(_projectManager.GetLoadedProject().FullFileName);
 
         string subfolder;
         IEnumerable<ElementSave> elements;
@@ -811,12 +809,12 @@ public class DragDropManager : IDragDropManager
         if (draggedFolderNode.IsComponentsFolderTreeNode())
         {
             subfolder = ElementReference.ComponentSubfolder;
-            elements = _projectState.GumProjectSave.Components;
+            elements = _projectState.GetLoadedProject().Components;
         }
         else if (draggedFolderNode.IsScreensFolderTreeNode())
         {
             subfolder = ElementReference.ScreenSubfolder;
-            elements = _projectState.GumProjectSave.Screens;
+            elements = _projectState.GetLoadedProject().Screens;
         }
         else
         {
@@ -887,7 +885,7 @@ public class DragDropManager : IDragDropManager
         Console.WriteLine($"Dropping{draggedObject} on {treeNodeDroppedOn}");
         if (treeNodeDroppedOn != null)
         {
-            object targetTag = treeNodeDroppedOn.Tag;
+            object? targetTag = treeNodeDroppedOn.Tag;
 
             if (draggedObject == null)
             {
@@ -1008,12 +1006,12 @@ public class DragDropManager : IDragDropManager
         float containerLeft = 0;
         float containerTop = 0;
 
-        float containerWidth = _projectState.GumProjectSave.DefaultCanvasWidth;
-        float containerHeight = _projectState.GumProjectSave.DefaultCanvasHeight;
+        var project = _projectState.GetLoadedProject();
+        float containerWidth = project.DefaultCanvasWidth;
+        float containerHeight = project.DefaultCanvasHeight;
 
-        if (component != null)
+        if (component != null && _wireframeObjectManager.GetRepresentation(component) is { } runtime)
         {
-            var runtime = _wireframeObjectManager.GetRepresentation(component);
             containerLeft = runtime.GetAbsoluteLeft();
             containerTop = runtime.GetAbsoluteTop();
 
@@ -1048,18 +1046,20 @@ public class DragDropManager : IDragDropManager
 
 
 
-        var instanceXUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
+        // The instance was just added and selected, which selects a state.
+        StateSave selectedStateSave = _selectedState.SelectedStateSave!;
+        var instanceXUnits = (PositionUnitType)selectedStateSave.GetValueRecursive($"{instance.Name}.XUnits");
         var asGeneralXUnitType = UnitConverter.ConvertToGeneralUnit(instanceXUnits);
         xToSet = UnitConverter.Self.ConvertXPosition(differenceX, GeneralUnitType.PixelsFromSmall, asGeneralXUnitType, containerWidth);
 
         var differenceY = worldY - containerTop;
-        var instanceYUnits = (PositionUnitType)_selectedState.SelectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
+        var instanceYUnits = (PositionUnitType)selectedStateSave.GetValueRecursive($"{instance.Name}.YUnits");
         var asGeneralYUnitType = UnitConverter.ConvertToGeneralUnit(instanceYUnits);
         yToSet = UnitConverter.Self.ConvertYPosition(differenceY, GeneralUnitType.PixelsFromSmall, asGeneralYUnitType, containerHeight);
 
 
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".X", xToSet, "float");
-        _selectedState.SelectedStateSave.SetValue(instance.Name + ".Y", yToSet, "float");
+        selectedStateSave.SetValue(instance.Name + ".X", xToSet, "float");
+        selectedStateSave.SetValue(instance.Name + ".Y", yToSet, "float");
     }
 
     #endregion

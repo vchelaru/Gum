@@ -73,7 +73,7 @@ public class FileCommands : IFileCommands
     /// Saves the current Behavior or Element
     /// </summary>
 
-    public FilePath? ProjectDirectory => FileManager.RelativeDirectory;
+    public FilePath ProjectDirectory => FileManager.RelativeDirectory;
 
     public void DeleteDirectory(FilePath directory) =>
         FileManager.DeleteDirectory(directory.FullPath);
@@ -226,7 +226,7 @@ public class FileCommands : IFileCommands
 
         var succeeded = _projectManager.SaveProject(forceSaveContainedElements);
 
-        if (string.IsNullOrEmpty(_projectState.GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(_projectState.GumProjectSave?.FullFileName))
         {
             // The user most likely canceled the save, as such, we have no filename
             // Do nothing, do not error.
@@ -309,7 +309,8 @@ public class FileCommands : IFileCommands
             {
                 _pluginManager.BeforeSavingElementSave(elementSave);
 
-                var fileName = GetFullPathXmlFileForElement(elementSave, elementSave.Name);
+                // shouldSave means the project has a file name, and so a path for the element.
+                var fileName = GetFullPathXmlFileForElement(elementSave, elementSave.Name)!;
 
                 // if it's readonly, let's warn the user
                 bool isReadOnly = IsFileReadOnly(fileName.FullPath);
@@ -327,7 +328,7 @@ public class FileCommands : IFileCommands
                     int numberOfTimesTried = 0;
 
                     succeeded = false;
-                    Exception exception = null;
+                    Exception? exception = null;
 
                     while (numberOfTimesTried < maxNumberOfTries)
                     {
@@ -349,7 +350,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception?.ToString());
                         succeeded = false;
                     }
                 }
@@ -369,7 +370,7 @@ public class FileCommands : IFileCommands
         return _projectManager.LoadProjectAsync(fileName);
     }
 
-    public FilePath GetFullFileName(ElementSave element)
+    public FilePath? GetFullFileName(ElementSave element)
     {
         return GetFullPathXmlFileForElement(element, element.Name);
     }
@@ -449,8 +450,9 @@ public class FileCommands : IFileCommands
         //     warnings route to the Output tab.
         //   * Mixed CSV+RESX or multiple CSVs: rejected with an Output-tab error because
         //     the runtime has no merge API for those shapes today.
-        var projectFiles = _projectState.GumProjectSave.LocalizationFiles;
-        if (projectFiles == null || projectFiles.Count == 0)
+        var gumProject = _projectState.GumProjectSave;
+        var projectFiles = gumProject?.LocalizationFiles;
+        if (gumProject == null || projectFiles == null || projectFiles.Count == 0)
         {
             _guiCommands.RefreshVariables();
             LocalizationLoaded?.Invoke();
@@ -537,7 +539,7 @@ public class FileCommands : IFileCommands
                 }
             }
 
-            _localizationService.CurrentLanguage = _projectState.GumProjectSave.CurrentLanguageIndex;
+            _localizationService.CurrentLanguage = gumProject.CurrentLanguageIndex;
         }
         catch (Exception e)
         {
@@ -575,27 +577,30 @@ public class FileCommands : IFileCommands
             {
                 //PluginManager.Self.BeforeBehaviorSave(behavior);
 
-                string fileName = GetFullPathXmlFile( behavior).FullPath;
+                // shouldSave means the project has a file name, and so a path for the behavior.
+                GumProjectSave project = _projectManager.GetLoadedProject();
+                string fileName = GetFullPathXmlFile( behavior)!.FullPath;
 
                 // A SourcePath-linked behavior's DefaultImplementation is per-project (each theme
                 // has its own default visual) even though the rest of the behavior is shared.
                 // Never let one project's save write its DefaultImplementation into the shared
                 // file - capture it as a reference-level override instead, and restore whatever
                 // DefaultImplementation is already on disk before writing.
-                var matchingReference = _projectManager.GumProjectSave.BehaviorReferences
+                var matchingReference = project.BehaviorReferences
                     ?.FirstOrDefault(item => item.Name == behavior.Name);
-                bool isLinkedBehavior = matchingReference != null && !string.IsNullOrEmpty(matchingReference.SourcePath);
-                string userIntendedDefaultImplementation = behavior.DefaultImplementation;
+                var linkedReference = !string.IsNullOrEmpty(matchingReference?.SourcePath) ? matchingReference : null;
+                bool isLinkedBehavior = linkedReference != null;
+                string? userIntendedDefaultImplementation = behavior.DefaultImplementation;
 
-                if (isLinkedBehavior)
+                if (linkedReference != null)
                 {
-                    matchingReference.DefaultImplementationOverride = userIntendedDefaultImplementation;
+                    linkedReference.DefaultImplementationOverride = userIntendedDefaultImplementation;
 
-                    string sharedDefaultImplementationOnDisk = null;
+                    string? sharedDefaultImplementationOnDisk = null;
                     if (FileManager.FileExists(fileName))
                     {
                         sharedDefaultImplementationOnDisk = BehaviorReference
-                            .DeserializeBehavior(fileName, _projectState.GumProjectSave.Version)
+                            .DeserializeBehavior(fileName, project.Version)
                             .DefaultImplementation;
                     }
                     behavior.DefaultImplementation = sharedDefaultImplementationOnDisk;
@@ -616,7 +621,7 @@ public class FileCommands : IFileCommands
                     int numberOfTimesTried = 0;
 
                     succeeded = false;
-                    Exception exception = null;
+                    Exception? exception = null;
 
                     while (numberOfTimesTried < maxNumberOfTries)
                     {
@@ -639,7 +644,7 @@ public class FileCommands : IFileCommands
 
                     if (succeeded == false)
                     {
-                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception.ToString());
+                        _dialogService.ShowMessage("Unknown error trying to save the file\n\n" + fileName + "\n\n" + exception?.ToString());
                         succeeded = false;
                     }
                 }
@@ -666,26 +671,27 @@ public class FileCommands : IFileCommands
 
     }
 
-    public FilePath GetFullPathXmlFile(BehaviorSave behaviorSave)
+    public FilePath? GetFullPathXmlFile(BehaviorSave behaviorSave)
     {
-        return GetFullPathXmlFile(behaviorSave, behaviorSave.Name);
+        return GetFullPathXmlFile(behaviorSave, behaviorSave.Name) is { } path ? new FilePath(path) : null;
     }
 
-    string GetFullPathXmlFile(BehaviorSave behaviorSave, string behaviorName)
+    string? GetFullPathXmlFile(BehaviorSave behaviorSave, string behaviorName)
     {
-        if (string.IsNullOrEmpty(_projectManager.GumProjectSave.FullFileName))
+        var gumProject = _projectManager.GumProjectSave;
+        if (gumProject == null || string.IsNullOrEmpty(gumProject.FullFileName))
         {
             return null;
         }
 
-        string directory = FileManager.GetDirectory(_projectManager.GumProjectSave.FullFileName);
+        string directory = FileManager.GetDirectory(gumProject.FullFileName);
 
-        var matchingReference = _projectManager.GumProjectSave.BehaviorReferences
+        var matchingReference = gumProject.BehaviorReferences
             ?.FirstOrDefault(item => item.Name == behaviorName);
 
         // Same project-format routing as the element overload above (issue #4595): a .gumj project
         // stores behaviors as .behj, and saving to .behx would write content it never loads back.
-        bool isJsonFormat = GumProjectSave.IsJsonFormat(_projectManager.GumProjectSave.FullFileName);
+        bool isJsonFormat = GumProjectSave.IsJsonFormat(gumProject.FullFileName);
 
         string relativeFilePath = matchingReference != null
             ? matchingReference.GetRelativeFilePath(isJsonFormat)

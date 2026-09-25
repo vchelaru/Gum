@@ -334,7 +334,7 @@ public class NameVerifierTests : BaseTestClass
     {
         StateSaveCategory category = new();
         StateSave state = new();
-        bool isValid = _nameVerifier.IsStateNameValid(category.Name, category, state, out _);
+        bool isValid = _nameVerifier.IsStateNameValid("Highlighted", category, state, out _);
         isValid.ShouldBeTrue();
     }
     
@@ -349,6 +349,22 @@ public class NameVerifierTests : BaseTestClass
                               "This would cause compiler errors when generating Forms code.");
         
         whyNotValid.ShouldBe("State name cannot be the same as its category's");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" Leading")]
+    [InlineData("My-State")]
+    public void IsStateNameValid_ShouldBeFalse_ForNamesTheCommonRulesReject(string name)
+    {
+        StateSaveCategory category = new() { Name = "CategoryName" };
+        StateSave state = new() { Name = "Existing" };
+        category.States.Add(state);
+
+        bool isValid = _nameVerifier.IsStateNameValid(name, category, state, out string? whyNotValid);
+
+        isValid.ShouldBeFalse();
+        whyNotValid.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]

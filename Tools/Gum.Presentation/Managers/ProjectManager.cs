@@ -320,7 +320,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             _gumProjectSave = null;
         }
 
-        string errors = result.ErrorMessage;
+        string? errors = result.ErrorMessage;
 
         if (!string.IsNullOrEmpty(errors))
         {
@@ -344,7 +344,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
         ObjectFinder.Self.GumProjectSave = _gumProjectSave;
 
-        _filePickingFolderProvider.FolderRelativeTo = fileName.GetDirectoryContainingThis().FullPath;
+        // A project file path is absolute, so it always has a containing directory.
+        _filePickingFolderProvider.FolderRelativeTo = fileName.GetDirectoryContainingThis()!.FullPath;
 
         if (_gumProjectSave != null)
         {
@@ -415,7 +416,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             }
             ObjectFinder.Self.DisableCache();
 
-            FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis().FullPath;
+            FileManager.RelativeDirectory = fileName.GetDirectoryContainingThis()!.FullPath;
             _gumProjectSave.RemoveDuplicateVariables();
 
 
@@ -499,7 +500,8 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
     internal void CopyLinkedComponents(GumProjectSave gumProjectSave)
     {
-        var gumDirectory = new FilePath(gumProjectSave.FullFileName).GetDirectoryContainingThis();
+        // A project file path is absolute, so it always has a containing directory.
+        var gumDirectory = new FilePath(gumProjectSave.FullFileName).GetDirectoryContainingThis()!;
         var isJsonFormat = GumProjectSave.IsJsonFormat(gumProjectSave.FullFileName);
 
         void CopyReference(ElementReference reference)
@@ -600,7 +602,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     {
         var wasAnythingAdded = false;
 
-        foreach (var component in _gumProjectSave.Components)
+        foreach (var component in this.GetLoadedProject().Components)
         {
             List<InstanceSave> necessaryInstances = new List<InstanceSave>();
             FillWithNecessaryInstances(component, necessaryInstances);
@@ -649,9 +651,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
             bool isNewProject;
             bool shouldSave = AskUserForProjectNameIfNecessary(out isNewProject);
 
-            if (shouldSave)
+            // shouldSave means a project is loaded and has a file name.
+            if (shouldSave && GumProjectSave is { } project)
             {
-                _pluginManager.BeforeSavingProjectSave(GumProjectSave);
+                _pluginManager.BeforeSavingProjectSave(project);
 
                 _elementCommands.Value.SortVariables();
 
@@ -660,43 +663,52 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 try
                 {
 
-                    _fileWatchManager.Value.IgnoreNextChangeUntil(GumProjectSave.FullFileName);
+                    _fileWatchManager.Value.IgnoreNextChangeUntil(project.FullFileName);
 
                     if (saveContainedElements)
                     {
-                        foreach (var screenSave in GumProjectSave.Screens)
+                        foreach (var screenSave in project.Screens)
                         {
                             _pluginManager.BeforeSavingElementSave(screenSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(screenSave, screenSave.Name));
+                            if (_fileCommands.Value.GetFullPathXmlFile(screenSave, screenSave.Name) is { } screenSavePath)
+                            {
+                                _fileWatchManager.Value.IgnoreNextChangeUntil(screenSavePath);
+                            }
                         }
-                        foreach (var componentSave in GumProjectSave.Components)
+                        foreach (var componentSave in project.Components)
                         {
                             _pluginManager.BeforeSavingElementSave(componentSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(componentSave, componentSave.Name));
+                            if (_fileCommands.Value.GetFullPathXmlFile(componentSave, componentSave.Name) is { } componentSavePath)
+                            {
+                                _fileWatchManager.Value.IgnoreNextChangeUntil(componentSavePath);
+                            }
                         }
-                        foreach (var standardElementSave in GumProjectSave.StandardElements)
+                        foreach (var standardElementSave in project.StandardElements)
                         {
                             _pluginManager.BeforeSavingElementSave(standardElementSave);
-                            _fileWatchManager.Value.IgnoreNextChangeUntil(_fileCommands.Value.GetFullPathXmlFile(standardElementSave, standardElementSave.Name));
+                            if (_fileCommands.Value.GetFullPathXmlFile(standardElementSave, standardElementSave.Name) is { } standardElementSavePath)
+                            {
+                                _fileWatchManager.Value.IgnoreNextChangeUntil(standardElementSavePath);
+                            }
                         }
                     }
 
                     // todo - this should go through the plugin...
 
-                    _retryService.TryMultipleTimes(() => GumProjectSave.Save(GumProjectSave.FullFileName, saveContainedElements));
+                    _retryService.TryMultipleTimes(() => project.Save(project.FullFileName, saveContainedElements));
                     succeeded = true;
 
                     if (succeeded && saveContainedElements)
                     {
-                        foreach (var screenSave in GumProjectSave.Screens)
+                        foreach (var screenSave in project.Screens)
                         {
                             _pluginManager.AfterSavingElementSave(screenSave);
                         }
-                        foreach (var componentSave in GumProjectSave.Components)
+                        foreach (var componentSave in project.Components)
                         {
                             _pluginManager.AfterSavingElementSave(componentSave);
                         }
-                        foreach (var standardElementSave in GumProjectSave.StandardElements)
+                        foreach (var standardElementSave in project.StandardElements)
                         {
                             _pluginManager.AfterSavingElementSave(standardElementSave);
                         }
@@ -707,12 +719,12 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     // Keep the project's own extension so the fallback copy saves in the same format
                     // (and stays loadable). "s" formats as 2026-09-03T12:34:56, whose colons are
                     // illegal in a Windows file name, so use a colon-free stamp (issue #4595).
-                    var tempFileName = FileManager.RemoveExtension(GumProjectSave.FullFileName)
+                    var tempFileName = FileManager.RemoveExtension(project.FullFileName)
                         + DateTime.Now.ToString("yyyy-MM-ddTHH-mm-ss")
-                        + "." + FileManager.GetExtension(GumProjectSave.FullFileName);
-                    _retryService.TryMultipleTimes(() => GumProjectSave.Save(tempFileName, saveContainedElements));
+                        + "." + FileManager.GetExtension(project.FullFileName);
+                    _retryService.TryMultipleTimes(() => project.Save(tempFileName, saveContainedElements));
 
-                    string fileName = TryGetFileNameFromException(exception);
+                    string? fileName = TryGetFileNameFromException(exception);
                     if (fileName != null && IsFileReadOnly(fileName))
                     {
                         ShowReadOnlyDialog(fileName);
@@ -724,13 +736,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 }
 
                 // This may be the first time the file is being saved.  If so, we should make it relative
-                FileManager.RelativeDirectory = FileManager.GetDirectory(GumProjectSave.FullFileName);
+                FileManager.RelativeDirectory = FileManager.GetDirectory(project.FullFileName);
 
                 if (succeeded)
                 {
-                    _pluginManager.ProjectSave(GumProjectSave);
-                    GeneralSettingsFile.AddToRecentFilesIfNew(GumProjectSave.FullFileName);
-                    GeneralSettingsFile.LastProject = GumProjectSave.FullFileName;
+                    _pluginManager.ProjectSave(project);
+                    GeneralSettingsFile.AddToRecentFilesIfNew(project.FullFileName);
+                    GeneralSettingsFile.LastProject = project.FullFileName;
                     GeneralSettingsFile.Save();
                 }
             }
@@ -740,7 +752,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     }
 
 
-    private static string TryGetFileNameFromException(UnauthorizedAccessException exception)
+    private static string? TryGetFileNameFromException(UnauthorizedAccessException exception)
     {
         string message = exception.Message;
 
@@ -765,9 +777,14 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     public bool AskUserForProjectNameIfNecessary(out bool isProjectNew)
     {
         isProjectNew = false;
+        // With no project loaded there is nothing to save.
+        if (GumProjectSave is not { } project)
+        {
+            return false;
+        }
         bool shouldSave = true;
         // If it's null, that means the user hasn't saved this file yet
-        if (string.IsNullOrEmpty(GumProjectSave.FullFileName))
+        if (string.IsNullOrEmpty(project.FullFileName))
         {
             shouldSave = false;
 
@@ -793,7 +810,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 FilePath desiredLocation = chosenFileName!;
                 var directory = desiredLocation.GetDirectoryContainingThis();
 
-                if(directory.Exists())
+                if(directory?.Exists() == true)
                 {
                     var files = System.IO.Directory.GetFiles(directory.FullPath);
                     var directories = System.IO.Directory.GetDirectories(directory.FullPath);
@@ -811,10 +828,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
 
             if(shouldProceed)
             {
-                GumProjectSave.FullFileName = chosenFileName!;
+                project.FullFileName = chosenFileName!;
                 var filePath = new FilePath(chosenFileName!);
                 _pluginManager.ProjectLocationSet(filePath);
-                _filePickingFolderProvider.FolderRelativeTo = filePath.GetDirectoryContainingThis().FullPath;
+                // The save dialog returns an absolute path, so it has a containing directory.
+                _filePickingFolderProvider.FolderRelativeTo = filePath.GetDirectoryContainingThis()!.FullPath;
 
                 shouldSave = true;
                 isProjectNew = true;

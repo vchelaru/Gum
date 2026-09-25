@@ -217,7 +217,7 @@ public class HotkeyManager : IHotkeyManager
                     InitialValue = oldName,
                     PreSelect = true,
                     Validator = v =>
-                        _nameVerifier.IsInstanceNameValid(v, selectedInstance, selectedInstance.ParentContainer, out string whyNotValid)
+                        _nameVerifier.IsInstanceNameValid(v, selectedInstance, selectedInstance.ParentContainer, out string? whyNotValid)
                             ? null
                             : whyNotValid
                 };
@@ -298,14 +298,14 @@ public class HotkeyManager : IHotkeyManager
     {
         if (GoToDefinition.IsPressed(e))
         {
-            DataTypes.ElementSave elementToGoTo = null;
+            DataTypes.ElementSave? elementToGoTo = null;
             if (_selectedState.SelectedInstance != null)
             {
                 elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
             }
-            else if (!string.IsNullOrWhiteSpace(_selectedState.SelectedElement?.BaseType))
+            else if (_selectedState.SelectedElement?.BaseType is { } baseType && !string.IsNullOrWhiteSpace(baseType))
             {
-                elementToGoTo = ObjectFinder.Self.GetElementSave(_selectedState.SelectedElement.BaseType);
+                elementToGoTo = ObjectFinder.Self.GetElementSave(baseType);
             }
 
             if (elementToGoTo != null)
@@ -419,8 +419,15 @@ public class HotkeyManager : IHotkeyManager
         if (nudgeX != 0 || nudgeY != 0)
         {
             var instance = _selectedState.SelectedInstance;
+            var element = _selectedState.SelectedElement;
 
             if (instance?.Locked == true)
+            {
+                return false;
+            }
+
+            // A behavior's instances have no element and no position to nudge.
+            if (instance != null && element == null)
             {
                 return false;
             }
@@ -431,11 +438,9 @@ public class HotkeyManager : IHotkeyManager
                 _undoManager.RecordState();
             }
 
-            var element = _selectedState.SelectedElement;
-
             float oldX = 0;
             float oldY = 0;
-            if(instance != null)
+            if(instance != null && element != null)
             {
                 oldX = (float)instance.GetValueFromThisOrBase(element, "X");
                 oldY = (float)instance.GetValueFromThisOrBase(element, "Y");

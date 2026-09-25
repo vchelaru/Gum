@@ -12,5 +12,6 @@ public class FileLocations : IFileLocations
 
     public string BehaviorsFolder => ProjectFolder + "Behaviors/";
 
-    public virtual string ProjectFolder  => FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
+    public virtual string ProjectFolder  => FileManager.GetDirectory(
+        (ObjectFinder.Self.GumProjectSave ?? throw new System.InvalidOperationException("No Gum project is loaded.")).FullFileName);
 }
