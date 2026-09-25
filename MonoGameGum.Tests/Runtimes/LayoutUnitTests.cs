@@ -1031,7 +1031,7 @@ public class LayoutUnitTests : BaseTestClass
         child.YOrigin = VerticalAlignment.Bottom;
         parent.AddChild(child);
 
-        parent.GetAbsoluteHeight().ShouldBe(20);
+        parent.AbsoluteHeight.ShouldBe(20);
         child.AbsoluteTop.ShouldBe(0);
     }
 
@@ -1069,7 +1069,7 @@ public class LayoutUnitTests : BaseTestClass
         parent.UpdateLayout();
 
         // The child hangs below the parent's bottom edge, so it adds nothing to the parent's height.
-        parent.GetAbsoluteHeight().ShouldBe(100);
+        parent.AbsoluteHeight.ShouldBe(100);
         child.AbsoluteTop.ShouldBe(100);
     }
 
@@ -1111,7 +1111,7 @@ public class LayoutUnitTests : BaseTestClass
         tallSibling.Height = 150;
 
         // A non-Text parent's baseline is its bottom edge, so both units follow it as the parent grows.
-        parent.GetAbsoluteHeight().ShouldBe(150);
+        parent.AbsoluteHeight.ShouldBe(150);
         child.AbsoluteTop.ShouldBe(130);
     }
 
