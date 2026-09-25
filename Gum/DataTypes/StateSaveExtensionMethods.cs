@@ -642,13 +642,15 @@ public static class StateSaveExtensionMethods
 
 
 
+            // A project that was never saved has no file name, so there is nothing to make the
+            // path relative to; keep it absolute.
             if (isFile &&
                 value is string asString &&
                 !string.IsNullOrEmpty(asString) &&
-                !FileManager.IsRelative(asString))
+                !FileManager.IsRelative(asString) &&
+                ObjectFinder.Self.GumProjectSave?.FullFileName is { Length: > 0 } projectFileName)
             {
-                // File variables are only set with absolute paths in the tool, which always has a saved project.
-                string directoryToMakeRelativeTo = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave!.FullFileName!);
+                string directoryToMakeRelativeTo = FileManager.GetDirectory(projectFileName);
 
                 const bool preserveCase = true;
                 if(!FileManager.IsUrl(asString))
