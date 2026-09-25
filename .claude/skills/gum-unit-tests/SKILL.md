@@ -31,7 +31,7 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 
 ## Key Rules
 
-- Always use **Shouldly** — never xUnit `Assert`. Alphabetize test methods within a class.
+- Always use **Shouldly** — never xUnit `Assert`.
 - Disable parallel execution in every test project (`[assembly: CollectionBehavior(DisableTestParallelization = true)]`) — Gum uses global singletons.
 - A test asserting on an absolute path must not use a Windows-style `"C:\..."` literal — `Path.IsPathRooted` doesn't recognize a drive letter as rooted on Unix, so macOS/Linux CI treats it as relative and silently prepends the runner's real working directory, corrupting the path. Use a leading-slash literal (e.g. `"/game/Content/"`) instead — rooted on both platforms.
   - A test that *creates* files under a temp directory has the mirror-image trap: `\` is a legal file name character on macOS/Linux, so `Path.Combine(root, "Folder\\File.cs")` makes one oddly named file in `root` rather than a nested one — green on Windows, red on CI. Write the relative path with `/` and `Replace('/', Path.DirectorySeparatorChar)` it.
