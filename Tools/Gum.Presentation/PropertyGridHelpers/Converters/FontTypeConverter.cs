@@ -15,21 +15,21 @@ class FontTypeConverter : TypeConverter
         _fontProvider = fontProvider;
     }
 
-    public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+    public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
     {
         return true;
     }
 
-    public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+    public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
     {
         return true;
     }
 
     DateTime lastFontGet = DateTime.MinValue;
-    StandardValuesCollection cachedCollection;
+    StandardValuesCollection? cachedCollection;
 
     public override StandardValuesCollection
-                 GetStandardValues(ITypeDescriptorContext context)
+                 GetStandardValues(ITypeDescriptorContext? context)
     {
         // getting fonts is slow, but we don't want fonts to 
         // display missing font values if the user has just installed

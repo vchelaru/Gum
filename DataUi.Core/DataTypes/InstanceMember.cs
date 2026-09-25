@@ -44,7 +44,7 @@ namespace WpfDataUi.DataTypes
 
         static int mNextUniqueId;
 
-        Type mPreferredDisplayer;
+        Type? mPreferredDisplayer;
 
         double mFirstGridLength;
 
@@ -275,7 +275,7 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        public virtual Type PreferredDisplayer
+        public virtual Type? PreferredDisplayer
         {
             get => mPreferredDisplayer; 
             set
@@ -379,8 +379,8 @@ namespace WpfDataUi.DataTypes
         }
 
 
-        string detailText;
-        public string DetailText
+        string? detailText;
+        public string? DetailText
         {
             get => detailText;
             set

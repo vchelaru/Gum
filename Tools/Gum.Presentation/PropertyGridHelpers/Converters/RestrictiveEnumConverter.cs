@@ -18,7 +18,7 @@ namespace Gum.PropertyGridHelpers.Converters
 
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
             // Iterate by NAME (not value) so we can:
             //   1. Skip names tagged with [Obsolete] — these share an underlying value with

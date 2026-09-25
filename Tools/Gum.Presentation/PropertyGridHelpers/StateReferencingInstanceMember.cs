@@ -167,7 +167,7 @@ public class StateReferencingInstanceMember : InstanceMember
     /// passed through unchanged; otherwise the neutral <see cref="VariableDisplayerKind"/> maps to a
     /// <see cref="StandardDisplayers"/> key that each head resolves to its own control.
     /// </summary>
-    public override Type PreferredDisplayer
+    public override Type? PreferredDisplayer
     {
         get
         {
@@ -275,7 +275,9 @@ public class StateReferencingInstanceMember : InstanceMember
             this.CustomSetPropertyEvent += HandleCustomSet;
         }
         this.CustomGetEvent += HandleCustomGet;
-        this.CustomGetTypeEvent += HandleCustomGetType;
+        // InstanceMember.PropertyType is declared non-null, but a null type is expected downstream:
+        // DisplayerRegistry picks a text box for it.
+        this.CustomGetTypeEvent += instance => HandleCustomGetType(instance)!;
 
         this.Instance = _entry.Instance;
         this.DisplayName = _entry.DisplayName;

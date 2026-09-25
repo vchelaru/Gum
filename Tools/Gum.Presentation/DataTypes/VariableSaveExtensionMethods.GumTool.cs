@@ -40,7 +40,8 @@ namespace Gum.DataTypes
             }
         }
 
-        public static Type GetRuntimeType(this VariableSave variableSave)
+        /// <summary>The variable's CLR type, or null for an enum whose converter lists no values.</summary>
+        public static Type? GetRuntimeType(this VariableSave variableSave)
         {
 
             string typeAsString = variableSave.Type;
@@ -58,7 +59,7 @@ namespace Gum.DataTypes
                 {
                     var values = enumConverter.GetStandardValues();
 
-                    if (values.Count > 0)
+                    if (values?.Count > 0)
                     {
                         return values.Cast<object>().First().GetType();
                     }
@@ -80,16 +81,18 @@ namespace Gum.DataTypes
 
         public static bool FixEnumerationsWithReflection(this VariableSave variableSave)
         {
-            if (variableSave.GetIsEnumeration() && variableSave.Value != null && variableSave.Value.GetType() == typeof(int))
+            if (variableSave.GetIsEnumeration() && variableSave.Value is int intValue &&
+                variableSave.GetRuntimeType() is { } runtimeType)
             {
-                Array array = Enum.GetValues(variableSave.GetRuntimeType());
+                Array array = Enum.GetValues(runtimeType);
 
                 // GetValue returns the value at an index, which is bad if there are
                 // gaps in the index
                 // variableSave.Value = array.GetValue((int)variableSave.Value);
                 for (int i = 0; i < array.Length; i++)
                 {
-                    if ((int)array.GetValue(i) == (int)variableSave.Value)
+                    // Enum.GetValues never holds nulls.
+                    if ((int)array.GetValue(i)! == intValue)
                     {
                         variableSave.Value = array.GetValue(i);
                         return true;
@@ -101,7 +104,7 @@ namespace Gum.DataTypes
             return false;
         }
 
-        public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container = null)
+        public static TypeConverter GetTypeConverter(this VariableSave variableSave, ElementSave container)
         {
             ElementSave categoryContainer;
             StateSaveCategory category;
@@ -123,7 +126,7 @@ namespace Gum.DataTypes
             }
             else if (variableSave.IsState(container, out categoryContainer, out category))
             {
-                string categoryName = null;
+                string? categoryName = null;
 
                 if (category != null)
                 {
@@ -144,7 +147,7 @@ namespace Gum.DataTypes
                 // We should see if it's an exposed variable, and if so, let's look to the source object's type converters
                 if (!string.IsNullOrEmpty(variableSave.SourceObject) && container != null)
                 {
-                    InstanceSave instance = container.GetInstance(variableSave.SourceObject);
+                    InstanceSave? instance = container.GetInstance(variableSave.SourceObject);
 
                     if (instance != null)
                     {
@@ -153,7 +156,7 @@ namespace Gum.DataTypes
 
                         if (foundElementSave != null)
                         {
-                            VariableSave rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
+                            VariableSave? rootVariableSave = foundElementSave.DefaultState.GetVariableSave(variableSave.GetRootName());
 
                             if (rootVariableSave != null)
                             {
@@ -164,7 +167,8 @@ namespace Gum.DataTypes
                 }
 
             }
-            Type type = variableSave.GetRuntimeType();
+            // Without a custom converter, GetRuntimeType has a type to return.
+            Type type = variableSave.GetRuntimeType()!;
             return variableSave.GetTypeConverter(type);
 
         }

@@ -363,7 +363,7 @@ public class CompositeMemberLogic
     /// </summary>
     private string? ValidateExposedName(string exposedName, ElementSave element)
     {
-        return _nameVerifier.IsVariableNameValid(exposedName, element, null!, out string? whyNot)
+        return _nameVerifier.IsVariableNameValid(exposedName, element, null, out string? whyNot)
             ? null
             : whyNot;
     }

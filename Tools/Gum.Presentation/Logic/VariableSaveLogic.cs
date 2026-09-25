@@ -35,7 +35,7 @@ public class VariableSaveLogic : IVariableSaveLogic
         element.DefaultState.GetVariableRecursive(variable);
 
     /// <inheritdoc/>
-    public bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave container, InstanceSave? currentInstance)
+    public bool GetIfVariableIsActive(VariableSave defaultVariable, ElementSave? container, InstanceSave? currentInstance)
     {
         bool shouldInclude = GetIfShouldIncludeAccordingToDefaultState(defaultVariable, container, currentInstance);
 
@@ -65,13 +65,13 @@ public class VariableSaveLogic : IVariableSaveLogic
 
         if (shouldInclude)
         {
-            StandardElementSave rootElementSave = null;
+            StandardElementSave? rootElementSave = null;
 
             if (currentInstance != null)
             {
                 rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(currentInstance);
             }
-            else if ((container is ScreenSave) == false)
+            else if (container != null && (container is ScreenSave) == false)
             {
                 rootElementSave = ObjectFinder.Self.GetRootStandardElementSave(container);
             }
@@ -95,8 +95,9 @@ public class VariableSaveLogic : IVariableSaveLogic
                 //rvf = new RecursiveVariableFinder(currentInstance, container);
                 // this should respect the current state:
 
-                var elementWithState = new ElementWithState(container);
-                elementWithState.InstanceName = currentInstance?.Name;
+                // An instance shown in the grid always belongs to an element.
+                var elementWithState = new ElementWithState(container!);
+                elementWithState.InstanceName = currentInstance.Name;
                 elementWithState.StateName = _selectedState.SelectedStateSave?.Name;
                 var stack = new List<ElementWithState>() { elementWithState };
 
@@ -111,7 +112,8 @@ public class VariableSaveLogic : IVariableSaveLogic
                 }
                 else
                 {
-                    rvf = new RecursiveVariableFinder(container.DefaultState);
+                    // Without an instance, the container is the element being shown.
+                    rvf = new RecursiveVariableFinder(container!.DefaultState);
                 }
             }
 
@@ -121,7 +123,7 @@ public class VariableSaveLogic : IVariableSaveLogic
         return shouldInclude;
     }
 
-    private bool GetIfShouldIncludeAccordingToDefaultState(VariableSave defaultVariable, ElementSave container, InstanceSave currentInstance)
+    private bool GetIfShouldIncludeAccordingToDefaultState(VariableSave defaultVariable, ElementSave? container, InstanceSave? currentInstance)
     {
         bool canOnlyBeSetInDefaultState = defaultVariable.CanOnlyBeSetInDefaultState;
         if (currentInstance != null)
@@ -144,7 +146,7 @@ public class VariableSaveLogic : IVariableSaveLogic
         }
         bool shouldInclude = true;
 
-        bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement.DefaultState;
+        bool isDefault = _selectedState.SelectedStateSave == _selectedState.SelectedElement?.DefaultState;
 
         if (currentInstance != null)
         {
@@ -158,7 +160,7 @@ public class VariableSaveLogic : IVariableSaveLogic
         return shouldInclude;
     }
 
-    private bool GetShouldIncludeBasedOnAttachments(VariableSave variableSave, ElementSave container, InstanceSave currentInstance)
+    private bool GetShouldIncludeBasedOnAttachments(VariableSave variableSave, ElementSave? container, InstanceSave? currentInstance)
     {
         bool toReturn = true;
         if (variableSave.Name == "Guide")
@@ -192,7 +194,8 @@ public class VariableSaveLogic : IVariableSaveLogic
                 if (container is ComponentSave)
                 {
                     // See if it's defined in the standards list
-                    var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component").VariableLists.FirstOrDefault(
+                    // Built-in types always have a default state; GetDefaultStateFor throws otherwise.
+                    var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component")!.VariableLists.FirstOrDefault(
                         item => item.Name == variableList.Name);
 
                     shouldInclude = foundInstance != null;
@@ -226,7 +229,7 @@ public class VariableSaveLogic : IVariableSaveLogic
         return shouldInclude;
     }
 
-    private bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave container, InstanceSave instanceSave, StandardElementSave rootElementSave)
+    private bool GetShouldIncludeBasedOnBaseType(VariableSave defaultVariable, ElementSave? container, InstanceSave? instanceSave, StandardElementSave? rootElementSave)
     {
         bool shouldInclude = false;
 
@@ -247,7 +250,8 @@ public class VariableSaveLogic : IVariableSaveLogic
                 if (container is ComponentSave)
                 {
                     // See if it's defined in the standards list
-                    var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component").Variables.FirstOrDefault(
+                    // Built-in types always have a default state; GetDefaultStateFor throws otherwise.
+                    var foundInstance = StandardElementsManager.Self.GetDefaultStateFor("Component")!.Variables.FirstOrDefault(
                         item => item.Name == defaultVariable.Name);
 
                     shouldInclude = foundInstance != null;
@@ -268,7 +272,7 @@ public class VariableSaveLogic : IVariableSaveLogic
                     shouldInclude = rootElementSave.DefaultState.GetVariableSave(defaultVariable.Name) != null;
                 }
 
-                string nameWithoutState = null;
+                string? nameWithoutState = null;
                 if (!shouldInclude && defaultVariable.Name.EndsWith("State") && instanceSave != null)
                 {
                     nameWithoutState = defaultVariable.Name.Substring(0, defaultVariable.Name.Length - "State".Length);
@@ -284,7 +288,7 @@ public class VariableSaveLogic : IVariableSaveLogic
                     }
                 }
 
-                if (!shouldInclude && instanceSave == null && defaultVariable.IsState(container))
+                if (!shouldInclude && instanceSave == null && container != null && defaultVariable.IsState(container))
                 {
                     return true;
                 }
@@ -312,6 +316,6 @@ public class VariableSaveLogic : IVariableSaveLogic
     }
 
     /// <inheritdoc/>
-    public System.ComponentModel.TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave? container) =>
+    public System.ComponentModel.TypeConverter GetTypeConverter(VariableSave defaultVariable, ElementSave container) =>
         _variableTypeConverterProvider.GetTypeConverter(defaultVariable, container);
 }

@@ -21,26 +21,31 @@ namespace Gum.PropertyGridHelpers.Converters
             _selectedState = Locator.GetRequiredService<ISelectedState>();
         }
         
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
             var stateSave = _selectedState.SelectedStateSave;
             var instance = _selectedState.SelectedInstance;
+            // The grid only shows this row while an element state is selected.
+            if (stateSave == null)
+            {
+                return new StandardValuesCollection(new List<string>());
+            }
             List<string> values = GetAvailableValues(container, instance, stateSave);
 
             return new StandardValuesCollection(values);
         }
 
-        public static List<string> GetAvailableValues(ElementSave container, InstanceSave instance, StateSave stateSave)
+        public static List<string> GetAvailableValues(ElementSave container, InstanceSave? instance, StateSave stateSave)
         {
             List<string> toReturn = new List<string>();
 

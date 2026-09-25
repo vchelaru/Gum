@@ -63,23 +63,24 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     private readonly IVariableFilterService _variableFilterService;
     private readonly IMultiSelectCommitLogic _multiSelectCommitLogic;
 
-    IDataUiGrid mVariablesDataGrid;
-    IVariablesTabView mainControl;
+    // The view is created by InitializeEarly, which runs before any refresh.
+    IDataUiGrid mVariablesDataGrid = null!;
+    IVariablesTabView mainControl = null!;
     private IPluginTab? _variablesTab;
 
-    ElementSaveDisplayer mPropertyGridDisplayer;
+    readonly ElementSaveDisplayer mPropertyGridDisplayer;
 
     //ToolStripMenuItem mExposeVariable;
     //ToolStripMenuItem mResetToDefault;
     //ToolStripMenuItem mUnExposeVariable;
 
-    ElementSave mLastElement;
+    ElementSave? mLastElement;
 
     List<InstanceSave> mLastInstanceSaves = new List<InstanceSave>();
     //InstanceSave mLastInstance;
-    StateSave mLastState;
+    StateSave? mLastState;
     StateSaveCategory? mLastCategory;
-    BehaviorSave mLastBehaviorSave;
+    BehaviorSave? mLastBehaviorSave;
 
     // Making this public allows the plugin to access it. Eventually we will want to migrate
     // this whole class to a plugin to work more like Glue, but that will take time
@@ -93,7 +94,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
     /// </summary>
     public List<object> ObjectsSuppressingRefresh { get; private set; } = new List<object>();
 
-    private CompositeMemberLogic _compositeMemberLogic;
+    private readonly CompositeMemberLogic _compositeMemberLogic;
     private StateSaveCategoryDisplayer _stateSaveCategoryDisplayer;
     private BehaviorShowingLogic _behaviorShowingLogic;
     private readonly IVariableCategoryCopyPasteService _variableCategoryCopyPasteService;
@@ -103,7 +104,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     #region Properties
 
-    public VariableSave SelectedBehaviorVariable
+    public VariableSave? SelectedBehaviorVariable
     {
         get
         {
@@ -175,12 +176,6 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         _variableCategoryCopyPasteService = new VariableCategoryCopyPasteService(_undoManager);
         _variableCategoryRowAdapter = new VariableCategoryRowAdapter();
         _multiSelectCommitLogic = new MultiSelectCommitLogic(_undoManager, _setVariableLogic);
-    }
-
-    // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
-    // so some of it will happen here:
-    public void InitializeEarly()
-    {
         _compositeMemberLogic = new CompositeMemberLogic(_selectedState,
             _exposeVariableService,
             _undoManager,
@@ -208,7 +203,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
             _wireframeObjectManager,
             _clipboardService,
             _projectState);
+    }
 
+    // Normally plugins will initialize through the PluginManager. This needs to happen earlier (see where it's called for info)
+    // so some of it will happen here:
+    public void InitializeEarly()
+    {
         mainControl = _variableGridHead.CreateVariablesTabView(VariableViewModel);
 
         _variablesTab = _tabManager.AddControl(mainControl.Control, "Variables", TabLocation.CenterBottom);
@@ -393,7 +393,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     }
                     else
                     {
-                        categories = GetMemberCategories(element, state!, stateCategory, instance);
+                        categories = GetMemberCategories(element, state, stateCategory, instance);
                     }
 
                     if (newInstances.Count > 1)
@@ -444,7 +444,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     }
                     records.Add("in");
 
-                    mVariablesDataGrid.Instance = (object)behaviorSave ?? _selectedState.SelectedStateSave;
+                    mVariablesDataGrid.Instance = (object?)behaviorSave ?? _selectedState.SelectedStateSave;
 
                     // April 10, 2023
                     // I am adding multi-select
@@ -671,14 +671,14 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         }
     }
 
-    private void RefreshBehaviorUi(BehaviorSave behaviorSave, List<InstanceSave> instances, StateSave state, StateSaveCategory category)
+    private void RefreshBehaviorUi(BehaviorSave? behaviorSave, List<InstanceSave> instances, StateSave? state, StateSaveCategory? category)
     {
 
         this.VariableViewModel.BehaviorVariables.Clear();
 
-        var isShown = behaviorSave != null && (instances == null || instances.Count == 0);
+        var isShown = behaviorSave != null && instances.Count == 0;
 
-        if(isShown)
+        if(behaviorSave != null && isShown)
         {
             this.VariableViewModel.BehaviorVariables.AddRange(behaviorSave.RequiredVariables.Variables);
         }
@@ -686,7 +686,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         this.VariableViewModel.BehaviorSave = behaviorSave;
         this.VariableViewModel.ShowBehaviorUi = isShown;
 
-        if(isShown)
+        if(behaviorSave != null && isShown)
         {
             mainControl.BehaviorGrid.Instance = behaviorSave;
             mainControl.BehaviorGrid.Categories.Clear();
@@ -711,16 +711,14 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
     }
 
-    private void RefreshErrors(ElementSave element)
+    private void RefreshErrors(ElementSave? element)
     {
-        var asComponent = element as ComponentSave;
+        string? message = null;
 
-        if(asComponent != null)
+        if (element is ComponentSave asComponent && _projectState.GumProjectSave is { } project)
         {
-            var behaviors = _projectState.GumProjectSave.Behaviors;
+            var behaviors = project.Behaviors;
             var behaviorReferences = asComponent.Behaviors;
-
-            string message = null;
 
             foreach(var behaviorReference in behaviorReferences)
             {
@@ -744,14 +742,12 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
                     }
                 }
             }
-
-            bool showError = !string.IsNullOrEmpty(message);
-            this.VariableViewModel.HasErrors = showError;
-
-
-
-            this.VariableViewModel.ErrorInformation = message;
         }
+
+        // Cleared for every other selection too, or a component's error stays on screen after
+        // selecting a screen, standard element, or behavior.
+        this.VariableViewModel.HasErrors = !string.IsNullOrEmpty(message);
+        this.VariableViewModel.ErrorInformation = message;
     }
 
     /// <summary>
@@ -954,7 +950,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return ToWpf(descriptors);
     }
 
-    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave state, StateSaveCategory? stateCategory, InstanceSave? instance)
+    private List<MemberCategory> GetMemberCategories(ElementSave instanceOwner, StateSave? state, StateSaveCategory? stateCategory, InstanceSave? instance)
     {
         List<MemberCategory> categories = new List<MemberCategory>();
 
@@ -1080,7 +1076,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         return categories;
     }
 
-    private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, ElementSave element, InstanceSave instance)
+    private void CustomizeVariables(List<MemberCategory> categories, StateSave stateSave, ElementSave element, InstanceSave? instance)
     {
         // Hack! I would like to have this set by variables, but that's going to require a ton
         // of refatoring. We need to move off of the intermediate PropertyDescriptor class.
@@ -1246,7 +1242,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
         fontCategory.Members.Insert(fontIndex, toggleMember);
     }
 
-    private void AdjustStringPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave instanceSave)
+    private void AdjustStringPreferredDisplayer(List<MemberCategory> categories, StateSave stateSave, InstanceSave? instanceSave)
     {
         foreach (var category in categories)
         {
@@ -1317,7 +1313,7 @@ public partial class PropertyGridManager : IBehaviorVariablePropertyGridSink
 
 
 
-    internal void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue,
+    internal void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
         if (strippedName == "VariableReferences")

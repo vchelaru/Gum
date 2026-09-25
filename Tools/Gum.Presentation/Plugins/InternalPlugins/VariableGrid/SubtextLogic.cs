@@ -20,14 +20,14 @@ public class SubtextLogic
     /// <param name="propertyName">The root name of the property being displayed</param>
     /// <param name="elementSave">The element if no instance is specified, or the base type of the argument instance</param>
     /// <param name="instanceSave"></param>
-    public string GetDefaultSubtext(VariableSave defaultVariable,
-        string subtext,
+    public string? GetDefaultSubtext(VariableSave defaultVariable,
+        string? subtext,
         string propertyName,
         ElementSave elementSave,
-        InstanceSave instanceSave)
+        InstanceSave? instanceSave)
     {
-        string result = subtext;
-        if (!string.IsNullOrEmpty(defaultVariable?.DetailText))
+        string? result = subtext;
+        if (!string.IsNullOrEmpty(defaultVariable.DetailText))
         {
             result += "\n" + defaultVariable.DetailText;
         }

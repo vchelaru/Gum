@@ -11,14 +11,14 @@ namespace Gum.PropertyGridHelpers.Converters
     {
         private readonly ISelectedState _selectedState;
         
-        InstanceSave mOverridingInstanceSave;
-        ElementSave mOverridingElementSave;
+        InstanceSave? mOverridingInstanceSave;
+        ElementSave? mOverridingElementSave;
 
         bool mUsesOverrides;
 
-        public string CategoryName { get; private set; }
+        public string? CategoryName { get; private set; }
 
-        public InstanceSave InstanceSave 
+        public InstanceSave? InstanceSave 
         { 
             get
             {
@@ -38,7 +38,7 @@ namespace Gum.PropertyGridHelpers.Converters
                 mUsesOverrides = true;
             }
         }
-        public ElementSave ElementSave 
+        public ElementSave? ElementSave 
         { 
             get
             {
@@ -59,24 +59,24 @@ namespace Gum.PropertyGridHelpers.Converters
             }
         }
 
-        public AvailableStatesConverter(string category, ISelectedState selectedState)
+        public AvailableStatesConverter(string? category, ISelectedState selectedState)
         {
             CategoryName = category;
             _selectedState = selectedState;
         }
 
 
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
             List<string> availableStates = new List<string>();
             if (InstanceSave != null)
@@ -91,17 +91,17 @@ namespace Gum.PropertyGridHelpers.Converters
             return new StandardValuesCollection(availableStates);
         }
 
-        public static List<string> GetAvailableStates(InstanceSave instanceSave, string categoryName)
+        public static List<string> GetAvailableStates(InstanceSave instanceSave, string? categoryName)
         {
 
-            ElementSave elementSave = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
+            ElementSave? elementSave = ObjectFinder.Self.GetElementSave(instanceSave.BaseType);
 
             List<string> toReturn = GetAvailableStates(elementSave, categoryName);
 
             return toReturn;
         }
 
-        private static List<string> GetAvailableStates(ElementSave elementSave, string categoryName)
+        private static List<string> GetAvailableStates(ElementSave? elementSave, string? categoryName)
         {
             List<string> toReturn = new List<string>();
 
@@ -117,7 +117,7 @@ namespace Gum.PropertyGridHelpers.Converters
                     // This could be defined in a base:
                     var category = elementSave.GetStateSaveCategoryRecursively(categoryName);
 
-                    toReturn = category?.States.Select(item => item.Name).ToList();
+                    toReturn = category?.States.Select(item => item.Name).ToList() ?? new List<string>();
                 }
             }
             return toReturn;

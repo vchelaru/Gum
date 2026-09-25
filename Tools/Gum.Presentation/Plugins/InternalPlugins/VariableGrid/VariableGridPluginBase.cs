@@ -74,7 +74,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         _propertyGridManager.RefreshVariablesDataGridValues();
     }
 
-    private void HandleVariableSet(ElementSave element, InstanceSave? instance, string strippedName, object? oldValue,
+    private void HandleVariableSet(ElementSave? element, InstanceSave? instance, string strippedName, object? oldValue,
         bool isFullCommit)
     {
         _propertyGridManager.HandleVariableSet(element, instance, strippedName, oldValue, isFullCommit);
@@ -104,7 +104,7 @@ public abstract class VariableGridPluginBase : PluginBase, IPriorityPlugin
         _propertyGridManager.RefreshEntireGrid(force: true);
     }
 
-    private void HandleInstanceSelected(ElementSave element, InstanceSave instance)
+    private void HandleInstanceSelected(ElementSave? element, InstanceSave? instance)
     {
         RefreshAddVariableButtonVisibility();
 

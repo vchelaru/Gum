@@ -9,7 +9,7 @@ namespace Gum.PropertyGridHelpers.Converters
         public const string NewGuideString = "<New Guide...>";
         public const string None = "<None>";
 
-        public GumProjectSave GumProjectSave
+        public GumProjectSave? GumProjectSave
         {
             get;
             set;
@@ -18,12 +18,12 @@ namespace Gum.PropertyGridHelpers.Converters
         public bool ShowNewGuide { get; set; }
         public bool ShowNone { get; set; }
 
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
         {
             return true;
         }
 
-        public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+        public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
         {
             return true;
         }
@@ -34,7 +34,7 @@ namespace Gum.PropertyGridHelpers.Converters
             ShowNone = true;
         }
 
-        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
         {
             List<string> values = GetAvailableValues(GumProjectSave, ShowNewGuide, ShowNone);
 
@@ -42,10 +42,10 @@ namespace Gum.PropertyGridHelpers.Converters
         }
 
 
-        public static List<string> GetAvailableValues(GumProjectSave gumProjectSave, bool includeNewValue, bool includeNone)
+        public static List<string> GetAvailableValues(GumProjectSave? gumProjectSave, bool includeNewValue, bool includeNone)
         {
             List<string> toReturn = new List<string>();
-            foreach (NamedRectangle guide in gumProjectSave.Guides)
+            foreach (NamedRectangle guide in gumProjectSave?.Guides ?? new List<GuideRectangle>())
             {
                 toReturn.Add(guide.Name);
             }

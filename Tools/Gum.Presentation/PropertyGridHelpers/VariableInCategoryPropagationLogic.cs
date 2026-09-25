@@ -90,7 +90,7 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
                 }
             }
 
-            StateSaveCategory category = null;
+            StateSaveCategory? category = null;
             var isState = false;
             
             if(variableContainer != null)
@@ -107,7 +107,8 @@ public class VariableInCategoryPropagationLogic : IVariableInCategoryPropagation
                 {
                     defaultVariable.Value = category.States.FirstOrDefault()?.Name;
                 }
-                else
+                // isState is only set when there is a container.
+                else if (variableContainer != null)
                 {
                     defaultVariable.Value = variableContainer.DefaultState?.Name;
 

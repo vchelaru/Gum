@@ -24,12 +24,12 @@ public class AvailableInstancesConverter : TypeConverter
         set;
     }
 
-    public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+    public override bool GetStandardValuesSupported(ITypeDescriptorContext? context)
     {
         return true;
     }
 
-    public override bool GetStandardValuesExclusive(ITypeDescriptorContext context)
+    public override bool GetStandardValuesExclusive(ITypeDescriptorContext? context)
     {
         return true;
     }
@@ -42,7 +42,7 @@ public class AvailableInstancesConverter : TypeConverter
 
 
 
-    public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+    public override TypeConverter.StandardValuesCollection GetStandardValues(ITypeDescriptorContext? context)
     {
         List<string> values;
 

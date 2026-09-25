@@ -14,8 +14,8 @@ public class CategorySortAndColorLogic
 {
     record CategoryColor
     {
-        public string Name;
-        public string Color;
+        public required string Name;
+        public required string Color;
     }
 
     const string alphaHex = "20";
@@ -57,9 +57,7 @@ public class CategorySortAndColorLogic
                 }
             }
 
-            var itemByCategory = categories.FirstOrDefault(item => item.Name == category);
-
-            var index = categories.IndexOf(itemByCategory);
+            var index = categories.FindIndex(item => item.Name == category);
 
             return OrderedCategories.Count + index;
         }

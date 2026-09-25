@@ -77,11 +77,11 @@ public class ElementSaveDisplayer
         string OriginalName,
         Type ComponentType,
         Attribute[] Attributes,
-        TypeConverter Converter,
-        string Category,
+        TypeConverter? Converter,
+        string? Category,
         bool IsReadOnly,
         bool IsAssignedByReference,
-        string Subtext,
+        string? Subtext,
         string? DisplayName = null,
         string? ToolTipText = null,
         Dictionary<string, object>? PropertiesToSetOnDisplayer = null);
@@ -140,7 +140,7 @@ public class ElementSaveDisplayer
         {
             StateSave defaultState = GetRecursiveStateFor(instanceOwner);
 
-            FillPropertyList(propertyList, instanceOwner, null, defaultState);
+            FillPropertyList(propertyList, instanceOwner, null, instanceOwner, defaultState);
 
 
         }
@@ -148,15 +148,15 @@ public class ElementSaveDisplayer
         return propertyList;
     }
 
+    /// <param name="effectiveElementSave">The element whose variables are listed: <paramref name="instanceOwner"/>
+    /// when no instance is given, else the instance's base element.</param>
     private void FillPropertyList(List<PropertyData> propertyList, ElementSave? instanceOwner,
-        InstanceSave? instanceSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
+        InstanceSave? instanceSave, ElementSave effectiveElementSave, StateSave defaultState, AmountToDisplay amountToDisplay = AmountToDisplay.AllVariables)
     {
         var currentState = _selectedState.SelectedStateSave;
-        bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
+        bool isDefault = currentState == _selectedState.SelectedElement?.DefaultState;
 
         bool isDefinedByBase = instanceSave?.DefinedByBase == true;
-
-        var effectiveElementSave = instanceSave == null ? instanceOwner : instanceSave.GetBaseElementSave();
 
         bool isCustomType = (effectiveElementSave is StandardElementSave) == false;
         if (isCustomType || instanceSave != null)
@@ -197,7 +197,8 @@ public class ElementSaveDisplayer
         // if component
         if (instanceSave == null && effectiveElementSave as ComponentSave != null)
         {
-            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Component");
+            // Built-in types always have a default state; GetDefaultStateFor throws otherwise.
+            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Component")!;
             var variables = defaultElementState.Variables;
             foreach (var item in variables)
             {
@@ -206,7 +207,7 @@ public class ElementSaveDisplayer
                 {
                     string variableName = item.Name;
                     var isReadonly = false;
-                    string subtext = null;
+                    string? subtext = null;
                     var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
                     if (variablesSetThroughReference.ContainsKey(variableName))
                     {
@@ -226,7 +227,7 @@ public class ElementSaveDisplayer
         // else if screen
         else if (instanceSave == null && effectiveElementSave as ScreenSave != null)
         {
-            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Screen");
+            var defaultElementState = _standardElementsManager.GetDefaultStateFor("Screen")!;
             var variables = defaultElementState.Variables;
 
             foreach (var item in variables)
@@ -234,7 +235,7 @@ public class ElementSaveDisplayer
                 // Shouldn't we check state?
                 string variableName = item.Name;
                 var isReadonly = false;
-                string subtext = null;
+                string? subtext = null;
                 var isSetByReference = variablesSetThroughReference.ContainsKey(variableName);
                 if (isSetByReference)
                 {
@@ -277,7 +278,8 @@ public class ElementSaveDisplayer
                         ObjectFinder.Self.GetRootVariable(variable.Name, instanceOwner);
                     if (definingVariable != null)
                     {
-                        exposedVariables.Add(definingVariable.Name, variable.ExposedAsName);
+                        // The Where above keeps only variables with an ExposedAsName.
+                        exposedVariables.Add(definingVariable.Name, variable.ExposedAsName!);
                     }
                 }
             }
@@ -319,7 +321,7 @@ public class ElementSaveDisplayer
             if(currentState != effectiveElementSave.DefaultState &&
                 defaultVariable.IsState(effectiveElementSave, out ElementSave categoryContainer, out StateSaveCategory category))
             {
-                if(category?.States.Contains(currentState) == true)
+                if(currentState != null && category?.States.Contains(currentState) == true)
                 {
                     shouldSkip = true;
                 }
@@ -346,11 +348,11 @@ public class ElementSaveDisplayer
     /// Red/Green/Blue, and only the channel rows exist in the grid - without expanding here the
     /// swatch stays editable and silently loses its value on the next apply (issue #4942).
     /// </summary>
-    private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave currentState, string variableListName)
+    private static Dictionary<string, string> GetVariablesSetThroughReferences(ElementSave elementSave, StateSave? currentState, string variableListName)
     {
         Dictionary<string, string> variablesSetThroughReference = new Dictionary<string, string>();
 
-        var value = currentState.GetValueRecursive(variableListName) as IList;
+        var value = currentState?.GetValueRecursive(variableListName) as IList;
         if (value != null)
         {
             foreach (var item in value)
@@ -398,16 +400,16 @@ public class ElementSaveDisplayer
             {
                 var channelOwner = ObjectFinder.Self.GetElementSave(instanceWithExposedVariables);
 
-                foreach (string item in variable.ValueAsIList)
+                foreach (string? item in variable.ValueAsIList)
                 {
-                    if(item?.StartsWith("//") == true)
+                    if(item == null || item.StartsWith("//"))
                     {
                         continue;
                     }
 
                     foreach (var expanded in ElementSaveExtensions.ExpandCompositeReferenceLine(item, channelOwner))
                     {
-                        var indexOfEquals = expanded?.IndexOf("=") ?? -1;
+                        var indexOfEquals = expanded.IndexOf("=");
 
                         if(indexOfEquals == -1)
                         {
@@ -448,7 +450,7 @@ public class ElementSaveDisplayer
                 {
                     continue;
                 }
-                string category = item.Category?.Trim();
+                string category = item.Category?.Trim() ?? "";
 
                 var categoryToAddTo = categories.FirstOrDefault(c => c.Name == category);
 
@@ -494,7 +496,7 @@ public class ElementSaveDisplayer
             {
                 continue;
             }
-            string category = propertyData.Category?.Trim();
+            string? category = propertyData.Category?.Trim();
 
             if(string.IsNullOrEmpty(category))
             {
@@ -842,7 +844,7 @@ public class ElementSaveDisplayer
         return entry;
     }
 
-    private void SetSubtext(StateSave stateSave, string subtext, VariableGridEntry entry, string variableName)
+    private void SetSubtext(StateSave? stateSave, string? subtext, VariableGridEntry entry, string variableName)
     {
         entry.DetailText = subtext;
         string? extraDetail = null;
@@ -881,7 +883,8 @@ public class ElementSaveDisplayer
 
         if (elementSave is StandardElementSave)
         {
-            var defaultStates = _standardElementsManager.GetDefaultStateFor(elementSave.Name);
+            // A standard element's name is always a registered type; GetDefaultStateFor throws otherwise.
+            var defaultStates = _standardElementsManager.GetDefaultStateFor(elementSave.Name)!;
             var variablesToAdd = defaultStates.Variables
                 .Select(item => item.Clone())
                 .Where(item => existingVariableNames.Contains(item.Name) == false);
@@ -941,13 +944,11 @@ public class ElementSaveDisplayer
 
     private void FillPropertyList(List<PropertyData> properties, InstanceSave instanceSave, ElementSave? instanceOwner)
     {
-        ElementSave instanceBaseType;
-        StateSave defaultStateForInstanceBaseTypeElement;
-        GetDefaultState(instanceSave, out instanceBaseType, out defaultStateForInstanceBaseTypeElement);
+        GetDefaultState(instanceSave, out ElementSave? instanceBaseType, out StateSave defaultStateForInstanceBaseTypeElement);
 
         if(instanceBaseType != null)
         {
-            FillPropertyList(properties, instanceOwner, instanceSave, defaultStateForInstanceBaseTypeElement, AmountToDisplay.ElementAndExposedOnly);
+            FillPropertyList(properties, instanceOwner, instanceSave, instanceBaseType, defaultStateForInstanceBaseTypeElement, AmountToDisplay.ElementAndExposedOnly);
         }
         else
         {
@@ -955,17 +956,13 @@ public class ElementSaveDisplayer
             // This can happen if the instance references a component type that doesn't exist.
             // We still want to let the user make edits to this object to fix the problem:
             var currentState = _selectedState.SelectedStateSave;
-            bool isDefault = currentState == _selectedState.SelectedElement.DefaultState;
-            if (instanceSave?.DefinedByBase == true)
+            bool isDefault = currentState == _selectedState.SelectedElement?.DefaultState;
+            if (instanceSave.DefinedByBase)
             {
                 isDefault = false;
             }
 
-            if (instanceSave != null)
-            {
-                AddNameAndBaseTypeProperties(properties, instanceOwner, instanceSave, isReadOnly: isDefault == false);
-
-            }
+            AddNameAndBaseTypeProperties(properties, instanceOwner, instanceSave, isReadOnly: isDefault == false);
         }
     }
 
@@ -980,7 +977,8 @@ public class ElementSaveDisplayer
             if (instanceBaseType is StandardElementSave)
             {
                 // if we use the standard elements manager, we don't get any custom categories, so we need to add those:
-                defaultState = _standardElementsManager.GetDefaultStateFor(instanceBaseType.Name).Clone();
+                // A standard element's name is always a registered type; GetDefaultStateFor throws otherwise.
+                defaultState = _standardElementsManager.GetDefaultStateFor(instanceBaseType.Name)!.Clone();
                 foreach (var category in instanceBaseType.Categories)
                 {
                     var expectedName = category.Name + "State";
@@ -1003,10 +1001,10 @@ public class ElementSaveDisplayer
         }
     }
 
-    private PropertyData CreatePropertyData(ElementSave elementSave, InstanceSave instanceSave,
-        AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string subtext, HashSet<string> addedNames)
+    private PropertyData? CreatePropertyData(ElementSave elementSave, InstanceSave? instanceSave,
+        AmountToDisplay amountToDisplay, VariableSave defaultVariable, bool forceReadOnly, bool isAssignedByReference, string? subtext, HashSet<string> addedNames)
     {
-        ElementSave container = elementSave;
+        ElementSave? container = elementSave;
         if (instanceSave != null)
         {
             container = instanceSave.ParentContainer;
@@ -1078,7 +1076,7 @@ public class ElementSaveDisplayer
 
             Attribute[] customAttributes = GetAttributesForVariable(defaultVariable);
 
-            string category = null;
+            string? category = null;
             if (!string.IsNullOrEmpty(defaultVariable.Category))
             {
                 category = defaultVariable.Category;
@@ -1114,7 +1112,8 @@ public class ElementSaveDisplayer
             }
             else
             {
-                var rootVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave);
+                var rootVariable = ObjectFinder.Self.GetRootVariable(defaultVariable.Name, elementSave)
+                    ?? throw new Exception($"Could not find type for {defaultVariable}");
 
                 type = _typeManager.GetTypeFromString(rootVariable.Type);
             }
@@ -1210,7 +1209,7 @@ public class ElementSaveDisplayer
             ToolTipText: "The slot instance that receives child objects by default when this component is placed inside another component or screen."));
     }
 
-    private void AddNameAndBaseTypeProperties(List<PropertyData> pdc, ElementSave? instanceOwner, InstanceSave instance, bool isReadOnly)
+    private void AddNameAndBaseTypeProperties(List<PropertyData> pdc, ElementSave? instanceOwner, InstanceSave? instance, bool isReadOnly)
     {
         pdc.Add(new PropertyData("Name", typeof(string), new Attribute[0], TypeDescriptor.GetConverter(typeof(string)), "", isReadOnly, false, null));
 
@@ -1218,7 +1217,7 @@ public class ElementSaveDisplayer
 
         if(instanceOwner != null)
         {
-            RecursiveVariableFinder rfv = null;
+            RecursiveVariableFinder rfv;
             if (instance != null)
             {
                 rfv = new RecursiveVariableFinder(instance, instanceOwner);
@@ -1250,13 +1249,13 @@ public class ElementSaveDisplayer
         }
     }
 
-    private bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave currentInstance)
+    private bool GetIfShouldInclude(VariableListSave variableList, ElementSave container, InstanceSave? currentInstance)
     {
         bool toReturn = (string.IsNullOrEmpty(variableList.SourceObject));
 
         if (toReturn)
         {
-            StandardElementSave rootElementSave = null;
+            StandardElementSave? rootElementSave = null;
 
             if (currentInstance != null)
             {

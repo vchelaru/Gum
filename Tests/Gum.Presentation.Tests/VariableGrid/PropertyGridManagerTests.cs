@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Gum.DataTypes;
+using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Input;
 using Gum.Localization;
@@ -130,6 +131,34 @@ public class PropertyGridManagerTests
         sut.HandleVariableSet(new ComponentSave(), instance: null, strippedName: "X", oldValue: 0f, isFullCommit: true);
 
         _view.Variables.Categories.ShouldNotContain(position);
+    }
+
+    [Fact]
+    public void RefreshEntireGrid_AfterSelectingANonComponent_ClearsTheMissingBehaviorVariableError()
+    {
+        PropertyGridManager sut = _mocker.CreateInstance<PropertyGridManager>();
+        sut.InitializeEarly();
+        BehaviorSave behavior = new BehaviorSave { Name = "Clickable" };
+        behavior.RequiredVariables.Variables.Add(new VariableSave { Name = "IsEnabled", Type = "bool" });
+        GumProjectSave project = new GumProjectSave();
+        project.Behaviors.Add(behavior);
+        ComponentSave component = new ComponentSave { Name = "Button" };
+        component.States.Add(new StateSave { Name = "Default", ParentContainer = component });
+        component.Behaviors.Add(new ElementBehaviorReference { BehaviorName = "Clickable" });
+        _mocker.GetMock<IProjectState>().SetupGet(state => state.GumProjectSave).Returns(project);
+        _mocker.GetMock<IStateEditingIndicatorService>()
+            .Setup(service => service.GetInfo())
+            .Returns(new StateEditingIndicatorInfo(HasStateInformation: false, StateInformation: null, StateBackground: default));
+        Mock<ISelectedState> selectedState = _mocker.GetMock<ISelectedState>();
+        selectedState.SetupGet(state => state.SelectedInstances).Returns(new List<InstanceSave>());
+        selectedState.SetupGet(state => state.SelectedElement).Returns(component);
+        sut.RefreshEntireGrid(force: true);
+        sut.VariableViewModel.HasErrors.ShouldBeTrue();
+
+        selectedState.SetupGet(state => state.SelectedElement).Returns(new ScreenSave { Name = "MainScreen" });
+        sut.RefreshEntireGrid(force: true);
+
+        sut.VariableViewModel.HasErrors.ShouldBeFalse();
     }
 
     [Fact]
