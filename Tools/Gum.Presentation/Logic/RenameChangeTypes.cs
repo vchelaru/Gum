@@ -31,18 +31,20 @@ public enum SideOfEquals
 
 public class VariableChange
 {
-    public IStateContainer Container;
-    public StateSaveCategory Category;
-    public StateSave State;
-    public VariableSave Variable;
-    public object NewValue;
+    public required IStateContainer Container;
+    /// <summary>The category holding <see cref="State"/>, or null for an uncategorized state.</summary>
+    public StateSaveCategory? Category;
+    // Always set by ReferenceFinder; a delete-impact test builds one without it.
+    public StateSave State = null!;
+    public required VariableSave Variable;
+    public object? NewValue;
 
 }
 
 public class VariableReferenceChange
 {
-    public ElementSave Container;
-    public VariableListSave VariableReferenceList;
+    public required ElementSave Container;
+    public required VariableListSave VariableReferenceList;
     public int LineIndex;
     public SideOfEquals ChangedSide;
 }

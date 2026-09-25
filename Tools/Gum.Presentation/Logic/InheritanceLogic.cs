@@ -3,6 +3,7 @@ using Gum.DataTypes;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Gum.Plugins.InternalPlugins.VariableGrid;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Gum.Logic;
@@ -36,7 +37,8 @@ public class InheritanceLogic
                 clone.ParentContainer = inheritingElement;
                 inheritingElement.Instances.Add(clone);
 
-                var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType);
+                // An inheriting element's base type always exists.
+                var directBase = ObjectFinder.Self.GetElementSave(inheritingElement.BaseType)!;
 
                 AdjustInstance(directBase, inheritingElement, clone.Name);
 
@@ -124,7 +126,7 @@ public class InheritanceLogic
 
     public void HandleElementBaseType(ElementSave asElementSave)
     {
-        string newValue = asElementSave.BaseType;
+        string? newValue = asElementSave.BaseType;
 
         asElementSave.Instances.RemoveAll(item => item.DefinedByBase);
 
@@ -171,9 +173,14 @@ public class InheritanceLogic
     private bool AdjustInstance(ElementSave baseElement, ElementSave derivedElement, string instanceName)
     {
         var instanceInBase = baseElement.GetInstance(instanceName);
-        var instanceInDerived = derivedElement.GetInstance(instanceName);
+        // Without the instance in the derived element there is nothing to move; going on would
+        // insert null into its instance list.
+        if (derivedElement.GetInstance(instanceName) is not { } instanceInDerived)
+        {
+            return false;
+        }
 
-        var indexInBase = baseElement.Instances.IndexOf(instanceInBase);
+        var indexInBase = IndexOf(baseElement.Instances, instanceInBase);
         string? nameOfObjectBefore = null;
         if (indexInBase > 0)
         {
@@ -190,7 +197,7 @@ public class InheritanceLogic
         if (nameOfObjectBefore != null)
         {
             var instanceBefore = derivedElement.GetInstance(nameOfObjectBefore);
-            exclusiveLowerIndexInDerived = derivedElement.Instances.IndexOf(instanceBefore);
+            exclusiveLowerIndexInDerived = IndexOf(derivedElement.Instances, instanceBefore);
         }
 
         int exclusiveUpperIndexInDerived = derivedElement.Instances.Count;
@@ -198,7 +205,7 @@ public class InheritanceLogic
         if (nameOfObjectAfter != null)
         {
             var instanceAfter = derivedElement.GetInstance(nameOfObjectAfter);
-            exclusiveUpperIndexInDerived = derivedElement.Instances.IndexOf(instanceAfter);
+            exclusiveUpperIndexInDerived = IndexOf(derivedElement.Instances, instanceAfter);
         }
 
         int currentDerivedIndex = derivedElement.Instances.IndexOf(instanceInDerived);
@@ -223,4 +230,8 @@ public class InheritanceLogic
 
         return didAdjust;
     }
+
+    // List.IndexOf returns -1 for a missing (null) instance, the same as for one not in the list.
+    private static int IndexOf(List<InstanceSave> instances, InstanceSave? instance) =>
+        instance == null ? -1 : instances.IndexOf(instance);
 }

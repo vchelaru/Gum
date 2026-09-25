@@ -69,8 +69,8 @@ public class CopiedData
     /// expanded parent leaves the new copy expanded too instead of defaulting to collapsed.
     /// </summary>
     public HashSet<string> CopiedExpandedInstanceNames = new HashSet<string>(StringComparer.Ordinal);
-    public ElementSave CopiedElement = null;
-    public StateSaveCategory CopiedCategory = null;
+    public ElementSave? CopiedElement = null;
+    public StateSaveCategory? CopiedCategory = null;
 }
 
 #endregion
@@ -365,7 +365,7 @@ public class CopyPasteLogic : ICopyPasteLogic
                 {
                     // copied instances is a clone, so need to find by name:
                     var originalForCopy = sourceElement.Instances.FirstOrDefault(item => item.Name == clone.Name);
-                    if (sourceElement.Instances.Contains(originalForCopy))
+                    if (originalForCopy != null)
                     {
                         _deleteLogic.RemoveInstance(originalForCopy, sourceElement);
                     }
@@ -425,13 +425,15 @@ public class CopyPasteLogic : ICopyPasteLogic
     private void PasteCopiedCategory()
     {
         var targetElement = _selectedState.SelectedElement;
+        // OnPaste only gets here with a copied category.
+        var copiedCategory = CopiedData.CopiedCategory;
 
-        if (targetElement == null)
+        if (targetElement == null || copiedCategory == null)
         {
             return;
         }
 
-        StateSaveCategory newCategory = CopiedData.CopiedCategory.Clone();
+        StateSaveCategory newCategory = copiedCategory.Clone();
         newCategory.Name = StringFunctions.MakeStringUnique(
             newCategory.Name,
             targetElement.Categories.Select(item => item.Name));
@@ -507,6 +509,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             return;
         }
+        // States are only pasted into a category; the Default state has none.
+        if (targetCategory == null)
+        {
+            _dialogService.ShowMessage("Select a state category to paste the state into.", "Failed to paste state");
+            return;
+        }
         //////////////////End Early Out////////////////
 
         StateSave newStateSave = CopiedData.CopiedStates.First().Clone();
@@ -529,22 +537,15 @@ public class CopyPasteLogic : ICopyPasteLogic
 
 
 
-            if (targetCategory != null)
+            if (targetCategory.States.Any(item => item.Name == name))
             {
-                if (targetCategory.States.Any(item => item.Name == name))
-                {
-                    name = name + "Copy";
-                }
-
-                name = StringFunctions.MakeStringUnique(name, targetCategory.States.Select(item => item.Name));
-                newStateSave.Name = name;
-
-                targetCategory.States.Add(newStateSave);
+                name = name + "Copy";
             }
-            else
-            {
-                // no longer alowd to paste here
-            }
+
+            name = StringFunctions.MakeStringUnique(name, targetCategory.States.Select(item => item.Name));
+            newStateSave.Name = name;
+
+            targetCategory.States.Add(newStateSave);
 
             _guiCommands.RefreshStateTreeView();
 
@@ -675,9 +676,10 @@ public class CopyPasteLogic : ICopyPasteLogic
         {
             foreach (var variable in state.Variables)
             {
-                if (variable.GetRootName() == "Parent" && variable.Value is string parentValue)
+                // A Parent variable is always on an instance, so it has a source object.
+                if (variable.GetRootName() == "Parent" && variable.Value is string parentValue && variable.SourceObject is { } sourceObject)
                 {
-                    copiedParentMap[variable.SourceObject] = parentValue;
+                    copiedParentMap[sourceObject] = parentValue;
                 }
             }
         }
@@ -701,7 +703,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             newInstances.Add(newInstance);
 
 
-            if (targetElement != null)
+            // targetElement is never null here; the block is kept for its scope.
             {
 
                 var oldName = newInstance.Name;
@@ -826,7 +828,7 @@ public class CopyPasteLogic : ICopyPasteLogic
 
             var newInstance = newInstances.First(item => item.Name == oldNewNameDictionary[sourceInstance.Name]);
 
-            if (targetElement != null)
+            // targetElement is never null here; the block is kept for its scope.
             {
                 // First pass: apply base-element default state captures, FILTERED by
                 // refOwnedLhses. The source's own state has not been applied yet, so
@@ -836,10 +838,11 @@ public class CopyPasteLogic : ICopyPasteLogic
                 {
                     foreach (var baseStateSave in baseElementDefaultStates)
                     {
+                        // When pasting into the source element, it is the selected element.
                         StateSave baseTargetState = targetElement != sourceElement
                             ? targetElement.DefaultState
-                            : (selectedState.SelectedElement.AllStates.FirstOrDefault(item => item.Name == baseStateSave.Name)
-                                ?? selectedState.SelectedElement.DefaultState);
+                            : (targetElement.AllStates.FirstOrDefault(item => item.Name == baseStateSave.Name)
+                                ?? targetElement.DefaultState);
 
                         var baseVariables = baseStateSave.Variables.Where(item =>
                             item.SourceObject == sourceInstance.Name &&
@@ -886,10 +889,9 @@ public class CopyPasteLogic : ICopyPasteLogic
                     }
                     else
                     {
-                        var selectedElement = selectedState.SelectedElement;
-
-                        targetState = selectedElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ??
-                            selectedState.SelectedElement.DefaultState;
+                        // When pasting into the source element, it is the selected element.
+                        targetState = targetElement.AllStates.FirstOrDefault(item => item.Name == stateSave.Name) ??
+                            targetElement.DefaultState;
                         //_selectedState.SelectedStateSave ?? _selectedState.SelectedElement.DefaultState;
 
                     }
@@ -987,7 +989,8 @@ public class CopyPasteLogic : ICopyPasteLogic
                             instance1.Name == instance2.Name;
                     }
 
-                    if (isParentOfPastedInstanceAlsoAPastedInstance)
+                    // desiredParentNameWithoutSubItem is only non-null when desiredParentName is.
+                    if (isParentOfPastedInstanceAlsoAPastedInstance && desiredParentName != null && desiredParentNameWithoutSubItem != null)
                     {
                         // this is a parent and it may be attached to a copy, so update the value
                         var remappedName = oldNewNameDictionary[desiredParentNameWithoutSubItem];
@@ -1149,18 +1152,23 @@ public class CopyPasteLogic : ICopyPasteLogic
     {
         ElementSave toAdd;
 
-        if (CopiedData.CopiedElement is ScreenSave)
+        // Only screens and components are copied (see StoreCopiedElementSave).
+        if (CopiedData.CopiedElement is ScreenSave copiedScreen)
         {
-            toAdd = ((ScreenSave)CopiedData.CopiedElement).Clone();
+            toAdd = copiedScreen.Clone();
             toAdd.Initialize(null);
             _standardElementsManagerGumTool.FixCustomTypeConverters(toAdd);
         }
-        else
+        else if (CopiedData.CopiedElement is ComponentSave copiedComponent)
         {
-            toAdd = ((ComponentSave)CopiedData.CopiedElement).Clone();
+            toAdd = copiedComponent.Clone();
             ((ComponentSave)toAdd).InitializeDefaultAndComponentVariables();
             _standardElementsManagerGumTool.FixCustomTypeConverters((ComponentSave)toAdd);
 
+        }
+        else
+        {
+            return;
         }
 
         var strippedName = toAdd.StrippedName;
@@ -1175,28 +1183,31 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
         else if (toAdd is ComponentSave && selectedNode.IsComponentsFolderTreeNode())
         {
-            var path = selectedNode.FullPath.Substring("Components\\".Length);
+            var path = selectedNode!.FullPath.Substring("Components\\".Length);
 
             toAdd.Name = (path + "/" + strippedName).Replace("\\", "/");
         }
 
         List<string> allElementNames = new List<string>();
-        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.Screens.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.Components.Select(item => item.Name.ToLowerInvariant()));
-        allElementNames.AddRange(_copyPasteProjectProvider.GumProjectSave.StandardElements.Select(item => item.Name.ToLowerInvariant()));
+        // Pasting an element only happens while a project is open.
+        var gumProject = _copyPasteProjectProvider.GumProjectSave
+            ?? throw new InvalidOperationException("No Gum project is loaded.");
+        allElementNames.AddRange(gumProject.Screens.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(gumProject.Components.Select(item => item.Name.ToLowerInvariant()));
+        allElementNames.AddRange(gumProject.StandardElements.Select(item => item.Name.ToLowerInvariant()));
 
         while (allElementNames.Contains(toAdd.Name.ToLowerInvariant()))
         {
             toAdd.Name = StringFunctions.IncrementNumberAtEnd(toAdd.Name);
         }
 
-        if (toAdd is ScreenSave)
+        if (toAdd is ScreenSave screenToAdd)
         {
-            _projectCommands.AddScreen(toAdd as ScreenSave);
+            _projectCommands.AddScreen(screenToAdd);
         }
         else
         {
-            _projectCommands.AddComponent(toAdd as ComponentSave);
+            _projectCommands.AddComponent((ComponentSave)toAdd);
         }
 
         _selectedState.SelectedElement = toAdd;

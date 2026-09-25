@@ -981,7 +981,7 @@ public class GumProjectSave
     }
 
 
-    public void ReactToRenamed(ElementSave element, InstanceSave instance, string oldName)
+    public void ReactToRenamed(ElementSave element, InstanceSave? instance, string oldName)
     {
         if (instance == null)
         {

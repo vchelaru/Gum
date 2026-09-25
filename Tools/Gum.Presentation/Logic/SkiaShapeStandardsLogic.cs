@@ -79,13 +79,16 @@ public class SkiaShapeStandardsLogic : ISkiaShapeStandardsLogic
 
     private void AddStandard(string standardName, StateSave defaultState)
     {
-        var targetFile = _projectState.ProjectDirectory + $"Standards/{standardName}.gutx";
+        // Both callers (the Plugins menu and the Forms import) require a saved project.
+        string projectDirectory = _projectState.ProjectDirectory
+            ?? throw new InvalidOperationException("The project must be saved before adding standard elements.");
+        var targetFile = projectDirectory + $"Standards/{standardName}.gutx";
         FileManager.SaveEmbeddedResource(
             typeof(SkiaShapeStandardsLogic).Assembly,
             EmbeddedResourcePrefix + standardName + ".gutx",
             targetFile);
 
-        var gumProject = _projectState.GumProjectSave;
+        var gumProject = _projectState.GetLoadedProject();
         var hasStandard = gumProject.StandardElementReferences.Any(item => item.Name == standardName);
         if (!hasStandard)
         {
@@ -100,7 +103,7 @@ public class SkiaShapeStandardsLogic : ISkiaShapeStandardsLogic
             {
                 var result = new GumLoadResult();
                 var loaded = newReference.ToElementSave<StandardElementSave>(
-                    _projectState.ProjectDirectory,
+                    projectDirectory,
                     "gutx",
                     result);
 

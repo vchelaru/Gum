@@ -20,7 +20,11 @@ public class ReferenceFinder : IReferenceFinder
     public ElementReferences GetReferencesToElement(ElementSave element, string elementName)
     {
         var changes = new ElementReferences();
-        var project = _projectProvider.GumProjectSave;
+        // No project means nothing can reference the element.
+        if (_projectProvider.GumProjectSave is not { } project)
+        {
+            return changes;
+        }
 
         string qualifiedOldName = element switch
         {
@@ -147,9 +151,8 @@ public class ReferenceFinder : IReferenceFinder
                 {
                     foreach (var variable in state.Variables)
                     {
-                        if (variable.GetRootName() == "Parent" && (variable.Value as string)?.Contains(".") == true)
+                        if (variable.GetRootName() == "Parent" && variable.Value is string value && value.Contains("."))
                         {
-                            var value = (string)variable.Value;
                             var dotIndex = value.IndexOf(".");
                             var valueBeforeDot = value.Substring(0, dotIndex);
                             var valueAfterDot = value.Substring(dotIndex + 1);
@@ -157,8 +160,9 @@ public class ReferenceFinder : IReferenceFinder
                             if (valueAfterDot == oldName)
                             {
                                 var parentInstance = otherElement.GetInstance(valueBeforeDot);
-                                var parentInstanceElement = ObjectFinder.Self.GetElementSave(parentInstance);
-                                if (parentInstanceElement == containerElement)
+                                // A Parent can name an instance that no longer exists.
+                                var parentInstanceElement = parentInstance == null ? null : ObjectFinder.Self.GetElementSave(parentInstance);
+                                if (parentInstance != null && parentInstanceElement == containerElement)
                                 {
                                     changes.ParentVariablesInOtherElements.Add((otherElement, variable));
                                 }
@@ -238,7 +242,7 @@ public class ReferenceFinder : IReferenceFinder
             _ => null
         };
 
-        if (qualifiedElementPrefix != null)
+        if (qualifiedElementPrefix != null && project != null)
         {
             var qualifiedInstancePrefix = $"{qualifiedElementPrefix}.{oldName}.";
 
@@ -289,7 +293,10 @@ public class ReferenceFinder : IReferenceFinder
     public BehaviorReferences GetReferencesToBehavior(BehaviorSave behavior, string oldName)
     {
         var changes = new BehaviorReferences();
-        var project = _projectProvider.GumProjectSave;
+        if (_projectProvider.GumProjectSave is not { } project)
+        {
+            return changes;
+        }
 
         foreach (var element in project.AllElements)
         {
@@ -357,7 +364,10 @@ public class ReferenceFinder : IReferenceFinder
     {
         var changes = new CategoryReferences();
 
-        var project = _projectProvider.GumProjectSave;
+        if (_projectProvider.GumProjectSave is not { } project)
+        {
+            return changes;
+        }
 
         var ownerAsElement = owner as ElementSave;
 
@@ -408,7 +418,7 @@ public class ReferenceFinder : IReferenceFinder
                         if (instance != null)
                         {
                             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                            if (inheritingElements?.Contains(instanceElement) == true)
+                            if (instanceElement != null && inheritingElements.Contains(instanceElement))
                             {
                                 AddVariableToList(element, changes.VariableChanges, state, variable);
                             }
@@ -437,7 +447,11 @@ public class ReferenceFinder : IReferenceFinder
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<VariableReferenceChange> variableReferenceChanges = new List<VariableReferenceChange>();
 
-        var project = _projectProvider.GumProjectSave;
+        // No project means nothing can reference the variable.
+        if (_projectProvider.GumProjectSave is not { } project)
+        {
+            return new VariableChangeResponse();
+        }
 
         var changedVariableOwnerElement = owner as ElementSave;
 
@@ -479,7 +493,7 @@ public class ReferenceFinder : IReferenceFinder
                         if (instance != null)
                         {
                             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-                            if (inheritingElements.Contains(instanceElement) || instanceElement == changedVariableOwnerElement)
+                            if ((instanceElement != null && inheritingElements.Contains(instanceElement)) || instanceElement == changedVariableOwnerElement)
                             {
                                 variableChanges.Add(new VariableChange
                                 {
@@ -533,7 +547,8 @@ public class ReferenceFinder : IReferenceFinder
                                     oldSourceObject = oldFullName.Substring(0, oldFullName.IndexOf("."));
                                 }
                                 // See if the element that contains the left side variable is a match...
-                                matchesLeft = changedVariableOwnerElement == rootLeftSideElement || inheritingElements.Contains(rootLeftSideElement) ||
+                                matchesLeft = changedVariableOwnerElement == rootLeftSideElement ||
+                                    (rootLeftSideElement != null && inheritingElements.Contains(rootLeftSideElement)) ||
                                     // or if we are in the same instance as the one that owns the variable reference...
                                     (element == changedVariableOwnerElement && variableList.SourceObject == oldSourceObject);
                             }
@@ -551,13 +566,15 @@ public class ReferenceFinder : IReferenceFinder
 
                             if (matchesLeft || matchesRight)
                             {
-                                var referenceChange = new VariableReferenceChange();
-                                referenceChange.Container = element;
-                                referenceChange.VariableReferenceList = variableList;
-                                referenceChange.LineIndex = i;
-                                referenceChange.ChangedSide = (matchesLeft && matchesRight) ? SideOfEquals.Both
-                                    : matchesLeft ? SideOfEquals.Left
-                                    : SideOfEquals.Right;
+                                var referenceChange = new VariableReferenceChange
+                                {
+                                    Container = element,
+                                    VariableReferenceList = variableList,
+                                    LineIndex = i,
+                                    ChangedSide = (matchesLeft && matchesRight) ? SideOfEquals.Both
+                                        : matchesLeft ? SideOfEquals.Left
+                                        : SideOfEquals.Right
+                                };
                                 variableReferenceChanges.Add(referenceChange);
                             }
                         }
