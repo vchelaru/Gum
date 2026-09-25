@@ -8,6 +8,7 @@ using Avalonia.Layout;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Services;
+using Gum.Avalonia.Shell.MacOS;
 using Gum.Avalonia.Themes;
 using Gum.Input;
 using Gum.Managers;
@@ -92,7 +93,9 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         if (OperatingSystem.IsMacOS())
         {
             // The menu-bar key equivalents are live only while this window is active, so a dialog keeps its own Cmd+Z.
-            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel, PlatformKeyModifiers.Command, this.GetObservable(IsActiveProperty)));
+            // Actions wait for AppKit's menu tracking to end so a dialog they open comes to the front (#4982).
+            NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel, PlatformKeyModifiers.Command,
+                this.GetObservable(IsActiveProperty), MenuTrackingScheduler.InvokeAfterTracking));
         }
         else
         {

@@ -27,14 +27,23 @@ public static class AvaloniaNativeMenuBuilder
     public static NativeMenu Build(MenuModel model) => Build(model, PlatformKeyModifiers.Command);
 
     /// <summary>
+    /// How a leaf item's action is run after its click. Defaults to a dispatcher post; on the real
+    /// macOS menu bar that still runs inside AppKit's menu tracking, so the shell supplies
+    /// <c>MenuTrackingScheduler.InvokeAfterTracking</c> instead.
+    /// </summary>
+    public static Action<Action> DefaultInvokeAfterClick => MenuItemActions.InvokeAfterClose;
+
+    /// <summary>
     /// Builds the menu-bar menu for <paramref name="model"/>, binding gestures with
     /// <paramref name="commandModifiers"/> as the neutral Ctrl. Gestures are bound only while
-    /// <paramref name="isOwnerActive"/> is true; with no signal they are always bound.
+    /// <paramref name="isOwnerActive"/> is true; with no signal they are always bound. A leaf's
+    /// action runs through <paramref name="invokeAfterClick"/>, or <see cref="DefaultInvokeAfterClick"/>.
     /// </summary>
-    public static NativeMenu Build(MenuModel model, KeyModifiers commandModifiers, IObservable<bool>? isOwnerActive = null)
+    public static NativeMenu Build(MenuModel model, KeyModifiers commandModifiers, IObservable<bool>? isOwnerActive = null,
+        Action<Action>? invokeAfterClick = null)
     {
         NativeMenu menu = new NativeMenu();
-        GestureBinding binding = new GestureBinding(commandModifiers, isBound: isOwnerActive == null);
+        GestureBinding binding = new GestureBinding(commandModifiers, isBound: isOwnerActive == null, invokeAfterClick ?? DefaultInvokeAfterClick);
         Populate(menu.Items, model.TopLevelItems, binding);
         model.TopLevelItems.CollectionChanged += (_, _) => Populate(menu.Items, model.TopLevelItems, binding);
         isOwnerActive?.Subscribe(new AnonymousObserver<bool>(isActive =>
@@ -47,13 +56,15 @@ public static class AvaloniaNativeMenuBuilder
 
     /// <summary>
     /// Builds the application menu (the one named after the app, left of File) with an About Gum
-    /// item that runs <paramref name="showAbout"/>. Avalonia appends the standard Services, Hide
-    /// and Quit items itself.
+    /// item that runs <paramref name="showAbout"/> through <paramref name="invokeAfterClick"/>, or
+    /// <see cref="DefaultInvokeAfterClick"/>. Avalonia appends the standard Services, Hide and
+    /// Quit items itself.
     /// </summary>
-    public static NativeMenu BuildAppMenu(Action showAbout)
+    public static NativeMenu BuildAppMenu(Action showAbout, Action<Action>? invokeAfterClick = null)
     {
         NativeMenu menu = new NativeMenu();
-        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), new GestureBinding(KeyModifiers.None, isBound: false)));
+        GestureBinding binding = new GestureBinding(KeyModifiers.None, isBound: false, invokeAfterClick ?? DefaultInvokeAfterClick);
+        menu.Items.Add(Create(new MenuItemModel("About Gum", showAbout), binding));
         return menu;
     }
 
@@ -90,9 +101,9 @@ public static class AvaloniaNativeMenuBuilder
         }
         else
         {
-            // The menu has closed by the time the click reaches managed code, but the action still
-            // runs off the dispatcher so a synchronous dialog opens outside the native callback.
-            menuItem.Click += (_, _) => MenuItemActions.InvokeAfterClose(model.Invoke);
+            // Deferred so a synchronous dialog opens outside the native callback and, on the real
+            // menu bar, after AppKit has finished tracking the menu.
+            menuItem.Click += (_, _) => binding.InvokeAfterClick(model.Invoke);
         }
 
         model.PropertyChanged += (_, e) => Apply(menuItem, model, e);
@@ -142,18 +153,21 @@ public static class AvaloniaNativeMenuBuilder
     /// <summary>
     /// Whether the menu's key equivalents are currently bound, plus each item's full gesture so it
     /// can be put back. Items are rebuilt when a model collection changes, so the table is weak.
+    /// Also carries how a leaf's action is deferred, since every item is built through it.
     /// </summary>
     private sealed class GestureBinding
     {
         public KeyModifiers CommandModifiers { get; }
         public bool IsBound { get; set; }
         public ConditionalWeakTable<NativeMenuItem, KeyGesture> Gestures { get; }
+        public Action<Action> InvokeAfterClick { get; }
 
-        public GestureBinding(KeyModifiers commandModifiers, bool isBound)
+        public GestureBinding(KeyModifiers commandModifiers, bool isBound, Action<Action> invokeAfterClick)
         {
             CommandModifiers = commandModifiers;
             IsBound = isBound;
             Gestures = new ConditionalWeakTable<NativeMenuItem, KeyGesture>();
+            InvokeAfterClick = invokeAfterClick;
         }
     }
 }

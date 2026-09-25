@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Gum.Avalonia.Diagnostics;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Shell.MacOS;
 using Gum.Avalonia.Themes;
 using Gum.CommandLine;
 using Gum.DataTypes;
@@ -60,7 +61,8 @@ public sealed class App : Application
             // supplies its own "About Avalonia" menu instead. The About action resolves on click
             // so no tool service is built this early.
             NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.BuildAppMenu(
-                () => _services.GetRequiredService<StandardMenuModelBuilder>().ShowAbout()));
+                () => _services.GetRequiredService<StandardMenuModelBuilder>().ShowAbout(),
+                MenuTrackingScheduler.InvokeAfterTracking));
         }
         // Compact density: the WPF head's fields and rows are tighter than Fluent's defaults.
         Styles.Add(new FluentTheme { DensityStyle = DensityStyle.Compact });
