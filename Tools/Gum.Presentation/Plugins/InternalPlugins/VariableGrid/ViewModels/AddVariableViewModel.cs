@@ -65,7 +65,7 @@ public class AddVariableViewModel : DialogViewModel
     }
 
     [DependsOn(nameof(SelectedItem))]
-    public object DefaultValue
+    public object? DefaultValue
     {
         get
         {
@@ -182,7 +182,7 @@ public class AddVariableViewModel : DialogViewModel
             return GeneralResponse.UnsuccessfulWith("You must enter a name");
         }
 
-        if (!_nameVerifier.IsVariableNameValid(EnteredName, Element, Variable, out string whyNotValid))
+        if (!_nameVerifier.IsVariableNameValid(EnteredName, Element, Variable, out string? whyNotValid))
         {
             return GeneralResponse.UnsuccessfulWith(whyNotValid);
         }
@@ -275,6 +275,13 @@ public class AddVariableViewModel : DialogViewModel
             ? variable.Name 
             : variable.ExposedAsName;
 
+        // An exposed-name rename of a variable that isn't exposed has nothing to rename. Going on
+        // would match every non-exposed variable, since they all have a null exposed name.
+        if (oldName == null)
+        {
+            return;
+        }
+
         HashSet<ElementSave> elementsToSave = new HashSet<ElementSave>();
         if (ApplyEditVariableOnElement(element, oldName, newName, type, 
             // If we're changing the variable on this element, we should respect whether it's
@@ -317,7 +324,7 @@ public class AddVariableViewModel : DialogViewModel
             var elementWithReference = referenceChange.Container;
             var variableList = referenceChange.VariableReferenceList;
 
-            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex].ToString();
+            var oldLine = variableList.ValueAsIList[referenceChange.LineIndex]?.ToString() ?? string.Empty;
 
             // This could be on the left or right side, so check either
             var leftAndRight = oldLine.Split('=').Select(item => item.Trim()).ToArray();
@@ -363,7 +370,8 @@ public class AddVariableViewModel : DialogViewModel
 
         foreach (var reference in references)
         {
-            var instance = reference.ReferencingObject as InstanceSave;
+            // InstanceOfType references always point at an instance.
+            var instance = (InstanceSave)reference.ReferencingObject;
 
             var oldFullName = instance.Name + "." + oldName;
             var newFullName = instance.Name + "." + newName;
