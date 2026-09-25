@@ -292,6 +292,43 @@ public class ElementCommandsTests : BaseTestClass
     }
 
     [Fact]
+    public void ModifyVariable_ElementWithWidthUnitsAbsoluteMultipliedByFontScale_ShouldDividePixelDeltaByGlobalFontScale()
+    {
+        float originalFontScale = GraphicalUiElement.GlobalFontScale;
+        try
+        {
+            GraphicalUiElement.GlobalFontScale = 4f;
+
+            ComponentSave component = new ComponentSave { Name = "FontScaleComponent", BaseType = "Container" };
+            StateSave defaultState = new StateSave { Name = "Default", ParentContainer = component };
+            component.States.Add(defaultState);
+            defaultState.Variables.Add(new VariableSave { Name = "Width", Value = 50f, Type = "float", SetsValue = true });
+            defaultState.Variables.Add(new VariableSave { Name = "WidthUnits", Value = DimensionUnitType.AbsoluteMultipliedByFontScale, Type = "DimensionUnitType", SetsValue = true });
+
+            GumProjectSave project = new GumProjectSave();
+            project.Components.Add(component);
+            ObjectFinder.GumProjectSave = project;
+
+            GraphicalUiElement gue = new GraphicalUiElement(new InvisibleRenderable())
+                { Width = 50f, WidthUnits = DimensionUnitType.AbsoluteMultipliedByFontScale, Tag = component };
+
+            _selectedState.SetupGet(x => x.SelectedElement).Returns(component);
+            _selectedState.SetupGet(x => x.SelectedStateSave).Returns(defaultState);
+            _wireframeObjectManager.Setup(x => x.GetRepresentation(component)).Returns(gue);
+            _wireframeObjectManager.Setup(x => x.GetSelectedRepresentation()).Returns(gue);
+            _projectManager.SetupGet(x => x.GumProjectSave).Returns(project);
+
+            float result = _sut.ModifyVariable("Width", 20f, component);
+
+            result.ShouldBe(55f, tolerance: 0.0001f);
+        }
+        finally
+        {
+            GraphicalUiElement.GlobalFontScale = originalFontScale;
+        }
+    }
+
+    [Fact]
     public void ModifyVariable_DragThenReleaseOnRectScreenScenario_TracksCorrectlyThroughoutWithNoReversion()
     {
         // Reproduces the real RectScreen.gusx repro reported by the user: RectangleInstance1 has

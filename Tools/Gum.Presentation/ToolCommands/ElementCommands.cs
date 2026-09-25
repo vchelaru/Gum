@@ -491,7 +491,7 @@ public class ElementCommands : IElementCommands
         }
 
         float currentValue = (float)currentValueAsObject;
-        string unitsVariableName = baseVariableName + " Units";
+        string unitsVariableName = baseVariableName + "Units";
         GetCurrentValueForVariable(unitsVariableName, null, out _, out object? unitsVariableAsObject);
 
         modificationAmount = ConvertAmountToPixelAccordingToUnitType(baseVariableName, modificationAmount, unitsVariableAsObject);
