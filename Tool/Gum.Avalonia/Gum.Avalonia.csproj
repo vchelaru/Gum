@@ -113,6 +113,9 @@
 	<ItemGroup>
 		<!-- The window icon, shared with the WPF head. -->
 		<AvaloniaResource Include="..\..\Gum\GumIcon.ico" Link="GumIcon.ico" />
+		<!-- The canvases' hidden KNI SDL window loads Icon.bmp from the entry assembly and falls back
+		     to the KNI logo; on macOS that becomes the Dock icon. Built by Packaging/make-icon-bmp.py. -->
+		<EmbeddedResource Include="Packaging\Icon.bmp" LogicalName="Icon.bmp" />
 		<!-- The title bar logo, dark and light (MainWindowIconLogic), shared with the WPF head. -->
 		<AvaloniaResource Include="..\..\Gum\GumLogo64.png" Link="GumLogo64.png" />
 		<AvaloniaResource Include="..\..\Gum\GumLogo64Light.png" Link="GumLogo64Light.png" />
