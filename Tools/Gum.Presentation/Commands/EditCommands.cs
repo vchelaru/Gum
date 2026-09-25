@@ -120,7 +120,7 @@ public class EditCommands : IEditCommands
         {
             if (deleteResponse.ShouldShowMessage)
             {
-                _dialogService.ShowMessage(deleteResponse.Message);
+                _dialogService.ShowMessage(deleteResponse.Message ?? string.Empty);
             }
         }
         else
@@ -166,8 +166,9 @@ public class EditCommands : IEditCommands
             var category = stateContainer.Categories.FirstOrDefault(item => item.States.Contains(stateSave));
             GetUserStringOptions options = new()
             {
-                InitialValue = _selectedState.SelectedStateSave.Name,
-                Validator = v => _nameVerifier.IsStateNameValid(v, category, stateSave, out string whyNotValid) ? null : whyNotValid
+                // The only caller passes the selected state, so this is the name it showed before.
+                InitialValue = stateSave.Name,
+                Validator = v => _nameVerifier.IsStateNameValid(v, category, stateSave, out string? whyNotValid) ? null : whyNotValid
             };
             var changes = _renameLogic.GetChangesForRenamedState(stateSave, stateSave.Name, stateContainer, category);
 
@@ -239,7 +240,7 @@ public class EditCommands : IEditCommands
         var oldCategory = stateContainer.Categories
             .FirstOrDefault(item => item.States.Contains(stateToMove));
         ////////////////////Early Out //////////////////////
-        if (stateToMove == null || categoryNameToMoveTo == null || oldCategory == null)
+        if (stateToMove == null || categoryNameToMoveTo == null || oldCategory == null || newCategory == null)
         {
             return;
         }
@@ -280,7 +281,8 @@ public class EditCommands : IEditCommands
             }
 
 
-            var firstState = newCategory.States.FirstOrDefault();
+            // newCategory holds stateToMove now, so it has a first state.
+            var firstState = newCategory.States[0];
             if (firstState != stateToMove)
             {
                 foreach (var variable in firstState.Variables)
@@ -337,7 +339,7 @@ public class EditCommands : IEditCommands
         {
             if (deleteResponse.ShouldShowMessage)
             {
-                _dialogService.ShowMessage(deleteResponse.Message, "Delete Category");
+                _dialogService.ShowMessage(deleteResponse.Message ?? string.Empty, "Delete Category");
             }
         }
         else
@@ -389,7 +391,7 @@ public class EditCommands : IEditCommands
         {
             // uncategorized states can't come from behaviors:
             bool isUncategorized = element.States.Contains(stateSave);
-            StateSaveCategory elementCategory = null;
+            StateSaveCategory? elementCategory = null;
 
             if (!isUncategorized)
             {
@@ -458,7 +460,7 @@ public class EditCommands : IEditCommands
             reference.BehaviorName = newName;
 
         // Update the project-level BehaviorReference entry
-        var projectRef = _projectManager.GumProjectSave.BehaviorReferences
+        var projectRef = _projectManager.GetLoadedProject().BehaviorReferences
             .FirstOrDefault(r => r.Name == oldName);
         if (projectRef != null)
             projectRef.Name = newName;
@@ -466,7 +468,7 @@ public class EditCommands : IEditCommands
         behavior.Name = newName;
 
         // Delete the old file and save under the new name
-        if (oldFile.Exists())
+        if (oldFile?.Exists() == true)
             System.IO.File.Delete(oldFile.FullPath);
 
         _fileCommands.TryAutoSaveBehavior(behavior);
@@ -491,7 +493,7 @@ public class EditCommands : IEditCommands
         string title = "Add behavior";
         GetUserStringOptions options = new()
         {
-            Validator = x => _nameVerifier.IsBehaviorNameValid(x, null, out string whyNotValid) ? null : whyNotValid
+            Validator = x => _nameVerifier.IsBehaviorNameValid(x, null, out string? whyNotValid) ? null : whyNotValid
         };
 
         if (_dialogService.GetUserString(message, title, options) is { } name)
@@ -499,10 +501,11 @@ public class EditCommands : IEditCommands
             var behavior = new BehaviorSave();
             behavior.Name = name;
 
-            _projectManager.GumProjectSave.BehaviorReferences.Add(new BehaviorReference { Name = name });
-            _projectManager.GumProjectSave.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
-            _projectManager.GumProjectSave.Behaviors.Add(behavior);
-            _projectManager.GumProjectSave.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
+            var gumProject = _projectManager.GetLoadedProject();
+            gumProject.BehaviorReferences.Add(new BehaviorReference { Name = name });
+            gumProject.BehaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
+            gumProject.Behaviors.Add(behavior);
+            gumProject.Behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 
             _pluginManager.BehaviorCreated(behavior);
 
@@ -538,7 +541,7 @@ public class EditCommands : IEditCommands
             {
                 InitialValue = element.Name + "Copy",
                 Validator = n =>
-                    _nameVerifier.IsElementNameValid(n, null, null, out string whyNotValid)
+                    _nameVerifier.IsElementNameValid(n, null, null, out string? whyNotValid)
                         ? null
                         : whyNotValid
             };
@@ -565,7 +568,7 @@ public class EditCommands : IEditCommands
             FilePath filePath = element.Name;
             var nameWithoutPath = filePath.FileNameNoPath;
 
-            string folder = null;
+            string? folder = null;
             if (element.Name.Contains("/"))
             {
                 folder = element.Name.Substring(0, element.Name.LastIndexOf('/'));
@@ -575,7 +578,7 @@ public class EditCommands : IEditCommands
             {
                 InitialValue = nameWithoutPath + "Copy",
                 Validator = n =>
-                    _nameVerifier.IsElementNameValid(n, folder, null, out string whyNotValid)
+                    _nameVerifier.IsElementNameValid(n, folder, null, out string? whyNotValid)
                         ? null
                         : whyNotValid
             };

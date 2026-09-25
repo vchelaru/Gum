@@ -311,6 +311,27 @@ public class FileChangeReactionLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ReactToFileChanged_ShouldReloadBehavior_WhenTheProjectAlsoHasANamelessBehavior()
+    {
+        FileChangeReactionLogic sut = BuildSut(
+            out Mock<IGuiCommands> guiCommandsMock,
+            out _,
+            out _,
+            out Mock<IProjectState> projectStateMock);
+
+        GumProjectSave project = new GumProjectSave { FullFileName = @"C:\proj\Project.gumj" };
+        project.Behaviors.Add(new Gum.DataTypes.Behaviors.BehaviorSave { Name = null! });
+        project.Behaviors.Add(new Gum.DataTypes.Behaviors.BehaviorSave { Name = "ButtonBehavior" });
+        projectStateMock.Setup(p => p.GumProjectSave).Returns(project);
+
+        FilePath changedFile = new FilePath(@"C:\proj\Behaviors\ButtonBehavior.behj");
+
+        sut.ReactToFileChanged(changedFile);
+
+        guiCommandsMock.Verify(g => g.RefreshElementTreeView(), Times.Once);
+    }
+
+    [Fact]
     public void FlagElementForDeletedFile_ShouldSetIsSourceFileMissing_WhenDeletedFileMapsToLoadedElement()
     {
         // Repro #3367: an element's source file is deleted on disk while the tool is running.

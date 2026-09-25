@@ -71,7 +71,7 @@ namespace Gum.Managers
             }
             else if(extension == GumProjectSave.ProjectExtension || extension == GumProjectSave.ProjectJsonExtension)
             {
-                var isCurrentProject = file == _projectState.GumProjectSave.FullFileName;
+                var isCurrentProject = _projectState.GumProjectSave?.FullFileName is { } projectFileName && file == projectFileName;
                 if(isCurrentProject)
                 {
                     ReactToProjectChanged(file);
@@ -213,7 +213,7 @@ namespace Gum.Managers
         private void ReactToLocalizationFileChanged(FilePath file)
         {
             var gumProject = _projectState.GumProjectSave;
-            var projectFiles = gumProject.LocalizationFiles;
+            var projectFiles = gumProject?.LocalizationFiles;
 
             if(projectFiles == null || projectFiles.Count == 0)
             {
@@ -322,7 +322,6 @@ namespace Gum.Managers
         private void ReactToImageFileChanged(FilePath file)
         {
             var currentElement = _selectedState.SelectedElement;
-            string relativeDirectory = _projectState.ProjectDirectory;
 
             if (currentElement != null)
             {
@@ -383,7 +382,6 @@ namespace Gum.Managers
         private void ReactToAnimationChainChanged(FilePath file)
         {
             var currentElement = _selectedState.SelectedElement;
-            string relativeDirectory = _projectState.ProjectDirectory;
             if (currentElement != null)
             {
                 var referencedFiles = ObjectFinder.Self
@@ -402,7 +400,6 @@ namespace Gum.Managers
         private void ReactToFontFileChanged(FilePath file)
         {
             var currentElement = _selectedState.SelectedElement;
-            string relativeDirectory = _projectState.ProjectDirectory;
 
             if (currentElement != null)
             {
@@ -434,9 +431,11 @@ namespace Gum.Managers
 
             if(element != null)
             {
-                _projectState.GumProjectSave.ReloadElement(element);
-                _projectState.GumProjectSave.Initialize();
-                _standardElementsManagerGumTool.FixCustomTypeConverters(_projectState.GumProjectSave);
+                // File changes are only watched while a project is open.
+                var gumProject = _projectState.GetLoadedProject();
+                gumProject.ReloadElement(element);
+                gumProject.Initialize();
+                _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
 
                 if (refreshingSelected)
@@ -451,7 +450,11 @@ namespace Gum.Managers
                 {
                     _selectedState.SelectedElement = element;
                 }
-                _pluginManager.ElementReloaded(element);
+                // The reloaded file can hold an element under another name.
+                if (element != null)
+                {
+                    _pluginManager.ElementReloaded(element);
+                }
             }
 
             bool shouldReloadWireframe = false;
@@ -487,17 +490,19 @@ namespace Gum.Managers
 
         private void ReactToBehaviorChanged(FilePath file)
         {
-            var behavior = _projectState.GumProjectSave.Behaviors.FirstOrDefault(item =>
+            // File changes are only watched while a project is open.
+            var gumProject = _projectState.GetLoadedProject();
+            var behavior = gumProject.Behaviors.FirstOrDefault(item =>
             // It's somehow possible for behaviors with no name to make it in the project. let's tolerate it
-                item?.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
+                item?.Name?.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
 
             var refreshingSelected = behavior == _selectedState.SelectedBehavior;
 
             if (behavior != null)
             {
-                _projectState.GumProjectSave.ReloadBehavior(behavior);
-                _projectState.GumProjectSave.Initialize();
-                _standardElementsManagerGumTool.FixCustomTypeConverters(_projectState.GumProjectSave);
+                gumProject.ReloadBehavior(behavior);
+                gumProject.Initialize();
+                _standardElementsManagerGumTool.FixCustomTypeConverters(gumProject);
 
                 if (refreshingSelected)
                 {
@@ -507,8 +512,8 @@ namespace Gum.Managers
 
                 if (refreshingSelected)
                 {
-                    behavior = _projectState.GumProjectSave.Behaviors.FirstOrDefault(item =>
-                        item.Name.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
+                    behavior = gumProject.Behaviors.FirstOrDefault(item =>
+                        item.Name?.ToLowerInvariant() == file.StandardizedNoPathNoExtension.ToLowerInvariant());
                     _selectedState.SelectedBehavior = behavior;
 
                     _guiCommands.RefreshVariables(force: true);

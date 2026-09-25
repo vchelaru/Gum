@@ -239,7 +239,10 @@ public class InstanceDeletionHelper
 
             foreach (var group in instancesByParent)
             {
-                RecursivelyDeleteChildrenOfInstances(group.ToList(), group.Key);
+                if (group.Key is { } parentElement)
+                {
+                    RecursivelyDeleteChildrenOfInstances(group.ToList(), parentElement);
+                }
             }
         }
     }

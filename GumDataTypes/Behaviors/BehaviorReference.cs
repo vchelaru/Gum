@@ -32,7 +32,7 @@ namespace Gum.DataTypes.Behaviors
         /// while still supplying its own default-visual path (e.g. each Forms theme's own
         /// default button component), without writing a theme-specific value into the shared file.
         /// </summary>
-        public string DefaultImplementationOverride;
+        public string? DefaultImplementationOverride;
 
         /// <summary>
         /// Returns the relative path to this behavior's backing file. When <see cref="SourcePath"/>

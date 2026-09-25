@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 namespace Gum.Managers;
 
 public class NameVerifier : INameVerifier
@@ -161,7 +162,7 @@ public class NameVerifier : INameVerifier
     
     #endregion
     
-    public bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, out string? whyNotValid)
+    public bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, [NotNullWhen(false)] out string? whyNotValid)
     {
         IsNameValidCommon(componentNameWithoutFolder, out whyNotValid, out _);
         if (string.IsNullOrEmpty(whyNotValid))
@@ -174,23 +175,27 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string whyNotValid, StateSaveCategory? categoryToIgnore = null)
+    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, [NotNullWhen(false)] out string? whyNotValid, StateSaveCategory? categoryToIgnore = null)
     {
-        IsNameValidCommon(name, out whyNotValid, out _);
+        if (!IsNameValidCommon(name, out string commonWhyNotValid, out _))
+        {
+            whyNotValid = commonWhyNotValid;
+            return false;
+        }
+        whyNotValid = null;
 
-        if (string.IsNullOrEmpty(whyNotValid) && name == categoryContainer.Name)
+        if (name == categoryContainer.Name)
         {
             whyNotValid = "Category name cannot be the same as its container's";
             return false;
         }
             
-        if(string.IsNullOrEmpty(whyNotValid) && name.Contains(" "))
+        if(name.Contains(" "))
         {
             whyNotValid = "Category names cannot contain spaces";
             return false;
         }
             
-        if(string.IsNullOrEmpty(whyNotValid))
         {
             string standardizedName = Standardize(name);
             string? existingName = null;
@@ -211,43 +216,51 @@ public class NameVerifier : INameVerifier
             }
         }
 
-        if(string.IsNullOrEmpty(whyNotValid) && categoryContainer is ElementSave element)
+        if(categoryContainer is ElementSave element)
         {
-            IsNameValidTopLevel(name, element, categoryToIgnore, out whyNotValid);
-        }
-
-        return string.IsNullOrEmpty(whyNotValid);
-    }
-    public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string whyNotValid)
-    {
-        IsNameValidCommon(name, out whyNotValid, out _);
-        if(string.IsNullOrEmpty(whyNotValid))
-        {
-            if (category != null && name == category.Name)
-            {
-                whyNotValid = "State name cannot be the same as its category's";
-                return false;
-            }
-            
-            var existing = category?.States.Find(item => Standardize(item.Name) == Standardize(name) && item != stateSave);
-            if (existing != null)
-            {
-                whyNotValid = $"The category {category.Name} already has a state named {name}";
-                return false;
-            }
+            return IsNameValidTopLevel(name, element, categoryToIgnore, out whyNotValid);
         }
 
         return true;
     }
-    public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string whyNotValid)
+    public bool IsStateNameValid(string? name, StateSaveCategory? category, StateSave? stateSave, [NotNullWhen(false)] out string? whyNotValid)
     {
-        IsNameValidCommon(instanceName, out whyNotValid, out _);
+        if (!IsNameValidCommon(name, out string commonWhyNotValid, out _))
+        {
+            whyNotValid = commonWhyNotValid;
+            return false;
+        }
+        whyNotValid = null;
+
+        if (category != null && name == category.Name)
+        {
+            whyNotValid = "State name cannot be the same as its category's";
+            return false;
+        }
+
+        var existing = category?.States.Find(item => Standardize(item.Name) == Standardize(name) && item != stateSave);
+        if (category != null && existing != null)
+        {
+            whyNotValid = $"The category {category.Name} already has a state named {name}";
+            return false;
+        }
+
+        return true;
+    }
+    public bool IsInstanceNameValid(string? instanceName, InstanceSave? instanceSave, IInstanceContainer? instanceContainer, [NotNullWhen(false)] out string? whyNotValid)
+    {
+        if (!IsNameValidCommon(instanceName, out string commonWhyNotValid, out _))
+        {
+            whyNotValid = commonWhyNotValid;
+            return false;
+        }
+        whyNotValid = null;
         // See if this is a variable used by any state in the StandardElementsManager:
         if(string.IsNullOrEmpty(whyNotValid))
         {
             IsNameUsedByStandardVariables(instanceName, out whyNotValid);
         }
-        if (string.IsNullOrEmpty(whyNotValid))
+        if (string.IsNullOrEmpty(whyNotValid) && instanceContainer != null)
         {
             IsNameAlreadyUsed(instanceName, instanceSave, instanceContainer, out whyNotValid);
         }
@@ -259,7 +272,7 @@ public class NameVerifier : INameVerifier
 
         return string.IsNullOrEmpty(whyNotValid);
     }
-    private void IsNameUsedByStandardVariables(string nameToCheck, out string whyNotValid)
+    private void IsNameUsedByStandardVariables(string nameToCheck, out string? whyNotValid)
     {
         var variables = _standardElementsManager.DefaultStates.SelectMany(item => item.Value.Variables);
         var names = variables.Select(item => item.Name).ToHashSet();
@@ -273,7 +286,7 @@ public class NameVerifier : INameVerifier
             whyNotValid = $"\"Name\" is a reserved keyword so it cannot be used as a name";
         }
     }
-    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, out string? whyNotValid)
+    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         var names = new List<TopLevelName>();
@@ -292,7 +305,8 @@ public class NameVerifier : INameVerifier
         {
             foreach (var variable in element.DefaultState.Variables.Where(item => !string.IsNullOrEmpty(item.ExposedAsName)))
             {
-                names.Add(new TopLevelName(variable.ExposedAsName, "Variable", variable));
+                // The Where above keeps only variables with an ExposedAsName.
+                names.Add(new TopLevelName(variable.ExposedAsName!, "Variable", variable));
             }
         }
 
@@ -310,10 +324,10 @@ public class NameVerifier : INameVerifier
 
         return true;
     }
-    public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string whyNotValid)
+    public bool IsVariableNameValid(string variableName, ElementSave? elementSave, VariableSave? variableSave, [NotNullWhen(false)] out string? whyNotValid)
     {
-        whyNotValid = null;
-        IsNameValidCommon(variableName, out whyNotValid, out _);
+        IsNameValidCommon(variableName, out string commonWhyNotValid, out _);
+        whyNotValid = commonWhyNotValid;
 
         // variables should not allow spaces because previous versions of Gum used to have variables with spaces
         // and that caused confusion when creating variable referencs. Therefore, Gum strips spaces from names. We 
@@ -354,9 +368,10 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsBehaviorNameValid(string behaviorName, BehaviorSave behaviorSave, out string whyNotValid)
+    public bool IsBehaviorNameValid(string? behaviorName, BehaviorSave? behaviorSave, [NotNullWhen(false)] out string? whyNotValid)
     {
-        IsNameValidCommon(behaviorName, out whyNotValid, out _);
+        IsNameValidCommon(behaviorName, out string commonWhyNotValid, out _);
+        whyNotValid = commonWhyNotValid;
         if (string.IsNullOrEmpty(whyNotValid))
         {
             IsFileNameWindowsReserved(behaviorName, out whyNotValid);
@@ -367,7 +382,7 @@ public class NameVerifier : INameVerifier
         }
         return string.IsNullOrEmpty(whyNotValid);
     }
-    public bool IsNameValidCommon(string? name, out string whyNotValid, out CommonValidationError commonValidationError)
+    public bool IsNameValidCommon([NotNullWhen(true)] string? name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
         whyNotValid = string.Empty;
         
@@ -426,7 +441,7 @@ public class NameVerifier : INameVerifier
 
         return stateToPullFrom.GetVariableRecursive(variable);
     }
-    public bool IsValidCSharpName(string name, out string whyNotValid, out CommonValidationError commonValidationError)
+    public bool IsValidCSharpName(string name, [NotNullWhen(false)] out string? whyNotValid, out CommonValidationError commonValidationError)
     {
         if (name[0] != '_' && !char.IsLetter(name[0]))
         {
@@ -450,7 +465,7 @@ public class NameVerifier : INameVerifier
     {
         return ObjectFinder.Self.GetComponent(name) != null;
     }
-    private void IsNameAlreadyUsed(string name, object objectToIgnore, IInstanceContainer instanceContainer, out string whyNotValid)
+    private void IsNameAlreadyUsed(string name, object? objectToIgnore, IInstanceContainer instanceContainer, out string? whyNotValid)
     {
         whyNotValid = null;
         if (objectToIgnore != instanceContainer && Standardize(name) == Standardize(instanceContainer.Name))
@@ -511,7 +526,7 @@ public class NameVerifier : INameVerifier
             whyNotValid = "There is a screen named " + screen.Name + " so this name can't be used.";
         }
     }
-    public bool IsNameValidAndroidFile(string name, out string whyNotValid)
+    public bool IsNameValidAndroidFile(string name, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         for(int i = 0; i < name.Length; i++)
@@ -531,7 +546,8 @@ public class NameVerifier : INameVerifier
             (c == '_') ||
             (c >= '0' && c <= '9');
     }
-    private string Standardize(string name)
+    [return: NotNullIfNotNull(nameof(name))]
+    private string? Standardize(string? name)
     {
         if (name == null) return null;
 

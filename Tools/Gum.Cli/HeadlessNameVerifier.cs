@@ -3,6 +3,7 @@ using Gum.DataTypes.Behaviors;
 using Gum.DataTypes.Variables;
 using Gum.Managers;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Gum.Cli;
 
@@ -26,7 +27,7 @@ internal class HeadlessNameVerifier : INameVerifier
     ];
 
     /// <inheritdoc/>
-    public bool IsValidCSharpName(string name, out string whyNotValid, out CommonValidationError commonValidationError)
+    public bool IsValidCSharpName(string name, [NotNullWhen(false)] out string? whyNotValid, out CommonValidationError commonValidationError)
     {
         if (name[0] != '_' && !char.IsLetter(name[0]))
         {
@@ -42,7 +43,7 @@ internal class HeadlessNameVerifier : INameVerifier
             return false;
         }
 
-        whyNotValid = null!;
+        whyNotValid = null;
         commonValidationError = CommonValidationError.None;
         return true;
     }
@@ -50,47 +51,47 @@ internal class HeadlessNameVerifier : INameVerifier
     /// <inheritdoc/>
     public bool IsFolderNameValid(string? folderName, out string whyNotValid)
     {
-        whyNotValid = null!;
+        whyNotValid = string.Empty;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsElementNameValid(string? componentNameWithoutFolder, string folderName, ElementSave elementSave, out string? whyNotValid)
+    public bool IsElementNameValid(string? componentNameWithoutFolder, string? folderName, ElementSave? elementSave, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, out string? whyNotValid, StateSaveCategory? categoryToIgnore = null)
+    public bool IsCategoryNameValid(string? name, IStateContainer categoryContainer, [NotNullWhen(false)] out string? whyNotValid, StateSaveCategory? categoryToIgnore = null)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsStateNameValid(string name, StateSaveCategory category, StateSave stateSave, out string? whyNotValid)
+    public bool IsStateNameValid(string? name, StateSaveCategory? category, StateSave? stateSave, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsInstanceNameValid(string instanceName, InstanceSave instanceSave, IInstanceContainer instanceContainer, out string? whyNotValid)
+    public bool IsInstanceNameValid(string? instanceName, InstanceSave? instanceSave, IInstanceContainer? instanceContainer, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsVariableNameValid(string variableName, ElementSave elementSave, VariableSave variableSave, out string? whyNotValid)
+    public bool IsVariableNameValid(string variableName, ElementSave? elementSave, VariableSave? variableSave, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsBehaviorNameValid(string behaviorName, BehaviorSave behaviorSave, out string? whyNotValid)
+    public bool IsBehaviorNameValid(string? behaviorName, BehaviorSave? behaviorSave, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
@@ -100,23 +101,23 @@ internal class HeadlessNameVerifier : INameVerifier
     public bool IsComponentNameAlreadyUsed(string name) => false;
 
     /// <inheritdoc/>
-    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, out string? whyNotValid)
+    public bool IsNameValidTopLevel(string name, ElementSave element, object? objectToIgnore, [NotNullWhen(false)] out string? whyNotValid)
     {
         whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsNameValidAndroidFile(string name, out string whyNotValid)
+    public bool IsNameValidAndroidFile(string name, [NotNullWhen(false)] out string? whyNotValid)
     {
-        whyNotValid = null!;
+        whyNotValid = null;
         return true;
     }
 
     /// <inheritdoc/>
-    public bool IsNameValidCommon(string name, out string whyNotValid, out CommonValidationError commonValidationError)
+    public bool IsNameValidCommon(string? name, out string whyNotValid, out CommonValidationError commonValidationError)
     {
-        whyNotValid = null!;
+        whyNotValid = string.Empty;
         commonValidationError = CommonValidationError.None;
         return true;
     }
