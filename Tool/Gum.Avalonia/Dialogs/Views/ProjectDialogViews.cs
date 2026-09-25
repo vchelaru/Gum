@@ -54,7 +54,7 @@ public sealed class ExposeColorDialogView : StackPanel
         error.Bind(TextBlock.TextProperty, new Binding(nameof(ExposeColorDialogViewModel.Error)));
         Children.Add(error);
 
-        DialogViewHelpers.FocusAndSelectAllWhenShown(this, baseName);
+        DialogViewHelpers.FocusAndSelectAllWhenShown(baseName);
     }
 }
 
