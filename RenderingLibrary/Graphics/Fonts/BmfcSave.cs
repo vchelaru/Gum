@@ -268,7 +268,8 @@ public class BmfcSave
     {
         var assembly2 = Assembly.GetEntryAssembly();
 
-        string directory = FileManager.GetDirectory(assembly2.Location);
+        // The template ships next to the tool executable.
+        string directory = FileManager.GetDirectory(assembly2!.Location);
 
         var bmfcTemplateFullPath =
             directory + "Content/BmfcTemplate.bmfc";
@@ -498,11 +499,15 @@ public class BmfcSave
     /// </summary>
     /// <param name="newRange">The range string to validate.</param>
     /// <returns>True if the range is valid; false otherwise.</returns>
-    public static bool GetIfIsValidRange(string newRange)
+    public static bool GetIfIsValidRange(string? newRange)
     {
         try
         {
-            if(newRange?.Contains(" ") == true)
+            if (newRange == null)
+            {
+                return false;
+            }
+            if(newRange.Contains(" "))
             {
                 return false; // no spaces allowed, bmfontgenerator doesn't like it
             }
@@ -693,14 +698,14 @@ public class BmfcSave
         float dropshadowBlur = 0f, byte dropshadowRed = 0, byte dropshadowGreen = 0, byte dropshadowBlue = 0,
         byte dropshadowAlpha = 0)
     {
-        string fileName = null;
+        string fileName;
 
         string effectiveFontName;
         bool isFromFile = !string.IsNullOrEmpty(fontFilePath);
 
         if(isFromFile)
         {
-            effectiveFontName = Path.GetFileNameWithoutExtension(fontFilePath);
+            effectiveFontName = Path.GetFileNameWithoutExtension(fontFilePath)!;
         }
         else
         {

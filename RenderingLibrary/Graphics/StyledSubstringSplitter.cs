@@ -15,7 +15,7 @@ public class InlineVariable
     /// Variable name, such as "Font". This translates to the left-side of the assignment in the tag. For example
     /// [Font=Arial] would have a VariableName of "Font".
     /// </summary>
-    public string VariableName;
+    public string VariableName = null!;
 
     /// <summary>
     /// The start index of the tag in the "stripped" text (after all tags have been removed).
@@ -26,7 +26,7 @@ public class InlineVariable
     /// The number of characters covered by this inline variable. This is the character count on the "stripped" text.
     /// </summary>
     public int CharacterCount;
-    public object Value;
+    public object Value = null!;
 
     public override string ToString()
     {
@@ -48,7 +48,7 @@ public class StyledSubstring
     /// <summary>
     /// The text content of this run.
     /// </summary>
-    public string Substring;
+    public string Substring = string.Empty;
 
     public override string ToString()
     {

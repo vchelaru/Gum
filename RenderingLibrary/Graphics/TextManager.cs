@@ -6,14 +6,14 @@ namespace RenderingLibrary.Graphics
     {
         #region Fields
 
-        static TextManager mSelf;
+        static TextManager? mSelf;
 
         List<Text> mTexts = new List<Text>();
 
         #endregion
 
         #region Properties
-        public SystemManagers Managers
+        public SystemManagers? Managers
         {
             get;
             set;
@@ -58,7 +58,7 @@ namespace RenderingLibrary.Graphics
             Add(text, null);
         }
 
-        public void Add(Text text, Layer layer)
+        public void Add(Text text, Layer? layer)
         {
             if (layer == null)
             {
