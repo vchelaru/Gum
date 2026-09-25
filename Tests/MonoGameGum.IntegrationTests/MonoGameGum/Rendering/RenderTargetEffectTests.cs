@@ -159,7 +159,7 @@ technique SpriteDrawing
         // 1) Compile the sample's grayscale .fx with ShadowDusk (no content pipeline).
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
 
         compileResult.IsSuccess.ShouldBeTrue(
             compileResult.IsFailure
@@ -216,7 +216,7 @@ technique SpriteDrawing
 
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
         compileResult.IsSuccess.ShouldBeTrue(
             compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
         using Effect grayscale = new(gd, compileResult.Value.Data);
@@ -261,7 +261,7 @@ technique SpriteDrawing
 
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL });
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
         compileResult.IsSuccess.ShouldBeTrue(
             compileResult.IsFailure ? string.Join("\n", compileResult.Error.Select(e => e.Message)) : "");
         using Effect grayscale = new(gd, compileResult.Value.Data);
@@ -314,7 +314,7 @@ technique SpriteDrawing
     {
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> compileResult =
-            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.DirectX });
+            compiler.Compile(GrayscaleFx, new CompilerOptions { Target = PlatformTarget.DirectX }, TestContext.Current.CancellationToken);
 
         compileResult.IsSuccess.ShouldBeTrue(
             compileResult.IsFailure
@@ -365,13 +365,13 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
 
         // OpenGL — the target Samples/MonoGameGumInCode's game-side resolver compiles for.
         Result<CompiledShader, ShaderError[]> openGlResult = compiler.Compile(
-            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL });
+            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
         openGlResult.IsSuccess.ShouldBeTrue(
             openGlResult.IsFailure ? string.Join("\n", openGlResult.Error.Select(e => e.Message)) : "");
 
         // DirectX — the target the Gum tool's RenderTargetShaderResolver compiles for (issue #3210).
         Result<CompiledShader, ShaderError[]> directXResult = compiler.Compile(
-            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.DirectX });
+            conversion.Value.FxText, new CompilerOptions { Target = PlatformTarget.DirectX }, TestContext.Current.CancellationToken);
         directXResult.IsSuccess.ShouldBeTrue(
             directXResult.IsFailure ? string.Join("\n", directXResult.Error.Select(e => e.Message)) : "");
     }
@@ -682,7 +682,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR0
         string source = File.ReadAllText(path);
         EffectCompiler compiler = new();
         Result<CompiledShader, ShaderError[]> result =
-            compiler.Compile(source, new CompilerOptions { Target = PlatformTarget.OpenGL });
+            compiler.Compile(source, new CompilerOptions { Target = PlatformTarget.OpenGL }, TestContext.Current.CancellationToken);
         if (result.IsFailure)
         {
             return null;

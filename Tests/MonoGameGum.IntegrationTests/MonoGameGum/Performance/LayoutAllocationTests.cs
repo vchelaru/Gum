@@ -8,7 +8,6 @@ using RenderingLibrary;
 using RenderingLibrary.Content;
 using Shouldly;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace MonoGameGum.IntegrationTests.MonoGameGum.Performance;
 

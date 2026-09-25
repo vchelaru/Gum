@@ -694,8 +694,8 @@ jobs:
         run: dotnet test "Tests/Gum.ProjectServices.MonoGame.Tests" --configuration Release --no-build --logger "trx" --results-directory "TestResults"
 
       # Real MonoGame Game + GraphicsDevice per test, on the same Mesa llvmpipe DLLs copied above
-      # (#4190). Windows-only for the same reason RaylibGum.Tests is: the macOS runner's window
-      # creation is main-thread-coupled via Cocoa, and Mesa is dropped in as Windows DLLs.
+      # (#4190). Windows-only because Mesa is dropped in as Windows DLLs. The suite also runs locally
+      # on macOS: its own Main runs every test on the process main thread, which Cocoa requires (#5025).
       #
       # All tests run unfiltered, including the 7 RenderTargetEffectTests that compile a .fx with
       # ShadowDusk for PlatformTarget.OpenGL. That target used to fail here with "DXIL container
