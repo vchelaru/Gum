@@ -1709,4 +1709,23 @@ public class GridTests : BaseTestClass
 
         rowContainer.MinHeight.ShouldBeNull();
     }
+
+    [Fact]
+    public void RemoveChild_ShouldRemoveFromGrid_WhenCalledThroughFrameworkElementReference()
+    {
+        Grid grid = new Grid();
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        Panel formsChild = new Panel();
+        ContainerRuntime gueChild = new ContainerRuntime();
+        grid.AddChild(formsChild, row: 0, column: 0);
+        grid.AddChild(gueChild, row: 0, column: 0);
+        FrameworkElement gridAsBase = grid;
+
+        gridAsBase.RemoveChild(formsChild);
+        gridAsBase.RemoveChild(gueChild);
+
+        formsChild.Visual.Parent.ShouldBeNull();
+        gueChild.Parent.ShouldBeNull();
+    }
 }

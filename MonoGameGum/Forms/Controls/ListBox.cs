@@ -517,12 +517,6 @@ public class ListBox : ItemsControl, IInputReceiver
     /// contains information about the changed selected items.
     /// </summary>
     public event Action<object, SelectionChangedEventArgs> SelectionChanged;
-    /// <summary>
-    /// Raised every frame while this control has input focus. Can be used
-    /// to perform custom per-frame logic while the control is focused.
-    /// </summary>
-    // Hides ScrollViewer.FocusUpdate instead of raising it; see #5001.
-    public new event Action<IInputReceiver>? FocusUpdate;
 
     /// <summary>
     /// Event raised when the user presses a button, whether at the top level or internally on
@@ -1717,7 +1711,7 @@ public class ListBox : ItemsControl, IInputReceiver
         base.HandleKeyboardFocusUpdate();
 #endif
 
-        FocusUpdate?.Invoke(this);
+        RaiseFocusUpdate();
     }
 
     private void DoListItemFocusUpdate()

@@ -306,4 +306,16 @@ public class DialogBoxTests : BaseTestClass
         dialogBox.IsFocused.ShouldBeTrue();
         dialogBox.PagesRemaining.ShouldBe(1); // two pages, first popped, rest must survive
     }
+
+    [Fact]
+    public void OnFocusUpdate_ShouldRaiseFocusUpdate()
+    {
+        (DialogBox dialogBox, TestDialogBoxVisual _) = CreateDialogBox();
+        bool wasRaised = false;
+        dialogBox.FocusUpdate += _ => wasRaised = true;
+
+        dialogBox.OnFocusUpdate();
+
+        wasRaised.ShouldBeTrue();
+    }
 }

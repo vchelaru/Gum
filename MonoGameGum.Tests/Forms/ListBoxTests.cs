@@ -2423,4 +2423,17 @@ public class ListBoxTests : BaseTestClass
     }
 
     #endregion
+
+    [Fact]
+    public void OnFocusUpdate_ShouldRaiseScrollViewerFocusUpdate()
+    {
+        ListBox listBox = new ListBox();
+        ScrollViewer listBoxAsBase = listBox;
+        bool wasRaised = false;
+        listBoxAsBase.FocusUpdate += _ => wasRaised = true;
+
+        listBox.OnFocusUpdate();
+
+        wasRaised.ShouldBeTrue();
+    }
 }

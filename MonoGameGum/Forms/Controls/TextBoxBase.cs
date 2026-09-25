@@ -291,10 +291,6 @@ public abstract class TextBoxBase :
         }
     }
 
-    // todo - this could move to the base class, if the base objects became input receivers
-    // Hides FrameworkElement.KeyDown instead of raising it; see #5001.
-    public new event Action<object, KeyEventArgs> KeyDown;
-
     bool isCaretVisibleWhenNotFocused;
     /// <summary>
     /// Whether the caret is visible when not focused. If true, the caret will always stay visible even if the TextBox has lost focus.
@@ -983,7 +979,7 @@ public abstract class TextBoxBase :
 #if !FRB
         var keyEventArg = new KeyEventArgs();
         keyEventArg.Key = (Gum.Forms.Input.Keys)(int)key;
-        KeyDown?.Invoke(this, keyEventArg);
+        RaiseKeyDown(keyEventArg);
 #endif
     }
 

@@ -1109,4 +1109,18 @@ public class TextBoxTests : BaseTestClass
 
         public bool GetUseNativeKeyboardPasswordMode() => UseNativeKeyboardPasswordMode;
     }
+
+    [Fact]
+    public void HandleKeyDown_ShouldRaiseFrameworkElementKeyDown()
+    {
+        TextBox textBox = new TextBox();
+        textBox.IsFocused = true;
+        FrameworkElement textBoxAsBase = textBox;
+        Gum.Forms.Input.Keys? receivedKey = null;
+        textBoxAsBase.KeyDown += (_, args) => receivedKey = args.Key;
+
+        textBox.HandleKeyDown(Gum.Forms.Input.Keys.Left, false, false, false);
+
+        receivedKey.ShouldBe(Gum.Forms.Input.Keys.Left);
+    }
 }
