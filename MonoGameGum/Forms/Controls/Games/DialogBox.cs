@@ -28,10 +28,10 @@ using global::RenderingLibrary.Graphics;
 using GamepadButton = Gum.Input.GamepadButton;
 
 #if XNALIKE
-using Microsoft.Xna.Framework.Input;
 using MonoGameGum;
-using System.Security.Cryptography;
-#else
+#endif
+
+#if !FRB || !XNALIKE
 using Keys = Gum.Forms.Input.Keys;
 #endif
 
