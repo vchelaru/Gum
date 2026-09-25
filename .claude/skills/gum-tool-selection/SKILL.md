@@ -34,7 +34,7 @@ Mouse up    → OnRelease()       → cleans up; resets IsActive to false
 
 `HandlePush` returns `bool`: `true` means this handler claims the gesture and sets `IsActive = true`; `false` passes to the next handler or the rectangle selector.
 
-`PrimaryClick` is a one-frame edge that needs the cursor on the canvas, so a release during a camera pan (`WireframeCanvasCore` skips `SelectionManager.Activity` while `CameraController.IsPanning`) or off the canvas is never seen. `WireframeEditor.ProcessHandleInput` treats an active handler with `PrimaryDownIgnoringIsInWindow == false` as that lost release, and `SelectionManager.ProcessInputForSelection` calls it on idle frames so the check runs; the texture-coordinate `RectangleSelector.ClickActivity` (`FlatRedBall.SpecializedXnaControls`) does the same for `mSideGrabbed`.
+`PrimaryClick` is a one-frame edge that needs the cursor on the canvas, so a release during a camera pan (`WireframeCanvasCore` skips `SelectionManager.Activity` while `CameraController.IsPanning`) or off the canvas is never seen. `WireframeEditor.ProcessHandleInput` treats an active handler with `PrimaryDownIgnoringIsInWindow == false` as that lost release, and `SelectionManager.ProcessInputForSelection` calls it on idle frames so the check runs; the texture-coordinate `RectangleSelector.ClickActivity` (`TextureCoordinatePlugin.Core`) does the same for `mSideGrabbed`.
 
 ### `IsActive` Flag
 

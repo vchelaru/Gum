@@ -39,7 +39,9 @@ namespace Gum.Wireframe
         readonly ICanvasDisplayScale _displayScale;
         bool _originDisplaysVisible = true;
 
-        const float WidthAtNoZoom = 12;
+        readonly ResizeHandleLayout _layout;
+
+        const float WidthAtNoZoom = ResizeHandleLayout.HandleSize;
 
         #endregion
 
@@ -120,6 +122,7 @@ namespace Gum.Wireframe
         public ResizeHandles(Layer layer, Color color, ICanvasDisplayScale displayScale)
         {
             _displayScale = displayScale;
+            _layout = new ResizeHandleLayout(displayScale);
             for (int i = 0; i < mHandles.Length; i++)
             {
                 mHandles[i] = new LineRectangle();
@@ -251,8 +254,8 @@ namespace Gum.Wireframe
             var lineWidth = _displayScale.DisplayScale;
             foreach (var handle in this.mHandles)
             {
-                handle.Width = ToWorld(WidthAtNoZoom);
-                handle.Height = ToWorld(WidthAtNoZoom);
+                handle.Width = _layout.GetHandleWorldSize(Renderer.Self.Camera.Zoom);
+                handle.Height = handle.Width;
                 handle.LinePixelWidth = lineWidth;
             }
             foreach(var innerHandle in mInnerHandles)
@@ -284,32 +287,15 @@ namespace Gum.Wireframe
 
         private void UpdateToProperties()
         {
-            var dim = ToWorld(WidthAtNoZoom);
-            var halflDim = dim / 2.0f;
+            var dim = _layout.GetHandleWorldSize(Renderer.Self.Camera.Zoom);
 
-            mHandles[0].X = 0 - dim;
-            mHandles[0].Y = 0 - dim;
-
-            mHandles[1].X = Width / 2.0f - halflDim;
-            mHandles[1].Y = 0 - dim;
-
-            mHandles[2].X = Width;
-            mHandles[2].Y = 0 - dim;
-
-            mHandles[3].X = Width;
-            mHandles[3].Y = Height / 2.0f - halflDim;
-
-            mHandles[4].X = Width;
-            mHandles[4].Y = Height;
-
-            mHandles[5].X = Width / 2.0f - halflDim;
-            mHandles[5].Y = Height;
-
-            mHandles[6].X = 0 - dim;
-            mHandles[6].Y = Height;
-
-            mHandles[7].X = 0 - dim;
-            mHandles[7].Y = Height / 2.0f - halflDim;
+            // Laid out unrotated around the origin, then rotated and offset to X, Y below.
+            for (int i = 0; i < mHandles.Length; i++)
+            {
+                var position = _layout.GetHandlePosition((ResizeSide)i, 0, 0, Width, Height, dim);
+                mHandles[i].X = position.X;
+                mHandles[i].Y = position.Y;
+            }
 
             Matrix rotationMatrix = Matrix.CreateRotationZ(-MathHelper.ToRadians( mRotation ));
 

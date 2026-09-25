@@ -4,7 +4,8 @@ using System.Linq;
 using XnaAndWinforms;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
-using FlatRedBall.SpecializedXnaControls.RegionSelection;
+using FlatRedBall.SpecializedXnaControls;
+using FlatRedBall.SpecializedXnaControls.Zooming;
 using RenderingLibrary;
 using RenderingLibrary.Content;
 using ToolsUtilities;
@@ -12,8 +13,9 @@ using System.Reflection;
 using RenderingLibrary.Math;
 using InputLibrary;
 using ToolsUtilitiesStandard.Helpers;
+using Gum.Services;
 
-namespace FlatRedBall.SpecializedXnaControls;
+namespace TextureCoordinateSelectionPlugin.RegionSelection;
 
 public enum ZoomDirection
 {
@@ -53,7 +55,7 @@ public class ImageRegionSelectionCore
 
     Sprite mCurrentTextureSprite;
 
-    public Zooming.ZoomNumbers ZoomNumbers
+    public ZoomNumbers ZoomNumbers
     {
         get;
         private set;
@@ -440,7 +442,9 @@ public class ImageRegionSelectionCore
     /// The host's OS display scale (1 at 100%), read every frame. The selectors size their strokes
     /// and handles by it.
     /// </summary>
-    public float DisplayScale { get; private set; } = 1;
+    public float DisplayScale => _displayScale.DisplayScale;
+
+    private readonly CanvasDisplayScale _displayScale = new CanvasDisplayScale();
 
     /// <summary>Creates the canvas over its host control and initializes rendering.</summary>
     public ImageRegionSelectionCore(ICanvasHost host)
@@ -525,16 +529,16 @@ public class ImageRegionSelectionCore
 
             var camera = mManagers.Renderer.Camera;
             camera.CameraCenterOnScreen = CameraCenterOnScreen.TopLeft;
-            ZoomNumbers = new Zooming.ZoomNumbers();
+            ZoomNumbers = new ZoomNumbers();
         }
     }
 
     /// <summary>The host calls this on a double click over the canvas.</summary>
     public void RaiseDoubleClick() => DoubleClick?.Invoke(this, EventArgs.Empty);
 
-    private RegionSelection.RectangleSelector CreateNewSelector()
+    private RectangleSelector CreateNewSelector()
     {
-        var newSelector = new RectangleSelector(mManagers);
+        var newSelector = new RectangleSelector(mManagers, _displayScale);
         newSelector.AddToManagers(mManagers);
         newSelector.Visible = false;
         newSelector.StartRegionChanged += HandleStartRegionChanged;
@@ -546,7 +550,6 @@ public class ImageRegionSelectionCore
         newSelector.CanChangeY = canChangeY;
         newSelector.CanChangeWidth = canChangeWidth;
         newSelector.CanChangeHeight = canChangeHeight;
-        newSelector.DisplayScale = DisplayScale;
 
         mRectangleSelectors.Add(newSelector);
 
@@ -615,10 +618,10 @@ public class ImageRegionSelectionCore
             return;
         }
 
-        DisplayScale = hostScale;
+        _displayScale.DisplayScale = hostScale;
         foreach (var selector in mRectangleSelectors)
         {
-            selector.DisplayScale = hostScale;
+            selector.RefreshDisplayScale();
         }
         DisplayScaleChanged?.Invoke();
     }

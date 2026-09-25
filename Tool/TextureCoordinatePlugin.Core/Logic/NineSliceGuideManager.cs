@@ -1,4 +1,4 @@
-using FlatRedBall.SpecializedXnaControls.RegionSelection;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using Gum.Services;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary;

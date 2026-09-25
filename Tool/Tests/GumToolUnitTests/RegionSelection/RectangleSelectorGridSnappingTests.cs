@@ -1,4 +1,5 @@
-using FlatRedBall.SpecializedXnaControls.RegionSelection;
+using Gum.Services;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
@@ -17,7 +18,7 @@ public class RectangleSelectorGridSnappingTests
             Renderer = new Renderer()
         };
 
-        return new RectangleSelector(managers)
+        return new RectangleSelector(managers, new CanvasDisplayScale())
         {
             RoundToUnitCoordinates = false,
             SnappingGridSize = 16

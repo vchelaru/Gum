@@ -1,4 +1,5 @@
-using FlatRedBall.SpecializedXnaControls.RegionSelection;
+using Gum.Services;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using InputLibrary;
 using Moq;
 using RenderingLibrary;
@@ -19,7 +20,7 @@ public class RectangleSelectorCursorTests
     // a bare SystemManagers instead of the full SystemManagers.Initialize, which requires
     // a real GraphicsDevice for its SpriteRenderer.
     private static RectangleSelector CreateSelector() =>
-        new RectangleSelector(new SystemManagers { Renderer = new Renderer() });
+        new RectangleSelector(new SystemManagers { Renderer = new Renderer() }, new CanvasDisplayScale());
 
     // A host the Cursor reports as "in window" - IsInWindow checks the sampled pointer position
     // against Width/Height.

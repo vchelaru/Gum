@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using FlatRedBall.SpecializedXnaControls;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using Gum;
 using Gum.Commands;
 using Gum.DataTypes;
@@ -653,7 +654,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         // early out
         if (refreshType == RefreshType.OnlyIfGrabbed &&
             control.RectangleSelector != null &&
-            control.RectangleSelector.SideGrabbed != FlatRedBall.SpecializedXnaControls.RegionSelection.ResizeSide.None)
+            control.RectangleSelector.SideGrabbed != TextureCoordinateSelectionPlugin.RegionSelection.ResizeSide.None)
         {
             return;
         }

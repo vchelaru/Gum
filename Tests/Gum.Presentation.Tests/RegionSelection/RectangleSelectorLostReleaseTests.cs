@@ -1,11 +1,12 @@
+using Gum.Services;
 using InputLibrary;
 using Moq;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using ResizeSide = FlatRedBall.SpecializedXnaControls.RegionSelection.ResizeSide;
+using ResizeSide = TextureCoordinateSelectionPlugin.RegionSelection.ResizeSide;
 // See RectangleSelectorDragRoundingTests for why this alias needs its own name.
-using TexCoordRectangleSelector = FlatRedBall.SpecializedXnaControls.RegionSelection.RectangleSelector;
+using TexCoordRectangleSelector = TextureCoordinateSelectionPlugin.RegionSelection.RectangleSelector;
 
 namespace Gum.Presentation.Tests.RegionSelection;
 
@@ -36,7 +37,7 @@ public class RectangleSelectorLostReleaseTests
         _keyboard.Initialize(_host.Object);
 
         // Camera transform needs no graphics device - see RectangleSelectorCursorTests.
-        _selector = new TexCoordRectangleSelector(new SystemManagers { Renderer = new Renderer() })
+        _selector = new TexCoordRectangleSelector(new SystemManagers { Renderer = new Renderer() }, new CanvasDisplayScale())
         {
             Visible = true,
             Left = 10,

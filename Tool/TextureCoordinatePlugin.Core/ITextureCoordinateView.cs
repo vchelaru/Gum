@@ -1,5 +1,6 @@
 using System;
 using FlatRedBall.SpecializedXnaControls;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using Gum.Input;
 
 namespace TextureCoordinateSelectionPlugin.Views;
