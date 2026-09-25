@@ -25,7 +25,7 @@ namespace Gum.Graphics.Animation
     {
         #region Fields
 
-        private string mName;
+        private string mName = null!;
 
         //private string mParentFileName;
         public int IndexInLoadedAchx = -1;
@@ -54,7 +54,7 @@ namespace Gum.Graphics.Animation
         /// there are no AnimationFrames.
         /// </summary>
         #endregion
-        public AnimationFrame LastFrame
+        public AnimationFrame? LastFrame
         {
             get 
             {
@@ -89,15 +89,15 @@ namespace Gum.Graphics.Animation
         /// </summary>
         public bool Loop { get; set; } = true;
 
-        private string mParentAchxFileName;
-        public string ParentAchxFileName
+        private string? mParentAchxFileName;
+        public string? ParentAchxFileName
         {
             get { return mParentAchxFileName; }
             set { mParentAchxFileName = value; }
         }
 
-        private string mParentGifFileName;
-        public string ParentGifFileName
+        private string? mParentGifFileName;
+        public string? ParentGifFileName
         {
             get { return mParentGifFileName; }
             set { mParentGifFileName = value; }
@@ -177,7 +177,7 @@ namespace Gum.Graphics.Animation
         /// <param name="nameToSearchFor">The name of the AnimationFrame to search for.</param>
         /// <returns>The AnimationFrame with matching name, or null if none exists.</returns>
         #endregion
-        public AnimationFrame FindByName(string nameToSearchFor)
+        public AnimationFrame? FindByName(string nameToSearchFor)
         {
             for (int i = 0; i < this.Count; i++)
             {
@@ -277,10 +277,8 @@ namespace Gum.Graphics.Animation
                 foreach (AnimationFrameSave save in animationChainSave.Frames)
                 {
                     // process the AnimationFrame and add it to the newly-created AnimationChain
-                    AnimationFrame frame = null;
-
                     bool loadTexture = true;
-                    frame = save.ToAnimationFrame(loadTexture, coordinateType);
+                    AnimationFrame frame = save.ToAnimationFrame(loadTexture, coordinateType);
 
                     frame.FrameLength /= divisor;
                     animationChain.Add(frame);

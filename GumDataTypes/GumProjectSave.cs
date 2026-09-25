@@ -325,7 +325,7 @@ public class GumProjectSave
     public int CurrentLanguageIndex { get; set; }
 
     [XmlIgnore]
-    public string FullFileName
+    public string? FullFileName
     {
         get;
         set;
@@ -504,7 +504,8 @@ public class GumProjectSave
         }
         else
         {
-            return toReturn;
+            // Load returns null only after recording an error or missing file, which throws above.
+            return toReturn!;
         }
     }
 
@@ -537,7 +538,7 @@ public class GumProjectSave
         // for both this project file and every element/behavior file it references.
         bool isJsonFormat = IsJsonFormat(fileName);
 
-        GumProjectSave gps = null;
+        GumProjectSave gps;
 
         var shouldLoadFromTitleContainer = false;
 #if NET6_0_OR_GREATER
@@ -564,7 +565,8 @@ public class GumProjectSave
                     var deserializer = isCompact
                         ? GumFileSerializer.GetGumProjectCompactSerializer()
                         : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent));
+                    // XmlSerializer returns null only for an xsi:nil root, which Gum never writes.
+                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(streamContent))!;
                     if (!isCompact && !streamContent.Contains("<Version>"))
                     {
                         gps.Version = (int)GumxVersions.InitialVersion;
@@ -592,7 +594,8 @@ public class GumProjectSave
                     var deserializer = isCompact
                         ? GumFileSerializer.GetGumProjectCompactSerializer()
                         : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent));
+                    // XmlSerializer returns null only for an xsi:nil root, which Gum never writes.
+                    gps = (GumProjectSave)deserializer.Deserialize(new StringReader(fileContent))!;
                     if (!isCompact && !fileContent.Contains("<Version>"))
                     {
                         gps.Version = (int)GumxVersions.InitialVersion;
@@ -797,8 +800,10 @@ public class GumProjectSave
 
     public void ReloadBehavior(BehaviorSave behavior)
     {
-        string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
-        bool isJsonFormat = IsJsonFormat(this.FullFileName);
+        // Reloading only happens for a project that was loaded from (or saved to) disk.
+        string fullFileName = this.FullFileName!;
+        string projectRootDirectory = FileManager.GetDirectory(fullFileName);
+        bool isJsonFormat = IsJsonFormat(fullFileName);
 
         var matchingReference = BehaviorReferences.FirstOrDefault(item => item.Name == behavior.Name);
 
@@ -813,8 +818,10 @@ public class GumProjectSave
 
     public void ReloadElement(ElementSave element)
     {
-        string projectRootDirectory = FileManager.GetDirectory(this.FullFileName);
-        bool isJsonFormat = IsJsonFormat(this.FullFileName);
+        // Reloading only happens for a project that was loaded from (or saved to) disk.
+        string fullFileName = this.FullFileName!;
+        string projectRootDirectory = FileManager.GetDirectory(fullFileName);
+        bool isJsonFormat = IsJsonFormat(fullFileName);
 
         var gumLoadResult = new GumLoadResult();
 
@@ -834,29 +841,29 @@ public class GumProjectSave
                 Screens.Add(newScreen);
             }
         }
-        else if (element is ComponentSave)
+        else if (element is ComponentSave oldComponent)
         {
             var matchingReference = ComponentReferences.FirstOrDefault(item => item.Name == element.Name);
 
-            ComponentSave newComonent = matchingReference?.ToElementSave<ComponentSave>(
+            ComponentSave? newComonent = matchingReference?.ToElementSave<ComponentSave>(
                 projectRootDirectory, isJsonFormat ? ComponentJsonExtension : GumProjectSave.ComponentExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newComonent != null)
             {
-                Components.Remove(element as ComponentSave);
+                Components.Remove(oldComponent);
                 Components.Add(newComonent);
             }
         }
-        else if (element is StandardElementSave)
+        else if (element is StandardElementSave oldStandardElement)
         {
             var matchingReference = StandardElementReferences.FirstOrDefault(item => item.Name == element.Name);
 
-            StandardElementSave newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
+            StandardElementSave? newStandardElement = matchingReference?.ToElementSave<StandardElementSave>(
                 projectRootDirectory, isJsonFormat ? StandardJsonExtension : GumProjectSave.StandardExtension, gumLoadResult, projectVersion: this.Version);
 
             if (newStandardElement != null)
             {
-                StandardElements.Remove(element as StandardElementSave);
+                StandardElements.Remove(oldStandardElement);
                 StandardElements.Add(newStandardElement);
             }
         }
@@ -952,7 +959,7 @@ public class GumProjectSave
             int numberOfTimesTried = 0;
 
             bool succeeded = false;
-            Exception exception = null;
+            Exception? exception = null;
 
             string standardExtension = isJsonFormat ? StandardJsonExtension : StandardExtension;
             while (numberOfTimesTried < maxNumberOfTries)

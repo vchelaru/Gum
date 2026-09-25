@@ -13,7 +13,7 @@ namespace Gum.DataTypes.Behaviors
 {
     public class BehaviorSave : IStateContainer, IInstanceContainer
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
 
         [XmlIgnore]
         public bool IsSourceFileMissing
@@ -71,7 +71,7 @@ namespace Gum.DataTypes.Behaviors
         // that required also bringing over interpolation so I didn't.
         public List<string> RequiredAnimations { get; set; } = new List<string>();
 
-        public string DefaultImplementation { get; set; }
+        public string? DefaultImplementation { get; set; }
 
         public override string ToString()
         {

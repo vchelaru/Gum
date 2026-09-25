@@ -74,7 +74,7 @@
         public static new GeneralResponse<T> UnsuccessfulWith(string message) =>
             new GeneralResponse<T> { Succeeded = false, Message = message };
 
-        public T Data { get; set; }
+        public T? Data { get; set; }
 
         public GeneralResponse()
         {

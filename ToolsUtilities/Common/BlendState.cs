@@ -42,7 +42,7 @@ namespace Gum
 
     public class BlendState
     {
-        string Name;
+        string? Name;
 
         // these are not used. They originally existed
         // because MonoGame had them, so maybe we'll need
@@ -312,6 +312,6 @@ namespace Gum
         public BlendState Clone() =>
             (BlendState)this.MemberwiseClone();
 
-        public override string ToString() => Name;
+        public override string? ToString() => Name;
     }
 }

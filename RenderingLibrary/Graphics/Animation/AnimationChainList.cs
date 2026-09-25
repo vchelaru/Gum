@@ -28,7 +28,7 @@ namespace Gum.Graphics.Animation
     {
         #region Fields
 
-        string mName;
+        string? mName;
 
         bool mFileRelativeTextures;
 
@@ -68,7 +68,7 @@ namespace Gum.Graphics.Animation
         /// Gets and sets the intance's name.
         /// </summary>
         #endregion
-        public string Name
+        public string? Name
         {
             get { return mName; }
             set { mName = value; }
@@ -81,7 +81,7 @@ namespace Gum.Graphics.Animation
         /// <param name="animationChainName">The name of the AnimationChain to return</param>
         /// <returns>Reference to the AnimationChain with the specified name.</returns> 
         #endregion
-        public AnimationChain this[string animationChainName]
+        public AnimationChain? this[string animationChainName]
         {
             get
             {
@@ -172,7 +172,7 @@ namespace Gum.Graphics.Animation
 		}
 #endif
 
-        public override string ToString()
+        public override string? ToString()
         {
             return this.Name;
         }
@@ -217,16 +217,15 @@ namespace Gum.Graphics.Animation
             {
                 if (animationChainListSave.FileRelativeTextures)
                 {
-                    FileManager.RelativeDirectory = FileManager.GetDirectory(animationChainListSave.FileName);
+                    // A save with file-relative textures is loaded through FromFile, which sets FileName.
+                    FileManager.RelativeDirectory = FileManager.GetDirectory(animationChainListSave.FileName!);
                 }
 
                 foreach (AnimationChainSave animationChain in animationChainListSave.AnimationChains)
                 {
                     try
                     {
-                        Gum.Graphics.Animation.AnimationChain newChain = null;
-
-                        newChain = animationChain.ToAnimationChain(animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
+                        Gum.Graphics.Animation.AnimationChain newChain = animationChain.ToAnimationChain(animationChainListSave.TimeMeasurementUnit, animationChainListSave.CoordinateType);
 
                         newChain.IndexInLoadedAchx = list.Count;
 

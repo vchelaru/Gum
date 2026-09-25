@@ -41,7 +41,7 @@ namespace Gum.DataTypes
         }
 
         [XmlIgnore]
-        public string FileName
+        public string? FileName
         {
             get;
             set;
@@ -109,7 +109,7 @@ namespace Gum.DataTypes
         }
 
         [XmlIgnore]
-        public StateSave DefaultState
+        public StateSave? DefaultState
         {
             get
             {

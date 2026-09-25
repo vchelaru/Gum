@@ -134,7 +134,7 @@ namespace Gum.Content.AnimationChain
         /// Used in XML Serialization of AnimationChains - this should
         /// not explicitly be set by the user.
         /// </summary>
-        public string TextureName;
+        public string? TextureName;
 
         /// <summary>
         /// The amount of time in seconds the AnimationFrame should be shown for.

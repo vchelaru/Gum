@@ -36,7 +36,7 @@ namespace Gum.Graphics.Animation
         /// Empty AnimationFrame.
         /// </summary>
         #endregion
-        public static AnimationFrame Empty;
+        public static AnimationFrame? Empty;
 
         // No #if guard needed: this file only ever compiles into MonoGameGum, KniGum,
         // FnaGum, RaylibGum, SkiaGum, or SokolGum, each of which defines exactly one of
@@ -112,7 +112,7 @@ namespace Gum.Graphics.Animation
         /// not explicitly be set by the user.
         /// </summary>
         #endregion
-        public string TextureName;
+        public string? TextureName;
 
         #region XML Docs
         /// <summary>
@@ -232,7 +232,7 @@ namespace Gum.Graphics.Animation
         #endregion
         public AnimationFrame Clone()
         {
-            AnimationFrame animationFrame = this.MemberwiseClone() as AnimationFrame;
+            AnimationFrame animationFrame = (AnimationFrame)this.MemberwiseClone();
             return animationFrame;
         }
 

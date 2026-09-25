@@ -30,14 +30,14 @@ namespace ToolsUtilities
             {
                 if (property.PropertyType == typeOfT)
                 {
-                    object objectToAdd = property.GetValue(container, null);
+                    object? objectToAdd = property.GetValue(container, null);
 
                     // Fields and properties may point to
                     // the same object so wee want to check for
                     // duplicates
-                    if (!toReturn.Contains((T)objectToAdd))
+                    if (!toReturn.Contains((T)objectToAdd!))
                     {
-                        toReturn.Add((T)objectToAdd);
+                        toReturn.Add((T)objectToAdd!);
                     }
                 }
 
@@ -48,14 +48,14 @@ namespace ToolsUtilities
             {
                 if (field.FieldType == typeOfT)
                 {
-                    object objectToAdd = field.GetValue(container);
+                    object? objectToAdd = field.GetValue(container);
 
                     // Fields and properties may point to
                     // the same object so wee want to check for
                     // duplicates
-                    if (!toReturn.Contains((T)objectToAdd))
+                    if (!toReturn.Contains((T)objectToAdd!))
                     {
-                        toReturn.Add((T)objectToAdd);
+                        toReturn.Add((T)objectToAdd!);
                     }
                 }
             }

@@ -30,7 +30,7 @@ public class StateSave
     } = new List<VariableListSave>();
 
     [XmlIgnore]
-    public ElementSave ParentContainer
+    public ElementSave? ParentContainer
     {
         get;
         set;
@@ -42,7 +42,7 @@ public class StateSave
 
 
     [XmlIgnore]
-    public Action Apply;
+    public Action? Apply;
 
 
     public StateSave()
@@ -101,7 +101,7 @@ public class StateSave
         return null;
     }
 
-    public VariableListSave GetVariableListSave(string variableName)
+    public VariableListSave? GetVariableListSave(string variableName)
     {
         var count = VariableLists.Count;
         for (int i = 0; i < count; i++)
@@ -115,9 +115,9 @@ public class StateSave
         return null;
     }
 
-    public bool TryGetValue<T>(string variableName, out T result)
+    public bool TryGetValue<T>(string variableName, out T? result)
     {
-        object value = GetValue(variableName);
+        object? value = GetValue(variableName);
         bool toReturn = false;
 
         if (value != null && value is T)
@@ -132,9 +132,9 @@ public class StateSave
         return toReturn;
     }
 
-    public T GetValueOrDefault<T>(string variableName)
+    public T? GetValueOrDefault<T>(string variableName)
     {
-        object toReturn = GetValue(variableName);
+        object? toReturn = GetValue(variableName);
 
         if (toReturn == null || (toReturn is T) == false)
         {
@@ -151,7 +151,7 @@ public class StateSave
     /// </summary>
     /// <param name="variableName">The qualified variable name</param>
     /// <returns>The value found, or null</returns>
-    public object GetValue(string variableName)
+    public object? GetValue(string variableName)
     {
         // Check for reserved stuff
         if (variableName == "Name" && ParentContainer != null)
@@ -175,7 +175,7 @@ public class StateSave
             string instanceName = variableName.Substring(0, variableName.IndexOf('.'));
 
             ElementSave elementSave = ParentContainer;
-            InstanceSave instanceSave = null;
+            InstanceSave? instanceSave = null;
 
             if (elementSave != null)
             {
@@ -204,14 +204,14 @@ public class StateSave
             }
         }
 
-        VariableSave variableState = GetVariableSave(variableName);
+        VariableSave? variableState = GetVariableSave(variableName);
 
 
         // If the user hasn't set this variable on this state, it'll be null. So let's just display null
         // for now.  Eventually we'll display a variable plus some kind of indication that it's an unset variable.
         if(variableState == null || variableState.SetsValue == false)
         {
-            VariableListSave variableListSave = GetVariableListSave(variableName);
+            VariableListSave? variableListSave = GetVariableListSave(variableName);
             if (variableListSave != null)
             {
                 return variableListSave.ValueAsIList;
@@ -229,13 +229,14 @@ public class StateSave
 
     public VariableSave SetValue(string variableName, object? valueToSet, string? variableType = null)
     {
-        VariableSave variableSave = GetVariableSave(variableName);
+        VariableSave? variableSave = GetVariableSave(variableName);
 
         if (variableSave == null)
         {
             variableSave = new VariableSave();
             variableSave.Name = variableName;
-            variableSave.Type = variableType;
+            // Type is left null when the caller passes none; tool code (ElementSaveDisplayer) checks for that.
+            variableSave.Type = variableType!;
             Variables.Add(variableSave);
         }
 

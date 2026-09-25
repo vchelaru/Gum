@@ -177,12 +177,12 @@ namespace ToolsUtilities
         }
 
 
-        public static string GetWordAfter(string stringToStartAfter, string entireString)
+        public static string? GetWordAfter(string stringToStartAfter, string entireString)
 		{
             return GetWordAfter(stringToStartAfter, entireString, 0);
         }
 
-        public static string GetWordAfter(string stringToStartAfter, string entireString, int startIndex)
+        public static string? GetWordAfter(string stringToStartAfter, string entireString, int startIndex)
         {
             int indexOf = entireString.IndexOf(stringToStartAfter, startIndex);
 			if (indexOf != -1)
@@ -217,15 +217,14 @@ namespace ToolsUtilities
 			 Replace("\\?", ".") + "$";
 		}
 
-        public static bool AreListsEqual(List<string> first, List<string> second)
+        public static bool AreListsEqual(List<string>? first, List<string>? second)
         {
             if (first == second)
             {
                 return true;
             }
 
-            if ((first == null && second != null) ||
-                (first != null && second == null))
+            if (first == null || second == null)
             {
                 return false;
             }
@@ -246,15 +245,14 @@ namespace ToolsUtilities
             return true;
         }
 
-        public static bool AreArraysEqual(string[] first, string[] second)
+        public static bool AreArraysEqual(string[]? first, string[]? second)
         {
             if (first == second)
             {
                 return true;
             }
 
-            if ((first == null && second != null) ||
-                (first != null && second == null))
+            if (first == null || second == null)
             {
                 return false;
             }

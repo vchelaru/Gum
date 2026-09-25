@@ -2,6 +2,6 @@
 {
     public interface IVariableFinder
     {
-        T GetValue<T>(string variableName);
+        T? GetValue<T>(string variableName);
     }
 }

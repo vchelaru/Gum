@@ -60,7 +60,7 @@ namespace ToolsUtilities
 
                     // Blazor-WASM returns "/" for BaseDirectory, which is invalid for GetDirectoryName.
                     if (result != "/")
-                        result = Path.GetDirectoryName(result);
+                        result = Path.GetDirectoryName(result)!; // null only for a root, which BaseDirectory never is
 
                     return result.Replace('/', Path.DirectorySeparatorChar)
                                  .Replace('\\', Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -143,7 +143,7 @@ namespace ToolsUtilities
 
             XmlSerializer serializer = GetXmlSerializer(typeof(T));// new XmlSerializer(type);
 
-            return (T)serializer.Deserialize(new StringReader(container));
+            return (T)serializer.Deserialize(new StringReader(container))!;
         }
 
 #if NET5_0_OR_GREATER
@@ -157,7 +157,7 @@ namespace ToolsUtilities
 
             XmlSerializer serializer = GetXmlSerializer(typeof(T));// new XmlSerializer(type);
 
-            return (T)serializer.Deserialize(new StringReader(container));
+            return (T)serializer.Deserialize(new StringReader(container))!;
         }
 
         public static bool FileExists(string fileName)
@@ -180,7 +180,7 @@ namespace ToolsUtilities
                         {
                             fileName = fileName.Substring(2);
                         }
-                        using (var stream = CustomGetStreamFromFile(fileName))
+                        using (var stream = CustomGetStreamFromFile?.Invoke(fileName))
                         {
                             return stream != null;
                         }
@@ -427,13 +427,13 @@ namespace ToolsUtilities
 
 
 
-        public static string GetWordAfter(string stringToStartAfter, string entireString)
+        public static string? GetWordAfter(string stringToStartAfter, string entireString)
         {
             return GetWordAfter(stringToStartAfter, entireString, 0);
         }
 
         static char[] WhitespaceChars = new char[] { ' ', '\n', '\t', '\r' };
-        public static string GetWordAfter(string stringToStartAfter, string entireString, int indexToStartAt)
+        public static string? GetWordAfter(string stringToStartAfter, string entireString, int indexToStartAt)
         {
             int indexOf = entireString.IndexOf(stringToStartAfter, indexToStartAt);
             if (indexOf != -1)
@@ -824,7 +824,7 @@ namespace ToolsUtilities
 #endif
         public static T XmlDeserialize<T>(string fileName)
         {
-            T objectToReturn = default(T);
+            T objectToReturn = default(T)!;
 
 
             //if (FileManager.IsRelative(fileName))
@@ -924,7 +924,8 @@ namespace ToolsUtilities
 
             XmlSerializer serializer = GetXmlSerializer(type);
 
-            T objectToReturn = (T)serializer.Deserialize(stream);
+            // XmlSerializer returns null only for an xsi:nil root.
+            T objectToReturn = (T)serializer.Deserialize(stream)!;
 
             return objectToReturn;
         }
@@ -948,10 +949,9 @@ namespace ToolsUtilities
                     // For info on this block, see:
                     // http://stackoverflow.com/questions/1127431/xmlserializer-giving-filenotfoundexception-at-constructor
 #if DEBUG
-                    XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0];
+                    XmlSerializer newSerializer = XmlSerializer.FromTypes(new[] { type })[0]!;
 #else
-                XmlSerializer newSerializer = null;
-                newSerializer = new XmlSerializer(type);
+                XmlSerializer newSerializer = new XmlSerializer(type);
 #endif
                     mXmlSerializers.Add(type, newSerializer);
                     return newSerializer;
@@ -1109,7 +1109,7 @@ namespace ToolsUtilities
         }
         public static byte[] FromFileBytes(string fileName)
         {
-            byte[] bytesToReturn = null;
+            byte[] bytesToReturn;
             using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 bytesToReturn = new byte[fileStream.Length];
@@ -1130,7 +1130,7 @@ namespace ToolsUtilities
         /// can either have a period or not.  That is ".jpg" and "jpg" are both valid fileType arguments.  An empty
         /// or null value for this parameter will return all files regardless of file type.</param>
         /// <returns>A list containing all of the files found which match the fileType.</returns>
-        public static List<string> GetAllFilesInDirectory(string directory, string fileType)
+        public static List<string> GetAllFilesInDirectory(string directory, string? fileType)
         {
             return GetAllFilesInDirectory(directory, fileType, int.MaxValue);
 
@@ -1148,7 +1148,7 @@ namespace ToolsUtilities
         /// <param name="depthToSearch">The depth to search through.  If the depthToSearch
         /// is 0, only the argument directory will be searched. To search infinte depth, use int.MaxValue</param>
         /// <returns>A list containing all of the files found which match the fileType.</returns>
-        public static List<string> GetAllFilesInDirectory(string directory, string fileType, int depthToSearch)
+        public static List<string> GetAllFilesInDirectory(string directory, string? fileType, int depthToSearch)
         {
             List<string> arrayToReturn = new List<string>();
 
@@ -1158,7 +1158,7 @@ namespace ToolsUtilities
         }
 
 
-        public static void GetAllFilesInDirectory(string directory, string fileType, int depthToSearch, List<string> arrayToReturn)
+        public static void GetAllFilesInDirectory(string directory, string? fileType, int depthToSearch, List<string> arrayToReturn)
         {
             if (!Directory.Exists(directory))
             {
@@ -1229,7 +1229,7 @@ namespace ToolsUtilities
                 throw new NullReferenceException("Assembly is null, so can't find the resource\n" + resourceName);
             }
 
-            Stream resourceStream = assembly.GetManifestResourceStream(resourceName);
+            Stream? resourceStream = assembly.GetManifestResourceStream(resourceName);
 
             if (resourceStream == null)
             {
@@ -1275,7 +1275,7 @@ namespace ToolsUtilities
                 throw new NullReferenceException("Assembly is null, so can't find the resource\n" + resourceName);
             }
 
-            Stream resourceStream = assembly.GetManifestResourceStream(resourceName);
+            Stream? resourceStream = assembly.GetManifestResourceStream(resourceName);
 
             if (resourceStream == null)
             {
@@ -1303,7 +1303,7 @@ namespace ToolsUtilities
 
         static string GetProperDirectoryCapitalization(DirectoryInfo dirInfo)
         {
-            DirectoryInfo parentDirInfo = dirInfo.Parent;
+            DirectoryInfo? parentDirInfo = dirInfo.Parent;
             if (null == parentDirInfo)
                 return dirInfo.Name;
             return Path.Combine(GetProperDirectoryCapitalization(parentDirInfo),
@@ -1314,7 +1314,7 @@ namespace ToolsUtilities
             if (FileManager.FileExists(filename))
             {
                 FileInfo fileInfo = new FileInfo(filename);
-                DirectoryInfo dirInfo = fileInfo.Directory;
+                DirectoryInfo dirInfo = fileInfo.Directory!; // the file exists, so it has a directory
                 return Path.Combine(GetProperDirectoryCapitalization(dirInfo),
                                     dirInfo.GetFiles(fileInfo.Name)[0].Name);
             }
@@ -1334,7 +1334,7 @@ namespace ToolsUtilities
         {
             return GetProperFilePathCapitalization(fileName);
         }
-        public static string GetRootObjectType(string fileName)
+        public static string? GetRootObjectType(string fileName)
         {
             if (!File.Exists(fileName))
             {
@@ -1342,14 +1342,14 @@ namespace ToolsUtilities
 
             }
 
-            string typeToReturn = null;
+            string? typeToReturn = null;
 
             using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 using (System.IO.StreamReader sr = new StreamReader(fileStream))
                 {
                     sr.ReadLine(); // this is the version and encoding line
-                    string line = sr.ReadLine();
+                    string line = sr.ReadLine()!;
 
                     typeToReturn = StringFunctions.GetWordAfter("<", line);
                     sr.Close();
@@ -1478,7 +1478,7 @@ namespace ToolsUtilities
                     return UserApplicationDataFolderOverride.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 }
 
-                string applicationDataName = Assembly.GetEntryAssembly().FullName;
+                string applicationDataName = Assembly.GetEntryAssembly()!.FullName!;
 
                 applicationDataName = applicationDataName.Substring(0, applicationDataName.IndexOf(','));
 
@@ -1533,7 +1533,7 @@ namespace ToolsUtilities
 #endif
         public static void XmlSerialize<T>(T objectToSerialize, string fileName)
         {
-            XmlSerialize(typeof(T), objectToSerialize, fileName);
+            XmlSerialize(typeof(T), objectToSerialize!, fileName);
         }
 
 #if NET5_0_OR_GREATER
@@ -1567,7 +1567,8 @@ namespace ToolsUtilities
 #endif
         public static T XmlDeserializeFromStream<T>(Stream stream, XmlSerializer serializer)
         {
-            return (T)serializer.Deserialize(stream);
+            // XmlSerializer returns null only for an xsi:nil root.
+            return (T)serializer.Deserialize(stream)!;
         }
 
 
@@ -1576,13 +1577,13 @@ namespace ToolsUtilities
 #endif
         public static T XmlDeserializeEmbeddedResource<T>(Assembly assembly, string location)
         {
-            T objectToReturn = default(T);
+            T objectToReturn;
             Type type = typeof(T);
 
-            using (Stream resourceStream = assembly.GetManifestResourceStream(location))
+            using (Stream resourceStream = assembly.GetManifestResourceStream(location)!)
             {
                 XmlSerializer serializer = GetXmlSerializer(type);
-                objectToReturn = (T)serializer.Deserialize(resourceStream);
+                objectToReturn = (T)serializer.Deserialize(resourceStream)!;
                 resourceStream.Close();
 
             }

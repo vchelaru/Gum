@@ -12,13 +12,13 @@ namespace Gum.Content.AnimationChain
     {
         #region Fields
 
-        public string Name;
+        public string Name = null!;
 
         /// <summary>
         /// This is used if the AnimationChain actually comes from 
         /// a file like a .gif.
         /// </summary>
-        public string ParentFile;
+        public string? ParentFile;
 
         [XmlElementAttribute("Frame")]
         public List<AnimationFrameSave> Frames = new List<AnimationFrameSave>();
