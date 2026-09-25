@@ -64,6 +64,17 @@ public static class GumChromeStyles
     /// <summary>A converter that multiplies a font size, for text and icons sized off the app's base size.</summary>
     public static IValueConverter ScaleFontSize(double factor) => new FuncValueConverter<double, double>(size => size * factor);
 
+    /// <summary>Creates the macOS-only styles. Add them after <see cref="Create"/>.</summary>
+    public static Styles CreateMacOS() => new Styles
+    {
+        // Fluent stretches a text box's text area to the box's height and draws the line at its top;
+        // the macOS font metrics leave that visibly high (#5013). Multi-line boxes keep their text at the top.
+        new Style(selector => selector.OfType<TextBox>().Not(inner => inner.PropertyEquals(TextBox.AcceptsReturnProperty, true)))
+        {
+            Setters = { new Setter(TextBox.VerticalContentAlignmentProperty, VerticalAlignment.Center) },
+        },
+    };
+
     /// <summary>Creates the styles. Add them after the Fluent theme so they take precedence.</summary>
     public static Styles Create() => new Styles
     {
