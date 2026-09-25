@@ -352,7 +352,7 @@ public class PolygonPointInputHandler : InputHandlerBase
         foreach (var possiblyChangedVariableList in stateSave.VariableLists)
         {
             var oldValue = Context.GrabbedState.StateSave?.GetVariableListSave(possiblyChangedVariableList.Name);
-            if (oldValue != possiblyChangedVariableList)
+            if (StateValueComparer.DoValuesDiffer(oldValue?.ValueAsIList, possiblyChangedVariableList.ValueAsIList))
             {
                 var instance = selectedElement?.GetInstance(possiblyChangedVariableList.SourceObject);
                 Context.PluginManager.VariableSet(selectedElement, instance,

@@ -28,14 +28,17 @@ namespace Gum.Presentation.Tests;
 /// </summary>
 public class EditorContextTests
 {
-    [Fact]
-    public void DoEndOfSettingValuesLogic_ShouldNotifyInjectedPluginManager_WhenVariableListChanged()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void DoEndOfSettingValuesLogic_ShouldNotifyPluginManager_OnlyWhenVariableListChanged(bool movePoint)
     {
         // Arrange
         ScreenSave selectedElement = new ScreenSave();
 
         StateSave stateSave = new StateSave();
         VariableListSave<Vector2> pointsVariableList = new VariableListSave<Vector2> { Name = "Points" };
+        pointsVariableList.Value.Add(new Vector2(0, 0));
         stateSave.VariableLists.Add(pointsVariableList);
 
         Mock<ISelectedState> mockSelectedState = new Mock<ISelectedState>();
@@ -70,6 +73,10 @@ public class EditorContextTests
 
         // Snapshot the "before drag" state so DoEndOfSettingValuesLogic has something to diff against.
         context.GrabbedState.HandlePush();
+        if (movePoint)
+        {
+            pointsVariableList.Value[0] = new Vector2(5, 5);
+        }
 
         // Act
         context.DoEndOfSettingValuesLogic();
@@ -77,6 +84,6 @@ public class EditorContextTests
         // Assert
         mockPluginManager.Verify(
             x => x.VariableSet(selectedElement, null, "Points", It.IsAny<object>(), true),
-            Times.Once);
+            movePoint ? Times.Once() : Times.Never());
     }
 }

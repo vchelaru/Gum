@@ -225,7 +225,7 @@ public class EditorContext
         {
             var oldValue = grabbedStateSave.GetValue(possiblyChangedVariable.Name);
 
-            if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
+            if (StateValueComparer.DoValuesDiffer(oldValue, stateSave.GetValue(possiblyChangedVariable.Name)))
             {
                 var instance = element.GetInstance(possiblyChangedVariable.SourceObject);
 
@@ -243,7 +243,7 @@ public class EditorContext
         {
             var oldValue = grabbedStateSave.GetVariableListSave(possiblyChangedVariableList.Name);
 
-            if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
+            if (StateValueComparer.DoValuesDiffer(oldValue?.ValueAsIList, possiblyChangedVariableList.ValueAsIList))
             {
                 var instance = element.GetInstance(possiblyChangedVariableList.SourceObject);
                 PluginManager.VariableSet(element, instance, possiblyChangedVariableList.GetRootName(), oldValue);
@@ -251,77 +251,6 @@ public class EditorContext
         }
 
         HasChangedAnythingSinceLastPush = false;
-    }
-
-    private bool DoValuesDiffer(DataTypes.Variables.StateSave newStateSave, string variableName, object? oldValue)
-    {
-        var newValue = newStateSave.GetValue(variableName);
-        if (newValue == null && oldValue != null)
-        {
-            return true;
-        }
-        if (newValue != null && oldValue == null)
-        {
-            return true;
-        }
-        if (newValue == null && oldValue == null)
-        {
-            return false;
-        }
-        // neither are null
-        else
-        {
-            if (oldValue is float oldFloat)
-            {
-                var newFloat = (float)newValue!;
-                return oldFloat != newFloat;
-            }
-            else if (oldValue is string)
-            {
-                return (string)oldValue != (string?)newValue;
-            }
-            else if (oldValue is bool)
-            {
-                return (bool)oldValue != (bool)newValue!;
-            }
-            else if (oldValue is int)
-            {
-                return (int)oldValue != (int)newValue!;
-            }
-            else if (oldValue is System.Numerics.Vector2)
-            {
-                return (System.Numerics.Vector2)oldValue != (System.Numerics.Vector2)newValue!;
-            }
-            else if (oldValue is System.Collections.IList oldList)
-            {
-                return AreListsSame(oldList, (System.Collections.IList?)newValue);
-            }
-            else
-            {
-                return oldValue!.Equals(newValue) == false;
-            }
-        }
-    }
-
-    private bool AreListsSame(System.Collections.IList? oldList, System.Collections.IList? newList)
-    {
-        if (oldList == null && newList == null)
-        {
-            return true;
-        }
-        if (oldList == null || newList == null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < oldList.Count; i++)
-        {
-            if (Equals(oldList[i], newList[i]) == false)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     #endregion
