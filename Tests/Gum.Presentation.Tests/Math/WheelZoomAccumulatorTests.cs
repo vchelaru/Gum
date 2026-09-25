@@ -58,4 +58,16 @@ public class WheelZoomAccumulatorTests
         // 80 leftover from the first call, plus 40 here, reaches the next full notch.
         accumulator.Consume(40).ShouldBe(1);
     }
+
+    [Fact]
+    public void Consume_ReversingDirection_DropsTheCarriedRemainder()
+    {
+        // A remainder carried from one direction must not step that direction after the input
+        // reverses (#5010).
+        var accumulator = new WheelZoomAccumulator();
+
+        accumulator.Consume(358).ShouldBe(1);
+        accumulator.Consume(-2).ShouldBe(0);
+        accumulator.Consume(-118).ShouldBe(-1);
+    }
 }
