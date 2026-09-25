@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using FlatRedBall.SpecializedXnaControls;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using Gum.Input;
 using TextureCoordinateSelectionPlugin.ViewModels;
 

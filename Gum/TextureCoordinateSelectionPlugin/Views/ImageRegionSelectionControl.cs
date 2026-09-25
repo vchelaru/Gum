@@ -2,6 +2,8 @@ using System;
 using System.Windows.Input;
 using XnaAndWinforms;
 
+using TextureCoordinateSelectionPlugin.RegionSelection;
+
 namespace FlatRedBall.SpecializedXnaControls;
 
 /// <summary>

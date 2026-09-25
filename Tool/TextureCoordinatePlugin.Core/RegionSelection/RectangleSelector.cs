@@ -4,8 +4,10 @@ using RenderingLibrary.Math.Geometry;
 using InputLibrary;
 using RenderingLibrary;
 using RenderingLibrary.Math;
+using Gum.Services;
+using Gum.Wireframe;
 
-namespace FlatRedBall.SpecializedXnaControls.RegionSelection
+namespace TextureCoordinateSelectionPlugin.RegionSelection
 {
     #region ResizeSide Enum
 
@@ -45,6 +47,9 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
 
         SystemManagers managers;
+
+        readonly ICanvasDisplayScale displayScale;
+        readonly ResizeHandleLayout handleLayout;
 
         List<LineRectangle> mHandles;
 
@@ -234,35 +239,7 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             }
         }
 
-        /// <summary>The handle size in device-independent pixels at 100% zoom.</summary>
-        float HandleSize
-        {
-            get;
-            set;
-        }
-
-        float displayScale = 1;
-        /// <summary>
-        /// The OS display scale of the monitor the canvas is on (1 at 100%). The outline and handle
-        /// strokes are this many pixels wide, and the handles grow by it, so they match the editor overlay.
-        /// </summary>
-        public float DisplayScale
-        {
-            get => displayScale;
-            set
-            {
-                displayScale = value;
-                mLineRectangle.LinePixelWidth = value;
-                foreach (var handle in mHandles)
-                {
-                    handle.LinePixelWidth = value;
-                }
-                UpdateHandleSizes();
-                UpdateHandles();
-            }
-        }
-
-        float HandleWorldSize => HandleSize * displayScale / managers.Renderer.Camera.Zoom;
+        float HandleWorldSize => handleLayout.GetHandleWorldSize(managers.Renderer.Camera.Zoom);
 
         public bool AllowMoveWithoutHandles
         {
@@ -341,10 +318,11 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
 
         #region Methods
 
-        public RectangleSelector(SystemManagers managers)
+        public RectangleSelector(SystemManagers managers, ICanvasDisplayScale displayScale)
         {
             this.managers = managers;
-            HandleSize = 12;
+            this.displayScale = displayScale;
+            handleLayout = new ResizeHandleLayout(displayScale);
             ResetsCursorIfNotOver = true;
             mShowHandles = true;
             mHandles = new List<LineRectangle>();
@@ -354,13 +332,12 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
             {
                 var lineRectangle = new LineRectangle(managers);
                 lineRectangle.IsDotted = false;
-                lineRectangle.Width = HandleSize;
-                lineRectangle.Height = HandleSize;
                 mHandles.Add(lineRectangle);
             }
 
             Width = 34;
             Height = 34;
+            RefreshDisplayScale();
         }
 
         public bool HasCursorOver(Cursor cursor)
@@ -414,31 +391,34 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
         public void UpdateHandles()
         {
             var dim = HandleWorldSize;
-            var halfDim = dim / 2.0f;
+            float left = Left;
+            float top = Top;
+            float width = Width;
+            float height = Height;
 
-            mHandles[0].X = Left - dim;
-            mHandles[0].Y = Top - dim;
+            // mHandles is in ResizeSide order, which the shared layout's ResizeSide matches.
+            for (int i = 0; i < mHandles.Count; i++)
+            {
+                var position = handleLayout.GetHandlePosition((Gum.Wireframe.ResizeSide)i, left, top, width, height, dim);
+                mHandles[i].X = position.X;
+                mHandles[i].Y = position.Y;
+            }
+        }
 
-            mHandles[1].X = CenterX - halfDim;
-            mHandles[1].Y = Top - dim;
-
-            mHandles[2].X = Right;
-            mHandles[2].Y = Top - dim;
-
-            mHandles[3].X = Right;
-            mHandles[3].Y = CenterY - halfDim;
-
-            mHandles[4].X = Right;
-            mHandles[4].Y = Bottom;
-
-            mHandles[5].X = CenterX - halfDim;
-            mHandles[5].Y = Bottom;
-
-            mHandles[6].X = Left - dim;
-            mHandles[6].Y = Bottom;
-
-            mHandles[7].X = Left - dim;
-            mHandles[7].Y = CenterY - halfDim;
+        /// <summary>
+        /// Re-applies the display scale after it changes, such as when the window moves to a monitor
+        /// with a different scale. The outline and handle strokes are that many pixels wide, and the
+        /// handles grow by it, so they match the editor overlay.
+        /// </summary>
+        public void RefreshDisplayScale()
+        {
+            mLineRectangle.LinePixelWidth = displayScale.DisplayScale;
+            foreach (var handle in mHandles)
+            {
+                handle.LinePixelWidth = displayScale.DisplayScale;
+            }
+            UpdateHandleSizes();
+            UpdateHandles();
         }
 
         public void Activity(Cursor cursor, Keyboard keyboard, IInputHostControl container)

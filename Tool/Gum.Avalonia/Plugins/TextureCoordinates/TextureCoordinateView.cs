@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Threading;
 using FlatRedBall.SpecializedXnaControls;
+using TextureCoordinateSelectionPlugin.RegionSelection;
 using Gum.Avalonia.Canvas;
 using Gum.Avalonia.Services;
 using Gum.Input;

@@ -1,12 +1,13 @@
+using Gum.Services;
 using RenderingLibrary;
 using RenderingLibrary.Graphics;
 using Shouldly;
-using ResizeSide = FlatRedBall.SpecializedXnaControls.RegionSelection.ResizeSide;
+using ResizeSide = TextureCoordinateSelectionPlugin.RegionSelection.ResizeSide;
 // Aliased under a distinct name: this test namespace nests under "Gum", which also declares its own
 // unrelated RectangleSelector (the scene drag-select box). That enclosing-namespace declaration wins
 // over an unqualified "RectangleSelector" even with a using-alias of the same name in this file, so
 // this alias needs its own name to actually bind to the texture-coordinate selector below.
-using TexCoordRectangleSelector = FlatRedBall.SpecializedXnaControls.RegionSelection.RectangleSelector;
+using TexCoordRectangleSelector = TextureCoordinateSelectionPlugin.RegionSelection.RectangleSelector;
 
 namespace Gum.Presentation.Tests.RegionSelection;
 
@@ -26,7 +27,7 @@ public class RectangleSelectorDragRoundingTests
             Renderer = new Renderer()
         };
 
-        return new TexCoordRectangleSelector(managers)
+        return new TexCoordRectangleSelector(managers, new CanvasDisplayScale())
         {
             RoundToUnitCoordinates = true,
             SnappingGridSize = null

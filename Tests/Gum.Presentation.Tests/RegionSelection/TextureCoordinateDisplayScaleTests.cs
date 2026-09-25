@@ -7,7 +7,7 @@ using System.Linq;
 using TextureCoordinateSelectionPlugin.Logic;
 // Aliased under a distinct name: the enclosing "Gum" namespace declares its own unrelated
 // RectangleSelector, which would win over a same-named alias.
-using TexCoordRectangleSelector = FlatRedBall.SpecializedXnaControls.RegionSelection.RectangleSelector;
+using TexCoordRectangleSelector = TextureCoordinateSelectionPlugin.RegionSelection.RectangleSelector;
 
 namespace Gum.Presentation.Tests.RegionSelection;
 
@@ -34,10 +34,12 @@ public class TextureCoordinateDisplayScaleTests
     {
         SystemManagers managers = CreateManagers();
         managers.Renderer.Camera.Zoom = 2;
-        TexCoordRectangleSelector selector = new TexCoordRectangleSelector(managers);
+        CanvasDisplayScale displayScale = new CanvasDisplayScale();
+        TexCoordRectangleSelector selector = new TexCoordRectangleSelector(managers, displayScale);
         selector.AddToManagers(managers);
 
-        selector.DisplayScale = 2;
+        displayScale.DisplayScale = 2;
+        selector.RefreshDisplayScale();
 
         var rectangles = managers.ShapeManager.Rectangles.ToList();
         rectangles.Count.ShouldBe(9);
