@@ -460,8 +460,12 @@ public class ProjectManagerTests : BaseTestClass
             o.Filter.Contains("*.gumx") && o.Filter.Contains("*.gumj"))), Times.Once);
     }
 
-    [Fact]
-    public void AskUserForProjectNameIfNecessary_AppendsGumj_WhenChosenNameHasNoExtension()
+    [Theory]
+    [InlineData("MyProject", "MyProject.gumj")]
+    [InlineData("My.Project", "My.Project.gumj")]
+    [InlineData("MyProject.gumx", "MyProject.gumx")]
+    public void AskUserForProjectNameIfNecessary_AppendsGumjOnlyWhenNoProjectExtension(
+        string chosenName, string expectedName)
     {
         GumProjectSave project = new GumProjectSave();
         SetCurrentProject(project);
@@ -472,12 +476,12 @@ public class ProjectManagerTests : BaseTestClass
 
         _dialogService
             .Setup(d => d.SaveFile(It.IsAny<SaveFileDialogOptions?>()))
-            .Returns(Path.Combine(tempDirectory, "MyProject"));
+            .Returns(Path.Combine(tempDirectory, chosenName));
 
         bool shouldSave = _projectManager.AskUserForProjectNameIfNecessary(out _);
 
         shouldSave.ShouldBeTrue();
-        project.FullFileName.ShouldBe(Path.Combine(tempDirectory, "MyProject.gumj"));
+        project.FullFileName.ShouldBe(Path.Combine(tempDirectory, expectedName));
     }
 
     [Fact]
