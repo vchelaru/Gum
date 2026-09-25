@@ -137,52 +137,8 @@ public class EditCommands : IEditCommands
 
             if (_dialogService.ShowYesNoMessage(confirmMessage, "Delete state?"))
             {
-                AskToResolveStateReferences(stateSave);
                 using var undoLock = _undoManager.RequestLock();
                 _deleteLogic.Remove(stateSave);
-            }
-        }
-    }
-
-    private void AskToResolveStateReferences(StateSave stateSave)
-    {
-        var elementSave = _selectedState.SelectedElement;
-        List<InstanceSave> foundInstances = new List<InstanceSave>();
-
-        if (elementSave != null)
-        {
-            ObjectFinder.Self.GetElementsReferencing(elementSave, null, foundInstances);
-        }
-
-        foreach (var instance in foundInstances)
-        {
-            ElementSave parent = instance.ParentContainer;
-            string variableToLookFor = instance.Name + ".State";
-
-            foreach (var stateInContainer in parent.AllStates)
-            {
-                var foundVariable = stateInContainer.Variables.FirstOrDefault(item => item.Name == variableToLookFor);
-
-#pragma warning disable CS0252 // reference comparison is a bug; see #5003
-                if (foundVariable != null && foundVariable.Value == stateSave.Name)
-#pragma warning restore CS0252
-                {
-                    string message = "The state " + stateSave.Name + " is used in the element " +
-                        elementSave + " in its state " + stateInContainer + ".\n  What would you like to do?";
-
-                    DialogChoices<string> choices = new()
-                    {
-                        ["do-nothing"] = "Do nothing - project may be in an invalid state",
-                        ["make-default"] = "Change variable to default"
-                    };
-
-                    string? result = _dialogService.ShowChoices(message, choices);
-
-                    if (result == "make-default")
-                    {
-                        foundVariable.Value = "Default";
-                    }
-                }
             }
         }
     }
