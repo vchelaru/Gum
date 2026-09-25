@@ -1,3 +1,4 @@
+using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -34,6 +35,51 @@ public static class AvaloniaMouseMapping
             Handled = e.Handled,
         };
     }
+
+    /// <summary>
+    /// Builds a neutral wheel event. On macOS a trackpad's two-finger scroll pans (unless Cmd is
+    /// held) like native Mac canvas apps; a mouse wheel, and every event on other OSes, zooms (#4985).
+    /// </summary>
+    public static GumMouseEventArgs ToGumWheelEventArgs(this PointerWheelEventArgs e, Visual relativeTo)
+    {
+        GumMouseEventArgs args = e.ToGumMouseEventArgs(relativeTo, PointerUpdateKind.Other);
+        bool isTrackpadScroll = OperatingSystem.IsMacOS() && MacScrollEvent.IsCurrentEventPrecise();
+        double dpiScale = TopLevel.GetTopLevel(relativeTo)?.RenderScaling ?? 1.0;
+        ApplyWheelDelta(args, e.Delta, e.KeyModifiers, isTrackpadScroll, dpiScale);
+        return args;
+    }
+
+    /// <summary>
+    /// Fills in <paramref name="args"/>' zoom <see cref="GumMouseEventArgs.Delta"/> or, for a
+    /// trackpad scroll without Cmd, its pan in physical pixels.
+    /// </summary>
+    public static void ApplyWheelDelta(GumMouseEventArgs args, Vector delta, KeyModifiers modifiers, bool isTrackpadScroll, double dpiScale)
+    {
+        if (isTrackpadScroll && !modifiers.HasFlag(KeyModifiers.Meta))
+        {
+            args.IsPanScroll = true;
+            args.PanX = (float)(delta.X * PrecisePointsPerDelta * dpiScale);
+            args.PanY = (float)(delta.Y * PrecisePointsPerDelta * dpiScale);
+            return;
+        }
+
+        args.Delta = (int)(delta.Y * WheelNotchDelta);
+    }
+
+    /// <summary>
+    /// Converts a trackpad pinch's magnification into wheel delta, one zoom step per 15% of
+    /// pinch, which is about the ratio between neighboring zoom levels.
+    /// </summary>
+    public static int PinchToWheelDelta(double magnification) =>
+        (int)Math.Round(magnification / PinchPerZoomStep * WheelNotchDelta);
+
+    // WPF reports 120 per notch; Avalonia reports 1.
+    private const int WheelNotchDelta = 120;
+
+    // Avalonia's macOS backend divides a precise scroll's points by 50 (AvnView.mm).
+    private const double PrecisePointsPerDelta = 50;
+
+    private const double PinchPerZoomStep = 0.15;
 
     private static GumMouseButton ToGumMouseButton(PointerUpdateKind updateKind, PointerPointProperties properties) => updateKind switch
     {

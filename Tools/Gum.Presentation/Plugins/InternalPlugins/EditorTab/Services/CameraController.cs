@@ -7,8 +7,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab.Services;
 
 /// <summary>
 /// Camera pan and zoom from mouse and hotkey input, shared by the wireframe canvas and the
-/// texture-coordinate canvas: middle-drag or Space+left-drag pans, the wheel zooms toward the
-/// cursor, and the camera hotkeys step position and zoom. Framework-neutral - each canvas
+/// texture-coordinate canvas: middle-drag, Space+left-drag or a pan scroll (macOS trackpad) pans,
+/// the wheel zooms toward the cursor, and the camera hotkeys step position and zoom. Framework-neutral - each canvas
 /// translates its own input into <see cref="GumMouseEventArgs"/>/<see cref="GumKeyEventArgs"/>
 /// and forwards them here.
 /// </summary>
@@ -46,6 +46,14 @@ public class CameraController
     public void HandleMouseWheel(GumMouseEventArgs e)
     {
         e.Handled = true;
+
+        if (e.IsPanScroll)
+        {
+            Camera.X -= e.PanX / Camera.Zoom;
+            Camera.Y -= e.PanY / Camera.Zoom;
+            CameraChanged?.Invoke();
+            return;
+        }
 
         int step = _wheelZoomAccumulator.Consume(e.Delta);
         if (step == 0)

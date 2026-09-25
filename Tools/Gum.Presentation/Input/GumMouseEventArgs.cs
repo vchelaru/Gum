@@ -26,6 +26,18 @@ public class GumMouseEventArgs
     public int Delta { get; set; }
 
     /// <summary>
+    /// Set on a wheel event that should pan instead of zoom (a macOS trackpad's two-finger scroll).
+    /// <see cref="PanX"/>/<see cref="PanY"/> then carry the move and <see cref="Delta"/> is ignored.
+    /// </summary>
+    public bool IsPanScroll { get; set; }
+
+    /// <summary>How far the content should move right, in physical pixels, for a <see cref="IsPanScroll"/> event.</summary>
+    public float PanX { get; set; }
+
+    /// <summary>How far the content should move down, in physical pixels, for a <see cref="IsPanScroll"/> event.</summary>
+    public float PanY { get; set; }
+
+    /// <summary>
     /// Set by the handler when it consumes the event; read back by the boundary caller to suppress the
     /// framework's own default handling (e.g. container scroll on mouse wheel).
     /// </summary>

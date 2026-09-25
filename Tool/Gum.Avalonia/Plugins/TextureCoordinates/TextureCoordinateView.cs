@@ -41,6 +41,7 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
         _canvasControl.PointerReleased += (_, e) =>
             MouseUp?.Invoke(e.ToGumMouseEventArgs(_canvasControl, e.GetCurrentPoint(_canvasControl).Properties.PointerUpdateKind));
         _canvasControl.PointerWheelChanged += HandleCanvasPointerWheelChanged;
+        Gestures.AddPointerTouchPadGestureMagnifyHandler(_canvasControl, HandleCanvasPinch);
 
         ScrollBar vertical = new ScrollBar { Orientation = Orientation.Vertical, AllowAutoHide = false };
         ScrollBar horizontal = new ScrollBar { Orientation = Orientation.Horizontal, AllowAutoHide = false };
@@ -161,9 +162,16 @@ public sealed class TextureCoordinateView : DockPanel, ITextureCoordinateView
 
     private void HandleCanvasPointerWheelChanged(object? sender, PointerWheelEventArgs e)
     {
+        GumMouseEventArgs args = e.ToGumWheelEventArgs(_canvasControl);
+        MouseWheel?.Invoke(args);
+        e.Handled = args.Handled;
+    }
+
+    // Avalonia raises the trackpad pinch only on macOS.
+    private void HandleCanvasPinch(object? sender, PointerDeltaEventArgs e)
+    {
         GumMouseEventArgs args = e.ToGumMouseEventArgs(_canvasControl, PointerUpdateKind.Other);
-        // WPF reports 120 per notch; Avalonia reports 1.
-        args.Delta = (int)(e.Delta.Y * 120);
+        args.Delta = AvaloniaMouseMapping.PinchToWheelDelta(e.Delta.X);
         MouseWheel?.Invoke(args);
         e.Handled = args.Handled;
     }
