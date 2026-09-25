@@ -236,7 +236,7 @@ public class CodeGenerationContext
         //}
         //else
         {
-            var defaultState = element.DefaultState;
+            var defaultState = element.DefaultState!;
             var rvf = new RecursiveVariableFinder(defaultState);
             var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
             if (isXamForms == true)
@@ -860,7 +860,7 @@ public class CodeGenerator
 
     private void FillWithNewVariables(CodeGenerationContext context)
     {
-        var variables = context.Element.DefaultState.Variables;
+        var variables = context.Element.DefaultState!.Variables;
 
         var stringBuilder = context.StringBuilder;
 
@@ -907,7 +907,7 @@ public class CodeGenerator
 
     private void FillWithExposedVariables(CodeGenerationContext context)
     {
-        var exposedVariables = context.Element.DefaultState.Variables
+        var exposedVariables = context.Element.DefaultState!.Variables
             .Where(item => !string.IsNullOrEmpty(item.ExposedAsName))
             .ToArray();
 
@@ -960,7 +960,7 @@ public class CodeGenerator
             type = "global::Gum.Converters.GeneralUnitType";
         }
 
-        var isState = exposedVariable.IsState(container, out ElementSave stateContainer, out StateSaveCategory category);
+        var isState = exposedVariable.IsState(container, out ElementSave? stateContainer, out StateSaveCategory? category);
 
         var shouldGenerate = true;
 
@@ -970,11 +970,16 @@ public class CodeGenerator
             {
                 shouldGenerate = false;
             }
+            // Uncategorized states (the "State" variable) have no generated enum to type the property with.
+            else if (category == null || stateContainer == null)
+            {
+                shouldGenerate = false;
+            }
         }
 
         if (shouldGenerate)
         {
-            if (isState)
+            if (isState && category != null && stateContainer != null)
             {
                 string stateContainerType;
                 VisualApi visualApi = GetVisualApiForElement(stateContainer);
@@ -998,7 +1003,7 @@ public class CodeGenerator
             }
             else if (bindingBehavior == BindingBehavior.BindablePropertyWithEventAssignment)
             {
-                var rcv = new RecursiveVariableFinder(container.DefaultState);
+                var rcv = new RecursiveVariableFinder(container.DefaultState!);
                 var defaultValue = rcv.GetValue(exposedVariable.Name);
                 var defaultValueAsString = VariableValueToGumCodeValue(exposedVariable, context, forcedValue: defaultValue);
                 var containerClassName = GetClassNameForType(container, VisualApi.XamarinForms, context);
@@ -1130,7 +1135,7 @@ public class CodeGenerator
                     }
 
                     // see if this has an exposed variable with the name of this variable
-                    var exposedVariableOnInstanceElement = instanceElement?.DefaultState.GetVariableRecursive(exposedVariable.GetRootName());
+                    var exposedVariableOnInstanceElement = instanceElement?.DefaultState!.GetVariableRecursive(exposedVariable.GetRootName());
                     if(exposedVariableOnInstanceElement?.ExposedAsName != exposedVariable.GetRootName())
                     {
                         exposedVariableOnInstanceElement = null;
@@ -1264,7 +1269,7 @@ public class CodeGenerator
 
         var instance = context.Instance!;
         
-        var defaultState = context.Element.DefaultState;
+        var defaultState = context.Element.DefaultState!;
         var isXamForms = defaultState.GetValueRecursive($"{instance.Name}.IsXamarinFormsControl") as bool?;
         if (isXamForms == true)
         {
@@ -1630,7 +1635,7 @@ public class CodeGenerator
         }
 
         var shouldSetBinding =
-            visualApi == VisualApi.XamarinForms && context.Element.DefaultState.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
+            visualApi == VisualApi.XamarinForms && context.Element.DefaultState!.Variables.Any(item => !string.IsNullOrEmpty(item.ExposedAsName) && item.SourceObject == instance.Name);
         // If it's xamarin forms and we have exposed variables, then let's set up binding to this
         if (shouldSetBinding)
         {
@@ -3021,7 +3026,7 @@ public class CodeGenerator
         // we'll get the recursive parent value instead
         // of relying on top-level variables:
 
-        var defaultState = container.DefaultState;
+        var defaultState = container.DefaultState!;
 
         var rfv = new RecursiveVariableFinder(defaultState);
 
@@ -4222,7 +4227,7 @@ public class CodeGenerator
 
             VisualApi visualApi = VisualApi.Gum;
 
-            var defaultState = context.Element.DefaultState;
+            var defaultState = context.Element.DefaultState!;
             bool? isXamForms = false;
             if (instance == null)
             {
@@ -4252,7 +4257,7 @@ public class CodeGenerator
             // could be null if the element references an element that doesn't exist.
             if (baseElement != null)
             {
-                var baseDefaultState = baseElement.DefaultState;
+                var baseDefaultState = baseElement.DefaultState!;
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
 
@@ -4313,7 +4318,7 @@ public class CodeGenerator
         var element = context.Element;
 
         #region Get variables to consider
-        var defaultState = element.DefaultState;
+        var defaultState = element.DefaultState!;
 
         var baseElement = ObjectFinder.Self.GetElementSave(element.BaseType);
         RecursiveVariableFinder? recursiveVariableFinder = null;
@@ -4321,7 +4326,7 @@ public class CodeGenerator
         // This is null if it's a screen, or there's some bad reference
         if (baseElement != null)
         {
-            recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState);
+            recursiveVariableFinder = new RecursiveVariableFinder(baseElement.DefaultState!);
         }
 
         var variablesToConsider = defaultState.Variables
@@ -4404,7 +4409,7 @@ public class CodeGenerator
 
         FillWithVariableAssignments(context, context.StringBuilder, variablesToAssignValues);
 
-        var variableListsToAssign = context.Element.DefaultState.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
+        var variableListsToAssign = context.Element.DefaultState!.VariableLists.Where(item => item.SourceObject == context.Instance.Name)
             .ToArray();
 
         FillWithVariableListAssignments(context, context.StringBuilder, variableListsToAssign);
@@ -4562,7 +4567,7 @@ public class CodeGenerator
     {
         var value = variable.Value;
         var rootName = variable.GetRootName();
-        var isState = variable.IsState(container, out ElementSave categoryContainer, out StateSaveCategory category);
+        var isState = variable.IsState(container, out ElementSave? categoryContainer, out StateSaveCategory? category);
         return VariableValueToXamarinFormsCodeValue(value, rootName, isState, categoryContainer, category, context);
     }
 
@@ -4610,7 +4615,7 @@ public class CodeGenerator
     {
         var value = forcedValue ?? variable.Value;
         var rootName = variable.GetRootName();
-        var isState = variable.IsState(context.Element, out ElementSave categoryContainer, out StateSaveCategory category);
+        var isState = variable.IsState(context.Element, out ElementSave? categoryContainer, out StateSaveCategory? category);
 
         return VariableValueToGumCode(value, rootName, isState, categoryContainer, category, context.CodeOutputProjectSettings);
     }
@@ -5046,7 +5051,7 @@ public class CodeGenerator
 
         #endregion
 
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState!, _localizationService))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -5064,7 +5069,7 @@ public class CodeGenerator
         {
             throw new InvalidOperationException("Instance cannot be null");
         }
-        var defaultState = context.Element.DefaultState;
+        var defaultState = context.Element.DefaultState!;
         VisualApi visualApi = GetVisualApiForInstance(instance, context.Element);
 
         // We used to do this, but now spacing is supported in FRB:
@@ -5090,7 +5095,7 @@ public class CodeGenerator
 
         // sometimes variables have to be processed in groups. For example, RGB values
         // have to be assigned all at once in a Color value in XamForms;
-        ProcessVariableGroups(variablesToAssignValues, container.DefaultState, visualApi, stringBuilder, context);
+        ProcessVariableGroups(variablesToAssignValues, container.DefaultState!, visualApi, stringBuilder, context);
 
         foreach (var variable in variablesToAssignValues)
         {
@@ -5121,7 +5126,7 @@ public class CodeGenerator
 
                 var variableRoot = variable.GetRootName();
 
-                var matchingExposed = instanceElement?.DefaultState.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
+                var matchingExposed = instanceElement?.DefaultState!.Variables.FirstOrDefault(item => item.ExposedAsName == variableRoot);
                 if (matchingExposed != null && matchingExposed.SourceObject != null)
                 {
                     var instanceInInstanceElement = instanceElement!.GetInstance(matchingExposed.SourceObject);
@@ -5143,7 +5148,7 @@ public class CodeGenerator
         context.StringBuilder.AppendLine(context.Tabs + "{");
         context.TabCount++;
 
-        foreach (var variable in context.Element.DefaultState.Variables)
+        foreach (var variable in context.Element.DefaultState!.Variables)
         {
             if (variable.IsCustomVariable)
             {
@@ -5483,7 +5488,7 @@ public class CodeGenerator
                 return $"{context.CodePrefixNoTabs}.SetProperty(\"{variable.GetRootName()}\", \"{variable.Value}\");";
             }
         }
-        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
+        else if (GetIsShouldBeLocalized(variable, context.Element.DefaultState!, _localizationService))
         {
             string assignment = GetLocalizedLine(variable, context);
 
@@ -5577,7 +5582,7 @@ public class CodeGenerator
 
                 RecursiveVariableFinder baseRecursiveVariableFinder = new RecursiveVariableFinder(baseDefaultState);
 
-                var defaultState = currentElement.DefaultState;
+                var defaultState = currentElement.DefaultState!;
                 var variablesToConsider = defaultState.Variables
                     .Where(item =>
                     {
@@ -5676,7 +5681,7 @@ public class CodeGenerator
             tabCount++;
             var context = new CodeGenerationContext(_codeGenerationNameVerifier, element);
             context.TabCount = tabCount;
-            foreach (var variable in element.DefaultState.Variables)
+            foreach (var variable in element.DefaultState!.Variables)
             {
                 InstanceSave? instance = null;
                 if (!string.IsNullOrEmpty(variable.SourceObject))
@@ -5687,7 +5692,7 @@ public class CodeGenerator
                 context.Instance = instance;
                 if (instance != null)
                 {
-                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState, _localizationService))
+                    if (GetIsShouldBeLocalized(variable, context.Element.DefaultState!, _localizationService))
                     {
                         string assignment = GetLocalizedLine(variable, context);
                         stringBuilder.AppendLine(ToTabs(tabCount) + assignment);
@@ -5737,7 +5742,7 @@ public class CodeGenerator
 
         var boundVariables = new List<VariableSave>();
 
-        foreach (var variable in element.DefaultState.Variables)
+        foreach (var variable in element.DefaultState!.Variables)
         {
             if (!string.IsNullOrEmpty(variable.ExposedAsName) && variable.SourceObject != null)
             {
@@ -5829,7 +5834,7 @@ public class CodeGenerator
 
     private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
     {
-        var isContainerXamarinForms = (container.DefaultState.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
+        var isContainerXamarinForms = (container.DefaultState!.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
         var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 
         if (isContainerXamarinForms && isInstanceXamarinForms)
@@ -5863,7 +5868,7 @@ public class CodeGenerator
 
     public static VisualApi GetVisualApiForInstance(InstanceSave instance, ElementSave elementContainingInstance, bool considerDefaultContainer = false)
     {
-        var defaultState = elementContainingInstance.DefaultState;
+        var defaultState = elementContainingInstance.DefaultState!;
 
         var isXamarinFormsControlVariable =
             $"{instance.Name}.IsXamarinFormsControl";
@@ -5871,7 +5876,7 @@ public class CodeGenerator
         if (considerDefaultContainer)
         {
             var instanceElement = ObjectFinder.Self.GetElementSave(instance);
-            var defaultParent = instanceElement?.DefaultState.GetValueOrDefault<string>("DefaultChildContainer");
+            var defaultParent = instanceElement?.DefaultState!.GetValueOrDefault<string>("DefaultChildContainer");
 
             if (!string.IsNullOrEmpty(defaultParent))
             {
@@ -5907,7 +5912,7 @@ public class CodeGenerator
         //}
         //else
         {
-            var defaultState = element.DefaultState;
+            var defaultState = element.DefaultState!;
             var rvf = new RecursiveVariableFinder(defaultState);
             var isXamForms = rvf.GetValue<bool>("IsXamarinFormsControl");
             if (isXamForms == true)

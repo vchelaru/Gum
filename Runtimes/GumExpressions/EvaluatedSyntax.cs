@@ -909,7 +909,7 @@ public class EvaluatedSyntax
 
     #endregion
 
-    public bool CastTo(string desiredType)
+    public bool CastTo(string? desiredType)
     {
         if(desiredType == this.EvaluatedType)
         {

@@ -12,7 +12,7 @@ namespace Gum.ProjectServices.CodeGeneration
     {
         public static bool GetIfVariableIsExcluded(VariableSave variable, RecursiveVariableFinder rvf)
         {
-            InstanceSave instance = rvf.InstanceSave;
+            InstanceSave? instance = rvf.InstanceSave;
 
             if(instance != null)
             {

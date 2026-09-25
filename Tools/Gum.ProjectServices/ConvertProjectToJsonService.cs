@@ -64,7 +64,9 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
 
     private ConvertProjectToJsonResult ConvertToJsonCore(GumProjectSave project, string sourceDirectory, string outputDirectory)
     {
-        string projectFileNameNoExtension = Path.GetFileNameWithoutExtension(project.FullFileName);
+        // ValidateAndGetSourceDirectory already rejected a project with no file name.
+        string projectFullFileName = project.FullFileName!;
+        string projectFileNameNoExtension = Path.GetFileNameWithoutExtension(projectFullFileName);
         string jsonProjectPath = outputDirectory + projectFileNameNoExtension + "." + GumProjectSave.ProjectJsonExtension;
 
         // GumProjectSave.Save dispatches XML vs JSON purely off the target path's extension, and
@@ -76,7 +78,7 @@ public class ConvertProjectToJsonService : IConvertProjectToJsonService
         // (issue #4219) - otherwise the file watcher reacts to each write as an external change and
         // triggers a full element reload + tree-view refresh per file, mirroring the pattern already
         // used by FileCommands/ProjectManager when they save.
-        string xmlProjectPath = project.FullFileName;
+        string xmlProjectPath = projectFullFileName;
         IgnoreUpcomingElementWrites(project, outputDirectory);
         _fileWatchIgnoreList.IgnoreNextChangeUntil(jsonProjectPath);
         project.Save(jsonProjectPath, saveElements: true);
