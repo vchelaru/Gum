@@ -35,7 +35,7 @@ Select the agent that best matches the task at hand. For tasks that span multipl
 
 General implementation work (new features, bug fixes, unit tests) has no dedicated agent file — follow this file and whatever skills its triggers pull in directly (`tdd` for test discipline, `code-style.md` for style, `refactoring-direction` before touching a static singleton, etc.).
 
-**Work in a fresh worktree, not the primary checkout**, unless the user explicitly says to work in place — the current branch may already have unrelated in-progress work on it.
+**Work in a fresh worktree, not the primary checkout**, unless the user explicitly says to work in place — the current branch may already have unrelated in-progress work on it. Create it with the `EnterWorktree` tool, not `git worktree add`: the tool moves the session into the worktree, so its terminal and the tool build the user runs from it (`dotnet run` from the repo root) use the branch under work. A worktree made with plain `git` leaves the session in the primary checkout, where running the tool silently runs `main`.
 
 **Boyscout principle:** while you're already reading a method or file for the task at hand, fix compiler warnings, dead code, and small inconsistencies you notice along the way — the context is already loaded, so it's cheap now and expensive later. Call out what you bundled in your final notes. Don't restructure classes or chase warnings into unrelated files as drive-by work.
 
