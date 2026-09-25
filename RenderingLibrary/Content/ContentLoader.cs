@@ -168,7 +168,9 @@ public sealed class ContentLoader : IContentLoader
     {
         byte[] imageData = null;
 
+#pragma warning disable SYSLIB0014 // obsolete but still supported; kept for its synchronous DownloadData
         using (var wc = new System.Net.WebClient())
+#pragma warning restore SYSLIB0014
             imageData = wc.DownloadData(url);
 
         return new System.IO.MemoryStream(imageData);
@@ -313,7 +315,7 @@ public sealed class ContentLoader : IContentLoader
 
                 toReturn = texture;
             }
-            catch(Exception e)
+            catch(Exception)
             {
 #if XNALIKE && !FRB
                 if (XnaContentManager != null)

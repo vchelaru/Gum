@@ -155,7 +155,7 @@ namespace RenderingLibrary.Math.Geometry
         /// Renders the primtive line object.
         /// </summary>
         /// <param name="spriteRenderer">The sprite renderer to use to render the primitive line object.</param>
-        /// <param name="managers"></param>The system managers to use.  Can be null.</param>
+        /// <param name="managers">The system managers to use. Can be null.</param>
         public void Render(SpriteRenderer spriteRenderer, SystemManagers? managers)
         {
             if(mTexture != null)

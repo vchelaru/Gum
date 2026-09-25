@@ -93,7 +93,8 @@ public class ScrollViewerVisual : InteractiveGue
         public StateSave Focused { get; private set; } = new StateSave() { Name = FrameworkElement.FocusedStateName };
     }
 
-    public ScrollViewerCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ScrollViewerCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

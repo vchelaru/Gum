@@ -643,7 +643,6 @@ public class ImageRegionSelectionCore
     {
         if (mCurrentTexture != null)
         {
-            const float pixelBorder = 10;
 
             bool isAbove = mCurrentTextureSprite.Y + mCurrentTexture.Height < Camera.AbsoluteTop;
             bool isBelow = mCurrentTextureSprite.Y > Camera.AbsoluteBottom;

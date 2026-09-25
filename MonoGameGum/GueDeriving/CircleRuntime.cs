@@ -95,7 +95,7 @@ public class CircleRuntime : GraphicalUiElement
     /// Per-platform routing for the obsolete single-color surface (<see cref="Color"/>,
     /// <see cref="Alpha"/>, <see cref="Red"/>, <see cref="Green"/>, <see cref="Blue"/>).
     /// XNALIKE writes the color directly onto the stroke renderable slot; everything else
-    /// (Raylib/Sokol) writes through <see cref="ContainedLineCircle"/>.
+    /// (Raylib/Sokol) writes through <c>ContainedLineCircle</c>.
     /// </summary>
     Color ObsoleteStrokeColor
     {

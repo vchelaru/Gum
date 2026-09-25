@@ -667,14 +667,17 @@ public abstract class AposShapeRuntime : GraphicalUiElement
         set => ContainedRenderable.DropshadowOffsetY = value;
     }
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>
+    /// Horizontal blur radius of the dropshadow, in pixels: how far the shadow visibly extends,
+    /// not the Gaussian sigma. 0 is a hard edge.
+    /// </summary>
     public float DropshadowBlurX
     {
         get => ContainedRenderable.DropshadowBlurX;
         set => ContainedRenderable.DropshadowBlurX = value;
     }
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <inheritdoc cref="DropshadowBlurX"/>
     public float DropshadowBlurY
     {
         get => ContainedRenderable.DropshadowBlurY;

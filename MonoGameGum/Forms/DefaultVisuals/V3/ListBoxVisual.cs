@@ -84,7 +84,8 @@ public class ListBoxVisual : InteractiveGue
         public StateSave Pushed { get; set; } = new StateSave() { Name = FrameworkElement.PushedStateName };
     }
 
-    public ListBoxCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ListBoxCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

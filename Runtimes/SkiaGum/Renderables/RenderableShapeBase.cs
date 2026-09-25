@@ -985,10 +985,12 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
             switch (GradientInnerRadiusUnits)
             {
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
                 case Gum.DataTypes.DimensionUnitType.Percentage:
                     effectiveInnerRadius = Width * GradientInnerRadius / 100;
                     break;
                 case Gum.DataTypes.DimensionUnitType.RelativeToContainer:
+#pragma warning restore CS0618
                     effectiveInnerRadius = Width + GradientInnerRadius;
                     break;
             }

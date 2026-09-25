@@ -19,7 +19,6 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin
     {
         private MenuItemModel _recentFilesMenuItem = null!;
         private readonly RecentFilesLogic _recentFilesLogic;
-        private readonly IDialogService _dialogService;
 
         [ImportingConstructor]
         public MainRecentFilesPlugin(IProjectManager projectManager, IFileCommands fileCommands, IDialogService dialogService)

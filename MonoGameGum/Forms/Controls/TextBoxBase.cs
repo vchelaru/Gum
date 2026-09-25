@@ -292,7 +292,8 @@ public abstract class TextBoxBase :
     }
 
     // todo - this could move to the base class, if the base objects became input receivers
-    public event Action<object, KeyEventArgs> KeyDown;
+    // Hides FrameworkElement.KeyDown instead of raising it; see #5001.
+    public new event Action<object, KeyEventArgs> KeyDown;
 
     bool isCaretVisibleWhenNotFocused;
     /// <summary>
@@ -1583,7 +1584,7 @@ public abstract class TextBoxBase :
     /// <summary>
     /// Controls whether pressing the Enter / Return key inserts a newline (<c>'\n'</c>) into the
     /// text. When <c>false</c> (the default), Enter is treated as a commit gesture (binding sources
-    /// with <see cref="UpdateSourceTrigger.LostFocus"/> are pushed) and no newline is added.
+    /// with <c>UpdateSourceTrigger.LostFocus</c> are pushed) and no newline is added.
     /// </summary>
     /// <remarks>
     /// This property only governs the keyboard behavior. It does NOT control visual layout

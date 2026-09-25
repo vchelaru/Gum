@@ -123,7 +123,7 @@ public static class CursorExtensions
         {
             return "The argument InteractiveGue has an AbsoluteWidth of 0";
         }
-        if(interactiveGue.GetAbsoluteHeight () == 0)
+        if(interactiveGue.AbsoluteHeight == 0)
         {
             return "The argument InteractiveGue has an AbsoluteHeight of 0";
         }

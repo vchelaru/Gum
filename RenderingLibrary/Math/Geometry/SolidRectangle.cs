@@ -106,7 +106,7 @@ public class SolidRectangle : SpriteBatchRenderableBase, IRenderableIpso, IVisib
 
     public object Tag { get; set; }
 
-    public BlendState BlendState { get; set; }
+    public new BlendState BlendState { get; set; }
 
 
     public int Alpha

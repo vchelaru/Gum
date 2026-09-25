@@ -39,7 +39,7 @@ public static class SpatialNavigationService
     /// are skipped if present — an ancestor's own center can otherwise score better than a true
     /// sibling simply by virtue of containing the origin, and an internal part sitting right at its
     /// owning control's edge can otherwise outscore that control (or an unrelated sibling) simply
-    /// by virtue of being nested inside it. This mirrors index-based <see cref="FrameworkElement.HandleTab"/>,
+    /// by virtue of being nested inside it. This mirrors index-based <see cref="FrameworkElement.HandleTab(TabDirection, FrameworkElement?, bool)"/>,
     /// which treats a focusable element as an opaque stop and never descends into it.
     /// </param>
     /// <param name="maxAngleRadians">Half-width of the direction cone; candidates outside are excluded.</param>

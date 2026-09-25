@@ -19,8 +19,8 @@ public interface IRenderable
     public string BatchKey => string.Empty;
 
     /// <summary>
-    /// Finer-grained grouping hint read only by <see cref="BatchKeyGroupedOrderer"/> (e.g. a
-    /// Texture2D reference) — unlike <see cref="BatchKey"/>, <see cref="BatchOrchestrator"/> never
+    /// Finer-grained grouping hint read only by <c>BatchKeyGroupedOrderer</c> (e.g. a
+    /// Texture2D reference) — unlike <see cref="BatchKey"/>, <c>BatchOrchestrator</c> never
     /// reads this, so it carries no flush cost. Null means "no finer grouping than BatchKey."
     /// </summary>
     public object? BatchSortKey => null;

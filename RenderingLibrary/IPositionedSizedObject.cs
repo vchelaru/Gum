@@ -129,7 +129,7 @@ namespace RenderingLibrary
 
         /// <summary>
         /// Returns the axis-aligned absolute bounds of <paramref name="ipso"/> in pixel space.
-        /// Used by <see cref="Graphics.BatchKeyGroupedOrderer"/> for overlap testing when
+        /// Used by <c>Graphics.BatchKeyGroupedOrderer</c> for overlap testing when
         /// deciding whether two draws may be reordered past each other. Rotation is ignored
         /// (treated as an AABB of the unrotated rect); negative widths/heights are normalized.
         /// </summary>

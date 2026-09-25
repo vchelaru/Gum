@@ -153,7 +153,7 @@ public class ShapeRenderer
 
     public void Initialize()
     {
-        var gumService = GumService.Default;
+        var gumService = Gum.GumService.Default;
         if(gumService.IsInitialized == false)
         {
             throw new InvalidOperationException(

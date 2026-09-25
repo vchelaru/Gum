@@ -512,7 +512,7 @@ public partial class GumService : IGumService
     /// <see cref="IGumFileProvider"/>.
     /// </summary>
     /// <remarks>
-    /// This enumerates once instead of probing <see cref="FileManager.FileExists"/> per element.
+    /// This enumerates once instead of probing <see cref="FileManager.FileExists(string)"/> per element.
     /// In bundle mode the enumeration is an in-memory dictionary scan — zero I/O, and crucially
     /// zero cosmetic 404s on browser/streaming platforms (Blazor WASM), where every per-element
     /// probe was previously a guaranteed-miss HTTP request. In loose mode on a real filesystem it
@@ -710,8 +710,10 @@ public partial class GumService : IGumService
     private void ApplyStandardElementDefaults(GumProjectSave gumProject)
     {
         var current = gumProject.StandardElements.Find(item => item.Name == "ColoredRectangle");
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
         ColoredRectangleRuntime.DefaultWidth = GetFloat("Width");
         ColoredRectangleRuntime.DefaultHeight = GetFloat("Height");
+#pragma warning restore CS0618
 
         current = gumProject.StandardElements.Find(item => item.Name == "NineSlice");
 
@@ -774,7 +776,9 @@ public partial class GumService : IGumService
         ElementSaveExtensions.ClearRegistrations();
 
         FrameworkElement.DefaultFormsTemplates.Clear();
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
         FrameworkElement.DefaultFormsComponents.Clear();
+#pragma warning restore CS0618
 
         ObjectFinder.Self.GumProjectSave = null;
         CurrentProjectResolution = null;

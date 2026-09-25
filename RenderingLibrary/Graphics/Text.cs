@@ -148,7 +148,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
     }
 
     /// <summary>
-    /// When true and the active <see cref="BitmapFont"/> has a <see cref="Fonts.BitmapFont.ShadowFont"/>,
+    /// When true and the active <see cref="BitmapFont"/> has a <c>Fonts.BitmapFont.ShadowFont</c>,
     /// a drop shadow is drawn as a second pass (issue #4001): the shadow silhouette is drawn offset by
     /// <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/> and tinted <see cref="DropshadowColor"/>,
     /// with the primary glyphs drawn on top. This keeps text and shadow color independent, which baking
@@ -759,7 +759,7 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     public object Tag { get; set; }
 
-    public BlendState BlendState { get; set; }
+    public new BlendState BlendState { get; set; }
 
     Renderer Renderer
     {
@@ -1078,7 +1078,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                     if (mTextureToRender is RenderTarget2D)
                     {
+#pragma warning disable CS0618 // MonoGame never raises ContentLost, but other XNA-family backends compile this too
                         (mTextureToRender as RenderTarget2D).ContentLost -= SetNeedsRefresh;
+#pragma warning restore CS0618
                     }
                     mTextureToRender = null;
                 }
@@ -1086,7 +1088,9 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
                 if (isNewInstance && mTextureToRender is RenderTarget2D)
                 {
+#pragma warning disable CS0618 // MonoGame never raises ContentLost, but other XNA-family backends compile this too
                     (mTextureToRender as RenderTarget2D).ContentLost += SetNeedsRefresh;
+#pragma warning restore CS0618
                     mTextureToRender.Name = "Render Target for Text " + this.Name;
 
                 }

@@ -26,7 +26,7 @@ public class Styling
     /// <remarks>
     /// Lazily creates a default-styled instance (loading the embedded UISpriteSheet) if nothing has
     /// explicitly set this yet. This covers constructing a V3 default-visual class (directly, or via
-    /// a <see cref="Gum.Forms.FrameworkElement.DefaultFormsTemplates"/> override) in an app that never
+    /// a <see cref="Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates"/> override) in an app that never
     /// called <c>InitializeDefaults</c> with V3/Newest - e.g. a test host initialized with V1/V2, or a
     /// composite control (like Slider's thumb) that internally builds a V3 visual regardless of which
     /// version the app registered.

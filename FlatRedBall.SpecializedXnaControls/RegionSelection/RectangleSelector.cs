@@ -43,8 +43,6 @@ namespace FlatRedBall.SpecializedXnaControls.RegionSelection
     {
         #region Fields
 
-        float xBeforeSnapping;
-        float yBeforeSnapping;
 
         SystemManagers managers;
 

@@ -6,7 +6,7 @@ namespace Gum.Logic;
 
 /// <summary>
 /// Narrow seam over <c>Gum.DataTypes.VariableSaveExtensionMethodsGumTool.GetTypeConverter</c>
-/// (Locator-resolving, tool-only) so <see cref="VariableSaveLogic"/> (headless, Gum.Presentation)
+/// (Locator-resolving, tool-only) so <c>VariableSaveLogic</c> (headless, Gum.Presentation)
 /// can obtain a variable's <see cref="TypeConverter"/> without referencing that tool-only
 /// extension method directly.
 /// </summary>

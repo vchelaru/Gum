@@ -83,7 +83,7 @@ namespace Gum.Graphics.Animation
 
         /// <summary>
         /// Whether this chain loops by default, authored via <see cref="AnimationChainSave.Loop"/>.
-        /// <see cref="RenderingLibrary.Graphics.Animation.AnimationChainLogic"/> seeds its own
+        /// <c>RenderingLibrary.Graphics.Animation.AnimationChainLogic</c> seeds its own
         /// <c>IsAnimationChainLooping</c> from this value when this chain becomes active, but that
         /// flag stays overridable per-instance afterward.
         /// </summary>

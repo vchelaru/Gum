@@ -207,7 +207,8 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         public StateSave MultiLineModeNoWrap { get; set; } = new StateSave() { Name = "MultiNoWrap" };
     }
 
-    public TextBoxCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new TextBoxCategoryStates States;
     /// <summary>
     /// The state category used by the Forms control to apply visual states.
     /// </summary>

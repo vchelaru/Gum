@@ -62,7 +62,7 @@ public class Menu : ItemsControl
 
     public override void UpdateState()
     {
-        var category = MenuCategoryState;
+        var category = MenuCategoryStateName;
         if (IsEnabled == false)
         {
             if (IsFocused)

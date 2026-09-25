@@ -33,9 +33,7 @@ public class MainHtmlToGumPlugin : PluginBase
 
     private readonly IProjectState _projectState;
     private readonly IImportLogic _importLogic;
-    private readonly IFileCommands _fileCommands;
     private readonly ISelectedState _selectedState;
-    private readonly IGuiCommands _guiCommands;
 
     [ImportingConstructor]
     public MainHtmlToGumPlugin(

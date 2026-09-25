@@ -89,7 +89,9 @@ namespace Gum.Converters
         {
             return unitType == GeneralUnitType.PixelsFromSmall ||
                 unitType == GeneralUnitType.PixelsFromMiddle ||
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                 unitType == GeneralUnitType.PixelsFromMiddleInverted ||
+#pragma warning restore CS0618
                 unitType == GeneralUnitType.PixelsFromLarge ||
                 unitType == GeneralUnitType.PixelsFromBaseline;
         }
@@ -200,7 +202,9 @@ namespace Gum.Converters
             {
                 absoluteY = parentHeight / 2.0f + relativeY;
             }
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             else if(generalY == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
             {
                 absoluteY = parentHeight / 2.0f - relativeY;
             }
@@ -292,7 +296,9 @@ namespace Gum.Converters
             {
                 relativeY = pixelYToConvert - parentHeight / 2.0f;
             }
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
             else if(generalY == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
             {
                 relativeY = -pixelYToConvert - parentHeight / 2.0f;
             }
@@ -403,7 +409,9 @@ namespace Gum.Converters
                 case PositionUnitType.PixelsFromCenterY:
                     return GeneralUnitType.PixelsFromMiddle;
                 case PositionUnitType.PixelsFromCenterYInverted:
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                     return GeneralUnitType.PixelsFromMiddleInverted;
+#pragma warning restore CS0618
                 case PositionUnitType.PixelsFromBaseline:
                     return GeneralUnitType.PixelsFromBaseline;
                 default:
@@ -465,7 +473,9 @@ namespace Gum.Converters
                     return isXAxis ? PositionUnitType.PixelsFromRight : PositionUnitType.PixelsFromBottom;
                 case GeneralUnitType.PixelsFromMiddle:
                     return isXAxis ? PositionUnitType.PixelsFromCenterX : PositionUnitType.PixelsFromCenterY;
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
                 case GeneralUnitType.PixelsFromMiddleInverted:
+#pragma warning restore CS0618
                     // PositionUnitType has no inverted-center on the X axis, so X falls back to center.
                     return isXAxis ? PositionUnitType.PixelsFromCenterX : PositionUnitType.PixelsFromCenterYInverted;
                 case GeneralUnitType.PixelsFromBaseline:

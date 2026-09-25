@@ -52,7 +52,7 @@ public interface IHasRenderableComponent
 /// <c>Renderer</c> can drive render-target rendering without knowing the concrete renderable type.
 /// Both the runtime container renderable (<see cref="RenderableBase"/>, e.g.
 /// <c>InvisibleRenderable</c>) and the Gum editor's container renderable
-/// (<see cref="RenderingLibrary.Math.Geometry.LineRectangle"/>, which carries the editor outline)
+/// (<c>RenderingLibrary.Math.Geometry.LineRectangle</c>, which carries the editor outline)
 /// implement it. The universal render-target inputs — <c>IsRenderTarget</c> and <c>Alpha</c> —
 /// already live on <see cref="IRenderableIpso"/>; this interface is the place to add further
 /// render-target-only state in the future.

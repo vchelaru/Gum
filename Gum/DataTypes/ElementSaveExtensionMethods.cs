@@ -48,6 +48,9 @@ namespace Gum.DataTypes
         /// <paramref name="defaultState"/>, fixes state-variable types, and initializes instances. Returns
         /// whether anything was changed.
         /// </summary>
+        /// <param name="elementSave">The element to initialize.</param>
+        /// <param name="defaultState">The default state to back-fill variables from.</param>
+        /// <param name="tolerateMissingDefaultStates">Whether a missing default state is allowed.</param>
         /// <param name="modifications">
         /// Optional. When provided, the names of any variables back-filled into the element's default state
         /// are appended, so a caller can report which variables made a freshly-loaded element dirty.

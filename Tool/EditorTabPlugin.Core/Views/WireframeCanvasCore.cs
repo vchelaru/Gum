@@ -327,7 +327,9 @@ public sealed class WireframeCanvasCore
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
+#pragma warning disable CS0618 // obsolete types and members still load from older projects
             () => new ColoredRectangleRuntime());
+#pragma warning restore CS0618
 
         // Container is deliberately absent (issue #4386). Every registered runtime installs its own
         // renderable in its constructor, so SetGraphicalUiElement sees a non-null RenderableComponent

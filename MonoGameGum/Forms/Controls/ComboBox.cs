@@ -263,7 +263,9 @@ public class ComboBox :
     /// </summary>
     public event Action<IInputReceiver>? FocusUpdate;
     public event Action<GamepadButton> ControllerButtonPushed;
+#pragma warning disable CS0067 // raised only in the FRB build
     public event Action<int> GenericGamepadButtonPushed;
+#pragma warning restore CS0067
 
     #endregion
 

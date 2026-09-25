@@ -749,7 +749,7 @@ public class Renderer : IRenderer
 
         /// <summary>
         /// <see cref="Draw(IRenderableIpso)"/> calls accumulate instead of submitting immediately.
-        /// At <see cref="End"/> they are stable-sorted by <see cref="IRenderableIpso.Z"/> (same
+        /// At <see cref="End"/> they are stable-sorted by <c>IRenderableIpso.Z</c> (same
         /// algorithm as <see cref="Layer.SortRenderables"/>) and run through the active
         /// <see cref="SiblingOrdering"/> as if they were siblings in one layer, so separate
         /// <see cref="Draw(IRenderableIpso)"/> calls can batch together (e.g. with
@@ -993,8 +993,6 @@ public class Renderer : IRenderer
 
     GumBatch gumBatch;
 
-    bool hasSaved = false;
-
     // True only while RenderToRenderTarget's nested Draw call is baking a subtree over a
     // transparent clear. Tells AdjustRenderStates/AdjustNonClipRenderStates to substitute
     // _bakeToRenderTargetBlendState wherever a renderable would otherwise resolve to
@@ -1096,19 +1094,6 @@ public class Renderer : IRenderer
 
             gumBatch.End();
             GraphicsDevice.SetRenderTarget(oldRenderTarget as RenderTarget2D);
-
-#if DEBUG
-            if(!hasSaved)
-            {
-                hasSaved = true;
-                // Uncomment this to test saving...
-                //if (!System.IO.File.Exists("Output.png"))
-                //{
-                //    using var stream = System.IO.File.OpenWrite("Output.png");
-                //    renderTarget.SaveAsPng(stream, renderTarget.Width, renderTarget.Height);
-                //}
-            }
-#endif
 
             Camera.ClientWidth = oldCameraWidth;
             Camera.ClientHeight = oldCameraHeight;
@@ -1347,7 +1332,7 @@ public class Renderer : IRenderer
 
     /// <summary>
     /// Draws an extra additive pass over an already-drawn sprite so an authored
-    /// <see cref="Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame renders as
+    /// <c>Gum.Graphics.Animation.AnimationFrameColorOperation.Add</c> frame renders as
     /// "tex.rgb + tint.rgb, tex.a" without a custom shader (#4792 Gap 2) — a ColorTextureAlpha draw
     /// of the same geometry, blended with <see cref="BlendState.AddColorPreserveDestinationAlpha"/>
     /// so color adds onto what the normal pass already drew while alpha is left untouched. Mirrors
@@ -1646,12 +1631,6 @@ public class Renderer : IRenderer
     {
         this.spriteRenderer.End();
 
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Renderer renderer &&
-               EqualityComparer<ReadOnlyCollection<Layer>>.Default.Equals(_layersReadOnly, renderer._layersReadOnly);
     }
 }
 
@@ -2442,8 +2421,10 @@ public class DeviceManager : IGraphicsDeviceService
 
     public GraphicsDevice GraphicsDevice { get; }
 
+#pragma warning disable CS0067 // required by IGraphicsDeviceService; this wraps an existing device and never raises them
     public event EventHandler<EventArgs>? DeviceCreated;
     public event EventHandler<EventArgs>? DeviceDisposing;
+#pragma warning restore CS0067
 
     private EventHandler<EventArgs> deviceReset;
     event EventHandler<EventArgs> IGraphicsDeviceService.DeviceReset
@@ -2464,7 +2445,9 @@ public class DeviceManager : IGraphicsDeviceService
         }
     }
 
+#pragma warning disable CS0067 // required by IGraphicsDeviceService; this wraps an existing device and never raises them
     public event EventHandler<EventArgs> DeviceResetting;
+#pragma warning restore CS0067
 }
 
 public class ServiceProvider : IServiceProvider

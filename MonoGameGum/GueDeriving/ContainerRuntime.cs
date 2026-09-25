@@ -35,7 +35,8 @@ public class ContainerRuntime : InteractiveGue
         }
     }
 
-    public bool IsRenderTarget
+    /// <summary>Whether this container renders its children to a render target. Settable, unlike the read-only GraphicalUiElement.IsRenderTarget.</summary>
+    public new bool IsRenderTarget
     {
         get => (RenderableComponent as InvisibleRenderable)?.IsRenderTarget ?? false;
         set
@@ -201,7 +202,7 @@ public class ContainerRuntime : InteractiveGue
 #if !SOKOL
     /// <inheritdoc cref="GraphicalUiElement.AddToManagers()"/>
     [Obsolete("Use the AddToRoot extension method instead (e.g. myContainer.AddToRoot()).")]
-    public void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
+    public new void AddToManagers() => base.AddToManagers(SystemManagers.Default, layer: null);
 #endif
 
     // Container is a transparent wrapper whose own Render is a no-op (InvisibleRenderable).

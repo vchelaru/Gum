@@ -151,7 +151,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         {
             return converter.Convert(value, targetType, Binding.ConverterParameter);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return GumProperty.UnsetValue;
         }
@@ -163,7 +163,7 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
         {
             return converter.ConvertBack(value, targetType, Binding.ConverterParameter);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return GumProperty.UnsetValue;
         }

@@ -257,9 +257,6 @@ namespace Gum.Plugins.Undos
 
         private ElementSave GetSelectedElementClone()
         {
-            ElementSave selectedElementClone = null;
-
-
             if (_selectedState.SelectedElement != null)
             {
                 return ElementUndoStrategy.CloneWithFixedEnumerations(_selectedState.SelectedElement);

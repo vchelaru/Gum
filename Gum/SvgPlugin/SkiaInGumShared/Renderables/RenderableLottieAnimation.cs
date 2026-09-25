@@ -32,7 +32,9 @@ namespace SkiaGum.Renderables
             set => IsAnimating = value;
         }
 
+#pragma warning disable CS0649 // never assigned, so the throttle never engages; see #5002
         DateTime lastUpdate;
+#pragma warning restore CS0649
 
         const double SecondsBetweenUpdates = .1;
 

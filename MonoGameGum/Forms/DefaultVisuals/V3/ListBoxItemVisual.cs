@@ -63,7 +63,8 @@ public class ListBoxItemVisual : InteractiveGue
         public StateSave Disabled { get; set; } = new StateSave() { Name = FrameworkElement.DisabledStateName };
     }
 
-    public ListBoxItemCategoryStates States;
+    /// <summary>This visual's category states, typed by name. Hides the untyped States dictionary on GraphicalUiElement.</summary>
+    public new ListBoxItemCategoryStates States;
 
     /// <summary>
     /// The state category used by the Forms control to apply visual states.

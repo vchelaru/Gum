@@ -184,7 +184,7 @@ public class PolygonRuntime : InteractiveGue
     /// <see cref="StrokeGapLength"/> are greater than zero. On MG/Raylib the backing
     /// <c>LinePolygon</c> only supports a fixed-pattern dotted texture, so the lengths drive
     /// a binary on/off rather than true per-segment dashing; on Skia the lengths flow through
-    /// <see cref="SkiaShapeRuntime"/> to <c>SKPathEffect.CreateDash</c> verbatim.
+    /// <c>SkiaShapeRuntime</c> to <c>SKPathEffect.CreateDash</c> verbatim.
     /// </summary>
     public float StrokeDashLength
     {

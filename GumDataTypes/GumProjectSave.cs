@@ -974,7 +974,7 @@ public class GumProjectSave
 
             if (!succeeded)
             {
-                throw exception;
+                throw exception!;
             }
 
         }

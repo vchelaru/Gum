@@ -32,7 +32,7 @@ public static class GumAnimationLoader
     /// (streaming platforms like Blazor WASM), so it warns instead.
     /// </param>
     /// <remarks>
-    /// This enumerates once instead of probing <see cref="FileManager.FileExists"/> per element. In bundle
+    /// This enumerates once instead of probing <see cref="FileManager.FileExists(string)"/> per element. In bundle
     /// mode the enumeration is an in-memory dictionary scan; in loose mode on a real filesystem it is a
     /// single directory walk, but loose mode on a streaming platform cannot enumerate a directory over
     /// HTTP, so no animations load there — package the project as a <c>.gumpkg</c> to ship animations to

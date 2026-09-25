@@ -678,6 +678,14 @@ public class BmfcSave
     /// <param name="isBold">Whether the font is bold.</param>
     /// <param name="fontFilePath">Optional .ttf file path. When set, the file name (without extension) is used
     /// as the font name and a "_ttf" suffix is appended to prevent collision with same-named system fonts.</param>
+    /// <param name="hasDropshadow">Whether the font has a dropshadow. When false, the other dropshadow values are ignored.</param>
+    /// <param name="dropshadowOffsetX">The dropshadow's horizontal offset.</param>
+    /// <param name="dropshadowOffsetY">The dropshadow's vertical offset.</param>
+    /// <param name="dropshadowBlur">The dropshadow's blur radius.</param>
+    /// <param name="dropshadowRed">The dropshadow color's red component.</param>
+    /// <param name="dropshadowGreen">The dropshadow color's green component.</param>
+    /// <param name="dropshadowBlue">The dropshadow color's blue component.</param>
+    /// <param name="dropshadowAlpha">The dropshadow color's alpha component.</param>
     /// <returns>A relative file path under "FontCache/" suitable for caching this font.</returns>
     public static string GetFontCacheFileNameFor(float fontSize, string fontName, int outline, bool useFontSmoothing,
         bool isItalic = false, bool isBold = false, string? fontFilePath = null,

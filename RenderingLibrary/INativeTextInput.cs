@@ -12,7 +12,7 @@ namespace Gum.Forms.Controls
     /// <remarks>
     /// Concrete implementations are supplied by each runtime that has a native
     /// text-input story; runtimes that don't (Raylib, FNA, Sokol, browser, etc.)
-    /// simply leave <see cref="IGumService.NativeTextInput"/> null and callers
+    /// simply leave <c>IGumService.NativeTextInput</c> null and callers
     /// no-op. The MonoGame implementation wraps
     /// <c>Microsoft.Xna.Framework.Input.KeyboardInput.Show</c>.
     /// </remarks>

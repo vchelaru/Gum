@@ -147,7 +147,7 @@ public class LineRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIps
 
     public object Tag { get; set; }
 
-    public BlendState BlendState
+    public new BlendState BlendState
     {
         get { return BlendState.NonPremultiplied; }
     }

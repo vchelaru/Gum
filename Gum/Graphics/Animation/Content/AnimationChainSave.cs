@@ -26,7 +26,7 @@ namespace Gum.Content.AnimationChain
         /// <summary>
         /// Whether this chain loops at runtime. Defaults to <c>true</c> so a file that omits this
         /// field (every .achx/.achj written before this field existed) keeps its prior behavior.
-        /// <see cref="RenderingLibrary.Graphics.Animation.AnimationChainLogic"/> seeds its own
+        /// <c>RenderingLibrary.Graphics.Animation.AnimationChainLogic</c> seeds its own
         /// playback loop flag from this value when the chain becomes active, but that flag stays
         /// overridable per-instance afterward (see <c>IsAnimationChainLooping</c>).
         /// </summary>

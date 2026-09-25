@@ -101,11 +101,11 @@ namespace RenderingLibrary.Graphics
         }
 
         /// <summary>
-        /// Stable sort on <see cref="IRenderableIpso.Z"/> (then, when <paramref name="secondarySortOnY"/>
+        /// Stable sort on <c>IRenderableIpso.Z</c> (then, when <paramref name="secondarySortOnY"/>
         /// is true, on absolute Y for equal-Z entries), extracted out of <see cref="SortRenderables"/> so
         /// a caller with a flat list of top-level renderables that isn't a <see cref="Layer"/> - the
         /// deferred immediate-mode flush in <c>Renderer.End</c> - can sort the same way before handing
-        /// the list to <see cref="IRenderableOrderer.BuildDrawList(IList{IRenderableIpso}, List{DrawCommand}, ClipBoundsSource)"/>.
+        /// the list to <c>IRenderableOrderer.BuildDrawList(IList{IRenderableIpso}, List{DrawCommand}, ClipBoundsSource)</c>.
         /// </summary>
         internal static void SortByZ(List<IRenderableIpso> renderables, bool secondarySortOnY = false)
         {

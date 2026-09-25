@@ -574,7 +574,9 @@ public class ElementCommands : IElementCommands
             yAmount = amount;
         }
 
+#pragma warning disable CS0618 // PixelsFromMiddleInverted is obsolete but still loads from older projects
         if (generalUnitType == GeneralUnitType.PixelsFromMiddleInverted)
+#pragma warning restore CS0618
         {
             return amount * -1;
         }

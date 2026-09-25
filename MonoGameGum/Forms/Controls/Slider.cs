@@ -268,7 +268,8 @@ public class Slider : RangeBase, IInputReceiver
 
     #endregion
 
-    private double ApplyValueConsideringSnapping(double newValue)
+    // Should override RangeBase.ApplyValueConsideringSnapping; see #5001.
+    private new double ApplyValueConsideringSnapping(double newValue)
     {
         var originalValue = newValue;
 

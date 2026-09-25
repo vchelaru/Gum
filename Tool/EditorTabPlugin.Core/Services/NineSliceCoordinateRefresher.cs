@@ -12,7 +12,9 @@ public class NineSliceCoordinateRefresher : INineSliceCoordinateRefresher
         // before we update the highlight objects.
         if (renderableComponent is NineSlice nineSlice)
         {
+#pragma warning disable CS0618 // the tool refreshes coordinates before rendering so highlights match
             nineSlice.RefreshTextureCoordinatesAndSpriteSizes();
+#pragma warning restore CS0618
         }
     }
 }

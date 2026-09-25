@@ -98,7 +98,9 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             // Actions wait for AppKit's menu tracking to end so a dialog they open comes to the front (#4982).
             // A menu-bar click or key equivalent never reaches Avalonia's input, so it asks for its own redraw.
             NativeMenu.SetMenu(this, AvaloniaNativeMenuBuilder.Build(menuModel, PlatformKeyModifiers.Command,
+#pragma warning disable CA1416 // only called from inside the OperatingSystem.IsMacOS() branch above; the analyzer does not follow into the lambda
                 this.GetObservable(IsActiveProperty), action => MenuTrackingScheduler.InvokeAfterTracking(() =>
+#pragma warning restore CA1416
                 {
                     action();
                     canvasRedrawScheduler.RequestRedraw();
