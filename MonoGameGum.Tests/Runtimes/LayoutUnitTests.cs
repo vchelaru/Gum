@@ -1015,6 +1015,106 @@ public class LayoutUnitTests : BaseTestClass
 
     #region Y Position Units
 
+    [Theory]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromLarge)]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromBaseline)]
+    public void YBottomAnchored_ShouldSizeRelativeToChildrenParent(Gum.Converters.GeneralUnitType yUnits)
+    {
+        ContainerRuntime parent = new();
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+
+        ContainerRuntime child = new();
+        child.Height = 20;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        child.YUnits = yUnits;
+        child.YOrigin = VerticalAlignment.Bottom;
+        parent.AddChild(child);
+
+        parent.GetAbsoluteHeight().ShouldBe(20);
+        child.AbsoluteTop.ShouldBe(0);
+    }
+
+    [Theory]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromLarge)]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromBaseline)]
+    public void YBottomAnchored_ShouldNotInflateHeight_InWrappingRelativeToChildrenStack(Gum.Converters.GeneralUnitType yUnits)
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+        parent.MaxWidth = 200;
+        parent.WrapsChildren = true;
+
+        ContainerRuntime tallSibling = new();
+        tallSibling.Width = 80;
+        tallSibling.WidthUnits = DimensionUnitType.Absolute;
+        tallSibling.Height = 100;
+        tallSibling.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(tallSibling);
+
+        ContainerRuntime child = new();
+        child.Width = 80;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.Height = 20;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        child.YUnits = yUnits;
+        child.YOrigin = VerticalAlignment.Top;
+        parent.AddChild(child);
+
+        parent.UpdateLayout();
+        parent.UpdateLayout();
+
+        // The child hangs below the parent's bottom edge, so it adds nothing to the parent's height.
+        parent.GetAbsoluteHeight().ShouldBe(100);
+        child.AbsoluteTop.ShouldBe(100);
+    }
+
+    [Theory]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromLarge, false)]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromLarge, true)]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromBaseline, false)]
+    [InlineData(Gum.Converters.GeneralUnitType.PixelsFromBaseline, true)]
+    public void YBottomAnchored_ShouldStayOnParentBottom_WhenSiblingGrowsRelativeToChildrenParent(Gum.Converters.GeneralUnitType yUnits, bool wrapsChildren)
+    {
+        ContainerRuntime parent = new();
+        parent.Width = 0;
+        parent.WidthUnits = DimensionUnitType.RelativeToChildren;
+        parent.Height = 0;
+        parent.HeightUnits = DimensionUnitType.RelativeToChildren;
+        if (wrapsChildren)
+        {
+            parent.ChildrenLayout = Gum.Managers.ChildrenLayout.LeftToRightStack;
+            parent.MaxWidth = 200;
+            parent.WrapsChildren = true;
+        }
+
+        ContainerRuntime tallSibling = new();
+        tallSibling.Width = 80;
+        tallSibling.WidthUnits = DimensionUnitType.Absolute;
+        tallSibling.Height = 100;
+        tallSibling.HeightUnits = DimensionUnitType.Absolute;
+        parent.AddChild(tallSibling);
+
+        ContainerRuntime child = new();
+        child.Width = 80;
+        child.WidthUnits = DimensionUnitType.Absolute;
+        child.Height = 20;
+        child.HeightUnits = DimensionUnitType.Absolute;
+        child.YUnits = yUnits;
+        child.YOrigin = VerticalAlignment.Bottom;
+        parent.AddChild(child);
+
+        tallSibling.Height = 150;
+
+        // A non-Text parent's baseline is its bottom edge, so both units follow it as the parent grows.
+        parent.GetAbsoluteHeight().ShouldBe(150);
+        child.AbsoluteTop.ShouldBe(130);
+    }
+
     [Fact]
     public void YPercentage_ShouldPositionAsPercentOfParentHeight()
     {
