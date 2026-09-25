@@ -48,19 +48,20 @@ public static class FrameworkElementExt
     public static void SetBinding<T>(this FrameworkElement element, string uiProperty, Expression<Func<T, object?>> propertyExpression) =>
         element.SetBinding(uiProperty, BinderHelpers.ExtractPath(propertyExpression));
 
-    public static FrameworkElement? GetFrameworkElement(this FrameworkElement element, string name)
-    {
-#pragma warning disable CS0618 // migrating changes throw-on-miss to null, see #5000
-        return element.Visual?.GetFrameworkElementByName<FrameworkElement>(name);
-#pragma warning restore CS0618
-    }
+    /// <summary>
+    /// Returns the shallowest descendant Forms control whose <c>Visual.Name</c> equals
+    /// <paramref name="name"/>, or null if none.
+    /// </summary>
+    public static FrameworkElement? GetFrameworkElement(this FrameworkElement element, string name) =>
+        element.Visual?.FindFormsControl<FrameworkElement>(name);
 
-    public static T? GetFrameworkElement<T>(this FrameworkElement element, string name) where T : FrameworkElement
-    {
-#pragma warning disable CS0618 // migrating changes throw-on-miss to null, see #5000
-        return element.Visual?.GetFrameworkElementByName<T>(name);
-#pragma warning restore CS0618
-    }
+    /// <summary>
+    /// Returns the shallowest descendant Forms control of type <typeparamref name="T"/> whose
+    /// <c>Visual.Name</c> equals <paramref name="name"/>, or null if none. A name match of
+    /// another type is skipped and the search continues.
+    /// </summary>
+    public static T? GetFrameworkElement<T>(this FrameworkElement element, string name) where T : FrameworkElement =>
+        element.Visual?.FindFormsControl<T>(name);
 
     public static IInputReceiver? GetParentInputReceiver(this FrameworkElement element)
     {
