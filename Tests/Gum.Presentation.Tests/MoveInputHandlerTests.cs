@@ -1,4 +1,6 @@
+using Gum.DataTypes.Variables;
 using Gum.Input;
+using Gum.ToolStates;
 using Gum.Wireframe;
 using Gum.Wireframe.Editors.Handlers;
 using Moq;
@@ -60,5 +62,25 @@ public class MoveInputHandlerTests
 
         // Assert
         cursor.ShouldBeNull();
+    }
+
+    [Fact]
+    public void HandlePush_WithACategoryButNoStateSelected_DoesNotStartAnEdit()
+    {
+        // Selecting a category in the States tab leaves no state to write to, so a drag would
+        // throw on release when it saves the "changed" state.
+        var selectionManager = new Mock<ISelectionManager>();
+        selectionManager.SetupGet(s => s.IsOverBody).Returns(true);
+        var selectedState = new Mock<ISelectedState>();
+        selectedState.SetupGet(s => s.SelectedStateSave).Returns((StateSave?)null);
+        var context = EditorContextTestHelper.Create(
+            selectedState: selectedState.Object,
+            selectionManager: selectionManager.Object);
+        var sut = new MoveInputHandler(context);
+
+        bool claimed = sut.HandlePush(0f, 0f);
+
+        claimed.ShouldBeFalse();
+        sut.IsActive.ShouldBeFalse();
     }
 }

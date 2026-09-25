@@ -25,7 +25,8 @@ public class GrabbedState
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private readonly IGumCursorState _cursor;
 
-    public StateSave StateSave { get; private set; }
+    /// <summary>A copy of the selected state at the last push, or null if no state was selected yet.</summary>
+    public StateSave? StateSave { get; private set; }
 
     public XOrY? AxisMovedFurthestAlong
     {
@@ -201,23 +202,22 @@ public class GrabbedState
         TrueInstancePositionOffsets.Clear();
         TrueInstanceSizeOffsets.Clear();
 
-        if(_selectedState.SelectedStateSave != null)
+        if(_selectedState.SelectedStateSave is { } selectedStateSave)
         {
-            RecordInitialPositions();
+            RecordInitialPositions(selectedStateSave);
         }
     }
 
-    private void RecordInitialPositions()
+    private void RecordInitialPositions(StateSave selectedStateSave)
     {
         InstancePositions.Clear();
         InstanceSizes.Clear();
 
-        StateSave = _selectedState.SelectedStateSave.Clone();
+        StateSave = selectedStateSave.Clone();
 
-        if (_selectedState.SelectedInstances.Count() == 0 && _selectedState.SelectedElement != null)
+        if (_selectedState.SelectedInstances.Count() == 0 && _selectedState.SelectedElement != null &&
+            _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement) is { } graphicalUiElement)
         {
-            var graphicalUiElement = _wireframeObjectManager.GetRepresentation(_selectedState.SelectedElement);
-
             ComponentPosition = new Vector2(graphicalUiElement.X, graphicalUiElement.Y);
             // AbsoluteWidth/Height (not Width/Height) - the resize math below mixes this against
             // cursor pixel deltas, so it must be in the same (pixel) space. Width/Height is the raw
@@ -229,7 +229,7 @@ public class GrabbedState
         }
         else if(_selectedState.SelectedInstances.Count() != 0)
         {
-            var stateSave = _selectedState.SelectedStateSave;
+            var stateSave = selectedStateSave;
             foreach(var instance in _selectedState.SelectedInstances)
             {
                 var instanceGue = _wireframeObjectManager.GetRepresentation(instance);

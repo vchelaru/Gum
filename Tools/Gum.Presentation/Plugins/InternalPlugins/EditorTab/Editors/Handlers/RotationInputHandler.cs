@@ -49,6 +49,8 @@ public class RotationInputHandler : InputHandlerBase
     {
         if (Context.SelectedObjects.Count == 0) return;
         if (!Context.IsRotationEnabled) return;
+        // HandlePush only starts a rotation while a state is selected.
+        if (Context.SelectedState.SelectedStateSave is not { } stateSave) return;
 
         var gue = Context.SelectedObjects.First();
 
@@ -83,7 +85,7 @@ public class RotationInputHandler : InputHandlerBase
             nameWithInstance = Context.SelectedState.SelectedInstance.Name + "." + nameWithInstance;
         }
 
-        Context.SelectedState.SelectedStateSave.SetValue(
+        stateSave.SetValue(
             nameWithInstance,
             rotationValueDegrees - parentRotation,
             Context.SelectedState.SelectedInstance,

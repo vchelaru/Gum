@@ -197,15 +197,19 @@ public class MoveInputHandler : InputHandlerBase
 
         var selectedInstances = Context.SelectedState.SelectedInstances;
 
+        var selectedElement = Context.SelectedState.SelectedElement;
         if (selectedInstances.Count() == 0 &&
             (Context.SelectedState.SelectedComponent != null ||
              Context.SelectedState.SelectedStandardElement != null))
         {
             // Component/element selected
             var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
-            var gue = Context.WireframeObjectManager.GetRepresentation(
-                Context.SelectedState.SelectedElement);
+            var gue = selectedElement == null ? null : Context.WireframeObjectManager.GetRepresentation(selectedElement);
 
+            if (gue == null)
+            {
+                return;
+            }
             if (xOrY == XOrY.X)
             {
                 gue.Y = Context.GrabbedState.ComponentPosition.Y;
@@ -227,6 +231,10 @@ public class MoveInputHandler : InputHandlerBase
 
                 var xOrY = Context.GrabbedState.AxisMovedFurthestAlong;
                 var gue = Context.WireframeObjectManager.GetRepresentation(instance);
+                if (gue == null)
+                {
+                    continue;
+                }
 
                 if (xOrY == XOrY.X)
                 {
@@ -242,6 +250,11 @@ public class MoveInputHandler : InputHandlerBase
 
     private void ApplyAxisLockToSelectedState()
     {
+        // HandlePush only starts a move while a state is selected.
+        if (Context.SelectedState.SelectedStateSave is not { } stateSave)
+        {
+            return;
+        }
         var axis = Context.GrabbedState.AxisMovedFurthestAlong;
 
         bool isElementSelected = Context.SelectedState.SelectedInstances.Count() == 0 &&
@@ -252,7 +265,7 @@ public class MoveInputHandler : InputHandlerBase
             // If the X axis is the furthest-moved, set the Y values back to what they were.
             if (isElementSelected)
             {
-                Context.SelectedState.SelectedStateSave.SetValue("Y", Context.GrabbedState.ComponentPosition.Y, "float");
+                stateSave.SetValue("Y", Context.GrabbedState.ComponentPosition.Y, "float");
             }
             else
             {
@@ -263,7 +276,7 @@ public class MoveInputHandler : InputHandlerBase
                         continue;
                     }
 
-                    Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
+                    stateSave.SetValue(instance.Name + ".Y", Context.GrabbedState.InstancePositions[instance].StateY, "float");
                 }
             }
         }
@@ -272,7 +285,7 @@ public class MoveInputHandler : InputHandlerBase
             // If the Y axis is the furthest-moved, set the X values back to what they were.
             if (isElementSelected)
             {
-                Context.SelectedState.SelectedStateSave.SetValue("X", Context.GrabbedState.ComponentPosition.X, "float");
+                stateSave.SetValue("X", Context.GrabbedState.ComponentPosition.X, "float");
             }
             else
             {
@@ -283,7 +296,7 @@ public class MoveInputHandler : InputHandlerBase
                         continue;
                     }
 
-                    Context.SelectedState.SelectedStateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
+                    stateSave.SetValue(instance.Name + ".X", Context.GrabbedState.InstancePositions[instance].StateX, "float");
                 }
             }
         }
@@ -293,32 +306,34 @@ public class MoveInputHandler : InputHandlerBase
     {
         bool wasAnythingModified = false;
 
+        // A selected component or standard element is the selected element, shown as the selected elementGue.
         if (Context.SelectedState.SelectedInstances.Count() == 0 &&
-            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null))
+            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null) &&
+            Context.SelectedState.SelectedElement is { } selectedElement &&
+            Context.SelectionManager.SelectedGue is { } elementGue)
         {
-            GraphicalUiElement gue = Context.SelectionManager.SelectedGue;
 
-            GetDifferenceToUnit(gue, out float differenceToUnitX, out float differenceToUnitY,
+            GetDifferenceToUnit(elementGue, out float differenceToUnitX, out float differenceToUnitY,
                 out float differenceToUnitWidth, out float differenceToUnitHeight);
 
             if (differenceToUnitX != 0)
             {
-                gue.X = Context.ElementCommands.ModifyVariable("X", differenceToUnitX, Context.SelectedState.SelectedElement);
+                elementGue.X = Context.ElementCommands.ModifyVariable("X", differenceToUnitX, selectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitY != 0)
             {
-                gue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToUnitY, Context.SelectedState.SelectedElement);
+                elementGue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToUnitY, selectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitWidth != 0)
             {
-                gue.Width = Context.ElementCommands.ModifyVariable("Width", differenceToUnitWidth, Context.SelectedState.SelectedElement);
+                elementGue.Width = Context.ElementCommands.ModifyVariable("Width", differenceToUnitWidth, selectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToUnitHeight != 0)
             {
-                gue.Height = Context.ElementCommands.ModifyVariable("Height", differenceToUnitHeight, Context.SelectedState.SelectedElement);
+                elementGue.Height = Context.ElementCommands.ModifyVariable("Height", differenceToUnitHeight, selectedElement);
                 wasAnythingModified = true;
             }
         }
@@ -369,23 +384,25 @@ public class MoveInputHandler : InputHandlerBase
         bool wasAnythingModified = false;
         float gridSize = Context.GridSize;
 
+        // A selected component or standard element is the selected element, shown as the selected elementGue.
         if (Context.SelectedState.SelectedInstances.Count() == 0 &&
-            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null))
+            (Context.SelectedState.SelectedComponent != null || Context.SelectedState.SelectedStandardElement != null) &&
+            Context.SelectedState.SelectedElement is { } selectedElement &&
+            Context.SelectionManager.SelectedGue is { } elementGue)
         {
-            GraphicalUiElement gue = Context.SelectionManager.SelectedGue;
 
-            GetDifferenceToGrid(gue, gridSize,
+            GetDifferenceToGrid(elementGue, gridSize,
                 Context.GrabbedState.ComponentPosition, Context.GrabbedState.TrueComponentPositionOffset,
                 out float differenceToGridX, out float differenceToGridY);
 
             if (differenceToGridX != 0)
             {
-                gue.X = Context.ElementCommands.ModifyVariable("X", differenceToGridX, Context.SelectedState.SelectedElement);
+                elementGue.X = Context.ElementCommands.ModifyVariable("X", differenceToGridX, selectedElement);
                 wasAnythingModified = true;
             }
             if (differenceToGridY != 0)
             {
-                gue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToGridY, Context.SelectedState.SelectedElement);
+                elementGue.Y = Context.ElementCommands.ModifyVariable("Y", differenceToGridY, selectedElement);
                 wasAnythingModified = true;
             }
         }

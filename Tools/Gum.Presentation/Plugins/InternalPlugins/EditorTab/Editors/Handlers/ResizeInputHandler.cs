@@ -234,7 +234,8 @@ public class ResizeInputHandler : InputHandlerBase
         Vector2 grabStartPosition, Vector2 grabStartSize, Vector2 truePositionOffset, Vector2 trueSizeOffset,
         List<ElementWithState> elementStack)
     {
-        if (gue == null)
+        // Resizing happens on an element's canvas; without an instance, the element itself is resized.
+        if (gue == null || Context.SelectedState.SelectedElement is not { } selectedElement)
         {
             return;
         }
@@ -261,25 +262,25 @@ public class ResizeInputHandler : InputHandlerBase
         {
             gue.X = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("X", differenceToGridX, instanceSave)
-                : Context.ElementCommands.ModifyVariable("X", differenceToGridX, Context.SelectedState.SelectedElement);
+                : Context.ElementCommands.ModifyVariable("X", differenceToGridX, selectedElement);
         }
         if (differenceToGridY != 0)
         {
             gue.Y = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Y", differenceToGridY, instanceSave)
-                : Context.ElementCommands.ModifyVariable("Y", differenceToGridY, Context.SelectedState.SelectedElement);
+                : Context.ElementCommands.ModifyVariable("Y", differenceToGridY, selectedElement);
         }
         if (differenceToGridWidth != 0)
         {
             gue.Width = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, instanceSave)
-                : Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, Context.SelectedState.SelectedElement);
+                : Context.ElementCommands.ModifyVariable("Width", differenceToGridWidth, selectedElement);
         }
         if (differenceToGridHeight != 0)
         {
             gue.Height = instanceSave != null
                 ? Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, instanceSave)
-                : Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, Context.SelectedState.SelectedElement);
+                : Context.ElementCommands.ModifyVariable("Height", differenceToGridHeight, selectedElement);
         }
     }
 
@@ -700,7 +701,9 @@ public class ResizeInputHandler : InputHandlerBase
 
         var ipso = instanceSave != null
             ? Context.WireframeObjectManager.GetRepresentation(instanceSave, elementStack)
-            : Context.WireframeObjectManager.GetRepresentation(Context.SelectedState.SelectedElement);
+            : Context.SelectedState.SelectedElement is { } selectedElement
+                ? Context.WireframeObjectManager.GetRepresentation(selectedElement)
+                : null;
 
         if (ipso == null) return;
 
@@ -987,6 +990,13 @@ public class ResizeInputHandler : InputHandlerBase
         {
             throw new InvalidOperationException("The SelectedStateSave is null, this should not happen");
         }
+        if (selectedElement == null)
+        {
+            throw new InvalidOperationException("The SelectedElement is null, this should not happen");
+        }
+        // The push that started this edit recorded the state, since edits only start with a state selected.
+        var grabbedStateSave = Context.GrabbedState.StateSave ??
+            throw new InvalidOperationException("The GrabbedState has no StateSave, this should not happen");
 
         Context.FileCommands.TryAutoSaveElement(selectedElement);
 
@@ -994,11 +1004,11 @@ public class ResizeInputHandler : InputHandlerBase
 
         Context.GuiCommands.RefreshVariableValues();
 
-        var element = Context.SelectedState.SelectedElement;
+        var element = selectedElement;
 
         foreach (var possiblyChangedVariable in stateSave.Variables.ToList())
         {
-            var oldValue = Context.GrabbedState.StateSave.GetValue(possiblyChangedVariable.Name);
+            var oldValue = grabbedStateSave.GetValue(possiblyChangedVariable.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariable.Name, oldValue))
             {
@@ -1019,7 +1029,7 @@ public class ResizeInputHandler : InputHandlerBase
 
         foreach (var possiblyChangedVariableList in stateSave.VariableLists)
         {
-            var oldValue = Context.GrabbedState.StateSave.GetVariableListSave(possiblyChangedVariableList.Name);
+            var oldValue = grabbedStateSave.GetVariableListSave(possiblyChangedVariableList.Name);
 
             if (DoValuesDiffer(stateSave, possiblyChangedVariableList.Name, oldValue))
             {
@@ -1031,7 +1041,7 @@ public class ResizeInputHandler : InputHandlerBase
         Context.HasChangedAnythingSinceLastPush = false;
     }
 
-    private bool DoValuesDiffer(StateSave newStateSave, string variableName, object oldValue)
+    private bool DoValuesDiffer(StateSave newStateSave, string variableName, object? oldValue)
     {
         var newValue = newStateSave.GetValue(variableName);
         if (newValue == null && oldValue != null)
@@ -1082,7 +1092,7 @@ public class ResizeInputHandler : InputHandlerBase
         }
     }
 
-    private bool AreListsSame(IList oldList, IList newList)
+    private bool AreListsSame(IList? oldList, IList? newList)
     {
         if (oldList == null && newList == null)
         {
@@ -1095,7 +1105,7 @@ public class ResizeInputHandler : InputHandlerBase
 
         for (int i = 0; i < oldList.Count; i++)
         {
-            if (oldList[i].Equals(newList[i]) == false)
+            if (Equals(oldList[i], newList[i]) == false)
             {
                 return false;
             }
