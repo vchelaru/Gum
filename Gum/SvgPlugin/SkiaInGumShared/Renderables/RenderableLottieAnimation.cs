@@ -25,6 +25,20 @@ namespace SkiaGum.Renderables
 
         public bool IsAnimating { get; set; } = true;
 
+        readonly Func<DateTime> _getNow;
+
+        public RenderableLottieAnimation() : this(() => DateTime.Now) { }
+
+        /// <summary>
+        /// Creates a Lottie renderable that reads the current time from <paramref name="getNow"/>.
+        /// The parameterless constructor uses <see cref="DateTime.Now"/>.
+        /// </summary>
+        public RenderableLottieAnimation(Func<DateTime> getNow)
+        {
+            _getNow = getNow;
+            sourceFile = "";
+        }
+
         // This alias exists to match the other interfaces, but should not be used in code:
         public bool Animate
         {
@@ -32,13 +46,11 @@ namespace SkiaGum.Renderables
             set => IsAnimating = value;
         }
 
-#pragma warning disable CS0649 // never assigned, so the throttle never engages; see #5002
-        DateTime lastUpdate;
-#pragma warning restore CS0649
+        DateTime _lastFrameAdvance;
 
         const double SecondsBetweenUpdates = .1;
 
-        SkiaSharp.Skottie.Animation animation;
+        SkiaSharp.Skottie.Animation? animation;
 
         public override void DrawToSurface(SKSurface surface)
         {
@@ -56,7 +68,7 @@ namespace SkiaGum.Renderables
                 //    surface.Canvas.DrawPicture(skiaSvg.Picture, ref scaleMatrix);
                 //}
                 var duration = animation.Duration.TotalSeconds;
-                animation.SeekFrameTime(DateTime.Now.TimeOfDay.TotalSeconds % duration);
+                animation.SeekFrameTime(_lastFrameAdvance.TimeOfDay.TotalSeconds % duration);
                 animation.Render(surface.Canvas, new SKRect(0, 0, Width, Height));
             }
             else
@@ -73,15 +85,22 @@ namespace SkiaGum.Renderables
 
         public override void PreRender()
         {
-            if ((DateTime.Now - lastUpdate).TotalSeconds > SecondsBetweenUpdates)
+            if (!IsAnimating)
             {
+                return;
+            }
+
+            DateTime now = _getNow();
+            if ((now - _lastFrameAdvance).TotalSeconds >= SecondsBetweenUpdates)
+            {
+                _lastFrameAdvance = now;
                 needsUpdate = true;
             }
         }
 
-        private SkiaSharp.Skottie.Animation GetAnimation()
+        private SkiaSharp.Skottie.Animation? GetAnimation()
         {
-            SkiaSharp.Skottie.Animation animation = null;
+            SkiaSharp.Skottie.Animation? animation = null;
 
             if (!string.IsNullOrWhiteSpace(sourceFile))
             {
