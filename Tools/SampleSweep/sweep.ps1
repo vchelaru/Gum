@@ -31,7 +31,9 @@ pwsh Tools/SampleSweep/sweep.ps1 -Resume       # finish an interrupted sweep
 param(
     [string]$OutRoot = (Join-Path $env:TEMP 'gum-sample-sweep'),
     [string]$Configuration = 'Debug',
-    [double]$ExitAfter = 8,
+    # The head counts from launch, not from project load; on a busy machine 8s can capture an
+    # unloaded project.
+    [double]$ExitAfter = 15,
     [int]$Parallel = 4,
     # Substrings matched against the sample id (e.g. GameUiSamples, MVVM).
     [string[]]$Samples,
@@ -151,6 +153,7 @@ if (-not $SkipRun) {
             $psi.RedirectStandardError = $true
             $psi.RedirectStandardOutput = $true
             $psi.UseShellExecute = $false
+            $psi.CreateNoWindow = $true
             $psi.Environment['GUM_ECHO_OUTPUT'] = '1'
             $sw = [System.Diagnostics.Stopwatch]::StartNew()
             $proc = [System.Diagnostics.Process]::Start($psi)
@@ -179,8 +182,20 @@ if (-not $SkipRun) {
             New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
             # A lane-0 copy is safe to read now: the head runs above have all exited.
             $gumxPath = Join-Path $outRoot "projects\$($job.Sample)\lane0\$($job.GumxName)"
-            $text = & $using:gumcli screenshot $gumxPath $job.Name --output $out 2>&1 | Out-String
-            Set-Content (Join-Path $outRoot "logs\$($job.Sample)\$($job.Safe).ref.log") "exit $LASTEXITCODE`n$text"
+            # gumcli is a console app: run it without a console window of its own.
+            $psi = [System.Diagnostics.ProcessStartInfo]::new($using:gumcli)
+            # An opaque background (the sheet's DimGray) so translucent edges composite the way they do
+            # on the tool's opaque canvas; a transparent render makes text look thinner than it is.
+            foreach ($a in @('screenshot', $gumxPath, $job.Name, '--output', $out, '--background', '696969')) { $psi.ArgumentList.Add($a) }
+            $psi.RedirectStandardError = $true
+            $psi.RedirectStandardOutput = $true
+            $psi.UseShellExecute = $false
+            $psi.CreateNoWindow = $true
+            $proc = [System.Diagnostics.Process]::Start($psi)
+            $errTask = $proc.StandardError.ReadToEndAsync()
+            $text = $proc.StandardOutput.ReadToEnd() + $errTask.Result
+            $proc.WaitForExit()
+            Set-Content (Join-Path $outRoot "logs\$($job.Sample)\$($job.Safe).ref.log") "exit $($proc.ExitCode)`n$text"
         }
     }
 }
@@ -224,8 +239,17 @@ foreach ($f in $flagged) { [void]$md.AppendLine("- $($f.Sample) ``$($f.Name)``: 
 if (Test-Path $gumcli) {
     [void]$md.AppendLine("`n## gumcli check`n")
     foreach ($p in $projects) {
-        $lines = @(& $gumcli check (Join-Path $p.Dir $p.GumxName) 2>&1 | ForEach-Object { "$_" } |
-            Where-Object { $_ -match '^(error|warning):' })
+        $psi = [System.Diagnostics.ProcessStartInfo]::new($gumcli)
+        foreach ($a in @('check', (Join-Path $p.Dir $p.GumxName))) { $psi.ArgumentList.Add($a) }
+        $psi.RedirectStandardError = $true
+        $psi.RedirectStandardOutput = $true
+        $psi.UseShellExecute = $false
+        $psi.CreateNoWindow = $true
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $errTask = $proc.StandardError.ReadToEndAsync()
+        $text = $proc.StandardOutput.ReadToEnd() + "`n" + $errTask.Result
+        $proc.WaitForExit()
+        $lines = @($text -split "`r?`n" | Where-Object { $_ -match '^(error|warning):' })
         [void]$md.AppendLine("- $($p.Id): $(if ($lines) { '' } else { 'clean' })")
         foreach ($l in $lines) { [void]$md.AppendLine("  - $l") }
     }

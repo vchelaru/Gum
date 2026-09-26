@@ -50,8 +50,13 @@ public sealed class AvaloniaRenderSurface : IDisposable
         RawImageBuffer = new byte[width * height * 4];
     }
 
-    /// <summary>Copies <see cref="RawImageBuffer"/> (already read back) into the bitmap.</summary>
-    public void Push(SurfaceFormat sourceFormat)
+    /// <summary>
+    /// Copies <see cref="RawImageBuffer"/> (already read back) into the bitmap. Pass
+    /// <paramref name="forceOpaque"/> for a frame drawn over an opaque background: Gum's
+    /// non-premultiplied blending leaves alpha below 255 wherever translucent content lands on it,
+    /// and shown as-is the window behind the canvas would bleed through those pixels.
+    /// </summary>
+    public void Push(SurfaceFormat sourceFormat, bool forceOpaque = false)
     {
         if (Bitmap == null)
         {
@@ -60,6 +65,14 @@ public sealed class AvaloniaRenderSurface : IDisposable
         if (sourceFormat != SurfaceFormat.Color)
         {
             throw new NotSupportedException($"No pixel buffer conversion from {sourceFormat} to RGBA.");
+        }
+
+        if (forceOpaque)
+        {
+            for (int i = 3; i < RawImageBuffer.Length; i += 4)
+            {
+                RawImageBuffer[i] = 255;
+            }
         }
 
         using ILockedFramebuffer framebuffer = Bitmap.Lock();

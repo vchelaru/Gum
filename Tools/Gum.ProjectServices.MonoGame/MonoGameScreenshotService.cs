@@ -72,9 +72,6 @@ public class MonoGameScreenshotService : IScreenshotService
 
             try
             {
-                int width = _request.Width ?? 800;
-                int height = _request.Height ?? 600;
-
                 var gumService = GumService.Default;
                 var project = gumService.Initialize(this, _request.ProjectPath);
 
@@ -83,6 +80,8 @@ public class MonoGameScreenshotService : IScreenshotService
                     Result = ScreenshotResult.Failed($"Failed to load project: {_request.ProjectPath}");
                     return;
                 }
+
+                (int width, int height) = _request.ResolveSize(project);
 
                 // Circle/rounded-rectangle rendering is Apos.Shapes-backed. Without this, those
                 // shapes silently fall back to the renderable's construction defaults (transparent
@@ -113,7 +112,12 @@ public class MonoGameScreenshotService : IScreenshotService
                     ? new Color(background.R, background.G, background.B, background.A)
                     : Color.Transparent;
 
-                using var renderTarget = new RenderTarget2D(GraphicsDevice, width, height);
+                // PreserveContents: an IsRenderTarget container switches the device to its own
+                // target mid-draw and back, which would otherwise discard the clear and anything
+                // drawn before it.
+                using var renderTarget = new RenderTarget2D(
+                    GraphicsDevice, width, height, mipMap: false, SurfaceFormat.Color, DepthFormat.None,
+                    preferredMultiSampleCount: 0, RenderTargetUsage.PreserveContents);
                 GraphicsDevice.SetRenderTarget(renderTarget);
                 GraphicsDevice.Clear(clearColor);
 

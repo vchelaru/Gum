@@ -490,6 +490,12 @@ public sealed class WireframeCanvasCore
         }
     }
 
+    /// <summary>
+    /// True once <see cref="Draw"/> paints a frame, which it clears to the opaque
+    /// <see cref="BackgroundColor"/>; before that a frame is left transparent.
+    /// </summary>
+    public bool DrawsOpaqueFrames => mHasInitialized;
+
     /// <summary>The host calls this with the render target bound and cleared.</summary>
     public void Draw()
     {

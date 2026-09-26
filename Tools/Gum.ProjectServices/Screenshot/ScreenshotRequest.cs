@@ -1,3 +1,5 @@
+using Gum.DataTypes;
+
 namespace Gum.ProjectServices.Screenshot;
 
 /// <summary>
@@ -34,4 +36,15 @@ public class ScreenshotRequest
     /// Background color to clear to before rendering. Defaults to fully transparent when null.
     /// </summary>
     public ScreenshotColor? BackgroundColor { get; init; }
+
+    /// <summary>
+    /// The size to render at: <see cref="Width"/>/<see cref="Height"/> when set, otherwise the
+    /// project's canvas size, otherwise 800x600.
+    /// </summary>
+    public (int Width, int Height) ResolveSize(GumProjectSave project)
+    {
+        int width = Width ?? (project.DefaultCanvasWidth > 0 ? project.DefaultCanvasWidth : 800);
+        int height = Height ?? (project.DefaultCanvasHeight > 0 ? project.DefaultCanvasHeight : 600);
+        return (width, height);
+    }
 }
