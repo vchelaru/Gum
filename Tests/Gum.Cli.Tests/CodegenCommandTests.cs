@@ -267,6 +267,32 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_WhenCodeProjectRootCannotBeCreated_ReportsTheErrorAndReturnsExitCode1()
+    {
+        // A file where the output folder should be makes directory creation fail on every OS, the
+        // same way a committed absolute path to another machine's folder does.
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        CliTestHelper.Run("new", gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "Blocked"), "not a folder");
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "Blocked/Output/",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        result.ExitCode.ShouldBe(1, customMessage: result.StandardError);
+        result.StandardError.ShouldNotContain("Unhandled exception");
+        result.StandardError.ShouldContain("Blocked");
+    }
+
+    [Fact]
     public void Codegen_WhenRaylibWithFullyInCode_ReturnsExitCode1WithClearError()
     {
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");

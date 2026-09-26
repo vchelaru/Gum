@@ -143,8 +143,11 @@ public static class CodegenCommand
         var fileLocationsService = new CodeGenerationFileLocationsService(
             codeGenerator, codeGenNameVerifier, projectDirectoryProvider);
 
+        // A logger of its own, so the exit code can reflect files the service failed to write
+        // without counting errors other services report through the shared logger.
+        ConsoleCodeGenLogger generationLogger = new ConsoleCodeGenLogger();
         var codeGenService = new HeadlessCodeGenerationService(
-            codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, logger);
+            codeGenerator, customCodeGenerator, fileLocationsService, elementSettingsManager, generationLogger);
 
         // Resolve which elements to generate
         List<ElementSave> elements = ResolveElements(project, elementNames);
@@ -221,10 +224,13 @@ public static class CodegenCommand
         if (blockedCount > 0)
         {
             Console.Error.WriteLine($"{blockedCount} element(s) skipped due to errors.");
-            return 1;
+        }
+        if (generationLogger.ErrorCount > 0)
+        {
+            Console.Error.WriteLine($"{generationLogger.ErrorCount} code generation error(s).");
         }
 
-        return 0;
+        return blockedCount > 0 || generationLogger.ErrorCount > 0 ? 1 : 0;
     }
 
     /// <summary>
