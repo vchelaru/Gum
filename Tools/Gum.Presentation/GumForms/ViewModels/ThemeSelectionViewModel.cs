@@ -1,3 +1,4 @@
+using Gum.DataTypes;
 using Gum.Mvvm;
 using Gum.ToolStates;
 using System;
@@ -89,7 +90,8 @@ public class ThemeSelectionViewModel : ViewModel
     private void RefreshRequirementsDescription()
     {
         string? theme = SelectedTheme;
-        if (string.IsNullOrEmpty(theme))
+        GumProjectSave? project = _projectState.GumProjectSave;
+        if (string.IsNullOrEmpty(theme) || project is null)
         {
             RequirementsDescription = string.Empty;
             return;
@@ -97,7 +99,7 @@ public class ThemeSelectionViewModel : ViewModel
 
         ThemeRequirements requirements =
             ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(theme));
-        ThemeRequirementsDiff diff = requirements.Diff(_projectState.GumProjectSave);
+        ThemeRequirementsDiff diff = requirements.Diff(project);
         RequirementsDescription = diff.HasChanges
             ? string.Join(Environment.NewLine, diff.DescribeChanges().Select(c => "• " + c))
             : string.Empty;

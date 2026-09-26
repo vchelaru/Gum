@@ -215,7 +215,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             if(_commandLineManager.Value.ShouldCodeGenAll)
             {
-                await _fileCommands.Value.LoadProjectAsync(_commandLineManager.Value.GlueProjectToLoad);
+                if (_commandLineManager.Value.GlueProjectToLoad is not { } projectToLoad)
+                {
+                    _guiCommands.PrintOutput("--generatecode requires a project file");
+                    return;
+                }
+
+                await _fileCommands.Value.LoadProjectAsync(projectToLoad);
 
                 await _messenger.SendAsync(new RequestCodeGenerationMessage());
             }

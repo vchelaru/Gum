@@ -37,9 +37,9 @@ public class AnimatedKeyframeViewModel : ViewModel, IComparable
         set => Set(value);
     }
 
-    public ObservableCollection<string> AvailableStates
+    public ObservableCollection<string>? AvailableStates
     {
-        get => Get<ObservableCollection<string>>();
+        get => Get<ObservableCollection<string>?>();
         set => Set(value);
     }
 

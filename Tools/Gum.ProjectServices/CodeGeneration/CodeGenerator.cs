@@ -5834,8 +5834,9 @@ public class CodeGenerator
 
     private static BindingBehavior GetBindingBehavior(ElementSave container, string instanceName)
     {
-        var isContainerXamarinForms = (container.DefaultState!.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
-        var isInstanceXamarinForms = (container.DefaultState.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
+        StateSave? defaultState = container.DefaultState;
+        var isContainerXamarinForms = (defaultState?.GetValueRecursive("IsXamarinFormsControl") as bool?) ?? false;
+        var isInstanceXamarinForms = (defaultState?.GetValueRecursive($"{instanceName}.IsXamarinFormsControl") as bool?) ?? false;
 
         if (isContainerXamarinForms && isInstanceXamarinForms)
         {

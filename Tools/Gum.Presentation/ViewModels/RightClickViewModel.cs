@@ -117,10 +117,11 @@ public class RightClickViewModel
         var parentMenuItem = new ContextMenuItemViewModel();
         parentMenuItem.Text = itemText;
 
-        // Add favorited components submenu
-        var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
-            _selectedState.SelectedElement,
-            _circularReferenceManager);
+        // Add favorited components submenu. A behavior's instance has no owning element to filter
+        // circular references against, so it gets no favorites.
+        List<ComponentSave> favoritedComponents = _selectedState.SelectedElement is { } selectedElement
+            ? _favoriteComponentManager.GetFilteredFavoritedComponentsFor(selectedElement, _circularReferenceManager)
+            : new List<ComponentSave>();
         if (favoritedComponents.Count > 0)
         {
             var favoritesParent = new ContextMenuItemViewModel();
@@ -208,9 +209,7 @@ public class RightClickViewModel
     {
         var variableName = instance.Name + ".Parent";
 
-        var state = owner.DefaultState;
-
-        var parentVariableValue = state.Variables.Find(item => item.Name == variableName)?.Value;
+        var parentVariableValue = owner.DefaultState?.Variables.Find(item => item.Name == variableName)?.Value;
 
         var parentName = (string?)parentVariableValue;
 

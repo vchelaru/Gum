@@ -35,8 +35,6 @@ public class PluginsDialogViewModel : DialogViewModel
         AffirmativeText = "Close";
         NegativeText = null;
 
-        CopyDiagnosticsCommand = new RelayCommand(() => clipboardService.SetText(Diagnostics));
-
         // Sorted by name so a plugin can be found by scanning; MEF hands them back in load order,
         // which is effectively arbitrary.
         foreach (PluginSummary summary in pluginManager.GetAllPluginSummaries()
@@ -47,6 +45,8 @@ public class PluginsDialogViewModel : DialogViewModel
 
         Diagnostics = pluginManager.GetPluginScanReport()?.Describe()
             ?? "Plugins have not been loaded, so there is nothing to report.";
+
+        CopyDiagnosticsCommand = new RelayCommand(() => clipboardService.SetText(Diagnostics));
     }
 }
 

@@ -44,10 +44,11 @@ public class AddStateDialogViewModelTests
     {
         StateSaveCategory category = new StateSaveCategory();
         StateSave newState = new StateSave();
-        _selectedState.Setup(x => x.SelectedStateContainer).Returns((IStateContainer?)null);
+        ComponentSave container = new ComponentSave();
+        _selectedState.Setup(x => x.SelectedStateContainer).Returns(container);
         _selectedState.Setup(x => x.SelectedStateCategorySave).Returns(category);
         _elementCommands
-            .Setup(x => x.AddState(null, category, "NewState"))
+            .Setup(x => x.AddState(container, category, "NewState"))
             .Returns(newState);
 
         _viewModel.Value = "NewState";

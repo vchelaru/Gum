@@ -134,10 +134,12 @@ public class GumxImportService : IGumxImportService
             "Screens", nameMap, sourceBase, projectDir);
 
         // 8. Save project then reload (standards take effect only after reload)
-        var fileName = _projectState.GumProjectSave.FullFileName;
+        string? fileName = _projectState.GumProjectSave?.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
-        if (wasSaved)
+        if (wasSaved && fileName is not null)
+        {
             await _fileCommands.LoadProjectAsync(fileName);
+        }
 
         return result;
     }

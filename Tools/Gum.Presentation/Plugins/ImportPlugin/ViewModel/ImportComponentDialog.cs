@@ -51,8 +51,9 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
             .Select(item => new FilePath(item))
             .ToList();
 
-        FilePath[] componentFilesInProject = _projectState.GumProjectSave
-            .Components
+        // The dialog is only offered for a saved project.
+        IEnumerable<ComponentSave> components = _projectState.GumProjectSave?.Components ?? Enumerable.Empty<ComponentSave>();
+        FilePath[] componentFilesInProject = components
             .SelectMany(item => new[]
             {
                 new FilePath(_projectState.ComponentFilePath + item.Name + "." + GumProjectSave.ComponentExtension),
@@ -69,10 +70,14 @@ public class ImportComponentDialog : ImportBaseDialogViewModel
 
     public override void OnAffirmative()
     {
-        ComponentSave lastImportedComponent = null;
+        if (_projectManager.GumProjectSave?.FullFileName is not { } projectFileName)
+        {
+            return;
+        }
 
-        string desiredDirectory = FileManager.GetDirectory(
-            _projectManager.GumProjectSave.FullFileName) + "Components/";
+        ComponentSave? lastImportedComponent = null;
+
+        string desiredDirectory = FileManager.GetDirectory(projectFileName) + "Components/";
         foreach (var file in SelectedFiles)
         {
             lastImportedComponent = _importLogic.ImportComponent(file, desiredDirectory,

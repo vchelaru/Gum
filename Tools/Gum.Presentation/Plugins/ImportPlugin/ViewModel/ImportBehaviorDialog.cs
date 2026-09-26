@@ -51,8 +51,9 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
             .Select(item => new FilePath(item))
             .ToList();
 
-        FilePath[] behaviorFilesInProject = _projectState.GumProjectSave
-            .Behaviors
+        // The dialog is only offered for a saved project.
+        IEnumerable<BehaviorSave> behaviors = _projectState.GumProjectSave?.Behaviors ?? Enumerable.Empty<BehaviorSave>();
+        FilePath[] behaviorFilesInProject = behaviors
             .SelectMany(item => new[]
             {
                 new FilePath(_projectState.BehaviorFilePath + item.Name + "." + BehaviorReference.Extension),
@@ -69,10 +70,14 @@ public class ImportBehaviorDialog : ImportBaseDialogViewModel
 
     public override void OnAffirmative()
     {
-        BehaviorSave lastImportedBehavior = null;
+        if (_projectManager.GumProjectSave?.FullFileName is not { } projectFileName)
+        {
+            return;
+        }
 
-        string desiredDirectory = FileManager.GetDirectory(
-            _projectManager.GumProjectSave.FullFileName) + "Behaviors/";
+        BehaviorSave? lastImportedBehavior = null;
+
+        string desiredDirectory = FileManager.GetDirectory(projectFileName) + "Behaviors/";
 
         foreach (string file in SelectedFiles)
         {

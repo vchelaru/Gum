@@ -104,6 +104,23 @@ public class ProjectManagerTests : BaseTestClass
     }
 
     [Fact]
+    public async Task Initialize_DoesNotLoadProject_WhenGenerateCodeHasNoProjectArgument()
+    {
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(true);
+        _commandLineManager.SetupGet(c => c.ShouldCodeGenAll).Returns(true);
+        _commandLineManager.SetupGet(c => c.GlueProjectToLoad).Returns((string?)null);
+
+        // Not awaited first: the code-generation request only completes when a handler answers it,
+        // and the mocked messenger has none.
+        Task initialize = _projectManager.Initialize();
+
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
+        _guiCommands.Verify(g => g.PrintOutput("--generatecode requires a project file"), Times.Once);
+        await initialize;
+    }
+
+    [Fact]
     public async Task Initialize_LoadsCommandLineProject_WhenShiftNotHeldAtStartup()
     {
         string glueProject = "c:/projects/MyGame.gumx";

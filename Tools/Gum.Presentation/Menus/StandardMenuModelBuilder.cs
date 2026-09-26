@@ -245,13 +245,19 @@ public class StandardMenuModelBuilder
 
     private void RemoveStateOrCategory()
     {
+        // A selected state or category always has an owning element or behavior.
+        if (_selectedState.SelectedStateContainer is not { } container)
+        {
+            return;
+        }
+
         if (_selectedState.SelectedStateSave != null)
         {
-            _editCommands.AskToDeleteState(_selectedState.SelectedStateSave, _selectedState.SelectedStateContainer);
+            _editCommands.AskToDeleteState(_selectedState.SelectedStateSave, container);
         }
         else if (_selectedState.SelectedStateCategorySave != null)
         {
-            _editCommands.AskToDeleteStateCategory(_selectedState.SelectedStateCategorySave, _selectedState.SelectedStateContainer);
+            _editCommands.AskToDeleteStateCategory(_selectedState.SelectedStateCategorySave, container);
         }
     }
 

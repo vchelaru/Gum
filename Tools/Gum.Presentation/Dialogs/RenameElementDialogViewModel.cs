@@ -38,7 +38,8 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
                     if (elementName.Contains("/"))
                     {
                         Value = Path.GetFileName(elementName);
-                        Prefix = Path.GetDirectoryName(elementName).Replace("\\", "/") + "/";
+                        // Contains "/" so there is always a directory part.
+                        Prefix = Path.GetDirectoryName(elementName)?.Replace("\\", "/") + "/";
                     }
                     else
                     {
@@ -53,7 +54,7 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
     {
         if (Value is null || ElementSave is null || Error is not null) return;
         
-        string? oldName = ElementSave?.Name;
+        string oldName = ElementSave.Name;
         string newName = Prefix + Value;
 
         if (newName != oldName)
@@ -76,10 +77,10 @@ public class RenameElementDialogViewModel : GetUserStringDialogBaseViewModel
     {
         var folderName = Prefix ?? string.Empty;
 
-        _nameVerifier.IsElementNameValid(this.Value, folderName, ElementSave, out string whyNotValid);
+        _nameVerifier.IsElementNameValid(this.Value, folderName, ElementSave, out string? whyNotValid);
 
-        if(!string.IsNullOrEmpty(whyNotValid))
-                    {
+        if (!string.IsNullOrEmpty(whyNotValid))
+        {
             return whyNotValid;
         }
 

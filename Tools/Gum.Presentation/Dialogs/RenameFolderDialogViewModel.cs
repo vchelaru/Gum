@@ -51,14 +51,15 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
 
     public override void OnAffirmative()
     {
+        // Folder nodes only have a path, and the project only exists, once the project is saved.
         if (FolderNode is null ||
             Value is null ||
-            Error is not null)
+            Error is not null ||
+            FolderNode.GetFullFilePath() is not { } oldFullPath ||
+            _projectState.GumProjectSave is not { } project)
         {
             return;
         }
-        
-        var oldFullPath = FolderNode.GetFullFilePath();
 
         // see if it already exists. Directory.Exists is case-insensitive on Windows/macOS, so a
         // rename that only changes casing (e.g. "GameMenuScreens" -> "gamemenuscreens") would
@@ -89,12 +90,14 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
 
         string oldPathRelativeToElementsRoot = FileManager.MakeRelative(oldFullPath.FullPath, rootForElement, preserveCase: true);
         FolderNode.Text = Value;
-        string newPathRelativeToElementsRoot = FileManager.MakeRelative(FolderNode.GetFullFilePath().FullPath, rootForElement, preserveCase: true);
+        // The node had a path before the rename, so it still has one; newFullPath is the same folder.
+        FilePath renamedFullPath = FolderNode.GetFullFilePath() ?? newFullPath;
+        string newPathRelativeToElementsRoot = FileManager.MakeRelative(renamedFullPath.FullPath, rootForElement, preserveCase: true);
 
         if (FolderNode.IsScreensFolderTreeNode())
         {
             // rename logic may adjust the order so let's get a copy:
-            var screensCopy = _projectState.GumProjectSave.Screens.ToArray();
+            var screensCopy = project.Screens.ToArray();
             foreach (var screen in screensCopy)
             {
                 if (screen.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))
@@ -109,7 +112,7 @@ public class RenameFolderDialogViewModel : GetUserStringDialogBaseViewModel
         }
         else if (FolderNode.IsComponentsFolderTreeNode())
         {
-            var componentsCopy = _projectState.GumProjectSave.Components.ToArray();
+            var componentsCopy = project.Components.ToArray();
             foreach (var component in componentsCopy)
             {
                 if (component.Name.ToLowerInvariant().StartsWith(oldPathRelativeToElementsRoot.Replace("\\", "/").ToLowerInvariant()))

@@ -65,12 +65,24 @@ public class CommandLineManagerTests
         _fontManager
             .Setup(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()))
             .ReturnsAsync(0);
+        _projectManager.Setup(p => p.GumProjectSave).Returns(new GumProjectSave());
 
         await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "--rebuildfonts", "MyProject.gumx" });
 
         _commandLineManager.ShouldExitImmediately.ShouldBeTrue();
         _fileCommands.Verify(f => f.LoadProjectAsync("MyProject.gumx"), Times.Once);
         _fontManager.Verify(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ReadCommandLine_SkipsFontRebuild_WhenRebuildFontsProjectFailsToLoad()
+    {
+        _projectManager.Setup(p => p.GumProjectSave).Returns((GumProjectSave?)null);
+
+        await _commandLineManager.ReadCommandLine(new[] { "Gum.exe", "--rebuildfonts", "Missing.gumx" });
+
+        _commandLineManager.ShouldExitImmediately.ShouldBeTrue();
+        _fontManager.Verify(f => f.CreateAllMissingFontFiles(It.IsAny<GumProjectSave>(), It.IsAny<bool>()), Times.Never);
     }
 
     [Fact]

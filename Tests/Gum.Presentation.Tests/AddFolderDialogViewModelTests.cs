@@ -29,6 +29,24 @@ public class AddFolderDialogViewModelTests
     }
 
     [Fact]
+    public void OnAffirmative_SetsError_WhenSelectedFolderHasNoLocationOnDisk()
+    {
+        string? whyNotValid = null;
+        _nameVerifier
+            .Setup(x => x.IsFolderNameValid(It.IsAny<string?>(), out whyNotValid))
+            .Returns(true);
+        Mock<ITreeNode> folderNode = new Mock<ITreeNode>();
+        folderNode.Setup(x => x.GetFullFilePath()).Returns((ToolsUtilities.FilePath?)null);
+        _selectedState.Setup(x => x.SelectedTreeNode).Returns(folderNode.Object);
+
+        _viewModel.Value = "NewFolder";
+        _viewModel.OnAffirmative();
+
+        _viewModel.Error.ShouldBe("You must first save the project before adding a folder");
+        _guiCommands.Verify(x => x.RefreshElementTreeView(), Times.Never);
+    }
+
+    [Fact]
     public void Validate_ReturnsNameVerifierError_WhenNameIsInvalid()
     {
         string? whyNotValid = "A folder with this name already exists.";

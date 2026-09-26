@@ -17,7 +17,7 @@ public enum TextureFilter
 public class ProjectPropertiesViewModel : ViewModel
 {
 
-    GumProjectSave gumProject;
+    GumProjectSave? gumProject;
 
     public bool AutoSave
     {
@@ -237,7 +237,7 @@ public class ProjectPropertiesViewModel : ViewModel
 
 
             AutoSave = autoSave;
-            ShowOutlines = this.gumProject.ShowOutlines;
+            ShowOutlines = gumProject.ShowOutlines;
             try
             {
                 TextureFilter =  (TextureFilter)Enum.Parse(typeof(TextureFilter),this.gumProject.TextureFilter);
@@ -246,23 +246,23 @@ public class ProjectPropertiesViewModel : ViewModel
             {
                 TextureFilter = TextureFilter.Point;
             }
-            ShowCanvasOutline = this.gumProject.ShowCanvasOutline;
-            ShowCheckerBackground = this.gumProject.ShowCheckerBackground;
-            FontRanges = this.gumProject.FontRanges;
-            FontSpacingHorizontal = this.gumProject.FontSpacingHorizontal;
-            FontSpacingVertical = this.gumProject.FontSpacingVertical;
-            UseFontCharacterFile = this.gumProject.UseFontCharacterFile;
-            AutoSizeFontOutputs = this.gumProject.AutoSizeFontOutputs;
-            FontGenerator = this.gumProject.FontGenerator;
+            ShowCanvasOutline = gumProject.ShowCanvasOutline;
+            ShowCheckerBackground = gumProject.ShowCheckerBackground;
+            FontRanges = gumProject.FontRanges;
+            FontSpacingHorizontal = gumProject.FontSpacingHorizontal;
+            FontSpacingVertical = gumProject.FontSpacingVertical;
+            UseFontCharacterFile = gumProject.UseFontCharacterFile;
+            AutoSizeFontOutputs = gumProject.AutoSizeFontOutputs;
+            FontGenerator = gumProject.FontGenerator;
 
-            RestrictToUnitValues = this.gumProject.RestrictToUnitValues;
-            CanvasHeight = this.gumProject.DefaultCanvasHeight;
-            CanvasWidth = this.gumProject.DefaultCanvasWidth;
-            RestrictFileNamesForAndroid = this.gumProject.RestrictFileNamesForAndroid;
+            RestrictToUnitValues = gumProject.RestrictToUnitValues;
+            CanvasHeight = gumProject.DefaultCanvasHeight;
+            CanvasWidth = gumProject.DefaultCanvasWidth;
+            RestrictFileNamesForAndroid = gumProject.RestrictFileNamesForAndroid;
 
             LocalizationFiles = new List<string>(this.gumProject.LocalizationFiles);
-            LanguageIndex = this.gumProject.CurrentLanguageIndex;
-            ShowLocalization = this.gumProject.ShowLocalizationInGum;
+            LanguageIndex = gumProject.CurrentLanguageIndex;
+            ShowLocalization = gumProject.ShowLocalizationInGum;
 
             SinglePixelTextureFile = gumProject.SinglePixelTextureFile;
             SinglePixelTextureLeft = gumProject.SinglePixelTextureLeft;
@@ -277,6 +277,12 @@ public class ProjectPropertiesViewModel : ViewModel
 
     public void ApplyToModelObjects()
     {
+        // Nothing to apply to until SetFrom has supplied the project.
+        if (gumProject is null)
+        {
+            return;
+        }
+
         this.gumProject.ShowOutlines = ShowOutlines;
         this.gumProject.ShowCanvasOutline = ShowCanvasOutline;
         this.gumProject.ShowCheckerBackground = ShowCheckerBackground;

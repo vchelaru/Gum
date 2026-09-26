@@ -146,16 +146,21 @@ public class GumxSourceService : IGumxSourceService
         }
 
         // Deserialize just the project save (references only, not element files)
-        GumProjectSave gps;
+        GumProjectSave? gps;
         try
         {
             bool isCompact = GumProjectSave.IsGumxCompactFormat(content);
             var deserializer = isCompact
                 ? GumFileSerializer.GetGumProjectCompactSerializer()
                 : FileManager.GetXmlSerializer(typeof(GumProjectSave));
-            gps = (GumProjectSave)deserializer.Deserialize(new StringReader(content));
+            gps = deserializer.Deserialize(new StringReader(content)) as GumProjectSave;
         }
         catch (Exception)
+        {
+            return null;
+        }
+
+        if (gps is null)
         {
             return null;
         }

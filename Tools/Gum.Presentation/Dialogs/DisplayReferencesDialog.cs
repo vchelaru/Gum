@@ -73,16 +73,16 @@ public class DisplayReferencesDialog : DialogViewModel
         else if (selectedItem is VariableSave variable)
         {
             ElementSave? foundElement = ObjectFinder.Self.GumProjectSave?.Screens
-                .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                .FirstOrDefault(item => item.DefaultState?.Variables.Contains(variable) == true);
             if (foundElement == null)
             {
                 foundElement = ObjectFinder.Self.GumProjectSave?.Components
-                    .FirstOrDefault(item => item.DefaultState.Variables.Contains(variable));
+                    .FirstOrDefault(item => item.DefaultState?.Variables.Contains(variable) == true);
             }
             if (foundElement != null)
             {
                 // what's the instance?
-                InstanceSave instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
+                InstanceSave? instanceWithVariable = foundElement.GetInstance(variable.SourceObject);
 
                 if (instanceWithVariable != null)
                 {
@@ -99,7 +99,7 @@ public class DisplayReferencesDialog : DialogViewModel
             }
             else
             {
-                InstanceSave instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
+                InstanceSave? instanceWithVariable = foundElement.GetInstance(variableListSave.SourceObject);
 
                 if (instanceWithVariable != null)
                 {

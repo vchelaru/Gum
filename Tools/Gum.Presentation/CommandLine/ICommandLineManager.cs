@@ -13,7 +13,7 @@ public interface ICommandLineManager
     /// <summary>
     /// The .gumx project the command line requested be loaded, or null if none was specified.
     /// </summary>
-    string GlueProjectToLoad { get; }
+    string? GlueProjectToLoad { get; }
 
     /// <summary>
     /// True when the command line requested an immediate exit after processing (for example a
@@ -29,7 +29,7 @@ public interface ICommandLineManager
     /// <summary>
     /// The element the command line requested be selected after load, or null if none was specified.
     /// </summary>
-    string ElementName { get; }
+    string? ElementName { get; }
 
     /// <summary>
     /// Parses the process command-line arguments (<see cref="System.Environment.GetCommandLineArgs"/>)

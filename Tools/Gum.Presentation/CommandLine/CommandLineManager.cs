@@ -24,7 +24,7 @@ namespace Gum.CommandLine
         #region Fields/Properties
 
         /// <inheritdoc/>
-        public string GlueProjectToLoad
+        public string? GlueProjectToLoad
         {
             get;
             private set;
@@ -37,7 +37,7 @@ namespace Gum.CommandLine
         public bool ShouldCodeGenAll { get; private set; }
 
         /// <inheritdoc/>
-        public string ElementName
+        public string? ElementName
         {
             get;
             private set;
@@ -79,12 +79,12 @@ namespace Gum.CommandLine
 
                 if (!string.IsNullOrEmpty(arg))
                 {
-                    if(arg?.ToLowerInvariant() == "--rebuildfonts")
+                    if(arg.ToLowerInvariant() == "--rebuildfonts")
                     {
                         await HandleRebuildFontCommand(commandLineArgs, i);
                         ShouldExitImmediately = true;
                     }
-                    else if(arg?.ToLowerInvariant() == "--generatecode")
+                    else if(arg.ToLowerInvariant() == "--generatecode")
                     {
                         ShouldCodeGenAll = true;
                         ShouldExitImmediately = true;
@@ -137,7 +137,10 @@ namespace Gum.CommandLine
             await _fileCommands.LoadProjectAsync(gumxFile);
 
             // 3.
-            await _fontManager.CreateAllMissingFontFiles(_projectManager.GumProjectSave);
+            if (_projectManager.GumProjectSave is { } project)
+            {
+                await _fontManager.CreateAllMissingFontFiles(project);
+            }
 
             // 4.
             _messenger.Send<CloseMainWindowMessage>();

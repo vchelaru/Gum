@@ -85,7 +85,7 @@ namespace Gum.Plugins.InternalPlugins.Hotkey.ViewModels
 
     public class HotkeyItemViewModel
     {
-        public string Display { get; set; }
+        public string Display { get; set; } = string.Empty;
 
         public override string ToString() => Display;
     }

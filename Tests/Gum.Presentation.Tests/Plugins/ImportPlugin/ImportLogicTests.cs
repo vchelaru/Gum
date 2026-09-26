@@ -53,6 +53,22 @@ public class ImportLogicTests : BaseTestClass
     }
 
     [Fact]
+    public void ImportScreen_ShowsMessageAndReturnsNull_WhenProjectIsUnsaved()
+    {
+        GumProjectSave unsavedProject = new GumProjectSave();
+        _mocker.GetMock<IProjectManager>()
+            .Setup(x => x.GumProjectSave)
+            .Returns(unsavedProject);
+        string screenFile = Path.Combine(_testDirectory, "Dropped.gusx");
+
+        ScreenSave? result = _importLogic.ImportScreen(screenFile);
+
+        result.ShouldBeNull();
+        _mocker.GetMock<IDialogService>()
+            .Verify(x => x.ShowMessage("You must first save the project before importing", It.IsAny<string?>(), It.IsAny<MessageDialogStyle?>()), Times.Once);
+    }
+
+    [Fact]
     public void ImportBehavior_ShouldDeserializeV1BehaviorWithNoVariables()
     {
         // Arrange — v1 format with no variables; absence of <Variable> must not be misread as compact
