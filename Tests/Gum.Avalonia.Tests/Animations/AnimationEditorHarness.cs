@@ -1,12 +1,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Headless;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.StateAnimation;
@@ -19,14 +16,12 @@ using Gum.Managers;
 using Gum.Menus;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
-using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.StateAnimation.SaveClasses;
 using Gum.ToolStates;
 using Gum.Undo;
 using Microsoft.Extensions.DependencyInjection;
 using StateAnimationPlugin.Timeline;
 using StateAnimationPlugin.ViewModels;
-using ToolsUtilities;
 
 namespace Gum.Avalonia.Tests.Animations;
 
@@ -42,12 +37,12 @@ internal sealed class AnimationEditorHarness : IDisposable
     private static IServiceProvider Services => TestAppBuilder.Services;
 
     private readonly PluginManager _pluginManager;
-    private readonly AvaloniaTabManager _tabManager;
-    private readonly AvaloniaPluginTab _tab;
+    private readonly ToolProjectFixture _fixture;
+    private readonly AvaloniaTabManager? _tabManager;
+    private readonly AvaloniaPluginTab? _tab;
     private readonly PluginBase? _headPlugin;
     private readonly MenuItemModel? _menuItemAdded;
-    private readonly string? _originalUserDataOverride;
-    private readonly string _framesFolder;
+    private readonly HeadlessWindowDriver? _driver;
     private readonly string _sidecarExtension;
 
     /// <param name="jsonProject">True for a .gumj project, whose sidecars are .ganj files.</param>
@@ -58,30 +53,10 @@ internal sealed class AnimationEditorHarness : IDisposable
     public AnimationEditorHarness(bool jsonProject = false, string? userDataFolder = null)
     {
         _sidecarExtension = jsonProject ? "Animations.ganj" : "Animations.ganx";
-        // Work another test left queued (a tree view syncing its selection, say) runs now, against
-        // that test's state, not later against this harness's project and selection.
-        Dispatcher.UIThread.RunJobs();
         _pluginManager = Services.GetRequiredService<PluginManager>();
-
-        ProjectFolder = Path.Combine(Path.GetTempPath(), "GumAnimationEditor", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(ProjectFolder);
-        _framesFolder = Environment.GetEnvironmentVariable("GUM_HEADLESS_FRAMES") is { Length: > 0 } folder
-            ? folder
-            : Path.Combine(Path.GetTempPath(), "GumAnimationEditor", "frames");
-
-        // The plugin's settings file follows the tool's user-data folder; keep it out of the user's.
-        _originalUserDataOverride = FileManager.UserApplicationDataFolderOverride;
-        FileManager.UserApplicationDataFolderOverride = userDataFolder ?? Path.Combine(ProjectFolder, "UserData");
+        _fixture = new ToolProjectFixture("GumAnimationEditor", jsonProject ? "AnimationEditor.gumj" : "AnimationEditor.gumx", userDataFolder);
         try
         {
-            SelectedState = Services.GetRequiredService<ISelectedState>();
-            UndoManager = Services.GetRequiredService<IUndoManager>();
-            IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
-            projectManager.CreateNewProject();
-            Project = projectManager.GumProjectSave!;
-            Project.FullFileName = Path.Combine(ProjectFolder, jsonProject ? "AnimationEditor.gumj" : "AnimationEditor.gumx");
-
-            Dialogs = new ScriptedDialogService();
             MenuModel menu = Services.GetRequiredService<MenuModel>();
             MenuItemModel viewMenu = menu.GetItem("View") ?? throw new InvalidOperationException("The head has no View menu.");
             List<MenuItemModel> viewItemsBefore = viewMenu.Items.ToList();
@@ -96,7 +71,7 @@ internal sealed class AnimationEditorHarness : IDisposable
 
             // Selection, rename, undo and the other plugin events reach this instance through the
             // manager in place of the head's own instance, which would otherwise handle every
-            // event too (moving or copying the same sidecar first); it is put back on dispose.
+            // event too (moving or copying the same sidecar first); the fixture puts the set back.
             _headPlugin = _pluginManager.InitializedPlugins.FirstOrDefault(plugin => plugin is AvaloniaStateAnimationPlugin);
             _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != _headPlugin).Append(Plugin).ToList();
             _pluginManager.PluginContainers[Plugin] = new PluginContainer(Plugin);
@@ -105,25 +80,12 @@ internal sealed class AnimationEditorHarness : IDisposable
             _tab = _tabManager.AllTabs.Last(tab => tab.Title == "Animations");
             _tab.Show();
             View = (AnimationsView)_tab.Content;
-            Window = new Window { Content = View, Width = 1100, Height = 640 };
-            Window.Show();
-            Layout();
-            AvaloniaHeadlessPlatform.ForceRenderTimerTick();
-            if (Window.InputHitTest(new Point(2, 2)) == null)
-            {
-                // Every gesture would land on nothing; see this folder's README, "Gotchas". A
-                // same-process retry here does not help - this is confirmed (not just suspected) to
-                // be scoped to the whole test's own isolated dispatcher session, not to one Window:
-                // recreating the Window 3x in place still failed 3/3 in local repro, so only a fresh
-                // process (a new xunit test-assembly run) gets a genuinely independent roll.
-                throw new InvalidOperationException("The tab's window hit-tests nothing after a render tick: this test's Avalonia session bound its compositor to a dispatcher that is not the current one.");
-            }
+            _driver = new HeadlessWindowDriver(View, width: 1100, height: 640, framesFolderName: "GumAnimationEditor");
         }
         catch
         {
-            // Nothing disposes a harness whose constructor threw, and the override would otherwise
-            // send every later test's per-user files into this temp folder.
-            FileManager.UserApplicationDataFolderOverride = _originalUserDataOverride;
+            // Nothing disposes a harness whose constructor threw.
+            Dispose();
             throw;
         }
     }
@@ -132,32 +94,35 @@ internal sealed class AnimationEditorHarness : IDisposable
     public PluginManager PluginManager => _pluginManager;
 
     /// <summary>The Animations tab this harness added to the tab manager.</summary>
-    public AvaloniaPluginTab Tab => _tab;
+    public AvaloniaPluginTab Tab => _tab!;
 
     /// <summary>The View menu entry this harness's plugin added ("View Animations" / "Hide Animations").</summary>
     public MenuItemModel ViewMenuItem => _menuItemAdded ?? throw new InvalidOperationException("The plugin added no View menu entry.");
 
     /// <summary>The scripted dialogs; queue an answer before the gesture that opens one.</summary>
-    public ScriptedDialogService Dialogs { get; }
+    public ScriptedDialogService Dialogs => _fixture.Dialogs;
 
     /// <summary>This harness's plugin instance.</summary>
-    public TestAnimationPlugin Plugin { get; }
+    public TestAnimationPlugin Plugin { get; } = null!;
 
     /// <summary>The tab's view, hosted in <see cref="Window"/>.</summary>
-    public AnimationsView View { get; }
+    public AnimationsView View { get; } = null!;
+
+    /// <summary>Input, context menus and pixel reads for the tab's window.</summary>
+    public HeadlessWindowDriver Input => _driver!;
 
     /// <summary>The headless window the view lives in; input goes through it.</summary>
-    public Window Window { get; }
+    public Window Window => Input.Window;
 
     /// <summary>The temp project the tab edits.</summary>
-    public GumProjectSave Project { get; }
+    public GumProjectSave Project => _fixture.Project;
 
     /// <summary>The folder <see cref="Project"/> lives in; element files and sidecars resolve under it.</summary>
-    public string ProjectFolder { get; }
+    public string ProjectFolder => _fixture.ProjectFolder;
 
-    public ISelectedState SelectedState { get; }
+    public ISelectedState SelectedState => _fixture.SelectedState;
 
-    public IUndoManager UndoManager { get; }
+    public IUndoManager UndoManager => _fixture.UndoManager;
 
     /// <summary>The view model the tab currently shows.</summary>
     public ElementAnimationsViewModel ViewModel => (ElementAnimationsViewModel)View.DataContext!;
@@ -194,8 +159,7 @@ internal sealed class AnimationEditorHarness : IDisposable
     }
 
     /// <summary>The context menu a right-click opened, or null when none is open.</summary>
-    public ContextMenu? OpenContextMenu =>
-        Window.GetSelfAndVisualDescendants().OfType<Control>().Select(control => control.ContextMenu).FirstOrDefault(menu => menu?.IsOpen == true);
+    public ContextMenu? OpenContextMenu => Input.OpenContextMenu;
 
     /// <summary>The text box inside the selected keyframe's editable state combo.</summary>
     public TextBox StateComboTextBox => DetailCombos[0].GetVisualDescendants().OfType<TextBox>().Single();
@@ -352,93 +316,32 @@ internal sealed class AnimationEditorHarness : IDisposable
         return condition();
     }
 
-    /// <summary>Runs pending dispatcher work and lays the window out, so the view reflects the model.</summary>
-    public void Layout()
-    {
-        Dispatcher.UIThread.RunJobs();
-        Window.UpdateLayout();
-        Dispatcher.UIThread.RunJobs();
-    }
+    // The gestures scenarios use most, forwarded to Input so the scenarios read as the user's steps.
 
-    public Point CenterOf(Control control)
-    {
-        Layout();
-        return control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), Window)
-            ?? throw new InvalidOperationException($"{control.GetType().Name} is not in the window.");
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.Layout"/>
+    public void Layout() => Input.Layout();
 
-    public void Click(Control control, RawInputModifiers modifiers = RawInputModifiers.None) => ClickAt(CenterOf(control), modifiers);
+    public Point CenterOf(Control control) => Input.CenterOf(control);
 
-    public void ClickAt(Point point, RawInputModifiers modifiers = RawInputModifiers.None)
-    {
-        Window.MouseMove(point, modifiers);
-        Window.MouseDown(point, MouseButton.Left, modifiers);
-        Window.MouseUp(point, MouseButton.Left, modifiers);
-        Layout();
-    }
+    public void Click(Control control, RawInputModifiers modifiers = RawInputModifiers.None) => Input.Click(control, modifiers);
 
-    /// <summary>Right-clicks <paramref name="control"/>, which opens its context menu.</summary>
-    public void RightClick(Control control)
-    {
-        Point point = CenterOf(control);
-        Window.MouseMove(point, RawInputModifiers.None);
-        Window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
-        Window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
-        Layout();
-    }
+    public void ClickAt(Point point, RawInputModifiers modifiers = RawInputModifiers.None) => Input.ClickAt(point, modifiers);
 
-    /// <summary>
-    /// Picks <paramref name="header"/> from the open context menu; a click when the popup laid the
-    /// item out, else the item's own click event, as <see cref="PickAddKeyframe"/> does for the flyout.
-    /// </summary>
-    public void PickContextMenuItem(string header)
-    {
-        ContextMenu menu = OpenContextMenu ?? throw new InvalidOperationException("No context menu is open.");
-        MenuItem item = menu.Items.OfType<MenuItem>().Single(candidate => (string)candidate.Header! == header);
-        if (item.IsEffectivelyVisible && item.Bounds.Width > 0)
-        {
-            Click(item);
-        }
-        else
-        {
-            item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-        }
-        menu.Close();
-        Layout();
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.RightClick"/>
+    public void RightClick(Control control) => Input.RightClick(control);
 
-    public void Hover(Point point)
-    {
-        Window.MouseMove(point, RawInputModifiers.None);
-        Layout();
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.PickContextMenuItem"/>
+    public void PickContextMenuItem(string header) => Input.PickContextMenuItem(header);
 
-    /// <summary>Presses the mouse at <paramref name="from"/>, moves it to <paramref name="to"/> and releases.</summary>
-    public void Drag(Point from, Point to)
-    {
-        Window.MouseMove(from, RawInputModifiers.None);
-        Window.MouseDown(from, MouseButton.Left, RawInputModifiers.None);
-        Window.MouseMove(new Point((from.X + to.X) / 2, (from.Y + to.Y) / 2), RawInputModifiers.LeftMouseButton);
-        Window.MouseMove(to, RawInputModifiers.LeftMouseButton);
-        Window.MouseUp(to, MouseButton.Left, RawInputModifiers.None);
-        Layout();
-    }
+    public void Hover(Point point) => Input.Hover(point);
 
-    public void Press(Key key, PhysicalKey physicalKey, RawInputModifiers modifiers = RawInputModifiers.None)
-    {
-        Window.KeyPress(key, modifiers, physicalKey, null);
-        Window.KeyRelease(key, modifiers, physicalKey, null);
-        Layout();
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.Drag"/>
+    public void Drag(Point from, Point to) => Input.Drag(from, to);
 
-    /// <summary>Focuses <paramref name="box"/>, replaces its text by typing, and presses Enter.</summary>
-    public void TypeAndEnter(TextBox box, string text)
-    {
-        box.Focus();
-        box.SelectAll();
-        Window.KeyTextInput(text);
-        Press(Key.Enter, PhysicalKey.Enter);
-    }
+    public void Press(Key key, PhysicalKey physicalKey, RawInputModifiers modifiers = RawInputModifiers.None) => Input.Press(key, physicalKey, modifiers);
+
+    /// <inheritdoc cref="HeadlessWindowDriver.TypeAndEnter"/>
+    public void TypeAndEnter(TextBox box, string text) => Input.TypeAndEnter(box, text);
 
     /// <summary>The list row showing <paramref name="item"/>.</summary>
     public Control RowFor(ListBox list, object item)
@@ -542,14 +445,6 @@ internal sealed class AnimationEditorHarness : IDisposable
 
     #endregion
 
-    /// <summary>The rendered color at <paramref name="point"/> in the window.</summary>
-    public Color PixelAt(Point point)
-    {
-        Layout();
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
-        return ReadPixel(frame, (int)point.X, (int)point.Y);
-    }
-
     /// <summary>
     /// True when any pixel within <paramref name="radius"/> of <paramref name="center"/> is within
     /// <paramref name="tolerance"/> per channel of <paramref name="color"/>.
@@ -558,93 +453,51 @@ internal sealed class AnimationEditorHarness : IDisposable
         AnyPixelNear(center, radius, pixel =>
             Math.Abs(pixel.R - color.R) <= tolerance && Math.Abs(pixel.G - color.G) <= tolerance && Math.Abs(pixel.B - color.B) <= tolerance);
 
-    /// <summary>True when any pixel within <paramref name="radius"/> of <paramref name="center"/> satisfies <paramref name="matches"/>.</summary>
-    public bool AnyPixelNear(Point center, int radius, Func<Color, bool> matches)
-    {
-        Layout();
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
-        for (int y = (int)center.Y - radius; y <= (int)center.Y + radius; y++)
-        {
-            for (int x = (int)center.X - radius; x <= (int)center.X + radius; x++)
-            {
-                if (x < 0 || y < 0 || x >= frame.PixelSize.Width || y >= frame.PixelSize.Height)
-                {
-                    continue;
-                }
-                if (matches(ReadPixel(frame, x, y)))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.AnyPixelNear"/>
+    public bool AnyPixelNear(Point center, int radius, Func<Color, bool> matches) => Input.AnyPixelNear(center, radius, matches);
 
-    private static Color ReadPixel(WriteableBitmap frame, int x, int y)
-    {
-        using ILockedFramebuffer buffer = frame.Lock();
-        int value = System.Runtime.InteropServices.Marshal.ReadInt32(buffer.Address, y * buffer.RowBytes + x * 4);
-        byte b0 = (byte)value, b1 = (byte)(value >> 8), b2 = (byte)(value >> 16), b3 = (byte)(value >> 24);
-        return buffer.Format == PixelFormat.Rgba8888
-            ? Color.FromArgb(b3, b0, b1, b2)
-            : Color.FromArgb(b3, b2, b1, b0);
-    }
-
-    /// <summary>Renders the window and saves it as a PNG for a person to look at; returns the path.</summary>
-    public string SaveFrame(string name)
-    {
-        Layout();
-        Directory.CreateDirectory(_framesFolder);
-        string path = Path.Combine(_framesFolder, name + ".png");
-        using WriteableBitmap frame = Window.CaptureRenderedFrame() ?? throw new InvalidOperationException("The headless window rendered no frame.");
-        frame.Save(path);
-        return path;
-    }
+    /// <inheritdoc cref="HeadlessWindowDriver.SaveFrame"/>
+    public string SaveFrame(string name) => Input.SaveFrame(name);
 
     private Button ButtonWithTip(string tip) =>
         Window.GetVisualDescendants().OfType<Button>().Single(button => ToolTip.GetTip(button) as string == tip);
 
+    /// <summary>Takes the harness's plugin, tab and window out of the tool, then disposes the project fixture.</summary>
     public void Dispose()
     {
         try
         {
-            ViewModel.IsPlaying = false;
+            if (View?.DataContext is ElementAnimationsViewModel viewModel)
+            {
+                viewModel.IsPlaying = false;
+            }
+            // Deselect while this plugin still handles the event, rather than the head's own.
+            SelectedState.SelectedInstance = null;
+            SelectedState.SelectedElement = null;
+            if (Plugin != null)
+            {
+                _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != Plugin).ToList();
+                _pluginManager.PluginContainers.Remove(Plugin);
+            }
+            if (_headPlugin is IAnimationUndoProvider headProvider)
+            {
+                Services.GetRequiredService<IAnimationUndoProviderRegistrar>().Register(headProvider);
+            }
+            if (_menuItemAdded != null)
+            {
+                Services.GetRequiredService<MenuModel>().GetItem("View")?.Items.Remove(_menuItemAdded);
+            }
+            _driver?.Dispose();
+            if (_tab != null)
+            {
+                _tabManager!.RemoveTab(_tab);
+            }
         }
-        catch
+        finally
         {
-            // The view model may already be gone.
-        }
-        SelectedState.SelectedInstance = null;
-        SelectedState.SelectedElement = null;
-        _pluginManager.Plugins = _pluginManager.InitializedPlugins.Where(plugin => plugin != Plugin).ToList();
-        _pluginManager.PluginContainers.Remove(Plugin);
-        if (_headPlugin != null)
-        {
-            _pluginManager.Plugins = _pluginManager.Plugins.Append(_headPlugin).ToList();
-        }
-        if (_headPlugin is IAnimationUndoProvider headProvider)
-        {
-            Services.GetRequiredService<IAnimationUndoProviderRegistrar>().Register(headProvider);
-        }
-        if (_menuItemAdded != null)
-        {
-            Services.GetRequiredService<MenuModel>().GetItem("View")?.Items.Remove(_menuItemAdded);
-        }
-        Window.Content = null;
-        Window.Close();
-        _tabManager.RemoveTab(_tab);
-        // The temp folder goes away below, so the tool must not keep a project that points into it
-        // (the Code tab's setup check lists the project's folder).
-        Services.GetRequiredService<IProjectManager>().CreateNewProject();
-        ObjectFinder.Self.GumProjectSave = null;
-        FileManager.UserApplicationDataFolderOverride = _originalUserDataOverride;
-        try
-        {
-            Directory.Delete(ProjectFolder, recursive: true);
-        }
-        catch
-        {
-            // A file watcher may still hold the folder; the temp folder is cleaned up later.
+            // Restores the plugin set (the head's animation plugin included), the dialogs, the
+            // per-user folder, and leaves no project pointing into the temp folder.
+            _fixture.Dispose();
         }
     }
 }
