@@ -38,7 +38,7 @@ namespace WpfDataUi.DataTypes
     {
         #region Fields
 
-        string mCustomDisplay;
+        string? mCustomDisplay;
 
         public int UniqueId;
 
@@ -97,7 +97,11 @@ namespace WpfDataUi.DataTypes
             }
         }
 
-        public object Instance
+        /// <summary>
+        /// The object that owns this member. Null for members that read and write through the custom
+        /// get/set events instead of reflection.
+        /// </summary>
+        public object? Instance
         {
             get;
             set;
@@ -114,9 +118,9 @@ namespace WpfDataUi.DataTypes
         /// (see IDataUiExtensionMethods.TrySetValueOnInstance and MenuItemExposedClick.MakeDefault).
         /// Used to populate PropertyChangedArgs.OldValue when DataUiGrid.PropertyChange fires.
         /// </summary>
-        public object OldValue { get; set; }
+        public object? OldValue { get; set; }
 
-        public object Value
+        public object? Value
         {
             get
             {
@@ -150,7 +154,7 @@ namespace WpfDataUi.DataTypes
 
         }
 
-        public ApplyValueResult SetValue(object value, SetPropertyCommitType commitType)
+        public ApplyValueResult SetValue(object? value, SetPropertyCommitType commitType)
         {
             ApplyValueResult result = ApplyValueResult.Success;
 
@@ -172,14 +176,9 @@ namespace WpfDataUi.DataTypes
             {
                 CustomSetEvent(Instance, value);
             }
-            else
+            else if (Instance != null)
             {
-                var instanceType = Instance.GetType();
-                if(instanceType != null)
-                {
-                    var instance = LateBinder.GetInstance(instanceType);
-                    instance?.SetValue(Instance, Name, value);
-                }
+                LateBinder.GetInstance(Instance.GetType()).SetValue(Instance, Name, value);
             }
             OnPropertyChanged("Value");
             OnPropertyChanged(nameof(IsDefault));
@@ -222,20 +221,14 @@ namespace WpfDataUi.DataTypes
         {
             get
             {
-                if (!IsDefined)
+                // A defined member without a custom getter reads through reflection, so it has an Instance.
+                if (!IsDefined || CustomGetEvent != null || Instance == null)
                 {
                     return false;
                 }
                 else
                 {
-                    if (CustomGetEvent != null)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return LateBinder.GetInstance(Instance.GetType()).IsWriteOnly(Name);
-                    }
+                    return LateBinder.GetInstance(Instance.GetType()).IsWriteOnly(Name);
                 }
             }
 
@@ -286,7 +279,7 @@ namespace WpfDataUi.DataTypes
 
         }
 
-        public virtual Type PropertyType
+        public virtual Type? PropertyType
         {
             get
             {
@@ -306,7 +299,7 @@ namespace WpfDataUi.DataTypes
 
         }
 
-        public MemberCategory Category
+        public MemberCategory? Category
         {
             get;
             set;
@@ -365,8 +358,8 @@ namespace WpfDataUi.DataTypes
         // have no options. If this is null, combo box displayers
         // use the default full enum list.
         //List<object> backingList = new List<object>();
-        IList<object> backingList;
-        public virtual IList<object> CustomOptions
+        IList<object>? backingList;
+        public virtual IList<object>? CustomOptions
         {
             get
             {
@@ -418,8 +411,8 @@ namespace WpfDataUi.DataTypes
         #endregion
 
         #region Events
-        public EventHandler BeforeSetByUi;
-        public EventHandler AfterSetByUi;
+        public EventHandler? BeforeSetByUi;
+        public EventHandler? AfterSetByUi;
 
         /// <summary>Raised with the displayer control each time a row host creates or reuses one for this member.</summary>
         public event Action<object>? UiCreated;
@@ -432,7 +425,7 @@ namespace WpfDataUi.DataTypes
         /// This can occur if the user attemts to set a non-numerical value for a numerical variable, such as
         /// "a" for a float.
         /// </example>
-        public Action<object> SetValueError;
+        public Action<object>? SetValueError;
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -441,14 +434,14 @@ namespace WpfDataUi.DataTypes
         /// Instance class as a field or property. The parameters are (owner, value)
         /// </summary>
         [Obsolete("Use CustomSetPropertyEvent to differentiate between Intermediate and Full property assignments")]
-        public event Action<object, object> CustomSetEvent;
+        public event Action<object?, object?>? CustomSetEvent;
 
         /// <summary>
         /// Provides a custom set event which supports intermediate and full setting. 
         /// This is required if the instance member is not part of the
         /// Instance class as a field or property. The parameters are (owner, setPropertyArgs)
         /// </summary>
-        public event Action<object, SetPropertyArgs> CustomSetPropertyEvent;
+        public event Action<object?, SetPropertyArgs>? CustomSetPropertyEvent;
 
         /// <summary>
         /// Allows the InstanceMenber to define its own custom logic for getting a value.
@@ -457,8 +450,13 @@ namespace WpfDataUi.DataTypes
         /// <remarks>
         /// The object passed in is the container of this member - which usually is the Instance of the DataGrid.
         /// </remarks>
-        public event Func<object, object?> CustomGetEvent;
-        public event Func<object, Type> CustomGetTypeEvent;
+        public event Func<object?, object?>? CustomGetEvent;
+
+        /// <summary>
+        /// Allows the InstanceMember to report its type without reflection. The object passed in is the
+        /// member's <see cref="Instance"/>. Returning null means the type is unknown.
+        /// </summary>
+        public event Func<object?, Type?>? CustomGetTypeEvent;
 
         #endregion
 
@@ -473,7 +471,7 @@ namespace WpfDataUi.DataTypes
             mNextUniqueId++;
         }
 
-        public InstanceMember(string name, object instance)
+        public InstanceMember(string name, object? instance)
         {
             ContextMenuEvents = new Dictionary<string, EventHandler>();
             mFirstGridLength = 100;
@@ -510,7 +508,7 @@ namespace WpfDataUi.DataTypes
 
         public override string ToString()
         {
-            string name = Name;
+            string? name = Name;
             if(string.IsNullOrEmpty(name))
             {
                 name = mCustomDisplay;
@@ -524,10 +522,7 @@ namespace WpfDataUi.DataTypes
             {
                 Category.HandleValueSetByUi(this);
             }
-            if (AfterSetByUi != null)
-            {
-                AfterSetByUi(this, null);
-            }
+            AfterSetByUi?.Invoke(this, EventArgs.Empty);
         }
 
         internal void CallBeforeSetByUi(IDataUi dataUi)

@@ -79,7 +79,7 @@ namespace WpfDataUi.Controls
         {
             SuppressSettingProperty = true;
 
-            bool successfulGet = this.TryGetValueOnInstance(out object valueOnInstance);
+            bool successfulGet = this.TryGetValueOnInstance(out object? valueOnInstance);
 
             if (successfulGet)
             {
@@ -110,7 +110,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
         {
             var value = valueOnInstance as bool?;
 

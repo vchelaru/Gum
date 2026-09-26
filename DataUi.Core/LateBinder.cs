@@ -26,34 +26,35 @@ namespace FlatRedBall.Instructions.Reflection
             {
                 Type t = typeof(LateBinder<>).MakeGenericType(
                     type);
-                object obj = Activator.CreateInstance(t);
+                LateBinder binder = (LateBinder)(Activator.CreateInstance(t)
+                    ?? throw new InvalidOperationException("Could not create a LateBinder for " + type));
 
-                mLateBinders.Add(type, obj as LateBinder);
+                mLateBinders.Add(type, binder);
             }
             return mLateBinders[type];
 
         }
 
-        public static object GetValueStatic(object target, string name)
+        public static object? GetValueStatic(object target, string name)
         {
             return GetInstance(target.GetType()).GetValue(target, name);
         }
 
-        public static void SetValueStatic(object target, string name, object value)
+        public static void SetValueStatic(object target, string name, object? value)
         {
             GetInstance(target.GetType()).SetValue(target, name, value);
         }
 
-        public static bool TryGetValueStatic(object target, string name, out object result)
+        public static bool TryGetValueStatic(object target, string name, out object? result)
         {
             return GetInstance(target.GetType()).TryGetValue(target, name, out result);
         }
 
-        public abstract object GetValue(object target, string name);
+        public abstract object? GetValue(object target, string name);
         public abstract bool IsReadOnly(string name);
         public abstract bool IsWriteOnly(string name);
-        public abstract bool TryGetValue(object target, string name, out object result);
-        public abstract void SetValue(object target, string name, object value);
+        public abstract bool TryGetValue(object target, string name, out object? result);
+        public abstract void SetValue(object target, string name, object? value);
     }
 
 
@@ -76,7 +77,7 @@ namespace FlatRedBall.Instructions.Reflection
 
         private Dictionary<Type, List<string>> mFields;
 
-        private T mTarget = default(T);
+        private T? mTarget = default(T);
 
         private static LateBinder<T> _instance;
 
@@ -94,7 +95,7 @@ namespace FlatRedBall.Instructions.Reflection
         /// The instance that this binder operates on by default
         /// </summary>
         /// <remarks>This can be overridden by the caller explicitly passing a target to the indexer</remarks>
-        public T Target
+        public T? Target
         {
             get { return mTarget; }
             set { mTarget = value; }
@@ -104,7 +105,7 @@ namespace FlatRedBall.Instructions.Reflection
         /// Gets or Sets the supplied property on the contained <seealso cref="Instance"/>
         /// </summary>
         /// <exception cref="InvalidOperationException">Throws if the contained Instance is null.</exception>
-        public object this[string propertyName]
+        public object? this[string propertyName]
         {
             get
             {
@@ -121,7 +122,7 @@ namespace FlatRedBall.Instructions.Reflection
         /// <summary>
         /// Gets or Sets the supplied property on the supplied target
         /// </summary>
-        public object this[T target, string propertyName]
+        public object? this[T? target, string propertyName]
         {
             get
             {
@@ -168,7 +169,7 @@ namespace FlatRedBall.Instructions.Reflection
 
         #region Public Methods
 
-        public override object GetValue(object target, string name)
+        public override object? GetValue(object target, string name)
         {
             if (mFieldsSet.Contains(name))
             {
@@ -195,8 +196,8 @@ namespace FlatRedBall.Instructions.Reflection
 
         public override bool IsReadOnly(string name)
         {
-            FieldInfo fieldInfo;
-            PropertyInfo propertyInfo;
+            FieldInfo? fieldInfo;
+            PropertyInfo? propertyInfo;
 
             fieldInfo = mType.GetField(name);
 
@@ -218,8 +219,8 @@ namespace FlatRedBall.Instructions.Reflection
 
         public override bool IsWriteOnly(string name)
         {
-            FieldInfo fieldInfo;
-            PropertyInfo propertyInfo;
+            FieldInfo? fieldInfo;
+            PropertyInfo? propertyInfo;
 
             fieldInfo = mType.GetField(name);
 
@@ -240,7 +241,7 @@ namespace FlatRedBall.Instructions.Reflection
 
         }
 
-        public override bool TryGetValue(object target, string name, out object result)
+        public override bool TryGetValue(object target, string name, out object? result)
         {
             if (mFieldsSet.Contains(name))
             {
@@ -275,7 +276,7 @@ namespace FlatRedBall.Instructions.Reflection
             }
         }
 
-        public override void SetValue(object target, string name, object value)
+        public override void SetValue(object target, string name, object? value)
         {
             if (mFieldsSet.Contains(name))
             {
@@ -302,7 +303,7 @@ namespace FlatRedBall.Instructions.Reflection
             }
         }
 
-        private void SetField(object target, string name, object value)
+        private void SetField(object target, string name, object? value)
         {
 
 
@@ -338,34 +339,24 @@ namespace FlatRedBall.Instructions.Reflection
             fieldInfo.SetValue(target, value);
 
 #else
-            FieldInfo fieldInfo = target.GetType().GetField(
+            FieldInfo? fieldInfo = target.GetType().GetField(
                 name);
 
+            if (fieldInfo == null)
+            {
+                throw new MemberAccessException("Could not find field by the name " + name);
+            }
 
 #if DEBUG
             try
             {
 #endif
-
-
-
-                fieldInfo.SetValueDirect(
-                    __makeref(target), value);
-
-
+                fieldInfo.SetValue(target, value);
 #if DEBUG
             }
             catch (Exception)
             {
-                if(fieldInfo == null)
-                {
-                    throw new Exception("Could nto find field by the name " + name );
-                }
-                else
-                {
-
-                    throw new Exception("Error trying to set field " + name + " which is of type " + fieldInfo.FieldType + ".\nTrying to set to " + value + " of type " + value.GetType());
-                }
+                throw new Exception("Error trying to set field " + name + " which is of type " + fieldInfo.FieldType + ".\nTrying to set to " + value + " of type " + value?.GetType());
             }
 #endif
 
@@ -419,7 +410,7 @@ namespace FlatRedBall.Instructions.Reflection
             {
                 // This is probably not a property so see if it is a field.
 
-                FieldInfo fieldInfo = mType.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+                FieldInfo? fieldInfo = mType.GetField(propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
 
                 if (fieldInfo == null)
                 {
@@ -438,7 +429,7 @@ namespace FlatRedBall.Instructions.Reflection
                     }
                     else
                     {
-                        object[] args = { value };
+                        object?[] args = { value };
                         mType.InvokeMember(propertyName, BindingFlags.SetField, null, target, args);
                     }
 
@@ -449,21 +440,21 @@ namespace FlatRedBall.Instructions.Reflection
 
         static BindingFlags mGetFieldBindingFlags = BindingFlags.GetField | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
-        public object GetField(object target, string fieldName)
+        public object? GetField(object? target, string fieldName)
         {
-
-
             if (target == null)
             {
-                FieldInfo fieldInfo = mType.GetField(fieldName, mGetFieldBindingFlags);
+                FieldInfo? fieldInfo = mType.GetField(fieldName, mGetFieldBindingFlags);
+                if (fieldInfo == null)
+                {
+                    throw new MemberAccessException("Could not find field by the name " + fieldName);
+                }
                 return fieldInfo.GetValue(null);
-
             }
             else
             {
-
-                Binder binder = null;
-                object[] args = null; 
+                Binder? binder = null;
+                object?[]? args = null;
                 
                 return mType.InvokeMember(
                    fieldName,
@@ -475,21 +466,21 @@ namespace FlatRedBall.Instructions.Reflection
             }
         }
 
-        public ReturnType GetField<ReturnType>(T target, string propertyName)
+        public ReturnType? GetField<ReturnType>(T? target, string propertyName)
         {
-            return (ReturnType)GetField(target, propertyName);
+            return (ReturnType?)GetField(target, propertyName);
         }
 
         /// <summary>
         /// Gets  the supplied property on the supplied target
         /// </summary>
         /// <typeparam name="K">The type of the property being returned</typeparam>
-        public K GetProperty<K>(T target, string propertyName)
+        public K? GetProperty<K>(T? target, string propertyName)
         {
-            return (K)GetProperty(target, propertyName);
+            return (K?)GetProperty(target, propertyName);
         }
 
-        public object GetProperty(object target, string propertyName)
+        public object? GetProperty(object? target, string propertyName)
         {
 #if NO_CODE_EMIT
             // SLOW, but still works
@@ -536,9 +527,9 @@ namespace FlatRedBall.Instructions.Reflection
 
         }
 
-        private static object GetPropertyThroughReflection(object target, string propertyName)
+        private static object? GetPropertyThroughReflection(object? target, string propertyName)
         {
-            PropertyInfo pi = typeof(T).GetProperty(propertyName, mGetterBindingFlags);
+            PropertyInfo? pi = typeof(T).GetProperty(propertyName, mGetterBindingFlags);
 
             if (pi == null)
             {
@@ -573,7 +564,7 @@ namespace FlatRedBall.Instructions.Reflection
             {
                 BindingFlags bindingFlags =
                     BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.Static;
-                PropertyInfo propertyInfo = mType.GetProperty(propertyName, bindingFlags);
+                PropertyInfo? propertyInfo = mType.GetProperty(propertyName, bindingFlags);
                 if (propertyInfo != null && propertyInfo.CanWrite)
                 {
                     mPropertySet.Add(propertyName, DynamicMethodCompiler.CreateSetHandler(mType, propertyInfo));
@@ -589,7 +580,7 @@ namespace FlatRedBall.Instructions.Reflection
         {
             if (!mPropertyGet.ContainsKey(propertyName))
             {
-                PropertyInfo propertyInfo = mType.GetProperty(propertyName, mGetterBindingFlags);
+                PropertyInfo? propertyInfo = mType.GetProperty(propertyName, mGetterBindingFlags);
                 if (propertyInfo != null)
                 {
 
@@ -600,8 +591,8 @@ namespace FlatRedBall.Instructions.Reflection
         #endregion
 
         #region Contained Classes
-        internal delegate object GetHandler(object source);
-        internal delegate void SetHandler(object source, object value);
+        internal delegate object? GetHandler(object? source);
+        internal delegate void SetHandler(object? source, object? value);
         internal delegate object InstantiateObjectHandler();
 
         /// <summary>
@@ -640,7 +631,8 @@ namespace FlatRedBall.Instructions.Reflection
             internal static GetHandler CreateGetHandler(Type type, PropertyInfo propertyInfo)
             {
 #if !NO_CODE_EMIT
-                MethodInfo getMethodInfo = propertyInfo.GetGetMethod(true);
+                MethodInfo getMethodInfo = propertyInfo.GetGetMethod(true)
+                    ?? throw new MemberAccessException("The property " + propertyInfo.Name + " has no getter");
                 DynamicMethod dynamicGet = CreateGetDynamicMethod(type);
                 ILGenerator getGenerator = dynamicGet.GetILGenerator();
 
@@ -677,7 +669,8 @@ namespace FlatRedBall.Instructions.Reflection
             internal static SetHandler CreateSetHandler(Type type, PropertyInfo propertyInfo)
             {
 #if !NO_CODE_EMIT
-                MethodInfo setMethodInfo = propertyInfo.GetSetMethod(true);
+                MethodInfo setMethodInfo = propertyInfo.GetSetMethod(true)
+                    ?? throw new MemberAccessException("The property " + propertyInfo.Name + " has no setter");
 
                 DynamicMethod dynamicSet = CreateSetDynamicMethod(type);
                 ILGenerator setGenerator = dynamicSet.GetILGenerator();

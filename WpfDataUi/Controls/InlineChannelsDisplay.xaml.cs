@@ -105,7 +105,8 @@ namespace WpfDataUi.Controls
                 return;
             }
 
-            if (TextBoxDisplayLogic.TryParseNumeric(textBox.Text, channel.PropertyType, out object parsed))
+            if (channel.PropertyType is System.Type channelType &&
+                TextBoxDisplayLogic.TryParseNumeric(textBox.Text, channelType, out object? parsed))
             {
                 channel.SetValue(parsed, SetPropertyCommitType.Full);
                 channel.CallAfterSetByUi();
@@ -191,7 +192,7 @@ namespace WpfDataUi.Controls
         /// Unused: fields commit directly to their own channel member (see <see cref="Commit"/>), not
         /// through a single composed value - see the class summary for why.
         /// </summary>
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance) => ApplyValueResult.NotSupported;
+        public ApplyValueResult TrySetValueOnUi(object? valueOnInstance) => ApplyValueResult.NotSupported;
 
         /// <inheritdoc cref="TrySetValueOnUi"/>
         public ApplyValueResult TryGetValueOnUi(out object? value)

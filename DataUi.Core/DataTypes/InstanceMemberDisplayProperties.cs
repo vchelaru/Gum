@@ -6,7 +6,7 @@ namespace WpfDataUi.DataTypes
     {
         #region Fields
 
-        string mCustomDisplay;
+        string? mCustomDisplay;
 
         #endregion
 
@@ -37,7 +37,7 @@ namespace WpfDataUi.DataTypes
             set;
         }
 
-        public string Category
+        public string? Category
         {
             get;
             set;
@@ -49,7 +49,7 @@ namespace WpfDataUi.DataTypes
             set;
         }
 
-        public Type PreferredDisplayer
+        public Type? PreferredDisplayer
         {
             get;
             set;
@@ -59,13 +59,13 @@ namespace WpfDataUi.DataTypes
 
         #endregion
 
-        public Func<InstanceMember, bool> IsHiddenDelegate;
+        public Func<InstanceMember, bool>? IsHiddenDelegate;
 
         #region Methods
 
         public InstanceMemberDisplayProperties()
         {
-
+            Name = string.Empty;
         }
 
         public bool GetEffectiveIsHidden(InstanceMember instance)
@@ -87,7 +87,7 @@ namespace WpfDataUi.DataTypes
 
         public InstanceMemberDisplayProperties Clone()
         {
-            return this.MemberwiseClone() as InstanceMemberDisplayProperties;
+            return (InstanceMemberDisplayProperties)this.MemberwiseClone();
         }
 
         #endregion

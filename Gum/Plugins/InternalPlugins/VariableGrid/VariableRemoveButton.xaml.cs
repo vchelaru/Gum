@@ -47,7 +47,7 @@ namespace Gum.Plugins.VariableGrid
             return ApplyValueResult.Success;
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
             return ApplyValueResult.Success;
         }

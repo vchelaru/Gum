@@ -245,14 +245,12 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         var hasEnoughInformationToWork = this.HasEnoughInformationToWork();
         if (hasEnoughInformationToWork)
         {
-            Type type = this.GetPropertyType();
-
-            mInstancePropertyType = type;
+            mInstancePropertyType = this.GetPropertyType();
 
             PopulateItems();
         }
 
-        object valueOnInstance;
+        object? valueOnInstance;
         bool successfulGet = this.TryGetValueOnInstance(out valueOnInstance);
         if (successfulGet)
         {
@@ -309,7 +307,7 @@ public class ComboBoxDisplay : UserControl, IDataUi, INotifyPropertyChanged
         }
     }
 
-    public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         this.SuppressSettingProperty = true;
         // A null nullable-enum value selects the "<None>" entry, so the combo still shows that the

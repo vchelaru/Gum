@@ -20,7 +20,7 @@ namespace Gum.Controls.DataUi
         #region Fields
 
         InstanceMember mInstanceMember;
-        Type mInstancePropertyType;
+        Type? mInstancePropertyType;
         private bool needsToPushFullCommitOnMouseUp;
 
         // Set in the constructor so the invalid-hex border can be cleared back to the control's themed default.
@@ -82,12 +82,10 @@ namespace Gum.Controls.DataUi
 
             if (this.HasEnoughInformationToWork())
             {
-                Type type = this.GetPropertyType();
-
-                mInstancePropertyType = type;
+                mInstancePropertyType = this.GetPropertyType();
             }
 
-            object valueOnInstance;
+            object? valueOnInstance;
             bool successfulGet = this.TryGetValueOnInstance(out valueOnInstance);
             if (successfulGet)
             {
@@ -117,7 +115,7 @@ namespace Gum.Controls.DataUi
             ReadOnlySwatch.Visibility = isReadOnly ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
         {
 #if XNA
             if (valueOnInstance is Microsoft.Xna.Framework.Color color)

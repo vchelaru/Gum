@@ -250,7 +250,7 @@ public class ColorDisplay : DataUiDisplayBase
         {
             _propertyType = this.GetPropertyType();
         }
-        if (this.TryGetValueOnInstance(out object valueOnInstance) && valueOnInstance != null)
+        if (this.TryGetValueOnInstance(out object? valueOnInstance) && valueOnInstance != null)
         {
             TrySetValueOnUi(valueOnInstance);
         }
@@ -261,7 +261,7 @@ public class ColorDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         if (valueOnInstance is not DrawingColor color)
         {
@@ -340,7 +340,7 @@ public class ColorDisplay : DataUiDisplayBase
 
         _isSetting = true;
         if (TryGetValueOnUi(out object? value) == ApplyValueResult.Success &&
-            this.TrySetValueOnInstance(value!, commitType) == ApplyValueResult.NotSupported)
+            this.TrySetValueOnInstance(value, commitType) == ApplyValueResult.NotSupported)
         {
             SetIsEditable(false);
         }
@@ -493,7 +493,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
             return;
         }
 
-        if (this.TryGetValueOnInstance(out object valueOnInstance) && valueOnInstance != null)
+        if (this.TryGetValueOnInstance(out object? valueOnInstance) && valueOnInstance != null)
         {
             TrySetValueOnUi(valueOnInstance);
         }
@@ -504,7 +504,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         if (valueOnInstance is not CornerRadiusComposite composite)
         {
@@ -713,7 +713,7 @@ public class VariableRemoveButton : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value) => ApplyValueResult.Success;
+    public override ApplyValueResult TrySetValueOnUi(object? value) => ApplyValueResult.Success;
 
     /// <summary>Removes the variable, as clicking does.</summary>
     internal void Remove() => this.TrySetValueOnInstance();

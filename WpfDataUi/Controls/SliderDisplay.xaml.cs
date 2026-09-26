@@ -164,7 +164,7 @@ namespace WpfDataUi.Controls
 
                 SuppressSettingProperty = true;
 
-                mTextBoxLogic.RefreshDisplay(out object _);
+                mTextBoxLogic.RefreshDisplay(out _);
 
                 this.Label.Text = InstanceMember.DisplayName;
 
@@ -245,7 +245,7 @@ namespace WpfDataUi.Controls
             return result;
         }
 
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
         {
             if(valueOnInstance != null)
             {

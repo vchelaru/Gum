@@ -389,7 +389,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
             foreach(var button in toggleButtons)
             {

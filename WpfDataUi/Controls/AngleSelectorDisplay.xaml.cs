@@ -236,7 +236,7 @@ namespace WpfDataUi.Controls
             //    mInstancePropertyType = type;
             //}
 
-            object valueOnInstance;
+            object? valueOnInstance;
             bool successfulGet = this.TryGetValueOnInstance(out valueOnInstance);
             if (successfulGet)
             {
@@ -299,7 +299,7 @@ namespace WpfDataUi.Controls
             return ApplyValueResult.Success;
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
             ApplyValueResult toReturn = ApplyValueResult.NotSupported;
             if (value is float || value is int)

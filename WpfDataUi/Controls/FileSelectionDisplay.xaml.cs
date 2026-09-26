@@ -90,7 +90,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
 
         SuppressSettingProperty = true;
 
-        _textBoxLogic.RefreshDisplay(out object _);
+        _textBoxLogic.RefreshDisplay(out _);
 
         HintTextBlock.Visibility = !string.IsNullOrEmpty(InstanceMember?.DetailText) ? Visibility.Visible : Visibility.Collapsed;
         HintTextBlock.Text = InstanceMember?.DetailText;
@@ -135,7 +135,7 @@ public partial class FileSelectionDisplay : UserControl, IDataUi
         }
     }
 
-    public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         this.TextBox.Text = valueOnInstance?.ToString();
         return ApplyValueResult.Success;

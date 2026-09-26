@@ -12,13 +12,13 @@ public class MultiSelectInstanceMember : InstanceMember
     /// Raised before setting values on multiple instances. Allows subscribers to prepare for the multi-set operation,
     /// such as requesting undo locks.
     /// </summary>
-    public event Action<SetPropertyArgs> BeforeMultiSet;
+    public event Action<SetPropertyArgs>? BeforeMultiSet;
 
     /// <summary>
     /// Raised after setting values on multiple instances. Allows subscribers to clean up after the multi-set operation,
     /// such as disposing undo locks and recording undo.
     /// </summary>
-    public event Action<SetPropertyArgs> AfterMultiSet;
+    public event Action<SetPropertyArgs>? AfterMultiSet;
 
     #endregion
 
@@ -74,7 +74,7 @@ public class MultiSelectInstanceMember : InstanceMember
     {
         // we should only allow custom options based on the first instance member
         // This is faster than going through all of them to see what they all have
-        if(instanceMembers?.Count > 0)
+        if(instanceMembers.Count > 0)
         {
             this.CustomOptions = instanceMembers[0].CustomOptions;
             this.PreferredDisplayer = instanceMembers[0].PreferredDisplayer;
@@ -93,7 +93,7 @@ public class MultiSelectInstanceMember : InstanceMember
 
     public MultiSelectInstanceMember() 
     {
-        //CustomSetEvent += HandleCustomSetEvent;
+        instanceMembers = new List<InstanceMember>();
         CustomSetPropertyEvent += HandleCustomSetEvent;
         CustomGetEvent += HandleCustomGetEvent;
         CustomGetTypeEvent += HandleCustomGetTypeEvent;
@@ -101,7 +101,7 @@ public class MultiSelectInstanceMember : InstanceMember
         SetValueError = HandleValueError;
     }
 
-    private void HandleCustomSetEvent(object owner, SetPropertyArgs value)
+    private void HandleCustomSetEvent(object? owner, SetPropertyArgs value)
     {
         BeforeMultiSet?.Invoke(value);
 
@@ -114,7 +114,7 @@ public class MultiSelectInstanceMember : InstanceMember
         AfterMultiSet?.Invoke(value);
     }
 
-    private object HandleCustomGetEvent(object owner)
+    private object? HandleCustomGetEvent(object? owner)
     {
         if(InstanceMembers.Count == 0) return null;
         else if (InstanceMembers.Count == 1) return InstanceMembers[0].Value;
@@ -132,7 +132,7 @@ public class MultiSelectInstanceMember : InstanceMember
         }
     }
 
-    private Type HandleCustomGetTypeEvent(object arg)
+    private Type? HandleCustomGetTypeEvent(object? arg)
     {
         return InstanceMembers.FirstOrDefault()?.PropertyType;
     }

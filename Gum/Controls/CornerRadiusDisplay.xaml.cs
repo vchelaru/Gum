@@ -78,7 +78,7 @@ namespace Gum.Controls.DataUi
                 return;
             }
 
-            bool successfulGet = this.TryGetValueOnInstance(out object valueOnInstance);
+            bool successfulGet = this.TryGetValueOnInstance(out object? valueOnInstance);
             if (successfulGet && valueOnInstance != null)
             {
                 TrySetValueOnUi(valueOnInstance);
@@ -161,7 +161,7 @@ namespace Gum.Controls.DataUi
             }
         }
 
-        public ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
         {
             if (valueOnInstance is not CornerRadiusComposite composite)
             {

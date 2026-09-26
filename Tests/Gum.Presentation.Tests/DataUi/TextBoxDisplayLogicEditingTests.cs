@@ -42,9 +42,9 @@ public class TextBoxDisplayLogicEditingTests
 
         public ApplyValueResult TryGetValueOnUi(out object? result) => Logic.TryGetValueOnUi(out result);
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
-            _textBox.Text = Logic.ConvertNumberToString(value);
+            _textBox.Text = Logic.ConvertNumberToString(value) ?? string.Empty;
             return ApplyValueResult.Success;
         }
     }

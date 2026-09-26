@@ -157,7 +157,7 @@ public class StateReferencingInstanceMember : InstanceMember
         }
     }
 
-    public override IList<object> CustomOptions => _entry.CustomOptions ?? base.CustomOptions;
+    public override IList<object>? CustomOptions => _entry.CustomOptions ?? base.CustomOptions;
 
     public override object? MakeDefaultPreviewValue => _entry.GetMakeDefaultPreviewValue();
 
@@ -275,9 +275,8 @@ public class StateReferencingInstanceMember : InstanceMember
             this.CustomSetPropertyEvent += HandleCustomSet;
         }
         this.CustomGetEvent += HandleCustomGet;
-        // InstanceMember.PropertyType is declared non-null, but a null type is expected downstream:
-        // DisplayerRegistry picks a text box for it.
-        this.CustomGetTypeEvent += instance => HandleCustomGetType(instance)!;
+        // A null type is expected downstream: DisplayerRegistry picks a text box for it.
+        this.CustomGetTypeEvent += HandleCustomGetType;
 
         this.Instance = _entry.Instance;
         this.DisplayName = _entry.DisplayName;
@@ -328,15 +327,17 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #region Get Value
 
-    private object? HandleCustomGet(object instance) => _entry.GetValue(instance);
+    // The custom get/set/type handlers read the entry's instance rather than the event argument:
+    // this member's Instance is always the entry's (see Initialize and Retarget), and the entry's is non-null.
+    private object? HandleCustomGet(object? _) => _entry.GetValue(_entry.Instance);
 
     #endregion
 
     #region Set Value
 
-    private void HandleCustomSet(object gumElementOrInstanceSaveAsObject, SetPropertyArgs setPropertyArgs)
+    private void HandleCustomSet(object? _, SetPropertyArgs setPropertyArgs)
     {
-        var response = _entry.SetValue(gumElementOrInstanceSaveAsObject, setPropertyArgs.Value, MapCommitType(setPropertyArgs.CommitType));
+        var response = _entry.SetValue(_entry.Instance, setPropertyArgs.Value, MapCommitType(setPropertyArgs.CommitType));
 
         if (!response.Succeeded)
         {
@@ -346,7 +347,7 @@ public class StateReferencingInstanceMember : InstanceMember
 
     #endregion
 
-    private Type? HandleCustomGetType(object instance) => _entry.GetValueType(instance);
+    private Type? HandleCustomGetType(object? _) => _entry.GetValueType(_entry.Instance);
 
     public VariableSave? GetRootVariableSave() => _entry.GetRootVariableSave();
 

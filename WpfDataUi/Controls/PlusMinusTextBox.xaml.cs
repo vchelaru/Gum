@@ -81,7 +81,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
         {
             SuppressSettingProperty = true;
 
-            mTextBoxLogic.RefreshDisplay(out object _);
+            mTextBoxLogic.RefreshDisplay(out _);
 
             this.Label.Text = InstanceMember.DisplayName;
             this.RefreshContextMenu(TextBox.ContextMenu);
@@ -95,7 +95,7 @@ public partial class PlusMinusTextBox : UserControl, IDataUi, ISetDefaultable
         }
     }
 
-    public virtual ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public virtual ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         this.TextBox.Text = mTextBoxLogic.ConvertNumberToString(valueOnInstance);
 

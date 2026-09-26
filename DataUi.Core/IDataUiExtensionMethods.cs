@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi;
@@ -29,20 +30,21 @@ public static class IDataUiExtensionMethods
 {
     public static bool HasEnoughInformationToWork(this IDataUi dataUi)
     {
-        return dataUi.InstanceMember.IsDefined;
+        return dataUi.InstanceMember?.IsDefined == true;
     }
 
-    public static bool TryGetValueOnInstance(this IDataUi dataUi, out object value)
+    public static bool TryGetValueOnInstance(this IDataUi dataUi, out object? value)
     {
+        InstanceMember? member = dataUi.InstanceMember;
         //////////////////Early Out/////////////////////////////////
-        if (dataUi.HasEnoughInformationToWork() == false || dataUi.InstanceMember.IsWriteOnly)
+        if (member == null || member.IsDefined == false || member.IsWriteOnly)
         {
             value = null;
             return false;
         }
         ////////////////End Early Out///////////////////////////////
 
-        value = dataUi.InstanceMember.Value;
+        value = member.Value;
 
         return true;
 
@@ -50,11 +52,7 @@ public static class IDataUiExtensionMethods
 
     public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi)
     {
-        ApplyValueResult result;
-        bool hasErrorOccurred;
-        GetIfValuesCanBeSetOnInstance(dataUi, out result, out hasErrorOccurred);
-
-        if (!hasErrorOccurred)
+        if (CanSetValuesOnInstance(dataUi, out ApplyValueResult result, out InstanceMember? member))
         {
 
             object? valueOnUi;
@@ -64,13 +62,13 @@ public static class IDataUiExtensionMethods
             if (result == ApplyValueResult.Success)
             {
                 // Why not protect against spammed same-value assignments?
-                if(dataUi.InstanceMember.Value != valueOnUi)
+                if(member.Value != valueOnUi)
                 {
-                    dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
-                    result = dataUi.InstanceMember.SetValue(valueOnUi, SetPropertyCommitType.Full);
+                    member.OldValue = member.Value;
+                    result = member.SetValue(valueOnUi, SetPropertyCommitType.Full);
                     if(result == ApplyValueResult.Success)
                     {
-                        dataUi.InstanceMember.CallAfterSetByUi();
+                        member.CallAfterSetByUi();
                     }
                 }
                 else
@@ -83,19 +81,15 @@ public static class IDataUiExtensionMethods
         return result;
     }
 
-    public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi, object valueToSet, SetPropertyCommitType commitType = SetPropertyCommitType.Full)
+    public static ApplyValueResult TrySetValueOnInstance(this IDataUi dataUi, object? valueToSet, SetPropertyCommitType commitType = SetPropertyCommitType.Full)
     {
-        ApplyValueResult result;
-        bool hasErrorOccurred;
-        GetIfValuesCanBeSetOnInstance(dataUi, out result, out hasErrorOccurred);
-
-        if (!hasErrorOccurred)
+        if (CanSetValuesOnInstance(dataUi, out ApplyValueResult result, out InstanceMember? member))
         {
-            if (AreEqual(dataUi.InstanceMember.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
+            if (AreEqual(member.Value, valueToSet) == false || commitType == SetPropertyCommitType.Full)
             {
-                dataUi.InstanceMember.OldValue = dataUi.InstanceMember.Value;
-                result = dataUi.InstanceMember.SetValue(valueToSet, commitType);
-                dataUi.InstanceMember.CallAfterSetByUi();
+                member.OldValue = member.Value;
+                result = member.SetValue(valueToSet, commitType);
+                member.CallAfterSetByUi();
             }
             else
             {
@@ -107,7 +101,7 @@ public static class IDataUiExtensionMethods
         return result;
     }
 
-    static bool AreEqual(object object1, object object2)
+    static bool AreEqual(object? object1, object? object2)
     {
         if(object1 is float && object2 is float)
         {
@@ -154,17 +148,18 @@ public static class IDataUiExtensionMethods
 
     }
 
-    private static void GetIfValuesCanBeSetOnInstance(IDataUi dataUi, out ApplyValueResult result, out bool hasErrorOccurred)
+    private static bool CanSetValuesOnInstance(IDataUi dataUi, out ApplyValueResult result, [NotNullWhen(true)] out InstanceMember? member)
     {
         result = ApplyValueResult.UnknownError;
-        hasErrorOccurred = false;
+        bool hasErrorOccurred = false;
+        member = dataUi.InstanceMember;
 
-        if (dataUi.HasEnoughInformationToWork() == false)
+        if (member == null || member.IsDefined == false)
         {
             result = ApplyValueResult.NotEnoughInformation;
             hasErrorOccurred = true;
         }
-        if (dataUi.InstanceMember.IsReadOnly)
+        if (member?.IsReadOnly == true)
         {
             result = ApplyValueResult.NotSupported;
             hasErrorOccurred = true;
@@ -174,17 +169,17 @@ public static class IDataUiExtensionMethods
             result = ApplyValueResult.NotEnabled;
             hasErrorOccurred = true;
         }
+        return member != null && !hasErrorOccurred;
     }
 
-    public static Type GetPropertyType(this IDataUi dataUi)
+    public static Type? GetPropertyType(this IDataUi dataUi)
     {
-
-        return dataUi.InstanceMember.PropertyType;
+        return dataUi.InstanceMember?.PropertyType;
     }
 
-    public static Type GetPropertyType(string propertyName, Type instanceType)
+    public static Type? GetPropertyType(string propertyName, Type instanceType)
     {
-        Type type;
+        Type? type;
 
         type = null;
         var fieldInfo = instanceType.GetField(propertyName);

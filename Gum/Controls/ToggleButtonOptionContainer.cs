@@ -97,7 +97,7 @@ namespace Gum.Controls
             return internalDisplay.TryGetValueOnUi(out result);
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
             return internalDisplay.TrySetValueOnUi(value);
         }
