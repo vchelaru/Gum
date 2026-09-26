@@ -638,14 +638,19 @@ public class ImageRegionSelectionCore
     }
 
     /// <summary>The host calls this with the render target bound and cleared.</summary>
+    /// <summary>
+    /// True while <see cref="Draw"/> paints the texture, which the texture-coordinate plugin draws
+    /// over an opaque background; otherwise the frame is left transparent.
+    /// </summary>
+    // Plugins should be removing textures if they are null, but a texture may become null and a plugin
+    // may not react in time. Therefore we draw only if the texture is not disposed.
+    public bool DrawsOpaqueFrames => CurrentTexture is { IsDisposed: false };
+
     public void Draw()
     {
         this.PerformActivity();
 
-        // Plugins should be removing textures if they are null, but a texture may become null and a plugin
-        // may not react in time. Therefore we should draw only if the textur is not disposed
-        var isDisposed = this.CurrentTexture?.IsDisposed;
-        if(isDisposed == false)
+        if (DrawsOpaqueFrames)
         {
             mManagers.Renderer.Draw(mManagers);
         }

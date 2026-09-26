@@ -1,4 +1,6 @@
 using Gum.GueDeriving;
+using Gum.Wireframe;
+using RenderingLibrary.Graphics;
 using Shouldly;
 using Xunit;
 
@@ -30,5 +32,20 @@ public class ContainerSetPropertyTests : BaseTestClass
         sut.SetProperty(nameof(ContainerRuntime.IsRenderTarget), true);
 
         sut.IsRenderTarget.ShouldBeTrue();
+    }
+
+    // The Gum tool wraps a Container in a plain GraphicalUiElement, not a ContainerRuntime, and
+    // backs it with an InvisibleRenderable when the project hides outlines (#5169).
+    [Fact]
+    public void SetProperty_OnPlainGraphicalUiElement_ShouldSetInvisibleRenderable()
+    {
+        InvisibleRenderable renderable = new();
+        GraphicalUiElement sut = new(renderable);
+
+        sut.SetProperty("IsRenderTarget", true);
+        sut.SetProperty("Alpha", 128);
+
+        renderable.IsRenderTarget.ShouldBeTrue();
+        renderable.Alpha.ShouldBe(128);
     }
 }
