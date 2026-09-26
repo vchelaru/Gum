@@ -23,7 +23,10 @@ public class VariableFilterService : IVariableFilterService
         // Typing leaves a trailing space often enough that not trimming reads as the filter breaking.
         string trimmed = filterText!.Trim();
 
-        if (variableName.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+        // An instance's rows are named "Instance.Variable"; the instance part would match every row.
+        string unqualifiedName = variableName.Substring(variableName.LastIndexOf('.') + 1);
+
+        if (unqualifiedName.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

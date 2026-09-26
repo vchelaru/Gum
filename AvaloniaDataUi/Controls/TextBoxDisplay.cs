@@ -186,6 +186,9 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             _nullableCheckBox.IsChecked = valueOnInstance == null;
         }
         _textBox.Text = _logic.ConvertNumberToString(valueOnInstance);
+        // Text the tool put in the field (a refresh, a scrub) is not a pending edit, so leaving the
+        // field must not commit it; only what the user types after this does.
+        _logic.TextAtStartOfEditing = _textBox.Text ?? string.Empty;
 
         RefreshPlaceholderText();
         _nullableCheckBox.IsVisible = IsDisplayedTypeNullable();

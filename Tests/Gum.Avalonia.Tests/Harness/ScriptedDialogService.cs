@@ -1,6 +1,7 @@
 using Gum.Services.Dialogs;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace Gum.Avalonia.Tests.Animations;
+namespace Gum.Avalonia.Tests.Harness;
 
 /// <summary>
 /// An <see cref="IDialogService"/> a scenario scripts ahead of time: each dialog the code under test
@@ -85,7 +86,8 @@ internal sealed class ScriptedDialogService : IDialogService
     /// <inheritdoc/>
     public bool Show<T>(Action<T>? initializer, out T viewModel) where T : DialogViewModel
     {
-        viewModel = Activator.CreateInstance<T>();
+        // As the head: the view model comes from the container, so one with dependencies builds too.
+        viewModel = ActivatorUtilities.GetServiceOrCreateInstance<T>(TestAppBuilder.Services);
         initializer?.Invoke(viewModel);
         return Show(viewModel);
     }
@@ -108,13 +110,13 @@ internal sealed class ScriptedDialogService : IDialogService
 
     /// <inheritdoc/>
     public List<string>? OpenFile(OpenFileDialogOptions? options = null) =>
-        throw new InvalidOperationException("The animation editor scenarios never open a file picker.");
+        throw new InvalidOperationException("Headless scenarios never open a file picker.");
 
     /// <inheritdoc/>
     public string? SaveFile(SaveFileDialogOptions? options = null) =>
-        throw new InvalidOperationException("The animation editor scenarios never open a save picker.");
+        throw new InvalidOperationException("Headless scenarios never open a save picker.");
 
     /// <inheritdoc/>
     public string? OpenFolder(OpenFolderDialogOptions? options = null) =>
-        throw new InvalidOperationException("The animation editor scenarios never open a folder picker.");
+        throw new InvalidOperationException("Headless scenarios never open a folder picker.");
 }

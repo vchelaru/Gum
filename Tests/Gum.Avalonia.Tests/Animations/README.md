@@ -21,7 +21,7 @@ to a folder before running; scenarios that call `SaveFrame` write there (default
 | File | Role |
 |---|---|
 | `AnimationEditorHarness.cs` | Hosts the tab (its own plugin instance on the head's real service graph, over a temp project) in a headless window. Input, lookups, pixel reads, sidecar reads. |
-| `ScriptedDialogService.cs` | Answers the dialogs the tab opens. An unanswered dialog fails the test instead of hanging. |
+| `../Harness/ScriptedDialogService.cs` | Answers the dialogs the tab opens. An unanswered dialog fails the test instead of hanging. Shared with the other tab harnesses (`../Harness/README.md`). |
 | `TestAnimationPlugin.cs` | The head's plugin with manual playback timers the harness fires, so playback does not depend on dispatcher timers. |
 | `*Tests.cs` | One file per area: editor basics, animation list, reload, timeline interaction, instance sub-animations, element lifecycle, playback, keyframe editing, errors, tab lifecycle, JSON projects, detail column, external changes. |
 

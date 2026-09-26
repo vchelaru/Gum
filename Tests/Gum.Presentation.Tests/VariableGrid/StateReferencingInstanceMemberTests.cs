@@ -219,6 +219,23 @@ public class StateReferencingInstanceMemberTests
     }
 
     [Fact]
+    public void Retarget_ShouldTakeTheNewInstancesQualifiedName()
+    {
+        // The grid finds a row by name (e.g. to show "Set by <category>" after a category-state edit),
+        // so a row retargeted from Box to Label must be found as Label.X.
+        ComponentSave componentSave = CreateComponent("RetargetNameComponent");
+        StateSave stateSave = componentSave.DefaultState;
+        StateReferencingInstanceMember boxX = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(float), stateSave, "Box.X", componentSave);
+        StateReferencingInstanceMember labelX = CreateSut(
+            Array.Empty<Attribute>(), null, typeof(float), stateSave, "Label.X", componentSave);
+
+        boxX.Retarget(labelX.Entry);
+
+        boxX.Name.ShouldBe("Label.X");
+    }
+
+    [Fact]
     public void SetValue_ShouldMapFullCommitType_WhenCommitTypeIsFull()
     {
         ComponentSave componentSave = CreateComponent("SetValueFullCommitComponent");
