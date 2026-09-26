@@ -21,6 +21,9 @@ public static class Program
 {
     private const string CrashLogsFolderName = "CrashLogs";
 
+    // Held so the thread-pool timer isn't collected while the run is alive.
+    private static UnattendedExitDeadline? _exitDeadline;
+
     /// <summary>Builds the service host, then runs the Avalonia application on this thread.</summary>
     [STAThread]
     public static int Main(string[] args)
@@ -29,6 +32,10 @@ public static class Program
         HeadOptions options = HeadOptions.Parse(args);
         // Before anything reads or writes a per-user file.
         FileManager.UserApplicationDataFolderOverride = options.UserDataFolder;
+        if (options.ExitAfterSeconds is double exitAfterSeconds)
+        {
+            _exitDeadline = UnattendedExitDeadline.Start(UnattendedExitDeadline.For(exitAfterSeconds), ForceExit);
+        }
 
         // Set once Avalonia is set up; until then an error is logged but not shown.
         IServiceProvider? services = null;
@@ -55,6 +62,15 @@ public static class Program
 
         host.StopAsync().GetAwaiter().GetResult();
         return exitCode;
+    }
+
+    // Killed rather than Environment.Exit: the generic host's ProcessExit handler waits for the host
+    // to be disposed, which never happens while Main is stuck.
+    private static void ForceExit(string message)
+    {
+        Console.Error.WriteLine(message);
+        Console.Error.Flush();
+        System.Diagnostics.Process.GetCurrentProcess().Kill();
     }
 
     // Posted, so the dialog never opens inside the exception handler that reported the error. An

@@ -29,8 +29,12 @@ public class HeadProcessTests
         File.Exists(head).ShouldBeTrue(head);
 
         string workingDirectory = Path.Combine(Path.GetTempPath(), "GumHeadRun_" + Guid.NewGuid().ToString("N"));
-        CopyDirectory(Path.Combine(repositoryRoot, "Tests", "CodeGen_Skia_ByReference", "Content", "GumProject"), workingDirectory);
-        string project = Directory.GetFiles(workingDirectory, "*.gumx").Single();
+        // Two folders deep, as in the repository: the project's code root is "..\..\", which
+        // for a shallow copy is the machine's temp folder's parent, and the orphan code scan on
+        // load walks all of it (#5140).
+        string projectDirectory = Path.Combine(workingDirectory, "Content", "GumProject");
+        CopyDirectory(Path.Combine(repositoryRoot, "Tests", "CodeGen_Skia_ByReference", "Content", "GumProject"), projectDirectory);
+        string project = Directory.GetFiles(projectDirectory, "*.gumx").Single();
         string screenshot = Path.Combine(workingDirectory, "run.png");
         // The run's own settings folder: loading the project records it as the last project, which
         // must not land in the user's settings once this folder is deleted.
@@ -43,6 +47,8 @@ public class HeadProcessTests
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
+                // dotnet is a console app; without this a local run pops up a console window.
+                CreateNoWindow = true,
             };
             foreach (string argument in new[] { head, project, "--exit-after", "10", "--screenshot", screenshot, "--user-data", userData })
             {
@@ -60,7 +66,7 @@ public class HeadProcessTests
             catch (OperationCanceledException)
             {
                 process.Kill(entireProcessTree: true);
-                throw new TimeoutException("The head did not exit within two minutes; a modal dialog may be blocking it.");
+                throw new TimeoutException("The head did not exit within two minutes, although --exit-after should force an exit well before then.");
             }
 
             string errorText = await errors;
