@@ -55,7 +55,7 @@ public partial class GumService : IGumService
     // platform-specific back-compat subclass shim (MonoGameGum.GumService / RaylibGum.GumService)
     // and lives in the per-platform partials, as do the GameTime property and the explicit
     // IGumService.Initialize / IGumService.GameTime members (issue #3608).
-    static GumService _default = default!;
+    static GumService? _default;
     #endregion
 
     /// <summary>
@@ -578,11 +578,11 @@ public partial class GumService : IGumService
                 throw new Exception(stringBuilder.ToString());
             }
 
-            var localizationFiles = gumProject?.LocalizationFiles;
+            var localizationFiles = gumProject.LocalizationFiles;
             if (localizationFiles != null && localizationFiles.Count > 0)
             {
                 // A project with localization files was loaded from disk, so it has a file name.
-                var projectDirectory = FileManager.GetDirectory(gumProject!.FullFileName!);
+                var projectDirectory = FileManager.GetDirectory(gumProject.FullFileName!);
                 var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
 
                 var resolvedPaths = new List<string>();
@@ -760,24 +760,26 @@ public partial class GumService : IGumService
             Root.RemoveFromManagers();
         }
 
+        // The statics reset with null! below are declared non-null but start as null! until
+        // Initialize sets them; teardown returns them to that pre-Initialize state.
         if (FrameworkElement.PopupRoot != null)
         {
             FrameworkElement.PopupRoot.Children.Clear();
             FrameworkElement.PopupRoot.RemoveFromManagers();
-            FrameworkElement.PopupRoot = null;
+            FrameworkElement.PopupRoot = null!;
         }
 
         if (FrameworkElement.ModalRoot != null)
         {
             FrameworkElement.ModalRoot.Children.Clear();
             FrameworkElement.ModalRoot.RemoveFromManagers();
-            FrameworkElement.ModalRoot = null;
+            FrameworkElement.ModalRoot = null!;
         }
 
         FrameworkElement.KeyboardsForUiControl.Clear();
         FrameworkElement.GamePadsForUiControl.Clear();
-        FrameworkElement.MainCursor = null;
-        FrameworkElement.MainKeyboard = null;
+        FrameworkElement.MainCursor = null!;
+        FrameworkElement.MainKeyboard = null!;
 
         FormsUtilities.Uninitialize();
 
@@ -810,8 +812,8 @@ public partial class GumService : IGumService
 
         _windowFit?.Reset();
 
-        SystemManagers.Default = null;
-        ISystemManagers.Default = null;
+        SystemManagers.Default = null!;
+        ISystemManagers.Default = null!;
         IGumService.Default = null;
 
         // Only reset RelativeDirectory if a project was loaded (it gets set to the project directory).

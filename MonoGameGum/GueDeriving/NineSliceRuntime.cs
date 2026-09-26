@@ -56,7 +56,7 @@ public class NineSliceRuntime : InteractiveGue
     #region Static Defaults
 
     [Obsolete("This is not currently functional")]
-    public static string DefaultSourceFile { get; set; }
+    public static string? DefaultSourceFile { get; set; }
     public static int DefaultTextureLeft;
     public static int DefaultTextureTop;
     public static int DefaultTextureWidth;
@@ -68,7 +68,7 @@ public class NineSliceRuntime : InteractiveGue
 
     #region Contained Nineslice
 
-    ContainedNineSliceType _containedNineSlice;
+    ContainedNineSliceType? _containedNineSlice;
 
     ContainedNineSliceType ContainedNineSlice
     {
@@ -76,7 +76,9 @@ public class NineSliceRuntime : InteractiveGue
         {
             if (_containedNineSlice == null)
             {
-                _containedNineSlice = (ContainedNineSliceType)this.RenderableComponent;
+                _containedNineSlice = this.RenderableComponent as ContainedNineSliceType
+                    ?? throw new InvalidOperationException(
+                        $"This {GetType().Name} has no {typeof(ContainedNineSliceType).Name} renderable. It may have been created with fullInstantiation: false.");
             }
             return _containedNineSlice;
         }
@@ -216,7 +218,7 @@ public class NineSliceRuntime : InteractiveGue
     /// <summary>
     /// The name of the currently active animation chain.
     /// </summary>
-    public string CurrentChainName
+    public string? CurrentChainName
     {
         get => ContainedNineSlice.AnimationLogic.CurrentChainName;
         set
@@ -229,7 +231,7 @@ public class NineSliceRuntime : InteractiveGue
     /// <summary>
     /// The list of animation chains available to this nine-slice.
     /// </summary>
-    public AnimationChainList AnimationChains
+    public AnimationChainList? AnimationChains
     {
         get => ContainedNineSlice.AnimationLogic.AnimationChains;
         set

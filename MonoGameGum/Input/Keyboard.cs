@@ -230,14 +230,22 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         }
     }
 
-    StringBuilder windowTextInputBuffer;
+    // Null until TrySubscribeToGameWindowInput succeeds; the handlers are subscribed just before it is
+    // assigned, so they skip input that arrives in that window.
+    StringBuilder? windowTextInputBuffer;
     string processedStringFromWindow = string.Empty;
 
 
 #if !FNA && !ANDROID
     private void HandleWindowTextInput(object? sender, TextInputEventArgs e)
     {
-        lock (windowTextInputBuffer)
+        var buffer = windowTextInputBuffer;
+        if (buffer == null)
+        {
+            return;
+        }
+
+        lock (buffer)
         {
             // In DirectX environments, which use Windows Forms, certain characters
             // are returned for certain hotkey combinations like '\u0001' for CTRL+A.
@@ -246,7 +254,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
             //System.Diagnostics.Debug.WriteLine($"Char: \\u{((int)e.Character):X4}" + $" ({e.Character} , {(int)e.Character})");
             if (ignoredWindowTextInputCharacters.Contains(e.Character) == false)
             {
-                windowTextInputBuffer.Append(e.Character);
+                buffer.Append(e.Character);
             }
 
         }
@@ -256,11 +264,17 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
 #if FNA
     private void HandleFnaTextInput(char character)
     {
-        lock (windowTextInputBuffer)
+        var buffer = windowTextInputBuffer;
+        if (buffer == null)
+        {
+            return;
+        }
+
+        lock (buffer)
         {
             if (ignoredWindowTextInputCharacters.Contains(character) == false)
             {
-                windowTextInputBuffer.Append(character);
+                buffer.Append(character);
             }
         }
     }
@@ -555,6 +569,7 @@ public partial class Keyboard : IInputReceiverKeyboardMonoGame
         return key >= Keys.A && key <= Keys.Z;
     }
 
+    [System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(mKeyToChar))]
     private void FillKeyCodes()
     {
         mKeyToChar = new char[NumberOfKeys];

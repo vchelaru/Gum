@@ -135,12 +135,17 @@ public class ContainerRuntime : InteractiveGue
 
 
 #if !SOKOL
+    // Falls back to the renderable default when there is no renderable (fullInstantiation: false),
+    // matching how Alpha and IsRenderTarget fall back.
+    global::Gum.BlendState ContainedBlendState =>
+        RenderableComponent?.BlendState ?? global::Gum.BlendState.NonPremultiplied;
+
     public BlendStateAlias BlendState
     {
 #if XNALIKE
-        get => RenderableComponent.BlendState.ToXNA();
+        get => ContainedBlendState.ToXNA();
 #else
-        get => RenderableComponent.BlendState;
+        get => ContainedBlendState;
 #endif
         set
         {
@@ -161,7 +166,7 @@ public class ContainerRuntime : InteractiveGue
     {
         get
         {
-            return Gum.RenderingLibrary.BlendExtensions.ToBlend(RenderableComponent.BlendState);
+            return Gum.RenderingLibrary.BlendExtensions.ToBlend(ContainedBlendState);
         }
         set
         {

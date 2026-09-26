@@ -16,7 +16,11 @@ public class ClipboardImplementation
     private static Task<string?>? _injectedClipboardTask;
 #endif
 
-    public static string GetText(Action? callback)
+    /// <summary>
+    /// Returns the clipboard text, or null while an injected clipboard's asynchronous read is still
+    /// pending. <paramref name="callback"/> is invoked when that read completes.
+    /// </summary>
+    public static string? GetText(Action? callback)
     {
 #if IOS
         return string.Empty;

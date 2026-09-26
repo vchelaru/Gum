@@ -455,20 +455,19 @@ public static class CursorExtensions
     }
 
 
-    private static GraphicalUiElement Get0WidthOrHeightParent(GraphicalUiElement visual)
+    private static GraphicalUiElement? Get0WidthOrHeightParent(GraphicalUiElement visual)
     {
-        if(visual.Parent as GraphicalUiElement == null)
+        if(visual.Parent is not GraphicalUiElement parentGue)
         {
             return null;
         }
-        else if(visual.Parent is GraphicalUiElement parentGue && 
-            (parentGue.AbsoluteWidth == 0 || parentGue.AbsoluteHeight == 0))
+        else if(parentGue.AbsoluteWidth == 0 || parentGue.AbsoluteHeight == 0)
         {
-            return visual.Parent as GraphicalUiElement;
+            return parentGue;
         }
         else
         {
-            return Get0WidthOrHeightParent(visual.Parent as GraphicalUiElement);
+            return Get0WidthOrHeightParent(parentGue);
         }
     }
 

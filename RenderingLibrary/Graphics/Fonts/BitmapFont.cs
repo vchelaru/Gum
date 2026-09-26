@@ -589,44 +589,40 @@ public class BitmapFont : IDisposable
             };
         }
 
-        // Added null check for space since some special fonts might not have a space inside them.
-        if (spaceCharInfo != null)
+        var space = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight,
+            mLineHeightInPixels);
+        // Tentative fallback for a font too small to have an index 32 at all (see the
+        // final assignment below, which takes precedence once the array is fully populated).
+        _defaultCharacterInfo = space;
+
+        for (int i = 0; i < charArraySize; i++)
         {
-            var space = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight,
-                mLineHeightInPixels);
-            // Tentative fallback for a font too small to have an index 32 at all (see the
-            // final assignment below, which takes precedence once the array is fully populated).
-            _defaultCharacterInfo = space;
+            mCharacterInfo[i] = space;
+        }
 
-            for (int i = 0; i < charArraySize; i++)
-            {
-                mCharacterInfo[i] = space;
-            }
-
-            // Tab and newline get their own instances. Every slot above shares the one space instance,
-            // so editing it in place would also change the space and every missing-glyph fallback.
-            if (mCharacterInfo.Length > (int)'\t')
-            {
-                // Make the tab character be equivalent to 4 spaces:
-                var tab = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
-                tab.ScaleX = space.ScaleX * 4;
-                tab.Spacing = space.Spacing * 4;
-                tab.XAdvance = space.XAdvance * 4;
-                tab.XOffsetInPixels = space.XOffsetInPixels * 4;
-                mCharacterInfo['\t'] = tab;
-                mKnownCharacterIds.Add('\t');
-            }
-            if(mCharacterInfo.Length > (int)'\n')
-            {
-                var newline = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
-                newline.ScaleX = 0;
-                newline.Spacing = 0;
-                newline.TURight = 0;
-                newline.TULeft = 0;
-                newline.XOffsetInPixels = 0;
-                mCharacterInfo['\n'] = newline;
-                mKnownCharacterIds.Add('\n');
-            }
+        // Tab and newline get their own instances. Every slot above shares the one space instance,
+        // so editing it in place would also change the space and every missing-glyph fallback.
+        if (mCharacterInfo.Length > (int)'\t')
+        {
+            // Make the tab character be equivalent to 4 spaces:
+            var tab = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
+            tab.ScaleX = space.ScaleX * 4;
+            tab.Spacing = space.Spacing * 4;
+            tab.XAdvance = space.XAdvance * 4;
+            tab.XOffsetInPixels = space.XOffsetInPixels * 4;
+            mCharacterInfo['\t'] = tab;
+            mKnownCharacterIds.Add('\t');
+        }
+        if(mCharacterInfo.Length > (int)'\n')
+        {
+            var newline = FillBitmapCharacterInfo(spaceCharInfo, textureWidth, textureHeight, mLineHeightInPixels);
+            newline.ScaleX = 0;
+            newline.Spacing = 0;
+            newline.TURight = 0;
+            newline.TULeft = 0;
+            newline.XOffsetInPixels = 0;
+            mCharacterInfo['\n'] = newline;
+            mKnownCharacterIds.Add('\n');
         }
 
             

@@ -34,14 +34,16 @@ public class ColoredRectangleRuntime : GraphicalUiElement
     public static float DefaultWidth = 50;
     public static float DefaultHeight = 50;
 
-    ContainedRectangleType _containedColoredRectangle;
+    ContainedRectangleType? _containedColoredRectangle;
     ContainedRectangleType ContainedColoredRectangle
     {
         get
         {
             if (_containedColoredRectangle == null)
             {
-                _containedColoredRectangle = this.RenderableComponent as ContainedRectangleType;
+                _containedColoredRectangle = this.RenderableComponent as ContainedRectangleType
+                    ?? throw new InvalidOperationException(
+                        $"This {GetType().Name} has no {typeof(ContainedRectangleType).Name} renderable. It may have been created with fullInstantiation: false.");
             }
             return _containedColoredRectangle;
         }

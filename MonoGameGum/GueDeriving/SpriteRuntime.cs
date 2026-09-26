@@ -49,14 +49,16 @@ public class SpriteRuntime : GraphicalUiElement
 #endif
 {
     #region Contained Sprite
-    ContainedSpriteType _containedSprite;
+    ContainedSpriteType? _containedSprite;
     ContainedSpriteType ContainedSprite
     {
         get
         {
             if (_containedSprite == null)
             {
-                _containedSprite = (ContainedSpriteType)this.RenderableComponent;
+                _containedSprite = this.RenderableComponent as ContainedSpriteType
+                    ?? throw new InvalidOperationException(
+                        $"This {GetType().Name} has no {typeof(ContainedSpriteType).Name} renderable. It may have been created with fullInstantiation: false.");
             }
             return _containedSprite;
         }

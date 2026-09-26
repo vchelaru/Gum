@@ -42,7 +42,7 @@ public interface IRenderableIpso : IRenderable, IPositionedSizedObject, IVisible
 /// </summary>
 public interface IHasRenderableComponent
 {
-    IRenderable RenderableComponent { get; }
+    IRenderable? RenderableComponent { get; }
 }
 
 /// <summary>

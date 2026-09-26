@@ -257,7 +257,7 @@ namespace Gum.Graphics.Animation
 
         #region IEquatable<AnimationFrame> Members
 
-        bool IEquatable<AnimationFrame>.Equals(AnimationFrame other)
+        bool IEquatable<AnimationFrame>.Equals(AnimationFrame? other)
         {
             return this == other;
         }

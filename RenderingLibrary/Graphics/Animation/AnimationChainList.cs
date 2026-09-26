@@ -183,7 +183,7 @@ namespace Gum.Graphics.Animation
 
         #region IEquatable<AnimationChainList> Members
 
-        bool IEquatable<AnimationChainList>.Equals(AnimationChainList other)
+        bool IEquatable<AnimationChainList>.Equals(AnimationChainList? other)
         {
             return this == other;
         }

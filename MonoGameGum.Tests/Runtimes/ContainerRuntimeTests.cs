@@ -27,6 +27,15 @@ public class ContainerRuntimeTests
     }
 
     [Fact]
+    public void Blend_ShouldBeNormal_WhenNotFullyInstantiated()
+    {
+        ContainerRuntime sut = new(fullInstantiation: false);
+
+        sut.Blend.ShouldBe(Gum.RenderingLibrary.Blend.Normal);
+        sut.BlendState.ShouldBe(Microsoft.Xna.Framework.Graphics.BlendState.NonPremultiplied);
+    }
+
+    [Fact]
     public void ContainedRenderable_ShouldBeInvisibleRenderable()
     {
         ContainerRuntime sut = new();
