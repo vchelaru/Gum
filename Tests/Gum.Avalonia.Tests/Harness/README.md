@@ -7,9 +7,19 @@ depend on the tab.
 | File | Role |
 |---|---|
 | `HeadlessWindowDriver.cs` | The window: clicks, right-click menus, drags, keys, typing, pixel reads, `SaveFrame`. Fails fast on the headless compositor race (see `Animations/README.md`, "Gotchas"). |
-| `ToolProjectFixture.cs` | A new project in a temp folder, built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab plugin sits out meanwhile: it needs a canvas the headless run never builds, and its first failure would disable it for every later test. Dispose restores the tool. |
+| `ToolProjectFixture.cs` | A new project in a temp folder (`.gumx` or `.gumj`, optionally with a shared per-user folder), built through the tool's own commands (`AddComponent`, `AddInstance`, `AddCategory`, `AddState`), with every dialog answered by `Dialogs`. The editor tab plugin sits out meanwhile: it needs a canvas the headless run never builds. Dispose restores the tool, including the plugin set, so a harness that swaps plugins in need not put them back itself. |
 | `ScriptedDialogService.cs` | Answers dialogs from a queue; an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
+
+The harnesses built on these: `../Animations/AnimationEditorHarness.cs` (hosts its own plugin
+instance) and `../VariableGrid/VariableGridHarness.cs` (hosts the head's singleton tab).
+
+## Plugins between tests
+
+`PluginManager` disables a plugin that throws for the rest of the process. `../PluginFailureGuardAttribute.cs`
+runs around every test in the assembly: it fails the test that disabled a guarded plugin, then gives
+every plugin the test disabled a fresh, enabled container and restores `PluginManager.Plugins` if the
+test left it changed. Each test starts with the same plugins enabled, whatever ran before it.
 
 ## Hosting a singleton tab's view
 

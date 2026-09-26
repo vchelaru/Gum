@@ -32,7 +32,12 @@ internal sealed class ToolProjectFixture : IDisposable
     private readonly IEnumerable<PluginBase>? _originalPlugins;
 
     /// <param name="folderName">Folder under the temp folder the project goes into, named for the harness.</param>
-    public ToolProjectFixture(string folderName)
+    /// <param name="projectFileName">The project's file name; a .gumj name makes a JSON project.</param>
+    /// <param name="userDataFolder">
+    /// Where the tool's per-user files go for this run; a second fixture given the same folder starts
+    /// the way a restarted tool would. Defaults to a folder under the temp project.
+    /// </param>
+    public ToolProjectFixture(string folderName, string projectFileName = "Harness.gumx", string? userDataFolder = null)
     {
         // Work another test left queued (a tree view syncing its selection, say) runs now, against
         // that test's state, not later against this fixture's project and selection.
@@ -41,7 +46,7 @@ internal sealed class ToolProjectFixture : IDisposable
         Directory.CreateDirectory(ProjectFolder);
 
         _originalUserDataOverride = FileManager.UserApplicationDataFolderOverride;
-        FileManager.UserApplicationDataFolderOverride = Path.Combine(ProjectFolder, "UserData");
+        FileManager.UserApplicationDataFolderOverride = userDataFolder ?? Path.Combine(ProjectFolder, "UserData");
         Dialogs = new ScriptedDialogService();
         _dialogScope = ((SwitchableDialogService)Services.GetRequiredService<IDialogService>()).Use(Dialogs);
         // The editor tab draws on a canvas the headless run never builds, so every element it is
@@ -59,7 +64,7 @@ internal sealed class ToolProjectFixture : IDisposable
             IProjectManager projectManager = Services.GetRequiredService<IProjectManager>();
             projectManager.CreateNewProject();
             Project = projectManager.GumProjectSave!;
-            Project.FullFileName = Path.Combine(ProjectFolder, "Harness.gumx");
+            Project.FullFileName = Path.Combine(ProjectFolder, projectFileName);
         }
         catch
         {

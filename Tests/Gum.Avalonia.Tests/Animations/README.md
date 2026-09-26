@@ -12,7 +12,7 @@ one with a test, fix it, and keep the scenario as the regression guard.
 dotnet test Tests/Gum.Avalonia.Tests --filter "FullyQualifiedName~Gum.Avalonia.Tests.Animations"
 ```
 
-About 85 scenarios, roughly a minute. To keep PNGs of what the tab drew, set `GUM_HEADLESS_FRAMES`
+About 90 scenarios, roughly a minute. To keep PNGs of what the tab drew, set `GUM_HEADLESS_FRAMES`
 to a folder before running; scenarios that call `SaveFrame` write there (default:
 `%TEMP%\GumAnimationEditor\frames`). Read the PNGs to check rendering by eye.
 
@@ -20,8 +20,8 @@ to a folder before running; scenarios that call `SaveFrame` write there (default
 
 | File | Role |
 |---|---|
-| `AnimationEditorHarness.cs` | Hosts the tab (its own plugin instance on the head's real service graph, over a temp project) in a headless window. Input, lookups, pixel reads, sidecar reads. |
-| `../Harness/ScriptedDialogService.cs` | Answers the dialogs the tab opens. An unanswered dialog fails the test instead of hanging. Shared with the other tab harnesses (`../Harness/README.md`). |
+| `AnimationEditorHarness.cs` | Hosts the tab (its own plugin instance on the head's real service graph) and adds the animation-specific pieces: project builders with states to key, lookups into the tab's controls, playback timing, sidecar reads. Its gesture and pixel methods forward to `Input`. |
+| `../Harness/` | The shared pieces (`../Harness/README.md`): `ToolProjectFixture` for the temp project and cleanup, `HeadlessWindowDriver` (`Input`) for the window, input and pixel reads, `ScriptedDialogService` for the dialogs the tab and the tool open. An unanswered dialog fails the test instead of hanging. |
 | `TestAnimationPlugin.cs` | The head's plugin with manual playback timers the harness fires, so playback does not depend on dispatcher timers. |
 | `*Tests.cs` | One file per area: editor basics, animation list, reload, timeline interaction, instance sub-animations, element lifecycle, playback, keyframe editing, errors, tab lifecycle, JSON projects, detail column, external changes. |
 
@@ -83,11 +83,12 @@ Rules that keep scenarios honest:
 - A plugin only receives tool events when it is in `PluginManager.PluginContainers` as well as
   `Plugins`. The harness registers itself in both and swaps the head's own instance out while it
   runs, so nothing handles an event twice.
-- The harness resets the tool's project and the `FileManager.UserApplicationDataFolderOverride` on
-  dispose; a test that adds shared state of its own must clear it the same way.
+- The harness's `ToolProjectFixture` resets the tool's project, dialogs, plugin set and
+  `FileManager.UserApplicationDataFolderOverride` on dispose; a test that adds shared state of its
+  own must clear it the same way.
 - Keep `[AvaloniaFact]` tests synchronous. An `async Task` one needs a nested dispatcher frame that
   the headless session sometimes refuses.
-- Occasionally a test fails at once with "The tab's window hit-tests nothing after a render tick".
+- Occasionally a test fails at once with "The window hit-tests nothing after a render tick".
   Confirmed cause, not a Gum bug: `Dispatcher.UIThread` in Avalonia's own
   `src/Avalonia.Base/Threading/Dispatcher.cs` is `s_uiThread ??= CreateUIThreadDispatcher()` with no
   lock; the headless session nulls it before each isolated test's app setup and recreates it lazily,
