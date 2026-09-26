@@ -38,8 +38,16 @@ namespace StateAnimationPlugin.Managers
             {
                 var text = System.IO.File.ReadAllText(_globalSettingsFilePath.FullPath);
 
-                GlobalSettings = JsonConvert.DeserializeObject<AnimationPluginSettings>(text) ??
-                    new AnimationPluginSettings();
+                try
+                {
+                    GlobalSettings = JsonConvert.DeserializeObject<AnimationPluginSettings>(text) ??
+                        new AnimationPluginSettings();
+                }
+                catch (JsonException)
+                {
+                    // Only the column ratio lives here; a default beats losing the Animations tab.
+                    GlobalSettings = new AnimationPluginSettings();
+                }
             }
 
             if (GlobalSettings == null)

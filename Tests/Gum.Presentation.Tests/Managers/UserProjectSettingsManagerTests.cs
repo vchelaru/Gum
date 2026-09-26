@@ -137,6 +137,27 @@ public class UserProjectSettingsManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadForProject_ReadsFileWrittenByWpfHead()
+    {
+        // The .user.setj the WPF head wrote beside a project, with a BOM as an editor may save it.
+        string json = """
+            {
+              "TreeViewState": {
+                "ExpandedNodes": [
+                  "Screens",
+                  "Components/Controls"
+                ]
+              }
+            }
+            """;
+        File.WriteAllText(_testSettingsPath, json, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+
+        _manager.LoadForProject(_testGumxPath);
+
+        _manager.CurrentSettings!.TreeViewState!.ExpandedNodes.ShouldBe(new[] { "Screens", "Components/Controls" });
+    }
+
+    [Fact]
     public void Save_ShouldCreateFile_WithCorrectJsonStructure()
     {
         // Arrange

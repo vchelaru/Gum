@@ -30,6 +30,20 @@ public class SettingsManagerTests : BaseTestClass
     }
 
     [Fact]
+    public void LoadOrCreateSettings_leaves_defaults_when_file_is_unreadable()
+    {
+        // Read while the plugin starts up; a throw disables the Animations tab for the session.
+        FilePath settingsFile = new FilePath(Path.Combine(_tempDirectory, "GlobalAnimationSettings.json"));
+        Directory.CreateDirectory(_tempDirectory);
+        File.WriteAllText(settingsFile.FullPath, "{\"FirstToSecondColumnRatio\": 2.");
+        SettingsManager settingsManager = new SettingsManager(settingsFile);
+
+        settingsManager.LoadOrCreateSettings();
+
+        settingsManager.GlobalSettings.FirstToSecondColumnRatio.ShouldBe(1m);
+    }
+
+    [Fact]
     public void LoadOrCreateSettings_round_trips_saved_settings()
     {
         FilePath settingsFile = new FilePath(Path.Combine(_tempDirectory, "GlobalAnimationSettings.json"));
