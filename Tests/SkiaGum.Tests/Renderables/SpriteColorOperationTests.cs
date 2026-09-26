@@ -45,6 +45,17 @@ public class SpriteColorOperationTests
     }
 
     [Fact]
+    public void ColorOperation_SetOnSprite_IsVisibleThroughBaseAndInterface()
+    {
+        Sprite sut = new();
+
+        sut.ColorOperation = ColorOperation.ColorTextureAlpha;
+
+        ((RenderableShapeBase)sut).ColorOperation.ShouldBe(ColorOperation.ColorTextureAlpha);
+        ((RenderingLibrary.Graphics.IRenderableIpso)sut).ColorOperation.ShouldBe(ColorOperation.ColorTextureAlpha);
+    }
+
+    [Fact]
     public void GetPaint_Modulate_MultipliesTextureRgbByTint()
     {
         TestableSprite sut = new() { Color = new SKColor(255, 0, 0, 255) };

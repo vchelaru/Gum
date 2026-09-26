@@ -29,6 +29,17 @@ public class NineSliceColorOperationTests
     }
 
     [Fact]
+    public void ColorOperation_SetOnNineSlice_IsVisibleThroughBaseAndInterface()
+    {
+        NineSlice sut = new();
+
+        sut.ColorOperation = ColorOperation.Add;
+
+        ((RenderableShapeBase)sut).ColorOperation.ShouldBe(ColorOperation.Add);
+        ((IRenderableIpso)sut).ColorOperation.ShouldBe(ColorOperation.Add);
+    }
+
+    [Fact]
     public void ApplyAnimationFrame_Add_SetsColorAndAddOperation()
     {
         NineSlice sut = new();

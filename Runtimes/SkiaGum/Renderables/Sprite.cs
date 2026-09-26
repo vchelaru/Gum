@@ -44,15 +44,6 @@ public class Sprite : RenderableShapeBase, IAspectRatio, ITextureCoordinate, IAn
     public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
     public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
-    /// <summary>
-    /// How the sprite's tint <see cref="RenderableShapeBase.Color"/> combines with its texture,
-    /// matching MonoGame's/raylib's <see cref="ColorOperation"/> (#4821). <see cref="ColorOperation.Modulate"/>
-    /// (the default) multiplies texture RGBA by the tint; <see cref="ColorOperation.ColorTextureAlpha"/>
-    /// uses the texture only as an alpha mask and fills with the tint color, via <see cref="SKBlendMode.SrcIn"/>
-    /// in <see cref="GetPaint"/>.
-    /// </summary>
-    public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
-
     public Rectangle? SourceRectangle;
     private SKBitmap? _texture;
 

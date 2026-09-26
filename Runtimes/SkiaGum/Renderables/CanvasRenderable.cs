@@ -11,8 +11,8 @@ namespace SkiaGum.Renderables;
 
 internal class CanvasRenderable : IRenderableIpso, IVisible
 {
-    public object Tag { get; set; }
-    public string Name
+    public object? Tag { get; set; }
+    public string? Name
     {
         get;
         set;
@@ -26,8 +26,8 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
         get { return mChildren; }
     }
 
-    IRenderableIpso mParent;
-    public IRenderableIpso Parent
+    IRenderableIpso? mParent;
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -100,7 +100,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 
     public bool Wrap => false;
 
-    public event Action<SkiaSharp.SKCanvas> CustomRender;
+    public event Action<SkiaSharp.SKCanvas>? CustomRender;
 
     public CanvasRenderable()
     {
@@ -118,7 +118,7 @@ internal class CanvasRenderable : IRenderableIpso, IVisible
 #if SKIA
     public void Render(ISystemManagers managers)
     {
-        var canvas = (managers as SystemManagers).Canvas;
+        var canvas = ((SystemManagers)managers).Canvas;
 
         if (AbsoluteVisible)
         {

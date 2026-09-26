@@ -109,12 +109,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
 
     public Rectangle? SourceRectangle { get; set; }
 
-    /// <summary>
-    /// How <see cref="Color"/> combines with the texture. Add draws the nine-slice untinted and
-    /// adds Color on top; Modulate (the default) multiplies by it.
-    /// </summary>
-    public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
-
     public float? TextureWidth => Texture?.Width;
     public float? TextureHeight => Texture?.Height;
 

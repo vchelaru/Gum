@@ -107,7 +107,7 @@ public class RoundedRectangle : RenderableShapeBase, IClipPath, ICloneable
     /// </summary>
     /// <remarks>
     /// Issue #4030 follow-up — unlike <see cref="SKCanvas.DrawRoundRect(SKRect, float, float, SKPaint)"/>
-    /// (which clamps its radii to fit the rect internally), the manual <see cref="SKPath.ArcTo"/>
+    /// (which clamps its radii to fit the rect internally), the manual <see cref="SKPath.ArcTo(SKRect, float, float, bool)"/>
     /// construction here does not. A per-corner radius larger than half the bounding rect's width
     /// or height produces an arc whose circle is bigger than the corner it's cut into, so the path
     /// bulges past the rect's edge -- most visible on the stroke slot, whose bounding rect is

@@ -9,8 +9,8 @@ namespace SkiaGum.Renderables
     {
         #region Fields/Properties
 
-        string sourceFile;
-        public string SourceFile
+        string? sourceFile;
+        public string? SourceFile
         {
             get => sourceFile;
             set
@@ -40,10 +40,12 @@ namespace SkiaGum.Renderables
 
 
 #if INCLUDE_SVG
-        Svg.Skia.SKSvg skiaSvg;
+        Svg.Skia.SKSvg? skiaSvg;
         // old implementation:
         //public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.ViewBox.Width / (float)skiaSvg.ViewBox.Height;
-        public float AspectRatio => skiaSvg == null ? 1 : skiaSvg.Picture.CullRect.Width / (float)skiaSvg.Picture.CullRect.Height;
+        public float AspectRatio => skiaSvg?.Picture is SKPicture picture
+            ? picture.CullRect.Width / (float)picture.CullRect.Height
+            : 1;
 #else
         public float AspectRatio => 1;
 #endif
@@ -57,18 +59,19 @@ namespace SkiaGum.Renderables
         {
 #if INCLUDE_SVG
 
-            if (skiaSvg != null)
+            SKPicture? picture = skiaSvg?.Picture;
+            if (picture != null)
             {
                 surface.Canvas.Clear(SKColors.Transparent);
 
-                var scaleX = this.Width / skiaSvg.Picture.CullRect.Width;
-                var scaleY = this.Height / skiaSvg.Picture.CullRect.Height;
+                var scaleX = this.Width / picture.CullRect.Width;
+                var scaleY = this.Height / picture.CullRect.Height;
 
                 SKMatrix scaleMatrix = SKMatrix.CreateScale(scaleX, scaleY);
 
                 {
 
-                    surface.Canvas.DrawPicture(skiaSvg.Picture , scaleMatrix);
+                    surface.Canvas.DrawPicture(picture, scaleMatrix);
                 }
             }
             else
@@ -85,9 +88,9 @@ namespace SkiaGum.Renderables
         }
 
 #if INCLUDE_SVG
-        private Svg.Skia.SKSvg GetSkSvg()
+        private Svg.Skia.SKSvg? GetSkSvg()
         {
-            Svg.Skia.SKSvg skiaSvg = null;
+            Svg.Skia.SKSvg? skiaSvg = null;
 
             if (!string.IsNullOrWhiteSpace(sourceFile))
             {

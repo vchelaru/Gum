@@ -11,20 +11,23 @@ namespace Gum.GueDeriving;
 
 public class LineGridRuntime: SkiaShapeRuntime
 {
-    protected override RenderableShapeBase ContainedRenderable => mContainedLineGrid;
+    protected override RenderableShapeBase ContainedRenderable => ContainedLineGrid;
 
     public ushort CellWidth
     {
-        get => mContainedLineGrid.CellWidth;
-        set => mContainedLineGrid.CellWidth = value; 
+        get => ContainedLineGrid.CellWidth;
+        set => ContainedLineGrid.CellWidth = value; 
     }
     public ushort CellHeight
     {
-        get => mContainedLineGrid.CellHeight; 
-        set => mContainedLineGrid.CellHeight = value; 
+        get => ContainedLineGrid.CellHeight; 
+        set => ContainedLineGrid.CellHeight = value; 
     }
 
-    public SKColor Color
+    /// <summary>
+    /// The grid line color. Redeclared here so LineGrid keeps a non-obsolete Color (the base shape Color is obsolete).
+    /// </summary>
+    public new SKColor Color
     {
         get => ContainedLineGrid.Color;
         set => ContainedLineGrid.Color = value;
@@ -32,20 +35,21 @@ public class LineGridRuntime: SkiaShapeRuntime
 
     public void LineGridCell(double pX, double pY, out int colX, out int colY)
     {
-        mContainedLineGrid.LineGridCell(pX, pY, out colX, out colY);
+        ContainedLineGrid.LineGridCell(pX, pY, out colX, out colY);
     }
     public bool GetCellPosition(int colX, int colY, out float left, out float top, out float right, out float bottom) 
     {
-        return mContainedLineGrid.GetCellPosition(colX, colY, out left, out top, out right, out bottom);
+        return ContainedLineGrid.GetCellPosition(colX, colY, out left, out top, out right, out bottom);
     }
 
-    private LineGrid mContainedLineGrid;
+    private LineGrid? mContainedLineGrid;
     LineGrid ContainedLineGrid
     {
         get
         {
-            if(mContainedLineGrid == null)
-                mContainedLineGrid = this.RenderableComponent as LineGrid;
+            mContainedLineGrid ??= this.RenderableComponent as LineGrid
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(LineGridRuntime)} has no LineGrid renderable.");
             return mContainedLineGrid;
         }
         set { mContainedLineGrid = value; }
@@ -53,8 +57,9 @@ public class LineGridRuntime: SkiaShapeRuntime
 
     public LineGridRuntime()
     {
-        SetContainedObject(new LineGrid());
-        ContainedLineGrid = this.RenderableComponent as LineGrid;
+        LineGrid lineGrid = new LineGrid();
+        SetContainedObject(lineGrid);
+        ContainedLineGrid = lineGrid;
 
         StrokeWidthUnits = Gum.DataTypes.DimensionUnitType.ScreenPixel;
 

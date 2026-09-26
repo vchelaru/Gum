@@ -112,7 +112,8 @@ public abstract class GumServiceSkiaBase : IGumService
     /// Convenience accessor for <see cref="global::RenderingLibrary.SystemManagers.Default"/>,
     /// valid after <c>Initialize</c>.
     /// </summary>
-    public SystemManagers SystemManagers => SystemManagers.Default;
+    public SystemManagers SystemManagers => SystemManagers.Default ?? throw new InvalidOperationException(
+        "GumService has not been initialized. Call GumService.Default.Initialize(SKCanvas, ...) first.");
 
     /// <summary>
     /// The collection of connected gamepads available to the application.

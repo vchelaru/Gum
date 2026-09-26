@@ -12,15 +12,14 @@ namespace Gum.GueDeriving;
 [Obsolete("Use RectangleRuntime with FillColor instead. SolidRectangleRuntime will be removed in a future release. See docs/gum-tool/upgrading/migrating-to-2026-may.md for the full migration guide.")]
 public class SolidRectangleRuntime : InteractiveGue
 {
-    SolidRectangle mContainedRectangle;
+    SolidRectangle? mContainedRectangle;
     SolidRectangle ContainedRectangle
     {
         get
         {
-            if(mContainedRectangle == null)
-            {
-                mContainedRectangle = this.RenderableComponent as SolidRectangle;
-            }
+            mContainedRectangle ??= this.RenderableComponent as SolidRectangle
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(SolidRectangleRuntime)} has no SolidRectangle renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedRectangle;
         }
     }

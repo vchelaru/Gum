@@ -217,9 +217,9 @@ namespace SkiaGum.Renderables
 
                 var color = _drawable.ShouldApplyColorOnSpriteRender ? _drawable.Color : Color.White;
 
-                var systemManagers = managers as SystemManagers;
+                var systemManagers = (SystemManagers)managers;
 
-                Sprite.Render(systemManagers, systemManagers!.Renderer.SpriteRenderer, this, _textureRenderer.Texture, color, rotationInDegrees: Rotation);
+                Sprite.Render(systemManagers, systemManagers.Renderer.SpriteRenderer, this, _textureRenderer.Texture, color, rotationInDegrees: Rotation);
 
                 this.X = oldX;
                 this.Y = oldY;

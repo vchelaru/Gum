@@ -15,7 +15,7 @@ namespace RenderingLibrary.Graphics
     {
 
         List<Layer> _layers = new List<Layer>();
-        ReadOnlyCollection<Layer> mLayersReadOnly;
+        readonly ReadOnlyCollection<Layer> mLayersReadOnly;
         public ReadOnlyCollection<Layer> Layers
         {
             get
@@ -24,9 +24,9 @@ namespace RenderingLibrary.Graphics
             }
         }
 
-        public Layer MainLayer =>
-            // Not sure if we have any layers in skia so do a FirstOrDefault
-            _layers.FirstOrDefault();
+        public Layer MainLayer => _layers.Count > 0
+            ? _layers[0]
+            : throw new InvalidOperationException("The Renderer has no layers. Call Initialize first.");
 
         public Layer AddLayer()
         {
@@ -84,6 +84,12 @@ namespace RenderingLibrary.Graphics
         }
 
         public Camera Camera { get; private set; }
+
+        public Renderer()
+        {
+            Camera = new Camera();
+            mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
+        }
         public bool ClearsCanvas { get; set; } = true;
 
         // Per-render-target-container offscreen surfaces (#3988), baked in a pre-pass and composited
@@ -102,22 +108,16 @@ namespace RenderingLibrary.Graphics
 
         public void Initialize(SystemManagers managers)
         {
-            Camera = new Camera();
-
-            mLayersReadOnly = new ReadOnlyCollection<Layer>(_layers);
-
             _layers.Add(new Layer());
             _layers[0].Name = "Main Layer";
         }
 
-        public void Draw(SystemManagers managers)
+        public void Draw(SystemManagers? managers)
         {
             //ClearPerformanceRecordingVariables();
 
-            if (managers == null)
-            {
-                managers = SystemManagers.Default;
-            }
+            managers ??= SystemManagers.Default
+                ?? throw new InvalidOperationException("No SystemManagers was passed and SystemManagers.Default is null.");
 
             Draw(managers, _layers);
 
@@ -149,7 +149,7 @@ namespace RenderingLibrary.Graphics
             Draw(whatToRender, managers, true);
         }
 
-        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false, Layer layer = null)
+        void Draw(IList<IRenderableIpso> whatToRender, SystemManagers managers, bool isTopLevelDraw = false, Layer? layer = null)
         {
             if (isTopLevelDraw)
             {
@@ -239,7 +239,7 @@ namespace RenderingLibrary.Graphics
                         continue;
                     }
 
-                    var canvas = (managers as SystemManagers).Canvas;
+                    var canvas = ((SystemManagers)managers).Canvas;
 
                     var isOnScreen = true;
 
@@ -361,8 +361,8 @@ namespace RenderingLibrary.Graphics
         /// none exists. Resolves the container's cache owner internally. Used by a Sprite pulling its
         /// <c>RenderTargetTextureSource</c>, and by tests.
         /// </summary>
-        public SKImage TryGetBakedRenderTargetFor(IRenderableIpso container)
-            => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage image)
+        public SKImage? TryGetBakedRenderTargetFor(IRenderableIpso container)
+            => _bakedImages.TryGetValue(ResolveRenderTargetCacheOwner(container), out SKImage? image)
                 ? image
                 : null;
 
@@ -473,7 +473,7 @@ namespace RenderingLibrary.Graphics
             }
 
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
-            SkiaRenderTarget renderTarget = _renderTargetService.GetFor(owner, width, height);
+            SkiaRenderTarget? renderTarget = _renderTargetService.GetFor(owner, width, height);
             if (renderTarget == null)
             {
                 return;
@@ -505,7 +505,7 @@ namespace RenderingLibrary.Graphics
         private void CompositeRenderTarget(IRenderableIpso container, SystemManagers managers)
         {
             IRenderableIpso owner = ResolveRenderTargetCacheOwner(container);
-            if (!_bakedImages.TryGetValue(owner, out SKImage image) || image == null)
+            if (!_bakedImages.TryGetValue(owner, out SKImage? image) || image == null)
             {
                 return;
             }
@@ -541,7 +541,7 @@ namespace RenderingLibrary.Graphics
             // #3998). The effect is image-independent (declares a `uniform shader inputImage`
             // child) -- the baked image is only known here, at composite time, so it is bound as
             // that child shader input on this call rather than cached on the effect.
-            SKRuntimeEffect effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
+            SKRuntimeEffect? effect = (owner as IRenderTargetRenderable)?.RenderTargetEffect as SKRuntimeEffect;
             if (effect == null)
             {
                 managers.Canvas.DrawImage(image, destination, paint);

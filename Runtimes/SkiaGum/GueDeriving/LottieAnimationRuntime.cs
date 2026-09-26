@@ -13,21 +13,20 @@ public class LottieAnimationRuntime : InteractiveGue
 {
     //protected override RenderableBase ContainedRenderable => ContainedLottieAnimation;
 
-    LottieAnimation mContainedLottieAnimation;
+    LottieAnimation? mContainedLottieAnimation;
     LottieAnimation ContainedLottieAnimation
     {
         get
         {
-            if (mContainedLottieAnimation == null)
-            {
-                mContainedLottieAnimation = this.RenderableComponent as LottieAnimation;
-            }
+            mContainedLottieAnimation ??= this.RenderableComponent as LottieAnimation
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(LottieAnimationRuntime)} has no LottieAnimation renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedLottieAnimation;
         }
     }
 
-    string sourceFile;
-    public string SourceFile
+    string? sourceFile;
+    public string? SourceFile
     {
         // eventually we may want to store this off somehow
         get => sourceFile;
@@ -36,14 +35,20 @@ public class LottieAnimationRuntime : InteractiveGue
             if (sourceFile != value)
             {
                 sourceFile = value;
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var animation = loaderManager.LoadContent<Animation>(value);
-                Animation = animation;
+                if (string.IsNullOrEmpty(value))
+                {
+                    Animation = null;
+                }
+                else
+                {
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    Animation = loaderManager.LoadContent<Animation>(value);
+                }
             }
         }
     }
 
-    public Animation Animation
+    public Animation? Animation
     {
         get => ContainedLottieAnimation.Animation;
         set => ContainedLottieAnimation.Animation = value;

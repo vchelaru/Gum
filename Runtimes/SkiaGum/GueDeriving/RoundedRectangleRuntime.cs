@@ -48,10 +48,9 @@ public class RoundedRectangleRuntime
     {
         get
         {
-            if (_containedRoundedRectangle == null)
-            {
-                _containedRoundedRectangle = (RoundedRectangle)this.RenderableComponent;
-            }
+            _containedRoundedRectangle ??= this.RenderableComponent as RoundedRectangle
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(RoundedRectangleRuntime)} has no RoundedRectangle renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return _containedRoundedRectangle;
         }
     }
