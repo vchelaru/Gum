@@ -62,45 +62,45 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
         string contents = _codeGenerator.GetGeneratedCodeForElement(element, elementSettings, projectSettings);
         contents = $"//Code for {element}\r\n{contents}";
 
-        // Ensure directory exists
-        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
+        if (!TryWriteFile(generatedFileName.FullPath, contents))
         {
-            try
-            {
-                System.IO.Directory.CreateDirectory(codeDirectory.FullPath);
-            }
-            catch (Exception e)
-            {
-                _logger.PrintError($"Error creating directory {codeDirectory}: {e.Message}");
-                return false;
-            }
+            return false;
         }
-
-        // Write generated file
-        System.IO.File.WriteAllText(generatedFileName.FullPath, contents);
         _logger.PrintOutput($"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}");
 
         // Write custom code file if it doesn't exist
-        if (!string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
+        var fullPath = generatedFileName.FullPath;
+        var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
+        if (!System.IO.File.Exists(customCodeFileName))
         {
-            var fullPath = generatedFileName.FullPath;
-            var customCodeFileName = fullPath.Substring(0, fullPath.Length - ".Generated.cs".Length) + ".cs";
-
-            if (!System.IO.File.Exists(customCodeFileName))
-            {
-                var directory = FileManager.GetDirectory(customCodeFileName);
-                if (!System.IO.Directory.Exists(directory))
-                {
-                    System.IO.Directory.CreateDirectory(directory);
-                }
-                var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(
-                    element, elementSettings, projectSettings);
-                System.IO.File.WriteAllText(customCodeFileName, customCodeContents);
-            }
+            var customCodeContents = _customCodeGenerator.GetCustomCodeForElement(
+                element, elementSettings, projectSettings);
+            return TryWriteFile(customCodeFileName, customCodeContents);
         }
 
         return true;
+    }
+
+    // Creates the file's folder and writes it, reporting a file-system failure (a read-only or
+    // unreachable CodeProjectRoot, such as another machine's absolute path) through the logger
+    // instead of throwing, so one bad path doesn't abort the whole run.
+    private bool TryWriteFile(string filePath, string contents)
+    {
+        try
+        {
+            string? directory = System.IO.Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                System.IO.Directory.CreateDirectory(directory);
+            }
+            System.IO.File.WriteAllText(filePath, contents);
+            return true;
+        }
+        catch (Exception e) when (e is System.IO.IOException || e is UnauthorizedAccessException)
+        {
+            _logger.PrintError($"Error writing {filePath}: {e.Message}");
+            return false;
+        }
     }
 
     /// <inheritdoc/>
@@ -160,13 +160,10 @@ public class HeadlessCodeGenerationService : IHeadlessCodeGenerationService
             return false;
         }
 
-        var codeDirectory = generatedFileName.GetDirectoryContainingThis();
-        if (codeDirectory != null && !System.IO.Directory.Exists(codeDirectory.FullPath))
+        if (!TryWriteFile(generatedFileName.FullPath, contents))
         {
-            System.IO.Directory.CreateDirectory(codeDirectory.FullPath);
+            return false;
         }
-
-        System.IO.File.WriteAllText(generatedFileName.FullPath, contents);
         _logger.PrintOutput($"Generated code to {FileManager.RemovePath(generatedFileName.FullPath)}");
 
         return true;

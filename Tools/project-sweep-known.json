@@ -1,0 +1,54 @@
+{
+  "Tests/CodeGen_MonoGame_ByReference/Content/GumProject/CodeGenTestProject.gumx": {
+    "check": "fixture: deliberately references deleted/invalid element types",
+    "codegen": "fixture: deliberately references deleted/invalid element types"
+  },
+  "Tests/CodeGen_MonoGameForms_ByReference/Content/GumProject/CodeGenTestProject.gumx": {
+    "check": "fixture: deliberately references a deleted component",
+    "codegen": "fixture: deliberately references a deleted component"
+  },
+  "Tests/CodeGen_MonoGameForms_FullCodegen/Content/CodeGenProject.gumx": {
+    "check": "fixture: deliberately references a deleted component",
+    "codegen": "fixture: deliberately references a deleted component"
+  },
+  "Tests/Gum.ProjectServices.Tests/ParityCorpus/FormsXml/CodeGenTestProject.gumx": {
+    "check": "fixture: copy of CodeGen_MonoGameForms_ByReference, references a deleted component"
+  },
+  "Samples/FnaGum/FnaSample/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls",
+    "codegen": "#5152 older Forms controls"
+  },
+  "Samples/GameUiSamples/Content/GumProject/GameUiSamplesGumProject.gumx": {
+    "check": "#5152 older Forms controls",
+    "codegen": "#5152 older Forms controls"
+  },
+  "Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls",
+    "codegen": "#5152 older Forms controls"
+  },
+  "Samples/MVVM/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls",
+    "codegen": "#5152 older Forms controls"
+  },
+  "FlatRedBall:FRBDK/Glue/GumPlugin/GumPlugin/Embedded/EmbeddedObjectGumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Samples/ChickenClicker/ChickenClicker/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Samples/FormsSampleProject/FormsSampleProject/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Samples/Platformer/DialogBoxDemo/DialogBoxDemo/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Samples/Platformer/MultiplayerPlatformerDemo/MultiplayerPlatformerDemo/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Samples/SkiaSampleProject/SkiaSampleProject/Content/GumProject/GumProject.gumx": {
+    "check": "#5152 older Forms controls (FlatRedBall repo)"
+  },
+  "FlatRedBall:Tests/TestProjectDesktopNet6/TestProjectDesktopNet6/Content/GumProject/GumProject.gumx": {
+    "check": "FlatRedBall test fixture: deliberate invalid parent; animation keyframes name categorized states without their category"
+  }
+}

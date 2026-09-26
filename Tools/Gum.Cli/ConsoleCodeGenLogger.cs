@@ -8,6 +8,12 @@ namespace Gum.Cli;
 /// </summary>
 internal class ConsoleCodeGenLogger : ICodeGenLogger
 {
+    /// <summary>
+    /// How many errors this logger has printed, so a command can fail when the service it was
+    /// handed to reported one.
+    /// </summary>
+    public int ErrorCount { get; private set; }
+
     /// <inheritdoc/>
     public void PrintOutput(string message)
     {
@@ -17,6 +23,7 @@ internal class ConsoleCodeGenLogger : ICodeGenLogger
     /// <inheritdoc/>
     public void PrintError(string message)
     {
+        ErrorCount++;
         Console.Error.WriteLine(message);
     }
 }

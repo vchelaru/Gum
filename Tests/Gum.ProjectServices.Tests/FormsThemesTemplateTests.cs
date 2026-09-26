@@ -11,10 +11,11 @@ namespace Gum.ProjectServices.Tests;
 /// <summary>
 /// Templates/FormsThemes/&lt;theme&gt; is a separate template tree from Templates/FormsTemplate
 /// (the gumcli/StandardElementsManager path fixed by #4674) - it's copied by GumFormsPlugin's MSBuild
-/// targets, not extracted from embedded resources, so nothing else sweeps it for a stray system font
-/// name (e.g. "Arial") that KernSmith can't resolve on BlazorGL/WASM.
+/// targets, not extracted from embedded resources, so nothing else sweeps it: for a stray system font
+/// name (e.g. "Arial") that KernSmith can't resolve on BlazorGL/WASM, or for error-check errors that
+/// every project a user imports the theme into would inherit.
 /// </summary>
-public class FormsThemesFontTests
+public class FormsThemesTemplateTests
 {
     public static IEnumerable<object[]> ThemeNames => new[]
     {
@@ -40,13 +41,30 @@ public class FormsThemesFontTests
             .Concat(result.Project.Screens);
 
         List<string> systemFontReferences = allElements
-            .SelectMany(e => e.DefaultState.Variables, (e, v) => (Element: e, Variable: v))
+            .SelectMany(e => e.DefaultState!.Variables, (e, v) => (Element: e, Variable: v))
             .Where(x => x.Variable.IsFont && x.Variable.Value is string font
                 && !font.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
             .Select(x => $"{x.Element.Name}.{x.Variable.Name} = {x.Variable.Value}")
             .ToList();
 
         systemFontReferences.ShouldBeEmpty();
+    }
+
+    [Theory]
+    [MemberData(nameof(ThemeNames))]
+    public void Load_ShouldHaveNoErrorCheckErrors(string themeName)
+    {
+        StandardElementsManager.Self.Initialize();
+        string themeDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", themeName);
+        ProjectLoadResult result = new ProjectLoader().Load(Path.Combine(themeDir, "GumProject.gumx"));
+        result.Success.ShouldBeTrue();
+
+        IReadOnlyList<ErrorResult> errors = new HeadlessErrorChecker(new DefaultTypeResolver()).GetAllErrors(result.Project!);
+
+        errors.Where(error => error.Severity == ErrorSeverity.Error)
+            .Select(error => $"{error.ElementName}: {error.Message}")
+            .ShouldBeEmpty();
     }
 
     private static string FindRepoRoot()
