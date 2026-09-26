@@ -19,7 +19,9 @@ public sealed class MessageDialogView : StackPanel
     {
         Spacing = 8;
         MaxWidth = 700;
-        TextBlock message = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        // Selectable so part of a message (a path, an error) can be copied; the window copies the
+        // whole message on the copy gesture when nothing is selected.
+        SelectableTextBlock message = new SelectableTextBlock { TextWrapping = TextWrapping.Wrap };
         message.Bind(TextBlock.TextProperty, new Binding(nameof(MessageDialogViewModel.Message)));
         Children.Add(message);
     }

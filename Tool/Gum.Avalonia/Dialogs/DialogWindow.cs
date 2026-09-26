@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform;
@@ -16,7 +18,8 @@ namespace Gum.Avalonia.Dialogs;
 /// <summary>
 /// The window every <see cref="DialogViewModel"/> is shown in, drawn as the WPF <c>DialogWindow</c>:
 /// the title as a bold caption inside a rounded frame, the registered view under it, the
-/// affirmative and negative buttons underneath, Enter and Escape wired to them, and the view
+/// affirmative and negative buttons underneath, Enter and Escape wired to them (plus the buttons'
+/// access keys, alone where the view model opts in), the copy gesture in a message dialog, and the view
 /// model's <see cref="DialogViewModel.RequestClose"/> closing the window.
 /// </summary>
 public sealed class DialogWindow : Window
@@ -212,7 +215,16 @@ public sealed class DialogWindow : Window
                 _viewModel.NegativeCommand.Execute(null);
                 e.Handled = true;
             }
+            // A button's access key alone (Y or N in the delete dialog) answers a dialog that opted in.
+            // Alt+letter needs nothing here: the buttons' "_Yes"/"_No" text makes them access keys.
+            else if (e.KeyModifiers == KeyModifiers.None && e.Key is >= Key.A and <= Key.Z
+                && _viewModel.TryAnswerFromAccessKey((char)('A' + (e.Key - Key.A))))
+            {
+                e.Handled = true;
+            }
         };
+        // Tunnel, so the copy gesture reaches the window before a focused button or text block.
+        AddHandler(KeyDownEvent, HandleCopyGesture, RoutingStrategies.Tunnel);
 
         // WPF gives a freshly-opened window keyboard focus to its first focusable control, so the
         // affirmative button's IsDefault fires on Enter with no click needed. Avalonia does not, so a
@@ -243,6 +255,31 @@ public sealed class DialogWindow : Window
         {
             MaxHeight = screen.WorkingArea.Height / screen.Scaling;
         }
+    }
+
+    // As the WPF window: the copy gesture in a message dialog copies the whole message, unless the
+    // user selected part of it, which the focused text block copies itself.
+    private void HandleCopyGesture(object? sender, KeyEventArgs e)
+    {
+        if (_viewModel is not MessageDialogViewModel { Message: { Length: > 0 } message } || !IsCopyGesture(e))
+        {
+            return;
+        }
+        if (FocusManager?.GetFocusedElement() is SelectableTextBlock { SelectedText.Length: > 0 })
+        {
+            return;
+        }
+        _ = Clipboard?.SetTextAsync(message);
+        e.Handled = true;
+    }
+
+    private bool IsCopyGesture(KeyEventArgs e)
+    {
+        if (PlatformSettings?.HotkeyConfiguration.Copy is { Count: > 0 } gestures)
+        {
+            return gestures.Any(gesture => gesture.Matches(e));
+        }
+        return e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control;
     }
 
     // The WPF dialog's action buttons: the default (primary) button, 64 wide at least, 16 by 4 padding.
