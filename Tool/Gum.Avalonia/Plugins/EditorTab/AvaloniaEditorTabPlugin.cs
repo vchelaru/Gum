@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Avalonia;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Controls.Shapes;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Platform.Storage;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using EditorTabPlugin_XNA.Services;
 using EditorTabPlugin_XNA.ViewModels;
@@ -56,6 +53,7 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
     private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
     private readonly IWireframeObjectManager _wireframeObjectManager;
     private WireframeCanvasControl? _canvasControl;
+    private EditorToolbar? _toolbar;
     private readonly ContextMenu _contextMenu = new ContextMenu();
 
     [ImportingConstructor]
@@ -165,7 +163,8 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         };
 
         DockPanel tab = new DockPanel { DataContext = editorViewModel };
-        Control toolbar = BuildToolbar();
+        EditorToolbar toolbar = new EditorToolbar();
+        _toolbar = toolbar;
         DockPanel.SetDock(toolbar, global::Avalonia.Controls.Dock.Top);
         DockPanel.SetDock(gridSnapWarning, global::Avalonia.Controls.Dock.Top);
         tab.Children.Add(toolbar);
@@ -175,160 +174,8 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         _tabManager.AddControl(tab, "Editor", TabLocation.RightTop);
     }
 
-    /// <summary>
-    /// The zoom, canvas size, font scale, and grid-snap controls, plus the icon-only Preview button
-    /// anchored at the far right (issue #4697) so it reads as a run control, not a view setting.
-    /// </summary>
-    private static Control BuildToolbar()
-    {
-        StackPanel panel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 0, Margin = new Thickness(4, 2) };
-
-        panel.Children.Add(SmallButton("-", nameof(EditorViewModel.ZoomOutCommand)));
-        panel.Children.Add(new ComboBox
-        {
-            Width = 100,
-            DisplayMemberBinding = new Binding(nameof(ZoomLevel.ZoomDisplay)),
-            [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(EditorViewModel.ZoomLevels)),
-            [!SelectingItemsControl.SelectedItemProperty] = new Binding(nameof(EditorViewModel.PercentZoomLevel)) { Mode = BindingMode.TwoWay },
-        });
-        panel.Children.Add(SmallButton("+", nameof(EditorViewModel.ZoomInCommand)));
-
-        panel.Children.Add(new ComboBox
-        {
-            Width = 180,
-            Margin = new Thickness(10, 0, 0, 0),
-            DisplayMemberBinding = new Binding(nameof(CustomCanvasSize.FriendlyName)),
-            [!ItemsControl.ItemsSourceProperty] = new Binding(nameof(EditorViewModel.CustomCanvasSizes)),
-            [!SelectingItemsControl.SelectedItemProperty] = new Binding(nameof(EditorViewModel.SelectedCustomCanvasSize)) { Mode = BindingMode.TwoWay },
-        });
-
-        panel.Children.Add(GlyphLabel("Aa", "Font Scale", 20));
-        panel.Children.Add(SmallButton("-", nameof(EditorViewModel.FontScaleDecreaseCommand)));
-        panel.Children.Add(new TextBlock
-        {
-            Width = 40,
-            VerticalAlignment = VerticalAlignment.Center,
-            TextAlignment = TextAlignment.Center,
-            [!TextBlock.TextProperty] = new Binding(nameof(EditorViewModel.GlobalFontScaleDisplay)),
-        });
-        panel.Children.Add(SmallButton("+", nameof(EditorViewModel.FontScaleIncreaseCommand)));
-
-        panel.Children.Add(new CheckBox
-        {
-            Content = "Snap to Grid",
-            Margin = new Thickness(20, 0, 0, 0),
-            VerticalAlignment = VerticalAlignment.Center,
-            [!ToggleButton.IsCheckedProperty] = new Binding(nameof(EditorViewModel.SnapToGrid)) { Mode = BindingMode.TwoWay },
-        });
-        panel.Children.Add(GlyphLabel("▦", "Grid Size", 10));
-        panel.Children.Add(new TextBox
-        {
-            Width = 40,
-            VerticalAlignment = VerticalAlignment.Center,
-            [!TextBox.TextProperty] = new Binding(nameof(EditorViewModel.GridSize)) { Mode = BindingMode.TwoWay },
-        });
-
-        RotateTransform previewSpinnerRotation = new RotateTransform();
-        TextBlock previewIcon = new TextBlock
-        {
-            Text = PreviewIdleGlyph,
-            TextAlignment = TextAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-        };
-        // A dashed-stroke ring, not a solid circle: rotating a solid circle is a visual no-op, but
-        // the gaps in the dash pattern give the rotation something asymmetric to actually show
-        // (issue #4717). Explicit Center alignment (rather than relying on Panel's default Stretch)
-        // keeps it pinned to the same spot the ▶ glyph occupies, so swapping between the two doesn't
-        // shift position.
-        Ellipse previewSpinner = new Ellipse
-        {
-            Width = 12,
-            Height = 12,
-            StrokeThickness = 2,
-            Stroke = Brushes.White,
-            StrokeDashArray = new AvaloniaList<double> { 2, 1.5 },
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            RenderTransform = previewSpinnerRotation,
-            RenderTransformOrigin = RelativePoint.Center,
-            IsVisible = false,
-        };
-        Panel previewIconHost = new Panel();
-        previewIconHost.Children.Add(previewIcon);
-        previewIconHost.Children.Add(previewSpinner);
-
-        Button previewButton = new Button
-        {
-            Classes = { GumChromeStyles.FlatButtonClass },
-            Content = previewIconHost,
-            Width = 26,
-            Margin = new Thickness(16, 0, 4, 0),
-            Padding = new Thickness(0),
-            HorizontalContentAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            [!Button.CommandProperty] = new Binding(nameof(EditorViewModel.PreviewCommand)),
-            [ToolTip.TipProperty] = "Preview in runtime",
-        };
-        previewButton.Click += (_, _) => ShowPreviewLaunchSpinner(previewIcon, previewSpinner, previewSpinnerRotation);
-        DockPanel.SetDock(previewButton, global::Avalonia.Controls.Dock.Right);
-
-        DockPanel toolbarDock = new DockPanel { LastChildFill = true };
-        toolbarDock.Children.Add(previewButton);
-        toolbarDock.Children.Add(panel);
-        return toolbarDock;
-    }
-
-    private const string PreviewIdleGlyph = "▶";
-
-    /// <summary>
-    /// Hides the Preview button's ▶ icon behind a spinning ring while the GumPreview process
-    /// spawns, then restores the icon. Only the ring rotates - the button itself (its
-    /// border/background/hit area) never moves (issue #4717).
-    /// </summary>
-    private static void ShowPreviewLaunchSpinner(TextBlock icon, Ellipse spinner, RotateTransform rotation)
-    {
-        TimeSpan rotationDuration = TimeSpan.FromMilliseconds(1400);
-        DateTime startUtc = DateTime.UtcNow;
-        icon.IsVisible = false;
-        spinner.IsVisible = true;
-        DispatcherTimer timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(16) };
-        timer.Tick += (_, _) =>
-        {
-            double elapsedMs = (DateTime.UtcNow - startUtc).TotalMilliseconds;
-            if (elapsedMs >= rotationDuration.TotalMilliseconds)
-            {
-                timer.Stop();
-                rotation.Angle = 0;
-                spinner.IsVisible = false;
-                icon.IsVisible = true;
-                return;
-            }
-
-            var degreesPerSecond = 360;
-
-            rotation.Angle = degreesPerSecond * elapsedMs / 1000 ;
-        };
-        timer.Start();
-    }
-
-    private static Button SmallButton(string content, string commandPath) => new Button
-    {
-        Classes = { GumChromeStyles.FlatButtonClass },
-        Content = content,
-        Width = 20,
-        Padding = new Thickness(0),
-        HorizontalContentAlignment = HorizontalAlignment.Center,
-        [!Button.CommandProperty] = new Binding(commandPath),
-    };
-
-    private static TextBlock GlyphLabel(string glyph, string tooltip, double leftMargin) => new TextBlock
-    {
-        Text = glyph,
-        Margin = new Thickness(leftMargin, 0, 4, 0),
-        VerticalAlignment = VerticalAlignment.Center,
-        [ToolTip.TipProperty] = tooltip,
-    };
+    /// <inheritdoc/>
+    protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);
 
     /// <inheritdoc/>
     // This head renders through KNI's SDL2/GL backend, so shaders compile to the OpenGL target.

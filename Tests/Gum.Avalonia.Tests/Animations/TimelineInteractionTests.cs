@@ -1,5 +1,10 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Media;
 using Gum.DataTypes;
 using Shouldly;
@@ -28,7 +33,8 @@ public class TimelineInteractionTests
         AnimationViewModel walk = editor.AddAnimation("Walk");
         AnimatedKeyframeViewModel only = editor.AddStateKeyframe($"{Category}/Pressed");
         walk.SelectedKeyframe = null;
-        editor.Layout();
+        // The add menu's item can sit over the new keyframe's list row, which would draw the marker hovered.
+        editor.Hover(new Point(5, 5));
 
         walk.Length.ShouldBe(0f);
         Point marker = editor.KeyframeMarkerCenter(only);
@@ -146,5 +152,88 @@ public class TimelineInteractionTests
         editor.TimelineTrackTipFor(released).ShouldBe($"{Category}/Released");
         editor.Hover(new Point(5, 5));
         editor.TimelineTrackTipFor(released).ShouldBeNull();
+    }
+
+    [AvaloniaFact]
+    public void TypingInTheTimeBox_MovesTheTimeWithEachKeystroke_WithoutRecordingUndo()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddStateKeyframe($"{Category}/Released");
+        int undoCountBefore = editor.UndoManager.CurrentElementHistory?.Actions.Count ?? 0;
+        TextBox timeBox = editor.TimelineTimeBox;
+        editor.ViewModel.DisplayedAnimationTime = 0.12345;
+        editor.Layout();
+        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.12345, "the box showing a rounded time must not write it back");
+
+        editor.Click(timeBox);
+        timeBox.SelectAll();
+
+        foreach (char typed in "0.2")
+        {
+            editor.Window.KeyTextInput(typed.ToString());
+        }
+        editor.Layout();
+        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.2, tolerance: 0.0001);
+
+        editor.Window.KeyTextInput("5");
+        editor.Layout();
+
+        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.25, tolerance: 0.0001);
+        timeBox.Text.ShouldBe("0.25");
+        (editor.UndoManager.CurrentElementHistory?.Actions.Count ?? 0).ShouldBe(undoCountBefore);
+    }
+
+    [AvaloniaFact]
+    public void DraggingTheScrubber_ShowsTheTimeAsATooltip_UntilReleased()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddStateKeyframe($"{Category}/Released");
+        Slider scrubber = editor.Scrubber;
+        Point thumb = editor.CenterOf(editor.ScrubberThumb);
+        double trackWidth = scrubber.Bounds.Width - editor.ScrubberThumb.Bounds.Width;
+        Point half = new Point(thumb.X + trackWidth / 2, thumb.Y);
+
+        editor.Window.MouseMove(thumb, RawInputModifiers.None);
+        editor.Window.MouseDown(thumb, MouseButton.Left, RawInputModifiers.None);
+        editor.Window.MouseMove(half, RawInputModifiers.LeftMouseButton);
+        editor.Layout();
+
+        ToolTip.GetIsOpen(scrubber).ShouldBeTrue();
+        ToolTip.GetTip(scrubber).ShouldBe(editor.ViewModel.DisplayedAnimationTime.ToString("0.00", System.Globalization.CultureInfo.CurrentCulture));
+
+        editor.Window.MouseUp(half, MouseButton.Left, RawInputModifiers.None);
+        editor.Layout();
+
+        ToolTip.GetIsOpen(scrubber).ShouldBeFalse();
+        ToolTip.GetTip(scrubber).ShouldBeNull("hovering the scrubber later must not show a stale time");
+    }
+
+    [AvaloniaFact]
+    public void TheScrubber_DrawsTickMarks_AndJumpsToAClickOnItsTrack()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddStateKeyframe($"{Category}/Released");
+        Slider scrubber = editor.Scrubber;
+
+        scrubber.TickFrequency.ShouldBe(0.1);
+        scrubber.GetVisualDescendants().OfType<TickBar>().Any(tickBar => tickBar.IsEffectivelyVisible).ShouldBeTrue();
+
+        Point thumb = editor.CenterOf(editor.ScrubberThumb);
+        double trackWidth = scrubber.Bounds.Width - editor.ScrubberThumb.Bounds.Width;
+        editor.ClickAt(new Point(thumb.X + trackWidth * 0.75, thumb.Y));
+
+        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.75, tolerance: 0.05);
     }
 }

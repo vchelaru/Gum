@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using StateAnimationPlugin.Timeline;
@@ -56,6 +57,10 @@ public sealed class TimelineView : Grid
 
         StackPanel timeRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 12, 4), VerticalAlignment = VerticalAlignment.Center };
         _timeBox = new TextBox { MinWidth = 64 };
+        // As the WPF box (UpdateSourceTrigger=PropertyChanged), typing moves the time on each
+        // keystroke; Enter and focus loss then reformat the text. The time is view state, so this
+        // records no undo.
+        _timeBox.TextChanged += (_, _) => ApplyTypedTime();
         _timeBox.LostFocus += (_, _) => CommitTimeBox();
         _timeBox.KeyDown += (_, e) =>
         {
@@ -70,8 +75,21 @@ public sealed class TimelineView : Grid
         timeRow.Children.Add(_lengthText);
         Children.Add(timeRow);
 
-        _scrubber = new Slider { Minimum = 0, SmallChange = 0.01, LargeChange = 0.25, Margin = new Thickness(0, 0, 20, 0), VerticalAlignment = VerticalAlignment.Center };
+        _scrubber = new Slider
+        {
+            Minimum = 0,
+            SmallChange = 0.01,
+            LargeChange = 0.25,
+            TickFrequency = 0.1,
+            TickPlacement = TickPlacement.BottomRight,
+            Margin = new Thickness(0, 0, 20, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         _scrubber.Bind(RangeBase.ValueProperty, new Binding(nameof(CurrentTime)) { Source = this, Mode = BindingMode.TwoWay });
+        // The WPF scrubber's AutoToolTip: the time, to two places, while the thumb is dragged.
+        _scrubber.AddHandler(Thumb.DragStartedEvent, (_, _) => ShowScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragDeltaEvent, (_, _) => ShowScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragCompletedEvent, (_, _) => HideScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
         SetColumn(_scrubber, 1);
         Children.Add(_scrubber);
 
@@ -258,6 +276,28 @@ public sealed class TimelineView : Grid
         if (!_timeBox.IsFocused)
         {
             _timeBox.Text = CurrentTime.ToString("0.###", CultureInfo.CurrentCulture);
+        }
+    }
+
+    private void ShowScrubberTip()
+    {
+        ToolTip.SetTip(_scrubber, _scrubber.Value.ToString("0.00", CultureInfo.CurrentCulture));
+        ToolTip.SetIsOpen(_scrubber, true);
+    }
+
+    // Clears the tip too, so hovering the scrubber later doesn't show a stale time.
+    private void HideScrubberTip()
+    {
+        ToolTip.SetIsOpen(_scrubber, false);
+        ToolTip.SetTip(_scrubber, null);
+    }
+
+    // Only text the user typed: the box also shows the time rounded, which must not write back.
+    private void ApplyTypedTime()
+    {
+        if (_timeBox.IsFocused && double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
+        {
+            CurrentTime = time;
         }
     }
 
