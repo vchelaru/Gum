@@ -318,7 +318,11 @@ deleted in Explorer or by a branch switch, `CodeProjectRoot` was empty at the ti
 last edited by an older Gum version.
 
 The scan runs on project load and on demand from **Content > Scan for Orphaned Code Files**, and
-reports each finding as a **GUM0005** row in the Errors tab with a **Delete File** action.
+reports each finding as a **GUM0005** row in the Errors tab with a **Delete File** action. The tool
+never walks the disk on the UI thread: `IOrphanCodeFileScanService.CreatePlan` reads the project on the
+UI thread, `Execute` walks the disk on the thread pool, and `OrphanCodeFileReporter` posts the result
+back through `IDispatcher`, discarding it if a newer scan started. A new tool caller goes through the
+reporter, never `Scan` (the synchronous pair, meant for `gumcli`).
 
 How it decides something is an orphan, and the limits that follow:
 
@@ -328,8 +332,11 @@ How it decides something is an orphan, and the limits that follow:
 * A custom `.cs` is flagged only when its generated sibling is itself a proven orphan. It is never
   judged on its own content. One consequence: a custom file you chose to keep at delete time can never
   be found later, because its anchor is gone.
-* `bin` and `obj` are skipped, `NeverGenerate` elements are left alone, and an element whose source
-  file is merely missing keeps its code files off the list.
+* `bin`, `obj`, `node_modules` and dot-folders (`.git`, `.vs`) are skipped, `NeverGenerate` elements
+  are left alone, and an element whose source file is merely missing keeps its code files off the list.
+* The walk stops after `MaxCodeRootDirectories` folders and says so in Output (or on stderr for
+  `gumcli`). Hitting it almost always means `CodeProjectRoot` resolves to the wrong folder, such as a
+  project copied shallow under `%TEMP%` whose `..\..\` lands in `%LOCALAPPDATA%`.
 
 ### Command line
 

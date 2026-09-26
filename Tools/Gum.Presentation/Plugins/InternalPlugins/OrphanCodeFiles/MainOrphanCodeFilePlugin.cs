@@ -7,12 +7,15 @@ using Gum.Managers;
 using Gum.Messages;
 using Gum.Plugins.BaseClasses;
 using Gum.ProjectServices.CodeGeneration;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolStates;
 using OrphanCodeFilePlugin;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 
@@ -21,7 +24,7 @@ namespace Gum.Plugins.InternalPlugins.OrphanCodeFiles;
 /// the code files being reconciled (issue #4422). Scans on project load and from the
 /// <b>Content</b> ▸ <b>Scan for Orphaned Code Files</b> menu item, and reports through the Errors
 /// tab with a per-file Delete action. All logic lives in <see cref="OrphanCodeFileReporter"/> and
-/// <see cref="OrphanCodeFileScanService"/> — this plugin is WPF menu/event plumbing only.
+/// <see cref="OrphanCodeFileScanService"/> — this plugin is menu/event plumbing only.
 /// </summary>
 [Export(typeof(PluginBase))]
 internal class MainOrphanCodeFilePlugin : PluginBase
@@ -41,7 +44,8 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IOutputManager outputManager,
         IFileCommands fileCommands,
         IDialogService dialogService,
-        IMessenger messenger)
+        IMessenger messenger,
+        IDispatcher dispatcher)
     {
         _projectState = projectState;
         _messenger = messenger;
@@ -62,7 +66,7 @@ internal class MainOrphanCodeFilePlugin : PluginBase
         IOrphanCodeFileScanService scanService = new OrphanCodeFileScanService(
             codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
 
-        _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService);
+        _reporter = new OrphanCodeFileReporter(scanService, fileCommands, dialogService, dispatcher, outputManager);
         _reporter.OrphansChanged += () =>
             _messenger.Send(new RequestErrorRefreshMessage { RequestingPlugin = this });
     }
@@ -89,25 +93,31 @@ internal class MainOrphanCodeFilePlugin : PluginBase
 
     private void HandleProjectLoad(GumProjectSave project)
     {
-        Refresh(project);
+        // Not awaited: the scan walks the disk off the UI thread and posts its result back (#5140).
+        _ = Refresh(project, onApplied: null);
     }
 
     private void HandleScanRequested()
     {
-        Refresh(_projectState.GumProjectSave);
+        _ = Refresh(_projectState.GumProjectSave, ShowScanSummary);
+    }
 
-        int count = _reporter.Orphans.Count;
+    private void ShowScanSummary(OrphanCodeFileScanResult result)
+    {
+        int count = result.Orphans.Count;
         string message = count == 0
             ? "No orphaned code files were found."
             : $"Found {count} orphaned code file(s). They are listed in the Errors tab, each with a " +
                 "Delete File action.\n\nNote that Gum only recognizes files it generated, so extra " +
                 "hand-written partial classes are never reported.";
+        if (result.IsTruncated)
+        {
+            message += "\n\n" + OrphanCodeFileScanService.GetTruncatedMessage(result.CodeRoot);
+        }
         _dialogService.ShowMessage(message, "Scan for Orphaned Code Files");
     }
 
-    private void Refresh(GumProjectSave? project)
-    {
-        // Refresh raises OrphansChanged, which is what sends the Errors tab refresh message.
-        _reporter.Refresh(project, _projectSettingsManager.CreateOrLoadSettingsForProject());
-    }
+    private Task Refresh(GumProjectSave? project, Action<OrphanCodeFileScanResult>? onApplied) =>
+        // The reporter raises OrphansChanged, which is what sends the Errors tab refresh message.
+        _reporter.RefreshAsync(project, _projectSettingsManager.CreateOrLoadSettingsForProject(), onApplied);
 }
