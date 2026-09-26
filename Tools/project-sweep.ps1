@@ -18,9 +18,13 @@ Every project is copied to a work folder first; the originals are never touched.
               the save is not stable.
   codegen     gumcli codegen. Skipped when the project has no code settings and auto-detection
               finds no .csproj. Fails when a written file has a backslash in its name (a Windows
-              path separator used off Windows). Generated files that differ from the checked-in
-              ones, line endings aside, are reported as a note.
-  fonts       gumcli fonts (generates missing bitmap fonts; KernSmith off Windows).
+              path separator used off Windows).
+  fonts       Deletes the project's cached .fnt files, then gumcli fonts (KernSmith off Windows).
+              A font substituted because it is not installed is reported as a note.
+
+After the steps, every file left in the copy goes into manifest.txt (path and hash, line endings
+ignored; generated fonts by name only). Tools/project-sweep-compare.ps1 compares the manifests
+from runs on different OSes.
 
 What gets copied: the project's folder, or, when ProjectCodeSettings.codsj points CodeProjectRoot
 outside it, the folder that holds both, so generated code lands inside the copy. bin, obj and .git
@@ -412,20 +416,18 @@ foreach ($projectFile in $projects) {
             }
             'fonts' {
                 # Deletes the cached fonts first, so every font the project uses is generated on this
-                # OS (KernSmith off Windows), then fails if any of them did not come back.
+                # OS (KernSmith off Windows). The checked-in cache also holds fonts nothing uses any
+                # more, so which fonts come back is compared across OSes (the manifest), not here.
                 $fontCache = Join-Path (Split-Path -Parent $copiedProject) 'FontCache'
-                $cached = @()
                 if (Test-Path -LiteralPath $fontCache) {
-                    $cached = @(Get-ChildItem -LiteralPath $fontCache -Filter '*.fnt' -File | ForEach-Object Name)
                     Get-ChildItem -LiteralPath $fontCache -Filter '*.fnt' -File | Remove-Item -Force
                 }
                 $run = Invoke-Gumcli $log @('fonts', $copiedProject)
-                $missing = @($cached | Where-Object { -not (Test-Path -LiteralPath (Join-Path $fontCache $_)) })
-                Add-Content -LiteralPath $log -Value (@('', 'cached fonts that were not generated again:') + $missing)
+                $substituted = @($run.Output | Where-Object { $_ -match 'is not installed on this machine' } | Sort-Object -Unique)
                 if ($run.ExitCode -ne 0) {
                     $result = 'FAIL'; $detail = Get-ErrorLines $run.Output
-                } elseif ($missing.Count -gt 0) {
-                    $result = 'FAIL'; $detail = 'did not generate ' + (Format-FileList $missing)
+                } elseif ($substituted.Count -gt 0) {
+                    $result = 'note'; $detail = $substituted -join ' '
                 }
             }
         }
@@ -445,10 +447,14 @@ foreach ($projectFile in $projects) {
 
     # What the steps left behind, for comparing runs on different OSes (Tools/project-sweep-compare.ps1).
     # Carriage returns are dropped before hashing, since git checks text out with CRLF on Windows.
-    # Font files are left out: bmfont.exe and KernSmith draw glyphs differently by design.
+    # Generated fonts are listed without their content: bmfont.exe and KernSmith draw glyphs
+    # differently by design, but every OS must generate the same set of fonts.
     foreach ($file in Get-ChildItem -LiteralPath $copyDir -Recurse -File -Force) {
         $relative = [System.IO.Path]::GetRelativePath($copyDir, $file.FullName) -replace '\\', '/'
-        if ($relative -match '(^|/)FontCache/') { continue }
+        if ($relative -match '(^|/)FontCache/') {
+            if ($relative.EndsWith('.fnt')) { $manifest.Add("$label|$relative|generated") }
+            continue
+        }
         $manifest.Add("$label|$relative|$([ProjectSweepFacts]::HashWithoutCarriageReturns($file.FullName))")
     }
 }

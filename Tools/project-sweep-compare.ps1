@@ -11,8 +11,8 @@ Two or more manifest.txt files. Each is labelled by its parent folder's name in 
 pwsh -Command "./Tools/project-sweep-compare.ps1 -Manifest win/manifest.txt, linux/manifest.txt"
 
 .NOTES
-Exit code 0 when every manifest lists the same files with the same content, 1 otherwise. Line
-endings are already ignored by the manifests; font files are not in them.
+Exit code 0 when every manifest lists the same files with the same content, 1 otherwise. The
+manifests already ignore line endings, and list generated fonts by name only.
 #>
 [CmdletBinding()]
 param(
