@@ -638,10 +638,9 @@ public class ArcRuntime
     {
         get
         {
-            if (_containedArc == null)
-            {
-                _containedArc = (Arc)this.RenderableComponent;
-            }
+            _containedArc ??= this.RenderableComponent as Arc
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(ArcRuntime)} has no Arc renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return _containedArc;
         }
     }

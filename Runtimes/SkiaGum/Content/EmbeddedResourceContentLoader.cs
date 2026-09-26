@@ -14,7 +14,7 @@ namespace SkiaGum.Content
     /// </remarks>
     public sealed class EmbeddedResourceContentLoader : IContentLoader
     {
-        public T LoadContent<T>(string contentName)
+        public T? LoadContent<T>(string contentName)
         {
             if (typeof(T) == typeof(SKTypeface))
             {
@@ -57,7 +57,7 @@ namespace SkiaGum.Content
         }
 
         /// <inheritdoc/>
-        public T TryLoadContent<T>(string contentName)
+        public T? TryLoadContent<T>(string contentName)
         {
             try
             {

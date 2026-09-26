@@ -148,7 +148,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
             }
         }
     }
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -182,6 +182,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
     /// </summary>
     public virtual bool ShouldApplyColorOnSpriteRender => false;
 
+    /// <summary>
+    /// How <see cref="Color"/> combines with a textured renderable (<c>Sprite</c>,
+    /// <c>NineSlice</c>). Modulate (the default) multiplies by it, ColorTextureAlpha uses the
+    /// texture only as an alpha mask, and Add adds it on top. Shapes that bake color into their paint ignore it.
+    /// </summary>
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
 
@@ -608,7 +613,10 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     private float _dropshadowBlurX;
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>
+    /// Horizontal visible blur radius of the dropshadow, in pixels. Passed to
+    /// <c>SKImageFilter.CreateDropShadow</c> as a sigma of one third of this value.
+    /// </summary>
     public float DropshadowBlurX
     {
         get => _dropshadowBlurX;
@@ -621,7 +629,9 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
 
     private float _dropshadowBlurY;
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>
+    /// Vertical visible blur radius of the dropshadow, in pixels. See <see cref="DropshadowBlurX"/>.
+    /// </summary>
     public float DropshadowBlurY
     {
         get => _dropshadowBlurY;
@@ -647,7 +657,7 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable
         set;
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
 #endregion
 

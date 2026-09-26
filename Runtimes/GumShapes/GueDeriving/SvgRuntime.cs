@@ -40,7 +40,9 @@ public class SvgRuntime : InteractiveGue
     {
         get
         {
-            mContainedSvg ??= (Svg)this.RenderableComponent;
+            mContainedSvg ??= this.RenderableComponent as Svg
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(SvgRuntime)} has no Svg renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedSvg;
         }
     }

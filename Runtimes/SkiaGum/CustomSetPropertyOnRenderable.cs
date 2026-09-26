@@ -1293,8 +1293,7 @@ public partial class CustomSetPropertyOnRenderable
                 if (!string.IsNullOrEmpty(asString))
                 {
                     var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var contentLoader = loaderManager.ContentLoader;
-                    asNineSlice.Texture = contentLoader.LoadContent<SKBitmap>(asString);
+                    asNineSlice.Texture = loaderManager.LoadContent<SKBitmap>(asString);
                 }
                 else
                 {
@@ -1391,8 +1390,7 @@ public partial class CustomSetPropertyOnRenderable
                 else if (!string.IsNullOrEmpty(asString))
                 {
                     var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                    var contentLoader = loaderManager.ContentLoader;
-                    var image = contentLoader.LoadContent<SKBitmap>(asString);
+                    var image = loaderManager.LoadContent<SKBitmap>(asString);
                     asSprite.Texture = image;
                 }
                 else
@@ -1561,7 +1559,7 @@ public partial class CustomSetPropertyOnRenderable
             var rawText = valueAsString;
             var shouldTranslate = gue is not Gum.GueDeriving.TextRuntime textRuntimeForLocalization
                 || textRuntimeForLocalization.LocalizeText;
-            if (LocalizationService != null && propertyName == "Text" && shouldTranslate)
+            if (LocalizationService != null && rawText != null && propertyName == "Text" && shouldTranslate)
             {
                 rawText = LocalizationService.Translate(rawText);
             }

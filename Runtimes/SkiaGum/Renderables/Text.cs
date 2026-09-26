@@ -20,10 +20,10 @@ namespace SkiaGum;
 #region LetterCustomization
 
 /// <summary>
-/// Mirrors <see cref="RenderingLibrary.Graphics.LetterCustomization"/> on the MonoGame-family runtime -
+/// Mirrors <c>RenderingLibrary.Graphics.LetterCustomization</c> on the MonoGame-family runtime -
 /// the per-letter styling a <c>[Custom]</c> callback can apply. SkiaGum cannot reference that type
 /// directly (it lives in the MonoGame-coupled <c>RenderingLibrary.Graphics.Text</c> source file), so this
-/// is a local copy, matching the approach <see cref="Gum.Renderables.LetterCustomization"/> takes on
+/// is a local copy, matching the approach <c>Gum.Renderables.LetterCustomization</c> takes on
 /// Raylib. Only <see cref="XOffset"/>, <see cref="YOffset"/>, <see cref="Color"/> and
 /// <see cref="ReplacementCharacter"/> are honored on SkiaGum (issue #3692): they map directly onto a
 /// RichTextKit <c>Style</c> override (Color) plus a post-layout glyph nudge (<c>FontRun.MoveGlyphs</c>)
@@ -49,7 +49,7 @@ public struct LetterCustomization
 #region ParameterizedLetterCustomizationCall
 
 /// <summary>
-/// Mirrors <see cref="RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall"/> on the
+/// Mirrors <c>RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall</c> on the
 /// MonoGame-family runtime. Resolves <see cref="FunctionName"/> against <see cref="Text.Customizations"/>
 /// / <see cref="Text.ContextCustomizations"/> lazily (rather than capturing the delegate at parse time)
 /// so registering the callback after the markup is assigned still takes effect at the next layout.
@@ -98,8 +98,8 @@ public class ParameterizedLetterCustomizationCall
 /// doesn't cause texture-sampling shimmer -- but it does give each glyph a slightly different
 /// anti-aliasing pattern per frame, or between sibling items in a list, which reads as
 /// jitter/inconsistency at small pixel-art font sizes. Mirrors the XNALIKE
-/// (<see cref="RenderingLibrary.Graphics.TextRenderingPositionMode"/>) and Raylib
-/// (<see cref="Gum.Renderables.TextRenderingPositionMode"/>) enum values and default.
+/// (<c>RenderingLibrary.Graphics.TextRenderingPositionMode</c>) and Raylib
+/// (<c>Gum.Renderables.TextRenderingPositionMode</c>) enum values and default.
 /// </summary>
 public enum TextRenderingPositionMode
 {
@@ -116,8 +116,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 {
     /// <summary>
     /// Registry of simple per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag, keyed by name.
-    /// Mirrors <see cref="RenderingLibrary.Graphics.Text.Customizations"/> on the MonoGame-family
-    /// runtime, and <see cref="Gum.Renderables.Text.Customizations"/> on Raylib -- each backend keeps its
+    /// Mirrors <c>RenderingLibrary.Graphics.Text.Customizations</c> on the MonoGame-family
+    /// runtime, and <c>Gum.Renderables.Text.Customizations</c> on Raylib -- each backend keeps its
     /// own registry (issue #3692), so a callback must be registered per platform the app targets.
     /// </summary>
     public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
@@ -128,7 +128,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// callback receives the <see cref="LetterCustomization"/> produced by any enclosing <c>[Custom]</c>
     /// tag so nested tags can chain (e.g. an outer tag sets Color, an inner tag darkens it). Checked
     /// before <see cref="Customizations"/> when both are registered under the same name. Mirrors
-    /// <see cref="RenderingLibrary.Graphics.Text.ContextCustomizations"/> on the MonoGame-family runtime.
+    /// <c>RenderingLibrary.Graphics.Text.ContextCustomizations</c> on the MonoGame-family runtime.
     /// </summary>
     public static Dictionary<string, Func<int, string, LetterCustomization, LetterCustomization>> ContextCustomizations { get; private set; }
         = new();
@@ -282,7 +282,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// When <c>true</c>, an overflowing last line ends with an ellipsis ("...") once the text is
     /// truncated (by <see cref="MaxNumberOfLines"/> or by <see cref="TextOverflowVerticalMode"/>
     /// clipping to <see cref="Height"/>). Honored through RichTextKit's
-    /// <c>TextBlock.EllipsisEnabled</c> in <see cref="GetTextBlock"/> (issue #3677). Set on the
+    /// <c>TextBlock.EllipsisEnabled</c> in <see cref="GetTextBlock(string, float?, bool)"/> (issue #3677). Set on the
     /// MonoGame/Raylib backends via <c>TextOverflowHorizontalMode.EllipsisLetter</c>.
     /// </summary>
     public bool IsTruncatingWithEllipsisOnLastLine
@@ -356,7 +356,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <inheritdoc/>
     /// <remarks>
     /// SkiaGum's own wrapping is performed by Topten.RichTextKit's <see cref="TextBlock"/>
-    /// (see <see cref="GetTextBlock"/>), not by the shared <see cref="IWrappedTextExtensions.UpdateLines"/>
+    /// (see <see cref="GetTextBlock(string, float?, bool)"/>), not by the shared <see cref="IWrappedTextExtensions.UpdateLines"/>
     /// word-wrap algorithm the MonoGame/Raylib backends use, so this value has no effect on
     /// SkiaGum's own layout. RichTextKit performs Unicode (UAX#14) line breaking, which does
     /// break within an overlong word when no earlier break opportunity fits the wrap width, so
@@ -558,7 +558,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     /// <summary>
     /// When <c>true</c>, a drop shadow is rendered behind the text using
-    /// <see cref="SKImageFilter.CreateDropShadow"/>. Mirrors the Skia shape drop-shadow property set.
+    /// <see cref="SKImageFilter.CreateDropShadow(float, float, float, float, SKColor)"/>. Mirrors the Skia shape drop-shadow property set.
     /// </summary>
     public bool HasDropshadow
     {
@@ -771,7 +771,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         get; set;
     }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -779,8 +779,8 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     public float Rotation { get; set; }
 
-    string mRawText;
-    public string RawText
+    string? mRawText;
+    public string? RawText
     {
         get
         {
@@ -803,7 +803,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     public ColorOperation ColorOperation { get; set; } = ColorOperation.Modulate;
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
     public bool FlipHorizontal
     {
@@ -855,7 +855,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <see cref="TextOverflowVerticalMode.TruncateLine"/> caps the RichTextKit
     /// <c>TextBlock</c> to <see cref="Height"/> (dropping lines that would spill past the
     /// bottom); <see cref="TextOverflowVerticalMode.SpillOver"/> (the default) renders
-    /// unbounded. Honored in <see cref="GetTextBlock"/> via <c>TextBlock.MaxHeight</c> (issue #3677).
+    /// unbounded. Honored in <see cref="GetTextBlock(string, float?, bool)"/> via <c>TextBlock.MaxHeight</c> (issue #3677).
     /// </summary>
     public TextOverflowVerticalMode TextOverflowVerticalMode
     {
@@ -895,7 +895,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
     public void Render(ISystemManagers managers)
     {
-        var canvas = (managers as SystemManagers).Canvas;
+        var canvas = ((SystemManagers)managers).Canvas;
 
         if (AbsoluteVisible)
         {
@@ -954,7 +954,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     }
 
     /// <summary>
-    /// The vertical shift applied to <see cref="GetAbsoluteY"/> before positioning <paramref name="textBlock"/>
+    /// The vertical shift applied to <c>GetAbsoluteY</c> before positioning <paramref name="textBlock"/>
     /// -- Center/Bottom shift the block within <see cref="Height"/> so it isn't pinned to the top. Shared by
     /// <see cref="Render"/> (positioning the painted block) and <see cref="GetCharacterIndexAtPosition(float, float)"/>
     /// (converting a screen click into the same block-local coordinate space), so the two never drift apart.
@@ -1056,12 +1056,12 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
         var effectiveMaxHeight = GetEffectiveMaxHeight();
 
         if(effectiveWidth != _lastEffectiveWidth
-            || _lastScreenDensity != ScreenDensity
+            || _lastScreenDensity != GlobalTextScale
             || effectiveMaxHeight != _lastEffectiveMaxHeight)
         {
             _cachedTextBlock = null;
             _lastEffectiveWidth = effectiveWidth;
-            _lastScreenDensity = ScreenDensity;
+            _lastScreenDensity = GlobalTextScale;
             _lastEffectiveMaxHeight = effectiveMaxHeight;
         }
 
@@ -1091,10 +1091,11 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
     /// <param name="textToRender">The text to lay out. Ignored when <paramref name="allowMarkup"/> is
     /// true and the RawText carries BBCode -- the parsed <see cref="_layoutText"/> / styled runs are
     /// used instead.</param>
+    /// <param name="forcedWidth">The wrap width. When null, this Text's <see cref="Width"/> is used.</param>
     /// <param name="allowMarkup">When true, BBCode inline styling (issue #3679) is honored by adding
     /// one styled run per <see cref="StyledSubstring"/>. When false (the <see cref="MaxLettersToShow"/>
     /// reveal path), the text is added as a single unstyled run.</param>
-    private TextBlock GetTextBlock(string textToRender, float? forcedWidth, bool allowMarkup)
+    private TextBlock GetTextBlock(string? textToRender, float? forcedWidth, bool allowMarkup)
     {
         List<StyledTextRun> runs = allowMarkup && _hasMarkup
             ? GetStyledRuns()
@@ -1143,7 +1144,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
                     break;
             }
 
-            textBlock.MaxLines = MaximumNumberOfLines;
+            textBlock.MaxLines = MaxNumberOfLines;
 
             // Vertical overflow (issue #3677): TruncateLine caps the block to this Text's Height so
             // RichTextKit drops lines that would spill past the bottom; SpillOver leaves MaxHeight
@@ -1265,7 +1266,7 @@ public class Text : IRenderableIpso, IVisible, IFormsText, ICloneable
 
         if (!_hasMarkup || string.IsNullOrEmpty(_layoutText))
         {
-            runs.Add(new StyledTextRun(_hasMarkup ? _layoutText : mRawText, GetStyle()));
+            runs.Add(new StyledTextRun((_hasMarkup ? _layoutText : mRawText) ?? string.Empty, GetStyle()));
             return runs;
         }
 

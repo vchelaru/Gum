@@ -21,16 +21,16 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
     } = SKColors.White;
 
     Vector2 Position;
-    IRenderableIpso mParent;
+    IRenderableIpso? mParent;
 
     public bool IsRenderTarget => false;
 
-    public SKSvg Texture
+    public SKSvg? Texture
     {
         get; set;
     }
 
-    public IRenderableIpso Parent
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -50,7 +50,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         }
     }
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
@@ -71,8 +71,8 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         set { } // not used currently
     }
 
-    public float? TextureWidth => Texture?.Picture.CullRect.Width;
-    public float? TextureHeight => Texture?.Picture.CullRect.Height;
+    public float? TextureWidth => Texture?.Picture?.CullRect.Width;
+    public float? TextureHeight => Texture?.Picture?.CullRect.Height;
 
     public float X
     {
@@ -102,7 +102,7 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
         get;
         set;
     }
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -191,10 +191,11 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
 #if SKIA
     public void Render(ISystemManagers managers)
     {
-        var canvas = (managers as SystemManagers).Canvas;
-        if (AbsoluteVisible && Texture != null)
+        var canvas = ((SystemManagers)managers).Canvas;
+        SKPicture? picture = Texture?.Picture;
+        if (AbsoluteVisible && picture != null)
         {
-            var textureBox = Texture.Picture.CullRect;
+            var textureBox = picture.CullRect;
             var textureWidth = textureBox.Width;
             var textureHeight = textureBox.Height;
 
@@ -257,12 +258,12 @@ public class VectorSprite : IRenderableIpso, IVisible, IAspectRatio, ITextureCoo
 
                     using (paint)
                     {
-                        canvas.DrawPicture(Texture.Picture, ref result, paint);
+                        canvas.DrawPicture(picture, in result, paint);
                     }
                 }
                 else
                 {
-                    canvas.DrawPicture(Texture.Picture, ref result);
+                    canvas.DrawPicture(picture, in result);
                 }
             }
             if (shouldClip)

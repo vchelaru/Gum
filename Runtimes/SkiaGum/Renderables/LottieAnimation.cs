@@ -12,14 +12,14 @@ namespace SkiaGum.Renderables;
 
 internal class LottieAnimation : IRenderableIpso, IVisible
 {
-    public SkiaSharp.Skottie.Animation Animation
+    public SkiaSharp.Skottie.Animation? Animation
     {
         get; set;
     }
 
     public bool IsRenderTarget => false;
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
 
     ObservableCollectionNoReset<IRenderableIpso> mChildren;
@@ -28,8 +28,8 @@ internal class LottieAnimation : IRenderableIpso, IVisible
         get { return mChildren; }
     }
 
-    IRenderableIpso mParent;
-    public IRenderableIpso Parent
+    IRenderableIpso? mParent;
+    public IRenderableIpso? Parent
     {
         get { return mParent; }
         set
@@ -79,7 +79,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
         get;
         set;
     }
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -164,7 +164,7 @@ internal class LottieAnimation : IRenderableIpso, IVisible
             var absoluteY = this.GetAbsoluteY();
             var boundingRect = new SKRect(absoluteX, absoluteY, absoluteX + this.Width, absoluteY + this.Height);
 
-            var canvas = (managers as SystemManagers).Canvas;
+            var canvas = ((SystemManagers)managers).Canvas;
 
             Animation.Render(canvas, boundingRect);
         }

@@ -185,7 +185,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
 
     #region Solid colors
 
-    public new int Alpha
+    public int Alpha
     {
         get => ContainedRenderable.Alpha;
         set => ContainedRenderable.Alpha = value;
@@ -752,7 +752,7 @@ public abstract class SkiaShapeRuntime : InteractiveGue
     /// mirroring <c>AposShapeRuntime.SetContainedShape</c> (XNALIKE). The hook is what makes
     /// <see cref="RefreshShapeState"/> (the two-slot stroke Width/Height mirror,
     /// <c>StrokeWidthUnits.ScreenPixel</c> resolution) run even when this runtime is a TOP-LEVEL
-    /// <see cref="RenderingLibrary.Graphics.Layer"/> member added via <c>AddToManagers</c> — in
+    /// <c>Layer</c> member added via <c>AddToManagers</c> — in
     /// that case only the raw fill renderable (not this GUE wrapper) is registered on the Layer,
     /// so <see cref="PreRender"/>'s own override is otherwise unreachable from the render walk
     /// (issue #4367 follow-up). A NESTED (tree-parented) instance still reaches

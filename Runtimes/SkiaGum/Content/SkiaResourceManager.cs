@@ -11,11 +11,11 @@ namespace SkiaGum.Content;
 
 public static class SkiaResourceManager
 {
-    public static Assembly CustomResourceAssembly { get; set; }
+    public static Assembly? CustomResourceAssembly { get; set; }
 
     // Even though this is used by EmbeddedResourceContentLoader, we put it here 
     // so projects could access both this and CustomResourceAssembly together.
-    public static Func<string, string> AdjustContentName;
+    public static Func<string, string>? AdjustContentName;
 
     static Assembly ResourceAssembly => CustomResourceAssembly ?? Assembly.GetExecutingAssembly();
 
@@ -23,7 +23,7 @@ public static class SkiaResourceManager
 
     #region SVG caching
 
-    private static ConcurrentDictionary<string, SKSvg> svgCache;
+    private static ConcurrentDictionary<string, SKSvg> svgCache = new ConcurrentDictionary<string, SKSvg>();
 
     public static bool ContainsSvg(string name) => svgCache.ContainsKey(name);
 
@@ -78,9 +78,9 @@ public static class SkiaResourceManager
 
     #region Lottie Animation Caching
 
-    private static ConcurrentDictionary<string, Animation> animationCache;
+    private static ConcurrentDictionary<string, Animation?> animationCache = new ConcurrentDictionary<string, Animation?>();
 
-    public static Animation GetLottieAnimation(string resourceName)
+    public static Animation? GetLottieAnimation(string resourceName)
     {
         if (!animationCache.ContainsKey(resourceName))
             CacheAnimation(resourceName);
@@ -93,7 +93,7 @@ public static class SkiaResourceManager
         using (Stream stream = GetManifestResourceStream(
             resourceName, ResourceAssembly))
         {
-            Animation animation = null;
+            Animation? animation = null;
 
             try
             {
@@ -117,24 +117,21 @@ public static class SkiaResourceManager
 
     private static Stream GetUrlStream(string url)
     {
-        byte[] imageData = null;
-
-        using (var wc = new System.Net.WebClient())
-            imageData = wc.DownloadData(url);
+        using var client = new System.Net.Http.HttpClient();
+        byte[] imageData = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
 
         return new MemoryStream(imageData);
     }
 
-    public static SKBitmap GetSKBitmapFromUrl(string url)
+    public static SKBitmap? GetSKBitmapFromUrl(string url)
     {
         // Even though GetSKBitmap does a cache check internally, we want to do a cache check before getting the url
         // so we'll wrap the check here:
         if (!skBitmapCache.ContainsKey(url))
         {
-            Stream urlStream = null;
             try
             {
-                urlStream = GetUrlStream(url);
+                Stream urlStream = GetUrlStream(url);
                 return GetSKBitmap(url, urlStream);
             }
             catch
@@ -194,7 +191,7 @@ public static class SkiaResourceManager
 
     #region Font caching
 
-    private static ConcurrentDictionary<int, SKTypeface> typefaceCache;
+    private static ConcurrentDictionary<int, SKTypeface> typefaceCache = new ConcurrentDictionary<int, SKTypeface>();
 
     public enum TypefaceType
     {
@@ -264,9 +261,6 @@ public static class SkiaResourceManager
         if(IsInitialized == false)
         {
             IsInitialized = true;
-            svgCache = new ConcurrentDictionary<string, SKSvg>();
-            animationCache = new ConcurrentDictionary<string, Animation>();
-            typefaceCache = new ConcurrentDictionary<int, SKTypeface>();
 
             foreach (int i in Enum.GetValues(typeof(TypefaceType)))
             {

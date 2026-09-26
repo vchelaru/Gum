@@ -17,15 +17,14 @@ public class ColoredCircleRuntime : SkiaShapeRuntime
 {
     protected override RenderableShapeBase ContainedRenderable => ContainedCircle;
 
-    SkiaGum.Renderables.Circle mContainedCircle;
+    SkiaGum.Renderables.Circle? mContainedCircle;
     SkiaGum.Renderables.Circle ContainedCircle
     {
         get
         {
-            if (mContainedCircle == null)
-            {
-                mContainedCircle = this.RenderableComponent as SkiaGum.Renderables.Circle;
-            }
+            mContainedCircle ??= this.RenderableComponent as SkiaGum.Renderables.Circle
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(ColoredCircleRuntime)} has no Circle renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedCircle;
         }
     }

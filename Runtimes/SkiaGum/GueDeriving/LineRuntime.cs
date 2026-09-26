@@ -43,10 +43,9 @@ public class LineRuntime
     {
         get
         {
-            if (_containedLine == null)
-            {
-                _containedLine = (Line)this.RenderableComponent;
-            }
+            _containedLine ??= this.RenderableComponent as Line
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(LineRuntime)} has no Line renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return _containedLine;
         }
     }

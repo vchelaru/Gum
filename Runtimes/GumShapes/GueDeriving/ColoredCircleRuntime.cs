@@ -28,10 +28,9 @@ public class ColoredCircleRuntime : AposShapeRuntime
     {
         get
         {
-            if (mContainedCircle == null)
-            {
-                mContainedCircle = (Circle)this.RenderableComponent;
-            }
+            mContainedCircle ??= this.RenderableComponent as Circle
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(ColoredCircleRuntime)} has no Circle renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedCircle;
         }
     }

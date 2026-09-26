@@ -29,7 +29,13 @@ namespace RenderingLibrary
         // sprite-sheet lookup resolve to this assembly's embedded resources.
         public static string AssemblyPrefix => "SkiaGum.Content";
 
-        static SystemManagers _default;
+        // Matches the MonoGame/raylib SystemManagers.Default contract (non-nullable, null only before
+        // Initialize) so source shared across backends sees the same nullability in every build.
+        static SystemManagers _default = null!;
+
+        /// <summary>
+        /// The SystemManagers created by Gum initialization (e.g. GumService.Initialize). Not usable before that.
+        /// </summary>
         public static SystemManagers Default
         {
             get => _default;
@@ -40,10 +46,30 @@ namespace RenderingLibrary
             }
         }
 
-        public SkiaSharp.SKCanvas Canvas { get; set; }
+        SkiaSharp.SKCanvas? _canvas;
+
+        /// <summary>
+        /// The canvas renderables draw to. Assigned by the host (e.g. GumService.Initialize) before drawing.
+        /// </summary>
+        public SkiaSharp.SKCanvas Canvas
+        {
+            get => _canvas ?? throw new InvalidOperationException(
+                "SystemManagers.Canvas has not been assigned. Initialize GumService (or assign Canvas) before drawing.");
+            set => _canvas = value;
+        }
 
 
-        public RenderingLibrary.Graphics.Renderer Renderer { get; private set; }
+        RenderingLibrary.Graphics.Renderer? _renderer;
+
+        /// <summary>
+        /// The Renderer used by this SystemManagers, created by <see cref="Initialize"/>.
+        /// </summary>
+        public RenderingLibrary.Graphics.Renderer Renderer
+        {
+            get => _renderer ?? throw new InvalidOperationException(
+                "SystemManagers.Renderer is not available until Initialize is called.");
+            private set => _renderer = value;
+        }
         public bool EnableTouchEvents { get => throw new System.NotImplementedException(); set => throw new System.NotImplementedException(); }
 
         IRenderer ISystemManagers.Renderer => Renderer;
@@ -241,7 +267,7 @@ namespace RenderingLibrary
             };
         }
 
-        private void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers managers, Layer layer)
+        private void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers managers, Layer? layer)
         {
             (layer ?? managers.Renderer.Layers[0]).Add(renderable);
         }

@@ -12,21 +12,20 @@ namespace Gum.GueDeriving;
 
 public class SvgRuntime : InteractiveGue
 {
-    VectorSprite mContainedSprite;
+    VectorSprite? mContainedSprite;
     VectorSprite ContainedSprite
     {
         get
         {
-            if (mContainedSprite == null)
-            {
-                mContainedSprite = this.RenderableComponent as VectorSprite;
-            }
+            mContainedSprite ??= this.RenderableComponent as VectorSprite
+                ?? throw new System.InvalidOperationException(
+                    $"{nameof(SvgRuntime)} has no {nameof(VectorSprite)} renderable. Construct it with fullInstantiation: true or call SetContainedObject first.");
             return mContainedSprite;
         }
     }
 
-    string sourceFile;
-    public string SourceFile
+    string? sourceFile;
+    public string? SourceFile
     {
         // eventually we may want to store this off somehow
         get => sourceFile;
@@ -35,14 +34,21 @@ public class SvgRuntime : InteractiveGue
             if (sourceFile != value)
             {
                 sourceFile = value;
-                var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                SKSvg skiaSvg = loaderManager.LoadContent<SKSvg>(value);
-                Texture = skiaSvg;
+                if (string.IsNullOrEmpty(value))
+                {
+                    Texture = null;
+                }
+                else
+                {
+                    var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
+                    SKSvg? skiaSvg = loaderManager.LoadContent<SKSvg>(value);
+                    Texture = skiaSvg;
+                }
             }
         }
     }
 
-    public SKSvg Texture
+    public SKSvg? Texture
     {
         get => ContainedSprite.Texture;
         set => ContainedSprite.Texture = value;

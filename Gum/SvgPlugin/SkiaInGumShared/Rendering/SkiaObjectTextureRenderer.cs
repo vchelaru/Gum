@@ -92,14 +92,15 @@ namespace SkiaGum.Renderables
                 var imageInfo = new SKImageInfo((int)widthToUse, (int)heightToUse, colorType, SKAlphaType.Premul);
                 using (var surface = SKSurface.Create(imageInfo))
                 {
-                    // It's possible this can fail
-                    if (surface != null)
+                    // It's possible this can fail, and there is no device to upload to before the renderer is initialized
+                    GraphicsDevice? graphicsDevice = SystemManagers.Default.Renderer.GraphicsDevice;
+                    if (surface != null && graphicsDevice != null)
                     {
                         _drawable.DrawToSurface(surface);
 
                         var skImage = surface.Snapshot();
 
-                        Texture = RenderImageToTexture2D(skImage, SystemManagers.Default.Renderer.GraphicsDevice, colorType);
+                        Texture = RenderImageToTexture2D(skImage, graphicsDevice, colorType);
                         NeedsUpdate = false;
                     }
                 }

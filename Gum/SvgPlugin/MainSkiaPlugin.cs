@@ -173,7 +173,7 @@ namespace SkiaPlugin
             return arg1 == "svg" || arg1 == "json";
         }
 
-        private IRenderableIpso HandleCreateRenderbleFor(string type)
+        private IRenderableIpso? HandleCreateRenderbleFor(string type)
         {
             switch (type)
             {
