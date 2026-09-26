@@ -1050,7 +1050,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
             GumTreeNode standardElementsTreeNode = new GumTreeNode("Standard");
             standardElementsTreeNode.ImageIndex = FolderImageIndex;
-            // When the experimental Standards palette is on, the Standard folder is replaced by the
+            // When the Standards palette is on, the Standard folder is replaced by the
             // chip palette, so it is not shown in the tree. The node object is still kept (and still
             // populated) so toggling the setting at runtime can restore it without a full rebuild.
             if (!_projectState.EffectiveUseStandardsPalette)

@@ -49,6 +49,33 @@ public class EditCommandsTests : BaseTestClass
         _editCommands = _mocker.CreateInstance<EditCommands>();
     }
 
+    [Theory]
+    [InlineData(nameof(EditCommands.ShowAddScreenDialog), "adding a screen")]
+    [InlineData(nameof(EditCommands.ShowAddComponentDialog), "adding a component")]
+    [InlineData(nameof(EditCommands.ShowAddFolderDialog), "adding a folder")]
+    [InlineData(nameof(EditCommands.AddBehavior), "adding a behavior")]
+    public void AddActions_ShowSaveFirstMessageInsteadOfPrompting_WhenProjectIsUnsaved(string methodName, string action)
+    {
+        _mocker.GetMock<IProjectState>().Setup(p => p.NeedsToSaveProject).Returns(true);
+
+        typeof(EditCommands).GetMethod(methodName)!.Invoke(_editCommands, null);
+
+        _dialogService.Verify(d => d.ShowMessage($"You must first save the project before {action}", null, null), Times.Once);
+        _dialogService.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public void ShowAddScreenDialog_ShowsDialog_WhenProjectIsSaved()
+    {
+        _mocker.GetMock<IProjectState>().Setup(p => p.NeedsToSaveProject).Returns(false);
+
+        _editCommands.ShowAddScreenDialog();
+
+        _dialogService.Verify(d => d.Show(
+            It.IsAny<Action<Gum.Dialogs.AddScreenDialogViewModel>?>(),
+            out It.Ref<Gum.Dialogs.AddScreenDialogViewModel>.IsAny), Times.Once);
+    }
+
     [Fact]
     public void AskToRenameBehavior_UpdatesElementBehaviorReferences()
     {

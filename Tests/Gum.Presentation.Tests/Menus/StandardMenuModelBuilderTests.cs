@@ -43,6 +43,22 @@ public class StandardMenuModelBuilderTests
     }
 
     [Fact]
+    public void Build_AddScreenAndComponent_GoThroughEditCommandsSaveGuard()
+    {
+        AutoMocker mocker = new AutoMocker();
+        Mock<IEditCommands> editCommands = mocker.GetMock<IEditCommands>();
+        StandardMenuModelBuilder builder = mocker.CreateInstance<StandardMenuModelBuilder>();
+
+        MenuModel model = builder.Build();
+        MenuItemModel add = model.GetItem("Edit")!.Items.Single(item => item.Header == "Add");
+        add.Items.Single(item => item.Header == "Screen").Invoke();
+        add.Items.Single(item => item.Header == "Component").Invoke();
+
+        editCommands.Verify(e => e.ShowAddScreenDialog(), Times.Once);
+        editCommands.Verify(e => e.ShowAddComponentDialog(), Times.Once);
+    }
+
+    [Fact]
     public void ShowAbout_ShowsTheVersionMessage_SameAsHelpAbout()
     {
         AutoMocker mocker = new AutoMocker();

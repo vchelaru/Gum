@@ -15,7 +15,7 @@ using Gum.Avalonia.Themes;
 namespace Gum.Avalonia.Plugins.TreeView;
 
 /// <summary>
-/// The experimental Standards chip palette pinned below the element tree when the
+/// The Standards chip palette pinned below the element tree when the
 /// UseStandardsPalette setting is on. Each chip is a standard type that can be dragged onto the
 /// tree or canvas, Ctrl+clicked to add it to the current element, or right-clicked for more. The
 /// counterpart of the WPF <c>StandardsPaletteView</c>.

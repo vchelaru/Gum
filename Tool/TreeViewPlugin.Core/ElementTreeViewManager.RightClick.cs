@@ -141,7 +141,7 @@ public partial class ElementTreeViewManager
     {
         if (SelectedNode != null)
         {
-            _dialogService.Show<AddFolderDialogViewModel>();
+            _editCommands.ShowAddFolderDialog();
         }
     }
 
@@ -411,7 +411,7 @@ public partial class ElementTreeViewManager
 
             else if (SelectedNode.IsTopScreenContainerTreeNode() || SelectedNode.IsScreensFolderTreeNode())
             {
-                AddMenuItem("Add Screen", () => _dialogService.Show<AddScreenDialogViewModel>());
+                AddMenuItem("Add Screen", _editCommands.ShowAddScreenDialog);
                 AddMenuItem("Import Screen", HandleImportScreen);
                 AddMenuItem("Add Folder", HandleAddFolder);
                 AddMenuItem("View in explorer", HandleViewInExplorer);
@@ -428,7 +428,7 @@ public partial class ElementTreeViewManager
 
             else if (SelectedNode.IsTopComponentContainerTreeNode() || SelectedNode.IsComponentsFolderTreeNode())
             {
-                AddMenuItem("Add Component", () => _dialogService.Show<AddComponentDialogViewModel>());
+                AddMenuItem("Add Component", _editCommands.ShowAddComponentDialog);
                 AddMenuItem("Import Components", HandleImportComponents);
                 AddMenuItem("Add Folder", HandleAddFolder);
                 AddMenuItem("View in explorer", HandleViewInExplorer);
@@ -643,7 +643,7 @@ public partial class ElementTreeViewManager
 
     private void HandleImportBehavior()
     {
-        if (GuardProjectSaved("before importing behaviors"))
+        if (_editCommands.EnsureProjectSaved("importing behaviors"))
         {
             _dialogService.Show<ImportBehaviorDialog>();
         }
@@ -651,7 +651,7 @@ public partial class ElementTreeViewManager
 
     private void HandleImportScreen()
     {
-        if (GuardProjectSaved("before importing screens"))
+        if (_editCommands.EnsureProjectSaved("importing screens"))
         {
             _dialogService.Show<ImportScreenDialog>();
         }
@@ -659,21 +659,10 @@ public partial class ElementTreeViewManager
 
     private void HandleImportComponents()
     {
-        if (GuardProjectSaved("before importing components"))
+        if (_editCommands.EnsureProjectSaved("importing components"))
         {
             _dialogService.Show<ImportComponentDialog>();
         }
-    }
-
-    private bool GuardProjectSaved(string? reason = null)
-    {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectState.GumProjectSave?.FullFileName))
-        {
-            _dialogService.ShowMessage("You must first save the project");
-            return false;
-        }
-
-        return true;
     }
 
 }
