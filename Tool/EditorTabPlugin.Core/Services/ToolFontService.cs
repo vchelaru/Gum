@@ -15,7 +15,7 @@ namespace Gum.Managers
         /// <summary>
         /// The font used by editor overlay text. Null until <see cref="Initialize"/> has been called.
         /// </summary>
-        BitmapFont ToolFont { get; }
+        BitmapFont? ToolFont { get; }
 
         /// <summary>
         /// Loads the tool font from the application's content directory.
@@ -26,8 +26,8 @@ namespace Gum.Managers
     /// <inheritdoc cref="IToolFontService"/>
     public class ToolFontService : IToolFontService
     {
-        BitmapFont _toolFont;
-        public BitmapFont ToolFont
+        BitmapFont? _toolFont;
+        public BitmapFont? ToolFont
         {
             get => _toolFont;
         }
@@ -46,7 +46,10 @@ namespace Gum.Managers
 
             foreach (var texture in font.Textures)
             {
-                LoaderManager.Self.RemoveWithoutDisposing(texture);
+                if (texture != null)
+                {
+                    LoaderManager.Self.RemoveWithoutDisposing(texture);
+                }
             }
             _toolFont = font;
         }

@@ -186,9 +186,9 @@ public class StandardWireframeEditor : WireframeEditor
 
         RecursiveVariableFinder? rfv = null;
 
-        if (tag is InstanceSave instance)
+        if (tag is InstanceSave { ParentContainer: { } instanceContainer } instance)
         {
-            rfv = new RecursiveVariableFinder(instance, instance.ParentContainer);
+            rfv = new RecursiveVariableFinder(instance, instanceContainer);
         }
         if(tag is ElementSave element)
         {

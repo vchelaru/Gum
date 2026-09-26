@@ -71,18 +71,21 @@ namespace Gum.Wireframe
 
         public void UpdateHighlightElements()
         {
+            if (mHighlightedIpso == null)
+            {
+                return;
+            }
+
             SetLineRectangleAroundIpso(GetOrMakeRectangleAtIndex(0), mHighlightedIpso);
 
-            if (mHighlightedIpso.Component is NineSlice)
+            if (mHighlightedIpso.Component is NineSlice nineSlice)
             {
-                CreateNineSliceSplitLines();
+                CreateNineSliceSplitLines(nineSlice);
             }
         }
 
-        private void CreateNineSliceSplitLines()
+        private void CreateNineSliceSplitLines(NineSlice nineSlice)
         {
-            NineSlice nineSlice = mHighlightedIpso.Component as NineSlice;
-
             float topHeight = 0;
             float centerHeight = 0;
             float bottomHeight = 0;

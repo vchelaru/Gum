@@ -14,7 +14,7 @@ namespace Gum.Managers
         /// The layer kept above all others, used for editor overlay visuals. Null until
         /// <see cref="Initialize"/> has been called.
         /// </summary>
-        Layer TopLayer { get; }
+        Layer? TopLayer { get; }
 
         /// <summary>
         /// Creates the top layer. Must be called after <see cref="SystemManagers.Default"/> is initialized.
@@ -30,7 +30,7 @@ namespace Gum.Managers
     /// <inheritdoc cref="IToolLayerService"/>
     public class ToolLayerService : IToolLayerService
     {
-        public Layer TopLayer { get; private set; }
+        public Layer? TopLayer { get; private set; }
 
         public void Initialize()
         {
@@ -39,6 +39,10 @@ namespace Gum.Managers
 
         public void Activity()
         {
+            if (TopLayer == null)
+            {
+                return;
+            }
             // just in case another plugin adds more layers, keep this one on top:
             if (SystemManagers.Default.Renderer.Layers.Last() != TopLayer)
             {

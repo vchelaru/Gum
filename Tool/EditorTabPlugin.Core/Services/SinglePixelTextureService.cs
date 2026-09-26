@@ -1,46 +1,43 @@
-﻿using Gum.Services;
-using Gum.ToolStates;
+using Gum.DataTypes;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EditorTabPlugin_XNA.Services;
 internal class SinglePixelTextureService
 {
-    public void RefreshSinglePixelTexture()
+    public void RefreshSinglePixelTexture(GumProjectSave gumProject)
     {
-        var projectState = Locator.GetRequiredService<IProjectState>();
-        var gumProject = projectState.GumProjectSave;
-
-
-
-        var hasCustomSinglePixelTexture =
-            gumProject.SinglePixelTextureFile != null &&
-            gumProject.SinglePixelTextureTop != null &&
-            gumProject.SinglePixelTextureLeft != null &&
-            gumProject.SinglePixelTextureRight != null &&
-            gumProject.SinglePixelTextureBottom != null;
-
         var renderer = global::RenderingLibrary.Graphics.Renderer.Self;
 
-        if (hasCustomSinglePixelTexture)
+        Texture2D? customTexture = null;
+        if (gumProject is
+            {
+                SinglePixelTextureFile: string textureFile,
+                SinglePixelTextureTop: int top,
+                SinglePixelTextureLeft: int left,
+                SinglePixelTextureRight: int right,
+                SinglePixelTextureBottom: int bottom
+            })
         {
             var loaderManager =
                 global::RenderingLibrary.Content.LoaderManager.Self;
 
-            renderer.SinglePixelTexture = loaderManager.LoadContent<Microsoft.Xna.Framework.Graphics.Texture2D>(gumProject.SinglePixelTextureFile);
+            // Null when the file does not exist; fall back to the plain white pixel below.
+            customTexture = loaderManager.LoadContent<Texture2D>(textureFile);
 
-            renderer.SinglePixelSourceRectangle = new Rectangle(
-                gumProject.SinglePixelTextureLeft.Value,
-                gumProject.SinglePixelTextureTop.Value,
-                width: gumProject.SinglePixelTextureRight.Value - gumProject.SinglePixelTextureLeft.Value,
-                height: gumProject.SinglePixelTextureBottom.Value - gumProject.SinglePixelTextureTop.Value);
+            if (customTexture != null)
+            {
+                renderer.SinglePixelTexture = customTexture;
+
+                renderer.SinglePixelSourceRectangle = new Rectangle(
+                    left,
+                    top,
+                    width: right - left,
+                    height: bottom - top);
+            }
         }
-        else
+
+        if (customTexture == null)
         {
             var texture = new Texture2D(renderer.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             Microsoft.Xna.Framework.Color[] pixels = new Microsoft.Xna.Framework.Color[1];

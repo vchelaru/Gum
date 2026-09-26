@@ -14,7 +14,7 @@ internal class ScreenshotService
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     string? nextScreenshotFileLocation = null;
-    Microsoft.Xna.Framework.Graphics.RenderTarget2D renderTarget;
+    Microsoft.Xna.Framework.Graphics.RenderTarget2D? renderTarget;
     private readonly SelectionManager _selectionManager;
     private readonly IWireframeCommands _wireframeCommands;
     private readonly IGuiCommands _guiCommands;
@@ -57,7 +57,9 @@ internal class ScreenshotService
 
     public void HandleBeforeRender()
     {
-        if (nextScreenshotFileLocation != null)
+        if (nextScreenshotFileLocation != null &&
+            // The render loop only runs once the graphics device exists.
+            Renderer.Self.GraphicsDevice is { } graphicsDevice)
         {
             wereRulersVisible =
                 _wireframeCommands.AreRulersVisible;
@@ -76,8 +78,6 @@ internal class ScreenshotService
 
             _selectionManager.SelectedGue = null;
 
-            var graphicsDevice = Renderer.Self.GraphicsDevice;
-
             var width = graphicsDevice.Viewport.Width;
             var height = graphicsDevice.Viewport.Height;
 
@@ -95,8 +95,7 @@ internal class ScreenshotService
     {
         if (nextScreenshotFileLocation != null && renderTarget != null)
         {
-            var graphicsDevice = Renderer.Self.GraphicsDevice;
-            graphicsDevice.SetRenderTarget(null);
+            Renderer.Self.GraphicsDevice?.SetRenderTarget(null);
 
             try
             {

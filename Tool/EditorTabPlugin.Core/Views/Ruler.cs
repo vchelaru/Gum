@@ -1,5 +1,6 @@
 ﻿using Gum.Services;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using RenderingLibrary;
@@ -36,7 +37,7 @@ public class Ruler
     private IToolFontService _toolFontService;
     private IToolLayerService _toolLayerService;
     private readonly IHotkeyManager _hotkeyManager;
-    SystemManagers mManagers;
+    SystemManagers? mManagers;
     Cursor mCursor;
     private readonly LayerService _layerService;
     private readonly ICanvasDisplayScale _displayScale;
@@ -48,7 +49,7 @@ public class Ruler
     List<Line> mRulerLines = new List<Line>();
     List<Line> mGuides = new List<Line>();
 
-    Line mGrabbedGuide;
+    Line? mGrabbedGuide;
     Text _grabbedGuideText;
 
     DistanceArrows DistanceArrow1;
@@ -215,7 +216,7 @@ public class Ruler
 
 
 
-    public Ruler(SystemManagers managers,
+    public Ruler(SystemManagers? managers,
         Cursor cursor, 
         IToolFontService toolFontService,
         IToolLayerService toolLayerService,
@@ -244,7 +245,8 @@ public class Ruler
 
     }
 
-    private void CreateArrows(SystemManagers managers)
+    [MemberNotNull(nameof(DistanceArrow1), nameof(DistanceArrow2))]
+    private void CreateArrows(SystemManagers? managers)
     {
         DistanceArrow1 = new DistanceArrows(managers ?? SystemManagers.Default, _toolFontService, _toolLayerService, _displayScale);
         DistanceArrow1.AddToManagers();
@@ -279,6 +281,7 @@ public class Ruler
     }
 
 
+    [MemberNotNull(nameof(_grabbedGuideText))]
     private void CreateGuideText()
     {
         _grabbedGuideText = new Text(mManagers, "");
@@ -288,6 +291,7 @@ public class Ruler
         TextManager.Add(_grabbedGuideText, _layerService.RulerLayer);
     }
 
+    [MemberNotNull(nameof(mOffsetSprite), nameof(mRectangle))]
     private void CreateVisualRepresentation()
     {
         mOffsetSprite = new Sprite(null);
@@ -387,7 +391,7 @@ public class Ruler
 
         //guideSpaceY; ;
 
-        Line guideOver = null;
+        Line? guideOver = null;
         if (mGrabbedGuide == null && isCursorInWindow)
         {
             foreach (Line line in mGuides)

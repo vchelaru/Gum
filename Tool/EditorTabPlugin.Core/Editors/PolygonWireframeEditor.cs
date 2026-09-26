@@ -36,7 +36,7 @@ public class PolygonWireframeEditor : WireframeEditor
     Layer layer;
 
     List<GraphicalUiElement> selectedPolygons = new List<GraphicalUiElement>();
-    LinePolygon SelectedLinePolygon => selectedPolygons.FirstOrDefault()?.RenderableComponent as LinePolygon;
+    LinePolygon? SelectedLinePolygon => selectedPolygons.FirstOrDefault()?.RenderableComponent as LinePolygon;
 
     public override bool HasCursorOverHandles
     {

@@ -214,7 +214,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         float absoluteWidth, float fromBodyOffset, float endCapLength, float extraTextOffset,
         Vector2 rotatedUpDirection, Vector2 rotatedRightDirection, Vector2 rotatedDownDirection)
     {
-        string suffix = GetDimensionSuffix(objectToUpdateTo.WidthUnits, isWidth: true);
+        string? suffix = GetDimensionSuffix(objectToUpdateTo.WidthUnits, isWidth: true);
 
 #pragma warning disable CS0618 // these are plain renderables, not GraphicalUiElements, so the X/Y ambiguity does not apply
         _middleLine.SetPosition(topLeft + rotatedUpDirection * fromBodyOffset);
@@ -254,7 +254,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         float absoluteHeight, float fromBodyOffset, float endCapLength, float extraTextOffset,
         Vector2 rotatedLeftDirection, Vector2 rotatedRightDirection, Vector2 rotatedDownDirection)
     {
-        string suffix = GetDimensionSuffix(objectToUpdateTo.HeightUnits, isWidth: false);
+        string? suffix = GetDimensionSuffix(objectToUpdateTo.HeightUnits, isWidth: false);
 
         // up is 0,1,0, which is actually down for Gum. Confusing, I know, but this results in the correct math
         _middleLine.X = (topLeft + rotatedLeftDirection * fromBodyOffset).X;
@@ -290,7 +290,7 @@ public class DimensionDisplayVisual : EditorVisualBase
         _endCap2.RelativePoint = rotatedRightDirection * endCapLength;
     }
 
-    internal static string GetDimensionSuffix(DimensionUnitType unitType, bool isWidth)
+    internal static string? GetDimensionSuffix(DimensionUnitType unitType, bool isWidth)
     {
         return unitType switch
         {
