@@ -40,6 +40,8 @@ public sealed class TimelineView : Grid
         AvaloniaProperty.Register<TimelineView, bool>(nameof(ClampInterpolationVisuals), defaultValue: true);
 
     private readonly TextBox _timeBox;
+    private bool _isApplyingTypedTime;
+    private string? _shownTimeText;
     private readonly TextBlock _lengthText;
     private readonly Slider _scrubber;
     private readonly Grid _rows;
@@ -87,8 +89,8 @@ public sealed class TimelineView : Grid
         };
         _scrubber.Bind(RangeBase.ValueProperty, new Binding(nameof(CurrentTime)) { Source = this, Mode = BindingMode.TwoWay });
         // The WPF scrubber's AutoToolTip: the time, to two places, while the thumb is dragged.
-        _scrubber.AddHandler(Thumb.DragStartedEvent, (_, _) => ShowScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
-        _scrubber.AddHandler(Thumb.DragDeltaEvent, (_, _) => ShowScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragStartedEvent, (_, e) => ShowScrubberTip(e.Source as Thumb), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragDeltaEvent, (_, e) => ShowScrubberTip(e.Source as Thumb), RoutingStrategies.Bubble, handledEventsToo: true);
         _scrubber.AddHandler(Thumb.DragCompletedEvent, (_, _) => HideScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
         SetColumn(_scrubber, 1);
         Children.Add(_scrubber);
@@ -273,14 +275,24 @@ public sealed class TimelineView : Grid
         double length = Animation?.Length ?? 0;
         _scrubber.Maximum = Math.Max(length, 0.0001);
         _lengthText.Text = "/" + length.ToString("0.##", CultureInfo.CurrentCulture);
-        if (!_timeBox.IsFocused)
+        // While the user types, the box keeps their text ("0." stays "0."); any other change of
+        // time (playback, undo, the scrubber) shows even while the box has focus.
+        if (!_isApplyingTypedTime)
         {
-            _timeBox.Text = CurrentTime.ToString("0.###", CultureInfo.CurrentCulture);
+            _shownTimeText = CurrentTime.ToString("0.###", CultureInfo.CurrentCulture);
+            _timeBox.Text = _shownTimeText;
         }
     }
 
-    private void ShowScrubberTip()
+    // Above the thumb, following it, as the WPF AutoToolTip (placement TopLeft) did.
+    private void ShowScrubberTip(Thumb? thumb)
     {
+        _scrubber.UpdateLayout();
+        ToolTip.SetPlacement(_scrubber, PlacementMode.TopEdgeAlignedLeft);
+        if (thumb?.TranslatePoint(default, _scrubber) is { } thumbLeft)
+        {
+            ToolTip.SetHorizontalOffset(_scrubber, thumbLeft.X);
+        }
         ToolTip.SetTip(_scrubber, _scrubber.Value.ToString("0.00", CultureInfo.CurrentCulture));
         ToolTip.SetIsOpen(_scrubber, true);
     }
@@ -293,11 +305,14 @@ public sealed class TimelineView : Grid
     }
 
     // Only text the user typed: the box also shows the time rounded, which must not write back.
+    // TextChanged arrives after the text is set, so the shown text is compared rather than flagged.
     private void ApplyTypedTime()
     {
-        if (_timeBox.IsFocused && double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
+        if (_timeBox.Text != _shownTimeText && double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
         {
-            CurrentTime = time;
+            _isApplyingTypedTime = true;
+            CurrentTime = ClampToLength(time);
+            _isApplyingTypedTime = false;
         }
     }
 
@@ -305,10 +320,14 @@ public sealed class TimelineView : Grid
     {
         if (double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
         {
-            CurrentTime = time;
+            CurrentTime = ClampToLength(time);
         }
         UpdateTimeText();
     }
+
+    // The view model stops the time at the animation's length, but a binding ignores a correction
+    // made while it writes, so the view applies the same limit itself.
+    private double ClampToLength(double time) => Animation is { } animation ? Math.Min(time, animation.Length) : time;
 }
 
 /// <summary>

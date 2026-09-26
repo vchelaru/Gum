@@ -11,6 +11,10 @@ depend on the tab.
 | `ScriptedDialogService.cs` | Answers dialogs from a queue; an unanswered dialog fails the test instead of hanging. |
 | `SwitchableDialogService.cs` | The test container's `IDialogService`. `ToolProjectFixture` points it at its scripted dialogs, so services built once for the whole run (grid manager, delete service) open scripted dialogs too. |
 
+A test window does not get the main window's app-wide hotkeys (Ctrl+Z, Ctrl+Plus) or its UI font
+size on its own. Give it the main window's own wiring: `AppWideWindowInput.RouteHotkeys` and
+`AppWideWindowInput.FollowBaseFontSize` (dispose the latter). `UiFontSizeEndToEndTests` shows both.
+
 The harnesses built on these: `../Animations/AnimationEditorHarness.cs` (hosts its own plugin
 instance) and `../VariableGrid/VariableGridHarness.cs` (hosts the head's singleton tab).
 

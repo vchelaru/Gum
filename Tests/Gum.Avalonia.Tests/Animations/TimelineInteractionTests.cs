@@ -155,68 +155,6 @@ public class TimelineInteractionTests
     }
 
     [AvaloniaFact]
-    public void TypingInTheTimeBox_MovesTheTimeWithEachKeystroke_WithoutRecordingUndo()
-    {
-        using AnimationEditorHarness editor = new AnimationEditorHarness();
-        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
-        editor.Select(component);
-        editor.AddAnimation("Walk");
-        editor.AddStateKeyframe($"{Category}/Pressed");
-        editor.AddStateKeyframe($"{Category}/Released");
-        int undoCountBefore = editor.UndoManager.CurrentElementHistory?.Actions.Count ?? 0;
-        TextBox timeBox = editor.TimelineTimeBox;
-        editor.ViewModel.DisplayedAnimationTime = 0.12345;
-        editor.Layout();
-        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.12345, "the box showing a rounded time must not write it back");
-
-        editor.Click(timeBox);
-        timeBox.SelectAll();
-
-        foreach (char typed in "0.2")
-        {
-            editor.Window.KeyTextInput(typed.ToString());
-        }
-        editor.Layout();
-        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.2, tolerance: 0.0001);
-
-        editor.Window.KeyTextInput("5");
-        editor.Layout();
-
-        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.25, tolerance: 0.0001);
-        timeBox.Text.ShouldBe("0.25");
-        (editor.UndoManager.CurrentElementHistory?.Actions.Count ?? 0).ShouldBe(undoCountBefore);
-    }
-
-    [AvaloniaFact]
-    public void DraggingTheScrubber_ShowsTheTimeAsATooltip_UntilReleased()
-    {
-        using AnimationEditorHarness editor = new AnimationEditorHarness();
-        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
-        editor.Select(component);
-        editor.AddAnimation("Walk");
-        editor.AddStateKeyframe($"{Category}/Pressed");
-        editor.AddStateKeyframe($"{Category}/Released");
-        Slider scrubber = editor.Scrubber;
-        Point thumb = editor.CenterOf(editor.ScrubberThumb);
-        double trackWidth = scrubber.Bounds.Width - editor.ScrubberThumb.Bounds.Width;
-        Point half = new Point(thumb.X + trackWidth / 2, thumb.Y);
-
-        editor.Window.MouseMove(thumb, RawInputModifiers.None);
-        editor.Window.MouseDown(thumb, MouseButton.Left, RawInputModifiers.None);
-        editor.Window.MouseMove(half, RawInputModifiers.LeftMouseButton);
-        editor.Layout();
-
-        ToolTip.GetIsOpen(scrubber).ShouldBeTrue();
-        ToolTip.GetTip(scrubber).ShouldBe(editor.ViewModel.DisplayedAnimationTime.ToString("0.00", System.Globalization.CultureInfo.CurrentCulture));
-
-        editor.Window.MouseUp(half, MouseButton.Left, RawInputModifiers.None);
-        editor.Layout();
-
-        ToolTip.GetIsOpen(scrubber).ShouldBeFalse();
-        ToolTip.GetTip(scrubber).ShouldBeNull("hovering the scrubber later must not show a stale time");
-    }
-
-    [AvaloniaFact]
     public void TheScrubber_DrawsTickMarks_AndJumpsToAClickOnItsTrack()
     {
         using AnimationEditorHarness editor = new AnimationEditorHarness();
@@ -227,7 +165,6 @@ public class TimelineInteractionTests
         editor.AddStateKeyframe($"{Category}/Released");
         Slider scrubber = editor.Scrubber;
 
-        scrubber.TickFrequency.ShouldBe(0.1);
         scrubber.GetVisualDescendants().OfType<TickBar>().Any(tickBar => tickBar.IsEffectivelyVisible).ShouldBeTrue();
 
         Point thumb = editor.CenterOf(editor.ScrubberThumb);

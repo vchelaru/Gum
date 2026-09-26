@@ -174,6 +174,9 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         _tabManager.AddControl(tab, "Editor", TabLocation.RightTop);
     }
 
+    /// <summary>The toolbar above the canvas, for tests; null until the editor tab is built.</summary>
+    internal EditorToolbar? Toolbar => _toolbar;
+
     /// <inheritdoc/>
     protected override void OnUiBaseFontSizeChanged(double size) => _toolbar?.UpdateButtonSizes(size);
 

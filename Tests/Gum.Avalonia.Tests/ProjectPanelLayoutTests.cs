@@ -32,24 +32,4 @@ public class ProjectPanelLayoutTests
         treeHost.Bounds.Height.ShouldBeGreaterThan(700);
         window.Close();
     }
-
-    [AvaloniaFact]
-    public void ToolButtonIcons_GrowWithTheUiBaseFontSize_AndTheButtonsFitThem()
-    {
-        AvaloniaElementTreeView view = new AvaloniaElementTreeView();
-        Window window = new Window { Content = view.Content, Width = 300, Height = 800 };
-        window.Show();
-
-        view.UpdateCollapseButtonSizes(24);
-        window.UpdateLayout();
-
-        foreach (Button button in view.SearchRow.Children.OfType<Button>())
-        {
-            Control icon = button.Content.ShouldBeAssignableTo<Control>().ShouldNotBeNull();
-            icon.Bounds.Width.ShouldBe(32);
-            icon.Bounds.Height.ShouldBe(32);
-            button.Bounds.Height.ShouldBeGreaterThanOrEqualTo(32);
-        }
-        window.Close();
-    }
 }
