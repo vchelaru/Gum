@@ -33,6 +33,18 @@ public class WireframeDropPayloadTests
             .Files.ShouldBe(files);
     }
 
+    [Theory]
+    [InlineData("C:\\Game\\Game.gumx")]
+    [InlineData("C:\\Game\\Game.gumj")]
+    public void ProjectFileAmongDroppedFiles_IsNotAFileDropForTheCanvas(string projectFile)
+    {
+        // The main window opens a dropped project; the canvas neither accepts nor handles it.
+        WireframeDropPayload payload = new WireframeDropPayload(null, null, new[] { "C:\\file.png", projectFile });
+
+        payload.HasFileDrop.ShouldBeFalse();
+        payload.ResolveAction().ShouldBeOfType<WireframeDropAction.None>();
+    }
+
     [Fact]
     public void ResolveAction_NoData_ReturnsNone()
     {

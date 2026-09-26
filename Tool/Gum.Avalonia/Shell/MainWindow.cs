@@ -22,6 +22,8 @@ using Avalonia.Data.Converters;
 using Avalonia.Styling;
 using AvaloniaDataUi;
 using Gum.Dialogs;
+using Gum.SelectionHistory;
+using Gum.Services.Dialogs;
 
 namespace Gum.Avalonia.Shell;
 
@@ -70,7 +72,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         IAppScaleProvider appScaleProvider,
         IFileSystemRevealService fileSystemRevealService,
         IClipboardService clipboardService,
-        ICanvasRedrawScheduler canvasRedrawScheduler)
+        ICanvasRedrawScheduler canvasRedrawScheduler,
+        ISelectionHistory selectionHistory,
+        IProjectFileDropLogic projectFileDropLogic,
+        IDialogService dialogService)
     {
         _shell = shell;
         _hotkeyManager = hotkeyManager;
@@ -80,6 +85,8 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         _clipboardService = clipboardService;
         DataContext = shell;
         messenger.RegisterAll(this);
+        AppWideWindowGestures.RouteSelectionHistoryButtons(this, selectionHistory);
+        AppWideWindowGestures.OpenDroppedProjects(this, projectFileDropLogic, dialogService);
 
         Title = shell.Title;
         Icon = new WindowIcon(AssetLoader.Open(new Uri("avares://Gum/GumIcon.ico")));
