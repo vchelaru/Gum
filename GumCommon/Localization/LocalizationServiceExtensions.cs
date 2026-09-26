@@ -22,7 +22,8 @@ public static class LocalizationServiceExtensions
         var columnCount = csv.ColumnCount;
 
         Dictionary<string, string[]> entryDictionary = new Dictionary<string, string[]>();
-        List<string> headerList = csv.HeaderRecord.Skip(1).ToList();
+        // ReadHeader throws when there is no header row, so HeaderRecord is set from here on.
+        List<string> headerList = csv.HeaderRecord?.Skip(1).ToList() ?? new List<string>();
 
         while (csv.Read())
         {
@@ -44,7 +45,9 @@ public static class LocalizationServiceExtensions
 
             for (int i = 1; i < columnCount; i++)
             {
-                translatedStrings[i] = csv.GetField(i);
+                // GetField throws MissingFieldException on a short row, so null is not
+                // expected here; fall back to the ID like a missing RESX translation does.
+                translatedStrings[i] = csv.GetField(i) ?? stringId;
             }
 
             entryDictionary[stringId] = translatedStrings;

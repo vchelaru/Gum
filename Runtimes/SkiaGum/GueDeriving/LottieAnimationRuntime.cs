@@ -37,8 +37,7 @@ public class LottieAnimationRuntime : InteractiveGue
             {
                 sourceFile = value;
                 var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                var animation = contentLoader.LoadContent<Animation>(value);
+                var animation = loaderManager.LoadContent<Animation>(value);
                 Animation = animation;
             }
         }

@@ -2705,7 +2705,6 @@ public partial class CustomSetPropertyOnRenderable
         BitmapFont? font = null;
 
         var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-        var contentLoader = loaderManager.ContentLoader;
 
         if (textRuntime.UseCustomFont)
         {

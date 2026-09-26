@@ -41,7 +41,7 @@ public class LoaderManager
 
     #region Fields
 
-    static LoaderManager mSelf;
+    static LoaderManager? mSelf;
 
 
     #endregion
@@ -55,10 +55,7 @@ public class LoaderManager
     {
         get
         {
-            if (mSelf == null)
-            {
-                mSelf = new LoaderManager();
-            }
+            mSelf ??= new LoaderManager();
             return mSelf;
         }
     }
@@ -66,9 +63,9 @@ public class LoaderManager
     /// <summary>
     /// The active content-loading strategy that <see cref="LoadContent{T}"/> and
     /// <see cref="TryLoadContent{T}"/> delegate to. Assign your own <see cref="IContentLoader"/> to
-    /// customize asset resolution.
+    /// customize asset resolution. Null until the runtime is initialized.
     /// </summary>
-    public IContentLoader ContentLoader
+    public IContentLoader? ContentLoader
     {
         get;
         set;
@@ -126,14 +123,7 @@ public class LoaderManager
     /// </remarks>
     public T? LoadContent<T>(string contentName)
     {
-#if FULL_DIAGNOSTICS
-        if (this.ContentLoader == null)
-        {
-            throw new Exception("The content loader is null - you must set it prior to calling LoadContent.");
-        }
-#endif
-
-        return ContentLoader.LoadContent<T>(contentName);
+        return GetRequiredContentLoader().LoadContent<T>(contentName);
     }
 
     /// <summary>
@@ -143,15 +133,14 @@ public class LoaderManager
     /// </summary>
     public T? TryLoadContent<T>(string contentName)
     {
+        return GetRequiredContentLoader().TryLoadContent<T>(contentName);
+    }
 
-#if FULL_DIAGNOSTICS
-        if (this.ContentLoader == null)
-        {
-            throw new Exception("The content loader is null - you must set it prior to calling LoadContent. " +
-                "If you haven't yet, you must first initialize Gum.");
-        }
-#endif
-        return ContentLoader.TryLoadContent<T>(contentName);
+    private IContentLoader GetRequiredContentLoader()
+    {
+        return ContentLoader ?? throw new InvalidOperationException(
+            "The content loader is null - you must set it prior to loading content. " +
+            "If you haven't yet, you must first initialize Gum.");
     }
 
     /// <summary>

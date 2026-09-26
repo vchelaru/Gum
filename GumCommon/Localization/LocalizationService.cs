@@ -106,7 +106,7 @@ public class LocalizationService : ILocalizationService
         {
             return stringID;
         }
-        else if (mStringDatabase.TryGetValue(stringID, out string[] translations))
+        else if (mStringDatabase.TryGetValue(stringID, out string[]? translations))
         {
             // A malformed/short database (e.g. a ragged CSV row, or Languages/CurrentLanguage out of
             // sync with a per-ID array's actual length) must degrade gracefully rather than crash -

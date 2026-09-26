@@ -87,7 +87,7 @@ chars count=0
 
     private static List<string> RunCapturingErrors(IContentLoader loader, string fntFile, string pageFile, Action act)
     {
-        IContentLoader savedLoader = LoaderManager.Self.ContentLoader;
+        IContentLoader? savedLoader = LoaderManager.Self.ContentLoader;
         Func<string, System.IO.Stream>? savedHook = FileManager.CustomGetStreamFromFile;
         List<string> captured = new();
         void Handler(string message) => captured.Add(message);

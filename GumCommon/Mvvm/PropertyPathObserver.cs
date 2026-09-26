@@ -111,7 +111,7 @@ public class PropertyPathObserver : IDisposable
             // index-relevance logic. A future optimization could inspect
             // NotifyCollectionChangedEventArgs to skip changes that don't affect the bound
             // index (e.g. inserts/removes after the bound index position).
-            if (_segments[i].Index.HasValue && cursor != null)
+            if (_segments[i].Index is int index && cursor != null)
             {
                 if (cursor is INotifyCollectionChanged incc)
                 {
@@ -119,7 +119,7 @@ public class PropertyPathObserver : IDisposable
                     _collectionListeners.Add(cl);
                 }
 
-                cursor = GetIndexedValue(cursor, _segments[i].Index.Value);
+                cursor = GetIndexedValue(cursor, index);
             }
         }
     }
@@ -153,9 +153,9 @@ public class PropertyPathObserver : IDisposable
             PropertyInfo? pi = cursor.GetType().GetProperty(segments[i].Name);
             cursor = pi?.GetValue(cursor);
 
-            if (segments[i].Index.HasValue && cursor != null)
+            if (segments[i].Index is int index && cursor != null)
             {
-                cursor = GetIndexedValue(cursor, segments[i].Index.Value);
+                cursor = GetIndexedValue(cursor, index);
             }
         }
         return cursor;
@@ -165,7 +165,7 @@ public class PropertyPathObserver : IDisposable
         "Re-walks the path from the changed segment, resolving each by name (GetProperty) on the " +
         "runtime type. Those members may be removed under PublishTrimmed if nothing else in the app " +
         "references them.")]
-    private void OnSegmentChanged(int level, string propName)
+    private void OnSegmentChanged(int level, string? propName)
     {
         // only react if the changed property matches the segment
         if (_segments[level].Name != propName)
@@ -206,7 +206,7 @@ public class PropertyPathObserver : IDisposable
 
             cursor = pi?.GetValue(cursor);
 
-            if (_segments[next].Index.HasValue && cursor != null)
+            if (_segments[next].Index is int index && cursor != null)
             {
                 if (cursor is INotifyCollectionChanged incc)
                 {
@@ -214,7 +214,7 @@ public class PropertyPathObserver : IDisposable
                     _collectionListeners.Add(cl);
                 }
 
-                cursor = GetIndexedValue(cursor, _segments[next].Index.Value);
+                cursor = GetIndexedValue(cursor, index);
             }
         }
 
@@ -234,9 +234,9 @@ public class PropertyPathObserver : IDisposable
                            .GetProperty(_segments[i].Name)
                            ?.GetValue(cursor);
 
-            if (_segments[i].Index.HasValue && cursor != null)
+            if (_segments[i].Index is int index && cursor != null)
             {
-                cursor = GetIndexedValue(cursor, _segments[i].Index.Value);
+                cursor = GetIndexedValue(cursor, index);
             }
         }
         return cursor;
@@ -371,7 +371,7 @@ public class PropertyPathObserver : IDisposable
         {
             if (_weakObs.TryGetTarget(out PropertyPathObserver? obs))
             {
-                obs.OnSegmentChanged(_level, e.PropertyName!);
+                obs.OnSegmentChanged(_level, e.PropertyName);
             }
             else
             {

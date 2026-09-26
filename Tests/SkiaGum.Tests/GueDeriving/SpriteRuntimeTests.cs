@@ -220,7 +220,7 @@ public class SpriteRuntimeTests
     public void ToAnimationFrame_OnSkia_ShouldLoadTextureViaLoaderManager()
     {
         MockContentLoader mockLoader = new MockContentLoader();
-        IContentLoader originalLoader = LoaderManager.Self.ContentLoader;
+        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
         try
@@ -257,7 +257,7 @@ public class SpriteRuntimeTests
     public void ToAnimationFrame_OnSkia_ConvertsPixelCoordinatesToUv()
     {
         MockContentLoader mockLoader = new MockContentLoader(bitmapWidth: 10, bitmapHeight: 10);
-        IContentLoader originalLoader = LoaderManager.Self.ContentLoader;
+        IContentLoader? originalLoader = LoaderManager.Self.ContentLoader;
         LoaderManager.Self.ContentLoader = mockLoader;
 
         try
