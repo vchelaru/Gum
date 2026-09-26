@@ -1,8 +1,10 @@
-using Gum.Avalonia.Services;
+﻿using Gum.Avalonia.Services;
+using Gum.ProjectServices.FontGeneration;
 using Gum.Services;
 using Gum.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -33,6 +35,8 @@ public static class HeadTestServices
         services.ConfigureWritable<LayoutSettings>(configuration, nameof(LayoutSettings), settingsPath);
         services.AddGumCore();
         services.AddGumAvalonia();
+        // Real generation runs on a thread-pool task that can outlive its test (#5097).
+        services.Replace(ServiceDescriptor.Singleton<IFontFileGenerator, NoOpFontFileGenerator>());
         ServiceProvider provider = services.BuildServiceProvider();
         // The plugin host and a few not-yet-drained services still reach the container through the locator.
         Locator.Register(provider);
