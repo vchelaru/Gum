@@ -2,70 +2,43 @@
 
 ## Introduction
 
-The DataUiGrid is similar to Winforms PropertyGrid - a reflection-based UI object which can be used to display the properties on objects in real-time. Additionally, it can display properties using explicit get and set methods rather than reflection. It is used for the properties on Gum objects, but is written to be general purpose to be used in any applications.
+The DataUiGrid is similar to the Windows Forms PropertyGrid: a reflection-based control which displays the properties on an object in real time. It can also display properties through explicit get and set methods rather than reflection. Gum uses it for the **Variables** tab, but it is general purpose and can be used in any Avalonia application.
 
-It is included in the WpfDataUi.dll file which is part of Gum, so this library can be pulled out and used in any other application.
+The grid is split into two projects in the Gum repository:
 
-The DataUiGrid can be used with reflection or its Categories can be manually populated. Using reflection is easier to set up, but does not provide as much flexibility. Manually building up Categories takes more work, but provide the most flexibility.
+* `DataUi.Core` holds the data model (`MemberCategory`, `InstanceMember`, and the `IDataUi` interface). It has no UI framework dependency.
+* `AvaloniaDataUi` holds the Avalonia `DataUiGrid` control and its editors.
+
+The DataUiGrid can be used with reflection or its Categories can be manually populated. Using reflection is easier to set up, but does not provide as much flexibility. Manually building up Categories takes more work, but provides the most flexibility.
+
+{% hint style="info" %}
+The Gum tool used to be a WPF application, and older versions of this page described the WPF grid in `WpfDataUi`. The data model types keep their `WpfDataUi` and `WpfDataUi.DataTypes` namespaces, so code that builds categories and instance members does not change.
+{% endhint %}
 
 ## Adding References
 
-The following references are needed for displaying the DataUiGrid:
-
-* PresentationCore
-* PresentationFramework
-* System.Xaml
-* WindowsBase
-
-## Adding a DataUiGrid to XAML
-
-To add a grid to your XAML you'll need to:
-
-If using .NET 6+, add the following using:
-
-```
-xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUiCore"
-```
-
-If using .NET 4.7, add the following using:
-
-```xml
-xmlns:WpfDataUi="clr-namespace:WpfDataUi;assembly=WpfDataUi"
-```
-
-Add the following inside a layout container (like a Grid):
-
-```xml
-<WpfDataUi:DataUiGrid Name="DataGrid"></WpfDataUi:DataUiGrid>
-```
+Add a project reference to `AvaloniaDataUi/AvaloniaDataUi.csproj`. It brings `DataUi.Core` with it.
 
 ## Adding a DataUiGrid in Code
 
-You can construct a grid in code just like any other WPF control.
+Construct a grid in code like any other Avalonia control:
 
 ```csharp
-var grid = new DataUiGrid();
-// add the grid to some layout object like a Grid or StackLayout...
+// Initialize
+var grid = new AvaloniaDataUi.DataUiGrid();
+// add the grid to a layout control such as a Grid or StackPanel...
 ```
 
 ## Using the grid in code
 
-To use the grid in code you simply need to set its Instance member to an instance object you want to view. For example:
+To use the grid, set its Instance property to the object you want to view. For example:
 
 ```csharp
-// We'll use a MemoryStream to show that it works,
-// but we could really use anything.
-MemoryStream memoryStream = new MemoryStream();
+// Initialize
+// A MemoryStream shows that the grid works with any object:
+System.IO.MemoryStream memoryStream = new System.IO.MemoryStream();
 
-this.DataGrid.Instance = memoryStream;
+grid.Instance = memoryStream;
 ```
 
-This produces a grid which looks like this:
-
-![](../../../.gitbook/assets/WpfDataUiGrid.png)
-
-Alternatively the Instance property can be data bound as shown in the following XAML:
-
-```
-<wpfdataui:DataUiGrid Instance="{Binding SelectedItem}"></wpfdataui:DataUiGrid>
-```
+The grid displays one row for each public property on the object, grouped into categories.

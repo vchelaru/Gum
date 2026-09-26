@@ -10,7 +10,7 @@ The Export delegate allows you to create a custom export for Gum elements. This 
 
 ## Code Example
 
-The following code will show a message box whenever an element is exported. Keep in mind this is only for demonstration purposes. By default Gum auto-saves every change made by the user, and showing a message box after every save can be very annoying for users of your plugin.
+The following code shows a message box, through the plugin's injected dialog service, whenever an element is exported. Keep in mind this is only for demonstration purposes. By default Gum auto-saves every change made by the user, and showing a message box after every save can be very annoying for users of your plugin.
 
 ```csharp
 public override void StartUp()
@@ -20,7 +20,7 @@ public override void StartUp()
 
 void HandleElementExport(Gum.DataTypes.ElementSave element)
 {
-    System.Windows.Forms.MessageBox.Show("Handling export of " + element);
+    _dialogService.ShowMessage("Handling export of " + element);
 }
 ```
 
