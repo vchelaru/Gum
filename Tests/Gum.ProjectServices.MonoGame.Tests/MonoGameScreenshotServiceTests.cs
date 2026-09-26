@@ -103,6 +103,47 @@ public class MonoGameScreenshotServiceTests : IDisposable
         outside.Alpha.ShouldBeLessThan((byte)10);
     }
 
+    // An IsRenderTarget container bakes into its own render target mid-draw. Switching the device
+    // away from the screenshot's target and back must not discard what was already drawn there,
+    // or the background clear comes back black.
+    [Fact]
+    public void TakeScreenshot_ScreenWithRenderTargetContainer_KeepsBackgroundColor()
+    {
+        string projectPath = Path.Combine(_tempDirectory, "Project.gumx");
+
+        ProjectCreator creator = new ProjectCreator();
+        GumProjectSave project = creator.Create(projectPath);
+
+        ScreenSave screen = new ScreenSave { Name = "Screen" };
+        StateSave defaultState = new StateSave { Name = "Default", ParentContainer = screen };
+        screen.States.Add(defaultState);
+        screen.Instances.Add(new InstanceSave { Name = "RenderTargetContainer", BaseType = "Container", ParentContainer = screen });
+        defaultState.Variables.Add(new VariableSave { Name = "RenderTargetContainer.Width", Type = "float", Value = 50f, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "RenderTargetContainer.Height", Type = "float", Value = 50f, SetsValue = true });
+        defaultState.Variables.Add(new VariableSave { Name = "RenderTargetContainer.IsRenderTarget", Type = "bool", Value = true, SetsValue = true });
+
+        project.Screens.Add(screen);
+        project.ScreenReferences.Add(new ElementReference { Name = "Screen", ElementType = ElementType.Screen });
+        project.Save(projectPath, saveElements: true);
+
+        string outputPath = Path.Combine(_tempDirectory, "Screen.png");
+        ScreenshotResult result = new MonoGameScreenshotService().TakeScreenshot(new ScreenshotRequest
+        {
+            ProjectPath = projectPath,
+            ElementName = "Screen",
+            OutputPath = outputPath,
+            Width = 200,
+            Height = 150,
+            BackgroundColor = new ScreenshotColor(0, 0, 255, 255),
+        });
+
+        result.Success.ShouldBeTrue(result.ErrorMessage);
+        using SKBitmap bitmap = SKBitmap.Decode(outputPath);
+        SKColor outsideContainer = bitmap.GetPixel(150, 120);
+        outsideContainer.Blue.ShouldBeGreaterThan((byte)245);
+        outsideContainer.Red.ShouldBeLessThan((byte)10);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

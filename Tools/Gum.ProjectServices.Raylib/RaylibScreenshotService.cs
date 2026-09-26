@@ -54,11 +54,8 @@ public class RaylibScreenshotService : IScreenshotService
                     $"Element '{request.ElementName}' not found in project.");
             }
 
-            // Matches MonoGameScreenshotService's fallback exactly (800x600) rather than the
-            // project's own canvas size, so the two backends stay directly diffable when Width/
-            // Height are omitted. See #4174 for the follow-up to make both honor canvas size.
-            int width = request.Width ?? 800;
-            int height = request.Height ?? 600;
+            // Same resolution as MonoGameScreenshotService, so the two backends stay diffable.
+            (int width, int height) = request.ResolveSize(project);
 
             // Must be set before UpdateLayout: a parentless element's PixelsFromMiddle/Percentage
             // positioning resolves against these, not against the render texture's actual size.

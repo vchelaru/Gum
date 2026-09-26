@@ -100,4 +100,7 @@ public sealed class WireframeCanvasControl : AvaloniaGraphicsDeviceControl
 
     /// <inheritdoc/>
     protected override void Draw() => Core.Draw();
+
+    /// <inheritdoc/>
+    protected override bool IsFrameOpaque => Core.DrawsOpaqueFrames;
 }

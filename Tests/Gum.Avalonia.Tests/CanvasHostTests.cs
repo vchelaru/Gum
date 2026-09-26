@@ -129,6 +129,30 @@ public class CanvasHostTests
         Should.Throw<NotSupportedException>(() => surface.Push(SurfaceFormat.Bgra32));
     }
 
+    // Gum draws with non-premultiplied blending, which leaves alpha below 255 wherever translucent
+    // content lands on the canvas's opaque background. Shown as-is, the window behind the canvas
+    // bleeds through those pixels, so an opaque frame must push alpha 255 with the color unchanged.
+    [AvaloniaTheory]
+    [InlineData(true, 255)]
+    [InlineData(false, 200)]
+    public void RenderSurface_Push_ForcesAlphaOpaque_OnlyWhenAsked(bool forceOpaque, int expectedAlpha)
+    {
+        using AvaloniaRenderSurface surface = new AvaloniaRenderSurface();
+        surface.Resize(1, 1);
+        surface.RawImageBuffer[0] = 51;
+        surface.RawImageBuffer[1] = 52;
+        surface.RawImageBuffer[2] = 53;
+        surface.RawImageBuffer[3] = 200;
+
+        surface.Push(SurfaceFormat.Color, forceOpaque);
+
+        surface.Bitmap.ShouldNotBeNull();
+        using global::Avalonia.Platform.ILockedFramebuffer framebuffer = surface.Bitmap.Lock();
+        byte[] pixel = new byte[4];
+        System.Runtime.InteropServices.Marshal.Copy(framebuffer.Address, pixel, 0, 4);
+        pixel.ShouldBe(new byte[] { 51, 52, 53, (byte)expectedAlpha });
+    }
+
     // #4811 (Avalonia parity with the WPF fix in #4681/#4682): the bitmap must always stay at 96
     // DPI regardless of display scale - Avalonia's compositor double-scales a Stretch.None-displayed
     // bitmap stamped at a non-96 DPI (github.com/AvaloniaUI/Avalonia/issues/17235), so the surface

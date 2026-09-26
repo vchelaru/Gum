@@ -306,7 +306,7 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     void IRenderTargetFrameClient.Present(RenderTarget2D renderTarget)
     {
         renderTarget.GetData(_surface.RawImageBuffer);
-        _surface.Push(renderTarget.Format);
+        _surface.Push(renderTarget.Format, forceOpaque: IsFrameOpaque);
         _image.InvalidateVisual();
     }
 
@@ -317,6 +317,13 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
     }
 
     void IRenderTargetFrameClient.ReportError(Exception exception) => ErrorOccurred?.Invoke(exception);
+
+    /// <summary>
+    /// Whether the frame just drawn covers the whole canvas with an opaque background. When true,
+    /// the frame is shown fully opaque (see <see cref="AvaloniaRenderSurface.Push"/>); when false,
+    /// its alpha is kept and the window behind the canvas shows through transparent pixels.
+    /// </summary>
+    protected virtual bool IsFrameOpaque => false;
 
     /// <summary>Derived classes override this to run per-frame logic before drawing.</summary>
     protected virtual void PreDrawUpdate()
