@@ -104,7 +104,7 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
     }
 
     /// <inheritdoc/>
-    public string Name { get; set; } = string.Empty;
+    public string? Name { get; set; } = string.Empty;
 
     /// <inheritdoc/>
     public float X

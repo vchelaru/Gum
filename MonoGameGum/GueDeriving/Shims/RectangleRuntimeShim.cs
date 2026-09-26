@@ -13,7 +13,7 @@ namespace MonoGameGum.GueDeriving;
 public class RectangleRuntime : Gum.GueDeriving.RectangleRuntime
 {
     /// <inheritdoc/>
-    public RectangleRuntime(bool fullInstantiation = true, SystemManagers systemManagers = null)
+    public RectangleRuntime(bool fullInstantiation = true, SystemManagers? systemManagers = null)
         : base(fullInstantiation, systemManagers)
     {
     }

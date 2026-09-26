@@ -254,7 +254,7 @@ public class TextRuntime : InteractiveGue
     }
 
     [Obsolete("Use Typeface instead.")]
-    public BitmapFont BitmapFont
+    public BitmapFont? BitmapFont
     {
         get => Typeface;
         set => Typeface = value;

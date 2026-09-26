@@ -63,7 +63,7 @@ namespace Gum.Wireframe
         /// <param name="baseType">Gum base-type name (e.g. <c>"Container"</c>, <c>"Sprite"</c>, <c>"Text"</c>).</param>
         /// <param name="managers">The platform's <c>SystemManagers</c>; cast internally as needed.</param>
         /// <returns>An <see cref="IRenderable"/> matching <paramref name="baseType"/>, or <c>null</c> for unrecognized names.</returns>
-        public static IRenderable TryHandleAsBaseType(string baseType, ISystemManagers? managers)
+        public static IRenderable? TryHandleAsBaseType(string baseType, ISystemManagers? managers)
         {
             SystemManagers? systemManagers = managers as SystemManagers;
             IRenderable? containedObject = null;
@@ -184,7 +184,7 @@ namespace Gum.Wireframe
     {
         /// <inheritdoc cref="FallbackRenderableFactory.TryHandleAsBaseType(string, ISystemManagers?)"/>
         [Obsolete("Renamed to FallbackRenderableFactory.TryHandleAsBaseType. See https://github.com/vchelaru/Gum/issues/2915.")]
-        public static IRenderable TryHandleAsBaseType(string baseType, ISystemManagers? managers)
+        public static IRenderable? TryHandleAsBaseType(string baseType, ISystemManagers? managers)
             => FallbackRenderableFactory.TryHandleAsBaseType(baseType, managers);
     }
 }

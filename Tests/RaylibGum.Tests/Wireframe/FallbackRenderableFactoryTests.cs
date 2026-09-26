@@ -24,21 +24,21 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_Circle_ReturnsLineCircle()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
         result.ShouldBeOfType<LineCircle>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_ColoredRectangle_ReturnsSolidRectangle()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("ColoredRectangle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("ColoredRectangle", null);
         result.ShouldBeOfType<SolidRectangle>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Component_ReturnsInvisibleRenderable()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Component", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Component", null);
 
         result.ShouldNotBeNull();
         result.ShouldBeOfType<InvisibleRenderable>();
@@ -47,7 +47,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_Container_ReturnsInvisibleRenderable()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
 
         result.ShouldNotBeNull();
         result.ShouldBeOfType<InvisibleRenderable>();
@@ -61,7 +61,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         // locks in the platform divergence so it is not "fixed" to match MonoGame by accident.
         GraphicalUiElement.ShowLineRectangles = true;
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
 
         result.ShouldBeOfType<InvisibleRenderable>();
     }
@@ -69,35 +69,35 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_NineSlice_ReturnsNineSlice()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("NineSlice", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("NineSlice", null);
         result.ShouldBeOfType<NineSlice>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Polygon_ReturnsLinePolygon()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Polygon", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Polygon", null);
         result.ShouldBeOfType<LinePolygon>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Rectangle_ReturnsLineRectangle()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
         result.ShouldBeOfType<LineRectangle>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Sprite_ReturnsSprite()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Sprite", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Sprite", null);
         result.ShouldBeOfType<Sprite>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Text_ReturnsText()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Text", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Text", null);
         result.ShouldBeOfType<Text>();
     }
 
@@ -106,7 +106,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     {
         // A non-standard name (e.g. a custom component's own name) is expected to fall through;
         // ElementSaveExtensions.CreateGraphicalComponent relies on this null to recurse into base types.
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("SomeCustomComponent", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("SomeCustomComponent", null);
         result.ShouldBeNull();
     }
 }

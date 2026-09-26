@@ -52,14 +52,16 @@ public class PolygonRuntime : SkiaShapeRuntime
 public class PolygonRuntime : InteractiveGue
 #endif
 {
-    ContainedPolygonType containedPolygon;
+    ContainedPolygonType? containedPolygon;
     ContainedPolygonType ContainedPolygon
     {
         get
         {
             if (containedPolygon == null)
             {
-                containedPolygon = this.RenderableComponent as ContainedPolygonType;
+                containedPolygon = this.RenderableComponent as ContainedPolygonType
+                    ?? throw new InvalidOperationException(
+                        $"This {GetType().Name} has no {typeof(ContainedPolygonType).Name} renderable. It may have been created with fullInstantiation: false.");
             }
             return containedPolygon;
         }

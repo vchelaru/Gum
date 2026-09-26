@@ -437,7 +437,7 @@ public partial class Cursor : ICursor
     MouseState _mouseState;
     MouseState mLastFrameMouseState = new MouseState();
 
-    TouchCollection _touchCollection;
+    TouchCollection _touchCollection = new TouchCollection();
     TouchCollection _lastFrameTouchCollection = new TouchCollection();
 
     public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
@@ -514,21 +514,11 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
         {
             _touchCollection = GetTouchCollection();
         }
-        else
-        {
-#if !XNALIKE && !FRB
-            _touchCollection = _touchCollection ?? new TouchCollection();
-#endif
-        }
 
         var lastFrameTouchCollectionCount = 0;
         try
         {
-#if !XNALIKE && !FRB
-            lastFrameTouchCollectionCount = _lastFrameTouchCollection?.Count ?? 0;
-#else
             lastFrameTouchCollectionCount = _lastFrameTouchCollection.Count;
-#endif
         }
         // FNA crashes here (maybe because XNA did?) if lastFrameTouchCollectionCount.GetState has never been called
         catch { }
@@ -561,7 +551,7 @@ public Cursor(Microsoft.Xna.Framework.GameWindow? gameWindow)
             }
         }
 
-        if(x != null)
+        if(x != null && y != null)
         {
             var vector = new Vector2(x.Value, y.Value);
             vector = Vector2.Transform(vector, TransformMatrix);

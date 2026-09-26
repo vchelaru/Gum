@@ -30,7 +30,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         // factories. Without a registered IStrokedCircleRenderable factory, the fallback's
         // legacy LineCircle path must still fire so the tool keeps rendering circles when
         // MonoGameGumShapes is not in use.
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
         result.ShouldBeOfType<LineCircle>();
     }
 
@@ -46,7 +46,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         RegistryStrokedCircleSentinel sentinel = new();
         RenderableRegistry.RegisterFactory<IStrokedCircleRenderable>(() => sentinel);
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Circle", null);
 
         result.ShouldBeSameAs(sentinel);
     }
@@ -54,7 +54,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_ColoredRectangle_ReturnsSolidRectangle()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("ColoredRectangle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("ColoredRectangle", null);
         result.ShouldBeOfType<SolidRectangle>();
     }
 
@@ -65,7 +65,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         // whenever ShowLineRectangles was false (its default), breaking old/XML-error projects.
         GraphicalUiElement.ShowLineRectangles = false;
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Component", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Component", null);
 
         result.ShouldNotBeNull();
         result.ShouldBeOfType<InvisibleRenderable>();
@@ -76,7 +76,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     {
         GraphicalUiElement.ShowLineRectangles = true;
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
 
         result.ShouldBeOfType<LineRectangle>();
     }
@@ -88,7 +88,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         // the tool on top of this fallback; a runtime with ShowLineRectangles on keeps a plain outline.
         GraphicalUiElement.ShowLineRectangles = true;
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
 
         LineRectangle outline = result.ShouldBeOfType<LineRectangle>();
         outline.IsDotted.ShouldBeFalse();
@@ -103,7 +103,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         // rather than null. A null here leaves the GraphicalUiElement with no contained object.
         GraphicalUiElement.ShowLineRectangles = false;
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Container", null);
 
         result.ShouldNotBeNull();
         result.ShouldBeOfType<InvisibleRenderable>();
@@ -112,21 +112,21 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_NineSlice_ReturnsNineSlice()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("NineSlice", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("NineSlice", null);
         result.ShouldBeOfType<NineSlice>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Polygon_ReturnsLinePolygon()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Polygon", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Polygon", null);
         result.ShouldBeOfType<LinePolygon>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Rectangle_ReturnsLineRectangle_WhenNoRegistryFactory()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
         result.ShouldBeOfType<LineRectangle>();
     }
 
@@ -139,7 +139,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
         RegistryStrokedRectangleSentinel sentinel = new();
         RenderableRegistry.RegisterFactory<IStrokedRectangleRenderable>(() => sentinel);
 
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Rectangle", null);
 
         result.ShouldBeSameAs(sentinel);
     }
@@ -147,14 +147,14 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     [Fact]
     public void TryHandleAsBaseType_Sprite_ReturnsSprite()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Sprite", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Sprite", null);
         result.ShouldBeOfType<Sprite>();
     }
 
     [Fact]
     public void TryHandleAsBaseType_Text_ReturnsText()
     {
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("Text", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("Text", null);
         result.ShouldBeOfType<Text>();
     }
 
@@ -163,7 +163,7 @@ public class FallbackRenderableFactoryTests : BaseTestClass
     {
         // A non-standard name (e.g. a custom component's own name) is expected to fall through;
         // ElementSaveExtensions.CreateGraphicalComponent relies on this null to recurse into base types.
-        IRenderable result = FallbackRenderableFactory.TryHandleAsBaseType("SomeCustomComponent", null);
+        IRenderable? result = FallbackRenderableFactory.TryHandleAsBaseType("SomeCustomComponent", null);
         result.ShouldBeNull();
     }
 

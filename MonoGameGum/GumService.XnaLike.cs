@@ -49,9 +49,9 @@ public partial class GumService
     #endregion
 
     /// <summary>
-    /// The GameTime of the most recent Update call.
+    /// The GameTime of the most recent Update call, or null before the first Update.
     /// </summary>
-    public GameTime GameTime { get; private set; }
+    public GameTime? GameTime { get; private set; }
 
     /// <inheritdoc/>
     float? IGumService.GameTime =>
@@ -426,7 +426,8 @@ public partial class GumService
             _systemManagers.Renderer.Uninitialize();
         }
 
-        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
+        // Declared non-null but null! until Initialize sets it; teardown restores that state.
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
 
         // Folded from the end of the pre-split Uninitialize (was a trailing #if XNALIKE _game = null).
         // Nothing between this seam's call site and that point reads _game, so the move is inert.
