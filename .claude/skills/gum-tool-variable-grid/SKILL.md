@@ -9,6 +9,8 @@ description: Gum Variables tab and DataUiGrid. Triggers: Variables tab, DataUiGr
 
 The **Variables tab** displays and edits properties of the selected element, instance, state, or behavior. The grid's model is framework-neutral in `DataUi.Core` (net10.0: `InstanceMember`, `MemberCategory`, `DataUiGridModel`, `DisplayerRegistry`, and the editor logic classes, still in the `WpfDataUi.*` namespaces). `WpfDataUi` holds only the WPF views (`DataUiGrid`, an `ItemsControl` over a `DataUiGridModel`, plus the editors) and `AvaloniaDataUi` the Avalonia ones (`DataUiGrid.cs`, `SingleDataUiContainer.cs`, editors under `Controls/`, all built in C#); the Avalonia head is the shipped tool, the WPF head is frozen. Categories render as collapsible `Expander` sections.
 
+Headless Variables grid scenarios and their harness: `Tests/Gum.Avalonia.Tests/VariableGrid/README.md`.
+
 > Icons rendered inside the Variables grid (unit selectors, alignment, dock/anchor, origin/sizing toggle-button option displays) come from the `GumIcon`/`PathGeometry` pipeline. For authoring or replacing them see [gum-icons](../gum-icons/SKILL.md).
 
 ---

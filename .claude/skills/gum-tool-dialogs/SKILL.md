@@ -84,6 +84,9 @@ sets `DialogWindow.SetScrollContent(this, false)` (twin of WPF's `Dialog.ScrollC
 take the bounded height itself and scroll only one part, as `GetUserStringDialogView` scrolls its
 message while keeping the text box pinned.
 
+A dialog with nothing to type into can set `AnswersOnAccessKeyAlone` so the bare access-key letter
+of its "_Yes"/"_No" text answers it (`DialogViewModel.TryAnswerFromAccessKey`).
+
 **Menu actions run after the menu closes.** Every Avalonia menu item (main menu, context menus,
 the Variables tab, the Animations tab, the Standards palette) invokes its action through
 `MenuItemActions.InvokeAfterClose` (`Tool/Gum.Avalonia/Shell/MenuItemActions.cs`). The dialog

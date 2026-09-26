@@ -46,6 +46,8 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 
 ## Avalonia head tests (Gum.Avalonia.Tests)
 
+Tab-level headless harnesses (window driver, project fixture, scripted dialogs) are in `Tests/Gum.Avalonia.Tests/Harness/README.md`.
+
 - Anything that creates an Avalonia object (controls, `ResourceDictionary`, geometry) must be
   `[AvaloniaFact]`, which runs on the headless UI thread; a plain `[Fact]` throws "Call from invalid
   thread".
