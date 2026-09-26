@@ -86,6 +86,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IPluginEnablementStore, PluginEnablementStore>();
         services.AddSingleton<TypeManager>();
         services.AddSingleton<ITypeManager>(provider => provider.GetRequiredService<TypeManager>());
+        services.AddSingleton<ILastProjectLoadMarker, LastProjectLoadMarker>();
         services.AddSingleton<ProjectManager>();
         services.AddSingleton<IProjectManager>(provider => provider.GetRequiredService<ProjectManager>());
         // Narrow ports over ProjectManager (ADR-0005 Phase 3): each resolves to the same singleton.

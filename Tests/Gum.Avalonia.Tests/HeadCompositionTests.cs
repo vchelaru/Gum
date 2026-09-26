@@ -3,6 +3,7 @@ using Avalonia.Headless.XUnit;
 using Gum.Avalonia.Dialogs;
 using Gum.Avalonia.Shell;
 using Gum.Services;
+using Gum.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
@@ -63,6 +64,32 @@ public class HeadCompositionTests
         window.IsVisible.ShouldBeTrue();
         window.Title.ShouldNotBeNullOrEmpty();
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void MainWindow_ShownInBackground_OpensOffScreenUnactivated_AndIgnoresTheSavedPlacement()
+    {
+        // An unattended run (--exit-after) must not take focus or cover the user's windows (#5133).
+        // Not shown: the container's one MainWindow may already have been shown and closed by
+        // another test, so this drives what the Opened handler runs. A closed window has no
+        // platform position to read back, so the off-screen position itself is not asserted.
+        MainWindow window = TestAppBuilder.Services.GetRequiredService<MainWindow>();
+        LayoutSettings layout = TestAppBuilder.Services.GetRequiredService<IWritableOptions<LayoutSettings>>().CurrentValue;
+        WindowSettings previous = layout.MainWindow;
+        layout.MainWindow = new WindowSettings(Width: 900, Height: 700, Top: 100, Left: 100, IsMaximized: true);
+        try
+        {
+            window.ShowInBackground();
+            window.RestoreSavedPlacement();
+
+            window.ShowActivated.ShouldBeFalse();
+            window.WindowState.ShouldBe(WindowState.Normal);
+            window.WindowStartupLocation.ShouldBe(WindowStartupLocation.Manual);
+        }
+        finally
+        {
+            layout.MainWindow = previous;
+        }
     }
 
     [AvaloniaFact]

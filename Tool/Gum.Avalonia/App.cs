@@ -97,6 +97,11 @@ public sealed class App : Application
             IMessenger messenger = _services.GetRequiredService<IMessenger>();
             IDisposable canvasInputHook = CanvasInputRedrawHook.Install(_services.GetRequiredService<ICanvasRedrawScheduler>());
             MainWindow window = _services.GetRequiredService<MainWindow>();
+            // Agents and CI run this hundreds of times; don't take the user's focus.
+            if (_options.ExitAfterSeconds != null)
+            {
+                window.ShowInBackground();
+            }
             desktop.MainWindow = window;
             StartupTiming.Mark("MainWindow resolved");
             _previousSessionEndedDirty = _freezeDiagnostics.BeginSession();
@@ -154,6 +159,7 @@ public sealed class App : Application
         if (_options.ExitAfterSeconds == null)
         {
             PromptForUnreportedFreezeDiagnostics();
+            _services.GetService<ICrashReporter>()?.PromptForPreviousCrash();
         }
     }
 

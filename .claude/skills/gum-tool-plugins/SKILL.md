@@ -43,7 +43,7 @@ The type check `is IPriorityPlugin` is used at runtime — priority plugins rece
 
 ## Plugin Lifecycle
 
-`StartUp()` is called once on load — subscribe to events and add menu entries here (the menu model is populated before plugins load). `ShutDown(PluginShutDownReason)` is called on unload. Service dependencies arrive through `[ImportingConstructor]` parameters or the inherited `[Import]` properties; a few legacy plugins still call `Locator.GetRequiredService<T>()` in their constructor (drain on touch). If any plugin handler throws, `PluginContainer` disables that plugin for the rest of the session.
+`StartUp()` is called once on load — subscribe to events and add menu entries here (the menu model is populated before plugins load). `ShutDown(PluginShutDownReason)` is called on unload. Service dependencies arrive through `[ImportingConstructor]` parameters or the inherited `[Import]` properties; a few legacy plugins still call `Locator.GetRequiredService<T>()` in their constructor (drain on touch). If any plugin handler throws, `PluginContainer` disables that plugin for the rest of the session. `PluginInstantiator` (`Tools/Gum.Presentation/Plugins/`) creates plugins one at a time; a plugin whose constructor throws or whose import is missing is reported in Output and skipped, and the rest still load.
 
 ## Internal Plugin Map
 

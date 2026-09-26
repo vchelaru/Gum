@@ -18,45 +18,38 @@ Gum is an open source project so you can run it from source instead of running t
 
 ## Running the code
 
-1. Locate the Gum.slnx file (Gum.Wpf.sln is the older Windows-only WPF tool)
-   1. If you downloaded the .zip, it is in the root folder of the zip
-   2. If you cloned the repository, it is at the root of the Gum folder
-2. Double-click it to open Visual Studio, or open Visual Studio and load the .slnx
-3. Be sure to build solution rather than pressing F5 (which only builds the current project). This guarantees that all plugins are built and copied correctly. For more information see below.
+Building Gum requires the [.NET 10 SDK](https://dotnet.microsoft.com/download). Gum builds and runs from source on Windows, macOS, and Linux.
 
-Once the project has been built, you can run (with or without a debugger attached).
+### From an IDE
 
-### Building Plugins
-
-Gum depends on a number of plugins for its functionality. By default if you build the project and run it (such as by pressing F5 in Visual Studio), then plugins are not automatically built. To build plugins, you need to explicitly build all plugin projects. The easiest way to do this is to select the Build -> Rebuild Solution option in Visual Studio.
+1. Locate the `Gum.slnx` file at the root of the repository (`Gum.Wpf.sln` is the older Windows-only WPF tool, which no longer ships)
+2. Open it in Visual Studio, Rider, or VS Code
+3. Build the whole solution rather than only the startup project. This guarantees that all plugins are built and copied correctly. For more information see below.
+4. Run the **Gum.Avalonia** project, which is the Gum tool. It is the solution's startup project.
 
 <figure><img src="../../.gitbook/assets/gb-006.png" alt=""><figcaption><p>Build -> Rebuild Solution in Visual Studio</p></figcaption></figure>
 
+### From the command line
+
+Run the following from the root of the repository:
+
+```sh
+dotnet build Gum.slnx
+dotnet run --project Tool/Gum.Avalonia
+```
+
+To open a project on startup, add its path after `--`:
+
+```sh
+dotnet run --project Tool/Gum.Avalonia -- path/to/MyProject.gumx
+```
+
+### Building Plugins
+
+Some of Gum's features live in plugin projects, which copy themselves into the tool's `Plugins` folder when they build. Building only the Gum.Avalonia project (for example, by pressing F5 in Visual Studio after changing a plugin) does not rebuild them. Build the whole solution, or run `dotnet build Gum.slnx`, after changing a plugin.
+
 ## Troubleshooting
 
-### Missing Editor Tab
+### A feature added by a plugin is missing
 
-If your Editor Tab is missing, be sure to Build -> Build Solution. The Editor tab is a plugin, and you can verify that the plugin is in fact being built/loaded.
-
-First view plugins:
-
-<figure><img src="../../.gitbook/assets/14_15 59 13.png" alt=""><figcaption></figcaption></figure>
-
-Next, look for the Editor tab plugin in the list that appears:
-
-<figure><img src="../../.gitbook/assets/14_16 01 14.png" alt=""><figcaption></figcaption></figure>
-
-If you are missing this, be sure to Build -> Build Solution.
-
-### A project with an Output Type of Class Library cannot be started directly
-
-<figure><img src="../../.gitbook/assets/20_09 20 07.png" alt=""><figcaption></figcaption></figure>
-
-If you have this popup, you need to set Gum as the startup project.
-
-In Visual Studio:
-
-1. Right-click on the **Gum** project (not the solution)
-2. Select **Set as Startup Project**
-
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
+If a menu item or tab that comes from a plugin is missing, build the whole solution. To see which plugins loaded, select **Plugins** > **Manage Plugins**. The dialog also lists any plugin that was found but could not be loaded, along with the reason.

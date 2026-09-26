@@ -167,6 +167,8 @@ public class AvaloniaDialogService : IDialogService
         DialogWindow window = new DialogWindow(viewModel, view);
         Window? owner = MainWindow;
         window.FitHeightToScreen(owner);
+        // An unattended run's window sits off-screen without focus; its dialogs stay there with it.
+        window.ShowActivated = owner?.ShowActivated ?? true;
 
         using CancellationTokenSource closed = new CancellationTokenSource();
         window.Closed += (_, _) => closed.Cancel();

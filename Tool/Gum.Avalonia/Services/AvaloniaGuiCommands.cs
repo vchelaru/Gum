@@ -83,7 +83,8 @@ public class AvaloniaGuiCommands : IGuiCommands
     {
         _dispatcher.Post(() =>
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { IsVisible: true } window })
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: { IsVisible: true } window }
+                && window is not Shell.MainWindow { IsInBackground: true })
             {
                 window.Activate();
             }

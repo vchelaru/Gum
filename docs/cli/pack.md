@@ -173,7 +173,7 @@ If your build also generates bitmap fonts, run [`gumcli fonts`](fonts.md) before
 ```
 
 {% hint style="info" %}
-`gumcli fonts` is Windows only, since it drives `bmfont.exe`. On a Linux or macOS build agent, either commit the generated `FontCache` files to source control, or pack with `--include core,external` and let the runtime rasterize fonts from a `.ttf`.
+`gumcli fonts` runs on any operating system when the project's Font Generator is **KernSmith**. A project that uses **BMFont** can only generate fonts on Windows, since BMFont runs `bmfont.exe`. On a Linux or macOS build agent with such a project, switch it to KernSmith, commit the generated `FontCache` files to source control, or pack with `--include core,external` and let the runtime rasterize fonts from a `.ttf`. See [fonts](fonts.md) for details.
 {% endhint %}
 
 ## Exit Codes
