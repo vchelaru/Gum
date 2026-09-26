@@ -23,7 +23,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     private readonly TextBlock _label;
     // Fills the label column with a hit-testable background so a scrub starts anywhere left of the field.
     private readonly Border _labelHost;
-    private readonly TextBox _textBox;
+    private readonly EditTrackingTextBox _textBox;
     private readonly CheckBox _nullableCheckBox;
     private readonly TextBlock _hint;
     private ApplyValueResult? _lastApplyValueResult;
@@ -51,8 +51,9 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         _labelHost.PointerMoved += HandleLabelPointerMoved;
         _labelHost.PointerReleased += HandleLabelPointerReleased;
 
-        _textBox = new TextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        _textBox = new EditTrackingTextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
         _textBox.GotFocus += (_, _) => RefreshPlaceholderText();
+        _textBox.EditCommitRequested += HandleEditCommitRequested;
         _textBox.LostFocus += HandleTextBoxLostFocus;
 
         _nullableCheckBox = new CheckBox
@@ -186,9 +187,6 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             _nullableCheckBox.IsChecked = valueOnInstance == null;
         }
         _textBox.Text = _logic.ConvertNumberToString(valueOnInstance);
-        // Text the tool put in the field (a refresh, a scrub) is not a pending edit, so leaving the
-        // field must not commit it; only what the user types after this does.
-        _logic.TextAtStartOfEditing = _textBox.Text ?? string.Empty;
 
         RefreshPlaceholderText();
         _nullableCheckBox.IsVisible = IsDisplayedTypeNullable();
@@ -214,6 +212,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         // So focus loss doesn't write the old text back.
         _logic.HasUserChangedAnything = false;
         _logic.TextAtStartOfEditing = _textBox.Text ?? string.Empty;
+        _textBox.AcceptText();
     }
 
     /// <summary>Makes the field a tall, wrapping, multi-line editor where Enter inserts a line.</summary>
@@ -272,17 +271,16 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
         SetIsEditable(true);
     }
 
+    private void HandleEditCommitRequested(object? sender, EventArgs e)
+    {
+        // Clamp on tab-away as Enter does.
+        _logic.ClampTextBoxValuesToMinMax();
+        _lastApplyValueResult = _logic.TryApplyToInstance();
+    }
+
     private void HandleTextBoxLostFocus(object? sender, global::Avalonia.Interactivity.RoutedEventArgs e)
     {
         RefreshPlaceholderText();
-
-        if ((_textBox.Text ?? string.Empty) != _logic.TextAtStartOfEditing)
-        {
-            // Clamp on tab-away as Enter does.
-            _logic.ClampTextBoxValuesToMinMax();
-            _lastApplyValueResult = _logic.TryApplyToInstance();
-        }
-
         TryGetValueOnUi(out object? valueOnInstance);
         RefreshIsEnabled(valueOnInstance, forceNullableEnable: false);
     }

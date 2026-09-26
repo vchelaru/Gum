@@ -437,7 +437,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     private readonly Grid _grid;
     private readonly TextBlock _label;
     private readonly Slider _slider;
-    private readonly TextBox _textBox;
+    private readonly EditTrackingTextBox _textBox;
     private readonly TextBlock _minValueText;
     private readonly TextBlock _maxValueText;
     private readonly TextBlock _hint;
@@ -453,8 +453,8 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         _slider = new Slider { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
         _slider.PropertyChanged += HandleSliderPropertyChanged;
         _slider.AddHandler(PointerReleasedEvent, (_, _) => HandleSliderCommitted(), RoutingStrategies.Bubble, handledEventsToo: true);
-        _textBox = new TextBox { Margin = new Thickness(3, 1, 1, 1), VerticalAlignment = VerticalAlignment.Center };
-        _textBox.LostFocus += HandleTextBoxLostFocus;
+        _textBox = new EditTrackingTextBox { Margin = new Thickness(3, 1, 1, 1), VerticalAlignment = VerticalAlignment.Center };
+        _textBox.EditCommitRequested += HandleEditCommitRequested;
         _minValueText = new TextBlock { FontSize = 10, IsHitTestVisible = false };
         _maxValueText = new TextBlock { FontSize = 10, IsHitTestVisible = false, HorizontalAlignment = HorizontalAlignment.Right };
         _hint = CreateHintTextBlock();
@@ -579,6 +579,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     public void SetToDefault()
     {
         _textLogic.HasUserChangedAnything = false;
+        _textBox.AcceptText();
     }
 
     /// <inheritdoc/>
@@ -634,13 +635,10 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         _textLogic.RefreshBackgroundColor();
     }
 
-    private void HandleTextBoxLostFocus(object? sender, RoutedEventArgs e)
+    private void HandleEditCommitRequested(object? sender, EventArgs e)
     {
         _textLogic.ClampTextBoxValuesToMinMax();
-        if (_textLogic.HasUserChangedAnything)
-        {
-            _textLogic.TryApplyToInstance();
-        }
+        _textLogic.TryApplyToInstance();
     }
 
     private void RefreshMinAndMaxValues()
@@ -666,7 +664,7 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
     private readonly TextBoxDisplayLogic _logic;
     private readonly Grid _grid;
     private readonly TextBlock _label;
-    private readonly TextBox _textBox;
+    private readonly EditTrackingTextBox _textBox;
     private readonly TextBlock _hint;
     private ApplyValueResult? _lastApplyValueResult;
     private KeyModifiers _lastPressModifiers;
@@ -675,8 +673,8 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
     public PlusMinusTextBox()
     {
         _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4, 4, 4, 0), VerticalAlignment = VerticalAlignment.Center };
-        _textBox = new TextBox { Width = 60, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-        _textBox.LostFocus += (_, _) =>
+        _textBox = new EditTrackingTextBox { Width = 60, HorizontalContentAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        _textBox.EditCommitRequested += (_, _) =>
         {
             _lastApplyValueResult = _logic!.TryApplyToInstance();
             RefreshEnabledState();
@@ -742,6 +740,7 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
     public void SetToDefault()
     {
         _logic.HasUserChangedAnything = false;
+        _textBox.AcceptText();
     }
 
     /// <inheritdoc/>

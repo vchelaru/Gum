@@ -25,7 +25,7 @@ public class AvaloniaDataUiTextBox : IDataUiTextBox
     /// double-click events to it. Keys and clicks are handled on the tunnel so they run before the
     /// text box's own handling.
     /// </summary>
-    public static TextBoxDisplayLogic CreateLogic(IDataUi container, TextBox textBox)
+    public static TextBoxDisplayLogic CreateLogic(IDataUi container, EditTrackingTextBox textBox)
     {
         TextBoxDisplayLogic logic = new TextBoxDisplayLogic(container, new AvaloniaDataUiTextBox(textBox));
 

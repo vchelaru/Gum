@@ -31,7 +31,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
     private readonly TextBlock _label;
     private readonly Canvas _dial;
     private readonly Line _needle;
-    private readonly TextBox _textBox;
+    private readonly EditTrackingTextBox _textBox;
     private readonly TextBlock _hint;
     private decimal? _angle;
     private bool _isDragging;
@@ -77,7 +77,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         _dial.PointerMoved += HandleDialPointerMoved;
         _dial.PointerReleased += HandleDialPointerReleased;
 
-        _textBox = new TextBox { MinWidth = 40, VerticalAlignment = VerticalAlignment.Center };
+        _textBox = new EditTrackingTextBox { MinWidth = 40, VerticalAlignment = VerticalAlignment.Center };
         // Registered before the text logic so the typed angle is parsed before the logic commits it.
         _textBox.AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -86,13 +86,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
                 ApplyTextBoxText();
             }
         }, RoutingStrategies.Tunnel);
-        _textBox.LostFocus += (_, _) =>
-        {
-            if (_textLogic!.HasUserChangedAnything)
-            {
-                ApplyTextBoxText();
-            }
-        };
+        _textBox.EditCommitRequested += (_, _) => ApplyTextBoxText();
         _textLogic = AvaloniaDataUiTextBox.CreateLogic(this, _textBox);
         _hint = CreateHintTextBlock();
 
@@ -875,7 +869,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
     private readonly FilePickingLogic _filePickingLogic;
     private readonly Grid _grid;
     private readonly TextBlock _label;
-    private readonly TextBox _textBox;
+    private readonly EditTrackingTextBox _textBox;
     private readonly Button _revealButton;
     private readonly TextBlock _hint;
 
@@ -884,8 +878,8 @@ public class FileSelectionDisplay : DataUiDisplayBase
     {
         _filePickingLogic = new FilePickingLogic();
         _label = new TextBlock { MinWidth = 100, Padding = new Thickness(4), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-        _textBox = new TextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
-        _textBox.LostFocus += HandleTextBoxLostFocus;
+        _textBox = new EditTrackingTextBox { MinWidth = 60, VerticalAlignment = VerticalAlignment.Center };
+        _textBox.EditCommitRequested += HandleEditCommitRequested;
         Button pickButton = new Button { Content = "...", MinWidth = 24, Margin = new Thickness(2, 0, 0, 0) };
         pickButton.Click += (_, _) => PickFile();
         _revealButton = new Button { Content = "↗", MinWidth = 24, Margin = new Thickness(1, 0, 0, 0) };
@@ -976,16 +970,13 @@ public class FileSelectionDisplay : DataUiDisplayBase
         }
     }
 
-    private void HandleTextBoxLostFocus(object? sender, RoutedEventArgs e)
+    private void HandleEditCommitRequested(object? sender, System.EventArgs e)
     {
-        if ((_textBox.Text ?? string.Empty) != _textLogic.TextAtStartOfEditing)
+        if (_textLogic.TryApplyToInstance() == ApplyValueResult.NotSupported)
         {
-            if (_textLogic.TryApplyToInstance() == ApplyValueResult.NotSupported)
-            {
-                SetIsEditable(false);
-            }
-            RefreshRevealButton();
+            SetIsEditable(false);
         }
+        RefreshRevealButton();
     }
 
     private void RefreshRevealButton()
@@ -1194,8 +1185,8 @@ public class InlineChannelsDisplay : DataUiDisplayBase
         _fieldsPanel.Columns = composite.ChannelMembers.Count;
         foreach (InstanceMember channel in composite.ChannelMembers)
         {
-            TextBox textBox = new TextBox();
-            textBox.LostFocus += (_, _) => Commit(channel, textBox);
+            EditTrackingTextBox textBox = new EditTrackingTextBox();
+            textBox.EditCommitRequested += (_, _) => Commit(channel, textBox);
             textBox.AddHandler(KeyDownEvent, (_, e) =>
             {
                 if (e.Key == Key.Enter)
