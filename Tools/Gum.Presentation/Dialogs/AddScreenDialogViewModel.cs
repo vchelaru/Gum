@@ -82,11 +82,6 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {        
-        if (!ObjectFinder.Self.IsProjectSaved())
-        {
-            return "You must first save a project before adding a Component";
-        }
-        
         return _nameVerifier.IsElementNameValid(value, null, null, out string? whyNotValid)
             ? base.Validate(value)
             : whyNotValid;

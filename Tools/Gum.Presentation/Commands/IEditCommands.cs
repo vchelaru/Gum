@@ -86,6 +86,22 @@ public interface IEditCommands
 
     #region Element
 
+    /// <summary>
+    /// Returns true if the project has been saved. Otherwise tells the user to save first and
+    /// returns false. Call it before prompting for anything that needs the project's folder.
+    /// </summary>
+    /// <param name="action">What the user was trying to do, e.g. "adding a screen".</param>
+    bool EnsureProjectSaved(string action);
+
+    /// <summary>Shows the Add Screen dialog, or the save-first message if the project is unsaved.</summary>
+    void ShowAddScreenDialog();
+
+    /// <summary>Shows the Add Component dialog, or the save-first message if the project is unsaved.</summary>
+    void ShowAddComponentDialog();
+
+    /// <summary>Shows the Add Folder dialog, or the save-first message if the project is unsaved.</summary>
+    void ShowAddFolderDialog();
+
     void DuplicateSelectedElement();
 
     void ShowCreateComponentFromInstancesDialog();

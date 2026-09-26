@@ -483,9 +483,8 @@ public class EditCommands : IEditCommands
 
     public void AddBehavior()
     {
-        if (_projectState.NeedsToSaveProject)
+        if (!EnsureProjectSaved("adding a behavior"))
         {
-            _dialogService.ShowMessage("You must first save the project before adding a new component");
             return;
         }
 
@@ -519,6 +518,44 @@ public class EditCommands : IEditCommands
     #endregion
 
     #region Element
+
+    /// <inheritdoc/>
+    public bool EnsureProjectSaved(string action)
+    {
+        if (_projectState.NeedsToSaveProject)
+        {
+            _dialogService.ShowMessage($"You must first save the project before {action}");
+            return false;
+        }
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public void ShowAddScreenDialog()
+    {
+        if (EnsureProjectSaved("adding a screen"))
+        {
+            _dialogService.Show<AddScreenDialogViewModel>();
+        }
+    }
+
+    /// <inheritdoc/>
+    public void ShowAddComponentDialog()
+    {
+        if (EnsureProjectSaved("adding a component"))
+        {
+            _dialogService.Show<AddComponentDialogViewModel>();
+        }
+    }
+
+    /// <inheritdoc/>
+    public void ShowAddFolderDialog()
+    {
+        if (EnsureProjectSaved("adding a folder"))
+        {
+            _dialogService.Show<AddFolderDialogViewModel>();
+        }
+    }
 
     public void DuplicateSelectedElement()
     {

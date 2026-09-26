@@ -112,8 +112,8 @@ public class StandardMenuModelBuilder
         edit.Items.Add(MenuItemModel.Separator());
 
         MenuItemModel add = new MenuItemModel("Add");
-        add.Items.Add(new MenuItemModel("Screen", () => _dialogService.Show<AddScreenDialogViewModel>()));
-        add.Items.Add(new MenuItemModel("Component", () => _dialogService.Show<AddComponentDialogViewModel>()));
+        add.Items.Add(new MenuItemModel("Screen", _editCommands.ShowAddScreenDialog));
+        add.Items.Add(new MenuItemModel("Component", _editCommands.ShowAddComponentDialog));
         add.Items.Add(new MenuItemModel("Instance", () => _dialogService.Show<AddInstanceDialogViewModel>()));
         add.Items.Add(new MenuItemModel("State", () => _dialogService.Show<AddStateDialogViewModel>()));
         edit.Items.Add(add);
@@ -129,10 +129,10 @@ public class StandardMenuModelBuilder
 
         MenuItemModel view = new MenuItemModel("View");
         view.Items.Add(new MenuItemModel("Theming", () => _dialogService.Show<ThemingDialogViewModel>()));
-        // Experimental: replace the Standard tree folder with a chip palette at the bottom of the
-        // Project panel. Opt-in; persisted in the global settings file, which loads after Build,
-        // so RefreshUI syncs the check mark once settings are available.
-        _standardsPaletteMenuItem = new MenuItemModel("Standards palette (experimental)")
+        // Replaces the Standard tree folder with a chip palette at the bottom of the Project panel.
+        // On by default; persisted in the global settings file, which loads after Build, so
+        // RefreshUI syncs the check mark once settings are available.
+        _standardsPaletteMenuItem = new MenuItemModel("Standards palette")
         {
             IsCheckable = true,
             IsChecked = _projectManager.EffectiveUseStandardsPalette,
