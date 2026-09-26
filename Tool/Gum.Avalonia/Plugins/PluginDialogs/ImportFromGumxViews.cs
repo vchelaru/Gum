@@ -9,6 +9,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Gum.Avalonia.Dialogs;
 using ImportFromGumxPlugin.ViewModels;
 
 namespace Gum.Avalonia.Plugins.PluginDialogs;
@@ -28,9 +29,11 @@ public sealed class ImportFromGumxView : Grid
     public ImportFromGumxView()
     {
         // The dialog opens at a fixed size, as in the WPF head, so a long item list scrolls
-        // instead of growing the window.
+        // instead of growing the window. On a shorter screen it shrinks, and only the tree scrolls:
+        // the destination box and the buttons stay in view (WPF's ScrollContent="False").
         Width = 600;
-        Height = 560;
+        DialogWindow.SetPreferredHeight(this, 560);
+        DialogWindow.SetScrollContent(this, false);
         RowDefinitions = new RowDefinitions("Auto,*");
 
         StackPanel source = new StackPanel();

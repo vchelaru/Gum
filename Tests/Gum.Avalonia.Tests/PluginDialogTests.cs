@@ -1,6 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Interactivity;
+using Dispatcher = Avalonia.Threading.Dispatcher;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Controls;
 using Gum.Avalonia.Dialogs;
@@ -49,12 +51,7 @@ public class PluginDialogTests
     [AvaloniaFact]
     public void ImportFromGumxView_ClickingARowTogglesItThroughTheViewModel()
     {
-        ImportFromGumxViewModel viewModel = new ImportFromGumxLogic(
-            Services.GetRequiredService<IProjectState>(),
-            Services.GetRequiredService<IImportLogic>(),
-            Services.GetRequiredService<IFileCommands>(),
-            Services.GetRequiredService<IDialogService>(),
-            Services.GetRequiredService<IDispatcher>()).CreateImportViewModel();
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
         ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel("Components", "Components");
         ImportTreeNodeViewModel leaf = new ImportTreeNodeViewModel("Button", "Button", ElementItemType.Component);
         folder.Children.Add(leaf);
@@ -74,6 +71,68 @@ public class PluginDialogTests
         view.Tree.GetVisualDescendants().OfType<CheckBox>().First(box => box.DataContext == folder).IsChecked.ShouldBe(true);
         viewModel.Title.ShouldBe("Import from .gumx");
         window.Close();
+    }
+
+    [AvaloniaFact]
+    public void ImportFromGumxDialog_OnAShortWindow_ScrollsOnlyTheTree()
+    {
+        // As WPF's ScrollContent="False": the tree scrolls inside the dialog while the destination
+        // box and the buttons stay on screen, rather than the whole view scrolling.
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
+        ImportTreeNodeViewModel folder = new ImportTreeNodeViewModel("Components", "Components");
+        for (int i = 0; i < 60; i++)
+        {
+            folder.Children.Add(new ImportTreeNodeViewModel($"Button{i}", $"Button{i}", ElementItemType.Component));
+        }
+        viewModel.RootNodes.Add(folder);
+        viewModel.IsPreviewLoaded = true;
+
+        ImportFromGumxView view = (ImportFromGumxView)Registry.CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view) { MaxHeight = 400 };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        window.Bounds.Height.ShouldBeLessThanOrEqualTo(400);
+        ScrollViewer treeScroller = view.Tree.GetVisualDescendants().OfType<ScrollViewer>().First();
+        window.GetVisualDescendants().OfType<ScrollViewer>()
+            .Where(scroller => scroller.Extent.Height > scroller.Viewport.Height)
+            .ShouldBe(new[] { treeScroller });
+        ShouldBeInsideWindow(view.GetVisualDescendants().OfType<TextBox>().Last(), window);
+        ShouldBeInsideWindow(window.GetVisualDescendants().OfType<Button>().Single(button => button.Name == DialogWindow.AffirmativeButtonName), window);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void ImportFromGumxDialog_OnATallScreen_OpensAtItsFixedSize()
+    {
+        ImportFromGumxViewModel viewModel = CreateImportViewModel();
+
+        ImportFromGumxView view = (ImportFromGumxView)Registry.CreateView(viewModel);
+        DialogWindow window = new DialogWindow(viewModel, view) { MaxHeight = 2000 };
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+        window.UpdateLayout();
+
+        // The WPF view's size before any preview loads, so loading one does not grow the window.
+        view.Bounds.Width.ShouldBe(600);
+        view.Bounds.Height.ShouldBe(560);
+        window.Close();
+    }
+
+    private static ImportFromGumxViewModel CreateImportViewModel() => new ImportFromGumxLogic(
+        Services.GetRequiredService<IProjectState>(),
+        Services.GetRequiredService<IImportLogic>(),
+        Services.GetRequiredService<IFileCommands>(),
+        Services.GetRequiredService<IDialogService>(),
+        Services.GetRequiredService<IDispatcher>()).CreateImportViewModel();
+
+    private static void ShouldBeInsideWindow(Control control, Window window)
+    {
+        Point origin = control.TranslatePoint(new Point(0, 0), window)!.Value;
+        control.Bounds.Height.ShouldBeGreaterThan(0);
+        origin.Y.ShouldBeGreaterThanOrEqualTo(0);
+        (origin.Y + control.Bounds.Height).ShouldBeLessThanOrEqualTo(window.Bounds.Height);
     }
 
     [AvaloniaFact]

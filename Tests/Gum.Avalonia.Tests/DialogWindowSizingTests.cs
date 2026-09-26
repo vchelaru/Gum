@@ -60,6 +60,23 @@ public class DialogWindowSizingTests
         window.Close();
     }
 
+    [AvaloniaFact]
+    public void PreferredHeight_WithWholeViewScrolling_ScrollsTheViewWithinThatHeight()
+    {
+        MessageDialogViewModel viewModel = new MessageDialogViewModel { Message = "m", AffirmativeText = "Ok" };
+        Border view = new Border { Height = 5000 };
+        DialogWindow.SetPreferredHeight(view, 300);
+        DialogWindow window = new DialogWindow(viewModel, view);
+
+        window.Show();
+        Dispatcher.UIThread.RunJobs();
+
+        ScrollViewer scroller = window.GetVisualDescendants().OfType<ScrollViewer>().Single();
+        scroller.Viewport.Height.ShouldBe(300);
+        scroller.Extent.Height.ShouldBe(5000);
+        window.Close();
+    }
+
     private static void ShouldBeInsideWindow(Control control, Window window)
     {
         Point origin = control.TranslatePoint(new Point(0, 0), window)!.Value;

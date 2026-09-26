@@ -20,10 +20,10 @@ ships without it (umbrella #5128); *dropped* is intentional. No confirmed blocke
 | Timeline scrubber value tooltip and tick marks | `Timeline.xaml` | Ticks every 0.1s, the time as a tooltip above the thumb while dragging, click-to-point. Pinned by `TimelineEndToEndTests` | Fixed, #5128 |
 | Editor toolbar +/- buttons scale with UI font size | Resize with the base font | `EditorToolbar.UpdateButtonSizes`. Pinned by `UiFontSizeEndToEndTests` | Fixed, #5128 |
 | Tree collapse-button icons scale with font size | `WpfElementTreeView.UpdateCollapseButtonSizes` | Icon and button height scale. Pinned by `UiFontSizeEndToEndTests` | Fixed, #5128 |
-| Plugins dialog layout (tabs, monospace scan text, Copy Scan in the button row) | `PluginsDialogView.xaml` | Everything stacked, paths wrap | Follow-up, #5128 |
-| Color picker HSV/HSL entry and hex box | Third-party PortableColorPicker | `CompactColorPicker`: SV square, hue bar, RGB sliders, swatches. Open question whether anything used is missing | Follow-up, #5128 |
-| "Add" cursor while dragging onto the tree | `AddCursor.cur` | Default cursor | Follow-up (cosmetic), #5128 |
-| Import from .gumx dialog doesn't scroll as a whole | `ScrollContent=False` | Not set; probably harmless | Follow-up, #5128 |
+| Plugins dialog layout (tabs, monospace scan text, Copy Scan in the button row) | `PluginsDialogView.xaml` | Same tabs, unwrapped monospace scan, Copy Scan beside Close, fixed size across tab switches. Pinned by `PluginsDialogViewTests` | Fixed, #5128 |
+| Color picker HSV/HSL entry | PixiEditor PortableColorPicker: HSV/HSL square, RGB/HSV/HSL slider tabs, hex box | Variables tab `CompactColorPicker`: SV square, hue bar, RGB sliders with 0-255 fields; hex box in the row. The Theming dialog uses Avalonia's `ColorPicker` | Dropped: every color is reachable by the square and exactly enterable as RGB or hex, and Gum stores R/G/B, so HSV/HSL numeric entry would be a second way to type the same thing |
+| "Add" cursor while dragging a node or file over the canvas | `GiveFeedback` sets `AddCursor.cur` | The OS copy cursor (arrow with +), since the canvas answers `DragDropEffects.Copy` | Dropped: Avalonia 11 has no `GiveFeedback` or other hook to set the cursor during a platform drag |
+| Import from .gumx dialog scrolls only its tree | `ScrollContent=False` | Opens at 600x560, shrinks on a short screen, and only the tree scrolls (`DialogWindow.SetPreferredHeight`). Pinned by `PluginDialogTests` | Fixed, #5128 |
 | Telemetry and crash reporting (AppCenter) | Shipped | None | Dropped (2026-09-14, see README open decisions) |
 | WPF-only third-party plugins | Load | Don't load | Dropped (ADR-0018) |
 

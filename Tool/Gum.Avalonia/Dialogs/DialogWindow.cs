@@ -45,6 +45,15 @@ public sealed class DialogWindow : Window
     public static readonly AttachedProperty<bool> ScrollContentProperty =
         AvaloniaProperty.RegisterAttached<DialogWindow, Control, bool>("ScrollContent", defaultValue: true);
 
+    /// <summary>
+    /// Set on a dialog view to open the window at this height while still letting it shrink to fit a
+    /// shorter screen, where a fixed <c>Height</c> would be clipped. With <see cref="ScrollContentProperty"/>
+    /// false the view scrolls a part of itself; otherwise the whole view scrolls. Twin of WPF's
+    /// fixed view height, which <c>Dialog.OnContentChanged</c> clears once the window has sized to it.
+    /// </summary>
+    public static readonly AttachedProperty<double> PreferredHeightProperty =
+        AvaloniaProperty.RegisterAttached<DialogWindow, Control, double>("PreferredHeight", defaultValue: double.NaN);
+
     /// <summary>Name of the caption text block that shows the title inside the frame.</summary>
     public const string CaptionName = "PART_Caption";
 
@@ -76,6 +85,12 @@ public sealed class DialogWindow : Window
 
     /// <summary>Set false to give <paramref name="view"/> the window's bounded height instead of a scroller.</summary>
     public static void SetScrollContent(Control view, bool scroll) => view.SetValue(ScrollContentProperty, scroll);
+
+    /// <summary>Gets the height <paramref name="view"/>'s window opens at, or NaN to size to the view.</summary>
+    public static double GetPreferredHeight(Control view) => view.GetValue(PreferredHeightProperty);
+
+    /// <summary>Opens <paramref name="view"/>'s window at <paramref name="height"/>, shrinking it on a shorter screen.</summary>
+    public static void SetPreferredHeight(Control view, double height) => view.SetValue(PreferredHeightProperty, height);
 
     /// <summary>
     /// Gives <paramref name="target"/> keyboard focus once its dialog window has opened, then runs
@@ -160,7 +175,7 @@ public sealed class DialogWindow : Window
 
         // As the WPF window: the view scrolls vertically when it would not fit, so the buttons stay
         // reachable under a tall view, unless the view opted out to scroll a part of itself.
-        Control viewHost = GetScrollContent(content)
+        Control scrolledContent = GetScrollContent(content)
             ? new ScrollViewer
             {
                 Content = content,
@@ -168,6 +183,10 @@ public sealed class DialogWindow : Window
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
             }
             : content;
+        // Outside the scroller, so a view that scrolls as a whole still scrolls within its preferred height.
+        Control viewHost = double.IsNaN(GetPreferredHeight(content))
+            ? scrolledContent
+            : new PreferredHeightHost(GetPreferredHeight(content)) { Child = scrolledContent };
 
         DockPanel body = new DockPanel { Margin = new Thickness(12) };
         DockPanel.SetDock(footer, Dock.Bottom);
@@ -280,6 +299,21 @@ public sealed class DialogWindow : Window
             return gestures.Any(gesture => gesture.Matches(e));
         }
         return e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control;
+    }
+
+    // Asks for the preferred height, or the height available when that is less, whatever the view's
+    // own content would ask for.
+    private sealed class PreferredHeightHost : Decorator
+    {
+        private readonly double _preferredHeight;
+
+        public PreferredHeightHost(double preferredHeight) => _preferredHeight = preferredHeight;
+
+        protected override Size MeasureOverride(Size availableSize)
+        {
+            double height = Math.Min(_preferredHeight, availableSize.Height);
+            return base.MeasureOverride(availableSize.WithHeight(height)).WithHeight(height);
+        }
     }
 
     // The WPF dialog's action buttons: the default (primary) button, 64 wide at least, 16 by 4 padding.

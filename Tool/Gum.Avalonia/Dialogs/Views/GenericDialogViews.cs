@@ -112,14 +112,21 @@ public sealed class ChoiceDialogView : StackPanel
     }
 }
 
-/// <summary>Lists loaded plugins with enable check boxes and the scan diagnostics.</summary>
-public sealed class PluginsDialogView : StackPanel
+/// <summary>
+/// Lists loaded plugins with enable check boxes on one tab and the folder scan on another, with Copy
+/// Scan on the dialog's button row. Twin of the WPF <c>PluginsDialogView</c>.
+/// </summary>
+public sealed class PluginsDialogView : Border
 {
     /// <summary>Builds the view.</summary>
     public PluginsDialogView()
     {
-        Spacing = 8;
-        MinWidth = 480;
+        // Fixed, as the WPF window stops sizing to content once open: the unwrapped scan would
+        // otherwise widen the window when its tab is picked.
+        Width = 500;
+        // Each tab scrolls inside a fixed-height dialog, so switching tabs does not resize the window.
+        DialogWindow.SetPreferredHeight(this, 450);
+        DialogWindow.SetScrollContent(this, false);
 
         ItemsControl plugins = new ItemsControl
         {
@@ -132,14 +139,46 @@ public sealed class PluginsDialogView : StackPanel
             }),
         };
         plugins.Bind(ItemsControl.ItemsSourceProperty, new Binding(nameof(PluginsDialogViewModel.Plugins)));
-        Children.Add(new ScrollViewer { Content = plugins, MaxHeight = 300 });
+        ScrollViewer pluginList = new ScrollViewer
+        {
+            Content = plugins,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+        };
 
-        TextBox diagnostics = new TextBox { IsReadOnly = true, AcceptsReturn = true, MaxHeight = 160, TextWrapping = TextWrapping.Wrap };
-        diagnostics.Bind(TextBox.TextProperty, new Binding(nameof(PluginsDialogViewModel.Diagnostics)));
-        Children.Add(diagnostics);
+        // Read-only but selectable, for pasting into a bug report. Unwrapped and monospace: these
+        // are long file paths, and wrapping breaks them mid-path.
+        TextBox scan = new TextBox
+        {
+            IsReadOnly = true,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.NoWrap,
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(4),
+            FontFamily = new FontFamily("Cascadia Mono,Consolas,Menlo,DejaVu Sans Mono,monospace"),
+            VerticalContentAlignment = VerticalAlignment.Top,
+        };
+        ScrollViewer.SetHorizontalScrollBarVisibility(scan, ScrollBarVisibility.Auto);
+        ScrollViewer.SetVerticalScrollBarVisibility(scan, ScrollBarVisibility.Auto);
+        scan.Bind(TextBox.TextProperty, new Binding(nameof(PluginsDialogViewModel.Diagnostics)) { Mode = BindingMode.OneWay });
 
-        Button copy = new Button { Content = "Copy diagnostics", HorizontalAlignment = HorizontalAlignment.Left };
+        Child = new TabControl
+        {
+            Items =
+            {
+                new TabItem { Header = "Plugins", Content = pluginList },
+                new TabItem { Header = "Folder scan", Content = scan },
+            },
+        };
+
+        // On the dialog's own button row next to Close: a button inside the tab reads as though it
+        // belongs to the text box.
+        StackPanel copyContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        copyContent.Children.Add(GumFluentIcons.Create(FluentIcons.Common.Icon.Copy, 16));
+        copyContent.Children.Add(new TextBlock { Text = "Copy Scan", VerticalAlignment = VerticalAlignment.Center });
+        Button copy = new Button { Content = copyContent };
+        ToolTip.SetTip(copy, "Copy the folder scan to the clipboard");
         copy.Bind(Button.CommandProperty, new Binding(nameof(PluginsDialogViewModel.CopyDiagnosticsCommand)));
-        Children.Add(copy);
+        DialogWindow.SetAuxiliaryActions(this, copy);
     }
 }
