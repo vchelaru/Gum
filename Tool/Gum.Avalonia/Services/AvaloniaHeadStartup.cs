@@ -55,8 +55,7 @@ public class AvaloniaHeadStartup : IHeadStartup
         PluginManager pluginManager = _services.GetRequiredService<PluginManager>();
         pluginManager.Initialize();
 
-        // Until the plugin-management dialog comes across, the Output tab is where a user can see
-        // which plugins this head composed.
+        // Lists the composed plugins in the Output tab; Plugins > Manage Plugins shows the same list.
         string names = string.Join(", ", pluginManager.InitializedPlugins.Select(plugin => plugin.FriendlyName).OrderBy(name => name));
         _services.GetRequiredService<IOutputManager>().AddOutput($"Loaded {pluginManager.InitializedPlugins.Count()} plugin(s): {names}");
     }
