@@ -12,11 +12,15 @@ namespace Gum.Services.Dialogs;
 /// </summary>
 public class DeleteOptionsDialogViewModel : DialogViewModel
 {
-    /// <summary>Creates an empty Yes/No confirmation.</summary>
+    /// <summary>
+    /// Creates an empty Yes/No confirmation. Y and N answer it, alone or with Alt, as the WPF
+    /// delete dialog does.
+    /// </summary>
     public DeleteOptionsDialogViewModel()
     {
-        AffirmativeText = "Yes";
-        NegativeText = "No";
+        AffirmativeText = "_Yes";
+        NegativeText = "_No";
+        AnswersOnAccessKeyAlone = true;
         Title = "Delete?";
         Message = string.Empty;
         CheckBoxes = new ObservableCollection<DeleteOptionCheckboxViewModel>();

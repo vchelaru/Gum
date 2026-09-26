@@ -38,6 +38,7 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     private readonly DockPanel _content;
     private readonly AvaloniaGumTreeView _tree;
     private readonly TextBox _searchBox;
+    private readonly Button _searchClearButton;
     private readonly CheckBox _deepSearch;
     private readonly ListBox _results;
     private readonly ObservableCollection<SearchItemViewModel> _resultItems;
@@ -68,7 +69,25 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
             () => CollapseToElementLevelRequested?.Invoke());
         // One row at the top of the panel: the search box, shrinking to make room for the two
         // 24px tool buttons at its right (#4694).
-        _searchBox = new TextBox { Watermark = "Search...", VerticalAlignment = VerticalAlignment.Center };
+        // As the WPF box: an (X) inside it clears the search. Fluent's own clearButton class shows
+        // only while the box has focus, so it would vanish once the user moved on to the results.
+        _searchClearButton = new Button
+        {
+            Content = GumFluentIcons.Create(FluentIcons.Common.Icon.Dismiss, 12),
+            Padding = new Thickness(4, 2),
+            Focusable = false,
+            IsVisible = false,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        _searchClearButton.Classes.Add(GumChromeStyles.FlatButtonClass);
+        ToolTip.SetTip(_searchClearButton, "Clear search");
+        _searchClearButton.Click += (_, _) => ClearSearchText();
+        _searchBox = new TextBox
+        {
+            Watermark = "Search...",
+            VerticalAlignment = VerticalAlignment.Center,
+            InnerRightContent = _searchClearButton,
+        };
         _collapseAllButton.Margin = new Thickness(4, 0, 0, 0);
         _collapseToElementButton.Margin = new Thickness(4, 0, 0, 0);
         Grid.SetColumn(_collapseAllButton, 1);
@@ -119,6 +138,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 
     /// <summary>The row holding the search box and the collapse buttons, for tests.</summary>
     internal Grid SearchRow => _searchRow;
+
+    /// <summary>The (X) button inside the search box that clears it, for tests.</summary>
+    internal Button SearchClearButton => _searchClearButton;
 
     /// <inheritdoc/>
     public GumTreeNodeCollection Nodes => _tree.Nodes;
@@ -281,7 +303,11 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 
     private void WireSearch()
     {
-        _searchBox.TextChanged += (_, _) => SearchTextChanged?.Invoke(_searchBox.Text);
+        _searchBox.TextChanged += (_, _) =>
+        {
+            _searchClearButton.IsVisible = !string.IsNullOrEmpty(_searchBox.Text);
+            SearchTextChanged?.Invoke(_searchBox.Text);
+        };
         _searchBox.GotFocus += (_, _) => UpdateDeepSearchVisibility();
         _searchBox.LostFocus += (_, _) => UpdateDeepSearchVisibility();
         _searchBox.AddHandler(InputElement.KeyDownEvent, HandleSearchKeyDown, RoutingStrategies.Tunnel);
