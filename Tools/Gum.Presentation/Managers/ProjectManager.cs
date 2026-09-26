@@ -435,10 +435,6 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 {
                     modifications.Add("RemoveSpacesInVariables");
                 }
-                if (_gumProjectSave.MigrateCircleRadiusToWidthHeight())
-                {
-                    modifications.Add("MigrateCircleRadiusToWidthHeight");
-                }
                 if (_gumProjectSave.StripCircleRectangleGradientColor1())
                 {
                     modifications.Add("StripCircleRectangleGradientColor1");

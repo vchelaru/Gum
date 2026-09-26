@@ -496,6 +496,40 @@ public class GumProjectSaveTests : BaseTestClass
         state.Variables.ShouldNotContain(v => v.Name.EndsWith(".Width"));
     }
 
+    [Fact]
+    public void Initialize_LegacyCircleStandardWithRadius_InstanceIsSizedFromRadius()
+    {
+        // Issue #5167 - a Circle saved before #2947 carries Radius alongside Width/Height (the
+        // samples' Standards/Circle.gutx has Radius 16, Width 16, Height 16, in that file order).
+        // The tool migrates Radius to Width = Height = Radius * 2 on load; the runtime must too,
+        // or a game draws a different circle than the tool shows.
+        GumProjectSave project = new GumProjectSave();
+        StandardElementSave circle = new StandardElementSave { Name = "Circle" };
+        Gum.DataTypes.Variables.StateSave circleDefault = new Gum.DataTypes.Variables.StateSave { Name = "Default" };
+        circleDefault.Variables.Add(new VariableSave { Name = "Height", Type = "float", Value = 16.0f, SetsValue = true });
+        circleDefault.Variables.Add(new VariableSave { Name = "Radius", Type = "float", Value = 16.0f, SetsValue = true });
+        circleDefault.Variables.Add(new VariableSave { Name = "Width", Type = "float", Value = 16.0f, SetsValue = true });
+        circle.States.Add(circleDefault);
+        project.StandardElements.Add(circle);
+
+        ScreenSave screen = new ScreenSave { Name = "StartScreen" };
+        screen.States.Add(new Gum.DataTypes.Variables.StateSave { Name = "Default" });
+        screen.Instances.Add(new InstanceSave { Name = "CircleInstance", BaseType = "Circle" });
+        project.Screens.Add(screen);
+
+        project.Initialize();
+        Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
+        // BaseTestClass.Dispose resets the registry, dropping this module-initializer default that
+        // a running game always has.
+        Gum.Renderables.DefaultStrokedCircleRenderable.RegisterRuntimeTypes();
+
+        Gum.Wireframe.GraphicalUiElement screenGue = Gum.ElementSaveExtensionMethods.ToGraphicalUiElement(screen);
+        Gum.Wireframe.GraphicalUiElement circleGue = screenGue.GetGraphicalUiElementByName("CircleInstance")!;
+
+        circleGue.Width.ShouldBe(32.0f);
+        circleGue.Height.ShouldBe(32.0f);
+    }
+
     // Issue #3009 — Circle/Rectangle dropped the standalone gradient start (Red1/Green1/Blue1/
     // Alpha1); the start is now the active body color. The migration strips orphaned …1 channels
     // from Circle/Rectangle elements and instances, while leaving Arc (which keeps Color1 as an

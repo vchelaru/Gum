@@ -39,7 +39,7 @@ internal static class StandardElementsCodeGenRegistration
         <Value xsi:type=""xsd:boolean"">false</Value>
       </Variable>
       <Variable Type=""float"" Name=""Height"" Category=""Dimensions"" SetsValue=""true"" IsHiddenInPropertyGrid=""true"">
-        <Value xsi:type=""xsd:float"">16</Value>
+        <Value xsi:type=""xsd:float"">32</Value>
       </Variable>
       <Variable Type=""DimensionUnitType"" Name=""HeightUnits"" Category=""Dimensions"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">0</Value>
@@ -58,9 +58,6 @@ internal static class StandardElementsCodeGenRegistration
       <Variable Type=""float?"" Name=""MinHeight"" Category=""Dimensions"" SetsValue=""true"" />
       <Variable Type=""float?"" Name=""MinWidth"" Category=""Dimensions"" SetsValue=""true"" />
       <Variable Type=""string"" Name=""Parent"" Category=""Parent"" SetsValue=""true"" />
-      <Variable Type=""float"" Name=""Radius"" Category=""Dimensions"" SetsValue=""true"">
-        <Value xsi:type=""xsd:float"">16</Value>
-      </Variable>
       <Variable Type=""int"" Name=""Red"" Category=""Rendering"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">255</Value>
       </Variable>
@@ -74,7 +71,7 @@ internal static class StandardElementsCodeGenRegistration
         <Value xsi:type=""xsd:boolean"">true</Value>
       </Variable>
       <Variable Type=""float"" Name=""Width"" Category=""Dimensions"" SetsValue=""true"" IsHiddenInPropertyGrid=""true"">
-        <Value xsi:type=""xsd:float"">16</Value>
+        <Value xsi:type=""xsd:float"">32</Value>
       </Variable>
       <Variable Type=""DimensionUnitType"" Name=""WidthUnits"" Category=""Dimensions"" SetsValue=""true"">
         <Value xsi:type=""xsd:int"">0</Value>
