@@ -145,6 +145,7 @@ public sealed class App : Application
         if (_options.ExitAfterSeconds == null)
         {
             PromptForUnreportedFreezeDiagnostics();
+            _services.GetService<ICrashReporter>()?.PromptForPreviousCrash();
         }
     }
 
