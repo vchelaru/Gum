@@ -24,5 +24,5 @@ public class DefaultFromFileTextBoxRuntime : InteractiveGue
         }
     }
 
-    public TextBox FormsControl => FormsControlAsObject as TextBox;
+    public TextBox? FormsControl => FormsControlAsObject as TextBox;
 }

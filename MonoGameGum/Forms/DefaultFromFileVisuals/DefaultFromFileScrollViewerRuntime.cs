@@ -22,5 +22,5 @@ public class DefaultFromFileScrollViewerRuntime : InteractiveGue
         }
     }
 
-    public ScrollViewer FormsControl => FormsControlAsObject as ScrollViewer;
+    public ScrollViewer? FormsControl => FormsControlAsObject as ScrollViewer;
 }

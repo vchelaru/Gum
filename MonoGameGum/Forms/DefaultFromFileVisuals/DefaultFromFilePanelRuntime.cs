@@ -22,6 +22,6 @@ internal class DefaultFromFilePanelRuntime : ContainerRuntime
             FormsControlAsObject = new Panel(this);
         }
     }
-    public Panel FormsControl => FormsControlAsObject as Panel;
+    public Panel? FormsControl => FormsControlAsObject as Panel;
 
 }

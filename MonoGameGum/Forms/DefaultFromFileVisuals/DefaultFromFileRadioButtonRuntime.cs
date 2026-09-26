@@ -22,5 +22,5 @@ public class DefaultFromFileRadioButtonRuntime : InteractiveGue
         }
     }
 
-    public RadioButton FormsControl => FormsControlAsObject as RadioButton;
+    public RadioButton? FormsControl => FormsControlAsObject as RadioButton;
 }

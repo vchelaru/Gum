@@ -26,6 +26,6 @@ public class DefaultFromFileItemsControlRuntime : InteractiveGue
         }
     }
 
-    public ItemsControl FormsControl => FormsControlAsObject as ItemsControl;
+    public ItemsControl? FormsControl => FormsControlAsObject as ItemsControl;
 
 }

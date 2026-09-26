@@ -23,6 +23,6 @@ internal class DefaultFromFileMenuItemRuntime : InteractiveGue
             FormsControlAsObject = new MenuItem(this);
         }
     }
-    public MenuItem FormsControl => FormsControlAsObject as MenuItem;
+    public MenuItem? FormsControl => FormsControlAsObject as MenuItem;
 }
 #endif

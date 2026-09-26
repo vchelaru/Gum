@@ -16,5 +16,5 @@ public class DefaultFromFileExpanderRuntime : InteractiveGue
             FormsControlAsObject = new Expander(this);
         }
     }
-    public Expander FormsControl => FormsControlAsObject as Expander;
+    public Expander? FormsControl => FormsControlAsObject as Expander;
 }

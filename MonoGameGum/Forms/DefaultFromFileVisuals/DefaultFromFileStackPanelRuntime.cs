@@ -26,6 +26,6 @@ public class DefaultFromFileStackPanelRuntime : ContainerRuntime
             FormsControlAsObject = new StackPanel(this);
         }
     }
-    public StackPanel FormsControl => FormsControlAsObject as StackPanel;
+    public StackPanel? FormsControl => FormsControlAsObject as StackPanel;
 
 }

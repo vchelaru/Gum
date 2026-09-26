@@ -24,7 +24,7 @@ public class DefaultFromFilePasswordBoxRuntime : InteractiveGue
         }
     }
 
-    public PasswordBox FormsControl => FormsControlAsObject as PasswordBox;
+    public PasswordBox? FormsControl => FormsControlAsObject as PasswordBox;
 
 }
 #endif

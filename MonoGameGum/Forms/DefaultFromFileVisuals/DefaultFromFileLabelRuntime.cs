@@ -22,5 +22,5 @@ public class DefaultFromFileLabelRuntime : InteractiveGue
         }
     }
 
-    public Label FormsControl => FormsControlAsObject as Label;
+    public Label? FormsControl => FormsControlAsObject as Label;
 }

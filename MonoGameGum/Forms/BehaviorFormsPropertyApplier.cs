@@ -20,7 +20,7 @@ internal static class BehaviorFormsPropertyApplier
 {
     public static void Apply(FrameworkElement formsControl, GraphicalUiElement visual)
     {
-        ElementSave? elementSave = visual?.ElementSave;
+        ElementSave? elementSave = visual.ElementSave;
         if (elementSave == null)
         {
             return;
@@ -45,7 +45,7 @@ internal static class BehaviorFormsPropertyApplier
             // default. The third tier lets a behavior's declared default carry through when
             // neither component nor parent state authors a value (mirrors WPF
             // DependencyProperty.PropertyMetadata.DefaultValue).
-            object? value = ReadEffectiveValue(visual!, declaration.Name) ?? declaration.Value;
+            object? value = ReadEffectiveValue(visual, elementSave, declaration.Name) ?? declaration.Value;
             if (value == null)
             {
                 continue;
@@ -79,7 +79,7 @@ internal static class BehaviorFormsPropertyApplier
         }
     }
 
-    private static object? ReadEffectiveValue(GraphicalUiElement visual, string propertyName)
+    private static object? ReadEffectiveValue(GraphicalUiElement visual, ElementSave elementSave, string propertyName)
     {
         // Prefer a parent-level instance-qualified override (e.g. screen state's
         // "ButtonInstance.ToolTip") over the element's own default. This matches how Gum
@@ -97,7 +97,7 @@ internal static class BehaviorFormsPropertyApplier
             }
         }
 
-        return new RecursiveVariableFinder(visual.ElementSave.DefaultState!).GetValue(propertyName);
+        return new RecursiveVariableFinder(elementSave.DefaultState!).GetValue(propertyName);
     }
 
     private static IEnumerable<VariableSave> EnumerateFormsPropertyDeclarations(

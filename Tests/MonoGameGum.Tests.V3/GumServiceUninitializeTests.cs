@@ -265,6 +265,27 @@ public class GumServiceUninitializeTests
         }
     }
 
+    [Fact]
+    public void FormsUtilities_Update_AfterUninitialize_ThrowsInvalidOperationException()
+    {
+        ICursor? savedCursor = FormsUtilities.Cursor;
+        InteractiveGue? savedPopupRoot = FrameworkElement.PopupRoot;
+        InteractiveGue? savedModalRoot = FrameworkElement.ModalRoot;
+        List<GraphicalUiElement> roots = new List<GraphicalUiElement>();
+
+        try
+        {
+            FormsUtilities.Uninitialize();
+
+            Should.Throw<InvalidOperationException>(() =>
+                FormsUtilities.Update(game: null, new Microsoft.Xna.Framework.GameTime(), roots));
+        }
+        finally
+        {
+            RestoreFormsUtilitiesState(savedCursor, savedPopupRoot, savedModalRoot);
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Styling.ActiveStyle — issue #4626, must not survive pointing at a
     // texture LoaderManager.Self.DisposeAndClear() just disposed.

@@ -16,5 +16,5 @@ public class DefaultFromFileTooltipRuntime : InteractiveGue
             FormsControlAsObject = new Tooltip(this);
         }
     }
-    public Tooltip FormsControl => FormsControlAsObject as Tooltip;
+    public Tooltip? FormsControl => FormsControlAsObject as Tooltip;
 }

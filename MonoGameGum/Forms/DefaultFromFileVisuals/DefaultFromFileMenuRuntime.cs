@@ -25,7 +25,7 @@ internal class DefaultFromFileMenuRuntime : InteractiveGue
         }
     }
 
-    public Menu FormsControl => FormsControlAsObject as Menu;
+    public Menu? FormsControl => FormsControlAsObject as Menu;
 
 }
 #endif

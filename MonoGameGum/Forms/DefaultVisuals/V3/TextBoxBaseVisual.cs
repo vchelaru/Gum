@@ -6,6 +6,7 @@ using Gum.Wireframe;
 using Gum.Forms.Controls;
 using RenderingLibrary.Graphics;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 
 #if XNALIKE
@@ -354,6 +355,7 @@ public abstract class TextBoxBaseVisual : InteractiveGue
         DefineDynamicStyleChanges();
     }
 
+    [MemberNotNull(nameof(LineModeCategory))]
     private void DefineDynamicStyleChanges()
     {
         TextboxCategory.States.Add(States.Enabled);

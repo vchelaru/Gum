@@ -5,6 +5,7 @@ using Gum.Wireframe;
 using RenderingLibrary.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -318,6 +319,7 @@ public class ScrollViewerVisual : InteractiveGue
     {
     }
 
+    [MemberNotNull(nameof(ScrollViewerCategory), nameof(States))]
     private void CreateStates()
     {
         CreateScrollViewerCategory();
@@ -325,6 +327,7 @@ public class ScrollViewerVisual : InteractiveGue
         CreateScrollBarVisibilityCategory();
     }
 
+    [MemberNotNull(nameof(ScrollViewerCategory), nameof(States))]
     private void CreateScrollViewerCategory()
     {
         ScrollViewerCategory = new StateSaveCategory();
@@ -433,8 +436,7 @@ public class ScrollViewerVisual : InteractiveGue
     /// </summary>
     protected virtual void RefreshScrollBarLengths()
     {
-        if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer
-            && HorizontalScrollBarInstance != null)
+        if (VerticalScrollBarInstance.Parent == ScrollAndClipContainer)
         {
             float margin = VerticalScrollBarInstance.Visible
                 ? VerticalScrollBarInstance.AbsoluteWidth
@@ -442,8 +444,7 @@ public class ScrollViewerVisual : InteractiveGue
             HorizontalScrollBarInstance.Width = -margin;
         }
 
-        if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer
-            && VerticalScrollBarInstance != null)
+        if (HorizontalScrollBarInstance.Parent == ScrollAndClipContainer)
         {
             float margin = HorizontalScrollBarInstance.Visible
                 ? HorizontalScrollBarInstance.AbsoluteHeight

@@ -16,5 +16,5 @@ public class DefaultFromFileColorPickerRuntime : InteractiveGue
             FormsControlAsObject = new ColorPicker(this);
         }
     }
-    public ColorPicker FormsControl => FormsControlAsObject as ColorPicker;
+    public ColorPicker? FormsControl => FormsControlAsObject as ColorPicker;
 }

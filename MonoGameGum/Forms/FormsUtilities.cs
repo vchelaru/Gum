@@ -55,9 +55,12 @@ public enum DefaultVisualsVersion
 
 public class FormsUtilities
 {
-    static ICursor cursor;
+    static ICursor? cursor;
 
-    public static ICursor Cursor => cursor;
+    /// <summary>
+    /// The cursor Forms reads each frame. Null before InitializeDefaults and after Uninitialize.
+    /// </summary>
+    public static ICursor? Cursor => cursor;
 
     public static void SetCursor(ICursor cursor)
     {
@@ -65,7 +68,7 @@ public class FormsUtilities
         FrameworkElement.MainCursor = cursor;
     }
 
-    // Null only before InitializeDefaults and after Uninitialize; Update never runs in either window.
+    // Null only before InitializeDefaults and after Uninitialize; Update throws in either window.
     static IInputReceiverKeyboard? keyboard;
 
     public static IInputReceiverKeyboard Keyboard => keyboard!;
@@ -282,16 +285,16 @@ public class FormsUtilities
 
 #if XNALIKE
     [Obsolete("Use the overload which takes a Game as the first argument, and pass the game instance.")]
-    public static void Update(GameTime gameTime, GraphicalUiElement rootGue)
+    public static void Update(GameTime gameTime, GraphicalUiElement? rootGue)
     {
         Update(null, gameTime, rootGue);
     }
 #endif
 
 #if XNALIKE
-    public static void Update(Game game, GameTime gameTime, GraphicalUiElement rootGue)
+    public static void Update(Game? game, GameTime gameTime, GraphicalUiElement? rootGue)
 #else
-    public static void Update(double gameTime, GraphicalUiElement rootGue)
+    public static void Update(double gameTime, GraphicalUiElement? rootGue)
 #endif
     {
         innerRootList.Clear();
@@ -307,9 +310,9 @@ public class FormsUtilities
     }
 
 #if XNALIKE
-    public static void Update(Game game, GameTime gameTime, IEnumerable<GraphicalUiElement> roots)
+    public static void Update(Game? game, GameTime gameTime, IEnumerable<GraphicalUiElement>? roots)
 #else
-    public static void Update(double gameTime, IEnumerable<GraphicalUiElement> roots)
+    public static void Update(double gameTime, IEnumerable<GraphicalUiElement>? roots)
 #endif
     {
 #if XNALIKE
@@ -324,6 +327,11 @@ public class FormsUtilities
             return;
         }
 
+        ICursor cursor = FormsUtilities.cursor
+            ?? throw new InvalidOperationException("FormsUtilities.Update was called with no cursor. Initialize Gum before updating Forms.");
+        IInputReceiverKeyboard keyboard = FormsUtilities.keyboard
+            ?? throw new InvalidOperationException("FormsUtilities.Update was called with no keyboard. Initialize Gum before updating Forms.");
+
         var frameworkElementOverBefore =
             cursor.WindowPushed?.FormsControlAsObject as FrameworkElement ??
             cursor.VisualOver?.FormsControlAsObject as FrameworkElement;
@@ -334,7 +342,7 @@ public class FormsUtilities
         double gameTimeSeconds = gameTime;
 #endif
         cursor.Activity(gameTimeSeconds);
-        keyboard!.Activity(gameTimeSeconds);
+        keyboard.Activity(gameTimeSeconds);
         UpdateGamepads(gameTimeSeconds);
         innerList.Clear();
 
@@ -347,7 +355,7 @@ public class FormsUtilities
         // A pair is only a candidate winner if it has a visible top child — otherwise (e.g. every
         // child mid fade-out) it wouldn't have received input under the old single-root behavior
         // either, so the search continues to the next pair rather than starving one that does.
-        GraphicalUiElement exclusiveModalItem = null;
+        GraphicalUiElement? exclusiveModalItem = null;
         for (int i = 0; i < popupModalRootPairs.Count && exclusiveModalItem == null; i++)
         {
             var modalRoot = popupModalRootPairs[i].modalRoot;
@@ -380,10 +388,11 @@ public class FormsUtilities
                 // make sure this is the last:
                 foreach (var layer in SystemManagers.Default.Renderer.Layers)
                 {
-                    if (layer.Renderables.Contains(modalRoot.RenderableComponent) && layer.Renderables.Last() != modalRoot.RenderableComponent)
+                    if (modalRoot.RenderableComponent is IRenderableIpso modalRenderable &&
+                        layer.Renderables.Contains(modalRenderable) && layer.Renderables.Last() != modalRenderable)
                     {
-                        layer.Remove(modalRoot.RenderableComponent as IRenderableIpso);
-                        layer.Add(modalRoot.RenderableComponent as IRenderableIpso);
+                        layer.Remove(modalRenderable);
+                        layer.Add(modalRenderable);
                     }
                 }
             }
@@ -423,11 +432,12 @@ public class FormsUtilities
                     // make sure this is the last:
                     foreach (var layer in SystemManagers.Default.Renderer.Layers)
                     {
-                        if (layer.Renderables.Contains(popupRoot.RenderableComponent) &&
-                            layer.Renderables.Last() != popupRoot.RenderableComponent)
+                        if (popupRoot.RenderableComponent is IRenderableIpso popupRenderable &&
+                            layer.Renderables.Contains(popupRenderable) &&
+                            layer.Renderables.Last() != popupRenderable)
                         {
-                            layer.Remove(popupRoot.RenderableComponent as IRenderableIpso);
-                            layer.Add(popupRoot.RenderableComponent as IRenderableIpso);
+                            layer.Remove(popupRenderable);
+                            layer.Add(popupRenderable);
                         }
                     }
 
@@ -442,7 +452,7 @@ public class FormsUtilities
         GueInteractiveExtensionMethods.DoUiActivityRecursively(
             innerList,
             cursor,
-            keyboard!,
+            keyboard,
             gameTimeSeconds);
 
         _lastEventRoots.Clear();
@@ -538,7 +548,7 @@ public class FormsUtilities
         // next access, instead of returning a Styling still pointing at the UISpriteSheet
         // texture that GumService.Uninitialize's LoaderManager.Self.DisposeAndClear() just
         // disposed (issue #4626).
-        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null!;
+        Gum.Forms.DefaultVisuals.V3.Styling.ActiveStyle = null;
         _defaultTooltipTemplate = null;
     }
 
