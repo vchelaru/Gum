@@ -3,6 +3,7 @@ using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using AvaloniaDataUi.Controls;
 using Shouldly;
 
@@ -47,19 +48,41 @@ public class EditTrackingTextBoxTests
     }
 
     [AvaloniaFact]
-    public void Leaving_AfterAPasteThatFinishesLater_RequestsACommit()
+    public async Task Leaving_AfterPasting_RequestsACommit()
     {
         (Window window, EditTrackingTextBox field, TextBox elsewhere) = Show("1");
         int requests = 0;
         field.EditCommitRequested += (_, _) => requests++;
+        await window.Clipboard!.SetTextAsync("77");
         field.Focus();
+        field.SelectAll();
 
-        // A desktop clipboard read completes after the key handling returns: the paste announces
-        // itself, then its text lands on its own.
+        // Raised as the text box's own paste raises it, ahead of its awaited clipboard read.
         field.RaiseEvent(new RoutedEventArgs(TextBox.PastingFromClipboardEvent));
-        field.Text = "77";
+        Dispatcher.UIThread.RunJobs();
         elsewhere.Focus();
 
+        field.Text.ShouldBe("77");
+        requests.ShouldBe(1);
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task Leaving_AfterCutting_RequestsACommit()
+    {
+        (Window window, EditTrackingTextBox field, TextBox elsewhere) = Show("12");
+        int requests = 0;
+        field.EditCommitRequested += (_, _) => requests++;
+        field.Focus();
+        field.SelectionStart = 1;
+        field.SelectionEnd = 2;
+
+        field.RaiseEvent(new RoutedEventArgs(TextBox.CuttingToClipboardEvent));
+        Dispatcher.UIThread.RunJobs();
+        elsewhere.Focus();
+
+        field.Text.ShouldBe("1");
+        (await window.Clipboard!.GetTextAsync()).ShouldBe("2");
         requests.ShouldBe(1);
         window.Close();
     }

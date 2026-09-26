@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 
 namespace AvaloniaDataUi.Controls;
@@ -15,15 +16,14 @@ namespace AvaloniaDataUi.Controls;
 public class EditTrackingTextBox : TextBox
 {
     private int _userInputDepth;
-    private bool _isClipboardEditPending;
     private string _shownText;
 
     /// <summary>Builds the field.</summary>
     public EditTrackingTextBox()
     {
         _shownText = string.Empty;
-        AddHandler(PastingFromClipboardEvent, (_, _) => _isClipboardEditPending = true, RoutingStrategies.Bubble, handledEventsToo: true);
-        AddHandler(CuttingToClipboardEvent, (_, _) => _isClipboardEditPending = true, RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(PastingFromClipboardEvent, HandlePastingFromClipboard, RoutingStrategies.Bubble);
+        AddHandler(CuttingToClipboardEvent, HandleCuttingToClipboard, RoutingStrategies.Bubble);
         // Runs after the editors' own Enter handlers (tunnel), which have committed by then.
         AddHandler(KeyDownEvent, HandleKeyDownAfterEditors, RoutingStrategies.Bubble, handledEventsToo: true);
     }
@@ -89,19 +89,70 @@ public class EditTrackingTextBox : TextBox
         base.OnPropertyChanged(change);
 
         // Watched here rather than through TextChanged, which is raised later, outside the input
-        // handling. The text box's own key and text handling (and a paste or cut, which finishes
-        // after the key returns) is the user; any other change is the tool showing a value.
-        if (change.Property != TextProperty)
+        // handling. The text box's own key and text handling is the user; any other change is the
+        // tool showing a value.
+        if (change.Property == TextProperty && _userInputDepth == 0)
         {
-            return;
+            AcceptText();
         }
-        if (_userInputDepth > 0 || _isClipboardEditPending)
+    }
+
+    // The text box's own paste and cut change the text after an awaited clipboard call, outside the
+    // key handling, so they are done here instead, with the text change inside the user's input.
+    private async void HandlePastingFromClipboard(object? sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard == null)
         {
-            _isClipboardEditPending = false;
             return;
         }
 
-        AcceptText();
+        string? text;
+        try
+        {
+            text = await clipboard.GetTextAsync();
+        }
+        catch
+        {
+            // An unreadable clipboard pastes nothing, as the text box's own paste does.
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(text))
+        {
+            RaiseEvent(new TextInputEventArgs { RoutedEvent = TextInputEvent, Text = text });
+        }
+    }
+
+    private async void HandleCuttingToClipboard(object? sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        string text = SelectedText;
+        _userInputDepth++;
+        try
+        {
+            SelectedText = string.Empty;
+        }
+        finally
+        {
+            _userInputDepth--;
+        }
+
+        IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await clipboard.SetTextAsync(text);
+        }
+        catch
+        {
+            // The text is cut either way, as it is when the text box's own cut cannot reach the clipboard.
+        }
     }
 
     private void HandleKeyDownAfterEditors(object? sender, KeyEventArgs e)
