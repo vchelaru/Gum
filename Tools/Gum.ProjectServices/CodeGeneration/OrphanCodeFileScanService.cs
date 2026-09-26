@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ToolsUtilities;
 
 namespace Gum.ProjectServices.CodeGeneration;
@@ -47,47 +48,90 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         _projectDirectoryProvider = projectDirectoryProvider;
     }
 
+    /// <summary>
+    /// Folder limit for the walk of the code output folder. A real code project is far below it; a
+    /// code root that resolves to a drive root or a profile folder is far above it.
+    /// </summary>
+    public const int MaxCodeRootDirectories = 10000;
+
+    /// <summary>
+    /// The warning shown when a scan stopped at <see cref="MaxCodeRootDirectories"/>. Shared by the
+    /// tool and <c>gumcli</c> so both say the same thing.
+    /// </summary>
+    public static string GetTruncatedMessage(string? codeRoot) =>
+        $"The orphaned code file scan stopped after {MaxCodeRootDirectories} folders under " +
+        $"{codeRoot}, so it may have missed some files. The project's Code Project Root probably points " +
+        "at the wrong folder.";
+
+    /// <summary>
+    /// Runs <see cref="CreatePlan"/> and <see cref="Execute"/> back to back on the calling thread,
+    /// for headless callers such as <c>gumcli codegen --prune</c>.
+    /// </summary>
+    public OrphanCodeFileScanResult Scan(GumProjectSave project, CodeOutputProjectSettings projectSettings) =>
+        Execute(CreatePlan(project, projectSettings), CancellationToken.None);
+
     /// <inheritdoc/>
-    public IReadOnlyList<OrphanCodeFile> Scan(GumProjectSave project, CodeOutputProjectSettings projectSettings)
+    public OrphanCodeFileScanPlan CreatePlan(GumProjectSave project, CodeOutputProjectSettings projectSettings)
     {
-        List<OrphanCodeFile> orphans = new List<OrphanCodeFile>();
+        HashSet<FilePath> expectedGenerated = new HashSet<FilePath>();
+        HashSet<FilePath> expectedCustom = new HashSet<FilePath>();
+        string? codeRoot = ResolveCodeRoot(projectSettings);
+        if (codeRoot != null)
+        {
+            AddExpectedCodeFiles(project, projectSettings, expectedGenerated, expectedCustom);
+        }
 
-        AddCodeFileOrphans(project, projectSettings, orphans);
-        AddElementSettingsOrphans(project, orphans);
+        List<string> elementSettingsDirectories = new List<string>();
+        HashSet<FilePath> expectedElementSettings = new HashSet<FilePath>();
+        AddExpectedElementSettings(project, elementSettingsDirectories, expectedElementSettings);
 
-        return orphans;
+        return new OrphanCodeFileScanPlan(
+            codeRoot, expectedGenerated, expectedCustom, elementSettingsDirectories, expectedElementSettings);
     }
 
-    private void AddCodeFileOrphans(GumProjectSave project, CodeOutputProjectSettings projectSettings,
-        List<OrphanCodeFile> orphans)
+    /// <inheritdoc/>
+    public OrphanCodeFileScanResult Execute(OrphanCodeFileScanPlan plan, CancellationToken cancellationToken)
     {
-        ///////////////////Early Out///////////////////
+        List<OrphanCodeFile> orphans = new List<OrphanCodeFile>();
+        bool isTruncated = false;
+
+        if (plan.CodeRoot != null)
+        {
+            isTruncated = AddCodeFileOrphans(plan, orphans, cancellationToken);
+        }
+        AddElementSettingsOrphans(plan, orphans, cancellationToken);
+
+        return new OrphanCodeFileScanResult(orphans, isTruncated, plan.CodeRoot);
+    }
+
+    /// <summary>
+    /// The absolute, normalized code output folder, or null when none is configured or it does not
+    /// exist - nothing can be proven orphaned then.
+    /// </summary>
+    private string? ResolveCodeRoot(CodeOutputProjectSettings projectSettings)
+    {
         if (string.IsNullOrEmpty(projectSettings.CodeProjectRoot))
         {
-            // Nothing to compare the project against, so nothing can be proven orphaned.
-            return;
+            return null;
         }
-        /////////////////End Early Out/////////////////
 
         string codeRoot = projectSettings.CodeProjectRoot;
         if (FileManager.IsRelative(codeRoot))
         {
             if (string.IsNullOrEmpty(_projectDirectoryProvider.ProjectDirectory))
             {
-                return;
+                return null;
             }
             codeRoot = _projectDirectoryProvider.ProjectDirectory + codeRoot;
         }
 
-        FilePath codeRootPath = Normalize(codeRoot);
-        if (!Directory.Exists(codeRootPath.FullPath))
-        {
-            return;
-        }
+        string fullPath = Normalize(codeRoot).FullPath;
+        return Directory.Exists(fullPath) ? fullPath : null;
+    }
 
-        HashSet<FilePath> expectedGenerated = new HashSet<FilePath>();
-        HashSet<FilePath> expectedCustom = new HashSet<FilePath>();
-
+    private void AddExpectedCodeFiles(GumProjectSave project, CodeOutputProjectSettings projectSettings,
+        HashSet<FilePath> expectedGenerated, HashSet<FilePath> expectedCustom)
+    {
         foreach (ElementSave element in GetCodeGeneratedElements(project))
         {
             CodeOutputElementSettings elementSettings = _elementSettingsManager.LoadOrCreateSettingsFor(element);
@@ -109,11 +153,28 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             // Owned by the project rather than any single element, so it is never an orphan.
             expectedGenerated.Add(Normalize(fallbackFileName));
         }
+    }
 
-        foreach (string file in EnumerateGeneratedFilesPruningBuildOutput(codeRootPath.FullPath))
+    /// <summary>
+    /// Adds generated files under the code root that the plan does not account for, plus their
+    /// custom siblings. Returns whether the walk stopped at <see cref="MaxCodeRootDirectories"/>.
+    /// </summary>
+    private static bool AddCodeFileOrphans(OrphanCodeFileScanPlan plan, List<OrphanCodeFile> orphans,
+        CancellationToken cancellationToken)
+    {
+        GeneratedFileWalk walk = WalkGeneratedFiles(
+            plan.CodeRoot!,
+            directory => Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix),
+            Directory.EnumerateDirectories,
+            MaxCodeRootDirectories,
+            cancellationToken);
+
+        foreach (string file in walk.Files)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             FilePath generatedPath = Normalize(file);
-            if (expectedGenerated.Contains(generatedPath) || IsInBuildOutputFolder(generatedPath))
+            if (plan.ExpectedGenerated.Contains(generatedPath) || IsInBuildOutputFolder(generatedPath))
             {
                 continue;
             }
@@ -128,14 +189,17 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             orphans.Add(new OrphanCodeFile(generatedPath, OrphanCodeFileKind.Generated, elementName));
 
             FilePath customCodePath = GetCustomCodePathFor(generatedPath);
-            if (!expectedCustom.Contains(customCodePath) && File.Exists(customCodePath.FullPath))
+            if (!plan.ExpectedCustom.Contains(customCodePath) && File.Exists(customCodePath.FullPath))
             {
                 orphans.Add(new OrphanCodeFile(customCodePath, OrphanCodeFileKind.CustomCode, elementName));
             }
         }
+
+        return walk.IsTruncated;
     }
 
-    private void AddElementSettingsOrphans(GumProjectSave project, List<OrphanCodeFile> orphans)
+    private void AddExpectedElementSettings(GumProjectSave project, List<string> elementSettingsDirectories,
+        HashSet<FilePath> expectedElementSettings)
     {
         string? projectDirectory = _projectDirectoryProvider.ProjectDirectory;
 
@@ -146,8 +210,6 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         }
         /////////////////End Early Out/////////////////
 
-        HashSet<FilePath> expected = new HashSet<FilePath>();
-
         IEnumerable<ElementSave> allElements = project.Screens.Cast<ElementSave>()
             .Concat(project.Components)
             .Concat(project.StandardElements);
@@ -157,7 +219,7 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
             FilePath? settingsPath = _elementSettingsManager.GetCodeSettingsFilePath(element);
             if (settingsPath != null)
             {
-                expected.Add(Normalize(settingsPath));
+                expectedElementSettings.Add(Normalize(settingsPath));
             }
         }
 
@@ -170,17 +232,27 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
 
         foreach (string subfolder in elementSubfolders)
         {
-            FilePath directory = Normalize(projectDirectory + subfolder);
-            if (!Directory.Exists(directory.FullPath))
+            elementSettingsDirectories.Add(Normalize(projectDirectory + subfolder).FullPath);
+        }
+    }
+
+    private static void AddElementSettingsOrphans(OrphanCodeFileScanPlan plan, List<OrphanCodeFile> orphans,
+        CancellationToken cancellationToken)
+    {
+        foreach (string directory in plan.ElementSettingsDirectories)
+        {
+            if (!Directory.Exists(directory))
             {
                 continue;
             }
 
-            foreach (string file in Directory.EnumerateFiles(directory.FullPath, "*" + ElementSettingsExtension,
+            foreach (string file in Directory.EnumerateFiles(directory, "*" + ElementSettingsExtension,
                 SearchOption.AllDirectories))
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 FilePath settingsPath = Normalize(file);
-                if (expected.Contains(settingsPath))
+                if (plan.ExpectedElementSettings.Contains(settingsPath))
                 {
                     continue;
                 }
@@ -199,32 +271,50 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
         project.Screens.Cast<ElementSave>().Concat(project.Components);
 
     /// <summary>
-    /// Walks <paramref name="root"/> for <c>*.Generated.cs</c> files, skipping <c>bin</c>/<c>obj</c>
-    /// subtrees during traversal rather than enumerating into them and filtering afterward - build
-    /// output can hold thousands of directory entries that are never going to match.
+    /// The <c>*.Generated.cs</c> files a walk found, and whether it stopped at its folder limit.
     /// </summary>
-    private static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(string root) =>
-        EnumerateGeneratedFilesPruningBuildOutput(
-            root,
-            directory => Directory.EnumerateFiles(directory, "*" + GeneratedFileSuffix),
-            Directory.EnumerateDirectories);
+    internal sealed class GeneratedFileWalk
+    {
+        public List<string> Files { get; }
+        public bool IsTruncated { get; }
+
+        public GeneratedFileWalk(List<string> files, bool isTruncated)
+        {
+            Files = files;
+            IsTruncated = isTruncated;
+        }
+    }
 
     /// <summary>
-    /// The walk over injectable enumerators. A directory the process may not read (a root-owned
-    /// folder under a Linux or macOS code root, say) is skipped rather than ending the scan, since
-    /// one such folder would otherwise disable the plugin for the session.
+    /// Breadth-first walk of <paramref name="root"/> for <c>*.Generated.cs</c> files over injectable
+    /// enumerators. Folders that are never code output (<c>bin</c>, <c>obj</c>, <c>node_modules</c>,
+    /// and dot-folders such as <c>.git</c>) are pruned during traversal. A folder the process may not
+    /// read (a root-owned folder under a Linux or macOS code root, say) is skipped rather than ending
+    /// the walk. Stops after visiting <paramref name="maxDirectories"/> folders, so a code root that
+    /// resolves to a huge tree cannot keep the scan running for minutes.
     /// </summary>
-    internal static IEnumerable<string> EnumerateGeneratedFilesPruningBuildOutput(
+    internal static GeneratedFileWalk WalkGeneratedFiles(
         string root,
         Func<string, IEnumerable<string>> enumerateGeneratedFiles,
-        Func<string, IEnumerable<string>> enumerateDirectories)
+        Func<string, IEnumerable<string>> enumerateDirectories,
+        int maxDirectories,
+        CancellationToken cancellationToken)
     {
+        List<string> found = new List<string>();
         Queue<string> directories = new Queue<string>();
         directories.Enqueue(root);
+        int visited = 0;
 
         while (directories.Count > 0)
         {
+            if (visited >= maxDirectories)
+            {
+                return new GeneratedFileWalk(found, isTruncated: true);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+
             string directory = directories.Dequeue();
+            visited++;
 
             List<string> files;
             List<string> subdirectories;
@@ -238,22 +328,25 @@ public class OrphanCodeFileScanService : IOrphanCodeFileScanService
                 continue;
             }
 
-            foreach (string file in files)
-            {
-                yield return file;
-            }
+            found.AddRange(files);
 
             foreach (string subdirectory in subdirectories)
             {
-                string name = Path.GetFileName(subdirectory);
-                if (!string.Equals(name, "bin", StringComparison.OrdinalIgnoreCase)
-                    && !string.Equals(name, "obj", StringComparison.OrdinalIgnoreCase))
+                if (!IsNeverCodeOutputFolder(Path.GetFileName(subdirectory)))
                 {
                     directories.Enqueue(subdirectory);
                 }
             }
         }
+
+        return new GeneratedFileWalk(found, isTruncated: false);
     }
+
+    private static bool IsNeverCodeOutputFolder(string name) =>
+        name.StartsWith(".", StringComparison.Ordinal)
+        || string.Equals(name, "bin", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(name, "obj", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(name, "node_modules", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Whether a file sits under a <c>bin</c> or <c>obj</c> folder. Build output is a copy of, not

@@ -218,7 +218,12 @@ public static class CodegenCommand
             // Scan after generating so files written by this run are never mistaken for orphans.
             var scanService = new OrphanCodeFileScanService(
                 codeGenerator, fileLocationsService, elementSettingsManager, projectDirectoryProvider);
-            Prune(scanService.Scan(project, projectSettings));
+            OrphanCodeFileScanResult scanResult = scanService.Scan(project, projectSettings);
+            if (scanResult.IsTruncated)
+            {
+                Console.Error.WriteLine("warning: " + OrphanCodeFileScanService.GetTruncatedMessage(scanResult.CodeRoot));
+            }
+            Prune(scanResult.Orphans);
         }
 
         if (blockedCount > 0)

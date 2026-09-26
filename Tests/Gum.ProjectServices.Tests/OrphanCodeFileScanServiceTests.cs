@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Gum.ProjectServices.Tests;
 
@@ -44,9 +45,104 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
             directory == "root/locked" ? throw new UnauthorizedAccessException(directory) : files[directory];
         Func<string, IEnumerable<string>> enumerateDirectories = directory => subdirectories[directory];
 
-        List<string> found = OrphanCodeFileScanService.EnumerateGeneratedFilesPruningBuildOutput("root", enumerateFiles, enumerateDirectories).ToList();
+        OrphanCodeFileScanService.GeneratedFileWalk walk = OrphanCodeFileScanService.WalkGeneratedFiles(
+            "root", enumerateFiles, enumerateDirectories, maxDirectories: 100, CancellationToken.None);
 
-        found.ShouldBe(new[] { "root/A.Generated.cs", "root/ok/B.Generated.cs" });
+        walk.Files.ShouldBe(new[] { "root/A.Generated.cs", "root/ok/B.Generated.cs" });
+    }
+
+    [Fact]
+    public void WalkGeneratedFiles_SkipsHiddenAndPackageFolders()
+    {
+        // .git, .vs and node_modules are never code output, and can hold thousands of folders.
+        Dictionary<string, string[]> files = new Dictionary<string, string[]>
+        {
+            ["root"] = Array.Empty<string>(),
+            ["root/Screens"] = new[] { "root/Screens/A.Generated.cs" },
+        };
+        Dictionary<string, string[]> subdirectories = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/.git", "root/.vs", "root/node_modules", "root/Screens" },
+            ["root/Screens"] = Array.Empty<string>(),
+        };
+
+        OrphanCodeFileScanService.GeneratedFileWalk walk = OrphanCodeFileScanService.WalkGeneratedFiles(
+            "root", directory => files[directory], directory => subdirectories[directory],
+            maxDirectories: 100, CancellationToken.None);
+
+        walk.Files.ShouldBe(new[] { "root/Screens/A.Generated.cs" });
+    }
+
+    [Fact]
+    public void WalkGeneratedFiles_StopsAtDirectoryBudget_AndReportsTruncation()
+    {
+        // A CodeProjectRoot pointing at a huge folder (a drive root, %LOCALAPPDATA%) must not walk forever.
+        Dictionary<string, string[]> files = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/A.Generated.cs" },
+            ["root/a"] = new[] { "root/a/B.Generated.cs" },
+            ["root/a/b"] = new[] { "root/a/b/C.Generated.cs" },
+        };
+        Dictionary<string, string[]> subdirectories = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/a" },
+            ["root/a"] = new[] { "root/a/b" },
+            ["root/a/b"] = Array.Empty<string>(),
+        };
+
+        OrphanCodeFileScanService.GeneratedFileWalk walk = OrphanCodeFileScanService.WalkGeneratedFiles(
+            "root", directory => files[directory], directory => subdirectories[directory],
+            maxDirectories: 2, CancellationToken.None);
+
+        walk.Files.ShouldBe(new[] { "root/A.Generated.cs", "root/a/B.Generated.cs" });
+        walk.IsTruncated.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WalkGeneratedFiles_IsNotTruncated_WhenTreeFitsTheBudget()
+    {
+        Dictionary<string, string[]> subdirectories = new Dictionary<string, string[]>
+        {
+            ["root"] = new[] { "root/a" },
+            ["root/a"] = Array.Empty<string>(),
+        };
+
+        OrphanCodeFileScanService.GeneratedFileWalk walk = OrphanCodeFileScanService.WalkGeneratedFiles(
+            "root", _ => Array.Empty<string>(), directory => subdirectories[directory],
+            maxDirectories: 2, CancellationToken.None);
+
+        walk.IsTruncated.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Execute_ShouldThrow_WhenCancelled()
+    {
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Screens/DeletedScreen.Generated.cs", "DeletedScreen");
+        OrphanCodeFileScanService service = CreateService();
+        OrphanCodeFileScanPlan plan = service.CreatePlan(project, projectSettings);
+        CancellationTokenSource cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        Should.Throw<OperationCanceledException>(() => service.Execute(plan, cancellation.Token));
+    }
+
+    [Fact]
+    public void Execute_ShouldFindOrphans_FromAPlanCreatedEarlier_AfterTheProjectChanges()
+    {
+        // The tool builds the plan on the UI thread and walks the disk on a worker; the walk must not
+        // read the live project, which the user may be editing meanwhile.
+        GumProjectSave project = Project;
+        CodeOutputProjectSettings projectSettings = CreateProjectSettings();
+        WriteGeneratedFile("Screens/DeletedScreen.Generated.cs", "DeletedScreen");
+        OrphanCodeFileScanService service = CreateService();
+        OrphanCodeFileScanPlan plan = service.CreatePlan(project, projectSettings);
+        project.Screens.Add(CreateScreen("DeletedScreen"));
+
+        OrphanCodeFileScanResult result = service.Execute(plan, CancellationToken.None);
+
+        result.Orphans.Select(item => item.FilePath.FileNameNoPath).ShouldBe(new[] { "DeletedScreen.Generated.cs" });
     }
 
     [Fact]
@@ -57,7 +153,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteGeneratedFile("Screens/DeletedScreen.Generated.cs", "DeletedScreen");
         WriteFile("Screens/DeletedScreen.cs", "partial class DeletedScreen { }");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.Count(item => item.Kind == OrphanCodeFileKind.CustomCode).ShouldBe(1);
         orphans.Single(item => item.Kind == OrphanCodeFileKind.CustomCode)
@@ -73,7 +169,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteGeneratedFile("Screens/OldScreen.Generated.cs", "OldScreen");
         WriteGeneratedFile("Screens/RenamedScreen.Generated.cs", "RenamedScreen");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.Select(item => item.FilePath.FileNameNoPath).ShouldBe(new[] { "OldScreen.Generated.cs" });
     }
@@ -85,7 +181,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = CreateProjectSettings();
         WriteGeneratedFile("Components/Menus/Deleted/DeepComponent.Generated.cs", "Menus/Deleted/DeepComponent");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.Single().FilePath.ShouldBe(new ToolsUtilities.FilePath(
             Path.Combine(_tempDirectory, "Components", "Menus", "Deleted", "DeepComponent.Generated.cs")));
@@ -101,7 +197,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteFile("Components/DeletedComponent.codsj", "{}");
         WriteFile("ProjectCodeSettings.codsj", "{}");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.Select(item => item.FilePath.FileNameNoPath).ShouldBe(new[] { "DeletedComponent.codsj" });
     }
@@ -116,7 +212,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteFile("Screens/DeletedScreen.Input.cs", "partial class DeletedScreen { }");
         WriteFile("Screens/MyOwnHelper.cs", "class MyOwnHelper { }");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -131,7 +227,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteGeneratedFile("Screens/HandManagedScreen.Generated.cs", "HandManagedScreen");
         WriteFile("Screens/HandManagedScreen.cs", "partial class HandManagedScreen { }");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -148,7 +244,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = CreateProjectSettings();
         WriteGeneratedFile("Screens/BranchSwitchedScreen.Generated.cs", "BranchSwitchedScreen");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -162,7 +258,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteGeneratedFile("Screens/LiveScreen.Generated.cs", "LiveScreen");
         WriteFile("Screens/LiveScreen.cs", "partial class LiveScreen { }");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -175,7 +271,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = CreateProjectSettings();
         WriteGeneratedFile("Screens/casescreen.Generated.cs", "CaseScreen");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -188,7 +284,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         WriteGeneratedFile("bin/Debug/net8.0/StaleCopy.Generated.cs", "StaleCopy");
         WriteGeneratedFile("obj/Debug/StaleCopy.Generated.cs", "StaleCopy");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -200,7 +296,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = CreateProjectSettings();
         WriteFile("Screens/SomeOtherTool.Generated.cs", "// <auto-generated by something else />");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -212,7 +308,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         CodeOutputProjectSettings projectSettings = CreateProjectSettings();
         WriteGeneratedFile("StandardElements.Generated.cs", "StandardElements");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }
@@ -225,7 +321,7 @@ public class OrphanCodeFileScanServiceTests : BaseTestClass
         projectSettings.CodeProjectRoot = string.Empty;
         WriteGeneratedFile("Screens/DeletedScreen.Generated.cs", "DeletedScreen");
 
-        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings);
+        IReadOnlyList<OrphanCodeFile> orphans = CreateService().Scan(project, projectSettings).Orphans;
 
         orphans.ShouldBeEmpty();
     }

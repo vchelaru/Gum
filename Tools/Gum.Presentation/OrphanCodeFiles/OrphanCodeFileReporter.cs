@@ -3,15 +3,18 @@ using Gum.Commands;
 using Gum.DataTypes;
 using Gum.Managers;
 using Gum.ProjectServices.CodeGeneration;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace OrphanCodeFilePlugin;
 
 /// <summary>
-/// Business logic behind the tool's orphaned-code-file reporting, kept out of the WPF-hosted
+/// Business logic behind the tool's orphaned-code-file reporting, kept out of the
 /// <c>MainOrphanCodeFilePlugin</c> (mirrors <see cref="ConvertToJsonPlugin.ConvertToJsonLogic"/>)
 /// so it can be unit tested headlessly. Holds the most recent scan result, turns it into Errors tab
 /// entries, and resolves an entry by moving the file to the Recycle Bin.
@@ -27,43 +30,101 @@ public class OrphanCodeFileReporter
     private readonly IOrphanCodeFileScanService _scanService;
     private readonly IFileCommands _fileCommands;
     private readonly IDialogService _dialogService;
+    private readonly IDispatcher _dispatcher;
+    private readonly IOutputManager _outputManager;
     private readonly List<OrphanCodeFile> _orphans;
+    private CancellationTokenSource? _currentScan;
 
     public OrphanCodeFileReporter(
         IOrphanCodeFileScanService scanService,
         IFileCommands fileCommands,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        IDispatcher dispatcher,
+        IOutputManager outputManager)
     {
         _scanService = scanService;
         _fileCommands = fileCommands;
         _dialogService = dialogService;
+        _dispatcher = dispatcher;
+        _outputManager = outputManager;
         _orphans = new List<OrphanCodeFile>();
     }
 
     /// <summary>
-    /// The orphans found by the most recent <see cref="Refresh"/>, minus any already resolved.
+    /// The orphans found by the most recent <see cref="RefreshAsync"/>, minus any already resolved.
     /// </summary>
     public IReadOnlyList<OrphanCodeFile> Orphans => _orphans;
 
     /// <summary>
-    /// Raised whenever <see cref="Orphans"/> changes, so the host can refresh whatever displays it.
+    /// Raised on the UI thread whenever <see cref="Orphans"/> changes, so the host can refresh
+    /// whatever displays it.
     /// </summary>
     public event Action? OrphansChanged;
 
     /// <summary>
-    /// Re-runs the scan and replaces <see cref="Orphans"/>. Clears the list when no project is
-    /// loaded. Read-only — nothing is deleted until <see cref="Resolve"/> is called.
+    /// Re-runs the scan and replaces <see cref="Orphans"/>; clears the list when no project is loaded.
+    /// Call it on the UI thread: the project is read there, the disk walk runs on the thread pool, and
+    /// the result is posted back through <see cref="IDispatcher"/>, where <paramref name="onApplied"/>
+    /// also runs. Starting a new refresh cancels the previous one and discards its result. The
+    /// returned task completes once the result has been posted, not applied. Read-only — nothing is
+    /// deleted until <see cref="Resolve"/> is called.
     /// </summary>
-    public void Refresh(GumProjectSave? project, CodeOutputProjectSettings projectSettings)
+    public async Task RefreshAsync(GumProjectSave? project, CodeOutputProjectSettings projectSettings,
+        Action<OrphanCodeFileScanResult>? onApplied = null)
     {
-        _orphans.Clear();
+        _currentScan?.Cancel();
+        CancellationTokenSource scan = new CancellationTokenSource();
+        _currentScan = scan;
 
-        if (project != null)
+        if (project == null)
         {
-            _orphans.AddRange(_scanService.Scan(project, projectSettings));
+            _orphans.Clear();
+            OrphansChanged?.Invoke();
+            return;
+        }
+
+        OrphanCodeFileScanPlan plan = _scanService.CreatePlan(project, projectSettings);
+
+        OrphanCodeFileScanResult result;
+        try
+        {
+            result = await Task.Run(() => _scanService.Execute(plan, scan.Token)).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception exception)
+        {
+            _dispatcher.Post(() => _outputManager.AddError(
+                $"The orphaned code file scan failed: {exception.Message}"));
+            return;
+        }
+
+        _dispatcher.Post(() => Apply(scan, result, onApplied));
+    }
+
+    private void Apply(CancellationTokenSource scan, OrphanCodeFileScanResult result,
+        Action<OrphanCodeFileScanResult>? onApplied)
+    {
+        ///////////////////Early Out///////////////////
+        if (scan != _currentScan)
+        {
+            // A newer refresh started while this one ran.
+            return;
+        }
+        /////////////////End Early Out/////////////////
+
+        _orphans.Clear();
+        _orphans.AddRange(result.Orphans);
+
+        if (result.IsTruncated)
+        {
+            _outputManager.AddError(OrphanCodeFileScanService.GetTruncatedMessage(result.CodeRoot));
         }
 
         OrphansChanged?.Invoke();
+        onApplied?.Invoke(result);
     }
 
     /// <summary>
