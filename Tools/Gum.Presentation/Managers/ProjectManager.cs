@@ -13,6 +13,7 @@ using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Settings;
+using Gum.Startup;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Wireframe;
@@ -63,6 +64,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     // Lazy: NewProjectLogic calls back into this manager, so a direct reference would be a
     // construction cycle.
     private readonly Lazy<INewProjectLogic> _newProjectLogic;
+    private readonly IProjectOpenRequestRouter _projectOpenRequests;
 
     #endregion
 
@@ -142,9 +144,11 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IGumProjectRepairLogic gumProjectRepairLogic,
         IFilePickingFolderProvider filePickingFolderProvider,
         Lazy<INewProjectLogic> newProjectLogic,
-        IFileSystemRevealService fileSystemRevealService)
+        IFileSystemRevealService fileSystemRevealService,
+        IProjectOpenRequestRouter projectOpenRequests)
     {
         _newProjectLogic = newProjectLogic;
+        _projectOpenRequests = projectOpenRequests;
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
         _elementCommands = elementCommands;
@@ -180,7 +184,13 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         {
             var isShift = _hotkeyManager.Value.IsPressedInControl(KeyCombination.Shift());
 
-            if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
+            // A project the OS asked to open (e.g. a macOS Finder double-click) is the user's
+            // explicit choice, so it wins over the command line, the last project and Shift.
+            if (_projectOpenRequests.TakePendingStartupProject() is { } requestedProject)
+            {
+                await _fileCommands.Value.LoadProjectAsync(requestedProject);
+            }
+            else if (!isShift && !string.IsNullOrEmpty(_commandLineManager.Value.GlueProjectToLoad))
             {
                 await _fileCommands.Value.LoadProjectAsync(_commandLineManager.Value.GlueProjectToLoad);
 
@@ -210,6 +220,9 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                 // flow as File > New Project, so a first-time user isn't dropped into a blank tool.
                 await _newProjectLogic.Value.CreateNewProjectAsync();
             }
+
+            // A request that arrived after the startup project was chosen opens now.
+            await _projectOpenRequests.CompleteStartupAsync();
         }
         else
         {

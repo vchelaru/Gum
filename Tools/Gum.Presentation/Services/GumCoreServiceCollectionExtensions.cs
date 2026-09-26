@@ -112,6 +112,7 @@ public static class GumCoreServiceCollectionExtensions
         services.AddSingleton<IDefaultFontBundler, DefaultFontBundler>();
         services.AddSingleton<GumFormsLogic>();
         services.AddSingleton<INewProjectLogic, NewProjectLogic>();
+        services.AddSingleton<Gum.Startup.IProjectOpenRequestRouter, Gum.Startup.ProjectOpenRequestRouter>();
         services.AddSingleton<FileLocations>();
         services.AddSingleton<IFileLocations>(provider => provider.GetRequiredService<FileLocations>());
         services.AddSingleton<FileWatchLogic>();
