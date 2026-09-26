@@ -27,6 +27,9 @@ public class MonoGameScreenshotService : IScreenshotService
     /// <inheritdoc/>
     public ScreenshotResult TakeScreenshot(ScreenshotRequest request)
     {
+        // SDL reads hints from the environment when the window is created: show the off-screen
+        // window without taking the user's focus (#5133).
+        Environment.SetEnvironmentVariable("SDL_WINDOW_NO_ACTIVATION_WHEN_SHOWN", "1");
         using var game = new ScreenshotGame(request);
         game.Run();
         try
