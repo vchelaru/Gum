@@ -126,14 +126,14 @@ function Get-CopyRoot([string]$projectFile) {
 }
 
 function Copy-Tree([string]$source, [string]$destination) {
-    New-Item -ItemType Directory -Force -Path $destination | Out-Null
-    foreach ($item in Get-ChildItem -LiteralPath $source -Force) {
-        if ($item.PSIsContainer) {
-            if ($excludedFolders -contains $item.Name) { continue }
-            Copy-Tree $item.FullName (Join-Path $destination $item.Name)
-        } else {
-            Copy-Item -LiteralPath $item.FullName -Destination (Join-Path $destination $item.Name)
-        }
+    [System.IO.Directory]::CreateDirectory($destination) | Out-Null
+    foreach ($directory in [System.IO.Directory]::GetDirectories($source)) {
+        $name = [System.IO.Path]::GetFileName($directory)
+        if ($excludedFolders -contains $name) { continue }
+        Copy-Tree $directory ([System.IO.Path]::Combine($destination, $name))
+    }
+    foreach ($file in [System.IO.Directory]::GetFiles($source)) {
+        [System.IO.File]::Copy($file, [System.IO.Path]::Combine($destination, [System.IO.Path]::GetFileName($file)))
     }
 }
 
@@ -141,7 +141,7 @@ function Get-FileHashes([string]$root) {
     $hashes = @{}
     foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Force) {
         $relative = [System.IO.Path]::GetRelativePath($root, $file.FullName) -replace '\\', '/'
-        $hashes[$relative] = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
+        $hashes[$relative] = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([System.IO.File]::ReadAllBytes($file.FullName)))
     }
     return $hashes
 }
@@ -159,18 +159,62 @@ function Format-FileList([string[]]$files) {
 # A saved file as a flat list of "path = value" facts, so two files that hold the same data compare
 # equal regardless of formatting: XML attributes and child elements are the same fact (the compact
 # and verbose formats), and comments, xmlns and xsi:type are ignored. JSON is flattened the same way.
-function Add-XmlFacts([System.Xml.XmlElement]$element, [string]$path, [System.Collections.Generic.List[string]]$facts) {
-    foreach ($attribute in $element.Attributes) {
-        if ($attribute.Name.StartsWith('xmlns') -or $attribute.Prefix -eq 'xsi') { continue }
-        $facts.Add("$path/$($attribute.LocalName) = $($attribute.Value)")
+# The XML walk and the multiset comparison are C#: as PowerShell functions they took minutes over
+# the corpus, most of the sweep's run time.
+Add-Type -TypeDefinition @'
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using System.Xml;
+
+public static class ProjectSweepFacts
+{
+    public static void AddXmlFacts(XmlElement element, string path, List<string> facts)
+    {
+        foreach (XmlAttribute attribute in element.Attributes)
+        {
+            if (attribute.Name.StartsWith("xmlns") || attribute.Prefix == "xsi") continue;
+            facts.Add(path + "/" + attribute.LocalName + " = " + attribute.Value);
+        }
+        var children = new List<XmlElement>();
+        foreach (XmlNode child in element.ChildNodes)
+        {
+            if (child is XmlElement childElement) children.Add(childElement);
+        }
+        if (children.Count == 0)
+        {
+            if (element.Attributes.Count == 0 || !string.IsNullOrEmpty(element.InnerText)) facts.Add(path + " = " + element.InnerText);
+            return;
+        }
+        foreach (var child in children) AddXmlFacts(child, path + "/" + child.LocalName, facts);
     }
-    $childElements = @($element.ChildNodes | Where-Object { $_ -is [System.Xml.XmlElement] })
-    if ($childElements.Count -eq 0) {
-        if ($element.Attributes.Count -eq 0 -or $element.InnerText) { $facts.Add("$path = $($element.InnerText)") }
-        return
+
+    public static string HashWithoutCarriageReturns(string file)
+    {
+        var bytes = System.IO.File.ReadAllBytes(file);
+        var kept = System.Array.FindAll(bytes, b => b != 13);
+        return System.Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(kept));
     }
-    foreach ($child in $childElements) { Add-XmlFacts $child "$path/$($child.LocalName)" $facts }
+
+    // Facts in the original missing from the saved list, counted as a multiset.
+    public static List<string> Removed(List<string> original, List<string> saved, string ignore)
+    {
+        var remaining = new Dictionary<string, int>();
+        foreach (var fact in saved) remaining[fact] = remaining.TryGetValue(fact, out var n) ? n + 1 : 1;
+        // Case-insensitive, as PowerShell's -match was.
+        var defaults = new Regex(" = (false|0|null|)$", RegexOptions.IgnoreCase);
+        var ignoreRegex = string.IsNullOrEmpty(ignore) ? null : new Regex(ignore, RegexOptions.IgnoreCase);
+        var removed = new List<string>();
+        foreach (var fact in original)
+        {
+            if (remaining.TryGetValue(fact, out var count) && count > 0) { remaining[fact] = count - 1; continue; }
+            if (defaults.IsMatch(fact)) continue;
+            if (ignoreRegex != null && ignoreRegex.IsMatch(fact)) continue;
+            removed.Add(fact);
+        }
+        return removed;
+    }
 }
+'@
 
 function Add-JsonFacts($node, [string]$path, [System.Collections.Generic.List[string]]$facts) {
     if ($node -is [System.Collections.IDictionary]) {
@@ -193,11 +237,12 @@ function Get-Facts([string]$file) {
     if ($text.TrimStart([char]0xFEFF).TrimStart().StartsWith('<')) {
         $document = [System.Xml.XmlDocument]::new()
         $document.LoadXml($text.TrimStart([char]0xFEFF))
-        Add-XmlFacts $document.DocumentElement $document.DocumentElement.LocalName $facts
+        [ProjectSweepFacts]::AddXmlFacts($document.DocumentElement, $document.DocumentElement.LocalName, $facts)
     } else {
         Add-JsonFacts ($text | ConvertFrom-Json -AsHashtable) '' $facts
     }
-    return $facts
+    # The comma keeps PowerShell from unrolling the list into an array.
+    return , $facts
 }
 
 # Facts (as a multiset) in the original that are gone from the saved copy, ignoring default values
@@ -205,16 +250,7 @@ function Get-Facts([string]$file) {
 function Get-RemovedFacts([string]$original, [string]$saved, [string]$ignore) {
     if (-not (Test-Path -LiteralPath $original)) { return @() }
     try {
-        $remaining = @{}
-        foreach ($fact in Get-Facts $saved) { $remaining[$fact] = 1 + [int]$remaining[$fact] }
-        $removed = @()
-        foreach ($fact in Get-Facts $original) {
-            if ([int]$remaining[$fact] -gt 0) { $remaining[$fact]--; continue }
-            if ($fact -match ' = (false|0|null|)$') { continue }
-            if ($ignore -and $fact -match $ignore) { continue }
-            $removed += $fact
-        }
-        return $removed
+        return @([ProjectSweepFacts]::Removed((Get-Facts $original), (Get-Facts $saved), $ignore))
     } catch {
         return @("(could not compare: $($_.Exception.Message))")
     }
@@ -273,6 +309,7 @@ New-Item -ItemType Directory -Force -Path $WorkRoot | Out-Null
 $WorkRoot = (Resolve-Path $WorkRoot).Path
 
 $results = [System.Collections.Generic.List[object]]::new()
+$manifest = [System.Collections.Generic.List[string]]::new()
 $index = 0
 foreach ($projectFile in $projects) {
     $index++
@@ -364,28 +401,32 @@ foreach ($projectFile in $projects) {
                 $misnamed = @(Get-ChildItem -LiteralPath $copyDir -Recurse -File -Force |
                     Where-Object { $_.Name.Contains('\') } |
                     ForEach-Object { [System.IO.Path]::GetRelativePath($copyDir, $_.FullName) })
-                # Generated code that differs from the checked-in copy (line endings aside) means the
-                # checked-in code is stale or this OS generates something different.
-                $differing = @(Get-ChangedFiles $before (Get-FileHashes $copyDir) | Where-Object {
-                    $original = Join-Path $pristineDir $_
-                    -not (Test-Path -LiteralPath $original) -or
-                        ([System.IO.File]::ReadAllText($original) -replace "`r", '') -ne
-                        ([System.IO.File]::ReadAllText((Join-Path $copyDir $_)) -replace "`r", '')
-                })
-                Add-Content -LiteralPath $log -Value (@('', 'files written that differ from the original (line endings ignored):') + $differing)
+                Add-Content -LiteralPath $log -Value (@('', 'files written:') + (Get-ChangedFiles $before (Get-FileHashes $copyDir)))
                 if ($run.ExitCode -eq 2 -and ($run.Output -match 'auto-detection failed')) {
                     $result = 'skip'; $detail = 'no code project'
                 } elseif ($run.ExitCode -ne 0) {
                     $result = 'FAIL'; $detail = Get-ErrorLines $run.Output
                 } elseif ($misnamed.Count -gt 0) {
                     $result = 'FAIL'; $detail = 'wrote files with a backslash in the name: ' + (Format-FileList $misnamed)
-                } elseif ($differing.Count -gt 0) {
-                    $result = 'note'; $detail = 'new or different from the checked-in code: ' + (Format-FileList $differing)
                 }
             }
             'fonts' {
+                # Deletes the cached fonts first, so every font the project uses is generated on this
+                # OS (KernSmith off Windows), then fails if any of them did not come back.
+                $fontCache = Join-Path (Split-Path -Parent $copiedProject) 'FontCache'
+                $cached = @()
+                if (Test-Path -LiteralPath $fontCache) {
+                    $cached = @(Get-ChildItem -LiteralPath $fontCache -Filter '*.fnt' -File | ForEach-Object Name)
+                    Get-ChildItem -LiteralPath $fontCache -Filter '*.fnt' -File | Remove-Item -Force
+                }
                 $run = Invoke-Gumcli $log @('fonts', $copiedProject)
-                if ($run.ExitCode -ne 0) { $result = 'FAIL'; $detail = Get-ErrorLines $run.Output }
+                $missing = @($cached | Where-Object { -not (Test-Path -LiteralPath (Join-Path $fontCache $_)) })
+                Add-Content -LiteralPath $log -Value (@('', 'cached fonts that were not generated again:') + $missing)
+                if ($run.ExitCode -ne 0) {
+                    $result = 'FAIL'; $detail = Get-ErrorLines $run.Output
+                } elseif ($missing.Count -gt 0) {
+                    $result = 'FAIL'; $detail = 'did not generate ' + (Format-FileList $missing)
+                }
             }
         }
         $knownReason = if ($known.ContainsKey($label)) { $known[$label][$step] } else { $null }
@@ -401,6 +442,15 @@ foreach ($projectFile in $projects) {
         $results.Add([pscustomobject]@{ Project = $label; Step = $step; Result = $result; Seconds = $seconds; Detail = $detail; Log = $log })
         Write-Host ("    {0,-9} {1} ({2}s) {3}" -f $step, $result, $seconds, $detail)
     }
+
+    # What the steps left behind, for comparing runs on different OSes (Tools/project-sweep-compare.ps1).
+    # Carriage returns are dropped before hashing, since git checks text out with CRLF on Windows.
+    # Font files are left out: bmfont.exe and KernSmith draw glyphs differently by design.
+    foreach ($file in Get-ChildItem -LiteralPath $copyDir -Recurse -File -Force) {
+        $relative = [System.IO.Path]::GetRelativePath($copyDir, $file.FullName) -replace '\\', '/'
+        if ($relative -match '(^|/)FontCache/') { continue }
+        $manifest.Add("$label|$relative|$([ProjectSweepFacts]::HashWithoutCarriageReturns($file.FullName))")
+    }
 }
 
 # --- report -----------------------------------------------------------------------------------
@@ -411,6 +461,7 @@ foreach ($r in $results) {
 $reportFile = Join-Path $WorkRoot 'report.md'
 Set-Content -LiteralPath $reportFile -Value $lines
 $results | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $WorkRoot 'results.json')
+$manifest | Sort-Object | Set-Content -LiteralPath (Join-Path $WorkRoot 'manifest.txt')
 
 $failed = @($results | Where-Object { $_.Result -eq 'FAIL' })
 Write-Host ''

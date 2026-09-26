@@ -61,6 +61,26 @@ jobs:
           path: |
             ${{ runner.temp }}/sweep/report.md
             ${{ runner.temp }}/sweep/results.json
+            ${{ runner.temp }}/sweep/manifest.txt
             ${{ runner.temp }}/sweep/*/logs/**
             ${{ runner.temp }}/sweep/*/project.txt
           if-no-files-found: ignore
+
+  # Every OS must leave the same files behind: same generated code in the same folders, same saved
+  # projects. A Windows-only path separator or a case-sensitive lookup shows up here even when every
+  # step passes on its own.
+  Compare-OS-Results:
+    needs: Project-Sweep
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: Tools
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: project-sweep-*
+          path: sweeps
+      - name: Compare what the sweep left behind on each OS
+        shell: pwsh
+        run: ./Tools/project-sweep-compare.ps1 -Manifest (Get-ChildItem sweeps -Recurse -Filter manifest.txt).FullName
