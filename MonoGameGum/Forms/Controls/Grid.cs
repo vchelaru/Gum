@@ -270,7 +270,7 @@ public class Grid :
         for (int r = 0; r < rowCount; r++)
         {
             InteractiveGue rowContainer = _rowContainers[r];
-            RowDefinition rowDef = r < RowDefinitions.Count ? RowDefinitions[r] : null;
+            RowDefinition? rowDef = r < RowDefinitions.Count ? RowDefinitions[r] : null;
             GridLength rowHeight = rowDef?.Height ?? new GridLength(1, GridUnitType.Star);
             float minHeight = rowDef?.MinHeight ?? 0f;
             float maxHeight = rowDef?.MaxHeight ?? float.PositiveInfinity;
@@ -292,7 +292,7 @@ public class Grid :
         // Build cell containers for each cell in the grid
         for (int r = 0; r < rowCount; r++)
         {
-            RowDefinition cellRowDef = r < RowDefinitions.Count ? RowDefinitions[r] : null;
+            RowDefinition? cellRowDef = r < RowDefinitions.Count ? RowDefinitions[r] : null;
             bool isAutoRow = cellRowDef?.Height.IsAuto ?? false;
 
             for (int c = 0; c < columnCount; c++)
@@ -303,7 +303,7 @@ public class Grid :
                     : global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
                 cellContainer.Height = 0;
 
-                ColumnDefinition colDef = c < ColumnDefinitions.Count ? ColumnDefinitions[c] : null;
+                ColumnDefinition? colDef = c < ColumnDefinitions.Count ? ColumnDefinitions[c] : null;
                 GridLength columnWidth = colDef?.Width ?? new GridLength(1, GridUnitType.Star);
                 float minWidth = colDef?.MinWidth ?? 0f;
                 float maxWidth = colDef?.MaxWidth ?? float.PositiveInfinity;
@@ -346,7 +346,7 @@ public class Grid :
     {
         for (int c = 0; c < columnCount; c++)
         {
-            ColumnDefinition colDef = c < ColumnDefinitions.Count ? ColumnDefinitions[c] : null;
+            ColumnDefinition? colDef = c < ColumnDefinitions.Count ? ColumnDefinitions[c] : null;
             GridLength columnWidth = colDef?.Width ?? new GridLength(1, GridUnitType.Star);
 
             if (!columnWidth.IsAuto)
@@ -474,13 +474,13 @@ public class Grid :
 
     private void UnsubscribeFromChildEvents(GraphicalUiElement childVisual)
     {
-        if (_sizeChangedHandlers.TryGetValue(childVisual, out EventHandler sizeHandler))
+        if (_sizeChangedHandlers.TryGetValue(childVisual, out EventHandler? sizeHandler))
         {
             childVisual.SizeChanged -= sizeHandler;
             _sizeChangedHandlers.Remove(childVisual);
         }
 
-        if (_parentChangedHandlers.TryGetValue(childVisual, out EventHandler<GraphicalUiElement.ParentChangedEventArgs> parentHandler))
+        if (_parentChangedHandlers.TryGetValue(childVisual, out EventHandler<GraphicalUiElement.ParentChangedEventArgs>? parentHandler))
         {
             childVisual.ParentChanged -= parentHandler;
             _parentChangedHandlers.Remove(childVisual);
@@ -501,7 +501,7 @@ public class Grid :
         return false;
     }
 
-    private void OnChildSizeChanged(object sender, EventArgs e)
+    private void OnChildSizeChanged(object? sender, EventArgs e)
     {
         if (_isRefreshingLayout)
         {
@@ -539,7 +539,7 @@ public class Grid :
         }
     }
 
-    private void OnChildParentChanged(object sender, GraphicalUiElement.ParentChangedEventArgs e)
+    private void OnChildParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e)
     {
         if (_isRefreshingLayout)
         {
@@ -551,7 +551,10 @@ public class Grid :
             return;
         }
 
-        GraphicalUiElement childVisual = (GraphicalUiElement)sender;
+        if (sender is not GraphicalUiElement childVisual)
+        {
+            return;
+        }
         UnsubscribeFromChildEvents(childVisual);
 
         _cellPlacements.Remove(childVisual);

@@ -37,7 +37,7 @@ public class ListBoxItem :
             // This allows ListBox to handle toggle logic in Multiple mode
             if (value)
             {
-                Selected?.Invoke(this, null);
+                Selected?.Invoke(this, EventArgs.Empty);
             }
         }
     }
@@ -74,14 +74,14 @@ public class ListBoxItem :
 
     #region Events
 
-    public event EventHandler Selected;
+    public event EventHandler? Selected;
     /// <summary>
     /// Event raised when the item is clicked by a cursor or touch (press, then release
     /// over the item). Unlike ButtonBase.Click, this is not raised by keyboard or gamepad
     /// activation.
     /// </summary>
-    public event EventHandler Clicked;
-    public event EventHandler Pushed;
+    public event EventHandler? Clicked;
+    public event EventHandler? Pushed;
 
     #endregion
 
@@ -151,7 +151,7 @@ public class ListBoxItem :
         }
     }
 
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
 
@@ -164,7 +164,7 @@ public class ListBoxItem :
     }
 
 
-    private void HandleRollOver(object sender, EventArgs args)
+    private void HandleRollOver(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
 
@@ -186,24 +186,24 @@ public class ListBoxItem :
             GetIfIsOnThisOrChildVisual(cursor) && IsEnabled;
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         IsHighlighted = false;
 
         UpdateState();
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
             IsSelected = true;
 
         }
-        Pushed?.Invoke(this, null);
+        Pushed?.Invoke(this, EventArgs.Empty);
     }
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.TouchScreen &&
             MainCursor.PrimaryClickNoSlide)
@@ -211,7 +211,7 @@ public class ListBoxItem :
             IsSelected = true;
 
         }
-        Clicked?.Invoke(this, null);
+        Clicked?.Invoke(this, EventArgs.Empty);
     }
 
 #endregion
@@ -223,7 +223,7 @@ public class ListBoxItem :
     /// and intentionally does not apply localization. To localize list items, translate values
     /// before adding them to the Items collection.
     /// </summary>
-    public virtual void UpdateToObject(object o)
+    public virtual void UpdateToObject(object? o)
     {
         if (coreText != null)
         {

@@ -22,7 +22,7 @@ public class RadioButton : ToggleButton
 
     private static readonly object FakeRoot = new object();    //will act as fake root to enable root level radio buttons to be added to the dictionary
 
-    private string _groupName;
+    private string _groupName = "";
 
     private object? GetParent()
     {
@@ -83,14 +83,14 @@ public class RadioButton : ToggleButton
 
     private void AddToDictionary()
     {
-        // early out
-        if (Visual == null)
+        var parent = GetParent();
+
+        // early out: parent is null when there is no Visual
+        if (parent == null)
         {
             return;
         }
         // end early out
-
-        var parent = GetParent();
 
         if (RadioButtonDictionary.ContainsKey(parent) == false)
             RadioButtonDictionary.Add(parent, new Dictionary<string, List<RadioButton>>());
@@ -154,7 +154,7 @@ public class RadioButton : ToggleButton
         var parent = GetParent();
 
         // Don't set all RadioButtons to FALSE just because they don't have a parent yet!
-        if (parent != FakeRoot)
+        if (parent != null && parent != FakeRoot)
         {
             foreach (var radio in RadioButtonDictionary[parent][GroupName])
             {
@@ -185,7 +185,7 @@ public class RadioButton : ToggleButton
 
     #region Event Handlers
 
-    private void HandleParentChanged(object sender, GraphicalUiElement.ParentChangedEventArgs e)
+    private void HandleParentChanged(object? sender, GraphicalUiElement.ParentChangedEventArgs e)
     {
         // setting GroupName refreshes grouping
         GroupName = GroupName;

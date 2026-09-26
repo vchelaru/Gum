@@ -100,7 +100,7 @@ public class KeyEventArgs : EventArgs
 }
 #endif
 
-public delegate void KeyEventHandler(object sender, KeyEventArgs e);
+public delegate void KeyEventHandler(object? sender, KeyEventArgs e);
 
 #endregion
 
@@ -124,9 +124,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     public static List<Xbox360GamePad> GamePadsForUiControl => GuiManager.GamePadsForUiControl;
 #else
-    public static ICursor MainCursor { get; set; }
+    public static ICursor MainCursor { get; set; } = null!;
 
-    public static IInputReceiverKeyboard MainKeyboard { get; set; }
+    public static IInputReceiverKeyboard MainKeyboard { get; set; } = null!;
 
 #if !FRB
     public Cursors? CustomCursor { get; set; }
@@ -149,13 +149,13 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <summary>
     /// Container used to hold popups such as the ListBox which appears when clicking on a combo box.
     /// </summary>
-    public static InteractiveGue PopupRoot { get; set; }
+    public static InteractiveGue PopupRoot { get; set; } = null!;
 
     /// <summary>
     /// Container used to hold modal objects. If any object is added to this container, then all other
     /// UI does not receive events.
     /// </summary>
-    public static InteractiveGue ModalRoot { get; set; }
+    public static InteractiveGue ModalRoot { get; set; } = null!;
 
     /// <summary>
     /// Additional popup/modal root pairs, beyond the global <see cref="PopupRoot"/>/<see cref="ModalRoot"/>,
@@ -199,11 +199,11 @@ public class FrameworkElement : INotifyPropertyChanged
                 if (isFocused)
                 {
                     timeFocused = InteractiveGue.CurrentGameTime;
-                    GotFocus?.Invoke(this, null);
+                    GotFocus?.Invoke(this, EventArgs.Empty);
                 }
                 else
                 {
-                    LostFocus?.Invoke(this, null);
+                    LostFocus?.Invoke(this, EventArgs.Empty);
 
                     if (this is IInputReceiver inputReceiver2 && InteractiveGue.CurrentInputReceiver == inputReceiver2)
                     {
@@ -228,7 +228,7 @@ public class FrameworkElement : INotifyPropertyChanged
 
     internal PropertyRegistry PropertyRegistry { get; }
 
-    public object BindingContext
+    public object? BindingContext
     {
         get => Visual?.BindingContext;
         [RequiresUnreferencedCode(
@@ -507,7 +507,7 @@ public class FrameworkElement : INotifyPropertyChanged
     internal void RaiseToolTipOpening() => ToolTipOpening?.Invoke(this, EventArgs.Empty);
     internal void RaiseToolTipClosing() => ToolTipClosing?.Invoke(this, EventArgs.Empty);
 
-    public FrameworkElement ParentFrameworkElement
+    public FrameworkElement? ParentFrameworkElement
     {
         get
         {
@@ -531,10 +531,15 @@ public class FrameworkElement : INotifyPropertyChanged
         }
     }
 
-    InteractiveGue visual;
+    InteractiveGue? visual;
+    /// <summary>
+    /// The Gum visual which renders and receives input for this control. Every working control has one;
+    /// it is assigned to null only when the control is being detached from its visual.
+    /// </summary>
+    [AllowNull]
     public InteractiveGue Visual
     {
-        get => visual;
+        get => visual!;
         set
         {
 #if FULL_DIAGNOSTICS
@@ -544,7 +549,7 @@ public class FrameworkElement : INotifyPropertyChanged
                 throw new ArgumentNullException("Visual cannot be assigned to null");
             }
 #endif
-            InteractiveGue oldVisual = visual;
+            InteractiveGue? oldVisual = visual;
             if (visual != value)
             {
 #if FULL_DIAGNOSTICS
@@ -595,7 +600,12 @@ public class FrameworkElement : INotifyPropertyChanged
                     });
                 }
 
-                ReactToVisualChanged();
+                // Overrides look up named children on the new visual, so there is nothing to react
+                // to when the visual is only being detached. ReactToVisualRemoved already ran above.
+                if (visual != null)
+                {
+                    ReactToVisualChanged();
+                }
             }
 
         }
@@ -643,7 +653,7 @@ public class FrameworkElement : INotifyPropertyChanged
     /// </summary>
     public static Dictionary<Type, VisualTemplate> DefaultFormsTemplates { get; private set; } = new Dictionary<Type, VisualTemplate>();
 
-    protected static InteractiveGue GetGraphicalUiElementFor(FrameworkElement element)
+    protected static InteractiveGue? GetGraphicalUiElementFor(FrameworkElement element)
     {
         var type = element.GetType();
         return GetGraphicalUiElementForFrameworkElement(type);
@@ -684,7 +694,7 @@ public class FrameworkElement : INotifyPropertyChanged
         else
         {
             var baseType = type.BaseType;
-            if (baseType == typeof(object) || baseType == typeof(FrameworkElement))
+            if (baseType == null || baseType == typeof(object) || baseType == typeof(FrameworkElement))
             {
                 //var message =
                 //    $"Could not find default Gum Component for {type}. You can solve this by adding a Gum type for {type} to " +
@@ -706,10 +716,10 @@ public class FrameworkElement : INotifyPropertyChanged
 
     #region Events
 
-    public event EventHandler GotFocus;
-    public event EventHandler LostFocus;
-    public event EventHandler Loaded;
-    public event KeyEventHandler KeyDown;
+    public event EventHandler? GotFocus;
+    public event EventHandler? LostFocus;
+    public event EventHandler? Loaded;
+    public event KeyEventHandler? KeyDown;
 
     #endregion
 
@@ -851,10 +861,10 @@ public class FrameworkElement : INotifyPropertyChanged
     /// <param name="layer">The layer to add this to, can be null to add it directly to managers</param>
     [Obsolete("Do not use this method. Either add this to the Root, to a Screen, or to a parent container")]
 #if FRB
-    public void Show(FlatRedBall.Graphics.Layer layer = null)
+    public void Show(FlatRedBall.Graphics.Layer? layer = null)
 #else
 
-    public void Show(Layer layer = null)
+    public void Show(Layer? layer = null)
 #endif
     {
 #if FULL_DIAGNOSTICS
@@ -915,7 +925,7 @@ public class FrameworkElement : INotifyPropertyChanged
 #endif
         var semaphoreSlim = new SemaphoreSlim(1);
 
-        void HandleRemovedFromManagers(object sender, EventArgs args) => semaphoreSlim.Release();
+        void HandleRemovedFromManagers(object? sender, EventArgs args) => semaphoreSlim.Release();
         Visual.RemovedFromGuiManager += HandleRemovedFromManagers;
 
         semaphoreSlim.Wait();
@@ -1036,6 +1046,9 @@ public class FrameworkElement : INotifyPropertyChanged
 
     #region Visual Changed Methods
 
+    /// <summary>
+    /// Method raised after a new, non-null visual is assigned. Overrides typically look up named children here.
+    /// </summary>
     protected virtual void ReactToVisualChanged() { }
 
     protected virtual void RefreshInternalVisualReferences() { }
@@ -1162,10 +1175,10 @@ public class FrameworkElement : INotifyPropertyChanged
     }
 
     [Obsolete("Use OnBindingContextChanged")]
-    protected virtual void HandleVisualBindingContextChanged(object sender, BindingContextChangedEventArgs args) =>
+    protected virtual void HandleVisualBindingContextChanged(object? sender, BindingContextChangedEventArgs args) =>
         OnBindingContextChanged(sender, args);
 
-    protected virtual void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args) { }
+    protected virtual void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args) { }
 
     protected void PushValueToViewModel([CallerMemberName] string? uiPropertyName = null)
     {
@@ -1594,16 +1607,15 @@ public class FrameworkElement : INotifyPropertyChanged
                             {
                                 // If we asked the parent and it didn't focus a new item, and if the parent doesn't have its own parent, then we
                                 // start back down the children of the parent:
+                                // requestingVisualSiblings is the parent's children, or the top-level
+                                // contained elements when there is no parent.
                                 InteractiveGue? firstChild = null;
-                                if(parentVisual.Children != null)
+                                foreach(var child in requestingVisualSiblings)
                                 {
-                                    foreach(var child in parentVisual.Children)
+                                    if (child is InteractiveGue ig && ig.Visible && ig.IsEnabled)
                                     {
-                                        if (child is InteractiveGue ig && ig.Visible && ig.IsEnabled)
-                                        {
-                                            firstChild = ig;
-                                            break;
-                                        }
+                                        firstChild = ig;
+                                        break;
                                     }
                                 }
                                 firstChild = firstChild ?? requestingVisual;
@@ -2356,7 +2368,7 @@ public class FrameworkElement : INotifyPropertyChanged
 #if FRB
     void HandleEnabledChanged(IWindow window)
 #else
-    void HandleEnabledChanged(object sender, EventArgs args)
+    void HandleEnabledChanged(object? sender, EventArgs args)
 #endif
     {
         if (Visual != null)
@@ -2372,9 +2384,9 @@ public class FrameworkElement : INotifyPropertyChanged
         return $"{this.Visual?.Name} ({this.GetType().Name})";
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

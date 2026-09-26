@@ -80,7 +80,7 @@ public class CustomListBoxItem : ListBoxItem
 
     public bool HasCalledUpdateToObject { get; private set; }
 
-    public override void UpdateToObject(object o)
+    public override void UpdateToObject(object? o)
     {
         HasCalledUpdateToObject = true;
 

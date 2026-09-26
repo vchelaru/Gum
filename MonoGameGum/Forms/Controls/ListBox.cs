@@ -151,7 +151,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// </remarks>
     protected List<ListBoxItem> ListBoxItemsInternal = new List<ListBoxItem>();
 
-    ObservableCollection<object> selectedItemsCollection = new ObservableCollection<object>();
+    ObservableCollection<object?> selectedItemsCollection = new ObservableCollection<object?>();
 
     // Source of truth for per-row IsSelected. Rows (ListBoxItem instances) are always unique even
     // when two rows are bound to the same DataObject reference, so tracking selection by row
@@ -163,7 +163,7 @@ public class ListBox : ItemsControl, IInputReceiver
     bool _suppressSelectionSync = false;
     SelectionMode selectionMode = SelectionMode.Single;
 
-    ReadOnlyCollection<ListBoxItem> listBoxItemsReadOnly;
+    ReadOnlyCollection<ListBoxItem>? listBoxItemsReadOnly;
     public ReadOnlyCollection<ListBoxItem> ListBoxItems
     {
         get
@@ -250,7 +250,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     [Obsolete("Use VisualTemplate")]
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-    public Type ListBoxItemGumType
+    public Type? ListBoxItemGumType
     {
         get => ItemGumType;
         [UnconditionalSuppressMessage("Trimming", "IL2114", Justification = PreservedNotCalledJustification)]
@@ -292,7 +292,7 @@ public class ListBox : ItemsControl, IInputReceiver
         }
     }
 
-    public object SelectedObject
+    public object? SelectedObject
     {
         get
         {
@@ -381,7 +381,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     public bool TakingInput => throw new NotImplementedException();
 
-    public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver? NextInTabSequence { get; set; }
 
     /// <summary>
     /// Whether the primary input button (usually the A button) results in the highlighted list box item
@@ -516,7 +516,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Event raised whenever the selection changes. The object parameter is the sender (list box) and the SelectionChangedeventArgs
     /// contains information about the changed selected items.
     /// </summary>
-    public event Action<object, SelectionChangedEventArgs> SelectionChanged;
+    public event Action<object, SelectionChangedEventArgs>? SelectionChanged;
 
     /// <summary>
     /// Event raised when the user presses a button, whether at the top level or internally on
@@ -526,10 +526,10 @@ public class ListBox : ItemsControl, IInputReceiver
     /// Until July 2024 this was only firing at the top level. July 2024 version also raises
     /// this event when a button is pushed on an item.
     /// </remarks>
-    public event Action<GamepadButton> ControllerButtonPushed;
+    public event Action<GamepadButton>? ControllerButtonPushed;
 
 #if FRB
-    public event Action<int> GenericGamepadButtonPushed;
+    public event Action<int>? GenericGamepadButtonPushed;
 #endif
 
 #endregion
@@ -553,7 +553,7 @@ public class ListBox : ItemsControl, IInputReceiver
         // do base first, so InnerPanel can get assigned by the base
         base.ReactToVisualChanged();
 
-        if (InnerPanel?.Children.Count > 0 && this.Items?.Count > 0 == false)
+        if (InnerPanel?.Children.Count > 0 && this.Items != null && this.Items.Count == 0)
         {
             foreach(var item in InnerPanel.Children)
             {
@@ -638,7 +638,8 @@ public class ListBox : ItemsControl, IInputReceiver
         {
             var display = objectToUpdateTo.GetType()
                 .GetProperty(DisplayMemberPath)
-                .GetValue(objectToUpdateTo, null) as string;
+                ?.GetValue(objectToUpdateTo, null) as string;
+
             listBoxItem.UpdateToObject(display);
 
         }
@@ -690,7 +691,9 @@ public class ListBox : ItemsControl, IInputReceiver
                         $"If you defined {ItemFormsType} without specifying a constructor, you need to add a constructor which takes a GraphicalUiElement and calls the base constructor.";
                     throw new Exception(message);
                 }
-                item = listBoxFormsConstructor.Invoke(new object[] { visual }) as ListBoxItem;
+                item = listBoxFormsConstructor.Invoke(new object[] { visual }) as ListBoxItem
+                    ?? throw new InvalidOperationException($"{ItemFormsType} must inherit from ListBoxItem.");
+
             }
 
             return item;
@@ -959,7 +962,7 @@ public class ListBox : ItemsControl, IInputReceiver
                         (visual.Parent.Children[newIndex] as InteractiveGue)?.FormsControlAsObject as ListBoxItem;
 
                     // Dropping onto a decoration (or any non-row visual) is not a reorder; ignore it.
-                    if (draggedListBoxItem == null || targetListBoxItem == null)
+                    if (draggedListBoxItem == null || targetListBoxItem == null || Items == null)
                     {
                         return;
                     }
@@ -1137,7 +1140,7 @@ public class ListBox : ItemsControl, IInputReceiver
     {
         _suppressSelectionSync = true;
         selectedItemsCollection.Clear();
-        List<object> seenValues = new List<object>();
+        List<object?> seenValues = new List<object?>();
         foreach (var row in _selectedRowsInternal)
         {
             var value = row.DataObject;
@@ -1205,7 +1208,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <summary>
     /// Handles changes to the SelectedItems collection and synchronizes the IsSelected state of ListBoxItems.
     /// </summary>
-    private void HandleSelectedItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void HandleSelectedItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (_suppressSelectionSync)
         {
@@ -1314,7 +1317,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     bool _suppressCollectionChangedToBase = false;
     bool _isAddingFromItemsCollection = false;
-    protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    protected override void HandleItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if(_suppressCollectionChangedToBase == false)
         {
@@ -1389,7 +1392,7 @@ public class ListBox : ItemsControl, IInputReceiver
                 newItem.UpdateState();
             }
 
-            if (!_isAddingFromItemsCollection && !Items.Contains(listBoxItem))
+            if (!_isAddingFromItemsCollection && Items != null && !Items.Contains(listBoxItem))
             {
                 // Directly-added ListBoxItem is its own backing object in Items (issue #556).
                 listBoxItem.DataObject = listBoxItem;
@@ -1430,7 +1433,7 @@ public class ListBox : ItemsControl, IInputReceiver
         // index is an InnerPanel.Children index that may include non-ListBoxItem visuals (issue
         // #556). This path is only reached when InnerPanel.Children is replaced directly; guard the
         // bounds so a mismatch between the collections can't throw.
-        if (index >= 0 && index < ListBoxItemsInternal.Count && index < (Items?.Count ?? 0))
+        if (Items != null && index >= 0 && index < ListBoxItemsInternal.Count && index < Items.Count)
         {
             ListBoxItemsInternal[index].UpdateToObject(Items[index]);
         }
@@ -1439,7 +1442,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
     #endregion
 
-    void OnItemFocused(object sender, EventArgs args)
+    void OnItemFocused(object? sender, EventArgs args)
     {
         for (int i = 0; i < ListBoxItemsInternal.Count; i++)
         {
@@ -1460,7 +1463,7 @@ public class ListBox : ItemsControl, IInputReceiver
     /// <param name="scrollIntoViewStyle">The desired location of the item after scrolling.</param>
     public void ScrollIntoView(object item, ScrollIntoViewStyle scrollIntoViewStyle = ScrollIntoViewStyle.BringIntoView)
     {
-        var itemIndex = Items.IndexOf(item);
+        var itemIndex = Items?.IndexOf(item) ?? -1;
 
         ScrollIndexIntoView(itemIndex, scrollIntoViewStyle);
     }
@@ -1488,7 +1491,7 @@ public class ListBox : ItemsControl, IInputReceiver
             var visualBottom = visualAsIpso.Y + visualAsIpso.Height;
 
             var viewTop = -InnerPanel.Y;
-            var viewBottom = -InnerPanel.Y + clipContainer.AbsoluteHeight;
+            var viewBottom = -InnerPanel.Y + ClipContainer.AbsoluteHeight;
             var isAboveView = visualTop < viewTop;
             var isBelowView = visualBottom > viewBottom;
 
@@ -1679,7 +1682,8 @@ public class ListBox : ItemsControl, IInputReceiver
             {
                 if (layer != layerToAddListBoxTo)
                 {
-                    if (layer.Renderables.Contains(parent) || layer.Renderables.Contains(parent.RenderableComponent as IRenderableIpso))
+                    if (layer.Renderables.Contains(parent) ||
+                        (parent.RenderableComponent is IRenderableIpso parentRenderable && layer.Renderables.Contains(parentRenderable)))
                     {
                         layerToAddListBoxTo = layer;
                         break;

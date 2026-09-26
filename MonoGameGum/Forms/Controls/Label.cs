@@ -18,10 +18,14 @@ public class Label :
     Gum.Forms.Controls.FrameworkElement
 #endif
 {
-    protected GraphicalUiElement textComponent;
-    protected global::RenderingLibrary.Graphics.IText coreTextObject;
+    protected GraphicalUiElement? textComponent;
+    protected global::RenderingLibrary.Graphics.IText? coreTextObject;
 
-    public GraphicalUiElement TextComponent => textComponent;
+    /// <summary>
+    /// The visual that displays the text: the Visual itself if it is a text object, otherwise its child
+    /// named TextInstance. Null if the Visual has neither.
+    /// </summary>
+    public GraphicalUiElement? TextComponent => textComponent;
 
     /// <summary>
     /// Gets or sets the label text. Setting this property applies localization
@@ -35,7 +39,7 @@ public class Label :
 #if FULL_DIAGNOSTICS
             ReportMissingTextInstance();
 #endif
-            return coreTextObject.RawText;
+            return coreTextObject?.RawText;
         }
         set
         {
@@ -46,7 +50,7 @@ public class Label :
                 ReportMissingTextInstance();
 #endif
                 // go through the component instead of the core text object to force a layout refresh if necessary
-                textComponent.SetProperty("Text", value);
+                textComponent?.SetProperty("Text", value);
 
                 PushValueToViewModel();
             }
@@ -67,7 +71,7 @@ public class Label :
     {
         if (value != Text)
         {
-            textComponent.SetProperty("TextNoTranslate", value);
+            textComponent?.SetProperty("TextNoTranslate", value);
             PushValueToViewModel();
         }
     }
@@ -94,7 +98,7 @@ public class Label :
         }
         else
         {
-            textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
+            textComponent = base.Visual?.GetGraphicalUiElementByName("TextInstance");
         }
 
 #if FULL_DIAGNOSTICS
@@ -102,7 +106,7 @@ public class Label :
         //ReportMissingTextInstance();
 #endif
 
-        coreTextObject = (global::RenderingLibrary.Graphics.IText)textComponent?.RenderableComponent;
+        coreTextObject = textComponent?.RenderableComponent as global::RenderingLibrary.Graphics.IText;
     }
 
     // Manual save/restore rather than RegisterRuntimeProperty because

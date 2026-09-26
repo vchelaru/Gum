@@ -169,7 +169,7 @@ public class FormsUtilities
             FrameworkElement.DefaultFormsTemplates[typeof(Tooltip)] = _defaultTooltipTemplate;
         }
 
-        void TryAdd(Type formsType, Func<object, bool, GraphicalUiElement> factory)
+        void TryAdd(Type formsType, Func<object?, bool, GraphicalUiElement> factory)
         {
             if (!FrameworkElement.DefaultFormsTemplates.ContainsKey(formsType))
             {
@@ -548,7 +548,7 @@ public class FormsUtilities
     // user code registered, so loading another project can replace it.
     private class FromFileTooltipTemplate : VisualTemplate
     {
-        public FromFileTooltipTemplate(Func<object, bool, GraphicalUiElement> creationFunc) : base(creationFunc) { }
+        public FromFileTooltipTemplate(Func<object?, bool, GraphicalUiElement> creationFunc) : base(creationFunc) { }
     }
 
     public static void RegisterFromFileFormRuntimeDefaults()

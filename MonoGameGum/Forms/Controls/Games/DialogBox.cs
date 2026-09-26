@@ -117,14 +117,14 @@ public class DialogBox : FrameworkElement, IInputReceiver
     /// <summary>
     /// Raised when the dialog box finishes showing all pages.
     /// </summary>
-    public event EventHandler FinishedShowing;
+    public event EventHandler? FinishedShowing;
 
     /// <summary>
     /// Raised whenever a page finishes typing out, either automatically or in response to input.
     /// </summary>
-    public event EventHandler FinishedTypingPage;
+    public event EventHandler? FinishedTypingPage;
 
-    public event EventHandler PageAdvanced;
+    public event EventHandler? PageAdvanced;
 
     /// <summary>
     /// If not null, this predicate is used to determine if input
@@ -333,7 +333,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #endif
         var semaphoreSlim = new SemaphoreSlim(1);
 
-        void HandleRemovedFromManagers(object sender, EventArgs args) => semaphoreSlim.Release();
+        void HandleRemovedFromManagers(object? sender, EventArgs args) => semaphoreSlim.Release();
         Visual.RemovedFromGuiManager += HandleRemovedFromManagers;
 
         semaphoreSlim.Wait();
@@ -385,8 +385,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #else
                     LastTimeDismissed = global::RenderingLibrary.IGumService.Default?.GameTime ?? 0;
 #endif
-                    PageAdvanced?.Invoke(this, null);
-                    FinishedShowing?.Invoke(this, null);
+                    PageAdvanced?.Invoke(this, EventArgs.Empty);
+                    FinishedShowing?.Invoke(this, EventArgs.Empty);
                 }
             }
             else
@@ -400,7 +400,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
                 var semaphoreSlim = new SemaphoreSlim(1);
 
-                void ReleaseSemaphor(object sender, EventArgs args) => 
+                void ReleaseSemaphor(object? sender, EventArgs args) => 
                     semaphoreSlim.Release();
 
                 this.PageAdvanced += ReleaseSemaphor;
@@ -466,7 +466,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 {
                     continueIndicatorInstance.Visible = true;
                 }
-                FinishedTypingPage?.Invoke(this, null);
+                FinishedTypingPage?.Invoke(this, EventArgs.Empty);
             };
 #else
             typingTargetLetterCount = strippedLength;
@@ -487,7 +487,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
             {
                 continueIndicatorInstance.Visible = true;
             }
-            FinishedTypingPage?.Invoke(this, null);
+            FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -509,7 +509,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
             {
                 continueIndicatorInstance.Visible = true;
             }
-            FinishedTypingPage?.Invoke(this, null);
+            FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
         else
         {
@@ -657,7 +657,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
             coreTextObject.MaxLettersToShow = currentPageText.Length;
 
-            FinishedTypingPage?.Invoke(this, null);
+            FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
         else if (Pages.Count > 0)
         {
@@ -666,7 +666,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 ShowNextPage(forceImmediatePrint);
             }
 
-            PageAdvanced?.Invoke(this, null);
+            PageAdvanced?.Invoke(this, EventArgs.Empty);
         }
         else
         {
@@ -682,13 +682,13 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #else
         LastTimeDismissed = global::RenderingLibrary.IGumService.Default?.GameTime ?? 0;
 #endif
-        PageAdvanced?.Invoke(this, null);
+        PageAdvanced?.Invoke(this, EventArgs.Empty);
         // Finish cleanup BEFORE raising FinishedShowing so a handler that re-shows the
         // dialog (e.g. a chained sequence of dialogs) is not undone by the state reset
         // below. Matches the async path, which fires the event only after the show loop ends.
         this.Pages.Clear();
         IsFocused = false;
-        FinishedShowing?.Invoke(this, null);
+        FinishedShowing?.Invoke(this, EventArgs.Empty);
     }
 
     public void OnFocusUpdatePreview(RoutedEventArgs args)

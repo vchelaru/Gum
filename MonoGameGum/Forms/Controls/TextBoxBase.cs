@@ -175,7 +175,7 @@ public abstract class TextBoxBase :
     /// <summary>
     /// The next control to receive focus when the user presses the tab key.
     /// </summary>
-    public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver? NextInTabSequence { get; set; }
 
     public override bool IsEnabled
     {
@@ -398,22 +398,22 @@ public abstract class TextBoxBase :
     /// <summary>
     /// Raised when a controller button is pushed while the control is focused.
     /// </summary>
-    public event Action<GamepadButton> ControllerButtonPushed;
+    public event Action<GamepadButton>? ControllerButtonPushed;
     /// <summary>
     /// Raised before new text is inserted (by typing or pasting). Set
     /// <see cref="RoutedEventArgs.Handled"/> to <c>true</c> to cancel the insertion.
     /// Similar to WPF's <c>PreviewTextInput</c>.
     /// </summary>
-    public event Action<object, TextCompositionEventArgs> PreviewTextInput;
+    public event Action<object, TextCompositionEventArgs>? PreviewTextInput;
     /// <summary>
     /// Raised when the <see cref="CaretIndex"/> changes.
     /// </summary>
-    public event EventHandler CaretIndexChanged;
+    public event EventHandler? CaretIndexChanged;
     protected void RaiseCaretIndexChanged() => CaretIndexChanged?.Invoke(this, EventArgs.Empty);
     /// <summary>
     /// Raised when the selection (SelectionStart or SelectionLength) changes.
     /// </summary>
-    public event EventHandler SelectionChanged;
+    public event EventHandler? SelectionChanged;
     protected void RaiseSelectionChanged() => SelectionChanged?.Invoke(this, EventArgs.Empty);
     protected virtual TextCompositionEventArgs RaisePreviewTextInput(string newText)
     {

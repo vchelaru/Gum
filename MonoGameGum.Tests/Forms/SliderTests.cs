@@ -56,6 +56,31 @@ public class SliderTests : BaseTestClass
         }
     }
 
+    static Slider CreateSliderWithoutThumb()
+    {
+        ContainerRuntime visual = new();
+        visual.Children.Add(new ContainerRuntime { Name = "TrackInstance" });
+        return new Slider(visual);
+    }
+
+    [Fact]
+    public void Visual_ShouldBeReplaceable_WhenVisualHasNoThumb()
+    {
+        Slider slider = CreateSliderWithoutThumb();
+        ContainerRuntime newVisual = new();
+        newVisual.Children.Add(new ContainerRuntime { Name = "TrackInstance" });
+
+        Should.NotThrow(() => slider.Visual = newVisual);
+    }
+
+    [Fact]
+    public void RollOver_ShouldNotThrow_WhenVisualHasNoThumb()
+    {
+        Slider slider = CreateSliderWithoutThumb();
+
+        Should.NotThrow(() => slider.Visual.TryCallRollOver());
+    }
+
     [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
     {

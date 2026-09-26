@@ -148,8 +148,8 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    VisualTemplate visualTemplate;
-    public VisualTemplate VisualTemplate
+    VisualTemplate? visualTemplate;
+    public VisualTemplate? VisualTemplate
     {
         get => visualTemplate;
         set
@@ -173,7 +173,7 @@ public class ItemsControl : ScrollViewer
         }
     }
 
-    public event EventHandler<NotifyCollectionChangedEventArgs> ItemsCollectionChanged;
+    public event EventHandler<NotifyCollectionChangedEventArgs>? ItemsCollectionChanged;
 
     public Orientation? Orientation
     {
@@ -218,12 +218,12 @@ public class ItemsControl : ScrollViewer
     /// Occurs when an item is clicked. A click is defined by the cursor
     /// primary button being pressed last frame, and released this frame.
     /// </summary>
-    public event EventHandler ItemClicked;
+    public event EventHandler? ItemClicked;
     /// <summary>
     /// Occurs when an item is pushed. A push is defined by the cursor
     /// primary button being released last frame, and pressed this frame.
     /// </summary>
-    public event EventHandler ItemPushed;
+    public event EventHandler? ItemPushed;
 
     #endregion
 
@@ -293,7 +293,9 @@ public class ItemsControl : ScrollViewer
             }
 
 
-            return toReturn as InteractiveGue;
+            return toReturn as InteractiveGue
+                ?? throw new InvalidOperationException("The visual template for this ListBox returned null.");
+
         }
         else
         {
@@ -327,8 +329,10 @@ public class ItemsControl : ScrollViewer
                     "avoids reflection entirely.");
             }
 
-            var visual = gumConstructor.Invoke(new object[] { true, true }) as InteractiveGue;
-            return visual;
+            return gumConstructor.Invoke(new object[] { true, true }) as InteractiveGue
+                ?? throw new InvalidOperationException(
+                    $"The item type {listBoxItemGumType.Name} used by this {GetType().Name} does not inherit from InteractiveGue.");
+
         }
     }
 
@@ -349,7 +353,7 @@ public class ItemsControl : ScrollViewer
     {
         switch (e.Action)
         {
-            case NotifyCollectionChangedAction.Add:
+            case NotifyCollectionChangedAction.Add when e.NewItems != null:
                 {
 
                     int absoluteIndex = e.NewStartingIndex;
@@ -707,11 +711,11 @@ public class ItemsControl : ScrollViewer
         Justification = "Automatic per-item BindingContext assignment when populating from a bound " +
             "collection. Any by-name VM member resolution happens in the item template's own bindings, " +
             "which already carry this warning at the SetBinding call that created them.")]
-    protected virtual void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    protected virtual void HandleItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
-            case NotifyCollectionChangedAction.Add:
+            case NotifyCollectionChangedAction.Add when e.NewItems != null:
                 {
                     // e.NewStartingIndex is an Items-space index. A decoration occupies an
                     // InnerPanel.Children slot without an Items slot, so translate to the matching
@@ -901,12 +905,12 @@ public class ItemsControl : ScrollViewer
     }
 
 
-    protected void OnItemClicked(object sender, EventArgs args)
+    protected void OnItemClicked(object? sender, EventArgs args)
     {
         ItemClicked?.Invoke(sender, args);
     }
 
-    protected void OnItemPushed(object sender, EventArgs args)
+    protected void OnItemPushed(object? sender, EventArgs args)
     {
         ItemPushed?.Invoke(sender, args);
     }
@@ -916,7 +920,7 @@ public class ItemsControl : ScrollViewer
     #region Update To
 
 #if FRB
-    protected override void OnBindingContextChanged(object sender, BindingContextChangedEventArgs args)
+    protected override void OnBindingContextChanged(object? sender, BindingContextChangedEventArgs args)
     {
         if (IsDataBound(nameof(Items)) && 
             args is { OldBindingContext: not null, NewBindingContext: null })

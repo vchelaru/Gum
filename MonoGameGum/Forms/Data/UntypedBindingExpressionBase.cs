@@ -116,12 +116,13 @@ internal abstract class UntypedBindingExpression : BindingExpressionBase
 
     protected object? GetSourceValue()
     {
-        if (SourceGetter is null || !PathObserver.HasResolution)
+        if (SourceGetter is null || !PathObserver.HasResolution || TargetElement.BindingContext is not { } bindingContext)
         {
             // binding error: broken path
             return GumProperty.UnsetValue;
         }
-        return SourceGetter(TargetElement.BindingContext);
+        return SourceGetter(bindingContext);
+
     }
 
     protected object? GetRootSourceValue()

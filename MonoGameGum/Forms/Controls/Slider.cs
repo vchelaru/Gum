@@ -71,9 +71,9 @@ public class Slider : RangeBase, IInputReceiver
     /// </summary>
     public event Action<IInputReceiver>? FocusUpdate;
 
-    public event Action<GamepadButton> ControllerButtonPushed;
+    public event Action<GamepadButton>? ControllerButtonPushed;
 #if FRB
-    public event Action<int> GenericGamepadButtonPushed;
+    public event Action<int>? GenericGamepadButtonPushed;
 #endif
 
 #endregion
@@ -105,13 +105,16 @@ public class Slider : RangeBase, IInputReceiver
     {
         base.ReactToVisualChanged();
 
-        Track.Push += HandleTrackPush;
+        if (Track != null)
+        {
+            Track.Push += HandleTrackPush;
 
 #if FRB
-        Track.RemovedAsPushedWindow += _ => HandleTrackRemovedAsPushedWindow(this, EventArgs.Empty);
+            Track.RemovedAsPushedWindow += _ => HandleTrackRemovedAsPushedWindow(this, EventArgs.Empty);
 #else
-        Track.RemovedAsPushed += HandleTrackRemovedAsPushedWindow;
+            Track.RemovedAsPushed += HandleTrackRemovedAsPushedWindow;
 #endif
+        }
 
         if (thumb != null)
         {
@@ -131,15 +134,24 @@ public class Slider : RangeBase, IInputReceiver
     {
         base.ReactToVisualRemoved();
 
-        Track.Push -= HandleTrackPush;
+        if (Track != null)
+        {
+            Track.Push -= HandleTrackPush;
+        }
 
     }
 
 #endregion
 
     #region Event Handlers
-    protected override void HandleThumbPush(object sender, EventArgs e)
+    protected override void HandleThumbPush(object? sender, EventArgs e)
     {
+        // Raised by the thumb, so it is set.
+        if (thumb == null)
+        {
+            return;
+        }
+
         var leftOfThumb = this.thumb.AbsoluteLeft;
 
         if (this.thumb.Visual.XOrigin == global::RenderingLibrary.Graphics.HorizontalAlignment.Center)
@@ -157,7 +169,7 @@ public class Slider : RangeBase, IInputReceiver
         ValueOnThumbOrTrackPush = Value;
     }
 
-    private void HandleThumbRemovedAsPushedWindow(object sender, EventArgs args)
+    private void HandleThumbRemovedAsPushedWindow(object? sender, EventArgs args)
     {
         if (ValueOnThumbOrTrackPush != Value)
         {
@@ -165,7 +177,7 @@ public class Slider : RangeBase, IInputReceiver
         }
     }
 
-    private void HandleTrackRemovedAsPushedWindow(object sender, EventArgs args)
+    private void HandleTrackRemovedAsPushedWindow(object? sender, EventArgs args)
     {
         if (ValueOnThumbOrTrackPush != Value && IsMoveToPointEnabled)
         {
@@ -191,7 +203,7 @@ public class Slider : RangeBase, IInputReceiver
 #if FRB
     private void HandleTrackPush(IWindow window)
 #else
-    private void HandleTrackPush(object sender, EventArgs args)
+    private void HandleTrackPush(object? sender, EventArgs args)
 #endif
     {
         //////////////////////////Early Out//////////////////////////
@@ -205,10 +217,11 @@ public class Slider : RangeBase, IInputReceiver
 
         ValueOnThumbOrTrackPush = Value;
 
-        if (IsMoveToPointEnabled)
+        // Raised by the track, so it is set.
+        if (IsMoveToPointEnabled && Track is { } track)
         {
-            var left = Track.GetAbsoluteX();
-            var right = Track.GetAbsoluteX() + Track.AbsoluteWidth;
+            var left = track.GetAbsoluteX();
+            var right = track.GetAbsoluteX() + track.AbsoluteWidth;
 
             var screenX = MainCursor.XRespectingGumZoomAndBounds();
 
@@ -358,11 +371,17 @@ public class Slider : RangeBase, IInputReceiver
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
 #endif
     {
+        // Only called while the thumb is being dragged.
+        if (thumb == null || Track is not { } track)
+        {
+            return;
+        }
+
         var valueBefore = Value;
 
         var cursorScreenX = cursor.XRespectingGumZoomAndBounds();
 
-        var cursorXRelativeToTrack = cursorScreenX - Track.AbsoluteLeft;
+        var cursorXRelativeToTrack = cursorScreenX - track.AbsoluteLeft;
 
         // See UpdateThumbPositionAccordingToValue for an explanation of why we use
         // Percentage rather than PixelsFromSmall:
@@ -372,7 +391,7 @@ public class Slider : RangeBase, IInputReceiver
         thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.Percentage;
 
         var pixelOffset = cursorXRelativeToTrack - cursorGrabOffsetRelativeToThumb;
-        var width = Track.AbsoluteWidth;
+        var width = track.AbsoluteWidth;
         if (width == 0)
         {
             // prevent divide by 0's
@@ -381,7 +400,7 @@ public class Slider : RangeBase, IInputReceiver
 
         thumb.X = 100 * pixelOffset / width;
 
-        float range = Track.AbsoluteWidth;
+        float range = track.AbsoluteWidth;
 
 
         if (range != 0)

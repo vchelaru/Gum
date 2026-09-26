@@ -133,17 +133,17 @@ public class ToggleButton : ButtonBase
     /// The Checked/Indeterminate/Unchecked event pattern follows wpf. For more info, see:
     /// https://stackoverflow.com/questions/5574613/separate-events-for-checked-and-unchecked-state-of-wpf-checkbox-why
     /// </remarks>
-    public event EventHandler Checked;
+    public event EventHandler? Checked;
 
     /// <summary>
     /// Event raised when the IsChecked value is set to null.
     /// </summary>
-    public event EventHandler Indeterminate;
+    public event EventHandler? Indeterminate;
 
     /// <summary>
     /// Event raised when the IsChecked value is set to false;
     /// </summary>
-    public event EventHandler Unchecked;
+    public event EventHandler? Unchecked;
 
     #endregion
 

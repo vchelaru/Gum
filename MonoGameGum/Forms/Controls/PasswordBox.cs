@@ -113,7 +113,7 @@ public class PasswordBox : TextBoxBase
     /// <summary>
     /// Raised when the password changes.
     /// </summary>
-    public event EventHandler PasswordChanged;
+    public event EventHandler? PasswordChanged;
 
     protected override string DisplayedText
     {

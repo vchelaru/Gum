@@ -61,9 +61,10 @@ public class ScrollBar : RangeBase
 
     float MinThumbPosition => 0;
     float MaxThumbPosition =>
-        Orientation == Orientation.Vertical
-        ? Track.AbsoluteHeight - thumb.ActualHeight
-        : Track.AbsoluteWidth - thumb.ActualWidth;
+        Track is not { } track || thumb == null ? 0
+        : Orientation == Orientation.Vertical
+        ? track.AbsoluteHeight - thumb.ActualHeight
+        : track.AbsoluteWidth - thumb.ActualWidth;
 
 
     public override Orientation Orientation 
@@ -169,15 +170,15 @@ public class ScrollBar : RangeBase
         // sized independently of Visual (e.g. by sibling changes or absolute sizing) we still react.
         // Hooking only Track is strictly more correct than hooking Visual. Field-tracked for clean
         // unsubscribe on visual change/removal.
-        if (Track != null)
+        if (Track is { } track)
         {
-            _subscribedTrack = Track;
-            _subscribedTrack.SizeChanged += HandleTrackSizeChanged;
+            _subscribedTrack = track;
+            track.SizeChanged += HandleTrackSizeChanged;
         }
 
 
 
-        var visibleTrackSpace = upButton != null && downButton != null
+        var visibleTrackSpace = Track != null && upButton != null && downButton != null
             ? Track.AbsoluteHeight - upButton.ActualHeight - downButton.ActualHeight
             : 0;
 
@@ -255,7 +256,7 @@ public class ScrollBar : RangeBase
 #endregion
 
     #region Event Handlers
-    protected override void HandleThumbPush(object sender, EventArgs e)
+    protected override void HandleThumbPush(object? sender, EventArgs e)
     {
         if(Orientation == Orientation.Vertical)
         {
@@ -273,7 +274,7 @@ public class ScrollBar : RangeBase
         }
     }
 
-    private void HandleTrackPush(object sender, EventArgs args)
+    private void HandleTrackPush(object? sender, EventArgs args)
     {
         // Early out, can't calulate without this
         if (thumb == null)
@@ -303,7 +304,7 @@ public class ScrollBar : RangeBase
         }
     }
 
-    private void HandleTrackSizeChanged(object sender, EventArgs e)
+    private void HandleTrackSizeChanged(object? sender, EventArgs e)
     {
         UpdateThumbSize();
         UpdateThumbPositionAccordingToValue();
@@ -398,10 +399,16 @@ public class ScrollBar : RangeBase
     protected override void UpdateThumbPositionToCursorDrag(ICursor cursor)
 #endif
     {
+        // Only called while the thumb is being dragged.
+        if (thumb == null || Track is not { } track)
+        {
+            return;
+        }
+
         if (Orientation == Orientation.Vertical)
         {
             var cursorScreenY = cursor.YRespectingGumZoomAndBounds();
-            var cursorYRelativeToTrack = cursorScreenY - Track.AbsoluteTop;
+            var cursorYRelativeToTrack = cursorScreenY - track.AbsoluteTop;
 
             thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
@@ -411,7 +418,7 @@ public class ScrollBar : RangeBase
         else
         {
             var cursorScreenX = cursor.XRespectingGumZoomAndBounds();
-            var cursorXRelativeToTrack = cursorScreenX - Track.AbsoluteLeft;
+            var cursorXRelativeToTrack = cursorScreenX - track.AbsoluteLeft;
 
             thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
             thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
@@ -470,7 +477,8 @@ public class ScrollBar : RangeBase
     private void UpdateThumbSize()
     {
         var desiredHeight = MinimumThumbSize;
-        if (ViewportSize != 0 && Track != null)
+        // Track falls back to the thumb's parent, so a thumb exists whenever Track does.
+        if (ViewportSize != 0 && Track is { } track && thumb != null)
         {
 
             var valueRange = (Maximum - Minimum) + ViewportSize;
@@ -480,7 +488,7 @@ public class ScrollBar : RangeBase
 
                 if(Orientation == Orientation.Vertical)
                 {
-                    float trackSize =  Track.AbsoluteHeight;
+                    float trackSize =  track.AbsoluteHeight;
                     thumb.Visual.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 
@@ -488,7 +496,7 @@ public class ScrollBar : RangeBase
                 }
                 else
                 {
-                    float trackSize =  Track.AbsoluteWidth;
+                    float trackSize =  track.AbsoluteWidth;
                     thumb.Visual.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
                     thumb.Visual.WidthUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
 

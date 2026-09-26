@@ -24,7 +24,37 @@ public class ListBoxTests : BaseTestClass
     #region Children
 
     [Fact]
+    public void NullItems_ShouldNotThrow_WhenAddingChildOrScrolling()
+    {
+        ListBox listBox = new();
+        listBox.Items = null;
+
+        Should.NotThrow(() =>
+        {
+            listBox.AddChild(new ListBoxItem());
+            listBox.ScrollIntoView("not in the list");
+        });
+        listBox.ListBoxItems.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void NullItems_ShouldNotThrow_WhenAssigningVisualWithItems()
+    {
+        ListBox previousOwner = new();
+        previousOwner.AddChild(new ListBoxItem());
+        InteractiveGue visualWithItem = previousOwner.Visual;
+        previousOwner.Visual = null;
+        visualWithItem.FormsControlAsObject = null;
+        ListBox listBox = new();
+        listBox.Items = null;
+
+        Should.NotThrow(() => listBox.Visual = visualWithItem);
+
+    }
+
+    [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
+
     {
         ListBox listBox = new();
         InteractiveGue visual = listBox.Visual;

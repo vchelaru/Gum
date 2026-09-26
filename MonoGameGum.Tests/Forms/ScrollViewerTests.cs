@@ -20,6 +20,26 @@ public class ScrollViewerTests : BaseTestClass
 {
 
     [Fact]
+    public void ScrollMembers_ShouldNotThrow_WhenVisualHasNoVerticalScrollBar()
+    {
+        ContainerRuntime visual = new();
+        ContainerRuntime clipContainer = new() { Name = "ClipContainerInstance" };
+        visual.Children.Add(clipContainer);
+        clipContainer.Children.Add(new ContainerRuntime { Name = "InnerPanelInstance" });
+        ScrollViewer scrollViewer = new(visual);
+
+        Should.NotThrow(() =>
+        {
+            scrollViewer.SmallChange = 5;
+            scrollViewer.LargeChange = 5;
+            scrollViewer.VerticalScrollBarValue = 5;
+            scrollViewer.ScrollToBottom();
+        });
+        scrollViewer.VerticalScrollBarValue.ShouldBe(0);
+        scrollViewer.VerticalScrollBarMaximum.ShouldBe(0);
+    }
+
+    [Fact]
     public void Children_Containers_ShouldNotHaveEvents()
     {
         ScrollViewer scrollViewer = new();
