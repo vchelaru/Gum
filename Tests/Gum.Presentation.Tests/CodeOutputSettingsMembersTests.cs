@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using CodeOutputPlugin;
 using CodeOutputPlugin.ViewModels;
@@ -80,6 +81,24 @@ public class CodeOutputSettingsMembersTests
 
         _sut.ProjectSettings.CodeProjectRoot.ShouldBe("Code/Project\\");
         changes.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CodeProjectRoot_FromAnAbsoluteFolder_IsStoredRelativeToTheProject_OnEveryOS()
+    {
+        // A folder picker returns an OS-native absolute path with no trailing separator; on macOS
+        // and Linux the setter still appends "\", which must not break the relative path.
+        string root = Path.Combine(Path.GetTempPath(), "GumCodeRootTest");
+        string projectDirectory = Path.Combine(root, "Content", "GumProject") + Path.DirectorySeparatorChar;
+        _projectState.Setup(state => state.ProjectDirectory).Returns(projectDirectory);
+        _sut.ProjectSettings = new CodeOutputProjectSettings();
+
+        Member("Code Project Root").SetValue(root, SetPropertyCommitType.Full);
+
+        string stored = _sut.ProjectSettings.CodeProjectRoot!;
+        Path.IsPathRooted(stored).ShouldBeFalse();
+        string resolved = Path.GetFullPath(Path.Combine(projectDirectory, stored.Replace('\\', '/')));
+        resolved.TrimEnd('/', '\\').ShouldBe(root);
     }
 
     [Fact]

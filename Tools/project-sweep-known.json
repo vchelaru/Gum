@@ -14,22 +14,6 @@
   "Tests/Gum.ProjectServices.Tests/ParityCorpus/FormsXml/CodeGenTestProject.gumx": {
     "check": "fixture: copy of CodeGen_MonoGameForms_ByReference, references a deleted component"
   },
-  "Samples/FnaGum/FnaSample/Content/GumProject/GumProject.gumx": {
-    "check": "#5152 older Forms controls",
-    "codegen": "#5152 older Forms controls"
-  },
-  "Samples/GameUiSamples/Content/GumProject/GameUiSamplesGumProject.gumx": {
-    "check": "#5152 older Forms controls",
-    "codegen": "#5152 older Forms controls"
-  },
-  "Samples/GumFormsSample/MonoGameGumFormsSample/Content/FormsGumProject/GumProject.gumx": {
-    "check": "#5152 older Forms controls",
-    "codegen": "#5152 older Forms controls"
-  },
-  "Samples/MVVM/Content/GumProject/GumProject.gumx": {
-    "check": "#5152 older Forms controls",
-    "codegen": "#5152 older Forms controls"
-  },
   "FlatRedBall:FRBDK/Glue/GumPlugin/GumPlugin/Embedded/EmbeddedObjectGumProject/GumProject.gumx": {
     "check": "#5152 older Forms controls (FlatRedBall repo)"
   },
