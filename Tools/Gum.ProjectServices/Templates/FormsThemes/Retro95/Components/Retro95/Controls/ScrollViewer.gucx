@@ -4,28 +4,48 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-
-    <!-- BevelInstance: Inset bevel + white fill, fills the whole control. Retro95's
-         ScrollViewerVisual never varies fill between Enabled/Focused; no separate
-         focus ring on this control (same as TextBox/PasswordBox). -->
-    <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Inset</Value></Variable>
-    <Variable Type="float" Name="BevelInstance.X" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="PositionUnitType" Name="BevelInstance.XUnits" SetsValue="true"><Value xsi:type="xsd:int">6</Value></Variable>
-    <Variable Type="HorizontalAlignment" Name="BevelInstance.XOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
-    <Variable Type="float" Name="BevelInstance.Y" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="PositionUnitType" Name="BevelInstance.YUnits" SetsValue="true"><Value xsi:type="xsd:int">7</Value></Variable>
-    <Variable Type="VerticalAlignment" Name="BevelInstance.YOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
-    <Variable Type="float" Name="BevelInstance.Width" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="DimensionUnitType" Name="BevelInstance.WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
-    <Variable Type="float" Name="BevelInstance.Height" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="DimensionUnitType" Name="BevelInstance.HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
-    <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
-    </VariableList>
-
+    <Variable Type="BevelCategory" Name="BevelInstance.BevelCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Inset</Value>
+    </Variable>
+    <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="BevelInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BevelInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BevelInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="BevelInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="BevelInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="BevelInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BevelInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="BevelInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="BevelInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="BevelInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
     <Variable Type="bool" Name="ClipContainerInstance.ClipsChildren" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
@@ -60,7 +80,6 @@
     <Variable Type="string" Name="DefaultChildContainer" SetsValue="true">
       <Value xsi:type="xsd:string">InnerPanelInstance</Value>
     </Variable>
-
     <Variable Type="OrientationCategory" Name="HorizontalScrollBarInstance.OrientationCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Horizontal</Value>
     </Variable>
@@ -86,7 +105,6 @@
     <Variable Type="PositionUnitType" Name="HorizontalScrollBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">5</Value>
     </Variable>
-
     <Variable Type="ChildrenLayout" Name="InnerPanelInstance.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -108,11 +126,9 @@
     <Variable Type="DimensionUnitType" Name="InnerPanelInstance.WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
     </Variable>
-
     <Variable Type="ScrollBarVisibility" Name="ScrollBarVisibilityState" SetsValue="false" />
     <Variable Type="ScrollViewerCategory" Name="ScrollViewerCategoryState" SetsValue="true" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-
     <Variable Type="float" Name="VerticalScrollBarInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">-24</Value>
     </Variable>
@@ -135,6 +151,16 @@
     <Variable Type="PositionUnitType" Name="VerticalScrollBarInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>BevelInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+      </Value>
+    </VariableList>
   </State>
   <Category>
     <Name>ScrollBarVisibility</Name>
@@ -227,20 +253,46 @@
     <Name>ScrollViewerCategory</Name>
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>BevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="int" Name="BevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="BevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>BevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
   </Category>

@@ -48,6 +48,8 @@
   <TextureFilter>Point</TextureFilter>
   <ConvertVariablesOnUnitTypeChange>false</ConvertVariablesOnUnitTypeChange>
   <RestrictToUnitValues>true</RestrictToUnitValues>
+  <SnapToGrid>false</SnapToGrid>
+  <GridSize>16</GridSize>
   <RestrictFileNamesForAndroid>false</RestrictFileNamesForAndroid>
   <Guides />
   <ParentProjectRoot>../</ParentProjectRoot>
