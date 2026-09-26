@@ -70,7 +70,7 @@ public class MainHtmlToGumPlugin : PluginBase
             return;
         }
 
-        string projectDir = _projectState.ProjectDirectory;
+        string? projectDir = _projectState.ProjectDirectory;
         if (string.IsNullOrEmpty(projectDir))
         {
             _dialogService.ShowMessage("No project directory: save the project first.");

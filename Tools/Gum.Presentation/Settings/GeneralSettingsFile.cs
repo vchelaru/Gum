@@ -17,7 +17,7 @@ namespace Gum.Settings
 
         #region Properties
 
-        public string LastProject
+        public string? LastProject
         {
             get;
             set;

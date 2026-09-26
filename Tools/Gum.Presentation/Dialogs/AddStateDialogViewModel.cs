@@ -32,13 +32,20 @@ public class AddStateDialogViewModel : GetUserStringDialogBaseViewModel
 
     public override void OnAffirmative()
     {
-        if (Error is not null) return;
-        
+        // Validate rejects a missing category or name before OK is enabled.
+        if (Error is not null ||
+            Value is null ||
+            _selectedState.SelectedStateContainer is not { } stateContainer ||
+            _selectedState.SelectedStateCategorySave is not { } category)
+        {
+            return;
+        }
+
         using (_undoManager.RequestLock())
         {
             StateSave stateSave = _elementCommands.AddState(
-                _selectedState.SelectedStateContainer,
-                _selectedState.SelectedStateCategorySave, 
+                stateContainer,
+                category,
                 Value);
             
             _selectedState.SelectedStateSave = stateSave;
@@ -55,7 +62,7 @@ public class AddStateDialogViewModel : GetUserStringDialogBaseViewModel
         }
         
         return _nameVerifier.IsStateNameValid(value, category, null,
-            out string whyNotValid)
+            out string? whyNotValid)
             ? base.Validate(value)
             : whyNotValid;
     }

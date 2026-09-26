@@ -120,7 +120,7 @@ public class ElementLifecycleTests
         keyframe.StateName.ShouldBe($"{Category}/Pressed", "a broken keyframe keeps its name so the user can fix the state (issue #3392)");
         keyframe.IsMissingReference.ShouldBeTrue();
         walk.HasBrokenKeyframe.ShouldBeTrue();
-        keyframe.AvailableStates.ShouldContain($"{Category}/Pressed");
+        keyframe.AvailableStates.ShouldNotBeNull().ShouldContain($"{Category}/Pressed");
 
         editor.UndoManager.PerformUndo();
         editor.Layout();
@@ -137,7 +137,7 @@ public class ElementLifecycleTests
         editor.Select(button);
         editor.AddAnimation("Walk");
         AnimatedKeyframeViewModel keyframe = editor.AddStateKeyframe($"{Category}/Pressed");
-        keyframe.AvailableStates.ShouldNotContain($"{Category}/Hover");
+        keyframe.AvailableStates.ShouldNotBeNull().ShouldNotContain($"{Category}/Hover");
 
         StateSave hover = new StateSave { Name = "Hover", ParentContainer = button };
         button.Categories[0].States.Add(hover);

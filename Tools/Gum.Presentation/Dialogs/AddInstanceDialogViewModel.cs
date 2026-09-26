@@ -51,13 +51,16 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
         if (IsAddingAsParentToSelectedInstance)
         {
-            ElementSave selectedElement = _selectedState.SelectedElement;
-            InstanceSave? focusedInstance = _selectedState.SelectedInstance;
-            System.Diagnostics.Debug.Assert(focusedInstance != null);
+            // The menu item that sets this flag only exists while an instance of an element is selected.
+            if (_selectedState.SelectedElement is not { } selectedElement ||
+                _selectedState.SelectedInstance is not { } focusedInstance)
+            {
+                return;
+            }
 
             // The new parent is created at the root, then takes the focused instance's place.
             InstanceSave? newInstance = _addInstanceLogic.AddInstance(elementToAdd, selectedElement, Value);
-            if (newInstance != null && focusedInstance != null)
+            if (newInstance != null)
             {
                 SetInstanceParentWrapper(selectedElement, newInstance, focusedInstance);
             }
@@ -72,9 +75,9 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
 
     protected override string? Validate(string? value)
     {
-        if (!_nameVerifier.IsInstanceNameValid(value, null, _selectedState.SelectedElement, out string whyNotValid))
+        if (!_nameVerifier.IsInstanceNameValid(value, null, _selectedState.SelectedElement, out string? whyNotValid))
         {
-            return  whyNotValid;
+            return whyNotValid;
         }
 
         return base.Validate(value);
@@ -95,7 +98,10 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         // From DragDropManager:
         // "Since the Parent property can only be set in the default state, we will
         // set the Parent variable on that instead of the _selectedState.SelectedStateSave"
-        var stateToAssignOn = targetElement.DefaultState;
+        if (targetElement.DefaultState is not { } stateToAssignOn)
+        {
+            return;
+        }
 
         var variableName = newInstance.Name + ".Parent";
         var existingInstanceVar = existingInstance.Name + ".Parent";
@@ -105,7 +111,7 @@ public class AddInstanceDialogViewModel : GetUserStringDialogBaseViewModel
         stateToAssignOn.SetValue(variableName, oldParentValue, "string");
         stateToAssignOn.SetValue(existingInstanceVar, newInstance.Name, "string");
 
-        _setVariableLogic.PropertyValueChanged("Parent", oldValue, newInstance, targetElement.DefaultState);
-        _setVariableLogic.PropertyValueChanged("Parent", oldParentValue, existingInstance, targetElement.DefaultState);
+        _setVariableLogic.PropertyValueChanged("Parent", oldValue, newInstance, stateToAssignOn);
+        _setVariableLogic.PropertyValueChanged("Parent", oldParentValue, existingInstance, stateToAssignOn);
     }
 }

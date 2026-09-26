@@ -29,7 +29,15 @@ public class AddFolderDialogViewModel : GetUserStringDialogBaseViewModel
     {
         if (Value is null || Error is not null) return;
 
-        string folder = _selectedState.SelectedTreeNode.GetFullFilePath() + Value + "\\";
+        // The path is null when the project has not been saved, so there is no folder to add to.
+        FilePath? parentFolder = _selectedState.SelectedTreeNode?.GetFullFilePath();
+        if (parentFolder is null)
+        {
+            Error = "You must first save the project before adding a folder";
+            return;
+        }
+
+        string folder = parentFolder + Value + "\\";
 
         // If the path is relative
         // that means that the root

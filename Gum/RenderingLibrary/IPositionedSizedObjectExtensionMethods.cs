@@ -101,7 +101,7 @@ namespace Gum.RenderingLibrary
 
         public static string GetAttachmentQualifiedName(this IRenderableIpso ipso, List<ElementWithState> elementStack)
         {
-            IRenderableIpso parent = ipso.Parent;
+            IRenderableIpso? parent = ipso.Parent;
             IRenderableIpso child = ipso;
 
             while (parent != null)
@@ -113,9 +113,8 @@ namespace Gum.RenderingLibrary
                 }
                 else
                 {
-                    InstanceSave thisInstance = child.Tag as InstanceSave;
-
-                    if (thisInstance.IsParentASibling(elementStack))
+                    // Tool renderables are tagged with their ElementSave or InstanceSave.
+                    if (child.Tag is InstanceSave thisInstance && thisInstance.IsParentASibling(elementStack))
                     {
                         child = parent;
                         parent = parent.Parent;
@@ -131,7 +130,7 @@ namespace Gum.RenderingLibrary
 
             if (parent == null)
             {
-                return ipso.Name;
+                return ipso.Name ?? string.Empty;
             }
             else
             {
@@ -142,8 +141,7 @@ namespace Gum.RenderingLibrary
                 }
                 else
                 {
-                    return ipso.Name;
-
+                    return ipso.Name ?? string.Empty;
                 }
             }
 

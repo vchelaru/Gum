@@ -39,8 +39,9 @@ public class ImportScreenDialog : ImportBaseDialogViewModel
         // Boyscout (issue #4182): this previously compared against ComponentFilePath instead of
         // ScreenFilePath, so an already-imported screen never matched here and always re-appeared
         // in the "available to import" list.
-        FilePath[] screenFilesInProject = _projectState.GumProjectSave
-            .Screens
+        // The dialog is only offered for a saved project.
+        IEnumerable<ScreenSave> screens = _projectState.GumProjectSave?.Screens ?? Enumerable.Empty<ScreenSave>();
+        FilePath[] screenFilesInProject = screens
             .SelectMany(item => new[]
             {
                 new FilePath(_projectState.ScreenFilePath + item.Name + "." + GumProjectSave.ScreenExtension),

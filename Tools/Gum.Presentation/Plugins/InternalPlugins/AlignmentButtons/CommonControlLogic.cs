@@ -56,8 +56,6 @@ public class CommonControlLogic
             // remove the negative
             value = 0f;
         }
-        var state = _selectedState.SelectedStateSave;
-
         SetAndCallReact("Y", value, "float");
         SetAndCallReact("YOrigin", alignment, typeof(global::RenderingLibrary.Graphics.VerticalAlignment).Name);
         SetAndCallReact("YUnits", yUnits, typeof(PositionUnitType).Name);
@@ -71,6 +69,12 @@ public class CommonControlLogic
 
     public void SetAndCallReact(string unqualified, object value, string typeName)
     {
+        // The Alignment tab is only shown while a state is selected.
+        if (_selectedState.SelectedStateSave is not { } state)
+        {
+            return;
+        }
+
         bool handledByInstance = false;
         foreach(var instance in _selectedState.SelectedInstances)
         {
@@ -84,7 +88,6 @@ public class CommonControlLogic
                 }
                 return prefixInternal;
             }
-            var state = _selectedState.SelectedStateSave;
             string prefix = GetVariablePrefix();
 
             var oldValue = state.GetValue(prefix + unqualified);
@@ -92,7 +95,7 @@ public class CommonControlLogic
 
             // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
             RecordSetVariablePersistPositions();
-            _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, _selectedState.SelectedStateSave, refresh: false);
+            _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, instance, state, refresh: false);
             ResumeSetVariablePersistOptions();
         }
 
@@ -100,14 +103,12 @@ public class CommonControlLogic
         {
             if (_selectedState.SelectedComponent != null || _selectedState.SelectedStandardElement != null)
             {
-                var state = _selectedState.SelectedStateSave;
-
                 var oldValue = state.GetValue(unqualified);
                 state.SetValue(unqualified, value, typeName);
 
                 // do this so the SetVariableLogic doesn't attempt to hold the object in-place which causes all kinds of weirdness
                 RecordSetVariablePersistPositions();
-                _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, _selectedState.SelectedStateSave, refresh: false);
+                _setVariableLogic.ReactToPropertyValueChanged(unqualified, oldValue, _selectedState.SelectedElement, null, state, refresh: false);
                 ResumeSetVariablePersistOptions();
             }
         }

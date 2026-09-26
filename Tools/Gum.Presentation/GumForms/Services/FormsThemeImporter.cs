@@ -50,9 +50,14 @@ public class FormsThemeImporter : IFormsThemeImporter
     {
         // Prerequisites have already been surfaced to the user (inline in the Add Forms dialog,
         // or implicitly by opting in to Forms at project creation) — no separate confirmation popup.
+        if (_projectState.GumProjectSave is not { } project)
+        {
+            return false;
+        }
+
         ThemeRequirements requirements =
             ThemeRequirements.LoadFromThemeDirectory(_formsFileService.GetThemeDirectory(themeName));
-        ThemeRequirementsDiff diff = requirements.Diff(_projectState.GumProjectSave);
+        ThemeRequirementsDiff diff = requirements.Diff(project);
 
         Dictionary<string, FilePath> sourceDestinations =
             _formsFileService.GetSourceDestinations(themeName, isIncludeDemoScreenGum);
@@ -64,16 +69,16 @@ public class FormsThemeImporter : IFormsThemeImporter
 
         // Apply the prerequisite edits to the in-memory project before saving, so the gumx
         // written below already contains the new font generator and standard references.
-        diff.Apply(_projectState.GumProjectSave, _skiaShapeStandards);
+        diff.Apply(project, _skiaShapeStandards);
 
         SaveFilesToDestination(sourceDestinations);
 
         AddAllElementsToProject(sourceDestinations);
 
         // reload standards:
-        string fileName = _projectState.GumProjectSave.FullFileName;
+        string? fileName = project.FullFileName;
         bool wasSaved = _fileCommands.TryAutoSaveProject();
-        if (wasSaved)
+        if (wasSaved && fileName is not null)
         {
             await _fileCommands.LoadProjectAsync(fileName);
         }
@@ -290,7 +295,7 @@ public class FormsThemeImporter : IFormsThemeImporter
             if (standardElement != null)
             {
                 // See if the states differ:
-                StateSave potentiallyModifiedDefault = standardElement.DefaultState;
+                StateSave? potentiallyModifiedDefault = standardElement.DefaultState;
                 StateSave? actualDefault =
                     StandardElementsManager.Self.GetDefaultStateFor(standardElementName)?.Clone();
                 if (actualDefault != null)

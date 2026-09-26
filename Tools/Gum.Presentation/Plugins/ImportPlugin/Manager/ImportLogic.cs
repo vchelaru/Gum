@@ -5,6 +5,7 @@ using Gum.ProjectServices;
 using Gum.Services;
 using Gum.ToolStates;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Gum.Commands;
 using Gum.Plugins;
 using Gum.Services.Dialogs;
@@ -48,7 +49,12 @@ public class ImportLogic : IImportLogic
 
     public ScreenSave? ImportScreen(ScreenSave screenSave, bool saveProject = true)
     {
-        var result = _screenImportService.ImportScreen(_projectManager.GumProjectSave, screenSave);
+        if (_projectManager.GumProjectSave is not { } project)
+        {
+            return null;
+        }
+
+        var result = _screenImportService.ImportScreen(project, screenSave);
         if (!result.Success)
         {
             _dialogService.ShowMessage($"This project already a screen named {result.ConflictingScreenName} in this project");
@@ -76,11 +82,16 @@ public class ImportLogic : IImportLogic
             return null;
         }
 
-        var elementReferences = _projectManager.GumProjectSave.ComponentReferences;
+        if (_projectManager.GumProjectSave is not { } project)
+        {
+            return null;
+        }
+
+        var elementReferences = project.ComponentReferences;
         elementReferences.Add(new ElementReference { Name = componentSave.Name, ElementType = ElementType.Component });
         elementReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-        var components = _projectManager.GumProjectSave.Components;
+        var components = project.Components;
         components.Add(componentSave);
         components.Sort((first, second) => first.Name.CompareTo(second.Name));
 
@@ -107,8 +118,14 @@ public class ImportLogic : IImportLogic
     private bool DetermineIfShouldAdd(ref FilePath filePath, ref string? desiredDirectory, string screensOrComponents)
     {
         var shouldAdd = true;
-        desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            _projectManager.GumProjectSave.FullFileName) + $"{screensOrComponents}/";
+        if (desiredDirectory == null)
+        {
+            if (!TryGetProjectDirectory(out string? projectDirectory))
+            {
+                return false;
+            }
+            desiredDirectory = projectDirectory + $"{screensOrComponents}/";
+        }
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
@@ -140,12 +157,36 @@ public class ImportLogic : IImportLogic
     }
 
 
-    public BehaviorSave ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
+    /// <summary>
+    /// Gets the loaded project's directory, or shows a message and returns false when the project
+    /// has never been saved, since there is no folder to import into.
+    /// </summary>
+    private bool TryGetProjectDirectory([NotNullWhen(true)] out string? projectDirectory)
+    {
+        string? projectFileName = _projectManager.GumProjectSave?.FullFileName;
+        if (string.IsNullOrEmpty(projectFileName))
+        {
+            _dialogService.ShowMessage("You must first save the project before importing");
+            projectDirectory = null;
+            return false;
+        }
+
+        projectDirectory = FileManager.GetDirectory(projectFileName);
+        return true;
+    }
+
+    public BehaviorSave? ImportBehavior(FilePath filePath, string? desiredDirectory = null, bool saveProject = false)
     {
         var shouldAdd = true;
 
-        desiredDirectory = desiredDirectory ?? FileManager.GetDirectory(
-            _projectManager.GumProjectSave.FullFileName) + "Behaviors/";
+        if (desiredDirectory == null)
+        {
+            if (!TryGetProjectDirectory(out string? projectDirectory))
+            {
+                return null;
+            }
+            desiredDirectory = projectDirectory + "Behaviors/";
+        }
 
         if (!FileManager.IsRelativeTo(filePath.FullPath, desiredDirectory))
         {
@@ -175,7 +216,7 @@ public class ImportLogic : IImportLogic
 
         BehaviorSave? toReturn = null;
 
-        if (shouldAdd)
+        if (shouldAdd && _projectManager.GumProjectSave is { } project)
         {
             string strippedName = filePath.RemoveExtension().FileNameNoPath;
 
@@ -185,11 +226,11 @@ public class ImportLogic : IImportLogic
                 : (int)GumProjectSave.GumxVersions.InitialVersion;
             var behaviorSave = BehaviorReference.DeserializeBehavior(filePath.FullPath, behaviorVersion);
 
-            var behaviorReferences = _projectManager.GumProjectSave.BehaviorReferences;
+            var behaviorReferences = project.BehaviorReferences;
             behaviorReferences.Add(new BehaviorReference { Name = behaviorSave.Name });
             behaviorReferences.Sort((first, second) => first.Name.CompareTo(second.Name));
 
-            var behaviors = _projectManager.GumProjectSave.Behaviors;
+            var behaviors = project.Behaviors;
             behaviors.Add(behaviorSave);
             behaviors.Sort((first, second) => first.Name.CompareTo(second.Name));
 

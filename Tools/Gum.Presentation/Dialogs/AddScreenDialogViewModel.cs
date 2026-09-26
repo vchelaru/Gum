@@ -42,20 +42,26 @@ public class AddScreenDialogViewModel : GetUserStringDialogBaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Value) || Error is not null) return;
 
-        ITreeNode nodeToAddTo = _selectedState.SelectedTreeNode;
+        ITreeNode? nodeToAddTo = _selectedState.SelectedTreeNode;
 
         while (nodeToAddTo is { Tag: ScreenSave, Parent: not null })
         {
             nodeToAddTo = nodeToAddTo.Parent;
         }
 
-        string? path = nodeToAddTo?.GetFullFilePath().FullPath;
+        string? path = nodeToAddTo?.GetFullFilePath()?.FullPath;
 
         if (nodeToAddTo == null || !nodeToAddTo.IsPartOfScreensFolderStructure())
         {
             path = _projectState.ScreenFilePath.FullPath;
         }
-        
+
+        // Validate rejects an unsaved project, which is the only case with no path.
+        if (path is null)
+        {
+            return;
+        }
+
         string relativeToScreens = FileManager.MakeRelative(path, _fileLocations.ScreensFolder, preserveCase: true);
 
         // Prevent issues with any code that's looking for a '/' instead of a '\' slash

@@ -105,14 +105,16 @@ public class ProjectPropertiesChangeLogic
         {
             case nameof(viewModel.LocalizationFiles):
 
-                // Normalize any absolute paths to project-relative so .gumx stays portable.
+                // Normalize any absolute paths to project-relative so .gumx stays portable. An
+                // unsaved project has no directory to be relative to, so paths stay absolute.
+                string? projectDirectory = _projectState.ProjectDirectory;
                 bool normalizedAny = false;
                 List<string> normalized = new List<string>(viewModel.LocalizationFiles.Count);
                 foreach (string file in viewModel.LocalizationFiles)
                 {
-                    if (!string.IsNullOrEmpty(file) && FileManager.IsRelative(file) == false)
+                    if (projectDirectory != null && !string.IsNullOrEmpty(file) && FileManager.IsRelative(file) == false)
                     {
-                        normalized.Add(FileManager.MakeRelative(file, _projectState.ProjectDirectory, preserveCase: true));
+                        normalized.Add(FileManager.MakeRelative(file, projectDirectory, preserveCase: true));
                         normalizedAny = true;
                     }
                     else
@@ -227,11 +229,13 @@ public class ProjectPropertiesChangeLogic
             case nameof(viewModel.SinglePixelTextureRight):
             case nameof(viewModel.SinglePixelTextureBottom):
 
-                if (!string.IsNullOrEmpty(viewModel.SinglePixelTextureFile) && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
+                if (_projectState.ProjectDirectory is { } projectDirectoryForTexture
+                    && !string.IsNullOrEmpty(viewModel.SinglePixelTextureFile)
+                    && FileManager.IsRelative(viewModel.SinglePixelTextureFile) == false)
                 {
                     // This will loop:
                     viewModel.SinglePixelTextureFile = FileManager.MakeRelative(viewModel.SinglePixelTextureFile,
-                        _projectState.ProjectDirectory, preserveCase: true);
+                        projectDirectoryForTexture, preserveCase: true);
                     shouldSaveAndRefresh = false;
                 }
 
@@ -249,7 +253,11 @@ public class ProjectPropertiesChangeLogic
                     break;
                 }
 
-                await _fontManager.CreateAllMissingFontFiles(_projectState.GumProjectSave);
+                // The properties tab is only filled from a loaded project.
+                if (_projectState.GumProjectSave is { } project)
+                {
+                    await _fontManager.CreateAllMissingFontFiles(project);
+                }
                 shouldReloadContent = true;
                 _guiCommands.RefreshVariables(force: true);
                 break;
@@ -262,7 +270,10 @@ public class ProjectPropertiesChangeLogic
                 break;
         }
 
-        _pluginManager.ProjectPropertySet(propertyName);
+        if (propertyName != null)
+        {
+            _pluginManager.ProjectPropertySet(propertyName);
+        }
 
         if (shouldSaveAndRefresh)
         {

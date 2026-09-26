@@ -123,6 +123,30 @@ public class ProjectPropertiesChangeLogicTests
     }
 
     [Fact]
+    public async Task HandlePropertyChanged_LocalizationFiles_KeepsAbsolutePath_WhenProjectIsUnsaved()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns((string?)null);
+        viewModel.LocalizationFiles = new List<string> { "/Elsewhere/Localization/en.csv" };
+
+        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.LocalizationFiles));
+
+        viewModel.LocalizationFiles.ShouldBe(new List<string> { "/Elsewhere/Localization/en.csv" });
+    }
+
+    [Fact]
+    public async Task HandlePropertyChanged_SinglePixelTextureFile_KeepsAbsolutePath_WhenProjectIsUnsaved()
+    {
+        ProjectPropertiesViewModel viewModel = MakeViewModel();
+        _projectState.Setup(p => p.ProjectDirectory).Returns((string?)null);
+        viewModel.SinglePixelTextureFile = "/Elsewhere/pixel.png";
+
+        await _logic.HandlePropertyChanged(viewModel, nameof(viewModel.SinglePixelTextureFile));
+
+        viewModel.SinglePixelTextureFile.ShouldBe("/Elsewhere/pixel.png");
+    }
+
+    [Fact]
     public async Task HandlePropertyChanged_UseFontCharacterFileTurnedOff_ResetsFontRangesAndReportsPathCleared()
     {
         ProjectPropertiesViewModel viewModel = MakeViewModel();

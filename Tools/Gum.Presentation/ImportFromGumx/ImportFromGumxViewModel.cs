@@ -539,7 +539,8 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     internal void RecomputeTransitiveDependencies()
     {
-        if (_sourceProject == null) { return; }
+        // The import menu item requires an open, saved destination project.
+        if (_sourceProject == null || _projectState.GumProjectSave is not { } destination) { return; }
 
         // Reset components that were auto-added in the previous pass
         foreach (var name in _autoAddedComponentNames)
@@ -570,7 +571,6 @@ public class ImportFromGumxViewModel : DialogViewModel
             .ToList();
 
         var directSelected = directComponents.Concat(directScreens).ToList();
-        var destination = _projectState.GumProjectSave;
         var deps = _dependencyResolver.ComputeTransitive(directSelected, _sourceProject, destination);
 
         // Auto-check transitive components (deps of selected elements not directly selected)
@@ -669,7 +669,7 @@ public class ImportFromGumxViewModel : DialogViewModel
 
     private ImportSelections BuildSelections()
     {
-        if (_sourceProject == null)
+        if (_sourceProject == null || _projectState.GumProjectSave is not { } destination)
         {
             return new ImportSelections();
         }
@@ -700,7 +700,6 @@ public class ImportFromGumxViewModel : DialogViewModel
         var directElements = directComponents.Cast<ElementSave>()
             .Concat(directScreens.Cast<ElementSave>())
             .ToList();
-        var destination = _projectState.GumProjectSave;
         var deps = _dependencyResolver.ComputeTransitive(directElements, _sourceProject, destination);
 
         var behaviors = _allLeafItems

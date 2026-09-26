@@ -113,9 +113,10 @@ public class RecentFilesLogic
     {
         LoadRecentViewModel viewModel = BuildLoadRecentViewModel();
 
-        if (_dialogService.Show(viewModel))
+        // OK is disabled until an item is selected.
+        if (_dialogService.Show(viewModel) && viewModel.SelectedItem is { } selectedItem)
         {
-            await _fileCommands.LoadProjectAsync(viewModel.SelectedItem.FullPath);
+            await _fileCommands.LoadProjectAsync(selectedItem.FullPath);
         }
 
         IReadOnlyList<RecentProjectReference> recentFiles = _projectManager.RecentProjects;

@@ -31,9 +31,9 @@ namespace Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels
             set => Set(value);
         }
 
-        public RecentItemViewModel SelectedItem
+        public RecentItemViewModel? SelectedItem
         {
-            get => Get<RecentItemViewModel>();
+            get => Get<RecentItemViewModel?>();
             set => Set(value);
         }
 
