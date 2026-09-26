@@ -96,7 +96,7 @@ public partial class ElementTreeViewManager
     {
         if (_selectedState.SelectedInstance != null)
         {
-            ElementSave element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
+            ElementSave? element = ObjectFinder.Self.GetElementSave(_selectedState.SelectedInstance.BaseType);
 
             _selectedState.SelectedElement = element;
         }
@@ -113,7 +113,10 @@ public partial class ElementTreeViewManager
 
     void HandleForceSaveObject()
     {
-        _fileCommands.ForceSaveElement(_selectedState.SelectedElement);
+        if (_selectedState.SelectedElement is { } element)
+        {
+            _fileCommands.ForceSaveElement(element);
+        }
     }
 
     void HandleCopyFullPath()
@@ -149,20 +152,32 @@ public partial class ElementTreeViewManager
 
         if (treeNode != null)
         {
-            string fullFile;
+            FilePath? fullFilePath;
             if (treeNode.Tag is ElementSave elementSave)
             {
-                fullFile = _fileCommands.GetFullPathXmlFile(elementSave, elementSave.Name)!.FullPath;
+                fullFilePath = _fileCommands.GetFullPathXmlFile(elementSave, elementSave.Name);
             }
             else if (treeNode.Tag is BehaviorSave behaviorSave)
             {
-                fullFile =
-                    _fileCommands.GetFullPathXmlFile(behaviorSave).FullPath;
+                fullFilePath = _fileCommands.GetFullPathXmlFile(behaviorSave);
             }
             else
             {
-                fullFile = treeNode.GetFullFilePath().FullPath;
+                // A top folder node of an unsaved project tells the user why itself.
+                fullFilePath = treeNode.GetFullFilePath();
             }
+
+            // Null when the project was never saved, so it has no folder yet.
+            if (fullFilePath == null)
+            {
+                if (treeNode.Tag != null)
+                {
+                    _dialogService.ShowMessage("The project must be saved before its files can be shown.");
+                }
+                return;
+            }
+
+            string fullFile = fullFilePath.FullPath;
             bool isFolder = fullFile.EndsWith("\\") || fullFile.EndsWith("/");
 
             try
@@ -275,7 +290,7 @@ public partial class ElementTreeViewManager
                 {
                     AddSeparator();
 
-                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'");
+                    AddCreateInstanceMenuItems($"Add child object to '{_selectedState.SelectedInstance.Name}'", containerElement);
 
                     AddMenuItem($"Add parent object to '{_selectedState.SelectedInstance.Name}'",
                         () => _dialogService.Show<AddInstanceDialogViewModel>(x => x.IsAddingAsParentToSelectedInstance = true));
@@ -287,7 +302,7 @@ public partial class ElementTreeViewManager
                         if (containerBase is ScreenSave || containerBase is ComponentSave)
                         {
                             AddMenuItem($"Add {_selectedState.SelectedInstance.Name} to base {containerBase}",
-                                () => HandleMoveToBase(_selectedState.SelectedInstances, _selectedState.SelectedElement, containerBase));
+                                () => HandleMoveToBase(_selectedState.SelectedInstances, containerElement, containerBase));
                         }
                     }
 
@@ -301,7 +316,7 @@ public partial class ElementTreeViewManager
 
             #region Screen or Component
             // ScreenSave or ComponentSave
-            else if (_selectedState.SelectedScreen != null || _selectedState.SelectedComponent != null)
+            else if (((ElementSave?)_selectedState.SelectedScreen ?? _selectedState.SelectedComponent) is { } selectedElement)
             {
                 AddMenuItem("View in explorer", HandleViewInExplorer);
 
@@ -311,11 +326,9 @@ public partial class ElementTreeViewManager
 
                 AddSeparator();
 
-                AddCreateInstanceMenuItems("Add object to " + _selectedState.SelectedElement!.Name);
+                AddCreateInstanceMenuItems("Add object to " + selectedElement.Name, selectedElement);
 
-                var duplicateText = _selectedState.SelectedScreen != null
-                    ? $"Duplicate {_selectedState.SelectedScreen.Name}"
-                    : $"Duplicate {_selectedState.SelectedComponent!.Name}";
+                var duplicateText = $"Duplicate {selectedElement.Name}";
                 AddMenuItem(duplicateText, HandleDuplicateElement, _hotkeyManager.Duplicate.ToString());
 
                 AddSeparator();
@@ -335,7 +348,7 @@ public partial class ElementTreeViewManager
                 }
                 else
                 {
-                    elementDeleteText = "Delete " + _selectedState.SelectedElement.ToString();
+                    elementDeleteText = "Delete " + selectedElement.ToString();
                 }
                 AddMenuItem(elementDeleteText, HandleDeleteObject, _hotkeyManager.Delete.ToString());
 
@@ -453,14 +466,14 @@ public partial class ElementTreeViewManager
         return _contextMenuItems;
     }
 
-    private void AddCreateInstanceMenuItems(string itemText)
+    private void AddCreateInstanceMenuItems(string itemText, ElementSave parent)
     {
         var parentMenuItem = new ContextMenuItemViewModel { Text = itemText };
         _contextMenuItems.Add(parentMenuItem);
 
         // Add favorited components first
         var favoritedComponents = _favoriteComponentManager.GetFilteredFavoritedComponentsFor(
-            _selectedState.SelectedElement,
+            parent,
             _circularReferenceManager);
         if (favoritedComponents.Count > 0)
         {
@@ -563,7 +576,9 @@ public partial class ElementTreeViewManager
 
         _copyPasteLogic.PasteInstanceSaves(
             instances.ToList(),
-            new List<DataTypes.Variables.StateSave> { derivedElement.DefaultState.Clone() },
+            derivedElement.DefaultState is { } defaultState
+                ? new List<DataTypes.Variables.StateSave> { defaultState.Clone() }
+                : new List<DataTypes.Variables.StateSave>(),
             baseElement,
             null);
     }
@@ -652,7 +667,7 @@ public partial class ElementTreeViewManager
 
     private bool GuardProjectSaved(string? reason = null)
     {
-        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectState.GumProjectSave.FullFileName))
+        if (ObjectFinder.Self.GumProjectSave == null || string.IsNullOrEmpty(_projectState.GumProjectSave?.FullFileName))
         {
             _dialogService.ShowMessage("You must first save the project");
             return false;

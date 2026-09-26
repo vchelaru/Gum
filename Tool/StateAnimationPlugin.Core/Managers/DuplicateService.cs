@@ -27,17 +27,17 @@ namespace StateAnimationPlugin.Managers
         {
             var project = _projectManager.GumProjectSave;
             //////////////////////Early Out////////////////////
-            if(project == null)
+            // A project that was never saved has no folder, so there is no animation file to copy.
+            if(project?.FullFileName is not { } projectFileName)
             {
                 return;
             }
             //////////////////////End Early Out////////////////////
-            ///
-            var projectDirectory = FileManager.GetDirectory(project.FullFileName);
+            var projectDirectory = FileManager.GetDirectory(projectFileName);
 
             // Suffix follows the open project's own format so a .gumj project duplicates .ganj
             // rather than looking for a .ganx that doesn't exist (issue #4595).
-            var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(project.FullFileName));
+            var suffix = ElementAnimationsSave.GetFileNameSuffix(GumProjectSave.IsJsonFormat(projectFileName));
 
             var oldFile = new FilePath(projectDirectory + oldElement.Subfolder + "/" + oldElement.Name + suffix);
             var newFile = new FilePath(projectDirectory + newElement.Subfolder + "/" + newElement.Name + suffix);

@@ -67,6 +67,15 @@ public class DuplicateServiceTests : BaseTestClass
         File.Exists(Path.Combine(componentsDirectory, "BarAnimations.ganx")).ShouldBeFalse();
     }
 
+    [Fact]
+    public void HandleDuplicate_does_nothing_when_project_was_never_saved()
+    {
+        _projectManager.Setup(x => x.GumProjectSave).Returns(new GumProjectSave { FullFileName = null });
+
+        Should.NotThrow(() => _duplicateService.HandleDuplicate(
+            new ComponentSave { Name = "Foo" }, new ComponentSave { Name = "Bar" }));
+    }
+
     public override void Dispose()
     {
         if (Directory.Exists(_tempDirectory))

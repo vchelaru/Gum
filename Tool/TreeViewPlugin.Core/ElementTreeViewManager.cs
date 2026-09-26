@@ -71,10 +71,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     /// </summary>
     internal IReadOnlyList<ITreeNode> RootTreeNodes => View.Nodes.ToList<ITreeNode>();
 
-    ITreeNodeMutable mScreensTreeNode;
-    ITreeNodeMutable mComponentsTreeNode;
-    ITreeNodeMutable mStandardElementsTreeNode;
-    ITreeNodeMutable mBehaviorsTreeNode;
+    // Created by CreateRootTreeNodesIfNecessary on the first RefreshUi (Initialize).
+    ITreeNodeMutable? mScreensTreeNode;
+    ITreeNodeMutable? mComponentsTreeNode;
+    ITreeNodeMutable? mStandardElementsTreeNode;
+    ITreeNodeMutable? mBehaviorsTreeNode;
     GumTreeNode? mLastHoveredNode;
     private DateTime? hoverStartTime;
 
@@ -114,7 +115,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     public List<ITreeNode> SelectedNodes => Selection.SelectedNodes.ToList<ITreeNode>();
 
-    string filterText;
+    string filterText = string.Empty;
     public string FilterText
     {
         get => filterText;
@@ -132,8 +133,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
     private void SelectFirstElement()
     {
-        GumTreeNode treeNode = 
-            View.Nodes.FirstOrDefault() as GumTreeNode;
+        GumTreeNode? treeNode = View.Nodes.FirstOrDefault();
 
         while(treeNode != null)
         {
@@ -149,13 +149,16 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
     }
 
-    public ITreeNodeMutable RootScreensTreeNode => mScreensTreeNode;
+    public ITreeNodeMutable RootScreensTreeNode => mScreensTreeNode ?? throw RootsNotCreated();
 
-    public ITreeNodeMutable RootComponentsTreeNode => mComponentsTreeNode;
+    public ITreeNodeMutable RootComponentsTreeNode => mComponentsTreeNode ?? throw RootsNotCreated();
 
-    public ITreeNodeMutable RootStandardElementsTreeNode => mStandardElementsTreeNode;
+    public ITreeNodeMutable RootStandardElementsTreeNode => mStandardElementsTreeNode ?? throw RootsNotCreated();
 
-    public ITreeNodeMutable RootBehaviorsTreeNode => mBehaviorsTreeNode;
+    public ITreeNodeMutable RootBehaviorsTreeNode => mBehaviorsTreeNode ?? throw RootsNotCreated();
+
+    private static InvalidOperationException RootsNotCreated() =>
+        new InvalidOperationException($"{nameof(Initialize)} must run before the tree's root nodes are used.");
 
     // The four root fields are ITreeNodeMutable, which extends ITreeNode, so these satisfy
     // IElementTreeRoots directly.
@@ -255,14 +258,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public GumTreeNode? GetTreeNodeFor(ElementSave? elementSave) =>
         (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(elementSave);
 
-    public GumTreeNode GetTreeNodeFor(ScreenSave screenSave) =>
-        (GumTreeNode)((IElementTreeRoots)this).GetTreeNodeFor(screenSave);
+    public GumTreeNode? GetTreeNodeFor(ScreenSave screenSave) =>
+        (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(screenSave);
 
-    public GumTreeNode GetTreeNodeFor(ComponentSave componentSave) =>
-        (GumTreeNode)((IElementTreeRoots)this).GetTreeNodeFor(componentSave);
+    public GumTreeNode? GetTreeNodeFor(ComponentSave componentSave) =>
+        (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(componentSave);
 
-    public GumTreeNode GetTreeNodeFor(StandardElementSave standardElementSave) =>
-        (GumTreeNode)((IElementTreeRoots)this).GetTreeNodeFor(standardElementSave);
+    public GumTreeNode? GetTreeNodeFor(StandardElementSave standardElementSave) =>
+        (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(standardElementSave);
 
     public GumTreeNode? GetTreeNodeFor(InstanceSave instanceSave, GumTreeNode container) =>
         (GumTreeNode?)((ITreeNode)container).GetTreeNodeFor(instanceSave);
@@ -270,8 +273,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public GumTreeNode? GetInstanceTreeNodeByName(string name, GumTreeNode container) =>
         (GumTreeNode?)((ITreeNode)container).GetInstanceTreeNodeByName(name);
 
-    public GumTreeNode GetTreeNodeFor(BehaviorSave behavior) =>
-        (GumTreeNode)((IElementTreeRoots)this).GetTreeNodeFor(behavior);
+    public GumTreeNode? GetTreeNodeFor(BehaviorSave behavior) =>
+        (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(behavior);
 
     public void UpdateErrorIndicatorsForElement(ElementSave element, bool hasErrors)
     {
@@ -284,10 +287,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             treeNode.ImageIndex = desiredIndex;
     }
 
+    /// <summary>
+    /// Returns the folder node for <paramref name="absoluteDirectory"/>, or null if there is none or
+    /// the project has never been saved (so it has no folder).
+    /// </summary>
     public GumTreeNode? GetTreeNodeFor(string absoluteDirectory) =>
-        (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(
-            absoluteDirectory,
-            FileManager.GetDirectory(_projectState.GumProjectSave.FullFileName));
+        _projectState.ProjectDirectory is { } projectDirectory
+            ? (GumTreeNode?)((IElementTreeRoots)this).GetTreeNodeFor(absoluteDirectory, projectDirectory)
+            : null;
 
     public ITreeNode? GetTreeNodeOver() => _view?.NodeUnderPointer;
 
@@ -297,7 +304,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
     public void Initialize()
     {
         _view = _viewFactory.Create();
-        _view.SearchTextChanged += text => FilterText = text;
+        _view.SearchTextChanged += text => FilterText = text ?? string.Empty;
         _view.SearchResultChosen += HandleSelectedSearchNode;
         _view.CollapseAllRequested += () => _collapseToggleService.HandleCollapseAll(RootTreeNodes, CollapseAll);
         _view.CollapseToElementLevelRequested += () => _collapseToggleService.HandleCollapseToElementLevel(RootTreeNodes, CollapseToElementLevel);
@@ -699,17 +706,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             string currentDirectory = FileManager.GetDirectory(ObjectFinder.Self.GumProjectSave.FullFileName);
 
             // Let's make sure these folders exist, they better!
-            Directory.CreateDirectory(mStandardElementsTreeNode.GetFullFilePath()!.FullPath);
-            Directory.CreateDirectory(mScreensTreeNode.GetFullFilePath()!.FullPath);
-            Directory.CreateDirectory(mComponentsTreeNode.GetFullFilePath()!.FullPath);
-            Directory.CreateDirectory(mBehaviorsTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(RootStandardElementsTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(RootScreensTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(RootComponentsTreeNode.GetFullFilePath()!.FullPath);
+            Directory.CreateDirectory(RootBehaviorsTreeNode.GetFullFilePath()!.FullPath);
 
 
             // add folders to the screens, entities, and standard elements
-            AddAndRemoveFolderNodesFromFileSystem(mStandardElementsTreeNode.GetFullFilePath()!.FullPath, mStandardElementsTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mScreensTreeNode.GetFullFilePath()!.FullPath, mScreensTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mComponentsTreeNode.GetFullFilePath()!.FullPath, mComponentsTreeNode);
-            AddAndRemoveFolderNodesFromFileSystem(mBehaviorsTreeNode.GetFullFilePath()!.FullPath, mBehaviorsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(RootStandardElementsTreeNode.GetFullFilePath()!.FullPath, RootStandardElementsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(RootScreensTreeNode.GetFullFilePath()!.FullPath, RootScreensTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(RootComponentsTreeNode.GetFullFilePath()!.FullPath, RootComponentsTreeNode);
+            AddAndRemoveFolderNodesFromFileSystem(RootBehaviorsTreeNode.GetFullFilePath()!.FullPath, RootBehaviorsTreeNode);
 
 
             AddNeededButMissingFromFileSystemFolderNodes();
@@ -774,7 +781,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if(parentNode != null)
             {
                 var treeNodeText = FileManager.RemovePath(directory);
-                if(treeNodeText?.EndsWith("/") == true)
+                if(treeNodeText.EndsWith("/"))
                 {
                     treeNodeText = treeNodeText.Substring(0, treeNodeText.Length - 1);
                 }
@@ -797,7 +804,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         foreach (string directory in directories)
         {
-            ITreeNodeMutable existingTreeNode = (ITreeNodeMutable)GetTreeNodeFor(directory);
+            ITreeNodeMutable? existingTreeNode = GetTreeNodeFor(directory);
 
             if (existingTreeNode == null)
             {
@@ -860,11 +867,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if (treeNode == null && ShouldShow(screenSave))
             {
                 string fullPath = _fileLocations.ScreensFolder + FileManager.GetDirectory(screenSave.Name);
-                GumTreeNode parentNode = GetTreeNodeFor(fullPath);
+                GumTreeNode parentNode = GetTreeNodeFor(fullPath)
+                    ?? throw new InvalidOperationException($"Error trying to get parent node for screen {fullPath}");
 
                 // The return value isn't read afterward - treeNode above only guards whether the
                 // node already exists.
-                AddTreeNodeForElement(screenSave, (ITreeNodeMutable)parentNode, ScreenImageIndex);
+                AddTreeNodeForElement(screenSave, parentNode, ScreenImageIndex);
             }
         }
 
@@ -873,14 +881,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             if (GetTreeNodeFor(componentSave) == null && ShouldShow(componentSave))
             {
                 string fullPath = _fileLocations.ComponentsFolder + FileManager.GetDirectory(componentSave.Name);
-                GumTreeNode parentNode = GetTreeNodeFor(fullPath);
+                GumTreeNode parentNode = GetTreeNodeFor(fullPath)
+                    ?? throw new InvalidOperationException($"Error trying to get parent node for component {fullPath}");
 
-                if(parentNode == null)
-                {
-                    throw new Exception($"Error trying to get parent node for component {fullPath}");
-                }
-
-                AddTreeNodeForElement(componentSave, (ITreeNodeMutable)parentNode, ComponentImageIndex);
+                AddTreeNodeForElement(componentSave, parentNode, ComponentImageIndex);
             }
         }
 
@@ -890,7 +894,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 if (GetTreeNodeFor(standardSave) == null &&  ShouldShow(standardSave))
                 {
-                    AddTreeNodeForElement(standardSave, mStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
+                    AddTreeNodeForElement(standardSave, RootStandardElementsTreeNode, _treeNodeImageLogic.GetImageIndexForStandardElement(standardSave.Name));
                 }
             }
         }
@@ -905,9 +909,12 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 {
                     fullPath = _fileLocations.BehaviorsFolder + FileManager.GetDirectory(behaviorSave.Name);
                 }
-                GumTreeNode parentNode = GetTreeNodeFor(fullPath);
+                // Unlike screens and components, behavior folders missing on disk get no node
+                // (AddNeededButMissingFromFileSystemFolderNodes skips behaviors).
+                GumTreeNode parentNode = GetTreeNodeFor(fullPath)
+                    ?? throw new InvalidOperationException($"Error trying to get parent node for behavior {fullPath}");
 
-                AddTreeNodeForBehavior(behaviorSave, (ITreeNodeMutable)parentNode, BehaviorImageIndex);
+                AddTreeNodeForBehavior(behaviorSave, parentNode, BehaviorImageIndex);
             }
         }
 
@@ -915,35 +922,35 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Remove nodes that are no longer needed
 
-        mScreensTreeNode.RemoveRecursivelyIfStale<ScreenSave>(
+        RootScreensTreeNode.RemoveRecursivelyIfStale<ScreenSave>(
             screen => gumProject.Screens.Contains(screen) && ShouldShow(screen));
 
-        mComponentsTreeNode.RemoveRecursivelyIfStale<ComponentSave>(
+        RootComponentsTreeNode.RemoveRecursivelyIfStale<ComponentSave>(
             component => gumProject.Components.Contains(component) && ShouldShow(component));
 
         // Standard elements don't support subfolders, so this pass is flat (non-recursive) and,
         // unlike the screen/component pass above, removes any non-StandardElementSave-tagged node
         // outright rather than recursing into it.
-        for (int i = mStandardElementsTreeNode.ChildCount - 1; i > -1; i--)
+        for (int i = RootStandardElementsTreeNode.ChildCount - 1; i > -1; i--)
         {
             // Do we want to support folders here?
-            StandardElementSave? standardElement = mStandardElementsTreeNode.GetChildAt(i).Tag as StandardElementSave;
+            StandardElementSave? standardElement = RootStandardElementsTreeNode.GetChildAt(i).Tag as StandardElementSave;
 
             if (standardElement == null || !gumProject.StandardElements.Contains(standardElement) || !ShouldShow(standardElement))
             {
-                mStandardElementsTreeNode.RemoveChildAt(i);
+                RootStandardElementsTreeNode.RemoveChildAt(i);
             }
         }
 
         // Also flat (non-recursive): unlike standard elements above, a non-BehaviorSave-tagged node
         // (a behavior subfolder) is left alone rather than removed.
-        for (int i = mBehaviorsTreeNode.ChildCount - 1; i > -1; i--)
+        for (int i = RootBehaviorsTreeNode.ChildCount - 1; i > -1; i--)
         {
-            BehaviorSave? behavior = mBehaviorsTreeNode.GetChildAt(i).Tag as BehaviorSave;
+            BehaviorSave? behavior = RootBehaviorsTreeNode.GetChildAt(i).Tag as BehaviorSave;
 
             if (behavior != null && (!gumProject.Behaviors.Contains(behavior) || !ShouldShow(behavior)))
             {
-                mBehaviorsTreeNode.RemoveChildAt(i);
+                RootBehaviorsTreeNode.RemoveChildAt(i);
             }
         }
 
@@ -951,25 +958,25 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         #region Update the nodes
 
-        RefreshChildNodes(mScreensTreeNode, RefreshUi);
+        RefreshChildNodes(RootScreensTreeNode, RefreshUi);
 
-        RefreshChildNodes(mComponentsTreeNode, RefreshUi);
+        RefreshChildNodes(RootComponentsTreeNode, RefreshUi);
 
-        RefreshChildNodes(mStandardElementsTreeNode, RefreshUi);
+        RefreshChildNodes(RootStandardElementsTreeNode, RefreshUi);
 
-        RefreshChildNodes(mBehaviorsTreeNode, RefreshUi);
+        RefreshChildNodes(RootBehaviorsTreeNode, RefreshUi);
 
         #endregion
 
         #region Sort everything
 
-        mScreensTreeNode.SortByName(recursive:true);
+        RootScreensTreeNode.SortByName(recursive:true);
 
-        mComponentsTreeNode.SortByName(recursive: true);
+        RootComponentsTreeNode.SortByName(recursive: true);
 
-        mStandardElementsTreeNode.SortByName(recursive: true);
+        RootStandardElementsTreeNode.SortByName(recursive: true);
 
-        mBehaviorsTreeNode.SortByName(recursive: true);
+        RootBehaviorsTreeNode.SortByName(recursive: true);
 
         #endregion
 
@@ -1589,7 +1596,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 fullPath = _fileLocations.ComponentsFolder + FileManager.GetDirectory(elementSave.Name);
             }
-            GumTreeNode desiredNode = GetTreeNodeFor(fullPath);
+            GumTreeNode? desiredNode = GetTreeNodeFor(fullPath);
             var parentNode = node.Parent;
             if(parentNode != desiredNode)
             {
@@ -1646,12 +1653,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
 
         foreach (InstanceSave instance in allInstances)
         {
-            GumTreeNode nodeForInstance = GetTreeNodeFor(instance, node);
-
-            if (nodeForInstance == null)
-            {
-                nodeForInstance = (GumTreeNode)AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes:false);
-            }
+            GumTreeNode nodeForInstance = GetTreeNodeFor(instance, node)
+                ?? (GumTreeNode)AddTreeNodeForInstance(instance, node, tolerateMissingTypes:false);
 
             if(instance.DefinedByBase)
             {
@@ -1672,10 +1675,10 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             }
             var desiredIndex = siblingInstances.IndexOf(instance);
 
-            var container = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
+            // Every instance here comes from elementSave.Instances, so elementSave is its container.
+            var container = instance.ParentContainer ?? elementSave;
             var defaultState = container.DefaultState;
-            //var thisParentValue = defaultState.GetValueOrDefault<string>($"{instance.Name}.Parent");
-            var thisParentValue = defaultState.GetValueRecursive($"{instance.Name}.Parent") as string;
+            var thisParentValue = defaultState?.GetValueRecursive($"{instance.Name}.Parent") as string;
 
             // If thisParentValue has a period, the instance is attached to an item inside the parent.
             if(thisParentValue?.Contains(".") == true)
@@ -1683,7 +1686,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
                 thisParentValue = thisParentValue.Substring(0, thisParentValue.IndexOf('.'));
             }
 
-            var desiredParentNode = node;
+            GumTreeNode? desiredParentNode = node;
             if(!string.IsNullOrEmpty(thisParentValue))
             {
                 var instanceParent = allInstances.FirstOrDefault(item => item.Name == thisParentValue);
@@ -1741,12 +1744,8 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         for (int i = 0; i < allInstances.Count; i++)
         {
             var instance = allInstances[i];
-            GumTreeNode nodeForInstance = GetTreeNodeFor(instance, node);
-
-            if (nodeForInstance == null)
-            {
-                nodeForInstance = (GumTreeNode)AddTreeNodeForInstance(instance, (ITreeNodeMutable)node, tolerateMissingTypes: true);
-            }
+            GumTreeNode nodeForInstance = GetTreeNodeFor(instance, node)
+                ?? (GumTreeNode)AddTreeNodeForInstance(instance, node, tolerateMissingTypes: true);
 
             if (instance.DefinedByBase)
             {
@@ -1770,11 +1769,11 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         treeNode.SetTag(instance);
 
         ITreeNodeMutable parentNode = parentContainerNode;
-        InstanceSave parentInstance = FindParentInstance(instance);
+        InstanceSave? parentInstance = FindParentInstance(instance);
 
         if (parentInstance != null)
         {
-            GumTreeNode parentInstanceNode = GetTreeNodeFor(parentInstance, (GumTreeNode)parentContainerNode);
+            GumTreeNode? parentInstanceNode = GetTreeNodeFor(parentInstance, (GumTreeNode)parentContainerNode);
 
             // Make sure we are not already trying to add the parent (protects against stack overflow with invalid data)
             if (parentInstanceNode == null && (pendingAdditions == null || !pendingAdditions.Contains(parentInstance)))
@@ -1808,10 +1807,14 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
         }
         else
         {
-            ElementSave element = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
+            ElementSave? element = instance.ParentContainer ?? ObjectFinder.Self.GetElementContainerOf(instance);
+            if (element == null)
+            {
+                return null;
+            }
 
             string name = instance.Name + ".Parent";
-            VariableSave? variable = element.DefaultState.Variables.FirstOrDefault(v => v.Name == name);
+            VariableSave? variable = element.DefaultState?.Variables.FirstOrDefault(v => v.Name == name);
 
             if (variable != null && variable.SetsValue && variable.Value != null)
             {
@@ -1881,16 +1884,15 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             {
                 _selectedState.SelectedInstance = null;
                 var elements = this.SelectedNodes
-                    .Where(item => item.Tag is ElementSave)
-                    .Select(item => (ElementSave)item.Tag);
+                    .Select(item => item.Tag)
+                    .OfType<ElementSave>();
 
                 _selectedState.SelectedElements = elements;
             }
             else if (selectedObject is InstanceSave selectedInstance)
             {
                 var instances = this.SelectedNodes.Select(item => item.Tag)
-                    .Where(item => item is InstanceSave)
-                    .Select(item => (InstanceSave)item);
+                    .OfType<InstanceSave>();
 
                 //_selectedState.SelectedInstance = selectedInstance;
                 _selectedState.SelectedInstances = instances;
@@ -1898,8 +1900,7 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             else if(selectedObject is BehaviorSave behavior)
             {
                 var behaviors = this.SelectedNodes.Select(item => item.Tag)
-                    .Where(item => item is BehaviorSave)
-                    .Select(item => (BehaviorSave)item);
+                    .OfType<BehaviorSave>();
 
                 _selectedState.SelectedBehaviors = behaviors;
             }
@@ -1988,10 +1989,17 @@ public partial class ElementTreeViewManager : IRecipient<ThemeChangedMessage>, I
             return;
         }
 
+        var project = _projectState.GumProjectSave;
+        // The project loads asynchronously at startup, so the search box can be typed in before it exists.
+        if (project == null)
+        {
+            View.ShowSearchResults(null);
+            return;
+        }
+
         List<SearchItemViewModel> results = new List<SearchItemViewModel>();
         string filterTextLower = filterText.ToLower();
         bool includeVariables = View.IsDeepSearchChecked;
-        var project = _projectState.GumProjectSave;
 
         foreach (var screen in project.Screens)
         {
