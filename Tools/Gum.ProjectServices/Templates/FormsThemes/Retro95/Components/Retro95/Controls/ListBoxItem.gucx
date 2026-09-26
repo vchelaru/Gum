@@ -4,22 +4,18 @@
   <BaseType>Container</BaseType>
   <State>
     <Name>Default</Name>
-    <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+    <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">4</Value>
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
     </Variable>
-    <Variable Type="float" Name="Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
     </Variable>
-    <Variable Type="ListBoxItemCategory" Name="ListBoxItemCategoryState" SetsValue="false" />
-    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-
-    <!-- Background: transparent at rest, navy when selected/focused (Win95: no hover fill) -->
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -56,20 +52,14 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
-    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">4</Value>
     </Variable>
-    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">128</Value>
-    </Variable>
-
-    <!-- TextInstance -->
+    <Variable Type="ListBoxItemCategory" Name="ListBoxItemCategoryState" SetsValue="false" />
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
@@ -121,6 +111,12 @@
     <Variable Type="PositionUnitType" Name="TextInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
     <VariableList xsi:type="VariableListSaveOfString">
       <Type>string</Type>
       <Name>TextInstance.VariableReferences</Name>
@@ -136,71 +132,167 @@
   </State>
   <Category>
     <Name>ListBoxItemCategory</Name>
-
     <State>
       <Name>Enabled</Name>
-      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
       </VariableList>
     </State>
-
     <State>
       <Name>Highlighted</Name>
-      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>Color = Components/Retro95/Styles.Text.FillColor</string></Value>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.Text.FillColor</string>
+        </Value>
       </VariableList>
     </State>
-
     <State>
       <Name>Selected</Name>
-      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>Background.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.Selection.FillColor</string></Value>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">128</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
+        </Value>
       </VariableList>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>Color = Components/Retro95/Styles.SelectionText.FillColor</string></Value>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
+        </Value>
       </VariableList>
     </State>
-
     <State>
       <Name>Focused</Name>
-      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="Background.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="Background.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>Background.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.Selection.FillColor</string></Value>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">128</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>Background.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.Selection.FillColor</string>
+        </Value>
       </VariableList>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>Color = Components/Retro95/Styles.SelectionText.FillColor</string></Value>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.SelectionText.FillColor</string>
+        </Value>
       </VariableList>
     </State>
-
     <State>
       <Name>Disabled</Name>
-      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Red" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Green" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TextInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>Color = Components/Retro95/Styles.DisabledText.FillColor</string></Value>
+      <Variable Type="int" Name="Background.FillAlpha" SetsValue="true">
+        <Value xsi:type="xsd:int">0</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
+        <Value xsi:type="xsd:int">128</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Green" SetsValue="true">
+        <Value xsi:type="xsd:int">128</Value>
+      </Variable>
+      <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
+        <Value xsi:type="xsd:int">128</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TextInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>Color = Components/Retro95/Styles.DisabledText.FillColor</string>
+        </Value>
       </VariableList>
     </State>
   </Category>

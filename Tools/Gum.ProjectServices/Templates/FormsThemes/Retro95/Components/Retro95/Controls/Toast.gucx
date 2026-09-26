@@ -7,6 +7,15 @@
     <Variable Type="bool" Name="Background.ExposeChildrenEvents" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
+    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -16,8 +25,23 @@
     <Variable Type="bool" Name="Background.IsFilled" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
     </Variable>
     <Variable Type="float" Name="Background.X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
@@ -37,35 +61,10 @@
     <Variable Type="PositionUnitType" Name="Background.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-    <Variable Type="float" Name="Background.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="Background.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillRed" SetsValue="true">
-      <Value xsi:type="xsd:int">192</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">192</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">192</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">57</Value>
     </Variable>
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Blue" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>
@@ -90,6 +89,7 @@
     <Variable Type="bool" Name="TextInstance.IsBold" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
+    <Variable Type="string" Name="TextInstance.Parent" SetsValue="true" />
     <Variable Type="int" Name="TextInstance.Red" SetsValue="true">
       <Value xsi:type="xsd:int">0</Value>
     </Variable>

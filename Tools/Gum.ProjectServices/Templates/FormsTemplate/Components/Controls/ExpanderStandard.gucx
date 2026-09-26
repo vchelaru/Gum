@@ -10,11 +10,11 @@
     <Variable Type="IconCategory" Name="ArrowIndicator.IconCategoryState" SetsValue="true">
       <Value xsi:type="xsd:string">Arrow2</Value>
     </Variable>
-    <Variable Type="float" Name="ArrowIndicator.Rotation" SetsValue="true">
-      <Value xsi:type="xsd:float">0</Value>
-    </Variable>
     <Variable Type="string" Name="ArrowIndicator.Parent" SetsValue="true">
       <Value xsi:type="xsd:string">HeaderContainer</Value>
+    </Variable>
+    <Variable Type="float" Name="ArrowIndicator.Rotation" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="ArrowIndicator.X" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>

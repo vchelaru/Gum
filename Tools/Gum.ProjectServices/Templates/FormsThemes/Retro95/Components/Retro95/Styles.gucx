@@ -37,120 +37,102 @@
     <Variable Type="PositionUnitType" Name="Colors.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
-
-    <Variable Type="int" Name="Surface.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-    <Variable Type="int" Name="Surface.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-    <Variable Type="int" Name="Surface.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-    <Variable Type="bool" Name="Surface.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="Surface.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="Surface.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="WhiteFill.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="WhiteFill.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="WhiteFill.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="bool" Name="WhiteFill.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="WhiteFill.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="WhiteFill.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="Text.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="Text.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="Text.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="bool" Name="Text.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="Text.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="Text.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="Selection.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="Selection.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="Selection.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="bool" Name="Selection.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="Selection.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="Selection.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="SelectionText.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="SelectionText.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="SelectionText.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="bool" Name="SelectionText.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="SelectionText.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="SelectionText.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="TextBoxSelection.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="TextBoxSelection.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="TextBoxSelection.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="TextBoxSelection.FillAlpha" SetsValue="true"><Value xsi:type="xsd:int">80</Value></Variable>
-    <Variable Type="bool" Name="TextBoxSelection.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="TextBoxSelection.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="TextBoxSelection.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="HighlightInner.FillRed" SetsValue="true"><Value xsi:type="xsd:int">223</Value></Variable>
-    <Variable Type="int" Name="HighlightInner.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">223</Value></Variable>
-    <Variable Type="int" Name="HighlightInner.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">223</Value></Variable>
-    <Variable Type="bool" Name="HighlightInner.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="HighlightInner.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="HighlightInner.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="HighlightOuter.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="HighlightOuter.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="HighlightOuter.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="bool" Name="HighlightOuter.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="HighlightOuter.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="HighlightOuter.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="ShadowInner.FillRed" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="ShadowInner.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="ShadowInner.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="bool" Name="ShadowInner.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="ShadowInner.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="ShadowInner.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="ShadowOuter.FillRed" SetsValue="true"><Value xsi:type="xsd:int">64</Value></Variable>
-    <Variable Type="int" Name="ShadowOuter.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">64</Value></Variable>
-    <Variable Type="int" Name="ShadowOuter.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">64</Value></Variable>
-    <Variable Type="bool" Name="ShadowOuter.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="ShadowOuter.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="ShadowOuter.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="DisabledText.FillRed" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="DisabledText.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="DisabledText.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="bool" Name="DisabledText.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="DisabledText.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="DisabledText.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="HairlineDivider.FillRed" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="HairlineDivider.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="int" Name="HairlineDivider.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">128</Value></Variable>
-    <Variable Type="bool" Name="HairlineDivider.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="HairlineDivider.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="HairlineDivider.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="SurfaceHover.FillRed" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
-    <Variable Type="int" Name="SurfaceHover.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
-    <Variable Type="int" Name="SurfaceHover.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">202</Value></Variable>
-    <Variable Type="bool" Name="SurfaceHover.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="SurfaceHover.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="SurfaceHover.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="WhiteHover.FillRed" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-    <Variable Type="int" Name="WhiteHover.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-    <Variable Type="int" Name="WhiteHover.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">248</Value></Variable>
-    <Variable Type="bool" Name="WhiteHover.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="WhiteHover.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="WhiteHover.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="WindowShadow.FillRed" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="WindowShadow.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="WindowShadow.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="bool" Name="WindowShadow.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="WindowShadow.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="WindowShadow.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
-    <Variable Type="int" Name="DisabledThumb.FillRed" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-    <Variable Type="int" Name="DisabledThumb.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-    <Variable Type="int" Name="DisabledThumb.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">168</Value></Variable>
-    <Variable Type="bool" Name="DisabledThumb.IsFilled" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-    <Variable Type="float" Name="DisabledThumb.StrokeWidth" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="string" Name="DisabledThumb.Parent" SetsValue="true"><Value xsi:type="xsd:string">Colors</Value></Variable>
-
+    <Variable Type="int" Name="DisabledText.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledText.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledText.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="bool" Name="DisabledText.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="DisabledText.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="DisabledText.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledThumb.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">168</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledThumb.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">168</Value>
+    </Variable>
+    <Variable Type="int" Name="DisabledThumb.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">168</Value>
+    </Variable>
+    <Variable Type="bool" Name="DisabledThumb.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="DisabledThumb.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="DisabledThumb.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HairlineDivider.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="HairlineDivider.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="HairlineDivider.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="bool" Name="HairlineDivider.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="HairlineDivider.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="HairlineDivider.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="float" Name="Height" SetsValue="true">
+      <Value xsi:type="xsd:float">-0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightInner.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">223</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightInner.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">223</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightInner.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">223</Value>
+    </Variable>
+    <Variable Type="bool" Name="HighlightInner.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="HighlightInner.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="HighlightInner.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightOuter.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightOuter.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="HighlightOuter.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="HighlightOuter.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="HighlightOuter.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="HighlightOuter.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="string" Name="Normal.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Regular.ttf</Value>
     </Variable>
@@ -169,7 +151,81 @@
     <Variable Type="string" Name="Normal.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Normal</Value>
     </Variable>
-
+    <Variable Type="int" Name="Selection.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="Selection.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Selection.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="Selection.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Selection.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Selection.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="SelectionText.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="SelectionText.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="SelectionText.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="SelectionText.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="SelectionText.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="SelectionText.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowInner.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowInner.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowInner.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="bool" Name="ShadowInner.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="ShadowInner.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="ShadowInner.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowOuter.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">64</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowOuter.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">64</Value>
+    </Variable>
+    <Variable Type="int" Name="ShadowOuter.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">64</Value>
+    </Variable>
+    <Variable Type="bool" Name="ShadowOuter.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="ShadowOuter.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="ShadowOuter.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
+      <Value xsi:type="xsd:string">Default</Value>
+    </Variable>
     <Variable Type="string" Name="Strong.Font" SetsValue="true">
       <Value xsi:type="xsd:string">Fonts/Nunito-Bold.ttf</Value>
     </Variable>
@@ -188,7 +244,81 @@
     <Variable Type="string" Name="Strong.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Strong</Value>
     </Variable>
-
+    <Variable Type="int" Name="Surface.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Surface.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="int" Name="Surface.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">192</Value>
+    </Variable>
+    <Variable Type="bool" Name="Surface.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Surface.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Surface.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="SurfaceHover.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">202</Value>
+    </Variable>
+    <Variable Type="int" Name="SurfaceHover.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">202</Value>
+    </Variable>
+    <Variable Type="int" Name="SurfaceHover.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">202</Value>
+    </Variable>
+    <Variable Type="bool" Name="SurfaceHover.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="SurfaceHover.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="SurfaceHover.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Text.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Text.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Text.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="Text.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="Text.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="Text.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBoxSelection.FillAlpha" SetsValue="true">
+      <Value xsi:type="xsd:int">80</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBoxSelection.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">128</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBoxSelection.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="TextBoxSelection.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="TextBoxSelection.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="TextBoxSelection.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="TextBoxSelection.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
     <Variable Type="ChildrenLayout" Name="TextStyles.ChildrenLayout" SetsValue="true">
       <Value xsi:type="xsd:int">1</Value>
     </Variable>
@@ -205,21 +335,65 @@
     <Variable Type="float" Name="TextStyles.Y" SetsValue="true">
       <Value xsi:type="xsd:float">81</Value>
     </Variable>
-
-    <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="false">
-      <Value xsi:type="xsd:string">Default</Value>
+    <Variable Type="int" Name="WhiteFill.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="float" Name="Height" SetsValue="true">
-      <Value xsi:type="xsd:float">-0</Value>
+    <Variable Type="int" Name="WhiteFill.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
     </Variable>
-    <Variable Type="DimensionUnitType" Name="HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
+    <Variable Type="int" Name="WhiteFill.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="bool" Name="WhiteFill.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="WhiteFill.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="WhiteFill.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="int" Name="WhiteHover.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">248</Value>
+    </Variable>
+    <Variable Type="int" Name="WhiteHover.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">248</Value>
+    </Variable>
+    <Variable Type="int" Name="WhiteHover.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">248</Value>
+    </Variable>
+    <Variable Type="bool" Name="WhiteHover.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="WhiteHover.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="WhiteHover.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="Width" SetsValue="true">
       <Value xsi:type="xsd:float">-0</Value>
     </Variable>
     <Variable Type="DimensionUnitType" Name="WidthUnits" SetsValue="true">
       <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="int" Name="WindowShadow.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="WindowShadow.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="WindowShadow.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="bool" Name="WindowShadow.IsFilled" SetsValue="true">
+      <Value xsi:type="xsd:boolean">true</Value>
+    </Variable>
+    <Variable Type="string" Name="WindowShadow.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">Colors</Value>
+    </Variable>
+    <Variable Type="float" Name="WindowShadow.StrokeWidth" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
     </Variable>
     <Variable Type="float" Name="X" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>

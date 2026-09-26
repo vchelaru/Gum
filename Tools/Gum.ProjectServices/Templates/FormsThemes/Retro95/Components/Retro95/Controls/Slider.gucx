@@ -7,12 +7,84 @@
     <Variable Type="float" Name="Height" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
-    <Variable Type="float" Name="Width" SetsValue="true">
-      <Value xsi:type="xsd:float">128</Value>
-    </Variable>
     <Variable Type="SliderCategory" Name="SliderCategoryState" SetsValue="false" />
     <Variable Type="State" Name="State" Category="States and Visibility" SetsValue="true" />
-
+    <Variable Type="float" Name="ThumbInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">22</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ThumbInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="ThumbInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TrackInstance</Value>
+    </Variable>
+    <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+      <Value xsi:type="xsd:boolean">false</Value>
+    </Variable>
+    <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">12</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="float" Name="ThumbInstance.X" ExposedAsName="SliderPercent" SetsValue="false" />
+    <Variable Type="HorizontalAlignment" Name="ThumbInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="ThumbInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
+    <Variable Type="BevelCategory" Name="TrackBevelInstance.BevelCategoryState" SetsValue="true">
+      <Value xsi:type="xsd:string">Inset</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+      <Value xsi:type="xsd:int">255</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBevelInstance.Height" SetsValue="true">
+      <Value xsi:type="xsd:float">3</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackBevelInstance.HeightUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="string" Name="TrackBevelInstance.Parent" SetsValue="true">
+      <Value xsi:type="xsd:string">TrackInstance</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBevelInstance.Width" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="DimensionUnitType" Name="TrackBevelInstance.WidthUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">2</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBevelInstance.X" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="HorizontalAlignment" Name="TrackBevelInstance.XOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackBevelInstance.XUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">6</Value>
+    </Variable>
+    <Variable Type="float" Name="TrackBevelInstance.Y" SetsValue="true">
+      <Value xsi:type="xsd:float">0</Value>
+    </Variable>
+    <Variable Type="VerticalAlignment" Name="TrackBevelInstance.YOrigin" SetsValue="true">
+      <Value xsi:type="xsd:int">1</Value>
+    </Variable>
+    <Variable Type="PositionUnitType" Name="TrackBevelInstance.YUnits" SetsValue="true">
+      <Value xsi:type="xsd:int">7</Value>
+    </Variable>
     <Variable Type="float" Name="TrackInstance.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -37,59 +109,19 @@
     <Variable Type="PositionUnitType" Name="TrackInstance.YUnits" SetsValue="true">
       <Value xsi:type="xsd:int">7</Value>
     </Variable>
-
-    <!-- TrackBevelInstance: thin 3px Inset bevel + white fill, centered in TrackInstance -->
-    <Variable Type="string" Name="TrackBevelInstance.Parent" SetsValue="true">
-      <Value xsi:type="xsd:string">TrackInstance</Value>
+    <Variable Type="float" Name="Width" SetsValue="true">
+      <Value xsi:type="xsd:float">128</Value>
     </Variable>
-    <Variable Type="BevelCategory" Name="TrackBevelInstance.BevelCategoryState" SetsValue="true"><Value xsi:type="xsd:string">Inset</Value></Variable>
-    <Variable Type="float" Name="TrackBevelInstance.X" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="PositionUnitType" Name="TrackBevelInstance.XUnits" SetsValue="true"><Value xsi:type="xsd:int">6</Value></Variable>
-    <Variable Type="HorizontalAlignment" Name="TrackBevelInstance.XOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
-    <Variable Type="float" Name="TrackBevelInstance.Y" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="PositionUnitType" Name="TrackBevelInstance.YUnits" SetsValue="true"><Value xsi:type="xsd:int">7</Value></Variable>
-    <Variable Type="VerticalAlignment" Name="TrackBevelInstance.YOrigin" SetsValue="true"><Value xsi:type="xsd:int">1</Value></Variable>
-    <Variable Type="float" Name="TrackBevelInstance.Width" SetsValue="true"><Value xsi:type="xsd:float">0</Value></Variable>
-    <Variable Type="DimensionUnitType" Name="TrackBevelInstance.WidthUnits" SetsValue="true"><Value xsi:type="xsd:int">2</Value></Variable>
-    <Variable Type="float" Name="TrackBevelInstance.Height" SetsValue="true"><Value xsi:type="xsd:float">3</Value></Variable>
-    <Variable Type="DimensionUnitType" Name="TrackBevelInstance.HeightUnits" SetsValue="true"><Value xsi:type="xsd:int">0</Value></Variable>
-    <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TrackBevelInstance.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+      </Value>
     </VariableList>
-
-    <!-- ThumbInstance -->
-    <Variable Type="float" Name="ThumbInstance.Height" SetsValue="true">
-      <Value xsi:type="xsd:float">22</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="ThumbInstance.HeightUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="string" Name="ThumbInstance.Parent" SetsValue="true">
-      <Value xsi:type="xsd:string">TrackInstance</Value>
-    </Variable>
-    <Variable Type="float" Name="ThumbInstance.Width" SetsValue="true">
-      <Value xsi:type="xsd:float">12</Value>
-    </Variable>
-    <Variable Type="DimensionUnitType" Name="ThumbInstance.WidthUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="float" Name="ThumbInstance.X" ExposedAsName="SliderPercent" SetsValue="false" />
-    <Variable Type="HorizontalAlignment" Name="ThumbInstance.XOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ThumbInstance.XUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">2</Value>
-    </Variable>
-    <Variable Type="VerticalAlignment" Name="ThumbInstance.YOrigin" SetsValue="true">
-      <Value xsi:type="xsd:int">1</Value>
-    </Variable>
-    <Variable Type="PositionUnitType" Name="ThumbInstance.YUnits" SetsValue="true">
-      <Value xsi:type="xsd:int">7</Value>
-    </Variable>
-    <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
   </State>
   <Category>
     <Name>SliderCategory</Name>
@@ -98,12 +130,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Enabled</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -111,12 +158,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Highlighted</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -124,12 +186,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Pushed</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -137,12 +214,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Focused</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -150,12 +242,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">HighlightedFocused</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">255</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">255</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.WhiteFill.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -163,12 +270,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">Disabled</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">false</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">false</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        </Value>
       </VariableList>
     </State>
     <State>
@@ -176,12 +298,27 @@
       <Variable Type="ButtonCategory" Name="ThumbInstance.ButtonCategoryState" SetsValue="true">
         <Value xsi:type="xsd:string">DisabledFocused</Value>
       </Variable>
-      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true"><Value xsi:type="xsd:boolean">true</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true"><Value xsi:type="xsd:int">192</Value></Variable>
-      <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TrackBevelInstance.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-        <Value><string>FillColor = Components/Retro95/Styles.Surface.FillColor</string></Value>
+      <Variable Type="bool" Name="ThumbInstance.ShowFocusRect" SetsValue="true">
+        <Value xsi:type="xsd:boolean">true</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillBlue" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillGreen" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <Variable Type="int" Name="TrackBevelInstance.FillRed" SetsValue="true">
+        <Value xsi:type="xsd:int">192</Value>
+      </Variable>
+      <VariableList xsi:type="VariableListSaveOfString">
+        <Type>string</Type>
+        <Name>TrackBevelInstance.VariableReferences</Name>
+        <Category>References</Category>
+        <IsFile>false</IsFile>
+        <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+        <Value>
+          <string>FillColor = Components/Retro95/Styles.Surface.FillColor</string>
+        </Value>
       </VariableList>
     </State>
   </Category>

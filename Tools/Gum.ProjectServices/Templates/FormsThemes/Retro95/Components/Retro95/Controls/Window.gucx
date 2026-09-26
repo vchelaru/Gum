@@ -40,15 +40,6 @@
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">192</Value>
     </Variable>
-    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
-    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
-      <Value xsi:type="xsd:int">0</Value>
-    </Variable>
     <Variable Type="bool" Name="Background.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">false</Value>
     </Variable>
@@ -62,6 +53,15 @@
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
     <Variable Type="string" Name="Background.Parent" SetsValue="true" />
+    <Variable Type="int" Name="Background.StrokeBlue" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeGreen" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
+    <Variable Type="int" Name="Background.StrokeRed" SetsValue="true">
+      <Value xsi:type="xsd:int">0</Value>
+    </Variable>
     <Variable Type="float" Name="Background.StrokeWidth" SetsValue="true">
       <Value xsi:type="xsd:float">1</Value>
     </Variable>

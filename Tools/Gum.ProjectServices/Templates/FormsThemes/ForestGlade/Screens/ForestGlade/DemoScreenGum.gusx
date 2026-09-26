@@ -6,16 +6,16 @@
     <Variable Type="float" Name="Background.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">6</Value>
     </Variable>
-    <Variable Type="float" Name="Background.CustomRadiusTopLeft" SetsValue="true">
-      <Value xsi:type="xsd:float">6</Value>
-    </Variable>
-    <Variable Type="float" Name="Background.CustomRadiusTopRight" SetsValue="true">
+    <Variable Type="float" Name="Background.CustomRadiusBottomLeft" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="float" Name="Background.CustomRadiusBottomRight" SetsValue="true">
       <Value xsi:type="xsd:float">6</Value>
     </Variable>
-    <Variable Type="float" Name="Background.CustomRadiusBottomLeft" SetsValue="true">
+    <Variable Type="float" Name="Background.CustomRadiusTopLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">6</Value>
+    </Variable>
+    <Variable Type="float" Name="Background.CustomRadiusTopRight" SetsValue="true">
       <Value xsi:type="xsd:float">24</Value>
     </Variable>
     <Variable Type="int" Name="Background.FillBlue" SetsValue="true">
@@ -27,12 +27,6 @@
     <Variable Type="int" Name="Background.FillRed" SetsValue="true">
       <Value xsi:type="xsd:int">10</Value>
     </Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>Background.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
-        <string>StrokeColor = Components/ForestGlade/Styles.Bark.FillColor</string>
-      </Value>
-    </VariableList>
     <Variable Type="float" Name="Background.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -84,16 +78,16 @@
     <Variable Type="float" Name="Background1.CornerRadius" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="float" Name="Background1.CustomRadiusTopLeft" SetsValue="true">
-      <Value xsi:type="xsd:float">4</Value>
-    </Variable>
-    <Variable Type="float" Name="Background1.CustomRadiusTopRight" SetsValue="true">
+    <Variable Type="float" Name="Background1.CustomRadiusBottomLeft" SetsValue="true">
       <Value xsi:type="xsd:float">18</Value>
     </Variable>
     <Variable Type="float" Name="Background1.CustomRadiusBottomRight" SetsValue="true">
       <Value xsi:type="xsd:float">4</Value>
     </Variable>
-    <Variable Type="float" Name="Background1.CustomRadiusBottomLeft" SetsValue="true">
+    <Variable Type="float" Name="Background1.CustomRadiusTopLeft" SetsValue="true">
+      <Value xsi:type="xsd:float">4</Value>
+    </Variable>
+    <Variable Type="float" Name="Background1.CustomRadiusTopRight" SetsValue="true">
       <Value xsi:type="xsd:float">18</Value>
     </Variable>
     <Variable Type="int" Name="Background1.DropshadowAlpha" SetsValue="true">
@@ -132,13 +126,6 @@
     <Variable Type="bool" Name="Background1.HasDropshadow" SetsValue="true">
       <Value xsi:type="xsd:boolean">true</Value>
     </Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>Background1.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value>
-        <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
-        <string>StrokeColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
-        <string>DropshadowColor = Components/ForestGlade/Styles.GlowMedium.FillColor</string>
-      </Value>
-    </VariableList>
     <Variable Type="float" Name="Background1.Height" SetsValue="true">
       <Value xsi:type="xsd:float">0</Value>
     </Variable>
@@ -702,9 +689,6 @@
     <Variable Type="int" Name="TitleText.Red" SetsValue="true">
       <Value xsi:type="xsd:int">241</Value>
     </Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TitleText.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value><string>Color = Components/ForestGlade/Styles.Text.FillColor</string></Value>
-    </VariableList>
     <Variable Type="string" Name="TitleText.Text" SetsValue="true">
       <Value xsi:type="xsd:string">Settings</Value>
     </Variable>
@@ -732,9 +716,6 @@
     <Variable Type="int" Name="TitleText1.Red" SetsValue="true">
       <Value xsi:type="xsd:int">241</Value>
     </Variable>
-    <VariableList xsi:type="VariableListSaveOfString"><Type>string</Type><Name>TitleText1.VariableReferences</Name><Category>References</Category><IsFile>false</IsFile><IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
-      <Value><string>Color = Components/ForestGlade/Styles.Text.FillColor</string></Value>
-    </VariableList>
     <Variable Type="string" Name="TitleText1.Text" SetsValue="true">
       <Value xsi:type="xsd:string">New Profile</Value>
     </Variable>
@@ -753,6 +734,49 @@
     <Variable Type="float" Name="WindowStandardInstance.Y" SetsValue="true">
       <Value xsi:type="xsd:float">575</Value>
     </Variable>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
+        <string>StrokeColor = Components/ForestGlade/Styles.Bark.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>Background1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>FillColor = Components/ForestGlade/Styles.WindowBody.FillColor</string>
+        <string>StrokeColor = Components/ForestGlade/Styles.SunPale.FillColor</string>
+        <string>DropshadowColor = Components/ForestGlade/Styles.GlowMedium.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/ForestGlade/Styles.Text.FillColor</string>
+      </Value>
+    </VariableList>
+    <VariableList xsi:type="VariableListSaveOfString">
+      <Type>string</Type>
+      <Name>TitleText1.VariableReferences</Name>
+      <Category>References</Category>
+      <IsFile>false</IsFile>
+      <IsHiddenInPropertyGrid>false</IsHiddenInPropertyGrid>
+      <Value>
+        <string>Color = Components/ForestGlade/Styles.Text.FillColor</string>
+      </Value>
+    </VariableList>
   </State>
   <Instance Name="DemoSettingsMenu" BaseType="Container" />
   <Instance Name="Background" BaseType="Rectangle" />
