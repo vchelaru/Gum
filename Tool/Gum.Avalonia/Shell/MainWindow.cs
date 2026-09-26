@@ -51,6 +51,13 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 
     private bool _drawsInTitleBar;
 
+    // Where ShowInBackground puts the window: past the edge of any real monitor, but clear of
+    // Windows' -32000 minimized-window sentinel.
+    private static readonly PixelPoint BackgroundPosition = new PixelPoint(-20000, -20000);
+
+    /// <summary>True after <see cref="ShowInBackground"/>; the window then never takes focus.</summary>
+    public bool IsInBackground { get; private set; }
+
     /// <summary>Builds the window; nothing here touches the project until the startup sequence runs.</summary>
     public MainWindow(
         ShellViewModel shell,
@@ -141,9 +148,9 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Content = root;
         ApplyResizeBorderMargin(panel);
 
-        Opened += (_, _) => RestorePlacement();
-        PositionChanged += (_, _) => { if (WindowState == WindowState.Normal) { _shell.Left = Position.X; _shell.Top = Position.Y; } };
-        SizeChanged += (_, _) => { if (WindowState == WindowState.Normal) { _shell.Width = Bounds.Width; _shell.Height = Bounds.Height; } };
+        Opened += (_, _) => RestoreSavedPlacement();
+        PositionChanged += (_, _) => { if (WindowState == WindowState.Normal && !IsInBackground) { _shell.Left = Position.X; _shell.Top = Position.Y; } };
+        SizeChanged += (_, _) => { if (WindowState == WindowState.Normal && !IsInBackground) { _shell.Width = Bounds.Width; _shell.Height = Bounds.Height; } };
         PropertyChanged += (_, e) =>
         {
             if (e.Property == WindowStateProperty)
@@ -277,8 +284,33 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         e.Handled = keyArgs.Handled;
     }
 
-    private void RestorePlacement()
+    /// <summary>
+    /// For unattended runs (<c>--exit-after</c>), called before the window is shown: it opens without
+    /// activating, off-screen at its default size and not minimized (a minimized window stops
+    /// rendering), and leaves the saved placement alone.
+    /// </summary>
+    public void ShowInBackground()
     {
+        IsInBackground = true;
+        ShowActivated = false;
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        WindowState = WindowState.Normal;
+        Position = BackgroundPosition;
+    }
+
+    /// <summary>
+    /// Moves and sizes the window to the placement saved by the last session; runs when the window
+    /// opens. A window shown with <see cref="ShowInBackground"/> goes back off-screen instead.
+    /// </summary>
+    public void RestoreSavedPlacement()
+    {
+        if (IsInBackground)
+        {
+            // Showing the window puts it back at 0,0 on Windows, so place it again once it is open.
+            Position = BackgroundPosition;
+            return;
+        }
+
         WindowSettings saved = _layoutSettings.CurrentValue.MainWindow;
         PixelPoint probe = saved.Left is double left && saved.Top is double top ? new PixelPoint((int)left, (int)top) : Position;
         Screen? screen = Screens.ScreenFromPoint(probe) ?? Screens.Primary;
