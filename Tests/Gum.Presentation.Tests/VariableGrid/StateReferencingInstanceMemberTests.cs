@@ -224,7 +224,7 @@ public class StateReferencingInstanceMemberTests
         // The grid finds a row by name (e.g. to show "Set by <category>" after a category-state edit),
         // so a row retargeted from Box to Label must be found as Label.X.
         ComponentSave componentSave = CreateComponent("RetargetNameComponent");
-        StateSave stateSave = componentSave.DefaultState;
+        StateSave stateSave = componentSave.GetDefaultStateOrThrow();
         StateReferencingInstanceMember boxX = CreateSut(
             Array.Empty<Attribute>(), null, typeof(float), stateSave, "Box.X", componentSave);
         StateReferencingInstanceMember labelX = CreateSut(
