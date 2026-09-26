@@ -17,7 +17,9 @@ Every project is copied to a work folder first; the originals are never touched.
               since the back-fill is by design. A second save that rewrites anything again fails:
               the save is not stable.
   codegen     gumcli codegen. Skipped when the project has no code settings and auto-detection
-              finds no .csproj.
+              finds no .csproj. Fails when a written file has a backslash in its name (a Windows
+              path separator used off Windows). Generated files that differ from the checked-in
+              ones, line endings aside, are reported as a note.
   fonts       gumcli fonts (generates missing bitmap fonts; KernSmith off Windows).
 
 What gets copied: the project's folder, or, when ProjectCodeSettings.codsj points CodeProjectRoot
@@ -355,11 +357,30 @@ foreach ($projectFile in $projects) {
                 }
             }
             'codegen' {
+                $before = Get-FileHashes $copyDir
                 $run = Invoke-Gumcli $log @('codegen', $copiedProject)
+                # Off Windows a path joined with "\" is not a folder: it becomes one file whose name
+                # holds the backslashes, next to where the real file should have gone.
+                $misnamed = @(Get-ChildItem -LiteralPath $copyDir -Recurse -File -Force |
+                    Where-Object { $_.Name.Contains('\') } |
+                    ForEach-Object { [System.IO.Path]::GetRelativePath($copyDir, $_.FullName) })
+                # Generated code that differs from the checked-in copy (line endings aside) means the
+                # checked-in code is stale or this OS generates something different.
+                $differing = @(Get-ChangedFiles $before (Get-FileHashes $copyDir) | Where-Object {
+                    $original = Join-Path $pristineDir $_
+                    -not (Test-Path -LiteralPath $original) -or
+                        ([System.IO.File]::ReadAllText($original) -replace "`r", '') -ne
+                        ([System.IO.File]::ReadAllText((Join-Path $copyDir $_)) -replace "`r", '')
+                })
+                Add-Content -LiteralPath $log -Value (@('', 'files written that differ from the original (line endings ignored):') + $differing)
                 if ($run.ExitCode -eq 2 -and ($run.Output -match 'auto-detection failed')) {
                     $result = 'skip'; $detail = 'no code project'
                 } elseif ($run.ExitCode -ne 0) {
                     $result = 'FAIL'; $detail = Get-ErrorLines $run.Output
+                } elseif ($misnamed.Count -gt 0) {
+                    $result = 'FAIL'; $detail = 'wrote files with a backslash in the name: ' + (Format-FileList $misnamed)
+                } elseif ($differing.Count -gt 0) {
+                    $result = 'note'; $detail = 'new or different from the checked-in code: ' + (Format-FileList $differing)
                 }
             }
             'fonts' {

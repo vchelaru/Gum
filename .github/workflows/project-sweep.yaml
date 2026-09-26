@@ -1,0 +1,66 @@
+name: Project Sweep
+
+# Runs every real Gum project in the repo through gumcli's load, check, save, codegen and font
+# paths (Tools/project-sweep.ps1) on Windows, macOS and Linux. The tool ships on all three, and
+# path separators, file-name case and font generation (KernSmith instead of bmfont.exe) only
+# break off Windows.
+#
+# Not a required check. It runs on pull requests that touch the code or data it exercises, nightly
+# on main, and on demand.
+on:
+  pull_request:
+    paths:
+      - 'Tools/Gum.ProjectServices/**'
+      - 'Tools/Gum.Cli/**'
+      - 'GumCommon/**'
+      - 'ToolsUtilities/**'
+      - 'RenderingLibrary/**'
+      - '**/*.gumx'
+      - '**/*.gumj'
+      - '**/*.gusx'
+      - '**/*.gucx'
+      - '**/*.gutx'
+      - '**/*.behx'
+      - '**/*.codsj'
+      - 'Tools/project-sweep*'
+      - '.github/workflows/project-sweep.yaml'
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  Project-Sweep:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Setup .NET SDKs
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Sweep real projects
+        shell: pwsh
+        run: ./Tools/project-sweep.ps1 -WorkRoot "${{ runner.temp }}/sweep"
+      - name: Report to job summary
+        if: always()
+        shell: pwsh
+        run: |
+          $report = Join-Path "${{ runner.temp }}" 'sweep/report.md'
+          if (Test-Path $report) { Get-Content $report | Add-Content $env:GITHUB_STEP_SUMMARY }
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-sweep-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/sweep/report.md
+            ${{ runner.temp }}/sweep/results.json
+            ${{ runner.temp }}/sweep/*/logs/**
+            ${{ runner.temp }}/sweep/*/project.txt
+          if-no-files-found: ignore
