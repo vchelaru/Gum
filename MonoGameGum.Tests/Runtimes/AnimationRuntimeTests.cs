@@ -408,6 +408,97 @@ public class AnimationRuntimeTests : BaseTestClass
         runtime.X.ShouldBe(100);
     }
 
+    [Fact]
+    public void GetStateToSet_ReturnsKeyframeState_ForAGraphicalUiElementWithDefaultIfNull()
+    {
+        // A GraphicalUiElement has no ElementSave default state to start from.
+        ContainerRuntime runtime = new ContainerRuntime();
+        AnimationRuntime animation = CreateXSettingAnimationRuntime(gue: runtime);
+
+        StateSave shown = animation.GetStateToSet(1, runtime, defaultIfNull: true);
+
+        shown.GetValue("X").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void GetStateToSet_SkipsASubAnimation_WhoseInstanceTypeIsMissing()
+    {
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        element.States.Add(new StateSave { Name = "Default", ParentContainer = element });
+        element.Instances.Add(new InstanceSave { Name = "IconInstance", BaseType = "Missing", ParentContainer = element });
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave formerIconType = new ComponentSave { Name = "Icon" };
+        AnimationRuntime subAnimation = CreateXSettingAnimationRuntime(element: formerIconType);
+        subAnimation.RefreshCumulativeStates(formerIconType);
+        AnimationRuntime animation = new AnimationRuntime();
+        animation.Keyframes.Add(new KeyframeRuntime { AnimationName = "IconInstance.Spin", Time = 0, SubAnimation = subAnimation });
+
+        StateSave shown = animation.GetStateToSet(1, element, defaultIfNull: false);
+
+        shown.Variables.Count.ShouldBe(0);
+    }
+
+    [Fact]
+    public void GetStateToSet_AppliesASubAnimationKeyframe_WithNoAnimationName()
+    {
+        ContainerRuntime runtime = new ContainerRuntime();
+        AnimationRuntime subAnimation = CreateXSettingAnimationRuntime(gue: runtime);
+        AnimationRuntime animation = new AnimationRuntime();
+        animation.Keyframes.Add(new KeyframeRuntime { Time = 0, SubAnimation = subAnimation });
+
+        StateSave shown = animation.GetStateToSet(1, runtime, defaultIfNull: false);
+
+        shown.GetValue("X").ShouldBe(100f);
+    }
+
+    [Fact]
+    public void ToRuntime_LeavesSubAnimationNull_WhenTheInstanceTypeHasNoAnimations()
+    {
+        ComponentSave iconType = new ComponentSave { Name = "Icon" };
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        element.Instances.Add(new InstanceSave { Name = "IconInstance", BaseType = "Icon", ParentContainer = element });
+        GumProjectSave project = new GumProjectSave();
+        project.Components.Add(iconType);
+        project.Components.Add(element);
+        ObjectFinder.Self.GumProjectSave = project;
+        Gum.StateAnimation.SaveClasses.AnimationSave animationSave = new Gum.StateAnimation.SaveClasses.AnimationSave { Name = "Show" };
+        animationSave.Animations.Add(new Gum.StateAnimation.SaveClasses.AnimationReferenceSave { Name = "IconInstance.Spin" });
+        List<Gum.StateAnimation.SaveClasses.ElementAnimationsSave> allAnimations = new List<Gum.StateAnimation.SaveClasses.ElementAnimationsSave>();
+
+        AnimationRuntime runtime = animationSave.ToRuntime(element, allAnimations);
+
+        runtime.Keyframes.Single().SubAnimation.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToRuntime_LeavesSubAnimationNull_WhenTheElementHasNoAnimationsInTheList()
+    {
+        ComponentSave element = new ComponentSave { Name = "Button" };
+        Gum.StateAnimation.SaveClasses.AnimationSave animationSave = new Gum.StateAnimation.SaveClasses.AnimationSave { Name = "Show" };
+        animationSave.Animations.Add(new Gum.StateAnimation.SaveClasses.AnimationReferenceSave { Name = "Fade" });
+        List<Gum.StateAnimation.SaveClasses.ElementAnimationsSave> allAnimations = new List<Gum.StateAnimation.SaveClasses.ElementAnimationsSave>();
+
+        AnimationRuntime runtime = animationSave.ToRuntime(element, allAnimations);
+
+        runtime.Keyframes.Single().SubAnimation.ShouldBeNull();
+    }
+
+    [Fact]
+    public void ToRuntime_ConvertsElementAnimations_WhenNoProjectIsLoaded()
+    {
+        ObjectFinder.Self.GumProjectSave = null;
+        Gum.StateAnimation.SaveClasses.AnimationSave animationSave = new Gum.StateAnimation.SaveClasses.AnimationSave { Name = "Show" };
+        animationSave.Animations.Add(new Gum.StateAnimation.SaveClasses.AnimationReferenceSave { Name = "Fade" });
+        Gum.StateAnimation.SaveClasses.ElementAnimationsSave elementAnimations = new Gum.StateAnimation.SaveClasses.ElementAnimationsSave { ElementName = "Button" };
+        elementAnimations.Animations.Add(animationSave);
+
+        List<AnimationRuntime> runtimes = elementAnimations.ToRuntime();
+
+        runtimes.Single().Keyframes.Single().SubAnimation.ShouldBeNull();
+    }
+
     #region Utilities
 
     private static AnimationRuntime CreateXSettingAnimationRuntime(ComponentSave? element = null, GraphicalUiElement? gue = null)
