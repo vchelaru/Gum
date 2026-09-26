@@ -521,9 +521,9 @@ public class GumProjectSaveTests : BaseTestClass
         Gum.Managers.ObjectFinder.Self.GumProjectSave = project;
         // BaseTestClass.Dispose resets the registry, dropping this module-initializer default that
         // a running game always has.
-        MonoGameGum.Renderables.DefaultStrokedCircleRenderable.RegisterRuntimeTypes();
+        Gum.Renderables.DefaultStrokedCircleRenderable.RegisterRuntimeTypes();
 
-        Gum.Wireframe.GraphicalUiElement screenGue = screen.ToGraphicalUiElement();
+        Gum.Wireframe.GraphicalUiElement screenGue = Gum.ElementSaveExtensionMethods.ToGraphicalUiElement(screen);
         Gum.Wireframe.GraphicalUiElement circleGue = screenGue.GetGraphicalUiElementByName("CircleInstance")!;
 
         circleGue.Width.ShouldBe(32.0f);
