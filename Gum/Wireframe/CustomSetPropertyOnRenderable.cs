@@ -393,6 +393,8 @@ public partial class CustomSetPropertyOnRenderable
 
     private static bool TrySetPropertyOnContainer(InvisibleRenderable invisibleRenderable, GraphicalUiElement graphicalUiElement, string propertyName, object value)
     {
+        // A plain GraphicalUiElement (the Gum tool's wrapper for every element) has no runtime to
+        // forward to, so the renderable is set directly (#5169).
         var containerRuntime = graphicalUiElement as ContainerRuntimeType;
 
         switch (propertyName)
@@ -404,17 +406,28 @@ public partial class CustomSetPropertyOnRenderable
                     {
                         containerRuntime.IsRenderTarget = valueAsBool;
                     }
+                    else
+                    {
+                        invisibleRenderable.IsRenderTarget = valueAsBool;
+                    }
                     return true;
                 }
             case "SourceShaderFile":
                 AssignSourceShaderFileOnContainer(invisibleRenderable, graphicalUiElement, value as string);
                 return true;
             case "Alpha":
-                if (containerRuntime != null)
                 {
-                    containerRuntime.Alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
+                    int alpha = InvisibleRenderable.NormalizeDispatchedAlpha(value);
+                    if (containerRuntime != null)
+                    {
+                        containerRuntime.Alpha = alpha;
+                    }
+                    else
+                    {
+                        invisibleRenderable.Alpha = alpha;
+                    }
+                    return true;
                 }
-                return true;
         }
 
         return false;

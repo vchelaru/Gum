@@ -220,6 +220,9 @@ public sealed class ImageRegionCanvasControl : AvaloniaGraphicsDeviceControl
 
     /// <inheritdoc/>
     protected override void Draw() => Core.Draw();
+
+    /// <inheritdoc/>
+    protected override bool IsFrameOpaque => Core.DrawsOpaqueFrames;
 }
 
 /// <summary>Adapts an Avalonia <see cref="ScrollBar"/> to <see cref="ICameraScrollBar"/>.</summary>

@@ -4,6 +4,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Input;
 using Avalonia.Input.Raw;
 using Gum.Avalonia.Canvas;
+using Gum.Avalonia.Plugins.TextureCoordinates;
 using InputLibrary;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -151,6 +152,28 @@ public class CanvasHostTests
         byte[] pixel = new byte[4];
         System.Runtime.InteropServices.Marshal.Copy(framebuffer.Address, pixel, 0, 4);
         pixel.ShouldBe(new byte[] { 51, 52, 53, (byte)expectedAlpha });
+    }
+
+    // The Texture Coordinates canvas draws a texture over its opaque background, so its frames must
+    // be shown opaque or the window bleeds through translucent texels (#5171). With no texture it
+    // draws nothing, and forcing that transparent frame opaque would show black.
+    [SkippableFact]
+    public void ImageRegionCanvas_DrawsOpaqueFrames_OnlyWhileShowingATexture()
+    {
+        Skip.IfNot(HasDisplay, SkipReason);
+
+        OnUiThread(() =>
+        {
+            using ImageRegionCanvasControl control = new ImageRegionCanvasControl(new CanvasRedrawScheduler(TimeProvider.System));
+            control.Core.DrawsOpaqueFrames.ShouldBeFalse();
+
+            using Texture2D texture = new Texture2D(control.Core.SystemManagers.Renderer.GraphicsDevice!, 2, 2);
+            control.Core.CurrentTexture = texture;
+            control.Core.DrawsOpaqueFrames.ShouldBeTrue();
+
+            control.Core.CurrentTexture = null;
+            control.Core.DrawsOpaqueFrames.ShouldBeFalse();
+        });
     }
 
     // #4811 (Avalonia parity with the WPF fix in #4681/#4682): the bitmap must always stay at 96
