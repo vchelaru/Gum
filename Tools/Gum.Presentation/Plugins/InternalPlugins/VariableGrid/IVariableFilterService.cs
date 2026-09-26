@@ -16,7 +16,8 @@ public interface IVariableFilterService
     /// <summary>
     /// Whether a row named <paramref name="variableName"/> (shown as <paramref name="displayName"/>, when
     /// that differs) should stay visible under <paramref name="filterText"/>. Matching is a
-    /// case-insensitive substring test against either name; a blank filter matches every row.
+    /// case-insensitive substring test against either name, leaving out an instance row's
+    /// "Instance." prefix; a blank filter matches every row.
     /// </summary>
     bool IsMatch(string? filterText, string variableName, string? displayName);
 }

@@ -72,4 +72,15 @@ public class VariableFilterServiceTests
         // Trailing space from typing must not make a real filter stop matching.
         service.IsMatch(" vis ", "Visible", displayName: null).ShouldBeTrue();
     }
+
+    [Fact]
+    public void IsMatch_ShouldIgnoreTheInstancePrefixOfAQualifiedName()
+    {
+        VariableFilterService service = CreateService();
+
+        // An instance's rows are named "Box.Visible"; the instance name is not part of the variable.
+        service.IsMatch("x", "Box.Visible", displayName: "Visible").ShouldBeFalse();
+        service.IsMatch("x", "Box.X", displayName: "X").ShouldBeTrue();
+        service.IsMatch("vis", "Box.Visible", displayName: "Visible").ShouldBeTrue();
+    }
 }

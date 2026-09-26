@@ -70,6 +70,8 @@ public class StateReferencingInstanceMember : InstanceMember
         }
 
         this.Instance = _entry.Instance;
+        // The grid looks rows up by their instance-qualified name (Label.X, not Box.X).
+        this.Name = _entry.Name;
         this.DisplayName = _entry.DisplayName;
         this.DetailText = _entry.DetailText;
         this.ToolTipText = _entry.ToolTipText;

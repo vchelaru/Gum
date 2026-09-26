@@ -98,6 +98,32 @@ public class SimpleEditorTests
     }
 
     [AvaloniaFact]
+    public void TextBoxDisplay_LosingFocus_AfterAScrub_DoesNotWriteTheScrubbedValueAgain()
+    {
+        // The scrub's release already committed. Leaving the field afterwards must not write the
+        // shown text a second time: when the value changed meanwhile (an undo), that write reverts it.
+        EditorFixture fixture = new EditorFixture { Count = 3 };
+        TextBoxDisplay display = new TextBoxDisplay { InstanceMember = fixture.Member(nameof(EditorFixture.Count)) };
+        TextBox elsewhere = new TextBox();
+        StackPanel panel = new StackPanel { Children = { display, elsewhere } };
+        Window window = new Window { Content = panel, Width = 400, Height = 200 };
+        window.Show();
+        window.UpdateLayout();
+        display.TextBox.Focus();
+        Point press = display.TranslatePoint(new Point(95, 1), window)!.Value;
+        window.MouseDown(press, MouseButton.Left);
+        window.MouseMove(press + new Point(4, 0));
+        window.MouseUp(press + new Point(4, 0), MouseButton.Left);
+        fixture.Count.ShouldBe(7);
+
+        fixture.Count = 3;
+        elsewhere.Focus();
+
+        fixture.Count.ShouldBe(3);
+        window.Close();
+    }
+
+    [AvaloniaFact]
     public void TextBoxDisplay_NullableType_IsNullCheckBoxWritesNull()
     {
         EditorFixture fixture = new EditorFixture { MaybeNumber = 2 };

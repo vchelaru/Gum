@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Gum.Avalonia.Plugins.StateAnimation;
 using Gum.Avalonia.Shell;
+using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.DataTypes;
 using Gum.DataTypes.Variables;
