@@ -33,7 +33,7 @@ public class ProjectPropertiesGridPresenterTests
         categories.ShouldContain("Single Pixel Texture");
         categories.ShouldContain("Font Generation");
         InstanceMember Member(string name) => grid.GetInstanceMember(name).ShouldNotBeNull();
-        Member(nameof(ProjectPropertiesViewModel.ShowOutlines)).Category.Name.ShouldBe("Guides");
+        Member(nameof(ProjectPropertiesViewModel.ShowOutlines)).Category.ShouldNotBeNull().Name.ShouldBe("Guides");
         Member(nameof(ProjectPropertiesViewModel.FontGenerator)).CustomOptions.ShouldBe(new object[] { FontGeneratorType.BmFont, FontGeneratorType.KernSmith });
         Member(nameof(ProjectPropertiesViewModel.TextureFilter)).CustomOptions.ShouldBe(new object[] { TextureFilter.Point, TextureFilter.Linear });
         Member(nameof(ProjectPropertiesViewModel.UseFontCharacterFile)).DisplayName.ShouldBe("Use Font Character File (.gumfcs)");
@@ -106,7 +106,7 @@ public class ProjectPropertiesGridPresenterTests
 
         InstanceMember after = grid.GetInstanceMember(nameof(ProjectPropertiesViewModel.CanvasWidth))!;
         after.ShouldNotBeSameAs(before);
-        after.Category.Name.ShouldBe(before.Category.Name);
+        after.Category.ShouldNotBeNull().Name.ShouldBe(before.Category.ShouldNotBeNull().Name);
     }
 
     /// <summary>An <see cref="IDataUiGrid"/> over a bare model, as either head's grid is.</summary>

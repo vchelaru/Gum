@@ -166,7 +166,7 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
         SuppressSettingProperty = true;
 
-        _logic.RefreshDisplay(out object valueOnInstance);
+        _logic.RefreshDisplay(out object? valueOnInstance);
 
         _label.Text = InstanceMember.DisplayName;
         RefreshHint(_hint);
@@ -179,13 +179,13 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         if (!_logic.IsInApplicationToInstance)
         {
             _nullableCheckBox.IsChecked = valueOnInstance == null;
         }
-        _textBox.Text = _logic.ConvertNumberToString(valueOnInstance!);
+        _textBox.Text = _logic.ConvertNumberToString(valueOnInstance);
 
         RefreshPlaceholderText();
         _nullableCheckBox.IsVisible = IsDisplayedTypeNullable();
@@ -293,11 +293,11 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
 
         if (_nullableCheckBox.IsChecked == false)
         {
-            Type propertyType = this.GetPropertyType();
-            Type? underlyingType = Nullable.GetUnderlyingType(propertyType);
+            Type? propertyType = this.GetPropertyType();
+            Type? underlyingType = propertyType == null ? null : Nullable.GetUnderlyingType(propertyType);
             if (underlyingType != null)
             {
-                TrySetValueOnUi(Activator.CreateInstance(underlyingType)!);
+                TrySetValueOnUi(Activator.CreateInstance(underlyingType));
             }
         }
 
@@ -317,12 +317,12 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
             return;
         }
 
-        if (TryGetValueOnUi(out object? value) != ApplyValueResult.Success)
+        if (TryGetValueOnUi(out object? value) != ApplyValueResult.Success || _logic.InstancePropertyType is not Type propertyType)
         {
             return;
         }
 
-        _scrubLogic.Begin(value, _logic.InstancePropertyType);
+        _scrubLogic.Begin(value, propertyType);
         _dragLastPosition = e.GetPosition(this);
         _dragPressedPosition = _dragLastPosition;
         e.Pointer.Capture(_labelHost);
@@ -388,7 +388,10 @@ public class TextBoxDisplay : DataUiDisplayBase, ISetDefaultable
     internal void BeginScrub()
     {
         TryGetValueOnUi(out object? value);
-        _scrubLogic.Begin(value, _logic.InstancePropertyType);
+        if (_logic.InstancePropertyType is Type propertyType)
+        {
+            _scrubLogic.Begin(value, propertyType);
+        }
     }
 
     /// <summary>Commits a scrub as a full edit, for tests.</summary>

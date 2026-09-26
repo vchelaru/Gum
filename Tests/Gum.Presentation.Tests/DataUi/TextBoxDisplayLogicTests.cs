@@ -47,7 +47,7 @@ public class TextBoxDisplayLogicTests
     public void TryHandleMathOperation_ShouldEvaluateExpression(
         string input, Type targetType, object expected)
     {
-        object result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
+        object? result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
 
         result.ShouldNotBeNull();
         result.ShouldBe(expected);
@@ -58,7 +58,7 @@ public class TextBoxDisplayLogicTests
     public void TryHandleMathOperation_ShouldReturnNullForNonMathStrings(
         string input, Type targetType)
     {
-        object result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
+        object? result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
 
         result.ShouldBeNull();
     }
@@ -68,7 +68,7 @@ public class TextBoxDisplayLogicTests
     public void TryHandleMathOperation_ShouldReturnNullForNonNumericTypes(
         string input, Type targetType)
     {
-        object result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
+        object? result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
 
         result.ShouldBeNull();
     }
@@ -80,7 +80,7 @@ public class TextBoxDisplayLogicTests
     {
         // Plain numbers have no math operators, so should return null
         // (the caller handles plain number parsing via TryParse/ConvertFromString).
-        object result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
+        object? result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
 
         result.ShouldBeNull();
     }
@@ -90,7 +90,7 @@ public class TextBoxDisplayLogicTests
     public void TryHandleMathOperation_ShouldWorkWithNullableNumericTypes(
         string input, Type targetType)
     {
-        object result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
+        object? result = TextBoxDisplayLogic.TryHandleMathOperation(input, targetType);
 
         result.ShouldNotBeNull();
     }
@@ -158,7 +158,7 @@ public class TextBoxDisplayLogicTests
     {
         // .NET Core 3.0+ float/double.TryParse succeeds on overflow and yields
         // Infinity/-Infinity instead of failing (FlatRedBall#2150).
-        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object result);
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object? result);
 
         succeeded.ShouldBeTrue();
         result.ShouldBe(expected);
@@ -184,7 +184,7 @@ public class TextBoxDisplayLogicTests
         // long/decimal/byte/short.TryParse fail outright on overflow (no Infinity concept
         // for these types) - clamp through a double intermediate instead of rejecting the
         // input, mirroring the pre-existing int-overflow clamp (FlatRedBall#2150 follow-up).
-        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object result);
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric(input, targetType, out object? result);
 
         succeeded.ShouldBeTrue();
         result.ShouldBe(expected);
@@ -196,7 +196,7 @@ public class TextBoxDisplayLogicTests
         // A fractional value is invalid for a long field but is not an overflow - it must
         // still be rejected (not silently truncated) so the caller falls through to the
         // normal invalid-syntax handling instead of accepting bad input.
-        bool succeeded = TextBoxDisplayLogic.TryParseNumeric("123.5", typeof(long), out object result);
+        bool succeeded = TextBoxDisplayLogic.TryParseNumeric("123.5", typeof(long), out object? result);
 
         succeeded.ShouldBeFalse();
     }

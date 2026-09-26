@@ -156,7 +156,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
         }
 
         SuppressSettingProperty = true;
-        if (this.TryGetValueOnInstance(out object valueOnInstance) && valueOnInstance != null)
+        if (this.TryGetValueOnInstance(out object? valueOnInstance) && valueOnInstance != null)
         {
             TrySetValueOnUi(valueOnInstance);
         }
@@ -175,7 +175,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value)
+    public override ApplyValueResult TrySetValueOnUi(object? value)
     {
         if (value is null)
         {
@@ -240,7 +240,7 @@ public class AngleSelectorDisplay : DataUiDisplayBase
 
         if (TryGetValueOnUi(out object? valueOnUi) == ApplyValueResult.Success)
         {
-            this.TrySetValueOnInstance(valueOnUi!, commitType);
+            this.TrySetValueOnInstance(valueOnUi, commitType);
         }
     }
 
@@ -416,7 +416,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
 
         SuppressSettingProperty = true;
         _label.Text = DataUiText.InsertSpacesInCamelCase(InstanceMember.DisplayName);
-        TrySetValueOnUi(InstanceMember.Value!);
+        TrySetValueOnUi(InstanceMember.Value);
         RefreshHint(_hint);
         RefreshButtonAppearance();
         RefreshIsEnabled();
@@ -432,7 +432,7 @@ public class ToggleButtonOptionDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value)
+    public override ApplyValueResult TrySetValueOnUi(object? value)
     {
         foreach (ToggleButton button in _buttons)
         {
@@ -576,7 +576,7 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
         _label.Text = InstanceMember.DisplayName;
         DataUiValueStateBrushes.ApplyBackground(_textBox, InstanceMember.ValueState);
         RefreshHint(_hint);
-        TrySetValueOnUi(InstanceMember.Value!);
+        TrySetValueOnUi(InstanceMember.Value);
         RefreshIsEnabled();
         SuppressSettingProperty = false;
     }
@@ -595,7 +595,7 @@ public class StringListTextBoxDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value)
+    public override ApplyValueResult TrySetValueOnUi(object? value)
     {
         if (value is List<string> lines)
         {
@@ -727,7 +727,7 @@ public class ListBoxDisplay : DataUiDisplayBase
         DataUiValueStateBrushes.ApplyBackground(_listBox,
             InstanceMember.IsDefault ? DataUiValueState.Default : DataUiValueState.Custom);
         RefreshHint(_hint);
-        TrySetValueOnUi(InstanceMember.Value!);
+        TrySetValueOnUi(InstanceMember.Value);
         RefreshIsEnabled();
         SuppressSettingProperty = false;
     }
@@ -746,7 +746,7 @@ public class ListBoxDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value)
+    public override ApplyValueResult TrySetValueOnUi(object? value)
     {
         // Edit a copy so nothing reaches the member until it is committed.
         _items = _listLogic.CreateEditableCopy(value, InstanceMember?.PropertyType);
@@ -946,7 +946,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
         }
 
         SuppressSettingProperty = true;
-        _textLogic.RefreshDisplay(out object _);
+        _textLogic.RefreshDisplay(out _);
         RefreshHint(_hint);
         _label.Text = InstanceMember.DisplayName;
         RefreshRevealButton();
@@ -955,7 +955,7 @@ public class FileSelectionDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         _textBox.Text = valueOnInstance?.ToString();
         return ApplyValueResult.Success;
@@ -1070,7 +1070,7 @@ public class MultiFileDisplay : DataUiDisplayBase
         SuppressSettingProperty = true;
         _label.Text = InstanceMember.DisplayName;
         RefreshHint(_hint);
-        TrySetValueOnUi(InstanceMember.Value!);
+        TrySetValueOnUi(InstanceMember.Value);
         RefreshIsEnabled();
         DataUiValueStateBrushes.ApplyBackground(_listBox,
             InstanceMember.IsDefault ? DataUiValueState.Default : DataUiValueState.Custom);
@@ -1078,7 +1078,7 @@ public class MultiFileDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object value)
+    public override ApplyValueResult TrySetValueOnUi(object? value)
     {
         _fileListLogic.SetEntries(value);
         Rebind(selectIndex: null);
@@ -1250,7 +1250,7 @@ public class InlineChannelsDisplay : DataUiDisplayBase
     }
 
     /// <summary>Fields commit to their channels directly; there is no single composed UI value.</summary>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance) => ApplyValueResult.NotSupported;
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance) => ApplyValueResult.NotSupported;
 
     /// <inheritdoc cref="TrySetValueOnUi"/>
     public override ApplyValueResult TryGetValueOnUi(out object? value)
@@ -1273,7 +1273,8 @@ public class InlineChannelsDisplay : DataUiDisplayBase
             return;
         }
 
-        if (TextBoxDisplayLogic.TryParseNumeric(textBox.Text ?? string.Empty, channel.PropertyType, out object parsed))
+        if (channel.PropertyType is Type channelType &&
+            TextBoxDisplayLogic.TryParseNumeric(textBox.Text ?? string.Empty, channelType, out object? parsed))
         {
             channel.SetValue(parsed, SetPropertyCommitType.Full);
             channel.CallAfterSetByUi();

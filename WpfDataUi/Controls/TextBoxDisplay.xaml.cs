@@ -217,7 +217,7 @@ namespace WpfDataUi.Controls
             {
                 SuppressSettingProperty = true;
 
-                mTextBoxLogic.RefreshDisplay(out object valueOnInstance);
+                mTextBoxLogic.RefreshDisplay(out object? valueOnInstance);
 
                 this.Label.Text = InstanceMember.DisplayName;
                 this.RefreshAllContextMenus();
@@ -248,7 +248,7 @@ namespace WpfDataUi.Controls
             HintTextBlock.Text = InstanceMember?.DetailText;
         }
 
-        private void RefreshNullableRelatedUiVisibility(object valueOnInstance)
+        private void RefreshNullableRelatedUiVisibility(object? valueOnInstance)
         {
             bool isNullable = IsDisplayedTypeNullable();
 
@@ -271,7 +271,7 @@ namespace WpfDataUi.Controls
             return isNullable;
         }
 
-        public virtual ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+        public virtual ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
         {
             if(!mTextBoxLogic.IsInApplicationToInstance)
             {
@@ -391,7 +391,7 @@ namespace WpfDataUi.Controls
             RefreshIsEnabled(valueOnInstance, forceNullableEnable:false);
         }
 
-        private void RefreshIsEnabled(object valueOnInstance, bool forceNullableEnable)
+        private void RefreshIsEnabled(object? valueOnInstance, bool forceNullableEnable)
         {
             if (lastApplyValueResult == ApplyValueResult.NotSupported)
             {
@@ -447,9 +447,9 @@ namespace WpfDataUi.Controls
 
                 var getValueStatus = TryGetValueOnUi(out object? valueOnInstance);
 
-                if (getValueStatus == ApplyValueResult.Success)
+                if (getValueStatus == ApplyValueResult.Success && mTextBoxLogic.InstancePropertyType is Type propertyType)
                 {
-                    _scrubLogic.Begin(valueOnInstance, mTextBoxLogic.InstancePropertyType);
+                    _scrubLogic.Begin(valueOnInstance, propertyType);
                 }
             }
         }
@@ -510,12 +510,11 @@ namespace WpfDataUi.Controls
 
         private void NullableCheckBox_Unchecked(object? sender, RoutedEventArgs e)
         {
-            var propertyType = this.GetPropertyType();
+            Type? propertyType = this.GetPropertyType();
 
-            if (propertyType.IsValueType && Nullable.GetUnderlyingType(propertyType) != null)
+            if (propertyType != null && propertyType.IsValueType && Nullable.GetUnderlyingType(propertyType) is Type underlyingType)
             {
                 // For nullable value types
-                var underlyingType = Nullable.GetUnderlyingType(propertyType);
                 var value = Activator.CreateInstance(underlyingType);
                 TrySetValueOnUi(value);
             }

@@ -52,7 +52,7 @@ public class CheckBoxDisplay : DataUiDisplayBase
 
         SuppressSettingProperty = true;
 
-        if (this.TryGetValueOnInstance(out object valueOnInstance))
+        if (this.TryGetValueOnInstance(out object? valueOnInstance))
         {
             bool wasSet = valueOnInstance != null && TrySetValueOnUi(valueOnInstance) == ApplyValueResult.Success;
             if (!wasSet)
@@ -69,7 +69,7 @@ public class CheckBoxDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         if (valueOnInstance is bool asBool)
         {
@@ -173,7 +173,7 @@ public class NullableBoolDisplay : DataUiDisplayBase
         }
 
         SuppressSettingProperty = true;
-        if (this.TryGetValueOnInstance(out object valueOnInstance))
+        if (this.TryGetValueOnInstance(out object? valueOnInstance))
         {
             TrySetValueOnUi(valueOnInstance);
         }
@@ -184,7 +184,7 @@ public class NullableBoolDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         switch (valueOnInstance as bool?)
         {
@@ -296,7 +296,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
             PopulateItems();
         }
 
-        if (this.TryGetValueOnInstance(out object valueOnInstance))
+        if (this.TryGetValueOnInstance(out object? valueOnInstance))
         {
             if (valueOnInstance != null)
             {
@@ -321,7 +321,7 @@ public class ComboBoxDisplay : DataUiDisplayBase
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         SuppressSettingProperty = true;
         object? itemToSelect = _logic.GetItemToSelect(valueOnInstance, _propertyType);
@@ -567,7 +567,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
         }
 
         SuppressSettingProperty = true;
-        _textLogic.RefreshDisplay(out object _);
+        _textLogic.RefreshDisplay(out _);
         _label.Text = InstanceMember.DisplayName;
         RefreshMinMaxText();
         RefreshIsEnabled();
@@ -590,7 +590,7 @@ public class SliderDisplay : DataUiDisplayBase, ISetDefaultable
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         if (valueOnInstance == null)
         {
@@ -731,7 +731,7 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
         }
 
         SuppressSettingProperty = true;
-        _logic.RefreshDisplay(out object _);
+        _logic.RefreshDisplay(out _);
         _label.Text = InstanceMember.DisplayName;
         RefreshHint(_hint);
         RefreshEnabledState();
@@ -745,7 +745,7 @@ public class PlusMinusTextBox : DataUiDisplayBase, ISetDefaultable
     }
 
     /// <inheritdoc/>
-    public override ApplyValueResult TrySetValueOnUi(object valueOnInstance)
+    public override ApplyValueResult TrySetValueOnUi(object? valueOnInstance)
     {
         _textBox.Text = _logic.ConvertNumberToString(valueOnInstance);
         return ApplyValueResult.Success;

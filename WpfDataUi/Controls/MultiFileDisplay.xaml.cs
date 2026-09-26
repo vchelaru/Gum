@@ -128,7 +128,7 @@ public partial class MultiFileDisplay : UserControl, IDataUi
         SuppressSettingProperty = false;
     }
 
-    public ApplyValueResult TrySetValueOnUi(object value)
+    public ApplyValueResult TrySetValueOnUi(object? value)
     {
         _fileListLogic.SetEntries(value);
         RebindListBox();

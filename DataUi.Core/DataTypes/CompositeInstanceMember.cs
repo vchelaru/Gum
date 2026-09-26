@@ -102,18 +102,18 @@ public class CompositeInstanceMember : InstanceMember
         SimulateValueChanged();
     }
 
-    private object HandleCustomGet(object owner)
+    private object HandleCustomGet(object? owner)
     {
         List<object?> channelValues = ChannelMembers.Select(channel => channel.Value).ToList();
         return _compose(channelValues);
     }
 
-    private Type HandleCustomGetType(object owner)
+    private Type HandleCustomGetType(object? owner)
     {
         return _compositeType;
     }
 
-    private void HandleCustomSet(object owner, SetPropertyArgs args)
+    private void HandleCustomSet(object? owner, SetPropertyArgs args)
     {
         // BeforeComposite typically takes a single undo lock (see CompositeMemberLogic) that AfterComposite
         // disposes. The channel writes must run inside try/finally so AfterComposite ALWAYS fires even if a

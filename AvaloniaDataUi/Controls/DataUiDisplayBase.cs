@@ -69,7 +69,7 @@ public abstract class DataUiDisplayBase : UserControl, IDataUi
     public abstract ApplyValueResult TryGetValueOnUi(out object? result);
 
     /// <inheritdoc/>
-    public abstract ApplyValueResult TrySetValueOnUi(object value);
+    public abstract ApplyValueResult TrySetValueOnUi(object? value);
 
     /// <summary>Called when a different member is assigned, before the refresh; clear per-member state here.</summary>
     protected virtual void OnInstanceMemberChanged()

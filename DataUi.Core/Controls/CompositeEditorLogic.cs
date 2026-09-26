@@ -65,7 +65,7 @@ public class AngleSelectorLogic
     /// arithmetic ("90*2"), giving null when it is not arithmetic. Returns false only when evaluating
     /// the arithmetic fails, in which case the shown angle should stay as it was.
     /// </summary>
-    public bool TryParseAngleText(string? text, Type propertyType, out float? angle)
+    public bool TryParseAngleText(string? text, Type? propertyType, out float? angle)
     {
         if (string.IsNullOrEmpty(text))
         {

@@ -107,7 +107,7 @@ namespace WpfDataUi.Controls
             }
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value)
+        public ApplyValueResult TrySetValueOnUi(object? value)
         {
             if (value is List<string> valueAsList)
             {

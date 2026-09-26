@@ -67,9 +67,22 @@ public class DataUiModelTests
             return ApplyValueResult.Success;
         }
 
-        public ApplyValueResult TrySetValueOnUi(object value) => ApplyValueResult.Success;
+        public ApplyValueResult TrySetValueOnUi(object? value) => ApplyValueResult.Success;
 
         public void SetToDefault() => WasSetToDefault = true;
+    }
+
+    [Fact]
+    public void ValueHelpers_WithNoMember_ReportNotEnoughInformation()
+    {
+        RecordingDataUi dataUi = new RecordingDataUi();
+
+        dataUi.HasEnoughInformationToWork().ShouldBeFalse();
+        dataUi.TryGetValueOnInstance(out object? value).ShouldBeFalse();
+        value.ShouldBeNull();
+        dataUi.TrySetValueOnInstance().ShouldBe(ApplyValueResult.NotEnoughInformation);
+        dataUi.TrySetValueOnInstance(5f).ShouldBe(ApplyValueResult.NotEnoughInformation);
+        dataUi.GetPropertyType().ShouldBeNull();
     }
 
     [Fact]

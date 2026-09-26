@@ -106,8 +106,8 @@ public class SimpleEditorTests
         display.TryGetValueOnUi(out object? shown).ShouldBe(ApplyValueResult.Success);
         shown.ShouldBe(2f);
 
-        display.TrySetValueOnUi(null!);
-        display.TrySetValueOnInstance(null!);
+        display.TrySetValueOnUi(null);
+        display.TrySetValueOnInstance(null);
 
         fixture.MaybeNumber.ShouldBeNull();
     }
@@ -150,7 +150,7 @@ public class SimpleEditorTests
         display.TrySetValueOnInstance();
         fixture.Maybe.ShouldBe(false);
 
-        display.TrySetValueOnUi(null!);
+        display.TrySetValueOnUi(null);
         display.TrySetValueOnInstance();
         fixture.Maybe.ShouldBeNull();
     }

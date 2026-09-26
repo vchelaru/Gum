@@ -129,7 +129,7 @@ public partial class ListBoxDisplay : UserControl, IDataUi
         return ApplyValueResult.NotSupported;
     }
 
-    public ApplyValueResult TrySetValueOnUi(object value)
+    public ApplyValueResult TrySetValueOnUi(object? value)
     {
         // Edit a copy so nothing reaches the member until it is committed.
         ListBox.ItemsSource = _listLogic.CreateEditableCopy(value, InstanceMember?.PropertyType);

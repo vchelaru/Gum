@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using WpfDataUi.DataTypes;
 
 namespace WpfDataUi.Controls
@@ -21,7 +22,7 @@ namespace WpfDataUi.Controls
         public bool HasUserChangedAnything { get; set; }
         public string TextAtStartOfEditing { get; set; }
         public InstanceMember? InstanceMember { get; set; }
-        public Type InstancePropertyType { get; set; }
+        public Type? InstancePropertyType { get; set; }
 
         public decimal? MinValue { get; set; }
         public decimal? MaxValue { get; set; }
@@ -62,6 +63,7 @@ namespace WpfDataUi.Controls
         {
             mAssociatedTextBox = textBox;
             mContainer = container;
+            TextAtStartOfEditing = string.Empty;
         }
 
         /// <summary>
@@ -187,9 +189,9 @@ namespace WpfDataUi.Controls
                         // Hold on, the Before set may have actually changed the value, so we should get the value again.
                         mContainer.TryGetValueOnUi(out newValue);
 
-                        if (newValue is string)
+                        if (newValue is string newString)
                         {
-                            newValue = (newValue as string).Replace("\r", "");
+                            newValue = newString.Replace("\r", "");
                         }
                         // get rid of \r
                         return mContainer.TrySetValueOnInstance(newValue, commitType);
@@ -214,13 +216,14 @@ namespace WpfDataUi.Controls
 
             string text = mAssociatedTextBox.Text;
 
-            if (InstancePropertyType.Name == "Vector3" ||
-                InstancePropertyType.Name == "Vector2")
+            string? typeName = InstancePropertyType?.Name;
+            if (typeName == "Vector3" ||
+                typeName == "Vector2")
             {
                 text = text.Replace("{", "").Replace("}", "").Replace("X:", "").Replace("Y:", "").Replace("Z:", "").Replace(" ", ",");
 
             }
-            if (InstancePropertyType.Name == "Color")
+            if (typeName == "Color")
             {
                 // I think this expects byte values, so we gotta make sure it's not giving us floats
                 text = text.Replace("{", "").Replace("}", "").Replace("A:", "").Replace("R:", "").Replace("G:", "").Replace("B:", "").Replace(" ", ",");
@@ -231,9 +234,9 @@ namespace WpfDataUi.Controls
 
         }
 
-        public string ConvertNumberToString(object value, int? numberOfDecimals = null)
+        public string? ConvertNumberToString(object? value, int? numberOfDecimals = null)
         {
-            string text = value?.ToString();
+            string? text = value?.ToString();
 
             if (value is float)
             {
@@ -456,7 +459,7 @@ namespace WpfDataUi.Controls
             return result;
         }
 
-        private bool TryConvertingToIntThroughDouble(ref object value, ref ApplyValueResult result, string usableString)
+        private bool TryConvertingToIntThroughDouble(ref object? value, ref ApplyValueResult result, string usableString)
         {
             bool succeeded = false;
             if (InstancePropertyType == typeof(int))
@@ -466,7 +469,10 @@ namespace WpfDataUi.Controls
 
                 try
                 {
-                    var doubleValue = (double)doubleConverter.ConvertFromString(usableString);
+                    if (doubleConverter.ConvertFromString(usableString) is not double doubleValue)
+                    {
+                        return false;
+                    }
 
                     if (doubleValue > int.MaxValue)
                     {
@@ -522,8 +528,13 @@ namespace WpfDataUi.Controls
             return ((int)(Math.Sign(valueToRound) * .5f + valueToRound / multipleOf)) * multipleOf;
         }
 
-        public static object TryHandleMathOperation(string usableString, Type instancePropertyType)
+        public static object? TryHandleMathOperation(string usableString, Type? instancePropertyType)
         {
+            if (instancePropertyType == null)
+            {
+                return null;
+            }
+
             if (instancePropertyType == typeof(float) ||
                 instancePropertyType == typeof(float?) ||
                 instancePropertyType == typeof(int?) ||
@@ -547,7 +558,7 @@ namespace WpfDataUi.Controls
                 {
                     var converter = TypeDescriptor.GetConverter(instancePropertyType);
 
-                    return converter.ConvertFrom(result.ToString());
+                    return converter.ConvertFrom(result.ToString() ?? string.Empty);
                 }
                 else
                 {
@@ -565,7 +576,7 @@ namespace WpfDataUi.Controls
         /// Returns true if the string was successfully parsed, with the result in <paramref name="result"/>.
         /// Falls through to false for non-numeric types so the caller can use ConvertFromString.
         /// </summary>
-        public static bool TryParseNumeric(string text, Type targetType, out object result)
+        public static bool TryParseNumeric(string text, Type targetType, [NotNullWhen(true)] out object? result)
         {
             result = null;
 
@@ -758,13 +769,11 @@ namespace WpfDataUi.Controls
 
         }
 
-        public void RefreshDisplay(out object valueOnInstance)
+        public void RefreshDisplay(out object? valueOnInstance)
         {
             if (mContainer.HasEnoughInformationToWork())
             {
-                Type type = mContainer.GetPropertyType();
-
-                InstancePropertyType = type;
+                InstancePropertyType = mContainer.GetPropertyType();
             }
 
             bool successfulGet = mContainer.TryGetValueOnInstance(out valueOnInstance);

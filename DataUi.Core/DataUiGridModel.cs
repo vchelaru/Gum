@@ -479,8 +479,8 @@ public class DataUiGridModel
         if (BeforePropertyChange != null && sender is InstanceMember senderMember)
         {
             BeforePropertyChangedArgs args = (BeforePropertyChangedArgs)e;
-            args.Owner = this.Instance!;
-            args.OldValue = senderMember.Value!;
+            args.Owner = this.Instance;
+            args.OldValue = senderMember.Value;
             args.PropertyName = senderMember.Name;
 
             BeforePropertyChange(senderMember.Name, args);
@@ -492,9 +492,9 @@ public class DataUiGridModel
         if (PropertyChange != null)
         {
             PropertyChangedArgs args = new PropertyChangedArgs();
-            args.Owner = this.Instance!;
+            args.Owner = this.Instance;
             args.OldValue = senderInstanceMember.OldValue;
-            args.NewValue = senderInstanceMember.Value!;
+            args.NewValue = senderInstanceMember.Value;
             args.PropertyName = senderInstanceMember.Name;
 
             PropertyChange(senderInstanceMember.Name, args);
@@ -704,8 +704,12 @@ public class DataUiGridModel
 
     }
 
-    private bool Differ(IList<object> first, IList<object> second)
+    private bool Differ(IList<object>? first, IList<object>? second)
     {
+        if (first == null || second == null)
+        {
+            return first != second;
+        }
         if (first.Count != second.Count)
         {
             return true;

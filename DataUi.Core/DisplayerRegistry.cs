@@ -13,13 +13,13 @@ namespace WpfDataUi;
 public class DisplayerRegistry
 {
     private readonly Dictionary<Type, Type> _controlTypesByKey;
-    private readonly List<KeyValuePair<Func<Type, bool>, Type>> _typeAssociations;
+    private readonly List<KeyValuePair<Func<Type?, bool>, Type>> _typeAssociations;
 
     /// <summary>Creates a registry with no controls registered and the standard type rules.</summary>
     public DisplayerRegistry()
     {
         _controlTypesByKey = new Dictionary<Type, Type>();
-        _typeAssociations = new List<KeyValuePair<Func<Type, bool>, Type>>
+        _typeAssociations = new List<KeyValuePair<Func<Type?, bool>, Type>>
         {
             new(type => type == typeof(bool), typeof(StandardDisplayers.CheckBox)),
             new(type => type == typeof(bool?), typeof(StandardDisplayers.NullableBool)),
@@ -67,8 +67,8 @@ public class DisplayerRegistry
         }
 
         Type? selected = null;
-        Type propertyType = member.PropertyType;
-        foreach (KeyValuePair<Func<Type, bool>, Type> association in _typeAssociations)
+        Type? propertyType = member.PropertyType;
+        foreach (KeyValuePair<Func<Type?, bool>, Type> association in _typeAssociations)
         {
             // Every matching rule overrides the previous one, so the last match wins.
             if (association.Key(propertyType))
