@@ -5,7 +5,7 @@
 {% endhint %}
 
 {% hint style="info" %}
-Text also supports `Has Dropshadow`, but the shadow is baked into the font's texture atlas at generation time rather than drawn at runtime like the shape dropshadows above. This requires the project's `FontGenerator` setting to be `KernSmith` — bmfont.exe (the default) cannot bake shadows.
+Text also supports `Has Dropshadow`, but the shadow is baked into the font's texture atlas at generation time rather than drawn at runtime like the shape dropshadows above. This requires the project's `FontGenerator` setting to be `KernSmith`, because BMFont cannot bake shadows.
 {% endhint %}
 
 ### Introduction
