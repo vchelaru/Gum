@@ -16,6 +16,7 @@ using Gum.Plugins;
 using Gum.Plugins.InternalPlugins.VariableGrid;
 using Gum.Services;
 using Gum.Services.Dialogs;
+using Gum.Startup;
 using Gum.ToolCommands;
 using Gum.ToolStates;
 using Moq;
@@ -43,6 +44,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IFilePickingFolderProvider> _filePickingFolderProvider;
     private readonly Mock<INewProjectLogic> _newProjectLogic;
     private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
+    private readonly Mock<IProjectOpenRequestRouter> _projectOpenRequests;
     private readonly Mock<ILastProjectLoadMarker> _lastProjectLoadMarker;
     private readonly ProjectManager _projectManager;
 
@@ -64,6 +66,7 @@ public class ProjectManagerTests : BaseTestClass
         _filePickingFolderProvider = new Mock<IFilePickingFolderProvider>();
         _newProjectLogic = new Mock<INewProjectLogic>();
         _fileSystemRevealService = new Mock<IFileSystemRevealService>();
+        _projectOpenRequests = new Mock<IProjectOpenRequestRouter>();
         _lastProjectLoadMarker = new Mock<ILastProjectLoadMarker>();
 
         _projectManager = new ProjectManager(
@@ -83,6 +86,7 @@ public class ProjectManagerTests : BaseTestClass
             _filePickingFolderProvider.Object,
             new Lazy<INewProjectLogic>(() => _newProjectLogic.Object),
             _fileSystemRevealService.Object,
+            _projectOpenRequests.Object,
             _lastProjectLoadMarker.Object);
     }
 
@@ -121,6 +125,42 @@ public class ProjectManagerTests : BaseTestClass
         _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
         _guiCommands.Verify(g => g.PrintOutput("--generatecode requires a project file"), Times.Once);
         await initialize;
+    }
+
+    [Fact]
+    public async Task Initialize_LoadsOpenRequestProject_InsteadOfCommandLineProject_EvenWithShiftHeld()
+    {
+        // #5130: a project the OS asked to open (a macOS Finder double-click) is what the user
+        // chose, so it wins over the command-line project, the last project and the Shift skip.
+        string requestedProject = "/Users/me/Game/Game.gumx";
+        _projectOpenRequests.Setup(r => r.TakePendingStartupProject()).Returns(requestedProject);
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+        _commandLineManager.SetupGet(c => c.GlueProjectToLoad).Returns("c:/projects/MyGame.gumx");
+        _hotkeyManager
+            .Setup(h => h.IsPressedInControl(It.Is<KeyCombination>(c => c.IsShiftDown && c.Key == null)))
+            .Returns(true);
+
+        await _projectManager.Initialize();
+
+        _fileCommands.Verify(f => f.LoadProjectAsync(requestedProject), Times.Once);
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Once);
+        _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task Initialize_CompletesOpenRequestStartup_AfterStartupProjectLoads()
+    {
+        // #5130: an open request arriving during the startup load is held until the load is done.
+        List<string> calls = new List<string>();
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+        _newProjectLogic.Setup(n => n.CreateNewProjectAsync()).Callback(() => calls.Add("startup project")).Returns(Task.CompletedTask);
+        _projectOpenRequests.Setup(r => r.CompleteStartupAsync()).Callback(() => calls.Add("complete")).Returns(Task.CompletedTask);
+
+        await _projectManager.Initialize();
+
+        calls.ShouldBe(new[] { "startup project", "complete" });
     }
 
     [Fact]

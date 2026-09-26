@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
@@ -56,6 +57,14 @@ public sealed class App : Application
     public override void Initialize()
     {
         Name = "Gum";
+        // macOS sends a Finder-opened document as an activation, not a command-line argument.
+        // Subscribe before the main loop starts so one sent at launch isn't missed (#5130).
+        if (this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+        {
+            FileActivationHandler fileActivationHandler = new FileActivationHandler(
+                _services.GetRequiredService<Lazy<IProjectOpenRequestRouter>>());
+            activatableLifetime.Activated += fileActivationHandler.HandleActivated;
+        }
         if (OperatingSystem.IsMacOS())
         {
             // The app menu must exist before Avalonia's post-setup exporter reads it, or it

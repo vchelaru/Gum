@@ -10,7 +10,7 @@ ships without it (umbrella #5128); *dropped* is intentional. No confirmed blocke
 | Gap | WPF | Avalonia | Call |
 |---|---|---|---|
 | Holding Shift at launch skips loading the last project | `ProjectManager.Initialize` checks `IsPressedInControl(Shift)` | `AvaloniaModifierKeyState` only updates on window key events, so Shift reads as up at startup | Blocker candidate, #5129 |
-| Opening a `.gumx` from macOS Finder opens that project | n/a (Windows passes it as an argument) | `Info.plist` declares document types; the head has no open-document (file activation) handling. Untested on a Mac | Blocker candidate, #5130 |
+| Opening a `.gumx` from macOS Finder opens that project | n/a (Windows passes it as an argument) | `App` forwards Avalonia file activations to `ProjectOpenRequestRouter`. Covered by headless tests; needs a Mac run | Fixed pending Mac check, #5130 |
 | Dropping a `.gumx`/`.gumj` on the window opens it | `MainWindow.xaml.cs` via `IProjectFileDropLogic` | Canvas drop rejects project files | Follow-up, #5128 |
 | Mouse back/forward buttons step selection history | `MainWindow.OnPreviewMouseDown` | Buttons are mapped but nothing reads them; Alt+Left/Right works | Follow-up, #5128 |
 | Ctrl+C copies a message dialog's text | `DialogWindow.xaml.cs` | `DialogWindow.cs` handles Escape only; message isn't selectable | Follow-up, #5128 |
