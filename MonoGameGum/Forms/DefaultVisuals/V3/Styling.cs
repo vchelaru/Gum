@@ -3,6 +3,7 @@ using RenderingLibrary;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 
 
 #if XNALIKE
@@ -18,7 +19,7 @@ namespace Gum.Forms.DefaultVisuals.V3;
 
 public class Styling
 {
-    private static Styling _activeStyle;
+    private static Styling? _activeStyle;
 
     /// <summary>
     /// This allows someone to get the active style from any instance they create, or from the class self like Styling.ActiveStyle.
@@ -29,16 +30,18 @@ public class Styling
     /// a <see cref="Gum.Forms.Controls.FrameworkElement.DefaultFormsTemplates"/> override) in an app that never
     /// called <c>InitializeDefaults</c> with V3/Newest - e.g. a test host initialized with V1/V2, or a
     /// composite control (like Slider's thumb) that internally builds a V3 visual regardless of which
-    /// version the app registered.
+    /// version the app registered. Setting null discards the current style so the next read
+    /// builds a fresh default one.
     /// </remarks>
+    [AllowNull]
     public static Styling ActiveStyle
     {
         get => _activeStyle ??= new Styling(spriteSheet: null);
         set => _activeStyle = value;
     }
 
-    private Texture2D _spriteSheet;
-    public Texture2D SpriteSheet 
+    private Texture2D? _spriteSheet;
+    public Texture2D? SpriteSheet 
     { 
         get => _spriteSheet;
         set
@@ -70,7 +73,7 @@ public class Styling
         // lazy getter can construct a Styling in either state, so fall back to an unset sheet
         // instead of throwing.
         Texture2D? loaded = SystemManagers.Default?.GetOrLoadEmbeddedTexture2d("UISpriteSheet.png");
-        this.SpriteSheet = spriteSheet ?? loaded ?? default!;
+        this.SpriteSheet = spriteSheet ?? loaded;
 
         // Set the backing field directly rather than going through the ActiveStyle property:
         // ActiveStyle's getter lazily constructs a Styling(null) when unset, and re-entering that
@@ -120,7 +123,7 @@ public class Styling
         };
     }
 
-    public static void UpdateTexturePosition(StateSave stateSave, int left, int top, int width, int height, Texture2D? texture = null)
+    public static void UpdateTexturePosition(StateSave? stateSave, int left, int top, int width, int height, Texture2D? texture = null)
     {
         stateSave?.SetValue("TextureLeft", left, "int");
         stateSave?.SetValue("TextureTop", top, "int");
@@ -166,23 +169,28 @@ public class Colors
 }
 
 
+/// <summary>
+/// Texture-coordinate states for the nine-slice backgrounds used by the default visuals. Each
+/// starts as an empty state (no texture coordinates) until <see cref="UseDefaults"/> or the
+/// caller fills it in.
+/// </summary>
 public class NineSlice
 {
-    public StateSave Solid;
-    public StateSave Bordered;
-    public StateSave BracketVertical;
-    public StateSave BracketHorizontal;
-    public StateSave Tab;
-    public StateSave TabBordered;
-    public StateSave Outlined;
-    public StateSave OutlinedHeavy;
-    public StateSave Panel;
-    public StateSave CircleSolid;
-    public StateSave CircleBordered;
-    public StateSave CircleOutlined;
-    public StateSave CircleOutlinedHeavy;
+    public StateSave Solid = new();
+    public StateSave Bordered = new();
+    public StateSave BracketVertical = new();
+    public StateSave BracketHorizontal = new();
+    public StateSave Tab = new();
+    public StateSave TabBordered = new();
+    public StateSave Outlined = new();
+    public StateSave OutlinedHeavy = new();
+    public StateSave Panel = new();
+    public StateSave CircleSolid = new();
+    public StateSave CircleBordered = new();
+    public StateSave CircleOutlined = new();
+    public StateSave CircleOutlinedHeavy = new();
 
-    public void UseDefaults(Texture2D texture)
+    public void UseDefaults(Texture2D? texture)
     {
         Solid = Styling.CreateTextureCoordinateState(0, 48, 24, 24, texture, nameof(Solid));
         Bordered = Styling.CreateTextureCoordinateState(24, 48, 24, 24, texture, nameof(Bordered));
@@ -199,7 +207,7 @@ public class NineSlice
         CircleOutlinedHeavy = Styling.CreateTextureCoordinateState(24, 120, 24, 24, texture, nameof(CircleOutlinedHeavy));
     }
 
-    public void UpdateTextures(Texture2D texture)
+    public void UpdateTextures(Texture2D? texture)
     {
         Solid?.SetValue("Texture", texture, "Texture2D");
         Bordered?.SetValue("Texture", texture, "Texture2D");
@@ -217,80 +225,84 @@ public class NineSlice
     }
 }
 
+/// <summary>
+/// Texture-coordinate states for the icons on the sprite sheet. Each starts as an empty state
+/// (no texture coordinates) until <see cref="UseDefaults"/> or the caller fills it in.
+/// </summary>
 public class Icons
 {
-    public StateSave Arrow1;
-    public StateSave Arrow2;
-    public StateSave Arrow3;
-    public StateSave Basket;
-    public StateSave Battery;
-    public StateSave Check;
-    public StateSave CheckeredFlag;
-    public StateSave Circle1;
-    public StateSave Circle2;
-    public StateSave Close;
-    public StateSave Crosshairs;
-    public StateSave Currency;
-    public StateSave Cursor;
-    public StateSave CursorText;
-    public StateSave Dash;
-    public StateSave Delete;
-    public StateSave Enter;
-    public StateSave Expand;
-    public StateSave Gamepad;
-    public StateSave GamepadNES;
-    public StateSave GamepadSNES;
-    public StateSave GamepadNintendo64;
-    public StateSave GamepadGamecube;
-    public StateSave GamepadSwitchPro;
-    public StateSave GamepadXbox;
-    public StateSave GamepadPlaystationDualShock;
-    public StateSave GamepadSegaGenesis;
-    public StateSave Gear;
-    public StateSave FastForward;
-    public StateSave FastForwardBar;
-    public StateSave FitToScreen;
-    public StateSave Flame1;
-    public StateSave Flame2;
-    public StateSave Heart;
-    public StateSave Info;
-    public StateSave Keyboard;
-    public StateSave Leaf;
-    public StateSave Lightning;
-    public StateSave Minimize;
-    public StateSave Monitor;
-    public StateSave Mouse;
-    public StateSave Music;
-    public StateSave Pause;
-    public StateSave Pencil;
-    public StateSave Play;
-    public StateSave PlayBar;
-    public StateSave Power;
-    public StateSave Radiation;
-    public StateSave Reduce;
-    public StateSave Shield;
-    public StateSave Shot;
-    public StateSave Skull;
-    public StateSave Sliders;
-    public StateSave SoundMaximum;
-    public StateSave SoundMinimum;
-    public StateSave Speech;
-    public StateSave Star;
-    public StateSave Stop;
-    public StateSave Temperature;
-    public StateSave Touch;
-    public StateSave Trash;
-    public StateSave Trophy;
-    public StateSave User;
-    public StateSave UserAdd;
-    public StateSave UserDelete;
-    public StateSave UserGear;
-    public StateSave UserMulti;
-    public StateSave UserRemove;
-    public StateSave Warning;
-    public StateSave Wrench;
+    public StateSave Arrow1 = new();
+    public StateSave Arrow2 = new();
+    public StateSave Arrow3 = new();
+    public StateSave Basket = new();
+    public StateSave Battery = new();
+    public StateSave Check = new();
+    public StateSave CheckeredFlag = new();
+    public StateSave Circle1 = new();
+    public StateSave Circle2 = new();
+    public StateSave Close = new();
+    public StateSave Crosshairs = new();
+    public StateSave Currency = new();
+    public StateSave Cursor = new();
+    public StateSave CursorText = new();
+    public StateSave Dash = new();
+    public StateSave Delete = new();
+    public StateSave Enter = new();
+    public StateSave Expand = new();
+    public StateSave Gamepad = new();
+    public StateSave GamepadNES = new();
+    public StateSave GamepadSNES = new();
+    public StateSave GamepadNintendo64 = new();
+    public StateSave GamepadGamecube = new();
+    public StateSave GamepadSwitchPro = new();
+    public StateSave GamepadXbox = new();
+    public StateSave GamepadPlaystationDualShock = new();
+    public StateSave GamepadSegaGenesis = new();
+    public StateSave Gear = new();
+    public StateSave FastForward = new();
+    public StateSave FastForwardBar = new();
+    public StateSave FitToScreen = new();
+    public StateSave Flame1 = new();
+    public StateSave Flame2 = new();
+    public StateSave Heart = new();
+    public StateSave Info = new();
+    public StateSave Keyboard = new();
+    public StateSave Leaf = new();
+    public StateSave Lightning = new();
+    public StateSave Minimize = new();
+    public StateSave Monitor = new();
+    public StateSave Mouse = new();
+    public StateSave Music = new();
+    public StateSave Pause = new();
+    public StateSave Pencil = new();
+    public StateSave Play = new();
+    public StateSave PlayBar = new();
+    public StateSave Power = new();
+    public StateSave Radiation = new();
+    public StateSave Reduce = new();
+    public StateSave Shield = new();
+    public StateSave Shot = new();
+    public StateSave Skull = new();
+    public StateSave Sliders = new();
+    public StateSave SoundMaximum = new();
+    public StateSave SoundMinimum = new();
+    public StateSave Speech = new();
+    public StateSave Star = new();
+    public StateSave Stop = new();
+    public StateSave Temperature = new();
+    public StateSave Touch = new();
+    public StateSave Trash = new();
+    public StateSave Trophy = new();
+    public StateSave User = new();
+    public StateSave UserAdd = new();
+    public StateSave UserDelete = new();
+    public StateSave UserGear = new();
+    public StateSave UserMulti = new();
+    public StateSave UserRemove = new();
+    public StateSave Warning = new();
+    public StateSave Wrench = new();
 
-    public void UseDefaults(Texture2D texture)
+    public void UseDefaults(Texture2D? texture)
     {
         Arrow1 = Styling.CreateTextureCoordinateState(288, 256, 32, 32, texture);
         Arrow2 = Styling.CreateTextureCoordinateState(320, 256, 32, 32, texture);
@@ -364,7 +376,7 @@ public class Icons
         Wrench = Styling.CreateTextureCoordinateState(384, 96, 32, 32, texture);
     }
 
-    public void UpdateTextures(Texture2D texture)
+    public void UpdateTextures(Texture2D? texture)
     {
         Arrow1?.SetValue("Texture", texture, "Texture2D");
         Arrow2?.SetValue("Texture", texture, "Texture2D");

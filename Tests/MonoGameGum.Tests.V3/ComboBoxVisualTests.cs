@@ -1,4 +1,7 @@
 ﻿using Gum.Forms.Controls;
+using Gum.Forms.DefaultVisuals.V3;
+using Gum.GueDeriving;
+using System;
 using Shouldly;
 using Xunit;
 
@@ -14,5 +17,17 @@ public class ComboBoxVisualTests
 
         // Assert
         sut.Visual.HasEvents.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ListBoxInstance_SetToVisualWithoutListBox_ThrowsArgumentExceptionAndKeepsListBox()
+    {
+        ComboBoxVisual sut = new ComboBoxVisual();
+        ListBox originalListBox = sut.FormsControl.ListBox;
+        ContainerRuntime notAListBox = new ContainerRuntime { Name = "ListBoxInstance" };
+
+        Should.Throw<ArgumentException>(() => sut.ListBoxInstance = notAListBox);
+
+        sut.FormsControl.ListBox.ShouldBeSameAs(originalListBox);
     }
 }

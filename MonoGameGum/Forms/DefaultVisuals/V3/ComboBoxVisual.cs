@@ -54,6 +54,7 @@ public class ComboBoxVisual : InteractiveGue
     /// <summary>
     /// The embedded ListBoxVisual used as the dropdown popup. Must be named "ListBoxInstance".
     /// </summary>
+    /// <exception cref="ArgumentException">The assigned visual is not backed by a ListBox Forms control.</exception>
     public GraphicalUiElement ListBoxInstance
     {
         get => listBoxInstance;
@@ -69,8 +70,10 @@ public class ComboBoxVisual : InteractiveGue
                 throw new InvalidOperationException("The assigned ListBox must be named ListBoxInstance");
             }
 #endif
+            ListBox listBox = (value as InteractiveGue)?.FormsControlAsObject as ListBox
+                ?? throw new ArgumentException("ListBoxInstance must be a visual backed by a ListBox Forms control", nameof(value));
             listBoxInstance = value;
-            this.FormsControl.ListBox = (listBoxInstance as InteractiveGue)?.FormsControlAsObject as ListBox;
+            this.FormsControl.ListBox = listBox;
             PositionAndAttachListBox(listBoxInstance);
         }
     }

@@ -22,5 +22,5 @@ public class DefaultFromFileCheckBoxRuntime : InteractiveGue
         }
     }
 
-    public CheckBox FormsControl => FormsControlAsObject as CheckBox;
+    public CheckBox? FormsControl => FormsControlAsObject as CheckBox;
 }

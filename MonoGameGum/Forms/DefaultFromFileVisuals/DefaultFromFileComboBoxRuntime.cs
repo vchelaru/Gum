@@ -23,5 +23,5 @@ public class DefaultFromFileComboBoxRuntime : InteractiveGue
         }
     }
 
-    public ComboBox FormsControl => FormsControlAsObject as ComboBox;
+    public ComboBox? FormsControl => FormsControlAsObject as ComboBox;
 }

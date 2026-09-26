@@ -28,5 +28,5 @@ public class DefaultFromFileLabelTextRuntime : TextRuntime
         }
     }
 
-    public Label FormsControl => FormsControlAsObject as Label;
+    public Label? FormsControl => FormsControlAsObject as Label;
 }

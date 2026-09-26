@@ -23,5 +23,5 @@ public class DefaultFromFileListBoxRuntime : InteractiveGue
         }
     }
 
-    public ListBox FormsControl => FormsControlAsObject as ListBox;
+    public ListBox? FormsControl => FormsControlAsObject as ListBox;
 }

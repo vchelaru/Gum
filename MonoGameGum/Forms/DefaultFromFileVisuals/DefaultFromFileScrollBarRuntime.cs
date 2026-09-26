@@ -22,5 +22,5 @@ public class DefaultFromFileScrollBarRuntime : InteractiveGue
         }
     }
 
-    public ScrollBar FormsControl => FormsControlAsObject as ScrollBar;
+    public ScrollBar? FormsControl => FormsControlAsObject as ScrollBar;
 }

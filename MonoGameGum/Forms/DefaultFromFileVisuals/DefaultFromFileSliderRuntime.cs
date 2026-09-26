@@ -22,5 +22,5 @@ public class DefaultFromFileSliderRuntime : InteractiveGue
         }
     }
 
-    public Slider FormsControl => FormsControlAsObject as Slider;
+    public Slider? FormsControl => FormsControlAsObject as Slider;
 }

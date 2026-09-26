@@ -21,5 +21,5 @@ public class DefaultFromFileSplitterRuntime : InteractiveGue
             FormsControlAsObject = new Splitter(this);
         }
     }
-    public Splitter FormsControl => FormsControlAsObject as Splitter;
+    public Splitter? FormsControl => FormsControlAsObject as Splitter;
 }
