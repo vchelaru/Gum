@@ -144,7 +144,10 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
 
     private void HandleCategoryAdd(StateSaveCategory category)
     {
-        _elementTreeViewManager.RefreshUi(_selectedState.SelectedStateContainer);
+        if (_selectedState.SelectedStateContainer is { } stateContainer)
+        {
+            _elementTreeViewManager.RefreshUi(stateContainer);
+        }
         RefreshErrorIndicatorsForElement(_selectedState.SelectedElement);
     }
 
@@ -205,7 +208,15 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
 
         // Load user settings and apply tree view state
-        _userProjectSettingsManager.LoadForProject(save.FullFileName);
+        // A new project has no file yet, so it has no settings file to load.
+        if (save.FullFileName is { } projectFileName)
+        {
+            _userProjectSettingsManager.LoadForProject(projectFileName);
+        }
+        else
+        {
+            _userProjectSettingsManager.Clear();
+        }
         _treeViewStateService.LoadAndApplyState(_elementTreeViewManager.RootTreeNodes);
         using (StartupTiming.Time("    MainTreeViewPlugin RefreshErrorIndicatorsForAllElements"))
         {
@@ -238,7 +249,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         RefreshErrorIndicatorsForAllElements();
     }
 
-    private void HandleBehaviorSelected(BehaviorSave save)
+    private void HandleBehaviorSelected(BehaviorSave? save)
     {
         if(save != null)
         {
@@ -262,7 +273,7 @@ internal class MainTreeViewPlugin : PluginBase, IPriorityPlugin, IRecipient<Appl
         }
     }
 
-    private void HandleElementSelected(ElementSave save)
+    private void HandleElementSelected(ElementSave? save)
     {
         _elementTreeViewManager.HighlightStandardInPalette(save);
 
