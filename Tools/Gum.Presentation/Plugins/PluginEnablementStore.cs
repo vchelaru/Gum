@@ -26,9 +26,23 @@ public class PluginEnablementStore : IPluginEnablementStore
 
     public void Load()
     {
-        _settings = File.Exists(_fileName)
-            ? PluginSettingsSave.Load(_fileName)
-            : new PluginSettingsSave();
+        if (!File.Exists(_fileName))
+        {
+            _settings = new PluginSettingsSave();
+            return;
+        }
+
+        try
+        {
+            _settings = PluginSettingsSave.Load(_fileName);
+        }
+        catch (IOException)
+        {
+            // Loaded during startup, so an unreadable file enables every plugin rather than stopping
+            // the tool. The next save overwrites it, so keep a copy.
+            File.Copy(_fileName, _fileName + ".unreadable", overwrite: true);
+            _settings = new PluginSettingsSave();
+        }
     }
 
     public bool IsDisabled(string pluginUniqueId) =>

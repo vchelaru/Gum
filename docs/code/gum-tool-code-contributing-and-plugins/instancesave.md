@@ -22,7 +22,9 @@ In this pic the Screen1 ScreenSave has 3 InstanceSaves: 1. TextInstance 1. Color
 The following code shows how to access the X value of an ElementSave as defined in the default state of its container.
 
 ```csharp
-var container = SelectedState.Self.SelectedScreen;
+// Initialize
+// _selectedState is the plugin's injected ISelectedState, see the SelectedState page
+var container = _selectedState.SelectedScreen;
 // This code gets an instance by the name "Title"
 var instance = container.Instances.FirstOrDefault(item=>item.Name == "Title");
 

@@ -1,10 +1,12 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Threading;
+using Gum.Avalonia.Diagnostics;
 using Gum.Avalonia.Services;
 using Gum.Diagnostics;
 using Gum.Services;
+using Gum.Services.Dialogs;
 using Gum.Settings;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,28 +19,54 @@ namespace Gum.Avalonia;
 /// <summary>Desktop entry point for the Avalonia head.</summary>
 public static class Program
 {
+    private const string CrashLogsFolderName = "CrashLogs";
+
     /// <summary>Builds the service host, then runs the Avalonia application on this thread.</summary>
     [STAThread]
     public static int Main(string[] args)
     {
         StartupTiming.Mark("Main entry");
-        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
-            Console.Error.WriteLine("Unhandled exception: " + e.ExceptionObject);
-        TaskScheduler.UnobservedTaskException += (_, e) =>
-            Console.Error.WriteLine("Unobserved task exception: " + e.Exception);
-
         HeadOptions options = HeadOptions.Parse(args);
         // Before anything reads or writes a per-user file.
         FileManager.UserApplicationDataFolderOverride = options.UserDataFolder;
-        using IHost host = CreateHostBuilder(args).Build();
+
+        // Set once Avalonia is set up; until then an error is logged but not shown.
+        IServiceProvider? services = null;
+        CrashReporter crashReporter = new CrashReporter(
+            Path.Combine(GetAppDataDirectory(), CrashLogsFolderName),
+            ToolVersion.Describe(typeof(Program).Assembly),
+            message => ShowErrorMessage(services, options, message));
+        UnhandledExceptionHooks.InstallProcessHooks(crashReporter);
+
+        using IHost host = CreateHostBuilder(args)
+            .ConfigureServices(serviceCollection => serviceCollection.AddSingleton<ICrashReporter>(crashReporter))
+            .Build();
         StartupTiming.Mark("Host built");
         Locator.Register(host.Services);
         host.StartAsync().GetAwaiter().GetResult();
 
-        int exitCode = BuildAvaloniaApp(host.Services, options).StartWithClassicDesktopLifetime(args);
+        int exitCode = BuildAvaloniaApp(host.Services, options)
+            .AfterSetup(_ =>
+            {
+                UnhandledExceptionHooks.InstallDispatcherHook(crashReporter);
+                services = host.Services;
+            })
+            .StartWithClassicDesktopLifetime(args);
 
         host.StopAsync().GetAwaiter().GetResult();
         return exitCode;
+    }
+
+    // Posted, so the dialog never opens inside the exception handler that reported the error. An
+    // unattended run has nobody to answer it, and the modal would hold up its exit timer.
+    private static void ShowErrorMessage(IServiceProvider? services, HeadOptions options, string message)
+    {
+        if (services == null || options.ExitAfterSeconds != null)
+        {
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => services.GetRequiredService<IDialogService>().ShowMessage(message, "Gum Error"));
     }
 
     /// <summary>The Avalonia app builder; also used by the headless tests.</summary>
@@ -70,9 +98,10 @@ public static class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(cfg =>
             {
-                if (!File.Exists(settingsPath))
+                string? unreadableCopy = AppSettingsFile.EnsureLoadable(settingsPath);
+                if (unreadableCopy != null)
                 {
-                    File.WriteAllText(settingsPath, "{}");
+                    Console.Error.WriteLine($"Could not read {settingsPath}; started with default theme and layout. The old file was moved to {unreadableCopy}.");
                 }
 
                 cfg.Sources.Clear();
