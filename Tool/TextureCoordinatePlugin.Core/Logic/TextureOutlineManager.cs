@@ -8,10 +8,10 @@ namespace TextureCoordinateSelectionPlugin.Logic;
 
 public class TextureOutlineManager : IVisualOverlayManager
 {
-    private LineRectangle _textureOutlineRectangle;
+    private LineRectangle? _textureOutlineRectangle;
     private readonly ICanvasDisplayScale _displayScale;
 
-    public Texture2D CurrentTexture { get; set; }
+    public Texture2D? CurrentTexture { get; set; }
 
     public TextureOutlineManager(ICanvasDisplayScale displayScale)
     {
@@ -29,6 +29,12 @@ public class TextureOutlineManager : IVisualOverlayManager
 
     public void Refresh()
     {
+        if (_textureOutlineRectangle == null)
+        {
+            // Not initialized yet: the canvas has no graphics device until the head's render surface is ready.
+            return;
+        }
+
         _textureOutlineRectangle.LinePixelWidth = _displayScale.DisplayScale;
         _textureOutlineRectangle.Visible = CurrentTexture != null;
         if (CurrentTexture != null)

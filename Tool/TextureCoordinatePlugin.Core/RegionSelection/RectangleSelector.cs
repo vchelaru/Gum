@@ -268,7 +268,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
             get; set;
         } = true;
 
-        public object Tag
+        public object? Tag
         {
             get;
             set;
@@ -301,15 +301,15 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
 
         #endregion
 
-        public event EventHandler StartRegionChanged;
+        public event EventHandler? StartRegionChanged;
         /// <summary>
         /// Event raised whenever the region changes. This can happen through keyboard input, or through mouse dragging.
         /// Note that this event will be raised frequently when dragging the mouse, so it should not be used to auto-save
         /// files. See EndRegionChanged for file saving.
         /// </summary>
-        public event EventHandler RegionChanged;
-        public event EventHandler EndRegionChanged;
-        public event EventHandler Pushed;
+        public event EventHandler? RegionChanged;
+        public event EventHandler? EndRegionChanged;
+        public event EventHandler? Pushed;
 
         /// <summary>
         /// Whether to raise EndRegionChanged when a mouse is released (clicked).
@@ -498,7 +498,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
                     {
                         // record before any changes are made
                         RecordOldValues();
-                        StartRegionChanged?.Invoke(this, null);
+                        StartRegionChanged?.Invoke(this, EventArgs.Empty);
                     }
 
 
@@ -525,8 +525,8 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
 
                     if (changed )
                     {
-                        RegionChanged?.Invoke(this, null);
-                        EndRegionChanged?.Invoke(this, null);
+                        RegionChanged?.Invoke(this, EventArgs.Empty);
+                        EndRegionChanged?.Invoke(this, EventArgs.Empty);
                     }
                 }
             }
@@ -636,7 +636,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
 
                 if(shouldRaiseEndRegionChanged)
                 {
-                    EndRegionChanged?.Invoke(this, null);
+                    EndRegionChanged?.Invoke(this, EventArgs.Empty);
                     shouldRaiseEndRegionChanged = false;
                 }
 
@@ -697,7 +697,7 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
                 this.Height = mCoordinates.Height + heightMultiplier * cursor.YChange;
 
 
-                RegionChanged?.Invoke(this, null);
+                RegionChanged?.Invoke(this, EventArgs.Empty);
 
                 shouldRaiseEndRegionChanged = true;
 
@@ -773,8 +773,8 @@ namespace TextureCoordinateSelectionPlugin.RegionSelection
 
                 if (mSideGrabbed != ResizeSide.None)
                 {
-                    Pushed?.Invoke(this, null);
-                    StartRegionChanged?.Invoke(this, null);
+                    Pushed?.Invoke(this, EventArgs.Empty);
+                    StartRegionChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }

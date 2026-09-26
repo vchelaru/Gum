@@ -67,10 +67,10 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     ExposedTextureCoordinateSet? _currentExposedSource;
 
-    object oldTextureLeftValue;
-    object oldTextureTopValue;
-    object oldTextureWidthValue;
-    object oldTextureHeightValue;
+    object? oldTextureLeftValue;
+    object? oldTextureTopValue;
+    object? oldTextureWidthValue;
+    object? oldTextureHeightValue;
 
     /// <summary>
     /// This can be set to false to prevent the
@@ -82,7 +82,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     SystemManagers SystemManagers => _view.Canvas.SystemManagers;
 
-    Texture2D CurrentTexture
+    Texture2D? CurrentTexture
     {
         get => _view.Canvas.CurrentTexture;
         set => _view.Canvas.CurrentTexture = value;
@@ -517,6 +517,11 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
         _undoManager.RecordUndo();
 
         var state = _selectedState.SelectedStateSave;
+        if (state == null)
+        {
+            // Nothing to record against: a region can only be dragged over a selected element's texture.
+            return;
+        }
 
         var instancePrefix = _selectedState.SelectedInstance?.Name;
 
@@ -543,15 +548,13 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     private void HandleRegionChanged(object? sender, EventArgs e)
     {
-        var control = sender as ImageRegionSelectionCore;
+        var selector = (sender as ImageRegionSelectionCore)?.RectangleSelector;
 
         var graphicalUiElement = _selectedState.SelectedIpso as GraphicalUiElement;
+        var state = _selectedState.SelectedStateSave;
 
-        if (graphicalUiElement != null)
+        if (graphicalUiElement != null && selector != null && state != null)
         {
-            var selector = control.RectangleSelector;
-
-            var state = _selectedState.SelectedStateSave;
             var instancePrefix = _selectedState.SelectedInstance?.Name;
 
             if (!string.IsNullOrEmpty(instancePrefix))
@@ -685,7 +688,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                 {
                     shouldClearOut = false;
                     control.DesiredSelectorCount = 1;
-                    var selector = control.RectangleSelector;
+                    var selector = control.RectangleSelectors[0];
 
                     selector.Left = innerChild.TextureLeft;
                     selector.Top = innerChild.TextureTop;
@@ -715,7 +718,7 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                     shouldClearOut = false;
                     control.DesiredSelectorCount = 1;
 
-                    var selector = control.RectangleSelector;
+                    var selector = control.RectangleSelectors[0];
 
 
                     selector.Left = rfv.GetValue<int>($"{instancePrefix}TextureLeft");
@@ -731,11 +734,12 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
                     this.CenterCameraOnSelection();
 
                 }
-                else if (textureAddress == TextureAddress.DimensionsBased)
+                // The width comes from the selected visual's size, so there is nothing to show without one.
+                else if (textureAddress == TextureAddress.DimensionsBased && graphicalUiElement != null)
                 {
                     shouldClearOut = false;
                     control.DesiredSelectorCount = 1;
-                    var selector = control.RectangleSelector;
+                    var selector = control.RectangleSelectors[0];
 
                     selector.Left = rfv.GetValue<int>($"{instancePrefix}TextureLeft");
                     selector.Top = rfv.GetValue<int>($"{instancePrefix}TextureTop");

@@ -4,6 +4,7 @@ using Gum.Managers;
 using Moq;
 using Shouldly;
 using TextureCoordinateSelectionPlugin.Logic;
+using TextureCoordinateSelectionPlugin.Models;
 
 namespace Gum.Presentation.Tests.Plugins.TextureCoordinateSelectionPlugin;
 
@@ -76,6 +77,16 @@ public class ExposedTextureCoordinateLogicTests : BaseTestClass
     #endregion
 
     #region GetExposedSets
+
+    [Fact]
+    public void GetExposedSets_ReturnsEmptyList_WhenElementHasNoStates()
+    {
+        ComponentSave component = new ComponentSave { Name = "NoStates" };
+
+        List<ExposedTextureCoordinateSet> result = _sut.GetExposedSets(component);
+
+        result.ShouldBeEmpty();
+    }
 
     [Fact]
     public void GetExposedSets_ReturnsEmptyList_WhenInstanceElementIsNotSpriteOrNineSlice()
