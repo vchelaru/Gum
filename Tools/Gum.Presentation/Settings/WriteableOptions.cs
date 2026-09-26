@@ -49,27 +49,21 @@ public sealed class WritableOptions<T> : IWritableOptions<T> where T : class, ne
     {
         lock (_writeLock)
         {
-            // Load file (or create an empty root if missing)
-            JsonObject root;
-            if (File.Exists(_filePath))
-            {
-                var text = File.ReadAllText(_filePath);
-                root = JsonNode.Parse(text) as JsonObject ?? new JsonObject();
-            }
-            else
-            {
-                root = new JsonObject();
-            }
+            JsonObject root = File.Exists(_filePath)
+                ? JsonNode.Parse(File.ReadAllText(_filePath), documentOptions: WritableOptionsServiceCollectionExtensions.ConfigurationJsonOptions) as JsonObject ?? new JsonObject()
+                : new JsonObject();
 
-            // Get or create this section node
-            var sectionNode = root[_sectionName] as JsonObject ?? new JsonObject();
-
-            // Deserialize current section to T, apply changes
-            var model = sectionNode.Deserialize<T>(JsonOpts) ?? new T();
+            // Read the section the way it was loaded (the configuration binder), not with
+            // System.Text.Json: the binder also takes enum names, numbers in strings and any key casing.
+            T model = BindSection(root) ?? new T();
             applyChanges(model);
 
-            // Write section back
-            root[_sectionName] = JsonSerializer.SerializeToNode(model, JsonOpts) as JsonNode;
+            // Configuration keys are case-insensitive, so a differently cased copy would be a duplicate key.
+            foreach (string key in root.Select(p => p.Key).Where(IsSectionKey).ToList())
+            {
+                root.Remove(key);
+            }
+            root[_sectionName] = JsonSerializer.SerializeToNode(model, JsonOpts);
 
             // Persist to disk atomically
             var tempPath = _filePath + ".tmp";
@@ -80,6 +74,14 @@ public sealed class WritableOptions<T> : IWritableOptions<T> where T : class, ne
             // Notify config that file changed
             _configRoot.Reload();
         }
+    }
+
+    private bool IsSectionKey(string key) => string.Equals(key, _sectionName, StringComparison.OrdinalIgnoreCase);
+
+    private T? BindSection(JsonObject root)
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(root.ToJsonString()));
+        return new ConfigurationBuilder().AddJsonStream(stream).Build().GetSection(_sectionName).Get<T>();
     }
 }
 
@@ -137,6 +139,13 @@ public class ColorJsonConverter : System.Text.Json.Serialization.JsonConverter<C
 
 public static class WritableOptionsServiceCollectionExtensions
 {
+    /// <summary>The leniency the JSON configuration provider parses with.</summary>
+    internal static readonly JsonDocumentOptions ConfigurationJsonOptions = new()
+    {
+        CommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
+    };
+
     /// <summary>
     /// Binds T to the given section and registers IWritableOptions&lt;T&gt; that
     /// writes back only that section to the provided file path.
@@ -193,13 +202,7 @@ public static class WritableOptionsServiceCollectionExtensions
             return false;
         }
 
-        // The same leniency the JSON configuration provider parses with.
-        var documentOptions = new JsonDocumentOptions
-        {
-            CommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true,
-        };
-        if (JsonNode.Parse(File.ReadAllText(filePath), documentOptions: documentOptions) is not JsonObject root)
+        if (JsonNode.Parse(File.ReadAllText(filePath), documentOptions: ConfigurationJsonOptions) is not JsonObject root)
         {
             return false;
         }
