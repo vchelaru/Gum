@@ -80,6 +80,9 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
   and the headless session sometimes throws `PlatformNotSupportedException` from `PushFrame`. To
   let a `DispatcherTimer` tick, loop `Thread.Sleep(10)` + `Dispatcher.UIThread.RunJobs()` for the
   duration instead of awaiting (`AnimationEditorHarness.Wait`).
+- `HeadTestServices` replaces `IFontFileGenerator` with `NoOpFontFileGenerator`, so no Avalonia
+  test writes `.fnt`/`.png` files; a test that needs real fonts must register the real generator
+  and await it.
 
 ## Save parity corpus
 
