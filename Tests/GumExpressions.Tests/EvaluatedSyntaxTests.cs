@@ -467,6 +467,30 @@ public class EvaluatedSyntaxTests : BaseTestClass
         result.Value.ShouldBe(200f);
     }
 
+    [Fact]
+    public void FromSyntaxNode_CrossElementReferenceWithNoVariable_ReturnsNull()
+    {
+        GumProjectSave project = new GumProjectSave();
+        ObjectFinder.Self.GumProjectSave = project;
+        ComponentSave button = new ComponentSave { Name = "Button" };
+        button.States.Add(new StateSave { Name = "Default", ParentContainer = button });
+        project.Components.Add(button);
+
+        EvaluatedSyntax? result = Evaluate("Components/Button", BuildState());
+
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public void FromSyntaxNode_CrossElementReferenceToMissingElement_ReturnsNull()
+    {
+        ObjectFinder.Self.GumProjectSave = new GumProjectSave();
+
+        EvaluatedSyntax? result = Evaluate("Components/Missing.Width", BuildState());
+
+        result.ShouldBeNull();
+    }
+
     #endregion
 
     #region Literals

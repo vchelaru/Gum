@@ -21,14 +21,14 @@ public class ExportEventFileManager
     const string masterFileName = "gum_events.json";
     static ExportedEventCollection? events;
 
-    static string EventExportDirectory
+    static string? EventExportDirectory
     {
         get
         {
-
-            if (string.IsNullOrEmpty(Locator.GetRequiredService<IProjectState>().ProjectDirectory) == false)
+            string? projectDirectory = Locator.GetRequiredService<IProjectState>().ProjectDirectory;
+            if (!string.IsNullOrEmpty(projectDirectory))
             {
-                return Path.Combine(Locator.GetRequiredService<IProjectState>().ProjectDirectory, "EventExport");
+                return Path.Combine(projectDirectory, "EventExport");
             }
             else
             {
@@ -37,14 +37,19 @@ public class ExportEventFileManager
         }
     }
 
-    static string EventFileFullPath
+    static string? EventFileFullPath
     {
         get
         {
-            if (string.IsNullOrEmpty(EventExportDirectory) == false)
-                return Path.Combine(EventExportDirectory, masterFileName);
+            string? eventExportDirectory = EventExportDirectory;
+            if (!string.IsNullOrEmpty(eventExportDirectory))
+            {
+                return Path.Combine(eventExportDirectory, masterFileName);
+            }
             else
+            {
                 return null;
+            }
         }
     }
 
@@ -108,13 +113,7 @@ public class ExportEventFileManager
     public static void DeleteOldEventFiles()
     {
         const int daysToKeep = 14;
-        var keys = Events?.UserEvents?.Keys?.ToList();
-
-        // EARLY OUT: nothing to delete, probably a new file
-        if (keys == null)
-        {
-            return;
-        }
+        var keys = Events.UserEvents.Keys.ToList();
 
         var cutoff = DateTime.UtcNow.AddDays(-daysToKeep);
         foreach (var key in keys)
@@ -133,39 +132,36 @@ public class ExportEventFileManager
 
     static ExportedEventCollection GetOrCreateEventCollection()
     {
-        ExportedEventCollection collection;
-        if(File.Exists(EventFileFullPath))
+        string? eventFileFullPath = EventFileFullPath;
+        if (eventFileFullPath != null && File.Exists(eventFileFullPath))
         {
-            var text = File.ReadAllText(EventFileFullPath);
-            collection = JsonConvert.DeserializeObject<ExportedEventCollection>(text);
+            var text = File.ReadAllText(eventFileFullPath);
+            return ExportedEventCollection.FromJson(text);
         }
         else
         {
-            collection = new ExportedEventCollection();
-            collection.UserEvents = new Dictionary<string, List<ExportedEvent>>();
+            return new ExportedEventCollection();
         }
-
-        return collection;
     }
 
     static void SaveEventCollection()
     {
-        if (string.IsNullOrEmpty(EventFileFullPath) == false)
+        string? eventFileFullPath = EventFileFullPath;
+        if (!string.IsNullOrEmpty(eventFileFullPath))
         {
-            var file = new FilePath(EventFileFullPath);
+            var file = new FilePath(eventFileFullPath);
             // using indented formatting results in "unminified" JSON. This is desired
             // to prevent merge conflicts.
             var serialized = JsonConvert.SerializeObject(Events, Formatting.Indented);
             _retryService.TryMultipleTimes(
                 () =>
                 {
-                    var directoryName = file.GetDirectoryContainingThis().FullPath;
-                    // make the directory
-                    System.IO.Directory.CreateDirectory(directoryName);
+                    // eventFileFullPath is a rooted file path, so it always has a containing directory.
+                    if (file.GetDirectoryContainingThis() is { } directory)
+                    {
+                        System.IO.Directory.CreateDirectory(directory.FullPath);
+                    }
 
-
-
-                    //System.IO.File.WriteAllText(file.FullPath, serialized);
                     _fileCommands.SaveIfDiffers(file, serialized);
                 });
         }

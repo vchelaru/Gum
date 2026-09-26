@@ -3,7 +3,7 @@
     public class TimeManager
     {
 
-        static TimeManager mSelf;
+        static TimeManager? mSelf;
 
         System.Diagnostics.Stopwatch mStopWatch;
 
@@ -29,22 +29,14 @@
 
         public TimeManager()
         {
-            InitializeStopwatch();
+            mStopWatch = new System.Diagnostics.Stopwatch();
+            mStopWatch.Start();
         }
 
 
         public void Activity()
         {
             CurrentTime = mStopWatch.Elapsed.TotalSeconds;
-
-        }
-
-
-
-        void InitializeStopwatch()
-        {
-            mStopWatch = new System.Diagnostics.Stopwatch();
-            mStopWatch.Start();
         }
     }
 }

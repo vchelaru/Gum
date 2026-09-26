@@ -1,4 +1,4 @@
-#region File Description
+﻿#region File Description
 //-----------------------------------------------------------------------------
 // GraphicsDeviceService.cs
 //
@@ -35,7 +35,7 @@ class GraphicsDeviceService : IGraphicsDeviceService
 
 
     // Singleton device service instance.
-    static GraphicsDeviceService singletonInstance;
+    static GraphicsDeviceService? singletonInstance;
 
 
     // Keep track of how many controls are sharing the singletonInstance.
@@ -90,7 +90,8 @@ class GraphicsDeviceService : IGraphicsDeviceService
                                                           width, height);
         }
 
-        return singletonInstance;
+        return singletonInstance
+            ?? throw new InvalidOperationException("The graphics device service was not created.");
     }
 
 
@@ -106,10 +107,9 @@ class GraphicsDeviceService : IGraphicsDeviceService
             // device, we should dispose the singleton instance.
             if (disposing)
             {
-                if (DeviceDisposing != null)
-                    DeviceDisposing(this, EventArgs.Empty);
+                DeviceDisposing?.Invoke(this, EventArgs.Empty);
 
-                graphicsDevice.Dispose();
+                graphicsDevice?.Dispose();
             }
 
             graphicsDevice = null;
@@ -130,7 +130,7 @@ class GraphicsDeviceService : IGraphicsDeviceService
         parameters.BackBufferWidth = Math.Max(parameters.BackBufferWidth, width);
         parameters.BackBufferHeight = Math.Max(parameters.BackBufferHeight, height);
 
-        graphicsDevice.Reset(parameters);
+        GraphicsDevice.Reset(parameters);
 
         if (DeviceReset != null)
             DeviceReset(this, EventArgs.Empty);
@@ -140,12 +140,13 @@ class GraphicsDeviceService : IGraphicsDeviceService
     /// <summary>
     /// Gets the current graphics device.
     /// </summary>
+    /// <exception cref="ObjectDisposedException">The last reference was released.</exception>
     public GraphicsDevice GraphicsDevice
     {
-        get { return graphicsDevice; }
+        get { return graphicsDevice ?? throw new ObjectDisposedException(nameof(GraphicsDeviceService)); }
     }
 
-    GraphicsDevice graphicsDevice;
+    GraphicsDevice? graphicsDevice;
 
 
     // Store the current device settings.
