@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -48,7 +49,7 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 /// this head renders through KNI's SDL2/GL backend.
 /// </summary>
 [Export(typeof(PluginBase))]
-public class AvaloniaEditorTabPlugin : EditorTabPluginBase
+public class AvaloniaEditorTabPlugin : EditorTabPluginBase, IRecipient<EditorCanvasFrameRequestMessage>
 {
     private readonly ICanvasRedrawScheduler _canvasRedrawScheduler;
     private readonly IWireframeObjectManager _wireframeObjectManager;
@@ -172,6 +173,21 @@ public class AvaloniaEditorTabPlugin : EditorTabPluginBase
         tab.Children.Add(canvasGrid);
 
         _tabManager.AddControl(tab, "Editor", TabLocation.RightTop);
+    }
+
+    void IRecipient<EditorCanvasFrameRequestMessage>.Receive(EditorCanvasFrameRequestMessage message)
+    {
+        message.Reply(WaitForCanvasFrameAsync());
+    }
+
+    private async Task<bool> WaitForCanvasFrameAsync()
+    {
+        if (_canvasControl == null)
+        {
+            throw new InvalidOperationException("The Editor canvas has not been created, so it cannot draw a frame.");
+        }
+        await _canvasControl.NextFramePresentedAsync();
+        return true;
     }
 
     /// <summary>The toolbar above the canvas, for tests; null until the editor tab is built.</summary>

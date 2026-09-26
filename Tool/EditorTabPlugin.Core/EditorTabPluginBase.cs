@@ -55,7 +55,8 @@ namespace Gum.Plugins.InternalPlugins.EditorTab;
 /// <see cref="HandleWireframeDrop"/>.
 /// </summary>
 #pragma warning disable CA1001 // Types that own disposable fields should be disposable - This is never disposed so suppressing this
-public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>, IRecipient<SiblingOrderingChangedMessage>
+public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipient<UiBaseFontSizeChangedMessage>, IRecipient<ThemeChangedMessage>, IRecipient<SiblingOrderingChangedMessage>,
+    IRecipient<ZoomCanvasToFitSelectionMessage>
 #pragma warning restore CA1001 // Types that own disposable fields should be disposable
 {
     #region Fields/Properties
@@ -1639,5 +1640,29 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     void IRecipient<ThemeChangedMessage>.Receive(ThemeChangedMessage message)
     {
         ApplyThemeSettings(message.settings);
+    }
+
+    void IRecipient<ZoomCanvasToFitSelectionMessage>.Receive(ZoomCanvasToFitSelectionMessage message) =>
+        message.Reply(ZoomToFitSelectedElement());
+
+    // Frames the selected element for an unattended screenshot (#5142). The camera's view size
+    // comes from the last drawn frame, so a caller draws one first.
+    private CanvasZoomToFitReport? ZoomToFitSelectedElement()
+    {
+        if (!_isXnaInitialized || _selectedState.SelectedElement is not { } element ||
+            _wireframeObjectManager.GetRepresentation(element) is not { } representation ||
+            !CanvasZoomToFit.TryGetVisibleBounds(representation, element is ScreenSave, out CanvasWorldBounds bounds))
+        {
+            return null;
+        }
+
+        Camera camera = _canvas.SystemManagers.Renderer.Camera;
+        ZoomToFitResult fit = CanvasZoomToFit.Calculate(bounds, camera.ClientWidth, camera.ClientHeight,
+            _editorViewModel.ZoomLevels.Select(level => level.Value).ToArray());
+        _editorViewModel.PercentZoom = fit.ZoomPercent;
+        camera.X = fit.CameraX;
+        camera.Y = fit.CameraY;
+        _pluginManager.CameraChanged();
+        return new CanvasZoomToFitReport(element.Name, bounds, fit.ZoomPercent, camera.X, camera.Y, camera.ClientWidth, camera.ClientHeight);
     }
 }

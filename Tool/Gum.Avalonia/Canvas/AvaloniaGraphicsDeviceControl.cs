@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -272,7 +273,28 @@ public class AvaloniaGraphicsDeviceControl : Grid, IDisposable, IRenderTargetFra
         if (_frameLoop.TryRenderFrame(width, height, this))
         {
             _frameGate.MarkDrawn(width, height);
+            FramePresented?.Invoke();
         }
+    }
+
+    /// <summary>Raised after each frame is drawn and pushed to the displayed bitmap.</summary>
+    public event Action? FramePresented;
+
+    /// <summary>
+    /// Asks for a frame and completes once one has been drawn and presented, so whatever changed
+    /// before the call is on screen. Used by the unattended screenshot (#5170).
+    /// </summary>
+    public Task NextFramePresentedAsync()
+    {
+        TaskCompletionSource presented = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        void HandlePresented()
+        {
+            FramePresented -= HandlePresented;
+            presented.TrySetResult();
+        }
+        FramePresented += HandlePresented;
+        _redrawScheduler.RequestRedraw();
+        return presented.Task;
     }
 
     /// <summary>

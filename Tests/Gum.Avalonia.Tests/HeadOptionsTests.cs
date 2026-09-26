@@ -19,4 +19,11 @@ public class HeadOptionsTests
     {
         HeadOptions.Parse(new[] { "project.gumx" }).UserDataFolder.ShouldBeNull();
     }
+
+    [Fact]
+    public void Parse_ReadsZoomToFit_AsASwitch()
+    {
+        HeadOptions.Parse(new[] { "project.gumx", "--zoom-to-fit", "--exit-after", "3" }).ZoomToFit.ShouldBeTrue();
+        HeadOptions.Parse(new[] { "project.gumx" }).ZoomToFit.ShouldBeFalse();
+    }
 }
