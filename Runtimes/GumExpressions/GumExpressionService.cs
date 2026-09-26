@@ -61,9 +61,10 @@ public static class GumExpressionService
 
         foreach (var branch in EvaluatedSyntax.EnumerateAllBranches(syntax, stateSave, liveRoot: liveRoot))
         {
-            if (branch.CastTo(desiredType))
+            // A branch that resolves to nothing (e.g. a missing variable) has no value to report.
+            if (branch.CastTo(desiredType) && branch.Value is { } value)
             {
-                yield return branch.Value;
+                yield return value;
             }
         }
     }

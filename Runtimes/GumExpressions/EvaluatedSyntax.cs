@@ -20,10 +20,10 @@ public class EvaluatedSyntax
 {
     #region Fields/Properties
 
-    public string EvaluatedType { get; set; }
-    public SyntaxNode SyntaxNode { get; set; }
+    public string? EvaluatedType { get; set; }
+    public SyntaxNode? SyntaxNode { get; set; }
 
-    public object Value { get; set; }
+    public object? Value { get; set; }
 
     #endregion
 
@@ -69,7 +69,7 @@ public class EvaluatedSyntax
     /// name="liveRoot"/> via <see cref="GraphicalUiElement.GetGraphicalUiElementByName(string)"/>,
     /// so it is scoped to <paramref name="liveRoot"/>'s own element (does not cross into a
     /// different element for a cross-element reference).</param>
-    public static EvaluatedSyntax FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
+    public static EvaluatedSyntax? FromSyntaxNode(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         return Evaluate(syntaxNode, stateForUnqualifiedRightSide, fallback, liveRoot);
     }
@@ -96,7 +96,7 @@ public class EvaluatedSyntax
     /// </remarks>
     /// <param name="syntaxNode">The Roslyn syntax node for the right side of an assignment.</param>
     /// <param name="fallback">Resolver consulted for every identifier, since no state authors any value.</param>
-    public static EvaluatedSyntax FromSyntaxNodeUsingDefaultsOnly(SyntaxNode syntaxNode, Func<string, object?>? fallback)
+    public static EvaluatedSyntax? FromSyntaxNodeUsingDefaultsOnly(SyntaxNode syntaxNode, Func<string, object?>? fallback)
     {
         ComponentSave restingOwner = new ComponentSave();
         StateSave restingState = new StateSave { ParentContainer = restingOwner };
@@ -151,7 +151,7 @@ public class EvaluatedSyntax
         }
     }
 
-    private static EvaluatedSyntax Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
+    private static EvaluatedSyntax? Evaluate(SyntaxNode syntaxNode, StateSave stateForUnqualifiedRightSide, Func<string, object?>? fallback = null, GraphicalUiElement? liveRoot = null)
     {
         if (syntaxNode is BinaryExpressionSyntax binaryExpressionSytax)
         {
@@ -207,22 +207,23 @@ public class EvaluatedSyntax
                 return FromSyntaxAndValue(syntaxNode, localizationValue);
             }
 
-            RecursiveVariableFinder rfv = null;
-
-            var stateForRfv = stateForUnqualifiedRightSide;
+            StateSave? stateForRfv = stateForUnqualifiedRightSide;
             var isCrossElement = rightSideToEvaluate.StartsWith("global::");
 
             if (isCrossElement)
             {
-                string elementName, elementType;
-                ConvertGlobalToElementNameWithSlashes(rightSideToEvaluate, out elementName, out elementType);
+                ConvertGlobalToElementNameWithSlashes(rightSideToEvaluate, out string? elementName, out string? elementType);
 
-                if (elementName != null)
+                if (elementName == null)
                 {
-                    var element = ObjectFinder.Self.GetElementSave(elementName);
-                    stateForRfv = element?.DefaultState;
-                    rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
+                    // Not an element path, or an element path with no variable after it
+                    // (e.g. "Components/Button"), so there is nothing to resolve.
+                    return null;
                 }
+
+                var element = ObjectFinder.Self.GetElementSave(elementName);
+                stateForRfv = element?.DefaultState;
+                rightSideToEvaluate = rightSideToEvaluate.Substring(($"global::{elementType}." + elementName).Length + 1);
             }
 
             // liveRoot is scoped to stateForUnqualifiedRightSide's own element; a cross-element
@@ -239,7 +240,7 @@ public class EvaluatedSyntax
             }
             else
             {
-                rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
+                var rfv = new RecursiveVariableFinder(stateForRfv) { Fallback = fallback };
 
                 var value = rfv.GetValue(rightSideToEvaluate);
 
@@ -406,7 +407,7 @@ public class EvaluatedSyntax
     // memory, so the eval sees a boxed enum on one side. Reference RHS literals stay as
     // strings (e.g. "Hidden" in `Foo == "Hidden"`). Bridge the two by comparing the enum's
     // name when the other operand is a string; otherwise defer to object.Equals.
-    private static bool AreEqual(object left, object right)
+    private static bool AreEqual(object? left, object? right)
     {
         if (left is Enum leftEnum && right is string rightString)
         {
@@ -419,9 +420,9 @@ public class EvaluatedSyntax
         return object.Equals(left, right);
     }
 
-    private static object Combine(EvaluatedSyntax leftEvaluated, EvaluatedSyntax rightEvaluated, SyntaxToken operatorToken)
+    private static object? Combine(EvaluatedSyntax? leftEvaluated, EvaluatedSyntax? rightEvaluated, SyntaxToken operatorToken)
     {
-        if (leftEvaluated?.Value == null || rightEvaluated?.Value == null)
+        if (leftEvaluated?.Value is not { } leftValue || rightEvaluated?.Value is not { } rightValue)
         {
             return null;
         }
@@ -431,18 +432,18 @@ public class EvaluatedSyntax
         // dynamic-coercion path below.
         if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.EqualsEqualsToken))
         {
-            return AreEqual(leftEvaluated.Value, rightEvaluated.Value);
+            return AreEqual(leftValue, rightValue);
         }
         else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.ExclamationEqualsToken))
         {
-            return !AreEqual(leftEvaluated.Value, rightEvaluated.Value);
+            return !AreEqual(leftValue, rightValue);
         }
 
         // Logical operators require both operands to be bool. We evaluate eagerly
         // (no short-circuit) because variable lookups have no side effects.
         if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.AmpersandAmpersandToken))
         {
-            if (leftEvaluated.Value is bool leftBoolAnd && rightEvaluated.Value is bool rightBoolAnd)
+            if (leftValue is bool leftBoolAnd && rightValue is bool rightBoolAnd)
             {
                 return leftBoolAnd && rightBoolAnd;
             }
@@ -450,15 +451,15 @@ public class EvaluatedSyntax
         }
         else if (operatorToken.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.BarBarToken))
         {
-            if (leftEvaluated.Value is bool leftBoolOr && rightEvaluated.Value is bool rightBoolOr)
+            if (leftValue is bool leftBoolOr && rightValue is bool rightBoolOr)
             {
                 return leftBoolOr || rightBoolOr;
             }
             return null;
         }
 
-        dynamic dynamicValue1, dynamicValue2;
-        GetDynamicValues(leftEvaluated.Value, rightEvaluated.Value, out dynamicValue1, out dynamicValue2);
+        dynamic? dynamicValue1, dynamicValue2;
+        GetDynamicValues(leftValue, rightValue, out dynamicValue1, out dynamicValue2);
 
         try
         {
@@ -517,7 +518,7 @@ public class EvaluatedSyntax
         return null;
     }
 
-    private static void GetDynamicValues(object obj1, object obj2, out dynamic dynamicValue1, out dynamic dynamicValue2)
+    private static void GetDynamicValues(object obj1, object obj2, out dynamic? dynamicValue1, out dynamic? dynamicValue2)
     {
         dynamicValue1 = null;
         dynamicValue2 = null;
@@ -550,12 +551,12 @@ public class EvaluatedSyntax
             }
         }
     }
-    private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object value)
+    private static EvaluatedSyntax FromSyntaxAndValue(SyntaxNode syntaxNode, object? value)
     {
         var toReturn = new EvaluatedSyntax();
         toReturn.SyntaxNode = syntaxNode;
         toReturn.Value = value;
-        string type = GetSimpleTypeNameForValue(value);
+        string? type = GetSimpleTypeNameForValue(value);
 
         toReturn.EvaluatedType = type;
 
@@ -566,7 +567,7 @@ public class EvaluatedSyntax
     #endregion
 
     #region Convert
-    private static string GetSimpleTypeNameForValue(object value)
+    private static string? GetSimpleTypeNameForValue(object? value)
     {
         return value is float ? "float"
             : value is string ? "string"
@@ -878,7 +879,7 @@ public class EvaluatedSyntax
         return convertedText;
     }
 
-    public static void ConvertGlobalToElementNameWithSlashes(string rightSideToEvaluate, out string elementName, out string elementType)
+    public static void ConvertGlobalToElementNameWithSlashes(string rightSideToEvaluate, out string? elementName, out string? elementType)
     {
         elementName = null;
         elementType = null;
@@ -902,6 +903,11 @@ public class EvaluatedSyntax
             {
                 elementName = elementName.Substring(0, nextDot);
                 elementName = elementName.Replace('\u1234', '/');
+            }
+            else
+            {
+                // An element path with no variable after it (e.g. "global::Components.Button").
+                elementName = null;
             }
         }
     }
@@ -928,43 +934,43 @@ public class EvaluatedSyntax
         switch (desiredType)
         {
             case "int":
-                if (this.EvaluatedType == "float")
+                if (this.EvaluatedType == "float" && this.Value is float floatToInt)
                 {
-                    this.Value = (int)(float)this.Value;
+                    this.Value = (int)floatToInt;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
-                else if(this.EvaluatedType == "double")
+                else if (this.EvaluatedType == "double" && this.Value is double doubleToInt)
                 {
-                    this.Value = (int)(double)this.Value;
+                    this.Value = (int)doubleToInt;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
                 break;
             case "float":
-                if(this.EvaluatedType == "int")
+                if (this.EvaluatedType == "int" && this.Value is int intToFloat)
                 {
-                    this.Value = (float)(int)this.Value;
+                    this.Value = (float)intToFloat;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
-                if (this.EvaluatedType == "double")
+                if (this.EvaluatedType == "double" && this.Value is double doubleToFloat)
                 {
-                    this.Value = (float)(double)this.Value;
+                    this.Value = (float)doubleToFloat;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
                 break;
             case "double":
-                if (this.EvaluatedType == "int")
+                if (this.EvaluatedType == "int" && this.Value is int intToDouble)
                 {
-                    this.Value = (double)(int)this.Value;
+                    this.Value = (double)intToDouble;
                     this.EvaluatedType = desiredType;
                     return true;
                 }
-                if (this.EvaluatedType == "float")
+                if (this.EvaluatedType == "float" && this.Value is float floatToDouble)
                 {
-                    this.Value = (double)(float)this.Value;
+                    this.Value = (double)floatToDouble;
                     this.EvaluatedType = desiredType;
                     return true;
                 }

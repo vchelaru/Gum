@@ -38,6 +38,7 @@
     <ProjectReference Include="..\..\Tool\EditorTabPlugin.Core\EditorTabPlugin.Core.csproj" />
     <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
+    <ProjectReference Include="..\..\Gum\EventOutputPlugin\EventOutputPlugin.csproj" />
     <!-- IsolatedPluginHostTests loads this fixture twice (default context + isolated context) to
          prove static-state isolation. See PluginHostFixture.csproj. -->
     <ProjectReference Include="..\..\Tests\PluginHostFixture\PluginHostFixture.csproj" />
