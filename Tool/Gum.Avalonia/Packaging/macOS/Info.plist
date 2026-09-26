@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
   The Gum.app bundle manifest for the Avalonia head's macOS preview builds. The release workflow
-  (publish-avalonia) fills in __VERSION__ and places this at Gum.app/Contents/Info.plist, with the
+  (publish-avalonia) fills in the version placeholder and places this at Gum.app/Contents/Info.plist, with the
   self-contained publish output in Gum.app/Contents/MacOS and Gum.icns (CFBundleIconFile, built by
   make-icns.py from Gum/GumIcon.ico) in Gum.app/Contents/Resources.
 -->
