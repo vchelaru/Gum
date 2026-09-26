@@ -1,5 +1,4 @@
 ﻿using EventOutputPlugin.Models;
-using Gum;
 using Gum.ToolStates;
 using Newtonsoft.Json;
 using System;
@@ -14,18 +13,31 @@ using ToolsUtilities;
 
 namespace EventOutputPlugin.Managers;
 
-public class ExportEventFileManager
+/// <inheritdoc cref="IExportEventFileManager"/>
+public class ExportEventFileManager : IExportEventFileManager
 {
-    private static readonly IFileCommands _fileCommands = Locator.GetRequiredService<IFileCommands>();
-    private static readonly IRetryService _retryService = Locator.GetRequiredService<IRetryService>();
+    private readonly IProjectState _projectState;
+    private readonly IFileCommands _fileCommands;
+    private readonly IRetryService _retryService;
     const string masterFileName = "gum_events.json";
-    static ExportedEventCollection? events;
+    ExportedEventCollection? _events;
+    string? _eventsFileFullPath;
 
-    static string? EventExportDirectory
+    /// <summary>
+    /// Creates the manager. The plugin constructs it from its injected services.
+    /// </summary>
+    public ExportEventFileManager(IProjectState projectState, IFileCommands fileCommands, IRetryService retryService)
+    {
+        _projectState = projectState;
+        _fileCommands = fileCommands;
+        _retryService = retryService;
+    }
+
+    string? EventExportDirectory
     {
         get
         {
-            string? projectDirectory = Locator.GetRequiredService<IProjectState>().ProjectDirectory;
+            string? projectDirectory = _projectState.ProjectDirectory;
             if (!string.IsNullOrEmpty(projectDirectory))
             {
                 return Path.Combine(projectDirectory, "EventExport");
@@ -37,7 +49,7 @@ public class ExportEventFileManager
         }
     }
 
-    static string? EventFileFullPath
+    string? EventFileFullPath
     {
         get
         {
@@ -53,16 +65,19 @@ public class ExportEventFileManager
         }
     }
 
-    static ExportedEventCollection Events
+    // The cache belongs to one events file; switching projects must not carry it over (#5106).
+    ExportedEventCollection Events
     {
         get
         {
-            if(events == null)
+            string? eventFileFullPath = EventFileFullPath;
+            if(_events == null || _eventsFileFullPath != eventFileFullPath)
             {
-                events = GetOrCreateEventCollection();
+                _events = GetOrCreateEventCollection(eventFileFullPath);
+                _eventsFileFullPath = eventFileFullPath;
             }
 
-            return events;
+            return _events;
         }
     }
 
@@ -86,7 +101,7 @@ public class ExportEventFileManager
         return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
     }
 
-    public static void ExportEvent(string? newName, string? oldName, GumEventTypes eventType, string? elementType)
+    public void ExportEvent(string? newName, string? oldName, GumEventTypes eventType, string? elementType)
     {
         if(!string.IsNullOrWhiteSpace(EventExportDirectory))
         {
@@ -110,7 +125,7 @@ public class ExportEventFileManager
         }
     }
 
-    public static void DeleteOldEventFiles()
+    public void DeleteOldEventFiles()
     {
         const int daysToKeep = 14;
         var keys = Events.UserEvents.Keys.ToList();
@@ -130,9 +145,8 @@ public class ExportEventFileManager
         SaveEventCollection();
     }
 
-    static ExportedEventCollection GetOrCreateEventCollection()
+    ExportedEventCollection GetOrCreateEventCollection(string? eventFileFullPath)
     {
-        string? eventFileFullPath = EventFileFullPath;
         if (eventFileFullPath != null && File.Exists(eventFileFullPath))
         {
             var text = File.ReadAllText(eventFileFullPath);
@@ -144,7 +158,7 @@ public class ExportEventFileManager
         }
     }
 
-    static void SaveEventCollection()
+    void SaveEventCollection()
     {
         string? eventFileFullPath = EventFileFullPath;
         if (!string.IsNullOrEmpty(eventFileFullPath))
