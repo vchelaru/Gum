@@ -144,7 +144,7 @@ public class Renderer : IRenderer
     /// Per-renderable shadow-blur service. Owns the Gaussian shader and the per-renderable
     /// render textures (issue #2865). Renderables call <c>Renderer.Self.ShadowBlur.Draw(this, ...)</c>
     /// from their <c>Render</c> method; the renderer sweeps unused entries at the top of every
-    /// frame via <see cref="ClearUnusedRenderTargetsLastFrame"/>.
+    /// frame via <see cref="ShadowBlurRenderer.ClearUnusedRenderTargetsLastFrame"/>.
     /// </summary>
     public ShadowBlurRenderer ShadowBlur { get; }
 
@@ -158,7 +158,7 @@ public class Renderer : IRenderer
 
     /// <summary>
     /// Owns the fragment shader for the extra additive pass an authored
-    /// <see cref="Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame draws (#4821 gap 2).
+    /// <see cref="Gum.Content.AnimationChain.AnimationFrameColorOperation.Add"/> frame draws (#4821 gap 2).
     /// A <see cref="Gum.Renderables.Sprite"/> set to <c>ColorOperation.Add</c> binds
     /// <c>AdditiveColorOverlayShader.Shader</c> around its extra draw call.
     /// </summary>
@@ -217,13 +217,6 @@ public class Renderer : IRenderer
 
     internal void Draw(SystemManagers systemManagers)
     {
-        //ClearPerformanceRecordingVariables();
-
-        if (systemManagers == null)
-        {
-            systemManagers = SystemManagers.Default;
-        }
-
         Draw(systemManagers, _layers);
     }
 
@@ -293,7 +286,7 @@ public class Renderer : IRenderer
         {
             for (int i = 0; i < layers.Count; i++)
             {
-                BakeRenderTargetsInSubtree(layers[i].Renderables, layers[i]);
+                BakeRenderTargetsInSubtree(layers[i].Renderables, layers[i], managers);
             }
         }
 
@@ -428,7 +421,7 @@ public class Renderer : IRenderer
         // uses the same build-then-submit shape via the orderer's subtree entry point, so raylib
         // has a single walk implementation.
         HierarchicalOrderer.Instance.BuildDrawList(layer, _scratchCommands, _camera);
-        Submit(_scratchCommands, layer);
+        Submit(_scratchCommands, layer, managers);
     }
 
     /// <summary>
@@ -438,7 +431,7 @@ public class Renderer : IRenderer
     /// bracketing, and hierarchy traversal; this method only translates commands into raylib
     /// calls.
     /// </summary>
-    private void Submit(List<DrawCommand> commands, Layer layer)
+    private void Submit(List<DrawCommand> commands, Layer layer, ISystemManagers managers)
     {
         int count = commands.Count;
         for (int i = 0; i < count; i++)
@@ -469,7 +462,7 @@ public class Renderer : IRenderer
                     BeginClipScope(layer, command.Target);
                     break;
                 case DrawCommandKind.DrawRenderable:
-                    command.Target.Render(null);
+                    command.Target.Render(managers);
                     break;
                 case DrawCommandKind.EndClip:
                     EndClipScope();
@@ -563,7 +556,7 @@ public class Renderer : IRenderer
     // offscreen texture before the main compositing walk. Post-order so a nested inner RT is baked
     // before its outer container, which then composites the inner's finished texture while baking.
     private void BakeRenderTargetsInSubtree(
-        System.Collections.Generic.IList<IRenderableIpso> renderables, Layer layer)
+        System.Collections.Generic.IList<IRenderableIpso> renderables, Layer layer, ISystemManagers managers)
     {
         for (int i = 0; i < renderables.Count; i++)
         {
@@ -578,12 +571,12 @@ public class Renderer : IRenderer
 
             if (renderable.Children != null)
             {
-                BakeRenderTargetsInSubtree(renderable.Children, layer);
+                BakeRenderTargetsInSubtree(renderable.Children, layer, managers);
             }
 
             if (renderable.IsRenderTarget)
             {
-                BakeRenderTarget(renderable, layer);
+                BakeRenderTarget(renderable, layer, managers);
             }
         }
     }
@@ -595,7 +588,7 @@ public class Renderer : IRenderer
     // the double-blend dark fringe — see CompositeRenderTarget for the matching premultiplied blit.
     // A degenerate (zero-size) clamp bakes nothing; the composite path then renders nothing either,
     // so the subtree does not appear (matching MonoGame, #3478).
-    private void BakeRenderTarget(IRenderableIpso container, Layer layer)
+    private void BakeRenderTarget(IRenderableIpso container, Layer layer, ISystemManagers managers)
     {
         // Shared clamp+size helper (#3478) — MonoGame's GetRenderTargetFor uses the same one — so the
         // camera-visible-bounds math is identical across backends by construction.
@@ -678,7 +671,7 @@ public class Renderer : IRenderer
                 children,
                 _bakeCommands,
                 new ClipBoundsSource(_bakeScissorRectangleMapping, _bakeCullTestBoundsMapping));
-            Submit(_bakeCommands, layer);
+            Submit(_bakeCommands, layer, managers);
         }
 
         counter.EndRenderTargetBlend();

@@ -33,11 +33,14 @@ public partial class SystemManagers : ISystemManagers
     System.OperatingSystem.IsAndroid() ||
         System.OperatingSystem.IsIOS();
 
+    /// <summary>
+    /// The SystemManagers created by Gum initialization (e.g. GumService.Initialize). Not usable before that.
+    /// </summary>
     public static SystemManagers Default
     {
         get;
         set;
-    }
+    } = null!;
 
     /// <summary>
     /// The Renderer used by this SystemManagers. This is created automatically when
@@ -71,7 +74,7 @@ public partial class SystemManagers : ISystemManagers
     }
 #endif
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -130,6 +133,8 @@ public partial class SystemManagers : ISystemManagers
         // Text.RenderBoundaryDefault don't exist on raylib's own Renderer/Text at all, and the
         // Content/-folder default is intentionally XNA/KNI/FNA-only - all three are mirrored below
         // as dead #if !RAYLIB code so the two files stay line-for-line comparable (#4577).
+        mPrimaryThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+
         if(fullInstantiation)
         {
             LoaderManager.Self.ContentLoader = new ContentLoader();
@@ -282,9 +287,12 @@ public partial class SystemManagers : ISystemManagers
 
     private void RegisterComponentRuntimeInstantiations()
     {
+        // ColoredRectangle is obsolete, but existing projects still load it by type name.
+#pragma warning disable CS0618 // Type or member is obsolete
         ElementSaveExtensions.RegisterGueInstantiation(
             "ColoredRectangle",
             () => new ColoredRectangleRuntime());
+#pragma warning restore CS0618
 
         ElementSaveExtensions.RegisterGueInstantiation(
             "Container",

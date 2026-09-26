@@ -43,7 +43,7 @@ public sealed class ContentLoader : IContentLoader
     internal static Action<Texture2D, Raylib_cs.TextureFilter> TextureFilterApplier { get; set; } = SetTextureFilter;
 
     /// <inheritdoc/>
-    public T LoadContent<T>(string contentName)
+    public T? LoadContent<T>(string contentName)
     {
         if (typeof(T) == typeof(Texture2D))
         {
@@ -143,18 +143,21 @@ public sealed class ContentLoader : IContentLoader
             }
         }
 
-        if (LoaderManager.Self.CacheTextures && font != null)
+        // Every branch above assigns a value (default(Font) when nothing loads).
+        Font loaded = font ?? default(Font);
+
+        if (LoaderManager.Self.CacheTextures)
         {
-            var managedFont = new ManagedFont(font.Value);
+            var managedFont = new ManagedFont(loaded);
 
             LoaderManager.Self.AddDisposable(contentNameStandardized, managedFont);
         }
 
 
-        return font;
+        return loaded;
     }
 
-    private static Texture2D? LoadTexture2D(string fileName)
+    private static Texture2D LoadTexture2D(string fileName)
     {
         ///////////////////////////////Early Out////////////////////////////////////
 
@@ -171,25 +174,22 @@ public sealed class ContentLoader : IContentLoader
 
 
 
-        Texture2D? toReturn = null;
         if (FileManager.IsUrl(fileName))
         {
             throw new NotImplementedException("Loading textures from URLs is not implemented yet.");
         }
-        else
-        {
-            // Load via fileNameStandardized so a relative fileName is resolved against
-            // FileManager.RelativeDirectory — the same prefix the cache lookup above used.
-            // Previously this was just `fileName`, which meant callers relying on
-            // RelativeDirectory (e.g. AnimationChainList.ToAnimationChainList loading per-frame
-            // textures relative to the .achx's folder) silently got an empty Texture2D and
-            // Sprite.Render early-returned on null Texture.
-            toReturn = LoadTextureFromFile(fileNameStandardized);
-        }
 
-        if (LoaderManager.Self.CacheTextures && toReturn != null)
+        // Load via fileNameStandardized so a relative fileName is resolved against
+        // FileManager.RelativeDirectory — the same prefix the cache lookup above used.
+        // Previously this was just `fileName`, which meant callers relying on
+        // RelativeDirectory (e.g. AnimationChainList.ToAnimationChainList loading per-frame
+        // textures relative to the .achx's folder) silently got an empty Texture2D and
+        // Sprite.Render early-returned on null Texture.
+        Texture2D toReturn = LoadTextureFromFile(fileNameStandardized);
+
+        if (LoaderManager.Self.CacheTextures)
         {
-            var managedTexture = new ManagedTexture(toReturn.Value);
+            var managedTexture = new ManagedTexture(toReturn);
 
             LoaderManager.Self.AddDisposable(fileNameStandardized, managedTexture);
         }
@@ -276,9 +276,8 @@ public sealed class ContentLoader : IContentLoader
 
     // Entry point for in-memory font creators in other assemblies (e.g. KernSmith.RaylibGum):
     // parse the .fnt text and assemble a raylib Font around the supplied atlas texture. Exposed
-    // (instead of BuildFont) so callers never name ParsedFontFile, which is compiled into BOTH
-    // GumCommon and RaylibGum — referencing it across the assembly boundary is an ambiguous-type
-    // (CS0433) error. See InternalsVisibleTo in Properties/AssemblyInfo.cs.
+    // (instead of BuildFont) so callers only pass text. See InternalsVisibleTo in
+    // Properties/AssemblyInfo.cs.
     // pageYOffsets, when supplied, shifts each glyph's atlas Y by its source page's offset. This
     // lets a single-texture consumer (KernSmith.RaylibGum) merge KernSmith's multiple atlas pages
     // into one stacked texture and still map every glyph correctly — raylib's Font holds one texture.
@@ -292,6 +291,13 @@ public sealed class ContentLoader : IContentLoader
     // ManagedFont.Dispose) — so they MUST be allocated with raylib's own allocator (MemAlloc).
     private static unsafe Font BuildFont(ParsedFontFile parsedFontFile, Texture2D pageTexture, int[]? pageYOffsets = null)
     {
+        // ParsedFontFile's constructor already throws when either line is missing; checked here,
+        // before MemAlloc, so a violation can't leak the native arrays.
+        FontFileInfoLine info = parsedFontFile.Info
+            ?? throw new InvalidOperationException("Font file did not have an info tag");
+        FontFileCommonLine common = parsedFontFile.Common
+            ?? throw new InvalidOperationException("Font file did not have a common tag");
+
         int glyphCount = parsedFontFile.Chars.Count;
 
         Rectangle* recs = (Rectangle*)MemAlloc((uint)(glyphCount * sizeof(Rectangle)));
@@ -315,7 +321,7 @@ public sealed class ContentLoader : IContentLoader
 
         Font font = new Font
         {
-            BaseSize = parsedFontFile.Info.Size,
+            BaseSize = info.Size,
             GlyphCount = glyphCount,
             GlyphPadding = 0,
             Texture = pageTexture,
@@ -326,7 +332,7 @@ public sealed class ContentLoader : IContentLoader
         // raylib's Font has no lineHeight/base field, so record the .fnt's values keyed by the atlas
         // texture id. The Text renderable uses these for line height and descender so raylib matches
         // the MonoGame BitmapFont; without it, line height collapses to BaseSize (no descender region).
-        RaylibFontMetricsRegistry.Register(pageTexture.Id, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+        RaylibFontMetricsRegistry.Register(pageTexture.Id, common.LineHeight, common.Base);
 
         // Apply the project's texture filter (#3496) once, here, since every bitmap-font
         // construction path (TryLoadBitmapFontThroughStreamHook, KernSmith's BuildFontFromFntText)
@@ -347,7 +353,10 @@ public sealed class ContentLoader : IContentLoader
         try
         {
             ParsedFontFile parsedFontFile = new ParsedFontFile(fntText);
-            RaylibFontMetricsRegistry.Register(textureId, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+            if (parsedFontFile.Common != null)
+            {
+                RaylibFontMetricsRegistry.Register(textureId, parsedFontFile.Common.LineHeight, parsedFontFile.Common.Base);
+            }
         }
         catch
         {
@@ -420,7 +429,7 @@ public sealed class ContentLoader : IContentLoader
     }
 
     /// <inheritdoc/>
-    public T TryLoadContent<T>(string contentName)
+    public T? TryLoadContent<T>(string contentName)
     {
         if (typeof(T) == typeof(Texture2D))
         {

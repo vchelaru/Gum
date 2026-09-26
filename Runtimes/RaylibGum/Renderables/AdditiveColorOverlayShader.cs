@@ -5,7 +5,7 @@ namespace Gum.Renderables;
 
 /// <summary>
 /// Owns the fragment shader used for the extra additive pass that reproduces an authored
-/// <see cref="global::Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> frame on raylib
+/// <see cref="global::Gum.Content.AnimationChain.AnimationFrameColorOperation.Add"/> frame on raylib
 /// (issue #4821 gap 2), mirroring MonoGame/KNI/FNA's <c>Renderer.DrawAdditiveColorOverlay</c>.
 ///
 /// <para><b>Why not reuse <see cref="ColorTextureAlphaShader"/>:</b> that shader emits

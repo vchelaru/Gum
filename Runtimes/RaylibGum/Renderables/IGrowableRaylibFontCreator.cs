@@ -14,12 +14,12 @@ namespace RaylibGum.Renderables;
 /// </summary>
 /// <remarks>
 /// Unlike <c>RenderingLibrary.Graphics.Fonts.IGrowableFontCreator</c> (the MonoGame/KniGum/FnaGum
-/// equivalent), <paramref name="font"/> below is passed by <c>ref</c> rather than mutated through a
+/// equivalent), <c>font</c> below is passed by <c>ref</c> rather than mutated through a
 /// held reference: <c>BitmapFont</c> is a class, so every <c>Text</c> sharing one automatically sees
 /// growth through that shared reference, but <see cref="Raylib_cs.Font"/> is a value type -- each
 /// <c>Text</c> holds its own independent copy. A creator that supports growth returns the CURRENT
 /// canonical font for this identity (which the caller assigns back onto its own copy via
-/// <paramref name="font"/>), and never frees or replaces the resources behind any font it has already
+/// <c>font</c>), and never frees or replaces the resources behind any font it has already
 /// handed out -- another <c>Text</c> instance holding an older copy of the same identity keeps
 /// rendering it safely until (if ever) its own growth check catches it up to the latest characters.
 /// </remarks>

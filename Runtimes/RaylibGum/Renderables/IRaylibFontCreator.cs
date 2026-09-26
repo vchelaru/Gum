@@ -9,8 +9,8 @@ namespace RaylibGum.Renderables;
 /// <see cref="BmfcSave"/> descriptor (for example, by rasterizing an atlas with KernSmith).
 /// </summary>
 /// <remarks>
-/// This is the Raylib parallel to <see cref="IInMemoryFontCreator"/>. The two cannot be unified:
-/// <see cref="IInMemoryFontCreator"/> returns a MonoGame-family <c>BitmapFont</c>, which Raylib's
+/// This is the Raylib parallel to <c>IInMemoryFontCreator</c>. The two cannot be unified:
+/// <c>IInMemoryFontCreator</c> returns a MonoGame-family <c>BitmapFont</c>, which Raylib's
 /// text renderer cannot draw — Raylib renders <see cref="Raylib_cs.Font"/>.
 /// </remarks>
 public interface IRaylibFontCreator

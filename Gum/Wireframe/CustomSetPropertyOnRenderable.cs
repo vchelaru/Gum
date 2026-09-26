@@ -180,7 +180,7 @@ public partial class CustomSetPropertyOnRenderable
 
     /// <summary>
     /// Optional in-memory font creator. When set, font generation bypasses disk entirely. On the
-    /// XNA-family backends the creator produces a <see cref="BitmapFont"/> directly from raw pixel
+    /// XNA-family backends the creator produces a <c>BitmapFont</c> directly from raw pixel
     /// data and .fnt metadata; on Raylib it produces a <c>Raylib_cs.Font</c> from a
     /// <see cref="BmfcSave"/> descriptor (for example, by rasterizing an atlas with KernSmith). If
     /// null or if creation fails, falls back to the disk-based <see cref="FontService"/> path (or
@@ -1896,7 +1896,7 @@ public partial class CustomSetPropertyOnRenderable
     /// The push/pop/sort/character-count loop is identical on every platform; only the font-CREATION body
     /// (<c>GetAndCreateFontIfNecessary</c>) is platform-specific, since Raylib produces a
     /// <c>Raylib_cs.Font</c> (or, with no creator, falls back to scaling the base atlas) while the
-    /// XNA-family backends produce a <see cref="BitmapFont"/>.
+    /// XNA-family backends produce a <c>BitmapFont</c>.
     /// </summary>
     private static void ApplyFontVariables(Text asText, List<FoundTag> results)
     {
@@ -2534,7 +2534,7 @@ public partial class CustomSetPropertyOnRenderable
     /// cascade, and so <c>UseAutomaticFontGrowth</c> can track either identity.
     /// </summary>
     private static Raylib_cs.Font GetOrCreateBakedFont(Gum.GueDeriving.TextRuntime textRuntime,
-        global::RenderingLibrary.Content.LoaderManager loaderManager, string fallbackFontFamily, string? fontFilePath)
+        global::RenderingLibrary.Content.LoaderManager loaderManager, string? fallbackFontFamily, string? fontFilePath)
     {
         string fontName = textRuntime.GetFontCacheFileName(fontFilePath);
         string fullFileName = ToolsUtilities.FileManager.Standardize(fontName, preserveCase: true, makeAbsolute: true);
@@ -2592,7 +2592,8 @@ public partial class CustomSetPropertyOnRenderable
         }
 
         var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
-        if (fontFromGum.BaseSize == 0)
+        // Font can be null when only CustomFontFile is set; there is then no family to fall back to.
+        if (fontFromGum.BaseSize == 0 && fallbackFontFamily != null)
         {
             fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fallbackFontFamily);
         }
@@ -2856,7 +2857,7 @@ public partial class CustomSetPropertyOnRenderable
                         textRuntime.CustomFontFile, preserveCase: true, makeAbsolute: true);
 
                     var fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(fullFileName);
-                    if (fontFromGum.BaseSize == 0)
+                    if (fontFromGum.BaseSize == 0 && asText.FontFamily != null)
                     {
                         fontFromGum = loaderManager.LoadContent<Raylib_cs.Font>(asText.FontFamily);
                     }

@@ -149,7 +149,6 @@
 		<Compile Include="..\..\RenderingLibrary\Graphics\DrawCommand.cs" Link="RenderingLibrary\DrawCommand.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\HierarchicalOrderer.cs" Link="RenderingLibrary\HierarchicalOrderer.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\IRenderableOrderer.cs" Link="RenderingLibrary\IRenderableOrderer.cs" />
-		<Compile Include="..\..\RenderingLibrary\Graphics\Fonts\ParsedFontFile.cs" Link="RenderingLibrary\Fonts\ParsedFontFile.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderStateChangeStatistics.cs" Link="RenderingLibrary\RenderStateChangeStatistics.cs" />
 		<Compile Include="..\..\RenderingLibrary\Graphics\RenderTargetService.cs" Link="RenderingLibrary\RenderTargetService.cs" />
 		<!-- Shared markup model + run-splitter (InlineVariable, StyledSubstring, StyledSubstringSplitter)
