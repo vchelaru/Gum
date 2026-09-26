@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using AvaloniaDataUi.Controls;
@@ -82,7 +83,7 @@ public class EditTrackingTextBoxTests
         elsewhere.Focus();
 
         field.Text.ShouldBe("1");
-        (await window.Clipboard!.GetTextAsync()).ShouldBe("2");
+        (await window.Clipboard!.TryGetTextAsync()).ShouldBe("2");
         requests.ShouldBe(1);
         window.Close();
     }

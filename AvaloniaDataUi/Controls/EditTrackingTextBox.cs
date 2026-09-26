@@ -111,7 +111,7 @@ public class EditTrackingTextBox : TextBox
         string? text;
         try
         {
-            text = await clipboard.GetTextAsync();
+            text = await clipboard.TryGetTextAsync();
         }
         catch
         {
