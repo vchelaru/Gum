@@ -36,8 +36,7 @@ public class SvgRuntime : InteractiveGue
             {
                 sourceFile = value;
                 var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                SKSvg skiaSvg = contentLoader.LoadContent<SKSvg>(value);
+                SKSvg skiaSvg = loaderManager.LoadContent<SKSvg>(value);
                 Texture = skiaSvg;
             }
         }

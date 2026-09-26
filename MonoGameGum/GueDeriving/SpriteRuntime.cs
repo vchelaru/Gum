@@ -345,8 +345,7 @@ public class SpriteRuntime : GraphicalUiElement
             else
             {
                 var loaderManager = global::RenderingLibrary.Content.LoaderManager.Self;
-                var contentLoader = loaderManager.ContentLoader;
-                var image = contentLoader.LoadContent<SkiaSharp.SKBitmap>(value);
+                var image = loaderManager.LoadContent<SkiaSharp.SKBitmap>(value);
                 Texture = image;
             }
         }

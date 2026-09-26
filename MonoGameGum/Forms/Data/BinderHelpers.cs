@@ -217,9 +217,9 @@ internal static class BinderHelpers
             }
 
             // If the intermediate segment has an index, apply indexer access with null propagation
-            if (segments[i].Index.HasValue)
+            if (segments[i].Index is int index)
             {
-                current = BuildIndexAccessWithNullPropagation(current, segments[i].Index.Value);
+                current = BuildIndexAccessWithNullPropagation(current, index);
             }
         }
 

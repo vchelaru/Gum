@@ -36,7 +36,7 @@ public class ContentLoaderTests : BaseTestClass
             string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
             string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
 
             appliedFilters.ShouldContain((font.Texture.Id, Raylib_cs.TextureFilter.Bilinear));
         }
@@ -88,7 +88,7 @@ public class ContentLoaderTests : BaseTestClass
             string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
                 "GumRaylibFontFilterHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath);
 
             appliedFilters.ShouldContain((font.Texture.Id, Raylib_cs.TextureFilter.Bilinear));
         }
@@ -119,7 +119,7 @@ public class ContentLoaderTests : BaseTestClass
 
             Font font = default;
             Should.NotThrow(() =>
-                font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+                font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath));
 
             font.GlyphCount.ShouldBe(0);
         }
@@ -145,7 +145,7 @@ public class ContentLoaderTests : BaseTestClass
             LoaderManager.Self.CacheTextures = false;
             FileManager.CustomGetStreamFromFile = null;
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
 
             font.GlyphCount.ShouldBeGreaterThan(0);
         }
@@ -176,7 +176,7 @@ public class ContentLoaderTests : BaseTestClass
             LoaderManager.Self.CacheTextures = false;
             FileManager.CustomGetStreamFromFile = null;
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
             uint textureId = font.Texture.Id;
 
             // Loaded: Font18Arial.fnt's lineHeight/base are registered against the atlas texture id.
@@ -210,7 +210,7 @@ public class ContentLoaderTests : BaseTestClass
             string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
             string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
 
             RaylibFontShadowRegistry.TryGet(font.Texture.Id, out Font shadowFont).ShouldBeTrue();
             shadowFont.GlyphCount.ShouldBe(2);
@@ -235,7 +235,7 @@ public class ContentLoaderTests : BaseTestClass
             string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
             string fntPath = Path.Combine(fixtureDirectory, "Font18ArialNoShadow.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
 
             RaylibFontShadowRegistry.TryGet(font.Texture.Id, out _).ShouldBeFalse();
         }
@@ -259,7 +259,7 @@ public class ContentLoaderTests : BaseTestClass
             string fixtureDirectory = Path.Combine(AppContext.BaseDirectory, "Content", "FontCache");
             string fntPath = Path.Combine(fixtureDirectory, "Font18Arial.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(fntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(fntPath);
             uint textureId = font.Texture.Id;
 
             RaylibFontShadowRegistry.TryGet(textureId, out _).ShouldBeTrue();
@@ -314,7 +314,7 @@ public class ContentLoaderTests : BaseTestClass
             string notOnDiskFntPath = Path.Combine(Path.GetTempPath(),
                 "GumRaylibFontHookTest_" + Guid.NewGuid().ToString("N"), "Font18Arial.fnt");
 
-            Font font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath);
+            Font font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath);
 
             font.GlyphCount.ShouldBe(191);
             font.Texture.Width.ShouldBe(256);
@@ -377,7 +377,7 @@ public class ContentLoaderTests : BaseTestClass
                 "GumRaylibMultiPageFontTest_" + Guid.NewGuid().ToString("N"), "MultiPage.fnt");
 
             Should.Throw<NotSupportedException>(() =>
-                LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+                LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath));
         }
         finally
         {
@@ -419,7 +419,7 @@ public class ContentLoaderTests : BaseTestClass
 
             Font font = default;
             Should.NotThrow(() =>
-                font = LoaderManager.Self.ContentLoader.LoadContent<Font>(notOnDiskFntPath));
+                font = LoaderManager.Self.LoadContent<Font>(notOnDiskFntPath));
 
             font.GlyphCount.ShouldBe(191);
         }
@@ -452,7 +452,7 @@ public class ContentLoaderTests : BaseTestClass
             FileManager.CustomGetStreamFromFile = null;
 
             Should.Throw<Exception>(() =>
-                LoaderManager.Self.ContentLoader.LoadContent<Texture2D>("does_not_exist.png"));
+                LoaderManager.Self.LoadContent<Texture2D>("does_not_exist.png"));
         }
         finally
         {
@@ -504,7 +504,7 @@ public class ContentLoaderTests : BaseTestClass
                 return null!;
             };
 
-            Texture2D loaded = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>(fileName);
+            Texture2D loaded = LoaderManager.Self.LoadContent<Texture2D>(fileName);
 
             hookWasInvoked.ShouldBeTrue();
             loaded.Width.ShouldBe(3);
@@ -583,7 +583,7 @@ public class ContentLoaderTests : BaseTestClass
             // same logical name from a different test.
             LoaderManager.Self.CacheTextures = false;
 
-            Texture2D loaded = LoaderManager.Self.ContentLoader.LoadContent<Texture2D>(fileName);
+            Texture2D loaded = LoaderManager.Self.LoadContent<Texture2D>(fileName);
 
             loaded.Width.ShouldBe(2);
             loaded.Height.ShouldBe(2);
@@ -619,7 +619,7 @@ public class ContentLoaderTests : BaseTestClass
 
             Texture2D loaded = default;
             Should.NotThrow(() =>
-                loaded = LoaderManager.Self.ContentLoader.TryLoadContent<Texture2D>("does_not_exist.png"));
+                loaded = LoaderManager.Self.TryLoadContent<Texture2D>("does_not_exist.png"));
 
             // default(Texture2D) is a zeroed struct — no width/height/pixels.
             loaded.Width.ShouldBe(0);
@@ -667,7 +667,7 @@ public class ContentLoaderTests : BaseTestClass
                 return null!;
             };
 
-            Texture2D loaded = LoaderManager.Self.ContentLoader.TryLoadContent<Texture2D>(fileName);
+            Texture2D loaded = LoaderManager.Self.TryLoadContent<Texture2D>(fileName);
 
             hookWasInvoked.ShouldBeTrue();
             loaded.Width.ShouldBe(5);

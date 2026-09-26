@@ -23,6 +23,21 @@ public class LoaderManagerTests
         loaderManager.GetDisposable("Example1").ShouldNotBeNull();
     }
 
+    [Fact]
+    public void LoadContent_ShouldThrowInvalidOperation_WhenContentLoaderIsNotSet()
+    {
+        LoaderManager loaderManager = new LoaderManager();
+
+        Should.Throw<InvalidOperationException>(() => loaderManager.LoadContent<object>("File.png"));
+    }
+
+    [Fact]
+    public void TryLoadContent_ShouldThrowInvalidOperation_WhenContentLoaderIsNotSet()
+    {
+        LoaderManager loaderManager = new LoaderManager();
+
+        Should.Throw<InvalidOperationException>(() => loaderManager.TryLoadContent<object>("File.png"));
+    }
 
 
     class ExampleDisposable : IDisposable
