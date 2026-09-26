@@ -57,7 +57,7 @@
       <IsFile>true</IsFile>
       <Type>string</Type>
       <Name>NineSliceInstance.SourceFile</Name>
-      <Value xsi:type="xsd:string">examplespriteframe.png</Value>
+      <Value xsi:type="xsd:string">ExampleSpriteFrame.png</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

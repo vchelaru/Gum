@@ -90,7 +90,7 @@ if(element == null) throw new System.InvalidOperationException("Could not find a
         this.NineSliceInstance.Height = 0f;
         this.NineSliceInstance.HeightUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.NineSliceInstance.Red = 0;
-        this.NineSliceInstance.SourceFileName = @"examplespriteframe.png";
+        this.NineSliceInstance.SourceFileName = @"ExampleSpriteFrame.png";
         this.NineSliceInstance.Width = 0f;
         this.NineSliceInstance.WidthUnits = global::Gum.DataTypes.DimensionUnitType.RelativeToParent;
         this.NineSliceInstance.X = 0f;

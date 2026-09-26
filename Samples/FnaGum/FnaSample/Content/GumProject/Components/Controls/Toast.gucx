@@ -23,12 +23,6 @@
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>
-      <Type>string</Type>
-      <Name>Background.Parent</Name>
-      <Value xsi:type="xsd:string">DemoSettingsMenu</Value>
-      <SetsValue>true</SetsValue>
-    </Variable>
-    <Variable>
       <Type>StyleCategory</Type>
       <Name>Background.StyleCategoryState</Name>
       <Value xsi:type="xsd:string">Panel</Value>
