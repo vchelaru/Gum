@@ -32,6 +32,11 @@ internal class ExposedTextureCoordinateLogic
         var state = element.DefaultState;
         var sourceSets = new Dictionary<string, ExposedTextureCoordinateSet>();
 
+        if (state == null)
+        {
+            return new List<ExposedTextureCoordinateSet>();
+        }
+
         foreach (var variable in state.Variables)
         {
             if (string.IsNullOrEmpty(variable.ExposedAsName)) continue;

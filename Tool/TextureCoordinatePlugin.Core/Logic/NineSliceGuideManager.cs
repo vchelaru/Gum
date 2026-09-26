@@ -18,8 +18,8 @@ public class NineSliceGuideManager : IVisualOverlayManager
     private readonly ICanvasDisplayScale _displayScale;
 
     public bool ShowGuides { get; set; }
-    public Texture2D CurrentTexture { get; set; }
-    public RectangleSelector Selector { get; set; }
+    public Texture2D? CurrentTexture { get; set; }
+    public RectangleSelector? Selector { get; set; }
     public float? CustomFrameWidth { get; set; }
 
     public NineSliceGuideManager(ICanvasDisplayScale displayScale)

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using XnaAndWinforms;
 using Microsoft.Xna.Framework.Graphics;
@@ -37,12 +38,12 @@ public class ImageRegionSelectionCore
 {
     #region Fields
 
-    ImageData maxAlphaImageData;
+    ImageData? maxAlphaImageData;
 
     IInputHostControl mInputHost;
 
-    Texture2D mCurrentTexture;
-    Texture2D maxAlphaTexture;
+    Texture2D? mCurrentTexture;
+    Texture2D? maxAlphaTexture;
 
     bool mRoundRectangleSelectorToUnit = true;
     List<RectangleSelector> mRectangleSelectors = new List<RectangleSelector>();
@@ -53,7 +54,7 @@ public class ImageRegionSelectionCore
 
     TimeManager mTimeManager;
 
-    Sprite mCurrentTextureSprite;
+    Sprite? mCurrentTextureSprite;
 
     public ZoomNumbers ZoomNumbers
     {
@@ -61,7 +62,7 @@ public class ImageRegionSelectionCore
         private set;
     }
 
-    IList<int> mAvailableZoomLevels;
+    IList<int>? mAvailableZoomLevels;
 
     bool showFullAlpha;
 
@@ -113,7 +114,7 @@ public class ImageRegionSelectionCore
         get { return mManagers; }
     }
 
-    public RectangleSelector RectangleSelector
+    public RectangleSelector? RectangleSelector
     {
         get 
         {
@@ -136,7 +137,7 @@ public class ImageRegionSelectionCore
         }
     }
 
-    public Texture2D CurrentTexture
+    public Texture2D? CurrentTexture
     {
         get { return mCurrentTexture; }
         set
@@ -148,9 +149,7 @@ public class ImageRegionSelectionCore
                 mCurrentTexture = value;
                 if (mManagers != null)
                 {
-                    bool hasCreateVisuals = mCurrentTextureSprite != null;
-
-                    if (!hasCreateVisuals)
+                    if (mCurrentTextureSprite == null)
                     {
                         CreateVisuals();
                     }
@@ -160,7 +159,7 @@ public class ImageRegionSelectionCore
                     }
                     else
                     {
-                        CreateMaxAlphaTexture();
+                        CreateMaxAlphaTexture(mCurrentTexture);
                         mCurrentTextureSprite.Visible = true;
                         if (showFullAlpha)
                         {
@@ -181,28 +180,30 @@ public class ImageRegionSelectionCore
         }
     }
 
-    private void CreateMaxAlphaTexture()
+    [MemberNotNull(nameof(maxAlphaTexture))]
+    private void CreateMaxAlphaTexture(Texture2D currentTexture)
     {
-        if (maxAlphaImageData == null)
+        // Both are created together, so either both exist or neither does.
+        if (maxAlphaImageData == null || maxAlphaTexture == null)
         {
-            maxAlphaImageData = new ImageData(mCurrentTexture.Width, mCurrentTexture.Height, mManagers);
-            maxAlphaImageData.CopyFrom(mCurrentTexture);
+            maxAlphaImageData = new ImageData(currentTexture.Width, currentTexture.Height, mManagers);
+            maxAlphaImageData.CopyFrom(currentTexture);
 
-            MaximizeAlpha();
+            MaximizeAlpha(maxAlphaImageData);
 
             maxAlphaTexture = maxAlphaImageData.ToTexture2D(generateMipmaps: false);
         }
         else
         {
-            bool showingBiggerTexture = mCurrentTexture.Width > maxAlphaImageData.Width || mCurrentTexture.Height > maxAlphaImageData.Height;
+            bool showingBiggerTexture = currentTexture.Width > maxAlphaImageData.Width || currentTexture.Height > maxAlphaImageData.Height;
             if (showingBiggerTexture)
             {
-                maxAlphaImageData = new ImageData(mCurrentTexture.Width, mCurrentTexture.Height, mManagers);
+                maxAlphaImageData = new ImageData(currentTexture.Width, currentTexture.Height, mManagers);
             }
 
-            maxAlphaImageData.CopyFrom(mCurrentTexture);
+            maxAlphaImageData.CopyFrom(currentTexture);
 
-            MaximizeAlpha();
+            MaximizeAlpha(maxAlphaImageData);
 
             if (showingBiggerTexture)
             {
@@ -220,17 +221,25 @@ public class ImageRegionSelectionCore
         }
     }
 
-    private void MaximizeAlpha()
+    private static void MaximizeAlpha(ImageData imageData)
     {
-        for (int i = 0; i < maxAlphaImageData.Data.Length; i++)
+        // Always built from the width/height constructor, so it holds Color data.
+        var data = imageData.Data;
+        if (data == null)
         {
-            if (maxAlphaImageData.Data[i].A > 0)
+            return;
+        }
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            if (data[i].A > 0)
             {
-                maxAlphaImageData.Data[i].A = 255;
+                data[i].A = 255;
             }
         }
     }
 
+    [MemberNotNull(nameof(mCurrentTextureSprite))]
     private void CreateVisuals()
     {
         mCurrentTextureSprite = new Sprite(mCurrentTexture);
@@ -283,7 +292,7 @@ public class ImageRegionSelectionCore
     /// <summary>
     /// Sets the available zoom levels, where 100 is 100. These values must be set for zooming to be enabled.
     /// </summary>
-    public IList<int> AvailableZoomLevels
+    public IList<int>? AvailableZoomLevels
     {
         get => mAvailableZoomLevels;
         set => mAvailableZoomLevels = value;
@@ -458,6 +467,8 @@ public class ImageRegionSelectionCore
 
     }
 
+    [MemberNotNull(nameof(mTimeManager), nameof(mManagers), nameof(mInputHost), nameof(mCursor),
+        nameof(mKeyboard), nameof(ZoomNumbers))]
     public void CustomInitialize()
     {
         {
@@ -577,17 +588,17 @@ public class ImageRegionSelectionCore
 
     private void HandleStartRegionChanged(object? sender, EventArgs e)
     {
-        StartRegionChanged?.Invoke(this, null);
+        StartRegionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     void RegionChangedInternal(object? sender, EventArgs e)
     {
-        RegionChanged?.Invoke(this, null);
+        RegionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     void EndRegionChangedInternal(object? sender, EventArgs e)
     {
-        EndRegionChanged?.Invoke(this, null);
+        EndRegionChanged?.Invoke(this, EventArgs.Empty);
     }
 
     void PerformActivity()
@@ -646,6 +657,12 @@ public class ImageRegionSelectionCore
     /// </summary>
     public void HandleZoom(ZoomDirection zoomDirection)
     {
+        var availableZoomLevels = mAvailableZoomLevels;
+        if (availableZoomLevels == null)
+        {
+            return;
+        }
+
         float oldZoom = ZoomValue / 100.0f;
         int index = ZoomIndex;
 
@@ -655,12 +672,12 @@ public class ImageRegionSelectionCore
         bool didZoom = false;
         if (zoomDirection == ZoomDirection.ZoomIn && index > 0)
         {
-            ZoomValue = mAvailableZoomLevels[index - 1];
+            ZoomValue = availableZoomLevels[index - 1];
             didZoom = true;
         }
-        else if (zoomDirection == ZoomDirection.ZoomOut && index != -1 && index < mAvailableZoomLevels.Count - 1)
+        else if (zoomDirection == ZoomDirection.ZoomOut && index != -1 && index < availableZoomLevels.Count - 1)
         {
-            ZoomValue = mAvailableZoomLevels[index + 1];
+            ZoomValue = availableZoomLevels[index + 1];
             didZoom = true;
         }
 
@@ -676,7 +693,7 @@ public class ImageRegionSelectionCore
 
     public void BringSpriteInView()
     {
-        if (mCurrentTexture != null)
+        if (mCurrentTexture != null && mCurrentTextureSprite != null)
         {
 
             bool isAbove = mCurrentTextureSprite.Y + mCurrentTexture.Height < Camera.AbsoluteTop;

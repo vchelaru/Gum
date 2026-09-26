@@ -18,9 +18,8 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
     private readonly IMessenger _messenger;
     private readonly IThemingService _themingService;
 
-    private Sprite _backgroundSprite;
-    private SolidRectangle _backgroundSolidColor;
-    private SystemManagers _systemManagers;
+    private Sprite? _backgroundSprite;
+    private SolidRectangle? _backgroundSolidColor;
     private bool _isCheckerboardVisible = true;
 
     public bool IsCheckerboardVisible
@@ -45,8 +44,6 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
 
     public void Initialize(SystemManagers systemManagers)
     {
-        _systemManagers = systemManagers;
-
         _backgroundSolidColor = new SolidRectangle();
         _backgroundSolidColor.Name = "Background Solid Color";
         _backgroundSolidColor.Width = BackgroundSolidSize;
@@ -111,6 +108,12 @@ public class BackgroundManager : IVisualOverlayManager, IRecipient<ThemeChangedM
 
     private void ApplyThemingSettings(IEffectiveThemeSettings settings)
     {
+        // A theme change can arrive before Initialize; Initialize applies the current theme itself.
+        if (_backgroundSolidColor == null || _backgroundSprite == null)
+        {
+            return;
+        }
+
         _backgroundSolidColor.Color = settings.CheckerA;
         _backgroundSprite.Color = settings.CheckerB;
     }

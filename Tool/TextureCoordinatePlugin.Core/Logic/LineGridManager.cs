@@ -7,11 +7,11 @@ namespace TextureCoordinateSelectionPlugin.Logic;
 
 public class LineGridManager : IVisualOverlayManager
 {
-    private LineGrid _lineGrid;
+    private LineGrid? _lineGrid;
 
     public bool IsVisible { get; set; }
     public int GridSize { get; set; }
-    public Texture2D CurrentTexture { get; set; }
+    public Texture2D? CurrentTexture { get; set; }
 
     public void Initialize(SystemManagers systemManagers)
     {
@@ -35,6 +35,12 @@ public class LineGridManager : IVisualOverlayManager
 
     public void Refresh()
     {
+        if (_lineGrid == null)
+        {
+            // Not initialized yet: the canvas has no graphics device until the head's render surface is ready.
+            return;
+        }
+
         _lineGrid.Visible = IsVisible;
 
         _lineGrid.ColumnWidth = GridSize;
