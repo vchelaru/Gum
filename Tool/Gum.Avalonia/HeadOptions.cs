@@ -23,7 +23,11 @@ public sealed class HeadOptions
         UserDataFolder = userDataFolder;
     }
 
-    /// <summary>When set, the app closes itself this many seconds after the main window opens.</summary>
+    /// <summary>
+    /// When set, the app closes itself this many seconds after the main window opens, and is
+    /// killed if it is still running <see cref="Diagnostics.UnattendedExitDeadline.GracePeriod"/>
+    /// after that many seconds from launch.
+    /// </summary>
     public double? ExitAfterSeconds { get; }
 
     /// <summary>When set, the main window is rendered to this PNG just before exiting.</summary>
