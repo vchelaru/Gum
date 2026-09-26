@@ -145,4 +145,33 @@ public class VariableMenuScenarioTests
         VariableGridHarness.StoredValue(button, "Width", pressed).ShouldBe(120f);
         grid.FieldText("Width").ShouldBe("120");
     }
+
+    [AvaloniaFact]
+    public void MakeDefault_InACategoryState_UsesTheInheritedValue_WhenTheDefaultStateDoesNotSetIt()
+    {
+        // The default state doesn't set Width, so Make Default falls back to the value the default
+        // state inherits from the base type, the same value the category gave its other states.
+        using VariableGridHarness grid = new VariableGridHarness();
+        ComponentSave button = grid.Project.AddComponent("Button");
+        button.DefaultState.Variables.RemoveAll(item => item.Name == "Width");
+        StateSaveCategory looks = grid.Project.AddCategory(button, "Looks");
+        StateSave pressed = grid.Project.AddState(button, looks, "Pressed");
+        object? inheritedWidth = button.DefaultState.GetValueRecursive("Width");
+        inheritedWidth.ShouldNotBeNull();
+        grid.Select(pressed);
+        grid.TypeAndEnter("Width", "210");
+
+        grid.PickRowMenuItem("Width", "Make Default");
+
+        ElementSave current = grid.SelectedState.SelectedElement!;
+        StateSave currentPressed = current.Categories.Single().States.Single();
+        VariableGridHarness.StoredValue(current, "Width", currentPressed).ShouldBe(inheritedWidth);
+        grid.FieldText("Width").ShouldBe(inheritedWidth.ToString());
+
+        grid.Undo();
+
+        ElementSave afterUndo = grid.SelectedState.SelectedElement!;
+        VariableGridHarness.StoredValue(afterUndo, "Width", afterUndo.Categories.Single().States.Single())
+            .ShouldBe(210f);
+    }
 }

@@ -849,7 +849,12 @@ public class VariableGridEntry
                 }
                 else if (isPartOfCategory)
                 {
-                    var variableInDefault = selectedElement.GetDefaultStateOrThrow().GetVariableSave(variable.Name);
+                    // Every state in a category sets the variable, so it can't be removed here.
+                    // Copy the default state's value instead, falling back to what the default state
+                    // inherits (base type, standard element), which is also the value
+                    // VariableInCategoryPropagationLogic gives the category's other states.
+                    var defaultState = selectedElement.GetDefaultStateOrThrow();
+                    var variableInDefault = defaultState.GetVariableSave(variable.Name);
                     if (variableInDefault != null)
                     {
                         _guiCommands.PrintOutput(
@@ -857,17 +862,26 @@ public class VariableGridEntry
 
                         variable.Value = variableInDefault.Value;
                     }
+                    else if (variable.IsState(selectedElement))
+                    {
+                        // A state variable can be un-set back to null:
+                        variable.Value = null;
+                        variable.SetsValue = true;
+                    }
                     else
                     {
-                        // If it's a state, we can un-set that back to null, that's okay:
-                        if (variable.IsState(selectedElement))
+                        var inheritedValue = defaultState.GetValueRecursive(variable.Name);
+                        if (inheritedValue != null)
                         {
-                            variable.Value = null;
-                            variable.SetsValue = true;
+                            _guiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value the default state inherits");
+
+                            variable.Value = inheritedValue;
                         }
                         else
                         {
-                            _guiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
+                            _guiCommands.PrintOutput(
+                                $"Could not set {variable.Name} to default because neither the default state nor its base types set this value");
                         }
                     }
                 }
