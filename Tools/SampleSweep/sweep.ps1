@@ -16,7 +16,8 @@ Output under -OutRoot:
   ref\<sample>\<element>.png     gumcli MonoGame renders (-Reference)
   logs\<sample>\<element>.log    the head's stderr, with GUM_ECHO_OUTPUT=1 (every Output tab line)
   sheets\sheet-NNN.png           contact sheets: the canvas region of each shot, beside its reference
-  results.csv, summary.md        exit code, duration and flagged log lines per element
+  results.csv, summary.md        exit code, duration and flagged log lines per element, plus a
+                                 `gumcli check` of each project when gumcli is built
 
 Build first: dotnet build Gum.slnx (and Tools\Gum.Cli\Gum.Cli.csproj for -Reference).
 
@@ -219,6 +220,16 @@ $md = [System.Text.StringBuilder]::new()
 foreach ($b in $bad) { [void]$md.AppendLine("- $($b.Sample) $($b.Kind) ``$($b.Name)``: exit $($b.ExitCode), screenshot $($b.Screenshot), file missing $($b.FileMissing)") }
 [void]$md.AppendLine("`n## Flagged Output lines ($($flagged.Count))`n")
 foreach ($f in $flagged) { [void]$md.AppendLine("- $($f.Sample) ``$($f.Name)``: $($f.Flags)") }
+# The tree's "!" icons never reach the Output echo, so run the same checks headlessly per project.
+if (Test-Path $gumcli) {
+    [void]$md.AppendLine("`n## gumcli check`n")
+    foreach ($p in $projects) {
+        $lines = @(& $gumcli check (Join-Path $p.Dir $p.GumxName) 2>&1 | ForEach-Object { "$_" } |
+            Where-Object { $_ -match '^(error|warning):' })
+        [void]$md.AppendLine("- $($p.Id): $(if ($lines) { '' } else { 'clean' })")
+        foreach ($l in $lines) { [void]$md.AppendLine("  - $l") }
+    }
+}
 Set-Content (Join-Path $OutRoot 'summary.md') $md.ToString()
 
 # --- Contact sheets -----------------------------------------------------------------------------

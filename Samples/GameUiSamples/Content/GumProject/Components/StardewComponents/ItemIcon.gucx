@@ -33,7 +33,7 @@
       <IsFile>true</IsFile>
       <Type>string</Type>
       <Name>SpriteInstance.SourceFile</Name>
-      <Value xsi:type="xsd:string">components\stardewcomponents\iconspritesheet.png</Value>
+      <Value xsi:type="xsd:string">Components\StardewComponents\IconSpriteSheet.png</Value>
       <SetsValue>true</SetsValue>
     </Variable>
     <Variable>

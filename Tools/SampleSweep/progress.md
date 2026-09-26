@@ -3,8 +3,14 @@
 Interrupted run, 2026-09-26: the sweep was paused because the head's windows took focus. Resume with `pwsh Tools/SampleSweep/sweep.ps1 -Resume -Reference -OutRoot <same folder>` once `--exit-after` runs open off-screen. Delete this file when the sweep is complete.
 
 - 378 elements across 12 distinct sample projects (SokolGumFromFile has the same .gumx as MonoGameGumFromFile and is skipped); 37 are byte-identical to an element already swept, 341 to run.
-- Run: 309, all exit 0 with a screenshot, no flagged Output lines. Screenshots not yet read.
+- Run: 309, all exit 0 with a screenshot, no flagged Output lines. All 39 contact sheets read; findings are in the PR body.
 - gumcli MonoGame reference renders: not run yet.
+- Canvas coverage: shots show only the top-left ~650x420 world pixels at 100% zoom, so bottom- or center-anchored content isn't captured (#5142).
+
+## Re-check on resume
+
+- GameUiSamples: Screen `StardewInventoryScreen`. The canvas never painted (window background, no checkerboard, 0 SpriteBatch begins), with no error in the log; its only child, `StardewComponents/InventoryGrid`, renders on its own. Re-run to tell a capture race from a real bug.
+- MonoGameGumCodeGeneration: Screen `MainMenuFullGeneration`, `TextWithLotsOfPropertiesSet` (Font24Arial, colored). Strokes render with a light stripe inside them. Compare with its gumcli reference before filing.
 
 ## Not yet run (32)
 
