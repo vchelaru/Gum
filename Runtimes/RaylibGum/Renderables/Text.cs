@@ -77,9 +77,9 @@ public enum TextPositionRoundingMode
 #region LetterCustomization
 
 /// <summary>
-/// Mirrors <see cref="RenderingLibrary.Graphics.LetterCustomization"/> on the MonoGame-family runtime -
+/// Mirrors <c>RenderingLibrary.Graphics.LetterCustomization</c> on the MonoGame-family runtime -
 /// the per-letter styling a <c>[Custom]</c> callback can apply. Not every field is representable on
-/// Raylib: <see cref="DrawStyledLine"/> draws a run via a single <c>DrawTextPro</c> call, which only
+/// Raylib: <see cref="Text.DrawStyledLine"/> draws a run via a single <c>DrawTextPro</c> call, which only
 /// supports a uniform font size, so <see cref="ScaleX"/>/<see cref="ScaleY"/> are approximated by their
 /// average when both are set rather than applied independently per axis.
 /// </summary>
@@ -101,7 +101,7 @@ public struct LetterCustomization
 #region ParameterizedLetterCustomizationCall
 
 /// <summary>
-/// Mirrors <see cref="RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall"/> on the
+/// Mirrors <c>RenderingLibrary.Graphics.ParameterizedLetterCustomizationCall</c> on the
 /// MonoGame-family runtime. Resolves <see cref="FunctionName"/> against <see cref="Text.Customizations"/>
 /// / <see cref="Text.ContextCustomizations"/> lazily (rather than capturing the delegate at parse time)
 /// so registering the callback after the markup is assigned still takes effect at draw time.
@@ -204,7 +204,7 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// Registry of simple per-letter callbacks for the <c>[Custom=Name]</c> BBCode tag, keyed by name.
-    /// Mirrors <see cref="RenderingLibrary.Graphics.Text.Customizations"/> on the MonoGame-family
+    /// Mirrors <c>RenderingLibrary.Graphics.Text.Customizations</c> on the MonoGame-family
     /// runtime so a callback registered by name behaves the same on every platform.
     /// </summary>
     public static Dictionary<string, Func<int, string, LetterCustomization>> Customizations { get; private set; }
@@ -215,7 +215,7 @@ public class Text : IVisible, IRenderableIpso,
     /// callback receives the <see cref="LetterCustomization"/> produced by any enclosing <c>[Custom]</c>
     /// tag so nested tags can chain (e.g. an outer tag sets Color, an inner tag darkens it). Checked
     /// before <see cref="Customizations"/> when both are registered under the same name. Mirrors
-    /// <see cref="RenderingLibrary.Graphics.Text.ContextCustomizations"/> on the MonoGame-family runtime.
+    /// <c>RenderingLibrary.Graphics.Text.ContextCustomizations</c> on the MonoGame-family runtime.
     /// </summary>
     public static Dictionary<string, Func<int, string, LetterCustomization, LetterCustomization>> ContextCustomizations { get; private set; }
         = new();
@@ -297,7 +297,7 @@ public class Text : IVisible, IRenderableIpso,
         set;
     }
 
-    public string FontFamily
+    public string? FontFamily
     {
         get; set;
     }
@@ -611,7 +611,7 @@ public class Text : IVisible, IRenderableIpso,
 
     /// <summary>
     /// When true and a "-shadow.fnt" sibling was loaded for the font(s) this Text draws with (see
-    /// <see cref="RenderingLibrary.RaylibFontShadowRegistry"/>), a drop shadow is drawn as a second
+    /// <see cref="global::RenderingLibrary.RaylibFontShadowRegistry"/>), a drop shadow is drawn as a second
     /// pass (issue #4057, the Raylib counterpart of #4001): the shadow silhouette is drawn offset by
     /// <see cref="DropshadowOffsetX"/>/<see cref="DropshadowOffsetY"/> and tinted
     /// <see cref="DropshadowColor"/>, with the primary glyphs drawn on top. Degrades gracefully to no
@@ -628,7 +628,7 @@ public class Text : IVisible, IRenderableIpso,
     /// <inheritdoc/>
     public bool IsHeightDependentOnLines { get; set; }
 
-    public string Name
+    public string? Name
     {
         get;
         set;
@@ -654,13 +654,13 @@ public class Text : IVisible, IRenderableIpso,
 
     public float FontScale { get; set; } = 1;
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
 
     /// <summary>
     /// The Gum blend mode applied when this text is drawn. Null means "use the renderer's current
     /// blend mode" (typically alpha blending). Honored in <see cref="Render"/> via the shared
-    /// <see cref="RenderingLibrary.Graphics.BatchDrawCallCounter"/>, mirroring the raylib Sprite and
+    /// <see cref="global::RenderingLibrary.Graphics.BatchDrawCallCounter"/>, mirroring the raylib Sprite and
     /// NineSlice renderables.
     /// </summary>
     public global::Gum.RenderingLibrary.Blend? Blend { get; set; }

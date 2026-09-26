@@ -28,6 +28,40 @@ public class TextRuntimeCustomFontFileTtfTests : BaseTestClass
     }
 
     [Fact]
+    public void SettingCustomFontFile_ToUnloadableFnt_WithNullFont_ShouldNotThrow()
+    {
+        TextRuntime text = new TextRuntime();
+        text.Font = null;
+        text.UseCustomFont = true;
+        text.FontSize = 24;
+
+        Should.NotThrow(() =>
+            text.CustomFontFile = "Fonts/Missing_" + Guid.NewGuid().ToString("N") + ".fnt");
+    }
+
+    [Fact]
+    public void SettingCustomFontFile_ToUnloadableTtf_WithNullFont_ShouldNotThrow()
+    {
+        IRaylibFontCreator? previous = CustomSetPropertyOnRenderable.InMemoryFontCreator;
+        CustomSetPropertyOnRenderable.InMemoryFontCreator = null;
+
+        try
+        {
+            TextRuntime text = new TextRuntime();
+            text.Font = null;
+            text.UseCustomFont = true;
+            text.FontSize = 24;
+
+            Should.NotThrow(() =>
+                text.CustomFontFile = "Fonts/Missing_" + Guid.NewGuid().ToString("N") + ".ttf");
+        }
+        finally
+        {
+            CustomSetPropertyOnRenderable.InMemoryFontCreator = previous;
+        }
+    }
+
+    [Fact]
     public void SettingCustomFontFileToTtf_PassesFontFileToInMemoryFontCreator()
     {
         CapturingFontCreator creator = new CapturingFontCreator();

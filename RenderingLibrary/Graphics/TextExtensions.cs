@@ -95,7 +95,12 @@ public static class TextExtensions
         float distanceMeasuredSoFar = 0;
 
 #if RAYLIB
-        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
+        if (textToUse == null)
+        {
+            return index;
+        }
+
+        for (int i = 0; i < textToUse.Length; i++)
         {
             // Is there a faster way to do this?
             distanceMeasuredSoFar = textInstance.MeasureString(textToUse.Substring(0, i + 1));

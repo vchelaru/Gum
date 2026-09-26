@@ -69,7 +69,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
 
     public bool FlipVertical { get; set; }
 
-    public int Alpha
+    public override int Alpha
     {
         get
         {
@@ -182,7 +182,7 @@ public class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordinate, IAn
         else if (Texture != null)
         {
             textureToDraw = Texture.Value;
-            defaultSrcRect = new Rectangle(0, 0, TextureWidth.Value, TextureHeight.Value);
+            defaultSrcRect = new Rectangle(0, 0, textureToDraw.Width, textureToDraw.Height);
         }
         else
         {

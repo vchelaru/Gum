@@ -162,6 +162,24 @@ public class GumServiceInitializeTests
     }
 
     [Fact]
+    public void Initialize_ShouldMakeCallingThreadPrimary()
+    {
+        SystemManagers sut = new SystemManagers();
+
+        try
+        {
+            sut.Initialize();
+
+            sut.IsCurrentThreadPrimary.ShouldBeTrue();
+        }
+        finally
+        {
+            // See Initialize_ShouldNotRecreateRenderer: restore the static registrations.
+            SystemManagers.Default.Initialize();
+        }
+    }
+
+    [Fact]
     public void Initialize_RegistersRootPopupRootAndModalRootInMainLayer()
     {
         // Tear down the assembly-wide state so we can observe a cold init.

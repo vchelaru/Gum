@@ -37,12 +37,12 @@ public sealed unsafe class BatchDrawCallCounter
 
     // Single-element array pinned for the process so the RenderBatch lives at a stable address:
     // rlSetRenderBatchActive stores the pointer, so the struct must not move while it is active.
-    private RenderBatch[] _batchStorage;
+    private RenderBatch[]? _batchStorage;
     private GCHandle _pinHandle;
     private RenderBatch* _batch;
     private bool _initialized;
 
-    private RenderStateChangeStatistics _statistics;
+    private RenderStateChangeStatistics? _statistics;
     private bool _active;
 
     /// <summary>
@@ -212,7 +212,7 @@ public sealed unsafe class BatchDrawCallCounter
     /// Enters an additive blend that adds color onto the destination while leaving destination
     /// alpha untouched (color factors ONE/ONE, alpha factors ZERO/ONE) - the raylib equivalent of
     /// MonoGame's <c>BlendState.AddColorPreserveDestinationAlpha</c>, used for the
-    /// <see cref="global::Gum.Graphics.Animation.AnimationFrameColorOperation.Add"/> overlay pass
+    /// <see cref="global::Gum.Content.AnimationChain.AnimationFrameColorOperation.Add"/> overlay pass
     /// (#4821 gap 2) so the overlay brightens the sprite without widening or punching its silhouette
     /// alpha. Pair with <see cref="EndBlendMode"/>.
     /// </summary>

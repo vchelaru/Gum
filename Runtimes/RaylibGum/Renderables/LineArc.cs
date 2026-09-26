@@ -194,12 +194,12 @@ public class LineArc : InvisibleRenderable
     /// <summary>Y offset of the dropshadow band in world-space pixels.</summary>
     public float DropshadowOffsetY { get; set; }
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>Horizontal blur radius of the dropshadow, in pixels: how far the soft falloff visibly extends.</summary>
     /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurY"/> —
     /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurX { get; set; }
 
-    /// <inheritdoc cref="SkiaGum.GueDeriving.SkiaShapeRuntime.DropshadowBlurX"/>
+    /// <summary>Vertical blur radius of the dropshadow, in pixels: how far the soft falloff visibly extends.</summary>
     /// <remarks>raylib note: treated as isotropic with <see cref="DropshadowBlurX"/> —
     /// rendering collapses anisotropic blur to <c>max(BlurX, BlurY)</c>.</remarks>
     public float DropshadowBlurY { get; set; }
