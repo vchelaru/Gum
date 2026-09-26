@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+using Gum.DataTypes;
 
 namespace Gum.Managers;
 
@@ -20,8 +22,11 @@ public sealed record WireframeDropPayload(
     /// <summary>True when the payload carries one or more dragged tree nodes.</summary>
     public bool HasNodes => NodeTags is { Count: > 0 };
 
-    /// <summary>True when the payload carries one or more dropped files.</summary>
-    public bool HasFileDrop => Files is { Length: > 0 };
+    /// <summary>
+    /// True when the payload carries one or more dropped files for the canvas. A drop that carries a
+    /// project file is not one: the main window opens that project instead.
+    /// </summary>
+    public bool HasFileDrop => Files is { Length: > 0 } && !Files.Any(GumProjectSave.IsProjectFile);
 
     /// <summary>
     /// Resolves which of the payload's drop kinds should be acted on, in the same precedence the

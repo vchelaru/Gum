@@ -863,7 +863,8 @@ public class DragDropManager : IDragDropManager
     {
         var targetTreeNode = _pluginManager.GetTreeNodeOver();
 
-        if (files != null)
+        // The main window opens a dropped project, so nothing gets imported into the one it replaces.
+        if (files != null && !files.Any(GumProjectSave.IsProjectFile))
         {
             var isTargetRootScreenTreeNode = targetTreeNode.IsTopScreenContainerTreeNode();
             foreach (FilePath file in files)
