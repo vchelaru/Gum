@@ -82,7 +82,7 @@ public class DialogKeyboardTests
 
     private static string? ClipboardText(DialogWindow window)
     {
-        Task<string?> read = window.Clipboard!.GetTextAsync();
+        Task<string?> read = window.Clipboard!.TryGetTextAsync();
         Dispatcher.UIThread.RunJobs();
         return read.Result;
     }
