@@ -23,7 +23,8 @@ public interface IPluginHostConfiguration
 
     /// <summary>
     /// Whether an external plugin assembly can be hosted here. A WPF head accepts anything; a
-    /// cross-platform head rejects assemblies that reference WPF or WinForms, giving the reason.
+    /// cross-platform head rejects assemblies that reference WPF or WinForms, or that use types its
+    /// own assemblies lack (built against the WPF tool), giving the reason.
     /// </summary>
     bool CanHostExternalAssembly(Assembly assembly, out string? reason);
 

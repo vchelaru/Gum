@@ -90,7 +90,7 @@ internal class PluginCatalogFactory
 
         _scans.Add(new PluginFileScan(fileName, PluginFileOutcome.Loaded, CouldContainPlugins(assembly), null));
 
-        return CreateResilientCatalog(assembly);
+        return CreateResilientCatalog(assembly, host);
     }
 
     /// <summary>
@@ -196,6 +196,16 @@ internal class PluginCatalogFactory
     /// </remarks>
     public ComposablePartCatalog? CreateResilientCatalog(Assembly assembly)
     {
+        return CreateResilientCatalog(assembly, null);
+    }
+
+    /// <summary>
+    /// As <see cref="CreateResilientCatalog(Assembly)"/>. When a skipped type is missing from one of
+    /// <paramref name="host"/>'s own assemblies, the report adds that the plugin was built against
+    /// another build of the tool, a backstop for a plugin the head's up-front check let through.
+    /// </summary>
+    public ComposablePartCatalog? CreateResilientCatalog(Assembly assembly, IPluginHostConfiguration? host)
+    {
         try
         {
             assembly.GetTypes();
@@ -203,8 +213,11 @@ internal class PluginCatalogFactory
         }
         catch (ReflectionTypeLoadException exception)
         {
+            IEnumerable<string> toolAssemblyNames = host?.InternalPluginAssemblies
+                .Select(toolAssembly => toolAssembly.GetName().Name)
+                .OfType<string>() ?? [];
             return CreateCatalogForLoadableTypes(assembly.FullName ?? assembly.ToString(), exception,
-                CouldContainPlugins(assembly));
+                CouldContainPlugins(assembly), toolAssemblyNames);
         }
     }
 
@@ -226,7 +239,7 @@ internal class PluginCatalogFactory
     /// Without the report, a plugin among the skipped types just silently never appears.
     /// </summary>
     internal ComposablePartCatalog? CreateCatalogForLoadableTypes(string assemblyName,
-        ReflectionTypeLoadException exception, bool couldContainPlugins)
+        ReflectionTypeLoadException exception, bool couldContainPlugins, IEnumerable<string>? toolAssemblyNames = null)
     {
         Type[] loadableTypes = exception.Types.OfType<Type>().ToArray();
 
@@ -236,14 +249,15 @@ internal class PluginCatalogFactory
         if (couldContainPlugins)
         {
             int skippedCount = exception.Types.Length - loadableTypes.Length;
-            _outputManager.AddError(BuildReport(assemblyName, exception, skippedCount, exception.Types.Length));
+            _outputManager.AddError(BuildReport(assemblyName, exception, skippedCount, exception.Types.Length,
+                toolAssemblyNames ?? []));
         }
 
         return loadableTypes.Length > 0 ? new TypeCatalog(loadableTypes) : null;
     }
 
     private static string BuildReport(string assemblyName, ReflectionTypeLoadException exception,
-        int skippedCount, int totalCount)
+        int skippedCount, int totalCount, IEnumerable<string> toolAssemblyNames)
     {
         StringBuilder report = new();
         report.AppendLine($"Plugin assembly '{assemblyName}' loaded, but {skippedCount} of its " +
@@ -265,6 +279,17 @@ internal class PluginCatalogFactory
         if (messages.Count > MaxReportedLoaderErrors)
         {
             report.AppendLine($"    ...and {messages.Count - MaxReportedLoaderErrors} more.");
+        }
+
+        // TypeLoadException carries the assembly only in its message, as "from assembly 'Name, Version=...'".
+        bool missesToolType = (exception.LoaderExceptions ?? [])
+            .OfType<TypeLoadException>()
+            .Any(loadException => toolAssemblyNames.Any(name =>
+                loadException.Message.Contains($"from assembly '{name},", StringComparison.OrdinalIgnoreCase)));
+        if (missesToolType)
+        {
+            report.AppendLine("It uses types this Gum tool does not have, so it was built against a different build " +
+                "of the Gum tool (for example the WPF tool) and needs to be rebuilt for this one.");
         }
 
         return report.ToString();
