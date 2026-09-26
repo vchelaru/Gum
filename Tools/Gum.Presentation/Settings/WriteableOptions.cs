@@ -149,6 +149,11 @@ public static class WritableOptionsServiceCollectionExtensions
         where T : class, new()
     {
         var section = configuration.GetSection(sectionName);
+        if (!CanBind<T>(section) && TrySetAsideSection(filePath, sectionName, out string? backupPath))
+        {
+            Console.Error.WriteLine($"Could not read {sectionName} in {filePath}; started with its defaults. The old section was moved to {backupPath}.");
+            (configuration as IConfigurationRoot)?.Reload();
+        }
         services.Configure<T>(section);
 
         services.AddSingleton<IWritableOptions<T>>(sp =>
@@ -159,5 +164,58 @@ public static class WritableOptionsServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    // A hand-edited value the binder can't convert (e.g. "mode": "Purple") would otherwise throw on
+    // the first CurrentValue read, which happens during startup, on every launch.
+    private static bool CanBind<T>(IConfigurationSection section) where T : class, new()
+    {
+        try
+        {
+            section.Get<T>();
+            return true;
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Writes the section to <c>&lt;file&gt;.&lt;section&gt;.unreadable</c> and removes it from
+    /// <paramref name="filePath"/>, so the section binds to its defaults and later saves start clean.
+    /// </summary>
+    private static bool TrySetAsideSection(string filePath, string sectionName, out string? backupPath)
+    {
+        backupPath = null;
+        if (!File.Exists(filePath))
+        {
+            return false;
+        }
+
+        // The same leniency the JSON configuration provider parses with.
+        var documentOptions = new JsonDocumentOptions
+        {
+            CommentHandling = JsonCommentHandling.Skip,
+            AllowTrailingCommas = true,
+        };
+        if (JsonNode.Parse(File.ReadAllText(filePath), documentOptions: documentOptions) is not JsonObject root)
+        {
+            return false;
+        }
+
+        // Configuration keys are case-insensitive, so the file's spelling may differ.
+        string? key = root.Select(p => p.Key)
+            .FirstOrDefault(k => string.Equals(k, sectionName, StringComparison.OrdinalIgnoreCase));
+        if (key == null)
+        {
+            return false;
+        }
+
+        backupPath = $"{filePath}.{sectionName}.unreadable";
+        File.WriteAllText(backupPath, root[key]?.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) ?? "null");
+        root.Remove(key);
+        File.WriteAllText(filePath, root.ToJsonString(new JsonSerializerOptions { WriteIndented = true }));
+        return true;
     }
 }
