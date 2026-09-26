@@ -147,21 +147,23 @@ namespace Gum.Wireframe
 
 
                 if (parent.ChildrenLayout != Managers.ChildrenLayout.Regular &&
-                    parent.WrapsChildren)
+                    parent.WrapsChildren &&
+                    // Filled by the parent's stacking layout; null until it has stacked a visible child.
+                    parent.StackedRowOrColumnDimensions is { } stackedDimensions)
                 {
                     // The origin may actually be a new row/column, so let's get that:
                     if (parent.ChildrenLayout == Managers.ChildrenLayout.LeftToRightStack)
                     {
                         for (int i = 0; i < asGue.StackedRowOrColumnIndex; i++)
                         {
-                            parentAbsoluteY += parent.StackedRowOrColumnDimensions[i] + parent.StackSpacing;
+                            parentAbsoluteY += stackedDimensions[i] + parent.StackSpacing;
                         }
                     }
                     if (parent.ChildrenLayout == Managers.ChildrenLayout.TopToBottomStack)
                     {
                         for (int i = 0; i < asGue.StackedRowOrColumnIndex; i++)
                         {
-                            parentAbsoluteX += parent.StackedRowOrColumnDimensions[i] + parent.StackSpacing;
+                            parentAbsoluteX += stackedDimensions[i] + parent.StackSpacing;
                         }
                     }
                 }

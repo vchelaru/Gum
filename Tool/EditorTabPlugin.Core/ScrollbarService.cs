@@ -32,18 +32,24 @@ public class ScrollbarService
         _projectManager = projectManager;
     }
 
-    public void HandleElementSelected(ElementSave obj)
+    public void HandleElementSelected(ElementSave? obj)
     {
+        GumProjectSave? project = _projectManager.GumProjectSave;
+        if (project == null)
+        {
+            return;
+        }
+
         GraphicalUiElement? ipso = null;
         if(obj != null)
         {
             ipso = _wireframeObjectManager.GetRepresentation(obj);
         }
 
-        float minX = -_projectManager.GumProjectSave.DefaultCanvasWidth/2;
-        float maxX = _projectManager.GumProjectSave.DefaultCanvasWidth;
-        float minY = -_projectManager.GumProjectSave.DefaultCanvasHeight / 2;
-        float maxY = _projectManager.GumProjectSave.DefaultCanvasHeight;
+        float minX = -project.DefaultCanvasWidth/2;
+        float maxX = project.DefaultCanvasWidth;
+        float minY = -project.DefaultCanvasHeight / 2;
+        float maxY = project.DefaultCanvasHeight;
 
         if(ipso != null)
         {

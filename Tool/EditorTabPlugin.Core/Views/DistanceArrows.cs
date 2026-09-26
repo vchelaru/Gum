@@ -159,20 +159,25 @@ namespace Gum.Wireframe
 
         private float ToWorld(float overlaySize) => _displayScale.ToWorld(overlaySize, Zoom);
 
+        private Layer GetTopLayer() => _toolLayerService.TopLayer ??
+            throw new InvalidOperationException("_toolLayerService.TopLayer should not be null at this point");
+
         public void AddToManagers()
         {
-            Arrow1.AddToManagers(_toolLayerService.TopLayer);
-            Arrow2.AddToManagers(_toolLayerService.TopLayer);
+            Layer topLayer = GetTopLayer();
+            Arrow1.AddToManagers(topLayer);
+            Arrow2.AddToManagers(topLayer);
 
-            _toolLayerService.TopLayer.Add(_distanceText);
+            topLayer.Add(_distanceText);
         }
 
         public void RemoveFromManagers()
         {
-            Arrow1.RemoveFromManagers(_toolLayerService.TopLayer);
-            Arrow2.RemoveFromManagers(_toolLayerService.TopLayer);
+            Layer topLayer = GetTopLayer();
+            Arrow1.RemoveFromManagers(topLayer);
+            Arrow2.RemoveFromManagers(topLayer);
 
-            _toolLayerService.TopLayer.Remove(_distanceText);
+            topLayer.Remove(_distanceText);
         }
     }
 
@@ -273,7 +278,7 @@ namespace Gum.Wireframe
 #pragma warning restore CS0618
             var normalizedBack = Vector2.Normalize(startAbsolute - endAbsolute);
 
-            var angle = Vector2Methods.Angle(normalizedBack).Value;
+            var angle = Vector2Methods.Angle(normalizedBack) ?? 0f;
             angle += MathHelper.PiOver4;
             endLine1.RelativePoint = Vector2Methods.AtAngle(new Vector2(arrowPointLineLength, 0), angle);
 
@@ -294,7 +299,7 @@ namespace Gum.Wireframe
             }
             else
             {
-                var existingAngle = vector2.Angle().Value;
+                var existingAngle = vector2.Angle() ?? 0f;
                 var newAngle = existingAngle + radiansToRotateBy;
                 return FromAngle(newAngle) * vector2.Length();
             }

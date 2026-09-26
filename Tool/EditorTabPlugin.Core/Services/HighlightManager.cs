@@ -109,7 +109,7 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
 
     }
 
-    public void UnhighlightIpso(GraphicalUiElement highlightedIpso)
+    public void UnhighlightIpso(GraphicalUiElement? highlightedIpso)
     {
         if (highlightedIpso?.Component is Sprite)
         {
@@ -159,9 +159,9 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
 
             mOverlaySprite.Rotation = HighlightedSprite.Rotation;
         }
-        else if (HighlightedNineSlice != null && AreHighlightsVisible)
+        else if (HighlightedNineSlice is NineSlice highlightedNineSlice && AreHighlightsVisible)
         {
-            SetNineSliceOverlay();
+            SetNineSliceOverlay(highlightedNineSlice);
         }
         else if (HighlightedLineRectangle != null && AreHighlightsVisible)
         {
@@ -201,37 +201,37 @@ public class HighlightManager : Editors.Visuals.IHighlightOverlayVisual
         }
     }
 
-    private void SetNineSliceOverlay()
+    private void SetNineSliceOverlay(NineSlice nineSlice)
     {
 
         mOverlayNineSlice.Visible = true;
 
-        var bounds = HighlightedNineSlice.GetBounds();
+        var bounds = nineSlice.GetBounds();
 
         mOverlayNineSlice.X = bounds.left;
         mOverlayNineSlice.Y = bounds.top;
 
         mOverlayNineSlice.Width = bounds.right - bounds.left;
         mOverlayNineSlice.Height = bounds.bottom - bounds.top;
-        mOverlayNineSlice.TopLeftTexture = HighlightedNineSlice.TopLeftTexture;
-        mOverlayNineSlice.TopTexture = HighlightedNineSlice.TopTexture;
-        mOverlayNineSlice.TopRightTexture = HighlightedNineSlice.TopRightTexture;
+        mOverlayNineSlice.TopLeftTexture = nineSlice.TopLeftTexture;
+        mOverlayNineSlice.TopTexture = nineSlice.TopTexture;
+        mOverlayNineSlice.TopRightTexture = nineSlice.TopRightTexture;
 
-        mOverlayNineSlice.LeftTexture = HighlightedNineSlice.LeftTexture;
-        mOverlayNineSlice.CenterTexture = HighlightedNineSlice.CenterTexture;
-        mOverlayNineSlice.RightTexture = HighlightedNineSlice.RightTexture;
+        mOverlayNineSlice.LeftTexture = nineSlice.LeftTexture;
+        mOverlayNineSlice.CenterTexture = nineSlice.CenterTexture;
+        mOverlayNineSlice.RightTexture = nineSlice.RightTexture;
 
-        mOverlayNineSlice.BottomLeftTexture = HighlightedNineSlice.BottomLeftTexture;
-        mOverlayNineSlice.BottomTexture = HighlightedNineSlice.BottomTexture;
-        mOverlayNineSlice.BottomRightTexture = HighlightedNineSlice.BottomRightTexture;
+        mOverlayNineSlice.BottomLeftTexture = nineSlice.BottomLeftTexture;
+        mOverlayNineSlice.BottomTexture = nineSlice.BottomTexture;
+        mOverlayNineSlice.BottomRightTexture = nineSlice.BottomRightTexture;
 
-        mOverlayNineSlice.Red = HighlightedNineSlice.Red;
-        mOverlayNineSlice.Green = HighlightedNineSlice.Green;
-        mOverlayNineSlice.Blue = HighlightedNineSlice.Blue;
+        mOverlayNineSlice.Red = nineSlice.Red;
+        mOverlayNineSlice.Green = nineSlice.Green;
+        mOverlayNineSlice.Blue = nineSlice.Blue;
 
-        mOverlayNineSlice.SourceRectangle = HighlightedNineSlice.SourceRectangle;
+        mOverlayNineSlice.SourceRectangle = nineSlice.SourceRectangle;
 
-        mOverlayNineSlice.Rotation = HighlightedNineSlice.Rotation;
+        mOverlayNineSlice.Rotation = nineSlice.Rotation;
 
     }
 }

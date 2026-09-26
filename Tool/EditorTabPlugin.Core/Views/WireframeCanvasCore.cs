@@ -265,7 +265,8 @@ public sealed class WireframeCanvasCore
 
             _cameraController = new CameraController();
 
-            LoaderManager.Self.Initialize(null, "Content/TestFont.fnt", _host.Services, null);
+            // No invalid-texture file, so LoaderManager generates its red-X placeholder.
+            LoaderManager.Self.Initialize("", "Content/TestFont.fnt", _host.Services, SystemManagers.Default);
             if (global::RenderingLibrary.Graphics.Text.DefaultBitmapFont == null)
             {
                 _outputManager.AddError(
@@ -369,6 +370,10 @@ public sealed class WireframeCanvasCore
 
     public void ShareLayerReferences(LayerService layerService)
     {
+        if (mCanvasBounds == null)
+        {
+            throw new InvalidOperationException("The canvas must be initialized before it shares layer references.");
+        }
         ShapeManager.Self.Add(mCanvasBounds, layerService.OverlayLayer);
         _gridOverlayManager!.AddToLayer(layerService.OverlayLayer);
 

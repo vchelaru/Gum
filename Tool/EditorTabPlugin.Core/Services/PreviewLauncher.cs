@@ -145,7 +145,7 @@ public class PreviewLauncher : IPreviewLauncher
         }
 
         GumProjectSave? project = _projectManager.GumProjectSave;
-        if (project == null)
+        if (project == null || string.IsNullOrEmpty(project.FullFileName))
         {
             return;
         }

@@ -212,7 +212,7 @@ namespace Gum.Wireframe
             }
             else if (ipsoList.Count() != 0)
             {
-                var first = ipsoList.FirstOrDefault();
+                var first = ipsoList.First();
 
                 var firstBounds = first.GetBounds();
                 float minX = firstBounds.left;

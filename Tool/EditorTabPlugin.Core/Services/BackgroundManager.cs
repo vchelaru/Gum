@@ -25,8 +25,9 @@ internal class BackgroundManager : IRecipient<ThemeChangedMessage>, IDisposable
     private readonly IMessenger _messenger;
     private readonly IThemingService _themingService;
 
-    private Sprite _backgroundSprite;
-    private SolidRectangle _backgroundSolidColor;
+    // Null until Initialize, which runs once the canvas exists.
+    private Sprite? _backgroundSprite;
+    private SolidRectangle? _backgroundSolidColor;
 
     public BackgroundManager(
         WireframeCommands wireframeCommands,
@@ -98,14 +99,22 @@ internal class BackgroundManager : IRecipient<ThemeChangedMessage>, IDisposable
 
     public void Activity()
     {
-        Debug.Assert(_backgroundSprite != null, "BackgroundManager.Initialize must be called before Activity");
-        Debug.Assert(_backgroundSolidColor != null, "BackgroundManager.Initialize must be called before Activity");
+        if (_backgroundSprite == null)
+        {
+            throw new InvalidOperationException("BackgroundManager.Initialize must be called before Activity");
+        }
 
         _backgroundSprite.Visible = _wireframeCommands.IsBackgroundGridVisible;
     }
 
     private void ApplyThemingSettings(IEffectiveThemeSettings settings)
     {
+        // A theme change can arrive before Initialize, which applies the current settings itself.
+        if (_backgroundSolidColor == null || _backgroundSprite == null)
+        {
+            return;
+        }
+
         _backgroundSolidColor.Color = settings.CheckerA;
         _backgroundSprite.Color = settings.CheckerB;
     }

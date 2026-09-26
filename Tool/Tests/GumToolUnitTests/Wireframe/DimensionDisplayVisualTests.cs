@@ -27,7 +27,7 @@ public class DimensionDisplayVisualTests
     public void GetDimensionSuffix_ShouldReturnNonNullSuffix_ForEveryUnitTypeExceptAbsolute(
         DimensionUnitType unitType, bool shouldHaveSuffix)
     {
-        string suffix = DimensionDisplayVisual.GetDimensionSuffix(unitType, isWidth: true);
+        string? suffix = DimensionDisplayVisual.GetDimensionSuffix(unitType, isWidth: true);
 
         if (shouldHaveSuffix)
         {

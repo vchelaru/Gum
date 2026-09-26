@@ -21,8 +21,14 @@ public class PreviewGumxProjectionService : IPreviewGumxProjectionService
     /// <inheritdoc/>
     public PreviewGumxProjection Project(GumProjectSave project)
     {
-        string contentRootDirectory = FileManager.GetDirectory(project.FullFileName);
-        string outputDirectory = GetTempDirectory(project.FullFileName);
+        string? fullFileName = project.FullFileName;
+        if (string.IsNullOrEmpty(fullFileName))
+        {
+            throw new ArgumentException("The project must be saved before it can be previewed.", nameof(project));
+        }
+
+        string contentRootDirectory = FileManager.GetDirectory(fullFileName);
+        string outputDirectory = GetTempDirectory(fullFileName);
         ConvertProjectToJsonResult result = _convertService.ConvertToJson(project, outputDirectory);
         return new PreviewGumxProjection(result.ProjectFilePath, contentRootDirectory);
     }

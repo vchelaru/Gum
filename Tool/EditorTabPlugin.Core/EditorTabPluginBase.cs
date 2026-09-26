@@ -125,6 +125,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private readonly SelectionManager _selectionManager;
     private readonly IElementCommands _elementCommands;
     private readonly SinglePixelTextureService _singlePixelTextureService;
+    private readonly IFileDropTargetFilter _fileDropTargetFilter;
     private BackgroundManager _backgroundManager;
     private bool _isXnaInitialized;
     private readonly ISelectedState _selectedState;
@@ -316,6 +317,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         _screenshotService = new ScreenshotService(_selectionManager, _wireframeCommands, _guiCommands, _dialogService);
         _singlePixelTextureService = new SinglePixelTextureService();
+        _fileDropTargetFilter = new FileDropTargetFilter();
         _backgroundManager = new BackgroundManager(_wireframeCommands, messenger, _themingService);
         _gridSnapWarningService = new GridSnapWarningService(_selectionManager);
 
@@ -564,7 +566,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         _wireframeObjectManager.RefreshAll(true);
     }
 
-    private void HandleIpsoSelected(IPositionedSizedObject ipso)
+    private void HandleIpsoSelected(IPositionedSizedObject? ipso)
     {
         _selectionManager.SelectedGue = ipso as GraphicalUiElement;
     }
@@ -668,31 +670,38 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         {
             AdjustTextureFilter();
         }
+
+        GumProjectSave? project = _projectManager.GumProjectSave;
+        if (project == null)
+        {
+            return;
+        }
+
         if (propertyName == nameof(GumProjectSave.RestrictToUnitValues))
         {
             _selectionManager.RestrictToUnitValues =
-                _projectManager.GumProjectSave.RestrictToUnitValues;
+                project.RestrictToUnitValues;
         }
         else if (propertyName == nameof(GumProjectSave.ShowCheckerBackground))
         {
             _wireframeCommands.IsBackgroundGridVisible =
-                _projectManager.GumProjectSave.ShowCheckerBackground;
+                project.ShowCheckerBackground;
         }
         else if (propertyName == nameof(GumProjectSave.SnapToGrid))
         {
             // No separate "show grid" setting - the overlay is only visible while snap is on.
             _selectionManager.SnapToGrid =
-                _projectManager.GumProjectSave.SnapToGrid;
+                project.SnapToGrid;
             _wireframeCommands.IsGridOverlayVisible =
-                _projectManager.GumProjectSave.SnapToGrid;
+                project.SnapToGrid;
             _editorViewModel.RefreshGridSnapWarning();
         }
         else if (propertyName == nameof(GumProjectSave.GridSize))
         {
             _selectionManager.GridSize =
-                _projectManager.GumProjectSave.GridSize;
+                project.GridSize;
             _wireframeCommands.GridSize =
-                _projectManager.GumProjectSave.GridSize;
+                project.GridSize;
         }
         else if (propertyName == nameof(GumProjectSave.SinglePixelTextureFile) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureTop) ||
@@ -700,7 +709,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             propertyName == nameof(GumProjectSave.SinglePixelTextureRight) ||
             propertyName == nameof(GumProjectSave.SinglePixelTextureBottom))
         {
-            _singlePixelTextureService.RefreshSinglePixelTexture();
+            _singlePixelTextureService.RefreshSinglePixelTexture(project);
 
             _wireframeObjectManager.RefreshAll(forceLayout: true, forceReloadTextures: true);
         }
@@ -709,17 +718,18 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     private void AdjustTextureFilter()
     {
         var project = ObjectFinder.Self.GumProjectSave;
+        Layer? mainEditorLayer = _layerService.MainEditorLayer;
 
-        if (project != null)
+        if (project != null && mainEditorLayer != null)
         {
             switch(project.TextureFilter)
             {
                 case nameof(TextureFilter.Linear):
-                    _layerService.MainEditorLayer.IsLinearFilteringEnabled = true;
+                    mainEditorLayer.IsLinearFilteringEnabled = true;
                     break;
                 case nameof(TextureFilter.Point):
                 default:
-                    _layerService.MainEditorLayer.IsLinearFilteringEnabled = false;
+                    mainEditorLayer.IsLinearFilteringEnabled = false;
 
                     break;
             }
@@ -753,7 +763,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             qualifiedName = instance.Name + "." + qualifiedName;
         }
 
-        var state = _selectedState.SelectedStateSave ?? element.DefaultState;
+        StateSave? state = _selectedState.SelectedStateSave ?? element.DefaultState;
 
         // This method could be called...
         // 1. Directly on an element or instance when the user edits a value
@@ -764,6 +774,12 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
         if(_selectedState.SelectedElements.Contains(element) == false)
         {
             state = element.DefaultState;
+        }
+
+        if (state == null)
+        {
+            // Unreachable for a loaded element, which always has a default state.
+            return;
         }
 
         var value = state.GetValue(qualifiedName);
@@ -918,7 +934,7 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     // When a new element is selected, its default state is selected too, so both
     // HandleStateSelected and HandleElementSelected fire in one cascade. The redundant second
     // rebuild is now suppressed via _wireframeRefreshCoordinator (issue #3212).
-    private void HandleElementSelected(ElementSave save)
+    private void HandleElementSelected(ElementSave? save)
     {
         // Selecting an element forces its default state first, so HandleStateSelected has already
         // rebuilt the wireframe for this element earlier in the same synchronous cascade. Skip the
@@ -969,6 +985,10 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
         // This must be initialized *after* ShareLayerReferences since that
         // creates the rulers
+        if (_canvas.TopRuler == null || _canvas.LeftRuler == null)
+        {
+            throw new InvalidOperationException("ShareLayerReferences must create the rulers before the editor view initializes.");
+        }
         _editorViewModel.InitializeXnaView(systemManagers,
             _canvas.TopRuler,
             _canvas.LeftRuler);
@@ -1229,9 +1249,14 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
+        // CanDrop has already rejected a drop with no selected element or state.
+        ElementSave? element = _selectedState.SelectedElement;
+        if (element == null || _selectedState.SelectedStateSave == null)
+        {
+            return;
+        }
 
-        var element = _selectedState.SelectedElement;
+        string nameToAdd = FileManager.RemovePath(FileManager.RemoveExtension(fileName));
 
         IEnumerable<string> existingNames = element.Instances.Select(i => i.Name);
         nameToAdd = StringFunctions.MakeStringUnique(nameToAdd, existingNames);
@@ -1268,6 +1293,12 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void TryHandleFileDropOnComponent(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
     {
+        // CanDrop has already rejected a drop with no selected element or state.
+        if (_selectedState.SelectedElement == null || _selectedState.SelectedStateSave == null)
+        {
+            return;
+        }
+
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
@@ -1374,12 +1405,18 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
 
     private void TryHandleFileDropOnInstance(float worldX, float worldY, string[] files, ref bool handled, ref bool shouldUpdate)
     {
+        // CanDrop has already rejected a drop with no selected element or state.
+        if (_selectedState.SelectedElement == null || _selectedState.SelectedStateSave == null)
+        {
+            return;
+        }
+
         string extension = FileManager.GetExtension(files[0]);
         bool isFontFile = extension == "ttf";
 
-        InstanceSave instance = isFontFile
-            ? FindInstanceWithFontProperty(worldX, worldY)
-            : FindInstanceWithSourceFile(worldX, worldY);
+        InstanceSave? instance = isFontFile
+            ? FindDropTargetInstance(worldX, worldY, _fileDropTargetFilter.CanReceiveFont)
+            : FindDropTargetInstance(worldX, worldY, _fileDropTargetFilter.CanReceiveSourceFile);
 
         if (instance != null)
         {
@@ -1476,7 +1513,11 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
             return;
         }
 
-        var stateSave = _selectedState.SelectedStateSave;
+        StateSave? stateSave = _selectedState.SelectedStateSave;
+        if (stateSave == null)
+        {
+            return;
+        }
         string Qualify(string memberName) => instance != null ? instance.Name + "." + memberName : memberName;
 
         var oldAnimate = stateSave.GetValueOrDefault<bool>(Qualify("Animate"));
@@ -1503,41 +1544,21 @@ public abstract class EditorTabPluginBase : PluginBase, IPriorityPlugin, IRecipi
     }
 
 
-    private InstanceSave FindInstanceWithSourceFile(float worldX, float worldY)
+    private InstanceSave? FindDropTargetInstance(float worldX, float worldY, Func<InstanceSave, bool> canReceiveFile)
     {
-        List<ElementWithState> elementStack = new List<ElementWithState>();
-        elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
-
-        IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
-
-        if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+        if (_selectedState.SelectedElement == null || _selectedState.SelectedStateSave == null)
         {
-            var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
-
-            if (baseStandardElement.DefaultState.Variables.Any(v => v.Name == "SourceFile"))
-            {
-                return ipsoOver.Tag as InstanceSave;
-            }
+            return null;
         }
 
-        return null;
-    }
-
-    private InstanceSave FindInstanceWithFontProperty(float worldX, float worldY)
-    {
         List<ElementWithState> elementStack = new List<ElementWithState>();
         elementStack.Add(new ElementWithState(_selectedState.SelectedElement) { StateName = _selectedState.SelectedStateSave.Name });
 
         IPositionedSizedObject? ipsoOver = _selectionManager.GetRepresentationAt(worldX, worldY, IsComponentNoInstanceSelected, elementStack);
 
-        if (ipsoOver != null && ipsoOver.Tag is InstanceSave)
+        if (ipsoOver?.Tag is InstanceSave instance && canReceiveFile(instance))
         {
-            var baseStandardElement = ObjectFinder.Self.GetRootStandardElementSave(ipsoOver.Tag as InstanceSave);
-
-            if (baseStandardElement?.Name == "Text")
-            {
-                return ipsoOver.Tag as InstanceSave;
-            }
+            return instance;
         }
 
         return null;
