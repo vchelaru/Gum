@@ -104,4 +104,49 @@ public class WpfSettingsCarryoverTests : IDisposable
         theme.Mode.ShouldBeNull();
         File.ReadAllText(settingsPath + ".unreadable").ShouldBe(contents);
     }
+
+    [Fact]
+    public void UnbindableThemeValue_DropsOnlyThatSectionAndKeepsIt()
+    {
+        string settingsPath = Path.Combine(_userDataFolder, "appsettings.json");
+        File.WriteAllText(settingsPath, """
+            {
+              "ThemeSettings": { "mode": "Purple", "accent": "#1E90FF" },
+              "LayoutSettings": { "mainWindow": { "width": 1600, "height": 900 } }
+            }
+            """);
+
+        using IHost host = Program.CreateHostBuilder().Build();
+
+        IWritableOptions<ThemeSettings> theme = host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>();
+        theme.CurrentValue.Mode.ShouldBeNull();
+        theme.CurrentValue.Accent.ShouldBeNull();
+        host.Services.GetRequiredService<IWritableOptions<LayoutSettings>>().CurrentValue.MainWindow
+            .ShouldBe(new WindowSettings(1600, 900));
+        File.ReadAllText(settingsPath + ".ThemeSettings.unreadable").ShouldContain("Purple");
+
+        // The file no longer holds the bad value, so saving a theme change works.
+        theme.Update(t => t.Mode = ThemeMode.Dark);
+        theme.CurrentValue.Mode.ShouldBe(ThemeMode.Dark);
+    }
+
+    [Fact]
+    public void UnbindableLayoutValue_StartsWithDefaultLayout()
+    {
+        string settingsPath = Path.Combine(_userDataFolder, "appsettings.json");
+        File.WriteAllText(settingsPath, """
+            {
+              "ThemeSettings": { "mode": 2 },
+              "LayoutSettings": { "mainWindow": { "width": "wide" } }
+            }
+            """);
+
+        using IHost host = Program.CreateHostBuilder().Build();
+
+        host.Services.GetRequiredService<IWritableOptions<LayoutSettings>>().CurrentValue.MainWindow
+            .ShouldBe(new WindowSettings());
+        host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>().CurrentValue.Mode
+            .ShouldBe(ThemeMode.Dark);
+        File.ReadAllText(settingsPath + ".LayoutSettings.unreadable").ShouldContain("wide");
+    }
 }
