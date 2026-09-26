@@ -1,5 +1,10 @@
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.Input;
+using Avalonia.VisualTree;
 using Avalonia.Media;
 using Gum.DataTypes;
 using Shouldly;
@@ -28,7 +33,8 @@ public class TimelineInteractionTests
         AnimationViewModel walk = editor.AddAnimation("Walk");
         AnimatedKeyframeViewModel only = editor.AddStateKeyframe($"{Category}/Pressed");
         walk.SelectedKeyframe = null;
-        editor.Layout();
+        // The add menu's item can sit over the new keyframe's list row, which would draw the marker hovered.
+        editor.Hover(new Point(5, 5));
 
         walk.Length.ShouldBe(0f);
         Point marker = editor.KeyframeMarkerCenter(only);
@@ -146,5 +152,25 @@ public class TimelineInteractionTests
         editor.TimelineTrackTipFor(released).ShouldBe($"{Category}/Released");
         editor.Hover(new Point(5, 5));
         editor.TimelineTrackTipFor(released).ShouldBeNull();
+    }
+
+    [AvaloniaFact]
+    public void TheScrubber_DrawsTickMarks_AndJumpsToAClickOnItsTrack()
+    {
+        using AnimationEditorHarness editor = new AnimationEditorHarness();
+        ComponentSave component = editor.AddComponent("Button", Category, "Pressed", "Released");
+        editor.Select(component);
+        editor.AddAnimation("Walk");
+        editor.AddStateKeyframe($"{Category}/Pressed");
+        editor.AddStateKeyframe($"{Category}/Released");
+        Slider scrubber = editor.Scrubber;
+
+        scrubber.GetVisualDescendants().OfType<TickBar>().Any(tickBar => tickBar.IsEffectivelyVisible).ShouldBeTrue();
+
+        Point thumb = editor.CenterOf(editor.ScrubberThumb);
+        double trackWidth = scrubber.Bounds.Width - editor.ScrubberThumb.Bounds.Width;
+        editor.ClickAt(new Point(thumb.X + trackWidth * 0.75, thumb.Y));
+
+        editor.ViewModel.DisplayedAnimationTime.ShouldBe(0.75, tolerance: 0.05);
     }
 }

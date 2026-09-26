@@ -34,6 +34,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
 {
     private const double TreeMenuIconSize = 16;
     private const double DragThreshold = 4;
+    // The collapse buttons at the default base font size; they scale with it.
+    private const double ToolButtonIconSize = 16;
+    private const double ToolButtonHeight = 24;
 
     private readonly DockPanel _content;
     private readonly AvaloniaGumTreeView _tree;
@@ -217,8 +220,19 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     /// <inheritdoc/>
     public void UpdateCollapseButtonSizes(double baseFontSize)
     {
-        _collapseAllButton.FontSize = baseFontSize;
-        _collapseToElementButton.FontSize = baseFontSize;
+        double scale = baseFontSize / FrbThemeResources.DefaultBaseFontSize;
+        foreach (Button button in new[] { _collapseAllButton, _collapseToElementButton })
+        {
+            button.FontSize = baseFontSize;
+            button.Height = ToolButtonHeight * scale;
+            if (button.Content is FluentIcon icon)
+            {
+                double iconSize = ToolButtonIconSize * scale;
+                icon.FontSize = iconSize;
+                icon.Width = iconSize;
+                icon.Height = iconSize;
+            }
+        }
     }
 
     /// <inheritdoc/>
@@ -452,9 +466,9 @@ public sealed class AvaloniaElementTreeView : IElementTreeView
     {
         Button button = new Button
         {
-            Content = GumFluentIcons.Create(icon, 16),
+            Content = GumFluentIcons.Create(icon, ToolButtonIconSize),
             Padding = new Thickness(4, 2),
-            Height = 24,
+            Height = ToolButtonHeight,
         };
         button.Classes.Add(GumChromeStyles.FlatButtonClass);
         ToolTip.SetTip(button, toolTip);
