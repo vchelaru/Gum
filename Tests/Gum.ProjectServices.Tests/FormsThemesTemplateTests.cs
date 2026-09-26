@@ -41,7 +41,7 @@ public class FormsThemesTemplateTests
             .Concat(result.Project.Screens);
 
         List<string> systemFontReferences = allElements
-            .SelectMany(e => e.DefaultState.Variables, (e, v) => (Element: e, Variable: v))
+            .SelectMany(e => e.DefaultState!.Variables, (e, v) => (Element: e, Variable: v))
             .Where(x => x.Variable.IsFont && x.Variable.Value is string font
                 && !font.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase))
             .Select(x => $"{x.Element.Name}.{x.Variable.Name} = {x.Variable.Value}")
