@@ -33,6 +33,15 @@ namespace Gum.DataTypes
 
             SortElementAndBehaviors(gumProjectSave);
 
+            // Data migrations that change what a legacy file renders as belong here, not in a
+            // tool-only load step: the tool and every runtime (GumService, hot reload) call
+            // Initialize, so a game draws what the tool shows without the project being re-saved.
+            if (gumProjectSave.MigrateCircleRadiusToWidthHeight())
+            {
+                wasModified = true;
+                modifications?.Add(nameof(MigrateCircleRadiusToWidthHeight));
+            }
+
             // Do StandardElements first
             // because the values here are
             // used by components to set their

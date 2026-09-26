@@ -85,7 +85,11 @@ public class BubblegumTemplateTests
         // Circle sizes via Width/Height since #2947 — "Radius" was dropped from the standard.
         // PR #2975 left redundant "Radius = Width/2" writes on the radio/slider-thumb circles;
         // they self-heal on load but should not linger in the committed template.
-        GumProjectSave project = LoadBubblegum();
+        // Read the committed files without Initialize: Initialize migrates Radius to
+        // Width/Height (#5167), which would hide a lingering Radius from this check.
+        string themeDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Bubblegum");
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(themeDir, "GumProject.gumx"))!;
 
         List<string> offenders = new();
         foreach (ElementSave element in project.AllElements)

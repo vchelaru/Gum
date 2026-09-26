@@ -82,7 +82,11 @@ public class HazardTemplateTests
     public void Load_CircleInstances_ShouldNotCarryRadiusVariable()
     {
         // Circle sizes via Width/Height since #2947 — "Radius" was dropped from the standard.
-        GumProjectSave project = LoadHazard();
+        // Read the committed files without Initialize: Initialize migrates Radius to
+        // Width/Height (#5167), which would hide a lingering Radius from this check.
+        string themeDir = Path.Combine(FindRepoRoot(),
+            "Tools", "Gum.ProjectServices", "Templates", "FormsThemes", "Hazard");
+        GumProjectSave project = GumProjectSave.Load(Path.Combine(themeDir, "GumProject.gumx"))!;
 
         List<string> offenders = new();
         foreach (ElementSave element in project.AllElements)
