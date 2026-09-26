@@ -24,6 +24,7 @@ using Gum.Dialogs;
 using Gum.Diagnostics;
 using Gum.Managers;
 using Gum.Menus;
+using Gum.Plugins.InternalPlugins.EditorTab.Services;
 using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.Startup;
@@ -42,6 +43,7 @@ public sealed class App : Application
     private readonly HeadOptions _options;
     private readonly IFreezeDiagnosticsInbox _freezeDiagnostics;
     private bool _previousSessionEndedDirty;
+    private bool _isUnattendedExitStarted;
 
     /// <summary>Creates the app over the built service host.</summary>
     public App(IServiceProvider services, HeadOptions options)
@@ -121,10 +123,11 @@ public sealed class App : Application
             window.Opened += (_, _) =>
             {
                 messenger.Send<ApplicationStartupMessage>();
-                Dispatcher.UIThread.Post(() => _ = RunStartupAsync(desktop, window), DispatcherPriority.Background);
+                TaskCompletionSource<UnattendedStartupOutcome> startup = new TaskCompletionSource<UnattendedStartupOutcome>();
+                Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, window), DispatcherPriority.Background);
                 if (_options.ExitAfterSeconds is double seconds)
                 {
-                    DispatcherTimer.RunOnce(() => CaptureAndExit(window, desktop), TimeSpan.FromSeconds(seconds));
+                    _ = RunUnattendedAsync(startup.Task, seconds, window, desktop, messenger);
                 }
                 StartFreezeWatchdog();
             };
@@ -133,7 +136,11 @@ public sealed class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private async Task RunStartupAsync(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window)
+    private async Task SignalStartupAsync(TaskCompletionSource<UnattendedStartupOutcome> startup,
+        IClassicDesktopStyleApplicationLifetime desktop, MainWindow window) =>
+        startup.SetResult(await RunStartupAsync(desktop, window));
+
+    private async Task<UnattendedStartupOutcome> RunStartupAsync(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window)
     {
         try
         {
@@ -144,24 +151,61 @@ public sealed class App : Application
             if (_services.GetRequiredService<ICommandLineManager>().ShouldExitImmediately)
             {
                 desktop.Shutdown();
-                return;
+                return UnattendedStartupOutcome.ExitRequested;
             }
         }
         catch (Exception exception)
         {
             // Also on stderr, so an unattended run (and HeadProcessTests) can see it.
             Console.Error.WriteLine("Startup failed: " + exception);
-            window.ShowStartupFailure(exception);
-            return;
+            // An unattended run that already gave up is closing the window; it has exited nonzero.
+            if (!_isUnattendedExitStarted)
+            {
+                window.ShowStartupFailure(exception);
+            }
+            return UnattendedStartupOutcome.Failed;
         }
 
-        // Nobody is there to answer in an unattended run, and the modal would hold up its exit timer.
+        // Nobody is there to answer in an unattended run, and the modal would hold up its exit.
         if (_options.ExitAfterSeconds == null)
         {
             PromptForUnreportedFreezeDiagnostics();
             _services.GetService<ICrashReporter>()?.PromptForPreviousCrash();
         }
+        return UnattendedStartupOutcome.Ready;
     }
+
+    // --exit-after is the upper bound (#5170): the run captures and exits once startup has finished
+    // and the canvas has drawn, and exits nonzero if that hasn't happened in time.
+    private async Task RunUnattendedAsync(Task<UnattendedStartupOutcome> startup, double exitAfterSeconds,
+        Window window, IClassicDesktopStyleApplicationLifetime desktop, IMessenger messenger)
+    {
+        int? exitCode;
+        try
+        {
+            exitCode = await UnattendedRun.RunAsync(
+                startup,
+                Task.Delay(TimeSpan.FromSeconds(exitAfterSeconds)),
+                exitAfterSeconds,
+                nextCanvasFrame: async () => await messenger.Send(new EditorCanvasFrameRequestMessage()),
+                zoomToFit: _options.ZoomToFit ? () => messenger.Send(new ZoomCanvasToFitSelectionMessage()).Response?.ToString() : null,
+                capture: _options.ScreenshotPath is { } path ? () => CaptureWindow(window, path) : null,
+                Console.Out,
+                Console.Error);
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine("The unattended run failed: " + exception);
+            exitCode = 1;
+        }
+
+        if (exitCode is int code)
+        {
+            _isUnattendedExitStarted = true;
+            desktop.Shutdown(code);
+        }
+    }
+
 
     // An unattended run can start with an element, and optionally one of its instances, selected.
     private void ApplyStartupSelection()
@@ -221,19 +265,14 @@ public sealed class App : Application
             .PromptIfNeeded(_previousSessionEndedDirty);
     }
 
-    private void CaptureAndExit(Window window, IClassicDesktopStyleApplicationLifetime desktop)
+    private static void CaptureWindow(Window window, string path)
     {
-        if (_options.ScreenshotPath != null)
-        {
-            PixelSize pixelSize = new PixelSize(
-                (int)Math.Round(window.Bounds.Width * window.RenderScaling),
-                (int)Math.Round(window.Bounds.Height * window.RenderScaling));
-            using RenderTargetBitmap bitmap = new RenderTargetBitmap(pixelSize, new Vector(96 * window.RenderScaling, 96 * window.RenderScaling));
-            bitmap.Render(window);
-            Directory.CreateDirectory(Path.GetDirectoryName(_options.ScreenshotPath)!);
-            bitmap.Save(_options.ScreenshotPath);
-        }
-
-        desktop.Shutdown();
+        PixelSize pixelSize = new PixelSize(
+            (int)Math.Round(window.Bounds.Width * window.RenderScaling),
+            (int)Math.Round(window.Bounds.Height * window.RenderScaling));
+        using RenderTargetBitmap bitmap = new RenderTargetBitmap(pixelSize, new Vector(96 * window.RenderScaling, 96 * window.RenderScaling));
+        bitmap.Render(window);
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        bitmap.Save(path);
     }
 }

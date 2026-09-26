@@ -5,8 +5,10 @@ Opens every element of every sample project in the Avalonia Gum tool and capture
 .DESCRIPTION
 For each .gumx under Samples\ (bin/obj skipped, byte-identical projects swept once), every Screen,
 Component and Standard element is opened in the built Avalonia head with
-  --exit-after <n> --select <element> --screenshot <png> --user-data <folder>
-against a copy of the project under -OutRoot, never the checked-in sample.
+  --exit-after <n> --select <element> --zoom-to-fit --screenshot <png> --user-data <folder>
+against a copy of the project under -OutRoot, never the checked-in sample. --zoom-to-fit frames each
+element (never above 100%) so content anchored away from the top-left is in the shot; the contact
+sheets read the applied camera back from each run's log to line the reference render up with it.
 
 -Reference also renders each Screen and Component through `gumcli screenshot` (MonoGame, the renderer
 the WPF tool's canvas uses), so each Avalonia canvas can be read next to what WPF would draw.
@@ -31,9 +33,11 @@ pwsh Tools/SampleSweep/sweep.ps1 -Resume       # finish an interrupted sweep
 param(
     [string]$OutRoot = (Join-Path $env:TEMP 'gum-sample-sweep'),
     [string]$Configuration = 'Debug',
-    # The head counts from launch, not from project load; on a busy machine 8s can capture an
-    # unloaded project.
-    [double]$ExitAfter = 15,
+    # An upper bound: each run ends once its project has loaded and the canvas has drawn, and exits
+    # nonzero (no screenshot) if that takes longer.
+    [double]$ExitAfter = 60,
+    # Keep each element's saved 100% top-left view instead of framing it with --zoom-to-fit.
+    [switch]$NoZoomToFit,
     [int]$Parallel = 4,
     # Substrings matched against the sample id (e.g. GameUiSamples, MVVM).
     [string[]]$Samples,
@@ -127,9 +131,11 @@ if (-not $SkipRun) {
         }
     }
 
-    $lanes = 0..($Parallel - 1) | ForEach-Object { $l = $_; , @($toRun | Where-Object { ([array]::IndexOf($toRun, $_) % $Parallel) -eq $l }) }
-    $laneIndex = 0
-    $laneInputs = foreach ($laneJobs in $lanes) { [pscustomobject]@{ Lane = $laneIndex; Jobs = $laneJobs }; $laneIndex++ }
+    # Built per lane directly: with one lane, a pipeline of lane arrays unrolls into one lane per job,
+    # and those lanes have no project copy.
+    $laneInputs = for ($l = 0; $l -lt $Parallel; $l++) {
+        [pscustomobject]@{ Lane = $l; Jobs = @($toRun | Where-Object { ([array]::IndexOf($toRun, $_) % $Parallel) -eq $l }) }
+    }
 
     $laneInputs | ForEach-Object -ThrottleLimit $Parallel -Parallel {
         $lane = $_.Lane
@@ -150,6 +156,7 @@ if (-not $SkipRun) {
             foreach ($a in @($gumxPath, '--exit-after', "$exitAfter", '--select', $job.Name, '--screenshot', $shot, '--user-data', $userData)) {
                 $psi.ArgumentList.Add($a)
             }
+            if (-not $using:NoZoomToFit) { $psi.ArgumentList.Add('--zoom-to-fit') }
             $psi.RedirectStandardError = $true
             $psi.RedirectStandardOutput = $true
             $psi.UseShellExecute = $false
@@ -264,8 +271,23 @@ $sheetDir = Join-Path $OutRoot 'sheets'
 if (Test-Path $sheetDir) { Remove-Item -Recurse -Force $sheetDir }
 New-Item -ItemType Directory -Force $sheetDir | Out-Null
 
-# Canvas crop in the default 1280x720 window, and where world (0,0) sits inside it at 100% zoom.
-$cropX = 578; $cropY = 80; $cropW = 690; $cropH = 435; $originX = 31; $originY = 31
+# Canvas crop in the default 1280x720 window. The canvas starts 1px into the crop; world (0,0) sits
+# at (-cameraX * zoom) canvas pixels from there. Without a "Zoom to fit:" line in the run's log the
+# camera is the tool's default: (-30, -30) at 100%.
+$cropX = 578; $cropY = 80; $cropW = 690; $cropH = 435; $canvasInCrop = 1
+function Get-RunCamera([string]$logPath) {
+    $camera = [pscustomobject]@{ Zoom = 1.0; X = -30.0; Y = -30.0 }
+    if (Test-Path $logPath) {
+        $fit = Select-String -Path $logPath -Pattern 'Zoom to fit: .* zoom (\d+)%, camera \((-?[\d.]+), (-?[\d.]+)\)' | Select-Object -First 1
+        if ($fit) {
+            $groups = $fit.Matches[0].Groups
+            $camera.Zoom = [double]::Parse($groups[1].Value, [cultureinfo]::InvariantCulture) / 100
+            $camera.X = [double]::Parse($groups[2].Value, [cultureinfo]::InvariantCulture)
+            $camera.Y = [double]::Parse($groups[3].Value, [cultureinfo]::InvariantCulture)
+        }
+    }
+    $camera
+}
 $cellW = 460; $cellH = 290; $labelH = 18; $rowsPerSheet = 4
 $scale = $cellW / $cropW
 $font = [System.Drawing.Font]::new('Segoe UI', 9)
@@ -310,8 +332,13 @@ for ($sheetIndex = 0; $sheetIndex -lt $sheetCount; $sheetIndex++) {
             $cell = [System.Drawing.Rectangle]::new($cellW, $y + $labelH, $cellW, $cellH)
             $g.FillRectangle([System.Drawing.Brushes]::DimGray, $cell)
             $g.SetClip($cell)
+            # Camera values are canvas (physical) pixels; the crop is in 1280x720 window units.
+            $camera = Get-RunCamera (Join-Path $OutRoot "logs\$($c.Sample)\$(Get-SafeName $c.Name).log")
+            $refScale = $scale * $camera.Zoom / $sx
+            $originX = $canvasInCrop - $camera.X * $camera.Zoom / $sx
+            $originY = $canvasInCrop - $camera.Y * $camera.Zoom / $sy
             $g.DrawImage($ref, [single]($cellW + $originX * $scale), [single]($y + $labelH + $originY * $scale),
-                [single]($ref.Width * $scale), [single]($ref.Height * $scale))
+                [single]($ref.Width * $refScale), [single]($ref.Height * $refScale))
             $g.ResetClip()
             $ref.Dispose()
         }
