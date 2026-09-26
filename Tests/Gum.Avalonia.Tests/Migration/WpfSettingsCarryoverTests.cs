@@ -130,6 +130,50 @@ public class WpfSettingsCarryoverTests : IDisposable
         theme.CurrentValue.Mode.ShouldBe(ThemeMode.Dark);
     }
 
+    [Theory]
+    [InlineData("""{ "ThemeSettings": { "mode": "Dark" } }""")]
+    [InlineData("""{ "ThemeSettings": { "mode": "dark" } }""")]
+    [InlineData("""{ "ThemeSettings": { "mode": "2" } }""")]
+    [InlineData("""{ "ThemeSettings": { "Mode": "Dark" } }""")]
+    [InlineData("""{ "themeSettings": { "mode": 2 } }""")]
+    [InlineData("""{ /* hand-edited */ "ThemeSettings": { "mode": 2, }, }""")]
+    public void HandEditedThemeSection_SavesInTheFormWpfReads(string json)
+    {
+        string settingsPath = Path.Combine(_userDataFolder, "appsettings.json");
+        File.WriteAllText(settingsPath, json);
+        using IHost host = Program.CreateHostBuilder().Build();
+        IWritableOptions<ThemeSettings> theme = host.Services.GetRequiredService<IWritableOptions<ThemeSettings>>();
+        theme.CurrentValue.Mode.ShouldBe(ThemeMode.Dark);
+
+        theme.Update(t => t.Accent = Color.FromArgb(255, 0x1E, 0x90, 0xFF));
+
+        theme.CurrentValue.Mode.ShouldBe(ThemeMode.Dark);
+        // One section key, enums as numbers, camelCase: the shape both heads have always written.
+        System.Text.Json.Nodes.JsonObject root = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(settingsPath))!.AsObject();
+        root.Select(p => p.Key).ShouldBe(new[] { "ThemeSettings" });
+        root["ThemeSettings"]!["mode"]!.GetValue<int>().ShouldBe(2);
+        root["ThemeSettings"]!["accent"]!.GetValue<string>().ShouldBe("#1E90FF");
+    }
+
+    [Fact]
+    public void HandEditedLayoutStrings_KeepTheirValuesOnSave()
+    {
+        string settingsPath = Path.Combine(_userDataFolder, "appsettings.json");
+        File.WriteAllText(settingsPath, """
+            { "LayoutSettings": { "MainWindow": { "Width": "1600", "height": "900", "isMaximized": "True" } } }
+            """);
+        using IHost host = Program.CreateHostBuilder().Build();
+        IWritableOptions<LayoutSettings> layout = host.Services.GetRequiredService<IWritableOptions<LayoutSettings>>();
+
+        layout.Update(l => l.MainTabDimensions = new MainTabDimensions(310, 420, 180));
+
+        layout.CurrentValue.MainWindow.ShouldBe(new WindowSettings(1600, 900, IsMaximized: true));
+        layout.CurrentValue.MainTabDimensions.ShouldBe(new MainTabDimensions(310, 420, 180));
+        System.Text.Json.Nodes.JsonNode window = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(settingsPath))!["LayoutSettings"]!["mainWindow"]!;
+        window["width"]!.GetValue<double>().ShouldBe(1600);
+        window["isMaximized"]!.GetValue<bool>().ShouldBeTrue();
+    }
+
     [Fact]
     public void UnbindableLayoutValue_StartsWithDefaultLayout()
     {
