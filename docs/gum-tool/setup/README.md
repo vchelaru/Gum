@@ -57,6 +57,14 @@ Gum needs a desktop session (X11 or Wayland), a graphics driver with OpenGL 3.0 
 {% endtab %}
 {% endtabs %}
 
+## If Gum crashes while opening your last project
+
+Gum reopens the project you had open last time. If Gum closes before that project finishes loading, for example because the project crashes Gum, the next launch does not reopen it. Gum starts with a new project instead and shows a message naming the project it skipped. Select **File** > **Load Project...** to try opening it again.
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Older releases (the WPF tool)
 
 Releases up to and including [September 2, 2026](https://github.com/vchelaru/Gum/releases/tag/Release_September_02_2026) are the older Windows-only WPF tool, distributed as `Gum.zip` with `Gum.exe` inside. That release stays downloadable if you need it, for example for a plugin that has not been migrated yet (see [Plugins](../plugins/README.md)), but it does not receive new features. Its WINE setup scripts for Linux and macOS are kept at that release's tag ([setup\_gum\_linux.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_linux.sh), [setup\_gum\_mac.sh](https://github.com/vchelaru/Gum/blob/Release_September_02_2026/setup_gum_mac.sh)); the native downloads above replace them.
