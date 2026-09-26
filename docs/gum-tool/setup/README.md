@@ -89,6 +89,14 @@ To open `.gumx` files by double-clicking them, right-click a `.gumx` file, selec
 {% endtab %}
 {% endtabs %}
 
+### If Gum crashes while opening your last project
+
+If Gum closes before the last project finishes loading, for example because the project crashes Gum, the next launch does not reopen it. Gum starts with a new project instead and shows a message naming the project it skipped. Select **File** > **Load Project...** to try opening it again.
+
+{% hint style="info" %}
+Available in October 2026, or now if building Gum from source.
+{% endhint %}
+
 ## Differences on macOS
 
 * Gum's menus (**File**, **Edit**, **View**, and so on) appear in the macOS menu bar at the top of the screen rather than inside the Gum window. **About Gum** is in the **Gum** application menu.

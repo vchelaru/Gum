@@ -45,6 +45,7 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
     private readonly Lazy<IElementCommands> _elementCommands;
     private readonly IDialogService _dialogService;
     private readonly IFileSystemRevealService _fileSystemRevealService;
+    private readonly ILastProjectLoadMarker _lastProjectLoadMarker;
     private readonly IGuiCommands _guiCommands;
     private readonly Lazy<IFileCommands> _fileCommands;
     private readonly IMessenger _messenger;
@@ -142,8 +143,10 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
         IGumProjectRepairLogic gumProjectRepairLogic,
         IFilePickingFolderProvider filePickingFolderProvider,
         Lazy<INewProjectLogic> newProjectLogic,
-        IFileSystemRevealService fileSystemRevealService)
+        IFileSystemRevealService fileSystemRevealService,
+        ILastProjectLoadMarker lastProjectLoadMarker)
     {
+        _lastProjectLoadMarker = lastProjectLoadMarker;
         _newProjectLogic = newProjectLogic;
         _fileSystemRevealService = fileSystemRevealService;
         _selectedState = selectedState;
@@ -189,9 +192,23 @@ public class ProjectManager : IProjectManager, IDeleteProjectProvider, ICopyPast
                     _selectedState.SelectedElement = ObjectFinder.Self.GetElementSave(_commandLineManager.Value.ElementName);
                 }
             }
+            else if (!isShift && _lastProjectLoadMarker.InterruptedProject is { } interruptedProject)
+            {
+                // The last launch started opening this project and never finished, most likely
+                // because loading it crashed the tool. Reopening it would crash every launch.
+                _lastProjectLoadMarker.Clear();
+                _dialogService.ShowMessage(
+                    $"Gum closed while opening \"{interruptedProject}\" last time, so it was not reopened.\n\n" +
+                    "Select File > Load Project to try opening it again.");
+                await _newProjectLogic.Value.CreateNewProjectAsync();
+            }
             else if (!isShift && !string.IsNullOrEmpty(GeneralSettingsFile.LastProject))
             {
+                // Cleared only when the load returns: a crash, a hang the user kills, or an
+                // exception escaping the load leaves the marker behind for the next launch.
+                _lastProjectLoadMarker.MarkStarted(GeneralSettingsFile.LastProject);
                 await _fileCommands.Value.LoadProjectAsync(GeneralSettingsFile.LastProject);
+                _lastProjectLoadMarker.Clear();
 
                 if(GumProjectSave == null)
                 {

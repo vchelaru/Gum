@@ -43,6 +43,7 @@ public class ProjectManagerTests : BaseTestClass
     private readonly Mock<IFilePickingFolderProvider> _filePickingFolderProvider;
     private readonly Mock<INewProjectLogic> _newProjectLogic;
     private readonly Mock<IFileSystemRevealService> _fileSystemRevealService;
+    private readonly Mock<ILastProjectLoadMarker> _lastProjectLoadMarker;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
@@ -63,6 +64,7 @@ public class ProjectManagerTests : BaseTestClass
         _filePickingFolderProvider = new Mock<IFilePickingFolderProvider>();
         _newProjectLogic = new Mock<INewProjectLogic>();
         _fileSystemRevealService = new Mock<IFileSystemRevealService>();
+        _lastProjectLoadMarker = new Mock<ILastProjectLoadMarker>();
 
         _projectManager = new ProjectManager(
             _selectedState.Object,
@@ -80,7 +82,8 @@ public class ProjectManagerTests : BaseTestClass
             _gumProjectRepairLogic.Object,
             _filePickingFolderProvider.Object,
             new Lazy<INewProjectLogic>(() => _newProjectLogic.Object),
-            _fileSystemRevealService.Object);
+            _fileSystemRevealService.Object,
+            _lastProjectLoadMarker.Object);
     }
 
     [Fact]
@@ -135,6 +138,56 @@ public class ProjectManagerTests : BaseTestClass
 
         _fileCommands.Verify(f => f.LoadProjectAsync(glueProject), Times.Once);
         _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task Initialize_MarksLastProjectLoad_AndClearsItAfterLoading()
+    {
+        string lastProject = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.gumx");
+        File.WriteAllText(lastProject, "");
+        try
+        {
+            _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+            _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+            _projectManager.GeneralSettingsFile.LastProject = lastProject;
+            var calls = new List<string>();
+            _lastProjectLoadMarker.Setup(m => m.MarkStarted(It.IsAny<string>()))
+                .Callback<string>(path => calls.Add("started " + path));
+            _fileCommands.Setup(f => f.LoadProjectAsync(It.IsAny<string>()))
+                .Callback(() => calls.Add("load"))
+                .Returns(Task.CompletedTask);
+            _lastProjectLoadMarker.Setup(m => m.Clear()).Callback(() => calls.Add("clear"));
+
+            await _projectManager.Initialize();
+
+            calls.ShouldBe(new[] { "started " + lastProject, "load", "clear" });
+        }
+        finally
+        {
+            File.Delete(lastProject);
+        }
+    }
+
+    [Fact]
+    public async Task Initialize_SkipsLastProject_WhenItsPreviousLoadWasInterrupted()
+    {
+        // A crash while opening the last project would otherwise crash every launch. The marker
+        // left behind by the unfinished load makes this launch start a new project instead.
+        string lastProject = "c:/projects/Crashes.gumx";
+        _commandLineManager.Setup(c => c.ReadCommandLine()).Returns(Task.CompletedTask);
+        _commandLineManager.SetupGet(c => c.ShouldExitImmediately).Returns(false);
+        _projectManager.GeneralSettingsFile.LastProject = lastProject;
+        _lastProjectLoadMarker.SetupGet(m => m.InterruptedProject).Returns(lastProject);
+
+        await _projectManager.Initialize();
+
+        _fileCommands.Verify(f => f.LoadProjectAsync(It.IsAny<string>()), Times.Never);
+        _newProjectLogic.Verify(n => n.CreateNewProjectAsync(), Times.Once);
+        _lastProjectLoadMarker.Verify(m => m.Clear(), Times.Once);
+        _dialogService.Verify(d => d.ShowMessage(
+            It.Is<string>(message => message.Contains(lastProject)),
+            It.IsAny<string?>(),
+            It.IsAny<MessageDialogStyle?>()), Times.Once);
     }
 
     [Theory]
