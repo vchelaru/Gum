@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using StateAnimationPlugin.Timeline;
@@ -39,6 +40,8 @@ public sealed class TimelineView : Grid
         AvaloniaProperty.Register<TimelineView, bool>(nameof(ClampInterpolationVisuals), defaultValue: true);
 
     private readonly TextBox _timeBox;
+    private bool _isApplyingTypedTime;
+    private string? _shownTimeText;
     private readonly TextBlock _lengthText;
     private readonly Slider _scrubber;
     private readonly Grid _rows;
@@ -56,6 +59,10 @@ public sealed class TimelineView : Grid
 
         StackPanel timeRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 12, 4), VerticalAlignment = VerticalAlignment.Center };
         _timeBox = new TextBox { MinWidth = 64 };
+        // As the WPF box (UpdateSourceTrigger=PropertyChanged), typing moves the time on each
+        // keystroke; Enter and focus loss then reformat the text. The time is view state, so this
+        // records no undo.
+        _timeBox.TextChanged += (_, _) => ApplyTypedTime();
         _timeBox.LostFocus += (_, _) => CommitTimeBox();
         _timeBox.KeyDown += (_, e) =>
         {
@@ -70,8 +77,21 @@ public sealed class TimelineView : Grid
         timeRow.Children.Add(_lengthText);
         Children.Add(timeRow);
 
-        _scrubber = new Slider { Minimum = 0, SmallChange = 0.01, LargeChange = 0.25, Margin = new Thickness(0, 0, 20, 0), VerticalAlignment = VerticalAlignment.Center };
+        _scrubber = new Slider
+        {
+            Minimum = 0,
+            SmallChange = 0.01,
+            LargeChange = 0.25,
+            TickFrequency = 0.1,
+            TickPlacement = TickPlacement.BottomRight,
+            Margin = new Thickness(0, 0, 20, 0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
         _scrubber.Bind(RangeBase.ValueProperty, new Binding(nameof(CurrentTime)) { Source = this, Mode = BindingMode.TwoWay });
+        // The WPF scrubber's AutoToolTip: the time, to two places, while the thumb is dragged.
+        _scrubber.AddHandler(Thumb.DragStartedEvent, (_, e) => ShowScrubberTip(e.Source as Thumb), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragDeltaEvent, (_, e) => ShowScrubberTip(e.Source as Thumb), RoutingStrategies.Bubble, handledEventsToo: true);
+        _scrubber.AddHandler(Thumb.DragCompletedEvent, (_, _) => HideScrubberTip(), RoutingStrategies.Bubble, handledEventsToo: true);
         SetColumn(_scrubber, 1);
         Children.Add(_scrubber);
 
@@ -255,9 +275,44 @@ public sealed class TimelineView : Grid
         double length = Animation?.Length ?? 0;
         _scrubber.Maximum = Math.Max(length, 0.0001);
         _lengthText.Text = "/" + length.ToString("0.##", CultureInfo.CurrentCulture);
-        if (!_timeBox.IsFocused)
+        // While the user types, the box keeps their text ("0." stays "0."); any other change of
+        // time (playback, undo, the scrubber) shows even while the box has focus.
+        if (!_isApplyingTypedTime)
         {
-            _timeBox.Text = CurrentTime.ToString("0.###", CultureInfo.CurrentCulture);
+            _shownTimeText = CurrentTime.ToString("0.###", CultureInfo.CurrentCulture);
+            _timeBox.Text = _shownTimeText;
+        }
+    }
+
+    // Above the thumb, following it, as the WPF AutoToolTip (placement TopLeft) did.
+    private void ShowScrubberTip(Thumb? thumb)
+    {
+        _scrubber.UpdateLayout();
+        ToolTip.SetPlacement(_scrubber, PlacementMode.TopEdgeAlignedLeft);
+        if (thumb?.TranslatePoint(default, _scrubber) is { } thumbLeft)
+        {
+            ToolTip.SetHorizontalOffset(_scrubber, thumbLeft.X);
+        }
+        ToolTip.SetTip(_scrubber, _scrubber.Value.ToString("0.00", CultureInfo.CurrentCulture));
+        ToolTip.SetIsOpen(_scrubber, true);
+    }
+
+    // Clears the tip too, so hovering the scrubber later doesn't show a stale time.
+    private void HideScrubberTip()
+    {
+        ToolTip.SetIsOpen(_scrubber, false);
+        ToolTip.SetTip(_scrubber, null);
+    }
+
+    // Only text the user typed: the box also shows the time rounded, which must not write back.
+    // TextChanged arrives after the text is set, so the shown text is compared rather than flagged.
+    private void ApplyTypedTime()
+    {
+        if (_timeBox.Text != _shownTimeText && double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
+        {
+            _isApplyingTypedTime = true;
+            CurrentTime = ClampToLength(time);
+            _isApplyingTypedTime = false;
         }
     }
 
@@ -265,10 +320,14 @@ public sealed class TimelineView : Grid
     {
         if (double.TryParse(_timeBox.Text, NumberStyles.Float, CultureInfo.CurrentCulture, out double time))
         {
-            CurrentTime = time;
+            CurrentTime = ClampToLength(time);
         }
         UpdateTimeText();
     }
+
+    // The view model stops the time at the animation's length, but a binding ignores a correction
+    // made while it writes, so the view applies the same limit itself.
+    private double ClampToLength(double time) => Animation is { } animation ? Math.Min(time, animation.Length) : time;
 }
 
 /// <summary>

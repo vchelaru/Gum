@@ -33,8 +33,6 @@ namespace Gum.Avalonia.Shell;
 public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
 {
     private readonly ShellViewModel _shell;
-    private readonly IHotkeyManager _hotkeyManager;
-    private readonly AvaloniaModifierKeyState _modifierKeyState;
     private readonly IWritableOptions<LayoutSettings> _layoutSettings;
     private readonly IFileSystemRevealService _fileSystemRevealService;
     private readonly IClipboardService _clipboardService;
@@ -73,8 +71,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         ICanvasRedrawScheduler canvasRedrawScheduler)
     {
         _shell = shell;
-        _hotkeyManager = hotkeyManager;
-        _modifierKeyState = modifierKeyState;
         _layoutSettings = layoutSettings;
         _fileSystemRevealService = fileSystemRevealService;
         _clipboardService = clipboardService;
@@ -87,13 +83,10 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         Height = WindowSettings.DefaultHeight;
         MinWidth = 640;
         MinHeight = 400;
-        ApplyBaseFontSize(appScaleProvider.BaseFontSize);
+        // The window lives as long as the app, so it never stops following the font size.
+        AppWideWindowInput.FollowBaseFontSize(this, appScaleProvider);
         this.WithThemeResource(BackgroundProperty, "Frb.Brushes.Background");
         this.WithThemeResource(ForegroundProperty, "Frb.Brushes.Foreground");
-        if (appScaleProvider is AvaloniaAppScaleProvider scale)
-        {
-            scale.BaseFontSizeChanged += () => ApplyBaseFontSize(scale.BaseFontSize);
-        }
         this.Bind(TitleProperty, new AvaloniaBinding(nameof(ShellViewModel.Title)));
 
         MenuModel menuModel = menuBuilder.Build();
@@ -166,8 +159,7 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
             }
         };
 
-        AddHandler(KeyDownEvent, OnPreviewKeyDown, RoutingStrategies.Tunnel);
-        AddHandler(KeyUpEvent, (_, e) => _modifierKeyState.Current = e.KeyModifiers, RoutingStrategies.Tunnel);
+        AppWideWindowInput.RouteHotkeys(this, hotkeyManager, modifierKeyState);
     }
 
     private void ApplyResizeBorderMargin(Control panel)
@@ -242,14 +234,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
         return row;
     }
 
-    // The base font size reaches plain text by inheritance from this window, and the Fluent-styled
-    // controls (menus, combo boxes, tabs) through the theme's font size resource.
-    private void ApplyBaseFontSize(double size)
-    {
-        FontSize = size;
-        Themes.FrbThemeResources.SetBaseFontSize(global::Avalonia.Application.Current!.Resources, size);
-    }
-
     // The shared light/dark logo choice (MainWindowIconLogic), loaded from this head's resources.
     private void RefreshLogo()
     {
@@ -273,16 +257,6 @@ public sealed class MainWindow : Window, IRecipient<CloseMainWindowMessage>
     }
 
     void IRecipient<CloseMainWindowMessage>.Receive(CloseMainWindowMessage message) => Close();
-
-    private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
-    {
-        _modifierKeyState.Current = e.KeyModifiers;
-        GumKeyEventArgs keyArgs = e.ToGumKeyEventArgs();
-        // Ctrl+= / Ctrl+- zoom the whole app unless a canvas that owns them has focus (phase 50).
-        // A render canvas that owns Ctrl+=/Ctrl+- for its own camera opts out of the app-wide zoom.
-        _hotkeyManager.PreviewKeyDownAppWide(keyArgs, enableEntireAppZoom: CameraZoomScope.IsEntireAppZoomEnabledFor(e.Source));
-        e.Handled = keyArgs.Handled;
-    }
 
     /// <summary>
     /// For unattended runs (<c>--exit-after</c>), called before the window is shown: it opens without

@@ -16,10 +16,10 @@ ships without it (umbrella #5128); *dropped* is intentional. No confirmed blocke
 | Ctrl+C copies a message dialog's text | `DialogWindow.xaml.cs` | `DialogWindow.cs` copies the whole message, or the selection: the message is a `SelectableTextBlock`. Pinned by `DialogKeyboardTests` | Fixed, #5128 |
 | Y/N (and Alt+Y/N) answer the delete dialog | `DeleteOptionsWindow.xaml.cs` | "_Yes"/"_No" access keys, plus `DialogViewModel.TryAnswerFromAccessKey` for the bare letter. Pinned by `DialogKeyboardTests` | Fixed, #5128 |
 | Clear (X) button in the tree search box | `WpfElementTreeView` `HasClearButtonProperty` | (X) inside the box while it has text. Pinned by `ProjectSearchBoxTests` | Fixed, #5128 |
-| Timeline time box applies while typing | `Timeline.xaml` | `TimelineView.cs` applies on Enter or focus loss | Follow-up, #5128 |
-| Timeline scrubber value tooltip and tick marks | `Timeline.xaml` | Plain slider | Follow-up, #5128 |
-| Editor toolbar +/- buttons scale with UI font size | Resize with the base font | No `OnUiBaseFontSizeChanged` override; fixed width | Follow-up, #5128 |
-| Tree collapse-button icons scale with font size | Not compared | Icon created at a fixed 16 (unverified at runtime) | Follow-up, #5128 |
+| Timeline time box applies while typing | `Timeline.xaml` | `TimelineView.cs` applies each keystroke; the time is view state, so no undo is recorded (as WPF). Pinned by `TimelineEndToEndTests` | Fixed, #5128 |
+| Timeline scrubber value tooltip and tick marks | `Timeline.xaml` | Ticks every 0.1s, the time as a tooltip above the thumb while dragging, click-to-point. Pinned by `TimelineEndToEndTests` | Fixed, #5128 |
+| Editor toolbar +/- buttons scale with UI font size | Resize with the base font | `EditorToolbar.UpdateButtonSizes`. Pinned by `UiFontSizeEndToEndTests` | Fixed, #5128 |
+| Tree collapse-button icons scale with font size | `WpfElementTreeView.UpdateCollapseButtonSizes` | Icon and button height scale. Pinned by `UiFontSizeEndToEndTests` | Fixed, #5128 |
 | Plugins dialog layout (tabs, monospace scan text, Copy Scan in the button row) | `PluginsDialogView.xaml` | Everything stacked, paths wrap | Follow-up, #5128 |
 | Color picker HSV/HSL entry and hex box | Third-party PortableColorPicker | `CompactColorPicker`: SV square, hue bar, RGB sliders, swatches. Open question whether anything used is missing | Follow-up, #5128 |
 | "Add" cursor while dragging onto the tree | `AddCursor.cur` | Default cursor | Follow-up (cosmetic), #5128 |
