@@ -45,6 +45,8 @@ protected override void ReactToVisualChanged()
 
 Named child lookup is the standard pattern — controls depend on specific child names being present in the visual. Properties like `Button.Text` silently no-op (or throw in `FULL_DIAGNOSTICS` mode) if the expected child is absent.
 
+`ReactToVisualChanged` runs only when a non-null visual is assigned, so an override can dereference `Visual` freely. Assigning `Visual = null` detaches the visual, and only `ReactToVisualRemoved` runs.
+
 ## Visual States (Not WPF Styles)
 
 Appearance changes are driven by a `StateSaveCategory` on the Visual. `UpdateState()` is called whenever interaction state changes and applies the correct state by name:
