@@ -39,8 +39,8 @@ using Keys = Gum.Forms.Input.Keys;
 
 public class DialogPageTask
 {
-    public string Page { get; set; }
-    public Func<Task>  Task { get; set; }
+    public string? Page { get; set; }
+    public Func<Task>? Task { get; set; }
 
     public static implicit operator DialogPageTask(string page) => 
         new DialogPageTask { Page = page };
@@ -59,9 +59,17 @@ public class DialogBox : FrameworkElement, IInputReceiver
 {
     #region Fields/Properties
 
-    GraphicalUiElement textComponent;
-    GraphicalUiElement continueIndicatorInstance;
-    IFormsText coreTextObject;
+    GraphicalUiElement? textComponent;
+    IFormsText? coreTextObject;
+
+    // Required to show text. Checked on use rather than when the visual is assigned so a
+    // visual without a TextInstance can still be loaded.
+    GraphicalUiElement TextComponent => textComponent
+        ?? throw new InvalidOperationException("The DialogBox visual must have an object called \"TextInstance\"");
+    IFormsText CoreTextObject => coreTextObject
+        ?? throw new InvalidOperationException("The DialogBox's \"TextInstance\" must be a text object");
+
+    GraphicalUiElement? continueIndicatorInstance;
 
 
     public IInputReceiver? ParentInputReceiver =>
@@ -74,7 +82,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     static global::Gum.DataTypes.Variables.StateSave NoTextShownState;
 
-    string currentPageText;
+    string currentPageText = string.Empty;
 
 #if FRB
     Tweener showLetterTweener;
@@ -90,7 +98,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
     public bool TakingInput { get; set; } = true;
 
-    public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver? NextInTabSequence { get; set; }
 
     public override bool IsFocused
     {
@@ -131,7 +139,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
     /// has been pressed to advance the input. If null, the default 
     /// page-advancing logic will be performed.
     /// </summary>
-    public Func<bool> AdvancePageInputPredicate;
+    public Func<bool>? AdvancePageInputPredicate;
 
     #endregion
 
@@ -178,14 +186,14 @@ public class DialogBox : FrameworkElement, IInputReceiver
     /// </summary>
     /// <param name="text">The text to print out, either immediately or letter-by-letter according to LettersPerSecond.</param>
     /// <param name="frbLayer">The FlatRedBall Layer to add the DialogBox to. If null, the dialog box will not be layered. This will attempt to use a Gum layer matching the FRB layer. This will automatically work if the Layer has been added through the FlatRedBall Editor.</param>
-    public void Show(string text, Layer frbLayer = null)
+    public void Show(string text, Layer? frbLayer = null)
     {
         // Delegate to the IEnumerable overload which calls ConvertToPages on each
         // entry; doing it here too would double-paginate.
         Show(new[] { text }, frbLayer);
     }
 
-    public void Show(IEnumerable<string> pages, Layer frbLayer = null)
+    public void Show(IEnumerable<string> pages, Layer? frbLayer = null)
     {
 #pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
@@ -246,7 +254,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
     }
 
 
-    public async Task ShowAsync(IEnumerable<string> pages, Layer frbLayer = null)
+    public async Task ShowAsync(IEnumerable<string> pages, Layer? frbLayer = null)
     {
 #pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
@@ -274,7 +282,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
     }
 
-    public async Task ShowAsync(IEnumerable<DialogPageTask> pageTasks, Layer frbLayer = null)
+    public async Task ShowAsync(IEnumerable<DialogPageTask> pageTasks, Layer? frbLayer = null)
     {
 #pragma warning disable CS0618 // DialogBox's layer overloads are built on the obsolete Show(Layer)
         base.Show(frbLayer);
@@ -305,7 +313,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
     // this doesn't override the base parameters.
     // It requires pages. 
     [Obsolete("Use ShowAsync")]
-    public async Task<bool?> ShowDialog(IEnumerable<string> pageTasks, Layer frbLayer = null)
+    public async Task<bool?> ShowDialog(IEnumerable<string> pageTasks, Layer? frbLayer = null)
     {
 #if DEBUG
         if (Visual == null)
@@ -323,7 +331,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #if FRB
     // See comment above about why this is obsolete.
     [Obsolete("Use ShowAsync")]
-    public async Task<bool?> ShowDialog(IEnumerable<DialogPageTask> pageTasks, Layer frbLayer = null)
+    public async Task<bool?> ShowDialog(IEnumerable<DialogPageTask> pageTasks, Layer? frbLayer = null)
     {
 #if DEBUG
         if (Visual == null)
@@ -356,7 +364,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         if(page != null)
         {
-            ShowInternal(page.Page, forceImmediatePrint);
+            ShowInternal(page.Page ?? string.Empty, forceImmediatePrint);
             Pages.RemoveAt(0);
         }
     }
@@ -406,7 +414,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 this.PageAdvanced += ReleaseSemaphor;
 
                 semaphoreSlim.Wait();
-                ShowInternal(page.Page, forceImmediatePrint: wasLastAdvancePressPrintImmediate);
+                ShowInternal(page.Page ?? string.Empty, forceImmediatePrint: wasLastAdvancePressPrintImmediate);
 
                 await semaphoreSlim.WaitAsync();
                 semaphoreSlim.Dispose();
@@ -428,11 +436,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
 #else
         isTyping = false;
 #endif
-#if DEBUG
-        ReportMissingTextInstance();
-#endif
         // go through the component instead of the core text object to force a layout refresh if necessary
-        textComponent.SetProperty("Text", text);
+        TextComponent.SetProperty("Text", text);
 
 
         var tags = BbCodeParser.Parse(text, BbCodeParser.KnownTags);
@@ -441,7 +446,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         var shouldPrintCharacterByCharacter = LettersPerSecond > 0 && !forceImmediatePrint;
         if(shouldPrintCharacterByCharacter)
         {
-            coreTextObject.MaxLettersToShow = 0;
+            CoreTextObject.MaxLettersToShow = 0;
 
             if (continueIndicatorInstance != null)
             {
@@ -476,7 +481,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
         else
         {
-            coreTextObject.MaxLettersToShow = strippedLength;
+            CoreTextObject.MaxLettersToShow = strippedLength;
 
             if (TakingInput && continueIndicatorInstance != null)
             {
@@ -498,12 +503,12 @@ public class DialogBox : FrameworkElement, IInputReceiver
 
         typingElapsedSeconds += secondDifference;
 
-        var lettersToShow = (int)(typingElapsedSeconds * LettersPerSecond);
+        var lettersToShow = (int)(typingElapsedSeconds * (LettersPerSecond ?? 0));
         if (lettersToShow >= typingTargetLetterCount)
         {
             lettersToShow = typingTargetLetterCount;
             isTyping = false;
-            coreTextObject.MaxLettersToShow = lettersToShow;
+            CoreTextObject.MaxLettersToShow = lettersToShow;
 
             if (TakingInput && continueIndicatorInstance != null)
             {
@@ -513,7 +518,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         }
         else
         {
-            coreTextObject.MaxLettersToShow = lettersToShow;
+            CoreTextObject.MaxLettersToShow = lettersToShow;
         }
     }
 #endif
@@ -522,8 +527,8 @@ public class DialogBox : FrameworkElement, IInputReceiver
     {
 
         var limitsLines = 
-            this.coreTextObject.MaxNumberOfLines != null || 
-            this.textComponent.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
+            this.CoreTextObject.MaxNumberOfLines != null || 
+            this.TextComponent.HeightUnits != global::Gum.DataTypes.DimensionUnitType.RelativeToChildren;
 
         if(!limitsLines)
         {
@@ -541,18 +546,18 @@ public class DialogBox : FrameworkElement, IInputReceiver
             var withRemovedTags = BbCodeParser.RemoveTags(text, foundTagsWithNewlines);
 
             var unlimitedLines = new List<string>();
-            var oldVerticalMode = this.textComponent.TextOverflowVerticalMode;
-            this.textComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
+            var oldVerticalMode = this.TextComponent.TextOverflowVerticalMode;
+            this.TextComponent.TextOverflowVerticalMode = TextOverflowVerticalMode.SpillOver;
 
-            coreTextObject.RawText = withRemovedTags;
-            coreTextObject.UpdateLines(unlimitedLines);
+            CoreTextObject.RawText = withRemovedTags;
+            CoreTextObject.UpdateLines(unlimitedLines);
 
-            this.textComponent.TextOverflowVerticalMode = oldVerticalMode;
+            this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
-            this.textComponent.SetProperty("Text", withRemovedTags);
-            this.textComponent.TextOverflowVerticalMode = oldVerticalMode;
+            this.TextComponent.SetProperty("Text", withRemovedTags);
+            this.TextComponent.TextOverflowVerticalMode = oldVerticalMode;
 
-            var limitedLines = coreTextObject.WrappedText;
+            var limitedLines = CoreTextObject.WrappedText;
 
             if (unlimitedLines.Count == limitedLines.Count)
             {
@@ -641,7 +646,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
         //var hasMoreToType = coreTextObject.MaxLettersToShow < currentPageText?.Length;
 
         // Use the raw text since that has stripped out the tags
-        var hasMoreToType = coreTextObject.MaxLettersToShow < coreTextObject.RawText.Length;
+        var hasMoreToType = CoreTextObject.MaxLettersToShow < (CoreTextObject.RawText?.Length ?? 0);
         if (hasMoreToType)
         {
 #if FRB
@@ -655,7 +660,7 @@ public class DialogBox : FrameworkElement, IInputReceiver
                 continueIndicatorInstance.Visible = true;
             }
 
-            coreTextObject.MaxLettersToShow = currentPageText.Length;
+            CoreTextObject.MaxLettersToShow = currentPageText.Length;
 
             FinishedTypingPage?.Invoke(this, EventArgs.Empty);
         }
@@ -749,22 +754,6 @@ public class DialogBox : FrameworkElement, IInputReceiver
     }
 
 #endregion
-
-    #region Utilities
-
-#if DEBUG
-    private void ReportMissingTextInstance()
-    {
-        if (textComponent == null)
-        {
-            throw new Exception(
-                $"This button was created with a Gum component ({Visual?.ElementSave}) " +
-                "that does not have an instance called 'text'. A 'text' instance must be added to modify the button's Text property.");
-        }
-    }
-#endif
-
-    #endregion
 
     #region IInputReceiver Methods
 

@@ -61,7 +61,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
     }
 
 
-    GraphicalUiElement innerPanel;
+    GraphicalUiElement? innerPanel;
 
     InteractiveGue? titleBar;
 
@@ -74,7 +74,11 @@ public class Window : Gum.Forms.Controls.FrameworkElement
     InteractiveGue? _borderBottom;
     InteractiveGue? _borderBottomRight;
 
-    public GraphicalUiElement InnerPanel => innerPanel;
+    /// <summary>
+    /// The container that holds the window's content, found by the name InnerPanelInstance.
+    /// Every Window visual is expected to provide one.
+    /// </summary>
+    public GraphicalUiElement InnerPanel => innerPanel!;
 
 
     /// <summary>
@@ -394,7 +398,7 @@ public class Window : Gum.Forms.Controls.FrameworkElement
         if (titleGrabbedInXOffset != null)
         {
             var desiredLeft = cursorX - titleGrabbedInXOffset.Value;
-            var desiredTop = cursorY - titleGrabbedInYOffset.Value;
+            var desiredTop = cursorY - (titleGrabbedInYOffset ?? 0);
 
             var differenceX = desiredLeft - Visual.AbsoluteLeft;
             var differenceY = desiredTop - Visual.AbsoluteTop;

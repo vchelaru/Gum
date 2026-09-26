@@ -78,7 +78,7 @@ public class PasswordBox : TextBoxBase
         try
         {
             valuePtr = System.Runtime.InteropServices.Marshal.SecureStringToGlobalAllocUnicode(value);
-            return System.Runtime.InteropServices.Marshal.PtrToStringUni(valuePtr);
+            return System.Runtime.InteropServices.Marshal.PtrToStringUni(valuePtr) ?? string.Empty;
         }
         finally
         {
@@ -260,7 +260,7 @@ public class PasswordBox : TextBoxBase
 
     protected override void HandleDelete()
     {
-        if (caretIndex < (SecurePassword?.Length ?? 0) && selectionLength == 0)
+        if (caretIndex < SecurePassword.Length && selectionLength == 0)
         {
             SecurePassword.RemoveAt(caretIndex);
 

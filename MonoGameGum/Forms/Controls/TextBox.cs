@@ -221,7 +221,6 @@ public class TextBox : TextBoxBase
             // If text is null force it to be an empty string so we can add characters
             string textAfterAdd = Text ?? "";
             string? newlyAddedText = null;
-            var addedCharacter = false;
 
             // We handle these actions in TextBoxBase.HandleKeyDown based on Keyboard.GetState()
             if (character == '\b'           // BACKSPACE key
@@ -237,7 +236,6 @@ public class TextBox : TextBoxBase
                 {
                     newlyAddedText = "\n";
                     textAfterAdd = textAfterAdd.Insert(caretIndex, newlyAddedText);
-                    addedCharacter = true;
                 }
                 else
                 {
@@ -250,15 +248,14 @@ public class TextBox : TextBoxBase
                 newlyAddedText = "" + character;
                 textAfterAdd = textAfterAdd.Insert(caretIndex, newlyAddedText);
                 // could be limited by MaxLength:
-                addedCharacter = true;
             }
 
-            // Vic asks - should RaisePreviewTextInput be called before truncating max length? 
-            textAfterAdd = TruncateTextToMaxLength(textAfterAdd);
+            // Vic asks - should RaisePreviewTextInput be called before truncating max length?
+            textAfterAdd = TruncateTextToMaxLength(textAfterAdd) ?? "";
             var caretIndexBefore = caretIndex;
 
             var wasHandledByEvent = false;
-            if (addedCharacter)
+            if (newlyAddedText != null)
             {
                 var args = RaisePreviewTextInput(newlyAddedText);
                 wasHandledByEvent = args.Handled;
@@ -331,19 +328,19 @@ public class TextBox : TextBoxBase
             // DeleteSelection routes through the CaretIndex setter, see note above.
             DeleteSelection();
         }
-        else if (caretIndex < (Text?.Length ?? 0))
+        else if (Text is { } text && caretIndex < text.Length)
         {
             // Use SetTextFromUi because this is user-initiated editing
-            SetTextFromUi(this.Text.Remove(caretIndex, 1));
+            SetTextFromUi(text.Remove(caretIndex, 1));
             RefreshCaretAfterEdit();
         }
     }
 
     protected override void HandleCopy()
     {
-        if (selectionLength != 0)
+        if (selectionLength != 0 && DisplayedText is { } displayedText)
         {
-            var whatToCopy = DisplayedText.Substring(
+            var whatToCopy = displayedText.Substring(
                 selectionStart, selectionLength);
 #if FRB
             ClipboardImplementation.PushStringToClipboard(whatToCopy);
@@ -355,9 +352,9 @@ public class TextBox : TextBoxBase
 
     protected override void HandleCut()
     {
-        if (selectionLength != 0)
+        if (selectionLength != 0 && DisplayedText is { } displayedText)
         {
-            var whatToCopy = DisplayedText.Substring(
+            var whatToCopy = displayedText.Substring(
                 selectionStart, selectionLength);
 #if FRB
             ClipboardImplementation.PushStringToClipboard(whatToCopy);
@@ -409,13 +406,14 @@ public class TextBox : TextBoxBase
     /// </summary>
     public void DeleteSelection()
     {
+        var text = Text ?? "";
         var lengthToRemove = selectionLength;
-        if (selectionStart + lengthToRemove > Text.Length)
+        if (selectionStart + lengthToRemove > text.Length)
         {
-            lengthToRemove = Text.Length - selectionStart;
+            lengthToRemove = text.Length - selectionStart;
         }
         // Use SetTextFromUi because this is user-initiated editing
-        SetTextFromUi(Text.Remove(selectionStart, lengthToRemove));
+        SetTextFromUi(text.Remove(selectionStart, lengthToRemove));
         CaretIndex = selectionStart;
         SelectionLength = 0;
     }
@@ -441,11 +439,11 @@ public class TextBox : TextBoxBase
         Text = TruncateTextToMaxLength(Text);
     }
 
-    private string TruncateTextToMaxLength(string text)
+    private string? TruncateTextToMaxLength(string? text)
     {
-        if (text?.Length > MaxLength)
+        if (text != null && MaxLength is int maxLength && text.Length > maxLength)
         {
-            text = text.Substring(0, MaxLength.Value);
+            text = text.Substring(0, maxLength);
         }
 
         return text;

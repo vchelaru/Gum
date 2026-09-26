@@ -459,6 +459,15 @@ public class TextBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void DeleteSelection_ShouldNotThrow_WhenTextIsNull()
+    {
+        TextBox textBox = new();
+        textBox.Text = null;
+
+        Should.NotThrow(() => textBox.DeleteSelection());
+    }
+
+    [Fact]
     public void DeletingScrolledText_ShouldSnapTextXBackToResting()
     {
         // Issue #2683: KeepCaretEdgeInsideParent only shifts to bring the caret
@@ -788,6 +797,54 @@ public class TextBoxTests : BaseTestClass
         textBox.CaretIndex = 0;
         visual.TextInstance.Y.ShouldBe(forcedTextY,
             "because moving the caret in single-line mode must never trigger a vertical shift");
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldShowSelectionOnEachLine_Multiline()
+    {
+        TextBox textBox = new();
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Text = "line1\nline2";
+
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 8;
+
+        NineSliceRuntime selection = textBox.Visual.Find<NineSliceRuntime>("SelectionInstance")!;
+        int visibleSelectionCount = selection.Parent!.Children
+            .Count(item => item.Name == "SelectionInstance" && item.Visible);
+        visibleSelectionCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public void SelectionLength_ShouldNotThrow_WhenSelectionInstanceCannotBeCloned_Multiline()
+    {
+        TextBoxVisual visual = new(tryCreateFormsObject: false);
+        GraphicalUiElement originalSelection = visual.SelectionInstance;
+        GraphicalUiElement selectionParent = originalSelection.Parent!;
+        selectionParent.Children.Remove(originalSelection);
+        GraphicalUiElement uncloneableSelection = new(new RenderingLibrary.Math.Geometry.LineRectangle());
+        uncloneableSelection.Name = "SelectionInstance";
+        selectionParent.Children.Add(uncloneableSelection);
+        TextBox textBox = new(visual);
+        textBox.TextWrapping = Gum.Forms.TextWrapping.Wrap;
+        textBox.AcceptsReturn = true;
+        textBox.Text = "line1\nline2";
+
+        textBox.SelectionStart = 0;
+        textBox.SelectionLength = 8;
+
+        uncloneableSelection.Visible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TextBox_ShouldThrowDescriptiveException_WhenVisualHasNoTextInstance()
+    {
+        InteractiveGue visual = new(new RenderingLibrary.Graphics.InvisibleRenderable());
+
+        Exception exception = Should.Throw<Exception>(() => new TextBox(visual));
+
+        exception.Message.ShouldContain("TextInstance");
     }
 
     [Fact]

@@ -1528,7 +1528,7 @@ public class ListBox : ItemsControl, IInputReceiver
 
                     var viewHeight = visualAsIpso.Height;
 
-                    var desiredViewTop = viewHeight / 2.0f + visualTop - clipContainer.AbsoluteHeight / 2;
+                    var desiredViewTop = viewHeight / 2.0f + visualTop - ClipContainer.AbsoluteHeight / 2;
 
                     amountToScroll = desiredViewTop - viewTop;
                     if (verticalScrollBar != null)

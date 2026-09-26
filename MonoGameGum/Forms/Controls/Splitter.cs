@@ -158,7 +158,10 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
     /// <param name="changeInPixels">The number of pixels to resize, where positive is to the right or down dependin gon the effective resize behavior.</param>
     public void ApplyResizeChangeInPixels(float changeInPixels)
     {
-        var parent = this.Visual.Parent as GraphicalUiElement;
+        if (this.Visual.Parent is not GraphicalUiElement parent)
+        {
+            return;
+        }
 
         var index = parent.Children.IndexOf(this.Visual);
 
@@ -260,7 +263,8 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         }
 
         // Ratios have to be handled together
-        if (firstUnits == DimensionUnitType.Ratio && secondUnits == DimensionUnitType.Ratio)
+        if (firstVisual != null && secondVisual != null &&
+            firstUnits == DimensionUnitType.Ratio && secondUnits == DimensionUnitType.Ratio)
         {
             if (resizeBehavior == Controls.ResizeBehavior.Rows)
             {
@@ -279,7 +283,11 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
         }
         else
         {
-            if (firstUnits == DimensionUnitType.PercentageOfParent)
+            if (firstVisual == null)
+            {
+                // no previous sibling to resize
+            }
+            else if (firstUnits == DimensionUnitType.PercentageOfParent)
             {
                 if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
@@ -314,13 +322,24 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(firstUnits == DimensionUnitType.Ratio)
             {
-                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
-                    firstVisual.Height, firstVisual.AbsoluteHeight, changeInPixels);
-                firstVisual.Height += ratioToAdd;
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
+                {
+                    firstVisual.Height += RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                        firstVisual.Height, firstVisual.AbsoluteHeight, changeInPixels);
+                }
+                else // columns
+                {
+                    firstVisual.Width += RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                        firstVisual.Width, firstVisual.AbsoluteWidth, changeInPixels);
+                }
             }
 
 
-            if (secondUnits == DimensionUnitType.PercentageOfParent)
+            if (secondVisual == null)
+            {
+                // no next sibling to resize
+            }
+            else if (secondUnits == DimensionUnitType.PercentageOfParent)
             {
                 if (resizeBehavior == Controls.ResizeBehavior.Rows)
                 {
@@ -352,9 +371,16 @@ public class Splitter : Gum.Forms.Controls.FrameworkElement
             }
             else if(secondUnits == DimensionUnitType.Ratio)
             {
-                var ratioToAdd = RatioResizeCalculator.GetRatioDeltaForPixelDelta(
-                    secondVisual.Height, secondVisual.AbsoluteHeight, changeInPixels);
-                secondVisual.Height -= ratioToAdd;
+                if (resizeBehavior == Controls.ResizeBehavior.Rows)
+                {
+                    secondVisual.Height -= RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                        secondVisual.Height, secondVisual.AbsoluteHeight, changeInPixels);
+                }
+                else // columns
+                {
+                    secondVisual.Width -= RatioResizeCalculator.GetRatioDeltaForPixelDelta(
+                        secondVisual.Width, secondVisual.AbsoluteWidth, changeInPixels);
+                }
             }
         }
 
