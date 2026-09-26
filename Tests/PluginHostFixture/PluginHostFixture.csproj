@@ -2,7 +2,8 @@
   <!--
     Standalone fixture assembly for IsolatedPluginHostTests (issue #4723): proves that a plugin
     assembly loaded through IsolatedPluginHost gets its own independent static state, separate
-    from the same assembly's copy already loaded into the default AssemblyLoadContext. Not added
+    from the same assembly's copy already loaded into the default AssemblyLoadContext. Also holds
+    PluginAssemblyWriter, which writes plugin-shaped assemblies for the plugin-host tests. Not added
     to Gum.slnx - built transitively via ProjectReference, same as CrossAssemblyAttributeFixture.
   -->
   <PropertyGroup>

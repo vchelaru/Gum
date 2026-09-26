@@ -73,6 +73,19 @@ public class AvaloniaPluginHostConfiguration : IPluginHostConfiguration
             return false;
         }
 
+        // A plugin built against the WPF head references its Gum assembly, which binds to this
+        // head's (same name) and then fails on the WPF-only types. Location is empty for an
+        // assembly loaded from bytes; there is no file to read and the loader reports it instead.
+        MissingToolType? missing = string.IsNullOrEmpty(assembly.Location)
+            ? null
+            : ToolTypeReferenceChecker.FindMissingToolType(assembly.Location, InternalPluginAssemblies);
+        if (missing != null)
+        {
+            reason = $"was built against another build of the Gum tool, likely the WPF tool: it uses {missing.TypeName} " +
+                $"from {missing.AssemblyName}, which this tool does not have; this plugin needs an Avalonia build";
+            return false;
+        }
+
         reason = null;
         return true;
     }

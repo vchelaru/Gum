@@ -8,6 +8,7 @@ using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Microsoft.Extensions.DependencyInjection;
+using PluginHostFixture;
 using Shouldly;
 
 namespace Gum.Avalonia.Tests;
@@ -62,6 +63,36 @@ public class PluginHostTests
         reason.ShouldNotBeNull();
         reason.ShouldContain("PresentationFramework");
     }
+
+    [Fact]
+    public void Head_RejectsAPluginBuiltAgainstTheWpfToolsGumAssembly()
+    {
+        // The WPF head's assembly is also named Gum, so the reference binds to this head and only
+        // the missing type gives it away (#5135).
+        IPluginHostConfiguration host = TestAppBuilder.Services.GetRequiredService<IPluginHostConfiguration>();
+        string pluginPath = PluginAssemblyWriter.WriteDerivingFrom(NewScratchDirectory(), "WpfBuiltPlugin" + Guid.NewGuid().ToString("N"),
+            "Gum", "Gum.Plugins.BaseClasses", "PriorityPlugin", "Gum.Presentation");
+        Assembly plugin = Assembly.LoadFrom(pluginPath);
+
+        host.CanHostExternalAssembly(plugin, out string? reason).ShouldBeFalse();
+        reason.ShouldNotBeNull();
+        reason.ShouldContain("Gum.Plugins.BaseClasses.PriorityPlugin");
+        reason.ShouldContain("needs an Avalonia build");
+    }
+
+    [Fact]
+    public void Head_HostsAPluginBuiltAgainstThisHeadsGumAssembly()
+    {
+        IPluginHostConfiguration host = TestAppBuilder.Services.GetRequiredService<IPluginHostConfiguration>();
+        string pluginPath = PluginAssemblyWriter.WriteDerivingFrom(NewScratchDirectory(), "AvaloniaBuiltPlugin" + Guid.NewGuid().ToString("N"),
+            "Gum", "Gum.Avalonia.Plugins", nameof(ShellTitlePlugin), "Gum.Presentation");
+        Assembly plugin = Assembly.LoadFrom(pluginPath);
+
+        host.CanHostExternalAssembly(plugin, out string? reason).ShouldBeTrue(reason);
+    }
+
+    private static string NewScratchDirectory() =>
+        Path.Combine(Path.GetTempPath(), "GumPluginHostTests", Guid.NewGuid().ToString("N"));
 
     // Plugin StartUp builds tab controls, so composition runs on the headless UI thread.
     [AvaloniaFact]

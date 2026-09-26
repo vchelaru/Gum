@@ -32,6 +32,8 @@
     <ProjectReference Include="..\..\Gum\GumFormsPlugin\GumFormsPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\ImportFromGumxPlugin\ImportFromGumxPlugin.csproj" />
     <ProjectReference Include="..\..\Gum\SvgPlugin\SkiaPlugin.csproj" />
+    <!-- PluginAssemblyWriter: stand-in plugins built against another build of the tool. -->
+    <ProjectReference Include="..\..\Tests\PluginHostFixture\PluginHostFixture.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
