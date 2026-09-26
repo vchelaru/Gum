@@ -43,7 +43,14 @@ public class FrameworkElementTemplate
         }
 #endif
 
-        Initialize(() => constructor.Invoke(null) as FrameworkElement);
+        Initialize(() =>
+        {
+            if (constructor == null)
+            {
+                throw new InvalidOperationException($"The type {type} must have a constructor with no arguments");
+            }
+            return (FrameworkElement)constructor.Invoke(null);
+        });
     }
 
     public FrameworkElementTemplate(Func<FrameworkElement> creationFunc)
@@ -51,7 +58,9 @@ public class FrameworkElementTemplate
         Initialize(creationFunc);
     }
 
+    [MemberNotNull(nameof(creationFunc))]
     private void Initialize(Func<FrameworkElement> creationFunc)
+
     {
         this.creationFunc = creationFunc;
     }

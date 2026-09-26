@@ -475,6 +475,7 @@ public class RefreshStylesTests : BaseTestClass
     {
         // Arrange — ComboBox with a selection made at runtime
         ComboBox comboBox = new();
+        comboBox.Items.ShouldNotBeNull();
         comboBox.Items.Add("Option A");
         comboBox.Items.Add("Option B");
         comboBox.Items.Add("Option C");

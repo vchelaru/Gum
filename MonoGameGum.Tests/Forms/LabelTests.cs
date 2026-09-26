@@ -29,6 +29,7 @@ public class LabelTests : BaseTestClass
         var parsedText = label.Text;
         // Assert
 
+        label.TextComponent.ShouldNotBeNull();
         var rawText = (Text)label.TextComponent.RenderableComponent;
         rawText.InlineVariables.Count.ShouldBe(4, "because the font starts default and changes 4 times with tags: bold, not bold, italic, not italic");
         rawText.RawText.ShouldBe("This is bold and italic text.");

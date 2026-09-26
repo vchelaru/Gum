@@ -157,7 +157,7 @@ public class TextBox : TextBoxBase
     /// <summary>
     /// Event raised when the Text property changes, regardless of the change's source.
     /// </summary>
-    public event EventHandler TextChanged;
+    public event EventHandler? TextChanged;
 
     /// <summary>
     /// Event raised when Text changes as a result of user interaction (typing, pasting,
@@ -167,7 +167,7 @@ public class TextBox : TextBoxBase
     /// <see cref="Primitives.RangeBase.ValueChangedByUi"/>. It is raised after the change is applied
     /// and fires with the same cadence as <see cref="TextChanged"/> for user-driven changes.
     /// </summary>
-    public event EventHandler TextChangedByUi;
+    public event EventHandler? TextChangedByUi;
 
     #endregion
 

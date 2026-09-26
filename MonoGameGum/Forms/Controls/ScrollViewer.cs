@@ -71,7 +71,7 @@ public class ScrollViewer :
 
 #if FRB
     public bool TakingInput => throw new NotImplementedException();
-    public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver? NextInTabSequence { get; set; }
     public List<Keys> IgnoredKeys => throw new NotImplementedException();
     public void ReceiveInput()
     {
@@ -101,11 +101,19 @@ public class ScrollViewer :
     protected ScrollBar? verticalScrollBar;
     protected ScrollBar? horizontalScrollBar;
 
-    GraphicalUiElement innerPanel;
-    public GraphicalUiElement InnerPanel => innerPanel;
+    GraphicalUiElement? innerPanel;
+    /// <summary>
+    /// The container that holds the scrolled content, found by the name InnerPanelInstance.
+    /// Every ScrollViewer visual is expected to provide one.
+    /// </summary>
+    public GraphicalUiElement InnerPanel => innerPanel!;
 
-    protected GraphicalUiElement clipContainer;
-    public GraphicalUiElement ClipContainer => clipContainer;
+    protected GraphicalUiElement? clipContainer;
+    /// <summary>
+    /// The container that clips the scrolled content, found by the name ClipContainerInstance.
+    /// Every ScrollViewer visual that has a scroll bar is expected to provide one.
+    /// </summary>
+    public GraphicalUiElement ClipContainer => clipContainer!;
 
     GraphicalUiElement? _stickyHeaderOverlay;
     /// <summary>
@@ -127,6 +135,11 @@ public class ScrollViewer :
         // header off when scrolled to.
         public GraphicalUiElement? Header;
         public GraphicalUiElement Placeholder;
+
+        public StickyHeaderEntry(GraphicalUiElement placeholder)
+        {
+            Placeholder = placeholder;
+        }
         public EventHandler? HeaderSizeChangedHandler;
         public bool IsTerminator;
     }
@@ -167,10 +180,13 @@ public class ScrollViewer :
     /// </remarks>
     public double SmallChange
     {
-        get => verticalScrollBar.SmallChange;
+        get => (verticalScrollBar ?? horizontalScrollBar)?.SmallChange ?? 0;
         set
         {
-            verticalScrollBar.SmallChange = value;
+            if (verticalScrollBar != null)
+            {
+                verticalScrollBar.SmallChange = value;
+            }
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.SmallChange = value;
@@ -180,10 +196,13 @@ public class ScrollViewer :
 
     public double LargeChange
     {
-        get => verticalScrollBar.LargeChange;
+        get => (verticalScrollBar ?? horizontalScrollBar)?.LargeChange ?? 0;
         set
         {
-            verticalScrollBar.LargeChange = value;
+            if (verticalScrollBar != null)
+            {
+                verticalScrollBar.LargeChange = value;
+            }
             if(horizontalScrollBar != null)
             {
                 horizontalScrollBar.LargeChange = value;
@@ -218,11 +237,14 @@ public class ScrollViewer :
     /// </summary>
     public double VerticalScrollBarValue
     {
-        get => verticalScrollBar.Value;
+        get => verticalScrollBar?.Value ?? 0;
         set
         {
-            verticalScrollBar.Value = value;
-            PushValueToViewModel();
+            if (verticalScrollBar != null)
+            {
+                verticalScrollBar.Value = value;
+                PushValueToViewModel();
+            }
         }
     }
 
@@ -244,7 +266,7 @@ public class ScrollViewer :
     /// assigned by the ScrollViewer in response to children being added.
     /// </summary>
     public double VerticalScrollBarMaximum =>
-        verticalScrollBar.Maximum;
+        verticalScrollBar?.Maximum ?? 0;
 
     public double HorizontalScrollBarMaximum =>
         horizontalScrollBar?.Maximum ?? 0;
@@ -277,7 +299,7 @@ public class ScrollViewer :
                 if(doItemsHaveFocus == false)
                 {
                     var currentReceiver = InteractiveGue.CurrentInputReceiver;
-                    if (currentReceiver.ParentInputReceiver == this)
+                    if (currentReceiver?.ParentInputReceiver == this)
                     {
                         this.IsFocused = true;
                     }
@@ -405,28 +427,31 @@ public class ScrollViewer :
                 verticalScrollBar = vericalScrollBarVisual.FormsControlAsObject as ScrollBar;
             }
 
-            verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
-
-            // Not sure if we want to set these here. This was moved out of 
-            // UpdateVerticalScrollBarValues so that it's only set once before
-            // CustomInitialize for UI, so usually this is okay. But eventually 
-            // the user may want to swap out controls and doing so might reset this
-            // value causing confusion? If so, we'd need to store off a temp value.
-            verticalScrollBar.SmallChange = 10;
-            if(verticalScrollBar.ViewportSize > 0)
+            if (verticalScrollBar != null)
             {
-                // May 14, 2025 - The ViewportSize can be negative or 0 if the
-                // visual for the ScrollViewer hasn't yet been given a height value.
-                // This may be given a valid height value after the visual is assigned,
-                // but in the meantime the large change should not be set to a negative value.
-                verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+                verticalScrollBar.ValueChanged += HandleVerticalScrollBarValueChanged;
+
+                // Not sure if we want to set these here. This was moved out of 
+                // UpdateVerticalScrollBarValues so that it's only set once before
+                // CustomInitialize for UI, so usually this is okay. But eventually 
+                // the user may want to swap out controls and doing so might reset this
+                // value causing confusion? If so, we'd need to store off a temp value.
+                verticalScrollBar.SmallChange = 10;
+                if(verticalScrollBar.ViewportSize > 0)
+                {
+                    // May 14, 2025 - The ViewportSize can be negative or 0 if the
+                    // visual for the ScrollViewer hasn't yet been given a height value.
+                    // This may be given a valid height value after the visual is assigned,
+                    // but in the meantime the large change should not be set to a negative value.
+                    verticalScrollBar.LargeChange = verticalScrollBar.ViewportSize;
+                }
+
+
+                // Depending on the height and width units, the scroll bar may get its update
+                // called before or after this. We can't bet on the order, so we have to handle
+                // both this and the scroll bar's height value changes, and adjust according to both:
+                verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
             }
-
-
-            // Depending on the height and width units, the scroll bar may get its update
-            // called before or after this. We can't bet on the order, so we have to handle
-            // both this and the scroll bar's height value changes, and adjust according to both:
-            verticalScrollBar.Visual.SizeChanged += HandleVerticalScrollBarThumbSizeChanged;
         }
 
         if (horizontalScrollBarVisual != null)
@@ -440,16 +465,19 @@ public class ScrollViewer :
                 horizontalScrollBar = horizontalScrollBarVisual.FormsControlAsObject as ScrollBar;
             }
 
-            horizontalScrollBar.Orientation = Orientation.Horizontal;
-            horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
-
-            horizontalScrollBar.SmallChange = 10;
-            if (horizontalScrollBar.ViewportSize > 0)
+            if (horizontalScrollBar != null)
             {
-                horizontalScrollBar.LargeChange = horizontalScrollBar.ViewportSize;
-            }
+                horizontalScrollBar.Orientation = Orientation.Horizontal;
+                horizontalScrollBar.ValueChanged += HandleHorizontalScrollBarValueChanged;
 
-            horizontalScrollBar.Visual.SizeChanged += HandleHorizontalScrollBarThumbSizeChanged;
+                horizontalScrollBar.SmallChange = 10;
+                if (horizontalScrollBar.ViewportSize > 0)
+                {
+                    horizontalScrollBar.LargeChange = horizontalScrollBar.ViewportSize;
+                }
+
+                horizontalScrollBar.Visual.SizeChanged += HandleHorizontalScrollBarThumbSizeChanged;
+            }
         }
 
         if (innerPanel != null)
@@ -509,7 +537,7 @@ public class ScrollViewer :
         base.ReactToVisualRemoved();
     }
 
-    private void HandleRollOver(object sender, RoutedEventArgs args)
+    private void HandleRollOver(object? sender, RoutedEventArgs args)
     {
         // On the frame a touch first makes contact, XChange/YChange reflect the jump from
         // wherever the cursor last was (a prior tap, or 0,0) to the new touch position, not
@@ -518,8 +546,11 @@ public class ScrollViewer :
         if (MainCursor.PrimaryDown && MainCursor.LastInputDevice == InputDevice.TouchScreen &&
             !MainCursor.PrimaryPush)
         {
-            verticalScrollBar.Value -= MainCursor.YChange /
-                global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
+            if (verticalScrollBar != null)
+            {
+                verticalScrollBar.Value -= MainCursor.YChange /
+                    global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
+            }
 
             if(horizontalScrollBar != null)
             {
@@ -536,7 +567,7 @@ public class ScrollViewer :
 
     #region Events
 
-    public event EventHandler ScrollChanged;
+    public event EventHandler? ScrollChanged;
 
     #endregion
 
@@ -631,7 +662,7 @@ public class ScrollViewer :
 
     #region Scroll Methods
 
-    private void HandleMouseWheelScroll(object sender, RoutedEventArgs args)
+    private void HandleMouseWheelScroll(object? sender, RoutedEventArgs args)
     {
         if(verticalScrollBar != null)
         {
@@ -657,6 +688,10 @@ public class ScrollViewer :
 
             if (isShiftHeld == false)
             {
+                if (verticalScrollBar == null)
+                {
+                    return;
+                }
                 var valueBefore = verticalScrollBar.Value;
 
                 verticalScrollBar.Value -= MainCursor.ZVelocity * MouseWheelScrollSpeed;
@@ -676,28 +711,34 @@ public class ScrollViewer :
 
     public void ScrollToBottom()
     {
-        verticalScrollBar.Value = verticalScrollBar.Maximum;
+        if (verticalScrollBar != null)
+        {
+            verticalScrollBar.Value = verticalScrollBar.Maximum;
+        }
     }
 
     #endregion
 
     #region Event Handlers
 
-    private void HandleVerticalScrollBarValueChanged(object sender, EventArgs e)
+    private void HandleVerticalScrollBarValueChanged(object? sender, EventArgs e)
     {
-        reactToInnerPanelPositionOrSizeChanged = false;
-        innerPanel.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
-        innerPanel.Y = -(float)verticalScrollBar.Value;
-        reactToInnerPanelPositionOrSizeChanged = true;
+        if (innerPanel != null && verticalScrollBar != null)
+        {
+            reactToInnerPanelPositionOrSizeChanged = false;
+            innerPanel.YUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
+            innerPanel.Y = -(float)verticalScrollBar.Value;
+            reactToInnerPanelPositionOrSizeChanged = true;
+        }
 
         ScrollChanged?.Invoke(this, EventArgs.Empty);
 
         RecomputeStickyHeaders();
     }
 
-    private void HandleHorizontalScrollBarValueChanged(object sender, EventArgs e)
+    private void HandleHorizontalScrollBarValueChanged(object? sender, EventArgs e)
     {
-        if(horizontalScrollBar != null)
+        if(horizontalScrollBar != null && innerPanel != null)
         {
             reactToInnerPanelPositionOrSizeChanged = false;
             innerPanel.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -707,7 +748,7 @@ public class ScrollViewer :
         }
     }
 
-    private void HandleInnerPanelSizeChanged(object sender, EventArgs e)
+    private void HandleInnerPanelSizeChanged(object? sender, EventArgs e)
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
@@ -723,7 +764,7 @@ public class ScrollViewer :
         RecomputeStickyHeaders();
     }
 
-    private void HandleVisualSizeChanged(object sender, EventArgs args)
+    private void HandleVisualSizeChanged(object? sender, EventArgs args)
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
@@ -739,7 +780,7 @@ public class ScrollViewer :
         RecomputeStickyHeaders();
     }
 
-    private void HandleVerticalScrollBarThumbSizeChanged(object sender, EventArgs args)
+    private void HandleVerticalScrollBarThumbSizeChanged(object? sender, EventArgs args)
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
@@ -747,7 +788,7 @@ public class ScrollViewer :
         }
     }
 
-    private void HandleHorizontalScrollBarThumbSizeChanged(object sender, EventArgs args)
+    private void HandleHorizontalScrollBarThumbSizeChanged(object? sender, EventArgs args)
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
@@ -755,7 +796,7 @@ public class ScrollViewer :
         }
     }
 
-    private void HandleInnerPanelPositionChanged(object sender, EventArgs e)
+    private void HandleInnerPanelPositionChanged(object? sender, EventArgs e)
     {
         if (reactToInnerPanelPositionOrSizeChanged)
         {
@@ -815,15 +856,14 @@ public class ScrollViewer :
         placeholder.Height = headerHeight;
         placeholder.HasEvents = false;
 
-        int headerIndex = innerPanel.Children.IndexOf(header);
+        int headerIndex = InnerPanel.Children.IndexOf(header);
         // headerIndex is guaranteed >= 0 by the Parent check above.
         header.Parent = _stickyHeaderOverlay;
-        innerPanel.Children.Insert(headerIndex, placeholder);
+        InnerPanel.Children.Insert(headerIndex, placeholder);
 
-        StickyHeaderEntry entry = new()
+        StickyHeaderEntry entry = new(placeholder)
         {
             Header = header,
-            Placeholder = placeholder,
         };
         entry.HeaderSizeChangedHandler = (_, _) =>
         {
@@ -927,11 +967,10 @@ public class ScrollViewer :
         marker.HeightUnits = global::Gum.DataTypes.DimensionUnitType.Absolute;
         marker.Height = 0;
         marker.HasEvents = false;
-        innerPanel.Children.Add(marker);
+        InnerPanel.Children.Add(marker);
 
-        _stickyHeaders.Add(new StickyHeaderEntry
+        _stickyHeaders.Add(new StickyHeaderEntry(marker)
         {
-            Placeholder = marker,
             IsTerminator = true,
         });
         RecomputeStickyHeaders();
@@ -944,24 +983,24 @@ public class ScrollViewer :
         {
             // Terminator: just remove the marker from the stack. There's no
             // header to restore.
-            innerPanel.Children.Remove(entry.Placeholder);
+            InnerPanel.Children.Remove(entry.Placeholder);
             return;
         }
 
         entry.Header!.SizeChanged -= entry.HeaderSizeChangedHandler;
 
         // Put the header back where its placeholder is, then drop the placeholder.
-        int placeholderIndex = innerPanel.Children.IndexOf(entry.Placeholder);
+        int placeholderIndex = InnerPanel.Children.IndexOf(entry.Placeholder);
         if (placeholderIndex >= 0)
         {
-            innerPanel.Children.RemoveAt(placeholderIndex);
+            InnerPanel.Children.RemoveAt(placeholderIndex);
             entry.Header.Parent = innerPanel;
             // Parent assignment appended; move it to the placeholder's slot.
-            int newIndex = innerPanel.Children.IndexOf(entry.Header);
+            int newIndex = InnerPanel.Children.IndexOf(entry.Header);
             if (newIndex >= 0 && newIndex != placeholderIndex)
             {
-                innerPanel.Children.RemoveAt(newIndex);
-                innerPanel.Children.Insert(placeholderIndex, entry.Header);
+                InnerPanel.Children.RemoveAt(newIndex);
+                InnerPanel.Children.Insert(placeholderIndex, entry.Header);
             }
         }
     }
@@ -1235,7 +1274,7 @@ public class ScrollViewer :
     // handled internally and this can be made private.
     public void UpdateVerticalScrollBarValues()
     {
-        if (verticalScrollBar == null)
+        if (verticalScrollBar is not { } scrollBar || innerPanel is not { } panel || clipContainer is not { } clip)
         {
             return;
         }
@@ -1245,20 +1284,20 @@ public class ScrollViewer :
 
         // Record the inner panel height before (possibly) changing the
         // scroll bar height...
-        var innerPanelHeight = innerPanel.AbsoluteHeight;
+        var innerPanelHeight = panel.AbsoluteHeight;
 
         switch (verticalScrollBarVisibility)
         {
             case ScrollBarVisibility.Hidden:
-                verticalScrollBar.IsVisible = false;
+                scrollBar.IsVisible = false;
                 break;
             case ScrollBarVisibility.Visible:
-                verticalScrollBar.IsVisible = true;
+                scrollBar.IsVisible = true;
                 break;
             case ScrollBarVisibility.Auto:
                 {
-                    var clipContainerHeight = clipContainer.AbsoluteHeight;
-                    verticalScrollBar.IsVisible = innerPanelHeight > clipContainerHeight;
+                    var clipContainerHeight = clip.AbsoluteHeight;
+                    scrollBar.IsVisible = innerPanelHeight > clipContainerHeight;
                 }
                 break;
         }
@@ -1266,7 +1305,7 @@ public class ScrollViewer :
 
 
         // now that we've set the visibility state, let's see if the height has changed
-        var didHeightChange = innerPanel.AbsoluteHeight != innerPanelHeight;
+        var didHeightChange = panel.AbsoluteHeight != innerPanelHeight;
         if (didHeightChange)
         {
             // It changed, which can adjust the scroll bar height so let's adjust it again
@@ -1275,16 +1314,16 @@ public class ScrollViewer :
 
         void SetVerticalScrollBarValuesFromVisuals()
         {
-            verticalScrollBar.Minimum = 0;
-            verticalScrollBar.ViewportSize = clipContainer.AbsoluteHeight;
+            scrollBar.Minimum = 0;
+            scrollBar.ViewportSize = clip.AbsoluteHeight;
 
-            var innerPanelHeight = innerPanel.AbsoluteHeight;
-            var clipContainerHeight = clipContainer.AbsoluteHeight;
+            var innerPanelHeight = panel.AbsoluteHeight;
+            var clipContainerHeight = clip.AbsoluteHeight;
             var maxValue = innerPanelHeight - clipContainerHeight;
 
             maxValue = System.Math.Max(0, maxValue);
 
-            verticalScrollBar.Maximum = maxValue;
+            scrollBar.Maximum = maxValue;
         }
 
         var oldReact = reactToInnerPanelPositionOrSizeChanged;
@@ -1312,7 +1351,7 @@ public class ScrollViewer :
 
     private void UpdateHorizontalScrollBarValues()
     {
-        if (horizontalScrollBar == null)
+        if (horizontalScrollBar is not { } scrollBar || innerPanel is not { } panel || clipContainer is not { } clip)
         {
             return;
         }
@@ -1320,20 +1359,20 @@ public class ScrollViewer :
         SetHorizontalSrollBarValuesFromVisuals();
         // Record the inner panel width before (possibly) changing the
         // scroll bar width...
-        var innerPanelWidth = innerPanel.AbsoluteWidth;
+        var innerPanelWidth = panel.AbsoluteWidth;
 
         switch (horizontalScrollBarVisibility)
         {
             case ScrollBarVisibility.Hidden:
-                horizontalScrollBar.IsVisible = false;
+                scrollBar.IsVisible = false;
                 break;
             case ScrollBarVisibility.Visible:
-                horizontalScrollBar.IsVisible = true;
+                scrollBar.IsVisible = true;
                 break;
             case ScrollBarVisibility.Auto:
                 {
-                    var clipContainerWidth = clipContainer.AbsoluteWidth;
-                    horizontalScrollBar.IsVisible = innerPanelWidth > clipContainerWidth;
+                    var clipContainerWidth = clip.AbsoluteWidth;
+                    scrollBar.IsVisible = innerPanelWidth > clipContainerWidth;
                 }
                 break;
         }
@@ -1342,7 +1381,7 @@ public class ScrollViewer :
 
 
         // now that we've set the visibility state, let's see if the width has changed
-        var didWidthChange = innerPanel.AbsoluteWidth != innerPanelWidth;
+        var didWidthChange = panel.AbsoluteWidth != innerPanelWidth;
         if (didWidthChange)
         {
             // It changed, which can adjust the scroll bar width so let's adjust it again
@@ -1351,16 +1390,16 @@ public class ScrollViewer :
 
         void SetHorizontalSrollBarValuesFromVisuals()
         {
-            horizontalScrollBar.Minimum = 0;
-            horizontalScrollBar.ViewportSize = clipContainer.AbsoluteWidth;
+            scrollBar.Minimum = 0;
+            scrollBar.ViewportSize = clip.AbsoluteWidth;
 
-            var innerPanelWidth = innerPanel.AbsoluteWidth;
-            var clipContainerWidth = clipContainer.AbsoluteWidth;
+            var innerPanelWidth = panel.AbsoluteWidth;
+            var clipContainerWidth = clip.AbsoluteWidth;
             var maxValue = innerPanelWidth - clipContainerWidth;
 
             maxValue = System.Math.Max(0, maxValue);
 
-            horizontalScrollBar.Maximum = maxValue;
+            scrollBar.Maximum = maxValue;
         }
     }
 

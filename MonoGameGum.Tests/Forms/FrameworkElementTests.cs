@@ -73,7 +73,39 @@ public class FrameworkElementTests : BaseTestClass
 
     // CustomCursor cannot be properly tested because it requires a concrete Cursor class.
 
+    [Fact]
+    public void GetGraphicalUiElementForFrameworkElement_ShouldReturnNull_ForTypeWithNoBaseType()
+    {
+        InteractiveGue? result = FrameworkElement.GetGraphicalUiElementForFrameworkElement(typeof(object));
+
+        result.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(typeof(Button))]
+    [InlineData(typeof(Label))]
+    [InlineData(typeof(ListBox))]
+    [InlineData(typeof(TextBox))]
+    public void Visual_ShouldAcceptNull_ToDetachVisual(Type controlType)
+    {
+        FrameworkElement control = (FrameworkElement)Activator.CreateInstance(controlType)!;
+
+        Should.NotThrow(() => control.Visual = null);
+    }
+
     #region HandleTab
+
+    [Fact]
+    public void HandleTab_ShouldNotThrow_WhenLoopingFromUnparentedContainedVisual()
+    {
+        ContainerRuntime screen = new();
+        Button button = new();
+        button.Visual.ElementGueContainingThis = screen;
+        button.IsFocused = true;
+
+        Should.NotThrow(() => button.HandleTab(loop: true));
+        button.IsFocused.ShouldBeTrue();
+    }
 
     [Fact]
     public void HandleTab_ShouldSelectNextItem_InSameContainer()

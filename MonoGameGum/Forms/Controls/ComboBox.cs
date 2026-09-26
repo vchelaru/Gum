@@ -43,9 +43,10 @@ public class ComboBox :
 {
     #region Fields/Properties
 
-    ListBox listBox;
-    GraphicalUiElement textComponent;
-    global::RenderingLibrary.Graphics.IText coreTextObject;
+    // Required parts of the visual, assigned whenever a visual is set.
+    ListBox listBox = null!;
+    GraphicalUiElement textComponent = null!;
+    global::RenderingLibrary.Graphics.IText coreTextObject = null!;
 
     /// <summary>
     /// Replaces the internal ListBox with the provided instance.
@@ -89,11 +90,11 @@ public class ComboBox :
         }
     }
 
-    string _displayMemberPath;
+    string? _displayMemberPath;
     /// <summary>
     /// The name of a property to read off each item for display, instead of the item's ToString.
     /// </summary>
-    public string DisplayMemberPath
+    public string? DisplayMemberPath
     {
         get => _displayMemberPath;
         [RequiresUnreferencedCode(ItemsControl.DisplayMemberPathTrimMessage)]
@@ -106,7 +107,8 @@ public class ComboBox :
         }
     }
     
-    public IList Items
+    public IList? Items
+
     {
         get => listBox.Items;
         set
@@ -127,7 +129,7 @@ public class ComboBox :
     /// </summary>
     [Obsolete("Use VisualTemplate")]
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-    public Type ListBoxItemGumType
+    public Type? ListBoxItemGumType
     {
         get { return listBox.ListBoxItemGumType; }
         [UnconditionalSuppressMessage("Trimming", "IL2114",
@@ -175,7 +177,7 @@ public class ComboBox :
     /// of each list item. To control the visual (GraphicalUiElement) layer instead, use
     /// <see cref="VisualTemplate"/>. This property forwards to the internal ListBox.
     /// </summary>
-    public FrameworkElementTemplate FrameworkElementTemplate
+    public FrameworkElementTemplate? FrameworkElementTemplate
     {
         get => listBox.FrameworkElementTemplate;
         set => listBox.FrameworkElementTemplate = value;
@@ -189,13 +191,13 @@ public class ComboBox :
     /// (FrameworkElement) layer instead, use <see cref="FrameworkElementTemplate"/>.
     /// This property forwards to the internal ListBox.
     /// </summary>
-    public VisualTemplate VisualTemplate
+    public VisualTemplate? VisualTemplate
     {
         get => listBox.VisualTemplate;
         set => listBox.VisualTemplate = value;
     }
 
-    public object SelectedObject
+    public object? SelectedObject
     {
         get => listBox.SelectedObject;
         set => listBox.SelectedObject = value;
@@ -256,15 +258,15 @@ public class ComboBox :
 
     #region Events
 
-    public event Action<object, SelectionChangedEventArgs> SelectionChanged;
+    public event Action<object, SelectionChangedEventArgs>? SelectionChanged;
     /// <summary>
     /// Raised every frame while this control has input focus. Can be used
     /// to perform custom per-frame logic while the control is focused.
     /// </summary>
     public event Action<IInputReceiver>? FocusUpdate;
-    public event Action<GamepadButton> ControllerButtonPushed;
+    public event Action<GamepadButton>? ControllerButtonPushed;
 #pragma warning disable CS0067 // raised only in the FRB build
-    public event Action<int> GenericGamepadButtonPushed;
+    public event Action<int>? GenericGamepadButtonPushed;
 #pragma warning restore CS0067
 
     #endregion
@@ -304,22 +306,13 @@ public class ComboBox :
 
     protected override void RefreshInternalVisualReferences()
     {
-        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue;
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
+        var listBoxInstance = Visual.GetGraphicalUiElementByName("ListBoxInstance") as InteractiveGue
+            ?? throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
+        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance")
+            ?? throw new Exception("Gum object must have an object called \"TextInstance\"");
 
-#if FULL_DIAGNOSTICS
-        if (listBoxInstance == null)
-        {
-            throw new Exception("Gum object must have an object called \"ListBoxInstance\"");
-        }
-
-        if (textComponent == null)
-        {
-            throw new Exception("Gum object must have an object called \"TextInstance\"");
-        }
-#endif
-        coreTextObject = textComponent.RenderableComponent as
-            global::RenderingLibrary.Graphics.IText;
+        coreTextObject = textComponent.RenderableComponent as global::RenderingLibrary.Graphics.IText
+            ?? throw new Exception("The combo box's \"TextInstance\" must be a text object");
 
         // remove it because it's gotta be a "popup"
 
@@ -332,16 +325,11 @@ public class ComboBox :
         }
         else
         {
-            listBox = listBoxInstance.FormsControlAsObject as ListBox;
+            listBox = listBoxInstance.FormsControlAsObject as ListBox
+                ?? throw new Exception(
+                    $"The ListBoxInstance Gum component inside the combo box {Visual.Name} is of type " +
+                    $"{listBoxInstance.FormsControlAsObject.GetType().Name}, but it should be of type ListBox");
 
-#if FULL_DIAGNOSTICS
-            if (listBox == null)
-            {
-                var message = $"The ListBoxInstance Gum component inside the combo box {Visual.Name} is of type " +
-                    $"{listBoxInstance.FormsControlAsObject.GetType().Name}, but it should be of type ListBox";
-                throw new Exception(message);
-            }
-#endif
         }
         var effectiveParent = listBox.Visual.EffectiveParentGue as InteractiveGue;
         if (effectiveParent != null)
@@ -361,22 +349,22 @@ public class ComboBox :
 
     #region Event Handler Methods
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         if (IsDropDownOpen)
         {
@@ -514,12 +502,12 @@ public class ComboBox :
         }
     }
 
-    private void HandleLosePush(object sender, EventArgs args)
+    private void HandleLosePush(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleSelectionChanged(object sender, SelectionChangedEventArgs args)
+    private void HandleSelectionChanged(object? sender, SelectionChangedEventArgs args)
     {
         // If we bind the Text, then don't set this here, the binding will take care of it
         if (!IsDataBound(nameof(Text)))
@@ -542,7 +530,7 @@ public class ComboBox :
     [UnconditionalSuppressMessage("Trimming", "IL2075",
         Justification = "Only reflects when DisplayMemberPath is set, and its setter carries the " +
             "RequiresUnreferencedCode warning that surfaces the risk at the caller.")]
-    public virtual void UpdateToObject(object o)
+    public virtual void UpdateToObject(object? o)
     {
         if(!string.IsNullOrEmpty(DisplayMemberPath ))
         {
@@ -559,7 +547,7 @@ public class ComboBox :
         }
     }
 
-    private void HandleListBoxItemPushed(object sender, EventArgs args)
+    private void HandleListBoxItemPushed(object? sender, EventArgs args)
     {
         HideListBox();
     }
@@ -667,17 +655,19 @@ public class ComboBox :
 #endif
     }
 
+    int ItemCount => Items?.Count ?? 0;
+
     private void DoDropDownOpenFocusUpdate(bool movedDown, bool movedUp, bool pressedButton)
     {
         if (movedDown)
         {
-            if (Items.Count > 0)
+            if (ItemCount > 0)
             {
-                if (SelectedIndex < 0 && Items.Count > 0)
+                if (SelectedIndex < 0 && ItemCount > 0)
                 {
                     SelectedIndex = 0;
                 }
-                else if (SelectedIndex < Items.Count - 1)
+                else if (SelectedIndex < ItemCount - 1)
                 {
                     SelectedIndex++;
                 }
@@ -687,9 +677,9 @@ public class ComboBox :
         }
         else if (movedUp)
         {
-            if (Items.Count > 0)
+            if (ItemCount > 0)
             {
-                if (SelectedIndex < 0 && Items.Count > 0)
+                if (SelectedIndex < 0 && ItemCount > 0)
                 {
                     SelectedIndex = 0;
                 }
@@ -745,7 +735,7 @@ public class ComboBox :
             this.listBox.IsFocused = true;
             this.listBox.DoListItemsHaveFocus = true;
             
-            if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
+            if (SelectedIndex > -1 && SelectedIndex < ItemCount)
             {
                 this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
             }
@@ -764,7 +754,7 @@ public class ComboBox :
             {
                 IsDropDownOpen = IsDropDownOpen = true;
 
-                if (SelectedIndex > -1 && SelectedIndex < this.Items.Count)
+                if (SelectedIndex > -1 && SelectedIndex < ItemCount)
                 {
                     this.listBox.ListBoxItems[SelectedIndex].IsFocused = true;
                 }

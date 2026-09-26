@@ -112,7 +112,7 @@ public class Expander : FrameworkElement
 
     #region Event Handlers
 
-    private void HandleHeaderClick(object sender, EventArgs args)
+    private void HandleHeaderClick(object? sender, EventArgs args)
     {
         IsExpanded = !IsExpanded;
     }

@@ -14,7 +14,7 @@ namespace Gum.Forms;
 
 public class VisualTemplate
 {
-    Func<object, bool, GraphicalUiElement> creationFunc;
+    Func<object?, bool, GraphicalUiElement> creationFunc;
 
     static Type[] boolTypes = new Type[2];
 
@@ -45,13 +45,9 @@ public class VisualTemplate
 
         diagnosticsInfo = "Returns new " + type.FullName;
 
-        var foundConstructor = false;
-
-
         var boolBoolconstructor = type.GetConstructor(boolTypes);
         if(boolBoolconstructor != null)
         {
-            foundConstructor = true;
             var parameters = new object[2];
             parameters[0] = true;
             parameters[1] = false;
@@ -59,15 +55,15 @@ public class VisualTemplate
             {
                 parameters[1] = createForms;
 
-                return boolBoolconstructor.Invoke(parameters) as GraphicalUiElement;
+                return (GraphicalUiElement)boolBoolconstructor.Invoke(parameters);
             });
 
         }
-
-        if(!foundConstructor)
+        else
         {
 
             var constructor = type.GetConstructor(Type.EmptyTypes);
+
 
 #if FULL_DIAGNOSTICS
             if (constructor == null)
@@ -77,7 +73,15 @@ public class VisualTemplate
             }
 #endif
 
-            Initialize((throwaway, createForms) => constructor.Invoke(null) as GraphicalUiElement);
+            Initialize((throwaway, createForms) =>
+            {
+                if (constructor == null)
+                {
+                    throw new InvalidOperationException(
+                        $"The type {type} must have a constructor with no arguments, or a constructor with (bool, bool)");
+                }
+                return (GraphicalUiElement)constructor.Invoke(null);
+            });
         }
 
     }
@@ -87,22 +91,23 @@ public class VisualTemplate
         Initialize((throwaway, _) => creationFunc());
     }
 
-    public VisualTemplate(Func<object, GraphicalUiElement> creationFunc)
+    public VisualTemplate(Func<object?, GraphicalUiElement> creationFunc)
     {
         Initialize((vm, createForms) => creationFunc(vm));
     }
 
-    public VisualTemplate(Func<object, bool, GraphicalUiElement> creationFunc)
+    public VisualTemplate(Func<object?, bool, GraphicalUiElement> creationFunc)
     {
         Initialize(creationFunc);
     }
 
-    private void Initialize(Func<object, bool, GraphicalUiElement> creationFunc)
+    [MemberNotNull(nameof(creationFunc))]
+    private void Initialize(Func<object?, bool, GraphicalUiElement> creationFunc)
     {
         this.creationFunc = creationFunc;
     }
 
-    public GraphicalUiElement CreateContent(object bindingContext, bool createFormsInternally = false)
+    public GraphicalUiElement CreateContent(object? bindingContext, bool createFormsInternally = false)
     {
         return creationFunc(bindingContext, createFormsInternally);
     }
@@ -115,7 +120,8 @@ public class VisualTemplate
         }
         else
         {
-            return base.ToString();
+            return base.ToString() ?? string.Empty;
+
         }
     }
 }

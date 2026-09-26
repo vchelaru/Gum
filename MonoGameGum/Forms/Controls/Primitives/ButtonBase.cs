@@ -41,7 +41,7 @@ public class ButtonBase :
 
     public bool TakingInput => throw new NotImplementedException();
 
-    public IInputReceiver NextInTabSequence { get; set; }
+    public IInputReceiver? NextInTabSequence { get; set; }
 
     public override bool IsFocused
     { 
@@ -69,14 +69,14 @@ public class ButtonBase :
     /// With keyboard or gamepad, Click fires immediately when the activation key/button is
     /// pressed, with no release-based confirmation.
     /// </summary>
-    public event EventHandler Click;
+    public event EventHandler? Click;
 
     /// <summary>
     /// Event raised when the user pushes on the control. 
     /// This means the cursor is over the button and the primary button was not pressed last frame, but is pressed this frame.
     /// The "push" terminology comes from the Cursor's PrimaryPush property.
     /// </summary>
-    public event EventHandler Push;
+    public event EventHandler? Push;
     /// <summary>
     /// Raised every frame while this control has input focus. Can be used
     /// to perform custom per-frame logic while the control is focused.
@@ -87,13 +87,13 @@ public class ButtonBase :
     /// Event raised when any button is pressed on an Xbox360GamePad which is being used by the 
     /// GuiManager.GamePadsForUiControl.
     /// </summary>
-    public event Action<GamepadButton> ControllerButtonPushed;
+    public event Action<GamepadButton>? ControllerButtonPushed;
 
 
 #if FRB
-    public event Action<int> GenericGamepadButtonPushed;
+    public event Action<int>? GenericGamepadButtonPushed;
 
-    public event Action<FlatRedBall.Input.Mouse.MouseButtons> MouseButtonPushed;
+    public event Action<FlatRedBall.Input.Mouse.MouseButtons>? MouseButtonPushed;
 #endif
 
 #endregion
@@ -129,7 +129,7 @@ public class ButtonBase :
 
     #region Event Handler Methods
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         UpdateState();
 
@@ -143,24 +143,24 @@ public class ButtonBase :
 #endif
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         UpdateState();
 
-        Push?.Invoke(this, null);
+        Push?.Invoke(this, EventArgs.Empty);
     }
 
-    private void HandleLosePush(object sender, EventArgs args)
-    {
-        UpdateState();
-    }
-
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleLosePush(object? sender, EventArgs args)
     {
         UpdateState();
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
+    {
+        UpdateState();
+    }
+
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         UpdateState();
     }

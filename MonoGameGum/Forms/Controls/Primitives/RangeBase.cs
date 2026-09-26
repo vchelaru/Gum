@@ -42,7 +42,7 @@ public abstract class RangeBase :
     // version 1 of this would use the thumb's parent. But this is problematic if the thumb
     // parent is re-assigned after the Slider is created. Instead we should look for an explicit
     // track:
-    InteractiveGue explicitTrack;
+    InteractiveGue? explicitTrack;
     public InteractiveGue? Track => explicitTrack ?? 
         // tolerate this so users can create and assign Visual later
         thumb?.Visual.EffectiveParentGue as InteractiveGue;
@@ -205,7 +205,7 @@ public abstract class RangeBase :
     /// of source. This event may be raised multiple times if the user
     /// pushes+drags on the track or thumb.
     /// </summary>
-    public event EventHandler ValueChanged;
+    public event EventHandler? ValueChanged;
 
     /// <summary>
     /// Event raised whenever a Value change has completed. This event is raised for discrete
@@ -219,18 +219,18 @@ public abstract class RangeBase :
     /// volume, or committing changes which are too expensive to perform every frame such as saving
     /// settings to disk.
     /// </remarks>
-    public event EventHandler ValueChangeCompleted;
+    public event EventHandler? ValueChangeCompleted;
 
     /// <summary>
     /// Event raised whenever a Value change is initiated by the UI. This event is not raised
     /// when Value changes are performed in code, such as by assigning the Value property.
     /// </summary>
-    public event EventHandler ValueChangedByUi;
+    public event EventHandler? ValueChangedByUi;
 
     /// <summary>
     /// Event raised when the Orientation property is changed.
     /// </summary>
-    public event EventHandler OrientationChanged;
+    public event EventHandler? OrientationChanged;
 
     #endregion
 
@@ -269,7 +269,10 @@ public abstract class RangeBase :
             {
                 thumb = thumbVisual.FormsControlAsObject as Button;
             }
-            thumb.Push += HandleThumbPush;
+            if (thumb != null)
+            {
+                thumb.Push += HandleThumbPush;
+            }
         }
 #if FRB
         if(thumb != null)
@@ -277,9 +280,12 @@ public abstract class RangeBase :
             thumb.Visual.DragOver += HandleThumbDragFrb;
         }
         Visual.RollOver += HandleThisRollOverFrb;
-        Track.Push += HandleTrackPushFrb;
-        Track.RollOver += HandleTrackHoverFrb;
-        Track.DragOver += HandleTrackDraggingFrb;
+        if (Track != null)
+        {
+            Track.Push += HandleTrackPushFrb;
+            Track.RollOver += HandleTrackHoverFrb;
+            Track.DragOver += HandleTrackDraggingFrb;
+        }
 #else
         if (thumb != null)
         {
@@ -339,7 +345,7 @@ public abstract class RangeBase :
         }
 #endif
 
-        explicitTrack = (InteractiveGue)trackLocal;
+        explicitTrack = trackLocal as InteractiveGue;
         if (trackLocal is InteractiveGue trackAsInteractive)
         {
             trackAsInteractive.RaiseChildrenEventsOutsideOfBounds = true;
@@ -360,20 +366,32 @@ public abstract class RangeBase :
     {
         base.ReactToVisualRemoved();
 
-        thumb.Push -= HandleThumbPush;
+        if (thumb != null)
+        {
+            thumb.Push -= HandleThumbPush;
 #if FRB
-        thumb.Visual.DragOver -= HandleThumbDragFrb;
-        Visual.RollOver -= HandleThisRollOverFrb;
-        Track.Push -= HandleTrackPushFrb;
-        Track.RollOver -= HandleTrackHoverFrb;
-        Track.DragOver -= HandleTrackDraggingFrb;
+            thumb.Visual.DragOver -= HandleThumbDragFrb;
 #else
-        thumb.Visual.Dragging -= HandleDragOver;
-        Visual.RollOver -= HandleThisRollOver;
-        Track.Push -= HandleTrackPush;
-        Track.HoverOver -= HandleTrackHover;
-        Track.Dragging -= HandleTrackDragging;
+            thumb.Visual.Dragging -= HandleDragOver;
 #endif
+        }
+#if FRB
+        Visual.RollOver -= HandleThisRollOverFrb;
+#else
+        Visual.RollOver -= HandleThisRollOver;
+#endif
+        if (Track != null)
+        {
+#if FRB
+            Track.Push -= HandleTrackPushFrb;
+            Track.RollOver -= HandleTrackHoverFrb;
+            Track.DragOver -= HandleTrackDraggingFrb;
+#else
+            Track.Push -= HandleTrackPush;
+            Track.HoverOver -= HandleTrackHover;
+            Track.Dragging -= HandleTrackDragging;
+#endif
+        }
     }
 
 
@@ -447,10 +465,11 @@ public abstract class RangeBase :
         int currentSignRelativeToThumb = GetCurrentSignRelativeToValue();
 
 
-        if (IsMoveToPointEnabled)
+        // Only reached while the track is pushed, so Track is set.
+        if (IsMoveToPointEnabled && Track is { } track)
         {
-            var left = Track.GetAbsoluteX();
-            var right = Track.GetAbsoluteX() + Track.AbsoluteWidth;
+            var left = track.GetAbsoluteX();
+            var right = track.GetAbsoluteX() + track.AbsoluteWidth;
 
             var screenX = MainCursor.XRespectingGumZoomAndBounds();
 
@@ -496,20 +515,26 @@ public abstract class RangeBase :
         //    : cursorX > thumb.AbsoluteLeft + thumb.ActualWidth ? 1 : 0;
         //return currentSignRelativeToThumb;
 
+        var track = Track;
+        if (track == null)
+        {
+            return 0;
+        }
+
         var currentPercentageOver = (Value - Minimum) / (Maximum - Minimum);
         float clickedPercentageOver;
 
         if(Orientation == Orientation.Horizontal)
         {
-            var trackWidth = Track.AbsoluteWidth;
+            var trackWidth = track.AbsoluteWidth;
             var cursorX = MainCursor.XRespectingGumZoomAndBounds();
-            clickedPercentageOver = (cursorX - Track.AbsoluteLeft) / trackWidth;
+            clickedPercentageOver = (cursorX - track.AbsoluteLeft) / trackWidth;
         }
         else
         {
-            var trackHeight = Track.AbsoluteHeight;
+            var trackHeight = track.AbsoluteHeight;
             var cursorY = MainCursor.YRespectingGumZoomAndBounds();
-            clickedPercentageOver = (cursorY - Track.AbsoluteTop) / trackHeight;
+            clickedPercentageOver = (cursorY - track.AbsoluteTop) / trackHeight;
         }
 
         if(clickedPercentageOver < currentPercentageOver)
@@ -530,13 +555,13 @@ public abstract class RangeBase :
 
     #region Thumb Events
 
-    protected abstract void HandleThumbPush(object sender, EventArgs e);
+    protected abstract void HandleThumbPush(object? sender, EventArgs e);
 
-    private void HandleDragOver(object sender, EventArgs args)
+    private void HandleDragOver(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
 
-        if (cursor.WindowPushed == thumb.Visual && IsEnabled)
+        if (thumb != null && cursor.WindowPushed == thumb.Visual && IsEnabled)
         {
             UpdateThumbPositionToCursorDrag(cursor);
         }
@@ -544,10 +569,10 @@ public abstract class RangeBase :
 
     // This is handling ThisRollOver, but it only does anything if the user pushed on the thumb,
     // so moving it to the ThumbEvents region
-    private void HandleThisRollOver(object sender, EventArgs args)
+    private void HandleThisRollOver(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
-        if (cursor.WindowPushed == thumb.Visual && IsEnabled)
+        if (thumb != null && cursor.WindowPushed == thumb.Visual && IsEnabled)
         {
             UpdateThumbPositionToCursorDrag(cursor);
         }

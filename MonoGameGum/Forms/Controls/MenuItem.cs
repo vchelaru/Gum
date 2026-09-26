@@ -155,13 +155,13 @@ public class MenuItem : ItemsControl
 
     #region Events
 
-    public event EventHandler Selected;
+    public event EventHandler? Selected;
     /// <summary>
     /// Event raised when the item is activated by a cursor or touch. With a mouse, this
     /// fires on push, matching WPF menu behavior; with touch, it fires on release. Unlike
     /// ButtonBase.Click, this is not raised by keyboard or gamepad activation.
     /// </summary>
-    public event EventHandler Clicked;
+    public event EventHandler? Clicked;
 
     #endregion
 
@@ -307,7 +307,7 @@ public class MenuItem : ItemsControl
 #endregion
 
     #region Event Handlers
-    private void HandleRollOn(object sender, EventArgs args)
+    private void HandleRollOn(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
 
@@ -320,7 +320,7 @@ public class MenuItem : ItemsControl
     }
 
 
-    private void HandleRollOver(object sender, EventArgs args)
+    private void HandleRollOver(object? sender, EventArgs args)
     {
         var cursor = MainCursor;
 
@@ -342,7 +342,7 @@ public class MenuItem : ItemsControl
             GetIfIsOnThisOrChildVisual(cursor) && IsEnabled;
     }
 
-    private void HandleRollOff(object sender, EventArgs args)
+    private void HandleRollOff(object? sender, EventArgs args)
     {
         IsHighlighted = false;
 
@@ -353,7 +353,7 @@ public class MenuItem : ItemsControl
         UpdateState();
     }
 
-    private void HandlePush(object sender, EventArgs args)
+    private void HandlePush(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
@@ -369,13 +369,13 @@ public class MenuItem : ItemsControl
             if (!_clickRaisedDuringPush)
             {
                 _clickRaisedDuringPush = true;
-                Clicked?.Invoke(this, null);
+                Clicked?.Invoke(this, EventArgs.Empty);
             }
         }
     }
 
 
-    private void HandleClick(object sender, EventArgs args)
+    private void HandleClick(object? sender, EventArgs args)
     {
         if (MainCursor.LastInputDevice == InputDevice.Mouse)
         {
@@ -388,12 +388,12 @@ public class MenuItem : ItemsControl
         {
             IsSelected = true;
 
-            Clicked?.Invoke(this, null);
+            Clicked?.Invoke(this, EventArgs.Empty);
         }
     }
     #endregion
 
-    protected override void HandleItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    protected override void HandleItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         base.HandleItemsCollectionChanged(sender, e);
 
