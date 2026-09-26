@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
+using AvaloniaDataUi.Controls;
 
 namespace Gum.Avalonia.Plugins.VariableGrid;
 
@@ -158,7 +159,7 @@ public class CompactColorPicker : UserControl
         };
         _channelSliders[channel] = slider;
 
-        TextBox textBox = new TextBox
+        EditTrackingTextBox textBox = new EditTrackingTextBox
         {
             Width = 40,
             MinHeight = 22,
@@ -176,7 +177,7 @@ public class CompactColorPicker : UserControl
                 e.Handled = true;
             }
         }, RoutingStrategies.Tunnel);
-        textBox.LostFocus += (_, _) => CommitChannelText(channel);
+        textBox.EditCommitRequested += (_, _) => CommitChannelText(channel);
         _channelTextBoxes[channel] = textBox;
 
         Grid row = new Grid { ColumnDefinitions = new ColumnDefinitions("12,*,Auto") };

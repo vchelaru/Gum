@@ -161,7 +161,7 @@ public class ColorDisplay : DataUiDisplayBase
 
     private readonly TextBlock _label;
     private readonly Border _swatch;
-    private readonly TextBox _hexTextBox;
+    private readonly EditTrackingTextBox _hexTextBox;
     private readonly CompactColorPicker _colorPicker;
     private readonly TextBlock _hint;
     private DrawingColor _current;
@@ -195,7 +195,7 @@ public class ColorDisplay : DataUiDisplayBase
         // and the row is disabled.
         swatchButton.Classes.Add(GumChromeStyles.ValuePreviewButtonClass);
 
-        _hexTextBox = new TextBox { Width = 76, VerticalAlignment = VerticalAlignment.Center };
+        _hexTextBox = new EditTrackingTextBox { Width = 76, VerticalAlignment = VerticalAlignment.Center };
         ToolTip.SetTip(_hexTextBox, "Type or paste a hex color (RRGGBB or RRGGBBAA). Alpha is ignored.");
         _hexTextBox.AddHandler(KeyDownEvent, (_, e) =>
         {
@@ -205,7 +205,7 @@ public class ColorDisplay : DataUiDisplayBase
                 e.Handled = true;
             }
         }, RoutingStrategies.Tunnel);
-        _hexTextBox.LostFocus += (_, _) => CommitHexText();
+        _hexTextBox.EditCommitRequested += (_, _) => CommitHexText();
         _hexTextBox.TextChanged += (_, _) => RefreshHexValidation();
 
         StackPanel hex = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(4, 0, 0, 0) };
@@ -572,7 +572,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
 
     private TextBox CreateField()
     {
-        TextBox field = new TextBox { VerticalAlignment = VerticalAlignment.Center };
+        EditTrackingTextBox field = new EditTrackingTextBox { VerticalAlignment = VerticalAlignment.Center };
         field.AddHandler(KeyDownEvent, (_, e) =>
         {
             if (e.Key == Key.Enter)
@@ -581,7 +581,7 @@ public class CornerRadiusDisplay : DataUiDisplayBase
                 e.Handled = true;
             }
         }, RoutingStrategies.Tunnel);
-        field.LostFocus += (_, _) => Commit();
+        field.EditCommitRequested += (_, _) => Commit();
         return field;
     }
 
