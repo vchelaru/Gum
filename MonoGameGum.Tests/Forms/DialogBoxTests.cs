@@ -64,6 +64,18 @@ public class DialogBoxTests : BaseTestClass
     }
 
     [Fact]
+    public void Show_ShouldThrowDescriptiveException_WhenVisualHasNoTextInstance()
+    {
+        InteractiveGue visual = new(new InvisibleRenderable());
+        DialogBox dialogBox = new(visual);
+
+        System.InvalidOperationException exception =
+            Should.Throw<System.InvalidOperationException>(() => dialogBox.Show("Hello"));
+
+        exception.Message.ShouldContain("TextInstance");
+    }
+
+    [Fact]
     public void Show_WithLettersPerSecond_ShouldStartAtZeroLetters()
     {
         var (dialogBox, visual) = CreateDialogBox();

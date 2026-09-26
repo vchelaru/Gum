@@ -136,8 +136,8 @@ public class MenuItem : ItemsControl
         }
     }
 
-    MenuItem _parentMenuItem;
-    internal MenuItem ParentMenuItem
+    MenuItem? _parentMenuItem;
+    internal MenuItem? ParentMenuItem
     {
         get => _parentMenuItem;
         set
@@ -149,7 +149,7 @@ public class MenuItem : ItemsControl
 
     public VisualTemplate? ScrollViewerVisualTemplate { get; set; } = null;
 
-    InteractiveGue lastVisual;
+    InteractiveGue? lastVisual;
 
     #endregion
 
@@ -210,7 +210,7 @@ public class MenuItem : ItemsControl
                 if (child is InteractiveGue interactiveGue && interactiveGue.FormsControlAsObject is MenuItem menuItem)
                 {
                     child.Parent = null;
-                    Items.Add(menuItem);
+                    Items?.Add(menuItem);
                 }
             }
 
@@ -222,7 +222,7 @@ public class MenuItem : ItemsControl
 
     private void HandleSubItemContainerChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        List<MenuItem> items = null;
+        List<MenuItem>? items = null;
         if(e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
             items = new List<MenuItem>();
@@ -241,7 +241,9 @@ public class MenuItem : ItemsControl
 #if FRB
             _=FlatRedBall.Instructions.InstructionManager.DoOnMainThreadAsync(() =>
 #else
-            global::RenderingLibrary.IGumService.Default.DeferredQueue.Enqueue(() =>
+            (global::RenderingLibrary.IGumService.Default
+                ?? throw new InvalidOperationException("Cannot add menu items because IGumService.Default is not initialized"))
+                .DeferredQueue.Enqueue(() =>
 #endif
             {
                 foreach (var item in items)
@@ -250,7 +252,7 @@ public class MenuItem : ItemsControl
                     // If that's the case, layout will be suspended. Let's
                     // force resume it now:
                     item.Visual.ResumeLayout(recursive:true);
-                    this.Items.Add(item);
+                    this.Items?.Add(item);
                 }
             });
         }
@@ -427,7 +429,7 @@ public class MenuItem : ItemsControl
     /// </summary>
     /// <param name="itemVisual"></param>
     /// <returns></returns>
-    public bool IsRecursiveMenuItem(GraphicalUiElement itemVisual)
+    public bool IsRecursiveMenuItem(GraphicalUiElement? itemVisual)
     {
         foreach (var menuItem in this.MenuItemsInternal)
         {
@@ -502,7 +504,7 @@ public class MenuItem : ItemsControl
 
             foreach (var item in Items)
             {
-                MenuItem menuItem;
+                MenuItem? menuItem;
                 FrameworkElement frameworkElementItem;
 
                 if (item is FrameworkElement asFrameworkElement)
@@ -634,7 +636,7 @@ public class MenuItem : ItemsControl
         }
     }
 
-    ScrollViewer itemsPopup;
+    ScrollViewer? itemsPopup;
 
     public bool IsPopupVisible => itemsPopup?.IsVisible == true;
 
@@ -642,7 +644,7 @@ public class MenuItem : ItemsControl
 
     #region Update to state/object
 
-    public virtual void UpdateToObject(object o)
+    public virtual void UpdateToObject(object? o)
     {
         if (coreText != null)
         {

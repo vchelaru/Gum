@@ -74,14 +74,15 @@ public abstract class TextBoxBase :
         }
     }
 
-    protected GraphicalUiElement textComponent;
-    protected IFormsText coreTextObject;
+    // Required parts of the visual, assigned whenever a visual is set.
+    protected GraphicalUiElement textComponent = null!;
+    protected IFormsText coreTextObject = null!;
+    GraphicalUiElement caretComponent = null!;
 
+    protected GraphicalUiElement? placeholderComponent;
+    protected IFormsText? placeholderTextObject;
 
-    protected GraphicalUiElement placeholderComponent;
-    protected IFormsText placeholderTextObject;
-
-    protected GraphicalUiElement selectionInstance;
+    protected GraphicalUiElement? selectionInstance;
     float _selectionInstanceYOffset;
 
     // Resting X of the text instance as set by the visual template. KeepCaretEdgeInsideParent
@@ -92,9 +93,7 @@ public abstract class TextBoxBase :
 
     List<GraphicalUiElement> _selectionInstances = new List<GraphicalUiElement>();
 
-    GraphicalUiElement selectionTemplate;
-
-    GraphicalUiElement caretComponent;
+    GraphicalUiElement? selectionTemplate;
 
     /// <summary>
     /// Raised every frame while this control has input focus. Can be used
@@ -165,7 +164,7 @@ public abstract class TextBoxBase :
     /// <summary>
     /// A list of keys that should be ignored by this control.
     /// </summary>
-    public List<Keys> IgnoredKeys => null;
+    public List<Keys>? IgnoredKeys => null;
 
     /// <summary>
     /// Whether this control is currently capable of receiving input. Always true for TextBoxBase.
@@ -479,8 +478,10 @@ public abstract class TextBoxBase :
 
     protected override void RefreshInternalVisualReferences()
     {
-        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance");
-        caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance");
+        textComponent = base.Visual.GetGraphicalUiElementByName("TextInstance")
+            ?? throw new Exception("Gum object must have an object called \"TextInstance\"");
+        caretComponent = base.Visual.GetGraphicalUiElementByName("CaretInstance")
+            ?? throw new Exception("Gum object must have an object called \"CaretInstance\"");
 
         // optional:
 
@@ -500,17 +501,10 @@ public abstract class TextBoxBase :
 
         placeholderComponent = base.Visual.GetGraphicalUiElementByName("PlaceholderTextInstance");
 
-#if FULL_DIAGNOSTICS
-        if (textComponent == null) throw new Exception("Gum object must have an object called \"TextInstance\"");
-        if (caretComponent == null) throw new Exception("Gum object must have an object called \"CaretInstance\"");
-#endif
-
-        coreTextObject = textComponent.RenderableComponent as IFormsText;
+        coreTextObject = textComponent.RenderableComponent as IFormsText
+            ?? throw new Exception("The Text instance must be of type Text");
         placeholderTextObject = placeholderComponent?.RenderableComponent as IFormsText;
 
-#if FULL_DIAGNOSTICS
-        if (coreTextObject == null) throw new Exception("The Text instance must be of type Text");
-#endif
         this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
         _textRestingX = this.textComponent.X;
         caretComponent.X = 0;
@@ -530,7 +524,7 @@ public abstract class TextBoxBase :
         }
     }
 
-    protected virtual void OnTextChanged(string value)
+    protected virtual void OnTextChanged(string? value)
     {
 
     }
@@ -650,11 +644,11 @@ public abstract class TextBoxBase :
         }
         if (MainCursor.LastInputDevice == InputDevice.TouchScreen)
         {
-            if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown)
+            if (MainCursor.WindowPushed == this.Visual && MainCursor.PrimaryDown && textComponent.Parent != null)
             {
                 var xChange = MainCursor.XChange / global::RenderingLibrary.ISystemManagers.Default.Renderer.Camera.Zoom;
 
-                var stringLength = MeasureStringScaled(DisplayedText, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
+                var stringLength = MeasureStringScaled(DisplayedText ?? string.Empty, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
 
                 var minimumShift = System.Math.Min(
                     edgeToTextPadding,
@@ -711,7 +705,7 @@ public abstract class TextBoxBase :
         {
             var lineHeight = EffectiveLineHeightInPixels;
             var topOfText = this.textComponent.GetAbsoluteTop();
-            if (this.coreTextObject?.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
+            if (this.coreTextObject.VerticalAlignment == global::RenderingLibrary.Graphics.VerticalAlignment.Center)
             {
                 topOfText = this.textComponent.GetAbsoluteCenterY() - lineHeight * (coreTextObject.WrappedText.Count - 1) / 2.0f;
             }
@@ -756,13 +750,14 @@ public abstract class TextBoxBase :
     // BitmapFont.XAdvance lookup; other backends fall back to measuring a one-character string.
     // Either way this method itself needs no #if: virtual dispatch on coreTextObject picks the
     // right implementation at runtime. See https://github.com/vchelaru/Gum/issues/3542.
-    private int GetIndex(float cursorOffset, string textToUse)
+    private int GetIndex(float cursorOffset, string? textToUse)
     {
-        var index = textToUse?.Length ?? 0;
+        textToUse ??= string.Empty;
+        var index = textToUse.Length;
         float distanceMeasuredSoFar = 0;
         var fontScale = coreTextObject.FontScale;
 
-        for (int i = 0; i < (textToUse?.Length ?? 0); i++)
+        for (int i = 0; i < textToUse.Length; i++)
         {
             // GetCharacterAdvance returns raw glyph-pixel width; the rendered glyph is
             // FontScale-wider, so the hit-test must scale to match the screen-space
@@ -1033,8 +1028,11 @@ public abstract class TextBoxBase :
             absoluteX = GetXCaretPositionForLineRelativeToTextParent(coreTextObject.WrappedText[lineNumber], relativeIndexOnLine);
         }
         absoluteY = GetCenterOfYForLinePixelsFromSmall(lineNumber);
-        absoluteX += this.coreTextObject.Parent.GetAbsoluteLeft();
-        absoluteY += this.coreTextObject.Parent.GetAbsoluteTop();
+        if (this.coreTextObject.Parent is { } textParent)
+        {
+            absoluteX += textParent.GetAbsoluteLeft();
+            absoluteY += textParent.GetAbsoluteTop();
+        }
     }
 
     protected virtual void HandleCopy()
@@ -1695,11 +1693,15 @@ public abstract class TextBoxBase :
     protected void UpdateToSelection()
     {
 
-        if (selectionInstance != null && selectionLength > 0 && DisplayedText?.Length > 0)
+        var displayedText = DisplayedText;
+        if (selectionInstance != null && selectionLength > 0 && displayedText?.Length > 0)
         {
-            UpdateSelectionStartEnds();
+            UpdateSelectionStartEnds(displayedText, selectionInstance);
 
-            while (_selectionInstances.Count < selectionStartEnds.Count)
+            // Without a template (the selection's renderable can't be cloned) only the
+            // original instance is available, so only the first line shows a selection.
+            while (selectionTemplate != null && selectionInstance.Parent != null &&
+                _selectionInstances.Count < selectionStartEnds.Count)
             {
                 var newSelection = selectionTemplate.Clone();
                 _selectionInstances.Add(newSelection);
@@ -1713,7 +1715,8 @@ public abstract class TextBoxBase :
                 item.Visible = false;
             }
 
-            for (int i = 0; i < selectionStartEnds.Count; i++)
+            var selectionCount = System.Math.Min(selectionStartEnds.Count, _selectionInstances.Count);
+            for (int i = 0; i < selectionCount; i++)
             {
                 var selection = _selectionInstances[i];
 
@@ -1737,10 +1740,10 @@ public abstract class TextBoxBase :
         }
     }
 
-    private void UpdateSelectionStartEnds()
+    private void UpdateSelectionStartEnds(string displayedText, GraphicalUiElement selectionInstance)
     {
         selectionStartEnds.Clear();
-        var substring = DisplayedText.Substring(0, selectionStart);
+        var substring = displayedText.Substring(0, selectionStart);
 
         if (!IsRenderedAsSingleLine)
         {
@@ -1784,7 +1787,7 @@ public abstract class TextBoxBase :
                 var selectionPosition = new SelectionPosition();
                 selectionPosition.XStart = startXForSelection;
                 var offsetPixelsFromSmall = GetCenterOfYForLinePixelsFromSmall(i);
-                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionTemplate);
+                selectionPosition.Y = ResolveLineYForComponent(offsetPixelsFromSmall, selectionTemplate ?? selectionInstance);
 
                 selectionPosition.Width = endXForSelection - startXForSelection;
 
@@ -1796,7 +1799,7 @@ public abstract class TextBoxBase :
         {
             var selectionPosition = new SelectionPosition();
             var firstMeasure = MeasureStringScaled(substring, global::RenderingLibrary.Graphics.HorizontalMeasurementStyle.Full);
-            substring = DisplayedText.Substring(0, selectionStart + selectionLength);
+            substring = displayedText.Substring(0, selectionStart + selectionLength);
 
             selectionPosition.XStart = this.textComponent.X + firstMeasure;
             selectionPosition.Y = this.textComponent.Y;
@@ -1863,7 +1866,7 @@ public abstract class TextBoxBase :
         // height — so we don't over-clamp and undo a legitimate scroll.
         var lineCount = coreTextObject.WrappedText?.Count ?? 0;
         float contentHeight = lineCount * EffectiveLineHeightInPixels;
-        float containerHeight = caretComponent.EffectiveParentGue.AbsoluteHeight;
+        float containerHeight = caretComponent.EffectiveParentGue?.AbsoluteHeight ?? 0;
         float maxScrollUp = System.Math.Max(0f, contentHeight - containerHeight);
         float clamped = System.Math.Max(this.textComponent.Y, -maxScrollUp);
         float delta = clamped - this.textComponent.Y;
@@ -1884,6 +1887,11 @@ public abstract class TextBoxBase :
     /// </summary>
     private void KeepCaretEdgeInsideParent(LayoutAxis axis)
     {
+        if (caretComponent.EffectiveParentGue is not { } caretParent)
+        {
+            return;
+        }
+
         if (axis == LayoutAxis.Horizontal)
         {
             this.textComponent.XUnits = global::Gum.Converters.GeneralUnitType.PixelsFromSmall;
@@ -1897,7 +1905,7 @@ public abstract class TextBoxBase :
             // the text by hundreds of pixels and the asymmetric branches
             // below would never undo it once the parent reached a sane size.
             // See issue #2680.
-            float parentWidth = caretComponent.EffectiveParentGue.AbsoluteWidth;
+            float parentWidth = caretParent.AbsoluteWidth;
             if (parentWidth <= 0)
             {
                 return;
@@ -1905,7 +1913,7 @@ public abstract class TextBoxBase :
 
             float nearOfCaret = caretComponent.GetAbsoluteLeft();
             float farOfCaret = nearOfCaret + caretComponent.AbsoluteWidth;
-            float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteLeft();
+            float nearOfParent = caretParent.GetAbsoluteLeft();
             float farOfParent = nearOfParent + parentWidth;
 
             float shiftAmount = 0;
@@ -1948,7 +1956,7 @@ public abstract class TextBoxBase :
             // meaning of the existing Y value.
 
             // Same invalid-geometry guard as the horizontal branch (see #2680).
-            float parentHeight = caretComponent.EffectiveParentGue.AbsoluteHeight;
+            float parentHeight = caretParent.AbsoluteHeight;
             if (parentHeight <= 0)
             {
                 return;
@@ -1956,7 +1964,7 @@ public abstract class TextBoxBase :
 
             float nearOfCaret = caretComponent.GetAbsoluteTop();
             float farOfCaret = nearOfCaret + caretComponent.AbsoluteHeight;
-            float nearOfParent = caretComponent.EffectiveParentGue.GetAbsoluteTop();
+            float nearOfParent = caretParent.GetAbsoluteTop();
             float farOfParent = nearOfParent + parentHeight;
 
             float shiftAmount = 0;
@@ -1979,7 +1987,7 @@ public abstract class TextBoxBase :
 
     protected void UpdatePlaceholderVisibility()
     {
-        if (placeholderTextObject != null)
+        if (placeholderTextObject != null && placeholderComponent != null)
         {
             placeholderComponent.Visible = string.IsNullOrEmpty(coreTextObject.RawText);
         }

@@ -43,6 +43,40 @@ public class SplitterTests : BaseTestClass
     }
 
     [Fact]
+    public void ApplyResizeChangeInPixels_ShouldResizeNextSibling_IfSplitterIsFirstChild()
+    {
+        StackPanel parentPanel = new();
+        Splitter splitter = new();
+        splitter.Dock(Gum.Wireframe.Dock.FillHorizontally);
+        parentPanel.AddChild(splitter);
+        Panel nextPanel = new();
+        parentPanel.AddChild(nextPanel);
+        nextPanel.Visual.HeightUnits = DimensionUnitType.Absolute;
+        nextPanel.Height = 100;
+
+        splitter.ApplyResizeChangeInPixels(12);
+
+        nextPanel.Height.ShouldBe(88);
+    }
+
+    [Fact]
+    public void ApplyResizeChangeInPixels_ShouldResizeRatioWidthOnly_IfOneColumnIsRatio()
+    {
+        SetupHorizontalStack();
+        _parentPanel!.Width = 300;
+        _parentPanel.Visual.WidthUnits = DimensionUnitType.Absolute;
+        _firstPanel!.Visual.WidthUnits = DimensionUnitType.Ratio;
+        _firstPanel.Width = 1;
+        _secondPanel!.Visual.WidthUnits = DimensionUnitType.Absolute;
+        _secondPanel.Width = 100;
+
+        _splitter!.ApplyResizeChangeInPixels(12);
+
+        _firstPanel.Height.ShouldBe(40);
+        _secondPanel.Width.ShouldBe(88);
+    }
+
+    [Fact]
     public void ApplyResizeChangeInPixels_ShouldResize_IfSiblingsAreRelativeToChildren()
     {
         SetupVerticalStack();

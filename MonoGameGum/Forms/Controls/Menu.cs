@@ -36,7 +36,7 @@ public class Menu : ItemsControl
 
     protected List<MenuItem> MenuItemsInternal = new List<MenuItem>();
 
-    ReadOnlyCollection<MenuItem> menuItemsReadOnly;
+    ReadOnlyCollection<MenuItem>? menuItemsReadOnly;
 
     public ReadOnlyCollection<MenuItem> MenuItems
     {
@@ -169,7 +169,7 @@ public class Menu : ItemsControl
         {
             var menuItemPushed = (MainCursor.WindowPushed as InteractiveGue)?.FormsControlAsObject 
                 as MenuItem;
-            shouldCloseAll = menuItemPushed.Items == null || menuItemPushed.Items.Count == 0;
+            shouldCloseAll = menuItemPushed?.Items == null || menuItemPushed.Items.Count == 0;
         }
 
 
@@ -244,7 +244,7 @@ public class Menu : ItemsControl
 
     protected override void HandleCollectionReplace(int index)
     {
-        MenuItemsInternal[index].UpdateToObject(Items[index]);
+        MenuItemsInternal[index].UpdateToObject(Items?[index]);
     }
 
     #endregion

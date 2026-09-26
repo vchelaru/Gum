@@ -136,33 +136,33 @@ public static class GraphicalUiElementFormsExtensions
     }
 
     [Obsolete("Use FindFormsControl<T>(name) instead.")]
-    public static FrameworkElementType TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
+    public static FrameworkElementType? TryGetFrameworkElementByName<FrameworkElementType>(this GraphicalUiElement graphicalUiElement, string name) where FrameworkElementType : FrameworkElement
     {
         var frameworkVisual = graphicalUiElement.GetGraphicalUiElementByName(name);
 
         if (frameworkVisual == null)
         {
-            return default(FrameworkElementType);
+            return null;
         }
 
         var frameworkVisualAsInteractiveGue = frameworkVisual as InteractiveGue;
 
         if (frameworkVisualAsInteractiveGue == null)
         {
-            return default(FrameworkElementType);
+            return null;
         }
 
         var formsControlAsObject = frameworkVisualAsInteractiveGue?.FormsControlAsObject;
 
         if (formsControlAsObject == null)
         {
-            return default(FrameworkElementType);
+            return null;
         }
 
         var frameworkElement = formsControlAsObject as FrameworkElementType;
         if (frameworkElement == null)
         {
-            return default(FrameworkElementType);
+            return null;
 
         }
         return frameworkElement;
