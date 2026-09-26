@@ -57,9 +57,8 @@ below means a C# Avalonia view bound to the same VM. Progress, in the order the 
   WPF grid is now view-model state with tests (`IsFontRangesReadOnly`, `AvailableLanguages`,
   `Reloaded`, `CloseRequested`), which `ProjectPropertiesChangeLogic` ignores as non-project data.
   The WPF `ProjectPropertiesControl` keeps its `DataUiGrid` and reacts to those; the Avalonia head
-  has a hand-built form (`ProjectPropertiesView`). **Gap, reversible:** in Avalonia the localization
-  file list is read-only and the single-pixel texture is a plain path box; adding/removing files and
-  a Browse button wait for phase 70's file editors rather than copying WpfDataUi's picker logic.
+  lays out an `AvaloniaDataUi` grid through the same `ProjectPropertiesGridPresenter`
+  (`ProjectPropertiesView`), so both heads show the same fields and file editors.
 
 ### Inventory: every XAML in scope and its Avalonia twin (2026-09-10)
 

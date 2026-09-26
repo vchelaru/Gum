@@ -1,4 +1,5 @@
 using System.Linq;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
@@ -23,9 +24,9 @@ using Shouldly;
 namespace Gum.Avalonia.Tests;
 
 /// <summary>
-/// Alt+Up/Down reordering a state, driven through the real Avalonia <see cref="TreeView"/> the
-/// States tab renders (issue #4755: reordering a state deselects it in the Avalonia head, which
-/// never happened in WPF).
+/// Keyboard and mouse behavior of the real Avalonia <see cref="TreeView"/> the States tab renders:
+/// Alt+Up/Down reordering (issue #4755: reordering a state deselected it in the Avalonia head, which
+/// never happened in WPF), delete focus, and right-click selection.
 /// </summary>
 public class StateTreeViewTests
 {
@@ -158,6 +159,24 @@ public class StateTreeViewTests
         TreeViewItem siblingRow = window.GetVisualDescendants().OfType<TreeViewItem>()
             .Single(item => item.DataContext is StateViewModel state && state.Data == sibling);
         siblingRow.IsFocused.ShouldBeTrue();
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public void RightClickingAState_SelectsItBeforeTheMenuOpens()
+    {
+        // The WPF States tree selects the row under a right-click so its menu acts on that state;
+        // the Avalonia head relies on TreeView's own right-press selection for the same thing.
+        (Window window, StateViewModel[] states, _) = CreateTreeWithStates(count: 2, selected: 0);
+        TreeViewItem container = FindContainer(window, states[1]);
+        Point point = container.TranslatePoint(new Point(20, 8), window)!.Value;
+
+        window.MouseDown(point, MouseButton.Right, RawInputModifiers.None);
+        window.MouseUp(point, MouseButton.Right, RawInputModifiers.None);
+        Dispatcher.UIThread.RunJobs();
+
+        states[1].IsSelected.ShouldBeTrue();
+        states[0].IsSelected.ShouldBeFalse();
         window.Close();
     }
 

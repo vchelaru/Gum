@@ -96,6 +96,8 @@ The Font Generator project property controls which tool Gum uses to bake `.fnt` 
 
 You can change the setting at any time in **Project Properties**. The next FontCache rebuild uses the chosen generator.
 
+BMFont runs only on Windows. On macOS and Linux, Gum generates fonts with KernSmith even when a project is set to BMFont, and the Font Generator property is read-only. The project keeps its BMFont setting, so fonts generated on Windows still use BMFont.
+
 {% hint style="info" %}
 **As of May 2026:** New projects default to **KernSmith**. Before this, the default was **BMFont**. Existing projects keep their current setting — opening an older project in a newer version of the Gum tool does not switch its generator, and there is no auto-migration.
 {% endhint %}

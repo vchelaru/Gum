@@ -90,7 +90,7 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
     #region Interface Lists
 
 
-    [ImportMany(AllowRecomposition = true)]
+    /// <summary>The plugins created by <see cref="PluginInstantiator"/>; null until plugins load.</summary>
     public IEnumerable<PluginBase>? Plugins { get; set; }
 
     /// <summary>The loaded plugins; throws if <see cref="Plugins"/> hasn't been set yet.</summary>
@@ -986,9 +986,9 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
                 container.Compose(batch);
             }
 
-            using (StartupTiming.Time("    container.ComposeParts (plugin ctors)"))
+            using (StartupTiming.Time("    create plugins (plugin ctors)"))
             {
-                container.ComposeParts(instance);
+                instance.Plugins = new PluginInstantiator(instance._outputManager).CreatePlugins(container, catalog);
             }
         }
         catch (Exception e)
@@ -1028,16 +1028,10 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
         #region Start all plugins
 
-        // Defense in depth, not a workaround for a known-active bug: the specific cause we found
-        // and fixed (PluginManager's own [Export("LocalizationService")] making MEF treat it as an
-        // implicit, separately-activated part - see the ctor comment above and #3880) is gone. But
-        // LoadPlugins still composes the container in two separate passes (Compose(batch) then
-        // ComposeParts(instance)) against a Plugins import marked AllowRecomposition = true, which
-        // is inherently easy to misuse into double-realizing an export again. Starting the same
-        // plugin twice would double every side effect its StartUp() has (menu items, event
-        // subscriptions, etc.) and can crash outright (e.g. a duplicate menu item under the same
-        // parent). Surface it rather than silently starting the plugin twice OR silently dropping
-        // the dupe with no signal.
+        // The same plugin type can reach the catalog twice (the same class compiled into two
+        // assemblies). Starting it twice would double every side effect of its StartUp()
+        // and can crash outright (a duplicate menu item under the same parent), so the second is
+        // reported and skipped.
         var startedPluginTypes = new Dictionary<Type, PluginBase>();
         using (StartupTiming.Time("    StartupPlugin on all plugins (total)"))
         {

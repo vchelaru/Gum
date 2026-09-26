@@ -161,6 +161,9 @@ namespace Gum.Settings
                 }
                 catch
                 {
+                    // The next save overwrites the file, so keep the unreadable one (and the recent
+                    // projects in it) beside it.
+                    File.Copy(GeneralSettingsFileName, GeneralSettingsFileName + ".unreadable", overwrite: true);
                     toReturn = new GeneralSettingsFile();
                 }
             }

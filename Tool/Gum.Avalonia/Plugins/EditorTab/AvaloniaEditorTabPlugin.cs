@@ -47,8 +47,8 @@ namespace Gum.Avalonia.Plugins.EditorTab;
 /// <summary>
 /// The Avalonia head's editor tab: <see cref="EditorTabPluginBase"/> completed with the Avalonia
 /// canvas, a code-built toolbar over the shared <see cref="EditorViewModel"/>, Avalonia scroll
-/// bars, an Avalonia context menu, and file drops. Render-target shaders have no resolver here
-/// yet (the WPF head's compiler ships Windows-only binaries), so shaded containers preview unshaded.
+/// bars, an Avalonia context menu, and file drops. Render-target shaders compile for OpenGL, since
+/// this head renders through KNI's SDL2/GL backend.
 /// </summary>
 [Export(typeof(PluginBase))]
 public class AvaloniaEditorTabPlugin : EditorTabPluginBase

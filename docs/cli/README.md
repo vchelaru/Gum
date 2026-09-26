@@ -12,7 +12,7 @@ Use **GumCli** when:
 - You are an AI agent working with Gum projects programmatically
 
 {% hint style="info" %}
-The full **Gum** tool runs on Linux via WINE if you prefer the visual editor. See the [Setup](../gum-tool/setup/README.md) page for details.
+The full **Gum** tool runs natively on Windows, macOS, and Linux if you prefer the visual editor. See the [Setup](../gum-tool/setup/README.md) page for details.
 {% endhint %}
 
 ## Installation

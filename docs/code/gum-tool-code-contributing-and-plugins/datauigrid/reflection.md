@@ -3,8 +3,9 @@
 The default behavior for DataUiGrid is to reflect properties from the assigned Instance. When the Instance is assigned, the Grid automatically populates its Categories with members based on reflection.&#x20;
 
 ```csharp
+// Initialize
 // Initially categories will be empty
-DataGrid.Instance = someObject;
+grid.Instance = someObject;
 // Now, the Categories contains one instance, 
 // and this category contains one InstanceMember for each reflected property
 ```
@@ -18,10 +19,10 @@ By default all public fields and properties are displayed in a DataUiGrid. To co
 For example, the following code clears the properties, and shows only X, Y, and Z:
 
 ```csharp
-var dataGrid = MainSpineControl.DataGrid;
-dataGrid.Instance = viewModel;
+// Initialize
+grid.Instance = viewModel;
 
-var category = dataGrid.Categories[0];
+var category = grid.Categories[0];
 
 category.Members.Clear();
 
