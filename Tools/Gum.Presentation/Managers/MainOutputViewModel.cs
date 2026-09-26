@@ -59,8 +59,15 @@ public partial class MainOutputViewModel : ViewModel, IOutputManager
     /// <inheritdoc/>
     public event Action? ErrorAdded;
 
+    /// <summary>
+    /// Whether any error has been added. Errors can be written before anything subscribes to
+    /// <see cref="ErrorAdded"/> (the plugin catalog reports skipped assemblies before plugins start).
+    /// </summary>
+    public bool HasErrors { get; private set; }
+
     public void AddError(string value)
     {
+        HasErrors = true;
         Echo("ERROR:  " + value);
         OutputText += "\n[" + DateTime.Now.ToShortTimeString() + "] ERROR:  " + value;
 

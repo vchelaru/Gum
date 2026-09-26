@@ -23,11 +23,19 @@ namespace Gum.Plugins.Output
             // Errors written to Output are silent otherwise, so bring the tab forward rather than
             // interrupting with a dialog. Selecting a hidden tab deselects the visible one in this
             // dock area without showing anything, so show it first.
-            _mainOutputViewModel.ErrorAdded += () =>
+            void BringForward()
             {
                 tab.Show();
                 tab.IsSelected = true;
-            };
+            }
+
+            _mainOutputViewModel.ErrorAdded += BringForward;
+
+            // A plugin that failed to load was reported before this tab existed.
+            if (_mainOutputViewModel.HasErrors)
+            {
+                BringForward();
+            }
         }
     }
 }
