@@ -607,6 +607,13 @@ public class VariableGridEntry
             return null;
         }
 
+        // A category state can't drop the variable, so Make Default sets a value instead of removing
+        // it; preview that value, not what removal would resolve to.
+        if (StateSaveCategory != null && VariableSave is { } categoryVariable && ElementSave is { } element)
+        {
+            return GetCategoryResetValue(element, categoryVariable).Value;
+        }
+
         var effectiveVariableName = VariableSave?.Name ?? _variableName;
         var toReturn = _stateSave?.GetValueRecursive(effectiveVariableName, ignoreOwnValue: true);
 
@@ -849,26 +856,27 @@ public class VariableGridEntry
                 }
                 else if (isPartOfCategory)
                 {
-                    var variableInDefault = selectedElement.GetDefaultStateOrThrow().GetVariableSave(variable.Name);
-                    if (variableInDefault != null)
+                    var reset = GetCategoryResetValue(selectedElement, variable);
+                    switch (reset.Source)
                     {
-                        _guiCommands.PrintOutput(
-                            $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
-
-                        variable.Value = variableInDefault.Value;
-                    }
-                    else
-                    {
-                        // If it's a state, we can un-set that back to null, that's okay:
-                        if (variable.IsState(selectedElement))
-                        {
+                        case CategoryResetSource.DefaultState:
+                            _guiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value in the default state");
+                            variable.Value = reset.Value;
+                            break;
+                        case CategoryResetSource.ClearedState:
                             variable.Value = null;
                             variable.SetsValue = true;
-                        }
-                        else
-                        {
-                            _guiCommands.PrintOutput("Could not set value to default because the default state doesn't set this value");
-                        }
+                            break;
+                        case CategoryResetSource.Inherited:
+                            _guiCommands.PrintOutput(
+                                $"The variable {variable.Name} is part of the category {StateSaveCategory!.Name} so it cannot be removed. Instead, the value has been set to the value the default state inherits");
+                            variable.Value = reset.Value;
+                            break;
+                        default:
+                            _guiCommands.PrintOutput(
+                                $"Could not set {variable.Name} to default because neither the default state nor its base types set this value");
+                            break;
                     }
                 }
                 else
@@ -920,6 +928,38 @@ public class VariableGridEntry
         }
 
         NotifyVariableLogic(Instance, VariablePropertyCommitType.Full, trySave: true);
+    }
+
+    private enum CategoryResetSource { DefaultState, ClearedState, Inherited, NotFound }
+
+    private readonly record struct CategoryResetValue(CategoryResetSource Source, object? Value);
+
+    /// <summary>
+    /// The value Make Default gives <paramref name="variable"/> in a category state. Every state in a
+    /// category sets the variable, so it can't be removed; it takes the default state's value, falling
+    /// back to what the default state inherits (base type, standard element), which is also the value
+    /// <c>VariableInCategoryPropagationLogic</c> gives the category's other states. A state variable
+    /// the default state doesn't set is cleared instead. Shared by <see cref="ResetToDefault"/> and
+    /// <see cref="GetMakeDefaultPreviewValue"/> so the menu label shows what the action sets.
+    /// </summary>
+    private static CategoryResetValue GetCategoryResetValue(ElementSave element, VariableSave variable)
+    {
+        var defaultState = element.GetDefaultStateOrThrow();
+        var variableInDefault = defaultState.GetVariableSave(variable.Name);
+        if (variableInDefault != null)
+        {
+            return new CategoryResetValue(CategoryResetSource.DefaultState, variableInDefault.Value);
+        }
+
+        if (variable.IsState(element))
+        {
+            return new CategoryResetValue(CategoryResetSource.ClearedState, null);
+        }
+
+        var inheritedValue = defaultState.GetValueRecursive(variable.Name);
+        return inheritedValue != null
+            ? new CategoryResetValue(CategoryResetSource.Inherited, inheritedValue)
+            : new CategoryResetValue(CategoryResetSource.NotFound, null);
     }
 
     #endregion
