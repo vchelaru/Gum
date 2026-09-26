@@ -70,9 +70,10 @@ public static class Program
         return Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration(cfg =>
             {
-                if (!File.Exists(settingsPath))
+                string? unreadableCopy = AppSettingsFile.EnsureLoadable(settingsPath);
+                if (unreadableCopy != null)
                 {
-                    File.WriteAllText(settingsPath, "{}");
+                    Console.Error.WriteLine($"Could not read {settingsPath}; started with default theme and layout. The old file was moved to {unreadableCopy}.");
                 }
 
                 cfg.Sources.Clear();

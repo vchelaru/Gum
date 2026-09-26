@@ -4,6 +4,7 @@ using System.Reflection;
 using Gum.Avalonia.Plugins;
 using Gum.Avalonia.Services;
 using Gum.Avalonia.Shell;
+using Gum.Managers;
 using Gum.Plugins;
 using Gum.Plugins.BaseClasses;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,6 +113,19 @@ public class PluginHostTests
         names.ShouldContain("MainFileWatchPlugin");
         names.ShouldContain("MainRecentFilesPlugin");
         names.ShouldContain("MainInheritancePlugin");
+    }
+
+    [AvaloniaFact]
+    public void PluginManager_ReportsNoBuiltInPluginItCouldNotCreate()
+    {
+        // Plugins are created one at a time and a failure goes to the Output tab rather than
+        // stopping the rest, so this is where a built-in plugin missing an export shows up.
+        PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
+        pluginManager.IsInitialized.ShouldBeTrue();
+
+        string output = TestAppBuilder.Services.GetRequiredService<MainOutputViewModel>().OutputText;
+
+        output.ShouldNotContain("was not loaded");
     }
 
     [AvaloniaFact]

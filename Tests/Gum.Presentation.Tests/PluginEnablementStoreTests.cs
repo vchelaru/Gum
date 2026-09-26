@@ -21,6 +21,23 @@ public class PluginEnablementStoreTests : IDisposable
         {
             File.Delete(_fileName);
         }
+        if (File.Exists(_fileName + ".unreadable"))
+        {
+            File.Delete(_fileName + ".unreadable");
+        }
+    }
+
+    [Fact]
+    public void Load_UnreadableFile_EnablesEveryPluginAndKeepsTheOldFile()
+    {
+        // Loaded during startup, so a throw here would stop the tool from starting at all.
+        File.WriteAllText(_fileName, "<PluginSettingsSave><DisabledPlugins><string>Some");
+        PluginEnablementStore store = new(_fileName);
+
+        store.Load();
+
+        store.IsDisabled("SomePlugin").ShouldBeFalse();
+        File.ReadAllText(_fileName + ".unreadable").ShouldBe("<PluginSettingsSave><DisabledPlugins><string>Some");
     }
 
     [Fact]
