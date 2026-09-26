@@ -46,8 +46,6 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 
 ## Avalonia head tests (Gum.Avalonia.Tests)
 
-Tab-level headless harnesses (window driver, project fixture, scripted dialogs) are in `Tests/Gum.Avalonia.Tests/Harness/README.md`.
-
 - Anything that creates an Avalonia object (controls, `ResourceDictionary`, geometry) must be
   `[AvaloniaFact]`, which runs on the headless UI thread; a plain `[Fact]` throws "Call from invalid
   thread".
@@ -60,12 +58,13 @@ Tab-level headless harnesses (window driver, project fixture, scripted dialogs) 
 - `MainWindow` is a container singleton that `HeadCompositionTests` shows and closes. A test that needs it must not `Show()` it again (a closed window cannot be re-shown) and must not build a second one through `ActivatorUtilities` (it re-parents the singleton plugin tab controls and breaks unrelated tests). Read its state through `window.Content` without showing it.
 - `HeadProcessTests` launches the built head (`Tool/Gum.Avalonia/bin/<Config>/net10.0`) on a copied
   fixture; it skips without a display and on CI.
-- To drive a whole plugin tab with real input, follow `Animations/AnimationEditorHarness`: build the
-  plugin with `ActivatorUtilities`, set its `[Import]` properties (`DialogService` gets a scripted
-  double, so no dialog can hang the run), `StartUp()`, then add it to both `PluginManager.Plugins`
-  and `PluginManager.PluginContainers` (events are dispatched only to plugins with a container) and
-  host its tab's content in a test window. Remove it all again in `Dispose`, and re-register the
-  head's own plugin as the animation undo provider.
+- To drive a whole plugin tab with real input, build on the shared pieces in `Harness/README.md`:
+  `ToolProjectFixture` (temp project, scripted dialogs, editor tab plugin kept out) and
+  `HeadlessWindowDriver` (input, pixel reads). `Animations/AnimationEditorHarness` and
+  `VariableGrid/VariableGridHarness` are the examples. A plugin added by hand must go in both
+  `PluginManager.Plugins` and `PluginManager.PluginContainers` (events are dispatched only to
+  plugins with a container). `PluginFailureGuardAttribute` fails the test that disabled a guarded
+  plugin and re-enables it afterwards, so every test starts with the same plugin set.
 - A list's own arrow-key navigation runs before a bubbling `KeyDown` handler and marks the event
   handled whatever the modifiers, so an Alt+arrow hotkey on a `ListBox` needs
   `AddHandler(KeyDownEvent, ..., RoutingStrategies.Tunnel)`.
