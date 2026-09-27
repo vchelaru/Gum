@@ -191,6 +191,56 @@ namespace Gum.Graphics.Animation
         #endregion
     }
 
+    /// <summary>
+    /// Loads an animation chain file assigned as a Sprite or NineSlice <c>SourceFile</c>. Shared by
+    /// every backend's property dispatcher so an .achx/.achj source loads the same way everywhere.
+    /// </summary>
+    public static class AnimationChainListFileLoader
+    {
+        /// <summary>
+        /// Whether <paramref name="value"/> is an animation chain source file: .achx (XML) or
+        /// .achj (JSON, see AnimationChainListSave.FromFile).
+        /// </summary>
+        public static bool IsAnimationChainFile(string value) =>
+            value.EndsWith(".achx") || value.EndsWith(".achj");
+
+        /// <summary>
+        /// Loads the animation chains in <paramref name="value"/>, resolving a relative path against
+        /// <see cref="FileManager.RelativeDirectory"/> (written back to <paramref name="value"/>) and
+        /// reusing the <paramref name="loaderManager"/> cache when texture caching is on.
+        /// </summary>
+        public static AnimationChainList? Load(ref string value,
+            // fully qualify to avoid Android naming conflicts
+            global::RenderingLibrary.Content.LoaderManager loaderManager)
+        {
+            if (FileManager.IsRelative(value))
+            {
+                value = FileManager.RelativeDirectory + value;
+
+                value = FileManager.RemoveDotDotSlash(value);
+            }
+
+            AnimationChainList? animationChainList = null;
+
+            if (loaderManager.CacheTextures)
+            {
+                animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
+            }
+
+            if (animationChainList == null)
+            {
+                var animationChainListSave = AnimationChainListSave.FromFile(value);
+                animationChainList = animationChainListSave.ToAnimationChainList();
+                if (loaderManager.CacheTextures)
+                {
+                    loaderManager.AddDisposable(value, animationChainList);
+                }
+            }
+
+            return animationChainList;
+        }
+    }
+
     public static class AnimationChainListSaveExtensionMethods
     {
         // todo - the contentManagerName parameter is unused, but FRB codegen depends on it. Need to increment FRB version to remove this, but that's a pain, so making it optional for now

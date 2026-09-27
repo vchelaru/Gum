@@ -664,9 +664,9 @@ public partial class CustomSetPropertyOnRenderable
         {
             nineSlice.SetSingleTexture(null);
         }
-        else if (IsAnimationChainFile(value))
+        else if (AnimationChainListFileLoader.IsAnimationChainFile(value))
         {
-            AnimationChainList? animationChainList = GetAnimationChainList(ref value, loaderManager);
+            AnimationChainList? animationChainList = AnimationChainListFileLoader.Load(ref value, loaderManager);
 
             nineSlice.AnimationChains = animationChainList;
 
@@ -3197,12 +3197,12 @@ public partial class CustomSetPropertyOnRenderable
 
             graphicalUiElement.UpdateLayout();
         }
-        else if (IsAnimationChainFile(value))
+        else if (AnimationChainListFileLoader.IsAnimationChainFile(value))
         {
             AnimationChainList? animationChainList = null;
             try
             {
-                animationChainList = GetAnimationChainList(ref value, loaderManager);
+                animationChainList = AnimationChainListFileLoader.Load(ref value, loaderManager);
                 sprite.AnimationChains = animationChainList;
             }
             catch(Exception ex)
@@ -3299,44 +3299,6 @@ public partial class CustomSetPropertyOnRenderable
         }
         handled = true;
         return handled;
-    }
-
-    /// <summary>
-    /// Whether <paramref name="value"/> is an animation chain source file — .achx (XML) or
-    /// .achj (JSON, see AnimationChainListSave.FromFile).
-    /// </summary>
-    private static bool IsAnimationChainFile(string value) =>
-        value.EndsWith(".achx") || value.EndsWith(".achj");
-
-    private static AnimationChainList? GetAnimationChainList(ref string value,
-        // fully qualify to avoid Android namign conflicts
-        global::RenderingLibrary.Content.LoaderManager loaderManager)
-    {
-        if (ToolsUtilities.FileManager.IsRelative(value))
-        {
-            value = ToolsUtilities.FileManager.RelativeDirectory + value;
-
-            value = ToolsUtilities.FileManager.RemoveDotDotSlash(value);
-        }
-
-        AnimationChainList? animationChainList = null;
-
-        if (loaderManager.CacheTextures)
-        {
-            animationChainList = loaderManager.GetDisposable(value) as AnimationChainList;
-        }
-
-        if (animationChainList == null)
-        {
-            var animationChainListSave = AnimationChainListSave.FromFile(value);
-            animationChainList = animationChainListSave.ToAnimationChainList();
-            if (loaderManager.CacheTextures)
-            {
-                loaderManager.AddDisposable(value, animationChainList);
-            }
-        }
-
-        return animationChainList;
     }
 
     public static void AddRenderableToManagers(IRenderableIpso renderable, ISystemManagers iSystemManagers, Layer? layer)
