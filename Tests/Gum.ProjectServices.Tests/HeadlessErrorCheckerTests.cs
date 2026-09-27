@@ -714,6 +714,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         ComponentSave component = new ComponentSave { Name = "BadColorComponent", BaseType = "Container" };
         StateSave state = new StateSave { Name = "Default", ParentContainer = component };
         component.States.Add(state);
+        component.Instances.Add(new InstanceSave { Name = "Source", BaseType = "ColoredRectangle", ParentContainer = component });
 
         state.Variables.Add(new VariableSave { Name = "Source.Red", Type = "int", Value = 100, SetsValue = true });
         state.Variables.Add(new VariableSave { Name = "Source.Green", Type = "int", Value = 20, SetsValue = true });
@@ -1581,6 +1582,123 @@ public class HeadlessErrorCheckerTests : BaseTestClass
         IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
 
         errors.ShouldNotContain(item => item.Code == "GUM0007");
+    }
+
+    #endregion
+
+    #region GUM0009 — Variable reference reads from something the project does not have
+
+    [Theory]
+    [InlineData("Color = Components/Styles.Primary.FillColor", "Components/Styles")]
+    [InlineData("X = Screens/Menus/Main.Width", "Screens/Menus/Main")]
+    [InlineData("Width = Standards/Oval.Width + 10", "Standards/Oval")]
+    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceNamesElementProjectDoesNotHave(string line, string missingElement)
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, line);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Severity.ShouldBe(ErrorSeverity.Error);
+        error.ElementName.ShouldBe("Label");
+        error.Message.ShouldContain(line);
+        error.Message.ShouldContain(missingElement);
+    }
+
+    [Theory]
+    [InlineData("Color = Components/Styles.Primary.Nope", "Primary.Nope")]
+    [InlineData("Color = Components/Styles.Secondary.Color", "Secondary.Color")]
+    [InlineData("Width = Ghost.Width", "Ghost.Width")]
+    [InlineData("Visible = Missing", "Missing")]
+    public void GetErrorsFor_ShouldReportGum0009_WhenReferenceNamesVariableOrInstanceElementDoesNotHave(string line, string missingPath)
+    {
+        AddStylesComponent("Styles", colorInstanceName: "Primary");
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, line);
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain(missingPath);
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldNotReportGum0009_WhenEveryReferenceResolves()
+    {
+        ComponentSave styles = AddStylesComponent("Styles", colorInstanceName: "Primary");
+        styles.DefaultState.Variables.Add(new VariableSave { Name = "Primary.Width", ExposedAsName = "PrimaryWidth", Type = "float", Value = 5f, SetsValue = true });
+        styles.Categories.Add(new StateSaveCategory { Name = "Theme" });
+        styles.DefaultState.Variables.Add(new VariableSave { Name = "Spacing", Type = "float", Value = 4f, SetsValue = true, IsCustomVariable = true });
+        ComponentSave derivedStyles = new ComponentSave { Name = "Folder/DerivedStyles", BaseType = "Styles" };
+        derivedStyles.States.Add(new StateSave { Name = "Default", ParentContainer = derivedStyles });
+        Project.Components.Add(derivedStyles);
+
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Background",
+            "Color = Components/Styles.Primary.Color",
+            "Width = Components/Styles.PrimaryWidth * 2",
+            "Height = Components/Folder/DerivedStyles.Primary.Height + Components/Styles.Spacing",
+            "Visible = Background.Visible && !false && Components/Styles.ThemeState == \"Dark\"",
+            "Text = \"Width: Ghost.Width \" + Background.Width",
+            "X = Background.Width > 1.5 ? AbsoluteWidth : 0",
+            "Y = global::Localization.CurrentLanguage",
+            "//Width = Ghost.Width");
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.Where(item => item.Code == "GUM0009").Select(item => item.Message).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009_WhenInstanceScopedReferenceNamesMissingElement()
+    {
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: "Background", "Color = Components/Styles.Primary.FillColor");
+        component.Instances.Add(new InstanceSave { Name = "Background", BaseType = "ColoredRectangle", ParentContainer = component });
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        ErrorResult error = errors.ShouldHaveSingleItem();
+        error.Code.ShouldBe("GUM0009");
+        error.Message.ShouldContain("Background.VariableReferences");
+    }
+
+    [Fact]
+    public void GetErrorsFor_ShouldReportGum0009AsMissingElement_WhenReferencedElementFileIsMissing()
+    {
+        // A project that still lists an element whose file is gone loads a placeholder for it.
+        ComponentSave styles = AddStylesComponent("Styles", colorInstanceName: "Primary");
+        styles.IsSourceFileMissing = true;
+        ComponentSave component = AddComponentWithReferences("Label", sourceObject: null, "Color = Components/Styles.Primary.Color");
+
+        IReadOnlyList<ErrorResult> errors = _sut.GetErrorsFor(component, Project);
+
+        errors.ShouldHaveSingleItem().Message.ShouldContain("from Components/Styles, which the project does not have");
+    }
+
+    private ComponentSave AddStylesComponent(string name, string colorInstanceName)
+    {
+        ComponentSave styles = new ComponentSave { Name = name, BaseType = "Container" };
+        styles.States.Add(new StateSave { Name = "Default", ParentContainer = styles });
+        styles.Instances.Add(new InstanceSave { Name = colorInstanceName, BaseType = "ColoredRectangle", ParentContainer = styles });
+        Project.Components.Add(styles);
+        return styles;
+    }
+
+    private ComponentSave AddComponentWithReferences(string name, string? sourceObject, params string[] lines)
+    {
+        ComponentSave component = new ComponentSave { Name = name, BaseType = "Container" };
+        StateSave state = new StateSave { Name = "Default", ParentContainer = component };
+        component.States.Add(state);
+        VariableListSave<string> references = new VariableListSave<string>
+        {
+            Name = sourceObject == null ? "VariableReferences" : sourceObject + ".VariableReferences",
+            Type = "string"
+        };
+        references.Value.AddRange(lines);
+        state.VariableLists.Add(references);
+        Project.Components.Add(component);
+        return component;
     }
 
     #endregion

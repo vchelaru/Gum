@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using ToolsUtilities;
 
 namespace Gum.ProjectServices;
@@ -145,6 +146,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         errors.AddRange(GetInvalidEnumValueErrorsFor(element));
         errors.AddRange(GetAchxOriginErrorsFor(element, project));
         errors.AddRange(GetVariableReferenceConflictErrorsFor(element));
+        errors.AddRange(GetUnresolvableVariableReferenceErrorsFor(element));
         errors.AddRange(GetSelfReferentialCategoryStateErrorsFor(element));
 
         foreach (var source in _additionalErrorSources)
@@ -327,6 +329,221 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
         value is float || value is double || value is int || value is long || value is decimal;
 
     private static string FormatValue(object? value) => value?.ToString() ?? "(null)";
+
+    #endregion
+
+    #region GUM0009 — Variable reference reads from something the project does not have
+
+    // An element-qualified path such as "Components/Folder/Styles.Primary.Red". Group 1 is the
+    // element's path, group 2 the variable path after it (empty when the path names only the element).
+    private static readonly Regex QualifiedReferencePathRegex = new Regex(
+        @"(?<![\w.])((?:Components|Screens|Standards)/[\w/]+)((?:\.\w+)*)", RegexOptions.Compiled);
+
+    // An unqualified path such as "Background.Width" or "Width", read from the reference's own element.
+    private static readonly Regex LocalReferencePathRegex = new Regex(
+        @"(?<![\w.:])[A-Za-z_]\w*(?:\.\w+)*", RegexOptions.Compiled);
+
+    // String literals, and the reserved global:: identifiers (global::Localization.CurrentLanguage),
+    // name nothing in the project.
+    private static readonly Regex NonReferenceTextRegex = new Regex(
+        @"""(?:[^""\\]|\\.)*""|global::[\w.]+", RegexOptions.Compiled);
+
+    private static readonly HashSet<string> ReferenceKeywords = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "true", "false", "null",
+    };
+
+    // Resolved from the live layout in the tool (see EvaluatedSyntax), never stored on a state.
+    private static readonly HashSet<string> RuntimeComputedVariableNames = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "AbsoluteX", "AbsoluteY", "AbsoluteLeft", "AbsoluteTop",
+        "AbsoluteRight", "AbsoluteBottom", "AbsoluteWidth", "AbsoluteHeight",
+    };
+
+    /// <summary>
+    /// Flags a <c>VariableReferences</c> line whose right side reads from an element, instance or
+    /// variable the project does not have. Such a line never resolves, so the value it should set
+    /// silently stays at its default. The usual causes are external edits and partial imports,
+    /// since the tool's own renames keep references in sync.
+    /// </summary>
+    private static List<ErrorResult> GetUnresolvableVariableReferenceErrorsFor(ElementSave element)
+    {
+        var errors = new List<ErrorResult>();
+        foreach (var state in element.AllStates)
+        {
+            foreach (var variableList in state.VariableLists)
+            {
+                if (variableList.GetRootName() != "VariableReferences" || variableList.ValueAsIList == null)
+                {
+                    continue;
+                }
+                ElementSave? channelOwner = ElementSaveExtensions.ResolveChannelOwner(state, variableList.SourceObject);
+                foreach (object? item in variableList.ValueAsIList)
+                {
+                    if (item is not string line || string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("//"))
+                    {
+                        continue;
+                    }
+                    string? problem = ElementSaveExtensions.ExpandCompositeReferenceLine(line, channelOwner)
+                        .Select(expanded => FindUnresolvableReference(element, expanded))
+                        .FirstOrDefault(found => found != null);
+                    if (problem == null)
+                    {
+                        continue;
+                    }
+                    errors.Add(new ErrorResult
+                    {
+                        ElementName = element.Name,
+                        Code = "GUM0009",
+                        Severity = ErrorSeverity.Error,
+                        Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies."
+                    });
+                }
+            }
+        }
+        return errors;
+    }
+
+    /// <summary>
+    /// Returns a description of the first thing the right side of <paramref name="line"/> reads
+    /// that does not exist, or null when every path it reads resolves.
+    /// </summary>
+    private static string? FindUnresolvableReference(ElementSave owner, string line)
+    {
+        int equalsIndex = line.IndexOf('=');
+        if (equalsIndex <= 0 || equalsIndex + 1 >= line.Length || line[equalsIndex + 1] == '=' || "!<>".IndexOf(line[equalsIndex - 1]) >= 0)
+        {
+            // Not an assignment; the tool comments such lines out and there is nothing to resolve.
+            return null;
+        }
+
+        string rightSide = NonReferenceTextRegex.Replace(line.Substring(equalsIndex + 1), " ");
+
+        string? problem = null;
+        rightSide = QualifiedReferencePathRegex.Replace(rightSide, match =>
+        {
+            if (problem == null)
+            {
+                string qualifiedElementName = match.Groups[1].Value;
+                string elementName = qualifiedElementName.Substring(qualifiedElementName.IndexOf('/') + 1);
+                string variablePath = match.Groups[2].Value.TrimStart('.');
+                ElementSave? referencedElement = ObjectFinder.Self.GetElementSave(elementName);
+                if (referencedElement == null || referencedElement.IsSourceFileMissing)
+                {
+                    problem = $"from {qualifiedElementName}, which the project does not have";
+                }
+                else if (variablePath.Length > 0 && !VariableExists(referencedElement, variablePath))
+                {
+                    problem = $"\"{variablePath}\" from {qualifiedElementName}, which has no such variable";
+                }
+            }
+            return " ";
+        });
+        if (problem != null)
+        {
+            return problem;
+        }
+
+        foreach (Match match in LocalReferencePathRegex.Matches(rightSide))
+        {
+            if (!ReferenceKeywords.Contains(match.Value) && !VariableExists(owner, match.Value))
+            {
+                return $"\"{match.Value}\", which {owner.Name} does not have";
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="variablePath"/> (e.g. <c>Width</c> or <c>Instance.Red</c>) names a
+    /// variable of <paramref name="element"/>, walking into instance types and base types the way
+    /// reference evaluation does.
+    /// </summary>
+    private static bool VariableExists(ElementSave element, string variablePath)
+    {
+        VariableSave? exposed = SelfAndBaseElements(element)
+            .Select(inChain => inChain.DefaultState?.Variables.FirstOrDefault(variable => variable.ExposedAsName == variablePath))
+            .FirstOrDefault(found => found != null);
+        if (exposed != null)
+        {
+            // An exposed variable is read through the instance variable it exposes. Only a dotted
+            // name is followed: each step then shortens the path, so a hand-edited file where two
+            // variables expose each other cannot recurse forever.
+            return !exposed.Name.Contains('.') || VariableExists(element, exposed.Name);
+        }
+
+        int dot = variablePath.IndexOf('.');
+        if (dot >= 0)
+        {
+            InstanceSave? instance = FindInstanceInInheritance(element, variablePath.Substring(0, dot));
+            if (instance == null)
+            {
+                return false;
+            }
+            ElementSave? instanceType = ObjectFinder.Self.GetElementSave(instance.BaseType);
+            // A missing instance type is already reported as a missing base type.
+            return instanceType == null || VariableExists(instanceType, variablePath.Substring(dot + 1));
+        }
+
+        if (RuntimeComputedVariableNames.Contains(variablePath)
+            || ObjectFinder.Self.GetRootVariable(variablePath, element) != null
+            || ObjectFinder.Self.GetRootVariableList(variablePath, element) != null)
+        {
+            return true;
+        }
+
+        foreach (ElementSave inChain in SelfAndBaseElements(element))
+        {
+            if (inChain.AllStates.Any(state => state.Variables.Any(variable => variable.Name == variablePath)))
+            {
+                return true;
+            }
+            // Category selectors ("State", "ButtonCategoryState") are not stored until set.
+            if (variablePath == "State"
+                || (variablePath.EndsWith("State") && inChain.Categories.Any(category => category.Name + "State" == variablePath)))
+            {
+                return true;
+            }
+            // A project whose standard file predates a variable still has it through the defaults.
+            if (inChain is StandardElementSave
+                && StandardElementsManager.Self.TryGetDefaultStateFor(inChain.Name, throwExceptionOnMissing: false)?.Variables
+                    .Any(variable => variable.Name == variablePath) == true)
+            {
+                return true;
+            }
+        }
+
+        // A composite color name ("FillColor") stands for its channels ("FillRed", ...).
+        if (variablePath.EndsWith("Color"))
+        {
+            return VariableExists(element, variablePath.Substring(0, variablePath.Length - "Color".Length) + "Red");
+        }
+        return false;
+    }
+
+    private static InstanceSave? FindInstanceInInheritance(ElementSave element, string instanceName)
+    {
+        foreach (ElementSave inChain in SelfAndBaseElements(element))
+        {
+            InstanceSave? instance = inChain.GetInstance(instanceName);
+            if (instance != null)
+            {
+                return instance;
+            }
+        }
+        return null;
+    }
+
+    private static IEnumerable<ElementSave> SelfAndBaseElements(ElementSave element)
+    {
+        var visited = new HashSet<ElementSave>();
+        ElementSave? current = element;
+        while (current != null && visited.Add(current))
+        {
+            yield return current;
+            current = string.IsNullOrEmpty(current.BaseType) ? null : ObjectFinder.Self.GetElementSave(current.BaseType);
+        }
+    }
 
     #endregion
 
