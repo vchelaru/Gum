@@ -138,7 +138,7 @@ public class CrossElementInstanceRenameUndoTests : BaseTestClass
         AddReferences(bigButton.DefaultState, "Label.VariableReferences", "Width=Background.Width", "Height=Background.Height");
 
         RenameBackgroundToBg(button);
-        Lines(bigButton, "Label.VariableReferences").ShouldBe(new[] { "Width = Bg.Width", "Height = Bg.Height" });
+        Lines(bigButton, "Label.VariableReferences").ShouldBe(new[] { "Width=Bg.Width", "Height=Bg.Height" });
 
         _undoManager.PerformUndo();
 
