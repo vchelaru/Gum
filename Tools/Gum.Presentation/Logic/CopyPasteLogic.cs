@@ -100,6 +100,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private readonly Lazy<IElementTreeRoots> _elementTreeRoots;
     private readonly ICircularReferenceManager _circularReferenceManager;
     private readonly IRenameLogic _renameLogic;
+    private readonly IOutputManager _outputManager;
 
     // The screen or component the last cut took, which the next paste on a folder moves. Null when
     // the last copy or cut was anything else, or the cut element was already moved.
@@ -127,10 +128,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         Lazy<IElementTreeRoots> elementTreeRoots,
         ICircularReferenceManager circularReferenceManager,
-        IRenameLogic renameLogic
+        IRenameLogic renameLogic,
+        IOutputManager outputManager
         )
     {
         _renameLogic = renameLogic;
+        _outputManager = outputManager;
         _circularReferenceManager = circularReferenceManager;
         _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
@@ -1304,26 +1307,36 @@ public class CopyPasteLogic : ICopyPasteLogic
 
     /// <summary>
     /// Moves the cut element into the selected folder, or to the root when its kind's top node
-    /// (Screens or Components) is selected, the way dragging it onto that folder does. Does nothing
-    /// when anything else, or the folder it is already in, is selected, leaving the cut pending. The
-    /// move records in the element's own undo history.
+    /// (Screens or Components) is selected, the way dragging it onto that folder does. When anything
+    /// else, or the folder it is already in, is selected, it writes why to the Output tab and leaves
+    /// the cut pending. The move records in the element's own undo history.
     /// </summary>
     private void MoveCutElement(ElementSave element)
     {
         if (_copyPasteProjectProvider.GumProjectSave?.AllElements.Contains(element) != true)
         {
-            // Deleted since the cut.
+            // A cut never copies, so forget the clone too or the next paste would add it back.
             _cutElement = null;
+            CopiedData.CopiedElement = null;
+            _outputManager.AddOutput($"Cut {element.Name} was deleted, so there is nothing to paste.");
             return;
         }
 
         var selectedNode = _selectedState.SelectedTreeNode;
-        bool isRootSelected = element is ScreenSave
+        bool isScreen = element is ScreenSave;
+        string kindFolder = isScreen ? "Screens" : "Components";
+        bool isRootSelected = isScreen
             ? selectedNode.IsTopScreenContainerTreeNode()
             : selectedNode.IsTopComponentContainerTreeNode();
         string? folder = isRootSelected ? string.Empty : GetSelectedSubfolderFor(element);
         if (folder == null)
         {
+            bool isOtherKindFolder = isScreen
+                ? selectedNode.IsTopComponentContainerTreeNode() || selectedNode.IsComponentsFolderTreeNode()
+                : selectedNode.IsTopScreenContainerTreeNode() || selectedNode.IsScreensFolderTreeNode();
+            _outputManager.AddOutput(isOtherKindFolder
+                ? $"Cut {element.Name} is a {(isScreen ? "screen" : "component")}, so it can only be pasted on a {kindFolder} folder, not on {selectedNode!.FullPath.Replace("\\", "/")}."
+                : $"Cut {element.Name} can only be pasted on a {kindFolder} folder.");
             return;
         }
 
@@ -1332,6 +1345,7 @@ public class CopyPasteLogic : ICopyPasteLogic
             .Replace("\\", "/");
         if (newName == oldName)
         {
+            _outputManager.AddOutput($"Cut {element.Name} is already in {selectedNode!.FullPath.Replace("\\", "/")}.");
             return;
         }
 

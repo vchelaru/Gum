@@ -290,6 +290,9 @@ public class CopyPasteRenameScenarioTests
 
         tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
 
+        tree.OutputWritten.ShouldContain("Cut Toggle was deleted, so there is nothing to paste.");
+        // The cut is used up, so pasting again must not add a copy either.
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
         tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Panel" });
         tree.SnapshotFiles().ShouldMatch(deleted, "a deleted cut element should not come back");
 
@@ -309,10 +312,16 @@ public class CopyPasteRenameScenarioTests
         tree.Press(Key.X, PhysicalKey.X, RawInputModifiers.Control);
         tree.Click(tree.FolderNode("Components", "Controls"));
         tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.OutputWritten.ShouldContain("Cut Controls/Toggle is already in Components/Controls.");
         tree.Click(tree.NodeFor(Component(tree, "Panel")));
         tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.OutputWritten.ShouldContain("Cut Controls/Toggle can only be pasted on a Components folder.");
+        tree.Click(tree.RootNode("Screens"));
+        tree.Press(Key.V, PhysicalKey.V, RawInputModifiers.Control);
+        tree.OutputWritten.ShouldContain("Cut Controls/Toggle is a component, so it can only be pasted on a Components folder, not on Screens.");
 
-        // Its own folder and a component are not somewhere to move it, and a cut never copies.
+        // Its own folder, a component and the Screens folder are not somewhere to move it, and a
+        // cut never copies.
         tree.Project.Project.Components.Select(component => component.Name).ShouldBe(new[] { "Controls/Toggle", "Panel" });
         tree.SnapshotFiles().ShouldMatch(start, "a cut with nowhere to move should change no file");
 
