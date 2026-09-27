@@ -15,6 +15,7 @@ public class UserApplicationDataOverrideTests
     {
         string folder = Path.Combine(Path.GetTempPath(), "GumUserDataOverride");
         string original = FileManager.UserApplicationDataForThisApplication;
+        string? originalOverride = FileManager.UserApplicationDataFolderOverride;
         try
         {
             FileManager.UserApplicationDataFolderOverride = folder;
@@ -25,7 +26,9 @@ public class UserApplicationDataOverrideTests
         }
         finally
         {
-            FileManager.UserApplicationDataFolderOverride = null;
+            // The test process has its own override (TestAppDataFolder); clearing it would send every
+            // later test to the shared per-user folder.
+            FileManager.UserApplicationDataFolderOverride = originalOverride;
         }
         FileManager.UserApplicationDataForThisApplication.ShouldBe(original);
     }
