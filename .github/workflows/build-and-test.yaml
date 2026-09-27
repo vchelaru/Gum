@@ -98,6 +98,8 @@ jobs:
       # device path; the other two run them locally.
       - name: Gum.Avalonia head and device tests under Xvfb (Linux)
         if: runner.os == 'Linux'
+        # A hang here once ran 74 minutes with no output; fail fast and dump the stuck test host.
+        timeout-minutes: 20
         env:
           GUM_RUN_HEAD_PROCESS_TEST: "1"
           GUM_RUN_CANVAS_DEVICE_TESTS: "1"
@@ -105,7 +107,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
-          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests" --logger "trx;LogFileName=head-process.trx" --results-directory "TestResults"
+          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests" --logger "trx;LogFileName=head-process.trx" --logger "console;verbosity=normal" --blame-hang-timeout 8m --blame-hang-dump-type mini --results-directory "TestResults"
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       - name: Gum.Presentation.Tests (shared logic on every OS)
@@ -122,6 +124,15 @@ jobs:
           path: "TestResults/*.trx"
           reporter: dotnet-trx
           fail-on-error: true
+      - name: Upload hang dumps
+        if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: hang-dumps-${{ matrix.os }}
+          path: |
+            TestResults/**/*.dmp
+            TestResults/**/Sequence_*.xml
+          if-no-files-found: ignore
 
   # End-to-end Native AOT smoke test for issue #4105: RegisterRuntimeTypesThroughReflection walked
   # every loaded assembly via unguarded reflection, which crashed GumService.Initialize under
