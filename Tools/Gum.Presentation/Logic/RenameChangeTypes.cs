@@ -39,6 +39,11 @@ public class VariableChange
     public required VariableSave Variable;
     public object? NewValue;
 
+    /// <summary>
+    /// True when <see cref="Variable"/> is a value an instance sets, false when it is an inheriting
+    /// element's own exposed-name entry. Only the former can be removed and restored as a plain value.
+    /// </summary>
+    public bool IsPlainInstanceOverride => string.IsNullOrEmpty(Variable.ExposedAsName);
 }
 
 public class VariableReferenceChange

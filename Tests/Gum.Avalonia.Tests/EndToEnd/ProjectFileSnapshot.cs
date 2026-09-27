@@ -9,7 +9,8 @@ namespace Gum.Avalonia.Tests.EndToEnd;
 internal sealed class ProjectFileSnapshot
 {
     // Folders under the project that hold per-user or generated files rather than project data.
-    private static readonly string[] IgnoredFolders = ["UserData", "FontCache"];
+    // EventExport is the Event Output plugin's journal: it appends every edit, an undo included.
+    private static readonly string[] IgnoredFolders = ["UserData", "FontCache", "EventExport"];
 
     private readonly SortedDictionary<string, byte[]> _files;
 

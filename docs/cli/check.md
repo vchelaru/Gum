@@ -29,10 +29,10 @@ No errors found.
 **Errors found (human-readable):**
 
 ```
-error: ButtonComponent: Base type 'ButtonBase' not found.
-warning: SliderComponent: Variable 'Thumb Width' references a missing variable.
+error: ButtonComponent: ButtonComponent has a base type of ButtonBase which does not exist
+warning: SliderComponent: SliderComponent references "Textures/Thumb.png", which was not found on disk.
 
-2 error(s) found.
+1 error(s), 1 warning(s) found.
 ```
 
 Each line follows the format: `<severity>: <element>: <message>`
@@ -43,16 +43,20 @@ Each line follows the format: `<severity>: <element>: <message>`
 [
   {
     "element": "ButtonComponent",
-    "message": "Base type 'ButtonBase' not found.",
-    "severity": "Error"
+    "message": "ButtonComponent has a base type of ButtonBase which does not exist",
+    "severity": "Error",
+    "code": null
   },
   {
     "element": "SliderComponent",
-    "message": "Variable 'Thumb Width' references a missing variable.",
-    "severity": "Warning"
+    "message": "SliderComponent references \"Textures/Thumb.png\", which was not found on disk.",
+    "severity": "Warning",
+    "code": "GUM0006"
   }
 ]
 ```
+
+`code` is the error's stable code, such as `GUM0006`. Match on `code` rather than `message` in scripts, because message wording can change between releases. Errors that have no code yet report `null`.
 
 ## Exit Codes
 

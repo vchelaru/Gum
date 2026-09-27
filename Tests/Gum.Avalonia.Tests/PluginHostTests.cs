@@ -42,6 +42,22 @@ public class PluginHostTests
         }
     }
 
+    [AvaloniaFact]
+    public void TestProcess_LoadsEachNeutralPluginFromItsPluginsFolder_AsOneAssembly()
+    {
+        ToolStartup.EnsureInitialized();
+        PluginManager pluginManager = TestAppBuilder.Services.GetRequiredService<PluginManager>();
+
+        foreach (Assembly assembly in NeutralPluginAssemblies)
+        {
+            string name = assembly.GetName().Name!;
+            File.Exists(Path.Combine(PluginManager.PluginFolder, name, name + ".dll")).ShouldBeTrue($"{name} is staged in the test output's Plugins folder");
+            // The folder's copy and the one this test references must be one assembly, or the
+            // plugin's types would not be the types the tests use.
+            pluginManager.InitializedPlugins.ShouldContain(plugin => plugin.GetType().Assembly == assembly, $"{name} is loaded");
+        }
+    }
+
     [Fact]
     public void Head_ExposesCursorStateAsInputLibraryCursorSelf()
     {
