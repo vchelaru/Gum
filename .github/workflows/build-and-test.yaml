@@ -93,9 +93,10 @@ jobs:
         shell: pwsh
         run: .github/scripts/run-avalonia-head-tests.ps1
       # The full-startup layer (phase 100): the real head executable on a fixture project, plus the
-      # KNI device tests. Only Linux has a cheap virtual display plus software GL on the runner
-      # (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves the startup sequence and the
-      # device path; the other two run them locally.
+      # KNI device tests and the canvas end-to-end scenarios. Only Linux has a cheap virtual display
+      # plus software GL on the runner (Xvfb + Mesa llvmpipe), so it is the one OS where CI proves
+      # the startup sequence and the device path; the other two run them locally. The same retry
+      # script as the headless step reruns only failed tests, for the same dispatcher race.
       - name: Gum.Avalonia head and device tests under Xvfb (Linux)
         if: runner.os == 'Linux'
         # A hang here once ran 74 minutes with no output; fail fast and dump the stuck test host.
@@ -107,7 +108,7 @@ jobs:
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q xvfb libgl1-mesa-dri libglu1-mesa libsdl2-2.0-0
-          xvfb-run -a -s "-screen 0 1600x1000x24" dotnet test Tests/Gum.Avalonia.Tests/Gum.Avalonia.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests" --logger "trx;LogFileName=head-process.trx" --logger "console;verbosity=normal" --blame-hang-timeout 8m --blame-hang-dump-type mini --results-directory "TestResults"
+          xvfb-run -a -s "-screen 0 1600x1000x24" pwsh .github/scripts/run-avalonia-head-tests.ps1 -Filter "FullyQualifiedName~HeadProcessTests|FullyQualifiedName~CanvasHostTests|FullyQualifiedName~TextureCoordinateTabTests|FullyQualifiedName~CanvasScenarioTests" -TrxName head-process.trx -HangTimeout 8m
       # The logic shared by both heads (Gum.Presentation.Tests) is what the Avalonia head runs on
       # macOS and Linux, so it must pass there, not only on the Windows runner in the main job.
       - name: Gum.Presentation.Tests (shared logic on every OS)

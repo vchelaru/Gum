@@ -20,8 +20,16 @@ namespace InputLibrary
         IInputHostControl? mControl;
 
         public const float MaximumSecondsBetweenClickForDoubleClick = .25f;
+
+        /// <summary>
+        /// How far, in pixels on either axis, the second click of a double click may land from the
+        /// first; Windows' default double-click rectangle is 4 pixels wide.
+        /// </summary>
+        public const float MaximumPixelsBetweenClicksForDoubleClick = 4;
         // Negative infinity so the first click after startup can never read as a double click.
         double mLastClickTime = double.NegativeInfinity;
+        float mLastClickX;
+        float mLastClickY;
 
         bool mHasBeenSet = false;
         CursorKind mSetCursor = CursorKind.Arrow;
@@ -177,12 +185,16 @@ namespace InputLibrary
                 var timeSinceLastClick =
                     currentTime - mLastClickTime;
 
-                if (timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick)
+                if (timeSinceLastClick < MaximumSecondsBetweenClickForDoubleClick &&
+                    Math.Abs(X - mLastClickX) <= MaximumPixelsBetweenClicksForDoubleClick &&
+                    Math.Abs(Y - mLastClickY) <= MaximumPixelsBetweenClicksForDoubleClick)
                 {
                     PrimaryDoubleClick = true;
                 }
 
                 mLastClickTime = currentTime;
+                mLastClickX = X;
+                mLastClickY = Y;
             }
         }
 

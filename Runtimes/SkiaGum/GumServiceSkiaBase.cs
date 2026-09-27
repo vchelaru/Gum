@@ -78,6 +78,32 @@ public abstract class GumServiceSkiaBase : IGumService
     }
 
     /// <summary>
+    /// Re-applies all styles on <see cref="Root"/>, <see cref="PopupRoot"/> and
+    /// <see cref="ModalRoot"/>. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to all live visuals. Forms runtime state (typed text, caret, scroll
+    /// positions) is preserved.
+    /// </summary>
+    public void RefreshStyles()
+    {
+        Root?.RefreshStyles();
+        PopupRoot?.RefreshStyles();
+        ModalRoot?.RefreshStyles();
+    }
+
+    /// <summary>
+    /// Re-applies all styles on <paramref name="target"/> and its children, preserving Forms
+    /// runtime state. Call after
+    /// <see cref="GumRuntime.ElementSaveExtensions.ApplyAllVariableReferences"/> to push variable
+    /// reference changes to live visuals in a specific subtree.
+    /// </summary>
+    /// <param name="target">The root of the subtree to refresh.</param>
+    public void RefreshStyles(GraphicalUiElement target)
+    {
+        target?.RefreshStyles();
+    }
+
+    /// <summary>
     /// Gets whether GumService has been initialized. Used by extension methods
     /// like <see cref="GraphicalUiElement.AddToRoot()"/>
     /// to guard against calls made before Initialize.
@@ -418,6 +444,10 @@ public abstract class GumServiceSkiaBase : IGumService
         // for it (issue #4452).
         FormsUtilities.InitializeDefaults(SystemManagers.Default, DefaultVisualsVersion.V3);
 
+        // Lets RefreshStyles keep typed text, caret, and scroll positions (issue #5229). Installed
+        // per Initialize rather than in the constructor so a re-initialize after teardown gets them.
+        FormsRefreshStylesHooks.Install();
+
         Root.AddToManagers(SystemManagers.Default);
         Root.UpdateLayout();
 
@@ -463,6 +493,7 @@ public abstract class GumServiceSkiaBase : IGumService
                 : gumProjectFile;
             var gumDirectory = FileManager.GetDirectory(absolutePath);
 
+            _relativeDirectoryBeforeProjectLoad ??= FileManager.RelativeDirectory;
             FileManager.RelativeDirectory = gumDirectory;
         }
 
@@ -483,6 +514,67 @@ public abstract class GumServiceSkiaBase : IGumService
         }
         _installedBundleHook = null;
         CurrentProjectResolution = null;
+    }
+
+    // The RelativeDirectory in effect before Initialize pointed it at a loaded project, restored by
+    // Uninitialize. Null when no project has been loaded since the last Uninitialize.
+    private string? _relativeDirectoryBeforeProjectLoad;
+
+    /// <summary>
+    /// Tears down what <c>Initialize</c> set up — the roots, Forms state, the loaded project, cached
+    /// content, and hot reload — so this instance can be initialized again cleanly.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the MonoGame/raylib <c>GumService.Uninitialize</c>, this keeps the runtime-type
+    /// registrations and the property/renderable delegates, removing only the ones the loaded
+    /// project added. Skia wires the rest once per process (SystemManagers' global setup and
+    /// generated code's module initializers), so a later <c>Initialize</c> would not restore them.
+    /// </remarks>
+    public void Uninitialize()
+    {
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+
+        DeferredQueue?.Clear();
+
+        InteractiveGue.CurrentInputReceiver = null;
+
+        if (Root != null)
+        {
+            Root.Children.Clear();
+            Root.RemoveFromManagers();
+            Root = null!;
+        }
+
+        // Forms roots, Forms input registrations and templates, the project, and the content cache.
+        // Shared with the MonoGame/raylib GumService.
+        GumServiceTeardown.ReleaseFormsAndContent();
+
+        FormsUtilities.Uninitialize();
+        FormsUtilities.UnregisterFromFileFormRuntimeDefaults();
+
+        // Restores the stream hook a .gumpkg load replaced (issue #5285).
+        ReleaseProjectResolution();
+        LastLoadResult = null;
+
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        _windowFit?.Reset();
+
+        SystemManagers.Default = null!;
+        IGumService.Default = null;
+
+        if (_relativeDirectoryBeforeProjectLoad != null)
+        {
+            FileManager.RelativeDirectory = _relativeDirectoryBeforeProjectLoad;
+            _relativeDirectoryBeforeProjectLoad = null;
+        }
+
+        _hasReceivedUpdate = false;
+        _previousTotalSeconds = 0;
+
+        IsInitialized = false;
     }
 
     /// <summary>

@@ -99,6 +99,11 @@ public class CopyPasteLogic : ICopyPasteLogic
     // during DI construction. Deferring resolution to first use breaks the cycle.
     private readonly Lazy<IElementTreeRoots> _elementTreeRoots;
     private readonly ICircularReferenceManager _circularReferenceManager;
+    private readonly IRenameLogic _renameLogic;
+
+    // The screen or component the last cut took, which the next paste on a folder moves. Null when
+    // the last copy or cut was anything else, or the cut element was already moved.
+    private ElementSave? _cutElement;
 
     public CopiedData CopiedData { get; private set; } = new CopiedData();
 
@@ -121,9 +126,11 @@ public class CopyPasteLogic : ICopyPasteLogic
         ICopyPasteProjectProvider copyPasteProjectProvider,
         IStandardElementsManagerGumTool standardElementsManagerGumTool,
         Lazy<IElementTreeRoots> elementTreeRoots,
-        ICircularReferenceManager circularReferenceManager
+        ICircularReferenceManager circularReferenceManager,
+        IRenameLogic renameLogic
         )
     {
+        _renameLogic = renameLogic;
         _circularReferenceManager = circularReferenceManager;
         _wireframeObjectManager = wireframeObjectManager;
         _selectedState = selectedState;
@@ -164,6 +171,7 @@ public class CopyPasteLogic : ICopyPasteLogic
     private void StoreCopiedObject(CopyType copyType, ISelectedState selectedState)
     {
         _copyType = copyType;
+        _cutElement = null;
         CopiedData.CopiedElement = null;
         CopiedData.CopiedInstancesRecursive.Clear();
         CopiedData.CopiedStates.Clear();
@@ -384,9 +392,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         }
 
 
-        // todo: need to handle cut Element saves, but I don't want to do it yet due to the danger of losing valid data...
-
-
+        // A cut element stays where it is until a paste on a folder moves it, so cutting and never
+        // pasting loses nothing.
+        if (CopiedData.CopiedElement != null)
+        {
+            _cutElement = sourceElement;
+        }
     }
 
     #region Paste
@@ -396,6 +407,12 @@ public class CopyPasteLogic : ICopyPasteLogic
         ////////////////////Early Out
         if (_copyType != copyType)
         {
+            return;
+        }
+
+        if (_copyType == CopyType.InstanceOrElement && _cutElement != null)
+        {
+            MoveCutElement(_cutElement);
             return;
         }
 
@@ -1231,21 +1248,9 @@ public class CopyPasteLogic : ICopyPasteLogic
             return;
         }
 
-        var strippedName = toAdd.StrippedName;
-
-        var selectedNode = _selectedState.SelectedTreeNode;
-
-        if (toAdd is ScreenSave && selectedNode.IsScreensFolderTreeNode())
+        if (GetSelectedSubfolderFor(toAdd) is { } path)
         {
-            var path = selectedNode!.FullPath.Substring("Screens\\".Length);
-
-            toAdd.Name = (path + "/" + strippedName).Replace("\\", "/");
-        }
-        else if (toAdd is ComponentSave && selectedNode.IsComponentsFolderTreeNode())
-        {
-            var path = selectedNode!.FullPath.Substring("Components\\".Length);
-
-            toAdd.Name = (path + "/" + strippedName).Replace("\\", "/");
+            toAdd.Name = (path + "/" + toAdd.StrippedName).Replace("\\", "/");
         }
 
         List<string> allElementNames = new List<string>();
@@ -1276,6 +1281,73 @@ public class CopyPasteLogic : ICopyPasteLogic
 
         _fileCommands.TryAutoSaveElement(toAdd);
         _fileCommands.TryAutoSaveProject();
+    }
+
+    /// <summary>
+    /// The selected folder's path below the Screens or Components root, matching the kind of
+    /// <paramref name="element"/>, or null when no such subfolder is selected.
+    /// </summary>
+    private string? GetSelectedSubfolderFor(ElementSave element)
+    {
+        var selectedNode = _selectedState.SelectedTreeNode;
+
+        if (element is ScreenSave && selectedNode.IsScreensFolderTreeNode())
+        {
+            return selectedNode!.FullPath.Substring("Screens\\".Length);
+        }
+        if (element is ComponentSave && selectedNode.IsComponentsFolderTreeNode())
+        {
+            return selectedNode!.FullPath.Substring("Components\\".Length);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Moves the cut element into the selected folder, or to the root when its kind's top node
+    /// (Screens or Components) is selected, the way dragging it onto that folder does. Does nothing
+    /// when anything else, or the folder it is already in, is selected, leaving the cut pending. The
+    /// move records in the element's own undo history.
+    /// </summary>
+    private void MoveCutElement(ElementSave element)
+    {
+        if (_copyPasteProjectProvider.GumProjectSave?.AllElements.Contains(element) != true)
+        {
+            // Deleted since the cut.
+            _cutElement = null;
+            return;
+        }
+
+        var selectedNode = _selectedState.SelectedTreeNode;
+        bool isRootSelected = element is ScreenSave
+            ? selectedNode.IsTopScreenContainerTreeNode()
+            : selectedNode.IsTopComponentContainerTreeNode();
+        string? folder = isRootSelected ? string.Empty : GetSelectedSubfolderFor(element);
+        if (folder == null)
+        {
+            return;
+        }
+
+        string oldName = element.Name;
+        string newName = (folder.Length == 0 ? element.StrippedName : folder + "/" + element.StrippedName)
+            .Replace("\\", "/");
+        if (newName == oldName)
+        {
+            return;
+        }
+
+        bool didMove;
+        using (_undoManager.RequestLock(element))
+        {
+            element.Name = newName;
+            didMove = _renameLogic.HandleRename(element, (InstanceSave?)null, oldName, NameChangeAction.Move, askAboutRename: false).Succeeded;
+        }
+
+        if (didMove)
+        {
+            _cutElement = null;
+            CopiedData.CopiedElement = null;
+            _selectedState.SelectedElement = element;
+        }
     }
 
     #endregion

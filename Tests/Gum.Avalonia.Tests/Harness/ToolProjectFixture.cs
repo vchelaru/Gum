@@ -151,6 +151,20 @@ internal sealed class ToolProjectFixture : IDisposable
         Project = projectManager.GumProjectSave ?? throw new InvalidOperationException("The reload left no project loaded.");
     }
 
+    /// <summary>
+    /// Lets the editor tab plugin, which sits out while the fixture runs, receive events again; for
+    /// a harness that has given it a canvas on a graphics device. Dispose restores the plugins the
+    /// fixture started with.
+    /// </summary>
+    public void IncludeEditorTab()
+    {
+        IEnumerable<PluginBase> current = _pluginManager.Plugins ?? Enumerable.Empty<PluginBase>();
+        // In the composed order, which event dispatch follows.
+        _pluginManager.Plugins = (_originalPlugins ?? Enumerable.Empty<PluginBase>())
+            .Where(plugin => plugin is AvaloniaEditorTabPlugin || current.Contains(plugin))
+            .ToList();
+    }
+
     /// <summary>The standard element named <paramref name="name"/> (Text, Sprite, Container...).</summary>
     public StandardElementSave Standard(string name) => Project.StandardElements.Single(element => element.Name == name);
 

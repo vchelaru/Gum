@@ -102,6 +102,32 @@ namespace GumRuntime
             TemplateFunc = templateFunc;
         }
 
+        /// <summary>
+        /// Removes the element-name registrations made through
+        /// <see cref="RegisterGueInstantiationType"/> whose registered type matches
+        /// <paramref name="shouldRemove"/>.
+        /// </summary>
+        public static void UnregisterGueInstantiationTypes(Func<Type, bool> shouldRemove)
+        {
+            List<string>? namesToRemove = null;
+            foreach (var pair in mElementToGueTypes)
+            {
+                if (shouldRemove(pair.Value))
+                {
+                    namesToRemove ??= new List<string>();
+                    namesToRemove.Add(pair.Key);
+                }
+            }
+
+            if (namesToRemove != null)
+            {
+                foreach (var name in namesToRemove)
+                {
+                    mElementToGueTypes.Remove(name);
+                }
+            }
+        }
+
         public static void ClearRegistrations()
         {
             mElementToGueTypes.Clear();

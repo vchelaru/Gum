@@ -54,6 +54,8 @@ dotnet test Tests/Gum.Avalonia.Tests --filter "Category=EndToEnd"
 | `ProjectFileSnapshot.cs` | Every project file's bytes, for "undo back to the start restores the files". A mismatch names each file and its first differing line, and copies both versions to `%TEMP%\GumEndToEnd\diffs`. |
 | `ToolExceptionWatch.cs` | Output-tab errors, exceptions the head's UI-thread hook would write to the crash log, and plugins disabled after throwing. |
 | `ProjectOracleTests.cs` | Each oracle fails on the damage it exists to catch. |
+| `CanvasHarness.cs` | The head's Editor tab (toolbar, canvas, scroll bars) on a real graphics device, next to a `ProjectTreeHarness` over the same project, whose oracles it ends with. Pointer, key, wheel and drop input in window coordinates (`WindowPointOf(worldX, worldY)`), a drawn frame after every event, and `SavedValue` to read what reached disk. |
+| `CanvasScenarioTests.cs` | The Editor canvas: selection, move, resize, rotate, nudge, polygon points, camera, rulers, drops. |
 | `TreeScenarioTests.cs`, `VariableScenarioTests.cs`, `CopyPasteRenameScenarioTests.cs` | The scenarios: the Project tree (menus, keys, search); the Variables tab, states and edits that cascade into other elements; copy, paste, rename and delete where they meet references, parents, states and animations. |
 
 A scenario builds its project with the fixture, clicks the starting node, takes a snapshot, does
@@ -78,5 +80,26 @@ Gotchas in scenario setup:
   element has no tree row to right-click.
 - The search box and "Include Variables" belong to the head's panel, which outlives the test; the
   harness clears both on dispose.
+
+### Canvas scenarios
+
+The canvas needs a display and a GL driver, so its scenarios are `[SkippableFact]`s that run on
+the Avalonia UI thread through `CanvasHarness.OnUiThread` (an `[AvaloniaFact]` cannot skip). Off CI
+they run wherever there is a display, except macOS (a plain `dotnet test` runs them on Windows). On
+CI they run only in the Linux Xvfb step, which sets `GUM_RUN_CANVAS_DEVICE_TESTS=1` and names the
+class in its filter.
+
+- The canvas polls its input once per frame, and `CanvasHarness` draws one after each event. The
+  editor tab plugin, its canvas and the shared device are built once and live for the rest of the
+  process, as in the tool; the fixture lets the plugin back in for the harness's lifetime.
+- A drag is ignored until it is more than 6 pixels from the press, and movement before that is
+  lost (#5257). `Drag` moves in 10 to 20 pixel steps so nothing is lost; pass `steps` to test
+  small moves.
+- Shift on the press adds to the selection instead of moving (#5258): for an axis-locked move,
+  `PressButton`, `DragTo`, then `HoldKey` Shift and `DragTo` again.
+- A drop onto the canvas is the platform's drag events with the payload the source would build
+  (`DropOnCanvas`); headless Avalonia has no drag source. A drop parents the new instance only to
+  the selected instance under it.
+- Undo replaces an element's instances with copies; after an undo, find instances again by name.
 
 `pwsh Tools/e2e-coverage.ps1` lists the inventory IDs no non-skipped test tags, per area.

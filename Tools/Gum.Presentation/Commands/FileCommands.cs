@@ -1,4 +1,4 @@
-﻿using Gum.DataTypes;
+using Gum.DataTypes;
 using Gum.DataTypes.Behaviors;
 using Gum.Localization;
 using Gum.Logic;
@@ -6,6 +6,7 @@ using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
 using Gum.Services.Dialogs;
+using Gum.ToolCommands;
 using Gum.ToolStates;
 using Gum.Undo;
 using Gum.Wireframe;
@@ -308,6 +309,8 @@ public class FileCommands : IFileCommands
             if (shouldSave)
             {
                 _pluginManager.BeforeSavingElementSave(elementSave);
+                // As a project save does, so an auto-save writes the bytes Save All would.
+                ElementCommands.SortStateVariables(elementSave);
 
                 // shouldSave means the project has a file name, and so a path for the element.
                 var fileName = GetFullPathXmlFileForElement(elementSave, elementSave.Name)!;

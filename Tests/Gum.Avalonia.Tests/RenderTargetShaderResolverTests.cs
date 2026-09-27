@@ -1,4 +1,5 @@
 using EditorTabPlugin_XNA.Services;
+using RenderingLibrary;
 using ShadowDusk.Core;
 using Shouldly;
 
@@ -70,7 +71,16 @@ public class RenderTargetShaderResolverTests
     public void Resolve_ExplainsAMissingDevice_InsteadOfReturningNull()
     {
         Func<string, object?> resolver = RenderTargetShaderResolver.For(PlatformTarget.OpenGL);
-
-        Should.Throw<InvalidOperationException>(() => resolver("Grayscale.fx")).Message.ShouldContain("GraphicsDevice");
+        // A canvas scenario earlier in the run leaves the editor's renderer, and its device, in place.
+        SystemManagers systemManagers = SystemManagers.Default;
+        SystemManagers.Default = null!;
+        try
+        {
+            Should.Throw<InvalidOperationException>(() => resolver("Grayscale.fx")).Message.ShouldContain("GraphicsDevice");
+        }
+        finally
+        {
+            SystemManagers.Default = systemManagers;
+        }
     }
 }

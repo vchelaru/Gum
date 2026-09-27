@@ -94,6 +94,28 @@ public class CursorTests
         cursor.PrimaryDoubleClick.ShouldBeFalse();
     }
 
+    // Two quick clicks on different objects are two selections, not a double click: a double click
+    // punches through to the object underneath, so the second object ended up deselected.
+    [Fact]
+    public void PrimaryDoubleClick_RequiresTheSecondClickNearTheFirst()
+    {
+        (Cursor cursor, FakeHost host) = Create();
+        void Click(float x, double time)
+        {
+            host.Pointer = new HostPointerState(x, 10, true, false, false);
+            cursor.Activity(time);
+            host.Pointer = new HostPointerState(x, 10, false, false, false);
+            cursor.Activity(time + 0.01);
+        }
+
+        Click(10, 0);
+        Click(60, 0.1);
+        cursor.PrimaryDoubleClick.ShouldBeFalse("the second click was 50 pixels from the first");
+
+        Click(60 + Cursor.MaximumPixelsBetweenClicksForDoubleClick, 0.2);
+        cursor.PrimaryDoubleClick.ShouldBeTrue();
+    }
+
     [Fact]
     public void Pushes_AreIgnoredWhileTheHostIsNotFocused()
     {
