@@ -36,7 +36,7 @@ public enum LineJoinStyle
 /// </summary>
 public class LinePolygon : InvisibleRenderable
 {
-    private readonly List<Vector2> _points = new();
+    private List<Vector2> _points = new();
 
     /// <summary>
     /// Legacy single-color slot used as the stroke color when <see cref="StrokeColor"/> is
@@ -148,6 +148,14 @@ public class LinePolygon : InvisibleRenderable
     public LinePolygon() : this(null) { }
 
     public LinePolygon(SystemManagers? _) { }
+
+    /// <inheritdoc/>
+    public override InvisibleRenderable Clone()
+    {
+        LinePolygon clone = (LinePolygon)base.Clone();
+        clone._points = new List<Vector2>(_points);
+        return clone;
+    }
 
     public void SetPoints(ICollection<Vector2> points)
     {

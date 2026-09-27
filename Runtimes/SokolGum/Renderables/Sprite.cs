@@ -53,7 +53,15 @@ public sealed class Sprite : InvisibleRenderable, IAspectRatio, ITextureCoordina
     /// (<see cref="AnimationChains"/>, <see cref="CurrentChainName"/>,
     /// <see cref="Animate"/>, <see cref="AnimationSpeed"/>) just forward.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; } = new();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new();
+
+    /// <inheritdoc/>
+    public override InvisibleRenderable Clone()
+    {
+        Sprite clone = (Sprite)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        return clone;
+    }
 
     public AnimationChainList? AnimationChains
     {

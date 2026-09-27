@@ -131,7 +131,7 @@ public static class SkiaResourceManager
         {
             try
             {
-                Stream urlStream = GetUrlStream(url);
+                using Stream urlStream = GetUrlStream(url);
                 return GetSKBitmap(url, urlStream);
             }
             catch
@@ -148,10 +148,27 @@ public static class SkiaResourceManager
     }
 
 
+    /// <summary>
+    /// Returns the cached bitmap for <paramref name="resourceName"/>, loading it on first use.
+    /// When <paramref name="stream"/> is given, the bitmap is decoded from it; otherwise it is
+    /// loaded from disk or, failing that, from an embedded resource.
+    /// </summary>
+    /// <exception cref="InvalidDataException"><paramref name="stream"/> does not hold a decodable image.</exception>
     public static SKBitmap GetSKBitmap(string resourceName, Stream? stream = null)
     {
         if (!skBitmapCache.ContainsKey(resourceName))
-            CacheSKImage(resourceName);
+        {
+            if (stream != null)
+            {
+                // Don't cache a failed decode, so a later call (e.g. a retried download) can succeed.
+                skBitmapCache[resourceName] = SKBitmap.Decode(stream)
+                    ?? throw new InvalidDataException($"Could not decode an image for {resourceName}.");
+            }
+            else
+            {
+                CacheSKImage(resourceName);
+            }
+        }
 
         return skBitmapCache[resourceName];
     }

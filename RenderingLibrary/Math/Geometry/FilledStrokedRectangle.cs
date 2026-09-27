@@ -20,7 +20,7 @@ namespace RenderingLibrary.Math.Geometry;
 /// antialiasing; those require the optional <c>Gum.Shapes</c>/<c>MonoGameGumShapes</c> package that
 /// <c>RectangleRuntime</c> itself gates behind, which FRB has no integration with.
 /// </summary>
-public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso
+public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRenderableIpso, System.ICloneable
 {
     #region Fields
 
@@ -268,6 +268,21 @@ public class FilledStrokedRectangle : SpriteBatchRenderableBase, IVisible, IRend
     IVisible? IVisible.Parent => ((IRenderableIpso)this).Parent as IVisible;
 
     #endregion
+
+    /// <summary>
+    /// Creates a copy with its own children collection, no parent, and its own line primitive,
+    /// so changing the copy's colors or size leaves this rectangle unchanged.
+    /// </summary>
+    public virtual FilledStrokedRectangle Clone()
+    {
+        FilledStrokedRectangle clone = (FilledStrokedRectangle)MemberwiseClone();
+        clone.mChildren = new();
+        clone.mParent = null;
+        clone.mLinePrimitive = mLinePrimitive.Clone();
+        return clone;
+    }
+
+    object System.ICloneable.Clone() => Clone();
 
     /// <inheritdoc/>
     public override string ToString() => Name + " (FilledStrokedRectangle)";

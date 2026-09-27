@@ -101,6 +101,7 @@ public class ScrollBarVisual : InteractiveGue
     /// The state category used by the Forms control to apply visual states. Never assigned by
     /// this visual, so it is always null.
     /// </summary>
+    [Obsolete("Never assigned by ScrollBarVisual, so it is always null. It will be removed in a future release.")]
     public StateSaveCategory? ScrollBarCategory { get; private set; }
 
     Color _trackBackgroundColor;

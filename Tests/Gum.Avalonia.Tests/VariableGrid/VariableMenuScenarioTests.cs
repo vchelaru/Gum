@@ -154,10 +154,10 @@ public class VariableMenuScenarioTests
         // state inherits from the base type, the same value the category gave its other states.
         using VariableGridHarness grid = new VariableGridHarness();
         ComponentSave button = grid.Project.AddComponent("Button");
-        button.DefaultState.Variables.RemoveAll(item => item.Name == "Width");
+        button.GetDefaultStateOrThrow().Variables.RemoveAll(item => item.Name == "Width");
         StateSaveCategory looks = grid.Project.AddCategory(button, "Looks");
         StateSave pressed = grid.Project.AddState(button, looks, "Pressed");
-        object? inheritedWidth = button.DefaultState.GetValueRecursive("Width");
+        object? inheritedWidth = button.GetDefaultStateOrThrow().GetValueRecursive("Width");
         inheritedWidth.ShouldNotBeNull();
         grid.Select(pressed);
         grid.TypeAndEnter("Width", "210");

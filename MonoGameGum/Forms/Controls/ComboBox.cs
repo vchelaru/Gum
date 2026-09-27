@@ -53,18 +53,22 @@ public class ComboBox :
     /// This replaces the Items, SelectedObject, and SelectedIndex unless
     /// the properties are bound.
     /// </summary>
+    /// <exception cref="ArgumentNullException">The assigned value is null.</exception>
     public ListBox ListBox
     {
         get => listBox;
         set
         {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             // If the user replaces this, it's up to the user to set the positions
             // and parenting properly!
             if(value != listBox)
             {
                 listBox = value;
-
-
 
                 listBox.IsVisible = false;
             }

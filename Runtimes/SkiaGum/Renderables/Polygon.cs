@@ -30,6 +30,14 @@ public class Polygon : RenderableShapeBase
 
     }
 
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        Polygon clone = (Polygon)base.Clone();
+        clone.Points = new List<SKPoint>(Points);
+        return clone;
+    }
+
     /// <summary>
     /// Replaces the current points with the supplied collection. Vector2-based overload
     /// added in issue #2757 so the shared <see cref="Gum.GueDeriving.PolygonRuntime"/>

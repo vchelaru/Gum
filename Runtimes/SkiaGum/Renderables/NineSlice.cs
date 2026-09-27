@@ -8,14 +8,22 @@ using System.Drawing;
 
 namespace SkiaGum.Renderables;
 
-public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureCoordinate
+public class NineSlice : RenderableShapeBase, IAnimatable, ITextureCoordinate
 {
     /// <summary>
     /// Shared AnimationChain playback state. The constructor wires
     /// <see cref="AnimationChainLogic.ApplyFrame"/> to copy the active frame's
     /// texture and (UV-derived) source rectangle onto this NineSlice.
     /// </summary>
-    public AnimationChainLogic AnimationLogic { get; } = new AnimationChainLogic();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new AnimationChainLogic();
+
+    /// <inheritdoc/>
+    public override object Clone()
+    {
+        NineSlice clone = (NineSlice)base.Clone();
+        clone.AnimationLogic = AnimationLogic.Clone(clone.ApplyAnimationFrame);
+        return clone;
+    }
 
     // Nearest-neighbour sampling. Linear filtering bleeds adjacent-section texels
     // across the boundary between two sections of the nine-slice source texture,
@@ -139,8 +147,6 @@ public class NineSlice : RenderableShapeBase, IAnimatable, ICloneable, ITextureC
     /// allowing the border to be drawn larger or smaller than its source pixel size.
     /// </summary>
     public float BorderScale { get; set; } = 1f;
-
-    public object Clone() => this.MemberwiseClone();
 
     protected override SKPaint GetPaint(SKRect boundingRect, float absoluteRotation)
     {

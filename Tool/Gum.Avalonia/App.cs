@@ -43,7 +43,6 @@ public sealed class App : Application
     private readonly HeadOptions _options;
     private readonly IFreezeDiagnosticsInbox _freezeDiagnostics;
     private bool _previousSessionEndedDirty;
-    private bool _isUnattendedExitStarted;
 
     /// <summary>Creates the app over the built service host.</summary>
     public App(IServiceProvider services, HeadOptions options)
@@ -124,10 +123,11 @@ public sealed class App : Application
             {
                 messenger.Send<ApplicationStartupMessage>();
                 TaskCompletionSource<UnattendedStartupOutcome> startup = new TaskCompletionSource<UnattendedStartupOutcome>();
-                Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, window), DispatcherPriority.Background);
+                StartupFailureReporter failureReporter = new StartupFailureReporter(window.ShowStartupFailure, Console.Error);
+                Dispatcher.UIThread.Post(() => _ = SignalStartupAsync(startup, desktop, failureReporter), DispatcherPriority.Background);
                 if (_options.ExitAfterSeconds is double seconds)
                 {
-                    _ = RunUnattendedAsync(startup.Task, seconds, window, desktop, messenger);
+                    _ = RunUnattendedAsync(startup.Task, seconds, window, desktop, messenger, failureReporter);
                 }
                 StartFreezeWatchdog();
             };
@@ -137,10 +137,11 @@ public sealed class App : Application
     }
 
     private async Task SignalStartupAsync(TaskCompletionSource<UnattendedStartupOutcome> startup,
-        IClassicDesktopStyleApplicationLifetime desktop, MainWindow window) =>
-        startup.SetResult(await RunStartupAsync(desktop, window));
+        IClassicDesktopStyleApplicationLifetime desktop, StartupFailureReporter failureReporter) =>
+        startup.SetResult(await RunStartupAsync(desktop, failureReporter));
 
-    private async Task<UnattendedStartupOutcome> RunStartupAsync(IClassicDesktopStyleApplicationLifetime desktop, MainWindow window)
+    private async Task<UnattendedStartupOutcome> RunStartupAsync(IClassicDesktopStyleApplicationLifetime desktop,
+        StartupFailureReporter failureReporter)
     {
         try
         {
@@ -166,13 +167,7 @@ public sealed class App : Application
         }
         catch (Exception exception)
         {
-            // Also on stderr, so an unattended run (and HeadProcessTests) can see it.
-            Console.Error.WriteLine("Startup failed: " + exception);
-            // An unattended run that already gave up is closing the window; it has exited nonzero.
-            if (!_isUnattendedExitStarted)
-            {
-                window.ShowStartupFailure(exception);
-            }
+            failureReporter.Report(exception);
             return UnattendedStartupOutcome.Failed;
         }
 
@@ -188,7 +183,8 @@ public sealed class App : Application
     // --exit-after is the upper bound (#5170): the run captures and exits once startup has finished
     // and the canvas has drawn, and exits nonzero if that hasn't happened in time.
     private async Task RunUnattendedAsync(Task<UnattendedStartupOutcome> startup, double exitAfterSeconds,
-        Window window, IClassicDesktopStyleApplicationLifetime desktop, IMessenger messenger)
+        Window window, IClassicDesktopStyleApplicationLifetime desktop, IMessenger messenger,
+        StartupFailureReporter failureReporter)
     {
         int? exitCode;
         try
@@ -211,7 +207,7 @@ public sealed class App : Application
 
         if (exitCode is int code)
         {
-            _isUnattendedExitStarted = true;
+            failureReporter.OnUnattendedExitStarted();
             desktop.Shutdown(code);
         }
     }

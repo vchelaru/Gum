@@ -48,7 +48,11 @@ public class InvisibleRenderable : RenderableBase, ICloneable, IRenderableIpso
     {
         return Clone();
     }
-    public InvisibleRenderable Clone()
+    /// <summary>
+    /// Creates a copy with its own children collection and no parent. A derived renderable that
+    /// holds mutable reference state (such as a point list) overrides this to copy it.
+    /// </summary>
+    public virtual InvisibleRenderable Clone()
     {
         var newInstance = (InvisibleRenderable)this.MemberwiseClone();
         ((IRenderableIpso)newInstance).SetParentDirect(null);

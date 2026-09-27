@@ -66,6 +66,39 @@ public class SkiaResourceManagerTests
         }
     }
 
+    // #5111: GetSKBitmapFromUrl downloads the image and hands the stream to GetSKBitmap, which
+    // must decode that stream instead of looking for the URL on disk or as an embedded resource.
+    [Fact]
+    public void GetSKBitmap_WithStream_ShouldDecodeTheStream()
+    {
+        string resourceName = "https://example.invalid/" + Guid.NewGuid().ToString("N") + ".png";
+        using MemoryStream stream = new MemoryStream();
+        using (SKBitmap source = new SKBitmap(4, 5))
+        using (SKImage image = SKImage.FromBitmap(source))
+        using (SKData encoded = image.Encode(SKEncodedImageFormat.Png, 100))
+        {
+            encoded.SaveTo(stream);
+        }
+        stream.Position = 0;
+
+        SKBitmap loaded = SkiaResourceManager.GetSKBitmap(resourceName, stream);
+
+        loaded.Width.ShouldBe(4);
+        loaded.Height.ShouldBe(5);
+        SkiaResourceManager.IsCached(resourceName).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void GetSKBitmap_WithUndecodableStream_ShouldThrowAndNotCache()
+    {
+        string resourceName = "https://example.invalid/" + Guid.NewGuid().ToString("N") + ".png";
+        using MemoryStream stream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+
+        Should.Throw<InvalidDataException>(() => SkiaResourceManager.GetSKBitmap(resourceName, stream));
+
+        SkiaResourceManager.IsCached(resourceName).ShouldBeFalse();
+    }
+
     // Regression: CacheSKImage used to do `RelativeDirectory + resourceName`
     // unconditionally, so any caller passing an already-absolute path (e.g.
     // AnimationFrame.ToAnimationFrame, which pre-prefixes RelativeDirectory

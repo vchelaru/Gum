@@ -647,12 +647,15 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
     public void RefreshSelector(RefreshType refreshType)
     {
-        if (_view.Canvas.CurrentTexture == null)
+        var control = _view.Canvas;
+
+        // With no texture or no element there is no region to edit. The previous selection's
+        // selectors must go too, or dragging where they were writes to this selection (#5101).
+        if (control.CurrentTexture == null || _selectedState.SelectedElement == null)
         {
+            control.DesiredSelectorCount = 0;
             return;
         }
-
-        var control = _view.Canvas;
 
         // early out
         if (refreshType == RefreshType.OnlyIfGrabbed &&
@@ -664,12 +667,6 @@ public class TextureCoordinateDisplayController : ITextureCoordinateDisplayContr
 
         if (shouldRefreshAccordingToVariableSets == false)
         {
-            return;
-        }
-
-        if (_selectedState.SelectedElement == null)
-        {
-            // in case a behavior is selected:
             return;
         }
 

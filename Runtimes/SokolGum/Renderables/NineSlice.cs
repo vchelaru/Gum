@@ -29,6 +29,7 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable,
         var newInstance = (NineSlice)this.MemberwiseClone();
         ((IRenderableIpso)newInstance).SetParentDirect(null);
         newInstance._children = new();
+        newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
         return newInstance;
     }
 
@@ -66,7 +67,7 @@ public sealed class NineSlice : RenderableBase, ITextureCoordinate, IAnimatable,
 
     // Shared animation state — see Sprite for the composition pattern.
 
-    public AnimationChainLogic AnimationLogic { get; } = new();
+    public AnimationChainLogic AnimationLogic { get; private set; } = new();
 
     public AnimationChainList? AnimationChains
     {
