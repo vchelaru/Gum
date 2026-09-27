@@ -146,20 +146,42 @@ public class CanvasScenarioTests
         });
     }
 
-    [SkippableFact(Skip = "#5257: movement inside the 6-pixel drag threshold is dropped, so the box trails the pointer")]
+    [SkippableFact]
     [Trait("Feature", "CANV-005")]
-    public void DragMove_InSmallSteps_KeepsTheGrabbedPointUnderThePointer()
+    [Trait("Feature", "CANV-007")]
+    [Trait("Feature", "CANV-014")]
+    public void DragsInSmallSteps_KeepTheGrabbedPointUnderThePointer()
     {
         OnCanvas(canvas =>
         {
             ComponentSave button = canvas.Project.AddComponent("Button");
             InstanceSave box = canvas.AddInstance(button, "Box", "Rectangle", x: 40, y: 40, width: 60, height: 40);
+            InstanceSave shape = canvas.AddInstance(button, "Shape", "Polygon", x: 300, y: 300);
+
+            // Two-pixel moves, as a mouse reports them: the first three stay inside the 6-pixel
+            // dead zone, and the drag still ends exactly under the pointer.
             canvas.Tree.Click(canvas.Tree.NodeFor(box));
-
-            // Two-pixel moves, as a mouse reports them.
             canvas.Drag(canvas.WindowPointOf(70, 60), canvas.WindowPointOf(90, 60), steps: 10);
+            canvas.SavedValue(button, "Box.X").ShouldBe(60f, canvas.Describe());
+            canvas.SavedValue(button, "Box.Y").ShouldBe(40f);
 
-            canvas.SavedValue(button, "Box.X").ShouldBe(60f);
+            // Wandering back inside the dead zone mid-drag still moves the box. (Pressed away from
+            // the last release, which a quick release there would take as a double click.)
+            canvas.PressButton(canvas.WindowPointOf(80, 50));
+            canvas.DragTo(canvas.WindowPointOf(90, 50));
+            canvas.DragTo(canvas.WindowPointOf(84, 50));
+            canvas.ReleaseButton();
+            canvas.SavedValue(button, "Box.X").ShouldBe(64f, canvas.Describe());
+
+            // The bottom-right resize handle sits just outside the corner (124, 80).
+            canvas.Drag(canvas.WindowPointOf(130, 86), canvas.WindowPointOf(150, 96), steps: 5);
+            canvas.SavedValue(button, "Box.Width").ShouldBe(80f, canvas.Describe());
+            canvas.SavedValue(button, "Box.Height").ShouldBe(50f);
+
+            // The standard polygon is the square (0,0) (32,0) (32,32) (0,32), closed.
+            canvas.Tree.Click(canvas.Tree.NodeFor(shape));
+            canvas.Drag(canvas.WindowPointOf(332, 332), canvas.WindowPointOf(352, 342), steps: 5);
+            SavedPoints(canvas, button).ShouldBe(new[] { new Vector2(0, 0), new Vector2(32, 0), new Vector2(52, 42), new Vector2(0, 32), new Vector2(0, 0) });
 
             canvas.AssertOracles();
         });
