@@ -902,6 +902,26 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
     }
 
     [Fact]
+    public async Task CreateAllMissingFontFiles_ShouldResolveBackslashFontFileToNativePath()
+    {
+        // A project saved on Windows can store a .ttf Font value with backslashes. On macOS/Linux
+        // a backslash is a file-name character, so the generator must get a native path.
+        ControllableFontFileGenerator generator = new();
+        HeadlessFontGenerationService service = new(generator);
+        string projectDirectory = Path.Combine(Path.GetTempPath(), "GumFontPathTests_" + Guid.NewGuid().ToString("N"));
+
+        ScreenSave screen = new() { Name = "Screen" };
+        StateSave state = AddState(screen);
+        SetVar(state, "Font", "Fonts\\Custom.ttf");
+        SetVar(state, "FontSize", 14);
+        Project.Screens.Add(screen);
+
+        await service.CreateAllMissingFontFiles(Project, projectDirectory);
+
+        generator.FontFiles.ShouldContain(Path.Combine(projectDirectory, "Fonts", "Custom.ttf"));
+    }
+
+    [Fact]
     public async Task CreateAllMissingFontFiles_ShouldReturnNumberOfFontsGenerated()
     {
         ControllableFontFileGenerator generator = new();
@@ -1202,11 +1222,13 @@ public class HeadlessFontGenerationServiceTests : BaseTestClass
         public bool ShouldFail { get; init; }
         public int GenerateFontCallCount { get; private set; }
         public List<string> GeneratedFntPaths { get; } = new();
+        public List<string?> FontFiles { get; } = new();
 
         public Task<GeneralResponse> GenerateFont(BmfcSave bmfcSave, string outputFntPath, bool createTask)
         {
             GenerateFontCallCount++;
             GeneratedFntPaths.Add(outputFntPath);
+            FontFiles.Add(bmfcSave.FontFile);
             GeneralResponse response = ShouldFail
                 ? GeneralResponse.UnsuccessfulWith("Simulated failure")
                 : GeneralResponse.SuccessfulResponse;

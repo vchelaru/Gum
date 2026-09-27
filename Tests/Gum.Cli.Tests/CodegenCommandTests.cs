@@ -124,6 +124,30 @@ public class CodegenCommandTests : IDisposable
     }
 
     [Fact]
+    public void Codegen_BackslashCodeProjectRoot_PrintsNativePath()
+    {
+        // Settings saved on Windows use backslashes; on macOS/Linux those are file-name
+        // characters, so the printed root must be converted rather than shown as "Output\".
+        string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");
+        new ProjectCreator().Create(gumxPath);
+        File.WriteAllText(Path.Combine(_tempDirectory, "ProjectCodeSettings.codsj"),
+            """
+            {
+              "CodeProjectRoot": "Output\\",
+              "RootNamespace": "TestNamespace",
+              "OutputLibrary": 5,
+              "ObjectInstantiationType": 0,
+              "SyntaxVersion": "*"
+            }
+            """);
+
+        CliTestHelper result = CliTestHelper.Run("codegen", gumxPath);
+
+        string expectedRoot = Path.Combine(_tempDirectory, "Output") + Path.DirectorySeparatorChar;
+        result.StandardOutput.ShouldContain("Generating code into " + expectedRoot);
+    }
+
+    [Fact]
     public void Codegen_WhenProjectHasLocalizationCsv_GeneratedCodeContainsApplyLocalization()
     {
         string gumxPath = Path.Combine(_tempDirectory, "MyProject.gumx");

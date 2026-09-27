@@ -64,8 +64,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
 
     private Dictionary<IPlugin, PluginContainer> mPluginContainers = new Dictionary<IPlugin, PluginContainer>();
 
-    private const String CompatibilityFileName = "Compatibility.txt";
-    
     // Set by Initialize; the static plugin-shutdown/export helpers only run after startup.
     static PluginManager mGlobalInstance = null!;
     static List<PluginManager> mInstances = new List<PluginManager>();
@@ -1187,40 +1185,6 @@ public class PluginManager : IPluginManager, IUndoPluginNotifier, IDeletePluginN
         }
 
         return returnValue;
-    }
-
-    private static bool IsCompatible(string filepath)
-    {
-        var compatibilityFilePath = filepath + @"\" + CompatibilityFileName;
-
-        //Check for compatibility file
-        if (File.Exists(compatibilityFilePath))
-        {
-            string value;
-
-            //Get compatibility timestamp
-            using (var file = new StreamReader(compatibilityFilePath))
-            {
-                value = file.ReadToEnd();
-            }
-
-            DateTime compatibilityTime;
-
-            if (DateTime.TryParse(value, out compatibilityTime))
-            {
-                //If compatibility timestamp is newer than current Glue's timestamp, then don't compile plugin
-                // Environment.ProcessPath gives the actual EXE path in all deployment modes including
-                // single-file publish, where Assembly.GetExecutingAssembly().Location returns empty string.
-                // If ProcessPath is somehow null, skip the check (treat as compatible).
-                var exePath = Environment.ProcessPath;
-                if (exePath != null && new FileInfo(exePath).LastWriteTime < compatibilityTime)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 
     private static void ExportFile(ElementSave elementSave)

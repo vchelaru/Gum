@@ -12,6 +12,7 @@
 - An end-to-end test tags itself `[Trait("Feature", "<ID>")]`. The end-to-end suite is
   `Tests/Gum.Avalonia.Tests/EndToEnd/`, tagged `[Trait("Category", "EndToEnd")]`. A skipped test
   does not make its item `tested:`.
+- `pwsh Tools/e2e-coverage.ps1` lists the items no non-skipped end-to-end test tags, per area.
 - Sources swept: `StandardMenuModelBuilder` and every plugin `AddMenuEntry`, every context menu
   builder, `HotkeyManager` and the per-view key handlers, `DialogViewRegistry`, `TabViewRegistry`
   and plugin `AddControl` calls, the displayer registries, every drag-drop handler, `HeadOptions`,
@@ -19,7 +20,7 @@
 
 ## File menu (FILE)
 
-- FILE-001 New Project. tested: NewProjectLogicTests
+- FILE-001 New Project. tested: NewProjectLogicTests, ProjectOracleTests
 - FILE-002 Load Project
 - FILE-003 Load Recent, pick a listed project. tested: RecentFilesLogicTests
 - FILE-004 Load Recent > More... dialog. tested: LoadRecentViewModelTests
@@ -27,7 +28,7 @@
 - FILE-006 Save All
 - FILE-007 Export > Export as Image
 - FILE-008 Export > Export to SVG. tested: SvgExportMenuLogicTests
-- FILE-009 Auto-save after each edit. tested: UndoManagerTests
+- FILE-009 Auto-save after each edit. tested: UndoManagerTests, VariableScenarioTests
 - FILE-010 Last project reopens on launch
 - FILE-011 Legacy project upgrades on load. tested: OldProjectLoadTests
 - FILE-012 Load a `.gumj` (JSON) project. tested: JsonProjectFormatRoundTripTests
@@ -36,8 +37,8 @@
 
 ## Edit menu (EDIT)
 
-- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests
-- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests
+- EDIT-001 Undo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
+- EDIT-002 Redo. tested: UndoManagerTests, TreeScenarioTests, VariableScenarioTests
 - EDIT-003 Undo/Redo enabled state follows history
 - EDIT-004 Add > Screen. tested: AddScreenDialogViewModelTests
 - EDIT-005 Add > Component. tested: AddComponentDialogViewModelTests
@@ -106,7 +107,7 @@
 - TREE-008 Search box filters project. tested: ProjectSearchBoxTests
 - TREE-009 Search "Include Variables"
 - TREE-010 Clear search button. tested: ProjectSearchBoxTests
-- TREE-011 Error icon on broken element. tested: MainTreeViewPluginErrorIndicatorTests
+- TREE-011 Error icon on broken element. tested: MainTreeViewPluginErrorIndicatorTests, VariableScenarioTests
 - TREE-012 Node icons by type. tested: TreeNodeImageLogicTests
 - TREE-013 Project title: View in explorer. tested: ProjectTitleContextMenuBuilderTests
 - TREE-014 Project title: Copy full path. tested: ProjectTitleContextMenuBuilderTests
@@ -138,7 +139,7 @@
 - TREE-040 Standard element: View in explorer / Force Save
 - TREE-041 Mixed selection: Delete N items
 - TREE-042 Delete key deletes selection. tested: TreeScenarioTests
-- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests, TreeScenarioTests
+- TREE-043 F2 renames element. tested: RenameElementDialogViewModelTests, TreeScenarioTests, VariableScenarioTests
 - TREE-044 Ctrl+C / Ctrl+V instances. tested: CopyPasteLogicDestinationTests, TreeScenarioTests
 - TREE-045 Ctrl+X cut instances. tested: TreeScenarioTests
 - TREE-046 Ctrl+D duplicate. tested: TreeScenarioTests
@@ -202,17 +203,17 @@
 
 ## Variables grid (VAR)
 
-- VAR-001 Edit a text value. tested: VariableEditScenarioTests
-- VAR-002 Edit commits on focus loss. tested: VariableFocusLossScenarioTests
+- VAR-001 Edit a text value. tested: VariableEditScenarioTests, VariableScenarioTests
+- VAR-002 Edit commits on focus loss. tested: VariableFocusLossScenarioTests, VariableScenarioTests
 - VAR-003 Filter box. tested: VariableFilterServiceTests
 - VAR-004 Escape clears filter. tested: VariablesTabTests
 - VAR-005 Category collapse
 - VAR-006 Label drag scrubs number. tested: LabelDragScrubLogicTests
 - VAR-007 Multi-select edit. tested: MultiSelectCommitLogicTests
-- VAR-008 State banner shows edited state. tested: StateEditingIndicatorServiceTests
-- VAR-009 Row: Make Default. tested: VariableEditScenarioTests
+- VAR-008 State banner shows edited state. tested: StateEditingIndicatorServiceTests, VariableScenarioTests
+- VAR-009 Row: Make Default. tested: VariableEditScenarioTests, VariableScenarioTests
 - VAR-010 Row: Copy Qualified Variable Name. tested: VariableGridEntryTests
-- VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests
+- VAR-011 Row: Expose Variable. tested: VariableMenuScenarioTests, VariableScenarioTests
 - VAR-012 Row: Un-expose Variable. tested: VariableMenuScenarioTests
 - VAR-013 Row: Show on Instances
 - VAR-014 Row: Hide from Instances. tested: VariableMenuScenarioTests
@@ -225,7 +226,7 @@
 - VAR-021 Add Variable button. tested: AddVariableButtonVisibilityLogicTests
 - VAR-022 Behavior variable: Edit Variable. tested: VariableGridMainControlViewModelTests
 - VAR-023 Behavior variable: Delete Variable. tested: DeleteVariableServiceTests
-- VAR-024 Variable references (VariableReferences row). tested: VariableReferenceLogicTests
+- VAR-024 Variable references (VariableReferences row). tested: VariableReferenceLogicTests, VariableScenarioTests
 - VAR-025 F12 on reference goes to source
 - VAR-026 Parent dropdown. tested: AvailableParentsTypeConverterTests
 - VAR-027 State dropdown on instance. tested: StateReferencingInstanceMemberTests
@@ -239,11 +240,11 @@
 
 ## Grid displayers (DISP)
 
-- DISP-001 TextBox. tested: TextBoxDisplayLogicTests
-- DISP-002 MultiLineTextBox. tested: PropertyGridManagerStringDisplayerTests
-- DISP-003 CheckBox. tested: SimpleEditorTests
+- DISP-001 TextBox. tested: TextBoxDisplayLogicTests, VariableScenarioTests
+- DISP-002 MultiLineTextBox. tested: PropertyGridManagerStringDisplayerTests, VariableScenarioTests
+- DISP-003 CheckBox. tested: SimpleEditorTests, VariableScenarioTests
 - DISP-004 NullableBool. tested: SimpleEditorTests
-- DISP-005 ComboBox. tested: SimpleEditorTests
+- DISP-005 ComboBox. tested: SimpleEditorTests, VariableScenarioTests
 - DISP-006 EditableComboBox. tested: SimpleEditorTests
 - DISP-007 ListBox. tested: CompositeEditorTests
 - DISP-008 Slider. tested: SimpleEditorTests
@@ -251,13 +252,13 @@
 - DISP-010 AngleSelector. tested: CompositeEditorTests
 - DISP-011 FileSelection. tested: FilePickingTests
 - DISP-012 MultiFile. tested: CompositeEditorTests
-- DISP-013 StringList. tested: CompositeEditorTests
+- DISP-013 StringList. tested: CompositeEditorTests, VariableScenarioTests
 - DISP-014 InlineChannels. tested: InlineChannelsDisplayLogicTests
 - DISP-015 ToggleButtonOption. tested: CompositeEditorTests
-- DISP-016 Color (picker and hex). tested: CompactColorPickerTests
+- DISP-016 Color (picker and hex). tested: CompactColorPickerTests, VariableScenarioTests
 - DISP-017 CornerRadius (linked/unlinked). tested: VariablesTabTests
 - DISP-018 RemoveButton. tested: VariablesTabTests
-- DISP-019 ChildrenLayout toggles. tested: VariablesTabTests
+- DISP-019 ChildrenLayout toggles. tested: VariablesTabTests, VariableScenarioTests
 - DISP-020 Width/Height Units toggles. tested: VariablesTabTests
 - DISP-021 X/Y Units toggles. tested: VariableGridToggleOptionsTests
 - DISP-022 X/Y Origin toggles. tested: VariableGridToggleOptionsTests
@@ -266,7 +267,7 @@
 
 ## States tab (STATE)
 
-- STATE-001 Select a state. tested: StateTreeViewModelTests
+- STATE-001 Select a state. tested: StateTreeViewModelTests, VariableScenarioTests
 - STATE-002 "+ New category" button
 - STATE-003 Add State. tested: StateTreeRightClickViewModelTests
 - STATE-004 Add Category. tested: AddCategoryDialogViewModelTests
@@ -490,23 +491,23 @@ Cross-feature scenarios the code lists don't show. Most need a real project, a s
 - COMBO-001 Copy instance with variable reference into another element
 - COMBO-002 Paste instance whose parent isn't copied
 - COMBO-003 Paste instance into element lacking its component type's state
-- COMBO-004 Rename element other elements inherit from
-- COMBO-005 Rename component used as instances elsewhere
+- COMBO-004 Rename element other elements inherit from. tested: VariableScenarioTests
+- COMBO-005 Rename component used as instances elsewhere. tested: VariableScenarioTests
 - COMBO-006 Rename component referenced by animations
 - COMBO-007 Rename instance referenced by variable references
 - COMBO-008 Rename state used by instances and animations
 - COMBO-009 Rename category with exposed state variable
-- COMBO-010 Delete component used as instances
+- COMBO-010 Delete component used as instances. tested: VariableScenarioTests
 - COMBO-011 Delete base element of inherited elements
 - COMBO-012 Delete state used by animation keyframes
 - COMBO-013 Delete instance that is a parent of others
-- COMBO-014 Undo across a state switch
-- COMBO-015 Undo across an element switch
-- COMBO-016 Undo a rename, then save and reload
+- COMBO-014 Undo across a state switch. tested: VariableScenarioTests
+- COMBO-015 Undo across an element switch. tested: VariableScenarioTests
+- COMBO-016 Undo a rename, then save and reload. tested: VariableScenarioTests
 - COMBO-017 Undo a cascading delete. tested: CrossElementStateUndoTests
 - COMBO-018 Undo all edits returns byte-identical files. tested: TreeScenarioTests
-- COMBO-019 Edit in category state, then Make Default
-- COMBO-020 Expose variable, then set it on an instance
+- COMBO-019 Edit in category state, then Make Default. tested: VariableScenarioTests
+- COMBO-020 Expose variable, then set it on an instance. tested: VariableScenarioTests
 - COMBO-021 Un-expose variable set on instances
 - COMBO-022 Change base type with instances and states set
 - COMBO-023 Reparent across element via tree drag, then undo
