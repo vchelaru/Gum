@@ -481,11 +481,72 @@ public abstract class GumServiceSkiaBase : IGumService
                 : gumProjectFile;
             var gumDirectory = FileManager.GetDirectory(absolutePath);
 
+            _relativeDirectoryBeforeProjectLoad ??= FileManager.RelativeDirectory;
             FileManager.RelativeDirectory = gumDirectory;
             _projectFileProvider = new LooseFileGumFileProvider(gumDirectory);
         }
 
         IsInitialized = true;
+    }
+
+    // The RelativeDirectory in effect before Initialize pointed it at a loaded project, restored by
+    // Uninitialize. Null when no project has been loaded since the last Uninitialize.
+    private string? _relativeDirectoryBeforeProjectLoad;
+
+    /// <summary>
+    /// Tears down what <c>Initialize</c> set up — the roots, Forms state, the loaded project, cached
+    /// content, and hot reload — so this instance can be initialized again cleanly.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the MonoGame/raylib <c>GumService.Uninitialize</c>, this keeps the runtime-type
+    /// registrations and the property/renderable delegates, removing only the ones the loaded
+    /// project added. Skia wires the rest once per process (SystemManagers' global setup and
+    /// generated code's module initializers), so a later <c>Initialize</c> would not restore them.
+    /// </remarks>
+    public void Uninitialize()
+    {
+        _hotReloadManager?.Stop();
+        _hotReloadManager = null;
+
+        DeferredQueue?.Clear();
+
+        InteractiveGue.CurrentInputReceiver = null;
+
+        if (Root != null)
+        {
+            Root.Children.Clear();
+            Root.RemoveFromManagers();
+            Root = null!;
+        }
+
+        // Forms roots, Forms input registrations and templates, the project, and the content cache.
+        // Shared with the MonoGame/raylib GumService.
+        GumServiceTeardown.ReleaseFormsAndContent();
+
+        FormsUtilities.Uninitialize();
+        FormsUtilities.UnregisterFromFileFormRuntimeDefaults();
+
+        _projectFileProvider = null;
+        LastLoadResult = null;
+
+        GraphicalUiElement.CanvasWidth = 0;
+        GraphicalUiElement.CanvasHeight = 0;
+
+        _windowFit?.Reset();
+
+        SystemManagers.Default = null!;
+        IGumService.Default = null;
+
+        if (_relativeDirectoryBeforeProjectLoad != null)
+        {
+            FileManager.RelativeDirectory = _relativeDirectoryBeforeProjectLoad;
+            _relativeDirectoryBeforeProjectLoad = null;
+        }
+
+        _hasReceivedUpdate = false;
+        _previousTotalSeconds = 0;
+
+        IsInitialized = false;
     }
 
     /// <summary>
