@@ -90,6 +90,20 @@ public class AnimationChainLogic
     /// </summary>
     public Action<AnimationFrame>? ApplyFrame;
 
+    /// <summary>
+    /// Returns a copy for a cloned renderable. The copy starts at this playback position (chain,
+    /// frame, time, speed, looping, animate) and shares the chain list, but advances on its own.
+    /// Its frames go to <paramref name="applyFrame"/>, and <see cref="AnimationChainCycled"/>
+    /// subscribers on this instance are not carried over, since they belong to the source.
+    /// </summary>
+    public AnimationChainLogic Clone(Action<AnimationFrame>? applyFrame)
+    {
+        AnimationChainLogic clone = (AnimationChainLogic)MemberwiseClone();
+        clone.ApplyFrame = applyFrame;
+        clone.AnimationChainCycled = null;
+        return clone;
+    }
+
     public bool AnimateSelf(double secondDifference)
     {
         if (!_animate || _currentChainIndex == -1 || _chains == null ||
