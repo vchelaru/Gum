@@ -282,6 +282,39 @@ public class DialogScenarioTests
     }
 
     [AvaloniaFact]
+    [Trait("Feature", "DLG-015")]
+    public void ManagePlugins_TurningAPluginOff_HidesItsTab_AndOnShowsItAgain()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        AvaloniaTabManager tabs = (AvaloniaTabManager)Services.GetRequiredService<ITabManager>();
+        tree.PickMainMenu("View", "View Animations");
+        AvaloniaPluginTab animations = tabs.AllTabs.Single(tab => tab.Title == "Animations" && tab.IsVisible);
+        try
+        {
+            tree.Dialogs.AnswerNext<PluginsDialogViewModel>(dialog =>
+            {
+                PluginItemViewModel stateAnimation = dialog.Plugins.Single(plugin => plugin.DisplayText.StartsWith("State Animation Plugin", StringComparison.Ordinal));
+                stateAnimation.IsEnabled = false;
+                animations.IsVisible.ShouldBeFalse("the tab of a plugin that is off is hidden");
+                Services.GetRequiredService<Gum.Menus.MenuModel>().GetItem("View")!.Items
+                    .Single(item => item.Header == "Hide Animations" || item.Header == "View Animations")
+                    .IsEnabled.ShouldBeFalse("the menu item of a plugin that is off is disabled");
+                stateAnimation.IsEnabled = true;
+                return true;
+            });
+
+            tree.PickMainMenu("Plugins", "Manage Plugins");
+
+            animations.IsVisible.ShouldBeTrue("turning the plugin back on shows the tab it had showing");
+            tree.AssertOracles();
+        }
+        finally
+        {
+            animations.Hide();
+        }
+    }
+
+    [AvaloniaFact]
     [Trait("Feature", "PROP-007")]
     [Trait("Feature", "PROP-012")]
     [Trait("Feature", "PROP-015")]
