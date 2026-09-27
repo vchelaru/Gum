@@ -395,7 +395,7 @@ public class HeadlessErrorChecker : IHeadlessErrorChecker
                     {
                         ElementName = element.Name,
                         Code = "GUM0009",
-                        Severity = ErrorSeverity.Error,
+                        Severity = ErrorSeverity.Warning,
                         Message = $"{state.Name}: the {variableList.Name} line \"{line}\" reads {problem}, so it never applies."
                     });
                 }

@@ -46,7 +46,7 @@ internal static class ProjectOracles
 
     /// <summary>
     /// Loads the project at <paramref name="projectPath"/> from disk and runs the checks
-    /// <c>gumcli check</c> runs (load errors plus <see cref="HeadlessErrorChecker"/>); throws on any
+    /// <c>gumcli check</c> runs (load errors plus <see cref="HeadlessErrorChecker"/>); throws on any GUM0009 warning or any
     /// error. The tool's own project stays loaded.
     /// </summary>
     public static void AssertCheckClean(string projectPath)
@@ -68,7 +68,9 @@ internal static class ProjectOracles
         {
             ObjectFinder.Self.GumProjectSave = toolProject;
         }
-        errors.Where(error => error.Severity == ErrorSeverity.Error)
+        // GUM0009 (a reference to something the project lacks) is only a warning so it doesn't
+        // block codegen, but no scenario should leave one behind.
+        errors.Where(error => error.Severity == ErrorSeverity.Error || error.Code == "GUM0009")
             .Select(error => $"{error.ElementName}: {error.Message}")
             .ShouldBeEmpty("gumcli check reports errors in the saved project");
     }

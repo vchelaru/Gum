@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using Gum.Avalonia.Tests.Harness;
 using Gum.Commands;
 using Gum.DataTypes;
+using Gum.DataTypes.Variables;
 using Gum.Managers;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
@@ -72,6 +73,21 @@ public class ProjectOracleTests
 
         Should.Throw<ShouldAssertException>(() => ProjectOracles.AssertCheckClean(tree.Project.ProjectFilePath))
             .Message.ShouldContain("Button");
+        ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(tree.Project.Project);
+    }
+
+    [AvaloniaFact]
+    public void AReferenceToAMissingComponent_FailsTheCheckOracle()
+    {
+        using ProjectTreeHarness tree = new ProjectTreeHarness();
+        ComponentSave button = tree.Project.AddComponent("Button");
+        VariableListSave<string> references = new VariableListSave<string> { Name = "VariableReferences", Type = "string" };
+        references.Value.Add("Width = Components/NoSuchStyles.Width");
+        button.DefaultState!.VariableLists.Add(references);
+        tree.SaveAll();
+
+        Should.Throw<ShouldAssertException>(() => ProjectOracles.AssertCheckClean(tree.Project.ProjectFilePath))
+            .Message.ShouldContain("Components/NoSuchStyles");
         ObjectFinder.Self.GumProjectSave.ShouldBeSameAs(tree.Project.Project);
     }
 

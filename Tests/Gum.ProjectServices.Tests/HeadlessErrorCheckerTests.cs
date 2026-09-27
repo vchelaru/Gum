@@ -1600,7 +1600,7 @@ public class HeadlessErrorCheckerTests : BaseTestClass
 
         ErrorResult error = errors.ShouldHaveSingleItem();
         error.Code.ShouldBe("GUM0009");
-        error.Severity.ShouldBe(ErrorSeverity.Error);
+        error.Severity.ShouldBe(ErrorSeverity.Warning);
         error.ElementName.ShouldBe("Label");
         error.Message.ShouldContain(line);
         error.Message.ShouldContain(missingElement);

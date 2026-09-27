@@ -350,7 +350,7 @@ Blue = Components/Styles.PrimaryColor.Blue
 
 A variable reference can read from something the project does not have: an element that was deleted, renamed outside of Gum, or never imported, or an instance or variable that element does not have. For example, `Color = Components/Styles.Primary.FillColor` in a project with no `Styles` component. Such a reference never resolves, so the variable keeps its default value.
 
-Gum reports a **GUM0009** error in the [Errors tab](../../editor-tab.md) for each of these lines, naming the element, the state, the line, and what it reads that is missing. `gumcli check` reports the same error. To resolve it, add or import the missing element, or change the reference to point at one the project has.
+Gum reports a **GUM0009** warning in the [Errors tab](../../editor-tab.md) for each of these lines, naming the element, the state, the line, and what it reads that is missing. `gumcli check` reports the same warning. To resolve it, add or import the missing element, or change the reference to point at one the project has.
 
 Renaming an element in Gum updates the references to it, so this usually happens after editing files outside of Gum or importing only part of another project.
 
