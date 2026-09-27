@@ -733,13 +733,18 @@ public class ElementUndoStrategy : IUndoStrategy
                 continue;
             }
 
-            var from = isUndo ? change.After : change.Before;
-            var to = isUndo ? change.Before : change.After;
+            bool didChange = change.BeforeList != null && change.AfterList != null
+                ? ApplyCrossElementVariableListChange(state,
+                    isUndo ? change.AfterList : change.BeforeList,
+                    isUndo ? change.BeforeList : change.AfterList)
+                : ApplyCrossElementVariableChange(state,
+                    isUndo ? change.After : change.Before,
+                    isUndo ? change.Before : change.After);
 
-            if (ApplyCrossElementVariableChange(state, from, to))
+            if (didChange)
             {
                 _fileCommands.TryAutoSaveElement(change.Container);
-                _pluginNotifier.VariableSet(change.Container, instance, (to ?? from)!.GetRootName(), null);
+                _pluginNotifier.VariableSet(change.Container, instance, change.RootName, null);
             }
         }
     }
@@ -809,6 +814,28 @@ public class ElementUndoStrategy : IUndoStrategy
         existing.Name = to.Name;
         existing.Type = to.Type;
         existing.Value = to.Value;
+        return true;
+    }
+
+    /// <summary>
+    /// Replaces the entries of the list in <paramref name="state"/> named like <paramref name="from"/>
+    /// with those of <paramref name="to"/>. Skipped unless the list still holds exactly what the action
+    /// left, so an edit made since is never overwritten. Returns whether anything changed.
+    /// </summary>
+    private static bool ApplyCrossElementVariableListChange(StateSave state, VariableListSave from, VariableListSave to)
+    {
+        var existing = state.VariableLists.FirstOrDefault(list => list.Name == from.Name);
+
+        if (existing == null || !existing.ValueAsIList.Cast<object>().SequenceEqual(from.ValueAsIList.Cast<object>()))
+        {
+            return false;
+        }
+
+        existing.ValueAsIList.Clear();
+        foreach (var item in to.ValueAsIList)
+        {
+            existing.ValueAsIList.Add(item);
+        }
         return true;
     }
 
