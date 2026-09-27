@@ -5,6 +5,11 @@ using Gum.Avalonia.Tests;
 using Microsoft.Extensions.DependencyInjection;
 
 [assembly: AvaloniaTestApplication(typeof(TestAppBuilder))]
+// One Application and one UI dispatcher for the whole assembly. Per-test isolation nulls
+// Dispatcher.UIThread before each test and rebuilds it lazily without a lock, so tool work still
+// running on a pool thread (font generation progress, for one) can create it against the wrong
+// platform during that window and leave the next test's window rendering and hit-testing nothing.
+[assembly: AvaloniaTestIsolation(AvaloniaTestIsolationLevel.PerAssembly)]
 
 namespace Gum.Avalonia.Tests;
 

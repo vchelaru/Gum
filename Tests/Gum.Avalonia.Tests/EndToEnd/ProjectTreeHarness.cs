@@ -51,7 +51,7 @@ internal sealed class ProjectTreeHarness : IDisposable
             // Adding elements refuses a project that was never saved.
             SaveAll();
             TreeManager.RefreshUi();
-            _driver = new HeadlessWindowDriver((Control)View.Content, width: 400, height: 900, framesFolderName: "GumProjectTree", contentOutlivesTest: true);
+            _driver = new HeadlessWindowDriver((Control)View.Content, width: 400, height: 900, framesFolderName: "GumProjectTree");
             AppWideWindowInput.RouteHotkeys(_driver.Window,
                 Services.GetRequiredService<IHotkeyManager>(),
                 Services.GetRequiredService<AvaloniaModifierKeyState>());

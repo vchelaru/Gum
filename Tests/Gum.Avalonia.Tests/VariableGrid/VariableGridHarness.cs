@@ -53,7 +53,7 @@ internal sealed class VariableGridHarness : IDisposable
         Project = project ?? new ToolProjectFixture("GumVariableGrid");
         try
         {
-            _driver = new HeadlessWindowDriver(View, width: 520, height: 1600, framesFolderName: "GumVariableGrid", contentOutlivesTest: true);
+            _driver = new HeadlessWindowDriver(View, width: 520, height: 1600, framesFolderName: "GumVariableGrid");
         }
         catch
         {

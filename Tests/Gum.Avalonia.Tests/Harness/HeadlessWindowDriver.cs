@@ -20,41 +20,31 @@ namespace Gum.Avalonia.Tests.Harness;
 internal sealed class HeadlessWindowDriver : IDisposable
 {
     private readonly string _framesFolder;
-    private readonly bool _contentOutlivesTest;
 
     /// <summary>Shows <paramref name="content"/> in a new headless window of the given size.</summary>
     /// <param name="framesFolderName">Folder under the temp folder that <see cref="SaveFrame"/> writes to, unless GUM_HEADLESS_FRAMES names one.</param>
-    /// <param name="contentOutlivesTest">
-    /// True for a view built once for the whole run (a singleton tab's content), which an earlier
-    /// test's window may have hosted; see <see cref="ReleaseTemplatedContent"/>.
-    /// </param>
-    public HeadlessWindowDriver(Control content, double width, double height, string framesFolderName, bool contentOutlivesTest = false)
+    public HeadlessWindowDriver(Control content, double width, double height, string framesFolderName)
     {
         _framesFolder = Environment.GetEnvironmentVariable("GUM_HEADLESS_FRAMES") is { Length: > 0 } folder
             ? folder
             : Path.Combine(Path.GetTempPath(), framesFolderName, "frames");
-        _contentOutlivesTest = contentOutlivesTest;
-        List<ContentPresenter> released = contentOutlivesTest ? ReleaseTemplatedContent(content) : new List<ContentPresenter>();
+        DetachFromHost(content);
         Window = new Window { Content = content, Width = width, Height = height };
         Window.Show();
         Layout();
-        foreach (ContentPresenter presenter in released.Where(presenter => presenter.GetVisualRoot() == Window))
-        {
-            // The template was kept rather than rebuilt; hand the presenter its content back.
-            presenter.ClearValue(ContentPresenter.ContentProperty);
-            ReleasedPresenters.Remove(presenter);
-            ReleaseIfDropped(presenter);
-        }
-        Layout();
+        // Hit testing reads what the compositor last rendered, and the compositor takes one frame
+        // at a time: a new frame waits until the previous one has been rendered and acknowledged.
+        // The application outlives the test and nothing renders between tests, so an earlier
+        // test's last frame can still be waiting here. The first tick renders that frame, the
+        // jobs acknowledge it and send this window's first frame, and the second tick renders it.
+        AvaloniaHeadlessPlatform.ForceRenderTimerTick();
+        Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         if (Window.InputHitTest(new Point(2, 2)) == null)
         {
-            // Every gesture would land on nothing; see Animations/README.md, "Gotchas". Only a
-            // fresh process gets an independent roll, so fail fast rather than retry here. A view
-            // that outlives the test is released as Dispose releases it, or its templates keep it
-            // and every later test that hosts it fails with "already has a visual parent".
+            // Every gesture would land on nothing; see Animations/README.md, "Gotchas".
             Dispose();
-            throw new InvalidOperationException("The window hit-tests nothing after a render tick: this test's Avalonia session bound its compositor to a dispatcher that is not the current one.");
+            throw new InvalidOperationException("The window hit-tests nothing after a render tick: the compositor has not rendered its first frame.");
         }
     }
 
@@ -232,68 +222,21 @@ internal sealed class HeadlessWindowDriver : IDisposable
     }
 
     /// <summary>
-    /// Frees a view that outlives the test for another window. Each test runs in its own Avalonia
-    /// session, so the next host re-applies every control's template, but the old template's
-    /// presenters still hold the controls' content as their visual child and the new presenters
-    /// then fail with "already has a visual parent". Clearing the old presenters (and whatever
-    /// presenter hosts the view itself, such as a closed main window's tab) releases it.
+    /// Takes a view that outlives the test (a singleton tab's content) out of whatever still holds
+    /// it, such as the tab of a main window an earlier test showed and closed, so a window can host it.
     /// </summary>
-    public static List<ContentPresenter> ReleaseTemplatedContent(Control view)
+    public static void DetachFromHost(Control view)
     {
         if (view.GetVisualParent() is ContentPresenter host)
         {
-            // Nothing hosts this presenter again (the main window cannot be re-shown), so it is not handed back.
             host.Content = null;
         }
-        List<ContentPresenter> released = new List<ContentPresenter>();
-        foreach (ContentPresenter presenter in view.GetVisualDescendants().OfType<ContentPresenter>().ToList())
-        {
-            // A presenter released when an earlier window closed still counts: the next host may keep its template.
-            if (presenter.TemplatedParent != null && (presenter.Child != null || ReleasedPresenters.TryGetValue(presenter, out _)))
-            {
-                presenter.Content = null;
-                ReleasedPresenters.AddOrUpdate(presenter, new object());
-                released.Add(presenter);
-            }
-        }
-        return released;
     }
 
-    /// <summary>
-    /// A kept template can still be rebuilt by a later layout pass (seen after the main window
-    /// hosted the view in an earlier test). Its old presenter then leaves the window still holding
-    /// the content, the new presenter cannot take it, and the view shows nothing for the rest of
-    /// the run. So a presenter that leaves the visual tree while its templated parent stays in it
-    /// lets its content go. A presenter that leaves along with its parent (the window closing, a
-    /// list recycling its container) keeps it.
-    /// </summary>
-    private static void ReleaseIfDropped(ContentPresenter presenter)
-    {
-        // Captured now: a template being replaced clears its parts' templated parent.
-        Visual? owner = presenter.TemplatedParent as Visual;
-        void Release(object? sender, VisualTreeAttachmentEventArgs e)
-        {
-            presenter.DetachedFromVisualTree -= Release;
-            if (owner?.GetVisualRoot() != null)
-            {
-                presenter.Content = null;
-            }
-        }
-        presenter.DetachedFromVisualTree += Release;
-    }
-
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<ContentPresenter, object> ReleasedPresenters = new();
-
-    /// <summary>Closes the window and detaches its content, so the view can be hosted again.</summary>
+    /// <summary>Closes the window and detaches its content, so a later window can host the view.</summary>
     public void Dispose()
     {
-        Control? content = Window.Content as Control;
         Window.Content = null;
         Window.Close();
-        if (_contentOutlivesTest && content != null)
-        {
-            // So a later session (the main window, another harness) can host it.
-            ReleaseTemplatedContent(content);
-        }
     }
 }
