@@ -9,7 +9,6 @@ using Gum.Plugins;
 using Gum.Plugins.ImportPlugin.ViewModel;
 using Gum.Plugins.InternalPlugins.LoadRecentFilesPlugin.ViewModels;
 using Gum.Services.Dialogs;
-using GumFormsPlugin.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using ToolsUtilities;
@@ -29,7 +28,7 @@ public class DialogScenarioTests
 
     private static IServiceProvider Services => TestAppBuilder.Services;
 
-    #region New project and Forms
+    #region New project
 
     [AvaloniaFact]
     [Trait("Feature", "DLG-004")]
@@ -59,67 +58,6 @@ public class DialogScenarioTests
         project.Components.ShouldBeEmpty();
         File.Exists(Path.Combine(tree.Project.ProjectFolder, "Screens", NewProjectLogic.StartingScreenName + ".gusx")).ShouldBeTrue();
         tree.ChildTexts(tree.RootNode("Screens")).ShouldBe(new[] { NewProjectLogic.StartingScreenName });
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact(Skip = "#5304: the test output has no staged Forms themes")]
-    [Trait("Feature", "DLG-004")]
-    [Trait("Feature", "FILE-001")]
-    public void NewProject_WithFormsAndTheDemoScreen_ImportsTheThemesComponents()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Dialogs.AnswerNext<NewProjectDialogViewModel>(dialog =>
-        {
-            dialog.IsIncludeFormsControls = true;
-            dialog.IsIncludeDemoScreenGum = true;
-            return true;
-        });
-        tree.Dialogs.AnswerNextSaveFile(tree.Project.ProjectFilePath);
-
-        tree.PickMainMenu("File", "New Project");
-        tree.WaitUntil(() => tree.SelectedState.SelectedScreen?.Name == NewProjectLogic.StartingScreenName, AsyncWork, "the new project's starting screen");
-
-        GumProjectSave project = Services.GetRequiredService<IProjectManager>().GumProjectSave.ShouldNotBeNull();
-        project.Components.ShouldNotBeEmpty("the Forms theme brings its components");
-        project.Screens.Count.ShouldBeGreaterThan(1, "the demo screen comes with the starting screen");
-        foreach (ComponentSave component in project.Components)
-        {
-            File.Exists(Path.Combine(tree.Project.ProjectFolder, "Components", component.Name.Replace('/', Path.DirectorySeparatorChar) + ".gucx"))
-                .ShouldBeTrue($"{component.Name} was saved");
-        }
-
-        tree.AssertOracles();
-    }
-
-    [AvaloniaFact(Skip = "#5304: the Forms plugin is not loaded and the test output has no staged Forms themes")]
-    [Trait("Feature", "DLG-021")]
-    public void AddForms_FromTheContentMenu_ImportsTheThemesComponents_IntoAnExistingProject()
-    {
-        using ProjectTreeHarness tree = new ProjectTreeHarness();
-        tree.Project.AddComponent("Card");
-        tree.Dialogs.AnswerNext<AddFormsViewModel>(dialog =>
-        {
-            dialog.IsIncludeDemoScreenGum = false;
-            return true;
-        });
-
-        tree.PickMainMenu("Content", "Add Forms Components");
-        tree.WaitUntil(() => tree.Project.Project.Components.Count > 1, AsyncWork, "the Forms components");
-        // The import adds its components one by one; let it finish.
-        int count = -1;
-        tree.WaitUntil(() =>
-        {
-            int now = tree.Project.Project.Components.Count;
-            bool settled = now == count;
-            count = now;
-            Thread.Sleep(50);
-            return settled;
-        }, AsyncWork, "the Forms import to finish");
-
-        tree.Project.Project.Components.ShouldContain(component => component.Name == "Card");
-        tree.Project.Project.Screens.ShouldBeEmpty("no demo screen was asked for");
-        tree.RootNode("Components").Nodes.Count.ShouldBeGreaterThan(1);
 
         tree.AssertOracles();
     }
@@ -255,7 +193,7 @@ public class DialogScenarioTests
         tree.AssertOracles();
     }
 
-    [AvaloniaFact(Skip = "#5303: re-enabling a plugin runs its StartUp again and adds its menu item twice")]
+    [AvaloniaFact]
     [Trait("Feature", "DLG-015")]
     public void ManagePlugins_TurningAPluginOffAndOnAgain_AddsItsMenuItemOnce()
     {
