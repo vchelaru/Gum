@@ -52,6 +52,7 @@ public class DragDropManager : IDragDropManager
     private readonly IReorderLogic _reorderLogic;
     private readonly IProjectManager _projectManager;
     private readonly IProjectState _projectState;
+    private readonly IPathCaseSensitivity _pathCaseSensitivity;
 
     #endregion
 
@@ -73,8 +74,10 @@ public class DragDropManager : IDragDropManager
         IPluginManager pluginManager,
         IReorderLogic reorderLogic,
         IProjectManager projectManager,
-        IProjectState projectState)
+        IProjectState projectState,
+        IPathCaseSensitivity pathCaseSensitivity)
     {
+        _pathCaseSensitivity = pathCaseSensitivity;
         _addInstanceLogic = addInstanceLogic;
         _circularReferenceManager = circularReferenceManager;
         _selectedState = selectedState;
@@ -707,27 +710,39 @@ public class DragDropManager : IDragDropManager
         var draggedPath = draggedFolderNode.GetFullFilePath();
         var targetPath = targetTreeNode.GetFullFilePath();
 
+        if (draggedPath == null || targetPath == null)
+        {
+            return false;
+        }
+
+        // Foo and foo are one folder only where the file system ignores case.
+        StringComparison pathComparison = _pathCaseSensitivity.GetComparison(draggedPath.FullPath);
+
         // Cannot drop onto itself
-        if (draggedPath == null || targetPath == null || draggedPath == targetPath)
+        if (IsSameFolder(draggedPath, targetPath, pathComparison))
         {
             return false;
         }
 
         // Cannot drop into a descendant of itself (circular move)
-        if (targetPath.FullPath.StartsWith(draggedPath.FullPath, StringComparison.OrdinalIgnoreCase))
+        if (targetPath.FullPath.StartsWith(draggedPath.FullPath, pathComparison))
         {
             return false;
         }
 
         // Cannot drop into current parent (no-op)
         var parentPath = draggedFolderNode.Parent?.GetFullFilePath();
-        if (parentPath != null && targetPath == parentPath)
+        if (parentPath != null && IsSameFolder(targetPath, parentPath, pathComparison))
         {
             return false;
         }
 
         return true;
     }
+
+    // FilePath's == ignores case everywhere; this ignores it only where the file system does.
+    private static bool IsSameFolder(FilePath first, FilePath second, StringComparison pathComparison) =>
+        string.Equals(first.FullPath, second.FullPath, pathComparison);
 
     public void OnNodeSortingDropped(IEnumerable<ITreeNode> draggedNodes, ITreeNode targetNode, DropTarget? dropTarget)
     {
@@ -847,10 +862,11 @@ public class DragDropManager : IDragDropManager
         string newRel = FileManager.MakeRelative(newFullPath, root, preserveCase: true)
             .Replace("\\", "/");
 
+        StringComparison pathComparison = _pathCaseSensitivity.GetComparison(oldFullPath);
         foreach (var element in elements.ToArray())
         {
             if (element.Name.Replace("\\", "/")
-                .StartsWith(oldRel, StringComparison.OrdinalIgnoreCase))
+                .StartsWith(oldRel, pathComparison))
             {
                 string oldName = element.Name;
                 element.Name = (newRel + element.Name.Substring(oldRel.Length))

@@ -5,6 +5,7 @@ using Gum.Logic;
 using Gum.Logic.FileWatch;
 using Gum.Managers;
 using Gum.Plugins;
+using Gum.Services;
 using Gum.Services.Dialogs;
 using Gum.ToolCommands;
 using Gum.ToolStates;
@@ -34,6 +35,7 @@ public class FileCommands : IFileCommands
     private readonly IPluginManager _pluginManager;
     private readonly IRecycleBinService _recycleBinService;
     private readonly ICsvLocalizationLoader _csvLocalizationLoader;
+    private readonly IPathCaseSensitivity _pathCaseSensitivity;
     // Lazy: NewProjectLogic saves through IFileCommands, so a direct reference would be a
     // construction cycle.
     private readonly Lazy<INewProjectLogic> _newProjectLogicLazy;
@@ -52,9 +54,11 @@ public class FileCommands : IFileCommands
         IPluginManager pluginManager,
         IRecycleBinService recycleBinService,
         ICsvLocalizationLoader csvLocalizationLoader,
-        Lazy<INewProjectLogic> newProjectLogic)
+        Lazy<INewProjectLogic> newProjectLogic,
+        IPathCaseSensitivity pathCaseSensitivity)
     {
         _newProjectLogicLazy = newProjectLogic;
+        _pathCaseSensitivity = pathCaseSensitivity;
         _selectedState = selectedState;
         _undoManager = undoManager;
         _dialogService = dialogService;
@@ -102,8 +106,9 @@ public class FileCommands : IFileCommands
         // (Windows/macOS). The general merge-into-destination logic below no-ops the "create" and
         // "move each file into itself" steps, then throws on the final Directory.Delete(source)
         // because the directory is still non-empty. Directory.Move handles this case correctly.
+        // On a case-sensitive file system the two are separate folders and merge like any other.
         bool isSameDirectoryDifferentCase =
-            string.Equals(NormalizeDirectoryPath(source), NormalizeDirectoryPath(destination), StringComparison.OrdinalIgnoreCase);
+            string.Equals(NormalizeDirectoryPath(source), NormalizeDirectoryPath(destination), _pathCaseSensitivity.GetComparison(source));
 
         if (isSameDirectoryDifferentCase)
         {
