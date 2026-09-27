@@ -239,9 +239,11 @@ public class Sprite : SpriteBatchRenderableBase,
     public float? TextureWidth => RenderTargetTextureSource?.Width ?? Texture?.Width;
     public float? TextureHeight => RenderTargetTextureSource?.Height ?? Texture?.Height;
 
-    // October 30, 2024
-    // Vic asks - is this even used?
-    // @VIC Read your comment above sir
+    /// <summary>
+    /// A legacy hand-assigned animation, advanced by <c>SpriteManager</c>; animation chains use
+    /// <see cref="AnimationLogic"/> instead. Cloning copies it only when it implements
+    /// <see cref="ICloneable"/>; otherwise the clone shares this instance.
+    /// </summary>
     public IAnimation? Animation
     {
         get;
@@ -1058,6 +1060,12 @@ public class Sprite : SpriteBatchRenderableBase,
         newInstance.mParent = null;
         newInstance.mChildren = new ();
         newInstance.AnimationLogic = AnimationLogic.Clone(newInstance.ApplyAnimationFrame);
+        // IAnimation has no clone contract: copy an implementation that opts in through
+        // ICloneable, and share any other one, since it may hold state that cannot be copied safely.
+        if (Animation is ICloneable cloneableAnimation)
+        {
+            newInstance.Animation = (IAnimation)cloneableAnimation.Clone();
+        }
 
         return newInstance;
     }

@@ -1947,11 +1947,28 @@ public class Text : SpriteBatchRenderableBase, IRenderableIpso, IVisible, IWrapp
 
     #endregion
 
+    /// <summary>
+    /// Creates a copy with its own wrapped lines, inline variables and children, and no parent,
+    /// render target or runtime hooks. The font is shared.
+    /// </summary>
     public Text Clone()
     {
         var newInstance = (Text)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new ();
+        // MemberwiseClone shares these lists; re-wrapping or re-parsing markup on one instance
+        // would otherwise rewrite the other's lines and inline-styling runs.
+        newInstance.mWrappedText = new List<string>(mWrappedText);
+        newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
+        // The render target belongs to this instance: the clone would redraw its own text into it
+        // or dispose it. The clone renders its own on the next refresh, and measures itself until
+        // then, since the source may have measured from that render target.
+        newInstance.mTextureToRender = null;
+        newInstance.mNeedsBitmapFontRefresh = true;
+        newInstance.UpdatePreRenderDimensions();
+        // These call back into the source's runtime; the clone's runtime wires its own.
+        newInstance.OnPreRender = null;
+        newInstance.OnGlyphGrowthCheck = null;
 
         return newInstance;
     }

@@ -54,6 +54,8 @@ public sealed class Text : RenderableBase, IText, IWrappedText, IFormsText, IClo
         var newInstance = (Text)this.MemberwiseClone();
         ((IRenderableIpso)newInstance).SetParentDirect(null);
         newInstance._children = new();
+        // MemberwiseClone shares the list; re-wrapping one instance would rewrite the other's lines.
+        newInstance._wrappedLines = new List<string>(_wrappedLines);
         return newInstance;
     }
 
@@ -173,7 +175,7 @@ public sealed class Text : RenderableBase, IText, IWrappedText, IFormsText, IClo
 
     public Color OutlineColor = new(0, 0, 0);
 
-    private readonly List<string> _wrappedLines = new();
+    private List<string> _wrappedLines = new();
     private bool _layoutDirty = true;
     private float _lastLaidOutWidth = -1f;
     private float _lastLaidOutFontSize = -1f;

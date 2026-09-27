@@ -2,8 +2,10 @@ using Gum.Graphics.Animation;
 using Microsoft.Xna.Framework.Graphics;
 using RenderingLibrary.Graphics;
 using Shouldly;
+using System;
 using System.Runtime.CompilerServices;
 using Xunit;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace MonoGameGum.Tests.RenderingLibraries.Graphics;
 
@@ -75,5 +77,69 @@ public class AnimatedRenderableCloneTests
         original.Texture.ShouldBeSameAs(firstTexture);
         originalCycles.ShouldBe(0);
         clone.Texture.ShouldBeSameAs(secondTexture);
+    }
+    /// <summary>
+    /// A user-supplied legacy <see cref="IAnimation"/> that opts into cloning. It advances by the
+    /// time passed per call, so sharing one instance would move both renderables twice as fast.
+    /// </summary>
+    private class CloneableAnimation : IAnimation, ICloneable
+    {
+        public int CallCount;
+        public bool FlipHorizontal => false;
+        public bool FlipVertical => false;
+        public Texture2D CurrentTexture { get; set; } = null!;
+        public Rectangle? SourceRectangle => null;
+        public int CurrentFrameIndex => 0;
+        public void AnimationActivity(double currentTime) => CallCount++;
+        public object Clone() => MemberwiseClone();
+    }
+
+    [Fact]
+    public void NineSlice_Clone_ShouldCloneCloneableLegacyAnimation()
+    {
+        CloneableAnimation animation = new() { CurrentTexture = CreateTexture() };
+        NineSlice original = new() { Animation = animation, Animate = true };
+
+        NineSlice clone = original.Clone();
+        clone.AnimationActivity(1);
+
+        clone.Animation.ShouldNotBeSameAs(animation);
+        animation.CallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Sprite_Clone_ShouldCloneCloneableLegacyAnimation()
+    {
+        CloneableAnimation animation = new() { CurrentTexture = CreateTexture() };
+        Sprite original = new((Texture2D?)null) { Animation = animation, Animate = true };
+
+        Sprite clone = original.Clone();
+        clone.AnimationActivity(1);
+
+        clone.Animation.ShouldNotBeSameAs(animation);
+        animation.CallCount.ShouldBe(0);
+    }
+
+    [Fact]
+    public void Sprite_Clone_ShouldShareNonCloneableLegacyAnimation()
+    {
+        // IAnimation has no clone contract, so an implementation that does not opt in through
+        // ICloneable stays shared rather than being copied by guesswork.
+        NonCloneableAnimation animation = new();
+        Sprite original = new((Texture2D?)null) { Animation = animation };
+
+        Sprite clone = original.Clone();
+
+        clone.Animation.ShouldBeSameAs(animation);
+    }
+
+    private class NonCloneableAnimation : IAnimation
+    {
+        public bool FlipHorizontal => false;
+        public bool FlipVertical => false;
+        public Texture2D CurrentTexture => null!;
+        public Rectangle? SourceRectangle => null;
+        public int CurrentFrameIndex => 0;
+        public void AnimationActivity(double currentTime) { }
     }
 }

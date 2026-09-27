@@ -149,9 +149,13 @@ public class Text : IVisible, IRenderableIpso,
         var newInstance = (Text)this.MemberwiseClone();
         newInstance.mParent = null;
         newInstance.mChildren = new();
-        // MemberwiseClone shares the list reference; give the clone its own copy so
-        // re-parsing markup on one instance doesn't mutate the other's runs.
+        // MemberwiseClone shares these lists; give the clone its own copies so re-wrapping or
+        // re-parsing markup on one instance doesn't rewrite the other's lines or runs.
+        newInstance.mWrappedText = new List<string>(mWrappedText);
         newInstance.InlineVariables = new List<InlineVariable>(InlineVariables);
+        // These call back into the source's runtime; the clone's runtime wires its own.
+        newInstance.OnPreRender = null;
+        newInstance.OnGlyphGrowthCheck = null;
         return newInstance;
     }
 

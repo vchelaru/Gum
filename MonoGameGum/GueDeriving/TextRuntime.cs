@@ -1473,6 +1473,15 @@ public class TextRuntime : InteractiveGue
         var toReturn = (TextRuntime)base.Clone();
 
         toReturn._containedText = null;
+#if XNALIKE || RAYLIB
+        // The cloned Text drops the source's hooks; wire this clone's now, since its lazy
+        // ContainedText getter may not run before the first render.
+        if (toReturn.RenderableComponent is Text clonedText)
+        {
+            clonedText.OnPreRender = toReturn.UpdateAutomaticFontOversampling;
+            clonedText.OnGlyphGrowthCheck = toReturn.CheckAndGrowFont;
+        }
+#endif
 
         return toReturn;
     }
