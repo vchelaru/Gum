@@ -900,12 +900,53 @@ public class GumProjectSave
             string.Equals(extension, ProjectJsonExtension, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// Sorts the reference lists and the loaded element and behavior lists by name: the one order
+    /// a project is saved in and loaded in. Lists already in order are left untouched, so code
+    /// enumerating them is not invalidated. Missing entries, and entries with no name, sort first.
+    /// </summary>
+    public void SortElementsAndReferencesByName()
+    {
+        SortByName(ScreenReferences, item => item?.Name);
+        SortByName(ComponentReferences, item => item?.Name);
+        SortByName(StandardElementReferences, item => item?.Name);
+        SortByName(BehaviorReferences, item => item?.Name);
+
+        SortByName(Screens, item => item?.Name);
+        SortByName(Components, item => item?.Name);
+        SortByName(StandardElements, item => item?.Name);
+        SortByName(Behaviors, item => item?.Name);
+    }
+
+    private static void SortByName<T>(List<T>? list, Func<T, string?> getName)
+    {
+        if (list == null)
+        {
+            return;
+        }
+        for (int i = 1; i < list.Count; i++)
+        {
+            if (CompareNames(getName(list[i - 1]), getName(list[i])) > 0)
+            {
+                list.Sort((first, second) => CompareNames(getName(first), getName(second)));
+                return;
+            }
+        }
+    }
+
+    private static int CompareNames(string? first, string? second) =>
+        string.Compare(first, second, StringComparison.CurrentCulture);
+
 #if NET5_0_OR_GREATER
     [UnconditionalSuppressMessage("Trimming", "IL2026",
         Justification = "Serializes this GumProjectSave instance, which GumCommon's ILLink.Descriptors.xml preserves in full (preserve=\"all\").")]
 #endif
     public void Save(string fileName, bool saveElements)
     {
+        // Entries are appended in creation order, but loading sorts them, so a project saved
+        // unsorted would reorder on its next save after reopening.
+        SortElementsAndReferencesByName();
+
         // No content-sniffing between XML and JSON - the target file's own extension decides the
         // format, symmetric with Load(). Nested elements below follow the same project-wide choice.
         bool isJsonFormat = IsJsonFormat(fileName);
