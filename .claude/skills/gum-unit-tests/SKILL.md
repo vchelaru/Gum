@@ -55,6 +55,9 @@ description: Writing unit tests in the Gum repo. Triggers: tests in Gum.ProjectS
 - Tests that compose plugins need the container registered with `Locator` (see
   `HeadTestServices`). A hung test host blocks the next run until it is killed; run with
   `--blame-hang --blame-hang-timeout 120s`.
+- Never dispose the shared graphics device in a test, and never block without a time limit on a call
+  onto the headless UI thread; run device code through `DeviceTestThread.Run`. Either mistake hangs
+  the whole test run.
 - `MainWindow` is a container singleton that `HeadCompositionTests` shows and closes. A test that needs it must not `Show()` it again (a closed window cannot be re-shown) and must not build a second one through `ActivatorUtilities` (it re-parents the singleton plugin tab controls and breaks unrelated tests). Read its state through `window.Content` without showing it.
 - `HeadProcessTests` launches the built head (`Tool/Gum.Avalonia/bin/<Config>/net10.0`) on a copied
   fixture; it skips without a display and on CI.

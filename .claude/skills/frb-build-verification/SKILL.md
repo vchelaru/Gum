@@ -36,7 +36,7 @@ Check the sibling's checked-out branch before trusting the canary — `git statu
 
 The sibling-relative imports (`..\..\..\..\FlatRedBall\…`) are computed from the csproj's location. A git worktree is a full checkout, so its internal directory structure mirrors the primary checkout at the same depth — the import resolves correctly as long as the worktree root itself sits at the same level as `Gum\` and `FlatRedBall\` (i.e. directly under the parent `GitHub\` folder). A worktree nested under `.claude/worktrees/<branch>/` is one level too deep, so the import resolves to nowhere (`MSB4019`).
 
-Create issue worktrees as a sibling of the Gum repo (e.g. `<gum-repo>/../gum-wt-<branch>/`), not under `.claude/worktrees/`.
+An agent working in a nested `.claude/worktrees/` worktree cannot run the canary; it reports the FRB check as not run, and the orchestrator runs it from a sibling worktree (e.g. `<gum-repo>/../gum-wt-<branch>/`) on the pushed branch.
 
 ## Canaries
 

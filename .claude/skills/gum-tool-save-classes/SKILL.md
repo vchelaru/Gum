@@ -74,6 +74,8 @@ When reverting a variable after failed validation, you must restore the exact pr
 
 **`GumProjectSave` reference lists vs. loaded lists:** The `.gumx` file serializes `ScreenReferences`, `ComponentReferences`, `StandardElementReferences`, `BehaviorReferences` (each a `List<ElementReference>` or `List<BehaviorReference>`). The `[XmlIgnore]` properties `Screens`, `Components`, `StandardElements`, `Behaviors` hold the loaded objects. Both must be updated on rename: the reference list (for `.gumx`) and the live objects (for in-memory state). `AllElements` is a computed `[XmlIgnore]` property that enumerates Screens + Components + Standards.
 
+**Saved order is culture-invariant:** element references, loaded element lists and state variables all sort through `GumProjectSave.CompareNames` (via `SortElementsAndReferencesByName` for the project lists). Never sort saved names with the current culture, or the same project saves in a different order on another machine.
+
 **Clone methods:** All save classes have a `Clone()` method that produces a deep copy via `FileManager.CloneSaveObject`. Cloned instances have different object references than the originals — relevant when cross-referencing with live editor state.
 
 ---

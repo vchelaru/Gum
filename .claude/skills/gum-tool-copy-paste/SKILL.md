@@ -21,9 +21,11 @@ Copy, cut, and paste each accept a `CopyType` parameter and bail out early if it
 
 Paste offers two modes: `Recursive` (instances + all descendants) vs `Top` (only top-level instances). The UI exposes both as separate "Paste" and "Paste Top Level Instance(s)" menu items.
 
-## Cut Is Immediate
+## Cutting Instances vs. Elements
 
-Cut calls `StoreCopiedObject()` (same as copy) then immediately deletes the source instances via `IDeleteLogic.RemoveInstance()`. The deletion happens at cut time, not deferred to paste. This means cutting and then not pasting still destroys the original.
+Cutting instances calls `StoreCopiedObject()` (same as copy) and then deletes the source instances right away via `IDeleteLogic.RemoveInstance()`, so cutting and never pasting still removes them.
+
+Cutting a screen or component leaves it in place. The next paste on a folder moves it there (`MoveCutElement`), and a paste anywhere else leaves the cut pending.
 
 ## Multi-Paste Targeting Is Shared With Ctrl+Shift-Click Adds
 

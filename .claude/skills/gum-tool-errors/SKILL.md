@@ -31,6 +31,8 @@ The tree's "!" follows every full check through `ErrorsChecked`, including the E
 
 **Core check** (missing references, structural problems): Add it to `HeadlessErrorChecker.GetErrorsForInternal` in `Gum.ProjectServices`, **not** the tool's `Tools/Gum.Presentation/Managers/ErrorChecker.cs`. The tool's checker delegates to the headless one (and converts `ErrorResult` → `ErrorViewModel`); putting checks in the headless layer means both the tool's Errors tab (per-selected-element refresh) and `gumcli check` (whole-project pass via `GetAllErrors`) surface them automatically. Pattern: iterate states/instances, emit `new ErrorResult { ElementName = ..., Message = ..., Code = "GUM00XX", Severity = ... }`. Register the code in `ErrorDocsRegistry` to get a help URL.
 
+**Project-level check** (not tied to one element): add it to `HeadlessErrorChecker.GetProjectErrors`, not the per-element check. The Errors tab lists project-level rows whatever is selected, alongside the selected element's rows.
+
 **Plugin check** (feature-specific, tool-side only): Subscribe to `GetAllErrors` in your plugin's `StartUp()`, return `IEnumerable<ErrorViewModel>`, and set `item.OwnerPlugin = this` on each. Plugin checks only show in the tool — the CLI doesn't load plugins. If the check should fire in CI / pre-commit, use the headless path above instead.
 
 **Fixable errors**: set `ActionName` and `ActionCommand` on the `ErrorViewModel` to render a button beside the row that resolves the error in place (`HasAction` drives its visibility). An action that destroys anything unrecoverable still owes the user a confirmation before it runs.
