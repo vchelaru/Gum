@@ -1054,7 +1054,11 @@ public class RenderableShapeBase : IRenderableIpso, IVisible, IDisposable, IClon
         return new SKRect(pointBefore.X, pointBefore.Y, pointBefore.X + beforeRotation.Width, pointBefore.Y + beforeRotation.Height);
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Releases the cached paint and disposes disposable children. A derived renderable that owns
+    /// native resources (such as an image it built from its texture) overrides this to release them.
+    /// </summary>
+    public virtual void Dispose()
     {
         ClearCachedPaint();
 
