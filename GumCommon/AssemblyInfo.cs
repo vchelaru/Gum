@@ -18,3 +18,7 @@ using System.Runtime.CompilerServices;
 // SetBinding/IsDataBound code paths.
 [assembly: InternalsVisibleTo("RaylibGum")]
 [assembly: InternalsVisibleTo("SokolGum")]
+
+// SkiaGum's GumServiceSkiaBase shares GumService internals with the MonoGame/raylib GumService
+// (LanguageChangeSubscription, GumLoadResult.ThrowIfFailed).
+[assembly: InternalsVisibleTo("SkiaGum")]

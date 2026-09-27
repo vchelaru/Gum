@@ -317,20 +317,7 @@ public partial class GumService : IGumService
         ModalRoot?.RefreshLocalization();
     }
 
-    private ILocalizationService? _subscribedLocalizationService;
-
-    private void HandleLocalizationServiceChanged(ILocalizationService? previous, ILocalizationService? current)
-    {
-        if (_subscribedLocalizationService != null)
-        {
-            _subscribedLocalizationService.CurrentLanguageChanged -= RefreshLocalization;
-        }
-        _subscribedLocalizationService = current;
-        if (current != null)
-        {
-            current.CurrentLanguageChanged += RefreshLocalization;
-        }
-    }
+    private readonly LanguageChangeSubscription _languageChangeSubscription;
 
     /// <summary>
     /// Re-applies all styles on the specified element and its children. Call after
@@ -457,9 +444,10 @@ public partial class GumService : IGumService
         Root.Name = "Main Root";
         Root.HasEvents = false;
 
-        CustomSetPropertyOnRenderable.LocalizationServiceChanged += HandleLocalizationServiceChanged;
+        _languageChangeSubscription = new LanguageChangeSubscription(RefreshLocalization);
+        CustomSetPropertyOnRenderable.LocalizationServiceChanged += _languageChangeSubscription.Track;
         // Pick up any LocalizationService that was assigned before this GumService was constructed.
-        HandleLocalizationServiceChanged(null, CustomSetPropertyOnRenderable.LocalizationService);
+        _languageChangeSubscription.Track(null, CustomSetPropertyOnRenderable.LocalizationService);
 
         GraphicalUiElement.RefreshLocalizationOnElementAction = element =>
         {
@@ -571,19 +559,7 @@ public partial class GumService : IGumService
             gumProject = GumProjectSave.Load(projectResolution.ResolvedGumxPath, out GumLoadResult loadResult);
             LastLoadResult = loadResult;
 
-            if (gumProject == null || !string.IsNullOrEmpty(loadResult.ErrorMessage) || loadResult.MissingFiles.Count > 0)
-            {
-                var stringBuilder = new StringBuilder();
-                if (!string.IsNullOrEmpty(loadResult.ErrorMessage))
-                {
-                    stringBuilder.AppendLine(loadResult.ErrorMessage);
-                }
-                foreach (var missingFile in loadResult.MissingFiles)
-                {
-                    stringBuilder.AppendLine($"Missing file: {missingFile}");
-                }
-                throw new Exception(stringBuilder.ToString());
-            }
+            loadResult.ThrowIfFailed(gumProject);
 
             var localizationService = CustomSetPropertyOnRenderable.LocalizationService;
             if (localizationService != null)
